@@ -87,10 +87,23 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
         warning(e));
     testSame("var a, b; a = (b = 7, 6)");
     testSame("var a, b; a ||= (b ||= 7, 6)");
-    testSame(lines("function x(){}", "function f(a, b){}", "f(1,(x(), 2));"));
+    testSame(
+        """
+        function x(){}
+        function f(a, b){}
+        f(1,(x(), 2));
+        """);
     test(
-        lines("function x(){}", "function f(a, b){}", "f(1,(2, 3));"),
-        lines("function x(){}", "function f(a, b){}", "f(1,(JSCOMPILER_PRESERVE(2), 3));"),
+        """
+        function x(){}
+        function f(a, b){}
+        f(1,(2, 3));
+        """,
+        """
+        function x(){}
+        function f(a, b){}
+        f(1,(JSCOMPILER_PRESERVE(2), 3));
+        """,
         warning(e));
   }
 
@@ -103,14 +116,30 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
         warning(e));
     test("`LoneTemplate`", "JSCOMPILER_PRESERVE(`LoneTemplate`)", warning(e));
     test(
-        lines("var name = 'Bad';", "`${name}Template`;"),
-        lines("var name = 'Bad';", "JSCOMPILER_PRESERVE(`${name}Template`)"),
+        """
+        var name = 'Bad';
+        `${name}Template`;
+        """,
+        """
+        var name = 'Bad';
+        JSCOMPILER_PRESERVE(`${name}Template`)
+        """,
         warning(e));
     test(
-        lines("var name = 'BadTail';", "`Template${name}`;"),
-        lines("var name = 'BadTail';", "JSCOMPILER_PRESERVE(`Template${name}`)"),
+        """
+        var name = 'BadTail';
+        `Template${name}`;
+        """,
+        """
+        var name = 'BadTail';
+        JSCOMPILER_PRESERVE(`Template${name}`)
+        """,
         warning(e));
-    testSame(lines("var name = 'Good';", "var templateString = `${name}Template`;"));
+    testSame(
+        """
+        var name = 'Good';
+        var templateString = `${name}Template`;
+        """);
     testSame("var templateString = `Template`;");
     testSame("tagged`Template`;");
     testSame("tagged`${name}Template`;");
@@ -119,21 +148,37 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
   @Test
   public void testUselessCodeDestructuring() {
     testSame(
-        lines(
-            "var obj = {",
-            "  itm1: 1,",
-            "  itm2: 2",
-            "}",
-            "var { itm1: de_item1, itm2: de_item2 } = obj;"));
-    testSame(lines("var obj = {", "  itm1: 1,", "  itm2: 2", "}", "var { itm1, itm2 } = obj;"));
-    testSame(lines("var arr = ['item1', 'item2', 'item3'];", "var [ itm1 = 1, itm2 = 2 ] = arr;"));
+        """
+        var obj = {
+          itm1: 1,
+          itm2: 2
+        }
+        var { itm1: de_item1, itm2: de_item2 } = obj;
+        """);
     testSame(
-        lines("var arr = ['item1', 'item2', 'item3'];", "var [ itm1 = 1, itm2 = 2 ] = badArr;"));
+        """
+        var obj = {
+          itm1: 1,
+          itm2: 2
+        }
+        var { itm1, itm2 } = obj;
+        """);
     testSame(
-        lines(
-            "var arr = ['item1', 'item2', 'item3'];",
-            "function f(){}",
-            "var [ itm1 = f(), itm2 = 2 ] = badArr;"));
+        """
+        var arr = ['item1', 'item2', 'item3'];
+        var [ itm1 = 1, itm2 = 2 ] = arr;
+        """);
+    testSame(
+        """
+        var arr = ['item1', 'item2', 'item3'];
+        var [ itm1 = 1, itm2 = 2 ] = badArr;
+        """);
+    testSame(
+        """
+        var arr = ['item1', 'item2', 'item3'];
+        function f(){}
+        var [ itm1 = f(), itm2 = 2 ] = badArr;
+        """);
   }
 
   @Test
@@ -184,63 +229,71 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
   @Test
   public void testUslessCodeInClassStaticBlock() {
     testSame(
-        lines(
-            "class C {", //
-            "  static {",
-            "    function f(x) { if(x) return; }",
-            "  }",
-            "}"));
+        """
+        class C {
+          static {
+            function f(x) { if(x) return; }
+          }
+        }
+        """);
     testWarning(
-        lines(
-            "class C {", //
-            "  static {",
-            "    function f(x) { if(x); }",
-            "  }",
-            "}"),
+        """
+        class C {
+          static {
+            function f(x) { if(x); }
+          }
+        }
+        """,
         e);
     testSame(
-        lines(
-            "class C {", //
-            "  static {",
-            "    var f = x=>x;",
-            "  }",
-            "}"));
+        """
+        class C {
+          static {
+            var f = x=>x;
+          }
+        }
+        """);
     testWarning(
-        lines(
-            "class C {", //
-            "  static {",
-            "    var f = (x)=>{ if(x); }",
-            "  }",
-            "}"),
+        """
+        class C {
+          static {
+            var f = (x)=>{ if(x); }
+          }
+        }
+        """,
         e);
     testSame(
-        lines(
-            "class C {", //
-            "  static {",
-            "    x = 3;",
-            "  }",
-            "}"));
+        """
+        class C {
+          static {
+            x = 3;
+          }
+        }
+        """);
     test(
-        lines(
-            "class C {", //
-            "  static {",
-            "    x == 3;",
-            "  }",
-            "}"),
-        lines(
-            "class C {", //
-            "  static {",
-            "    JSCOMPILER_PRESERVE(x == 3);",
-            "  }",
-            "}"),
+        """
+        class C {
+          static {
+            x == 3;
+          }
+        }
+        """,
+        """
+        class C {
+          static {
+            JSCOMPILER_PRESERVE(x == 3);
+          }
+        }
+        """,
         warning(e));
     testSame(
-        lines(
-            "class C {", //
-            "  static {",
-            "     foo();;;;bar();;;;",
-            "  }",
-            "}"));
+        """
+        class C {
+          static {
+             foo();;;;bar();;;;
+          }
+        }
+        """);
   }
 
   @Test
@@ -301,15 +354,16 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
   @Test
   public void testExternFunctions() {
     String externs =
-        lines(
-            "/** @return {boolean}",
-            "  * @nosideeffects */",
-            "function noSideEffectsExtern(){}",
-            "/** @return {boolean}",
-            "  * @nosideeffects */",
-            "var noSideEffectsExtern2 = function(){};",
-            "/** @return {boolean} */ function hasSideEffectsExtern(){}",
-            "/** @return {boolean} */ var hasSideEffectsExtern2 = function(){}");
+        """
+        /** @return {boolean}
+          * @nosideeffects */
+        function noSideEffectsExtern(){}
+        /** @return {boolean}
+          * @nosideeffects */
+        var noSideEffectsExtern2 = function(){};
+        /** @return {boolean} */ function hasSideEffectsExtern(){}
+        /** @return {boolean} */ var hasSideEffectsExtern2 = function(){}
+        """;
 
     testSame(externs(externs), srcs("alert(noSideEffectsExtern());"));
 
@@ -344,11 +398,12 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
   @Test
   public void testExternPropertyFunctions() {
     String externs =
-        lines(
-            "/** @const */ var foo = {};",
-            "/** @return {boolean}",
-            "  * @nosideeffects */",
-            "foo.noSideEffectsExtern = function(){}");
+        """
+        /** @const */ var foo = {};
+        /** @return {boolean}
+          * @nosideeffects */
+        foo.noSideEffectsExtern = function(){}
+        """;
 
     testSame(externs(externs), srcs("alert(foo.noSideEffectsExtern());"));
 
@@ -365,12 +420,13 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
     testSame(
         externs(externs),
         srcs(
-            lines(
-                "(function() {",
-                "  var foo = {};",
-                "  foo.noSideEffectsExtern = function() {};",
-                "  noSideEffectsExtern();",
-                " })()")));
+            """
+            (function() {
+              var foo = {};
+              foo.noSideEffectsExtern = function() {};
+              noSideEffectsExtern();
+             })()
+            """));
   }
 
   @Test

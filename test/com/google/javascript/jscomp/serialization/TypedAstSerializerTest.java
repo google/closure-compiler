@@ -57,25 +57,25 @@ public class TypedAstSerializerTest extends CompilerTestCase {
    */
   private static final Externs CONSOLE_EXTERNS =
       externs(
-          lines(
-              "/** @constructor */",
-              "function Console() {};",
-              "",
-              "/**",
-              " * @param {...*} var_args",
-              " * @return {undefined}",
-              " */",
-              "Console.prototype.log = function(var_args) {};",
-              "",
-              "/**",
-              " * @param {...*} var_args",
-              " * @return {undefined}",
-              " */",
-              "Console.prototype.error = function(var_args) {};",
-              "",
-              "/** @const {!Console} */",
-              "var console;",
-              ""));
+          """
+          /** @constructor */
+          function Console() {};
+
+          /**
+           * @param {...*} var_args
+           * @return {undefined}
+           */
+          Console.prototype.log = function(var_args) {};
+
+          /**
+           * @param {...*} var_args
+           * @return {undefined}
+           */
+          Console.prototype.error = function(var_args) {};
+
+          /** @const {!Console} */
+          var console;
+          """);
 
   // Proto fields commonly ignored in tests because hardcoding their values is brittle
   private static final FieldDescriptor OBJECT_UUID =

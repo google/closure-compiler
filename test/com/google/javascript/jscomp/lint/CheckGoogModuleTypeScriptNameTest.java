@@ -62,7 +62,11 @@ public final class CheckGoogModuleTypeScriptNameTest extends CompilerTestCase {
 
   @Test
   public void testNoWarning_noModule() {
-    testNoWarning(lines("goog.provide('test');", "alert(1)"));
+    testNoWarning(
+        """
+        goog.provide('test');
+        alert(1)
+        """);
   }
 
   @Test

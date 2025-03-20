@@ -2023,22 +2023,32 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
         "function foo(x = (1 !== void 0), y) {return x+y;}",
         "function foo(x = true, y) {return x+y;}");
     test(
-        lines("class Foo {", "  constructor() {this.x = null <= null;}", "}"),
-        lines("class Foo {", "  constructor() {this.x = true;}", "}"));
+        """
+        class Foo {
+          constructor() {this.x = null <= null;}
+        }
+        """,
+        """
+        class Foo {
+          constructor() {this.x = true;}
+        }
+        """);
     test("function foo() {return `${false && y}`}", "function foo() {return `${false}`}");
   }
 
   @Test
   public void testClassField() {
     test(
-        lines(
-            "class Foo {", //
-            "  x = null <= null;",
-            "}"),
-        lines(
-            "class Foo {", //
-            "  x = true;",
-            "}"));
+        """
+        class Foo {
+          x = null <= null;
+        }
+        """,
+        """
+        class Foo {
+          x = true;
+        }
+        """);
   }
 
   private static final ImmutableList<String> LITERAL_OPERANDS =

@@ -118,10 +118,11 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
             " *  @return {string}",
             " */ var f = function(a) { return a[0]; };")
         .addDiagnostic(
-            lines(
-                "inconsistent return type", //
-                "found   : number",
-                "required: string"))
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -134,10 +135,11 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
             " *  @return {string}",
             " */ var f = function(a) { return a[0]; };")
         .addDiagnostic(
-            lines(
-                "inconsistent return type", //
-                "found   : number",
-                "required: string"))
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -459,12 +461,13 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
             "/** @type {string} */ Foo.prototype.prop = 'str'",
             "f(new Foo)")
         .addDiagnostic(
-            lines(
-                "actual parameter 1 of f does not match formal parameter",
-                "found   : Foo",
-                "required: WithPropT<number>",
-                "missing : []",
-                "mismatch: [prop]"))
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : Foo
+            required: WithPropT<number>
+            missing : []
+            mismatch: [prop]
+            """)
         .run();
   }
 
@@ -480,12 +483,13 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
             "/** @type {string} */ Foo.prototype.prop = 'str'",
             "f(new Foo)")
         .addDiagnostic(
-            lines(
-                "actual parameter 1 of f does not match formal parameter",
-                "found   : Foo<?>",
-                "required: WithPropT<number>",
-                "missing : []",
-                "mismatch: [prop]"))
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : Foo<?>
+            required: WithPropT<number>
+            missing : []
+            mismatch: [prop]
+            """)
         .run();
   }
 
@@ -507,12 +511,13 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
             "}",
             "f(new Foo('str'))")
         .addDiagnostic(
-            lines(
-                "actual parameter 1 of f does not match formal parameter",
-                "found   : Foo<string>",
-                "required: WithPropT<number>",
-                "missing : []",
-                "mismatch: [prop]"))
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : Foo<string>
+            required: WithPropT<number>
+            missing : []
+            mismatch: [prop]
+            """)
         .run();
   }
 
@@ -535,12 +540,13 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
             "function f(x, y){};",
             "f(new Foo, 'str')")
         .addDiagnostic(
-            lines(
-                "actual parameter 1 of f does not match formal parameter",
-                "found   : Foo",
-                "required: WithProp<string>",
-                "missing : []",
-                "mismatch: [prop]"))
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : Foo
+            required: WithProp<string>
+            missing : []
+            mismatch: [prop]
+            """)
         .run();
   }
 

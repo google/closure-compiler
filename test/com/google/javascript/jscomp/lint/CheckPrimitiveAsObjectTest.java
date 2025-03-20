@@ -103,62 +103,85 @@ public final class CheckPrimitiveAsObjectTest extends CompilerTestCase {
   @Test
   public void testWarningForNumberParameterDeclaration() {
     testWarning(
-        lines(
-            "/**",
-            " * @param {Number=} x",
-            " * @return {number}",
-            " */",
-            "function f(x) {",
-            "  return x + 1;",
-            "}"),
+        """
+        /**
+         * @param {Number=} x
+         * @return {number}
+         */
+        function f(x) {
+          return x + 1;
+        }
+        """,
         PRIMITIVE_OBJECT_DECLARATION);
   }
 
   @Test
   public void testWarningForNumberParameterDeclaration_withES6Modules() {
     testWarning(
-        lines(
-            "export",
-            "/**",
-            " * @param {Number=} x",
-            " * @return {number}",
-            " */",
-            "function f(x) {",
-            "  return x + 1;",
-            "}"),
+        """
+        export
+        /**
+         * @param {Number=} x
+         * @return {number}
+         */
+        function f(x) {
+          return x + 1;
+        }
+        """,
         PRIMITIVE_OBJECT_DECLARATION);
   }
 
   @Test
   public void testWarningForBooleanParameterDeclarationInTypedef() {
     testWarning(
-        lines("/**", " * @typedef {function(Boolean=)}", " */", "var takesOptionalBoolean;"),
+        """
+        /**
+         * @typedef {function(Boolean=)}
+         */
+        var takesOptionalBoolean;
+        """,
         PRIMITIVE_OBJECT_DECLARATION);
   }
 
   @Test
   public void testWarningForBooleanParameterDeclarationInTypedef_withES6Modules() {
     testWarning(
-        lines(
-            "export",
-            "/**",
-            " * @typedef {function(Boolean=)}",
-            " */",
-            "var takesOptionalBoolean;"),
+        """
+        export
+        /**
+         * @typedef {function(Boolean=)}
+         */
+        var takesOptionalBoolean;
+        """,
         PRIMITIVE_OBJECT_DECLARATION);
   }
 
   @Test
   public void testWarningForNumberReturnDeclaration() {
     testWarning(
-        lines("/**", " * @return {Number}", " */", "function f() {", "  return 5;", "}"),
+        """
+        /**
+         * @return {Number}
+         */
+        function f() {
+          return 5;
+        }
+        """,
         PRIMITIVE_OBJECT_DECLARATION);
   }
 
   @Test
   public void testWarningForNumberReturnDeclaration_withES6Modules() {
     testWarning(
-        lines("export", "/**", " * @return {Number}", " */", "function f() {", "  return 5;", "}"),
+        """
+        export
+        /**
+         * @return {Number}
+         */
+        function f() {
+          return 5;
+        }
+        """,
         PRIMITIVE_OBJECT_DECLARATION);
   }
 }

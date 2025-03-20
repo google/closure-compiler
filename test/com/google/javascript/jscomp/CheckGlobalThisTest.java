@@ -319,43 +319,46 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
   public void testInnerFunctionInClassMethod1() {
     // TODO(user): It would be nice to warn for using 'this' here
     testSame(
-        lines(
-            "function Foo() {}",
-            "Foo.prototype.init = function() {",
-            "  button.addEventListener('click', function () {",
-            "    this.click();",
-            "  });",
-            "}",
-            "Foo.prototype.click = function() {}"));
+        """
+        function Foo() {}
+        Foo.prototype.init = function() {
+          button.addEventListener('click', function () {
+            this.click();
+          });
+        }
+        Foo.prototype.click = function() {}
+        """);
   }
 
   @Test
   public void testInnerFunctionInClassMethod2() {
     // TODO(user): It would be nice to warn for using 'this' here
     testSame(
-        lines(
-            "function Foo() {",
-            "  var x = function() {",
-            "    button.addEventListener('click', function () {",
-            "      this.click();",
-            "    });",
-            "  }",
-            "}"));
+        """
+        function Foo() {
+          var x = function() {
+            button.addEventListener('click', function () {
+              this.click();
+            });
+          }
+        }
+        """);
   }
 
   @Test
   public void testInnerFunctionInEs6ClassMethod() {
     // TODO(user): It would be nice to warn for using 'this' here
     testSame(
-        lines(
-            "class Foo {",
-            "  constructor() {",
-            "    button.addEventListener('click', function () {",
-            "      this.click();",
-            "    });",
-            "  }",
-            "  click() {}",
-            "}"));
+        """
+        class Foo {
+          constructor() {
+            button.addEventListener('click', function () {
+              this.click();
+            });
+          }
+          click() {}
+        }
+        """);
   }
 
   @Test
@@ -364,26 +367,28 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
     testSame("class Foo {static {this.x = 2; }}");
     testSame("class Foo {static {this[this.x] = 3;}}");
     testSame(
-        lines(
-            "class Foo {",
-            "  static {",
-            "    function g() {",
-            "      return this.f() + 1;",
-            "    }",
-            "    var y = g() + 1;",
-            "  }",
-            "  static f() {return 1;}",
-            "}"));
+        """
+        class Foo {
+          static {
+            function g() {
+              return this.f() + 1;
+            }
+            var y = g() + 1;
+          }
+          static f() {return 1;}
+        }
+        """);
     testSame(
-        lines(
-            "class Foo {",
-            "  static {",
-            "    button.addEventListener('click', function () {",
-            "      this.click();",
-            "    });",
-            "  }",
-            "  static click() {}",
-            "}"));
+        """
+        class Foo {
+          static {
+            button.addEventListener('click', function () {
+              this.click();
+            });
+          }
+          static click() {}
+        }
+        """);
   }
 
   @Test
@@ -392,49 +397,53 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
     testSame("class Foo {static h() {this.x = 2; }}");
     testSame("class Foo {static h() {this[this.x] = 3;}}");
     testSame(
-        lines(
-            "class Foo {",
-            "  static h() {",
-            "    function g() {",
-            "      return this.f() + 1;",
-            "    }",
-            "    var y = g() + 1;",
-            "  }",
-            "  static f() {return 1;}",
-            "}"));
+        """
+        class Foo {
+          static h() {
+            function g() {
+              return this.f() + 1;
+            }
+            var y = g() + 1;
+          }
+          static f() {return 1;}
+        }
+        """);
     testSame(
-        lines(
-            "class Foo {",
-            "  static h() {",
-            "    button.addEventListener('click', function () {",
-            "      this.click();",
-            "    });",
-            "  }",
-            "  static click() {}",
-            "}"));
+        """
+        class Foo {
+          static h() {
+            button.addEventListener('click', function () {
+              this.click();
+            });
+          }
+          static click() {}
+        }
+        """);
   }
 
   @Test
   public void testFunctionWithThisTypeAnnotated() throws Exception {
     testSame(
-        lines(
-            "/**",
-            " * @type {function(this:{hello:string})}",
-            " */",
-            "function test() {",
-            "  console.log(this.hello)",
-            "}"));
+        """
+        /**
+         * @type {function(this:{hello:string})}
+         */
+        function test() {
+          console.log(this.hello)
+        }
+        """);
   }
 
   @Test
   public void testFunctionWithoutThisTypeAnnotated() throws Exception {
     testFailure(
-        lines(
-            "/**",
-            " * @type {function()}",
-            " */",
-            "function test() {",
-            "  console.log(this.hello)",
-            "}"));
+        """
+        /**
+         * @type {function()}
+         */
+        function test() {
+          console.log(this.hello)
+        }
+        """);
   }
 }

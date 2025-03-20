@@ -266,67 +266,69 @@ public class ChromePassTest extends CompilerTestCase {
   @Test
   public void testCrDefineConstEnum() {
     test(
-        lines(
-            "cr.define('foo', function() {",
-            "  /** ",
-            "   * @enum {string}",
-            "   */",
-            "  const DangerType = {",
-            "    NOT_DANGEROUS: 'NOT_DANGEROUS',",
-            "    DANGEROUS: 'DANGEROUS',",
-            "  };",
-            "",
-            "  return {",
-            "    DangerType: DangerType,",
-            "  };",
-            "});"),
-        lines(
-            "var foo = foo || {};",
-            "cr.define('foo', function() {",
-            "  /** @enum {string} */",
-            "  foo.DangerType = {",
-            "    NOT_DANGEROUS:'NOT_DANGEROUS',",
-            "    DANGEROUS:'DANGEROUS',",
-            "  };",
-            "",
-            "  return {",
-            "    DangerType: foo.DangerType",
-            "  }",
-            "})",
-            ""));
+        """
+        cr.define('foo', function() {
+          /**
+           * @enum {string}
+           */
+          const DangerType = {
+            NOT_DANGEROUS: 'NOT_DANGEROUS',
+            DANGEROUS: 'DANGEROUS',
+          };
+
+          return {
+            DangerType: DangerType,
+          };
+        });
+        """,
+        """
+        var foo = foo || {};
+        cr.define('foo', function() {
+          /** @enum {string} */
+          foo.DangerType = {
+            NOT_DANGEROUS:'NOT_DANGEROUS',
+            DANGEROUS:'DANGEROUS',
+          };
+
+          return {
+            DangerType: foo.DangerType
+          }
+        })
+        """);
   }
 
   @Test
   public void testCrDefineLetEnum() {
     test(
-        lines(
-            "cr.define('foo', function() {",
-            "  /** ",
-            "   * @enum {string}",
-            "   */",
-            "  let DangerType = {",
-            "    NOT_DANGEROUS: 'NOT_DANGEROUS',",
-            "    DANGEROUS: 'DANGEROUS',",
-            "  };",
-            "",
-            "  return {",
-            "    DangerType: DangerType,",
-            "  };",
-            "});"),
-        lines(
-            "var foo = foo || {};",
-            "cr.define('foo', function() {",
-            "  /** @enum {string} */",
-            "  foo.DangerType = {",
-            "    NOT_DANGEROUS:'NOT_DANGEROUS',",
-            "    DANGEROUS:'DANGEROUS',",
-            "  };",
-            "",
-            "  return {",
-            "    DangerType: foo.DangerType",
-            "  }",
-            "})",
-            ""));
+        """
+        cr.define('foo', function() {
+          /**
+           * @enum {string}
+           */
+          let DangerType = {
+            NOT_DANGEROUS: 'NOT_DANGEROUS',
+            DANGEROUS: 'DANGEROUS',
+          };
+
+          return {
+            DangerType: DangerType,
+          };
+        });
+        """,
+        """
+        var foo = foo || {};
+        cr.define('foo', function() {
+          /** @enum {string} */
+          foo.DangerType = {
+            NOT_DANGEROUS:'NOT_DANGEROUS',
+            DANGEROUS:'DANGEROUS',
+          };
+
+          return {
+            DangerType: foo.DangerType
+          }
+        })
+        """);
   }
 
   @Test
@@ -407,43 +409,48 @@ public class ChromePassTest extends CompilerTestCase {
   public void testCrDefinePropertyDefinesUnquotedPropertyWithTypeInfoForPropertyKindJs()
       throws Exception {
     test(
-        lines(
-            // @type starts here.
-            "/** @type {!Object} */", "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.JS);"),
-        lines(
-            "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.JS);",
-            // But gets moved here.
-            "/** @type {!Object} */",
-            "a.prototype.c;"));
+        """
+        /** @type {!Object} */
+        cr.defineProperty(a.prototype, 'c', cr.PropertyKind.JS);
+        """,
+        """
+        cr.defineProperty(a.prototype, 'c', cr.PropertyKind.JS);
+        // But gets moved here.
+        /** @type {!Object} */
+        a.prototype.c;
+        """);
   }
 
   @Test
   public void testCrDefinePropertyDefinesUnquotedPropertyIgnoringJsDocWhenBoolAttrIsPresent()
       throws Exception {
     test(
-        lines(
-            // PropertyKind is used at runtime and is canonical. When it's specified, ignore @type.
-            "/** @type {!Object} */",
-            "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.BOOL_ATTR);"),
-        lines(
-            "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.BOOL_ATTR);",
-            // @type is now {boolean}. Earlier, manually-specified @type is ignored.
-            "/** @type {boolean} */",
-            "a.prototype.c;"));
+        """
+        /** @type {!Object} */
+        cr.defineProperty(a.prototype, 'c', cr.PropertyKind.BOOL_ATTR);
+        """,
+        """
+        cr.defineProperty(a.prototype, 'c', cr.PropertyKind.BOOL_ATTR);
+        // @type is now {boolean}. Earlier, manually-specified @type is ignored.
+        /** @type {boolean} */
+        a.prototype.c;
+        """);
   }
 
   @Test
   public void testCrDefinePropertyDefinesUnquotedPropertyIgnoringJsDocWhenAttrIsPresent()
       throws Exception {
     test(
-        lines(
-            // PropertyKind is used at runtime and is canonical. When it's specified, ignore @type.
-            "/** @type {!Array} */", "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.ATTR);"),
-        lines(
-            "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.ATTR);",
-            // @type is now {string}. Earlier, manually-specified @type is ignored.
-            "/** @type {string} */",
-            "a.prototype.c;"));
+        """
+        /** @type {!Array} */
+        cr.defineProperty(a.prototype, 'c', cr.PropertyKind.ATTR);
+        """,
+        """
+        cr.defineProperty(a.prototype, 'c', cr.PropertyKind.ATTR);
+        // @type is now {string}. Earlier, manually-specified @type is ignored.
+        /** @type {string} */
+        a.prototype.c;
+        """);
   }
 
   @Test
@@ -504,76 +511,84 @@ public class ChromePassTest extends CompilerTestCase {
   @Test
   public void testCrDefineFunction() {
     test(
-        lines(
-            "cr.define('settings', function() {",
-            "  var x = 0;",
-            "  function C() {}",
-            "  return { C: C };",
-            "});"),
-        lines(
-            "var settings = settings || {};",
-            "cr.define('settings', function() {",
-            "  var x = 0;",
-            "  settings.C = function C() {};",
-            "  return { C: settings.C };",
-            "});"));
+        """
+        cr.define('settings', function() {
+          var x = 0;
+          function C() {}
+          return { C: C };
+        });
+        """,
+        """
+        var settings = settings || {};
+        cr.define('settings', function() {
+          var x = 0;
+          settings.C = function C() {};
+          return { C: settings.C };
+        });
+        """);
   }
 
   @Test
   public void testCrDefineClassStatement() {
     test(
-        lines(
-            "cr.define('settings', function() {",
-            "  var x = 0;",
-            "  class C {}",
-            "  return { C: C };",
-            "});"),
-        lines(
-            "var settings = settings || {};",
-            "cr.define('settings', function() {",
-            "  var x = 0;",
-            "  settings.C = class {}",
-            "  return { C: settings.C };",
-            "});"));
+        """
+        cr.define('settings', function() {
+          var x = 0;
+          class C {}
+          return { C: C };
+        });
+        """,
+        """
+        var settings = settings || {};
+        cr.define('settings', function() {
+          var x = 0;
+          settings.C = class {}
+          return { C: settings.C };
+        });
+        """);
   }
 
   @Test
   public void testCrDefineClassExpression() {
     test(
-        lines(
-            "cr.define('settings', function() {",
-            "  var x = 0;",
-            "  var C = class {}",
-            "  return { C: C };",
-            "});"),
-        lines(
-            "var settings = settings || {};",
-            "cr.define('settings', function() {",
-            "  var x = 0;",
-            "  settings.C = class {}",
-            "  return { C: settings.C };",
-            "});"));
+        """
+        cr.define('settings', function() {
+          var x = 0;
+          var C = class {}
+          return { C: C };
+        });
+        """,
+        """
+        var settings = settings || {};
+        cr.define('settings', function() {
+          var x = 0;
+          settings.C = class {}
+          return { C: settings.C };
+        });
+        """);
   }
 
   @Test
   public void testCrDefineClassWithInternalSelfReference() {
     test(
-        lines(
-            "cr.define('settings', function() {",
-            "  var x = 0;",
-            "  class C {",
-            "    static create() { return new C; }",
-            "  }",
-            "  return { C: C };",
-            "});"),
-        lines(
-            "var settings = settings || {};",
-            "cr.define('settings', function() {",
-            "  var x = 0;",
-            "  settings.C = class {",
-            "    static create() { return new settings.C; }",
-            "  }",
-            "  return { C: settings.C };",
-            "});"));
+        """
+        cr.define('settings', function() {
+          var x = 0;
+          class C {
+            static create() { return new C; }
+          }
+          return { C: C };
+        });
+        """,
+        """
+        var settings = settings || {};
+        cr.define('settings', function() {
+          var x = 0;
+          settings.C = class {
+            static create() { return new settings.C; }
+          }
+          return { C: settings.C };
+        });
+        """);
   }
 }

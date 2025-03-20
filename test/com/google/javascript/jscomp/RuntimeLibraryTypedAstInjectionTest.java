@@ -50,13 +50,14 @@ public final class RuntimeLibraryTypedAstInjectionTest extends CompilerTestCase 
     test(
         srcs("Object;"),
         expected(
-            lines(
-                "/** @const */ var $jscomp = $jscomp || {};", //
-                "/** @const */ $jscomp.scope = {};",
-                "$jscomp.owns = function(obj, prop) {",
-                "  return Object.prototype.hasOwnProperty.call(obj, prop);",
-                "};",
-                "Object;")));
+            """
+            /** @const */ var $jscomp = $jscomp || {};
+            /** @const */ $jscomp.scope = {};
+            $jscomp.owns = function(obj, prop) {
+              return Object.prototype.hasOwnProperty.call(obj, prop);
+            };
+            Object;
+            """));
 
     ImmutableList<Node> objectNameNodes =
         findNodesNamed(this.getLastCompiler().getRoot(), "Object");
@@ -81,13 +82,14 @@ public final class RuntimeLibraryTypedAstInjectionTest extends CompilerTestCase 
     test(
         srcs("Object;"),
         expected(
-            lines(
-                "/** @const */ var $jscomp = $jscomp || {};", //
-                "/** @const */ $jscomp.scope = {};",
-                "$jscomp.owns = function(obj, prop) {",
-                "  return Object.prototype.hasOwnProperty.call(obj, prop);",
-                "};",
-                "Object;")));
+            """
+            /** @const */ var $jscomp = $jscomp || {};
+            /** @const */ $jscomp.scope = {};
+            $jscomp.owns = function(obj, prop) {
+              return Object.prototype.hasOwnProperty.call(obj, prop);
+            };
+            Object;
+            """));
 
     ImmutableList<Node> objectNameNodes =
         findNodesNamed(this.getLastCompiler().getRoot(), "Object");

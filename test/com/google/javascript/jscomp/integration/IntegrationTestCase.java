@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
@@ -63,85 +62,85 @@ abstract class IntegrationTestCase {
               .addAlert()
               .addClosureExterns()
               .addExtra(
-                  lines(
-                      "/**",
-                      " * @const",
-                      " */",
-                      "var Math = {};",
-                      "/**",
-                      " * @param {?} n1",
-                      " * @param {?} n2",
-                      " * @return {number}",
-                      " * @nosideeffects",
-                      " */",
-                      "Math.pow = function(n1, n2) {};",
-                      "Math.random = function() {}",
-                      "var isNaN;",
-                      "var Infinity;",
-                      "/**",
-                      " * @constructor",
-                      " * @extends {Array<string>}",
-                      " */",
-                      "var ITemplateArray = function() {};",
-                      "/**",
-                      " * @constructor @struct",
-                      " * @param {?Iterable<!Array<K|V>>|!Array<!Array<K|V>>=} opt_iterable",
-                      " * @implements {ReadonlyMap<K, V>}",
-                      " * @template K, V",
-                      " */",
-                      "function Map(opt_iterable) {}",
-                      "/** @constructor */",
-                      "var Set;",
-                      "/** @constructor */ function Window() {}",
-                      "/** @type {string} */ Window.prototype.name;",
-                      "/** @type {string} */ Window.prototype.offsetWidth;",
-                      "/** @type {Window} */ var window;",
-                      "",
-                      "/** @nosideeffects */ function noSideEffects() {}",
-                      "",
-                      "/**",
-                      " * @constructor",
-                      " * @nosideeffects",
-                      " */",
-                      "function Widget() {}",
-                      "/** @modifies {this} */ Widget.prototype.go = function() {};",
-                      "/** @return {string} */ var widgetToken = function() {};",
-                      "",
-                      "/**",
-                      " * @constructor",
-                      " * @return {number}",
-                      " * @param {*=} opt_n",
-                      " */",
-                      "function Number(opt_n) {}",
-                      "",
-                      "/**",
-                      " * @constructor",
-                      " * @return {boolean}",
-                      " * @param {*=} opt_b",
-                      " */",
-                      "function Boolean(opt_b) {}",
-                      "",
-                      "/**",
-                      " * @constructor",
-                      " * @return {!TypeError}",
-                      " * @param {*=} message",
-                      " * @param {*=} fileNameOrOptions",
-                      " * @param {*=} line",
-                      " */",
-                      "function TypeError(message, fileNameOrOptions, line) {}",
-                      "/**",
-                      " * @constructor",
-                      " * @param {*=} message",
-                      " * @param {*=} fileNameOrOptions",
-                      " * @param {*=} line",
-                      " * @return {!Error}",
-                      " * @nosideeffects",
-                      " */",
-                      "function Error(message, fileNameOrOptions, line) {}",
-                      "",
-                      "/** @constructor */",
-                      "var HTMLElement = function() {};",
-                      ""))
+                  """
+                  /**
+                   * @const
+                   */
+                  var Math = {};
+                  /**
+                   * @param {?} n1
+                   * @param {?} n2
+                   * @return {number}
+                   * @nosideeffects
+                   */
+                  Math.pow = function(n1, n2) {};
+                  Math.random = function() {}
+                  var isNaN;
+                  var Infinity;
+                  /**
+                   * @constructor
+                   * @extends {Array<string>}
+                   */
+                  var ITemplateArray = function() {};
+                  /**
+                   * @constructor @struct
+                   * @param {?Iterable<!Array<K|V>>|!Array<!Array<K|V>>=} opt_iterable
+                   * @implements {ReadonlyMap<K, V>}
+                   * @template K, V
+                   */
+                  function Map(opt_iterable) {}
+                  /** @constructor */
+                  var Set;
+                  /** @constructor */ function Window() {}
+                  /** @type {string} */ Window.prototype.name;
+                  /** @type {string} */ Window.prototype.offsetWidth;
+                  /** @type {Window} */ var window;
+
+                  /** @nosideeffects */ function noSideEffects() {}
+
+                  /**
+                   * @constructor
+                   * @nosideeffects
+                   */
+                  function Widget() {}
+                  /** @modifies {this} */ Widget.prototype.go = function() {};
+                  /** @return {string} */ var widgetToken = function() {};
+
+                  /**
+                   * @constructor
+                   * @return {number}
+                   * @param {*=} opt_n
+                   */
+                  function Number(opt_n) {}
+
+                  /**
+                   * @constructor
+                   * @return {boolean}
+                   * @param {*=} opt_b
+                   */
+                  function Boolean(opt_b) {}
+
+                  /**
+                   * @constructor
+                   * @return {!TypeError}
+                   * @param {*=} message
+                   * @param {*=} fileNameOrOptions
+                   * @param {*=} line
+                   */
+                  function TypeError(message, fileNameOrOptions, line) {}
+                  /**
+                   * @constructor
+                   * @param {*=} message
+                   * @param {*=} fileNameOrOptions
+                   * @param {*=} line
+                   * @return {!Error}
+                   * @nosideeffects
+                   */
+                  function Error(message, fileNameOrOptions, line) {}
+
+                  /** @constructor */
+                  var HTMLElement = function() {};
+                  """)
               .buildExternsFile("externs"));
 
   protected List<SourceFile> externs = DEFAULT_EXTERNS;

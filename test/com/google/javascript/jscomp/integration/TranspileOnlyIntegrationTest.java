@@ -17,7 +17,6 @@ package com.google.javascript.jscomp.integration;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static org.junit.Assert.assertThrows;
 
 import com.google.javascript.jscomp.AstValidator;
@@ -63,12 +62,13 @@ public final class TranspileOnlyIntegrationTest extends IntegrationTestCase {
     this.options.setSkipNonTranspilationPasses(true);
 
     String source =
-        lines(
-            "goog.module('x');", //
-            "function tag(x) {",
-            "  console.log(x);",
-            "}",
-            " tag``");
+        """
+        goog.module('x');
+        function tag(x) {
+          console.log(x);
+        }
+         tag``
+        """;
 
     String expected =
         "var $jscomp$templatelit$98447280$0=$jscomp.createTemplateTagFirstArg([\"\"]);"
@@ -120,21 +120,23 @@ public final class TranspileOnlyIntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
         options,
-        lines(
-            "class Bar {}", //
-            "class Foo extends (class extends Bar {}) {",
-            "  static x;",
-            "}"),
-        lines(
-            "var Bar = function() {};",
-            "var i0$classextends$var0 = function() {",
-            "  Bar.apply(this, arguments)",
-            "};",
-            "$jscomp.inherits(i0$classextends$var0, Bar);",
-            "var Foo = function() {",
-            "  i0$classextends$var0.apply(this, arguments)",
-            "};",
-            "$jscomp.inherits(Foo, i0$classextends$var0);",
-            "Foo.x;"));
+        """
+        class Bar {}
+        class Foo extends (class extends Bar {}) {
+          static x;
+        }
+        """,
+        """
+        var Bar = function() {};
+        var i0$classextends$var0 = function() {
+          Bar.apply(this, arguments)
+        };
+        $jscomp.inherits(i0$classextends$var0, Bar);
+        var Foo = function() {
+          i0$classextends$var0.apply(this, arguments)
+        };
+        $jscomp.inherits(Foo, i0$classextends$var0);
+        Foo.x;
+        """);
   }
 }

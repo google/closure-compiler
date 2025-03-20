@@ -218,13 +218,25 @@ public final class InferConstsTest extends CompilerTestCase {
   @Test
   public void testGeneratorFunctionVar() {
     assertNotConsts(
-        lines("function *gen() {", "  var x = 0; ", "  while (x < 3)", "    yield x++;", "}"), "x");
+        """
+        function *gen() {
+          var x = 0;
+          while (x < 3)
+            yield x++;
+        }
+        """,
+        "x");
   }
 
   @Test
   public void testGeneratorFunctionConst() {
     assertConsts(
-        lines("function *gen() {", "  var x = 0;", "  yield x;", "}"),
+        """
+        function *gen() {
+          var x = 0;
+          yield x;
+        }
+        """,
         notDeclared("x"),
         inferred("x"));
   }

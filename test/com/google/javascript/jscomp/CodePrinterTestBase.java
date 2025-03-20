@@ -170,17 +170,18 @@ public abstract class CodePrinterTestBase {
     parse(expected); // validate the expected string is valid JS
     assertThat(
             parsePrint(
-                js,
-                newCompilerOptions(
-                    new CompilerOptionBuilder() {
-                      @Override
-                      void setOptions(CompilerOptions options) {
-                        options.setPrettyPrint(false);
-                        options.setLineLengthThreshold(
-                            CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
-                      }
-                    })))
-        .isEqualTo(expected);
+                    js,
+                    newCompilerOptions(
+                        new CompilerOptionBuilder() {
+                          @Override
+                          void setOptions(CompilerOptions options) {
+                            options.setPrettyPrint(false);
+                            options.setLineLengthThreshold(
+                                CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
+                          }
+                        }))
+                .trim())
+        .isEqualTo(expected.trim());
   }
 
   protected void assertPrintSame(String js) {

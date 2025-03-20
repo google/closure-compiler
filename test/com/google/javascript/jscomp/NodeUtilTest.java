@@ -5084,16 +5084,16 @@ public final class NodeUtilTest {
       assertThat(
               NodeUtil.estimateNumLines(
                   parse(
-                      lines(
-                          "/* some",
-                          "long",
-                          "multi",
-                          "line",
-                          "comment",
-                          "*/",
-                          "const x = 1;",
-                          "const y = 2;",
-                          ""))))
+                      """
+                      /* some
+                      long
+                      multi
+                      line
+                      comment
+                      */
+                      const x = 1;
+                      const y = 2;
+                      """)))
           .isEqualTo(9);
     }
   }

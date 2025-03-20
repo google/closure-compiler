@@ -124,18 +124,20 @@ public final class CheckEnumsTest extends CompilerTestCase {
             + " EnumTwo = { FOO: 'some'}",
         ENUM_TYPE_NOT_STRING_OR_NUMBER);
     testWarning(
-        lines(
-            "/** @enum {number} */",
-            "let EnumOne = {  FOO: 1, BAR: 2};",
-            "/** @enum {!EnumOne}*/",
-            "let EnumTwo = { FOO: EnumOne.FOO}"),
+        """
+        /** @enum {number} */
+        let EnumOne = {  FOO: 1, BAR: 2};
+        /** @enum {!EnumOne}*/
+        let EnumTwo = { FOO: EnumOne.FOO}
+        """,
         ENUM_TYPE_NOT_STRING_OR_NUMBER);
     testWarning(
-        lines(
-            "/** @enum {string} */",
-            "let EnumOne = {  FOO: 'foo',  BAR: 'bar'};",
-            "/** @enum {!EnumOne}*/",
-            "let EnumTwo = { FOO: EnumOne.FOO}"),
+        """
+        /** @enum {string} */
+        let EnumOne = {  FOO: 'foo',  BAR: 'bar'};
+        /** @enum {!EnumOne}*/
+        let EnumTwo = { FOO: EnumOne.FOO}
+        """,
         ENUM_TYPE_NOT_STRING_OR_NUMBER);
 
     testWarning(" /** @enum {{x: number}} */ var E = {A: true };", ENUM_TYPE_NOT_STRING_OR_NUMBER);
@@ -212,11 +214,12 @@ public final class CheckEnumsTest extends CompilerTestCase {
     // template lit substitution.
 
     testWarning(
-        lines(
-            "/** @enum {string} */",
-            "let EnumOne = {  FOO: 'foo',  BAR: 'bar'};",
-            "/** @enum {string}*/",
-            "let EnumTwo = { FOO: EnumOne.FOO}"),
+        """
+        /** @enum {string} */
+        let EnumOne = {  FOO: 'foo',  BAR: 'bar'};
+        /** @enum {string}*/
+        let EnumTwo = { FOO: EnumOne.FOO}
+        """,
         NON_STATIC_INITIALIZER_STRING_VALUE_IN_ENUM); // using another string enum as value gets
     // reported
   }

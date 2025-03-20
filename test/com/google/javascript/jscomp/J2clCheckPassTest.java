@@ -55,12 +55,13 @@ public class J2clCheckPassTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 "java/lang/SomeClass.impl.java.js",
-                lines(
-                    "/** @constructor */",
-                    "var SomeClass = function() {};",
-                    "var x = new SomeClass();",
-                    "var y = new SomeClass();",
-                    "var a = x == y;"))));
+                """
+                /** @constructor */
+                var SomeClass = function() {};
+                var x = new SomeClass();
+                var y = new SomeClass();
+                var a = x == y;
+                """)));
   }
 
   @Test
@@ -70,11 +71,12 @@ public class J2clCheckPassTest extends CompilerTestCase {
           srcs(
               SourceFile.fromCode(
                   value,
-                  lines(
-                      "/** @constructor */",
-                      "var SomeClass = function() {};",
-                      "var x = new SomeClass();",
-                      "var a = x == null;"))));
+                  """
+                  /** @constructor */
+                  var SomeClass = function() {};
+                  var x = new SomeClass();
+                  var a = x == null;
+                  """)));
     }
   }
 
@@ -85,11 +87,12 @@ public class J2clCheckPassTest extends CompilerTestCase {
           srcs(
               SourceFile.fromCode(
                   value,
-                  lines(
-                      "/** @constructor */",
-                      "var SomeClass = function() {};",
-                      "var x = new SomeClass();",
-                      "var a = x == undefined;"))));
+                  """
+                  /** @constructor */
+                  var SomeClass = function() {};
+                  var x = new SomeClass();
+                  var a = x == undefined;
+                  """)));
     }
   }
 
@@ -100,12 +103,13 @@ public class J2clCheckPassTest extends CompilerTestCase {
           srcs(
               SourceFile.fromCode(
                   value,
-                  lines(
-                      "/** @constructor */",
-                      "var SomeClass = function() {};",
-                      "var x = new SomeClass();",
-                      "var y = new SomeClass();",
-                      "var a = x == y;"))),
+                  """
+                  /** @constructor */
+                  var SomeClass = function() {};
+                  var x = new SomeClass();
+                  var y = new SomeClass();
+                  var a = x == y;
+                  """)),
           warning(J2CL_REFERENCE_EQUALITY));
     }
   }

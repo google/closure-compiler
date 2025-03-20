@@ -43,49 +43,58 @@ public final class J2clStringValueOfRewriterPassTest extends CompilerTestCase {
         "module$exports$java$lang$String$impl.m_valueOf__java_lang_Object__java_lang_String(null)",
         "String(null)");
     test(
-        lines(
-            "module$exports$java$lang$String$impl",
-            "    .m_valueOf__java_lang_Object__java_lang_String(undefined)"),
+        """
+        module$exports$java$lang$String$impl
+            .m_valueOf__java_lang_Object__java_lang_String(undefined)
+        """,
         "'null'");
     test(
-        lines(
-            "module$exports$java$lang$String$impl",
-            "    .m_valueOf__java_lang_Object__java_lang_String(void 0)"),
+        """
+        module$exports$java$lang$String$impl
+            .m_valueOf__java_lang_Object__java_lang_String(void 0)
+        """,
         "'null'");
     test(
-        lines(
-            "module$exports$java$lang$String$impl",
-            "   .m_valueOf__java_lang_Object__java_lang_String('foo' +",
-            "       module$exports$java$lang$String$impl",
-            "           .m_valueOf__java_lang_Object__java_lang_String(bar))"),
-        lines(
-            "String('foo' + module$exports$java$lang$String$impl",
-            "   .m_valueOf__java_lang_Object__java_lang_String(bar))"));
+        """
+        module$exports$java$lang$String$impl
+           .m_valueOf__java_lang_Object__java_lang_String('foo' +
+               module$exports$java$lang$String$impl
+                   .m_valueOf__java_lang_Object__java_lang_String(bar))
+        """,
+        """
+        String('foo' + module$exports$java$lang$String$impl
+           .m_valueOf__java_lang_Object__java_lang_String(bar))
+        """);
     test(
-        lines(
-            "module$exports$java$lang$String$impl",
-            "   .m_valueOf__java_lang_Object__java_lang_String(foo + 'bar' + baz)"),
+        """
+        module$exports$java$lang$String$impl
+           .m_valueOf__java_lang_Object__java_lang_String(foo + 'bar' + baz)
+        """,
         "String(foo + 'bar' + baz)");
     test(
-        lines(
-            "foo + module$exports$java$lang$String$impl",
-            "   .m_valueOf__java_lang_Object__java_lang_String('bar' + baz)"),
+        """
+        foo + module$exports$java$lang$String$impl
+           .m_valueOf__java_lang_Object__java_lang_String('bar' + baz)
+        """,
         "foo + String('bar' + baz)");
     test(
         "module$exports$java$lang$String$impl.m_valueOf__java_lang_Object__java_lang_String(1)",
         "String(1)");
     test(
-        lines(
-            "module$exports$java$lang$String$impl",
-            "    .m_valueOf__java_lang_Object__java_lang_String(null + foo)"),
+        """
+        module$exports$java$lang$String$impl
+            .m_valueOf__java_lang_Object__java_lang_String(null + foo)
+        """,
         "String(null + foo)");
     testSame(
-        lines(
-            "module$exports$java$lang$String$impl",
-            "   .m_valueOf__java_lang_Object__java_lang_String(window)"));
+        """
+        module$exports$java$lang$String$impl
+           .m_valueOf__java_lang_Object__java_lang_String(window)
+        """);
     testSame(
-        lines(
-            "module$exports$java$lang$String$impl",
-            "    .m_valueOf__java_lang_Object__java_lang_String([])"));
+        """
+        module$exports$java$lang$String$impl
+            .m_valueOf__java_lang_Object__java_lang_String([])
+        """);
   }
 }

@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.integration;
 
-import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilationLevel;
@@ -57,23 +56,23 @@ public final class OptionalChainingIntegrationTest extends IntegrationTestCase {
     externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
     test(
         options,
-        lines(
-            "class MyClass {", //
-            "  method(msg) {",
-            "    console.log(msg);",
-            "  }",
-            "}",
-            "",
-            "/**",
-            " * @param {?MyClass} maybeMyClass",
-            " */",
-            "function maybeLog(maybeMyClass) {",
-            "  maybeMyClass?.method('log message')",
-            "}",
-            "",
-            "maybeLog(null);",
-            "maybeLog(new MyClass());",
-            ""),
+        """
+        class MyClass {
+          method(msg) {
+            console.log(msg);
+          }
+        }
+
+        /**
+         * @param {?MyClass} maybeMyClass
+         */
+        function maybeLog(maybeMyClass) {
+          maybeMyClass?.method('log message')
+        }
+
+        maybeLog(null);
+        maybeLog(new MyClass());
+        """,
         "console.log('log message');");
   }
 
@@ -83,22 +82,22 @@ public final class OptionalChainingIntegrationTest extends IntegrationTestCase {
     externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
     test(
         options,
-        lines(
-            "class MyClass {", //
-            "  method() {",
-            "    return 4;",
-            "  }",
-            "}",
-            "",
-            "/**",
-            " * @param {?MyClass} maybeMyClass",
-            " */",
-            "function maybeLog(maybeMyClass) {",
-            "  maybeMyClass?.method()", // optional chaining call
-            "}",
-            "",
-            "maybeLog(new MyClass());",
-            ""),
+        """
+        class MyClass {
+          method() {
+            return 4;
+          }
+        }
+
+        /**
+         * @param {?MyClass} maybeMyClass
+         */
+        function maybeLog(maybeMyClass) {
+          maybeMyClass?.method() // optional chaining call
+        }
+
+        maybeLog(new MyClass());
+        """,
         "");
   }
 
@@ -108,36 +107,37 @@ public final class OptionalChainingIntegrationTest extends IntegrationTestCase {
     externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
     test(
         options,
-        lines(
-            "class MyClass {", //
-            "  method() {",
-            "    return 4;",
-            "  }",
-            "}",
-            "let x = (new MyClass()).method();", // regular call gets devirtualized and inlined
-            "console.log(x);",
-            ""),
+        """
+        class MyClass {
+          method() {
+            return 4;
+          }
+        }
+        let x = (new MyClass()).method(); // regular call gets devirtualized and inlined
+        console.log(x);
+        """,
         "console.log(4);");
 
     test(
         options,
-        lines(
-            "class MyClass {", //
-            "  method() {",
-            "    return 4;",
-            "  }",
-            "}",
-            "let x = (new MyClass())?.method();",
-            "console.log(x);",
-            ""),
-        lines(
-            "class a {", //
-            "  a() {",
-            "    return 4;",
-            "  }",
-            "}",
-            // optional call is not devirtualized and not inlined
-            "console.log((new a)?.a());"));
+        """
+        class MyClass {
+          method() {
+            return 4;
+          }
+        }
+        let x = (new MyClass())?.method();
+        console.log(x);
+        """,
+        """
+        class a {
+          a() {
+            return 4;
+          }
+        }
+        // optional call is not devirtualized and not inlined
+        console.log((new a)?.a());
+        """);
   }
 
   @Test

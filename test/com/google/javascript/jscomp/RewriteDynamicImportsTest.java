@@ -126,11 +126,12 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
             ImmutableList.of(
                 SourceFile.fromCode(
                     "i0.js",
-                    lines(
-                        "const a$$module$i0 = 1;",
-                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                        "/** @const */ var module$i0 = {};",
-                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;")),
+                    """
+                    const a$$module$i0 = 1;
+                    var $jscompDefaultExport$$module$i0 = a$$module$i0;
+                    /** @const */ var module$i0 = {};
+                    /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
+                    """),
                 SourceFile.fromCode("i1.js", "Promise.resolve();")));
 
     test(srcs(new JSChunk[] {actualChunk0}), expectedSrcs);
@@ -148,11 +149,12 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
             ImmutableList.of(
                 SourceFile.fromCode(
                     "i0.js",
-                    lines(
-                        "const a$$module$i0 = 1;",
-                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                        "/** @const */ var module$i0 = {};",
-                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;")),
+                    """
+                    const a$$module$i0 = 1;
+                    var $jscompDefaultExport$$module$i0 = a$$module$i0;
+                    /** @const */ var module$i0 = {};
+                    /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
+                    """),
                 SourceFile.fromCode("i1.js", "const ns = Promise.resolve(module$i0);")));
 
     test(srcs(new JSChunk[] {actualChunk0}), expectedSrcs);
@@ -169,11 +171,12 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
             ImmutableList.of(
                 SourceFile.fromCode(
                     "i0.js",
-                    lines(
-                        "const a$$module$i0 = 1;",
-                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                        "/** @const */ var module$i0 = {};",
-                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;")),
+                    """
+                    const a$$module$i0 = 1;
+                    var $jscompDefaultExport$$module$i0 = a$$module$i0;
+                    /** @const */ var module$i0 = {};
+                    /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
+                    """),
                 SourceFile.fromCode("i1.js", "const ns = Promise.resolve(module$i0);")));
 
     test(
@@ -196,11 +199,12 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
             ImmutableList.of(
                 SourceFile.fromCode(
                     "i0.js",
-                    lines(
-                        "const a$$module$i0 = 1;",
-                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                        "/** @const */ var module$i0 = {};",
-                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;")),
+                    """
+                    const a$$module$i0 = 1;
+                    var $jscompDefaultExport$$module$i0 = a$$module$i0;
+                    /** @const */ var module$i0 = {};
+                    /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
+                    """),
                 SourceFile.fromCode("i1.js", "import('./chunk0.js');")));
 
     test(srcs(new JSChunk[] {actualChunk0, actualChunk1}), expectedSrcs);
@@ -219,11 +223,12 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
             ImmutableList.of(
                 SourceFile.fromCode(
                     "i0.js",
-                    lines(
-                        "const a$$module$i0 = 1;",
-                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                        "/** @const */ var module$i0 = {};",
-                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;")),
+                    """
+                    const a$$module$i0 = 1;
+                    var $jscompDefaultExport$$module$i0 = a$$module$i0;
+                    /** @const */ var module$i0 = {};
+                    /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
+                    """),
                 SourceFile.fromCode("i1.js", "imprt_('./chunk0.js');")));
 
     test(srcs(new JSChunk[] {actualChunk0, actualChunk1}), expectedSrcs);
@@ -243,16 +248,18 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
             ImmutableList.of(
                 SourceFile.fromCode(
                     "i0.js",
-                    lines(
-                        "const a$$module$i0 = 1;",
-                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                        "/** @const */ var module$i0 = {};",
-                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;")),
+                    """
+                    const a$$module$i0 = 1;
+                    var $jscompDefaultExport$$module$i0 = a$$module$i0;
+                    /** @const */ var module$i0 = {};
+                    /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
+                    """),
                 SourceFile.fromCode(
                     "i1.js",
-                    lines(
-                        "const nsPromise =", //
-                        "    import('./chunk0.js').then(() => module$i0);"))));
+                    """
+                    const nsPromise =
+                        import('./chunk0.js').then(() => module$i0);
+                    """)));
 
     test(srcs(new JSChunk[] {actualChunk0, actualChunk1}), expectedSrcs);
   }
@@ -270,11 +277,12 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
             ImmutableList.of(
                 SourceFile.fromCode(
                     "i0.js",
-                    lines(
-                        "const a$$module$i0 = 1;",
-                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                        "/** @const */ var module$i0 = {};",
-                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;")),
+                    """
+                    const a$$module$i0 = 1;
+                    var $jscompDefaultExport$$module$i0 = a$$module$i0;
+                    /** @const */ var module$i0 = {};
+                    /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
+                    """),
                 SourceFile.fromCode(
                     "i1.js", "const nsPromise = imprt_('./chunk0.js').then(() => module$i0);")));
 
@@ -286,18 +294,20 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
     this.dynamicImportAlias = "ns.imprt_";
     ignoreWarnings(LOAD_WARNING);
     test(
-        lines(
-            "/** @const */", //
-            "const ns = {};",
-            "/** @const */",
-            "ns.imprt_ = function(path) {};",
-            "import('./other.js');"),
-        lines(
-            "/** @const */", //
-            "const ns = {};",
-            "/** @const */",
-            "ns.imprt_ = function(path) {};",
-            "ns.imprt_('./other.js');"));
+        """
+        /** @const */
+        const ns = {};
+        /** @const */
+        ns.imprt_ = function(path) {};
+        import('./other.js');
+        """,
+        """
+        /** @const */
+        const ns = {};
+        /** @const */
+        ns.imprt_ = function(path) {};
+        ns.imprt_('./other.js');
+        """);
   }
 
   @Test
@@ -365,11 +375,12 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
             ImmutableList.of(
                 SourceFile.fromCode(
                     "i0.js",
-                    lines(
-                        "const a$$module$i0 = 1;",
-                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                        "/** @const */ var module$i0 = {};",
-                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;")),
+                    """
+                    const a$$module$i0 = 1;
+                    var $jscompDefaultExport$$module$i0 = a$$module$i0;
+                    /** @const */ var module$i0 = {};
+                    /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
+                    """),
                 SourceFile.fromCode("i1.js", "Promise.resolve();")));
 
     test(srcs(new JSChunk[] {actualChunk0}), expectedSrcs);
@@ -389,11 +400,12 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
             ImmutableList.of(
                 SourceFile.fromCode(
                     "i0.js",
-                    lines(
-                        "const a$$module$i0 = 1;",
-                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                        "/** @const */ var module$i0 = {};",
-                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;")),
+                    """
+                    const a$$module$i0 = 1;
+                    var $jscompDefaultExport$$module$i0 = a$$module$i0;
+                    /** @const */ var module$i0 = {};
+                    /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
+                    """),
                 SourceFile.fromCode("i1.js", "const ns = Promise.resolve(module$i0);")));
 
     test(srcs(new JSChunk[] {actualChunk0}), expectedSrcs);
@@ -415,11 +427,12 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
             ImmutableList.of(
                 SourceFile.fromCode(
                     "i0.js",
-                    lines(
-                        "const a$$module$i0 = 1;",
-                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                        "/** @const */ var module$i0 = {};",
-                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;")),
+                    """
+                    const a$$module$i0 = 1;
+                    var $jscompDefaultExport$$module$i0 = a$$module$i0;
+                    /** @const */ var module$i0 = {};
+                    /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
+                    """),
                 SourceFile.fromCode("i1.js", "import('./chunk0.js');")));
 
     test(srcs(new JSChunk[] {actualChunk0, actualChunk1}), expectedSrcs);
@@ -441,11 +454,12 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
             ImmutableList.of(
                 SourceFile.fromCode(
                     "i0.js",
-                    lines(
-                        "const a$$module$i0 = 1;",
-                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                        "/** @const */ var module$i0 = {};",
-                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;")),
+                    """
+                    const a$$module$i0 = 1;
+                    var $jscompDefaultExport$$module$i0 = a$$module$i0;
+                    /** @const */ var module$i0 = {};
+                    /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
+                    """),
                 SourceFile.fromCode(
                     "i1.js",
                     lines(

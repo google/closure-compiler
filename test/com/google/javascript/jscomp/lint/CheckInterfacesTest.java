@@ -52,14 +52,23 @@ public final class CheckInterfacesTest extends CompilerTestCase {
         CheckInterfaces.INTERFACE_CONSTRUCTOR_SHOULD_NOT_TAKE_ARGS);
 
     testSame(
-        lines("var ns = {};\n", "/** @interface */\n", "ns.SomeInterface = function(x) {};"),
+        """
+        var ns = {};
+
+        /** @interface */
+
+        ns.SomeInterface = function(x) {};
+        """,
         CheckInterfaces.INTERFACE_CONSTRUCTOR_SHOULD_NOT_TAKE_ARGS);
 
     testSame(
-        lines(
-            "var ns = {};\n",
-            "/** @interface */\n",
-            "ns.SomeInterface = class { constructor(x) {}};"),
+        """
+        var ns = {};
+
+        /** @interface */
+
+        ns.SomeInterface = class { constructor(x) {}};
+        """,
         CheckInterfaces.INTERFACE_CONSTRUCTOR_SHOULD_NOT_TAKE_ARGS);
   }
 
@@ -81,27 +90,30 @@ public final class CheckInterfacesTest extends CompilerTestCase {
     testSame("/** @interface */ class C { constructor() { /** @type {string} */ this.foo; }}");
 
     testSame(
-        lines(
-            "var ns = {};",
-            "/** @interface */",
-            "ns.SomeInterface = function() { /** @type {string} */ this.foo; };"));
+        """
+        var ns = {};
+        /** @interface */
+        ns.SomeInterface = function() { /** @type {string} */ this.foo; };
+        """);
 
     testSame(
-        lines(
-            "var ns = {};",
-            "/** @interface */",
-            "ns.SomeInterface = class { constructor() { /** @type {string} */ this.foo; }; }"));
+        """
+        var ns = {};
+        /** @interface */
+        ns.SomeInterface = class { constructor() { /** @type {string} */ this.foo; }; }
+        """);
   }
 
   @Test
   public void testInterfaceMethodNotEmpty() {
     testSame(
-        lines(
-            "/** @interface */ ", //
-            "class C { ",
-            "  constructor() {} ",
-            "  A() { this.foo; }",
-            "}"),
+        """
+        /** @interface */
+        class C {
+          constructor() {}
+          A() { this.foo; }
+        }
+        """,
         CheckInterfaces.INTERFACE_CLASS_NONSTATIC_METHOD_NOT_EMPTY);
   }
 
@@ -167,13 +179,14 @@ public final class CheckInterfacesTest extends CompilerTestCase {
   @Test
   public void testInterfaceSetters() {
     testSame(
-        lines(
-            "/** @interface */", //
-            "class C {",
-            "  set One(x) {",
-            "   this.one = x;",
-            "  }",
-            "}"),
+        """
+        /** @interface */
+        class C {
+          set One(x) {
+           this.one = x;
+          }
+        }
+        """,
         CheckInterfaces.INTERFACE_CLASS_NONSTATIC_METHOD_NOT_EMPTY);
   }
 
@@ -181,13 +194,14 @@ public final class CheckInterfacesTest extends CompilerTestCase {
   public void testInterfaceEs6ClassDeclaration_havingStaticMethod() {
     testSame(
         srcs(
-            lines(
-                "/** @interface */",
-                "class I {",
-                "  constructor() {}",
-                "  static foo() {}",
-                "}",
-                "I.foo();")),
+            """
+            /** @interface */
+            class I {
+              constructor() {}
+              static foo() {}
+            }
+            I.foo();
+            """),
         warning(CheckInterfaces.STATIC_MEMBER_FUNCTION_IN_INTERFACE_CLASS)
             .withMessageContaining(
                 "Consider pulling out the static method into a flat name as I_foo"));
@@ -197,13 +211,14 @@ public final class CheckInterfacesTest extends CompilerTestCase {
   public void testInterfaceEs6ClassAssignment_havingStaticMethod() {
     testSame(
         srcs(
-            lines(
-                "/** @interface */",
-                "let I = class {",
-                "  constructor() {}",
-                "  static foo() {}",
-                "}",
-                "I.foo();")),
+            """
+            /** @interface */
+            let I = class {
+              constructor() {}
+              static foo() {}
+            }
+            I.foo();
+            """),
         warning(CheckInterfaces.STATIC_MEMBER_FUNCTION_IN_INTERFACE_CLASS)
             .withMessageContaining(
                 "Consider pulling out the static method into a flat name as I_foo"));
@@ -213,14 +228,15 @@ public final class CheckInterfacesTest extends CompilerTestCase {
   public void testInterfaceEs6ClassAssignment_havingStaticMethod2() {
     testSame(
         srcs(
-            lines(
-                "let C;",
-                "/** @interface */",
-                "C.I = class {",
-                "  constructor() {}",
-                "  static foo() {}",
-                "}",
-                "C.I.foo();")),
+            """
+            let C;
+            /** @interface */
+            C.I = class {
+              constructor() {}
+              static foo() {}
+            }
+            C.I.foo();
+            """),
         warning(CheckInterfaces.STATIC_MEMBER_FUNCTION_IN_INTERFACE_CLASS)
             .withMessageContaining(
                 "Consider pulling out the static method into a flat name as C.I_foo"));
@@ -245,51 +261,55 @@ public final class CheckInterfacesTest extends CompilerTestCase {
   @Test
   public void testRecordWithFieldDeclarations() {
     testSame(
-        lines(
-            "/** @record */",
-            "function R() {",
-            "  /** @type {string} */",
-            "  this.foo;",
-            "",
-            "  /** @type {number} */",
-            "  this.bar;",
-            "}"));
+        """
+        /** @record */
+        function R() {
+          /** @type {string} */
+          this.foo;
+
+          /** @type {number} */
+          this.bar;
+        }
+        """);
   }
 
   @Test
   public void testRecordWithFieldDeclarationsMissingJSDoc() {
     testSame(
-        lines(
-            "/** @record */",
-            "function R() {",
-            "  // This should have a JSDoc.",
-            "  this.noJSDoc;",
-            "",
-            "}"),
+        """
+        /** @record */
+        function R() {
+          // This should have a JSDoc.
+          this.noJSDoc;
+
+        }
+        """,
         CheckInterfaces.MISSING_JSDOC_IN_DECLARATION_STATEMENT);
   }
 
   @Test
   public void testRecordWithOtherContents() {
     testSame(
-        lines(
-            "/** @record */", //
-            "function R() {",
-            "  /** @type {string} */",
-            "  let foo = '';",
-            "}"),
+        """
+        /** @record */
+        function R() {
+          /** @type {string} */
+          let foo = '';
+        }
+        """,
         CheckInterfaces.NON_DECLARATION_STATEMENT_IN_INTERFACE);
   }
 
   @Test
   public void testInterfaceWithOtherContents() {
     testSame(
-        lines(
-            "/** @interface */", //
-            "function R() {",
-            "  /** @type {string} */",
-            "  let foo = '';",
-            "}"),
+        """
+        /** @interface */
+        function R() {
+          /** @type {string} */
+          let foo = '';
+        }
+        """,
         CheckInterfaces.NON_DECLARATION_STATEMENT_IN_INTERFACE);
   }
 }

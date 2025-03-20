@@ -49,56 +49,82 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
   @Test
   public void testReplaceSimpleMessage() {
     test(
-        lines("/** @desc A simple message. */\n", "var MSG_A = goog.getMsg('Hello world');"),
-        lines(
-            "/** @desc A simple message. */\n",
-            "var MSG_A=chrome.i18n.getMessage('8660696502365331902');"));
+        """
+        /** @desc A simple message. */
+
+        var MSG_A = goog.getMsg('Hello world');
+        """,
+        """
+        /** @desc A simple message. */
+
+        var MSG_A=chrome.i18n.getMessage('8660696502365331902');
+        """);
 
     test(
-        lines(
-            "/** @desc A message attached to an object. */\n",
-            "foo.bar.MSG_B = goog.getMsg('Goodbye world');"),
-        lines(
-            "/** @desc A message attached to an object. */\n",
-            "foo.bar.MSG_B=chrome.i18n.getMessage('2356086230621084760');"));
+        """
+        /** @desc A message attached to an object. */
+
+        foo.bar.MSG_B = goog.getMsg('Goodbye world');
+        """,
+        """
+        /** @desc A message attached to an object. */
+
+        foo.bar.MSG_B=chrome.i18n.getMessage('2356086230621084760');
+        """);
   }
 
   @Test
   public void testReplaceSinglePlaceholder() {
     test(
-        lines(
-            "/** @desc A message with one placeholder. */\n",
-            "var MSG_C = goog.getMsg('Hello, {$name}', {name: 'Tyler'});"),
-        lines(
-            "/** @desc A message with one placeholder. */\n",
-            "var MSG_C=chrome.i18n.getMessage('4985325380591528435', ['Tyler']);"));
+        """
+        /** @desc A message with one placeholder. */
+
+        var MSG_C = goog.getMsg('Hello, {$name}', {name: 'Tyler'});
+        """,
+        """
+        /** @desc A message with one placeholder. */
+
+        var MSG_C=chrome.i18n.getMessage('4985325380591528435', ['Tyler']);
+        """);
   }
 
   @Test
   public void testReplaceTwoPlaceholders() {
     test(
-        lines(
-            "/** @desc A message with two placeholders. */\n",
-            "var MSG_D = goog.getMsg('{$greeting}, {$name}', ",
-            "{greeting: 'Hi', name: 'Tyler'});"),
-        lines(
-            "/** @desc A message with two placeholders. */\n",
-            "var MSG_D=chrome.i18n.getMessage('3605047247574980322', ",
-            "['Hi', 'Tyler']);"));
+        """
+        /** @desc A message with two placeholders. */
+
+        var MSG_D = goog.getMsg('{$greeting}, {$name}',
+        {greeting: 'Hi', name: 'Tyler'});
+        """,
+        """
+        /** @desc A message with two placeholders. */
+
+        var MSG_D=chrome.i18n.getMessage('3605047247574980322',
+        ['Hi', 'Tyler']);
+        """);
 
     test(
-        lines(
-            "/** @desc A message with two placeholders, but their order is\n",
-            " * reversed in the object literal. (Shouldn't make a difference.)\n",
-            " */\n",
-            "var MSG_E = goog.getMsg('{$greeting}, {$name}!', ",
-            "{name: 'Tyler', greeting: 'Hi'});"),
-        lines(
-            "/** @desc A message with two placeholders, but their order is\n",
-            " * reversed in the object literal. (Shouldn't make a difference.)\n",
-            " */\n",
-            "var MSG_E=chrome.i18n.getMessage('691522386483664339', ",
-            "['Hi', 'Tyler']);"));
+        """
+        /** @desc A message with two placeholders, but their order is
+
+         * reversed in the object literal. (Shouldn't make a difference.)
+
+         */
+
+        var MSG_E = goog.getMsg('{$greeting}, {$name}!',
+        {name: 'Tyler', greeting: 'Hi'});
+        """,
+        """
+        /** @desc A message with two placeholders, but their order is
+
+         * reversed in the object literal. (Shouldn't make a difference.)
+
+         */
+
+        var MSG_E=chrome.i18n.getMessage('691522386483664339',
+        ['Hi', 'Tyler']);
+        """);
   }
 
   @Test
@@ -112,124 +138,165 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
   @Test
   public void testReplaceTwoPlaceholdersNonAlphaOrder() {
     test(
-        lines(
-            "/** @desc A message with two placeholders not in order .*/\n",
-            "var MSG_G = goog.getMsg('{$name}: {$greeting}', ",
-            "{greeting: 'Salutations', name: 'Tyler'});"),
-        lines(
-            "/** @desc A message with two placeholders not in order .*/\n",
-            "var MSG_G=chrome.i18n.getMessage('7437383242562773138', ",
-            "['Salutations', 'Tyler']);"));
+        """
+        /** @desc A message with two placeholders not in order .*/
+
+        var MSG_G = goog.getMsg('{$name}: {$greeting}',
+        {greeting: 'Salutations', name: 'Tyler'});
+        """,
+        """
+        /** @desc A message with two placeholders not in order .*/
+
+        var MSG_G=chrome.i18n.getMessage('7437383242562773138',
+        ['Salutations', 'Tyler']);
+        """);
   }
 
   @Test
   public void testReplaceSinglePlaceholderComputedProp() {
     testError(
-        lines(
-            "/** @desc A message with one placeholder. */\n",
-            "var MSG_H = goog.getMsg('Hello, {$name}', {['name']: 'Tyler'});"),
+        """
+        /** @desc A message with one placeholder. */
+
+        var MSG_H = goog.getMsg('Hello, {$name}', {['name']: 'Tyler'});
+        """,
         JsMessageVisitor.MESSAGE_TREE_MALFORMED);
   }
 
   @Test
   public void testReplaceSimpleMessageWithLet() {
     test(
-        lines("/** @desc A simple message. */\n", "let MSG_I = goog.getMsg('Hello world');"),
-        lines(
-            "/** @desc A simple message. */\n",
-            "let MSG_I = chrome.i18n.getMessage('987871171253827787');"));
+        """
+        /** @desc A simple message. */
+
+        let MSG_I = goog.getMsg('Hello world');
+        """,
+        """
+        /** @desc A simple message. */
+
+        let MSG_I = chrome.i18n.getMessage('987871171253827787');
+        """);
   }
 
   @Test
   public void testReplaceSimpleMessageWithConst() {
     test(
-        lines("/** @desc A simple message. */\n", "const MSG_J = goog.getMsg('Hello world');"),
-        lines(
-            "/** @desc A simple message. */\n",
-            "const MSG_J =chrome.i18n.getMessage('3477894568604521782');"));
+        """
+        /** @desc A simple message. */
+
+        const MSG_J = goog.getMsg('Hello world');
+        """,
+        """
+        /** @desc A simple message. */
+
+        const MSG_J =chrome.i18n.getMessage('3477894568604521782');
+        """);
   }
 
   @Test
   public void testReplaceTemplatedMessage() {
     testError(
-        lines(
-            "const greeting = '{$greeting}'",
-            "/** @desc A simple message */\n",
-            "var MSG_K = goog.getMsg(`${greeting}, Tyler`, {greeting: 'Hello'});"),
+        """
+        const greeting = '{$greeting}'
+        /** @desc A simple message */
+
+        var MSG_K = goog.getMsg(`${greeting}, Tyler`, {greeting: 'Hello'});
+        """,
         JsMessageVisitor.MESSAGE_TREE_MALFORMED);
   }
 
   @Test
   public void testReplaceExternalMessage() {
     test(
-        lines(
-            "/** @desc A message that was extracted with SoyMsgExtractor. */\n",
-            "var MSG_EXTERNAL_1357902468 = goog.getMsg('Hello world');"),
-        lines(
-            "/** @desc A message that was extracted with SoyMsgExtractor. */\n",
-            "var MSG_EXTERNAL_1357902468 = chrome.i18n.getMessage('1357902468');"));
+        """
+        /** @desc A message that was extracted with SoyMsgExtractor. */
+
+        var MSG_EXTERNAL_1357902468 = goog.getMsg('Hello world');
+        """,
+        """
+        /** @desc A message that was extracted with SoyMsgExtractor. */
+
+        var MSG_EXTERNAL_1357902468 = chrome.i18n.getMessage('1357902468');
+        """);
   }
 
   /** Test that messages are handled correctly if they contain the same placeholder twice. */
   @Test
   public void testReplaceMessageWithDuplicatePlaceholders() {
     test(
-        lines(
-            "/** @desc A message that contains two instances of the same placeholder. */\n",
-            "var MSG_EXTERNAL_987654321 = goog.getMsg(",
-            "'{$startDiv_1}You are signed in as{$endDiv}{$img}{$startDiv_2}{$name}{$endDiv}',",
-            "{'startDiv_1': '<div>',",
-            "'endDiv': '</div>',",
-            "'img': '<img src=\"http://example.com/photo.png\">',",
-            "'startDiv_2': '<div class=\"name\">',",
-            "'name': name});"),
-        lines(
-            "/** @desc A message that contains two instances of the same placeholder. */\n",
-            "var MSG_EXTERNAL_987654321 = chrome.i18n.getMessage('987654321', ",
-            "[",
-            "'</div>', ", // endDiv, only included once even though it appears twice in the message.
-            "'<img src=\"http://example.com/photo.png\">', ", // img
-            "name, ", // name
-            "'<div>', ", // startDiv_1
-            "'<div class=\"name\">'", // startDiv_2
-            "]);"));
+        """
+        /** @desc A message that contains two instances of the same placeholder. */
+
+        var MSG_EXTERNAL_987654321 = goog.getMsg(
+        '{$startDiv_1}You are signed in as{$endDiv}{$img}{$startDiv_2}{$name}{$endDiv}',
+        {'startDiv_1': '<div>',
+        'endDiv': '</div>',
+        'img': '<img src="http://example.com/photo.png">',
+        'startDiv_2': '<div class="name">',
+        'name': name});
+        """,
+        """
+        /** @desc A message that contains two instances of the same placeholder. */
+
+        var MSG_EXTERNAL_987654321 = chrome.i18n.getMessage('987654321',
+        [
+        '</div>',  // endDiv, only included once even though it appears twice in the message.
+        '<img src="http://example.com/photo.png">',  // img
+        name,  // name
+        '<div>',  // startDiv_1
+        '<div class="name">' // startDiv_2
+        ]);
+        """);
   }
 
   @Test
   public void testReplaceMessageWithHtml() {
     test(
-        lines(
-            "/** @desc A message with one placeholder. */\n",
-            "var MSG_C = goog.getMsg('Hello, {$name}', {name: 'Tyler'}, {html: true});"),
-        lines(
-            "/** @desc A message with one placeholder. */\n",
-            "var MSG_C=chrome.i18n.getMessage.apply(null, ['4985325380591528435',"
-                + " ['Tyler']].concat((/Chrome\\/(\\d+)/.exec(navigator.userAgent) || [])[1] >= 79"
-                + " ? [{escapeLt: true}] : []));"));
+        """
+        /** @desc A message with one placeholder. */
+
+        var MSG_C = goog.getMsg('Hello, {$name}', {name: 'Tyler'}, {html: true});
+        """,
+        """
+/** @desc A message with one placeholder. */
+
+var MSG_C=chrome.i18n.getMessage.apply(null, ['4985325380591528435', ['Tyler']].concat((/Chrome\\/(\\d+)/.exec(navigator.userAgent) || [])[1] >= 79 ? [{escapeLt: true}] : []));
+""");
 
     test(
-        lines(
-            "/** @desc A simple message. */\n",
-            "var MSG_A = goog.getMsg('Hello world', {}, {html: true});"),
-        lines(
-            "/** @desc A simple message. */\n",
-            "var MSG_A=chrome.i18n.getMessage.apply(null, ['8660696502365331902',"
-                + " []].concat((/Chrome\\/(\\d+)/.exec(navigator.userAgent) || [])[1] >= 79 ?"
-                + " [{escapeLt: true}] : []));"));
+        """
+        /** @desc A simple message. */
+
+        var MSG_A = goog.getMsg('Hello world', {}, {html: true});
+        """,
+        """
+/** @desc A simple message. */
+
+var MSG_A=chrome.i18n.getMessage.apply(null, ['8660696502365331902', []].concat((/Chrome\\/(\\d+)/.exec(navigator.userAgent) || [])[1] >= 79 ? [{escapeLt: true}] : []));
+""");
 
     test(
-        lines(
-            "/** @desc A simple message. */\n",
-            "var MSG_A = goog.getMsg('Hello world', {}, {html: false});"),
-        lines(
-            "/** @desc A simple message. */\n",
-            "var MSG_A=chrome.i18n.getMessage('8660696502365331902');"));
+        """
+        /** @desc A simple message. */
+
+        var MSG_A = goog.getMsg('Hello world', {}, {html: false});
+        """,
+        """
+        /** @desc A simple message. */
+
+        var MSG_A=chrome.i18n.getMessage('8660696502365331902');
+        """);
 
     test(
-        lines(
-            "/** @desc A simple message. */\n", "var MSG_A = goog.getMsg('Hello world', {}, {});"),
-        lines(
-            "/** @desc A simple message. */\n",
-            "var MSG_A=chrome.i18n.getMessage('8660696502365331902');"));
+        """
+        /** @desc A simple message. */
+
+        var MSG_A = goog.getMsg('Hello world', {}, {});
+        """,
+        """
+        /** @desc A simple message. */
+
+        var MSG_A=chrome.i18n.getMessage('8660696502365331902');
+        """);
   }
 }

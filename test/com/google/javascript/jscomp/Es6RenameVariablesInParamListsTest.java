@@ -55,168 +55,205 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
     test("var x = 5; function f(y=x) { var x; }", "var x = 5; function f(y=x) { var x$0; }");
 
     test(
-        lines(
-            "function x() {}",
-            "function f(y=(function y() { return x(); }())) {",
-            "  var x; y++;",
-            "}"),
-        lines(
-            "function x() {}",
-            "function f(y=(function y() { return x(); }())) {",
-            "  var x$0; y++;",
-            "}"));
+        """
+        function x() {}
+        function f(y=(function y() { return x(); }())) {
+          var x; y++;
+        }
+        """,
+        """
+        function x() {}
+        function f(y=(function y() { return x(); }())) {
+          var x$0; y++;
+        }
+        """);
 
     test(
-        lines(
-            "function x() {}",
-            "function f(y=(function y() { return x(); }())) {",
-            "  var x = 0;",
-            "  { let x = 0; x++; }",
-            "  x++;",
-            "}"),
-        lines(
-            "function x() {}",
-            "function f(y=(function y() { return x(); }())) {",
-            "  var x$0 = 0;",
-            "  { let x = 0; x++; }",
-            "  x$0++;",
-            "}"));
+        """
+        function x() {}
+        function f(y=(function y() { return x(); }())) {
+          var x = 0;
+          { let x = 0; x++; }
+          x++;
+        }
+        """,
+        """
+        function x() {}
+        function f(y=(function y() { return x(); }())) {
+          var x$0 = 0;
+          { let x = 0; x++; }
+          x$0++;
+        }
+        """);
 
     test(
-        lines(
-            "function x() {}",
-            "function f(y=(function y() { return x(); }())) {",
-            "  var x = 0; { x++ };",
-            "}"),
-        lines(
-            "function x() {}",
-            "function f(y=(function y() { return x(); }())) {",
-            "  var x$0 = 0; { x$0++ };",
-            "}"));
+        """
+        function x() {}
+        function f(y=(function y() { return x(); }())) {
+          var x = 0; { x++ };
+        }
+        """,
+        """
+        function x() {}
+        function f(y=(function y() { return x(); }())) {
+          var x$0 = 0; { x$0++ };
+        }
+        """);
 
     test(
-        lines(
-            "function f(a = x, b = y) {",
-            "  var y, x;",
-            "  return function() { var x = () => y };",
-            "}"),
-        lines(
-            "function f(a = x, b = y) {",
-            "  var y$0, x$1;",
-            "  return function() { var x = () => y$0 };",
-            "}"));
+        """
+        function f(a = x, b = y) {
+          var y, x;
+          return function() { var x = () => y };
+        }
+        """,
+        """
+        function f(a = x, b = y) {
+          var y$0, x$1;
+          return function() { var x = () => y$0 };
+        }
+        """);
 
     test(
-        lines("var x = 4;", "function f(a=x) { let x = 5; { let x = 99; } return a + x; }"),
-        lines("var x = 4;", "function f(a=x) { let x$0 = 5; { let x = 99; } return a + x$0; }"));
+        """
+        var x = 4;
+        function f(a=x) { let x = 5; { let x = 99; } return a + x; }
+        """,
+        """
+        var x = 4;
+        function f(a=x) { let x$0 = 5; { let x = 99; } return a + x$0; }
+        """);
   }
 
   @Test
   public void testRenameFunction() {
     test(
-        lines("function x() {}", "function f(y=x()) {", "  x();", "  function x() {}", "}"),
-        lines("function x() {}", "function f(y=x()) {", "  x$0();", "  function x$0() {}", "}"));
+        """
+        function x() {}
+        function f(y=x()) {
+          x();
+          function x() {}
+        }
+        """,
+        """
+        function x() {}
+        function f(y=x()) {
+          x$0();
+          function x$0() {}
+        }
+        """);
   }
 
   @Test
   public void testGlobalDeclaration() {
     ignoreWarnings(TypeCheck.FUNCTION_MASKS_VARIABLE);
     test(
-        lines(
-            "function x() {}",
-            "function f(y=(function y() { w = 5; return w; }())) {",
-            "  let x = w;",
-            "  var w = 3;",
-            "  return w;",
-            "}"),
-        lines(
-            "function x() {}",
-            "function f(y=(function y() { w = 5; return w; }())) {",
-            "  let x = w$0;",
-            "  var w$0 = 3;",
-            "  return w$0;",
-            "}"));
+        """
+        function x() {}
+        function f(y=(function y() { w = 5; return w; }())) {
+          let x = w;
+          var w = 3;
+          return w;
+        }
+        """,
+        """
+        function x() {}
+        function f(y=(function y() { w = 5; return w; }())) {
+          let x = w$0;
+          var w$0 = 3;
+          return w$0;
+        }
+        """);
 
     testSame(
-        lines(
-            "function x() {}",
-            "function f(y=(function () { w = 5; return w; }())) {",
-            "  w;",
-            "  return w;",
-            "}"));
+        """
+        function x() {}
+        function f(y=(function () { w = 5; return w; }())) {
+          w;
+          return w;
+        }
+        """);
 
     test(
-        lines(
-            "function x() {}",
-            "function f(y=(function () { w = 5; return w; }())) {",
-            "  w;",
-            "  var w = 3;",
-            "  return w;",
-            "}"),
-        lines(
-            "function x() {}",
-            "function f(y=(function () { w = 5; return w; }())) {",
-            "  w$0;",
-            "  var w$0 = 3;",
-            "  return w$0;",
-            "}"));
+        """
+        function x() {}
+        function f(y=(function () { w = 5; return w; }())) {
+          w;
+          var w = 3;
+          return w;
+        }
+        """,
+        """
+        function x() {}
+        function f(y=(function () { w = 5; return w; }())) {
+          w$0;
+          var w$0 = 3;
+          return w$0;
+        }
+        """);
 
     test(
-        lines(
-            "function x() {}",
-            "function f(y=(function () { w = 5; return w; }())) {",
-            "  w;",
-            "  let w = 3;",
-            "  return w;",
-            "}"),
-        lines(
-            "function x() {}",
-            "function f(y=(function () { w = 5; return w; }())) {",
-            "  w$0;",
-            "  let w$0 = 3;",
-            "  return w$0;",
-            "}"));
+        """
+        function x() {}
+        function f(y=(function () { w = 5; return w; }())) {
+          w;
+          let w = 3;
+          return w;
+        }
+        """,
+        """
+        function x() {}
+        function f(y=(function () { w = 5; return w; }())) {
+          w$0;
+          let w$0 = 3;
+          return w$0;
+        }
+        """);
   }
 
   @Test
   public void testMultipleDefaultParams() {
     test(
-        lines(
-            "function x() {}",
-            "var y = 1;",
-            "function f(z=x, w=y) {",
-            "  let x = y;",
-            "  var y = 3;",
-            "  return w;",
-            "}"),
-        lines(
-            "function x() {}",
-            "var y = 1;",
-            "function f(z=x, w=y) {",
-            "  let x$0 = y$1;",
-            "  var y$1 = 3;",
-            "  return w;",
-            "}"));
+        """
+        function x() {}
+        var y = 1;
+        function f(z=x, w=y) {
+          let x = y;
+          var y = 3;
+          return w;
+        }
+        """,
+        """
+        function x() {}
+        var y = 1;
+        function f(z=x, w=y) {
+          let x$0 = y$1;
+          var y$1 = 3;
+          return w;
+        }
+        """);
 
     test(
-        lines(
-            "function x() {}",
-            "var y = 1;",
-            "function f(z=x, w=y) {",
-            "  var x = 0;",
-            "  { let y = 0; y++; }",
-            "  { var y = 0; y++; }",
-            "  x++;",
-            "}"),
-        lines(
-            "function x() {}",
-            "var y = 1;",
-            "function f(z=x, w=y) {",
-            "  var x$0 = 0;",
-            "  { let y = 0; y++; }",
-            "  { var y$1 = 0; y$1++; }",
-            "  x$0++;",
-            "}"));
+        """
+        function x() {}
+        var y = 1;
+        function f(z=x, w=y) {
+          var x = 0;
+          { let y = 0; y++; }
+          { var y = 0; y++; }
+          x++;
+        }
+        """,
+        """
+        function x() {}
+        var y = 1;
+        function f(z=x, w=y) {
+          var x$0 = 0;
+          { let y = 0; y++; }
+          { var y$1 = 0; y$1++; }
+          x$0++;
+        }
+        """);
   }
 
   @Test

@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.disambiguate;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.disambiguate.ColorGraphBuilder.EdgeReason.ALGEBRAIC;
 import static com.google.javascript.jscomp.disambiguate.ColorGraphBuilder.EdgeReason.CAN_HOLD;
 
@@ -150,14 +149,15 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     ColorGraphBuilder builder =
         this.createBuilderIncludingCode(
             null,
-            lines(
-                "/** @interface */", //
-                "class IFoo { }",
-                "",
-                "let /** !IFoo */ test;",
-                "",
-                "IFOO_PROTOTYPE: IFoo.prototype",
-                "IFOO: test;"));
+            """
+            /** @interface */
+            class IFoo { }
+
+            let /** !IFoo */ test;
+
+            IFOO_PROTOTYPE: IFoo.prototype
+            IFOO: test;
+            """);
 
     // When
     this.result = builder.build();
@@ -174,13 +174,14 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     ColorGraphBuilder builder =
         this.createBuilderIncludingCode(
             null,
-            lines(
-                "class Foo { }", //
-                "",
-                "const test = new Foo();",
-                "",
-                "FOO_PROTOTYPE: Foo.prototype;",
-                "FOO: new Foo();"));
+            """
+            class Foo { }
+
+            const test = new Foo();
+
+            FOO_PROTOTYPE: Foo.prototype;
+            FOO: new Foo();
+            """);
 
     // When
     this.result = builder.build();
@@ -197,16 +198,17 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     ColorGraphBuilder builder =
         this.createBuilderIncludingCode(
             null,
-            lines(
-                "class Foo { }", //
-                "class Bar extends Foo { }",
-                "",
-                "const test = new Bar();",
-                "",
-                "FOO_PROTOTYPE: Foo.prototype;",
-                "FOO: new Foo();",
-                "BAR_PROTOTYPE: Bar.prototype;",
-                "FOO_PROTOTYPE: Foo.prototype;"));
+            """
+            class Foo { }
+            class Bar extends Foo { }
+
+            const test = new Bar();
+
+            FOO_PROTOTYPE: Foo.prototype;
+            FOO: new Foo();
+            BAR_PROTOTYPE: Bar.prototype;
+            FOO_PROTOTYPE: Foo.prototype;
+            """);
 
     // When
     this.result = builder.build();
@@ -224,20 +226,21 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     ColorGraphBuilder builder =
         this.createBuilderIncludingCode(
             null,
-            lines(
-                "class Foo { }", //
-                "class Bar extends Foo { }", //
-                "class Qux extends Foo { }", //
-                "",
-                "const testBar = new Bar();",
-                "const testQux = new Qux();",
-                "",
-                "FOO_PROTOTYPE: Foo.prototype;",
-                "FOO: new Foo();",
-                "BAR_PROTOTYPE: Bar.prototype;",
-                "BAR: new Bar();",
-                "QUX_PROTOTYPE: Qux.prototype;",
-                "QUX: new Qux();"));
+            """
+            class Foo { }
+            class Bar extends Foo { }
+            class Qux extends Foo { }
+
+            const testBar = new Bar();
+            const testQux = new Qux();
+
+            FOO_PROTOTYPE: Foo.prototype;
+            FOO: new Foo();
+            BAR_PROTOTYPE: Bar.prototype;
+            BAR: new Bar();
+            QUX_PROTOTYPE: Qux.prototype;
+            QUX: new Qux();
+            """);
 
     // When
     this.result = builder.build();
@@ -256,14 +259,15 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     ColorGraphBuilder builder =
         this.createBuilderIncludingCode(
             null,
-            lines(
-                "class Foo { }", //
-                "",
-                "const test = Foo;",
-                "",
-                "FOO_PROTOTYPE: Foo.prototype;",
-                "FOO: new Foo();",
-                "BAR_PROTOTYPE: Bar.prototype;"));
+            """
+            class Foo { }
+
+            const test = Foo;
+
+            FOO_PROTOTYPE: Foo.prototype;
+            FOO: new Foo();
+            BAR_PROTOTYPE: Bar.prototype;
+            """);
 
     // When
     this.result = builder.build();
@@ -280,14 +284,15 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     ColorGraphBuilder builder =
         this.createBuilderIncludingCode(
             null,
-            lines(
-                "/** @interface */", //
-                "class IFoo { }",
-                "",
-                "let /** !IFoo */ test;",
-                "",
-                "IFOO: test;",
-                "IFOO_PROTOTYPE: IFoo.prototype;"));
+            """
+            /** @interface */
+            class IFoo { }
+
+            let /** !IFoo */ test;
+
+            IFOO: test;
+            IFOO_PROTOTYPE: IFoo.prototype;
+            """);
 
     // When
     this.result = builder.build();
@@ -302,15 +307,16 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     ColorGraphBuilder builder =
         this.createBuilderIncludingCode(
             null,
-            lines(
-                "/** @constructor */ function Foo0 () { }",
-                "class Foo1 extends Foo0 { }", //
-                "class Foo2 extends Foo1 { }",
-                "",
-                "let /** !(typeof Foo2) */ test;",
-                "FOO0_CTOR: Foo0;",
-                "FOO1_CTOR: Foo1;",
-                "FOO2_CTOR: Foo2;"));
+            """
+            /** @constructor */ function Foo0 () { }
+            class Foo1 extends Foo0 { }
+            class Foo2 extends Foo1 { }
+
+            let /** !(typeof Foo2) */ test;
+            FOO0_CTOR: Foo0;
+            FOO1_CTOR: Foo1;
+            FOO2_CTOR: Foo2;
+            """);
 
     // When
     this.result = builder.build();
@@ -357,16 +363,17 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     ColorGraphBuilder builder =
         this.createBuilderIncludingCode(
             stubFinder,
-            lines(
-                "class Foo { }",
-                "class Bar { }",
-                "class Qux { }",
-                "",
-                "let /** (!Foo|!Bar|!Qux) */ test;",
-                "",
-                "FOO: new Foo();",
-                "BAR: new Bar();",
-                "QUX: new Qux();"));
+            """
+            class Foo { }
+            class Bar { }
+            class Qux { }
+
+            let /** (!Foo|!Bar|!Qux) */ test;
+
+            FOO: new Foo();
+            BAR: new Bar();
+            QUX: new Qux();
+            """);
 
     // When
     this.result = builder.build();
@@ -390,16 +397,17 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     ColorGraphBuilder builder =
         this.createBuilderIncludingCode(
             stubFinder,
-            lines(
-                "class Foo { }",
-                "class Bar { }",
-                "class Qux { }",
-                "",
-                "let /** (!Foo|!Bar|!Qux) */ test;",
-                "",
-                "FOO: new Foo();",
-                "BAR: new Bar();",
-                "QUX: new Qux();"));
+            """
+            class Foo { }
+            class Bar { }
+            class Qux { }
+
+            let /** (!Foo|!Bar|!Qux) */ test;
+
+            FOO: new Foo();
+            BAR: new Bar();
+            QUX: new Qux();
+            """);
     builder.add(this.graphNodeFactory.createNode(colorWithId(kifId).build()));
 
     // When
@@ -423,16 +431,17 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     ColorGraphBuilder builder =
         this.createBuilderIncludingCode(
             stubFinder,
-            lines(
-                "class Foo { }",
-                "class Bar { }",
-                "class Qux { }",
-                "",
-                "let /** (!Foo|!Bar|!Qux) */ test;",
-                "",
-                "FOO: new Foo();",
-                "BAR: new Bar();",
-                "QUX: new Qux();"));
+            """
+            class Foo { }
+            class Bar { }
+            class Qux { }
+
+            let /** (!Foo|!Bar|!Qux) */ test;
+
+            FOO: new Foo();
+            BAR: new Bar();
+            QUX: new Qux();
+            """);
     builder.add(this.graphNodeFactory.createNode(colorWithId(kixId).build()));
     builder.add(this.graphNodeFactory.createNode(colorWithId(lopId).build()));
 
@@ -460,17 +469,18 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     ColorGraphBuilder builder =
         this.createBuilderIncludingCode(
             stubFinder,
-            lines(
-                "class Foo { }",
-                "class Bar { }",
-                "class Qux { }",
-                "",
-                "let /** (!Foo|!Bar|!Qux) */ testA;",
-                "let /** (!Foo|!Bar) */ testB;",
-                "",
-                "FOO: new Foo();",
-                "BAR: new Bar();",
-                "QUX: new Qux();"));
+            """
+            class Foo { }
+            class Bar { }
+            class Qux { }
+
+            let /** (!Foo|!Bar|!Qux) */ testA;
+            let /** (!Foo|!Bar) */ testB;
+
+            FOO: new Foo();
+            BAR: new Bar();
+            QUX: new Qux();
+            """);
     builder.add(this.graphNodeFactory.createNode(colorWithId(kifId).build()));
 
     // When
@@ -494,16 +504,17 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     ColorGraphBuilder builder =
         this.createBuilderIncludingCode(
             stubFinder,
-            lines(
-                "class Kif { }",
-                "class Foo extends Kif { }",
-                "class Bar extends Kif { }",
-                "",
-                "let /** ((typeof Foo.prototype)|(typeof Bar.prototype)) */ test;",
-                "",
-                "KIF: new Kif();",
-                "FOO_PROTOTYPE: Foo.prototype;",
-                "BAR_PROTOTYPE: Bar.prototype;"));
+            """
+            class Kif { }
+            class Foo extends Kif { }
+            class Bar extends Kif { }
+
+            let /** ((typeof Foo.prototype)|(typeof Bar.prototype)) */ test;
+
+            KIF: new Kif();
+            FOO_PROTOTYPE: Foo.prototype;
+            BAR_PROTOTYPE: Bar.prototype;
+            """);
 
     // When
     this.result = builder.build();

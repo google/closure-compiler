@@ -174,10 +174,11 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "var c2;",
             "c1 = c2;")
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : (C2|null)",
-                "required: (C1|null)"))
+            """
+            assignment
+            found   : (C2|null)
+            required: (C1|null)
+            """)
         .run();
   }
 
@@ -288,10 +289,11 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "var c5;",
             "i5 = c5;")
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : (C5|null)",
-                "required: (I5|null)"))
+            """
+            assignment
+            found   : (C5|null)
+            required: (I5|null)
+            """)
         .run();
   }
 
@@ -327,46 +329,47 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
    * is declared as @record so structural interface matching will be performed
    */
   private static final String EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD =
-      lines(
-          "/** @record */",
-          "function I5() {}",
-          "/** @type {I5} */",
-          "I5.prototype.next;",
-          "",
-          "/** @constructor */",
-          "function C6() {}",
-          "/** @type {C6} */",
-          "C6.prototype.next;",
-          "",
-          "/** @constructor */",
-          "function C6_1() {}",
-          "/** @type {C6} */",
-          "C6_1.prototype.next;",
-          "",
-          "/** @constructor */",
-          "function C6_2() {}",
-          "/** @type {C6_1} */",
-          "C6_2.prototype.next;",
-          "",
-          "/** @constructor */",
-          "function C6_3() {}",
-          "/** @type {C6_2} */",
-          "C6_3.prototype.next;",
-          "",
-          "/** @constructor */",
-          "function C6_4() {}",
-          "/** @type {C6_3} */",
-          "C6_4.prototype.next;",
-          "",
-          "/** @constructor */",
-          "function C6_5() {}",
-          "/** @type {C6_4} */",
-          "C6_5.prototype.next;",
-          "",
-          "/** @constructor */",
-          "function C5() {}",
-          "/** @type {C6_5} */",
-          "C5.prototype.next;");
+      """
+      /** @record */
+      function I5() {}
+      /** @type {I5} */
+      I5.prototype.next;
+
+      /** @constructor */
+      function C6() {}
+      /** @type {C6} */
+      C6.prototype.next;
+
+      /** @constructor */
+      function C6_1() {}
+      /** @type {C6} */
+      C6_1.prototype.next;
+
+      /** @constructor */
+      function C6_2() {}
+      /** @type {C6_1} */
+      C6_2.prototype.next;
+
+      /** @constructor */
+      function C6_3() {}
+      /** @type {C6_2} */
+      C6_3.prototype.next;
+
+      /** @constructor */
+      function C6_4() {}
+      /** @type {C6_3} */
+      C6_4.prototype.next;
+
+      /** @constructor */
+      function C6_5() {}
+      /** @type {C6_4} */
+      C6_5.prototype.next;
+
+      /** @constructor */
+      function C5() {}
+      /** @type {C6_5} */
+      C5.prototype.next;
+      """;
 
   @Test
   public void testStructuralInterfaceMatching16_1() {
@@ -420,46 +423,47 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
    * C5.next.next.next.next.next has type number
    */
   private static final String EXTERNS_FOR_LONG_NONMATCHING_CHAIN =
-      lines(
-          "/** @record */",
-          "function I5() {}",
-          "/** @type {I5} */",
-          "I5.prototype.next;",
-          "",
-          "/** @constructor */",
-          "function C6() {}",
-          "/** @type {number} */",
-          "C6.prototype.next;",
-          "",
-          "/** @constructor */",
-          "function C6_1() {}",
-          "/** @type {C6} */",
-          "C6_1.prototype.next;",
-          "",
-          "/** @constructor */",
-          "function C6_2() {}",
-          "/** @type {C6_1} */",
-          "C6_2.prototype.next;",
-          "",
-          "/** @constructor */",
-          "function C6_3() {}",
-          "/** @type {C6_2} */",
-          "C6_3.prototype.next;",
-          "",
-          "/** @constructor */",
-          "function C6_4() {}",
-          "/** @type {C6_3} */",
-          "C6_4.prototype.next;",
-          "",
-          "/** @constructor */",
-          "function C6_5() {}",
-          "/** @type {C6_4} */",
-          "C6_5.prototype.next;",
-          "",
-          "/** @interface */",
-          "function C5() {}",
-          "/** @type {C6_5} */",
-          "C5.prototype.next;");
+      """
+      /** @record */
+      function I5() {}
+      /** @type {I5} */
+      I5.prototype.next;
+
+      /** @constructor */
+      function C6() {}
+      /** @type {number} */
+      C6.prototype.next;
+
+      /** @constructor */
+      function C6_1() {}
+      /** @type {C6} */
+      C6_1.prototype.next;
+
+      /** @constructor */
+      function C6_2() {}
+      /** @type {C6_1} */
+      C6_2.prototype.next;
+
+      /** @constructor */
+      function C6_3() {}
+      /** @type {C6_2} */
+      C6_3.prototype.next;
+
+      /** @constructor */
+      function C6_4() {}
+      /** @type {C6_3} */
+      C6_4.prototype.next;
+
+      /** @constructor */
+      function C6_5() {}
+      /** @type {C6_4} */
+      C6_5.prototype.next;
+
+      /** @interface */
+      function C5() {}
+      /** @type {C6_5} */
+      C5.prototype.next;
+      """;
 
   @Test
   public void testStructuralInterfaceMatching19() {
@@ -473,10 +477,11 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "var c5;",
             "i5 = c5;")
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : (C5|null)",
-                "required: (I5|null)"))
+            """
+            assignment
+            found   : (C5|null)
+            required: (I5|null)
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -496,10 +501,11 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "",
             "f(c5);")
         .addDiagnostic(
-            lines(
-                "actual parameter 1 of f does not match formal parameter",
-                "found   : (C5|null)",
-                "required: (I5|null)"))
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : (C5|null)
+            required: (I5|null)
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -516,10 +522,11 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "var c5;",
             "i5.next = c5;")
         .addDiagnostic(
-            lines(
-                "assignment to property next of I5", //
-                "found   : (C5|null)",
-                "required: (I5|null)"))
+            """
+            assignment to property next of I5
+            found   : (C5|null)
+            required: (I5|null)
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -582,10 +589,11 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "",
             "i7 = c7;")
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : (C7|null)",
-                "required: (I7|null)"))
+            """
+            assignment
+            found   : (C7|null)
+            required: (I7|null)
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -817,10 +825,11 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "",
             "i7 = c7;")
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : (C7|null)",
-                "required: (I7|null)"))
+            """
+            assignment
+            found   : (C7|null)
+            required: (I7|null)
+            """)
         .run();
   }
 
@@ -906,10 +915,11 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "",
             "i7 = c7;")
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : (C7|null)",
-                "required: (I7|null)"))
+            """
+            assignment
+            found   : (C7|null)
+            required: (I7|null)
+            """)
         .run();
   }
 
@@ -1082,12 +1092,19 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "",
             "com1 = com2;")
         .addDiagnostic(
-            lines(
-                "assignment",
-                "found   : {\n  fun: function((I7|null)): (C7|null),\n  prop: {prop: (C7|null)}\n}",
-                "required: {\n  fun: function((C7|null)): (I7|null),\n  prop: {prop: (I7|null)}\n}",
-                "missing : []",
-                "mismatch: [fun,prop]"))
+            """
+            assignment
+            found   : {
+              fun: function((I7|null)): (C7|null),
+              prop: {prop: (C7|null)}
+            }
+            required: {
+              fun: function((C7|null)): (I7|null),
+              prop: {prop: (I7|null)}
+            }
+            missing : []
+            mismatch: [fun,prop]
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1104,12 +1121,13 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "/** @type {I2} */", //
             "var o1 = {length : 'test'};")
         .addDiagnostic(
-            lines(
-                "initializing variable",
-                "found   : {length: string}",
-                "required: (I2|null)",
-                "missing : []",
-                "mismatch: [length]"))
+            """
+            initializing variable
+            found   : {length: string}
+            required: (I2|null)
+            missing : []
+            mismatch: [length]
+            """)
         .run();
   }
 
@@ -1156,12 +1174,13 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "/** @type {!I2} */", //
             "var o1 = {};")
         .addDiagnostic(
-            lines(
-                "initializing variable",
-                "found   : {}",
-                "required: I2",
-                "missing : [length]",
-                "mismatch: []"))
+            """
+            initializing variable
+            found   : {}
+            required: I2
+            missing : [length]
+            mismatch: []
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1179,12 +1198,13 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "/** @type {!I2} */", //
             "var o1 = {};")
         .addDiagnostic(
-            lines(
-                "initializing variable",
-                "found   : {}",
-                "required: I2",
-                "missing : [length]",
-                "mismatch: []"))
+            """
+            initializing variable
+            found   : {}
+            required: I2
+            missing : [length]
+            mismatch: []
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1201,12 +1221,13 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "/** @type {!I2} */", //
             "var o1 = {length: null};")
         .addDiagnostic(
-            lines(
-                "initializing variable",
-                "found   : {length: null}",
-                "required: I2",
-                "missing : []",
-                "mismatch: [length]"))
+            """
+            initializing variable
+            found   : {length: null}
+            required: I2
+            missing : []
+            mismatch: [length]
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1224,12 +1245,13 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "/** @type {!I2} */", //
             "var o1 = {length: null};")
         .addDiagnostic(
-            lines(
-                "initializing variable",
-                "found   : {length: null}",
-                "required: I2",
-                "missing : []",
-                "mismatch: [length]"))
+            """
+            initializing variable
+            found   : {length: null}
+            required: I2
+            missing : []
+            mismatch: [length]
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1495,10 +1517,11 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "var obj2 = new C1();",
             "obj1 = obj2;")
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : (C1|null)",
-                "required: (Interface1|null)"))
+            """
+            assignment
+            found   : (C1|null)
+            required: (Interface1|null)
+            """)
         .run();
   }
 
@@ -1530,10 +1553,11 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "",
             "i7 = c7;")
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : (C7|null)",
-                "required: (I7|null)"))
+            """
+            assignment
+            found   : (C7|null)
+            required: (I7|null)
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1563,10 +1587,11 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "",
             "i7 = c7;")
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : (C7|null)",
-                "required: (I7|null)"))
+            """
+            assignment
+            found   : (C7|null)
+            required: (I7|null)
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1599,12 +1624,13 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "",
             "var /** !Rec */ x = new Foo;")
         .addDiagnostic(
-            lines(
-                "initializing variable",
-                "found   : Foo",
-                "required: Rec",
-                "missing : [unknown]",
-                "mismatch: []"))
+            """
+            initializing variable
+            found   : Foo
+            required: Rec
+            missing : [unknown]
+            mismatch: []
+            """)
         .run();
   }
 
@@ -1636,12 +1662,13 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "",
             "var /** !Rec */ x = new Foo;")
         .addDiagnostic(
-            lines(
-                "initializing variable",
-                "found   : Foo",
-                "required: Rec",
-                "missing : [top]",
-                "mismatch: []"))
+            """
+            initializing variable
+            found   : Foo
+            required: Rec
+            missing : [top]
+            mismatch: []
+            """)
         .run();
   }
 
@@ -1694,12 +1721,13 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "}",
             "var /** !WithProp */ wp = new Foo;")
         .addDiagnostic(
-            lines(
-                "initializing variable",
-                "found   : Foo",
-                "required: WithProp",
-                "missing : [prop]",
-                "mismatch: []"))
+            """
+            initializing variable
+            found   : Foo
+            required: WithProp
+            missing : [prop]
+            mismatch: []
+            """)
         .run();
   }
 
@@ -1716,12 +1744,13 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "}",
             "var /** !WithProp */ wp = new Foo;")
         .addDiagnostic(
-            lines(
-                "initializing variable",
-                "found   : Foo",
-                "required: WithProp",
-                "missing : []",
-                "mismatch: [prop]"))
+            """
+            initializing variable
+            found   : Foo
+            required: WithProp
+            missing : []
+            mismatch: [prop]
+            """)
         .run();
   }
 
@@ -1749,12 +1778,13 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "/** @type {number} */ ns.oops;",
             "var /** !WithProp */ wp = ns;")
         .addDiagnostic(
-            lines(
-                "initializing variable",
-                "found   : function(): undefined",
-                "required: WithProp",
-                "missing : [prop]",
-                "mismatch: []"))
+            """
+            initializing variable
+            found   : function(): undefined
+            required: WithProp
+            missing : [prop]
+            mismatch: []
+            """)
         .run();
   }
 
@@ -1769,12 +1799,13 @@ public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
             "/** @type {string} */ ns.prop;",
             "var /** !WithProp */ wp = ns;")
         .addDiagnostic(
-            lines(
-                "initializing variable",
-                "found   : function(): undefined",
-                "required: WithProp",
-                "missing : []",
-                "mismatch: [prop]"))
+            """
+            initializing variable
+            found   : function(): undefined
+            required: WithProp
+            missing : []
+            mismatch: [prop]
+            """)
         .run();
   }
 

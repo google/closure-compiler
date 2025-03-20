@@ -301,14 +301,15 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     SourceFile externs = extern(new TestExternsBuilder().addAlert().build());
     SourceFile lib1 =
         code(
-            lines(
-                "class C {",
-                "  constructor(foo, bar) {",
-                "    this.foo = foo;",
-                "    this.bar = bar;",
-                "  }",
-                "}",
-                "alert(new C(1, 2))"));
+            """
+            class C {
+              constructor(foo, bar) {
+                this.foo = foo;
+                this.bar = bar;
+              }
+            }
+            alert(new C(1, 2))
+            """);
     SourceFile lib2 = code("const obj = { /** @export */ foo: 0, bar: 1};");
     precompileLibrary(externs, lib1);
     precompileLibrary(lib2);
@@ -322,11 +323,12 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     assertCompiledCodeEquals(
         compiler,
-        lines(
-            "class a {", //
-            "constructor() { this.foo = 1; }",
-            "}",
-            "alert(new a());"),
+        """
+        class a {
+        constructor() { this.foo = 1; }
+        }
+        alert(new a());
+        """,
         "");
   }
 
@@ -335,14 +337,15 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     SourceFile externs = extern(new TestExternsBuilder().addAlert().build());
     SourceFile lib1 =
         code(
-            lines(
-                "class C {",
-                "  constructor(foo, bar) {",
-                "    this.foo = foo;",
-                "    this.bar = bar;",
-                "  }",
-                "}",
-                "alert(new C(1, 2))"));
+            """
+            class C {
+              constructor(foo, bar) {
+                this.foo = foo;
+                this.bar = bar;
+              }
+            }
+            alert(new C(1, 2))
+            """);
     SourceFile unusedLib = code("const obj = { /** @export */ foo: 0, bar: 1};");
     precompileLibrary(externs, lib1);
     precompileLibrary(unusedLib);
@@ -364,9 +367,10 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     assertCompiledCodeEquals(
         compiler,
-        lines(
-            "class a {}", //
-            "alert(new a());"));
+        """
+        class a {}
+        alert(new a());
+        """);
   }
 
   @Test
@@ -384,22 +388,24 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     assertCompiledCodeEquals(
         compiler,
-        lines(
-            "var b;", //
-            "var c;",
-            "b.exportSymbol('a', c);"));
+        """
+        var b;
+        var c;
+        b.exportSymbol('a', c);
+        """);
   }
 
   @Test
   public void lateFulfilledGlobalVariableIsRenamed() throws IOException {
     SourceFile lib1 =
         code(
-            lines(
-                "function lib1() {",
-                "  if (typeof lib2Var !== 'undefined') {",
-                "    alert(lib2Var);",
-                "  }",
-                "}"));
+            """
+            function lib1() {
+              if (typeof lib2Var !== 'undefined') {
+                alert(lib2Var);
+              }
+            }
+            """);
     precompileLibrary(extern(new TestExternsBuilder().addAlert().build()), lib1);
     precompileLibrary(typeSummary(lib1), code("var lib2Var = 10; lib1();"));
 
@@ -411,12 +417,13 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     String[] expected =
         new String[] {
-          lines(
-              "function $lib1$$() {",
-              "  if (typeof $lib2Var$$ !== 'undefined') {",
-              "    alert($lib2Var$$);",
-              "  }",
-              "}"),
+          """
+          function $lib1$$() {
+            if (typeof $lib2Var$$ !== 'undefined') {
+              alert($lib2Var$$);
+            }
+          }
+          """,
           "var $lib2Var$$ = 10; $lib1$$();"
         };
     assertCompiledCodeEquals(compiler, expected);
@@ -455,11 +462,12 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
         extern(
             new TestExternsBuilder()
                 .addExtra(
-                    lines(
-                        "/** @typedef {{x: number, y: number}} */",
-                        "let Coord;",
-                        "/** @param {!Coord} coord */",
-                        "function takeCoord(coord) {}"))
+                    """
+                    /** @typedef {{x: number, y: number}} */
+                    let Coord;
+                    /** @param {!Coord} coord */
+                    function takeCoord(coord) {}
+                    """)
                 .build()),
         code("const coord = {x: 1, y: 2}; takeCoord(coord);"));
 
@@ -478,10 +486,11 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
         extern(
             new TestExternsBuilder()
                 .addExtra(
-                    lines(
-                        "/** @fileoverview @externs */ ", //
-                        "var ns = {}; ",
-                        "ns.x; "))
+                    """
+                    /** @fileoverview @externs */
+                    var ns = {};
+                    ns.x;
+                    """)
                 .addConsole()
                 .build()),
         code("ns.nonExternProperty = 2; console.log(ns.x); console.log(ns.nonExternProperty);"));
@@ -584,13 +593,14 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     SourceFile f =
         SourceFile.fromCode(
             "f.java.js",
-            lines(
-                "function InternalWidget(){}",
-                "InternalWidget.$clinit = function () {",
-                "  InternalWidget.$clinit = function() {};",
-                "  InternalWidget.$clinit();",
-                "};",
-                "InternalWidget.$clinit();"));
+            """
+            function InternalWidget(){}
+            InternalWidget.$clinit = function () {
+              InternalWidget.$clinit = function() {};
+              InternalWidget.$clinit();
+            };
+            InternalWidget.$clinit();
+            """);
     stubSourceFiles.add(f);
     precompileLibrary(f);
 
@@ -608,10 +618,11 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     precompileLibrary(
         extern(new TestExternsBuilder().build()),
         code(
-            lines(
-                "/** @ngInject */ function f() {} ",
-                "/** @ngInject */ function g(a){} ",
-                "/** @ngInject */ var b = function f(a, b, c) {} ")));
+            """
+            /** @ngInject */ function f() {}
+            /** @ngInject */ function g(a){}
+            /** @ngInject */ var b = function f(a, b, c) {}
+            """));
 
     CompilerOptions options = new CompilerOptions();
 
@@ -619,10 +630,11 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     assertCompiledCodeEquals(
         compiler,
-        lines(
-            "function f() {} ",
-            "function g(a) {} g['$inject']=['a'];",
-            "var b = function f(a, b, c) {}; b['$inject']=['a', 'b', 'c']"));
+        """
+        function f() {}
+        function g(a) {} g['$inject']=['a'];
+        var b = function f(a, b, c) {}; b['$inject']=['a', 'b', 'c']
+        """);
   }
 
   @Test
@@ -631,12 +643,13 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     SourceFile f1 =
         SourceFile.fromCode(
             "f1.js",
-            lines(
-                "/** @constructor */",
-                "var Foo = function() {};",
-                "Foo.prototype.bar = function() {};",
-                "/** @type {!Foo} */",
-                "var x = new Foo();"));
+            """
+            /** @constructor */
+            var Foo = function() {};
+            Foo.prototype.bar = function() {};
+            /** @type {!Foo} */
+            var x = new Foo();
+            """);
     SourceFile f2 = SourceFile.fromCode("f2.js", "x.bar();");
     precompileLibrary(f1);
     precompileLibrary(typeSummary(f1), f2);
@@ -695,10 +708,11 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
   }
 
   private static final String EXPORT_PROPERTY_DEF =
-      lines(
-          "goog.exportProperty = function(object, publicName, symbol) {",
-          "  object[publicName] = symbol;",
-          "};");
+      """
+      goog.exportProperty = function(object, publicName, symbol) {
+        object[publicName] = symbol;
+      };
+      """;
 
   @Test
   public void testPolymerExportPolicyExportAllClassBased() throws IOException {
@@ -715,17 +729,18 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
         typeSummary(closureBase),
         extern(new TestExternsBuilder().addString().addPolymer().build()),
         code(
-            lines(
-                "class FooElement extends PolymerElement {",
-                "  static get properties() {",
-                "    return {",
-                "      longUnusedProperty: String,",
-                "    }",
-                "  }",
-                "  longUnusedMethod() {",
-                "    return this.longUnusedProperty;",
-                "  }",
-                "}")));
+            """
+            class FooElement extends PolymerElement {
+              static get properties() {
+                return {
+                  longUnusedProperty: String,
+                }
+              }
+              longUnusedMethod() {
+                return this.longUnusedProperty;
+              }
+            }
+            """));
 
     Compiler compiler = compileTypedAstShards(options);
     String source = compiler.toSource();
@@ -753,18 +768,19 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
         typeSummary(closureBase),
         extern(new TestExternsBuilder().addString().addPolymer().build()),
         code(
-            lines(
-                "goog.module('fooElement');",
-                "class FooElement extends PolymerElement {",
-                "  static get properties() {",
-                "    return {",
-                "      longUnusedProperty: String,",
-                "    }",
-                "  }",
-                "  longUnusedMethod() {",
-                "    return this.longUnusedProperty;",
-                "  }",
-                "}")));
+            """
+            goog.module('fooElement');
+            class FooElement extends PolymerElement {
+              static get properties() {
+                return {
+                  longUnusedProperty: String,
+                }
+              }
+              longUnusedMethod() {
+                return this.longUnusedProperty;
+              }
+            }
+            """));
 
     Compiler compiler = compileTypedAstShards(options);
     String source = compiler.toSource();
@@ -790,16 +806,17 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
         typeSummary(closureBase),
         extern(new TestExternsBuilder().addString().addPolymer().build()),
         code(
-            lines(
-                "Polymer({",
-                "  is: \"foo-element\",",
-                "  properties: {",
-                "    longUnusedProperty: String,",
-                "  },",
-                "  longUnusedMethod: function() {",
-                "    return this.longUnusedProperty;",
-                "  },",
-                "});")));
+            """
+            Polymer({
+              is: "foo-element",
+              properties: {
+                longUnusedProperty: String,
+              },
+              longUnusedMethod: function() {
+                return this.longUnusedProperty;
+              },
+            });
+            """));
 
     Compiler compiler = compileTypedAstShards(options);
     String source = compiler.toSource();
@@ -827,17 +844,18 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
         typeSummary(closureBase),
         extern(new TestExternsBuilder().addString().addPolymer().build()),
         code(
-            lines(
-                "goog.module('fooElement');",
-                "Polymer({",
-                "  is: \"foo-element\",",
-                "  properties: {",
-                "    longUnusedProperty: String,",
-                "  },",
-                "  longUnusedMethod: function() {",
-                "    return this.longUnusedProperty;",
-                "  },",
-                "});")));
+            """
+            goog.module('fooElement');
+            Polymer({
+              is: "foo-element",
+              properties: {
+                longUnusedProperty: String,
+              },
+              longUnusedMethod: function() {
+                return this.longUnusedProperty;
+              },
+            });
+            """));
 
     Compiler compiler = compileTypedAstShards(options);
     String source = compiler.toSource();
@@ -868,18 +886,19 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
                 .build());
     SourceFile fooElement =
         code(
-            lines(
-                "const FooElement = Polymer({",
-                "  is: \"foo-element\",",
-                "  properties: {",
-                "    longProperty: String,",
-                "  },",
-                "  longUnusedMethod: function() {",
-                "    return this.longProperty;",
-                "  },",
-                "});",
-                "class Other { longProperty() {} }",
-                "console.log(new Other().longProperty());"));
+            """
+            const FooElement = Polymer({
+              is: "foo-element",
+              properties: {
+                longProperty: String,
+              },
+              longUnusedMethod: function() {
+                return this.longProperty;
+              },
+            });
+            class Other { longProperty() {} }
+            console.log(new Other().longProperty());
+            """);
     precompileLibrary(closureBase); // base library
     precompileLibrary( // polymer dependency library
         typeSummary(closureBase), polymerExterns, fooElement);
@@ -900,17 +919,19 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
         // Verify that the references to 'longProperty' off the FooElement are never renamed or
         // disambiguated, even when referenced in a differet file, although longProperty on
         // `class Other {` can be renamed/inlined.
-        lines(
-            "Polymer({",
-            "  $is$: 'foo-element',",
-            "  $properties$: {longProperty: String},",
-            "  longUnusedMethod: function(){return this.longProperty}",
-            "});",
-            "console.log(void 0);"),
-        lines(
-            "globalThis.test = function($fooElement$$) {",
-            "  console.log($fooElement$$.longProperty);",
-            "}"));
+        """
+        Polymer({
+          $is$: 'foo-element',
+          $properties$: {longProperty: String},
+          longUnusedMethod: function(){return this.longProperty}
+        });
+        console.log(void 0);
+        """,
+        """
+        globalThis.test = function($fooElement$$) {
+          console.log($fooElement$$.longProperty);
+        }
+        """);
   }
 
   // use over 'compileTypedAstShards' if you want to validate reported errors or warnings in your

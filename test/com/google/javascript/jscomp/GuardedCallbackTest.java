@@ -83,19 +83,17 @@ public final class GuardedCallbackTest extends CompilerTestCase {
     test(
         externs(externs),
         srcs(
-            lines(
-                "", //
-                "if (Promise && Promise.allSettled) {",
-                "  Promise.allSettled([]).then(() => console.log('done'));",
-                "}",
-                "")),
+            """
+            if (Promise && Promise.allSettled) {
+              Promise.allSettled([]).then(() => console.log('done'));
+            }
+            """),
         expected(
-            lines(
-                "", //
-                "if (GUARDED_NAME && GUARDED_NAME.GUARDED_PROP) {",
-                "  GUARDED_NAME.GUARDED_PROP([]).then(() => console.log('done'));",
-                "}",
-                "")));
+            """
+            if (GUARDED_NAME && GUARDED_NAME.GUARDED_PROP) {
+              GUARDED_NAME.GUARDED_PROP([]).then(() => console.log('done'));
+            }
+            """));
   }
 
   @Test
@@ -104,35 +102,31 @@ public final class GuardedCallbackTest extends CompilerTestCase {
     test(
         externs(externs),
         srcs(
-            lines(
-                "", //
-                "if (Promise?.allSettled) {",
-                "  Promise.allSettled([]).then(() => console.log('done'));",
-                "}",
-                "")),
+            """
+            if (Promise?.allSettled) {
+              Promise.allSettled([]).then(() => console.log('done'));
+            }
+            """),
         expected(
-            lines(
-                "", //
-                "if (GUARDED_NAME?.GUARDED_PROP) {",
-                "  GUARDED_NAME.GUARDED_PROP([]).then(() => console.log('done'));",
-                "}",
-                "")));
+            """
+            if (GUARDED_NAME?.GUARDED_PROP) {
+              GUARDED_NAME.GUARDED_PROP([]).then(() => console.log('done'));
+            }
+            """));
     test(
         externs(externs),
         srcs(
-            lines(
-                "", //
-                "if (Promise?.allSettled([])) {",
-                "  Promise.allSettled([]).then(() => console.log('done'));",
-                "}",
-                "")),
+            """
+            if (Promise?.allSettled([])) {
+              Promise.allSettled([]).then(() => console.log('done'));
+            }
+            """),
         expected(
-            lines(
-                "", //
-                "if (GUARDED_NAME?.allSettled([])) {",
-                "  GUARDED_NAME.allSettled([]).then(() => console.log('done'));",
-                "}",
-                "")));
+            """
+            if (GUARDED_NAME?.allSettled([])) {
+              GUARDED_NAME.allSettled([]).then(() => console.log('done'));
+            }
+            """));
   }
 
   @Test
@@ -170,16 +164,18 @@ public final class GuardedCallbackTest extends CompilerTestCase {
     test(
         externs(externs),
         srcs(
-            lines(
-                "console.log(",
-                "    Promise?.resolve(Promise)",
-                "        .then(x.finally)",
-                "        .finally?.(x.finally))")),
+            """
+            console.log(
+                Promise?.resolve(Promise)
+                    .then(x.finally)
+                    .finally?.(x.finally))
+            """),
         expected(
-            lines(
-                "console.log(",
-                "    GUARDED_NAME?.resolve(GUARDED_NAME)",
-                "        .then(x.finally)",
-                "        .GUARDED_PROP?.(x.GUARDED_PROP))")));
+            """
+            console.log(
+                GUARDED_NAME?.resolve(GUARDED_NAME)
+                    .then(x.finally)
+                    .GUARDED_PROP?.(x.GUARDED_PROP))
+            """));
   }
 }

@@ -95,7 +95,11 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
         "function f(){if(a()){}else{return;b()}}");
     fold(
         "function f(){ if (x) return; if (y) return; if (z) return; w(); }",
-        lines("function f() {", "  if (x) {} else { if (y) {} else { if (z) {} else w(); }}", "}"));
+        """
+        function f() {
+          if (x) {} else { if (y) {} else { if (z) {} else w(); }}
+        }
+        """);
 
     fold("function f(){while(a())return;}", "function f(){while(a())return}");
     foldSame("function f(){for(x in a())return}");
@@ -124,18 +128,19 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
   @Test
   public void testFunctionReturnScoped() {
     testSame(
-        lines(
-            "function f(a) {",
-            "  if (a) {",
-            "    const a = Math.random();",
-            "",
-            "    if (a < 0.5) {",
-            "        return a;",
-            "    }",
-            "  }",
-            "",
-            "  return a;",
-            "}"));
+        """
+        function f(a) {
+          if (a) {
+            const a = Math.random();
+
+            if (a < 0.5) {
+                return a;
+            }
+          }
+
+          return a;
+        }
+        """);
   }
 
   @Test
@@ -348,16 +353,17 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
     // let/const declarations to vars in a loop can cause incorrect semantics.
     // See the following test case for an example.
     foldSame(
-        lines(
-            "function f(param) {",
-            "  let arr = [];",
-            "  for (let x of param) {",
-            "    if (x < 0) continue;",
-            "    let y = x * 2;",
-            "    arr.push(() => y);", // If y was a var, this would capture the wrong value.
-            "   }",
-            "  return arr;",
-            "}"));
+        """
+        function f(param) {
+          let arr = [];
+          for (let x of param) {
+            if (x < 0) continue;
+            let y = x * 2;
+            arr.push(() => y); // If y was a var, this would capture the wrong value.
+           }
+          return arr;
+        }
+        """);
 
     // Additional tests for different kinds of loops.
     foldSame("function f() { while (true) { if (true) {return;} let c = 3; } }");

@@ -58,9 +58,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype.bar = function() {};"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.bar = function() {};
+                    """)
                 .addChunk("(new Foo).bar()")
                 .build()));
 
@@ -70,9 +71,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype.bar = function() {};"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.bar = function() {};
+                    """)
                 .addChunk("(new Foo).bar()")
                 .build()),
         expected(
@@ -81,9 +83,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "function Foo() {}",
                 "Foo.prototype.bar = JSCompiler_stubMethod(0);"),
             // Chunk 2
-            lines(
-                "Foo.prototype.bar = JSCompiler_unstubMethod(0, function() {});", //
-                "(new Foo).bar()")));
+            """
+            Foo.prototype.bar = JSCompiler_unstubMethod(0, function() {});
+            (new Foo).bar()
+            """));
   }
 
   @Test
@@ -92,9 +95,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype = { method: function() {} };"))
+                    """
+                    function Foo() {}
+                    Foo.prototype = { method: function() {} };
+                    """)
                 .addChunk("(new Foo).method()")
                 .build()),
         expected(
@@ -103,10 +107,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "function Foo() {}",
                 "Foo.prototype = { method: JSCompiler_stubMethod(0) };"),
             // Chunk 2
-            lines(
-                "Foo.prototype.method = ", //
-                "    JSCompiler_unstubMethod(0, function() {});",
-                "(new Foo).method()")));
+            """
+            Foo.prototype.method =
+                JSCompiler_unstubMethod(0, function() {});
+            (new Foo).method()
+            """));
   }
 
   @Test
@@ -116,19 +121,22 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype = { method: function() {} };"))
+                    """
+                    function Foo() {}
+                    Foo.prototype = { method: function() {} };
+                    """)
                 .addChunk("(new Foo).method()")
                 .build()),
         expected(
-            lines(
-                "function Foo() {}", //
-                "Foo.prototype = {};"),
+            """
+            function Foo() {}
+            Foo.prototype = {};
+            """,
             // Chunk 2
-            lines(
-                "Foo.prototype.method = function() {};", //
-                "(new Foo).method()")));
+            """
+            Foo.prototype.method = function() {};
+            (new Foo).method()
+            """));
   }
 
   @Test
@@ -137,9 +145,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype = { method() {} };"))
+                    """
+                    function Foo() {}
+                    Foo.prototype = { method() {} };
+                    """)
                 .addChunk("(new Foo).method()")
                 .build()),
         expected(
@@ -148,10 +157,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "function Foo() {}",
                 "Foo.prototype = { method: JSCompiler_stubMethod(0) };"),
             // Chunk 2
-            lines(
-                "Foo.prototype.method = ", //
-                "    JSCompiler_unstubMethod(0, function() {});",
-                "(new Foo).method()")));
+            """
+            Foo.prototype.method =
+                JSCompiler_unstubMethod(0, function() {});
+            (new Foo).method()
+            """));
   }
 
   @Test
@@ -161,15 +171,22 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype = { method() {} };"))
+                    """
+                    function Foo() {}
+                    Foo.prototype = { method() {} };
+                    """)
                 .addChunk("(new Foo).method()")
                 .build()),
         expected(
-            lines("function Foo() {}", "Foo.prototype = {};"),
+            """
+            function Foo() {}
+            Foo.prototype = {};
+            """,
             // Chunk 2
-            lines("Foo.prototype.method = function() {};", "(new Foo).method()")));
+            """
+            Foo.prototype.method = function() {};
+            (new Foo).method()
+            """));
   }
 
   @Test
@@ -178,9 +195,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype = { method() { return super.toString(); } };"))
+                    """
+                    function Foo() {}
+                    Foo.prototype = { method() { return super.toString(); } };
+                    """)
                 .addChunk("(new Foo).method()")
                 .build()));
   }
@@ -191,9 +209,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype = { [1]:  {} };"))
+                    """
+                    function Foo() {}
+                    Foo.prototype = { [1]:  {} };
+                    """)
                 .addChunk("(new Foo)[1]()")
                 .build()));
   }
@@ -212,9 +231,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "class Foo {}",
                 "Foo.prototype.method = JSCompiler_stubMethod(0);"),
             // Chunk 2
-            lines(
-                "Foo.prototype.method = JSCompiler_unstubMethod(0, function() {});",
-                "(new Foo).method();")));
+            """
+            Foo.prototype.method = JSCompiler_unstubMethod(0, function() {});
+            (new Foo).method();
+            """));
 
     // Same as above, but reference to the method is via an optional chain
     test(
@@ -229,9 +249,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "class Foo {}",
                 "Foo.prototype.method = JSCompiler_stubMethod(0);"),
             // Chunk 2
-            lines(
-                "Foo.prototype.method = JSCompiler_unstubMethod(0, function() {});",
-                "(new Foo)?.method();")));
+            """
+            Foo.prototype.method = JSCompiler_unstubMethod(0, function() {});
+            (new Foo)?.method();
+            """));
   }
 
   @Test
@@ -240,11 +261,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "", //
-                        "class Bar { method() {} }",
-                        "class Foo extends Bar { method2() { super.method(); } }",
-                        ""))
+                    """
+                    class Bar { method() {} }
+                    class Foo extends Bar { method2() { super.method(); } }
+                    """)
                 .addChunk("(new Foo).method2()")
                 .build()),
         expected(
@@ -254,11 +274,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "Bar.prototype.method = JSCompiler_stubMethod(0);",
                 "class Foo extends Bar { method2() { super.method(); } }",
                 ""),
-            lines(
-                "", //
-                "Bar.prototype.method = JSCompiler_unstubMethod(0, function() {});",
-                "(new Foo).method2();",
-                "")));
+            """
+            Bar.prototype.method = JSCompiler_unstubMethod(0, function() {});
+            (new Foo).method2();
+            """));
   }
 
   @Test
@@ -269,11 +288,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "", //
-                        "class Bar { method() {} }",
-                        "class Foo extends Bar { method2() { return () => super.method(); } }",
-                        ""))
+                    """
+                    class Bar { method() {} }
+                    class Foo extends Bar { method2() { return () => super.method(); } }
+                    """)
                 .addChunk("(new Foo).method2()")
                 .build()),
         expected(
@@ -283,11 +301,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "Bar.prototype.method = JSCompiler_stubMethod(0);",
                 "class Foo extends Bar { method2() { return () => super.method(); } }",
                 ""),
-            lines(
-                "", //
-                "Bar.prototype.method = JSCompiler_unstubMethod(0, function() {});",
-                "(new Foo).method2();",
-                "")));
+            """
+            Bar.prototype.method = JSCompiler_unstubMethod(0, function() {});
+            (new Foo).method2();
+            """));
   }
 
   @Test
@@ -299,20 +316,19 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "", //
-                        "class Foo {",
-                        "  method() {",
-                        "    return {",
-                        "      objLitMethod() {",
-                        // This `super` isn't really a reference within `method()`
-                        // It refers to Object.prototype.toString.
-                        "        super.toString;",
-                        "      }",
-                        "    };",
-                        "  }",
-                        "}",
-                        ""))
+                    """
+                    class Foo {
+                      method() {
+                        return {
+                          objLitMethod() {
+                    // This `super` isn't really a reference within `method()`
+                    // It refers to Object.prototype.toString.
+                            super.toString;
+                          }
+                        };
+                      }
+                    }
+                    """)
                 .addChunk("(new Foo).method();")
                 .build()),
         expected(
@@ -323,17 +339,16 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "}",
                 "Foo.prototype.method = JSCompiler_stubMethod(0);",
                 ""),
-            lines(
-                "", //
-                "Foo.prototype.method = JSCompiler_unstubMethod(0, function() {",
-                "  return {",
-                "    objLitMethod() {",
-                "      super.toString;",
-                "    }",
-                "  };",
-                "});",
-                "(new Foo).method();",
-                "")));
+            """
+            Foo.prototype.method = JSCompiler_unstubMethod(0, function() {
+              return {
+                objLitMethod() {
+                  super.toString;
+                }
+              };
+            });
+            (new Foo).method();
+            """));
   }
 
   @Test
@@ -342,11 +357,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "", //
-                        "class Bar { defaultValue() { return 1; } }",
-                        "class Foo extends Bar { method(x = super.defaultValue()) { return x; } }",
-                        ""))
+                    """
+                    class Bar { defaultValue() { return 1; } }
+                    class Foo extends Bar { method(x = super.defaultValue()) { return x; } }
+                    """)
                 .addChunk("(new Foo).method2()")
                 .build()));
   }
@@ -357,10 +371,9 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "", //
-                        "class Foo { constructor() { } }",
-                        ""))
+                    """
+                    class Foo { constructor() { } }
+                    """)
                 .addChunk("(new Foo).constructor")
                 .build()));
   }
@@ -390,9 +403,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "const Foo = class FooInternal {}",
                 "Foo.prototype.method = JSCompiler_stubMethod(0);"),
             // Chunk 2
-            lines(
-                "Foo.prototype.method = JSCompiler_unstubMethod(0, function() {});",
-                "(new Foo).method();")));
+            """
+            Foo.prototype.method = JSCompiler_unstubMethod(0, function() {});
+            (new Foo).method();
+            """));
   }
 
   @Test
@@ -403,11 +417,12 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         JSChunkGraphBuilder.forChain()
             // m1
             .addChunk(
-                lines(
-                    "var a = 0;", //
-                    "function f1(a) { return a + 1 }",
-                    "var b = f1(1);",
-                    "a += 1;"))
+                """
+                var a = 0;
+                function f1(a) { return a + 1 }
+                var b = f1(1);
+                a += 1;
+                """)
             // m2
             .addChunk("var c = b")
             .build();
@@ -433,9 +448,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype = { get method() {} };"))
+                    """
+                    function Foo() {}
+                    Foo.prototype = { get method() {} };
+                    """)
                 .addChunk("(new Foo).method()")
                 .build()));
   }
@@ -457,9 +473,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype.bar = function() {};"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.bar = function() {};
+                    """)
                 .addChunk("(new Foo).bar()")
                 .build()));
 
@@ -470,63 +487,81 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype.bar = function() {};"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.bar = function() {};
+                    """)
                 .addChunk("(new Foo).bar()")
                 .build()),
         expected(
             "function Foo() {}",
             // Chunk 2
-            lines(
-                "Foo.prototype.bar = function() {};", //
-                "(new Foo).bar()")));
+            """
+            Foo.prototype.bar = function() {};
+            (new Foo).bar()
+            """));
   }
 
   @Test
   public void movePrototypeMethodImplementingInterfaceWithoutStub() {
     disableCompareJsDoc(); // multistage compilation erases the @implements
     testSame(
-        externs(lines("/** @interface */", "class IFoo {", "  ifooMethod() {}", "}", "")),
+        externs(
+            """
+            /** @interface */
+            class IFoo {
+              ifooMethod() {}
+            }
+            """),
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "/**", //
-                        " * @constructor",
-                        " * @implements {IFoo}",
-                        " */",
-                        "function Foo() {}",
-                        "Foo.prototype.ifooMethod = function() {};"))
+                    """
+                    /**
+                     * @constructor
+                     * @implements {IFoo}
+                     */
+                    function Foo() {}
+                    Foo.prototype.ifooMethod = function() {};
+                    """)
                 .addChunk("(new Foo).ifooMethod()")
                 .build()));
 
     canMoveExterns = true;
     noStubs = true;
     test(
-        externs(lines("/** @interface */", "class IFoo {", "  ifooMethod() {}", "}", "")),
+        externs(
+            """
+            /** @interface */
+            class IFoo {
+              ifooMethod() {}
+            }
+            """),
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "/**", //
-                        " * @constructor",
-                        " * @implements {IFoo}",
-                        " */",
-                        "function Foo() {}",
-                        "Foo.prototype.ifooMethod = function() {};"))
+                    """
+                    /**
+                     * @constructor
+                     * @implements {IFoo}
+                     */
+                    function Foo() {}
+                    Foo.prototype.ifooMethod = function() {};
+                    """)
                 .addChunk("(new Foo).ifooMethod()")
                 .build()),
         expected(
-            lines(
-                "/**", //
-                " * @constructor",
-                " */",
-                "function Foo() {}"),
+            """
+            /**
+             * @constructor
+             */
+            function Foo() {}
+            """,
             // Chunk 2
-            lines(
-                "Foo.prototype.ifooMethod = function() {};", //
-                "(new Foo).ifooMethod()")));
+            """
+            Foo.prototype.ifooMethod = function() {};
+            (new Foo).ifooMethod()
+            """));
   }
 
   @Test
@@ -551,19 +586,30 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         expected(
             "class Foo {}",
             // Chunk 2
-            lines(
-                "Foo.prototype.bar = function() {};", //
-                "(new Foo).bar()")));
+            """
+            Foo.prototype.bar = function() {};
+            (new Foo).bar()
+            """));
   }
 
   @Test
   public void moveClassMethodImplementingExternsInterfaceWithoutStub() {
     disableCompareJsDoc(); // multistage compilation deletes the @implements
     testSame(
-        externs(lines("/** @interface */", "class IFoo {", "  ifooMethod() {}", "}", "")),
+        externs(
+            """
+            /** @interface */
+            class IFoo {
+              ifooMethod() {}
+            }
+            """),
         srcs(
             JSChunkGraphBuilder.forChain()
-                .addChunk(lines("/** @implements {IFoo} */", "class Foo { ifooMethod() {} }"))
+                .addChunk(
+                    """
+                    /** @implements {IFoo} */
+                    class Foo { ifooMethod() {} }
+                    """)
                 .addChunk("(new Foo).ifooMethod()")
                 .build()));
 
@@ -571,23 +617,28 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
     noStubs = true;
     test(
         externs(
-            lines(
-                "/** @interface */", //
-                "class IFoo {",
-                "  ifooMethod() {}",
-                "}",
-                "")),
+            """
+            /** @interface */
+            class IFoo {
+              ifooMethod() {}
+            }
+            """),
         srcs(
             JSChunkGraphBuilder.forChain()
-                .addChunk(lines("/** @implements {IFoo} */", "class Foo { ifooMethod() {} }"))
+                .addChunk(
+                    """
+                    /** @implements {IFoo} */
+                    class Foo { ifooMethod() {} }
+                    """)
                 .addChunk("(new Foo).ifooMethod()")
                 .build()),
         expected(
             lines("class Foo {}"),
             // Chunk 2
-            lines(
-                "Foo.prototype.ifooMethod = function() {};", //
-                "(new Foo).ifooMethod()")));
+            """
+            Foo.prototype.ifooMethod = function() {};
+            (new Foo).ifooMethod()
+            """));
   }
 
   @Test
@@ -598,10 +649,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}",
-                        "Foo.prototype.m = function() {};",
-                        "Foo.prototype.m2 = Foo.prototype.m;"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.m = function() {};
+                    Foo.prototype.m2 = Foo.prototype.m;
+                    """)
                 .addChunk("(new Foo).m()")
                 .build()));
 
@@ -609,10 +661,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}",
-                        "Foo.prototype.m = function() {};",
-                        "Foo.prototype.m2 = Foo.prototype.m;"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.m = function() {};
+                    Foo.prototype.m2 = Foo.prototype.m;
+                    """)
                 .addChunk("(new Foo).m(), (new Foo).m2()")
                 .build()));
 
@@ -622,10 +675,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}",
-                        "Foo.prototype.m = function() {};",
-                        "Foo.prototype.m2 = Foo.prototype.m;"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.m = function() {};
+                    Foo.prototype.m2 = Foo.prototype.m;
+                    """)
                 .addChunk("(new Foo).m()")
                 .build()),
         expected(
@@ -635,18 +689,20 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "Foo.prototype.m = JSCompiler_stubMethod(0);",
                 "Foo.prototype.m2 = Foo.prototype.m;"),
             // Chunk 2
-            lines(
-                "Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});", //
-                "(new Foo).m()")));
+            """
+            Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});
+            (new Foo).m()
+            """));
 
     test(
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}",
-                        "Foo.prototype.m = function() {};",
-                        "Foo.prototype.m2 = Foo.prototype.m;"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.m = function() {};
+                    Foo.prototype.m2 = Foo.prototype.m;
+                    """)
                 .addChunk("(new Foo).m(), (new Foo).m2()")
                 .build()),
         expected(
@@ -656,9 +712,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "Foo.prototype.m = JSCompiler_stubMethod(0);",
                 "Foo.prototype.m2 = Foo.prototype.m;"),
             // Chunk 2
-            lines(
-                "Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});",
-                "(new Foo).m(), (new Foo).m2()")));
+            """
+            Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});
+            (new Foo).m(), (new Foo).m2()
+            """));
   }
 
   @Test
@@ -669,9 +726,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "class Foo { m() {} }", //
-                        "Foo.prototype.m2 = Foo.prototype.m;"))
+                    """
+                    class Foo { m() {} }
+                    Foo.prototype.m2 = Foo.prototype.m;
+                    """)
                 .addChunk("(new Foo).m()")
                 .build()));
 
@@ -679,9 +737,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "class Foo { m() {} }", //
-                        "Foo.prototype.m2 = Foo.prototype.m;"))
+                    """
+                    class Foo { m() {} }
+                    Foo.prototype.m2 = Foo.prototype.m;
+                    """)
                 .addChunk("(new Foo).m(), (new Foo).m2()")
                 .build()));
 
@@ -691,9 +750,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "class Foo { m() {} }", //
-                        "Foo.prototype.m2 = Foo.prototype.m;"))
+                    """
+                    class Foo { m() {} }
+                    Foo.prototype.m2 = Foo.prototype.m;
+                    """)
                 .addChunk("(new Foo).m()")
                 .build()),
         expected(
@@ -703,17 +763,19 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "Foo.prototype.m = JSCompiler_stubMethod(0);",
                 "Foo.prototype.m2 = Foo.prototype.m;"),
             // Chunk 2
-            lines(
-                "Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});", //
-                "(new Foo).m()")));
+            """
+            Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});
+            (new Foo).m()
+            """));
 
     test(
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "class Foo { m() {} }", //
-                        "Foo.prototype.m2 = Foo.prototype.m;"))
+                    """
+                    class Foo { m() {} }
+                    Foo.prototype.m2 = Foo.prototype.m;
+                    """)
                 .addChunk("(new Foo).m(), (new Foo).m2()")
                 .build()),
         expected(
@@ -723,9 +785,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "Foo.prototype.m = JSCompiler_stubMethod(0);",
                 "Foo.prototype.m2 = Foo.prototype.m;"),
             // Chunk 2
-            lines(
-                "Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});",
-                "(new Foo).m(), (new Foo).m2()")));
+            """
+            Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});
+            (new Foo).m(), (new Foo).m2()
+            """));
   }
 
   @Test
@@ -735,9 +798,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forStar()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype.method = function() {};"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.method = function() {};
+                    """)
                 .addChunk("Foo.prototype.method = function() {};")
                 .addChunk("(new Foo).method()")
                 .build()));
@@ -762,9 +826,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype.method = function() {};"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.method = function() {};
+                    """)
                 .addChunk("(new Foo).method()")
                 .addChunk("Foo.prototype.method = function() {};")
                 .build()));
@@ -790,9 +855,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype.method = function() {};"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.method = function() {};
+                    """)
                 .addChunk("Foo.prototype.method = function() {};")
                 .addChunk("(new Foo).method()")
                 .build()));
@@ -817,9 +883,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype.baz = function() { this.baz(); };"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.baz = function() { this.baz(); };
+                    """)
                 .addChunk("(new Foo).baz()")
                 .build()),
         expected(
@@ -828,9 +895,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "function Foo() {}",
                 "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
             // Chunk 2
-            lines(
-                "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() { this.baz(); });",
-                "(new Foo).baz()")));
+            """
+            Foo.prototype.baz = JSCompiler_unstubMethod(0, function() { this.baz(); });
+            (new Foo).baz()
+            """));
   }
 
   @Test
@@ -847,9 +915,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "class Foo {}",
                 "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
             // Chunk 2
-            lines(
-                "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() { this.baz(); });",
-                "(new Foo).baz()")));
+            """
+            Foo.prototype.baz = JSCompiler_unstubMethod(0, function() { this.baz(); });
+            (new Foo).baz()
+            """));
   }
 
   @Test
@@ -858,9 +927,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype.baz = shared;"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.baz = shared;
+                    """)
                 .addChunk("(new Foo).baz()")
                 .build()));
 
@@ -868,9 +938,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "class Foo {}", //
-                        "Foo.prototype.baz = shared;"))
+                    """
+                    class Foo {}
+                    Foo.prototype.baz = shared;
+                    """)
                 .addChunk("(new Foo).baz()")
                 .build()));
   }
@@ -881,10 +952,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}",
-                        "Foo.prototype.baz = function() { return 1; };",
-                        "Foo.prototype.baz = function() { return 2; };"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.baz = function() { return 1; };
+                    Foo.prototype.baz = function() { return 2; };
+                    """)
                 .addChunk("(new Foo).baz()")
                 .build()),
         expected(
@@ -894,10 +966,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "Foo.prototype.baz = JSCompiler_stubMethod(1);",
                 "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
             // Chunk 2
-            lines(
-                "Foo.prototype.baz = JSCompiler_unstubMethod(1, function() { return 1; });",
-                "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() { return 2; });",
-                "(new Foo).baz()")));
+            """
+            Foo.prototype.baz = JSCompiler_unstubMethod(1, function() { return 1; });
+            Foo.prototype.baz = JSCompiler_unstubMethod(0, function() { return 2; });
+            (new Foo).baz()
+            """));
   }
 
   @Test
@@ -906,9 +979,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "class Foo { baz() { return 1; } }",
-                        "Foo.prototype.baz = function() { return 2; };"))
+                    """
+                    class Foo { baz() { return 1; } }
+                    Foo.prototype.baz = function() { return 2; };
+                    """)
                 .addChunk("(new Foo).baz()")
                 .build()),
         expected(
@@ -918,12 +992,13 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "Foo.prototype.baz = JSCompiler_stubMethod(1);",
                 "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
             // Chunk 2
-            lines(
-                "Foo.prototype.baz = ",
-                "JSCompiler_unstubMethod(1, function() { return 1; });",
-                "Foo.prototype.baz = ",
-                "JSCompiler_unstubMethod(0, function() { return 2; });",
-                "(new Foo).baz()")));
+            """
+            Foo.prototype.baz =
+            JSCompiler_unstubMethod(1, function() { return 1; });
+            Foo.prototype.baz =
+            JSCompiler_unstubMethod(0, function() { return 2; });
+            (new Foo).baz()
+            """));
   }
 
   @Test
@@ -931,11 +1006,12 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
     JSChunk[] m =
         JSChunkGraphBuilder.forUnordered()
             .addChunk(
-                lines(
-                    "function Foo() {}",
-                    "Foo.prototype.baz = function() { return 1; };",
-                    "function Goo() {}",
-                    "Goo.prototype.baz = function() { return 2; };"))
+                """
+                function Foo() {}
+                Foo.prototype.baz = function() { return 1; };
+                function Goo() {}
+                Goo.prototype.baz = function() { return 2; };
+                """)
 
             // Chunk 2, depends on 1
             .addChunk("")
@@ -964,10 +1040,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
             // Chunk 2
             "",
             // Chunk 3
-            lines(
-                "Foo.prototype.baz = JSCompiler_unstubMethod(1, function() { return 1; });",
-                "Goo.prototype.baz = JSCompiler_unstubMethod(0, function() { return 2; });",
-                "(new Foo).baz()"),
+            """
+            Foo.prototype.baz = JSCompiler_unstubMethod(1, function() { return 1; });
+            Goo.prototype.baz = JSCompiler_unstubMethod(0, function() { return 2; });
+            (new Foo).baz()
+            """,
             // Chunk 4
             "",
             // Chunk 5
@@ -979,9 +1056,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
     JSChunk[] m =
         JSChunkGraphBuilder.forUnordered()
             .addChunk(
-                lines(
-                    "class Foo { baz() { return 1; } }", //
-                    "class Goo { baz() { return 2; } }"))
+                """
+                class Foo { baz() { return 1; } }
+                class Goo { baz() { return 2; } }
+                """)
             // Chunk 2, depends on 1
             .addChunk("")
             // Chunk 3, depends on 2
@@ -1009,10 +1087,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
             // Chunk 2
             "",
             // Chunk 3
-            lines(
-                "Foo.prototype.baz = JSCompiler_unstubMethod(1, function() { return 1; });",
-                "Goo.prototype.baz = JSCompiler_unstubMethod(0, function() { return 2; });",
-                "(new Foo).baz()"),
+            """
+            Foo.prototype.baz = JSCompiler_unstubMethod(1, function() { return 1; });
+            Goo.prototype.baz = JSCompiler_unstubMethod(0, function() { return 2; });
+            (new Foo).baz()
+            """,
             // Chunk 4
             "",
             // Chunk 5
@@ -1025,9 +1104,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forStar()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype.baz = function() {};"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.baz = function() {};
+                    """)
                 .addChunk("(new Foo).baz()")
                 .addChunk("(new Foo).baz()")
                 .build()));
@@ -1049,9 +1129,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
     JSChunk[] chunks =
         JSChunkGraphBuilder.forUnordered()
             .addChunk(
-                lines(
-                    "function Foo() {}", //
-                    "Foo.prototype.baz = function() {};"))
+                """
+                function Foo() {}
+                Foo.prototype.baz = function() {};
+                """)
             // Chunk 2
             // a blank chunk in the middle
             .addChunk("")
@@ -1118,9 +1199,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype.baz = function() {};"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.baz = function() {};
+                    """)
                 // Chunk 2
                 .addChunk("Foo.prototype.callBaz = function() { this.baz(); }")
                 // Chunk 3
@@ -1134,11 +1216,12 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
             // Chunk 2
             "Foo.prototype.callBaz = JSCompiler_stubMethod(1);",
             // Chunk 3
-            lines(
-                "Foo.prototype.callBaz = ",
-                "  JSCompiler_unstubMethod(1, function() { this.baz(); });",
-                "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});",
-                "(new Foo).callBaz()")));
+            """
+            Foo.prototype.callBaz =
+              JSCompiler_unstubMethod(1, function() { this.baz(); });
+            Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});
+            (new Foo).callBaz()
+            """));
   }
 
   @Test
@@ -1160,10 +1243,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
             // Chunk 2
             "Foo.prototype.callBaz = JSCompiler_stubMethod(1);",
             // Chunk 3
-            lines(
-                "Foo.prototype.callBaz = JSCompiler_unstubMethod(1, function() { this.baz(); });",
-                "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});",
-                "(new Foo).callBaz()")));
+            """
+            Foo.prototype.callBaz = JSCompiler_unstubMethod(1, function() { this.baz(); });
+            Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});
+            (new Foo).callBaz()
+            """));
   }
 
   @Test
@@ -1175,9 +1259,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype.baz = function() {};"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.baz = function() {};
+                    """)
                 // Chunk 2
                 // call before definition
                 .addChunk("(new Foo).callBaz()")
@@ -1192,9 +1277,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
             // Chunk 2
             "(new Foo).callBaz()",
             // Chunk 3
-            lines(
-                "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});",
-                "Foo.prototype.callBaz = function() { this.baz(); };")));
+            """
+            Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});
+            Foo.prototype.callBaz = function() { this.baz(); };
+            """));
   }
 
   @Test
@@ -1205,12 +1291,13 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}",
-                        "Foo.prototype.baz = function() {};",
-                        // usage here doesn't really happen until x() is called, so
-                        // it's OK to move the definition of baz().
-                        "function x() { return (new Foo).baz(); }"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.baz = function() {};
+                    // usage here doesn't really happen until x() is called, so
+                    // it's OK to move the definition of baz().
+                    function x() { return (new Foo).baz(); }
+                    """)
                 // Chunk 2
                 .addChunk("x();")
                 .build()),
@@ -1221,9 +1308,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "Foo.prototype.baz = JSCompiler_stubMethod(0);",
                 "function x() { return (new Foo).baz(); }"),
             // Chunk 2
-            lines(
-                "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});", //
-                "x();")));
+            """
+            Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});
+            x();
+            """));
   }
 
   @Test
@@ -1234,13 +1322,14 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "class Foo {",
-                        "  baz() {}",
-                        "}",
-                        // usage here doesn't really happen until x() is called, so
-                        // it's OK to move the definition of baz().
-                        "function x() { return (new Foo).baz(); }"))
+                    """
+                    class Foo {
+                      baz() {}
+                    }
+                    // usage here doesn't really happen until x() is called, so
+                    // it's OK to move the definition of baz().
+                    function x() { return (new Foo).baz(); }
+                    """)
                 // Chunk 2
                 .addChunk("x();")
                 .build()),
@@ -1251,9 +1340,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "Foo.prototype.baz = JSCompiler_stubMethod(0);",
                 "function x() { return (new Foo).baz(); }"),
             // Chunk 2
-            lines(
-                "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});", //
-                "x();")));
+            """
+            Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});
+            x();
+            """));
   }
 
   // Read of closure variable disables method motions.
@@ -1263,12 +1353,13 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}",
-                        "(function() {",
-                        "  var x = 'x';",
-                        "  Foo.prototype.baz = function() {x};",
-                        "})();"))
+                    """
+                    function Foo() {}
+                    (function() {
+                      var x = 'x';
+                      Foo.prototype.baz = function() {x};
+                    })();
+                    """)
                 .addChunk("var y = new Foo(); y.baz();")
                 .build()));
   }
@@ -1281,11 +1372,12 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "const Foo = (function() {",
-                        "  var x = 'x';",
-                        "  return class Foo { baz() { return x; } };",
-                        "})();"))
+                    """
+                    const Foo = (function() {
+                      var x = 'x';
+                      return class Foo { baz() { return x; } };
+                    })();
+                    """)
                 .addChunk("var y = new Foo(); y.baz();")
                 .build()));
   }
@@ -1296,16 +1388,17 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}",
-                        "Foo.prototype.b1 = function() {",
-                        "  var x = 1;",
-                        "  Foo.prototype.b2 = function() {",
-                        "    Foo.prototype.b3 = function() {",
-                        "      x;",
-                        "    }",
-                        "  }",
-                        "};"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.b1 = function() {
+                      var x = 1;
+                      Foo.prototype.b2 = function() {
+                        Foo.prototype.b3 = function() {
+                          x;
+                        }
+                      }
+                    };
+                    """)
                 // Chunk 2
                 .addChunk("var y = new Foo(); y.b1();")
                 // Chunk 3
@@ -1319,16 +1412,17 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "function Foo() {}",
                 "Foo.prototype.b1 = JSCompiler_stubMethod(0);"),
             // Chunk 2
-            lines(
-                "Foo.prototype.b1 = JSCompiler_unstubMethod(0, function() {",
-                "  var x = 1;",
-                "  Foo.prototype.b2 = function() {",
-                "    Foo.prototype.b3 = function() {",
-                "      x;",
-                "    }",
-                "  }",
-                "});",
-                "var y = new Foo(); y.b1();"),
+            """
+            Foo.prototype.b1 = JSCompiler_unstubMethod(0, function() {
+              var x = 1;
+              Foo.prototype.b2 = function() {
+                Foo.prototype.b3 = function() {
+                  x;
+                }
+              }
+            });
+            var y = new Foo(); y.b1();
+            """,
             // Chunk 3
             "y = new Foo(); z.b2();",
             // Chunk 4
@@ -1342,18 +1436,19 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "class Foo {",
-                        "  b1() {",
-                        "    var x = 1;",
-                        // b2 cannot be extracted, because it contains a reference to x
-                        "    Foo.prototype.b2 = function() {",
-                        "      Foo.prototype.b3 = function() {",
-                        "        x;",
-                        "      }",
-                        "    }",
-                        "  };",
-                        "}"))
+                    """
+                    class Foo {
+                      b1() {
+                        var x = 1;
+                    // b2 cannot be extracted, because it contains a reference to x
+                        Foo.prototype.b2 = function() {
+                          Foo.prototype.b3 = function() {
+                            x;
+                          }
+                        }
+                      };
+                    }
+                    """)
                 .addChunk("var y = new Foo(); y.b1();")
                 .addChunk("y = new Foo(); z.b2();")
                 .addChunk("y = new Foo(); z.b3();")
@@ -1364,16 +1459,17 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "class Foo {}",
                 "Foo.prototype.b1 = JSCompiler_stubMethod(0);"),
             // Chunk 2
-            lines(
-                "Foo.prototype.b1 = JSCompiler_unstubMethod(0, function() {",
-                "  var x = 1;",
-                "  Foo.prototype.b2 = function() {",
-                "    Foo.prototype.b3 = function() {",
-                "      x;",
-                "    }",
-                "  }",
-                "});",
-                "var y = new Foo(); y.b1();"),
+            """
+            Foo.prototype.b1 = JSCompiler_unstubMethod(0, function() {
+              var x = 1;
+              Foo.prototype.b2 = function() {
+                Foo.prototype.b3 = function() {
+                  x;
+                }
+              }
+            });
+            var y = new Foo(); y.b1();
+            """,
             // Chunk 3
             "y = new Foo(); z.b2();",
             // Chunk 4
@@ -1390,20 +1486,21 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}",
-                        "Foo.prototype.b1 = function() {",
-                        // definition of b2 can be extracted, because it doesn't refer to any
-                        // variables
-                        // defined by b1.
-                        "  Foo.prototype.b2 = function() {",
-                        "    var x = 1;",
-                        // definition of b3 cannot be extracted, because it refers to x
-                        "    Foo.prototype.b3 = function() {",
-                        "      x;",
-                        "    }",
-                        "  }",
-                        "};"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.b1 = function() {
+                    // definition of b2 can be extracted, because it doesn't refer to any
+                    // variables
+                    // defined by b1.
+                      Foo.prototype.b2 = function() {
+                        var x = 1;
+                    // definition of b3 cannot be extracted, because it refers to x
+                        Foo.prototype.b3 = function() {
+                          x;
+                        }
+                      }
+                    };
+                    """)
                 .addChunk("var y = new Foo(); y.b1();")
                 .addChunk("y = new Foo(); z.b2();")
                 .addChunk("y = new Foo(); z.b3();")
@@ -1414,20 +1511,22 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "function Foo() {}",
                 "Foo.prototype.b1 = JSCompiler_stubMethod(0);"),
             // Chunk 2
-            lines(
-                "Foo.prototype.b1 = JSCompiler_unstubMethod(0, function() {",
-                "  Foo.prototype.b2 = JSCompiler_stubMethod(1);",
-                "});",
-                "var y = new Foo(); y.b1();"),
+            """
+            Foo.prototype.b1 = JSCompiler_unstubMethod(0, function() {
+              Foo.prototype.b2 = JSCompiler_stubMethod(1);
+            });
+            var y = new Foo(); y.b1();
+            """,
             // Chunk 3
-            lines(
-                "Foo.prototype.b2 = JSCompiler_unstubMethod(1, function() {",
-                "  var x = 1;",
-                "  Foo.prototype.b3 = function() {",
-                "    x;",
-                "  }",
-                "});",
-                "y = new Foo(); z.b2();"),
+            """
+            Foo.prototype.b2 = JSCompiler_unstubMethod(1, function() {
+              var x = 1;
+              Foo.prototype.b3 = function() {
+                x;
+              }
+            });
+            y = new Foo(); z.b2();
+            """,
             // Chunk 4
             "y = new Foo(); z.b3();"));
   }
@@ -1442,21 +1541,22 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "class Foo {",
-                        "  b1() {",
-                        // definition of b2 can be extracted, because it doesn't refer to any
-                        // variables
-                        // defined by b1.
-                        "    Foo.prototype.b2 = function() {",
-                        "      var x = 1;",
-                        // definition of b3 cannot be extracted, because it refers to x
-                        "      Foo.prototype.b3 = function() {",
-                        "        x;",
-                        "      }",
-                        "    }",
-                        "  }",
-                        "}"))
+                    """
+                    class Foo {
+                      b1() {
+                    // definition of b2 can be extracted, because it doesn't refer to any
+                    // variables
+                    // defined by b1.
+                        Foo.prototype.b2 = function() {
+                          var x = 1;
+                    // definition of b3 cannot be extracted, because it refers to x
+                          Foo.prototype.b3 = function() {
+                            x;
+                          }
+                        }
+                      }
+                    }
+                    """)
                 // Chunk 2
                 .addChunk("var y = new Foo(); y.b1();")
                 // Chunk 3
@@ -1470,25 +1570,27 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "class Foo {}",
                 "Foo.prototype.b1 = JSCompiler_stubMethod(0);"),
             // Chunk 2
-            lines(
-                "Foo.prototype.b1 =",
-                "    JSCompiler_unstubMethod(",
-                "        0,",
-                "        function() {",
-                "          Foo.prototype.b2 = JSCompiler_stubMethod(1);",
-                "        });",
-                "",
-                "",
-                "var y = new Foo(); y.b1();"),
+            """
+            Foo.prototype.b1 =
+                JSCompiler_unstubMethod(
+                    0,
+                    function() {
+                      Foo.prototype.b2 = JSCompiler_stubMethod(1);
+                    });
+
+
+            var y = new Foo(); y.b1();
+            """,
             // Chunk 3
-            lines(
-                "Foo.prototype.b2 = JSCompiler_unstubMethod(1, function() {",
-                "  var x = 1;",
-                "  Foo.prototype.b3 = function() {",
-                "    x;",
-                "  }",
-                "});",
-                "y = new Foo(); z.b2();"),
+            """
+            Foo.prototype.b2 = JSCompiler_unstubMethod(1, function() {
+              var x = 1;
+              Foo.prototype.b3 = function() {
+                x;
+              }
+            });
+            y = new Foo(); z.b2();
+            """,
             // Chunk 4
             "y = new Foo(); z.b3();"));
   }
@@ -1500,10 +1602,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "var x = 'x';",
-                        "Foo.prototype.baz = function(){x};"))
+                    """
+                    function Foo() {}
+                    var x = 'x';
+                    Foo.prototype.baz = function(){x};
+                    """)
                 .addChunk("var y = new Foo(); y.baz();")
                 .build()),
         expected(
@@ -1513,9 +1616,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "var x = 'x';",
                 "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
             // Chunk 2
-            lines(
-                "Foo.prototype.baz = JSCompiler_unstubMethod(0, function(){x});", //
-                "var y = new Foo(); y.baz();")));
+            """
+            Foo.prototype.baz = JSCompiler_unstubMethod(0, function(){x});
+            var y = new Foo(); y.baz();
+            """));
   }
 
   // Read of global variable is fine.
@@ -1525,12 +1629,12 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "class Foo {", //
-                        "  baz() { x; }",
-                        "}",
-                        "var x = 'x';",
-                        ""))
+                    """
+                    class Foo {
+                      baz() { x; }
+                    }
+                    var x = 'x';
+                    """)
                 .addChunk("var y = new Foo(); y.baz();")
                 .build()),
         expected(
@@ -1541,9 +1645,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "var x = 'x';",
                 ""),
             // Chunk 2
-            lines(
-                "Foo.prototype.baz = JSCompiler_unstubMethod(0, function(){x});", //
-                "var y = new Foo(); y.baz();")));
+            """
+            Foo.prototype.baz = JSCompiler_unstubMethod(0, function(){x});
+            var y = new Foo(); y.baz();
+            """));
   }
 
   // Read of a local is fine.
@@ -1553,9 +1658,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}", //
-                        "Foo.prototype.baz = function(){var x = 1;x};"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.baz = function(){var x = 1;x};
+                    """)
                 .addChunk("var y = new Foo(); y.baz();")
                 .build()),
         expected(
@@ -1564,10 +1670,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "function Foo() {}",
                 "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
             // Chunk 2
-            lines(
-                "Foo.prototype.baz = JSCompiler_unstubMethod(",
-                "    0, function(){var x = 1; x});",
-                "var y = new Foo(); y.baz();")));
+            """
+            Foo.prototype.baz = JSCompiler_unstubMethod(
+                0, function(){var x = 1; x});
+            var y = new Foo(); y.baz();
+            """));
   }
 
   // Read of a local is fine.
@@ -1585,10 +1692,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "class Foo {}",
                 "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
             // Chunk 2
-            lines(
-                "Foo.prototype.baz = JSCompiler_unstubMethod(",
-                "    0, function(){var x = 1; x});",
-                "var y = new Foo(); y.baz();")));
+            """
+            Foo.prototype.baz = JSCompiler_unstubMethod(
+                0, function(){var x = 1; x});
+            var y = new Foo(); y.baz();
+            """));
   }
 
   // An anonymous inner function reading a closure variable is fine.
@@ -1598,12 +1706,13 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo() {}",
-                        "Foo.prototype.baz = function() {",
-                        "  var x = 1;",
-                        "  return function(){x}",
-                        "};"))
+                    """
+                    function Foo() {}
+                    Foo.prototype.baz = function() {
+                      var x = 1;
+                      return function(){x}
+                    };
+                    """)
                 .addChunk("var y = new Foo(); y.baz();")
                 .build()),
         expected(
@@ -1612,10 +1721,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "function Foo() {}",
                 "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
             // Chunk 2
-            lines(
-                "Foo.prototype.baz = JSCompiler_unstubMethod(",
-                "    0, function(){var x = 1; return function(){x}});",
-                "var y = new Foo(); y.baz();")));
+            """
+            Foo.prototype.baz = JSCompiler_unstubMethod(
+                0, function(){var x = 1; return function(){x}});
+            var y = new Foo(); y.baz();
+            """));
   }
 
   @Test
@@ -1624,13 +1734,14 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "class Foo {",
-                        "  baz() {",
-                        "    var x = 1;",
-                        "    return function(){x}",
-                        "  }",
-                        "}"))
+                    """
+                    class Foo {
+                      baz() {
+                        var x = 1;
+                        return function(){x}
+                      }
+                    }
+                    """)
                 .addChunk("var y = new Foo(); y.baz();")
                 .build()),
         expected(
@@ -1639,10 +1750,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "class Foo {}",
                 "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
             // Chunk 2
-            lines(
-                "Foo.prototype.baz = JSCompiler_unstubMethod(",
-                "    0, function(){var x = 1; return function(){x}});",
-                "var y = new Foo(); y.baz();")));
+            """
+            Foo.prototype.baz = JSCompiler_unstubMethod(
+                0, function(){var x = 1; return function(){x}});
+            var y = new Foo(); y.baz();
+            """));
   }
 
   @Test
@@ -1653,18 +1765,19 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "class Bar {", //
-                        "  method() {",
-                        "  }",
-                        "  static {",
-                        "  }",
-                        "}",
-                        "class Foo extends Bar {",
-                        "  method2() {",
-                        "    return () => super.method();",
-                        "  }",
-                        "}"))
+                    """
+                    class Bar {
+                      method() {
+                      }
+                      static {
+                      }
+                    }
+                    class Foo extends Bar {
+                      method2() {
+                        return () => super.method();
+                      }
+                    }
+                    """)
                 .addChunk("(new Foo).method2()")
                 .build()),
         expected(
@@ -1681,9 +1794,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "  }",
                 "}"),
             // Chunk 2
-            lines(
-                "Bar.prototype.method = JSCompiler_unstubMethod(0, function() {});",
-                "(new Foo).method2()")));
+            """
+            Bar.prototype.method = JSCompiler_unstubMethod(0, function() {});
+            (new Foo).method2()
+            """));
   }
 
   @Test
@@ -1694,19 +1808,20 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "class Bar {", //
-                        "  method() {",
-                        "  }",
-                        "  static {",
-                        "    this.prototype.method;",
-                        "  }",
-                        "}",
-                        "class Foo extends Bar {",
-                        "  method2() {",
-                        "    return () => super.method();",
-                        "  }",
-                        "}"))
+                    """
+                    class Bar {
+                      method() {
+                      }
+                      static {
+                        this.prototype.method;
+                      }
+                    }
+                    class Foo extends Bar {
+                      method2() {
+                        return () => super.method();
+                      }
+                    }
+                    """)
                 .addChunk("(new Foo).method2()")
                 .build()));
   }
@@ -1719,18 +1834,19 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "class Bar {", //
-                        "  method() {}",
-                        "}",
-                        "class Foo extends Bar {",
-                        "  static {",
-                        "    (new Bar).method();",
-                        "  }",
-                        "  method2() {",
-                        "    return () => super.method();",
-                        "  }",
-                        "}"))
+                    """
+                    class Bar {
+                      method() {}
+                    }
+                    class Foo extends Bar {
+                      static {
+                        (new Bar).method();
+                      }
+                      method2() {
+                        return () => super.method();
+                      }
+                    }
+                    """)
                 .addChunk("(new Foo).method2()")
                 .build()));
   }
@@ -1741,20 +1857,22 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "class Bar {", //
-                        "  method() {}",
-                        "}"))
+                    """
+                    class Bar {
+                      method() {}
+                    }
+                    """)
                 .addChunk(
-                    lines(
-                        "class Foo extends Bar {",
-                        "  static {",
-                        "    (new Bar()).method();",
-                        "  }",
-                        "  method2() {",
-                        "    return () => { return super.method(); };",
-                        "  }",
-                        "}"))
+                    """
+                    class Foo extends Bar {
+                      static {
+                        (new Bar()).method();
+                      }
+                      method2() {
+                        return () => { return super.method(); };
+                      }
+                    }
+                    """)
                 .addChunk("(new Foo).method2()")
                 .build()),
         expected(
@@ -1764,16 +1882,17 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "}",
                 "Bar.prototype.method = JSCompiler_stubMethod(0);"),
             // Chunk 2
-            lines(
-                "Bar.prototype.method = JSCompiler_unstubMethod(0, function() {});",
-                "class Foo extends Bar {",
-                "  static {",
-                "    (new Bar()).method();",
-                "  }",
-                "  method2() {",
-                "    return () => { return super.method(); };",
-                "  }",
-                "}"),
+            """
+            Bar.prototype.method = JSCompiler_unstubMethod(0, function() {});
+            class Foo extends Bar {
+              static {
+                (new Bar()).method();
+              }
+              method2() {
+                return () => { return super.method(); };
+              }
+            }
+            """,
             // Chunk 3
             lines("(new Foo()).method2();")));
   }
@@ -1784,23 +1903,25 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "var jQuery1 = (function() {",
-                        "  var jQuery2 = function() {};",
-                        "  var theLoneliestNumber = 1;",
-                        "  jQuery2.prototype = {",
-                        "    size: function() {",
-                        "      return theLoneliestNumber;",
-                        "    }",
-                        "  };",
-                        "  return jQuery2;",
-                        "})();"))
+                    """
+                    var jQuery1 = (function() {
+                      var jQuery2 = function() {};
+                      var theLoneliestNumber = 1;
+                      jQuery2.prototype = {
+                        size: function() {
+                          return theLoneliestNumber;
+                        }
+                      };
+                      return jQuery2;
+                    })();
+                    """)
                 .addChunk(
-                    lines(
-                        "(function() {", //
-                        "  var div = jQuery1('div');",
-                        "  div.size();",
-                        "})();"))
+                    """
+                    (function() {
+                      var div = jQuery1('div');
+                      div.size();
+                    })();
+                    """)
                 .build()));
   }
 
@@ -1810,22 +1931,24 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "var jQuery1 = (function() {",
-                        "  var jQuery2 = function() {};",
-                        "  jQuery2.prototype = {",
-                        "    size: function() {",
-                        "      return 1;",
-                        "    }",
-                        "  };",
-                        "  return jQuery2;",
-                        "})();\n"))
+                    """
+                    var jQuery1 = (function() {
+                      var jQuery2 = function() {};
+                      jQuery2.prototype = {
+                        size: function() {
+                          return 1;
+                        }
+                      };
+                      return jQuery2;
+                    })();
+                    """)
                 .addChunk(
-                    lines(
-                        "(function() {", //
-                        "  var div = jQuery1('div');",
-                        "  div.size();",
-                        "})();"))
+                    """
+                    (function() {
+                      var div = jQuery1('div');
+                      div.size();
+                    })();
+                    """)
                 .build()));
   }
 
@@ -1835,19 +1958,21 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "var jQuery2 = function() {};",
-                        "jQuery2.prototype = {",
-                        "  size: function() {",
-                        "    return 1;",
-                        "  }",
-                        "};"))
+                    """
+                    var jQuery2 = function() {};
+                    jQuery2.prototype = {
+                      size: function() {
+                        return 1;
+                      }
+                    };
+                    """)
                 .addChunk(
-                    lines(
-                        "(function() {", //
-                        "  var div = jQuery2('div');",
-                        "  div.size();",
-                        "})();"))
+                    """
+                    (function() {
+                      var div = jQuery2('div');
+                      div.size();
+                    })();
+                    """)
                 .build()),
         expected(
             lines(
@@ -1857,13 +1982,14 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "  size: JSCompiler_stubMethod(0)",
                 "};"),
             // Chunk 2
-            lines(
-                "jQuery2.prototype.size=",
-                "    JSCompiler_unstubMethod(0,function(){return 1});",
-                "(function() {",
-                "  var div = jQuery2('div');",
-                "  div.size();",
-                "})();")));
+            """
+            jQuery2.prototype.size=
+                JSCompiler_unstubMethod(0,function(){return 1});
+            (function() {
+              var div = jQuery2('div');
+              div.size();
+            })();
+            """));
   }
 
   @Test
@@ -1872,21 +1998,23 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "var jQuery2 = function() {};",
-                        "(function() {",
-                        "  jQuery2.prototype = {",
-                        "    size: function() {",
-                        "      return 1;",
-                        "    }",
-                        "  };",
-                        "})();"))
+                    """
+                    var jQuery2 = function() {};
+                    (function() {
+                      jQuery2.prototype = {
+                        size: function() {
+                          return 1;
+                        }
+                      };
+                    })();
+                    """)
                 .addChunk(
-                    lines(
-                        "(function() {", //
-                        "  var div = jQuery2('div');",
-                        "  div.size();",
-                        "})();"))
+                    """
+                    (function() {
+                      var div = jQuery2('div');
+                      div.size();
+                    })();
+                    """)
                 .build()),
         expected(
             lines(
@@ -1897,13 +2025,14 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "    size: JSCompiler_stubMethod(0)",
                 "  };",
                 "})();"),
-            lines(
-                "jQuery2.prototype.size=",
-                "    JSCompiler_unstubMethod(0,function(){return 1});",
-                "(function() {",
-                "  var div = jQuery2('div');",
-                "  div.size();",
-                "})();")));
+            """
+            jQuery2.prototype.size=
+                JSCompiler_unstubMethod(0,function(){return 1});
+            (function() {
+              var div = jQuery2('div');
+              div.size();
+            })();
+            """));
   }
 
   @Test
@@ -1912,22 +2041,24 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "var jQuery2 = function() {};",
-                        "(function() {",
-                        "  var theLoneliestNumber = 1;",
-                        "  jQuery2.prototype = {",
-                        "    size: function() {",
-                        "      return theLoneliestNumber;",
-                        "    }",
-                        "  };",
-                        "})();"))
+                    """
+                    var jQuery2 = function() {};
+                    (function() {
+                      var theLoneliestNumber = 1;
+                      jQuery2.prototype = {
+                        size: function() {
+                          return theLoneliestNumber;
+                        }
+                      };
+                    })();
+                    """)
                 .addChunk(
-                    lines(
-                        "(function() {", //
-                        "  var div = jQuery2('div');",
-                        "  div.size();",
-                        "})();"))
+                    """
+                    (function() {
+                      var div = jQuery2('div');
+                      div.size();
+                    })();
+                    """)
                 .build()));
   }
 
@@ -1937,9 +2068,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "/** @constructor */", //
-                        "function F() {}"))
+                    """
+                    /** @constructor */
+                    function F() {}
+                    """)
                 .addChunk("this.prototype.foo = function() {};")
                 .addChunk("(new F()).foo();")
                 .build()));
@@ -1951,10 +2083,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "/** @constructor */", //
-                        "function F() {}",
-                        "F.prototype.foo = function() {};"))
+                    """
+                    /** @constructor */
+                    function F() {}
+                    F.prototype.foo = function() {};
+                    """)
                 .addChunk("const {foo} = new F();")
                 .build()),
         expected(
@@ -1963,9 +2096,10 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 "/** @constructor */",
                 "function F() {}",
                 "F.prototype.foo = JSCompiler_stubMethod(0);"),
-            lines(
-                "F.prototype.foo = JSCompiler_unstubMethod(0, function(){});", //
-                "const {foo} = new F();")));
+            """
+            F.prototype.foo = JSCompiler_unstubMethod(0, function(){});
+            const {foo} = new F();
+            """));
   }
 
   @Test
@@ -1974,10 +2108,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "/** @constructor */", //
-                        "function F() {}",
-                        "F.prototype.foo = function() {};"))
+                    """
+                    /** @constructor */
+                    function F() {}
+                    F.prototype.foo = function() {};
+                    """)
                 .addChunk("const {'foo': foo} = new F();")
                 .build()));
   }
@@ -1989,10 +2124,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "/** @constructor */", //
-                        "function F() {}",
-                        "F.prototype['foo'] = function() {};"))
+                    """
+                    /** @constructor */
+                    function F() {}
+                    F.prototype['foo'] = function() {};
+                    """)
                 .addChunk("const {['foo']: foo} = new F();")
                 .build()));
   }

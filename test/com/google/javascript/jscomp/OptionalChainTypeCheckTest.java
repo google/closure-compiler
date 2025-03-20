@@ -165,17 +165,23 @@ public class OptionalChainTypeCheckTest {
               .forObjType("Array<number>")
               .withExpr("a?.[0];")
               .assignedTo("string")
-              .mustReport(lines("assignment", "found   : (number|undefined)", "required: string"))
+              .mustReport(
+                  """
+                  assignment
+                  found   : (number|undefined)
+                  required: string
+                  """)
               .build(),
           OptChainTestCase.builder()
               .forObjType("Array<?number>")
               .withExpr("a?.[0];")
               .assignedTo("number|undefined")
               .mustReport(
-                  lines(
-                      "assignment",
-                      "found   : (null|number|undefined)",
-                      "required: (number|undefined)"))
+                  """
+                  assignment
+                  found   : (null|number|undefined)
+                  required: (number|undefined)
+                  """)
               .build(),
           OptChainTestCase.builder()
               .forObjType("null")
@@ -211,17 +217,22 @@ public class OptionalChainTypeCheckTest {
               .withExpr("a[b];")
               .assignedTo("?")
               .mustReport(
-                  lines(
-                      "only arrays or objects can be accessed",
-                      "found   : null",
-                      "required: Object"))
+                  """
+                  only arrays or objects can be accessed
+                  found   : null
+                  required: Object
+                  """)
               .build(),
           OptChainTestCase.builder()
               .forObjType("null")
               .withExpr("a.b?.[c];")
               .assignedTo("?")
               .mustReport(
-                  lines("No properties on this expression", "found   : null", "required: Object"))
+                  """
+                  No properties on this expression
+                  found   : null
+                  required: Object
+                  """)
               .build());
     }
 
@@ -289,15 +300,23 @@ public class OptionalChainTypeCheckTest {
               .forObjType("{b:number}")
               .withExpr("a?.b;")
               .assignedTo("string")
-              .mustReport(lines("assignment", "found   : number", "required: string"))
+              .mustReport(
+                  """
+                  assignment
+                  found   : number
+                  required: string
+                  """)
               .build(),
           OptChainTestCase.builder()
               .forObjType("?{b:number}")
               .withExpr("a?.b;")
               .assignedTo("undefined|string")
               .mustReport(
-                  lines(
-                      "assignment", "found   : (number|undefined)", "required: (string|undefined)"))
+                  """
+                  assignment
+                  found   : (number|undefined)
+                  required: (string|undefined)
+                  """)
               .build(),
 
           // normal GETPROP
@@ -306,7 +325,11 @@ public class OptionalChainTypeCheckTest {
               .withExpr("a.alert();")
               .assignedTo("?")
               .mustReport(
-                  lines("No properties on this expression", "found   : null", "required: Object"))
+                  """
+                  No properties on this expression
+                  found   : null
+                  required: Object
+                  """)
               .build());
     }
 
@@ -476,13 +499,23 @@ public class OptionalChainTypeCheckTest {
               .withPropReturnType("string")
               .withExpr("a?.prop()")
               .assignedTo("number")
-              .mustReport(lines("assignment", "found   : string", "required: number"))
+              .mustReport(
+                  """
+                  assignment
+                  found   : string
+                  required: number
+                  """)
               .build(),
           OptChainTestCase.builder()
               .withPropReturnType("?string")
               .withExpr("a?.prop()")
               .assignedTo("string")
-              .mustReport(lines("assignment", "found   : (null|string)", "required: string"))
+              .mustReport(
+                  """
+                  assignment
+                  found   : (null|string)
+                  required: string
+                  """)
               .build(),
 
           // non-optional tests
@@ -502,13 +535,23 @@ public class OptionalChainTypeCheckTest {
               .withPropReturnType("string")
               .withExpr("a.prop()")
               .assignedTo("number")
-              .mustReport(lines("assignment", "found   : string", "required: number"))
+              .mustReport(
+                  """
+                  assignment
+                  found   : string
+                  required: number
+                  """)
               .build(),
           OptChainTestCase.builder()
               .withPropReturnType("?string")
               .withExpr("a.prop()")
               .assignedTo("string")
-              .mustReport(lines("assignment", "found   : (null|string)", "required: string"))
+              .mustReport(
+                  """
+                  assignment
+                  found   : (null|string)
+                  required: string
+                  """)
               .build(),
 
           // We don't report an error when a null or undefined type is called as a function
@@ -618,7 +661,11 @@ public class OptionalChainTypeCheckTest {
       newTest()
           .addSource("/** @return {void}*/function foo(){foo().bar;}")
           .addDiagnostic(
-              lines("No properties on this expression", "found   : undefined", "required: Object"))
+              """
+              No properties on this expression
+              found   : undefined
+              required: Object
+              """)
           .run();
     }
 
@@ -656,10 +703,11 @@ public class OptionalChainTypeCheckTest {
       newTest()
           .addSource("/** @param {!Number} foo*/function bar(foo){ bar('abc'); }")
           .addDiagnostic(
-              lines(
-                  "actual parameter 1 of bar does not match formal parameter",
-                  "found   : string",
-                  "required: Number"))
+              """
+              actual parameter 1 of bar does not match formal parameter
+              found   : string
+              required: Number
+              """)
           .run();
     }
 
@@ -668,10 +716,11 @@ public class OptionalChainTypeCheckTest {
       newTest()
           .addSource("/** @param {!Number} foo*/function bar(foo){ bar?.('abc'); }")
           .addDiagnostic(
-              lines(
-                  "actual parameter 1 of bar does not match formal parameter",
-                  "found   : string",
-                  "required: Number"))
+              """
+              actual parameter 1 of bar does not match formal parameter
+              found   : string
+              required: Number
+              """)
           .run();
     }
 

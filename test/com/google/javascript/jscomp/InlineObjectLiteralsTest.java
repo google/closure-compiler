@@ -117,14 +117,15 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
 
     String src = "{let a;if(Math.random()){a={x:''};console.log(a.x)}};";
     String expected =
-        lines(
-            "{",
-            "  var JSCompiler_object_inline_x_0;",
-            "  if (Math.random()) {",
-            "    JSCompiler_object_inline_x_0 = '', true;",
-            "    console.log(JSCompiler_object_inline_x_0);",
-            "  }",
-            "};");
+        """
+        {
+          var JSCompiler_object_inline_x_0;
+          if (Math.random()) {
+            JSCompiler_object_inline_x_0 = '', true;
+            console.log(JSCompiler_object_inline_x_0);
+          }
+        };
+        """;
 
     test(src, expected);
   }
@@ -145,12 +146,13 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
 
     String src = "{let a; a={x:\"\"};console.log(a.x);}";
     String expected =
-        lines(
-            "{",
-            "  var JSCompiler_object_inline_x_0;",
-            "  JSCompiler_object_inline_x_0 = \"\", true;",
-            "  console.log(JSCompiler_object_inline_x_0);",
-            "}");
+        """
+        {
+          var JSCompiler_object_inline_x_0;
+          JSCompiler_object_inline_x_0 = "", true;
+          console.log(JSCompiler_object_inline_x_0);
+        }
+        """;
     test(src, expected);
   }
 
@@ -160,17 +162,18 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(getOptions());
 
     String src =
-        lines(
-            "const b = () => ({ x: '' })",
-            "function main() {",
-            "  let a;",
-            "  if (Math.random()) {",
-            // regardless of scope, only direct assignments to object literals get inlined.
-            "    a = b();",
-            "    alert(a.x);",
-            "  }",
-            "}",
-            "main();");
+        """
+        const b = () => ({ x: '' })
+        function main() {
+          let a;
+          if (Math.random()) {
+        // regardless of scope, only direct assignments to object literals get inlined.
+            a = b();
+            alert(a.x);
+          }
+        }
+        main();
+        """;
     testSameLocal(src);
   }
 
@@ -180,15 +183,16 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(getOptions());
 
     String src =
-        lines(
-            "const b = () => ({ x: '' })",
-            "function main() {",
-            "  let a;",
-            // regardless of scope, only direct assignments to object literals get inlined.
-            "  a = b();",
-            "  alert(a.x);",
-            "}",
-            "main();");
+        """
+        const b = () => ({ x: '' })
+        function main() {
+          let a;
+        // regardless of scope, only direct assignments to object literals get inlined.
+          a = b();
+          alert(a.x);
+        }
+        main();
+        """;
     testSameLocal(src);
   }
 
@@ -580,10 +584,11 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   public void testInlineObjectWithLet() {
     testLocal(
         "let a = {x:x(), y:y()}; f(a.x, a.y);",
-        lines(
-            "var JSCompiler_object_inline_x_0=x();",
-            "var JSCompiler_object_inline_y_1=y();",
-            "f(JSCompiler_object_inline_x_0, JSCompiler_object_inline_y_1);"));
+        """
+        var JSCompiler_object_inline_x_0=x();
+        var JSCompiler_object_inline_y_1=y();
+        f(JSCompiler_object_inline_x_0, JSCompiler_object_inline_y_1);
+        """);
   }
 
   @Test
@@ -647,113 +652,141 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   @Test
   public void testProto() {
     testSameLocal(
-        lines(
-            "var protoObject = {",
-            "  f: function() {",
-            "    return 1;",
-            "  }",
-            "};",
-            "var object = {",
-            "  __proto__: protoObject,",
-            "};",
-            "g(object.f);"));
+        """
+        var protoObject = {
+          f: function() {
+            return 1;
+          }
+        };
+        var object = {
+          __proto__: protoObject,
+        };
+        g(object.f);
+        """);
 
     testSame(
         externs(
-            lines(
-                "var protoObject = {",
-                "  f: function() {",
-                "    return 1;",
-                "  }",
-                "};",
-                "var object = {",
-                "  __proto__: protoObject,",
-                "  g: false",
-                "};",
-                "g(object.g);")),
+            """
+            var protoObject = {
+              f: function() {
+                return 1;
+              }
+            };
+            var object = {
+              __proto__: protoObject,
+              g: false
+            };
+            g(object.g);
+            """),
         srcs(
-            lines(
-                "var protoObject = {",
-                "  f: function() {",
-                "    return 1;",
-                "  }",
-                "};",
-                "var JSCompiler_object_inline___proto___0=protoObject;",
-                "var JSCompiler_object_inline_g_1=false;",
-                "g(JSCompiler_object_inline_g_1)")));
+            """
+            var protoObject = {
+              f: function() {
+                return 1;
+              }
+            };
+            var JSCompiler_object_inline___proto___0=protoObject;
+            var JSCompiler_object_inline_g_1=false;
+            g(JSCompiler_object_inline_g_1)
+            """));
   }
 
   @Test
   public void testSuper() {
     testSameLocal(
-        lines(
-            "var superObject = {",
-            "  f() {",
-            "    return 1;",
-            "  }",
-            "};",
-            "var object = {",
-            "  __proto__: superObject,",
-            "  f() {",
-            "    return super.f();",
-            "  }",
-            "}",
-            "g(object.f());"));
+        """
+        var superObject = {
+          f() {
+            return 1;
+          }
+        };
+        var object = {
+          __proto__: superObject,
+          f() {
+            return super.f();
+          }
+        }
+        g(object.f());
+        """);
   }
 
   @Test
   public void testShorthandFunctions() {
     testSameLocal(
-        lines(
-            "var object = {",
-            "  items: [],",
-            "  add(item) {",
-            "    this.items.push(item);",
-            "  },",
-            "};",
-            "object.add(1);"));
+        """
+        var object = {
+          items: [],
+          add(item) {
+            this.items.push(item);
+          },
+        };
+        object.add(1);
+        """);
 
     testSameLocal(
-        lines("var object = {", "  one() {", "    return 1", "  },", "};", "object.one();"));
+        """
+        var object = {
+          one() {
+            return 1
+          },
+        };
+        object.one();
+        """);
   }
 
   @Test
   public void testShorthandAssignments() {
     testLocal(
-        lines("var object = {", "  x,", "  y", "};", "f(object.x, object.y);"),
-        lines(
-            "var JSCompiler_object_inline_x_0=x;",
-            "var JSCompiler_object_inline_y_1=y;",
-            "f(JSCompiler_object_inline_x_0,JSCompiler_object_inline_y_1)"));
+        """
+        var object = {
+          x,
+          y
+        };
+        f(object.x, object.y);
+        """,
+        """
+        var JSCompiler_object_inline_x_0=x;
+        var JSCompiler_object_inline_y_1=y;
+        f(JSCompiler_object_inline_x_0,JSCompiler_object_inline_y_1)
+        """);
 
     testLocal(
-        lines("var object = {", "  x,", "};", "object.y = y", "f(object.x, object.y);"),
-        lines(
-            "var JSCompiler_object_inline_x_0=x;",
-            "var JSCompiler_object_inline_y_1;",
-            "var JSCompiler_object_inline_y_1=y;",
-            "f(JSCompiler_object_inline_x_0,JSCompiler_object_inline_y_1)"));
+        """
+        var object = {
+          x,
+        };
+        object.y = y
+        f(object.x, object.y);
+        """,
+        """
+        var JSCompiler_object_inline_x_0=x;
+        var JSCompiler_object_inline_y_1;
+        var JSCompiler_object_inline_y_1=y;
+        f(JSCompiler_object_inline_x_0,JSCompiler_object_inline_y_1)
+        """);
   }
 
   @Test
   public void testComputedPropertyName() {
     testSameLocal(
-        lines(
-            "function addBar(name) {",
-            "  return name + 'Bar'",
-            "}",
-            "var object = {",
-            "  [addBar(\"foo\")]: 1",
-            "};"));
+        """
+        function addBar(name) {
+          return name + 'Bar'
+        }
+        var object = {
+          [addBar("foo")]: 1
+        };
+        """);
 
     testSameLocal(
-        lines(
-            "var sym = Symbol('key');",
-            "var object = {",
-            "  [sym]: 1,",
-            "  x: true",
-            "}",
-            "use(object[sym]);"));
+        """
+        var sym = Symbol('key');
+        var object = {
+          [sym]: 1,
+          x: true
+        }
+        use(object[sym]);
+        """);
   }
 
   @Test
@@ -761,10 +794,11 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
     testLocal("var obj = {'a.b.c': 'd'};", "var JSCompiler_object_inline_string_key_0 = 'd';");
     testLocal(
         "var obj = {'@': 5, '!': 4, 'foo': 3};",
-        lines(
-            "var JSCompiler_object_inline_string_key_0 = 5;",
-            "var JSCompiler_object_inline_string_key_1 = 4;",
-            "var JSCompiler_object_inline_foo_2 = 3;"));
+        """
+        var JSCompiler_object_inline_string_key_0 = 5;
+        var JSCompiler_object_inline_string_key_1 = 4;
+        var JSCompiler_object_inline_foo_2 = 3;
+        """);
 
     testSameLocal("var obj = {}; obj['@'] = 3;");
   }
@@ -779,18 +813,20 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   @Test
   public void testObjectSpread_readingFromSpreadAssignment() {
     testSameLocal(
-        lines(
-            "var obj = {...foo};", //
-            "use(obj.bar);"));
+        """
+        var obj = {...foo};
+        use(obj.bar);
+        """);
   }
 
   @Test
   public void testObjectSpread_readingFromOverwrittenProp() {
     testSameLocal(
-        lines(
-            "var foo = {prop: 7};",
-            "var obj = {prop: 6, ...foo};", //
-            "use(obj.prop);"));
+        """
+        var foo = {prop: 7};
+        var obj = {prop: 6, ...foo};
+        use(obj.prop);
+        """);
   }
 
   private static final String LOCAL_PREFIX = "function local(){";

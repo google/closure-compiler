@@ -57,18 +57,19 @@ public final class CheckConformanceTest extends CompilerTestCase {
           "function eval() {}");
 
   private static final String DEFAULT_CONFORMANCE =
-      lines(
-          "requirement: {",
-          "  type: BANNED_NAME",
-          "  value: 'eval'",
-          "   error_message: 'eval is not allowed'",
-          "}",
-          "",
-          "requirement: {",
-          "  type: BANNED_PROPERTY",
-          "  value: 'Arguments.prototype.callee'",
-          "  error_message: 'Arguments.prototype.callee is not allowed'",
-          "}");
+      """
+      requirement: {
+        type: BANNED_NAME
+        value: 'eval'
+         error_message: 'eval is not allowed'
+      }
+
+      requirement: {
+        type: BANNED_PROPERTY
+        value: 'Arguments.prototype.callee'
+        error_message: 'Arguments.prototype.callee is not allowed'
+      }
+      """;
 
   public CheckConformanceTest() {
     super(EXTERNS);
@@ -640,23 +641,42 @@ public final class CheckConformanceTest extends CompilerTestCase {
     String violationMessage =
         "Violation: Enhanced namespace is not allowed.\n" + "The enhanced namespace ";
 
-    String ban1 = lines("/**", " * @enhance {some.banned.namespace}", " */");
+    String ban1 =
+        """
+        /**
+         * @enhance {some.banned.namespace}
+         */
+        """;
     testWarning(
         ban1,
         CheckConformance.CONFORMANCE_VIOLATION,
         violationMessage + "\"{some.banned.namespace}\"");
 
-    String ban2 = lines("/**", " * @enhance {another.banned.namespace}", " */");
+    String ban2 =
+        """
+        /**
+         * @enhance {another.banned.namespace}
+         */
+        """;
     testWarning(
         ban2,
         CheckConformance.CONFORMANCE_VIOLATION,
         violationMessage + "\"{another.banned.namespace}\"");
 
-    String allow1 = lines("/**", " * @enhance {some.allowed.namespace}", " */");
+    String allow1 =
+        """
+        /**
+         * @enhance {some.allowed.namespace}
+         */
+        """;
     testNoWarning(allow1);
 
     String allow2 =
-        lines("/**", " * @fileoverview no enhance annotation should always pass.", " */");
+        """
+        /**
+         * @fileoverview no enhance annotation should always pass.
+         */
+        """;
     testNoWarning(allow2);
   }
 
@@ -670,14 +690,30 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "}";
     String violationMessage = "Violation: Modding namespaces ending in _bar is NOT allowed.";
 
-    String ban = lines("/**", " * @mods {ns.foo_bar}", " * @modName {ns.foo_bar_baz}", " */");
+    String ban =
+        """
+        /**
+         * @mods {ns.foo_bar}
+         * @modName {ns.foo_bar_baz}
+         */
+        """;
     testWarning(ban, CheckConformance.CONFORMANCE_VIOLATION, violationMessage);
 
-    String allow1 = lines("/**", " * @mods {ns.foo}", " * @modName {ns.foo_bar}", " */");
+    String allow1 =
+        """
+        /**
+         * @mods {ns.foo}
+         * @modName {ns.foo_bar}
+         */
+        """;
     testNoWarning(allow1);
 
     String allow2 =
-        lines("/**", " * @fileoverview no enhance annotation should always pass.", " */");
+        """
+        /**
+         * @fileoverview no enhance annotation should always pass.
+         */
+        """;
     testNoWarning(allow2);
   }
 
@@ -720,77 +756,89 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testInferredConstCheck() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: CUSTOM",
-            "  java_class: 'com.google.javascript.jscomp.ConformanceRules$InferredConstCheck'",
-            "  error_message: 'Failed to infer type of constant'",
-            "}");
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$InferredConstCheck'
+          error_message: 'Failed to infer type of constant'
+        }
+        """;
 
     testNoWarning("/** @const */ var x = 0;");
     testNoWarning("/** @const */ var x = unknown;");
     testNoWarning("const x = unknown;");
 
     testWarning(
-        lines(
-            "/** @constructor */",
-            "function f() {",
-            "  /** @const */ this.foo = unknown;",
-            "}",
-            "var x = new f();"),
+        """
+        /** @constructor */
+        function f() {
+          /** @const */ this.foo = unknown;
+        }
+        var x = new f();
+        """,
         CheckConformance.CONFORMANCE_VIOLATION);
 
     testWarning(
-        lines(
-            "/** @constructor */",
-            "function f() {}",
-            "/** @this {f} */",
-            "var init_f = function() {",
-            "  /** @const */ this.foo = unknown;",
-            "};",
-            "var x = new f();"),
+        """
+        /** @constructor */
+        function f() {}
+        /** @this {f} */
+        var init_f = function() {
+          /** @const */ this.foo = unknown;
+        };
+        var x = new f();
+        """,
         CheckConformance.CONFORMANCE_VIOLATION);
 
     testWarning(
-        lines(
-            "/** @constructor */",
-            "function f() {}",
-            "var init_f = function() {",
-            "  /** @const */ this.FOO = unknown;",
-            "};",
-            "var x = new f();"),
+        """
+        /** @constructor */
+        function f() {}
+        var init_f = function() {
+          /** @const */ this.FOO = unknown;
+        };
+        var x = new f();
+        """,
         CheckConformance.CONFORMANCE_VIOLATION);
 
     testWarning(
-        lines(
-            "/** @constructor */",
-            "function f() {}",
-            "f.prototype.init_f = function() {",
-            "  /** @const */ this.FOO = unknown;",
-            "};",
-            "var x = new f();"),
+        """
+        /** @constructor */
+        function f() {}
+        f.prototype.init_f = function() {
+          /** @const */ this.FOO = unknown;
+        };
+        var x = new f();
+        """,
         CheckConformance.CONFORMANCE_VIOLATION);
 
     testNoWarning(
-        lines(
-            "/** @constructor */",
-            "function f() {}",
-            "f.prototype.init_f = function() {",
-            "  /** @const {?} */ this.FOO = unknown;",
-            "};",
-            "var x = new f();"));
+        """
+        /** @constructor */
+        function f() {}
+        f.prototype.init_f = function() {
+          /** @const {?} */ this.FOO = unknown;
+        };
+        var x = new f();
+        """);
 
     testNoWarning(
-        lines("/** @const */", "var ns = {};", "/** @const */", "ns.subns = ns.subns || {};"));
+        """
+        /** @const */
+        var ns = {};
+        /** @const */
+        ns.subns = ns.subns || {};
+        """);
 
     // We only check @const nodes, not @final nodes.
     testNoWarning(
-        lines(
-            "/** @constructor */",
-            "function f() {",
-            "  /** @final */ this.foo = unknown;",
-            "}",
-            "var x = new f();"));
+        """
+        /** @constructor */
+        function f() {
+          /** @final */ this.foo = unknown;
+        }
+        var x = new f();
+        """);
   }
 
   @Test
@@ -910,13 +958,14 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testReportLooseTypeViolations() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY_WRITE",
-            "  value: 'HTMLScriptElement.prototype.textContent'",
-            "  error_message: 'Setting content of <script> is dangerous.'",
-            "  report_loose_type_violations: false",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY_WRITE
+          value: 'HTMLScriptElement.prototype.textContent'
+          error_message: 'Setting content of <script> is dangerous.'
+          report_loose_type_violations: false
+        }
+        """;
 
     String externs =
         lines(
@@ -944,22 +993,28 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testDontCrashOnNonConstructorWithPrototype() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY_WRITE",
-            "  value: 'Bar.prototype.method'",
-            "  error_message: 'asdf'",
-            "  report_loose_type_violations: false",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY_WRITE
+          value: 'Bar.prototype.method'
+          error_message: 'asdf'
+          report_loose_type_violations: false
+        }
+        """;
 
     testNoWarning(
         externs(
             DEFAULT_EXTERNS
-                + lines(
-                    "/** @constructor */",
-                    "function Bar() {}",
-                    "Bar.prototype.method = function() {};")),
-        srcs(lines("function Foo() {}", "Foo.prototype.method = function() {};")));
+                + """
+                /** @constructor */
+                function Bar() {}
+                Bar.prototype.method = function() {};
+                """),
+        srcs(
+            """
+            function Foo() {}
+            Foo.prototype.method = function() {};
+            """));
   }
 
   private void testConformance(String src1, String src2) {
@@ -986,26 +1041,37 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedPropertyWhitelist0() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY",
-            "  value: 'C.prototype.p'",
-            "  error_message: 'C.p is not allowed'",
-            "  whitelist: 'SRC1'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'C.prototype.p'
+          error_message: 'C.p is not allowed'
+          whitelist: 'SRC1'
+        }
+        """;
 
     String cDecl =
-        lines("/** @constructor */", "function C() {}", "/** @type {string} */", "C.prototype.p;");
+        """
+        /** @constructor */
+        function C() {}
+        /** @type {string} */
+        C.prototype.p;
+        """;
 
     String dDecl =
-        lines("/** @constructor */ function D() {}", "/** @type {string} */", "D.prototype.p;");
+        """
+        /** @constructor */ function D() {}
+        /** @type {string} */
+        D.prototype.p;
+        """;
 
     testConformance(cDecl, dDecl);
     String typedefDecl =
-        lines(
-            "/** @typedef {{p: string}} */ let E;",
-            "/** @const {!E} */ const value = {p: 'foo'};",
-            "/** @type {string} */ const s = value.p;");
+        """
+        /** @typedef {{p: string}} */ let E;
+        /** @const {!E} */ const value = {p: 'foo'};
+        /** @type {string} */ const s = value.p;
+        """;
 
     testConformance(cDecl, dDecl, typedefDecl);
   }
@@ -1013,19 +1079,29 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedPropertyAllowlist0() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY",
-            "  value: 'C.prototype.p'",
-            "  error_message: 'C.p is not allowed'",
-            "  allowlist: 'SRC1'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'C.prototype.p'
+          error_message: 'C.p is not allowed'
+          allowlist: 'SRC1'
+        }
+        """;
 
     String cDecl =
-        lines("/** @constructor */", "function C() {}", "/** @type {string} */", "C.prototype.p;");
+        """
+        /** @constructor */
+        function C() {}
+        /** @type {string} */
+        C.prototype.p;
+        """;
 
     String dDecl =
-        lines("/** @constructor */ function D() {}", "/** @type {string} */", "D.prototype.p;");
+        """
+        /** @constructor */ function D() {}
+        /** @type {string} */
+        D.prototype.p;
+        """;
 
     testConformance(cDecl, dDecl);
   }
@@ -1033,17 +1109,30 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedPropertyWhitelist1() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY",
-            "  value: 'C.prototype.p'",
-            "  error_message: 'C.p is not allowed'",
-            "  whitelist: 'SRC1'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'C.prototype.p'
+          error_message: 'C.p is not allowed'
+          whitelist: 'SRC1'
+        }
+        """;
 
-    String cDecl = lines("/** @constructor */", "function C() {", "  this.p = 'str';", "}");
+    String cDecl =
+        """
+        /** @constructor */
+        function C() {
+          this.p = 'str';
+        }
+        """;
 
-    String dDecl = lines("/** @constructor */", "function D() {", "  this.p = 'str';", "}");
+    String dDecl =
+        """
+        /** @constructor */
+        function D() {
+          this.p = 'str';
+        }
+        """;
 
     testConformance(cDecl, dDecl);
   }
@@ -1051,17 +1140,30 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedPropertyAllowlist1() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY",
-            "  value: 'C.prototype.p'",
-            "  error_message: 'C.p is not allowed'",
-            "  allowlist: 'SRC1'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'C.prototype.p'
+          error_message: 'C.p is not allowed'
+          allowlist: 'SRC1'
+        }
+        """;
 
-    String cDecl = lines("/** @constructor */", "function C() {", "  this.p = 'str';", "}");
+    String cDecl =
+        """
+        /** @constructor */
+        function C() {
+          this.p = 'str';
+        }
+        """;
 
-    String dDecl = lines("/** @constructor */", "function D() {", "  this.p = 'str';", "}");
+    String dDecl =
+        """
+        /** @constructor */
+        function D() {
+          this.p = 'str';
+        }
+        """;
 
     testConformance(cDecl, dDecl);
   }
@@ -1069,24 +1171,26 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedPropertyWhitelist2() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY",
-            "  value: 'C.prototype.p'",
-            "  error_message: 'C.p is not allowed'",
-            "  whitelist: 'SRC1'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'C.prototype.p'
+          error_message: 'C.p is not allowed'
+          whitelist: 'SRC1'
+        }
+        """;
 
     String declarations =
-        lines(
-            "/** @constructor */ function SC() {}",
-            "/** @constructor @extends {SC} */",
-            "function C() {}",
-            "/** @type {string} */",
-            "C.prototype.p;",
-            "/** @constructor */ function D() {}",
-            "/** @type {string} */",
-            "D.prototype.p;");
+        """
+        /** @constructor */ function SC() {}
+        /** @constructor @extends {SC} */
+        function C() {}
+        /** @type {string} */
+        C.prototype.p;
+        /** @constructor */ function D() {}
+        /** @type {string} */
+        D.prototype.p;
+        """;
 
     testConformance(declarations, "var d = new D(); d.p = 'boo';");
 
@@ -1114,24 +1218,26 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedPropertyAllowlist2() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY",
-            "  value: 'C.prototype.p'",
-            "  error_message: 'C.p is not allowed'",
-            "  allowlist: 'SRC1'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'C.prototype.p'
+          error_message: 'C.p is not allowed'
+          allowlist: 'SRC1'
+        }
+        """;
 
     String declarations =
-        lines(
-            "/** @constructor */ function SC() {}",
-            "/** @constructor @extends {SC} */",
-            "function C() {}",
-            "/** @type {string} */",
-            "C.prototype.p;",
-            "/** @constructor */ function D() {}",
-            "/** @type {string} */",
-            "D.prototype.p;");
+        """
+        /** @constructor */ function SC() {}
+        /** @constructor @extends {SC} */
+        function C() {}
+        /** @type {string} */
+        C.prototype.p;
+        /** @constructor */ function D() {}
+        /** @type {string} */
+        D.prototype.p;
+        """;
 
     testConformance(declarations, "var d = new D(); d.p = 'boo';");
 
@@ -1159,28 +1265,31 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedPropertyWhitelist3() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY",
-            "  value: 'C.prototype.p'",
-            "  error_message: 'C.p is not allowed'",
-            "  whitelist: 'SRC1'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'C.prototype.p'
+          error_message: 'C.p is not allowed'
+          whitelist: 'SRC1'
+        }
+        """;
 
     String cdecl =
-        lines(
-            "/** @constructor */ function SC() {}",
-            "/** @constructor @extends {SC} */",
-            "function C() {}",
-            "/** @type {string} */",
-            "C.prototype.p;");
+        """
+        /** @constructor */ function SC() {}
+        /** @constructor @extends {SC} */
+        function C() {}
+        /** @type {string} */
+        C.prototype.p;
+        """;
     String ddecl =
-        lines(
-            "/** @constructor @template T */ function D() {}",
-            "/** @param {T} a */",
-            "D.prototype.method = function(a) {",
-            "  use(a.p);",
-            "};");
+        """
+        /** @constructor @template T */ function D() {}
+        /** @param {T} a */
+        D.prototype.method = function(a) {
+          use(a.p);
+        };
+        """;
 
     testConformance(cdecl, ddecl, CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
   }
@@ -1188,28 +1297,31 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedPropertyAllowlist3() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY",
-            "  value: 'C.prototype.p'",
-            "  error_message: 'C.p is not allowed'",
-            "  allowlist: 'SRC1'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'C.prototype.p'
+          error_message: 'C.p is not allowed'
+          allowlist: 'SRC1'
+        }
+        """;
 
     String cdecl =
-        lines(
-            "/** @constructor */ function SC() {}",
-            "/** @constructor @extends {SC} */",
-            "function C() {}",
-            "/** @type {string} */",
-            "C.prototype.p;");
+        """
+        /** @constructor */ function SC() {}
+        /** @constructor @extends {SC} */
+        function C() {}
+        /** @type {string} */
+        C.prototype.p;
+        """;
     String ddecl =
-        lines(
-            "/** @constructor @template T */ function D() {}",
-            "/** @param {T} a */",
-            "D.prototype.method = function(a) {",
-            "  use(a.p);",
-            "};");
+        """
+        /** @constructor @template T */ function D() {}
+        /** @param {T} a */
+        D.prototype.method = function(a) {
+          use(a.p);
+        };
+        """;
 
     testConformance(cdecl, ddecl, CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
   }
@@ -1217,45 +1329,48 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedPropertyWhitelist4() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY",
-            "  value: 'C.prototype.p'",
-            "  error_message: 'C.p is not allowed'",
-            "  whitelist: 'SRC1'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'C.prototype.p'
+          error_message: 'C.p is not allowed'
+          whitelist: 'SRC1'
+        }
+        """;
 
     String cdecl =
-        lines(
-            "/** @constructor */ function SC() {}",
-            "/** @constructor @extends {SC} */",
-            "function C() {}",
-            "/** @type {string} */",
-            "C.prototype.p;",
-            "",
-            "/**",
-            " * @param {K} key",
-            " * @param {V=} opt_value",
-            " * @constructor",
-            " * @struct",
-            " * @template K, V",
-            " * @private",
-            " */",
-            "var Entry_ = function(key, opt_value) {",
-            "  /** @const {K} */",
-            "  this.key = key;",
-            "  /** @type {V|undefined} */",
-            "  this.value = opt_value;",
-            "};");
+        """
+        /** @constructor */ function SC() {}
+        /** @constructor @extends {SC} */
+        function C() {}
+        /** @type {string} */
+        C.prototype.p;
+
+        /**
+         * @param {K} key
+         * @param {V=} opt_value
+         * @constructor
+         * @struct
+         * @template K, V
+         * @private
+         */
+        var Entry_ = function(key, opt_value) {
+          /** @const {K} */
+          this.key = key;
+          /** @type {V|undefined} */
+          this.value = opt_value;
+        };
+        """;
 
     String ddecl =
-        lines(
-            "/** @constructor @template T */ function D() {}",
-            "/** @param {T} a */",
-            "D.prototype.method = function(a) {",
-            "  var entry = new Entry('key');",
-            "  use(entry.value.p);",
-            "};");
+        """
+        /** @constructor @template T */ function D() {}
+        /** @param {T} a */
+        D.prototype.method = function(a) {
+          var entry = new Entry('key');
+          use(entry.value.p);
+        };
+        """;
 
     testConformance(cdecl, ddecl, CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
   }
@@ -1263,45 +1378,48 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedPropertyAllowlist4() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY",
-            "  value: 'C.prototype.p'",
-            "  error_message: 'C.p is not allowed'",
-            "  allowlist: 'SRC1'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'C.prototype.p'
+          error_message: 'C.p is not allowed'
+          allowlist: 'SRC1'
+        }
+        """;
 
     String cdecl =
-        lines(
-            "/** @constructor */ function SC() {}",
-            "/** @constructor @extends {SC} */",
-            "function C() {}",
-            "/** @type {string} */",
-            "C.prototype.p;",
-            "",
-            "/**",
-            " * @param {K} key",
-            " * @param {V=} opt_value",
-            " * @constructor",
-            " * @struct",
-            " * @template K, V",
-            " * @private",
-            " */",
-            "var Entry_ = function(key, opt_value) {",
-            "  /** @const {K} */",
-            "  this.key = key;",
-            "  /** @type {V|undefined} */",
-            "  this.value = opt_value;",
-            "};");
+        """
+        /** @constructor */ function SC() {}
+        /** @constructor @extends {SC} */
+        function C() {}
+        /** @type {string} */
+        C.prototype.p;
+
+        /**
+         * @param {K} key
+         * @param {V=} opt_value
+         * @constructor
+         * @struct
+         * @template K, V
+         * @private
+         */
+        var Entry_ = function(key, opt_value) {
+          /** @const {K} */
+          this.key = key;
+          /** @type {V|undefined} */
+          this.value = opt_value;
+        };
+        """;
 
     String ddecl =
-        lines(
-            "/** @constructor @template T */ function D() {}",
-            "/** @param {T} a */",
-            "D.prototype.method = function(a) {",
-            "  var entry = new Entry('key');",
-            "  use(entry.value.p);",
-            "};");
+        """
+        /** @constructor @template T */ function D() {}
+        /** @param {T} a */
+        D.prototype.method = function(a) {
+          var entry = new Entry('key');
+          use(entry.value.p);
+        };
+        """;
 
     testConformance(cdecl, ddecl, CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
   }
@@ -1309,12 +1427,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedProperty5() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY",
-            "  value: 'Array.prototype.push'",
-            "  error_message: 'banned Array.prototype.push'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'Array.prototype.push'
+          error_message: 'banned Array.prototype.push'
+        }
+        """;
 
     testWarning("[1, 2, 3].push(4);\n", CheckConformance.CONFORMANCE_VIOLATION);
   }
@@ -1322,100 +1441,108 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedPropertyWhitelist_recordType() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY",
-            "  value: 'Logger.prototype.config'",
-            "  error_message: 'Logger.config is not allowed'",
-            "  whitelist: 'SRC1'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'Logger.prototype.config'
+          error_message: 'Logger.config is not allowed'
+          whitelist: 'SRC1'
+        }
+        """;
 
     String declaration = "class Logger { config() {} }";
 
     // Fine, because there is no explicit relationship between Logger & GoodRecord.
     testConformance(
         declaration,
-        lines(
-            "/** @record */",
-            "class GoodRecord {",
-            "  constructor() {",
-            "    /** @type {Function} */ this.config;",
-            "  }",
-            "}"));
+        """
+        /** @record */
+        class GoodRecord {
+          constructor() {
+            /** @type {Function} */ this.config;
+          }
+        }
+        """);
 
     // Bad, because there is a direct relationship.
     testConformance(
         "/** @implements {BadRecord} */ " + declaration,
-        lines(
-            "/** @record */",
-            "class BadRecord {",
-            "  constructor() {",
-            "    /** @type {Function} */ this.config;",
-            "  }",
-            "}"),
+        """
+        /** @record */
+        class BadRecord {
+          constructor() {
+            /** @type {Function} */ this.config;
+          }
+        }
+        """,
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
   }
 
   @Test
   public void testBannedPropertyAllowlist_recordType() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY",
-            "  value: 'Logger.prototype.config'",
-            "  error_message: 'Logger.config is not allowed'",
-            "  allowlist: 'SRC1'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'Logger.prototype.config'
+          error_message: 'Logger.config is not allowed'
+          allowlist: 'SRC1'
+        }
+        """;
 
     String declaration = "class Logger { config() {} }";
 
     // Fine, because there is no explicit relationship between Logger & GoodRecord.
     testConformance(
         declaration,
-        lines(
-            "/** @record */",
-            "class GoodRecord {",
-            "  constructor() {",
-            "    /** @type {Function} */ this.config;",
-            "  }",
-            "}"));
+        """
+        /** @record */
+        class GoodRecord {
+          constructor() {
+            /** @type {Function} */ this.config;
+          }
+        }
+        """);
 
     // Bad, because there is a direct relationship.
     testConformance(
         "/** @implements {BadRecord} */ " + declaration,
-        lines(
-            "/** @record */",
-            "class BadRecord {",
-            "  constructor() {",
-            "    /** @type {Function} */ this.config;",
-            "  }",
-            "}"),
+        """
+        /** @record */
+        class BadRecord {
+          constructor() {
+            /** @type {Function} */ this.config;
+          }
+        }
+        """,
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
   }
 
   @Test
   public void testBannedPropertyWhitelist_namespacedType() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY",
-            "  value: 'ns.C.prototype.p'",
-            "  error_message: 'ns.C.p is not allowed'",
-            "  whitelist: 'SRC1'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'ns.C.prototype.p'
+          error_message: 'ns.C.p is not allowed'
+          whitelist: 'SRC1'
+        }
+        """;
 
     String declarations =
-        lines(
-            "/** @const */",
-            "var ns = {};",
-            "/** @constructor */ function SC() {}",
-            "/** @constructor @extends {SC} */",
-            "ns.C = function() {}",
-            "/** @type {string} */",
-            "ns.C.prototype.p;",
-            "/** @constructor */ function D() {}",
-            "/** @type {string} */",
-            "D.prototype.p;");
+        """
+        /** @const */
+        var ns = {};
+        /** @constructor */ function SC() {}
+        /** @constructor @extends {SC} */
+        ns.C = function() {}
+        /** @type {string} */
+        ns.C.prototype.p;
+        /** @constructor */ function D() {}
+        /** @type {string} */
+        D.prototype.p;
+        """;
 
     testConformance(declarations, "var d = new D(); d.p = 'boo';");
 
@@ -1431,26 +1558,28 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedPropertyAllowlist_namespacedType() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY",
-            "  value: 'ns.C.prototype.p'",
-            "  error_message: 'ns.C.p is not allowed'",
-            "  allowlist: 'SRC1'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'ns.C.prototype.p'
+          error_message: 'ns.C.p is not allowed'
+          allowlist: 'SRC1'
+        }
+        """;
 
     String declarations =
-        lines(
-            "/** @const */",
-            "var ns = {};",
-            "/** @constructor */ function SC() {}",
-            "/** @constructor @extends {SC} */",
-            "ns.C = function() {}",
-            "/** @type {string} */",
-            "ns.C.prototype.p;",
-            "/** @constructor */ function D() {}",
-            "/** @type {string} */",
-            "D.prototype.p;");
+        """
+        /** @const */
+        var ns = {};
+        /** @constructor */ function SC() {}
+        /** @constructor @extends {SC} */
+        ns.C = function() {}
+        /** @type {string} */
+        ns.C.prototype.p;
+        /** @constructor */ function D() {}
+        /** @type {string} */
+        D.prototype.p;
+        """;
 
     testConformance(declarations, "var d = new D(); d.p = 'boo';");
 
@@ -1468,59 +1597,64 @@ public final class CheckConformanceTest extends CompilerTestCase {
     disableRewriteClosureCode();
 
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY",
-            "  value: 'test.bns.BC.prototype.p'",
-            "  error_message: 'test.bns.BC.p is not allowed'",
-            "  whitelist: 'SRC1'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'test.bns.BC.prototype.p'
+          error_message: 'test.bns.BC.p is not allowed'
+          whitelist: 'SRC1'
+        }
+        """;
 
     String declarations =
-        lines(
-            "/** @fileoverview @typeSummary */",
-            "goog.loadModule(function(exports) {",
-            "goog.module('test.bns');",
-            "/** @constructor */ function SBC() {}",
-            "exports.SBC = SBC;",
-            "/** @constructor @extends {SBC} */",
-            "BC = function() {}",
-            "/** @type {string} */",
-            "BC.prototype.p;",
-            "exports.BC = BC;",
-            "/** @constructor */ function D() {}",
-            "exports.D = D;",
-            "/** @type {string} */",
-            "D.prototype.p;",
-            "return exports;",
-            "});");
+        """
+        /** @fileoverview @typeSummary */
+        goog.loadModule(function(exports) {
+        goog.module('test.bns');
+        /** @constructor */ function SBC() {}
+        exports.SBC = SBC;
+        /** @constructor @extends {SBC} */
+        BC = function() {}
+        /** @type {string} */
+        BC.prototype.p;
+        exports.BC = BC;
+        /** @constructor */ function D() {}
+        exports.D = D;
+        /** @type {string} */
+        D.prototype.p;
+        return exports;
+        });
+        """;
 
     testConformance(
         declarations,
-        lines(
-            "goog.module('test');",
-            "const {D} = goog.require('test.bns');",
-            "var d = new D();",
-            "d.p = 'boo';"));
+        """
+        goog.module('test');
+        const {D} = goog.require('test.bns');
+        var d = new D();
+        d.p = 'boo';
+        """);
 
     // This case should be a certain violation, but the compiler cannot figure out that the imported
     // type is the same as the one found from the type registry.
     testConformance(
         declarations,
-        lines(
-            "goog.module('test');",
-            "const {BC} = goog.require('test.bns');",
-            "var bc = new BC();",
-            "bc.p = 'boo';"),
+        """
+        goog.module('test');
+        const {BC} = goog.require('test.bns');
+        var bc = new BC();
+        bc.p = 'boo';
+        """,
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
 
     testConformance(
         declarations,
-        lines(
-            "goog.module('test');",
-            "const bns = goog.require('test.bns');",
-            "var bc = new bns.SBC();",
-            "bc.p = 'boo';"),
+        """
+        goog.module('test');
+        const bns = goog.require('test.bns');
+        var bc = new bns.SBC();
+        bc.p = 'boo';
+        """,
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
   }
 
@@ -1529,81 +1663,88 @@ public final class CheckConformanceTest extends CompilerTestCase {
     disableRewriteClosureCode();
 
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY",
-            "  value: 'test.bns.BC.prototype.p'",
-            "  error_message: 'test.bns.BC.p is not allowed'",
-            "  allowlist: 'SRC1'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'test.bns.BC.prototype.p'
+          error_message: 'test.bns.BC.p is not allowed'
+          allowlist: 'SRC1'
+        }
+        """;
 
     String declarations =
-        lines(
-            "/** @fileoverview @typeSummary */",
-            "goog.loadModule(function(exports) {",
-            "goog.module('test.bns');",
-            "/** @constructor */ function SBC() {}",
-            "exports.SBC = SBC;",
-            "/** @constructor @extends {SBC} */",
-            "BC = function() {}",
-            "/** @type {string} */",
-            "BC.prototype.p;",
-            "exports.BC = BC;",
-            "/** @constructor */ function D() {}",
-            "exports.D = D;",
-            "/** @type {string} */",
-            "D.prototype.p;",
-            "return exports;",
-            "});");
+        """
+        /** @fileoverview @typeSummary */
+        goog.loadModule(function(exports) {
+        goog.module('test.bns');
+        /** @constructor */ function SBC() {}
+        exports.SBC = SBC;
+        /** @constructor @extends {SBC} */
+        BC = function() {}
+        /** @type {string} */
+        BC.prototype.p;
+        exports.BC = BC;
+        /** @constructor */ function D() {}
+        exports.D = D;
+        /** @type {string} */
+        D.prototype.p;
+        return exports;
+        });
+        """;
 
     testConformance(
         declarations,
-        lines(
-            "goog.module('test');",
-            "const {D} = goog.require('test.bns');",
-            "var d = new D();",
-            "d.p = 'boo';"));
+        """
+        goog.module('test');
+        const {D} = goog.require('test.bns');
+        var d = new D();
+        d.p = 'boo';
+        """);
 
     // This case should be a certain violation, but the compiler cannot figure out that the imported
     // type is the same as the one found from the type registry.
     testConformance(
         declarations,
-        lines(
-            "goog.module('test');",
-            "const {BC} = goog.require('test.bns');",
-            "var bc = new BC();",
-            "bc.p = 'boo';"),
+        """
+        goog.module('test');
+        const {BC} = goog.require('test.bns');
+        var bc = new BC();
+        bc.p = 'boo';
+        """,
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
 
     testConformance(
         declarations,
-        lines(
-            "goog.module('test');",
-            "const bns = goog.require('test.bns');",
-            "var bc = new bns.SBC();",
-            "bc.p = 'boo';"),
+        """
+        goog.module('test');
+        const bns = goog.require('test.bns');
+        var bc = new bns.SBC();
+        bc.p = 'boo';
+        """,
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
   }
 
   @Test
   public void testBannedPropertyWhitelist_destructuring() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY",
-            "  value: 'C.prototype.p'",
-            "  error_message: 'C.p is not allowed'",
-            "  whitelist: 'SRC1'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'C.prototype.p'
+          error_message: 'C.p is not allowed'
+          whitelist: 'SRC1'
+        }
+        """;
 
     String declarations =
-        lines(
-            "/** @constructor */",
-            "var C = function() {}",
-            "/** @type {string} */",
-            "C.prototype.p;",
-            "/** @type {number} */",
-            "C.prototype.m");
+        """
+        /** @constructor */
+        var C = function() {}
+        /** @type {string} */
+        C.prototype.p;
+        /** @type {number} */
+        C.prototype.m
+        """;
 
     testConformance(declarations, "var {m} = new C();");
 
@@ -1616,22 +1757,24 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedPropertyAllowlist_destructuring() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: BANNED_PROPERTY",
-            "  value: 'C.prototype.p'",
-            "  error_message: 'C.p is not allowed'",
-            "  allowlist: 'SRC1'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'C.prototype.p'
+          error_message: 'C.p is not allowed'
+          allowlist: 'SRC1'
+        }
+        """;
 
     String declarations =
-        lines(
-            "/** @constructor */",
-            "var C = function() {}",
-            "/** @type {string} */",
-            "C.prototype.p;",
-            "/** @type {number} */",
-            "C.prototype.m");
+        """
+        /** @constructor */
+        var C = function() {}
+        /** @type {string} */
+        C.prototype.p;
+        /** @type {number} */
+        C.prototype.m
+        """;
 
     testConformance(declarations, "var {m} = new C();");
 
@@ -2295,7 +2438,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "  error_message: 'BanThrowOfNonErrorTypes Message'\n"
             + "}";
 
-    testNoWarning(lines("/** @param {*} x */", "function f(x) {", "  throw x;", "}"));
+    testNoWarning(
+        """
+        /** @param {*} x */
+        function f(x) {
+          throw x;
+        }
+        """);
   }
 
   @Test
@@ -2309,16 +2458,17 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "}";
 
     testNoWarning(
-        lines(
-            "/** @constructor @extends {Error} */",
-            "function MyError() {}",
-            "/** @param {*} x */",
-            "function f(x) {",
-            "  if (x instanceof MyError) {",
-            "  } else {",
-            "    throw x;",
-            "  }",
-            "}"));
+        """
+        /** @constructor @extends {Error} */
+        function MyError() {}
+        /** @param {*} x */
+        function f(x) {
+          if (x instanceof MyError) {
+          } else {
+            throw x;
+          }
+        }
+        """);
   }
 
   @Test
@@ -2372,18 +2522,19 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "}";
 
     String assertInstanceof =
-        lines(
-            "/** @const */ var asserts = {};",
-            "/**",
-            " * @param {?} value The value to check.",
-            " * @param {function(new: T, ...)} type A user-defined constructor.",
-            " * @return {T}",
-            " * @template T",
-            " * @closurePrimitive {asserts.matchesReturn}",
-            " */",
-            "asserts.assertInstanceof = function(value, type) {",
-            "  return value;",
-            "};");
+        """
+        /** @const */ var asserts = {};
+        /**
+         * @param {?} value The value to check.
+         * @param {function(new: T, ...)} type A user-defined constructor.
+         * @return {T}
+         * @template T
+         * @closurePrimitive {asserts.matchesReturn}
+         */
+        asserts.assertInstanceof = function(value, type) {
+          return value;
+        };
+        """;
 
     testNoWarning(lines(assertInstanceof, "function f() {asserts.assertInstanceof(this, Error);}"));
   }
@@ -2434,11 +2585,12 @@ public final class CheckConformanceTest extends CompilerTestCase {
     configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
 
     testWarning(
-        lines(
-            "/** @constructor */",
-            "function f() {}",
-            "f.prototype.prop;",
-            "f.prototype.method = function() { alert(this.prop); };"),
+        """
+        /** @constructor */
+        function f() {}
+        f.prototype.prop;
+        f.prototype.method = function() { alert(this.prop); };
+        """,
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message");
   }
@@ -2448,12 +2600,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
     configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
 
     testNoWarning(
-        lines(
-            "/** @constructor */",
-            "function f() {};",
-            "/** @type {?} */",
-            "f.prototype.prop;",
-            "f.prototype.method = function() { alert(this.prop); }"));
+        """
+        /** @constructor */
+        function f() {};
+        /** @type {?} */
+        f.prototype.prop;
+        f.prototype.method = function() { alert(this.prop); }
+        """);
   }
 
   @Test
@@ -2461,15 +2614,16 @@ public final class CheckConformanceTest extends CompilerTestCase {
     configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
 
     testWarning(
-        lines(
-            "class F {",
-            "  constructor() {",
-            "    this.prop;",
-            "  }",
-            "  method() {",
-            "    alert(this.prop);",
-            "  }",
-            "}"),
+        """
+        class F {
+          constructor() {
+            this.prop;
+          }
+          method() {
+            alert(this.prop);
+          }
+        }
+        """,
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message");
   }
@@ -2479,16 +2633,17 @@ public final class CheckConformanceTest extends CompilerTestCase {
     configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
 
     testNoWarning(
-        lines(
-            "class F {",
-            "  constructor() {",
-            "    /** @type {?} */",
-            "    this.prop;",
-            "  }",
-            "  method() {",
-            "    alert(this.prop);",
-            "  }",
-            "}"));
+        """
+        class F {
+          constructor() {
+            /** @type {?} */
+            this.prop;
+          }
+          method() {
+            alert(this.prop);
+          }
+        }
+        """);
   }
 
   @Test
@@ -2496,13 +2651,14 @@ public final class CheckConformanceTest extends CompilerTestCase {
     configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
     // TODO(b/192088118): need to fix so test gives warning for implicit field reference
     testNoWarning(
-        lines(
-            "class F {", //
-            "  prop;",
-            "  method() {",
-            "    alert(this.prop);",
-            "  }",
-            "}"));
+        """
+        class F {
+          prop;
+          method() {
+            alert(this.prop);
+          }
+        }
+        """);
   }
 
   @Test
@@ -2510,14 +2666,15 @@ public final class CheckConformanceTest extends CompilerTestCase {
     configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
 
     testNoWarning(
-        lines(
-            "class F {", //
-            "  /** @type {?} */",
-            "  prop = 2;",
-            "  method() {",
-            "    alert(this.prop);",
-            "  }",
-            "}"));
+        """
+        class F {
+          /** @type {?} */
+          prop = 2;
+          method() {
+            alert(this.prop);
+          }
+        }
+        """);
   }
 
   @Test
@@ -2525,15 +2682,16 @@ public final class CheckConformanceTest extends CompilerTestCase {
     configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
 
     testNoWarning(
-        lines(
-            "class F {",
-            "  constructor() {",
-            "    this.prop = 42;",
-            "  }",
-            "  method() {",
-            "    alert(this.prop);",
-            "  }",
-            "}"));
+        """
+        class F {
+          constructor() {
+            this.prop = 42;
+          }
+          method() {
+            alert(this.prop);
+          }
+        }
+        """);
   }
 
   @Test
@@ -2541,11 +2699,12 @@ public final class CheckConformanceTest extends CompilerTestCase {
     configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
 
     testNoWarning(
-        lines(
-            "/** @constructor */",
-            "function f() {}",
-            "f.prototype.prop;",
-            "f.prototype.method = function() { this.prop = foo; };"));
+        """
+        /** @constructor */
+        function f() {}
+        f.prototype.prop;
+        f.prototype.method = function() { this.prop = foo; };
+        """);
   }
 
   @Test
@@ -2566,20 +2725,21 @@ public final class CheckConformanceTest extends CompilerTestCase {
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
     testSame(
-        lines(
-            "/** @record @template T */",
-            "class X {",
-            "  constructor() {",
-            "    /** @type {T|!Array<T>} */ this.x;",
-            "    f(this.x);",
-            "  }",
-            "}",
-            "",
-            "/**",
-            " * @param {T|!Array<T>} value",
-            " * @template T",
-            " */",
-            "function f(value) {}"));
+        """
+        /** @record @template T */
+        class X {
+          constructor() {
+            /** @type {T|!Array<T>} */ this.x;
+            f(this.x);
+          }
+        }
+
+        /**
+         * @param {T|!Array<T>} value
+         * @template T
+         */
+        function f(value) {}
+        """);
   }
 
   @Test
@@ -2588,14 +2748,15 @@ public final class CheckConformanceTest extends CompilerTestCase {
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
     testWarning(
-        lines(
-            "class F {",
-            "  constructor() {",
-            "    this.prop;",
-            "  }",
-            "}",
-            "",
-            "alert(new F().prop);"),
+        """
+        class F {
+          constructor() {
+            this.prop;
+          }
+        }
+
+        alert(new F().prop);
+        """,
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message\nThe property \"prop\" on type \"F\"");
   }
@@ -2606,10 +2767,11 @@ public final class CheckConformanceTest extends CompilerTestCase {
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
     String js =
-        lines(
-            "Object.prototype.foobar;",
-            " /** @param {ObjectWithNoProps} a */",
-            "function f(a) { alert(a.foobar); };");
+        """
+        Object.prototype.foobar;
+         /** @param {ObjectWithNoProps} a */
+        function f(a) { alert(a.foobar); };
+        """;
 
     testWarning(
         js,
@@ -2633,9 +2795,10 @@ public final class CheckConformanceTest extends CompilerTestCase {
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
     testNoWarning(
-        lines(
-            "/** @constructor */ function f() { /** @type {?} */ this.prop = null; };",
-            "f.prototype.method = function() { alert(this.prop); }"));
+        """
+        /** @constructor */ function f() { /** @type {?} */ this.prop = null; };
+        f.prototype.method = function() { alert(this.prop); }
+        """);
   }
 
   @Test
@@ -2644,10 +2807,11 @@ public final class CheckConformanceTest extends CompilerTestCase {
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
     testWarning(
-        lines(
-            "/** @typedef {?} */ var Unk;",
-            "/** @constructor */ function f() { /** @type {?Unk} */ this.prop = null; };",
-            "f.prototype.method = function() { alert(this.prop); }"),
+        """
+        /** @typedef {?} */ var Unk;
+        /** @constructor */ function f() { /** @type {?Unk} */ this.prop = null; };
+        f.prototype.method = function() { alert(this.prop); }
+        """,
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message\nThe property \"prop\" on type \"f\"");
   }
@@ -2658,10 +2822,11 @@ public final class CheckConformanceTest extends CompilerTestCase {
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
     testWarning(
-        lines(
-            "goog.module('example');",
-            "/** @constructor */ function f() { this.prop; };",
-            "f.prototype.method = function() { alert(this.prop); }"),
+        """
+        goog.module('example');
+        /** @constructor */ function f() { this.prop; };
+        f.prototype.method = function() { alert(this.prop); }
+        """,
         CheckConformance.CONFORMANCE_VIOLATION,
         // TODO(tbreisacher): Can we display a more user-friendly name here?
         "Violation: My rule message\nThe property \"prop\" on type \"module$contents$example_f\"");
@@ -2673,15 +2838,16 @@ public final class CheckConformanceTest extends CompilerTestCase {
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
     testNoWarning(
-        lines(
-            "/** @constructor */",
-            "function Foo() {",
-            "  /** @type {!Object<number, number>} */",
-            "  this.prop;",
-            "}",
-            "function f(/** !Foo */ x) {",
-            "  return x.prop[1] + 123;",
-            "}"));
+        """
+        /** @constructor */
+        function Foo() {
+          /** @type {!Object<number, number>} */
+          this.prop;
+        }
+        function f(/** !Foo */ x) {
+          return x.prop[1] + 123;
+        }
+        """);
   }
 
   @Test
@@ -2691,14 +2857,15 @@ public final class CheckConformanceTest extends CompilerTestCase {
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
     testNoWarning(
-        lines(
-            "/** @constructor */",
-            "function Foo() {",
-            "  /** @type {!Object<number, number>} */",
-            "  this.prop;",
-            "}",
-            "const foo = new Foo();",
-            "const f = () => void foo.prop;"));
+        """
+        /** @constructor */
+        function Foo() {
+          /** @type {!Object<number, number>} */
+          this.prop;
+        }
+        const foo = new Foo();
+        const f = () => void foo.prop;
+        """);
   }
 
   @Test
@@ -2708,13 +2875,14 @@ public final class CheckConformanceTest extends CompilerTestCase {
     test(
         externs("var unknownItem;"),
         srcs(
-            lines(
-                "/** @constructor */",
-                "function Foo() {}",
-                "const foo = new Foo();",
-                // note that `foo.prop` is unknown here, but we don't warn because it's not being
-                // used
-                "[foo.prop] = unknownItem;")));
+            """
+            /** @constructor */
+            function Foo() {}
+            const foo = new Foo();
+            // note that `foo.prop` is unknown here, but we don't warn because it's not being
+            // used
+            [foo.prop] = unknownItem;
+            """));
   }
 
   @Test
@@ -2722,16 +2890,17 @@ public final class CheckConformanceTest extends CompilerTestCase {
     configuration = config(rule("BanUnknownTypedClassPropsReferences"), "My rule message");
 
     testNoWarning(
-        lines(
-            "/** @constructor */",
-            "function Foo() {}",
-            "if (false) {",
-            "  /** @type {(null|?)} */",
-            "  Foo.prototype.prop;",
-            "}",
-            "function f() {",
-            "  return new Foo().prop;",
-            "}"));
+        """
+        /** @constructor */
+        function Foo() {}
+        if (false) {
+          /** @type {(null|?)} */
+          Foo.prototype.prop;
+        }
+        function f() {
+          return new Foo().prop;
+        }
+        """);
   }
 
   @Test
@@ -2750,10 +2919,11 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "");
 
     testNoWarning(
-        lines(
-            "/** @typedef {?} */ var Unk;",
-            "/** @constructor */ function F() { /** @type {?Unk} */ this.prop = null; };",
-            "F.prototype.method = function() { alert(this.prop); }"));
+        """
+        /** @typedef {?} */ var Unk;
+        /** @constructor */ function F() { /** @type {?Unk} */ this.prop = null; };
+        F.prototype.method = function() { alert(this.prop); }
+        """);
   }
 
   @Test
@@ -2762,14 +2932,15 @@ public final class CheckConformanceTest extends CompilerTestCase {
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
     String js =
-        lines(
-            "/** @interface */ function I() {}",
-            "I.prototype.method = function() {};",
-            "I.prototype.gak;",
-            "/** @param {!I} a */",
-            "function f(a) {",
-            "  a.gak();",
-            "}");
+        """
+        /** @interface */ function I() {}
+        I.prototype.method = function() {};
+        I.prototype.gak;
+        /** @param {!I} a */
+        function f(a) {
+          a.gak();
+        }
+        """;
 
     testWarning(
         js,
@@ -2783,12 +2954,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
     testNoWarning(
-        lines(
-            "/** @interface */ function I() {}",
-            "I.prototype.method = function() {};",
-            "/** @param {I} a */ function f(a) {",
-            "  a.method();",
-            "}"));
+        """
+        /** @interface */ function I() {}
+        I.prototype.method = function() {};
+        /** @param {I} a */ function f(a) {
+          a.method();
+        }
+        """);
   }
 
   @Test
@@ -2839,22 +3011,24 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
     // Test with let and const
     testNoWarning(
-        lines(
-            "goog.scope(function() {",
-            "  let x = {y: 'y'}",
-            "  let z = {",
-            "     [x.y]: 2",
-            "  }",
-            "});"));
+        """
+        goog.scope(function() {
+          let x = {y: 'y'}
+          let z = {
+             [x.y]: 2
+          }
+        });
+        """);
 
     testNoWarning(
-        lines(
-            "goog.scope(function() {",
-            "  const x = {y: 'y'}",
-            "  const z = {",
-            "     [x.y]: 2",
-            "  }",
-            "});"));
+        """
+        goog.scope(function() {
+          const x = {y: 'y'}
+          const z = {
+             [x.y]: 2
+          }
+        });
+        """);
   }
 
   @Test
@@ -2896,12 +3070,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
     // ES6 modules cannot be type checked yet
     disableTypeCheck();
     configuration =
-        lines(
-            "requirement: {",
-            "  type: CUSTOM",
-            "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanGlobalVars'",
-            "  error_message: 'BanGlobalVars Message'",
-            "}");
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanGlobalVars'
+          error_message: 'BanGlobalVars Message'
+        }
+        """;
 
     testNoWarning("export function foo() {}");
     testNoWarning("var s; export {x}");
@@ -2929,26 +3104,28 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
     test(
         srcs(
-            lines(
-                "goog.forwardDeclare('Foo');",
-                "goog.forwardDeclare('Bar');",
-                "/** @param {?Foo|Bar} foobar */",
-                "function f(foobar) {",
-                "  return foobar.m();",
-                "}")),
+            """
+            goog.forwardDeclare('Foo');
+            goog.forwardDeclare('Bar');
+            /** @param {?Foo|Bar} foobar */
+            function f(foobar) {
+              return foobar.m();
+            }
+            """),
         warning(CheckConformance.CONFORMANCE_VIOLATION)
             .withMessage(
                 "Violation: BanUnresolvedType Message\n"
                     + "Reference to type 'Foo|Bar' never resolved."));
 
     testNoWarning(
-        lines(
-            "/**",
-            " *  @param {!Object<string, ?>} data",
-            " */",
-            "function foo(data) {",
-            "  data['bar'].baz();",
-            "}"));
+        """
+        /**
+         *  @param {!Object<string, ?>} data
+         */
+        function foo(data) {
+          data['bar'].baz();
+        }
+        """);
   }
 
   @Test
@@ -2978,16 +3155,17 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
     test(
         srcs(
-            lines(
-                "goog.forwardDeclare('Foo');",
-                "goog.forwardDeclare('Bar');",
-                "/**",
-                " * @param {?Foo} foo",
-                " * @param {?Bar} bar",
-                " */",
-                "function f(foo, bar) {",
-                "  return foo || bar;",
-                "}")),
+            """
+            goog.forwardDeclare('Foo');
+            goog.forwardDeclare('Bar');
+            /**
+             * @param {?Foo} foo
+             * @param {?Bar} bar
+             */
+            function f(foo, bar) {
+              return foo || bar;
+            }
+            """),
         warning(CheckConformance.CONFORMANCE_VIOLATION)
             .withMessage(
                 "Violation: StrictBanUnresolvedType Message\n"
@@ -3167,7 +3345,10 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "");
 
     final String code =
-        lines("/** @return {void} n */", "function f() { alert(ns.Type.State.OPEN); }");
+        """
+        /** @return {void} n */
+        function f() { alert(ns.Type.State.OPEN); }
+        """;
     testNoWarning(externs(typedefExterns), srcs(code));
   }
 
@@ -3175,7 +3356,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   public void testCustomBanNullDeref4() {
     configuration = config(rule("BanNullDeref"), "My rule message");
 
-    testNoWarning(lines("/** @param {*} x */", "function f(x) {", "  return x.toString();", "}"));
+    testNoWarning(
+        """
+        /** @param {*} x */
+        function f(x) {
+          return x.toString();
+        }
+        """);
   }
 
   @Test
@@ -3258,12 +3445,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   private String getBannedNonLiteralArgsConfiguration() {
-    return lines(
-        "requirement: {",
-        "  type: CUSTOM",
-        "  java_class:'com.google.javascript.jscomp.ConformanceRules$BanNonLiteralArgsToGoogStringConstFrom'",
-        "  error_message: 'BanNonLiteralArgsToGoogStringConstFrom Message'",
-        "}");
+    return """
+requirement: {
+  type: CUSTOM
+  java_class:'com.google.javascript.jscomp.ConformanceRules$BanNonLiteralArgsToGoogStringConstFrom'
+  error_message: 'BanNonLiteralArgsToGoogStringConstFrom Message'
+}
+""";
   }
 
   @Test
@@ -3309,26 +3497,29 @@ public final class CheckConformanceTest extends CompilerTestCase {
         externs(
             lines(
                 DEFAULT_EXTERNS,
-                lines(
-                    "goog.provide('goog.string.Const');",
-                    "/** @constructor */ goog.string.Const = function() {};",
-                    "goog.string.Const.from = function(x) {};")));
+                """
+                goog.provide('goog.string.Const');
+                /** @constructor */ goog.string.Const = function() {};
+                goog.string.Const.from = function(x) {};
+                """));
     testNoWarning(
         externs,
         srcs(
-            lines(
-                "goog.module('test')",
-                "goog.require('goog.string.Const'); ",
-                "goog.string.Const.from('');")));
+            """
+            goog.module('test')
+            goog.require('goog.string.Const');
+            goog.string.Const.from('');
+            """));
 
     testWarning(
         externs,
         srcs(
-            lines(
-                "goog.module('test')",
-                "goog.require('goog.string.Const'); ",
-                "const bar = '';",
-                "goog.string.Const.from(bar);")),
+            """
+            goog.module('test')
+            goog.require('goog.string.Const');
+            const bar = '';
+            goog.string.Const.from(bar);
+            """),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanNonLiteralArgsToGoogStringConstFrom Message");
   }
@@ -3341,26 +3532,29 @@ public final class CheckConformanceTest extends CompilerTestCase {
         externs(
             lines(
                 DEFAULT_EXTERNS,
-                lines(
-                    "goog.provide('goog.string.Const');",
-                    "/** @constructor */ goog.string.Const = function() {};",
-                    "goog.string.Const.from = function(x) {};")));
+                """
+                goog.provide('goog.string.Const');
+                /** @constructor */ goog.string.Const = function() {};
+                goog.string.Const.from = function(x) {};
+                """));
     testNoWarning(
         externs,
         srcs(
-            lines(
-                "goog.module('test')",
-                "const const1 = goog.require('goog.string.Const'); ",
-                "const1.from('');")));
+            """
+            goog.module('test')
+            const const1 = goog.require('goog.string.Const');
+            const1.from('');
+            """));
 
     testWarning(
         externs,
         srcs(
-            lines(
-                "goog.module('test')",
-                "const const1 = goog.require('goog.string.Const'); ",
-                "const bar = '';",
-                "const1.from(bar);")),
+            """
+            goog.module('test')
+            const const1 = goog.require('goog.string.Const');
+            const bar = '';
+            const1.from(bar);
+            """),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanNonLiteralArgsToGoogStringConstFrom Message");
   }
@@ -3373,25 +3567,28 @@ public final class CheckConformanceTest extends CompilerTestCase {
         externs(
             lines(
                 DEFAULT_EXTERNS,
-                lines(
-                    "goog.provide('goog.string.Const');",
-                    "/** @constructor */ goog.string.Const = function() {};",
-                    "goog.string.Const.from = function(x) {};")));
+                """
+                goog.provide('goog.string.Const');
+                /** @constructor */ goog.string.Const = function() {};
+                goog.string.Const.from = function(x) {};
+                """));
     testNoWarning(
         externs,
         srcs(
-            lines(
-                "goog.module('test')",
-                "const {from} = goog.require('goog.string.Const'); ",
-                "from('');")));
+            """
+            goog.module('test')
+            const {from} = goog.require('goog.string.Const');
+            from('');
+            """));
     testWarning(
         externs,
         srcs(
-            lines(
-                "goog.module('test')",
-                "const {from} = goog.require('goog.string.Const'); ",
-                "const bar = '';",
-                "from(bar);")),
+            """
+            goog.module('test')
+            const {from} = goog.require('goog.string.Const');
+            const bar = '';
+            from(bar);
+            """),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanNonLiteralArgsToGoogStringConstFrom Message");
   }
@@ -3487,9 +3684,10 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning("goog.dom.createDom('img', {'src': src});");
     testNoWarning("goog.dom.createDom('img', attrs);");
     testNoWarning(
-        lines(
-            "goog.dom.createDom(",
-            "'iframe', /** @type {?string|!Array|undefined} */ (className));"));
+        """
+        goog.dom.createDom(
+        'iframe', /** @type {?string|!Array|undefined} */ (className));
+        """);
     testNoWarning("goog.dom.createDom(tag, {});");
     testNoWarning(
         "/** @enum {string} */ var Classes = {A: ''};\n"
@@ -3538,16 +3736,21 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testWarning(
         externs(externs),
         srcs(
-            lines(
-                "function f(/** !goog.dom.TagName<!HTMLDivElement> */ div) {",
-                "  goog.dom.createDom(div, 'red');",
-                "}")),
+            """
+            function f(/** !goog.dom.TagName<!HTMLDivElement> */ div) {
+              goog.dom.createDom(div, 'red');
+            }
+            """),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanCreateDom Message");
 
     testWarning(
         externs(externs),
-        srcs(lines("const TagName = goog.dom.TagName;", "goog.dom.createDom(TagName.DIV, 'red');")),
+        srcs(
+            """
+            const TagName = goog.dom.TagName;
+            goog.dom.createDom(TagName.DIV, 'red');
+            """),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanCreateDom Message");
   }
@@ -3555,13 +3758,14 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBanCreateDomMultiType() {
     configuration =
-        lines(
-            "requirement: {",
-            "  type: CUSTOM",
-            "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateDom'",
-            "  error_message: 'BanCreateDom Message'",
-            "  value: 'h2.class'",
-            "}");
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateDom'
+          error_message: 'BanCreateDom Message'
+          value: 'h2.class'
+        }
+        """;
 
     String externs =
         lines(
@@ -3573,10 +3777,11 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testWarning(
         externs(externs),
         srcs(
-            lines(
-                "function f(/** !goog.dom.TagName<!HTMLHeadingElement> */ heading) {",
-                "  goog.dom.createDom(heading, 'red');",
-                "}")),
+            """
+            function f(/** !goog.dom.TagName<!HTMLHeadingElement> */ heading) {
+              goog.dom.createDom(heading, 'red');
+            }
+            """),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanCreateDom Message");
   }
@@ -3643,16 +3848,23 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBanElementSetAttribute() {
     configuration =
-        lines(
-            "requirement: {\n",
-            "  type: CUSTOM\n",
-            "  value: 'src'\n",
-            "  value: 'HREF'\n",
-            "  java_class:"
-                + " 'com.google.javascript.jscomp.ConformanceRules$BanElementSetAttribute'\n",
-            "  report_loose_type_violations: false\n",
-            "  error_message: 'BanSetAttribute Message'\n",
-            "}");
+        """
+        requirement: {
+
+          type: CUSTOM
+
+          value: 'src'
+
+          value: 'HREF'
+
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanElementSetAttribute'
+
+          report_loose_type_violations: false
+
+          error_message: 'BanSetAttribute Message'
+
+        }
+        """;
 
     String externs =
         lines(
@@ -3719,35 +3931,44 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning(
         externs(externs),
         srcs(
-            lines(
-                "const foo = 'safe';",
-                "var bar = foo;",
-                "(new HTMLScriptElement).setAttribute(bar, 'xxx');")));
+            """
+            const foo = 'safe';
+            var bar = foo;
+            (new HTMLScriptElement).setAttribute(bar, 'xxx');
+            """));
 
     testNoWarning(externs(externs), srcs("(new HTMLScriptElement)['data-random'] = 'xxx';"));
 
     testNoWarning(
         externs(externs),
         srcs(
-            lines(
-                "const foo = 'safe';",
-                "const bar = foo;",
-                "(new HTMLScriptElement).setAttribute(bar, 'xxx');")));
+            """
+            const foo = 'safe';
+            const bar = foo;
+            (new HTMLScriptElement).setAttribute(bar, 'xxx');
+            """));
   }
 
   @Test
   public void testBanElementSetAttributeLoose() {
     configuration =
-        lines(
-            "requirement: {\n",
-            "  type: CUSTOM\n",
-            "  value: 'src'\n",
-            "  value: 'HREF'\n",
-            "  java_class:"
-                + " 'com.google.javascript.jscomp.ConformanceRules$BanElementSetAttribute'\n",
-            "  error_message: 'BanSetAttribute Message'\n",
-            "  report_loose_type_violations: true\n",
-            "}");
+        """
+        requirement: {
+
+          type: CUSTOM
+
+          value: 'src'
+
+          value: 'HREF'
+
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanElementSetAttribute'
+
+          error_message: 'BanSetAttribute Message'
+
+          report_loose_type_violations: true
+
+        }
+        """;
 
     String externs =
         lines(
@@ -3836,10 +4057,11 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testWarning(
         externs(externs),
         srcs(
-            lines(
-                "const foo = 'safe';",
-                "var bar = foo;",
-                "(new HTMLScriptElement).setAttribute(bar, 'xxx');")),
+            """
+            const foo = 'safe';
+            var bar = foo;
+            (new HTMLScriptElement).setAttribute(bar, 'xxx');
+            """),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanSetAttribute Message");
 
@@ -3848,74 +4070,87 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning(
         externs(externs),
         srcs(
-            lines(
-                "const foo = 'safe';",
-                "const bar = foo;",
-                "(new HTMLScriptElement).setAttribute(bar, 'xxx');")));
+            """
+            const foo = 'safe';
+            const bar = foo;
+            (new HTMLScriptElement).setAttribute(bar, 'xxx');
+            """));
 
     testNoWarning(
         externs(externs),
         srcs(
-            lines(
-                "/** @const */",
-                "var foo = 'safe';",
-                "(new HTMLScriptElement).setAttribute(foo, 'xxx');")));
+            """
+            /** @const */
+            var foo = 'safe';
+            (new HTMLScriptElement).setAttribute(foo, 'xxx');
+            """));
 
     testNoWarning(
         externs(externs),
         srcs(
-            lines(
-                "goog.provide('test.Attribute');",
-                "/** @const */",
-                "test.Attribute.foo = 'safe';",
-                "(new HTMLScriptElement).setAttribute(test.Attribute.foo, 'xxx');")));
+            """
+            goog.provide('test.Attribute');
+            /** @const */
+            test.Attribute.foo = 'safe';
+            (new HTMLScriptElement).setAttribute(test.Attribute.foo, 'xxx');
+            """));
 
     testNoWarning(
         externs(externs),
         srcs(
             new String[] {
-              lines(
-                  "goog.provide('test.Attribute');",
-                  "",
-                  "/** @enum {string} */",
-                  "test.Attribute = {SRC: 'src', HREF: 'href', SAFE: 'safe'};"),
-              lines(
-                  "goog.module('test.setAttribute');",
-                  "",
-                  "const Attribute = goog.require('test.Attribute');",
-                  "",
-                  "const attr = Attribute.SAFE;",
-                  "(new HTMLScriptElement).setAttribute(attr, 'xxx');")
+              """
+              goog.provide('test.Attribute');
+
+              /** @enum {string} */
+              test.Attribute = {SRC: 'src', HREF: 'href', SAFE: 'safe'};
+              """,
+              """
+              goog.module('test.setAttribute');
+
+              const Attribute = goog.require('test.Attribute');
+
+              const attr = Attribute.SAFE;
+              (new HTMLScriptElement).setAttribute(attr, 'xxx');
+              """
             }));
 
     testNoWarning(
         externs(externs),
         srcs(
-            lines(
-                "goog.provide('xid');",
-                "goog.provide('xid.String');",
-                "/** @enum {string} */ xid.String = {DO_NOT_USE: ''};",
-                "/**",
-                " * @param {string} id",
-                " * @return {xid.String}",
-                " */",
-                "xid = function(id) {return /** @type {xid.String} */ (id);};",
-                "const attr = xid('src');",
-                "(new HTMLScriptElement).setAttribute(attr, 'xxx');",
-                "(new HTMLScriptElement)[attr] = 'xxx';")));
+            """
+            goog.provide('xid');
+            goog.provide('xid.String');
+            /** @enum {string} */ xid.String = {DO_NOT_USE: ''};
+            /**
+             * @param {string} id
+             * @return {xid.String}
+             */
+            xid = function(id) {return /** @type {xid.String} */ (id);};
+            const attr = xid('src');
+            (new HTMLScriptElement).setAttribute(attr, 'xxx');
+            (new HTMLScriptElement)[attr] = 'xxx';
+            """));
   }
 
   @Test
   public void testBanSettingAttributes() {
     configuration =
-        lines(
-            "requirement: {\n",
-            "  type: CUSTOM\n",
-            "  value: 'Element.prototype.attr'\n",
-            "  value: 'Foo.prototype.attrib'\n",
-            "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanSettingAttributes'\n",
-            "  error_message: 'BanSettingAttributes Message'\n",
-            "}");
+        """
+        requirement: {
+
+          type: CUSTOM
+
+          value: 'Element.prototype.attr'
+
+          value: 'Foo.prototype.attrib'
+
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanSettingAttributes'
+
+          error_message: 'BanSettingAttributes Message'
+
+        }
+        """;
 
     String externs =
         lines(
@@ -3948,65 +4183,76 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testWarning(
         externs(externs),
         srcs(
-            lines(
-                "const foo = 'safe';",
-                "var bar = foo;",
-                "(new HTMLScriptElement).attr(bar, 'xxx');")),
+            """
+            const foo = 'safe';
+            var bar = foo;
+            (new HTMLScriptElement).attr(bar, 'xxx');
+            """),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanSettingAttributes Message");
 
     testNoWarning(
         externs(externs),
         srcs(
-            lines(
-                "const foo = 'safe';",
-                "const bar = foo;",
-                "(new HTMLScriptElement).attr(bar, 'xxx');")));
+            """
+            const foo = 'safe';
+            const bar = foo;
+            (new HTMLScriptElement).attr(bar, 'xxx');
+            """));
 
     testNoWarning(
         externs(externs),
         srcs(
             new String[] {
-              lines(
-                  "goog.provide('test.Attribute');",
-                  "",
-                  "/** @enum {string} */",
-                  "test.Attribute = {SRC: 'src', HREF: 'href', SAFE: 'safe'};"),
-              lines(
-                  "goog.module('test.attr');",
-                  "",
-                  "const Attribute = goog.require('test.Attribute');",
-                  "",
-                  "const attr = Attribute.SAFE;",
-                  "(new HTMLScriptElement).attr(attr, 'xxx');")
+              """
+              goog.provide('test.Attribute');
+
+              /** @enum {string} */
+              test.Attribute = {SRC: 'src', HREF: 'href', SAFE: 'safe'};
+              """,
+              """
+              goog.module('test.attr');
+
+              const Attribute = goog.require('test.Attribute');
+
+              const attr = Attribute.SAFE;
+              (new HTMLScriptElement).attr(attr, 'xxx');
+              """
             }));
 
     testNoWarning(
         externs(externs),
         srcs(
-            lines(
-                "goog.provide('xid');",
-                "goog.provide('xid.String');",
-                "/** @enum {string} */ xid.String = {DO_NOT_USE: ''};",
-                "/**",
-                " * @param {string} id",
-                " * @return {xid.String}",
-                " */",
-                "xid = function(id) {return /** @type {xid.String} */ (id);};",
-                "const attr = xid('src');",
-                "(new HTMLScriptElement).attr(attr, 'xxx');")));
+            """
+            goog.provide('xid');
+            goog.provide('xid.String');
+            /** @enum {string} */ xid.String = {DO_NOT_USE: ''};
+            /**
+             * @param {string} id
+             * @return {xid.String}
+             */
+            xid = function(id) {return /** @type {xid.String} */ (id);};
+            const attr = xid('src');
+            (new HTMLScriptElement).attr(attr, 'xxx');
+            """));
   }
 
   @Test
   public void testBanExecCommand() {
     configuration =
-        lines(
-            "requirement: {\n",
-            "  type: CUSTOM\n",
-            "  value: 'insertHTML'\n",
-            "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanExecCommand'\n",
-            "  error_message: 'BanExecCommand message'\n",
-            "}");
+        """
+        requirement: {
+
+          type: CUSTOM
+
+          value: 'insertHTML'
+
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanExecCommand'
+
+          error_message: 'BanExecCommand message'
+
+        }
+        """;
 
     String externs = lines(DEFAULT_EXTERNS, "/** @constructor */ function Document() {}");
 
@@ -4022,65 +4268,72 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBanStaticThis() {
     configuration =
-        lines(
-            "requirement: {", //
-            "  type: CUSTOM",
-            "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanStaticThis'",
-            "  error_message: 'BanStaticThis Message'",
-            "}");
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanStaticThis'
+          error_message: 'BanStaticThis Message'
+        }
+        """;
 
     testWarning(
-        lines(
-            "class Foo {", //
-            "  static bar() {",
-            "    this;",
-            "  }",
-            "}"),
+        """
+        class Foo {
+          static bar() {
+            this;
+          }
+        }
+        """,
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanStaticThis Message");
     testWarning(
-        lines(
-            "class Foo {", //
-            "  static bar() {",
-            "    this.buzz();",
-            "  }",
-            "  static buzz() {}",
-            "}"),
+        """
+        class Foo {
+          static bar() {
+            this.buzz();
+          }
+          static buzz() {}
+        }
+        """,
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanStaticThis Message");
     testWarning(
-        lines(
-            "class Foo {", //
-            "  static bar() {",
-            "    let fn = () => this;",
-            "  }",
-            "}"),
+        """
+        class Foo {
+          static bar() {
+            let fn = () => this;
+          }
+        }
+        """,
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanStaticThis Message");
 
     testNoWarning("let fn = function() { this.buzz(); };");
     testNoWarning(
-        lines(
-            "class Foo {", //
-            "  bar() {",
-            "    this.buzz();",
-            "  }",
-            "  buzz() {}",
-            "}"));
+        """
+        class Foo {
+          bar() {
+            this.buzz();
+          }
+          buzz() {}
+        }
+        """);
     testNoWarning(
-        lines(
-            "class Foo {", //
-            "  static buzz() {}",
-            "}",
-            "Foo.bar = function() {",
-            "  this.buzz();",
-            "}"));
+        """
+        class Foo {
+          static buzz() {}
+        }
+        Foo.bar = function() {
+          this.buzz();
+        }
+        """);
     testNoWarning(
-        lines(
-            "class Foo {", //
-            "  static bar() {",
-            "    let fn = function() { this; };",
-            "  }",
-            "}"));
+        """
+        class Foo {
+          static bar() {
+            let fn = function() { this; };
+          }
+        }
+        """);
   }
 }

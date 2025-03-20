@@ -58,15 +58,17 @@ public final class AliasStringsTest extends CompilerTestCase {
   public void testTemplateLiteral() {
     // TODO(bradfordcsmith): Maybe implement using aliases in template literals?
     test(
-        lines(
-            "const A = 'aliasable string';",
-            "const B = 'aliasable string';",
-            "const AB = `${A}aliasable string${B}`;"),
-        lines(
-            "var $$S_aliasable$20string = 'aliasable string';",
-            "const A = $$S_aliasable$20string;",
-            "const B = $$S_aliasable$20string;",
-            "const AB = `${A}aliasable string${B}`"));
+        """
+        const A = 'aliasable string';
+        const B = 'aliasable string';
+        const AB = `${A}aliasable string${B}`;
+        """,
+        """
+        var $$S_aliasable$20string = 'aliasable string';
+        const A = $$S_aliasable$20string;
+        const B = $$S_aliasable$20string;
+        const AB = `${A}aliasable string${B}`
+        """);
   }
 
   @Test
@@ -76,9 +78,10 @@ public final class AliasStringsTest extends CompilerTestCase {
     aliasStringsMode = AliasStringsMode.ALL_AGGRESSIVE;
     test(
         lines("function f() { return 'aliasable string'; }"),
-        lines(
-            "var $$S_aliasable$20string = 'aliasable string';",
-            "function f() { return $$S_aliasable$20string; }"));
+        """
+        var $$S_aliasable$20string = 'aliasable string';
+        function f() { return $$S_aliasable$20string; }
+        """);
   }
 
   @Test
@@ -266,16 +269,15 @@ public final class AliasStringsTest extends CompilerTestCase {
         srcs(chunks),
         expected(
             // m1
-            lines(
-                "var $$S_ciaociaociaociaociao = 'ciaociaociaociaociao';",
-                "function g() { alert($$S_ciaociaociaociaociao); }"),
+            """
+            var $$S_ciaociaociaociaociao = 'ciaociaociaociaociao';
+            function g() { alert($$S_ciaociaociaociaociao); }
+            """,
             // m2
-            lines(
-                "var $$S_hhhhhhhhhhhhhhhhhhh$3a = 'hhhhhhhhhhhhhhhhhhh:';",
-                "function h(a) {"
-                    + "  alert($$S_hhhhhhhhhhhhhhhhhhh$3a + a);"
-                    + "  alert($$S_hhhhhhhhhhhhhhhhhhh$3a + a);"
-                    + "}"),
+            """
+var $$S_hhhhhhhhhhhhhhhhhhh$3a = 'hhhhhhhhhhhhhhhhhhh:';
+function h(a) {  alert($$S_hhhhhhhhhhhhhhhhhhh$3a + a);  alert($$S_hhhhhhhhhhhhhhhhhhh$3a + a);}
+""",
             // m3
             "h($$S_ciaociaociaociaociao + 'adios');",
             // m4
@@ -301,9 +303,10 @@ public final class AliasStringsTest extends CompilerTestCase {
             // m0
             "",
             // m1
-            lines(
-                "var $$S_ciaociaociaociaociao = 'ciaociaociaociaociao';",
-                "function g() { alert($$S_ciaociaociaociaociao); }"),
+            """
+            var $$S_ciaociaociaociaociao = 'ciaociaociaociaociao';
+            function g() { alert($$S_ciaociaociaociaociao); }
+            """,
             // m2
             "h($$S_ciaociaociaociaociao + 'adios');",
             // m3
@@ -335,20 +338,18 @@ public final class AliasStringsTest extends CompilerTestCase {
     aliasStringsMode = AliasStringsMode.LARGE;
 
     test(
-        lines(
-            "const A = 'non aliasable string with length <= 100 characters';",
-            "const B = 'non aliasable string with length <= 100 characters';",
-            // C and D have lengths of 101 characters
-            "const C = 'aliasable large string"
-                + " largestringlargestringlargestringlargestringlargestringlargestringlargestring!';",
-            "const D = 'aliasable large string"
-                + " largestringlargestringlargestringlargestringlargestringlargestringlargestring!';"),
-        lines(
-            "var $$S_aliasable$20large$20stri_6c7cf169 = 'aliasable large string"
-                + " largestringlargestringlargestringlargestringlargestringlargestringlargestring!';",
-            "const A = 'non aliasable string with length <= 100 characters';",
-            "const B = 'non aliasable string with length <= 100 characters';",
-            "const C = $$S_aliasable$20large$20stri_6c7cf169;",
-            "const D = $$S_aliasable$20large$20stri_6c7cf169;"));
+        """
+const A = 'non aliasable string with length <= 100 characters';
+const B = 'non aliasable string with length <= 100 characters';
+const C = 'aliasable large string largestringlargestringlargestringlargestringlargestringlargestringlargestring!';
+const D = 'aliasable large string largestringlargestringlargestringlargestringlargestringlargestringlargestring!';
+""",
+        """
+var $$S_aliasable$20large$20stri_6c7cf169 = 'aliasable large string largestringlargestringlargestringlargestringlargestringlargestringlargestring!';
+const A = 'non aliasable string with length <= 100 characters';
+const B = 'non aliasable string with length <= 100 characters';
+const C = $$S_aliasable$20large$20stri_6c7cf169;
+const D = $$S_aliasable$20large$20stri_6c7cf169;
+""");
   }
 }

@@ -69,10 +69,11 @@ public final class JSDocInfoPrinterTest {
     JSDocInfo info = builder.buildAndReset();
     assertThat(jsDocInfoPrinter.print(info))
         .isEqualTo(
-            lines(
-                "/**", //
-                " * @suppress {globalThis,uselessCode} Common description.",
-                " */\n"));
+            """
+            /**
+             * @suppress {globalThis,uselessCode} Common description.
+             */
+            """);
   }
 
   @Test
@@ -83,11 +84,12 @@ public final class JSDocInfoPrinterTest {
     JSDocInfo info = builder.buildAndReset();
     assertThat(jsDocInfoPrinter.print(info))
         .isEqualTo(
-            lines(
-                "/**", //
-                " * @suppress {globalThis,uselessCode} Common description.",
-                " * More on another line.",
-                " */\n"));
+            """
+            /**
+             * @suppress {globalThis,uselessCode} Common description.
+             * More on another line.
+             */
+            """);
   }
 
   @Test
@@ -98,11 +100,12 @@ public final class JSDocInfoPrinterTest {
     JSDocInfo info = builder.buildAndReset();
     assertThat(jsDocInfoPrinter.print(info))
         .isEqualTo(
-            lines(
-                "/**", //
-                " * @suppress {globalThis,uselessCode} Common description.",
-                " * @suppress {const}",
-                " */\n"));
+            """
+            /**
+             * @suppress {globalThis,uselessCode} Common description.
+             * @suppress {const}
+             */
+            """);
   }
 
   @Test
@@ -172,12 +175,12 @@ public final class JSDocInfoPrinterTest {
 
     assertThat(jsDocInfoPrinter.print(info))
         .isEqualTo(
-            lines(
-                "/**", //
-                " * @template T",
-                " * @template U",
-                " */",
-                ""));
+            """
+            /**
+             * @template T
+             * @template U
+             */
+            """);
   }
 
   @Test
@@ -189,11 +192,11 @@ public final class JSDocInfoPrinterTest {
 
     assertThat(jsDocInfoPrinter.print(info))
         .isEqualTo(
-            lines(
-                "/**", //
-                " * @template {!Array<number>} T",
-                " */",
-                ""));
+            """
+            /**
+             * @template {!Array<number>} T
+             */
+            """);
   }
 
   @Test
@@ -205,11 +208,11 @@ public final class JSDocInfoPrinterTest {
 
     assertThat(jsDocInfoPrinter.print(info))
         .isEqualTo(
-            lines(
-                "/**", //
-                " * @template {?Array<number>} T",
-                " */",
-                ""));
+            """
+            /**
+             * @template {?Array<number>} T
+             */
+            """);
   }
 
   @Test
@@ -221,11 +224,11 @@ public final class JSDocInfoPrinterTest {
 
     assertThat(jsDocInfoPrinter.print(info))
         .isEqualTo(
-            lines(
-                "/**", //
-                " * @template T",
-                " */",
-                ""));
+            """
+            /**
+             * @template T
+             */
+            """);
   }
 
   @Test
@@ -239,12 +242,12 @@ public final class JSDocInfoPrinterTest {
 
     assertThat(jsDocInfoPrinter.print(info))
         .isEqualTo(
-            lines(
-                "/**", //
-                " * @template {!Array<number>} T",
-                " * @template {boolean} U",
-                " */",
-                ""));
+            """
+            /**
+             * @template {!Array<number>} T
+             * @template {boolean} U
+             */
+            """);
   }
 
   @Test
@@ -261,15 +264,15 @@ public final class JSDocInfoPrinterTest {
 
     assertThat(jsDocInfoPrinter.print(info))
         .isEqualTo(
-            lines(
-                "/**",
-                " * @template {!Object} T",
-                " * @template S",
-                " * @template R",
-                " * @template {*} U",
-                " * @template Q",
-                " */",
-                ""));
+            """
+            /**
+             * @template {!Object} T
+             * @template S
+             * @template R
+             * @template {*} U
+             * @template Q
+             */
+            """);
   }
 
   @Test

@@ -512,11 +512,11 @@ public final class TypeCheckAbstractClassesAndMethodsTest extends TypeCheckTestC
             "/** @return {string} */",
             "function test() { return (/** @type {Baz} */ (null)).foo(); }")
         .addDiagnostic(
-            lines(
-                "mismatch of the foo property on type Baz and the type of the property it overrides"
-                    + " from interface IFoo",
-                "original: function(this:IFoo): number",
-                "override: function(this:Foo): string"))
+            """
+mismatch of the foo property on type Baz and the type of the property it overrides from interface IFoo
+original: function(this:IFoo): number
+override: function(this:Foo): string
+""")
         .run();
   }
 

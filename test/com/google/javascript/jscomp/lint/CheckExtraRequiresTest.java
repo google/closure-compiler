@@ -63,20 +63,21 @@ public final class CheckExtraRequiresTest extends CompilerTestCase {
   @Test
   public void testFailForwardDeclareInModule() {
     testError(
-        lines(
-            "goog.module('example');",
-            "",
-            "var Event = goog.forwardDeclare('goog.events.Event');",
-            "var Unused = goog.forwardDeclare('goog.events.Unused');",
-            "",
-            "/**",
-            " * @param {!Event} event",
-            " */",
-            "function listener(event) {",
-            "  alert(event);",
-            "}",
-            "",
-            "exports = listener;"),
+        """
+        goog.module('example');
+
+        var Event = goog.forwardDeclare('goog.events.Event');
+        var Unused = goog.forwardDeclare('goog.events.Unused');
+
+        /**
+         * @param {!Event} event
+         */
+        function listener(event) {
+          alert(event);
+        }
+
+        exports = listener;
+        """,
         EXTRA_REQUIRE_WARNING);
   }
 
@@ -85,29 +86,31 @@ public final class CheckExtraRequiresTest extends CompilerTestCase {
     // It would be nice to catch this, but currently the pass is name based and thus misses
     // the fact that the import is unused.
     testSame(
-        lines(
-            "goog.module('example');",
-            "",
-            "var Shadowed = goog.forwardDeclare('foo.Shadowed');",
-            "",
-            "function f(Shadowed) {",
-            "  alert(Shadowed);",
-            "}"));
+        """
+        goog.module('example');
+
+        var Shadowed = goog.forwardDeclare('foo.Shadowed');
+
+        function f(Shadowed) {
+          alert(Shadowed);
+        }
+        """);
   }
 
   @Test
   public void testFailForwardDeclare() {
     testError(
-        lines(
-            "goog.forwardDeclare('goog.events.Event');",
-            "goog.forwardDeclare('goog.events.Unused');",
-            "",
-            "/**",
-            " * @param {!goog.events.Event} event",
-            " */",
-            "function listener(event) {",
-            "  alert(event);",
-            "}"),
+        """
+        goog.forwardDeclare('goog.events.Event');
+        goog.forwardDeclare('goog.events.Unused');
+
+        /**
+         * @param {!goog.events.Event} event
+         */
+        function listener(event) {
+          alert(event);
+        }
+        """,
         EXTRA_REQUIRE_WARNING);
   }
 
@@ -170,33 +173,36 @@ public final class CheckExtraRequiresTest extends CompilerTestCase {
   @Test
   public void testNoWarning_esImport_objlitShorthand() {
     testSame(
-        lines(
-            "import '/example.module';", //
-            "",
-            "import X from '/example.X';",
-            "alert({X});"));
+        """
+        import '/example.module';
+
+        import X from '/example.X';
+        alert({X});
+        """);
   }
 
   @Test
   public void testNoWarning_require_InnerClassInExtends() {
     testSame(
-        lines(
-            "var goog = {};",
-            "goog.require('goog.foo.Bar');",
-            "",
-            "/** @constructor @extends {goog.foo.Bar.Inner} */",
-            "function SubClass() {}"));
+        """
+        var goog = {};
+        goog.require('goog.foo.Bar');
+
+        /** @constructor @extends {goog.foo.Bar.Inner} */
+        function SubClass() {}
+        """);
   }
 
   @Test
   public void testNoWarning_requireType_InnerClassInExtends() {
     testSame(
-        lines(
-            "var goog = {};",
-            "goog.requireType('goog.foo.Bar');",
-            "",
-            "/** @constructor @extends {goog.foo.Bar.Inner} */",
-            "function SubClass() {}"));
+        """
+        var goog = {};
+        goog.requireType('goog.foo.Bar');
+
+        /** @constructor @extends {goog.foo.Bar.Inner} */
+        function SubClass() {}
+        """);
   }
 
   @Test
@@ -204,11 +210,19 @@ public final class CheckExtraRequiresTest extends CompilerTestCase {
     testError("goog.require('foo.bar');", EXTRA_REQUIRE_WARNING);
 
     testError(
-        lines("goog.require('Bar');", "function func( {a} ){}", "func( {a: 1} );"),
+        """
+        goog.require('Bar');
+        function func( {a} ){}
+        func( {a: 1} );
+        """,
         EXTRA_REQUIRE_WARNING);
 
     testError(
-        lines("goog.require('Bar');", "function func( a = 1 ){}", "func(42);"),
+        """
+        goog.require('Bar');
+        function func( a = 1 ){}
+        func(42);
+        """,
         EXTRA_REQUIRE_WARNING);
   }
 
@@ -217,9 +231,10 @@ public final class CheckExtraRequiresTest extends CompilerTestCase {
     testError("goog.requireType('foo.bar');", EXTRA_REQUIRE_WARNING);
 
     testError(
-        lines(
-            "goog.requireType('Bar');", //
-            "/** @type {string} */ var x"),
+        """
+        goog.requireType('Bar');
+        /** @type {string} */ var x
+        """,
         EXTRA_REQUIRE_WARNING);
   }
 
@@ -233,16 +248,29 @@ public final class CheckExtraRequiresTest extends CompilerTestCase {
 
   @Test
   public void testPassModule() {
-    testSame(lines("import {Foo} from '/bar';", "new Foo();"));
-
-    testSame(lines("import Bar from '/bar';", "new Bar();"));
-
-    testSame(lines("import {CoolFeature as Foo} from '/bar';", "new Foo();"));
+    testSame(
+        """
+        import {Foo} from '/bar';
+        new Foo();
+        """);
 
     testSame(
-        lines(
-            "import Bar, {CoolFeature as Foo, OtherThing as Baz} from '/bar';",
-            "new Foo(); new Bar(); new Baz();"));
+        """
+        import Bar from '/bar';
+        new Bar();
+        """);
+
+    testSame(
+        """
+        import {CoolFeature as Foo} from '/bar';
+        new Foo();
+        """);
+
+    testSame(
+        """
+        import Bar, {CoolFeature as Foo, OtherThing as Baz} from '/bar';
+        new Foo(); new Bar(); new Baz();
+        """);
   }
 
   @Test
@@ -254,282 +282,313 @@ public final class CheckExtraRequiresTest extends CompilerTestCase {
     testError("import {Foo as Bar} from '/bar';", EXTRA_REQUIRE_WARNING);
 
     testError(
-        lines("import {Foo} from '/bar';", "goog.require('example.ExtraRequire');", "new Foo;"),
+        """
+        import {Foo} from '/bar';
+        goog.require('example.ExtraRequire');
+        new Foo;
+        """,
         EXTRA_REQUIRE_WARNING);
 
     testError(
-        lines(
-            "import {Foo} from '/bar';", //
-            "goog.requireType('example.ExtraRequire');",
-            "new Foo;"),
+        """
+        import {Foo} from '/bar';
+        goog.requireType('example.ExtraRequire');
+        new Foo;
+        """,
         EXTRA_REQUIRE_WARNING);
   }
 
   @Test
   public void testPassForwardDeclareInModule() {
     testSame(
-        lines(
-            "goog.module('example');",
-            "",
-            "var Event = goog.forwardDeclare('goog.events.Event');",
-            "",
-            "/**",
-            " * @param {!Event} event",
-            " */",
-            "function listener(event) {",
-            "  alert(event);",
-            "}",
-            "",
-            "exports = listener;"));
+        """
+        goog.module('example');
+
+        var Event = goog.forwardDeclare('goog.events.Event');
+
+        /**
+         * @param {!Event} event
+         */
+        function listener(event) {
+          alert(event);
+        }
+
+        exports = listener;
+        """);
   }
 
   @Test
   public void testPassForwardDeclare() {
     testSame(
-        lines(
-            "goog.forwardDeclare('goog.events.Event');",
-            "",
-            "/**",
-            " * @param {!goog.events.Event} event",
-            " */",
-            "function listener(event) {",
-            "  alert(event);",
-            "}"));
+        """
+        goog.forwardDeclare('goog.events.Event');
+
+        /**
+         * @param {!goog.events.Event} event
+         */
+        function listener(event) {
+          alert(event);
+        }
+        """);
   }
 
   @Test
   public void testGoogModuleGet() {
     testSame(
-        lines(
-            "goog.provide('x.y');",
-            "goog.require('foo.bar');",
-            "",
-            "goog.scope(function() {",
-            "var bar = goog.module.get('foo.bar');",
-            "x.y = function() {};",
-            "});"));
+        """
+        goog.provide('x.y');
+        goog.require('foo.bar');
+
+        goog.scope(function() {
+        var bar = goog.module.get('foo.bar');
+        x.y = function() {};
+        });
+        """);
   }
 
   @Test
   public void testGoogModuleWithAliasedRequire() {
     testNoWarning(
-        lines(
-            "goog.module('example');",
-            "",
-            "const asserts = goog.require('goog.asserts');",
-            "",
-            "exports = function() {",
-            "  asserts.assert(true);",
-            "};"));
+        """
+        goog.module('example');
+
+        const asserts = goog.require('goog.asserts');
+
+        exports = function() {
+          asserts.assert(true);
+        };
+        """);
 
     testError(
-        lines(
-            "goog.module('example');",
-            "",
-            "const asserts = goog.require('goog.asserts');",
-            "",
-            "exports = function() {",
-            "  goog.asserts.assert(true);",
-            "};"),
+        """
+        goog.module('example');
+
+        const asserts = goog.require('goog.asserts');
+
+        exports = function() {
+          goog.asserts.assert(true);
+        };
+        """,
         EXTRA_REQUIRE_WARNING);
   }
 
   @Test
   public void testGoogModuleWithDestructuringRequire() {
     testNoWarning(
-        lines(
-            "goog.module('example');",
-            "",
-            "const {assert} = goog.require('goog.asserts');",
-            "",
-            "exports = function() {",
-            "  assert(true);",
-            "};"));
+        """
+        goog.module('example');
+
+        const {assert} = goog.require('goog.asserts');
+
+        exports = function() {
+          assert(true);
+        };
+        """);
 
     testError(
-        lines(
-            "goog.module('example');",
-            "",
-            "const {assert} = goog.require('goog.asserts');",
-            "",
-            "exports = function() {",
-            "  goog.asserts.assert(true);",
-            "};"),
+        """
+        goog.module('example');
+
+        const {assert} = goog.require('goog.asserts');
+
+        exports = function() {
+          goog.asserts.assert(true);
+        };
+        """,
         EXTRA_REQUIRE_WARNING);
   }
 
   @Test
   public void testGoogModuleWithDestructuringShortnameRequire() {
     testNoWarning(
-        lines(
-            "goog.module('example');",
-            "",
-            "const {assert: googAssert} = goog.require('goog.asserts');",
-            "",
-            "exports = function() {",
-            "  googAssert(true);",
-            "};"));
+        """
+        goog.module('example');
+
+        const {assert: googAssert} = goog.require('goog.asserts');
+
+        exports = function() {
+          googAssert(true);
+        };
+        """);
 
     testError(
-        lines(
-            "goog.module('example');",
-            "",
-            "var {assert: googAssert} = goog.require('goog.asserts');",
-            "",
-            "exports = function() {",
-            "  assert(true);",
-            "};"),
+        """
+        goog.module('example');
+
+        var {assert: googAssert} = goog.require('goog.asserts');
+
+        exports = function() {
+          assert(true);
+        };
+        """,
         EXTRA_REQUIRE_WARNING);
 
     testError(
-        lines(
-            "goog.module('example');",
-            "",
-            "const {assert: googAssert} = goog.require('goog.asserts');",
-            "",
-            "exports = function() {",
-            "  goog.asserts.assert(true);",
-            "};"),
+        """
+        goog.module('example');
+
+        const {assert: googAssert} = goog.require('goog.asserts');
+
+        exports = function() {
+          goog.asserts.assert(true);
+        };
+        """,
         EXTRA_REQUIRE_WARNING);
   }
 
   @Test
   public void testGoogModuleWithPartiallyUnusedDestructuringRequire() {
     testError(
-        lines(
-            "goog.module('example');",
-            "",
-            "const {assert, fail} = goog.require('goog.asserts');",
-            "",
-            "exports = function() {",
-            "  assert(true);",
-            "};"),
+        """
+        goog.module('example');
+
+        const {assert, fail} = goog.require('goog.asserts');
+
+        exports = function() {
+          assert(true);
+        };
+        """,
         EXTRA_REQUIRE_WARNING);
   }
 
   @Test
   public void testGoogModuleWithEmptyDestructuringRequire() {
     testError(
-        lines("goog.module('example');", "", "var {} = goog.require('goog.asserts');"),
+        """
+        goog.module('example');
+
+        var {} = goog.require('goog.asserts');
+        """,
         EXTRA_REQUIRE_WARNING);
   }
 
   @Test
   public void testGoogModuleWithAliasedRequireType() {
     testNoWarning(
-        lines(
-            "goog.module('example');",
-            "",
-            "const color = goog.requireType('goog.color');",
-            "",
-            "exports = /** @param {color.Rgb} x */ function(x) { alert(x); };"));
+        """
+        goog.module('example');
+
+        const color = goog.requireType('goog.color');
+
+        exports = /** @param {color.Rgb} x */ function(x) { alert(x); };
+        """);
 
     testError(
-        lines(
-            "goog.module('example');",
-            "",
-            "const color = goog.requireType('goog.color');",
-            "",
-            "exports = /** @param {goog.color.Rgb} x */ function(x) { alert(x); };"),
+        """
+        goog.module('example');
+
+        const color = goog.requireType('goog.color');
+
+        exports = /** @param {goog.color.Rgb} x */ function(x) { alert(x); };
+        """,
         EXTRA_REQUIRE_WARNING);
   }
 
   @Test
   public void testGoogModuleWithDestructuringRequireType() {
     testError(
-        lines(
-            "goog.module('example');",
-            "",
-            "const {Rgb} = goog.requireType('goog.color');",
-            "",
-            "exports = /** @param {goog.color.Rgb} x */ function(x) { alert(x); };"),
+        """
+        goog.module('example');
+
+        const {Rgb} = goog.requireType('goog.color');
+
+        exports = /** @param {goog.color.Rgb} x */ function(x) { alert(x); };
+        """,
         EXTRA_REQUIRE_WARNING);
   }
 
   @Test
   public void testGoogModuleWithDestructuringShortnameRequireType() {
     testNoWarning(
-        lines(
-            "goog.module('example');",
-            "",
-            "const {Rgb: googColorRgb} = goog.requireType('goog.color');",
-            "",
-            "exports = /** @param {googColorRgb} x */ function(x) { alert(x); };"));
+        """
+        goog.module('example');
+
+        const {Rgb: googColorRgb} = goog.requireType('goog.color');
+
+        exports = /** @param {googColorRgb} x */ function(x) { alert(x); };
+        """);
 
     testError(
-        lines(
-            "goog.module('example');",
-            "",
-            "const {Rgb: googColorRgb} = goog.requireType('goog.color');",
-            "",
-            "exports = /** @param {Rgb} x */ function(x) { alert(x); };"),
+        """
+        goog.module('example');
+
+        const {Rgb: googColorRgb} = goog.requireType('goog.color');
+
+        exports = /** @param {Rgb} x */ function(x) { alert(x); };
+        """,
         EXTRA_REQUIRE_WARNING);
 
     testError(
-        lines(
-            "goog.module('example');",
-            "",
-            "const {Rgb: googColorRgb} = goog.requireType('goog.color');",
-            "",
-            "exports = /** @param {goog.color.Rgb} x */ function(x) { alert(x); };"),
+        """
+        goog.module('example');
+
+        const {Rgb: googColorRgb} = goog.requireType('goog.color');
+
+        exports = /** @param {goog.color.Rgb} x */ function(x) { alert(x); };
+        """,
         EXTRA_REQUIRE_WARNING);
   }
 
   @Test
   public void testGoogModuleWithPartiallyUnusedDestructuringRequireType() {
     testError(
-        lines(
-            "goog.module('example');",
-            "",
-            "const {Rgb, Hsv} = goog.require('goog.color');",
-            "",
-            "exports = /** @param {Rgb} x */ function(x) { alert(x); };"),
+        """
+        goog.module('example');
+
+        const {Rgb, Hsv} = goog.require('goog.color');
+
+        exports = /** @param {Rgb} x */ function(x) { alert(x); };
+        """,
         EXTRA_REQUIRE_WARNING);
   }
 
   @Test
   public void testGoogModuleWithEmptyDestructuringRequireType() {
     testError(
-        lines(
-            "goog.module('example');", //
-            "",
-            "var {} = goog.requireType('goog.color');"),
+        """
+        goog.module('example');
+
+        var {} = goog.requireType('goog.color');
+        """,
         EXTRA_REQUIRE_WARNING);
   }
 
   @Test
   public void testES6ModuleWithDestructuringRequire() {
     testError(
-        lines(
-            "import '/example';",
-            "",
-            "import {assert, fail} from '/goog.asserts';",
-            "",
-            "export default function() {",
-            "  assert(true);",
-            "};"),
+        """
+        import '/example';
+
+        import {assert, fail} from '/goog.asserts';
+
+        export default function() {
+          assert(true);
+        };
+        """,
         EXTRA_REQUIRE_WARNING);
 
     testError(
-        lines(
-            "import '/example';",
-            "",
-            "import {assert as assert, fail as fail} from '/goog.asserts';",
-            "",
-            "export default function() {",
-            "  assert(true);",
-            "};"),
+        """
+        import '/example';
+
+        import {assert as assert, fail as fail} from '/goog.asserts';
+
+        export default function() {
+          assert(true);
+        };
+        """,
         EXTRA_REQUIRE_WARNING);
 
     testError(
-        lines(
-            "import '/example';",
-            "",
-            "import {assert as a, fail as f} from '/goog.asserts';",
-            "",
-            "export default function() {",
-            "  a(true);",
-            "};"),
+        """
+        import '/example';
+
+        import {assert as a, fail as f} from '/goog.asserts';
+
+        export default function() {
+          a(true);
+        };
+        """,
         EXTRA_REQUIRE_WARNING);
   }
 }

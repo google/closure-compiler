@@ -34,7 +34,10 @@ import org.junit.runners.JUnit4;
 public final class CheckArrayWithGoogObjectTest extends CompilerTestCase {
 
   private static final String GOOG_OBJECT =
-      lines("goog.object = {};", "goog.object.forEach = function(obj, f, opt_this) {}");
+      """
+      goog.object = {};
+      goog.object.forEach = function(obj, f, opt_this) {}
+      """;
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {

@@ -177,9 +177,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
     moduleType = ModuleType.GOOG_PROVIDE;
 
     testCommonCase(
-        lines(
-            "goog.provide('test');", //
-            "<import>('symbol');"));
+        """
+        goog.provide('test');
+        <import>('symbol');
+        """);
   }
 
   @Test
@@ -187,9 +188,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
     moduleType = ModuleType.GOOG_MODULE;
 
     testCommonCase(
-        lines(
-            "goog.module('test');", //
-            "<import>('symbol');"));
+        """
+        goog.module('test');
+        <import>('symbol');
+        """);
   }
 
   @Test
@@ -197,11 +199,12 @@ public class CheckClosureImportsTest extends CompilerTestCase {
     moduleType = ModuleType.GOOG_MODULE;
 
     testCommonCase(
-        lines(
-            "goog.loadModule(function(exports) {",
-            "  goog.module('test');", //
-            "  <import>('symbol');",
-            "});"));
+        """
+        goog.loadModule(function(exports) {
+          goog.module('test');
+          <import>('symbol');
+        });
+        """);
   }
 
   @Test
@@ -209,9 +212,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
     moduleType = ModuleType.ES6_MODULE;
 
     testCommonCase(
-        lines(
-            "<import>('symbol');", //
-            "export {};"));
+        """
+        <import>('symbol');
+        export {};
+        """);
   }
 
   @Test
@@ -223,17 +227,19 @@ public class CheckClosureImportsTest extends CompilerTestCase {
   public void importInBlockScopeInModuleHoistScopeIsError() {
     moduleType = ModuleType.GOOG_MODULE;
     testCommonCase(
-        lines(
-            "goog.module('test');", //
-            "{ <import>('symbol'); }"),
+        """
+        goog.module('test');
+        { <import>('symbol'); }
+        """,
         INVALID_CLOSURE_CALL_SCOPE_ERROR);
 
     moduleType = ModuleType.ES6_MODULE;
 
     testCommonCase(
-        lines(
-            "{ <import>('symbol'); }", //
-            "export {};"),
+        """
+        { <import>('symbol'); }
+        export {};
+        """,
         INVALID_CLOSURE_CALL_SCOPE_ERROR);
   }
 
@@ -247,16 +253,18 @@ public class CheckClosureImportsTest extends CompilerTestCase {
     moduleType = ModuleType.GOOG_MODULE;
 
     testCommonCase(
-        lines(
-            "goog.module('test');", //
-            "var symbol = <import>('symbol');"));
+        """
+        goog.module('test');
+        var symbol = <import>('symbol');
+        """);
 
     moduleType = ModuleType.ES6_MODULE;
 
     testCommonCase(
-        lines(
-            "const symbol = <import>('symbol');", //
-            "export {};"));
+        """
+        const symbol = <import>('symbol');
+        export {};
+        """);
   }
 
   @Test
@@ -264,9 +272,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
     moduleType = ModuleType.GOOG_MODULE;
 
     testCommonCase(
-        lines(
-            "goog.module('test');", //
-            "const Symbol = <import>('symbol');"),
+        """
+        goog.module('test');
+        const Symbol = <import>('symbol');
+        """,
         INCORRECT_SHORTNAME_CAPITALIZATION);
   }
 
@@ -275,9 +284,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
     moduleType = ModuleType.GOOG_MODULE;
 
     testCommonCase(
-        lines(
-            "goog.module('test');", //
-            "const localSymbol = <import>('symbol');"));
+        """
+        goog.module('test');
+        const localSymbol = <import>('symbol');
+        """);
   }
 
   @Test
@@ -285,29 +295,33 @@ public class CheckClosureImportsTest extends CompilerTestCase {
     moduleType = ModuleType.GOOG_MODULE;
 
     testCommonCase(
-        lines(
-            "goog.module('test');", //
-            "var before, symbol = goog.require('symbol');"),
+        """
+        goog.module('test');
+        var before, symbol = goog.require('symbol');
+        """,
         ONE_CLOSURE_IMPORT_PER_DECLARATION);
 
     testCommonCase(
-        lines(
-            "goog.module('test');", //
-            "var symbol = goog.require('symbol'), after;"),
+        """
+        goog.module('test');
+        var symbol = goog.require('symbol'), after;
+        """,
         ONE_CLOSURE_IMPORT_PER_DECLARATION);
 
     moduleType = ModuleType.ES6_MODULE;
 
     testCommonCase(
-        lines(
-            "const before = 0, symbol = goog.require('symbol');", //
-            "export {};"),
+        """
+        const before = 0, symbol = goog.require('symbol');
+        export {};
+        """,
         ONE_CLOSURE_IMPORT_PER_DECLARATION);
 
     testCommonCase(
-        lines(
-            "var symbol = goog.require('symbol'), after = 0;", //
-            "export {};"),
+        """
+        var symbol = goog.require('symbol'), after = 0;
+        export {};
+        """,
         ONE_CLOSURE_IMPORT_PER_DECLARATION);
   }
 
@@ -319,26 +333,29 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "const symbol = goog.require('symbol');", //
-                    "export {};"))));
+                """
+                const symbol = goog.require('symbol');
+                export {};
+                """)));
 
     test(
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "let symbol = goog.require('symbol');", //
-                    "export {};"))),
+                """
+                let symbol = goog.require('symbol');
+                export {};
+                """)),
         error(LET_CLOSURE_IMPORT));
 
     test(
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "var symbol = goog.require('symbol');", //
-                    "export {};"))),
+                """
+                var symbol = goog.require('symbol');
+                export {};
+                """)),
         error(LHS_OF_CLOSURE_IMPORT_MUST_BE_CONST_IN_ES_MODULE));
   }
 
@@ -350,9 +367,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "let symbol = goog.require('symbol');"))),
+                """
+                goog.module('test');
+                let symbol = goog.require('symbol');
+                """)),
         error(LET_CLOSURE_IMPORT));
   }
 
@@ -364,9 +382,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "let symbol = goog.requireType('symbol');"))),
+                """
+                goog.module('test');
+                let symbol = goog.requireType('symbol');
+                """)),
         error(LET_CLOSURE_IMPORT));
   }
 
@@ -378,9 +397,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "const {property0, property1: p1} = goog.require('symbol');"))));
+                """
+                goog.module('test');
+                const {property0, property1: p1} = goog.require('symbol');
+                """)));
   }
 
   @Test
@@ -391,9 +411,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "const {property0, property1: p1} = goog.requireType('symbol');"))));
+                """
+                goog.module('test');
+                const {property0, property1: p1} = goog.requireType('symbol');
+                """)));
   }
 
   @Test
@@ -404,9 +425,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "const {property0} = goog.forwardDeclare('symbol');"))),
+                """
+                goog.module('test');
+                const {property0} = goog.forwardDeclare('symbol');
+                """)),
         error(NO_CLOSURE_IMPORT_DESTRUCTURING));
   }
 
@@ -418,9 +440,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "const {property0: {a}} = goog.require('symbol');"))),
+                """
+                goog.module('test');
+                const {property0: {a}} = goog.require('symbol');
+                """)),
         error(INVALID_CLOSURE_IMPORT_DESTRUCTURING));
   }
 
@@ -432,9 +455,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "const {property0: {a}} = goog.requireType('symbol');"))),
+                """
+                goog.module('test');
+                const {property0: {a}} = goog.requireType('symbol');
+                """)),
         error(INVALID_CLOSURE_IMPORT_DESTRUCTURING));
   }
 
@@ -446,9 +470,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "const [e0] = goog.require('symbol');"))),
+                """
+                goog.module('test');
+                const [e0] = goog.require('symbol');
+                """)),
         error(INVALID_CLOSURE_IMPORT_DESTRUCTURING));
   }
 
@@ -460,9 +485,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "const [e0] = goog.requireType('symbol');"))),
+                """
+                goog.module('test');
+                const [e0] = goog.requireType('symbol');
+                """)),
         error(INVALID_CLOSURE_IMPORT_DESTRUCTURING));
   }
 
@@ -502,9 +528,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "goog.module.get('symbol');"))),
+                """
+                goog.module('test');
+                goog.module.get('symbol');
+                """)),
         error(MODULE_USES_GOOG_MODULE_GET));
 
     moduleType = ModuleType.ES6_MODULE;
@@ -513,9 +540,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.module.get('symbol');", //
-                    "export {};"))),
+                """
+                goog.module.get('symbol');
+                export {};
+                """)),
         error(MODULE_USES_GOOG_MODULE_GET));
   }
 
@@ -535,9 +563,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "() => goog.module.get('symbol');"))));
+                """
+                goog.module('test');
+                () => goog.module.get('symbol');
+                """)));
 
     moduleType = ModuleType.ES6_MODULE;
 
@@ -545,9 +574,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "() => goog.module.get('symbol');", //
-                    "export {};"))));
+                """
+                () => goog.module.get('symbol');
+                export {};
+                """)));
 
     moduleType = ModuleType.SCRIPT;
 
@@ -562,10 +592,11 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "let symbol = goog.forwardDeclare('symbol');",
-                    "() => symbol = goog.module.get('symbol');"))));
+                """
+                goog.module('test');
+                let symbol = goog.forwardDeclare('symbol');
+                () => symbol = goog.module.get('symbol');
+                """)));
   }
 
   @Test
@@ -576,10 +607,11 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.provide('a.b.c');", //
-                    "goog.require('symbol');",
-                    "a.b.c = goog.module.get('symbol');"))));
+                """
+                goog.provide('a.b.c');
+                goog.require('symbol');
+                a.b.c = goog.module.get('symbol');
+                """)));
   }
 
   @Test
@@ -590,55 +622,61 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.provide('test');", //
-                    "var sym = goog.module.get('symbol');"))),
+                """
+                goog.provide('test');
+                var sym = goog.module.get('symbol');
+                """)),
         error(INVALID_GET_CALL_SCOPE));
 
     test(
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.provide('test');", //
-                    "var sym = goog.module.get('symbol').sym;"))),
+                """
+                goog.provide('test');
+                var sym = goog.module.get('symbol').sym;
+                """)),
         error(INVALID_GET_CALL_SCOPE));
 
     test(
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.provide('test');", //
-                    "var sym = goog.module.get('symbol')?.sym;"))),
+                """
+                goog.provide('test');
+                var sym = goog.module.get('symbol')?.sym;
+                """)),
         error(INVALID_GET_CALL_SCOPE));
 
     test(
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.provide('test');", //
-                    "const {sym} = goog.module.get('symbol');"))),
+                """
+                goog.provide('test');
+                const {sym} = goog.module.get('symbol');
+                """)),
         error(INVALID_GET_CALL_SCOPE));
 
     test(
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.provide('test');", //
-                    "var sym",
-                    "sym = goog.module.get('symbol').sym;"))),
+                """
+                goog.provide('test');
+                var sym
+                sym = goog.module.get('symbol').sym;
+                """)),
         error(INVALID_GET_CALL_SCOPE));
 
     test(
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.provide('test');", //
-                    "let sym; ({sym} = goog.module.get('symbol'));"))),
+                """
+                goog.provide('test');
+                let sym; ({sym} = goog.module.get('symbol'));
+                """)),
         error(INVALID_GET_CALL_SCOPE));
   }
 
@@ -650,10 +688,11 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "let symbol;",
-                    "() => symbol = goog.module.get('symbol');"))),
+                """
+                goog.module('test');
+                let symbol;
+                () => symbol = goog.module.get('symbol');
+                """)),
         error(INVALID_GET_ALIAS));
   }
 
@@ -665,10 +704,11 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "let symbol = goog.forwardDeclare('symbol');",
-                    "() => symbol = goog.module.get('test');"))),
+                """
+                goog.module('test');
+                let symbol = goog.forwardDeclare('symbol');
+                () => symbol = goog.module.get('test');
+                """)),
         error(INVALID_GET_ALIAS));
   }
 
@@ -686,9 +726,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
     test(
         srcs(
             makeTestFile(
-                lines(
-                    "goog.provide('test');", //
-                    "goog.forwardDeclare('MyGlobal');"))));
+                """
+                goog.provide('test');
+                goog.forwardDeclare('MyGlobal');
+                """)));
   }
 
   @Test
@@ -698,9 +739,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
     test(
         srcs(
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "goog.forwardDeclare('MyGlobal');"))));
+                """
+                goog.module('test');
+                goog.forwardDeclare('MyGlobal');
+                """)));
   }
 
   @Test
@@ -710,9 +752,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
     test(
         srcs(
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "const MyGlobal = goog.forwardDeclare('MyGlobal');"))),
+                """
+                goog.module('test');
+                const MyGlobal = goog.forwardDeclare('MyGlobal');
+                """)),
         error(MISSING_MODULE_OR_PROVIDE_FOR_FORWARD_DECLARE));
   }
 
@@ -723,9 +766,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
     test(
         srcs(
             makeTestFile(
-                lines(
-                    "export {};", //
-                    "goog.forwardDeclare('MyGlobal');"))));
+                """
+                export {};
+                goog.forwardDeclare('MyGlobal');
+                """)));
   }
 
   @Test
@@ -735,9 +779,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
     test(
         srcs(
             makeTestFile(
-                lines(
-                    "export {};", //
-                    "const MyGlobal = goog.forwardDeclare('MyGlobal');"))),
+                """
+                export {};
+                const MyGlobal = goog.forwardDeclare('MyGlobal');
+                """)),
         error(MISSING_MODULE_OR_PROVIDE_FOR_FORWARD_DECLARE));
   }
 
@@ -749,10 +794,11 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "const {alias} = goog.require('symbol');",
-                    "alias;"))));
+                """
+                goog.module('test');
+                const {alias} = goog.require('symbol');
+                alias;
+                """)));
   }
 
   @Test
@@ -763,10 +809,11 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "const alias = goog.forwardDeclare('symbol');",
-                    "alias;"))));
+                """
+                goog.module('test');
+                const alias = goog.forwardDeclare('symbol');
+                alias;
+                """)));
   }
 
   @Test
@@ -777,10 +824,11 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "const {Type} = goog.requireType('symbol');",
-                    "/** !Type */ let x;"))));
+                """
+                goog.module('test');
+                const {Type} = goog.requireType('symbol');
+                /** !Type */ let x;
+                """)));
   }
 
   @Test
@@ -791,9 +839,10 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             ES_MODULE_SRC,
             makeTestFile(
-                lines(
-                    "const {Type} = goog.require('es.module');", //
-                    "export {};"))),
+                """
+                const {Type} = goog.require('es.module');
+                export {};
+                """)),
         warning(Es6RewriteModules.SHOULD_IMPORT_ES6_MODULE));
   }
 
@@ -804,11 +853,12 @@ public class CheckClosureImportsTest extends CompilerTestCase {
         srcs(
             PROVIDES_SYMBOL_SRC,
             makeTestFile(
-                lines(
-                    "goog.module('test');", //
-                    "function fn() {",
-                    "  return arguments;",
-                    "}"))));
+                """
+                goog.module('test');
+                function fn() {
+                  return arguments;
+                }
+                """)));
   }
 
   @Test
@@ -836,11 +886,12 @@ public class CheckClosureImportsTest extends CompilerTestCase {
             JSChunkGraphBuilder.forStar()
                 .addChunk("// base")
                 .addChunk(
-                    lines(
-                        "goog.loadModule(function(exports) {",
-                        "goog.module('test');",
-                        "return exports;",
-                        "});"))
+                    """
+                    goog.loadModule(function(exports) {
+                    goog.module('test');
+                    return exports;
+                    });
+                    """)
                 .addChunk("goog.require('test');")
                 .build()),
         warning(CheckClosureImports.CROSS_CHUNK_REQUIRE_ERROR));

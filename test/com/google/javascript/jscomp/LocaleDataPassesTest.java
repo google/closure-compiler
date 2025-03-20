@@ -147,34 +147,34 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
   public void testBaseJsGoogLocaleRef() {
     // We're confirming that there won't be any error reported for the use of `goog.LOCALE`.
     multiTest( //
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @provideGoog", // no @localeFile, but base.js has this special annotation
-            " */",
-            "goog.provide('some.Obj');",
-            "goog.LOCALE = 'en';",
-            "console.log(goog.LOCALE);",
-            ""),
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @provideGoog", // no @localeFile, but base.js has this special annotation
-            " */",
-            "goog.provide('some.Obj');",
-            "goog.LOCALE = __JSC_LOCALE__;",
-            "console.log(__JSC_LOCALE__);",
-            ""),
+        """
+        /**
+         * @fileoverview
+         * @provideGoog // no @localeFile, but base.js has this special annotation
+         */
+        goog.provide('some.Obj');
+        goog.LOCALE = 'en';
+        console.log(goog.LOCALE);
+        """,
+        """
+        /**
+         * @fileoverview
+         * @provideGoog // no @localeFile, but base.js has this special annotation
+         */
+        goog.provide('some.Obj');
+        goog.LOCALE = __JSC_LOCALE__;
+        console.log(__JSC_LOCALE__);
+        """,
         new LocaleResult(
             "es_ES",
-            lines(
-                "/**",
-                " * @fileoverview",
-                " * @provideGoog", // no @localeFile, but base.js has this special annotation
-                " */",
-                "goog.provide('some.Obj');",
-                "goog.LOCALE = 'es_ES';",
-                "console.log('es_ES');",
-                "")));
+            """
+            /**
+             * @fileoverview
+             * @provideGoog // no @localeFile, but base.js has this special annotation
+             */
+            goog.provide('some.Obj');
+            goog.LOCALE = 'es_ES';
+            console.log('es_ES');
+            """));
   }
 }

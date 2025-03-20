@@ -801,12 +801,13 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
         "a = (x[--y]) ? 0 : 1;");
 
     test(
-        lines(
-            "if (x?.[--y]) {", //
-            "    a = 0;",
-            "} else {",
-            "    a = 1;",
-            "}"),
+        """
+        if (x?.[--y]) {
+            a = 0;
+        } else {
+            a = 1;
+        }
+        """,
         "a = (x?.[--y]) ? 0 : 1;");
 
     test("if (x++) { x += 2 } else { x += 3 }", "x++ ? x += 2 : x += 3");
@@ -880,8 +881,16 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   @Test
   public void testCoercionSubstitution_hook() {
     enableTypeCheck();
-    testSame(lines("var x = {};", "var y = x != null ? 1 : 2;"));
-    testSame(lines("var x = 1;", "var y = x != 0 ? 1 : 2;"));
+    testSame(
+        """
+        var x = {};
+        var y = x != null ? 1 : 2;
+        """);
+    testSame(
+        """
+        var x = 1;
+        var y = x != 0 ? 1 : 2;
+        """);
   }
 
   @Test
@@ -948,14 +957,19 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   public void testMinimizeIfWithNewTargetCondition() {
     // Related to https://github.com/google/closure-compiler/issues/3097
     test(
-        lines(
-            "function x() {",
-            "  if (new.target) {",
-            "    return 1;",
-            "  } else {",
-            "    return 2;",
-            "  }",
-            "}"),
-        lines("function x() {", "  return new.target ? 1 : 2;", "}"));
+        """
+        function x() {
+          if (new.target) {
+            return 1;
+          } else {
+            return 2;
+          }
+        }
+        """,
+        """
+        function x() {
+          return new.target ? 1 : 2;
+        }
+        """);
   }
 }

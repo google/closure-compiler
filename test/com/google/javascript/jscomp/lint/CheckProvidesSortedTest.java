@@ -63,41 +63,50 @@ public final class CheckProvidesSortedTest extends CompilerTestCase {
   @Test
   public void testNoWarning() {
     testNoWarning(
-        lines(
-            "/** @fileoverview foo */",
-            "",
-            "goog.provide('a');",
-            "goog.provide('b');",
-            "goog.provide('c');",
-            "",
-            "alert(1);"));
+        """
+        /** @fileoverview foo */
+
+        goog.provide('a');
+        goog.provide('b');
+        goog.provide('c');
+
+        alert(1);
+        """);
   }
 
   @Test
   public void testNoWarning_noProvides() {
     testNoWarning(
-        lines("/** @fileoverview foo */", "", "goog.module('m');", "", "goog.require('x');"));
+        """
+        /** @fileoverview foo */
+
+        goog.module('m');
+
+        goog.require('x');
+        """);
   }
 
   @Test
   public void testWarning() {
     test(
         srcs(
-            lines(
-                "/** @fileoverview foo */",
-                "",
-                "goog.provide('b');",
-                "goog.provide('a');",
-                "goog.provide('c');",
-                "",
-                "alert(1);")),
+            """
+            /** @fileoverview foo */
+
+            goog.provide('b');
+            goog.provide('a');
+            goog.provide('c');
+
+            alert(1);
+            """),
         warning(PROVIDES_NOT_SORTED)
             .withMessageContaining(
-                lines(
-                    "The correct order is:",
-                    "",
-                    "goog.provide('a');",
-                    "goog.provide('b');",
-                    "goog.provide('c');")));
+                """
+                The correct order is:
+
+                goog.provide('a');
+                goog.provide('b');
+                goog.provide('c');
+                """));
   }
 }

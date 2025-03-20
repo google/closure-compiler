@@ -63,10 +63,11 @@ public final class Es7RewriteExponentialOperatorTest extends CompilerTestCase {
     test(
         srcs("a.x **= 2;"),
         expected(
-            lines(
-                "let $jscomp$exp$assign$tmpm1146332801$0;", //
-                "($jscomp$exp$assign$tmpm1146332801$0 = a).x",
-                " = Math.pow($jscomp$exp$assign$tmpm1146332801$0.x, 2);")));
+            """
+            let $jscomp$exp$assign$tmpm1146332801$0;
+            ($jscomp$exp$assign$tmpm1146332801$0 = a).x
+             = Math.pow($jscomp$exp$assign$tmpm1146332801$0.x, 2);
+            """));
   }
 
   @Test
@@ -74,13 +75,14 @@ public final class Es7RewriteExponentialOperatorTest extends CompilerTestCase {
     test(
         srcs("a[x] **= 2;"),
         expected(
-            lines(
-                "let $jscomp$exp$assign$tmpm1146332801$0;", //
-                "let $jscomp$exp$assign$tmpindexm1146332801$0;",
-                "($jscomp$exp$assign$tmpm1146332801$0 = a)",
-                "[$jscomp$exp$assign$tmpindexm1146332801$0 = x]",
-                " = Math.pow($jscomp$exp$assign$tmpm1146332801$0",
-                "[$jscomp$exp$assign$tmpindexm1146332801$0], 2);")));
+            """
+            let $jscomp$exp$assign$tmpm1146332801$0;
+            let $jscomp$exp$assign$tmpindexm1146332801$0;
+            ($jscomp$exp$assign$tmpm1146332801$0 = a)
+            [$jscomp$exp$assign$tmpindexm1146332801$0 = x]
+             = Math.pow($jscomp$exp$assign$tmpm1146332801$0
+            [$jscomp$exp$assign$tmpindexm1146332801$0], 2);
+            """));
   }
 
   /**

@@ -143,44 +143,50 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
 
     // test static keyword
     test(
-        lines(
-            "class C {", //
-            "'m'(){}",
-            "['n'](){}",
-            "static 'x' = 0;",
-            "static ['y'] = 1;}"),
-        lines(
-            "class C {", //
-            "m(){}",
-            "n(){}",
-            "static x = 0;",
-            "static y= 1;}"));
+        """
+        class C {
+        'm'(){}
+        ['n'](){}
+        static 'x' = 0;
+        static ['y'] = 1;}
+        """,
+        """
+        class C {
+        m(){}
+        n(){}
+        static x = 0;
+        static y= 1;}
+        """);
     test(
-        lines(
-            "window[\"MyClass\"] = class {", //
-            "static [\"Register\"](){}",
-            "};"),
-        lines(
-            "window.MyClass = class {", //
-            "static Register(){}",
-            "};"));
+        """
+        window["MyClass"] = class {
+        static ["Register"](){}
+        };
+        """,
+        """
+        window.MyClass = class {
+        static Register(){}
+        };
+        """);
     test(
-        lines(
-            "class C { ",
-            "'method'(){} ",
-            "async ['method1'](){}",
-            "*['method2'](){}",
-            "static ['smethod'](){}",
-            "static async ['smethod1'](){}",
-            "static *['smethod2'](){}}"),
-        lines(
-            "class C {",
-            "method(){}",
-            "async method1(){}",
-            "*method2(){}",
-            "static smethod(){}",
-            "static async smethod1(){}",
-            "static *smethod2(){}}"));
+        """
+        class C {
+        'method'(){}
+        async ['method1'](){}
+        *['method2'](){}
+        static ['smethod'](){}
+        static async ['smethod1'](){}
+        static *['smethod2'](){}}
+        """,
+        """
+        class C {
+        method(){}
+        async method1(){}
+        *method2(){}
+        static smethod(){}
+        static async smethod1(){}
+        static *smethod2(){}}
+        """);
 
     testSame("const o = {[fn()]: 0}");
     testSame("const test1 = {[0]:87};");
@@ -200,13 +206,15 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
 
     test("const opt2 = window?.a['b'];", "const opt2 = window?.a.b;");
     test(
-        lines(
-            "const chain =",
-            "window['a'].x.y.b.x.y['c'].x.y?.d.x.y['e'].x.y",
-            "['f-f'].x.y?.['g-g'].x.y?.['h'].x.y['i'].x.y;"),
-        lines(
-            "const chain = window.a.x.y.b.x.y.c.x.y?.d.x.y.e.x.y",
-            "['f-f'].x.y?.['g-g'].x.y?.h.x.y.i.x.y;"));
+        """
+        const chain =
+        window['a'].x.y.b.x.y['c'].x.y?.d.x.y['e'].x.y
+        ['f-f'].x.y?.['g-g'].x.y?.['h'].x.y['i'].x.y;
+        """,
+        """
+        const chain = window.a.x.y.b.x.y.c.x.y?.d.x.y.e.x.y
+        ['f-f'].x.y?.['g-g'].x.y?.h.x.y.i.x.y;
+        """);
   }
 
   @Test

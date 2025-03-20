@@ -39,29 +39,31 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
   private static final SourceFile other =
       SourceFile.fromCode(
           "other.js",
-          lines(
-              "export default 0;", //
-              "export let name, x, a, b, c;",
-              "export {x as class};",
-              "export class Parent {}"));
+          """
+          export default 0;
+          export let name, x, a, b, c;
+          export {x as class};
+          export class Parent {}
+          """);
 
   private static final SourceFile otherExpected =
       SourceFile.fromCode(
           "other.js",
-          lines(
-              "var $jscompDefaultExport$$module$other = 0;", //
-              "let name$$module$other, x$$module$other, a$$module$other, b$$module$other, ",
-              "  c$$module$other;",
-              "class Parent$$module$other {}",
-              "/** @const */ var module$other = {};",
-              "/** @const */ module$other.Parent = Parent$$module$other;",
-              "/** @const */ module$other.a = a$$module$other;",
-              "/** @const */ module$other.b = b$$module$other;",
-              "/** @const */ module$other.c = c$$module$other;",
-              "/** @const */ module$other.class = x$$module$other;",
-              "/** @const */ module$other.default = $jscompDefaultExport$$module$other;",
-              "/** @const */ module$other.name = name$$module$other;",
-              "/** @const */ module$other.x = x$$module$other;"));
+          """
+          var $jscompDefaultExport$$module$other = 0;
+          let name$$module$other, x$$module$other, a$$module$other, b$$module$other,
+            c$$module$other;
+          class Parent$$module$other {}
+          /** @const */ var module$other = {};
+          /** @const */ module$other.Parent = Parent$$module$other;
+          /** @const */ module$other.a = a$$module$other;
+          /** @const */ module$other.b = b$$module$other;
+          /** @const */ module$other.c = c$$module$other;
+          /** @const */ module$other.class = x$$module$other;
+          /** @const */ module$other.default = $jscompDefaultExport$$module$other;
+          /** @const */ module$other.name = name$$module$other;
+          /** @const */ module$other.x = x$$module$other;
+          """);
 
   @Override
   @Before
@@ -113,29 +115,33 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
   @Test
   public void testImport() {
     testModules(
-        lines(
-            "import name from './other.js';", //
-            "use(name);"),
+        """
+        import name from './other.js';
+        use(name);
+        """,
         "use($jscompDefaultExport$$module$other); /** @const */ var module$testcode = {};");
 
     testModules("import {a as name} from './other.js';", "/** @const */ var module$testcode = {};");
 
     testModules(
-        lines(
-            "import x, {a as foo, b as bar} from './other.js';", //
-            "use(x);"),
+        """
+        import x, {a as foo, b as bar} from './other.js';
+        use(x);
+        """,
         "use($jscompDefaultExport$$module$other); /** @const */ var module$testcode = {};");
 
     testModules(
-        lines(
-            "import {default as name} from './other.js';", //
-            "use(name);"),
+        """
+        import {default as name} from './other.js';
+        use(name);
+        """,
         "use($jscompDefaultExport$$module$other); /** @const */ var module$testcode = {};");
 
     testModules(
-        lines(
-            "import {class as name} from './other.js';", //
-            "use(name);"),
+        """
+        import {class as name} from './other.js';
+        use(name);
+        """,
         "use(x$$module$other); /** @const */ var module$testcode = {};");
   }
 
@@ -152,28 +158,33 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
     // it chooses to rewrite to "module$does_not_exist.name", thinking that this could've been a
     // reference to an export that doesn't exist.
     testModules(
-        lines(
-            "import {name} from './does_not_exist';", //
-            "use(name);"),
-        lines(
-            "use(name$$module$does_not_exist);", //
-            "/** @const */ var module$testcode = {};"));
+        """
+        import {name} from './does_not_exist';
+        use(name);
+        """,
+        """
+        use(name$$module$does_not_exist);
+        /** @const */ var module$testcode = {};
+        """);
 
     testModules(
-        lines(
-            "import * as dne from './does_not_exist';", //
-            "use(dne.name);"),
-        lines(
-            "use(module$does_not_exist.name);", //
-            "/** @const */ var module$testcode = {};"));
+        """
+        import * as dne from './does_not_exist';
+        use(dne.name);
+        """,
+        """
+        use(module$does_not_exist.name);
+        /** @const */ var module$testcode = {};
+        """);
   }
 
   @Test
   public void testImportStar() {
     testModules(
-        lines(
-            "import * as name from './other.js';", //
-            "use(name.a);"),
+        """
+        import * as name from './other.js';
+        use(name.a);
+        """,
         "use(a$$module$other); /** @const */ var module$testcode = {};");
   }
 
@@ -184,97 +195,111 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
         srcs(
             SourceFile.fromCode(
                 "other.js",
-                lines(
-                    "export default 0;", //
-                    "export let name = 'George';",
-                    "export let a = class {};")),
+                """
+                export default 0;
+                export let name = 'George';
+                export let a = class {};
+                """),
             SourceFile.fromCode(
                 "testcode",
-                lines(
-                    "import * as name from './other.js';", //
-                    "/** @type {name.a} */ var x;"))),
+                """
+                import * as name from './other.js';
+                /** @type {name.a} */ var x;
+                """)),
         expected(
             SourceFile.fromCode(
                 "other.js",
-                lines(
-                    "var $jscompDefaultExport$$module$other = 0;", //
-                    "let name$$module$other = 'George';",
-                    "let a$$module$other = class {};",
-                    "/** @const */ var module$other = {};",
-                    "/** @const */ module$other.a = a$$module$other;",
-                    "/** @const */ module$other.default = $jscompDefaultExport$$module$other;",
-                    "/** @const */ module$other.name = name$$module$other;",
-                    "")),
+                """
+                var $jscompDefaultExport$$module$other = 0;
+                let name$$module$other = 'George';
+                let a$$module$other = class {};
+                /** @const */ var module$other = {};
+                /** @const */ module$other.a = a$$module$other;
+                /** @const */ module$other.default = $jscompDefaultExport$$module$other;
+                /** @const */ module$other.name = name$$module$other;
+                """),
             SourceFile.fromCode(
                 "testcode",
-                lines(
-                    "/** @type {a$$module$other} */ var x$$module$testcode;",
-                    "/** @const */ var module$testcode = {};"))));
+                """
+                /** @type {a$$module$other} */ var x$$module$testcode;
+                /** @const */ var module$testcode = {};
+                """)));
   }
 
   @Test
   public void testExport() {
     testModules(
         "export var a = 1, b = 2;",
-        lines(
-            "var a$$module$testcode = 1, b$$module$testcode = 2;",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.a = a$$module$testcode;",
-            "/** @const */ module$testcode.b = b$$module$testcode;"));
+        """
+        var a$$module$testcode = 1, b$$module$testcode = 2;
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.a = a$$module$testcode;
+        /** @const */ module$testcode.b = b$$module$testcode;
+        """);
 
     testModules(
         "export var a;\nexport var b;",
-        lines(
-            "var a$$module$testcode; var b$$module$testcode;",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.a = a$$module$testcode;",
-            "/** @const */ module$testcode.b = b$$module$testcode;"));
+        """
+        var a$$module$testcode; var b$$module$testcode;
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.a = a$$module$testcode;
+        /** @const */ module$testcode.b = b$$module$testcode;
+        """);
 
     testModules(
         "export function f() {};",
-        lines(
-            "function f$$module$testcode() {}",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.f = f$$module$testcode;"));
+        """
+        function f$$module$testcode() {}
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.f = f$$module$testcode;
+        """);
 
     testModules(
         "export function f() {};\nfunction g() { f(); }",
-        lines(
-            "function f$$module$testcode() {}",
-            "function g$$module$testcode() { f$$module$testcode(); }",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.f = f$$module$testcode;"));
+        """
+        function f$$module$testcode() {}
+        function g$$module$testcode() { f$$module$testcode(); }
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.f = f$$module$testcode;
+        """);
 
     testModules(
-        lines("export function MyClass() {};", "MyClass.prototype.foo = function() {};"),
-        lines(
-            "function MyClass$$module$testcode() {}",
-            "MyClass$$module$testcode.prototype.foo = function() {};",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.MyClass = MyClass$$module$testcode;"));
+        """
+        export function MyClass() {};
+        MyClass.prototype.foo = function() {};
+        """,
+        """
+        function MyClass$$module$testcode() {}
+        MyClass$$module$testcode.prototype.foo = function() {};
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.MyClass = MyClass$$module$testcode;
+        """);
 
     testModules(
         "var f = 1;\nvar b = 2;\nexport {f as foo, b as bar};",
-        lines(
-            "var f$$module$testcode = 1;",
-            "var b$$module$testcode = 2;",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.bar = b$$module$testcode;",
-            "/** @const */ module$testcode.foo = f$$module$testcode;"));
+        """
+        var f$$module$testcode = 1;
+        var b$$module$testcode = 2;
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.bar = b$$module$testcode;
+        /** @const */ module$testcode.foo = f$$module$testcode;
+        """);
 
     testModules(
         "var f = 1;\nexport {f as default};",
-        lines(
-            "var f$$module$testcode = 1;",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.default = f$$module$testcode;"));
+        """
+        var f$$module$testcode = 1;
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.default = f$$module$testcode;
+        """);
 
     testModules(
         "var f = 1;\nexport {f as class};",
-        lines(
-            "var f$$module$testcode = 1;",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.class = f$$module$testcode;"));
+        """
+        var f$$module$testcode = 1;
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.class = f$$module$testcode;
+        """);
   }
 
   @Test
@@ -283,10 +308,10 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
         srcs(
             SourceFile.fromCode(
                 "externsMod.js",
-                lines(
-                    "/** @fileoverview @externs */",
-                    "export let /** !number */ externalName;",
-                    ""))),
+                """
+                /** @fileoverview @externs */
+                export let /** !number */ externalName;
+                """)),
         error(TranspilationUtil.CANNOT_CONVERT_YET));
   }
 
@@ -297,305 +322,340 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
         srcs(
             SourceFile.fromCode(
                 "mod1.js",
-                lines(
-                    "/** @fileoverview @typeSummary */",
-                    "export let /** !number */ externalName;",
-                    "")),
+                """
+                /** @fileoverview @typeSummary */
+                export let /** !number */ externalName;
+                """),
             SourceFile.fromCode(
                 "mod2.js",
-                lines(
-                    "import {externalName as localName} from './mod1.js'",
-                    "alert(localName);",
-                    ""))),
+                """
+                import {externalName as localName} from './mod1.js'
+                alert(localName);
+                """)),
         expected(
             SourceFile.fromCode(
                 "mod2.js",
-                lines(
-                    "alert(externalName$$module$mod1);",
-                    "/** @const */ var module$mod2 = {};",
-                    ""))));
+                """
+                alert(externalName$$module$mod1);
+                /** @const */ var module$mod2 = {};
+                """)));
   }
 
   @Test
   public void testMutableExport() {
     testModules(
-        lines(
-            "export var a = 1, b = 2;", //
-            "function f() {",
-            "  a++;",
-            "  b++",
-            "}"),
-        lines(
-            "var a$$module$testcode = 1, b$$module$testcode = 2;",
-            "function f$$module$testcode() {",
-            "  a$$module$testcode++;",
-            "  b$$module$testcode++",
-            "}",
-            "/** @const */ var module$testcode = {",
-            "  /** @return {?} */ get a() { return a$$module$testcode; },",
-            "  /** @return {?} */ get b() { return b$$module$testcode; },",
-            "};"));
+        """
+        export var a = 1, b = 2;
+        function f() {
+          a++;
+          b++
+        }
+        """,
+        """
+        var a$$module$testcode = 1, b$$module$testcode = 2;
+        function f$$module$testcode() {
+          a$$module$testcode++;
+          b$$module$testcode++
+        }
+        /** @const */ var module$testcode = {
+          /** @return {?} */ get a() { return a$$module$testcode; },
+          /** @return {?} */ get b() { return b$$module$testcode; },
+        };
+        """);
 
     testModules(
-        lines(
-            "var a = 1, b = 2; export {a as A, b as B};",
-            "const f = () => {",
-            "  a++;",
-            "  b++",
-            "};"),
-        lines(
-            "var a$$module$testcode = 1, b$$module$testcode = 2;",
-            "const f$$module$testcode = () => {",
-            "  a$$module$testcode++;",
-            "  b$$module$testcode++",
-            "};",
-            "/** @const */ var module$testcode = {",
-            "  /** @return {?} */ get A() { return a$$module$testcode; },",
-            "  /** @return {?} */ get B() { return b$$module$testcode; },",
-            "};"));
+        """
+        var a = 1, b = 2; export {a as A, b as B};
+        const f = () => {
+          a++;
+          b++
+        };
+        """,
+        """
+        var a$$module$testcode = 1, b$$module$testcode = 2;
+        const f$$module$testcode = () => {
+          a$$module$testcode++;
+          b$$module$testcode++
+        };
+        /** @const */ var module$testcode = {
+          /** @return {?} */ get A() { return a$$module$testcode; },
+          /** @return {?} */ get B() { return b$$module$testcode; },
+        };
+        """);
 
     testModules(
-        lines(
-            "export function f() {};", //
-            "function g() {",
-            "  f = function() {};",
-            "}"),
-        lines(
-            "function f$$module$testcode() {}",
-            "function g$$module$testcode() {",
-            "  f$$module$testcode = function() {};",
-            "}",
-            "/** @const */ var module$testcode = {",
-            "  /** @return {?} */ get f() { return f$$module$testcode; },",
-            "};"));
+        """
+        export function f() {};
+        function g() {
+          f = function() {};
+        }
+        """,
+        """
+        function f$$module$testcode() {}
+        function g$$module$testcode() {
+          f$$module$testcode = function() {};
+        }
+        /** @const */ var module$testcode = {
+          /** @return {?} */ get f() { return f$$module$testcode; },
+        };
+        """);
 
     testModules(
-        lines(
-            "export default function f() {};", //
-            "function g() {",
-            "  f = function() {};",
-            "}"),
-        lines(
-            "function f$$module$testcode() {}",
-            "function g$$module$testcode() {",
-            "  f$$module$testcode = function() {};",
-            "}",
-            "/** @const */ var module$testcode = {",
-            "  /** @return {?} */ get default() { return f$$module$testcode; },",
-            "};"));
+        """
+        export default function f() {};
+        function g() {
+          f = function() {};
+        }
+        """,
+        """
+        function f$$module$testcode() {}
+        function g$$module$testcode() {
+          f$$module$testcode = function() {};
+        }
+        /** @const */ var module$testcode = {
+          /** @return {?} */ get default() { return f$$module$testcode; },
+        };
+        """);
 
     testModules(
-        lines(
-            "export class C {};", //
-            "function g() {",
-            "  C = class {};",
-            "}"),
-        lines(
-            "class C$$module$testcode {}",
-            "function g$$module$testcode() {",
-            "  C$$module$testcode = class {};",
-            "}",
-            "/** @const */ var module$testcode = {",
-            "  /** @return {?} */ get C() { return C$$module$testcode; },",
-            "};"));
+        """
+        export class C {};
+        function g() {
+          C = class {};
+        }
+        """,
+        """
+        class C$$module$testcode {}
+        function g$$module$testcode() {
+          C$$module$testcode = class {};
+        }
+        /** @const */ var module$testcode = {
+          /** @return {?} */ get C() { return C$$module$testcode; },
+        };
+        """);
 
     testModules(
-        lines(
-            "export default class C {};", //
-            "function g() {",
-            "  C = class {};",
-            "}"),
-        lines(
-            "class C$$module$testcode {}",
-            "function g$$module$testcode() {",
-            "  C$$module$testcode = class {};",
-            "}",
-            "/** @const */ var module$testcode = {",
-            "  /** @return {?} */ get default() { return C$$module$testcode; },",
-            "};"));
+        """
+        export default class C {};
+        function g() {
+          C = class {};
+        }
+        """,
+        """
+        class C$$module$testcode {}
+        function g$$module$testcode() {
+          C$$module$testcode = class {};
+        }
+        /** @const */ var module$testcode = {
+          /** @return {?} */ get default() { return C$$module$testcode; },
+        };
+        """);
 
     testModules(
-        lines(
-            "export var IN, OF;", //
-            "function f() {",
-            "  for (IN in {});",
-            "  for (OF of []);",
-            "}"),
-        lines(
-            "var IN$$module$testcode, OF$$module$testcode;",
-            "function f$$module$testcode() {",
-            "  for (IN$$module$testcode in {});",
-            "  for (OF$$module$testcode of []);",
-            "}",
-            "/** @const */ var module$testcode = {",
-            "  /** @return {?} */ get IN() { return IN$$module$testcode; },",
-            "  /** @return {?} */ get OF() { return OF$$module$testcode; },",
-            "};"));
+        """
+        export var IN, OF;
+        function f() {
+          for (IN in {});
+          for (OF of []);
+        }
+        """,
+        """
+        var IN$$module$testcode, OF$$module$testcode;
+        function f$$module$testcode() {
+          for (IN$$module$testcode in {});
+          for (OF$$module$testcode of []);
+        }
+        /** @const */ var module$testcode = {
+          /** @return {?} */ get IN() { return IN$$module$testcode; },
+          /** @return {?} */ get OF() { return OF$$module$testcode; },
+        };
+        """);
 
     testModules(
-        lines(
-            "export var ARRAY, OBJ, UNCHANGED;",
-            "function f() {",
-            "  ({OBJ} = {OBJ: {}});",
-            "  [ARRAY] = [];",
-            "  var x = {UNCHANGED: 0};",
-            "}"),
-        lines(
-            "var ARRAY$$module$testcode, OBJ$$module$testcode, UNCHANGED$$module$testcode;",
-            "function f$$module$testcode() {",
-            "  ({OBJ:OBJ$$module$testcode} = {OBJ: {}});",
-            "  [ARRAY$$module$testcode] = [];",
-            "  var x = {UNCHANGED: 0};",
-            "}",
-            "/** @const */ var module$testcode = {",
-            "  /** @return {?} */ get ARRAY() { return ARRAY$$module$testcode; },",
-            "  /** @return {?} */ get OBJ() { return OBJ$$module$testcode; },",
-            "};",
-            "/** @const */ module$testcode.UNCHANGED = UNCHANGED$$module$testcode"));
+        """
+        export var ARRAY, OBJ, UNCHANGED;
+        function f() {
+          ({OBJ} = {OBJ: {}});
+          [ARRAY] = [];
+          var x = {UNCHANGED: 0};
+        }
+        """,
+        """
+        var ARRAY$$module$testcode, OBJ$$module$testcode, UNCHANGED$$module$testcode;
+        function f$$module$testcode() {
+          ({OBJ:OBJ$$module$testcode} = {OBJ: {}});
+          [ARRAY$$module$testcode] = [];
+          var x = {UNCHANGED: 0};
+        }
+        /** @const */ var module$testcode = {
+          /** @return {?} */ get ARRAY() { return ARRAY$$module$testcode; },
+          /** @return {?} */ get OBJ() { return OBJ$$module$testcode; },
+        };
+        /** @const */ module$testcode.UNCHANGED = UNCHANGED$$module$testcode
+        """);
   }
 
   @Test
   public void testConstClassExportIsConstant() {
     testModules(
         "export const Class = class {}",
-        lines(
-            "const Class$$module$testcode = class {}",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.Class = Class$$module$testcode;"));
+        """
+        const Class$$module$testcode = class {}
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.Class = Class$$module$testcode;
+        """);
   }
 
   @Test
   public void testTopLevelMutationIsNotMutable() {
     testModules(
-        lines(
-            "export var a = 1, b = 2;", //
-            "a++;",
-            "b++"),
-        lines(
-            "var a$$module$testcode = 1, b$$module$testcode = 2;",
-            "a$$module$testcode++;",
-            "b$$module$testcode++",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.a = a$$module$testcode;",
-            "/** @const */ module$testcode.b = b$$module$testcode;"));
+        """
+        export var a = 1, b = 2;
+        a++;
+        b++
+        """,
+        """
+        var a$$module$testcode = 1, b$$module$testcode = 2;
+        a$$module$testcode++;
+        b$$module$testcode++
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.a = a$$module$testcode;
+        /** @const */ module$testcode.b = b$$module$testcode;
+        """);
 
     testModules(
-        lines(
-            "var a = 1, b = 2; export {a as A, b as B};", //
-            "if (change) {",
-            "  a++;",
-            "  b++",
-            "}"),
-        lines(
-            "var a$$module$testcode = 1, b$$module$testcode = 2;",
-            "if (change) {",
-            "  a$$module$testcode++;",
-            "  b$$module$testcode++",
-            "}",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.A = a$$module$testcode;",
-            "/** @const */ module$testcode.B = b$$module$testcode;"));
+        """
+        var a = 1, b = 2; export {a as A, b as B};
+        if (change) {
+          a++;
+          b++
+        }
+        """,
+        """
+        var a$$module$testcode = 1, b$$module$testcode = 2;
+        if (change) {
+          a$$module$testcode++;
+          b$$module$testcode++
+        }
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.A = a$$module$testcode;
+        /** @const */ module$testcode.B = b$$module$testcode;
+        """);
 
     testModules(
-        lines(
-            "export function f() {};", //
-            "if (change) {",
-            "  f = function() {};",
-            "}"),
-        lines(
-            "function f$$module$testcode() {}",
-            "if (change) {",
-            "  f$$module$testcode = function() {};",
-            "}",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.f = f$$module$testcode;"));
+        """
+        export function f() {};
+        if (change) {
+          f = function() {};
+        }
+        """,
+        """
+        function f$$module$testcode() {}
+        if (change) {
+          f$$module$testcode = function() {};
+        }
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.f = f$$module$testcode;
+        """);
 
     testModules(
-        lines(
-            "export default function f() {};",
-            "try { f = function() {}; } catch (e) { f = function() {}; }"),
-        lines(
-            "function f$$module$testcode() {}",
-            "try { f$$module$testcode = function() {}; }",
-            "catch (e) { f$$module$testcode = function() {}; }",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.default = f$$module$testcode;"));
+        """
+        export default function f() {};
+        try { f = function() {}; } catch (e) { f = function() {}; }
+        """,
+        """
+        function f$$module$testcode() {}
+        try { f$$module$testcode = function() {}; }
+        catch (e) { f$$module$testcode = function() {}; }
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.default = f$$module$testcode;
+        """);
 
     testModules(
-        lines(
-            "export class C {};", //
-            "if (change) {",
-            "  C = class {};",
-            "}"),
-        lines(
-            "class C$$module$testcode {}",
-            "if (change) {",
-            "  C$$module$testcode = class {};",
-            "}",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.C = C$$module$testcode;"));
+        """
+        export class C {};
+        if (change) {
+          C = class {};
+        }
+        """,
+        """
+        class C$$module$testcode {}
+        if (change) {
+          C$$module$testcode = class {};
+        }
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.C = C$$module$testcode;
+        """);
 
     testModules(
-        lines(
-            "export default class C {};", //
-            "{",
-            "  C = class {};",
-            "}"),
-        lines(
-            "class C$$module$testcode {}",
-            "{",
-            "  C$$module$testcode = class {};",
-            "}",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.default = C$$module$testcode;"));
+        """
+        export default class C {};
+        {
+          C = class {};
+        }
+        """,
+        """
+        class C$$module$testcode {}
+        {
+          C$$module$testcode = class {};
+        }
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.default = C$$module$testcode;
+        """);
   }
 
   @Test
   public void testExportWithJsDoc() {
     testModules(
         "/** @constructor */\nexport function F() { return '';}",
-        lines(
-            "/** @constructor */",
-            "function F$$module$testcode() { return ''; }",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.F = F$$module$testcode;"));
+        """
+        /** @constructor */
+        function F$$module$testcode() { return ''; }
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.F = F$$module$testcode;
+        """);
 
     testModules(
         "/** @return {string} */\nexport function f() { return '';}",
-        lines(
-            "/** @return {string} */",
-            "function f$$module$testcode() { return ''; }",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.f = f$$module$testcode;"));
+        """
+        /** @return {string} */
+        function f$$module$testcode() { return ''; }
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.f = f$$module$testcode;
+        """);
 
     testModules(
         "/** @return {string} */\nexport var f = function() { return '';}",
-        lines(
-            "/** @return {string} */",
-            "var f$$module$testcode = function() { return ''; }",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.f = f$$module$testcode;"));
+        """
+        /** @return {string} */
+        var f$$module$testcode = function() { return ''; }
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.f = f$$module$testcode;
+        """);
 
     testModules(
         "/** @type {number} */\nexport var x = 3",
-        lines(
-            "/** @type {number} */",
-            "var x$$module$testcode = 3;",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.x = x$$module$testcode;"));
+        """
+        /** @type {number} */
+        var x$$module$testcode = 3;
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.x = x$$module$testcode;
+        """);
   }
 
   @Test
   public void testImportAndExport() {
     testModules(
-        lines(
-            "import {name as n} from './other.js';", //
-            "use(n);",
-            "export {n as name};"),
-        lines(
-            "use(name$$module$other);",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.name = name$$module$other;"));
+        """
+        import {name as n} from './other.js';
+        use(n);
+        export {n as name};
+        """,
+        """
+        use(name$$module$other);
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.name = name$$module$other;
+        """);
   }
 
   @Test
@@ -605,19 +665,21 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
             other,
             SourceFile.fromCode(
                 "testcode",
-                lines(
-                    "export {name} from './other.js';",
-                    "export {default} from './other.js';",
-                    "export {class} from './other.js';"))),
+                """
+                export {name} from './other.js';
+                export {default} from './other.js';
+                export {class} from './other.js';
+                """)),
         expected(
             otherExpected,
             SourceFile.fromCode(
                 "testcode",
-                lines(
-                    "/** @const */ var module$testcode = {};",
-                    "/** @const */ module$testcode.class = x$$module$other;",
-                    "/** @const */ module$testcode.default = $jscompDefaultExport$$module$other;",
-                    "/** @const */ module$testcode.name = name$$module$other;"))));
+                """
+                /** @const */ var module$testcode = {};
+                /** @const */ module$testcode.class = x$$module$other;
+                /** @const */ module$testcode.default = $jscompDefaultExport$$module$other;
+                /** @const */ module$testcode.name = name$$module$other;
+                """)));
 
     test(
         srcs(other, SourceFile.fromCode("testcode", "export {a, b as c, x} from './other.js';")),
@@ -625,11 +687,12 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
             otherExpected,
             SourceFile.fromCode(
                 "testcode",
-                lines(
-                    "/** @const */ var module$testcode = {}",
-                    "/** @const */ module$testcode.a = a$$module$other;",
-                    "/** @const */ module$testcode.c = b$$module$other;",
-                    "/** @const */ module$testcode.x = x$$module$other;"))));
+                """
+                /** @const */ var module$testcode = {}
+                /** @const */ module$testcode.a = a$$module$other;
+                /** @const */ module$testcode.c = b$$module$other;
+                /** @const */ module$testcode.x = x$$module$other;
+                """)));
 
     test(
         srcs(other, SourceFile.fromCode("testcode", "export {a as b, b as a} from './other.js';")),
@@ -637,281 +700,310 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
             otherExpected,
             SourceFile.fromCode(
                 "testcode",
-                lines(
-                    "/** @const */ var module$testcode = {}",
-                    "/** @const */ module$testcode.a = b$$module$other;",
-                    "/** @const */ module$testcode.b = a$$module$other;"))));
+                """
+                /** @const */ var module$testcode = {}
+                /** @const */ module$testcode.a = b$$module$other;
+                /** @const */ module$testcode.b = a$$module$other;
+                """)));
 
     test(
         srcs(
             other,
             SourceFile.fromCode(
                 "testcode",
-                lines(
-                    "export {default as a} from './other.js';",
-                    "export {a as a2, default as b} from './other.js';",
-                    "export {class as switch} from './other.js';"))),
+                """
+                export {default as a} from './other.js';
+                export {a as a2, default as b} from './other.js';
+                export {class as switch} from './other.js';
+                """)),
         expected(
             otherExpected,
             SourceFile.fromCode(
                 "testcode",
-                lines(
-                    "/** @const */ var module$testcode = {}",
-                    "/** @const */ module$testcode.a = $jscompDefaultExport$$module$other;",
-                    "/** @const */ module$testcode.a2 = a$$module$other;",
-                    "/** @const */ module$testcode.b = $jscompDefaultExport$$module$other;",
-                    "/** @const */ module$testcode.switch = x$$module$other;"))));
+                """
+                /** @const */ var module$testcode = {}
+                /** @const */ module$testcode.a = $jscompDefaultExport$$module$other;
+                /** @const */ module$testcode.a2 = a$$module$other;
+                /** @const */ module$testcode.b = $jscompDefaultExport$$module$other;
+                /** @const */ module$testcode.switch = x$$module$other;
+                """)));
   }
 
   @Test
   public void testExportDefault() {
     testModules(
         "export default 'someString';",
-        lines(
-            "var $jscompDefaultExport$$module$testcode = 'someString';",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.default = $jscompDefaultExport$$module$testcode;"));
+        """
+        var $jscompDefaultExport$$module$testcode = 'someString';
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.default = $jscompDefaultExport$$module$testcode;
+        """);
 
     testModules(
         "var x = 5;\nexport default x;",
-        lines(
-            "var x$$module$testcode = 5;",
-            "var $jscompDefaultExport$$module$testcode = x$$module$testcode;",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.default = $jscompDefaultExport$$module$testcode;"));
+        """
+        var x$$module$testcode = 5;
+        var $jscompDefaultExport$$module$testcode = x$$module$testcode;
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.default = $jscompDefaultExport$$module$testcode;
+        """);
 
     testModules(
         "export default function f(){};\n var x = f();",
-        lines(
-            "function f$$module$testcode() {}",
-            "var x$$module$testcode = f$$module$testcode();",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.default = f$$module$testcode;"));
+        """
+        function f$$module$testcode() {}
+        var x$$module$testcode = f$$module$testcode();
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.default = f$$module$testcode;
+        """);
 
     testModules(
         "export default class Foo {};\n var x = new Foo;",
-        lines(
-            "class Foo$$module$testcode {}",
-            "var x$$module$testcode = new Foo$$module$testcode;",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.default = Foo$$module$testcode;"));
+        """
+        class Foo$$module$testcode {}
+        var x$$module$testcode = new Foo$$module$testcode;
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.default = Foo$$module$testcode;
+        """);
   }
 
   @Test
   public void testExportDefault_anonymous() {
     testModules(
         "export default class {};",
-        lines(
-            "var $jscompDefaultExport$$module$testcode = class {};",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.default = $jscompDefaultExport$$module$testcode;"));
+        """
+        var $jscompDefaultExport$$module$testcode = class {};
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.default = $jscompDefaultExport$$module$testcode;
+        """);
 
     testModules(
         "export default function() {}",
-        lines(
-            "var $jscompDefaultExport$$module$testcode = function() {}",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.default = $jscompDefaultExport$$module$testcode;"));
+        """
+        var $jscompDefaultExport$$module$testcode = function() {}
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.default = $jscompDefaultExport$$module$testcode;
+        """);
   }
 
   @Test
   public void testExportDestructureDeclaration() {
     testModules(
         "export let {a, c:b} = obj;",
-        lines(
-            "let {a:a$$module$testcode, c:b$$module$testcode} = obj;",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.a = a$$module$testcode;",
-            "/** @const */ module$testcode.b = b$$module$testcode;"));
+        """
+        let {a:a$$module$testcode, c:b$$module$testcode} = obj;
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.a = a$$module$testcode;
+        /** @const */ module$testcode.b = b$$module$testcode;
+        """);
 
     testModules(
         "export let [a, b] = obj;",
-        lines(
-            "let [a$$module$testcode, b$$module$testcode] = obj;",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.a = a$$module$testcode;",
-            "/** @const */ module$testcode.b = b$$module$testcode;"));
+        """
+        let [a$$module$testcode, b$$module$testcode] = obj;
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.a = a$$module$testcode;
+        /** @const */ module$testcode.b = b$$module$testcode;
+        """);
 
     testModules(
         "export let {a, b:[c,d]} = obj;",
-        lines(
-            "let {a:a$$module$testcode, b:[c$$module$testcode, d$$module$testcode]} = obj;",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.a = a$$module$testcode;",
-            "/** @const */ module$testcode.c = c$$module$testcode;",
-            "/** @const */ module$testcode.d = d$$module$testcode;"));
+        """
+        let {a:a$$module$testcode, b:[c$$module$testcode, d$$module$testcode]} = obj;
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.a = a$$module$testcode;
+        /** @const */ module$testcode.c = c$$module$testcode;
+        /** @const */ module$testcode.d = d$$module$testcode;
+        """);
   }
 
   @Test
   public void testExtendImportedClass() {
     testModules(
-        lines(
-            "import {Parent} from './other.js';",
-            "class Child extends Parent {",
-            "  /** @param {Parent} parent */",
-            "  useParent(parent) {}",
-            "}"),
-        lines(
-            "class Child$$module$testcode extends Parent$$module$other {",
-            "  /** @param {Parent$$module$other} parent */",
-            "  useParent(parent) {}",
-            "}",
-            "/** @const */ var module$testcode = {};"));
+        """
+        import {Parent} from './other.js';
+        class Child extends Parent {
+          /** @param {Parent} parent */
+          useParent(parent) {}
+        }
+        """,
+        """
+        class Child$$module$testcode extends Parent$$module$other {
+          /** @param {Parent$$module$other} parent */
+          useParent(parent) {}
+        }
+        /** @const */ var module$testcode = {};
+        """);
 
     testModules(
-        lines(
-            "import {Parent} from './other.js';",
-            "export class Child extends Parent {",
-            "  /** @param {Parent} parent */",
-            "  useParent(parent) {}",
-            "}"),
-        lines(
-            "class Child$$module$testcode extends Parent$$module$other {",
-            "  /** @param {Parent$$module$other} parent */",
-            "  useParent(parent) {}",
-            "}",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.Child = Child$$module$testcode;"));
+        """
+        import {Parent} from './other.js';
+        export class Child extends Parent {
+          /** @param {Parent} parent */
+          useParent(parent) {}
+        }
+        """,
+        """
+        class Child$$module$testcode extends Parent$$module$other {
+          /** @param {Parent$$module$other} parent */
+          useParent(parent) {}
+        }
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.Child = Child$$module$testcode;
+        """);
   }
 
   @Test
   public void testFixTypeNode() {
     testModules(
-        lines(
-            "export class Child {", //
-            "  /** @param {Child} child */",
-            "  useChild(child) {}",
-            "}"),
-        lines(
-            "class Child$$module$testcode {",
-            "  /** @param {Child$$module$testcode} child */",
-            "  useChild(child) {}",
-            "}",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.Child = Child$$module$testcode;"));
+        """
+        export class Child {
+          /** @param {Child} child */
+          useChild(child) {}
+        }
+        """,
+        """
+        class Child$$module$testcode {
+          /** @param {Child$$module$testcode} child */
+          useChild(child) {}
+        }
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.Child = Child$$module$testcode;
+        """);
 
     testModules(
-        lines(
-            "export class Child {",
-            "  /** @param {Child.Foo.Bar.Baz} baz */",
-            "  useBaz(baz) {}",
-            "}",
-            "",
-            "Child.Foo = class {};",
-            "",
-            "Child.Foo.Bar = class {};",
-            "",
-            "Child.Foo.Bar.Baz = class {};",
-            ""),
-        lines(
-            "class Child$$module$testcode {",
-            "  /** @param {Child$$module$testcode.Foo.Bar.Baz} baz */",
-            "  useBaz(baz) {}",
-            "}",
-            "Child$$module$testcode.Foo=class{};",
-            "Child$$module$testcode.Foo.Bar=class{};",
-            "Child$$module$testcode.Foo.Bar.Baz=class{};",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.Child = Child$$module$testcode;"));
+        """
+        export class Child {
+          /** @param {Child.Foo.Bar.Baz} baz */
+          useBaz(baz) {}
+        }
+
+        Child.Foo = class {};
+
+        Child.Foo.Bar = class {};
+
+        Child.Foo.Bar.Baz = class {};
+        """,
+        """
+        class Child$$module$testcode {
+          /** @param {Child$$module$testcode.Foo.Bar.Baz} baz */
+          useBaz(baz) {}
+        }
+        Child$$module$testcode.Foo=class{};
+        Child$$module$testcode.Foo.Bar=class{};
+        Child$$module$testcode.Foo.Bar.Baz=class{};
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.Child = Child$$module$testcode;
+        """);
   }
 
   @Test
   public void testRenameTypedef() {
     testModules(
-        lines(
-            "import './other.js';", //
-            "/** @typedef {string|!Object} */",
-            "export var UnionType;"),
-        lines(
-            "/** @typedef {string|!Object} */",
-            "var UnionType$$module$testcode;",
-            "/** @const */ var module$testcode = {};",
-            "/** @typedef {UnionType$$module$testcode} */",
-            "module$testcode.UnionType;"));
+        """
+        import './other.js';
+        /** @typedef {string|!Object} */
+        export var UnionType;
+        """,
+        """
+        /** @typedef {string|!Object} */
+        var UnionType$$module$testcode;
+        /** @const */ var module$testcode = {};
+        /** @typedef {UnionType$$module$testcode} */
+        module$testcode.UnionType;
+        """);
   }
 
   @Test
   public void testNoInnerChange() {
     testModules(
-        lines(
-            "var Foo = (function () {",
-            "    /**  @param bar */",
-            "    function Foo(bar) {}",
-            "    return Foo;",
-            "}());",
-            "export { Foo };"),
-        lines(
-            "var Foo$$module$testcode = function() {",
-            "    /**  @param bar */",
-            "    function Foo(bar) {}",
-            "    return Foo;",
-            "}();",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.Foo = Foo$$module$testcode;"));
+        """
+        var Foo = (function () {
+            /**  @param bar */
+            function Foo(bar) {}
+            return Foo;
+        }());
+        export { Foo };
+        """,
+        """
+        var Foo$$module$testcode = function() {
+            /**  @param bar */
+            function Foo(bar) {}
+            return Foo;
+        }();
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.Foo = Foo$$module$testcode;
+        """);
   }
 
   @Test
   public void testRenameImportedReference() {
     testModules(
-        lines(
-            "import {a} from './other.js';",
-            "import {b as bar} from './other.js';",
-            "a();",
-            "function g() {",
-            "  a();",
-            "  bar++;",
-            "  function h() {",
-            "    var a = 3;",
-            "    { let a = 4; }",
-            "  }",
-            "}"),
-        lines(
-            "a$$module$other();",
-            "function g$$module$testcode() {",
-            "  a$$module$other();",
-            "  b$$module$other++;",
-            "  function h() {",
-            "    var a = 3;",
-            "    { let a = 4; }",
-            "  }",
-            "}",
-            "/** @const */ var module$testcode = {};"));
+        """
+        import {a} from './other.js';
+        import {b as bar} from './other.js';
+        a();
+        function g() {
+          a();
+          bar++;
+          function h() {
+            var a = 3;
+            { let a = 4; }
+          }
+        }
+        """,
+        """
+        a$$module$other();
+        function g$$module$testcode() {
+          a$$module$other();
+          b$$module$other++;
+          function h() {
+            var a = 3;
+            { let a = 4; }
+          }
+        }
+        /** @const */ var module$testcode = {};
+        """);
   }
 
   @Test
   public void testObjectDestructuringAndObjLitShorthand() {
     testModules(
-        lines(
-            "import {c} from './other.js';",
-            "const foo = 1;",
-            "const {a, b} = c({foo});",
-            "use(a, b);"),
-        lines(
-            "const foo$$module$testcode = 1;",
-            "const {",
-            "  a: a$$module$testcode,",
-            "  b: b$$module$testcode,",
-            "} = c$$module$other({foo: foo$$module$testcode});",
-            "use(a$$module$testcode, b$$module$testcode);",
-            "/** @const */ var module$testcode = {};"));
+        """
+        import {c} from './other.js';
+        const foo = 1;
+        const {a, b} = c({foo});
+        use(a, b);
+        """,
+        """
+        const foo$$module$testcode = 1;
+        const {
+          a: a$$module$testcode,
+          b: b$$module$testcode,
+        } = c$$module$other({foo: foo$$module$testcode});
+        use(a$$module$testcode, b$$module$testcode);
+        /** @const */ var module$testcode = {};
+        """);
   }
 
   @Test
   public void testObjectDestructuringAndObjLitShorthandWithDefaultValue() {
     testModules(
-        lines(
-            "import {c} from './other.js';",
-            "const foo = 1;",
-            "const {a = 'A', b = 'B'} = c({foo});",
-            "use(a, b);"),
-        lines(
-            "const foo$$module$testcode = 1;",
-            "const {",
-            "  a: a$$module$testcode = 'A',",
-            "  b: b$$module$testcode = 'B',",
-            "} = c$$module$other({foo: foo$$module$testcode});",
-            "use(a$$module$testcode, b$$module$testcode);",
-            "/** @const */ var module$testcode = {};"));
+        """
+        import {c} from './other.js';
+        const foo = 1;
+        const {a = 'A', b = 'B'} = c({foo});
+        use(a, b);
+        """,
+        """
+        const foo$$module$testcode = 1;
+        const {
+          a: a$$module$testcode = 'A',
+          b: b$$module$testcode = 'B',
+        } = c$$module$other({foo: foo$$module$testcode});
+        use(a$$module$testcode, b$$module$testcode);
+        /** @const */ var module$testcode = {};
+        """);
   }
 
   @Test
@@ -925,18 +1017,20 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
   public void testUselessUseStrict() {
     ModulesTestUtils.testModulesError(
         this,
-        lines(
-            "'use strict';", //
-            "export default undefined;"),
+        """
+        'use strict';
+        export default undefined;
+        """,
         ClosureRewriteModule.USELESS_USE_STRICT_DIRECTIVE);
   }
 
   @Test
   public void testUseStrict_noWarning() {
     testSame(
-        lines(
-            "'use strict';", //
-            "var x;"));
+        """
+        'use strict';
+        var x;
+        """);
   }
 
   @Test
@@ -958,34 +1052,41 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
   @Test
   public void testUseImportInEs6ObjectLiteralShorthand() {
     testModules(
-        lines(
-            "import {b} from './other.js';", //
-            "var bar = {a: 1, b};"),
-        lines(
-            "var bar$$module$testcode={a: 1, b: b$$module$other};",
-            "/** @const */ var module$testcode = {};"));
+        """
+        import {b} from './other.js';
+        var bar = {a: 1, b};
+        """,
+        """
+        var bar$$module$testcode={a: 1, b: b$$module$other};
+        /** @const */ var module$testcode = {};
+        """);
 
     testModules(
-        lines(
-            "import {a as foo} from './other.js';", //
-            "var bar = {a: 1, foo};"),
-        lines(
-            "var bar$$module$testcode={a: 1, foo: a$$module$other};",
-            "/** @const */ var module$testcode = {};"));
+        """
+        import {a as foo} from './other.js';
+        var bar = {a: 1, foo};
+        """,
+        """
+        var bar$$module$testcode={a: 1, foo: a$$module$other};
+        /** @const */ var module$testcode = {};
+        """);
 
     testModules(
-        lines(
-            "import f from './other.js';", //
-            "var bar = {a: 1, f};"),
-        lines(
-            "var bar$$module$testcode={a: 1, f: $jscompDefaultExport$$module$other};",
-            "/** @const */ var module$testcode = {};"));
+        """
+        import f from './other.js';
+        var bar = {a: 1, f};
+        """,
+        """
+        var bar$$module$testcode={a: 1, f: $jscompDefaultExport$$module$other};
+        /** @const */ var module$testcode = {};
+        """);
 
     testModules(
         "import * as f from './other.js';\nvar bar = {a: 1, f};",
-        lines(
-            "var bar$$module$testcode={a: 1, f: module$other};",
-            "/** @const */ var module$testcode = {};"));
+        """
+        var bar$$module$testcode={a: 1, f: module$other};
+        /** @const */ var module$testcode = {};
+        """);
   }
 
   @Test
@@ -995,76 +1096,84 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
             SourceFile.fromCode("a.js", "export class A {}"),
             SourceFile.fromCode(
                 "b.js",
-                lines(
-                    "import {A as B} from './a.js';", //
-                    "const /** !B */ b = new B();"))),
+                """
+                import {A as B} from './a.js';
+                const /** !B */ b = new B();
+                """)),
         expected(
             SourceFile.fromCode(
                 "a.js",
-                lines(
-                    "class A$$module$a {}",
-                    "/** @const */ var module$a = {};",
-                    "/** @const */ module$a.A = A$$module$a;")),
+                """
+                class A$$module$a {}
+                /** @const */ var module$a = {};
+                /** @const */ module$a.A = A$$module$a;
+                """),
             SourceFile.fromCode(
                 "b.js",
-                lines(
-                    "const /** !A$$module$a*/ b$$module$b = new A$$module$a();",
-                    "/** @const */ var module$b = {};"))));
+                """
+                const /** !A$$module$a*/ b$$module$b = new A$$module$a();
+                /** @const */ var module$b = {};
+                """)));
   }
 
   @Test
   public void testExportStar() {
     testModules(
         "export * from './other.js';",
-        lines(
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.Parent = Parent$$module$other;",
-            "/** @const */ module$testcode.a = a$$module$other;",
-            "/** @const */ module$testcode.b = b$$module$other;",
-            "/** @const */ module$testcode.c = c$$module$other;",
-            "/** @const */ module$testcode.class = x$$module$other;",
-            // no default
-            "/** @const */ module$testcode.name = name$$module$other;",
-            "/** @const */ module$testcode.x = x$$module$other;"));
+        """
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.Parent = Parent$$module$other;
+        /** @const */ module$testcode.a = a$$module$other;
+        /** @const */ module$testcode.b = b$$module$other;
+        /** @const */ module$testcode.c = c$$module$other;
+        /** @const */ module$testcode.class = x$$module$other;
+        // no default
+        /** @const */ module$testcode.name = name$$module$other;
+        /** @const */ module$testcode.x = x$$module$other;
+        """);
   }
 
   @Test
   public void testExportStarWithLocalExport() {
     testModules(
-        lines(
-            "export * from './other.js';", //
-            "export let baz, zed;"),
-        lines(
-            "let baz$$module$testcode, zed$$module$testcode;",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.Parent = Parent$$module$other;",
-            "/** @const */ module$testcode.a = a$$module$other;",
-            "/** @const */ module$testcode.b = b$$module$other;",
-            "/** @const */ module$testcode.baz = baz$$module$testcode;",
-            "/** @const */ module$testcode.c = c$$module$other;",
-            "/** @const */ module$testcode.class = x$$module$other;",
-            "/** @const */ module$testcode.name = name$$module$other;",
-            "/** @const */ module$testcode.x = x$$module$other;",
-            "/** @const */ module$testcode.zed = zed$$module$testcode;"));
+        """
+        export * from './other.js';
+        export let baz, zed;
+        """,
+        """
+        let baz$$module$testcode, zed$$module$testcode;
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.Parent = Parent$$module$other;
+        /** @const */ module$testcode.a = a$$module$other;
+        /** @const */ module$testcode.b = b$$module$other;
+        /** @const */ module$testcode.baz = baz$$module$testcode;
+        /** @const */ module$testcode.c = c$$module$other;
+        /** @const */ module$testcode.class = x$$module$other;
+        /** @const */ module$testcode.name = name$$module$other;
+        /** @const */ module$testcode.x = x$$module$other;
+        /** @const */ module$testcode.zed = zed$$module$testcode;
+        """);
   }
 
   @Test
   public void testExportStarWithLocalExportOverride() {
     testModules(
-        lines(
-            "export * from './other.js';", //
-            "export let a, zed;"),
-        lines(
-            "let a$$module$testcode, zed$$module$testcode;",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.Parent = Parent$$module$other;",
-            "/** @const */ module$testcode.a = a$$module$testcode;",
-            "/** @const */ module$testcode.b = b$$module$other;",
-            "/** @const */ module$testcode.c = c$$module$other;",
-            "/** @const */ module$testcode.class = x$$module$other;",
-            "/** @const */ module$testcode.name = name$$module$other;",
-            "/** @const */ module$testcode.x = x$$module$other;",
-            "/** @const */ module$testcode.zed = zed$$module$testcode;"));
+        """
+        export * from './other.js';
+        export let a, zed;
+        """,
+        """
+        let a$$module$testcode, zed$$module$testcode;
+        /** @const */ var module$testcode = {};
+        /** @const */ module$testcode.Parent = Parent$$module$other;
+        /** @const */ module$testcode.a = a$$module$testcode;
+        /** @const */ module$testcode.b = b$$module$other;
+        /** @const */ module$testcode.c = c$$module$other;
+        /** @const */ module$testcode.class = x$$module$other;
+        /** @const */ module$testcode.name = name$$module$other;
+        /** @const */ module$testcode.x = x$$module$other;
+        /** @const */ module$testcode.zed = zed$$module$testcode;
+        """);
   }
 
   @Test
@@ -1075,52 +1184,60 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
             SourceFile.fromCode("b.js", "export {A} from './a.js';"),
             SourceFile.fromCode(
                 "c.js",
-                lines(
-                    "import {A} from './b.js';", //
-                    "let /** !A */ a = new A();"))),
+                """
+                import {A} from './b.js';
+                let /** !A */ a = new A();
+                """)),
         expected(
             SourceFile.fromCode(
                 "a.js",
-                lines(
-                    "class A$$module$a {}",
-                    "/** @const */ var module$a = {};",
-                    "/** @const */ module$a.A = A$$module$a;")),
+                """
+                class A$$module$a {}
+                /** @const */ var module$a = {};
+                /** @const */ module$a.A = A$$module$a;
+                """),
             SourceFile.fromCode(
                 "b.js",
-                lines(
-                    "/** @const */ var module$b = {};", //
-                    "/** @const */ module$b.A = A$$module$a;")),
+                """
+                /** @const */ var module$b = {};
+                /** @const */ module$b.A = A$$module$a;
+                """),
             SourceFile.fromCode(
                 "c.js",
-                lines(
-                    "let /** !A$$module$a*/ a$$module$c = new A$$module$a();",
-                    "/** @const */ var module$c = {};"))));
+                """
+                let /** !A$$module$a*/ a$$module$c = new A$$module$a();
+                /** @const */ var module$c = {};
+                """)));
     test(
         srcs(
             SourceFile.fromCode("a.js", "export class A {}"),
             SourceFile.fromCode("b.js", "export {A as B} from './a.js';"),
             SourceFile.fromCode(
                 "c.js",
-                lines(
-                    "import {B as C} from './b.js';", //
-                    "let /** !C */ a = new C();"))),
+                """
+                import {B as C} from './b.js';
+                let /** !C */ a = new C();
+                """)),
         expected(
             SourceFile.fromCode(
                 "a.js",
-                lines(
-                    "class A$$module$a {}",
-                    "/** @const */ var module$a = {};",
-                    "/** @const */ module$a.A = A$$module$a;")),
+                """
+                class A$$module$a {}
+                /** @const */ var module$a = {};
+                /** @const */ module$a.A = A$$module$a;
+                """),
             SourceFile.fromCode(
                 "b.js",
-                lines(
-                    "/** @const */ var module$b = {};", //
-                    "/** @const */ module$b.B = A$$module$a;")),
+                """
+                /** @const */ var module$b = {};
+                /** @const */ module$b.B = A$$module$a;
+                """),
             SourceFile.fromCode(
                 "c.js",
-                lines(
-                    "let /** !A$$module$a*/ a$$module$c = new A$$module$a();",
-                    "/** @const */ var module$c = {};"))));
+                """
+                let /** !A$$module$a*/ a$$module$c = new A$$module$a();
+                /** @const */ var module$c = {};
+                """)));
   }
 
   @Test
@@ -1131,58 +1248,66 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
             SourceFile.fromCode("b.js", "export {A} from './a.js';"),
             SourceFile.fromCode(
                 "c.js",
-                lines(
-                    "import {A} from './b.js';", //
-                    "let /** !A */ a = new A();"))),
+                """
+                import {A} from './b.js';
+                let /** !A */ a = new A();
+                """)),
         expected(
             SourceFile.fromCode(
                 "a.js",
-                lines(
-                    "let A$$module$a = class {};",
-                    "()=>A$$module$a = class {};",
-                    "/** @const */ var module$a = {",
-                    "  /** @return {?} */ get A() { return A$$module$a; },",
-                    "};")),
+                """
+                let A$$module$a = class {};
+                ()=>A$$module$a = class {};
+                /** @const */ var module$a = {
+                  /** @return {?} */ get A() { return A$$module$a; },
+                };
+                """),
             SourceFile.fromCode(
                 "b.js",
-                lines(
-                    "/** @const */ var module$b = {",
-                    "  /** @return {?} */ get A() { return A$$module$a; },",
-                    "};")),
+                """
+                /** @const */ var module$b = {
+                  /** @return {?} */ get A() { return A$$module$a; },
+                };
+                """),
             SourceFile.fromCode(
                 "c.js",
-                lines(
-                    "let /** !A$$module$a*/ a$$module$c = new A$$module$a();",
-                    "/** @const */ var module$c = {};"))));
+                """
+                let /** !A$$module$a*/ a$$module$c = new A$$module$a();
+                /** @const */ var module$c = {};
+                """)));
     test(
         srcs(
             SourceFile.fromCode("a.js", "export let A = class {}; () => (A = class {});"),
             SourceFile.fromCode("b.js", "export {A as B} from './a.js';"),
             SourceFile.fromCode(
                 "c.js",
-                lines(
-                    "import {B as C} from './b.js';", //
-                    "let /** !C */ a = new C();"))),
+                """
+                import {B as C} from './b.js';
+                let /** !C */ a = new C();
+                """)),
         expected(
             SourceFile.fromCode(
                 "a.js",
-                lines(
-                    "let A$$module$a = class {};",
-                    "()=>A$$module$a = class {};",
-                    "/** @const */ var module$a = {",
-                    "  /** @return {?} */ get A() { return A$$module$a; },",
-                    "};")),
+                """
+                let A$$module$a = class {};
+                ()=>A$$module$a = class {};
+                /** @const */ var module$a = {
+                  /** @return {?} */ get A() { return A$$module$a; },
+                };
+                """),
             SourceFile.fromCode(
                 "b.js",
-                lines(
-                    "/** @const */ var module$b = {",
-                    "  /** @return {?} */ get B() { return A$$module$a; },",
-                    "};")),
+                """
+                /** @const */ var module$b = {
+                  /** @return {?} */ get B() { return A$$module$a; },
+                };
+                """),
             SourceFile.fromCode(
                 "c.js",
-                lines(
-                    "let /** !A$$module$a*/ a$$module$c = new A$$module$a();",
-                    "/** @const */ var module$c = {};"))));
+                """
+                let /** !A$$module$a*/ a$$module$c = new A$$module$a();
+                /** @const */ var module$c = {};
+                """)));
   }
 
   @Test
@@ -1192,31 +1317,36 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
             SourceFile.fromCode("a.js", "export class A {}"),
             SourceFile.fromCode(
                 "b.js",
-                lines(
-                    "import * as a from './a.js';", //
-                    "export {a};")),
+                """
+                import * as a from './a.js';
+                export {a};
+                """),
             SourceFile.fromCode(
                 "c.js",
-                lines(
-                    "import * as b from './b.js';", //
-                    "let /** !b.a.A */ a = new b.a.A();"))),
+                """
+                import * as b from './b.js';
+                let /** !b.a.A */ a = new b.a.A();
+                """)),
         expected(
             SourceFile.fromCode(
                 "a.js",
-                lines(
-                    "class A$$module$a {}",
-                    "/** @const */ var module$a = {};",
-                    "/** @const */ module$a.A = A$$module$a;")),
+                """
+                class A$$module$a {}
+                /** @const */ var module$a = {};
+                /** @const */ module$a.A = A$$module$a;
+                """),
             SourceFile.fromCode(
                 "b.js",
-                lines(
-                    "/** @const */ var module$b = {};", //
-                    "/** @const */ module$b.a = module$a;")),
+                """
+                /** @const */ var module$b = {};
+                /** @const */ module$b.a = module$a;
+                """),
             SourceFile.fromCode(
                 "c.js",
-                lines(
-                    "let /** !A$$module$a*/ a$$module$c = new A$$module$a();",
-                    "/** @const */ var module$c = {};"))));
+                """
+                let /** !A$$module$a*/ a$$module$c = new A$$module$a();
+                /** @const */ var module$c = {};
+                """)));
   }
 
   @Test
@@ -1227,23 +1357,26 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
             SourceFile.fromCode("other.js", lines("export let name = {}, a = { Type: class {} };")),
             SourceFile.fromCode(
                 "testcode",
-                lines(
-                    "import * as name from './other.js';", //
-                    "let /** !name.a.Type */ t = new name.a.Type();"))),
+                """
+                import * as name from './other.js';
+                let /** !name.a.Type */ t = new name.a.Type();
+                """)),
         expected(
             SourceFile.fromCode(
                 "other.js",
-                lines(
-                    "let name$$module$other = {}, a$$module$other = { Type: class {} };",
-                    "/** @const */ var module$other = {};",
-                    "/** @const */ module$other.a = a$$module$other;",
-                    "/** @const */ module$other.name = name$$module$other;")),
+                """
+                let name$$module$other = {}, a$$module$other = { Type: class {} };
+                /** @const */ var module$other = {};
+                /** @const */ module$other.a = a$$module$other;
+                /** @const */ module$other.name = name$$module$other;
+                """),
             SourceFile.fromCode(
                 "testcode",
-                lines(
-                    "let /** !a$$module$other.Type */ t$$module$testcode =",
-                    "   new a$$module$other.Type();",
-                    "/** @const */ var module$testcode = {};"))));
+                """
+                let /** !a$$module$other.Type */ t$$module$testcode =
+                   new a$$module$other.Type();
+                /** @const */ var module$testcode = {};
+                """)));
   }
 
   @Test

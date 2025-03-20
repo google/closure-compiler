@@ -37,25 +37,27 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
   @Test
   public void testHoistClinitConstantAssignments() {
     test(
-        lines(
-            "var someClass = /** @constructor */ function() {};",
-            "someClass.$clinit = function() {",
-            "  someClass.$clinit = function() {};",
-            "  someClass$foo = true;",
-            "  someClass$bar = 'hey';",
-            "  someClass$buzz = function() { return someClass$bar; };",
-            "};",
-            "var someClass$foo = false;",
-            "var someClass$bar = null;",
-            "var someClass$buzz = null;"),
-        lines(
-            "var someClass = /** @constructor */ function() {};",
-            "someClass.$clinit = function() {",
-            "  someClass.$clinit = function() {};",
-            "};",
-            "var someClass$foo = true;",
-            "var someClass$bar = 'hey';",
-            "var someClass$buzz = function(){ return someClass$bar; };"));
+        """
+        var someClass = /** @constructor */ function() {};
+        someClass.$clinit = function() {
+          someClass.$clinit = function() {};
+          someClass$foo = true;
+          someClass$bar = 'hey';
+          someClass$buzz = function() { return someClass$bar; };
+        };
+        var someClass$foo = false;
+        var someClass$bar = null;
+        var someClass$buzz = null;
+        """,
+        """
+        var someClass = /** @constructor */ function() {};
+        someClass.$clinit = function() {
+          someClass.$clinit = function() {};
+        };
+        var someClass$foo = true;
+        var someClass$bar = 'hey';
+        var someClass$buzz = function(){ return someClass$bar; };
+        """);
   }
 
   @Test
@@ -109,24 +111,25 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
   @Test
   public void testHoistClinitConstantAssignments_avoidUnsafe() {
     testSame(
-        lines(
-            "var someClass = /** @constructor */ function() {};",
-            "someClass.$clinit = function() {",
-            "  someClass.$clinit = function() {};",
-            "  someClass$foo1 = true;", // More than two assignments.
-            "  someClass$foo2 = true;", // More than two assignments.
-            "  someClass$bar = true;", // Also initialized by another method.
-            "  someClass$zoo = true;", // Not initialized in declaration phase.
-            "  someClass$hoo = someClass$zoo;", // Not literal value.
-            "};",
-            "someClass.$otherMethod = function() {",
-            "  someClass$foo1 |= true;", // Compound assignment to make it less trivial to detect.
-            "  someClass$foo2++;", // Compound assignment to make it less trivial to detect.
-            "  someClass$bar = true;",
-            "};",
-            "var someClass$foo1 = false;",
-            "var someClass$foo2 = false;",
-            "var someClass$hoo = false;"));
+        """
+        var someClass = /** @constructor */ function() {};
+        someClass.$clinit = function() {
+          someClass.$clinit = function() {};
+          someClass$foo1 = true; // More than two assignments.
+          someClass$foo2 = true; // More than two assignments.
+          someClass$bar = true; // Also initialized by another method.
+          someClass$zoo = true; // Not initialized in declaration phase.
+          someClass$hoo = someClass$zoo; // Not literal value.
+        };
+        someClass.$otherMethod = function() {
+          someClass$foo1 |= true; // Compound assignment to make it less trivial to detect.
+          someClass$foo2++; // Compound assignment to make it less trivial to detect.
+          someClass$bar = true;
+        };
+        var someClass$foo1 = false;
+        var someClass$foo2 = false;
+        var someClass$hoo = false;
+        """);
   }
 
   /**
@@ -135,44 +138,48 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
   @Test
   public void testHoistClinitConstantAssignments_devirtualized() {
     test(
-        lines(
-            "var someClass = /** @constructor */ function() {};",
-            "var someClass$$0clinit = function() {",
-            "  someClass$$0clinit = function() {};",
-            "  someClass$shouldHoist = true;",
-            "  someClass$shouldNotHoist = new Object();",
-            "};",
-            "var someClass$shouldHoist = false;",
-            "var someClass$shouldNotHoist = null;"),
-        lines(
-            "var someClass = /** @constructor */ function() {};",
-            "var someClass$$0clinit = function() {",
-            "  someClass$$0clinit = function() {};",
-            "  someClass$shouldNotHoist = new Object();",
-            "};",
-            "var someClass$shouldHoist = true;",
-            "var someClass$shouldNotHoist = null;"));
+        """
+        var someClass = /** @constructor */ function() {};
+        var someClass$$0clinit = function() {
+          someClass$$0clinit = function() {};
+          someClass$shouldHoist = true;
+          someClass$shouldNotHoist = new Object();
+        };
+        var someClass$shouldHoist = false;
+        var someClass$shouldNotHoist = null;
+        """,
+        """
+        var someClass = /** @constructor */ function() {};
+        var someClass$$0clinit = function() {
+          someClass$$0clinit = function() {};
+          someClass$shouldNotHoist = new Object();
+        };
+        var someClass$shouldHoist = true;
+        var someClass$shouldNotHoist = null;
+        """);
   }
 
   @Test
   public void testHoistClinitConstantAssignments_avoidUnsafeFunc() {
     testSame(
-        lines(
-            "var someClass = /** @constructor */ function() {};",
-            "someClass.$clinit = function() {",
-            "  someClass.$clinit = function() {};",
-            "  var x = 10;",
-            "  someClass$foo = function() { return x; };", // Depends on the scope of the clinit.
-            "};",
-            "var someClass$foo = null;"));
+        """
+        var someClass = /** @constructor */ function() {};
+        someClass.$clinit = function() {
+          someClass.$clinit = function() {};
+          var x = 10;
+          someClass$foo = function() { return x; }; // Depends on the scope of the clinit.
+        };
+        var someClass$foo = null;
+        """);
     testSame(
-        lines(
-            "var someClass = /** @constructor */ function() {};",
-            "someClass.$clinit = function() {",
-            "  someClass.$clinit = function() {};",
-            "  var x = 10;",
-            "  someClass$foo = function() { return 1; };", // x is assumed to be used
-            "};",
-            "var someClass$foo = null;"));
+        """
+        var someClass = /** @constructor */ function() {};
+        someClass.$clinit = function() {
+          someClass.$clinit = function() {};
+          var x = 10;
+          someClass$foo = function() { return 1; }; // x is assumed to be used
+        };
+        var someClass$foo = null;
+        """);
   }
 }

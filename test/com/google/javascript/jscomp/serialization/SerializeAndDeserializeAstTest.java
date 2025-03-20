@@ -251,93 +251,112 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testClassDeclarationWithMethods() {
-    testSame(lines("class Foo {", "  a() {}", "  get c() {}", "  set d(x) {}", "}"));
+    testSame(
+        """
+        class Foo {
+          a() {}
+          get c() {}
+          set d(x) {}
+        }
+        """);
 
     // Type checking will report computed property accesses as errors for a class,
     // so disable it for this case which contains several.
     disableTypeCheck();
     testSame(
-        lines(
-            "class Foo {",
-            "  a() {}",
-            "  'b'() {}",
-            "  get c() {}",
-            "  set d(x) {}",
-            "  ['e']() {}",
-            "}"));
+        """
+        class Foo {
+          a() {}
+          'b'() {}
+          get c() {}
+          set d(x) {}
+          ['e']() {}
+        }
+        """);
   }
 
   @Test
   public void testClassDeclarationWithFields() {
     skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
-    testSame(lines("class Foo {", "  a = 1;", "  d;", "}"));
+    testSame(
+        """
+        class Foo {
+          a = 1;
+          d;
+        }
+        """);
 
     // Type checking will report computed property accesses as errors for a class,
     // so disable it for this case which contains several.
     disableTypeCheck();
     testSame(
-        lines(
-            "class Foo {",
-            "  a = 1;",
-            "  'b' = 4;",
-            "  static ['c'] = 'hi';",
-            "  d;",
-            "  ['e'];",
-            "  1 = 2;",
-            "}"));
+        """
+        class Foo {
+          a = 1;
+          'b' = 4;
+          static ['c'] = 'hi';
+          d;
+          ['e'];
+          1 = 2;
+        }
+        """);
   }
 
   @Test
   public void testEmptyClassStaticBlock() {
     skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame(
-        lines(
-            "class Foo {", //
-            "  static {",
-            "  }",
-            "}"));
+        """
+        class Foo {
+          static {
+          }
+        }
+        """);
   }
 
   @Test
   public void testClassStaticBlock_variables() {
     skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame(
-        lines(
-            "class Foo {", //
-            "  static {",
-            "    this.x=1;",
-            "    let y =2;",
-            "    var z =3;",
-            "  }",
-            "}"));
+        """
+        class Foo {
+          static {
+            this.x=1;
+            let y =2;
+            var z =3;
+          }
+        }
+        """);
   }
 
   @Test
   public void testClassStaticBlock_function() {
     skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame(
-        lines(
-            "class Foo {", //
-            "  static {",
-            "    function x() {",
-            "    }",
-            "  }",
-            "}"));
+        """
+        class Foo {
+          static {
+            function x() {
+            }
+          }
+        }
+        """);
   }
 
   @Test
   public void testMultipleClassStaticBlocks() {
     skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame(
-        lines(
-            "class Foo {", //
-            "  static {",
-            "    this.x=1;",
-            "  }",
-            "  static {",
-            "    this.y=2;",
-            "  }",
-            "}"));
+        """
+        class Foo {
+          static {
+            this.x=1;
+          }
+          static {
+            this.y=2;
+          }
+        }
+        """);
   }
 
   @Test
@@ -447,13 +466,14 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   @Test
   public void testInlineSourceMaps() {
     String sourceMapTestCode =
-        lines(
-            "var X = (function () {",
-            "    function X(input) {",
-            "        this.y = input;",
-            "    }",
-            "    return X;",
-            "}());");
+        """
+        var X = (function () {
+            function X(input) {
+                this.y = input;
+            }
+            return X;
+        }());
+        """;
     String sourceMappingURLComment = "//# sourceMappingURL=" + BASE64_PREFIX + ENCODED_SOURCE_MAP;
     ;
     String code = sourceMapTestCode + "\n" + sourceMappingURLComment;
@@ -468,13 +488,14 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     // Sourcemap URLs should be a base64 encoded data url, not the name of a .js.map file.
     // If we see a .js.map file, we will not serialize it.
     String sourceMapTestCode =
-        lines(
-            "var X = (function () {",
-            "    function X(input) {",
-            "        this.y = input;",
-            "    }",
-            "    return X;",
-            "}());");
+        """
+        var X = (function () {
+            function X(input) {
+                this.y = input;
+            }
+            return X;
+        }());
+        """;
     String sourceMappingURL = "foo.js.map";
     String sourceMappingURLComment = "//# sourceMappingURL=" + sourceMappingURL;
     String code = sourceMapTestCode + "\n" + sourceMappingURLComment;
@@ -487,13 +508,14 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   public void testSourceMapsWithoutResolvingSourceMapAnnotations() {
     this.resolveSourceMapAnnotations = false;
     String sourceMapTestCode =
-        lines(
-            "var X = (function () {",
-            "    function X(input) {",
-            "        this.y = input;",
-            "    }",
-            "    return X;",
-            "}());");
+        """
+        var X = (function () {
+            function X(input) {
+                this.y = input;
+            }
+            return X;
+        }());
+        """;
     String sourceMappingURLComment = "//# sourceMappingURL=" + BASE64_PREFIX + ENCODED_SOURCE_MAP;
     ;
     String code = sourceMapTestCode + "\n" + sourceMappingURLComment;
@@ -507,13 +529,14 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   public void testSourceMapsWithoutParsingInlineSourceMaps() {
     this.parseInlineSourceMaps = false;
     String sourceMapTestCode =
-        lines(
-            "var X = (function () {",
-            "    function X(input) {",
-            "        this.y = input;",
-            "    }",
-            "    return X;",
-            "}());");
+        """
+        var X = (function () {
+            function X(input) {
+                this.y = input;
+            }
+            return X;
+        }());
+        """;
     String sourceMappingURLComment = "//# sourceMappingURL=" + BASE64_PREFIX + ENCODED_SOURCE_MAP;
     ;
     String code = sourceMapTestCode + "\n" + sourceMappingURLComment;
@@ -531,13 +554,14 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     // sourcemaps). Sourcemap URLs should be a base64 encoded data url, not a path to the
     // sourcemap file. If we see a path, we will not serialize anything.
     String sourceMapTestCode =
-        lines(
-            "var X = (function () {",
-            "    function X(input) {",
-            "        this.y = input;",
-            "    }",
-            "    return X;",
-            "}());");
+        """
+        var X = (function () {
+            function X(input) {
+                this.y = input;
+            }
+            return X;
+        }());
+        """;
     String sourceMappingURLPath = "directory/foo.js.map";
     String sourceMappingURLComment = "//# sourceMappingURL=" + sourceMappingURLPath;
     String code = sourceMapTestCode + "\n" + sourceMappingURLComment;
@@ -611,9 +635,10 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
         testAndReturnResult(
                 srcs("goog.module('a.b.c'); const x = 0;"),
                 expected(
-                    lines(
-                        "/** @const */ var module$exports$a$b$c = {};",
-                        "const module$contents$a$b$c_x = 0;")))
+                    """
+                    /** @const */ var module$exports$a$b$c = {};
+                    const module$contents$a$b$c_x = 0;
+                    """))
             .sourceRoot
             .getFirstChild();
 
@@ -705,11 +730,12 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
             // the injected "base" library is merged into the first file's script. ensure that
             // SourceFiles are wired up correctly.
             expected(
-                lines(
-                    "/** @const */ var $jscomp = $jscomp || {};",
-                    "/** @const */",
-                    "$jscomp.scope = {};",
-                    "0;")));
+                """
+                /** @const */ var $jscomp = $jscomp || {};
+                /** @const */
+                $jscomp.scope = {};
+                0;
+                """));
 
     Node script = result.sourceRoot.getFirstChild();
     assertNode(script).hasToken(Token.SCRIPT);
@@ -730,12 +756,13 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     Result result =
         this.testAndReturnResult(
             externs(
-                lines(
-                    "class Foo {", //
-                    // Ensure JSDoc properties are included (b/180424427)
-                    "  /** @param {{arg: string}} x */",
-                    "  method(x) { }",
-                    "}")),
+                """
+                class Foo {
+                // Ensure JSDoc properties are included (b/180424427)
+                  /** @param {{arg: string}} x */
+                  method(x) { }
+                }
+                """),
             srcs(""),
             expected(""));
 
@@ -770,7 +797,12 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
                 .build());
     Result result =
         testAndReturnResult(
-            srcs(lines("(function() {", "  window['foo'] = 5;", "})();")),
+            srcs(
+                """
+                (function() {
+                  window['foo'] = 5;
+                })();
+                """),
             expected(lines("SHADOW();")));
     assertThat(result.compiler.getErrors()).isEmpty();
 
@@ -779,7 +811,12 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
     Node shadowedContent = shadowHost.getClosureUnawareShadow();
     Node expectedShadowContent =
-        this.parseExpectedJs(lines("(function() {", "  window['foo'] = 5;", "})"));
+        this.parseExpectedJs(
+            """
+            (function() {
+              window['foo'] = 5;
+            })
+            """);
     assertNode(shadowedContent).isEqualIncludingJsDocTo(expectedShadowContent);
 
     assertThat(result.compiler.toSource(result.sourceRoot))

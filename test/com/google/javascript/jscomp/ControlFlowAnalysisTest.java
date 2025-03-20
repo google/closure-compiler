@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
@@ -1679,16 +1678,17 @@ public final class ControlFlowAnalysisTest {
   public void testForAwaitOfOrderBreakAndContinue() throws IOException {
     assertNodeOrder(
         createCfg(
-            lines(
-                "async function f() {",
-                "  outer: for await (let x of y) {",
-                "    inner: for await (let z of x) {",
-                "      if (z) break inner;",
-                "      else continue outer;",
-                "    }",
-                "  }",
-                "  return 0;",
-                "}")),
+            """
+            async function f() {
+              outer: for await (let x of y) {
+                inner: for await (let z of x) {
+                  if (z) break inner;
+                  else continue outer;
+                }
+              }
+              return 0;
+            }
+            """),
         ImmutableList.of(
             Token.SCRIPT,
             Token.FUNCTION,
@@ -1711,16 +1711,17 @@ public final class ControlFlowAnalysisTest {
   public void testForAwaitOfOrderBreakAndContinueAndYield() throws IOException {
     assertNodeOrder(
         createCfg(
-            lines(
-                "async function* f() {",
-                "  outer: for await (let x of y) {",
-                "    inner: for await (let z of x) {",
-                "      if (z > 0) break inner;",
-                "      else if (z < 0) continue outer;",
-                "      yield z;",
-                "    }",
-                "  }",
-                "}")),
+            """
+            async function* f() {
+              outer: for await (let x of y) {
+                inner: for await (let z of x) {
+                  if (z > 0) break inner;
+                  else if (z < 0) continue outer;
+                  yield z;
+                }
+              }
+            }
+            """),
         ImmutableList.of(
             Token.SCRIPT,
             Token.FUNCTION,
@@ -1920,14 +1921,15 @@ public final class ControlFlowAnalysisTest {
   @Test
   public void testCfgRootedAtClassStaticBlockMultipleStatementAndSubsequentMembers() {
     String src =
-        lines(
-            "class C {",
-            "  static { alert(0); }",
-            "  x = 0;",
-            "  [0+1]() {}",
-            "  static { alert(1); }",
-            "  fn(){}",
-            "}");
+        """
+        class C {
+          static { alert(0); }
+          x = 0;
+          [0+1]() {}
+          static { alert(1); }
+          fn(){}
+        }
+        """;
     Compiler compiler = new Compiler();
     Node globalRoot = compiler.parseSyntheticCode("cfgtest", src);
     ImmutableList<Node> staticBlocks =

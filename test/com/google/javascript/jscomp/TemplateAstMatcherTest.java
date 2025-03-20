@@ -542,21 +542,21 @@ public final class TemplateAstMatcherTest {
   @Test
   public void testMatches_namespace_method() {
     String externs =
-        lines(
-            "",
-            "/** @const */ const ns = {};",
-            "/** @const */ ns.sub = {};",
-            "/** @return {boolean} */ ns.sub.method = function() {};",
-            "");
+        """
+        /** @const */ const ns = {};
+        /** @const */ ns.sub = {};
+        /** @return {boolean} */ ns.sub.method = function() {};
+        """;
 
     String template =
-        lines(
-            "/**",
-            " * @param {typeof ns.sub} target",
-            " */",
-            "function template(target) {",
-            "  target.method();",
-            "}");
+        """
+        /**
+         * @param {typeof ns.sub} target
+         */
+        function template(target) {
+          target.method();
+        }
+        """;
 
     TestNodePair pair = compile(externs, template, "var alias = ns.sub; alias.method();");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());

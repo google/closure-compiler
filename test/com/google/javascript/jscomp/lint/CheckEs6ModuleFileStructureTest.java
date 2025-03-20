@@ -80,10 +80,11 @@ public class CheckEs6ModuleFileStructureTest extends CompilerTestCase {
     testWarning("goog.require('bar'); import 'file';", MUST_COME_BEFORE);
 
     testSame(
-        lines(
-            "import 'file';",
-            "goog.declareModuleId('name');",
-            "const bar = goog.require('bar');",
-            "let rest;"));
+        """
+        import 'file';
+        goog.declareModuleId('name');
+        const bar = goog.require('bar');
+        let rest;
+        """);
   }
 }

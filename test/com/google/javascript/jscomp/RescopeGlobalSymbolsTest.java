@@ -524,22 +524,24 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test("class A {} class B extends A {}", "_.A = class {}; _.B = class extends _.A {}");
     test("class A {} let a = new A;", "_.A = class {}; _.a = new _.A;");
     test(
-        lines(
-            "const PI = 3.14;",
-            "class A {",
-            "  static printPi() {",
-            "    console.log(PI);",
-            "  }",
-            "}",
-            "A.printPi();"),
-        lines(
-            "_.PI = 3.14;",
-            "_.A = class {",
-            "  static printPi() {",
-            "    console.log(_.PI);",
-            "  }",
-            "}",
-            "_.A.printPi();"));
+        """
+        const PI = 3.14;
+        class A {
+          static printPi() {
+            console.log(PI);
+          }
+        }
+        A.printPi();
+        """,
+        """
+        _.PI = 3.14;
+        _.A = class {
+          static printPi() {
+            console.log(_.PI);
+          }
+        }
+        _.A.printPi();
+        """);
 
     // Test that class expression names are not rewritten.
     test("var A = class Name {};", "_.A = class Name {};");
@@ -803,12 +805,14 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "function foo() { var {key: _} = {}; _.foo = foo; _.bar = 1; }",
         "_.foo = function () { var {key: _$} = {}; _$.foo = _.foo; _$.bar = 1}");
     test(
-        lines(
-            "function foo() { var _ = {}; _.foo = foo; _.bar = 1; ",
-            "(function() { var _ = 0;})() }"),
-        lines(
-            "_.foo = function () { var _$ = {}; _$.foo = _.foo; _$.bar = 1; ",
-            "(function() { var _$ = 0;})() }"));
+        """
+        function foo() { var _ = {}; _.foo = foo; _.bar = 1;
+        (function() { var _ = 0;})() }
+        """,
+        """
+        _.foo = function () { var _$ = {}; _$.foo = _.foo; _$.bar = 1;
+        (function() { var _$ = 0;})() }
+        """);
     test(
         "function foo() { var _ = {}; _.foo = foo; _.bar = 1; " + "var _$ = 1; }",
         "_.foo = function () { var _$ = {}; _$.foo = _.foo; _$.bar = 1; " + "var _$$ = 1; }");
@@ -938,24 +942,26 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forUnordered()
                 .addChunk(
-                    lines(
-                        "Foo = function() { this.b = ns; };",
-                        "var f = function(a) {",
-                        "  if (a instanceof Foo && a.b === ns) {}",
-                        "},",
-                        "ns = {},",
-                        "g = function(a) { var b = new Foo; };"))
+                    """
+                    Foo = function() { this.b = ns; };
+                    var f = function(a) {
+                      if (a instanceof Foo && a.b === ns) {}
+                    },
+                    ns = {},
+                    g = function(a) { var b = new Foo; };
+                    """)
                 .addChunk("f; g;")
                 .build()),
         expected(
-            lines(
-                "var ns;",
-                "Foo = function() { this.b = ns; };",
-                "_.f = function(a) {",
-                "  if (a instanceof Foo && a.b === ns) {}",
-                "};",
-                "ns = {};",
-                "_.g = function(a) { var b = new Foo; };"),
+            """
+            var ns;
+            Foo = function() { this.b = ns; };
+            _.f = function(a) {
+              if (a instanceof Foo && a.b === ns) {}
+            };
+            ns = {};
+            _.g = function(a) { var b = new Foo; };
+            """,
             "_.f; _.g;"));
 
     test(

@@ -80,14 +80,15 @@ public final class CheckNestedNamesTest extends CompilerTestCase {
     noWarning("goog.module('a'); function foo() { class C {}; /** @enum */ C.E = {};} foo();");
     noWarning("goog.module('a'); function foo() { let C = {}; /** @enum */ C.E = {};} foo();");
     noWarning(
-        lines(
-            "goog.module('a');",
-            "/** @param {!Function} x */",
-            "function foo(x) {",
-            "  /** @enum */ x.E = {};",
-            "}",
-            "function y() {}",
-            "foo(y);"));
+        """
+        goog.module('a');
+        /** @param {!Function} x */
+        function foo(x) {
+          /** @enum */ x.E = {};
+        }
+        function y() {}
+        foo(y);
+        """);
   }
 
   @Test

@@ -78,14 +78,16 @@ public final class RewriteObjectSpreadTest extends CompilerTestCase {
   @Test
   public void testTyping_ofSpreadResult_isObject() {
     test(
-        lines(
-            "const first = 0;", //
-            "const spread = {bar: 'str', qux: false};",
-            "const obj = ({first, ...spread});"),
-        lines(
-            "const first = 0;", //
-            "const spread = {bar: 'str', qux: false};",
-            "const obj = Object.assign({}, {first}, spread)"));
+        """
+        const first = 0;
+        const spread = {bar: 'str', qux: false};
+        const obj = ({first, ...spread});
+        """,
+        """
+        const first = 0;
+        const spread = {bar: 'str', qux: false};
+        const obj = Object.assign({}, {first}, spread)
+        """);
 
     Compiler lastCompiler = getLastCompiler();
 

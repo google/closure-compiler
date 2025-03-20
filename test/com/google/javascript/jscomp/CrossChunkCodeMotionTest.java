@@ -68,12 +68,13 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
         JSChunkGraphBuilder.forStar()
             // m1
             .addChunk(
-                lines(
-                    "function f1(a) { alert(a); }",
-                    "function f2(a) { alert(a); }",
-                    "function f3(a) { alert(a); }",
-                    "function f4() { alert(1); }",
-                    "function g() { alert('ciao'); }"))
+                """
+                function f1(a) { alert(a); }
+                function f2(a) { alert(a); }
+                function f3(a) { alert(a); }
+                function f4() { alert(1); }
+                function g() { alert('ciao'); }
+                """)
             // m2
             .addChunk("f1('hi'); f3('bye'); var a = f4; function h(a) { alert('h:' + a); }")
             // m3
@@ -86,12 +87,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             // m1
             "function f3(a) { alert(a); } function g() { alert('ciao'); }",
             // m2
-            lines(
-                "function f1(a) { alert(a); }",
-                "function f4() { alert(1); }",
-                "f1('hi'); f3('bye'); var a = f4;",
-                "function h(a) { alert('h:' + a); }",
-                ""),
+            """
+            function f1(a) { alert(a); }
+            function f4() { alert(1); }
+            f1('hi'); f3('bye'); var a = f4;
+            function h(a) { alert('h:' + a); }
+            """,
             // m3
             "function f2(a) { alert(a); } f2('hi'); f2('hi'); f3('bye');"));
   }
@@ -213,9 +214,10 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             // m1
             "",
             // m2
-            lines(
-                "var f = function(n){if(true){if(true){return (n<1)?1:f(n-1)}}};",
-                "var a = f(4);")));
+            """
+            var f = function(n){if(true){if(true){return (n<1)?1:f(n-1)}}};
+            var a = f(4);
+            """));
   }
 
   @Test
@@ -310,10 +312,11 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forStar()
                 .addChunk(
-                    lines(
-                        "function f(){};f.prototype.bar=new f;",
-                        "if(a)function f2(){}",
-                        "{{while(a)function f3(){}}}"))
+                    """
+                    function f(){};f.prototype.bar=new f;
+                    if(a)function f2(){}
+                    {{while(a)function f3(){}}}
+                    """)
                 .addChunk("var a = new f();f2();f3();")
                 .build()));
   }
@@ -444,9 +447,10 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forStar()
                 .addChunk(
-                    lines(
-                        "function f(){} f.prototype.bar=function (){};",
-                        "(true && ('undefined' != typeof f && 1 instanceof f));"))
+                    """
+                    function f(){} f.prototype.bar=function (){};
+                    (true && ('undefined' != typeof f && 1 instanceof f));
+                    """)
                 .addChunk("var a = new f();")
                 .build()),
         expected(
@@ -461,9 +465,10 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forStar()
                 .addChunk(
-                    lines(
-                        "function f(){} f.prototype.bar=function (){};",
-                        "(true && ('function' == typeof f && 1 instanceof f));"))
+                    """
+                    function f(){} f.prototype.bar=function (){};
+                    (true && ('function' == typeof f && 1 instanceof f));
+                    """)
                 .addChunk("var a = new f();")
                 .build()),
         expected(
@@ -527,13 +532,14 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             // m3
             "",
             // m4
-            lines(
-                "class f {}",
-                "f.prototype.bar = 3;",
-                "f.prototype.baz = 5;",
-                "f.prototype.baq = 7;",
-                "f.prototype.baz = 9;",
-                "var a = new f();")));
+            """
+            class f {}
+            f.prototype.bar = 3;
+            f.prototype.baz = 5;
+            f.prototype.baq = 7;
+            f.prototype.baz = 9;
+            var a = new f();
+            """));
   }
 
   @Test
@@ -558,13 +564,14 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             // m3
             "",
             // m4
-            lines(
-                "function f(){}",
-                "f.prototype.bar=3;",
-                "f.prototype.baz=5;",
-                "f.prototype.baq = 7;",
-                "f.prototype.baz = 9;",
-                "var a = new f();")));
+            """
+            function f(){}
+            f.prototype.bar=3;
+            f.prototype.baz=5;
+            f.prototype.baq = 7;
+            f.prototype.baz = 9;
+            var a = new f();
+            """));
   }
 
   @Test
@@ -589,13 +596,14 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             // m3
             "",
             // m4
-            lines(
-                "var f = function() {};",
-                "f.prototype.bar=3;",
-                "f.prototype.baz=5;",
-                "f = 7;",
-                "f = 9;",
-                "f = 11;")));
+            """
+            var f = function() {};
+            f.prototype.bar=3;
+            f.prototype.baz=5;
+            f = 7;
+            f = 9;
+            f = 11;
+            """));
   }
 
   @Test
@@ -708,20 +716,21 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             JSChunkGraphBuilder.forChain()
                 // m1
                 .addChunk(
-                    lines(
-                        "function Foo(){}",
-                        "Object.defineProperties(Foo.prototype, {a: {get:function(){return"
-                            + " 0;}}});"))
+                    """
+                    function Foo(){}
+                    Object.defineProperties(Foo.prototype, {a: {get:function(){return 0;}}});
+                    """)
 
                 // m2
                 .addChunk("new Foo();")
                 .build()),
         expected(
             "", // m1
-            lines(
-                "function Foo(){}",
-                "Object.defineProperties(Foo.prototype, {a: {get:function(){return 0;}}});",
-                "new Foo();") // m2
+            """
+            function Foo(){}
+            Object.defineProperties(Foo.prototype, {a: {get:function(){return 0;}}});
+            new Foo();
+            """ // m2
             ));
   }
 
@@ -806,13 +815,14 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             .addChunk("var x =1;")
             // m2
             .addChunk(
-                lines(
-                    "class Foo {", //
-                    "  static {",
-                    "    x = 2;",
-                    "  }",
-                    "}",
-                    "use(x);"))
+                """
+                class Foo {
+                  static {
+                    x = 2;
+                  }
+                }
+                use(x);
+                """)
             // m3
             .addChunk("new Foo();")
             .build();
@@ -823,14 +833,15 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             // m1
             "",
             // m2
-            lines(
-                "var x =1;", //
-                "class Foo {",
-                "  static {",
-                "    x = 2",
-                "  }",
-                "}",
-                "use(x);"),
+            """
+            var x =1;
+            class Foo {
+              static {
+                x = 2
+              }
+            }
+            use(x);
+            """,
             // m3
             "new Foo();"));
   }
@@ -841,20 +852,21 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "class ValueType {}",
-                        "class Foo {}",
-                        "ValueType.mixin(Foo, ValueType, 5,"
-                            + " goog.reflect.objectProperty('foo', Foo))"))
+                    """
+                    class ValueType {}
+                    class Foo {}
+                    ValueType.mixin(Foo, ValueType, 5, goog.reflect.objectProperty('foo', Foo))
+                    """)
                 .addChunk("new Foo();")
                 .build()),
         expected(
             "", // m1
-            lines(
-                "class ValueType {}",
-                "class Foo {}",
-                "ValueType.mixin(Foo, ValueType, 5, goog.reflect.objectProperty('foo', Foo))",
-                "new Foo();") // m2
+            """
+            class ValueType {}
+            class Foo {}
+            ValueType.mixin(Foo, ValueType, 5, goog.reflect.objectProperty('foo', Foo))
+            new Foo();
+            """ // m2
             ));
   }
 
@@ -867,19 +879,22 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function wrapIt(val) { return [val]; }", //
-                        "class ImmovableClass { static x = wrapIt(123); }",
-                        "class MovableClass { static y = /** @pureOrBreakMyCode */ wrapIt(123); }"))
+                    """
+                    function wrapIt(val) { return [val]; }
+                    class ImmovableClass { static x = wrapIt(123); }
+                    class MovableClass { static y = /** @pureOrBreakMyCode */ wrapIt(123); }
+                    """)
                 .addChunk("new ImmovableClass(); new MovableClass();")
                 .build()),
         expected(
-            lines(
-                "function wrapIt(val) { return [val] }", //
-                "class ImmovableClass { static x = wrapIt(123);}"),
-            lines(
-                "class MovableClass { static y = /** @pureOrBreakMyCode */ wrapIt(123); }", //
-                "new ImmovableClass(); new MovableClass();")));
+            """
+            function wrapIt(val) { return [val] }
+            class ImmovableClass { static x = wrapIt(123);}
+            """,
+            """
+            class MovableClass { static y = /** @pureOrBreakMyCode */ wrapIt(123); }
+            new ImmovableClass(); new MovableClass();
+            """));
   }
 
   @Test
@@ -902,9 +917,10 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             // m0
             "",
             // m1
-            lines(
-                "function Foo(){} Foo.prototype.bar = JSCompiler_stubMethod(x);",
-                "Foo.prototype.bar = JSCompiler_unstubMethod(x);"),
+            """
+            function Foo(){} Foo.prototype.bar = JSCompiler_stubMethod(x);
+            Foo.prototype.bar = JSCompiler_unstubMethod(x);
+            """,
             // m2
             "new Foo();"));
   }
@@ -928,9 +944,10 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             JSChunkGraphBuilder.forChain()
                 // m1
                 .addChunk(
-                    lines(
-                        "function Foo(){}",
-                        "Object.defineProperties(Foo.prototype, {a: {get: createSomething()}})"))
+                    """
+                    function Foo(){}
+                    Object.defineProperties(Foo.prototype, {a: {get: createSomething()}})
+                    """)
                 // m2
                 .addChunk("new Foo();")
                 .build()));
@@ -942,10 +959,10 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function Foo(){}",
-                        "Object.defineProperties(Foo.prototype,{[test()]:{get: function() {return"
-                            + " 10;}}})"))
+                    """
+                    function Foo(){}
+                    Object.defineProperties(Foo.prototype,{[test()]:{get: function() {return 10;}}})
+                    """)
                 .addChunk("new Foo();")
                 .build()));
   }
@@ -1496,11 +1513,11 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             // m1
             "",
             // m2
-            lines(
-                "function f(){}",
-                "f.prototype.clone = function() { return new f() };",
-                "var a = (new f).clone();",
-                "")));
+            """
+            function f(){}
+            f.prototype.clone = function() { return new f() };
+            var a = (new f).clone();
+            """));
   }
 
   @Test
@@ -1509,22 +1526,24 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function f(){}",
-                        "f.prototype.cloneFun = function() {",
-                        "  return function() {new f}",
-                        "};"))
+                    """
+                    function f(){}
+                    f.prototype.cloneFun = function() {
+                      return function() {new f}
+                    };
+                    """)
                 .addChunk("var a = (new f).cloneFun();")
                 .build()),
         expected(
             // m1
             "",
-            lines(
-                "function f(){}",
-                "f.prototype.cloneFun = function() {",
-                "  return function() {new f}",
-                "};",
-                "var a = (new f).cloneFun();")));
+            """
+            function f(){}
+            f.prototype.cloneFun = function() {
+              return function() {new f}
+            };
+            var a = (new f).cloneFun();
+            """));
   }
 
   @Test
@@ -1614,9 +1633,10 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "g();", // must recognize this as a reference to the following declaration
-                        "function g() {}"))
+                    """
+                    g(); // must recognize this as a reference to the following declaration
+                    function g() {}
+                    """)
                 .addChunk("g();")
                 .build()));
 
@@ -1626,11 +1646,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             JSChunkGraphBuilder.forChain()
                 // m1
                 .addChunk(
-                    lines(
-                        "function f() { g(); }",
-                        "function g() {}",
-                        // f() cannot move, so neither can g()
-                        "f();"))
+                    """
+                    function f() { g(); }
+                    function g() {}
+                    // f() cannot move, so neither can g()
+                    f();
+                    """)
                 // m2
                 .addChunk("g();")
                 .build()));
@@ -1643,11 +1664,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             JSChunkGraphBuilder.forChain()
                 // m0
                 .addChunk(
-                    lines(
-                        "function a() { b(); }",
-                        "function b() {}",
-                        "function c() {}",
-                        "a.prototype.x = function() { c(); };"))
+                    """
+                    function a() { b(); }
+                    function b() {}
+                    function c() {}
+                    a.prototype.x = function() { c(); };
+                    """)
                 // m1
                 .addChunk("a();")
                 .build()),
@@ -1655,12 +1677,13 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             // m0
             "",
             // m1
-            lines(
-                "function b() {}",
-                "function c() {}",
-                "function a() { b(); }",
-                "a.prototype.x = function() { c(); };",
-                "a();")));
+            """
+            function b() {}
+            function c() {}
+            function a() { b(); }
+            a.prototype.x = function() { c(); };
+            a();
+            """));
   }
 
   @Test
@@ -1670,12 +1693,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             JSChunkGraphBuilder.forChain()
                 // m0
                 .addChunk(
-                    lines(
-                        "function a() { c(); }",
-                        "function b() {}",
-                        "a.prototype.x = function() { c(); };",
-                        "function c() {}",
-                        ""))
+                    """
+                    function a() { c(); }
+                    function b() {}
+                    a.prototype.x = function() { c(); };
+                    function c() {}
+                    """)
                 // m1
                 .addChunk("a();")
                 .build()),
@@ -1683,12 +1706,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             // m0
             "function b() {}",
             // m1
-            lines(
-                "function c() {}",
-                "function a() { c(); }",
-                "a.prototype.x = function() { c(); };",
-                "a();",
-                "")));
+            """
+            function c() {}
+            function a() { c(); }
+            a.prototype.x = function() { c(); };
+            a();
+            """));
   }
 
   @Test
@@ -1819,11 +1842,11 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             JSChunkGraphBuilder.forChain()
                 // m0
                 .addChunk(
-                    lines(
-                        "function C() {}",
-                        "function X() {}",
-                        "X.prototype.a = function(x) { return x instanceof C; }",
-                        ""))
+                    """
+                    function C() {}
+                    function X() {}
+                    X.prototype.a = function(x) { return x instanceof C; }
+                    """)
                 // m1
                 .addChunk("new C();")
                 // m2
@@ -1835,22 +1858,22 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             // m1
             "function C() {} new C();",
             // m2
-            lines(
-                "function X() {}",
-                // no need to guard instanceof
-                "X.prototype.a = function(x) { return x instanceof C; }",
-                "new X();",
-                "")));
+            """
+            function X() {}
+            // no need to guard instanceof
+            X.prototype.a = function(x) { return x instanceof C; }
+            new X();
+            """));
     test(
         srcs(
             JSChunkGraphBuilder.forChain()
                 // m0
                 .addChunk(
-                    lines(
-                        "function C() {}",
-                        "function X() {}",
-                        "X.prototype.a = function(x) { return x instanceof C; }",
-                        ""))
+                    """
+                    function C() {}
+                    function X() {}
+                    X.prototype.a = function(x) { return x instanceof C; }
+                    """)
                 // m1
                 .addChunk("new X();")
                 // m2
@@ -1860,11 +1883,11 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             // m0
             "",
             // m1
-            lines(
-                "function X() {}",
-                "X.prototype.a = function(x) { return 'function' == typeof C && x instanceof C; }",
-                "new X();",
-                ""),
+            """
+            function X() {}
+            X.prototype.a = function(x) { return 'function' == typeof C && x instanceof C; }
+            new X();
+            """,
             // m2
             "function C() {} new C();"));
   }
@@ -2058,17 +2081,19 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function wrapIt(val) { return [val]; }",
-                        "const value = /** @pureOrBreakMyCode */ wrapIt(123);"))
+                    """
+                    function wrapIt(val) { return [val]; }
+                    const value = /** @pureOrBreakMyCode */ wrapIt(123);
+                    """)
                 .addChunk("const unwrappedValue = value[0];")
                 .build()),
         expected(
             "",
-            lines(
-                "function wrapIt(val) { return [val]; }",
-                "const value = /** @pureOrBreakMyCode */ wrapIt(123);",
-                "const unwrappedValue = value[0];")));
+            """
+            function wrapIt(val) { return [val]; }
+            const value = /** @pureOrBreakMyCode */ wrapIt(123);
+            const unwrappedValue = value[0];
+            """));
 
     // should move a class if its static initializer containing a function call was annotated with
     // @pureOrBreakMyCode
@@ -2076,41 +2101,43 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "function wrapIt(val) { return [val]; }",
-                        "class ImmovableClass {}",
-                        "ImmovableClass.prop = wrapIt(123);",
-                        "class MovableClass {}",
-                        "MovableClass.prop = /** @pureOrBreakMyCode */ wrapIt(123);"))
+                    """
+                    function wrapIt(val) { return [val]; }
+                    class ImmovableClass {}
+                    ImmovableClass.prop = wrapIt(123);
+                    class MovableClass {}
+                    MovableClass.prop = /** @pureOrBreakMyCode */ wrapIt(123);
+                    """)
                 .addChunk("new ImmovableClass(); new MovableClass();")
                 .build()),
         expected(
-            lines(
-                "function wrapIt(val) { return [val] }",
-                "class ImmovableClass {}",
-                "ImmovableClass.prop = wrapIt(123);"),
-            lines(
-                "class MovableClass {}",
-                "MovableClass.prop = /** @pureOrBreakMyCode */ wrapIt(123);",
-                "new ImmovableClass(); new MovableClass();")));
+            """
+            function wrapIt(val) { return [val] }
+            class ImmovableClass {}
+            ImmovableClass.prop = wrapIt(123);
+            """,
+            """
+            class MovableClass {}
+            MovableClass.prop = /** @pureOrBreakMyCode */ wrapIt(123);
+            new ImmovableClass(); new MovableClass();
+            """));
 
     test(
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    lines(
-                        "class LowerCasePipe {}",
-                        "/** @nocollapse */ LowerCasePipe.ɵpipe = /** @pureOrBreakMyCode*/"
-                            + " i0.ɵɵdefinePipe({ name: \"lowercase\", type: LowerCasePipe, pure:"
-                            + " true });"))
+                    """
+class LowerCasePipe {}
+/** @nocollapse */ LowerCasePipe.\u0275pipe = /** @pureOrBreakMyCode*/ i0.\u0275\u0275definePipe({ name: "lowercase", type: LowerCasePipe, pure: true });
+""")
                 .addChunk("new LowerCasePipe();")
                 .build()),
         expected(
             "",
-            lines(
-                "class LowerCasePipe {}",
-                "/** @nocollapse */ LowerCasePipe.ɵpipe = /** @pureOrBreakMyCode*/"
-                    + " i0.ɵɵdefinePipe({ name: \"lowercase\", type: LowerCasePipe, pure: true });",
-                "new LowerCasePipe();")));
+            """
+class LowerCasePipe {}
+/** @nocollapse */ LowerCasePipe.\u0275pipe = /** @pureOrBreakMyCode*/ i0.\u0275\u0275definePipe({ name: "lowercase", type: LowerCasePipe, pure: true });
+new LowerCasePipe();
+"""));
   }
 }

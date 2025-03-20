@@ -192,13 +192,14 @@ public final class ProcessTweaksTest extends CompilerTestCase {
   public void testStrippingWithExplicitDefaultValues() {
     stripTweaks = true;
     test(
-        lines(
-            "goog.tweak.registerNumber('TweakA', 'desc', 5);",
-            "goog.tweak.registerBoolean('TweakB', 'desc', true);",
-            "goog.tweak.registerString('TweakC', 'desc', '!');",
-            "alert(goog.tweak.getNumber('TweakA'));",
-            "alert(goog.tweak.getBoolean('TweakB'));",
-            "alert(goog.tweak.getString('TweakC'));"),
+        """
+        goog.tweak.registerNumber('TweakA', 'desc', 5);
+        goog.tweak.registerBoolean('TweakB', 'desc', true);
+        goog.tweak.registerString('TweakC', 'desc', '!');
+        alert(goog.tweak.getNumber('TweakA'));
+        alert(goog.tweak.getBoolean('TweakB'));
+        alert(goog.tweak.getString('TweakC'));
+        """,
         "void 0; void 0; void 0; alert(5); alert(true); alert('!')");
   }
 
@@ -206,14 +207,18 @@ public final class ProcessTweaksTest extends CompilerTestCase {
   public void testStrippingWithInCodeOverrides() {
     stripTweaks = true;
     test(
-        lines(
-            "goog.tweak.registerNumber('TweakA', 'desc');",
-            "goog.tweak.registerBoolean('TweakB', 'desc');",
-            "goog.tweak.registerString('TweakC', 'desc', 'foo');",
-            "alert(goog.tweak.getNumber('TweakA'));",
-            "alert(goog.tweak.getBoolean('TweakB'));",
-            "alert(goog.tweak.getString('TweakC'));"),
-        lines("void 0; void 0; void 0;", "alert(0); alert(false); alert('foo');"));
+        """
+        goog.tweak.registerNumber('TweakA', 'desc');
+        goog.tweak.registerBoolean('TweakB', 'desc');
+        goog.tweak.registerString('TweakC', 'desc', 'foo');
+        alert(goog.tweak.getNumber('TweakA'));
+        alert(goog.tweak.getBoolean('TweakB'));
+        alert(goog.tweak.getString('TweakC'));
+        """,
+        """
+        void 0; void 0; void 0;
+        alert(0); alert(false); alert('foo');
+        """);
   }
 
   @Test

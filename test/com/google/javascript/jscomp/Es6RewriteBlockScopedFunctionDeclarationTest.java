@@ -56,16 +56,16 @@ public final class Es6RewriteBlockScopedFunctionDeclarationTest extends Compiler
   @Test
   public void testHoistsFunctionToStartOfBlock() {
     test(
-        lines(
-            "", // preserve newlines
-            "function use(x) {}",
-            "{ use(f()); function f(){} }",
-            ""),
-        lines(
-            "", // preserve newlines
-            "function use(x) {}",
-            "{ let f = function(){}; use(f()); }",
-            ""));
+        """
+         // preserve newlines
+        function use(x) {}
+        { use(f()); function f(){} }
+        """,
+        """
+         // preserve newlines
+        function use(x) {}
+        { let f = function(){}; use(f()); }
+        """);
   }
 
   @Test
@@ -76,38 +76,48 @@ public final class Es6RewriteBlockScopedFunctionDeclarationTest extends Compiler
   @Test
   public void testBlockNestedInsideFunction() {
     test(
-        lines(
-            "function f() {",
-            "  var x = 1;",
-            "  if (a) {",
-            "    x1();",
-            "    function x1() { return x1; }",
-            "  }",
-            "  return x;",
-            "}"),
-        lines(
-            "function f() {",
-            "  var x = 1;",
-            "  if (a) {",
-            "    let x1 = function() { return x1; };",
-            "    x1();",
-            "  }",
-            "  return x;",
-            "}"));
+        """
+        function f() {
+          var x = 1;
+          if (a) {
+            x1();
+            function x1() { return x1; }
+          }
+          return x;
+        }
+        """,
+        """
+        function f() {
+          var x = 1;
+          if (a) {
+            let x1 = function() { return x1; };
+            x1();
+          }
+          return x;
+        }
+        """);
   }
 
   @Test
   public void testFunctionInLoop() {
     test(
-        lines("for (var x of y) {", "  y();", "  function f() {", "    let z;", "  }", "}"),
-        lines(
-            "var x;",
-            "for (x of y) {",
-            "  let f = function() {",
-            "    let z;",
-            "  };",
-            "  y();",
-            "}"));
+        """
+        for (var x of y) {
+          y();
+          function f() {
+            let z;
+          }
+        }
+        """,
+        """
+        var x;
+        for (x of y) {
+          let f = function() {
+            let z;
+          };
+          y();
+        }
+        """);
   }
 
   @Test

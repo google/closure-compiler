@@ -70,29 +70,30 @@ public final class FunctionRewriterTest extends CompilerTestCase {
   public void testEs6Class() {
     // There is never any benefit to replacing ES6 class methods
     checkCompilesToSame(
-        lines(
-            "class C {",
-            "  constructor(x = 1) {", // looks like a setter
-            "    this.x_ = x;",
-            "  }",
-            "  get x() {",
-            "    return this.x_",
-            "  }",
-            "  getX() {",
-            "    return this.x_",
-            "  }",
-            "  set x(x) {",
-            "    this.x_ = x;",
-            "  }",
-            "  setX(x = 3) {",
-            "    this.x_ = x;",
-            "  }",
-            "  getConst() {",
-            "    return 1;",
-            "  }",
-            "  empty() {}",
-            "  identity(x) { return x; }",
-            "}"),
+        """
+        class C {
+          constructor(x = 1) { // looks like a setter
+            this.x_ = x;
+          }
+          get x() {
+            return this.x_
+          }
+          getX() {
+            return this.x_
+          }
+          set x(x) {
+            this.x_ = x;
+          }
+          setX(x = 3) {
+            this.x_ = x;
+          }
+          getConst() {
+            return 1;
+          }
+          empty() {}
+          identity(x) { return x; }
+        }
+        """,
         10);
   }
 

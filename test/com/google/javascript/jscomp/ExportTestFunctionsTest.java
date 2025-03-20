@@ -162,7 +162,10 @@ public final class ExportTestFunctionsTest extends CompilerTestCase {
         "let testBar = function() {}; google_exportSymbol('testBar', testBar)");
     test(
         "let tearDown = function() {}",
-        lines("let tearDown = function() {}; ", "google_exportSymbol('tearDown', tearDown)"));
+        """
+        let tearDown = function() {};
+        google_exportSymbol('tearDown', tearDown)
+        """);
   }
 
   @Test
@@ -170,26 +173,45 @@ public final class ExportTestFunctionsTest extends CompilerTestCase {
     testSame("const Foo = function() {var testA = function() {}}");
     test(
         "const setUp = function() {}",
-        lines("const setUp = function() {}; ", "google_exportSymbol('setUp', setUp)"));
+        """
+        const setUp = function() {};
+        google_exportSymbol('setUp', setUp)
+        """);
     test(
         "const testBar = function() {}",
-        lines("const testBar = function() {}; ", "google_exportSymbol('testBar', testBar)"));
+        """
+        const testBar = function() {};
+        google_exportSymbol('testBar', testBar)
+        """);
     test(
         "const tearDown = function() {}",
-        lines("const tearDown = function() {}; ", "google_exportSymbol('tearDown', tearDown)"));
+        """
+        const tearDown = function() {};
+        google_exportSymbol('tearDown', tearDown)
+        """);
   }
 
   @Test
   public void testArrowFunctionExpressionsAreExported() {
     testSame("var Foo = ()=>{var testA = function() {}}");
     test(
-        "var setUp = ()=>{}", lines("var setUp = ()=>{}; ", "google_exportSymbol('setUp', setUp)"));
+        "var setUp = ()=>{}",
+        """
+        var setUp = ()=>{};
+        google_exportSymbol('setUp', setUp)
+        """);
     test(
         "var testBar = ()=>{}",
-        lines("var testBar = ()=>{}; ", "google_exportSymbol('testBar', testBar)"));
+        """
+        var testBar = ()=>{};
+        google_exportSymbol('testBar', testBar)
+        """);
     test(
         "var tearDown = ()=>{}",
-        lines("var tearDown = ()=>{}; ", "google_exportSymbol('tearDown', tearDown)"));
+        """
+        var tearDown = ()=>{};
+        google_exportSymbol('tearDown', tearDown)
+        """);
   }
 
   @Test
@@ -254,49 +276,56 @@ public final class ExportTestFunctionsTest extends CompilerTestCase {
   @Test
   public void testExportTestSuite_inGoogModule() {
     test(
-        lines(
-            "goog.module('my.test');",
-            "const testSuite = goog.require('goog.testing.testSuite');",
-            "testSuite({a: function() {}, b: function() {}});"),
-        lines(
-            "goog.module('my.test');",
-            "const testSuite = goog.require('goog.testing.testSuite');",
-            "testSuite({'a': function() {}, 'b': function() {}});"));
+        """
+        goog.module('my.test');
+        const testSuite = goog.require('goog.testing.testSuite');
+        testSuite({a: function() {}, b: function() {}});
+        """,
+        """
+        goog.module('my.test');
+        const testSuite = goog.require('goog.testing.testSuite');
+        testSuite({'a': function() {}, 'b': function() {}});
+        """);
   }
 
   @Test
   public void testNonGoogTestingTestSuiteNotRewrittenInModule() {
     testSame(
-        lines(
-            "goog.module('my.test');", //
-            "const testSuite = goog.require('some.other.testSuite');",
-            "testSuite({a: function() {}, b: function() {}});"));
+        """
+        goog.module('my.test');
+        const testSuite = goog.require('some.other.testSuite');
+        testSuite({a: function() {}, b: function() {}});
+        """);
   }
 
   @Test
   public void testExportTestSuite_differentNameInGoogModule() {
     test(
-        lines(
-            "goog.module('my.test');",
-            "const someRandomName = goog.require('goog.testing.testSuite');",
-            "someRandomName({a: function() {}, b: function() {}});"),
-        lines(
-            "goog.module('my.test');",
-            "const someRandomName = goog.require('goog.testing.testSuite');",
-            "someRandomName({'a': function() {}, 'b': function() {}});"));
+        """
+        goog.module('my.test');
+        const someRandomName = goog.require('goog.testing.testSuite');
+        someRandomName({a: function() {}, b: function() {}});
+        """,
+        """
+        goog.module('my.test');
+        const someRandomName = goog.require('goog.testing.testSuite');
+        someRandomName({'a': function() {}, 'b': function() {}});
+        """);
   }
 
   @Test
   public void testExportTestSuite_inEsModule() {
     test(
-        lines(
-            "const testSuite = goog.require('goog.testing.testSuite');",
-            "testSuite({a: function() {}, b: function() {}});",
-            "export {};"), // Add `export {}` to make this an ES module.
-        lines(
-            "const testSuite = goog.require('goog.testing.testSuite');",
-            "testSuite({'a': function() {}, 'b': function() {}});",
-            "export {};"));
+        """
+        const testSuite = goog.require('goog.testing.testSuite');
+        testSuite({a: function() {}, b: function() {}});
+        export {};
+        """, // Add `export {}` to make this an ES module.
+        """
+        const testSuite = goog.require('goog.testing.testSuite');
+        testSuite({'a': function() {}, 'b': function() {}});
+        export {};
+        """);
   }
 
   @Test
@@ -309,27 +338,30 @@ public final class ExportTestFunctionsTest extends CompilerTestCase {
   @Test
   public void testMemberDefInObjLitInTestSuite_becomesStringKey_withSameJSDoc() {
     test(
-        lines(
-            "goog.testing.testSuite({",
-            "  /** @suppress {checkTypes} */ a() {},",
-            "  b() {}",
-            "});"),
-        lines(
-            "goog.testing.testSuite({",
-            "  /** @suppress {checkTypes} */",
-            "  'a': function() {},",
-            "  'b': function() {}",
-            "});"));
+        """
+        goog.testing.testSuite({
+          /** @suppress {checkTypes} */ a() {},
+          b() {}
+        });
+        """,
+        """
+        goog.testing.testSuite({
+          /** @suppress {checkTypes} */
+          'a': function() {},
+          'b': function() {}
+        });
+        """);
   }
 
   @Test
   public void testComputedPropInObjLitInTestSuite_doesNotChange() {
     testSame(
-        lines(
-            "goog.testing.testSuite({",
-            "  /** @suppress {checkTypes} */ ['a']() {},",
-            "  ['b']() {}",
-            "});"));
+        """
+        goog.testing.testSuite({
+          /** @suppress {checkTypes} */ ['a']() {},
+          ['b']() {}
+        });
+        """);
   }
 
   @Test
@@ -345,11 +377,12 @@ public final class ExportTestFunctionsTest extends CompilerTestCase {
   public void testEs6Class_testMethod_inGoogModule() {
     test(
         "goog.module('test'); class MyTest {testFoo() {}} goog.testing.testSuite(new MyTest());",
-        lines(
-            "goog.module('test');",
-            "class MyTest {testFoo() {}} ",
-            "google_exportProperty(MyTest.prototype, 'testFoo', MyTest.prototype.testFoo); ",
-            "goog.testing.testSuite(new MyTest());"));
+        """
+        goog.module('test');
+        class MyTest {testFoo() {}}
+        google_exportProperty(MyTest.prototype, 'testFoo', MyTest.prototype.testFoo);
+        goog.testing.testSuite(new MyTest());
+        """);
   }
 
   @Test

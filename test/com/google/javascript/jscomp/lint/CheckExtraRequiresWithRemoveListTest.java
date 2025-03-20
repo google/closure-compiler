@@ -66,7 +66,12 @@ public final class CheckExtraRequiresWithRemoveListTest extends CompilerTestCase
 
   @Test
   public void testUsedInJsDoc() {
-    testSame(lines("goog.require('xx');", "/** @type {xx}*/", "var a;"));
+    testSame(
+        """
+        goog.require('xx');
+        /** @type {xx}*/
+        var a;
+        """);
   }
 
   @Test

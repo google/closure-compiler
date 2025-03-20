@@ -231,63 +231,71 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
   @Test
   public void testEs6ClassCompatibility() {
     test(
-        lines(
-            "class C {", //
-            "  constructor() {",
-            "    this.x = goog.object.create(1, 2);",
-            "  }",
-            "}"),
-        lines(
-            "class C {", //
-            "  constructor() {",
-            "    this.x = {1: 2};",
-            "  }",
-            "}"));
+        """
+        class C {
+          constructor() {
+            this.x = goog.object.create(1, 2);
+          }
+        }
+        """,
+        """
+        class C {
+          constructor() {
+            this.x = {1: 2};
+          }
+        }
+        """);
   }
 
   @Test
   public void testEs6MemberFunctionDefCompatibility() {
     test(
-        lines(
-            "var obj = {", //
-            "  method() {",
-            "    return goog.object.create('a', 2);",
-            "  }",
-            "}"),
-        lines(
-            "var obj = {", //
-            "  method() {",
-            "    return {'a': 2};",
-            "  }",
-            "}"));
+        """
+        var obj = {
+          method() {
+            return goog.object.create('a', 2);
+          }
+        }
+        """,
+        """
+        var obj = {
+          method() {
+            return {'a': 2};
+          }
+        }
+        """);
   }
 
   @Test
   public void testEs6ComputedPropCompatibility() {
     test(
-        lines(
-            "var obj = {", //
-            "  [goog.object.create(1, 2)]: 42",
-            "}"),
-        lines(
-            "var obj = {", //
-            "  [{1: 2}]: 42",
-            "}"));
+        """
+        var obj = {
+          [goog.object.create(1, 2)]: 42
+        }
+        """,
+        """
+        var obj = {
+          [{1: 2}]: 42
+        }
+        """);
   }
 
   @Test
   public void testEs6TemplateLitCompatibility() {
     test(
-        lines(
-            "function tag(strings) {",
-            "  return goog.object.create('a', 2);",
-            "}",
-            "tag`template`"),
-        lines(
-            "function tag(strings) {", //
-            "  return {'a': 2};",
-            "}",
-            "tag`template`"));
+        """
+        function tag(strings) {
+          return goog.object.create('a', 2);
+        }
+        tag`template`
+        """,
+        """
+        function tag(strings) {
+          return {'a': 2};
+        }
+        tag`template`
+        """);
   }
 
   @Test
@@ -298,13 +306,15 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
   @Test
   public void testEs6AsyncCompatibility() {
     test(
-        lines(
-            "async function foo() {", //
-            "   return await goog.object.create('a', 2);",
-            "}"),
-        lines(
-            "async function foo() {", //
-            "   return await {'a': 2};",
-            "}"));
+        """
+        async function foo() {
+           return await goog.object.create('a', 2);
+        }
+        """,
+        """
+        async function foo() {
+           return await {'a': 2};
+        }
+        """);
   }
 }

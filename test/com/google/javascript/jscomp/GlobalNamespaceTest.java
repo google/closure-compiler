@@ -139,12 +139,13 @@ public final class GlobalNamespaceTest {
   public void testlogicalAssignmentGets1() {
     GlobalNamespace namespace =
         parse(
-            lines(
-                "const ns = {};", //
-                "ns.n1 = 1;",
-                "ns.n2 = 2;",
-                "ns.n1 ??= ns.n2;",
-                "ns.n1 &&= ns.n2;"));
+            """
+            const ns = {};
+            ns.n1 = 1;
+            ns.n2 = 2;
+            ns.n1 ??= ns.n2;
+            ns.n1 &&= ns.n2;
+            """);
 
     Name bar = namespace.getSlot("ns");
     assertThat(bar.getGlobalSets()).isEqualTo(1);
@@ -166,12 +167,13 @@ public final class GlobalNamespaceTest {
   public void testlogicalAssignmentGets2() {
     GlobalNamespace namespace =
         parse(
-            lines(
-                "const ns = {};", //
-                "ns.n1 = 1;",
-                "ns.n2 = 2;",
-                "ns.n1 ?? (ns.n1 = ns.n2);",
-                "ns.n1 && (ns.n1 = ns.n2);"));
+            """
+            const ns = {};
+            ns.n1 = 1;
+            ns.n2 = 2;
+            ns.n1 ?? (ns.n1 = ns.n2);
+            ns.n1 && (ns.n1 = ns.n2);
+            """);
 
     Name bar = namespace.getSlot("ns");
     assertThat(bar.getGlobalSets()).isEqualTo(1);
@@ -238,17 +240,17 @@ public final class GlobalNamespaceTest {
   public void firstDeclarationJSDocAlwaysWins() {
     GlobalNamespace namespace =
         parse(
-            lines(
-                "const X = {};", //
-                "/** @type {symbol} */", // later assignment should win
-                "X.number;",
-                "/** @type {number} */", // this is the JSDoc we should use
-                "X.number = 3;",
-                "/** @type {string} */",
-                "X.number = 'hi';",
-                "/** @type {Object} */",
-                "X.number;",
-                ""));
+            """
+            const X = {};
+            /** @type {symbol} */ // later assignment should win
+            X.number;
+            /** @type {number} */ // this is the JSDoc we should use
+            X.number = 3;
+            /** @type {string} */
+            X.number = 'hi';
+            /** @type {Object} */
+            X.number;
+            """);
     Name nameX = namespace.getOwnSlot("X.number");
     Ref declarationRef = nameX.getDeclaration();
     assertThat(declarationRef).isNotNull();
@@ -274,13 +276,13 @@ public final class GlobalNamespaceTest {
   public void withoutAssignmentFirstQnameDeclarationStatementJSDocWins() {
     GlobalNamespace namespace =
         parse(
-            lines(
-                "const X = {};", //
-                "/** @type {string} */",
-                "X.number;",
-                "/** @type {Object} */",
-                "X.number;",
-                ""));
+            """
+            const X = {};
+            /** @type {string} */
+            X.number;
+            /** @type {Object} */
+            X.number;
+            """);
     Name nameX = namespace.getOwnSlot("X.number");
     Ref declarationRef = nameX.getDeclaration();
     assertThat(declarationRef).isNull();
@@ -298,9 +300,10 @@ public final class GlobalNamespaceTest {
   public void testSimpleSubclassingRefCollection() {
     GlobalNamespace namespace =
         parse(
-            lines(
-                "class Superclass {}", //
-                "class Subclass extends Superclass {}"));
+            """
+            class Superclass {}
+            class Subclass extends Superclass {}
+            """);
 
     Name superclass = namespace.getOwnSlot("Superclass");
     assertThat(superclass.getRefs()).hasSize(2);
@@ -311,14 +314,15 @@ public final class GlobalNamespaceTest {
   public void testStaticInheritedReferencesDontReferToSuperclass() {
     GlobalNamespace namespace =
         parse(
-            lines(
-                "class Superclass {",
-                "  static staticMethod() {}",
-                "}",
-                "class Subclass extends Superclass {}",
-                "Subclass.staticMethod();",
-                "Subclass.staticMethod?.();",
-                "Subclass?.staticMethod();"));
+            """
+            class Superclass {
+              static staticMethod() {}
+            }
+            class Subclass extends Superclass {}
+            Subclass.staticMethod();
+            Subclass.staticMethod?.();
+            Subclass?.staticMethod();
+            """);
 
     Name superclass = namespace.getOwnSlot("Superclass");
     assertThat(superclass.getSubclassingGets()).isEqualTo(1);
@@ -400,9 +404,10 @@ public final class GlobalNamespaceTest {
   public void updateRefNodeRejectsNodeWithExistingRefs() {
     GlobalNamespace namespace =
         parse(
-            lines(
-                "const A = 3;", // declaration ref
-                "A;")); // use ref
+            """
+            const A = 3; // declaration ref
+            A;
+            """); // use ref
 
     Name nameA = namespace.getOwnSlot("A");
     Ref declarationRef = nameA.getDeclaration();
@@ -418,9 +423,10 @@ public final class GlobalNamespaceTest {
   public void confirmTwinsAreCreated() {
     GlobalNamespace namespace =
         parse(
-            lines(
-                "let A;", //
-                "const B = A = 3;")); // A will have twin refs here
+            """
+            let A;
+            const B = A = 3;
+            """); // A will have twin refs here
 
     Name nameA = namespace.getOwnSlot("A");
     // first ref is declaration of A
@@ -445,9 +451,10 @@ public final class GlobalNamespaceTest {
   public void updateRefNodeCanRemoveTwinRefs() {
     GlobalNamespace namespace =
         parse(
-            lines(
-                "let A;", //
-                "const B = A = 3;")); // A will have twin refs here
+            """
+            let A;
+            const B = A = 3;
+            """); // A will have twin refs here
 
     Name nameA = namespace.getOwnSlot("A");
     // first ref is declaration of A
@@ -474,9 +481,10 @@ public final class GlobalNamespaceTest {
   public void removeTwinRef() {
     GlobalNamespace namespace =
         parse(
-            lines(
-                "let A;", //
-                "const B = A = 3;")); // A will have twin refs here
+            """
+            let A;
+            const B = A = 3;
+            """); // A will have twin refs here
 
     Name nameA = namespace.getOwnSlot("A");
     // first ref is declaration of A
@@ -616,7 +624,12 @@ public final class GlobalNamespaceTest {
   @Test
   public void testCollapsing_forEscapedConstructor_ignoringStaticInheritance() {
     GlobalNamespace namespace =
-        parse(lines("/** @constructor */", "function Bar() {}", "use(Bar);"));
+        parse(
+            """
+            /** @constructor */
+            function Bar() {}
+            use(Bar);
+            """);
 
     Name bar = namespace.getSlot("Bar");
     assertThat(bar.canCollapse()).isTrue(); // trivially true, already collapsed
@@ -629,7 +642,12 @@ public final class GlobalNamespaceTest {
   public void testCollapsing_forEscapedConstructor_consideringStaticInheritance() {
     this.assumeStaticInheritanceIsNotUsed = false;
     GlobalNamespace namespace =
-        parse(lines("/** @constructor */", "function Bar() {}", "use(Bar);"));
+        parse(
+            """
+            /** @constructor */
+            function Bar() {}
+            use(Bar);
+            """);
 
     Name bar = namespace.getSlot("Bar");
     assertThat(bar.canCollapse()).isTrue(); // trivially true, already collapsed
@@ -640,20 +658,21 @@ public final class GlobalNamespaceTest {
   public void testInlinability_forAliasingPropertyOnEscapedConstructor_ignoringStaticInheritance() {
     GlobalNamespace namespace =
         parse(
-            lines(
-                "var prop = 1;",
-                "/** @constructor */",
-                "var Foo = function() {}",
-                "",
-                "Foo.prop = prop;",
-                "",
-                "/** @constructor */",
-                "function Bar() {}",
-                "Bar.aliasOfFoo = Foo;", // alias Foo
-                "use(Bar);", // uninlinable alias of Bar
-                "const BarAlias = Bar;", // inlinable alias of Bar
-                "alert(Bar.aliasOfFoo.prop);",
-                "alert(BarAlias.aliasOfFoo.prop);"));
+            """
+            var prop = 1;
+            /** @constructor */
+            var Foo = function() {}
+
+            Foo.prop = prop;
+
+            /** @constructor */
+            function Bar() {}
+            Bar.aliasOfFoo = Foo; // alias Foo
+            use(Bar); // uninlinable alias of Bar
+            const BarAlias = Bar; // inlinable alias of Bar
+            alert(Bar.aliasOfFoo.prop);
+            alert(BarAlias.aliasOfFoo.prop);
+            """);
 
     Name barAliasOfFoo = namespace.getSlot("Bar.aliasOfFoo");
     Inlinability barAliasInlinability = barAliasOfFoo.calculateInlinability();
@@ -674,20 +693,21 @@ public final class GlobalNamespaceTest {
     this.assumeStaticInheritanceIsNotUsed = false;
     GlobalNamespace namespace =
         parse(
-            lines(
-                "var prop = 1;",
-                "/** @constructor */",
-                "var Foo = function() {}",
-                "",
-                "Foo.prop = prop;",
-                "",
-                "/** @constructor */",
-                "function Bar() {}",
-                "Bar.aliasOfFoo = Foo;", // alias Foo
-                "use(Bar);", // uninlinable alias of Bar
-                "const BarAlias = Bar;", // inlinable alias of Bar
-                "alert(Bar.aliasOfFoo.prop);",
-                "alert(BarAlias.aliasOfFoo.prop);"));
+            """
+            var prop = 1;
+            /** @constructor */
+            var Foo = function() {}
+
+            Foo.prop = prop;
+
+            /** @constructor */
+            function Bar() {}
+            Bar.aliasOfFoo = Foo; // alias Foo
+            use(Bar); // uninlinable alias of Bar
+            const BarAlias = Bar; // inlinable alias of Bar
+            alert(Bar.aliasOfFoo.prop);
+            alert(BarAlias.aliasOfFoo.prop);
+            """);
 
     Name barAliasOfFoo = namespace.getSlot("Bar.aliasOfFoo");
     Inlinability barAliasInlinability = barAliasOfFoo.calculateInlinability();
@@ -744,33 +764,33 @@ public final class GlobalNamespaceTest {
     // None of the symbol uses here should be considered aliasing gets.
     GlobalNamespace namespace =
         parse(
-            lines(
-                "const ns = {};", //
-                "ns.n1 = 1;",
-                "ns.n2 = 2;",
-                "ns.n1 === ns.n2;",
-                "ns.n1 == ns.n2;",
-                "ns.n1 !== ns.n2;",
-                "ns.n1 != ns.n2;",
-                "ns.n1 <  ns.n2;",
-                "ns.n1 <= ns.n2;",
-                "ns.n1 >  ns.n2;",
-                "ns.n1 >= ns.n2;",
-                "ns.n1 + ns.n2;",
-                "ns.n1 - ns.n2;",
-                "ns.n1 * ns.n2;",
-                "ns.n1 / ns.n2;",
-                "ns.n1 % ns.n2;",
-                "ns.n1 ** ns.n2;",
-                "ns.n1 & ns.n2;",
-                "ns.n1 | ns.n2;",
-                "ns.n1 ^ ns.n2;",
-                "ns.n1 << ns.n2;",
-                "ns.n1 >> ns.n2;",
-                "ns.n1 >>> ns.n2;",
-                "ns.n1 && ns.n2;",
-                "ns.n1 || ns.n2;",
-                ""));
+            """
+            const ns = {};
+            ns.n1 = 1;
+            ns.n2 = 2;
+            ns.n1 === ns.n2;
+            ns.n1 == ns.n2;
+            ns.n1 !== ns.n2;
+            ns.n1 != ns.n2;
+            ns.n1 <  ns.n2;
+            ns.n1 <= ns.n2;
+            ns.n1 >  ns.n2;
+            ns.n1 >= ns.n2;
+            ns.n1 + ns.n2;
+            ns.n1 - ns.n2;
+            ns.n1 * ns.n2;
+            ns.n1 / ns.n2;
+            ns.n1 % ns.n2;
+            ns.n1 ** ns.n2;
+            ns.n1 & ns.n2;
+            ns.n1 | ns.n2;
+            ns.n1 ^ ns.n2;
+            ns.n1 << ns.n2;
+            ns.n1 >> ns.n2;
+            ns.n1 >>> ns.n2;
+            ns.n1 && ns.n2;
+            ns.n1 || ns.n2;
+            """);
 
     Name bar = namespace.getSlot("ns");
     assertThat(bar.getGlobalSets()).isEqualTo(1);
@@ -811,13 +831,12 @@ public final class GlobalNamespaceTest {
   public void testConditionalDestructuringDoesNotHideAliasingGet() {
     GlobalNamespace namespace =
         parse(
-            lines(
-                "", //
-                "const ns1 = {a: 3};",
-                "const ns2 = {b: 3};",
-                // Creates an aliasing get for both ns1 and ns2
-                "const {a, b} = Math.random() ? ns1 : ns2;",
-                ""));
+            """
+            const ns1 = {a: 3};
+            const ns2 = {b: 3};
+            // Creates an aliasing get for both ns1 and ns2
+            const {a, b} = Math.random() ? ns1 : ns2;
+            """);
 
     Name ns1 = namespace.getSlot("ns1");
     assertThat(ns1.getAliasingGets()).isEqualTo(1);
@@ -1037,10 +1056,11 @@ public final class GlobalNamespaceTest {
     // Casting is only legal JS syntax in simple assignments, not with destructuring or declaration.
     GlobalNamespace namespace =
         parse(
-            lines(
-                "const ns = {};",
-                " const b = 5;",
-                " /** @type {*} */ (/** @type {*} */ (ns.a)) = b;"));
+            """
+            const ns = {};
+             const b = 5;
+             /** @type {*} */ (/** @type {*} */ (ns.a)) = b;
+            """);
 
     Name ns = namespace.getSlot("ns");
     assertThat(ns.getGlobalSets()).isEqualTo(1);
@@ -1089,19 +1109,20 @@ public final class GlobalNamespaceTest {
   public void testGitHubIssue3733() {
     GlobalNamespace namespace =
         parse(
-            lines(
-                "const X = {Y: 1};",
-                "",
-                "function fn(a) {",
-                "  if (a) {",
-                // Before issue #3733 was fixed GlobalNamespace failed to see this reference
-                // as creating an alias for X due to a switch statement that failed to check
-                // for the RETURN node type, so X.Y was incorrectly collapsed.
-                "    return a ? X : {};",
-                "  }",
-                "}",
-                "",
-                "console.log(fn(true).Y);"));
+            """
+            const X = {Y: 1};
+
+            function fn(a) {
+              if (a) {
+            // Before issue #3733 was fixed GlobalNamespace failed to see this reference
+            // as creating an alias for X due to a switch statement that failed to check
+            // for the RETURN node type, so X.Y was incorrectly collapsed.
+                return a ? X : {};
+              }
+            }
+
+            console.log(fn(true).Y);
+            """);
 
     Name nameX = namespace.getSlot("X");
     assertThat(nameX.canCollapseUnannotatedChildNames()).isFalse();
@@ -1114,19 +1135,20 @@ public final class GlobalNamespaceTest {
   public void testThrowPreventsCollapsingChildNames() {
     GlobalNamespace namespace =
         parse(
-            lines(
-                "const X = {Y: 1};",
-                "",
-                "function fn(a) {",
-                // This is specifically testing a bugfix closely related to GitHub issue
-                // #3733. A quirk of the implementation hides the bug when the throw isn't
-                // inside an if statement or the thrown value isn't a conditional expression.
-                "  if (a) {",
-                "    throw a ? X : {};",
-                "  }",
-                "}",
-                "",
-                "console.log(fn(true).Y);"));
+            """
+            const X = {Y: 1};
+
+            function fn(a) {
+            // This is specifically testing a bugfix closely related to GitHub issue
+            // #3733. A quirk of the implementation hides the bug when the throw isn't
+            // inside an if statement or the thrown value isn't a conditional expression.
+              if (a) {
+                throw a ? X : {};
+              }
+            }
+
+            console.log(fn(true).Y);
+            """);
 
     Name nameX = namespace.getSlot("X");
     assertThat(nameX.canCollapseUnannotatedChildNames()).isFalse();
@@ -1149,12 +1171,13 @@ public final class GlobalNamespaceTest {
   public void testCanCollapseAliasedConstructorProperty_ignoringStaticInheritance() {
     GlobalNamespace namespace =
         parse(
-            lines(
-                "/** @constructor */",
-                "var Foo = function() {}",
-                "",
-                "Foo.prop = prop;",
-                "use(Foo);"));
+            """
+            /** @constructor */
+            var Foo = function() {}
+
+            Foo.prop = prop;
+            use(Foo);
+            """);
 
     Name fooProp = namespace.getSlot("Foo.prop");
 
@@ -1168,12 +1191,13 @@ public final class GlobalNamespaceTest {
     this.assumeStaticInheritanceIsNotUsed = false;
     GlobalNamespace namespace =
         parse(
-            lines(
-                "/** @constructor */",
-                "var Foo = function() {}",
-                "",
-                "Foo.prop = prop;",
-                "use(Foo);"));
+            """
+            /** @constructor */
+            var Foo = function() {}
+
+            Foo.prop = prop;
+            use(Foo);
+            """);
 
     Name fooProp = namespace.getSlot("Foo.prop");
 
@@ -1184,12 +1208,13 @@ public final class GlobalNamespaceTest {
   public void testCanCollapseAliasedInterfaceProperty_ignoringStaticInheritance() {
     GlobalNamespace namespace =
         parse(
-            lines(
-                "/** @interface */",
-                "var Foo = function() {}",
-                "",
-                "Foo.prop = prop;",
-                "use(Foo);"));
+            """
+            /** @interface */
+            var Foo = function() {}
+
+            Foo.prop = prop;
+            use(Foo);
+            """);
 
     Name fooProp = namespace.getSlot("Foo.prop");
 
@@ -1203,12 +1228,13 @@ public final class GlobalNamespaceTest {
     this.assumeStaticInheritanceIsNotUsed = false;
     GlobalNamespace namespace =
         parse(
-            lines(
-                "/** @interface */",
-                "var Foo = function() {}",
-                "",
-                "Foo.prop = prop;",
-                "use(Foo);"));
+            """
+            /** @interface */
+            var Foo = function() {}
+
+            Foo.prop = prop;
+            use(Foo);
+            """);
 
     Name fooProp = namespace.getSlot("Foo.prop");
     assertThat(fooProp.canCollapse()).isFalse();
@@ -1238,10 +1264,11 @@ public final class GlobalNamespaceTest {
   public void testCannotCollapseOrInlineDeletedProperty() {
     GlobalNamespace namespace =
         parse(
-            lines(
-                "const global = window;", //
-                "delete global.HTMLElement;",
-                "global.HTMLElement = (class {});"));
+            """
+            const global = window;
+            delete global.HTMLElement;
+            global.HTMLElement = (class {});
+            """);
 
     Name deletedProp = namespace.getSlot("global.HTMLElement");
     assertThat(deletedProp.canCollapseOrInline()).isEqualTo(Inlinability.DO_NOT_INLINE);
@@ -1355,12 +1382,13 @@ public final class GlobalNamespaceTest {
   public void googLoadModule_containsExports() {
     GlobalNamespace namespace =
         parseAndGatherModuleData(
-            lines(
-                "goog.loadModule(function(exports) {",
-                "  goog.module('m');",
-                "  const x = 0;",
-                "  return exports;",
-                "});"));
+            """
+            goog.loadModule(function(exports) {
+              goog.module('m');
+              const x = 0;
+              return exports;
+            });
+            """);
     ModuleMetadata metadata =
         lastCompiler.getModuleMetadataMap().getModulesByGoogNamespace().get("m");
     Name exports = namespace.getNameFromModule(metadata, "exports");
@@ -1371,13 +1399,14 @@ public final class GlobalNamespaceTest {
   public void googLoadModule_capturesQualifiedNames() {
     GlobalNamespace namespace =
         parseAndGatherModuleData(
-            lines(
-                "goog.loadModule(function(exports) {",
-                "  goog.module('m');",
-                "  class Foo {}",
-                "  Foo.Bar = class {};",
-                "  return exports;",
-                "});"));
+            """
+            goog.loadModule(function(exports) {
+              goog.module('m');
+              class Foo {}
+              Foo.Bar = class {};
+              return exports;
+            });
+            """);
     ModuleMetadata metadata =
         lastCompiler.getModuleMetadataMap().getModulesByGoogNamespace().get("m");
     Name foo = namespace.getNameFromModule(metadata, "Foo");
@@ -1389,12 +1418,13 @@ public final class GlobalNamespaceTest {
   public void googLoadModule_containsExportsPropertyAssignments() {
     GlobalNamespace namespace =
         parseAndGatherModuleData(
-            lines(
-                "goog.loadModule(function(exports) {",
-                "  goog.module('m');",
-                "  exports.Foo = class {};",
-                "  return exports;",
-                "});"));
+            """
+            goog.loadModule(function(exports) {
+              goog.module('m');
+              exports.Foo = class {};
+              return exports;
+            });
+            """);
     ModuleMetadata metadata =
         lastCompiler.getModuleMetadataMap().getModulesByGoogNamespace().get("m");
     Name exportsFoo = namespace.getNameFromModule(metadata, "exports.Foo");
@@ -1416,13 +1446,14 @@ public final class GlobalNamespaceTest {
   public void assignToGlobalNameInLoadModule_doesNotCreateModuleName() {
     GlobalNamespace namespace =
         parseAndGatherModuleData(
-            lines(
-                "class Foo {}",
-                "goog.loadModule(function(exports) {",
-                "  goog.module('m');",
-                "  Foo.Bar = 0",
-                "  return exports;",
-                "});"));
+            """
+            class Foo {}
+            goog.loadModule(function(exports) {
+              goog.module('m');
+              Foo.Bar = 0
+              return exports;
+            });
+            """);
 
     ModuleMetadata metadata =
         lastCompiler.getModuleMetadataMap().getModulesByGoogNamespace().get("m");

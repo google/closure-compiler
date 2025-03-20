@@ -51,10 +51,11 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     declareIstArrExtern();
 
     String source =
-        lines(
-            "function foo() { ", //
-            "   console.log('Hello'); ",
-            "}");
+        """
+        function foo() {
+           console.log('Hello');
+        }
+        """;
 
     String expected =
         lines(
@@ -72,9 +73,17 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     CompilerOptions options = createCompilerOptions();
     declareIstArrExtern();
 
-    String source = lines("var global = 23;", "console.log(global);");
+    String source =
+        """
+        var global = 23;
+        console.log(global);
+        """;
 
-    String expected = lines("var global = 23;", "console.log(global);");
+    String expected =
+        """
+        var global = 23;
+        console.log(global);
+        """;
 
     test(options, source, instrumentCodeExpected.concat(expected));
   }
@@ -87,10 +96,11 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     options.setLanguageOut(LanguageMode.NO_TRANSPILE);
 
     String source =
-        lines(
-            "function foo() { ", //
-            "   console.log('Hello'); ",
-            "}");
+        """
+        function foo() {
+           console.log('Hello');
+        }
+        """;
 
     String expected =
         lines(
@@ -109,10 +119,11 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     declareIstArrExtern();
 
     String source =
-        lines(
-            "if (tempBool) {", //
-            "   console.log('Hello');",
-            "}");
+        """
+        if (tempBool) {
+           console.log('Hello');
+        }
+        """;
 
     String expected =
         lines(
@@ -134,12 +145,13 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     declareIstArrExtern();
 
     String source =
-        lines(
-            "if (tempBool) {",
-            "   console.log('Hello');",
-            "} else if(anotherTempBool) {",
-            "   console.log('hi');",
-            "}");
+        """
+        if (tempBool) {
+           console.log('Hello');
+        } else if(anotherTempBool) {
+           console.log('hi');
+        }
+        """;
 
     String expected =
         lines(
@@ -222,10 +234,11 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     declareIstArrExtern();
 
     String source =
-        lines(
-            "for(var i = 0 ; i < 10 ; ++i) {", //
-            "   console.log('*');",
-            "}");
+        """
+        for(var i = 0 ; i < 10 ; ++i) {
+           console.log('*');
+        }
+        """;
 
     String expected =
         lines(
@@ -244,11 +257,12 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     declareIstArrExtern();
 
     String source =
-        lines(
-            "switch (x) {", //
-            "   case 1: ",
-            "      x = 5;",
-            "};");
+        """
+        switch (x) {
+           case 1:
+              x = 5;
+        };
+        """;
 
     String expected =
         lines(
@@ -305,10 +319,11 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     CompilerOptions options = createCompilerOptions();
 
     String source =
-        lines(
-            "for(var i = 0 ; i < 10 ; ++i) {", //
-            "   console.log('*');",
-            "}");
+        """
+        for(var i = 0 ; i < 10 ; ++i) {
+           console.log('*');
+        }
+        """;
 
     AssertionError e = assertThrows(AssertionError.class, () -> compile(options, source));
     assertThat(e)
@@ -352,10 +367,11 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     declareIstArrExtern();
 
     String source =
-        lines(
-            "function foo() { ", //
-            "   console.log('Hello');",
-            "}");
+        """
+        function foo() {
+           console.log('Hello');
+        }
+        """;
 
     Compiler compiledSourceCode = compile(options, source);
     VariableMap variableParamMap = compiledSourceCode.getInstrumentationMapping();
@@ -384,15 +400,17 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     declareIstArrExtern();
 
     String source =
-        lines(
-            "function foo (x) {", //
-            "   console.log(x+5);",
-            "};");
+        """
+        function foo (x) {
+           console.log(x+5);
+        };
+        """;
     String useGlobalArray =
-        lines(
-            "function ist(){", //
-            "   console.log(ist_array)",
-            "}");
+        """
+        function ist(){
+           console.log(ist_array)
+        }
+        """;
 
     String expected =
         lines(
@@ -418,13 +436,14 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     declareIstArrExtern();
 
     String source =
-        lines(
-            "function foo (x) {", //
-            "   if(x) { ",
-            "      alert(x+5); ",
-            "   }",
-            "} ",
-            "foo(true); foo(false);");
+        """
+        function foo (x) {
+           if(x) {
+              alert(x+5);
+           }
+        }
+        foo(true); foo(false);
+        """;
 
     String expected =
         lines(
@@ -447,14 +466,15 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
 
   private void declareIstArrExtern() {
     String externDefinition =
-        lines(
-            "/**", //
-            "* @externs",
-            "*/",
-            "/**",
-            "*@type {!Array<string>}",
-            "*/",
-            "let ist_arr;");
+        """
+        /**
+        * @externs
+        */
+        /**
+        *@type {!Array<string>}
+        */
+        let ist_arr;
+        """;
     externs =
         ImmutableList.of(
             new TestExternsBuilder()

@@ -71,9 +71,33 @@ public final class CheckUselessBlocksTest extends CompilerTestCase {
     testWarning("{}", USELESS_BLOCK);
     testWarning("{ var f = function() {}; }", USELESS_BLOCK);
     testWarning("{ var x = 1; }", USELESS_BLOCK);
-    testWarning(lines("function f() {", "  return", "    {foo: 'bar'};", "}"), USELESS_BLOCK);
-    testWarning(lines("if (foo) {", "  bar();", "  {", "    baz();", "  }", "}"), USELESS_BLOCK);
-    testWarning(lines("if (foo) {", "  bar();", "} {", "  baz();", "}"), USELESS_BLOCK);
+    testWarning(
+        """
+        function f() {
+          return
+            {foo: 'bar'};
+        }
+        """,
+        USELESS_BLOCK);
+    testWarning(
+        """
+        if (foo) {
+          bar();
+          {
+            baz();
+          }
+        }
+        """,
+        USELESS_BLOCK);
+    testWarning(
+        """
+        if (foo) {
+          bar();
+        } {
+          baz();
+        }
+        """,
+        USELESS_BLOCK);
     testWarning("function bar() { { baz(); } }", USELESS_BLOCK);
     testWarning("{ let x = function() {}; {} }", USELESS_BLOCK);
     testWarning("{ let x = function() { {} }; }", USELESS_BLOCK);

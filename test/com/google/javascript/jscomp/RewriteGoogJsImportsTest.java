@@ -38,16 +38,23 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
   // file.
   private static final SourceFile BASE =
       SourceFile.fromCode(
-          "/closure/base.js", lines("/**", " * @fileoverview", " * @provideGoog", " */"));
+          "/closure/base.js",
+          """
+          /**
+           * @fileoverview
+           * @provideGoog
+           */
+          """);
 
   private static final SourceFile GOOG =
       SourceFile.fromCode(
           "/closure/goog.js",
-          lines(
-              "export const require = goog.require;",
-              "export function foo() {}",
-              "export class MyClass {}",
-              "export const constant = 0;"));
+          """
+          export const require = goog.require;
+          export function foo() {}
+          export class MyClass {}
+          export const constant = 0;
+          """);
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -98,17 +105,19 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
             GOOG,
             SourceFile.fromCode(
                 "testcode",
-                lines(
-                    "import * as goog from './closure/goog.js';",
-                    "use(goog.require, goog.foo, goog.MyClass, goog.constant);"))),
+                """
+                import * as goog from './closure/goog.js';
+                use(goog.require, goog.foo, goog.MyClass, goog.constant);
+                """)),
         expected(
             BASE,
             GOOG,
             SourceFile.fromCode(
                 "testcode",
-                lines(
-                    "import './closure/goog.js';",
-                    "use(goog.require, goog.foo, goog.MyClass, goog.constant);"))));
+                """
+                import './closure/goog.js';
+                use(goog.require, goog.foo, goog.MyClass, goog.constant);
+                """)));
     assertThat(
             getLastCompiler()
                 .getModuleMap()
@@ -127,15 +136,17 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 "testcode",
-                lines(
-                    "import * as goog from './closure/goog.js';",
-                    "use(goog.require, goog.foo, goog.MyClass, goog.constant);"))),
+                """
+                import * as goog from './closure/goog.js';
+                use(goog.require, goog.foo, goog.MyClass, goog.constant);
+                """)),
         expected(
             SourceFile.fromCode(
                 "testcode",
-                lines(
-                    "import './closure/goog.js';",
-                    "use(goog.require, goog.foo, goog.MyClass, goog.constant);"))));
+                """
+                import './closure/goog.js';
+                use(goog.require, goog.foo, goog.MyClass, goog.constant);
+                """)));
   }
 
   @Test
@@ -146,16 +157,19 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
             GOOG,
             SourceFile.fromCode(
                 "testcode",
-                lines(
-                    "import * as goog from './closure/goog.js';", "use(goog.require, goog.bad);"))),
+                """
+                import * as goog from './closure/goog.js';
+                use(goog.require, goog.bad);
+                """)),
         expected(
             BASE,
             GOOG,
             SourceFile.fromCode(
                 "testcode",
-                lines(
-                    "import * as $goog from './closure/goog.js';",
-                    "use(goog.require, $goog.bad);"))));
+                """
+                import * as $goog from './closure/goog.js';
+                use(goog.require, $goog.bad);
+                """)));
     assertThat(
             getLastCompiler()
                 .getModuleMap()
@@ -173,9 +187,10 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
             GOOG,
             SourceFile.fromCode(
                 "testcode",
-                lines(
-                    "import * as goog from './closure/goog.js';", //
-                    "export {goog};"))),
+                """
+                import * as goog from './closure/goog.js';
+                export {goog};
+                """)),
         error(GOOG_JS_REEXPORTED));
 
     testError(
@@ -184,9 +199,10 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
             GOOG,
             SourceFile.fromCode(
                 "testcode",
-                lines(
-                    "import * as goog from './closure/goog.js';", //
-                    "export default goog;"))),
+                """
+                import * as goog from './closure/goog.js';
+                export default goog;
+                """)),
         error(GOOG_JS_REEXPORTED));
 
     testError(
@@ -210,11 +226,18 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
             GOOG,
             SourceFile.fromCode(
                 "testcode",
-                lines("import * as goog from './closure/goog.js';", "use(import.meta);"))),
+                """
+                import * as goog from './closure/goog.js';
+                use(import.meta);
+                """)),
         expected(
             BASE,
             GOOG,
             SourceFile.fromCode(
-                "testcode", lines("import './closure/goog.js';", "use(import.meta);"))));
+                "testcode",
+                """
+                import './closure/goog.js';
+                use(import.meta);
+                """)));
   }
 }

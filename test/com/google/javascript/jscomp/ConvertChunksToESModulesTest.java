@@ -290,28 +290,31 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
                             + "(function () { return module$i1; }))",
                         "    .then(function (ns) { console.log(ns.default); });"))
                 .addChunk(
-                    lines(
-                        "const a$$module$i1 = 1;",
-                        "var $jscompDefaultExport$$module$i1 = a$$module$i1;",
-                        "/** @const */ var module$i1 = {};",
-                        "/** @const */ module$i1.default = $jscompDefaultExport$$module$i1;"))
+                    """
+                    const a$$module$i1 = 1;
+                    var $jscompDefaultExport$$module$i1 = a$$module$i1;
+                    /** @const */ var module$i1 = {};
+                    /** @const */ module$i1.default = $jscompDefaultExport$$module$i1;
+                    """)
                 .build()),
         expected(
             JSChunkGraphBuilder.forStar()
                 .addChunk(
-                    lines(
-                        "import('./m1.js')",
-                        "    .then(function ($) { return $.module$i1; })",
-                        "    .then(function (ns) { console.log(ns.default); });",
-                        "export {};"))
+                    """
+                    import('./m1.js')
+                        .then(function ($) { return $.module$i1; })
+                        .then(function (ns) { console.log(ns.default); });
+                    export {};
+                    """)
                 .addChunk(
-                    lines(
-                        "import './m0.js';",
-                        "const a$$module$i1 = 1;",
-                        "var $jscompDefaultExport$$module$i1 = a$$module$i1;",
-                        "/** @const */ var module$i1 = {};",
-                        "/** @const */ module$i1.default = $jscompDefaultExport$$module$i1;",
-                        "export {module$i1};"))
+                    """
+                    import './m0.js';
+                    const a$$module$i1 = 1;
+                    var $jscompDefaultExport$$module$i1 = a$$module$i1;
+                    /** @const */ var module$i1 = {};
+                    /** @const */ module$i1.default = $jscompDefaultExport$$module$i1;
+                    export {module$i1};
+                    """)
                 .build()));
   }
 
@@ -322,11 +325,12 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forStar() //
                 .addChunk(
-                    lines(
-                        "const a$$module$i0 = 1;",
-                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                        "/** @const */ var module$i0 = {};",
-                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;"))
+                    """
+                    const a$$module$i0 = 1;
+                    var $jscompDefaultExport$$module$i0 = a$$module$i0;
+                    /** @const */ var module$i0 = {};
+                    /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
+                    """)
                 .addChunk(
                     lines(
                         "import('./m0.js')",
@@ -336,18 +340,20 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
         expected(
             JSChunkGraphBuilder.forStar()
                 .addChunk(
-                    lines(
-                        "const a$$module$i0 = 1;",
-                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                        "/** @const */ var module$i0 = {};",
-                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;",
-                        "export {module$i0};"))
+                    """
+                    const a$$module$i0 = 1;
+                    var $jscompDefaultExport$$module$i0 = a$$module$i0;
+                    /** @const */ var module$i0 = {};
+                    /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
+                    export {module$i0};
+                    """)
                 .addChunk(
-                    lines(
-                        "import './m0.js';",
-                        "import('./m0.js')",
-                        "    .then(($) => $.module$i0)",
-                        "    .then((ns) => console.log(ns.default));"))
+                    """
+                    import './m0.js';
+                    import('./m0.js')
+                        .then(($) => $.module$i0)
+                        .then((ns) => console.log(ns.default));
+                    """)
                 .build()));
   }
 
@@ -358,27 +364,34 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forStar() //
                 .addChunk(
-                    lines(
-                        "var a$$module$i0 = 1;",
-                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                        "/** @const */ var module$i0 = {};",
-                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;"))
-                .addChunk(lines("import('./m0.js')", "    .then((ns) => console.log(ns.default));"))
+                    """
+                    var a$$module$i0 = 1;
+                    var $jscompDefaultExport$$module$i0 = a$$module$i0;
+                    /** @const */ var module$i0 = {};
+                    /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
+                    """)
+                .addChunk(
+                    """
+                    import('./m0.js')
+                        .then((ns) => console.log(ns.default));
+                    """)
                 .build()),
         expected(
             JSChunkGraphBuilder.forStar()
                 .addChunk(
-                    lines(
-                        "var a$$module$i0 = 1;",
-                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                        "/** @const */ var module$i0 = {};",
-                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;",
-                        "export {};"))
+                    """
+                    var a$$module$i0 = 1;
+                    var $jscompDefaultExport$$module$i0 = a$$module$i0;
+                    /** @const */ var module$i0 = {};
+                    /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
+                    export {};
+                    """)
                 .addChunk(
-                    lines(
-                        "import './m0.js';",
-                        "import('./m0.js')",
-                        "    .then((ns) => console.log(ns.default));"))
+                    """
+                    import './m0.js';
+                    import('./m0.js')
+                        .then((ns) => console.log(ns.default));
+                    """)
                 .build()));
   }
 
@@ -389,11 +402,12 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forStar() //
                 .addChunk(
-                    lines(
-                        "var a$$module$i0 = 1;",
-                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                        "/** @const */ var module$i0 = {};",
-                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;"))
+                    """
+                    var a$$module$i0 = 1;
+                    var $jscompDefaultExport$$module$i0 = a$$module$i0;
+                    /** @const */ var module$i0 = {};
+                    /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
+                    """)
                 .addChunk(
                     lines(
                         "import('./m0.js')",
@@ -413,11 +427,12 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forStar() //
                 .addChunk(
-                    lines(
-                        "var a$$module$i0 = 1;",
-                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                        "/** @const */ var module$i0 = {};",
-                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;"))
+                    """
+                    var a$$module$i0 = 1;
+                    var $jscompDefaultExport$$module$i0 = a$$module$i0;
+                    /** @const */ var module$i0 = {};
+                    /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
+                    """)
                 .addChunk(
                     lines(
                         "import('./m0.js')",

@@ -77,38 +77,40 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Comp
   public void testPolymerPropertyUsedAsObserver1() {
     allowExternsChanges();
     testNoWarning(
-        lines(
-            "Polymer({",
-            "  is: 'example-elem',",
-            "  properties: {",
-            "    foo: {",
-            "      type: Boolean,",
-            "      observer: 'fooChanged_',",
-            "    },",
-            "  },",
-            "",
-            "  /** @private */",
-            "  fooChanged_() {},",
-            "});"));
+        """
+        Polymer({
+          is: 'example-elem',
+          properties: {
+            foo: {
+              type: Boolean,
+              observer: 'fooChanged_',
+            },
+          },
+
+          /** @private */
+          fooChanged_() {},
+        });
+        """);
   }
 
   @Test
   public void testPolymerPropertyUsedAsObserver2() {
     allowExternsChanges();
     testNoWarning(
-        lines(
-            "Polymer({",
-            "  is: 'example-elem',",
-            "  properties: {",
-            "    foo: {",
-            "      type: Boolean,",
-            "      observer: 'fooChanged_',",
-            "    },",
-            "  },",
-            "",
-            "  /** @private */",
-            "  fooChanged_: function() {},",
-            "});"));
+        """
+        Polymer({
+          is: 'example-elem',
+          properties: {
+            foo: {
+              type: Boolean,
+              observer: 'fooChanged_',
+            },
+          },
+
+          /** @private */
+          fooChanged_: function() {},
+        });
+        """);
   }
 
   @Test
@@ -116,23 +118,25 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Comp
     allowExternsChanges();
     testNoWarning(
         srcs(
-            lines(
-                "/** @polymerBehavior */",
-                "var Behavior = {",
-                "  properties: {",
-                "    foo: {",
-                "      type: Boolean,",
-                "      observer: 'fooChanged_',",
-                "    },",
-                "  },",
-                "",
-                "  /** @private */",
-                "  fooChanged_: function() {},",
-                "};"),
-            lines(
-                "Polymer({", //
-                "  is: 'example-elem',",
-                "  behaviors: [Behavior],",
-                "});")));
+            """
+            /** @polymerBehavior */
+            var Behavior = {
+              properties: {
+                foo: {
+                  type: Boolean,
+                  observer: 'fooChanged_',
+                },
+              },
+
+              /** @private */
+              fooChanged_: function() {},
+            };
+            """,
+            """
+            Polymer({
+              is: 'example-elem',
+              behaviors: [Behavior],
+            });
+            """));
   }
 }

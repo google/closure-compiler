@@ -45,10 +45,11 @@ public final class TypeCheckBigIntTest extends TypeCheckTestCase {
     newTest()
         .addSource("BigInt({})")
         .addDiagnostic(
-            lines(
-                "actual parameter 1 of BigInt does not match formal parameter",
-                "found   : {}",
-                "required: (bigint|number|string)"))
+            """
+            actual parameter 1 of BigInt does not match formal parameter
+            found   : {}
+            required: (bigint|number|string)
+            """)
         .run();
   }
 
@@ -60,10 +61,11 @@ public final class TypeCheckBigIntTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @type {bigint|string} */var x; x++;")
         .addDiagnostic(
-            lines(
-                "increment/decrement", //
-                "found   : (bigint|string)",
-                "required: (bigint|number)"))
+            """
+            increment/decrement
+            found   : (bigint|string)
+            required: (bigint|number)
+            """)
         .run();
   }
 
@@ -75,10 +77,11 @@ public final class TypeCheckBigIntTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @type {bigint|string} */var x; x--;")
         .addDiagnostic(
-            lines(
-                "increment/decrement", //
-                "found   : (bigint|string)",
-                "required: (bigint|number)"))
+            """
+            increment/decrement
+            found   : (bigint|string)
+            required: (bigint|number)
+            """)
         .run();
   }
 
@@ -98,10 +101,11 @@ public final class TypeCheckBigIntTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @type {bigint|string} */var x; ~x;")
         .addDiagnostic(
-            lines(
-                "bitwise NOT", //
-                "found   : (bigint|string)",
-                "required: (bigint|number)"))
+            """
+            bitwise NOT
+            found   : (bigint|string)
+            required: (bigint|number)
+            """)
         .run();
   }
 
@@ -146,10 +150,11 @@ public final class TypeCheckBigIntTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @type {bigint|string} */var x; -x;")
         .addDiagnostic(
-            lines(
-                "unary minus operator", //
-                "found   : (bigint|string)",
-                "required: (bigint|number)"))
+            """
+            unary minus operator
+            found   : (bigint|string)
+            required: (bigint|number)
+            """)
         .run();
   }
 
@@ -379,10 +384,11 @@ public final class TypeCheckBigIntTest extends TypeCheckTestCase {
     newTest()
         .addSource("const x = 1n; const y = 'asdf'; x < y;")
         .addDiagnostic(
-            lines(
-                "right side of numeric comparison",
-                "found   : string",
-                "required: (bigint|number)"))
+            """
+            right side of numeric comparison
+            found   : string
+            required: (bigint|number)
+            """)
         .run();
   }
 
@@ -412,10 +418,11 @@ public final class TypeCheckBigIntTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @type {bigint|number} */ var x; 'asdf' < x;")
         .addDiagnostic(
-            lines(
-                "left side of numeric comparison", //
-                "found   : string",
-                "required: (bigint|number)"))
+            """
+            left side of numeric comparison
+            found   : string
+            required: (bigint|number)
+            """)
         .run();
   }
 
@@ -432,10 +439,11 @@ public final class TypeCheckBigIntTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @type {bigint|string} */ var x; var y = 2n; x < y;")
         .addDiagnostic(
-            lines(
-                "left side of numeric comparison",
-                "found   : (bigint|string)",
-                "required: (bigint|number)"))
+            """
+            left side of numeric comparison
+            found   : (bigint|string)
+            required: (bigint|number)
+            """)
         .run();
   }
 
@@ -444,10 +452,11 @@ public final class TypeCheckBigIntTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @type {bigint|string} */ var x; var y = 2; x < y;")
         .addDiagnostic(
-            lines(
-                "left side of numeric comparison",
-                "found   : (bigint|string)",
-                "required: (bigint|number)"))
+            """
+            left side of numeric comparison
+            found   : (bigint|string)
+            required: (bigint|number)
+            """)
         .run();
   }
 
@@ -472,10 +481,11 @@ public final class TypeCheckBigIntTest extends TypeCheckTestCase {
     newTest()
         .addSource("var arr = []; /** @type {bigint} */ var b; arr[b];")
         .addDiagnostic(
-            lines(
-                "restricted index type", //
-                "found   : bigint",
-                "required: number"))
+            """
+            restricted index type
+            found   : bigint
+            required: number
+            """)
         .run();
   }
 
@@ -497,10 +507,11 @@ public final class TypeCheckBigIntTest extends TypeCheckTestCase {
     newTest()
         .addSource("var arr = []; /** @type {bigint|number} */ var bn; arr[bn];")
         .addDiagnostic(
-            lines(
-                "restricted index type", //
-                "found   : (bigint|number)",
-                "required: number"))
+            """
+            restricted index type
+            found   : (bigint|number)
+            required: number
+            """)
         .run();
   }
 

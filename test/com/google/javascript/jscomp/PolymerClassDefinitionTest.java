@@ -46,41 +46,42 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
   public void testSimpleBehavior() {
     PolymerClassDefinition def =
         parseAndExtractClassDefFromCall(
-            lines(
-                "/** @polymerBehavior */",
-                "var FunBehavior = {",
-                "  properties: {",
-                "    /** @type {boolean} */",
-                "    isFun: {",
-                "      type: Boolean,",
-                "      value: true,",
-                "    }",
-                "  },",
-                "  listeners: {",
-                "    click: 'doSomethingFun',",
-                "  },",
-                "  /** @type {string} */",
-                "  foo: 'hooray',",
-                "",
-                "  /** @param {string} funAmount */",
-                "  doSomethingFun: function(funAmount) {",
-                "    alert('Something ' + funAmount + ' fun!');",
-                "  },",
-                "",
-                "  /** @override */",
-                "  created: function() {}",
-                "};",
-                "var A = Polymer({",
-                "  is: 'x-element',",
-                "  properties: {",
-                "    pets: {",
-                "      type: Array,",
-                "      notify: true,",
-                "    },",
-                "    name: String,",
-                "  },",
-                "  behaviors: [ FunBehavior ],",
-                "});"));
+            """
+            /** @polymerBehavior */
+            var FunBehavior = {
+              properties: {
+                /** @type {boolean} */
+                isFun: {
+                  type: Boolean,
+                  value: true,
+                }
+              },
+              listeners: {
+                click: 'doSomethingFun',
+              },
+              /** @type {string} */
+              foo: 'hooray',
+
+              /** @param {string} funAmount */
+              doSomethingFun: function(funAmount) {
+                alert('Something ' + funAmount + ' fun!');
+              },
+
+              /** @override */
+              created: function() {}
+            };
+            var A = Polymer({
+              is: 'x-element',
+              properties: {
+                pets: {
+                  type: Array,
+                  notify: true,
+                },
+                name: String,
+              },
+              behaviors: [ FunBehavior ],
+            });
+            """);
 
     assertThat(def).isNotNull();
     assertThat(def.defType).isEqualTo(PolymerClassDefinition.DefinitionType.ObjectLiteral);
@@ -99,19 +100,20 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
   public void testBasicClass() {
     PolymerClassDefinition def =
         parseAndExtractClassDefFromClass(
-            lines(
-                "class A extends Polymer.Element {",
-                "  static get is() { return 'x-element'; }",
-                "  static get properties() {",
-                "    return {",
-                "      pets: {",
-                "        type: Array,",
-                "        notify: true,",
-                "      },",
-                "      name: String",
-                "    };",
-                "  }",
-                "}"));
+            """
+            class A extends Polymer.Element {
+              static get is() { return 'x-element'; }
+              static get properties() {
+                return {
+                  pets: {
+                    type: Array,
+                    notify: true,
+                  },
+                  name: String
+                };
+              }
+            }
+            """);
 
     assertThat(def).isNotNull();
     assertThat(def.defType).isEqualTo(PolymerClassDefinition.DefinitionType.ES6Class);
@@ -127,7 +129,12 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
   @Test
   public void testDynamicDescriptor() {
     PolymerClassDefinition def =
-        parseAndExtractClassDefFromCall(lines("var A = Polymer({", "  is: x,", "});"));
+        parseAndExtractClassDefFromCall(
+            """
+            var A = Polymer({
+              is: x,
+            });
+            """);
 
     assertThat(def.target.getString()).isEqualTo("A");
   }
@@ -135,7 +142,12 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
   @Test
   public void testDynamicDescriptor1() {
     PolymerClassDefinition def =
-        parseAndExtractClassDefFromCall(lines("Polymer({", "  is: x,", "});"));
+        parseAndExtractClassDefFromCall(
+            """
+            Polymer({
+              is: x,
+            });
+            """);
 
     assertThat(def.target.getString()).isEqualTo("XElement");
   }
@@ -143,7 +155,12 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
   @Test
   public void testDynamicDescriptor2() {
     PolymerClassDefinition def =
-        parseAndExtractClassDefFromCall(lines("Polymer({", "  is: foo.bar,", "});"));
+        parseAndExtractClassDefFromCall(
+            """
+            Polymer({
+              is: foo.bar,
+            });
+            """);
 
     assertThat(def.target.getString()).isEqualTo("Foo$barElement");
   }
@@ -151,7 +168,12 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
   @Test
   public void testDynamicDescriptor3() {
     PolymerClassDefinition def =
-        parseAndExtractClassDefFromCall(lines("Polymer({", "  is: this.bar,", "});"));
+        parseAndExtractClassDefFromCall(
+            """
+            Polymer({
+              is: this.bar,
+            });
+            """);
 
     assertThat(def.target.getString()).isEqualTo("This$barElement");
   }

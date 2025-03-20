@@ -232,30 +232,30 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     allowExternsChanges();
     testMode = TestMode.PROTECT_MSGS;
     test(
-        lines(
-            "/** @desc d */", //
-            "var MSG_A = goog.getMsg('asdf');",
-            "/** @desc d */",
-            "var MSG_B = goog.getMsg('qwerty');",
-            "var x = goog.getMsgWithFallback(MSG_A, MSG_B);",
-            ""),
-        lines(
-            "/** @desc d */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":    \"MSG_A\",",
-            "          \"msg_text\":\"asdf\",",
-            "        });",
-            "/** @desc d */",
-            "var MSG_B =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":    \"MSG_B\",",
-            "          \"msg_text\":\"qwerty\",",
-            "      });",
-            "var x = __jscomp_msg_fallback__(\"MSG_A\", MSG_A, \"MSG_B\", MSG_B);",
-            ""));
+        """
+        /** @desc d */
+        var MSG_A = goog.getMsg('asdf');
+        /** @desc d */
+        var MSG_B = goog.getMsg('qwerty');
+        var x = goog.getMsgWithFallback(MSG_A, MSG_B);
+        """,
+        """
+        /** @desc d */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":    "MSG_A",
+                  "msg_text":"asdf",
+                });
+        /** @desc d */
+        var MSG_B =
+            __jscomp_define_msg__(
+                {
+                  "key":    "MSG_B",
+                  "msg_text":"qwerty",
+              });
+        var x = __jscomp_msg_fallback__("MSG_A", MSG_A, "MSG_B", MSG_B);
+        """);
     // It's important that all of the protective function calls be marked as having no side effects,
     // so they will be removed during optimizations if they are unused.
     final Node jsRoot = getLastCompiler().getJsRoot();
@@ -285,22 +285,25 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(getTestMessageBuilder("MSG_A").appendStringPart("Hi\nthere").build());
 
     multiPhaseTest(
-        lines(
-            "/** @desc d */", //
-            "var MSG_A = goog.getMsg('asdf');"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":    \"MSG_A\",",
-            "          \"msg_text\":\"asdf\",",
-            "        });"),
-        lines(
-            "/** @desc d */", //
-            "var MSG_A='Hi\\nthere'"));
+        """
+        /** @desc d */
+        var MSG_A = goog.getMsg('asdf');
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":    "MSG_A",
+                  "msg_text":"asdf",
+                });
+        """,
+        """
+        /** @desc d */
+        var MSG_A='Hi\\nthere'
+        """);
   }
 
   @Test
@@ -308,22 +311,25 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(getTestMessageBuilder("12345").appendStringPart("Saluton!").build());
 
     multiPhaseTest(
-        lines(
-            "/** @desc d */", //
-            "var MSG_EXTERNAL_12345 = goog.getMsg('Hello!');"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_EXTERNAL_12345 =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":    \"MSG_EXTERNAL_12345\",",
-            "          \"msg_text\":\"Hello!\",",
-            "        });"),
-        lines(
-            "/** @desc d */", //
-            "var MSG_EXTERNAL_12345='Saluton!'"));
+        """
+        /** @desc d */
+        var MSG_EXTERNAL_12345 = goog.getMsg('Hello!');
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_EXTERNAL_12345 =
+            __jscomp_define_msg__(
+                {
+                  "key":    "MSG_EXTERNAL_12345",
+                  "msg_text":"Hello!",
+                });
+        """,
+        """
+        /** @desc d */
+        var MSG_EXTERNAL_12345='Saluton!'
+        """);
   }
 
   @Test
@@ -353,36 +359,39 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(showEmailTranslatedMsg);
 
     multiPhaseTest(
-        lines(
-            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
-            "",
-            "const MSG_SHOW_EMAIL =",
-            "    declareIcuTemplate(",
-            "        'Email: {EMAIL}',",
-            "        {",
-            "          description: 'Labeled email address',",
-            // The example text is dropped, since it is only used for XMB extraction.
-            // However, it does cause the JsMessage read from the JS code to have a placeholder
-            // in it.
-            "          example: {",
-            "            'EMAIL': 'me@foo.com'",
-            "           }",
-            "        });"),
-        lines(
-            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
-            "",
-            "const MSG_SHOW_EMAIL =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":    \"MSG_SHOW_EMAIL\",",
-            "          \"icu_placeholder_names\": [\"EMAIL\"],",
-            "          \"msg_text\": \"Email: {EMAIL}\",",
-            "          \"isIcuTemplate\": \"\"",
-            "        });"),
-        lines(
-            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
-            "",
-            "const MSG_SHOW_EMAIL = 'Retpoŝtadreso: {EMAIL}';"));
+        """
+        const {declareIcuTemplate} = goog.require('goog.i18n.messages');
+
+        const MSG_SHOW_EMAIL =
+            declareIcuTemplate(
+                'Email: {EMAIL}',
+                {
+                  description: 'Labeled email address',
+        // The example text is dropped, since it is only used for XMB extraction.
+        // However, it does cause the JsMessage read from the JS code to have a placeholder
+        // in it.
+                  example: {
+                    'EMAIL': 'me@foo.com'
+                   }
+                });
+        """,
+        """
+        const {declareIcuTemplate} = goog.require('goog.i18n.messages');
+
+        const MSG_SHOW_EMAIL =
+            __jscomp_define_msg__(
+                {
+                  "key":    "MSG_SHOW_EMAIL",
+                  "icu_placeholder_names": ["EMAIL"],
+                  "msg_text": "Email: {EMAIL}",
+                  "isIcuTemplate": ""
+                });
+        """,
+        """
+        const {declareIcuTemplate} = goog.require('goog.i18n.messages');
+
+        const MSG_SHOW_EMAIL = 'Retpo\u015dtadreso: {EMAIL}';
+        """);
   }
 
   @Test
@@ -400,30 +409,33 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
 
     multiPhaseTest(
-        lines(
-            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
-            "",
-            // Note that no placeholder information is specified here, so the JsMessage as it is
-            // read from the JS code will have no placeholders.
-            // In this test case we've put a placeholder in the bundle above, but if the bundle
-            // were created based on this code, it would not have a placeholder.
-            // This situation could occur with an externally-produced message bundle.
-            "const MSG_SHOW_EMAIL = declareIcuTemplate(",
-            "    'Email: {EMAIL}', { description: 'Labeled email address' });"),
-        lines(
-            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
-            "",
-            "const MSG_SHOW_EMAIL =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":    \"MSG_SHOW_EMAIL\",",
-            "          \"msg_text\": \"Email: {EMAIL}\",",
-            "          \"isIcuTemplate\": \"\"",
-            "        });"),
-        lines(
-            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
-            "",
-            "const MSG_SHOW_EMAIL = 'Retpoŝtadreso: {EMAIL}';"));
+        """
+        const {declareIcuTemplate} = goog.require('goog.i18n.messages');
+
+        // Note that no placeholder information is specified here, so the JsMessage as it is
+        // read from the JS code will have no placeholders.
+        // In this test case we've put a placeholder in the bundle above, but if the bundle
+        // were created based on this code, it would not have a placeholder.
+        // This situation could occur with an externally-produced message bundle.
+        const MSG_SHOW_EMAIL = declareIcuTemplate(
+            'Email: {EMAIL}', { description: 'Labeled email address' });
+        """,
+        """
+        const {declareIcuTemplate} = goog.require('goog.i18n.messages');
+
+        const MSG_SHOW_EMAIL =
+            __jscomp_define_msg__(
+                {
+                  "key":    "MSG_SHOW_EMAIL",
+                  "msg_text": "Email: {EMAIL}",
+                  "isIcuTemplate": ""
+                });
+        """,
+        """
+        const {declareIcuTemplate} = goog.require('goog.i18n.messages');
+
+        const MSG_SHOW_EMAIL = 'Retpo\u015dtadreso: {EMAIL}';
+        """);
   }
 
   @Test
@@ -440,34 +452,37 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
 
     multiPhaseTest(
-        lines(
-            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
-            "",
-            "const MSG_SHOW_EMAIL =",
-            "    declareIcuTemplate(",
-            "        'Email Options: {EMAIL_1} or {EMAIL_2}',",
-            "        {",
-            "          description: 'Labeled email address',",
-            "          example: {",
-            "            'EMAIL_1': 'me1@foo.com',",
-            "            'EMAIL_2': 'me2@foo.com'",
-            "           }",
-            "        });"),
-        lines(
-            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
-            "",
-            "const MSG_SHOW_EMAIL =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":    \"MSG_SHOW_EMAIL\",",
-            "          \"icu_placeholder_names\": [\"EMAIL_1\", \"EMAIL_2\"],",
-            "          \"msg_text\": \"Email Options: {EMAIL_1} or {EMAIL_2}\",",
-            "          \"isIcuTemplate\": \"\"",
-            "        });"),
-        lines(
-            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
-            "",
-            "const MSG_SHOW_EMAIL = 'Retpoŝtadreso: {EMAIL_1} aŭ {EMAIL_2}';"));
+        """
+        const {declareIcuTemplate} = goog.require('goog.i18n.messages');
+
+        const MSG_SHOW_EMAIL =
+            declareIcuTemplate(
+                'Email Options: {EMAIL_1} or {EMAIL_2}',
+                {
+                  description: 'Labeled email address',
+                  example: {
+                    'EMAIL_1': 'me1@foo.com',
+                    'EMAIL_2': 'me2@foo.com'
+                   }
+                });
+        """,
+        """
+        const {declareIcuTemplate} = goog.require('goog.i18n.messages');
+
+        const MSG_SHOW_EMAIL =
+            __jscomp_define_msg__(
+                {
+                  "key":    "MSG_SHOW_EMAIL",
+                  "icu_placeholder_names": ["EMAIL_1", "EMAIL_2"],
+                  "msg_text": "Email Options: {EMAIL_1} or {EMAIL_2}",
+                  "isIcuTemplate": ""
+                });
+        """,
+        """
+        const {declareIcuTemplate} = goog.require('goog.i18n.messages');
+
+        const MSG_SHOW_EMAIL = 'Retpo\u015dtadreso: {EMAIL_1} a\u016d {EMAIL_2}';
+        """);
   }
 
   @Test
@@ -475,42 +490,45 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     // We don't registerMessage() here, so there are no messages in the bundle used by this test.
 
     multiPhaseTest(
-        lines(
-            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
-            "",
-            "const MSG_SHOW_EMAIL =",
-            "    declareIcuTemplate(",
-            "        'Email: {EMAIL}',",
-            "        {",
-            "          description: 'Labeled email address',",
-            // The example text is dropped, since it is only used for XMB extraction.
-            // However, it does cause the JsMessage read from the JS code to have a placeholder
-            // in it.
-            // We add this placeholder in the "icu_placeholder_names" field to keep track of how the
-            // message has multiple parts, which is necessary for the message ID to be generated
-            // correctly.
-            // The purpose of this test is to:
-            // 1. make sure the message template is properly put back together.
-            // 2. make sure the "icu_placeholder_names" field is populated with `EMAIL`
-            "          example: {",
-            "            'EMAIL': 'me@foo.com'",
-            "           }",
-            "        });"),
-        lines(
-            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
-            "",
-            "const MSG_SHOW_EMAIL =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":    \"MSG_SHOW_EMAIL\",",
-            "          \"icu_placeholder_names\": [\"EMAIL\"],",
-            "          \"msg_text\": \"Email: {EMAIL}\",",
-            "          \"isIcuTemplate\": \"\"",
-            "        });"),
-        lines(
-            "const {declareIcuTemplate} = goog.require('goog.i18n.messages');",
-            "",
-            "const MSG_SHOW_EMAIL = 'Email: {EMAIL}';"));
+        """
+        const {declareIcuTemplate} = goog.require('goog.i18n.messages');
+
+        const MSG_SHOW_EMAIL =
+            declareIcuTemplate(
+                'Email: {EMAIL}',
+                {
+                  description: 'Labeled email address',
+        // The example text is dropped, since it is only used for XMB extraction.
+        // However, it does cause the JsMessage read from the JS code to have a placeholder
+        // in it.
+        // We add this placeholder in the "icu_placeholder_names" field to keep track of how the
+        // message has multiple parts, which is necessary for the message ID to be generated
+        // correctly.
+        // The purpose of this test is to:
+        // 1. make sure the message template is properly put back together.
+        // 2. make sure the "icu_placeholder_names" field is populated with `EMAIL`
+                  example: {
+                    'EMAIL': 'me@foo.com'
+                   }
+                });
+        """,
+        """
+        const {declareIcuTemplate} = goog.require('goog.i18n.messages');
+
+        const MSG_SHOW_EMAIL =
+            __jscomp_define_msg__(
+                {
+                  "key":    "MSG_SHOW_EMAIL",
+                  "icu_placeholder_names": ["EMAIL"],
+                  "msg_text": "Email: {EMAIL}",
+                  "isIcuTemplate": ""
+                });
+        """,
+        """
+        const {declareIcuTemplate} = goog.require('goog.i18n.messages');
+
+        const MSG_SHOW_EMAIL = 'Email: {EMAIL}';
+        """);
   }
 
   @Test
@@ -532,33 +550,30 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
 
     multiPhaseTest(
-        lines(
-            "/** @desc ICU gender-sensitive greeting */",
-            // Message in the JS code does not define placeholders for the compiler.
-            "const MSG_EXTERNAL_123456 = goog.getMsg(",
-            "    '{USER_GENDER,select,' +",
-            "    'female{Hello {USER_IDENTIFIER}.}' +",
-            "    'male{Hello {USER_IDENTIFIER}.}' +",
-            "    'other{Hello {USER_IDENTIFIER}.}}');"),
-        lines(
-            "/** @desc ICU gender-sensitive greeting */",
-            "const MSG_EXTERNAL_123456 =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":    \"MSG_EXTERNAL_123456\",",
-            "          \"msg_text\":",
-            "    '{USER_GENDER,select,"
-                + "female{Hello {USER_IDENTIFIER}.}"
-                + "male{Hello {USER_IDENTIFIER}.}"
-                + "other{Hello {USER_IDENTIFIER}.}}',",
-            "        });"),
-        lines(
-            "/** @desc ICU gender-sensitive greeting */", //
-            "const MSG_EXTERNAL_123456 =",
-            "    '{USER_GENDER,select,"
-                + "female{Saluton {USER_IDENTIFIER}.}"
-                + "male{Saluton {USER_IDENTIFIER}.}"
-                + "other{Saluton {USER_IDENTIFIER}.}}';"));
+        """
+        /** @desc ICU gender-sensitive greeting */
+        // Message in the JS code does not define placeholders for the compiler.
+        const MSG_EXTERNAL_123456 = goog.getMsg(
+            '{USER_GENDER,select,' +
+            'female{Hello {USER_IDENTIFIER}.}' +
+            'male{Hello {USER_IDENTIFIER}.}' +
+            'other{Hello {USER_IDENTIFIER}.}}');
+        """,
+        """
+/** @desc ICU gender-sensitive greeting */
+const MSG_EXTERNAL_123456 =
+    __jscomp_define_msg__(
+        {
+          "key":    "MSG_EXTERNAL_123456",
+          "msg_text":
+    '{USER_GENDER,select,female{Hello {USER_IDENTIFIER}.}male{Hello {USER_IDENTIFIER}.}other{Hello {USER_IDENTIFIER}.}}',
+        });
+""",
+        """
+/** @desc ICU gender-sensitive greeting */
+const MSG_EXTERNAL_123456 =
+    '{USER_GENDER,select,female{Saluton {USER_IDENTIFIER}.}male{Saluton {USER_IDENTIFIER}.}other{Saluton {USER_IDENTIFIER}.}}';
+""");
   }
 
   @Test
@@ -566,51 +581,57 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(getTestMessageBuilder("MSG_A").appendStringPart("Hi\nthere").build());
 
     multiPhaseTest(
-        lines(
-            "/** @desc d */", //
-            "var MSG_A = goog.getMsg('abcd' + 'efgh');"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_A\",",
-            "          \"msg_text\":\"abcdefgh\",",
-            "        });"),
-        lines(
-            "/** @desc d */", //
-            "var MSG_A='Hi\\nthere'"));
+        """
+        /** @desc d */
+        var MSG_A = goog.getMsg('abcd' + 'efgh');
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_A",
+                  "msg_text":"abcdefgh",
+                });
+        """,
+        """
+        /** @desc d */
+        var MSG_A='Hi\\nthere'
+        """);
   }
 
   @Test
   public void testMissingAlternateMessage() {
     multiPhaseTest(
-        lines(
-            "/**", //
-            " * @desc d",
-            " * @alternateMessageId 1984",
-            " */",
-            "var MSG_A = goog.getMsg('asdf');"),
-        lines(
-            "/**",
-            " * @desc d",
-            " * @alternateMessageId 1984",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_A\",",
-            "          \"alt_id\":\"1984\",",
-            "          \"msg_text\":\"asdf\",",
-            "        });"),
-        lines(
-            "/**", //
-            " * @desc d",
-            " * @alternateMessageId 1984",
-            " */",
-            "var MSG_A='asdf'"));
+        """
+        /**
+         * @desc d
+         * @alternateMessageId 1984
+         */
+        var MSG_A = goog.getMsg('asdf');
+        """,
+        """
+        /**
+         * @desc d
+         * @alternateMessageId 1984
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_A",
+                  "alt_id":"1984",
+                  "msg_text":"asdf",
+                });
+        """,
+        """
+        /**
+         * @desc d
+         * @alternateMessageId 1984
+         */
+        var MSG_A='asdf'
+        """);
   }
 
   @Test
@@ -624,30 +645,33 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
 
     multiPhaseTest(
-        lines(
-            "/**",
-            " * @desc d",
-            " * @alternateMessageId 1984",
-            " */",
-            "var MSG_A = goog.getMsg('asdf');"),
-        lines(
-            "/**",
-            " * @desc d",
-            " * @alternateMessageId 1984",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_A\",",
-            "          \"alt_id\":\"1984\",",
-            "          \"msg_text\":\"asdf\",",
-            "        });"),
-        lines(
-            "/**", //
-            " * @desc d",
-            " * @alternateMessageId 1984",
-            " */",
-            "var MSG_A = 'Hello! Welcome!';"));
+        """
+        /**
+         * @desc d
+         * @alternateMessageId 1984
+         */
+        var MSG_A = goog.getMsg('asdf');
+        """,
+        """
+        /**
+         * @desc d
+         * @alternateMessageId 1984
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_A",
+                  "alt_id":"1984",
+                  "msg_text":"asdf",
+                });
+        """,
+        """
+        /**
+         * @desc d
+         * @alternateMessageId 1984
+         */
+        var MSG_A = 'Hello! Welcome!';
+        """);
   }
 
   @Test
@@ -671,43 +695,40 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
 
     multiPhaseTest(
-        lines(
-            "/**",
-            " * @desc ICU gender-sensitive greeting",
-            " * @alternateMessageId 1984",
-            " */",
-            // Message in the JS code does not define placeholders for the compiler.
-            "const MSG_ICU_SELECT = goog.getMsg(",
-            "    '{USER_GENDER,select,' +",
-            "    'female{Hello {USER_IDENTIFIER}.}' +",
-            "    'male{Hello {USER_IDENTIFIER}.}' +",
-            "    'other{Hello {USER_IDENTIFIER}.}}');"),
-        lines(
-            "/**",
-            " * @desc ICU gender-sensitive greeting",
-            " * @alternateMessageId 1984",
-            " */",
-            "const MSG_ICU_SELECT =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":    \"MSG_ICU_SELECT\",",
-            "          \"alt_id\": \"1984\",",
-            "          \"msg_text\":",
-            "    '{USER_GENDER,select,"
-                + "female{Hello {USER_IDENTIFIER}.}"
-                + "male{Hello {USER_IDENTIFIER}.}"
-                + "other{Hello {USER_IDENTIFIER}.}}',",
-            "        });"),
-        lines(
-            "/**",
-            " * @desc ICU gender-sensitive greeting",
-            " * @alternateMessageId 1984",
-            " */",
-            "const MSG_ICU_SELECT =",
-            "    '{USER_GENDER,select,"
-                + "female{Saluton {USER_IDENTIFIER}.}"
-                + "male{Saluton {USER_IDENTIFIER}.}"
-                + "other{Saluton {USER_IDENTIFIER}.}}';"));
+        """
+        /**
+         * @desc ICU gender-sensitive greeting
+         * @alternateMessageId 1984
+         */
+        // Message in the JS code does not define placeholders for the compiler.
+        const MSG_ICU_SELECT = goog.getMsg(
+            '{USER_GENDER,select,' +
+            'female{Hello {USER_IDENTIFIER}.}' +
+            'male{Hello {USER_IDENTIFIER}.}' +
+            'other{Hello {USER_IDENTIFIER}.}}');
+        """,
+        """
+/**
+ * @desc ICU gender-sensitive greeting
+ * @alternateMessageId 1984
+ */
+const MSG_ICU_SELECT =
+    __jscomp_define_msg__(
+        {
+          "key":    "MSG_ICU_SELECT",
+          "alt_id": "1984",
+          "msg_text":
+    '{USER_GENDER,select,female{Hello {USER_IDENTIFIER}.}male{Hello {USER_IDENTIFIER}.}other{Hello {USER_IDENTIFIER}.}}',
+        });
+""",
+        """
+/**
+ * @desc ICU gender-sensitive greeting
+ * @alternateMessageId 1984
+ */
+const MSG_ICU_SELECT =
+    '{USER_GENDER,select,female{Saluton {USER_IDENTIFIER}.}male{Saluton {USER_IDENTIFIER}.}other{Saluton {USER_IDENTIFIER}.}}';
+""");
   }
 
   /**
@@ -729,29 +750,30 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
 
     multiPhaseTestPostLookupError(
-        lines(
-            "/**",
-            " * @desc B desc",
-            " * @meaning B meaning",
-            " * @alternateMessageId 1984",
-            " */",
-            "var MSG_A = goog.getMsg('Hello, {$name}!', {name: name});"),
-        lines(
-            "/**", //
-            " * @desc B desc",
-            " * @meaning B meaning",
-            " * @alternateMessageId 1984",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":    \"MSG_A\",",
-            "          \"alt_id\": \"1984\",",
-            "          \"meaning\":\"B meaning\",",
-            "          \"msg_text\":\"Hello, {$name}!\"",
-            "        },",
-            "        {'name': name});",
-            ""),
+        """
+        /**
+         * @desc B desc
+         * @meaning B meaning
+         * @alternateMessageId 1984
+         */
+        var MSG_A = goog.getMsg('Hello, {$name}!', {name: name});
+        """,
+        """
+        /**
+         * @desc B desc
+         * @meaning B meaning
+         * @alternateMessageId 1984
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":    "MSG_A",
+                  "alt_id": "1984",
+                  "meaning":"B meaning",
+                  "msg_text":"Hello, {$name}!"
+                },
+                {'name': name});
+        """,
         ReplaceMessages.INVALID_ALTERNATE_MESSAGE_PLACEHOLDERS);
   }
 
@@ -760,30 +782,33 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(getTestMessageBuilder("1984").appendStringPart("Howdy\npardner").build());
 
     multiPhaseTest(
-        lines(
-            "/**",
-            " * @desc B desc",
-            " * @alternateMessageId 1984",
-            " */",
-            "var MSG_A = goog.getMsg('asdf');"),
-        lines(
-            "/**",
-            " * @desc B desc",
-            " * @alternateMessageId 1984",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_A\",",
-            "          \"alt_id\":\"1984\",",
-            "          \"msg_text\":\"asdf\",",
-            "        });\n"),
-        lines(
-            "/**",
-            " * @desc B desc",
-            " * @alternateMessageId 1984",
-            " */",
-            "var MSG_A='Howdy\\npardner'"));
+        """
+        /**
+         * @desc B desc
+         * @alternateMessageId 1984
+         */
+        var MSG_A = goog.getMsg('asdf');
+        """,
+        """
+        /**
+         * @desc B desc
+         * @alternateMessageId 1984
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_A",
+                  "alt_id":"1984",
+                  "msg_text":"asdf",
+                });
+        """,
+        """
+        /**
+         * @desc B desc
+         * @alternateMessageId 1984
+         */
+        var MSG_A='Howdy\\npardner'
+        """);
   }
 
   @Test
@@ -797,31 +822,33 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
 
     multiPhaseTest(
-        lines(
-            "/**", //
-            " * @desc d",
-            " * @alternateMessageId 1984",
-            " */",
-            "var MSG_A = goog.getMsg('asdf');"),
-        lines(
-            "/**",
-            " * @desc d",
-            " * @alternateMessageId 1984",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_A\",",
-            "          \"alt_id\":\"1984\",",
-            "          \"msg_text\":\"asdf\",",
-            "        });",
-            " "),
-        lines(
-            "/**", //
-            " * @desc d",
-            " * @alternateMessageId 1984",
-            " */",
-            "var MSG_A = 'Hi\\nthere';"));
+        """
+        /**
+         * @desc d
+         * @alternateMessageId 1984
+         */
+        var MSG_A = goog.getMsg('asdf');
+        """,
+        """
+        /**
+         * @desc d
+         * @alternateMessageId 1984
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_A",
+                  "alt_id":"1984",
+                  "msg_text":"asdf",
+                });
+        """,
+        """
+        /**
+         * @desc d
+         * @alternateMessageId 1984
+         */
+        var MSG_A = 'Hi\\nthere';
+        """);
   }
 
   @Test
@@ -831,50 +858,53 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(getTestMessageBuilder("MSG_B").appendStringPart("Good\nmorrow, sir").build());
 
     multiPhaseTest(
-        lines(
-            "/**",
-            " * @desc d",
-            " * @alternateMessageId 1984",
-            "*/",
-            "var MSG_A = goog.getMsg('asdf');",
-            "/**",
-            " * @desc d",
-            "*/",
-            "var MSG_B = goog.getMsg('ghjk');",
-            "var x = goog.getMsgWithFallback(MSG_A, MSG_B);"),
-        lines(
-            "/**",
-            " * @desc d",
-            " * @alternateMessageId 1984",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_A\",",
-            "          \"alt_id\":\"1984\",",
-            "          \"msg_text\":\"asdf\",",
-            "        });",
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_B =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_B\",",
-            "          \"msg_text\":\"ghjk\",",
-            "        });",
-            "var x = __jscomp_msg_fallback__(\"MSG_A\", MSG_A, \"MSG_B\", MSG_B);"),
-        lines(
-            "/**",
-            "    @desc d",
-            "    @alternateMessageId 1984",
-            "*/",
-            "var MSG_A = 'Howdy\\npardner';",
-            "/**",
-            "    @desc d",
-            "*/",
-            "var MSG_B = 'Good\\nmorrow, sir';",
-            "var x = MSG_A;"));
+        """
+        /**
+         * @desc d
+         * @alternateMessageId 1984
+        */
+        var MSG_A = goog.getMsg('asdf');
+        /**
+         * @desc d
+        */
+        var MSG_B = goog.getMsg('ghjk');
+        var x = goog.getMsgWithFallback(MSG_A, MSG_B);
+        """,
+        """
+        /**
+         * @desc d
+         * @alternateMessageId 1984
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_A",
+                  "alt_id":"1984",
+                  "msg_text":"asdf",
+                });
+        /**
+         * @desc d
+         */
+        var MSG_B =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_B",
+                  "msg_text":"ghjk",
+                });
+        var x = __jscomp_msg_fallback__("MSG_A", MSG_A, "MSG_B", MSG_B);
+        """,
+        """
+        /**
+            @desc d
+            @alternateMessageId 1984
+        */
+        var MSG_A = 'Howdy\\npardner';
+        /**
+            @desc d
+        */
+        var MSG_B = 'Good\\nmorrow, sir';
+        var x = MSG_A;
+        """);
   }
 
   @Test
@@ -882,50 +912,52 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(getTestMessageBuilder("1984").appendStringPart("Howdy\npardner").build());
 
     multiPhaseTest(
-        lines(
-            "/**",
-            "    @desc d",
-            "*/",
-            "var MSG_A = goog.getMsg('asdf');",
-            "/**",
-            "    @desc d",
-            "    @alternateMessageId 1984",
-            "*/",
-            "var MSG_B = goog.getMsg('ghjk');",
-            "var x = goog.getMsgWithFallback(MSG_A, MSG_B);"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_A\",",
-            "          \"msg_text\":\"asdf\",",
-            "        });",
-            "/**",
-            " * @desc d",
-            "    @alternateMessageId 1984     */",
-            "var MSG_B =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_B\",",
-            "          \"alt_id\":\"1984\",",
-            "          \"msg_text\":\"ghjk\",",
-            "        });",
-            "var x = __jscomp_msg_fallback__(\"MSG_A\", MSG_A, \"MSG_B\", MSG_B);",
-            ""),
-        lines(
-            "/**",
-            "    @desc d",
-            "*/",
-            "var MSG_A = 'asdf';",
-            "/**",
-            "    @desc d",
-            "    @alternateMessageId 1984",
-            "*/",
-            "var MSG_B = 'Howdy\\npardner';",
-            "var x = MSG_B;"));
+        """
+        /**
+            @desc d
+        */
+        var MSG_A = goog.getMsg('asdf');
+        /**
+            @desc d
+            @alternateMessageId 1984
+        */
+        var MSG_B = goog.getMsg('ghjk');
+        var x = goog.getMsgWithFallback(MSG_A, MSG_B);
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_A",
+                  "msg_text":"asdf",
+                });
+        /**
+         * @desc d
+            @alternateMessageId 1984     */
+        var MSG_B =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_B",
+                  "alt_id":"1984",
+                  "msg_text":"ghjk",
+                });
+        var x = __jscomp_msg_fallback__("MSG_A", MSG_A, "MSG_B", MSG_B);
+        """,
+        """
+        /**
+            @desc d
+        */
+        var MSG_A = 'asdf';
+        /**
+            @desc d
+            @alternateMessageId 1984
+        */
+        var MSG_B = 'Howdy\\npardner';
+        var x = MSG_B;
+        """);
   }
 
   @Test
@@ -938,20 +970,25 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
 
     multiPhaseTest(
-        lines("/** @desc d */", "var MSG_B=goog.getMsg('asdf {$measly}', {measly: x});"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_B =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_B\",",
-            "          \"msg_text\":\"asdf {$measly}\",",
-            "        }, {'measly': x});"),
-        lines(
-            "/** @desc d */", //
-            "var MSG_B = 'One ' + x + ' ph';"));
+        """
+        /** @desc d */
+        var MSG_B=goog.getMsg('asdf {$measly}', {measly: x});
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_B =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_B",
+                  "msg_text":"asdf {$measly}",
+                }, {'measly': x});
+        """,
+        """
+        /** @desc d */
+        var MSG_B = 'One ' + x + ' ph';
+        """);
   }
 
   @Test
@@ -964,41 +1001,44 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
 
     multiPhaseTest(
-        lines(
-            "/** @desc d */",
-            "var MSG_B =",
-            "    goog.getMsg(",
-            "        'asdf {$measly}',",
-            "        {measly: x},",
-            "        {",
-            // use all allowed options
-            "          html: true,",
-            "          unescapeHtmlEntities: true,",
-            // original_code and example get dropped, because they're only used
-            // when generating the XMB file.
-            "          original_code: {",
-            "            'measly': 'getMeasley()'",
-            "          },",
-            "          example: {",
-            "            'measly': 'very little'",
-            "          },",
-            "        });"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_B =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_B\",",
-            "          \"msg_text\":\"asdf {$measly}\",",
-            "          \"escapeLessThan\":\"\",",
-            "          \"unescapeHtmlEntities\":\"\"",
-            "        },",
-            "        {'measly': x});"),
-        lines(
-            "/** @desc d */", //
-            "var MSG_B = 'One ' + x + ' ph';"));
+        """
+        /** @desc d */
+        var MSG_B =
+            goog.getMsg(
+                'asdf {$measly}',
+                {measly: x},
+                {
+        // use all allowed options
+                  html: true,
+                  unescapeHtmlEntities: true,
+        // original_code and example get dropped, because they're only used
+        // when generating the XMB file.
+                  original_code: {
+                    'measly': 'getMeasley()'
+                  },
+                  example: {
+                    'measly': 'very little'
+                  },
+                });
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_B =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_B",
+                  "msg_text":"asdf {$measly}",
+                  "escapeLessThan":"",
+                  "unescapeHtmlEntities":""
+                },
+                {'measly': x});
+        """,
+        """
+        /** @desc d */
+        var MSG_B = 'One ' + x + ' ph';
+        """);
   }
 
   @Test
@@ -1006,23 +1046,25 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(getTestMessageBuilder("MSG_C").appendJsPlaceholderReference("amount").build());
 
     multiPhaseTest(
-        lines(
-            "/** @desc d */", //
-            "var MSG_C = goog.getMsg('${$amount}', {amount: a.b.amount});"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_C =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_C\",",
-            "          \"msg_text\":\"${$amount}\",",
-            "        }, {'amount': a.b.amount});",
-            "     "),
-        lines(
-            "/** @desc d */", //
-            "var MSG_C=a.b.amount"));
+        """
+        /** @desc d */
+        var MSG_C = goog.getMsg('${$amount}', {amount: a.b.amount});
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_C =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_C",
+                  "msg_text":"${$amount}",
+                }, {'amount': a.b.amount});
+        """,
+        """
+        /** @desc d */
+        var MSG_C=a.b.amount
+        """);
   }
 
   @Test
@@ -1030,21 +1072,25 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(getTestMessageBuilder("MSG_D").appendJsPlaceholderReference("amount").build());
 
     multiPhaseTest(
-        lines("/** @desc d */", "var MSG_D = goog.getMsg('${$amount}', {amount: getAmt()});"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_D =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_D\",",
-            "          \"msg_text\":\"${$amount}\",",
-            "        }, {'amount': getAmt()});",
-            "     "),
-        lines(
-            "/** @desc d */", //
-            "var MSG_D=getAmt()"));
+        """
+        /** @desc d */
+        var MSG_D = goog.getMsg('${$amount}', {amount: getAmt()});
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_D =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_D",
+                  "msg_text":"${$amount}",
+                }, {'amount': getAmt()});
+        """,
+        """
+        /** @desc d */
+        var MSG_D=getAmt()
+        """);
   }
 
   @Test
@@ -1052,22 +1098,25 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(getTestMessageBuilder("MSG_E").appendJsPlaceholderReference("amount").build());
 
     multiPhaseTest(
-        lines(
-            "/** @desc d */", //
-            "var MSG_E = goog.getMsg('${$amount}', {amount: obj.getAmt()});"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_E =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_E\",",
-            "          \"msg_text\":\"${$amount}\",",
-            "        }, {'amount': obj.getAmt()});"),
-        lines(
-            "/** @desc d */", //
-            "var MSG_E=obj.getAmt()"));
+        """
+        /** @desc d */
+        var MSG_E = goog.getMsg('${$amount}', {amount: obj.getAmt()});
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_E =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_E",
+                  "msg_text":"${$amount}",
+                }, {'amount': obj.getAmt()});
+        """,
+        """
+        /** @desc d */
+        var MSG_E=obj.getAmt()
+        """);
   }
 
   @Test
@@ -1075,19 +1124,21 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(getTestMessageBuilder("MSG_M").build());
 
     multiPhaseTest(
-        lines(
-            "/** @desc d */", //
-            "var MSG_M = goog.getMsg('${$amount}', {amount: obj.getAmt()});"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_M =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_M\",",
-            "          \"msg_text\":\"${$amount}\",",
-            "        }, {'amount': obj.getAmt()});\n"),
+        """
+        /** @desc d */
+        var MSG_M = goog.getMsg('${$amount}', {amount: obj.getAmt()});
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_M =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_M",
+                  "msg_text":"${$amount}",
+                }, {'amount': obj.getAmt()});
+        """,
         "/** @desc d */\n var MSG_M=''");
   }
 
@@ -1102,20 +1153,21 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
     multiPhaseTest(
         "/** @desc d */\n var MSG_F = goog.getMsg('${$amount}', {amount: (a ? b : c)});",
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_F =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_F\",",
-            "          \"msg_text\":\"${$amount}\",",
-            "        }, {'amount': a ? b : c});"),
-        lines(
-            "/** @desc d */", //
-            "var MSG_F = '#' + (a?b:c) + '.';",
-            ""));
+        """
+        /**
+         * @desc d
+         */
+        var MSG_F =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_F",
+                  "msg_text":"${$amount}",
+                }, {'amount': a ? b : c});
+        """,
+        """
+        /** @desc d */
+        var MSG_F = '#' + (a?b:c) + '.';
+        """);
   }
 
   @Test
@@ -1123,21 +1175,24 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(getTestMessageBuilder("MSG_G").appendJsPlaceholderReference("amount").build());
 
     multiPhaseTest(
-        lines(
-            "/** @desc d */", //
-            "var MSG_G = goog.getMsg('${$amount}', {amount: x + ''});"),
-        lines(
-            "/** @desc d */", //
-            "var MSG_G =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          'key':'MSG_G',",
-            "          \"msg_text\":\"${$amount}\",",
-            "        },",
-            "        {'amount': x + ''});"),
-        lines(
-            "/** @desc d */", //
-            "var MSG_G=x+''"));
+        """
+        /** @desc d */
+        var MSG_G = goog.getMsg('${$amount}', {amount: x + ''});
+        """,
+        """
+        /** @desc d */
+        var MSG_G =
+            __jscomp_define_msg__(
+                {
+                  'key':'MSG_G',
+                  "msg_text":"${$amount}",
+                },
+                {'amount': x + ''});
+        """,
+        """
+        /** @desc d */
+        var MSG_G=x+''
+        """);
   }
 
   @Test
@@ -1153,74 +1208,80 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
     multiPhaseTest(
         "/** @desc d */\n var MSG_H = goog.getMsg('{$dick}{$jane}', {jane: x, dick: y});",
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_H =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_H\",",
-            "          \"msg_text\":\"{$dick}{$jane}\",",
-            "        }, {'jane': x, 'dick': y});",
-            ""),
-        lines(
-            "/** @desc d */", //
-            "var MSG_H = y + ', ' + y + ' and ' + x;"));
+        """
+        /**
+         * @desc d
+         */
+        var MSG_H =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_H",
+                  "msg_text":"{$dick}{$jane}",
+                }, {'jane': x, 'dick': y});
+        """,
+        """
+        /** @desc d */
+        var MSG_H = y + ', ' + y + ' and ' + x;
+        """);
   }
 
   @Test
   public void testInvalidMessageStringType() {
     multiPhaseTestPreLookupError(
-        lines(
-            "/** @desc d */", //
-            "const MSG_H = goog.getMsg(10);"),
+        """
+        /** @desc d */
+        const MSG_H = goog.getMsg(10);
+        """,
         MESSAGE_TREE_MALFORMED);
   }
 
   @Test
   public void testPlaceholderValueDefinedTwice() {
     multiPhaseTestPreLookupError(
-        lines(
-            "/** @desc d */",
-            "const MSG_H = goog.getMsg(",
-            "    '{$dick}{$jane}',",
-            "    {jane: x, dick: y, jane: x});"),
+        """
+        /** @desc d */
+        const MSG_H = goog.getMsg(
+            '{$dick}{$jane}',
+            {jane: x, dick: y, jane: x});
+        """,
         MESSAGE_TREE_MALFORMED);
   }
 
   @Test
   public void testInvalidPlaceholderArgument() {
     multiPhaseTestPreLookupError(
-        lines(
-            "/** @desc d */",
-            "const MSG_H = goog.getMsg(",
-            "    '{$dick}{$jane}',",
-            "    'this should be an object literal');"),
+        """
+        /** @desc d */
+        const MSG_H = goog.getMsg(
+            '{$dick}{$jane}',
+            'this should be an object literal');
+        """,
         MESSAGE_TREE_MALFORMED);
   }
 
   @Test
   public void testInvalidOptionsArgumentType() {
     multiPhaseTestPreLookupError(
-        lines(
-            "/** @desc d */",
-            "const MSG_H = goog.getMsg(",
-            "    '{$dick}{$jane}',",
-            "    {jane: x, dick: y},",
-            "    'should be an object literal');"),
+        """
+        /** @desc d */
+        const MSG_H = goog.getMsg(
+            '{$dick}{$jane}',
+            {jane: x, dick: y},
+            'should be an object literal');
+        """,
         MESSAGE_TREE_MALFORMED);
   }
 
   @Test
   public void testComputedKeyInOptions() {
     multiPhaseTestPreLookupError(
-        lines(
-            "/** @desc d */",
-            "const MSG_H = goog.getMsg(",
-            "    '{$dick}{$jane}',",
-            "    {jane: x, dick: y},",
-            "    {[computedOpt]: true});"),
+        """
+        /** @desc d */
+        const MSG_H = goog.getMsg(
+            '{$dick}{$jane}',
+            {jane: x, dick: y},
+            {[computedOpt]: true});
+        """,
         MESSAGE_TREE_MALFORMED);
   }
 
@@ -1233,23 +1294,25 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
 
     multiPhaseTest(
-        lines(
-            "/** @desc d */", //
-            "var MSG_I = goog.getMsg('${$amtEarned}', {amtEarned: x});"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_I =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_I\",",
-            "          \"msg_text\":\"${$amtEarned}\",",
-            "        }, {'amtEarned': x});",
-            "     "),
-        lines(
-            "/** @desc d */", //
-            "var MSG_I='Sum: $'+x"));
+        """
+        /** @desc d */
+        var MSG_I = goog.getMsg('${$amtEarned}', {amtEarned: x});
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_I =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_I",
+                  "msg_text":"${$amtEarned}",
+                }, {'amtEarned': x});
+        """,
+        """
+        /** @desc d */
+        var MSG_I='Sum: $'+x
+        """);
   }
 
   @Test
@@ -1262,24 +1325,26 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
 
     multiPhaseTest(
-        lines(
-            "/** @desc d */", //
-            "a.b.c.MSG_J = goog.getMsg('asdf {$measly}', {measly: x});"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "    a.b.c.MSG_J =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":   'MSG_J',",
-            "          \"msg_text\":\"asdf {$measly}\",",
-            "        },",
-            "        {'measly': x});",
-            ""),
-        lines(
-            "/** @desc d */", //
-            "a.b.c.MSG_J = 'One ' + x + ' ph';"));
+        """
+        /** @desc d */
+        a.b.c.MSG_J = goog.getMsg('asdf {$measly}', {measly: x});
+        """,
+        """
+        /**
+         * @desc d
+         */
+            a.b.c.MSG_J =
+            __jscomp_define_msg__(
+                {
+                  "key":   'MSG_J',
+                  "msg_text":"asdf {$measly}",
+                },
+                {'measly': x});
+        """,
+        """
+        /** @desc d */
+        a.b.c.MSG_J = 'One ' + x + ' ph';
+        """);
   }
 
   @Test
@@ -1292,38 +1357,43 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
 
     multiPhaseTest(
-        lines(
-            "/** @desc d */", //
-            "var MSG_L = goog.getMsg('{$a} has {$b}', {a: '{$b}', b: 1});"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_L =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_L\",",
-            "          \"msg_text\":\"{$a} has {$b}\"",
-            "        }, {'a': \"{$b}\", 'b': 1});",
-            ""),
-        lines(
-            "/** @desc d */", //
-            "var MSG_L = '{$b}' + ' has ' + 1;"));
+        """
+        /** @desc d */
+        var MSG_L = goog.getMsg('{$a} has {$b}', {a: '{$b}', b: 1});
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_L =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_L",
+                  "msg_text":"{$a} has {$b}"
+                }, {'a': "{$b}", 'b': 1});
+        """,
+        """
+        /** @desc d */
+        var MSG_L = '{$b}' + ' has ' + 1;
+        """);
   }
 
   @Test
   public void testSimpleMessageReplacementMissing() {
     multiPhaseTestWarning(
-        lines(
-            "/** @desc d */", //
-            "var MSG_E = 'd*6a0@z>t';"), //
-        lines(
-            "/** @desc d */", //
-            "var MSG_E =",
-            "    __jscomp_define_msg__({\"key\":\"MSG_E\", \"msg_text\":\"d*6a0@z\\x3et\"});"),
-        lines(
-            "/** @desc d */", //
-            "var MSG_E = 'd*6a0@z>t'"),
+        """
+        /** @desc d */
+        var MSG_E = 'd*6a0@z>t';
+        """, //
+        """
+        /** @desc d */
+        var MSG_E =
+            __jscomp_define_msg__({"key":"MSG_E", "msg_text":"d*6a0@z\\x3et"});
+        """,
+        """
+        /** @desc d */
+        var MSG_E = 'd*6a0@z>t'
+        """,
         MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
 
@@ -1331,16 +1401,17 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testSimpleMessageReplacementMissingWithNewStyle() {
     multiPhaseTest(
         "/** @desc d */\n var MSG_E = goog.getMsg('missing');",
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_E =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_E\",",
-            "          \"msg_text\":\"missing\",",
-            "        });\n"),
+        """
+        /**
+         * @desc d
+         */
+        var MSG_E =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_E",
+                  "msg_text":"missing",
+                });
+        """,
         "/** @desc d */\n var MSG_E = 'missing'");
   }
 
@@ -1348,14 +1419,14 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testStrictModeAndMessageReplacementAbsentInBundle() {
     strictReplacement = true;
     multiPhaseTestPostLookupError(
-        lines(
-            "/** @desc d */", //
-            "var MSG_E = goog.getMsg('Hello');",
-            ""),
-        lines(
-            "/** @desc d */", //
-            "var MSG_E = __jscomp_define_msg__({\"key\":\"MSG_E\", \"msg_text\":\"Hello\"});",
-            ""),
+        """
+        /** @desc d */
+        var MSG_E = goog.getMsg('Hello');
+        """,
+        """
+        /** @desc d */
+        var MSG_E = __jscomp_define_msg__({"key":"MSG_E", "msg_text":"Hello"});
+        """,
         ReplaceMessages.BUNDLE_DOES_NOT_HAVE_THE_MESSAGE);
   }
 
@@ -1370,12 +1441,14 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
     strictReplacement = true;
     multiPhaseTestPostLookupError(
-        lines(
-            "/** @desc d */", //
-            "var MSG_E = goog.getMsg('Hello');"),
-        lines(
-            "/** @desc d */", //
-            "var MSG_E = __jscomp_define_msg__({\"key\":\"MSG_E\", \"msg_text\":\"Hello\"});"),
+        """
+        /** @desc d */
+        var MSG_E = goog.getMsg('Hello');
+        """,
+        """
+        /** @desc d */
+        var MSG_E = __jscomp_define_msg__({"key":"MSG_E", "msg_text":"Hello"});
+        """,
         ReplaceMessages.BUNDLE_DOES_NOT_HAVE_THE_MESSAGE);
   }
 
@@ -1383,15 +1456,16 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testFunctionReplacementMissing() {
     multiPhaseTestWarning(
         "var MSG_F = function() {return 'asdf'};", //
-        lines(
-            "var MSG_F = function() {", //
-            "  return __jscomp_define_msg__(",
-            "      {",
-            "        \"key\":\"MSG_F\",",
-            "        \"msg_text\":\"asdf\"",
-            "      },",
-            "      {});",
-            "};"),
+        """
+        var MSG_F = function() {
+          return __jscomp_define_msg__(
+              {
+                "key":"MSG_F",
+                "msg_text":"asdf"
+              },
+              {});
+        };
+        """,
         "var MSG_F = function() {return'asdf'}",
         MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
@@ -1400,15 +1474,16 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testFunctionWithParamReplacementMissing() {
     multiPhaseTestWarning(
         "var MSG_G = function(measly) { return 'asdf' + measly};",
-        lines(
-            "var MSG_G = function(measly) {",
-            "    return __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_G\",",
-            "          \"msg_text\":\"asdf{$measly}\"",
-            "        },",
-            "        {\"measly\":measly});",
-            "    };"),
+        """
+        var MSG_G = function(measly) {
+            return __jscomp_define_msg__(
+                {
+                  "key":"MSG_G",
+                  "msg_text":"asdf{$measly}"
+                },
+                {"measly":measly});
+            };
+        """,
         "var MSG_G = function(measly) { return 'asdf' + measly}",
         MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
@@ -1424,17 +1499,17 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(getTestMessageBuilder("MSG_K").appendJsPlaceholderReference("amount").build());
 
     multiPhaseTestPostLookupError(
-        lines(
-            "/** @desc d */", //
-            "var MSG_K = goog.getMsg('Hi {$jane}', {jane: x});",
-            ""),
-        lines(
-            "/** @desc d */", //
-            "var MSG_K =",
-            "    __jscomp_define_msg__(",
-            "        { \"key\":\"MSG_K\", \"msg_text\":\"Hi {$jane}\" },",
-            "        {'jane': x});",
-            ""),
+        """
+        /** @desc d */
+        var MSG_K = goog.getMsg('Hi {$jane}', {jane: x});
+        """,
+        """
+        /** @desc d */
+        var MSG_K =
+            __jscomp_define_msg__(
+                { "key":"MSG_K", "msg_text":"Hi {$jane}" },
+                {'jane': x});
+        """,
         MESSAGE_TREE_MALFORMED);
   }
 
@@ -1448,15 +1523,15 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
 
     multiPhaseTestPostLookupError(
-        lines(
-            "/** @desc d */", //
-            "var MSG_E = goog.getMsg('no placeholders');",
-            ""),
-        lines(
-            "/** @desc d */", //
-            "var MSG_E =",
-            "    __jscomp_define_msg__({\"key\":\"MSG_E\", \"msg_text\":\"no placeholders\"});",
-            ""),
+        """
+        /** @desc d */
+        var MSG_E = goog.getMsg('no placeholders');
+        """,
+        """
+        /** @desc d */
+        var MSG_E =
+            __jscomp_define_msg__({"key":"MSG_E", "msg_text":"no placeholders"});
+        """,
         MESSAGE_TREE_MALFORMED,
         "Message parse tree malformed. The translated message has placeholders, but the definition"
             + " in the JS code does not.");
@@ -1487,15 +1562,16 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(getTestMessageBuilder("MSG_B").appendStringPart("Hi\nthere").build());
     multiPhaseTestWarning(
         "var MSG_B = function() {return 'asdf'};", //
-        lines(
-            "var MSG_B = function() {",
-            "    return __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_B\",",
-            "          \"msg_text\":\"asdf\"",
-            "        },",
-            "        {});",
-            "};"),
+        """
+        var MSG_B = function() {
+            return __jscomp_define_msg__(
+                {
+                  "key":"MSG_B",
+                  "msg_text":"asdf"
+                },
+                {});
+        };
+        """,
         "var MSG_B=function(){return'Hi\\nthere'}",
         MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
@@ -1510,15 +1586,16 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
     multiPhaseTestWarning(
         "var MSG_C = function(measly) {return 'asdf' + measly};",
-        lines(
-            "var MSG_C = function(measly) {",
-            "    return __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_C\",",
-            "          \"msg_text\":\"asdf{$measly}\"",
-            "        },",
-            "        {\"measly\":measly});",
-            "};"),
+        """
+        var MSG_C = function(measly) {
+            return __jscomp_define_msg__(
+                {
+                  "key":"MSG_C",
+                  "msg_text":"asdf{$measly}"
+                },
+                {"measly":measly});
+        };
+        """,
         "var MSG_C=function(measly){ return 'One ' + measly + ' ph'; }",
         MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
@@ -1533,16 +1610,16 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
     multiPhaseTestWarning(
         "var MSG_D = function(jane, dick) {return jane + dick};", //
-        lines(
-            "var MSG_D = function(jane, dick) {",
-            "    return __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_D\",",
-            "          \"msg_text\":\"{$jane}{$dick}\"",
-            "        },",
-            "        {\"jane\":jane, \"dick\":dick});",
-            "};",
-            ""),
+        """
+        var MSG_D = function(jane, dick) {
+            return __jscomp_define_msg__(
+                {
+                  "key":"MSG_D",
+                  "msg_text":"{$jane}{$dick}"
+                },
+                {"jane":jane, "dick":dick});
+        };
+        """,
         "var MSG_D = function(jane,dick) { return dick + ' and ' + jane; }",
         MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
@@ -1556,15 +1633,16 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
     multiPhaseTestWarning(
         "var MSG_E = function(amtEarned) {return amtEarned + 'x'};",
-        lines(
-            "var MSG_E = function(amtEarned) {",
-            "    return __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_E\",",
-            "          \"msg_text\":\"{$amtEarned}x\"",
-            "        },",
-            "        {\"amtEarned\":amtEarned});",
-            "};"),
+        """
+        var MSG_E = function(amtEarned) {
+            return __jscomp_define_msg__(
+                {
+                  "key":"MSG_E",
+                  "msg_text":"{$amtEarned}x"
+                },
+                {"amtEarned":amtEarned});
+        };
+        """,
         "var MSG_E=function(amtEarned){return'Sum: $'+amtEarned}",
         MESSAGE_NOT_INITIALIZED_CORRECTLY);
   }
@@ -1698,10 +1776,12 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   @Test
   public void testBadFallbackSyntax1() {
     multiPhaseTestPreLookupError(
-        lines(
-            "/** @desc d */\n",
-            "var MSG_A = goog.getMsg('asdf');",
-            "var x = goog.getMsgWithFallback(MSG_A);"),
+        """
+        /** @desc d */
+
+        var MSG_A = goog.getMsg('asdf');
+        var x = goog.getMsgWithFallback(MSG_A);
+        """,
         JsMessageVisitor.BAD_FALLBACK_SYNTAX);
   }
 
@@ -1714,40 +1794,44 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   @Test
   public void testBadFallbackSyntax3() {
     multiPhaseTestPreLookupError(
-        lines(
-            "/** @desc d */\n",
-            "var MSG_A = goog.getMsg('asdf');"
-                + "var x = goog.getMsgWithFallback(MSG_A, NOT_A_MESSAGE);"),
+        """
+        /** @desc d */
+
+        var MSG_A = goog.getMsg('asdf');var x = goog.getMsgWithFallback(MSG_A, NOT_A_MESSAGE);
+        """,
         JsMessageVisitor.BAD_FALLBACK_SYNTAX);
   }
 
   @Test
   public void testBadFallbackSyntax4() {
     multiPhaseTestPreLookupError(
-        lines(
-            "/** @desc d */\n",
-            "var MSG_A = goog.getMsg('asdf');"
-                + "var x = goog.getMsgWithFallback(NOT_A_MESSAGE, MSG_A);"),
+        """
+        /** @desc d */
+
+        var MSG_A = goog.getMsg('asdf');var x = goog.getMsgWithFallback(NOT_A_MESSAGE, MSG_A);
+        """,
         JsMessageVisitor.BAD_FALLBACK_SYNTAX);
   }
 
   @Test
   public void testBadFallbackSyntax5() {
     multiPhaseTestPreLookupError(
-        lines(
-            "/** @desc d */\n",
-            "var MSG_A = goog.getMsg('asdf');"
-                + "var x = goog.getMsgWithFallback(MSG_A, MSG_DOES_NOT_EXIST);"),
+        """
+        /** @desc d */
+
+        var MSG_A = goog.getMsg('asdf');var x = goog.getMsgWithFallback(MSG_A, MSG_DOES_NOT_EXIST);
+        """,
         JsMessageVisitor.FALLBACK_ARG_ERROR);
   }
 
   @Test
   public void testBadFallbackSyntax6() {
     multiPhaseTestPreLookupError(
-        lines(
-            "/** @desc d */\n",
-            "var MSG_A = goog.getMsg('asdf');"
-                + "var x = goog.getMsgWithFallback(MSG_DOES_NOT_EXIST, MSG_A);"),
+        """
+        /** @desc d */
+
+        var MSG_A = goog.getMsg('asdf');var x = goog.getMsgWithFallback(MSG_DOES_NOT_EXIST, MSG_A);
+        """,
         JsMessageVisitor.FALLBACK_ARG_ERROR);
   }
 
@@ -1755,151 +1839,163 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testUseFallback() {
     registerMessage(getTestMessageBuilder("MSG_B").appendStringPart("translated").build());
     multiPhaseTest(
-        lines(
-            "/** @desc d */",
-            "var MSG_A = goog.getMsg('msg A');",
-            "/** @desc d */",
-            "var MSG_B = goog.getMsg('msg B');",
-            "var x = goog.getMsgWithFallback(MSG_A, MSG_B);"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_A\",",
-            "          \"msg_text\":\"msg A\",",
-            "        });",
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_B =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_B\",",
-            "          \"msg_text\":\"msg B\",",
-            "        });",
-            "var x = __jscomp_msg_fallback__(\"MSG_A\", MSG_A, \"MSG_B\", MSG_B);"),
-        lines(
-            "/** @desc d */",
-            "var MSG_A = 'msg A';",
-            "/** @desc d */",
-            "var MSG_B = 'translated';",
-            "var x = MSG_B;"));
+        """
+        /** @desc d */
+        var MSG_A = goog.getMsg('msg A');
+        /** @desc d */
+        var MSG_B = goog.getMsg('msg B');
+        var x = goog.getMsgWithFallback(MSG_A, MSG_B);
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_A",
+                  "msg_text":"msg A",
+                });
+        /**
+         * @desc d
+         */
+        var MSG_B =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_B",
+                  "msg_text":"msg B",
+                });
+        var x = __jscomp_msg_fallback__("MSG_A", MSG_A, "MSG_B", MSG_B);
+        """,
+        """
+        /** @desc d */
+        var MSG_A = 'msg A';
+        /** @desc d */
+        var MSG_B = 'translated';
+        var x = MSG_B;
+        """);
   }
 
   @Test
   public void testFallbackEmptyBundle() {
     multiPhaseTest(
-        lines(
-            "/** @desc d */",
-            "var MSG_A = goog.getMsg('msg A');",
-            "/** @desc d */",
-            "var MSG_B = goog.getMsg('msg B');",
-            "var x = goog.getMsgWithFallback(MSG_A, MSG_B);"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_A\",",
-            "          \"msg_text\":\"msg A\",",
-            "        });",
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_B =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_B\",",
-            "          \"msg_text\":\"msg B\",",
-            "        });",
-            "var x = __jscomp_msg_fallback__(\"MSG_A\", MSG_A, \"MSG_B\", MSG_B);"),
-        lines(
-            "/** @desc d */",
-            "var MSG_A = 'msg A';",
-            "/** @desc d */",
-            "var MSG_B = 'msg B';",
-            "var x = MSG_A;"));
+        """
+        /** @desc d */
+        var MSG_A = goog.getMsg('msg A');
+        /** @desc d */
+        var MSG_B = goog.getMsg('msg B');
+        var x = goog.getMsgWithFallback(MSG_A, MSG_B);
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_A",
+                  "msg_text":"msg A",
+                });
+        /**
+         * @desc d
+         */
+        var MSG_B =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_B",
+                  "msg_text":"msg B",
+                });
+        var x = __jscomp_msg_fallback__("MSG_A", MSG_A, "MSG_B", MSG_B);
+        """,
+        """
+        /** @desc d */
+        var MSG_A = 'msg A';
+        /** @desc d */
+        var MSG_B = 'msg B';
+        var x = MSG_A;
+        """);
   }
 
   @Test
   public void testNoUseFallback() {
     registerMessage(getTestMessageBuilder("MSG_A").appendStringPart("translated").build());
     multiPhaseTest(
-        lines(
-            "/** @desc d */",
-            "var MSG_A = goog.getMsg('msg A');",
-            "/** @desc d */",
-            "var MSG_B = goog.getMsg('msg B');",
-            "var x = goog.getMsgWithFallback(MSG_A, MSG_B);"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_A\",",
-            "          \"msg_text\":\"msg A\",",
-            "        });",
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_B =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_B\",",
-            "          \"msg_text\":\"msg B\",",
-            "        });",
-            "var x = __jscomp_msg_fallback__(\"MSG_A\", MSG_A, \"MSG_B\", MSG_B);"),
-        lines(
-            "/** @desc d */",
-            "var MSG_A = 'translated';",
-            "/** @desc d */",
-            "var MSG_B = 'msg B';",
-            "var x = MSG_A;"));
+        """
+        /** @desc d */
+        var MSG_A = goog.getMsg('msg A');
+        /** @desc d */
+        var MSG_B = goog.getMsg('msg B');
+        var x = goog.getMsgWithFallback(MSG_A, MSG_B);
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_A",
+                  "msg_text":"msg A",
+                });
+        /**
+         * @desc d
+         */
+        var MSG_B =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_B",
+                  "msg_text":"msg B",
+                });
+        var x = __jscomp_msg_fallback__("MSG_A", MSG_A, "MSG_B", MSG_B);
+        """,
+        """
+        /** @desc d */
+        var MSG_A = 'translated';
+        /** @desc d */
+        var MSG_B = 'msg B';
+        var x = MSG_A;
+        """);
   }
 
   @Test
   public void testNoUseFallback2() {
     registerMessage(getTestMessageBuilder("MSG_C").appendStringPart("translated").build());
     multiPhaseTest(
-        lines(
-            "/** @desc d */",
-            "var MSG_A = goog.getMsg('msg A');",
-            "/** @desc d */",
-            "var MSG_B = goog.getMsg('msg B');",
-            "var x = goog.getMsgWithFallback(MSG_A, MSG_B);"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_A\",",
-            "          \"msg_text\":\"msg A\",",
-            "        });",
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_B =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_B\",",
-            "          \"msg_text\":\"msg B\",",
-            "        });",
-            "var x = __jscomp_msg_fallback__(\"MSG_A\", MSG_A, \"MSG_B\", MSG_B);"),
-        lines(
-            "/** @desc d */",
-            "var MSG_A = 'msg A';",
-            "/** @desc d */",
-            "var MSG_B = 'msg B';",
-            "var x = MSG_A;"));
+        """
+        /** @desc d */
+        var MSG_A = goog.getMsg('msg A');
+        /** @desc d */
+        var MSG_B = goog.getMsg('msg B');
+        var x = goog.getMsgWithFallback(MSG_A, MSG_B);
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_A",
+                  "msg_text":"msg A",
+                });
+        /**
+         * @desc d
+         */
+        var MSG_B =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_B",
+                  "msg_text":"msg B",
+                });
+        var x = __jscomp_msg_fallback__("MSG_A", MSG_A, "MSG_B", MSG_B);
+        """,
+        """
+        /** @desc d */
+        var MSG_A = 'msg A';
+        /** @desc d */
+        var MSG_B = 'msg B';
+        var x = MSG_A;
+        """);
   }
 
   @Test
@@ -1908,17 +2004,17 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
     multiPhaseTest(
         "/** @desc d */\n var MSG_A = goog.getMsg(`asdf`);",
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_A\",",
-            "          \"msg_text\":\"asdf\",",
-            "        });",
-            "     "),
+        """
+        /**
+         * @desc d
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_A",
+                  "msg_text":"asdf",
+                });
+        """,
         "/** @desc d */\n var MSG_A='Hi\\nthere'");
   }
 
@@ -1933,21 +2029,22 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
     multiPhaseTest(
         "/** @desc d */\n var MSG_B=goog.getMsg(`asdf {$measly}`, {measly: x});",
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_B =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_B\",",
-            "          \"msg_text\":\"asdf {$measly}\",",
-            "        },",
-            "        {'measly': x});",
-            ""),
-        lines(
-            "/** @desc d */", //
-            "var MSG_B = 'One ' + x + ' ph';"));
+        """
+        /**
+         * @desc d
+         */
+        var MSG_B =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_B",
+                  "msg_text":"asdf {$measly}",
+                },
+                {'measly': x});
+        """,
+        """
+        /** @desc d */
+        var MSG_B = 'One ' + x + ' ph';
+        """);
   }
 
   @Test
@@ -1964,86 +2061,87 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testReplaceUnescapeHtmlEntitiesMessage() {
     multiPhaseTest(
         "/** @desc d */\n var MSG_A = goog.getMsg('A', {}, {unescapeHtmlEntities: true});",
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_A\",",
-            "          \"msg_text\":\"A\",",
-            "          \"unescapeHtmlEntities\":\"\"",
-            "        },",
-            "        {});",
-            "     "),
+        """
+        /**
+         * @desc d
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_A",
+                  "msg_text":"A",
+                  "unescapeHtmlEntities":""
+                },
+                {});
+        """,
         "/** @desc d */\n var MSG_A = 'A';");
     multiPhaseTest(
-        lines(
-            "/** @desc d */\n",
-            "var MSG_A = goog.getMsg('User&apos;s &lt; email &amp; address &gt; are"
-                + " &quot;correct&quot;', {}, {unescapeHtmlEntities: true});"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_A\",",
-            "          \"msg_text\":\"User\\x26apos;s \\x26lt; email \\x26amp; address \\x26gt;"
-                + " are \\x26quot;correct\\x26quot;\",",
-            "          \"unescapeHtmlEntities\":\"\"",
-            "        },",
-            "        {});",
-            ""),
+        """
+/** @desc d */
+
+var MSG_A = goog.getMsg('User&apos;s &lt; email &amp; address &gt; are &quot;correct&quot;', {}, {unescapeHtmlEntities: true});
+""",
+        """
+/**
+ * @desc d
+ */
+var MSG_A =
+    __jscomp_define_msg__(
+        {
+          "key":"MSG_A",
+          "msg_text":"User\\x26apos;s \\x26lt; email \\x26amp; address \\x26gt; are \\x26quot;correct\\x26quot;",
+          "unescapeHtmlEntities":""
+        },
+        {});
+
+""",
         "/** @desc d */\n var MSG_A = 'User\\'s < email & address > are \"correct\"';");
     multiPhaseTest(
-        lines(
-            "/** @desc d */\n",
-            "var MSG_A = goog.getMsg('&lt; {$startSpan}email &amp; address{$endSpan} &gt;', "
-                + "{'startSpan': '<span title=\"&lt;info&gt;\">', 'endSpan': '</span>'}, "
-                + "{unescapeHtmlEntities: true});"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_A\",",
-            "          \"msg_text\":\"\\x26lt; {$startSpan}email \\x26amp; address{$endSpan}"
-                + " \\x26gt;\",",
-            "          \"unescapeHtmlEntities\":\"\"",
-            "        },",
-            "        {",
-            "          \"startSpan\":'\\x3cspan title\\x3d\"\\x26lt;info\\x26gt;\"\\x3e',",
-            "          \"endSpan\":\"\\x3c/span\\x3e\"",
-            "        });",
-            ""),
-        lines(
-            "/** @desc d */", //
-            "var MSG_A =",
-            "    '< ' + '<span title=\"&lt;info&gt;\">' + 'email & address' + '</span>' + ' >';",
-            ""));
+        """
+/** @desc d */
+
+var MSG_A = goog.getMsg('&lt; {$startSpan}email &amp; address{$endSpan} &gt;', {'startSpan': '<span title="&lt;info&gt;">', 'endSpan': '</span>'}, {unescapeHtmlEntities: true});
+""",
+        """
+        /**
+         * @desc d
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_A",
+                  "msg_text":"\\x26lt; {$startSpan}email \\x26amp; address{$endSpan} \\x26gt;",
+                  "unescapeHtmlEntities":""
+                },
+                {
+                  "startSpan":'\\x3cspan title\\x3d"\\x26lt;info\\x26gt;"\\x3e',
+                  "endSpan":"\\x3c/span\\x3e"
+                });
+        """,
+        """
+        /** @desc d */
+        var MSG_A =
+            '< ' + '<span title="&lt;info&gt;">' + 'email & address' + '</span>' + ' >';
+        """);
     multiPhaseTest(
-        lines(
-            "/** @desc d */\n",
-            "var MSG_A = goog.getMsg('&amp;lt;double &amp;amp; escaping&amp;gt;', {},"
-                + " {unescapeHtmlEntities: true});"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_A\",",
-            "          \"msg_text\":\"\\x26amp;lt;double \\x26amp;amp; escaping\\x26amp;gt;\",",
-            "          \"unescapeHtmlEntities\":\"\"",
-            "        },",
-            "        {});",
-            ""),
+        """
+/** @desc d */
+
+var MSG_A = goog.getMsg('&amp;lt;double &amp;amp; escaping&amp;gt;', {}, {unescapeHtmlEntities: true});
+""",
+        """
+        /**
+         * @desc d
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_A",
+                  "msg_text":"\\x26amp;lt;double \\x26amp;amp; escaping\\x26amp;gt;",
+                  "unescapeHtmlEntities":""
+                },
+                {});
+        """,
         "/** @desc d */\n var MSG_A = '&lt;double &amp; escaping&gt;';");
   }
 
@@ -2062,22 +2160,23 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
     multiPhaseTest(
         "/** @desc d */\n var MSG_A = goog.getMsg('A', {}, {unescapeHtmlEntities: true});",
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_A\",",
-            "          \"msg_text\":\"A\",",
-            "          \"unescapeHtmlEntities\":\"\"",
-            "        },",
-            "        {});",
-            "     "),
-        lines(
-            "/** @desc d */", //
-            "var MSG_A = 'User\\'s < email & address > are \"correct\"';"));
+        """
+        /**
+         * @desc d
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_A",
+                  "msg_text":"A",
+                  "unescapeHtmlEntities":""
+                },
+                {});
+        """,
+        """
+        /** @desc d */
+        var MSG_A = 'User\\'s < email & address > are "correct"';
+        """);
 
     registerMessage(
         getTestMessageBuilder("MSG_B")
@@ -2096,19 +2195,19 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
     multiPhaseTest(
         "/** @desc d */\n var MSG_B = goog.getMsg('B', {}, {unescapeHtmlEntities: true});",
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_B =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_B\",",
-            "          \"msg_text\":\"B\",",
-            "          \"unescapeHtmlEntities\":\"\"",
-            "        },",
-            "        {});",
-            ""),
+        """
+        /**
+         * @desc d
+         */
+        var MSG_B =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_B",
+                  "msg_text":"B",
+                  "unescapeHtmlEntities":""
+                },
+                {});
+        """,
         "/** @desc d */\n var MSG_B = 'User\\'s < email & address > are \"correct\"';");
 
     registerMessage(
@@ -2123,31 +2222,33 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .appendStringPart("os;")
             .build());
     multiPhaseTest(
-        lines(
-            "/** @desc d */\n",
-            "var MSG_C = goog.getMsg('{$br}{$x}{$y}{$z}', {'br': '<br>', 'x': 'X', 'y': 'Y',"
-                + " 'z': 'Z'}, {unescapeHtmlEntities: true});"),
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_C =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_C\",",
-            "          \"msg_text\":\"{$br}{$x}{$y}{$z}\",",
-            "          \"unescapeHtmlEntities\":\"\"",
-            "        },",
-            "        {",
-            "          \"br\":\"\\x3cbr\\x3e\",",
-            "          \"x\":\"X\",",
-            "          \"y\":\"Y\",",
-            "          \"z\":\"Z\"",
-            "        });",
-            ""),
-        lines(
-            "/** @desc d */", //
-            "var MSG_C = '<br>' + '&' + 'X' + 'Y' + '&ap' + 'Z' + 'os;';"));
+        """
+/** @desc d */
+
+var MSG_C = goog.getMsg('{$br}{$x}{$y}{$z}', {'br': '<br>', 'x': 'X', 'y': 'Y', 'z': 'Z'}, {unescapeHtmlEntities: true});
+""",
+        """
+        /**
+         * @desc d
+         */
+        var MSG_C =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_C",
+                  "msg_text":"{$br}{$x}{$y}{$z}",
+                  "unescapeHtmlEntities":""
+                },
+                {
+                  "br":"\\x3cbr\\x3e",
+                  "x":"X",
+                  "y":"Y",
+                  "z":"Z"
+                });
+        """,
+        """
+        /** @desc d */
+        var MSG_C = '<br>' + '&' + 'X' + 'Y' + '&ap' + 'Z' + 'os;';
+        """);
   }
 
   @Test
@@ -2161,39 +2262,43 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
     multiPhaseTest(
         "/** @desc d */\n var MSG_A = goog.getMsg('{$br}', {'br': '<br>'}, {html: true});",
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_A\",",
-            "          \"msg_text\":\"{$br}\",",
-            "          \"escapeLessThan\":\"\",",
-            "        },",
-            "        {\"br\":\"\\x3cbr\\x3e\"});"),
-        lines(
-            "/** @desc d */", //
-            "var MSG_A = 'Hello &lt;' + '<br>' + '&gt;';"));
+        """
+        /**
+         * @desc d
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_A",
+                  "msg_text":"{$br}",
+                  "escapeLessThan":"",
+                },
+                {"br":"\\x3cbr\\x3e"});
+        """,
+        """
+        /** @desc d */
+        var MSG_A = 'Hello &lt;' + '<br>' + '&gt;';
+        """);
 
     // Confirm that the default behavior is to leave `<` unchanged
     multiPhaseTest(
         "/** @desc d */\n var MSG_A = goog.getMsg('{$br}', {'br': '<br>'});",
-        lines(
-            "/**",
-            " * @desc d",
-            " */",
-            "var MSG_A =",
-            "    __jscomp_define_msg__(",
-            "        {",
-            "          \"key\":\"MSG_A\",",
-            "          \"msg_text\":\"{$br}\",",
-            "        },",
-            "        {\"br\":\"\\x3cbr\\x3e\"});"),
-        lines(
-            "/** @desc d */", //
-            "var MSG_A = 'Hello <' + '<br>' + '&gt;';"));
+        """
+        /**
+         * @desc d
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_A",
+                  "msg_text":"{$br}",
+                },
+                {"br":"\\x3cbr\\x3e"});
+        """,
+        """
+        /** @desc d */
+        var MSG_A = 'Hello <' + '<br>' + '&gt;';
+        """);
   }
 
   private void registerMessage(JsMessage message) {

@@ -378,10 +378,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
     strictMode = SLOPPY;
     expectFeatures(Feature.FOR_OF);
     parse(
-        lines(
-            "for (var x of [1, 2, 3]) {", //
-            "  if (x == 2) break;",
-            "}"));
+        """
+        for (var x of [1, 2, 3]) {
+          if (x == 2) break;
+        }
+        """);
   }
 
   @Test
@@ -431,10 +432,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
     strictMode = SLOPPY;
     expectFeatures(Feature.FOR_OF);
     parse(
-        lines(
-            "for (var x of [1, 2, 3]) {", //
-            "  if (x == 2) continue;",
-            "}"));
+        """
+        for (var x of [1, 2, 3]) {
+          if (x == 2) continue;
+        }
+        """);
   }
 
   /**
@@ -1195,11 +1197,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testJSDocAttachment19() {
     Node fn =
         parse(
-                lines(
-                    "function f() { ", //
-                    "  /** @type {string} */",
-                    "  return;",
-                    "};"))
+                """
+                function f() {
+                  /** @type {string} */
+                  return;
+                };
+                """)
             .getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
 
@@ -1212,11 +1215,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testJSDocAttachment20() {
     Node fn =
         parse(
-                lines(
-                    "function f() { ", //
-                    "  /** @type {string} */",
-                    "  if (true) return;",
-                    "};"))
+                """
+                function f() {
+                  /** @type {string} */
+                  if (true) return;
+                };
+                """)
             .getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
 
@@ -1620,14 +1624,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
     Node root =
         parse(
-            lines(
-                "// comment before GETPROP",
-                "a(",
-                "// comment on GETPROP",
-                ")",
-                ".b();",
-                "// comment after GETPROP",
-                "c();"));
+            """
+            // comment before GETPROP
+            a(
+            // comment on GETPROP
+            )
+            .b();
+            // comment after GETPROP
+            c();
+            """);
     Node exprResultA = root.getFirstChild();
     assertNode(exprResultA).hasType(Token.EXPR_RESULT);
     assertThat(exprResultA.getNonJSDocCommentString()).isEqualTo("// comment before GETPROP");
@@ -1949,11 +1954,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
     Node fn =
         parse(
-                lines(
-                    "function f(", //
-                    "  x,// first",
-                    "  y // second",
-                    "){}"))
+                """
+                function f(
+                  x,// first
+                  y // second
+                ){}
+                """)
             .getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
 
@@ -1976,11 +1982,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
     Node fn =
         parse(
-                lines(
-                    "function f(", //
-                    "  x, /* first */",
-                    "  y /* second */",
-                    ") {}"))
+                """
+                function f(
+                  x, /* first */
+                  y /* second */
+                ) {}
+                """)
             .getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
 
@@ -2003,10 +2010,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
     Node fn =
         parse(
-                lines(
-                    "function f(x, /* first */", //
-                    "y",
-                    ") {}"))
+                """
+                function f(x, /* first */
+                y
+                ) {}
+                """)
             .getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
 
@@ -2053,7 +2061,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testNonJSDocTrailingCommentOnConstantFollowedByConstant() {
     isIdeMode = true;
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
-    Node cnst = parse(lines("const A = 1; // comment", "", "const B = 2;")).getFirstChild();
+    Node cnst =
+        parse(
+                """
+                const A = 1; // comment
+
+                const B = 2;
+                """)
+            .getFirstChild();
     assertNode(cnst).hasType(Token.CONST);
 
     assertThat(cnst.getTrailingNonJSDocCommentString()).isEqualTo("// comment");
@@ -2063,7 +2078,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testMultipleNonJSDocTrailingComments() {
     isIdeMode = true;
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
-    Node n = parse(lines("const A = 1; /* A1 */ /* A2 */ // A3", "", "const B = 2;"));
+    Node n =
+        parse(
+            """
+            const A = 1; /* A1 */ /* A2 */ // A3
+
+            const B = 2;
+            """);
     Node a = n.getFirstChild();
     assertNode(a).hasType(Token.CONST);
     Node b = n.getLastChild();
@@ -2085,7 +2106,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testNonJSDocTrailingCommentAfterFunctionCall() {
     isIdeMode = true;
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
-    Node n = parse(lines("function g(){ f(); // comment", "f();}"));
+    Node n =
+        parse(
+            """
+            function g(){ f(); // comment
+            f();}
+            """);
     Node exprRes = n.getFirstChild().getLastChild().getFirstChild();
     assertNode(exprRes).hasType(Token.EXPR_RESULT);
 
@@ -2098,12 +2124,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
     Node n =
         parse(
-            lines(
-                "if (true) {",
-                "  f1(); // comment1 on f1()",
-                "  // comment2",
-                "  // comment3",
-                "}"));
+            """
+            if (true) {
+              f1(); // comment1 on f1()
+              // comment2
+              // comment3
+            }
+            """);
     Node exprRes = n.getFirstChild().getLastChild().getFirstChild();
     assertNode(exprRes).hasType(Token.EXPR_RESULT);
 
@@ -2115,7 +2142,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testLastNonJSDocCommentInBlock() {
     isIdeMode = true;
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
-    Node n = parse(lines("if (true) {", "  f();", "  /* comment */", "}"));
+    Node n =
+        parse(
+            """
+            if (true) {
+              f();
+              /* comment */
+            }
+            """);
     Node exprRes = n.getFirstChild().getLastChild().getFirstChild();
     assertNode(exprRes).hasType(Token.EXPR_RESULT);
 
@@ -2126,7 +2160,16 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testLastNonJSDocCommentInBlockWithBlankLines() {
     isIdeMode = true;
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
-    Node n = parse(lines("if (true) {", "  f();", "", "", "  /* comment */", "}"));
+    Node n =
+        parse(
+            """
+            if (true) {
+              f();
+
+
+              /* comment */
+            }
+            """);
     Node exprRes = n.getFirstChild().getLastChild().getFirstChild();
     assertNode(exprRes).hasType(Token.EXPR_RESULT);
 
@@ -2138,7 +2181,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testInlineCommentInFunctionCallInBlock() {
     isIdeMode = true;
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
-    Node n = parse(lines("if (true) {", "  f(0, 1 /* comment */);}"));
+    Node n =
+        parse(
+            """
+            if (true) {
+              f(0, 1 /* comment */);}
+            """);
     Node exprRes = n.getFirstChild().getLastChild().getFirstChild();
     assertNode(exprRes).hasType(Token.EXPR_RESULT);
     // TODO(b/242294987): This should not be an "end of block" comment (which we treat as trailing
@@ -2150,7 +2198,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testNonJSDocBigCommentInbetween() {
     isIdeMode = true;
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
-    Node n = parse(lines("let x = 0; // comment on x", "//", "// more comment", "let y = 1;"));
+    Node n =
+        parse(
+            """
+            let x = 0; // comment on x
+            //
+            // more comment
+            let y = 1;
+            """);
 
     Node fstLetDecl = n.getFirstChild();
     Node sndLetDecl = n.getLastChild();
@@ -2188,12 +2243,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
     Node fn =
         parse(
-                lines(
-                    "function f(", //
-                    "  // blah1", //
-                    "  x,", //
-                    "  // blah2", //
-                    "  y) {}"))
+                """
+                function f(
+                  // blah1
+                  x,
+                  // blah2
+                  y) {}
+                """)
             .getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
 
@@ -2213,12 +2269,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
     Node fn =
         parse(
-                lines(
-                    "function f(", //
-                    "  /* blah1 */ x,", //
-                    "  // blah2", //
-                    "  y", //
-                    ") {}"))
+                """
+                function f(
+                  /* blah1 */ x,
+                  // blah2
+                  y
+                ) {}
+                """)
             .getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
 
@@ -2246,11 +2303,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
     Node fn =
         parse(
-                lines(
-                    "function f(", //
-                    "     /* blah1 */",
-                    "     x // blah",
-                    "  ) {}"))
+                """
+                function f(
+                     /* blah1 */
+                     x // blah
+                  ) {}
+                """)
             .getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
 
@@ -2265,11 +2323,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
     Node scriptNode =
         parse(
-            lines(
-                "function f1() {}", //
-                "// first",
-                "f1();",
-                "// second"));
+            """
+            function f1() {}
+            // first
+            f1();
+            // second
+            """);
 
     assertNode(scriptNode).hasType(Token.SCRIPT);
 
@@ -2285,11 +2344,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
     Node scriptNode =
         parse(
-            lines(
-                "function f1() {}", //
-                "// first",
-                "f1();",
-                "/* second */"));
+            """
+            function f1() {}
+            // first
+            f1();
+            /* second */
+            """);
 
     assertNode(scriptNode).hasType(Token.SCRIPT);
 
@@ -2305,13 +2365,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
     Node scriptNode =
         parse(
-            lines(
-                "function f1() {}", //
-                "// first",
-                "f1();",
-                "// second",
-                "/* third */",
-                "// fourth"));
+            """
+            function f1() {}
+            // first
+            f1();
+            // second
+            /* third */
+            // fourth
+            """);
 
     assertNode(scriptNode).hasType(Token.SCRIPT);
 
@@ -2328,13 +2389,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
     Node scriptNode =
         parse(
-            lines(
-                "function f1() {}", //
-                "if (true) {",
-                "// first",
-                "f1(); // second ",
-                "}",
-                "// third"));
+            """
+            function f1() {}
+            if (true) {
+            // first
+            f1(); // second
+            }
+            // third
+            """);
 
     assertNode(scriptNode).hasType(Token.SCRIPT);
 
@@ -2354,9 +2416,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
     Node fn =
         parse(
-                lines(
-                    "function f(/* blah1 */ x // blah", //
-                    ") {}"))
+                """
+                function f(/* blah1 */ x // blah
+                ) {}
+                """)
             .getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
 
@@ -2474,10 +2537,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testInlineJSDocAttachment4() {
     parse(
-        lines(
-            "function f(/**", //
-            " * @type {string}",
-            " */ x) {}"));
+        """
+        function f(/**
+         * @type {string}
+         */ x) {}
+        """);
   }
 
   @Test
@@ -2669,18 +2733,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     // The original repro case as reported.
     js =
-        lines(
-            "(function() {",
-            "  var url=\"\";",
-            "  switch(true)",
-            "  {",
-            "    case /a.com\\/g|l.i/N/.test(url):",
-            "      return \"\";",
-            "    case /b.com\\/T/.test(url):",
-            "      return \"\";",
-            "  }",
-            "}",
-            ")();");
+        """
+        (function() {
+          var url="";
+          switch(true)
+          {
+            case /a.com\\/g|l.i/N/.test(url):
+              return "";
+            case /b.com\\/T/.test(url):
+              return "";
+          }
+        }
+        )();
+        """;
     parseError(js, "primary expression expected");
   }
 
@@ -3002,41 +3067,46 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.COMPUTED_PROPERTIES);
 
     testComputedProperty(
-        lines(
-            "var prop = 'some complex expression';", //
-            "",
-            "var x = {",
-            "  [prop]: 'foo'",
-            "}"));
+        """
+        var prop = 'some complex expression';
+
+        var x = {
+          [prop]: 'foo'
+        }
+        """);
 
     testComputedProperty(
-        lines(
-            "var prop = 'some complex expression';",
-            "",
-            "var x = {",
-            "  [prop + '!']: 'foo'",
-            "}"));
+        """
+        var prop = 'some complex expression';
+
+        var x = {
+          [prop + '!']: 'foo'
+        }
+        """);
 
     testComputedProperty(
-        lines(
-            "var prop;", //
-            "",
-            "var x = {",
-            "  [prop = 'some expr']: 'foo'",
-            "}"));
+        """
+        var prop;
+
+        var x = {
+          [prop = 'some expr']: 'foo'
+        }
+        """);
 
     testComputedProperty(
-        lines(
-            "var x = {", //
-            "  [1 << 8]: 'foo'",
-            "}"));
+        """
+        var x = {
+          [1 << 8]: 'foo'
+        }
+        """);
 
     String js =
-        lines(
-            "var x = {", //
-            "  [1 << 8]: 'foo',",
-            "  [1 << 7]: 'bar'",
-            "}");
+        """
+        var x = {
+          [1 << 8]: 'foo',
+          [1 << 7]: 'bar'
+        }
+        """;
     mode = LanguageMode.ECMASCRIPT_2015;
     strictMode = SLOPPY;
     parse(js);
@@ -3802,9 +3872,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     Node n =
         parse(
-            lines(
-                "/** @fileoverview First */", //
-                "/** @fileoverview Second */"));
+            """
+            /** @fileoverview First */
+            /** @fileoverview Second */
+            """);
 
     assertThat(n.getJSDocInfo()).isNotNull();
     assertThat(n.getJSDocInfo().getFileOverview()).isEqualTo("First");
@@ -3816,9 +3887,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     Node n =
         parse(
-            lines(
-                "/** @typeSummary */", //
-                "/** @fileoverview Second */"));
+            """
+            /** @typeSummary */
+            /** @fileoverview Second */
+            """);
 
     assertThat(n.getJSDocInfo()).isNotNull();
     assertThat(n.getJSDocInfo().isTypeSummary()).isTrue();
@@ -3831,9 +3903,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     Node n =
         parse(
-            lines(
-                "/** @fileoverview @suppress {const} */", //
-                "/** @fileoverview @suppress {checkTypes} */"));
+            """
+            /** @fileoverview @suppress {const} */
+            /** @fileoverview @suppress {checkTypes} */
+            """);
 
     assertThat(n.getJSDocInfo()).isNotNull();
     assertThat(n.getJSDocInfo().getSuppressions()).containsExactly("const", "checkTypes");
@@ -3845,9 +3918,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     Node n =
         parse(
-            lines(
-                "/** @fileoverview First */", //
-                "/** @externs */"));
+            """
+            /** @fileoverview First */
+            /** @externs */
+            """);
 
     assertThat(n.getJSDocInfo()).isNotNull();
     assertThat(n.getJSDocInfo().getFileOverview()).isEqualTo("First");
@@ -4056,18 +4130,20 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("function * f() { return yield; }"); // OK
     parse("function * f() { return yield 1; }"); // OK
     parse(
-        lines(
-            "function * f() {",
-            "  yield *", // line break allowed here
-            "      [1, 2, 3];",
-            "}"));
+        """
+        function * f() {
+          yield * // line break allowed here
+              [1, 2, 3];
+        }
+        """);
     expectFeatures();
     parseError(
-        lines(
-            "function * f() {",
-            "  yield", // line break not allowed here
-            "      *[1, 2, 3];",
-            "}"),
+        """
+        function * f() {
+          yield // line break not allowed here
+              *[1, 2, 3];
+        }
+        """,
         "'}' expected");
     parseError("function * f() { yield *; }", "yield* requires an expression");
   }
@@ -4145,12 +4221,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
     // google3/third_party/java_src/jscomp/java/com/google/javascript/jscomp/parsing/IRFactory.java?rcl=719034735&l=3482
     // Hence, after deduplication, we only get one error.
     parseWarning(
-        lines(
-            "function x() {", //
-            "        a = \"\\",
-            "        \\ \\",
-            "        \";",
-            "};"),
+        """
+        function x() {
+                a = "\\
+                \\ \\
+                ";
+        };
+        """,
         "Unnecessary escape: '\\ ' is equivalent to just ' '",
         STRING_CONTINUATIONS_WARNING);
   }
@@ -5220,15 +5297,16 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testForEach() {
     parseError(
-        lines(
-            "function f(stamp, status) {",
-            "  for each ( var curTiming in this.timeLog.timings ) {",
-            "    if ( curTiming.callId == stamp ) {",
-            "      curTiming.flag = status;",
-            "      break;",
-            "    }",
-            "  }",
-            "};"),
+        """
+        function f(stamp, status) {
+          for each ( var curTiming in this.timeLog.timings ) {
+            if ( curTiming.callId == stamp ) {
+              curTiming.flag = status;
+              break;
+            }
+          }
+        };
+        """,
         "'(' expected");
   }
 
@@ -5301,9 +5379,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("var unterm = 'forgot closing quote", "Unterminated string literal");
 
     parseError(
-        lines(
-            "var unterm = 'forgot closing quote", //
-            "alert(unterm);"),
+        """
+        var unterm = 'forgot closing quote
+        alert(unterm);
+        """,
         "Unterminated string literal");
 
     // test combo of a string continuation + useless escape warning + unterminated literal error
@@ -5329,9 +5408,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("var unterm = /forgot trailing slash", "Expected '/' in regular expression literal");
 
     parseError(
-        lines(
-            "var unterm = /forgot trailing slash", //
-            "alert(unterm);"),
+        """
+        var unterm = /forgot trailing slash
+        alert(unterm);
+        """,
         "Expected '/' in regular expression literal");
   }
 
@@ -5582,20 +5662,22 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("class C {}");
 
     parse(
-        lines(
-            "class C {", //
-            "  member() {}",
-            "  get prop() {}",
-            "  set prop(a) {}",
-            "}"));
+        """
+        class C {
+          member() {}
+          get prop() {}
+          set prop(a) {}
+        }
+        """);
 
     parse(
-        lines(
-            "class C {",
-            "  static member() {}",
-            "  static get prop() {}",
-            "  static set prop(a) {}",
-            "}"));
+        """
+        class C {
+          static member() {}
+          static get prop() {}
+          static set prop(a) {}
+        }
+        """);
   }
 
   @Test
@@ -5603,20 +5685,22 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.CLASSES);
     strictMode = SLOPPY;
     parse(
-        lines(
-            "class C {", //
-            "  member() {};",
-            "  get prop() {};",
-            "  set prop(a) {};",
-            "}"));
+        """
+        class C {
+          member() {};
+          get prop() {};
+          set prop(a) {};
+        }
+        """);
 
     parse(
-        lines(
-            "class C {",
-            "  static member() {};",
-            "  static get prop() {};",
-            "  static set prop(a) {};",
-            "}"));
+        """
+        class C {
+          static member() {};
+          static get prop() {};
+          static set prop(a) {};
+        }
+        """);
   }
 
   @Test
@@ -5624,12 +5708,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.CLASSES, Feature.KEYWORDS_AS_PROPERTIES);
     strictMode = SLOPPY;
     parse(
-        lines(
-            "class KeywordMethods {", //
-            "  continue() {}",
-            "  throw() {}",
-            "  else() {}",
-            "}"));
+        """
+        class KeywordMethods {
+          continue() {}
+          throw() {}
+          else() {}
+        }
+        """);
   }
 
   @Test
@@ -5637,30 +5722,33 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.CLASSES, Feature.KEYWORDS_AS_PROPERTIES);
     strictMode = SLOPPY;
     parse(
-        lines(
-            "class C {", //
-            "  import() {};",
-            "  get break() {};",
-            "  set break(a) {};",
-            "}"));
+        """
+        class C {
+          import() {};
+          get break() {};
+          set break(a) {};
+        }
+        """);
 
     parse(
-        lines(
-            "class C {",
-            "  static import() {};",
-            "  static get break() {};",
-            "  static set break(a) {};",
-            "}"));
+        """
+        class C {
+          static import() {};
+          static get break() {};
+          static set break(a) {};
+        }
+        """);
   }
 
   @Test
   public void testClass_semicolonsInBodyAreIgnored() {
     Node tree =
         parse(
-            lines(
-                "class C {", //
-                "  foo() {};;;;;;",
-                "}"));
+            """
+            class C {
+              foo() {};;;;;;
+            }
+            """);
 
     Node members = tree.getFirstChild().getChildAtIndex(2);
     assertThat(members.isClassMembers()).isTrue();
@@ -6042,11 +6130,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testPrivateProperty_definition_linenocharno() {
     Node n =
         parse(
-                lines(
-                    "class C {", //
-                    "  #pf = 1;",
-                    "  #pm() {}",
-                    "}"))
+                """
+                class C {
+                  #pf = 1;
+                  #pm() {}
+                }
+                """)
             .getFirstChild();
 
     Node members = NodeUtil.getClassMembers(n);
@@ -6145,11 +6234,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testPrivateProperty_reference_linenocharno() {
     Node n =
         parse(
-                lines(
-                    "class C {", //
-                    "  #pf1 = 1;",
-                    "  #pf2 = this.#pf1;",
-                    "}"))
+                """
+                class C {
+                  #pf1 = 1;
+                  #pf2 = this.#pf1;
+                }
+                """)
             .getFirstChild();
 
     Node members = NodeUtil.getClassMembers(n);
@@ -6190,51 +6280,53 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.PRIVATE_CLASS_PROPERTIES);
 
     parse(
-        lines(
-            "class Outer {",
-            "  #of1;",
-            "  #of2;",
-            "  om() {",
-            "    this.#of1;",
-            "    this.#of2;",
-            "    class Inner {",
-            "      #if1;",
-            "      #if2;",
-            "      im() {",
-            "        this.#of1;",
-            "        this.#of2;",
-            "        this.#if1;",
-            "        this.#if2;",
-            "      }",
-            "    }",
-            "  }",
-            "}"));
+        """
+        class Outer {
+          #of1;
+          #of2;
+          om() {
+            this.#of1;
+            this.#of2;
+            class Inner {
+              #if1;
+              #if2;
+              im() {
+                this.#of1;
+                this.#of2;
+                this.#if1;
+                this.#if2;
+              }
+            }
+          }
+        }
+        """);
   }
 
   @Test
   public void testPrivateProperty_nestedClasses_invalid_referenceInnerFieldFromOuter() {
     parseError(
-        lines(
-            "class Outer {",
-            "  #of1;",
-            "  #of2;",
-            "  om() {",
-            "    this.#of1;",
-            "    this.#of2;",
-            "    this.#if1;", // Invalid
-            "    this.#if2;", // Invalid
-            "    class Inner {",
-            "      #if1;",
-            "      #if2;",
-            "      im() {",
-            "        this.#of1;",
-            "        this.#of2;",
-            "        this.#if1;",
-            "        this.#if2;",
-            "      }",
-            "    }",
-            "  }",
-            "}"),
+        """
+        class Outer {
+          #of1;
+          #of2;
+          om() {
+            this.#of1;
+            this.#of2;
+            this.#if1; // Invalid
+            this.#if2; // Invalid
+            class Inner {
+              #if1;
+              #if2;
+              im() {
+                this.#of1;
+                this.#of2;
+                this.#if1;
+                this.#if2;
+              }
+            }
+          }
+        }
+        """,
         PRIVATE_FIELD_NOT_DEFINED,
         PRIVATE_FIELD_NOT_DEFINED);
   }
@@ -6470,13 +6562,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testPrivateProperty_inOperatorWithPrivateProp_linenocharno() {
     Node n =
         parse(
-                lines(
-                    "class C {",
-                    "  #f = 1;",
-                    "  static isC(x) {",
-                    "    return #f in x;",
-                    "  }",
-                    "}"))
+                """
+                class C {
+                  #f = 1;
+                  static isC(x) {
+                    return #f in x;
+                  }
+                }
+                """)
             .getFirstChild();
 
     Node members = NodeUtil.getClassMembers(n);
@@ -6596,49 +6689,53 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testClassStaticBlock_this() {
     // multiple fields
     parse(
-        lines(
-            "class C { ",
-            "static field1 = 1; static field2 = 2; static field3 = 3;",
-            "static { ",
-            "let x = this.field1; let y = this.field2; let z = this.field3;",
-            "}",
-            "}"));
+        """
+        class C {
+        static field1 = 1; static field2 = 2; static field3 = 3;
+        static {
+        let x = this.field1; let y = this.field2; let z = this.field3;
+        }
+        }
+        """);
     parse("class C { static { this.field1 = 1; this.field2 = 2; this.field3 = 3; } }");
     parse(
-        lines(
-            "let a = class { ",
-            "static field1 = 1; static field2 = 2; static field3 = 3;",
-            "static {",
-            "let x = this.field1; let y = this.field2; let z = this.field3;",
-            "}",
-            "};"));
+        """
+        let a = class {
+        static field1 = 1; static field2 = 2; static field3 = 3;
+        static {
+        let x = this.field1; let y = this.field2; let z = this.field3;
+        }
+        };
+        """);
     parse("let a = class { static { this.field1 = 1; this.field2 = 2; this.field3 = 3; } };");
     // functions
     parse(
-        lines(
-            "class C {",
-            "static field1 = 1;",
-            "static {",
-            "function incr() { return ++A.field1; }",
-            "console.log(incr());",
-            "if(incr()) {",
-            "this.field2 = 2;",
-            "}",
-            "}",
-            "}"));
+        """
+        class C {
+        static field1 = 1;
+        static {
+        function incr() { return ++A.field1; }
+        console.log(incr());
+        if(incr()) {
+        this.field2 = 2;
+        }
+        }
+        }
+        """);
     // try catch
     parse(
-        lines(
-            "class C {",
-            "static field1 = 1;",
-            "static {",
-            "try {",
-            "this.field1 = 2;",
-            "}",
-            "catch {",
-            "}",
-            "}",
-            "}"));
+        """
+        class C {
+        static field1 = 1;
+        static {
+        try {
+        this.field1 = 2;
+        }
+        catch {
+        }
+        }
+        }
+        """);
   }
 
   @Test
@@ -6665,38 +6762,41 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("let a = class { static { } static { } };");
     // multiple fields
     parse(
-        lines(
-            "class C {",
-            "static field1 = 1; static field2 = 2; static field3 = 3;",
-            "static { ",
-            "let x = this.field1; let y = this.field2; ",
-            "} ",
-            "static {",
-            "let z = this.field3;",
-            "} ",
-            "}"));
+        """
+        class C {
+        static field1 = 1; static field2 = 2; static field3 = 3;
+        static {
+        let x = this.field1; let y = this.field2;
+        }
+        static {
+        let z = this.field3;
+        }
+        }
+        """);
     parse("class C { static { this.field1 = 1; this.field2 = 2; } static { this.field3 = 3; } }");
     parse(
-        lines(
-            "let a = class { ",
-            "static field1 = 1; static field2 = 2; static field3 = 3;",
-            "static {",
-            "let x = this.field1; let y = this.field2;",
-            "}",
-            "static {",
-            "let z = this.field3;",
-            "}",
-            "};"));
+        """
+        let a = class {
+        static field1 = 1; static field2 = 2; static field3 = 3;
+        static {
+        let x = this.field1; let y = this.field2;
+        }
+        static {
+        let z = this.field3;
+        }
+        };
+        """);
     parse(
-        lines(
-            "let a = class {",
-            "static {",
-            "this.field1 = 1; this.field2 = 2;",
-            "}",
-            "static {",
-            " this.field3 = 3;",
-            "}",
-            "};"));
+        """
+        let a = class {
+        static {
+        this.field1 = 1; this.field2 = 2;
+        }
+        static {
+         this.field3 = 3;
+        }
+        };
+        """);
   }
 
   @Test
@@ -7101,13 +7201,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
         Feature.CONST_DECLARATIONS,
         Feature.LET_DECLARATIONS);
     parse(
-        lines(
-            "class C {",
-            "  async(x) { return x; }",
-            "}",
-            "const c = new C();",
-            "c.async(1);",
-            "let foo = async(5);"));
+        """
+        class C {
+          async(x) { return x; }
+        }
+        const c = new C();
+        c.async(1);
+        let foo = async(5);
+        """);
   }
 
   @Test
@@ -7610,14 +7711,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testLookaheadGithubIssue699() {
     long start = System.currentTimeMillis();
     parse(
-        lines(
-            "[1,[1,[1,[1,[1,[1,",
-            "[1,[1,[1,[1,[1,[1,",
-            "[1,[1,[1,[1,[1,[1,",
-            "[1,[1,[1,[1,[1,[1,",
-            "[1,[1,[1,[1,[1,[1,",
-            "[1,[1,",
-            "[1]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]] "));
+        """
+        [1,[1,[1,[1,[1,[1,
+        [1,[1,[1,[1,[1,[1,
+        [1,[1,[1,[1,[1,[1,
+        [1,[1,[1,[1,[1,[1,
+        [1,[1,[1,[1,[1,[1,
+        [1,[1,
+        [1]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
+        """);
 
     long stop = System.currentTimeMillis();
 
@@ -7627,17 +7729,18 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testInvalidHandling1() {
     parse(
-        lines(
-            "/**",
-            " * @fileoverview Definition.",
-            " * @mods {ns.bar}",
-            " * @modName mod",
-            " *",
-            " * @extends {ns.bar}",
-            " * @author someone",
-            " */",
-            "",
-            "goog.provide('ns.foo');"));
+        """
+        /**
+         * @fileoverview Definition.
+         * @mods {ns.bar}
+         * @modName mod
+         *
+         * @extends {ns.bar}
+         * @author someone
+         */
+
+        goog.provide('ns.foo');
+        """);
   }
 
   @Test
@@ -7702,19 +7805,16 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testParseInlineSourceMap() {
     String code =
-        lines(
-            "var X = (function () {",
-            "    function X(input) {",
-            "        this.y = input;",
-            "    }",
-            "    return X;",
-            "}());",
-            "console.log(new X(1));",
-            "//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpz"
-                + "Iiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZm9vLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQU"
-                + "FBO0lBR0UsV0FBWSxLQUFhO1FBQ3ZCLElBQUksQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDO0lBQ2pCLENBQUM7"
-                + "SUFDSCxRQUFDO0FBQUQsQ0FBQyxBQU5ELElBTUM7QUFFRCxPQUFPLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQy"
-                + "xDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMifQ==");
+        """
+var X = (function () {
+    function X(input) {
+        this.y = input;
+    }
+    return X;
+}());
+console.log(new X(1));
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZm9vLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0lBR0UsV0FBWSxLQUFhO1FBQ3ZCLElBQUksQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDO0lBQ2pCLENBQUM7SUFDSCxRQUFDO0FBQUQsQ0FBQyxBQU5ELElBTUM7QUFFRCxPQUFPLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMifQ==
+""";
     ParseResult result = doParse(code);
     assertThat(result.sourceMapURL)
         .isEqualTo(
@@ -7728,15 +7828,16 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testParseSourceMapRelativeURL() {
     String code =
-        lines(
-            "var X = (function () {",
-            "    function X(input) {",
-            "        this.y = input;",
-            "    }",
-            "    return X;",
-            "}());",
-            "console.log(new X(1));",
-            "//# sourceMappingURL=somefile.js.map");
+        """
+        var X = (function () {
+            function X(input) {
+                this.y = input;
+            }
+            return X;
+        }());
+        console.log(new X(1));
+        //# sourceMappingURL=somefile.js.map
+        """;
     ParseResult result = doParse(code);
     assertThat(result.sourceMapURL).isEqualTo("somefile.js.map");
   }
@@ -7748,9 +7849,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testParseSourceMapAbsoluteURL() {
     String code =
-        lines(
-            "console.log('asdf');", //
-            "//# sourceMappingURL=/some/absolute/path/to/somefile.js.map");
+        """
+        console.log('asdf');
+        //# sourceMappingURL=/some/absolute/path/to/somefile.js.map
+        """;
     ParseResult result = doParse(code);
     assertThat(result.sourceMapURL).isEqualTo("/some/absolute/path/to/somefile.js.map");
   }
@@ -7762,9 +7864,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testParseSourceMapAbsoluteURLHTTP() {
     String code =
-        lines(
-            "console.log('asdf');",
-            "//# sourceMappingURL=http://google.com/some/absolute/path/to/somefile.js.map");
+        """
+        console.log('asdf');
+        //# sourceMappingURL=http://google.com/some/absolute/path/to/somefile.js.map
+        """;
     ParseResult result = doParse(code);
     assertThat(result.sourceMapURL)
         .isEqualTo("http://google.com/some/absolute/path/to/somefile.js.map");
@@ -7828,9 +7931,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
             "(async function() { return await import('foo'); })()",
             "(async function() { await import('foo').then(function(a) { return a; }); })()",
             "(async function() { var moduleNamespace = await import('foo'); })()",
-            lines(
-                "(async function() {",
-                "await Promise.all([import('foo')]).then(function(a) { return a; }); })()"));
+            """
+            (async function() {
+            await Promise.all([import('foo')]).then(function(a) { return a; }); })()
+            """);
     expectFeatures(Feature.DYNAMIC_IMPORT, Feature.ASYNC_FUNCTIONS);
 
     for (String importUseSource : awaitDynamicImportUses) {

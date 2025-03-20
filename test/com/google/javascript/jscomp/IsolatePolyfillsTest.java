@@ -120,11 +120,11 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
     addLibrary("Array.prototype.includes", "es6", "es5", "es6/array/includes");
     test(
         "if (a.b()?.includes()) {}",
-        lines(
-            "var $jscomp$polyfillTmp; ",
-            "if (($jscomp$polyfillTmp = a.b(),",
-            "    $jscomp$lookupPolyfilledValue($jscomp$polyfillTmp, 'includes',"
-                + " true))?.call($jscomp$polyfillTmp)) {}"));
+        """
+var $jscomp$polyfillTmp;
+if (($jscomp$polyfillTmp = a.b(),
+    $jscomp$lookupPolyfilledValue($jscomp$polyfillTmp, 'includes', true))?.call($jscomp$polyfillTmp)) {}
+""");
   }
 
   @Test
@@ -294,12 +294,13 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
 
     test(
         "if (Array.of) { Array.of(); } else { Array.of(); }",
-        lines(
-            "if ($jscomp$lookupPolyfilledValue(Array, 'of')) {",
-            "$jscomp$lookupPolyfilledValue(Array, 'of').call(Array);",
-            "} else {",
-            "  $jscomp$lookupPolyfilledValue(Array, 'of').call(Array);",
-            "}"));
+        """
+        if ($jscomp$lookupPolyfilledValue(Array, 'of')) {
+        $jscomp$lookupPolyfilledValue(Array, 'of').call(Array);
+        } else {
+          $jscomp$lookupPolyfilledValue(Array, 'of').call(Array);
+        }
+        """);
   }
 
   @Test
@@ -310,9 +311,10 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
     setLanguage(ES_2020, ES3);
     test(
         "Promise.allSettled([p1, p2]);",
-        lines(
-            "$jscomp$lookupPolyfilledValue($jscomp.polyfills['Promise'], 'allSettled')",
-            "   .call($jscomp.polyfills['Promise'], [p1, p2]);"));
+        """
+        $jscomp$lookupPolyfilledValue($jscomp.polyfills['Promise'], 'allSettled')
+           .call($jscomp.polyfills['Promise'], [p1, p2]);
+        """);
 
     setLanguage(ES_2020, ES6);
     test(
@@ -329,11 +331,12 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
 
     test(
         "x().endsWith(y);",
-        lines(
-            "var $jscomp$polyfillTmp;",
-            "($jscomp$polyfillTmp = x(),",
-            "  $jscomp$lookupPolyfilledValue($jscomp$polyfillTmp, 'endsWith'))",
-            "      .call($jscomp$polyfillTmp, y);"));
+        """
+        var $jscomp$polyfillTmp;
+        ($jscomp$polyfillTmp = x(),
+          $jscomp$lookupPolyfilledValue($jscomp$polyfillTmp, 'endsWith'))
+              .call($jscomp$polyfillTmp, y);
+        """);
   }
 
   @Test
@@ -344,20 +347,22 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
     setLanguage(ES6, ES5);
     test(
         "x.endsWith(y) || x.startsWith(y);",
-        lines(
-            "$jscomp$lookupPolyfilledValue(x, 'endsWith').call(x, y)",
-            "  || $jscomp$lookupPolyfilledValue(x, 'startsWith').call(x, y);"));
+        """
+        $jscomp$lookupPolyfilledValue(x, 'endsWith').call(x, y)
+          || $jscomp$lookupPolyfilledValue(x, 'startsWith').call(x, y);
+        """);
 
     test(
         "x().endsWith(y) || x().startsWith(y);",
-        lines(
-            "var $jscomp$polyfillTmp;",
-            "($jscomp$polyfillTmp = x(), ",
-            "    $jscomp$lookupPolyfilledValue($jscomp$polyfillTmp, 'endsWith'))",
-            "  .call($jscomp$polyfillTmp, y)",
-            " || ($jscomp$polyfillTmp = x(),",
-            "      $jscomp$lookupPolyfilledValue($jscomp$polyfillTmp, 'startsWith'))",
-            "    .call($jscomp$polyfillTmp, y);"));
+        """
+        var $jscomp$polyfillTmp;
+        ($jscomp$polyfillTmp = x(),
+            $jscomp$lookupPolyfilledValue($jscomp$polyfillTmp, 'endsWith'))
+          .call($jscomp$polyfillTmp, y)
+         || ($jscomp$polyfillTmp = x(),
+              $jscomp$lookupPolyfilledValue($jscomp$polyfillTmp, 'startsWith'))
+            .call($jscomp$polyfillTmp, y);
+        """);
   }
 
   @Test
@@ -448,9 +453,10 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
     setLanguage(ES_2020, ES3);
     test("var $jscomp$lookupPolyfilledValue = function() {};", "");
     test(
-        lines(
-            "var $jscomp$lookupPolyfilledValue = function() {};", //
-            "new Promise();"),
+        """
+        var $jscomp$lookupPolyfilledValue = function() {};
+        new Promise();
+        """,
         "new $jscomp.polyfills['Promise']();");
   }
 
@@ -461,14 +467,16 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
 
     setLanguage(ES_2020, ES3);
     test(
-        lines(
-            "var $jscomp$lookupPolyfilledValue = function() {};", //
-            "new Promise().finally(cb);"),
-        lines(
-            "var $jscomp$polyfillTmp;",
-            "var $jscomp$lookupPolyfilledValue = function() {};",
-            "($jscomp$polyfillTmp = new $jscomp.polyfills['Promise'],",
-            "    $jscomp$lookupPolyfilledValue($jscomp$polyfillTmp, 'finally'))",
-            "  .call($jscomp$polyfillTmp, cb);"));
+        """
+        var $jscomp$lookupPolyfilledValue = function() {};
+        new Promise().finally(cb);
+        """,
+        """
+        var $jscomp$polyfillTmp;
+        var $jscomp$lookupPolyfilledValue = function() {};
+        ($jscomp$polyfillTmp = new $jscomp.polyfills['Promise'],
+            $jscomp$lookupPolyfilledValue($jscomp$polyfillTmp, 'finally'))
+          .call($jscomp$polyfillTmp, cb);
+        """);
   }
 }

@@ -81,10 +81,11 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
   @Test
   public void testConstructorPropUnmodified_nonQnameClass() {
     testSame(
-        lines(
-            "const obj = {};",
-            "/** @constructor */ obj['ctor'] = function () {};",
-            "/** @private */ obj['ctor'].prop = 1;"));
+        """
+        const obj = {};
+        /** @constructor */ obj['ctor'] = function () {};
+        /** @private */ obj['ctor'].prop = 1;
+        """);
   }
 
   @Test
@@ -166,14 +167,15 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
   @Test
   public void testConstructorPropModified_lambda() {
     testSame(
-        lines(
-            "/** @constructor */",
-            "function C() {",
-            "  /** @private */",
-            "  this.foo_ = 2;",
-            "",
-            "  (() => { this.foo_ = 1; })();",
-            "}"));
+        """
+        /** @constructor */
+        function C() {
+          /** @private */
+          this.foo_ = 2;
+
+          (() => { this.foo_ = 1; })();
+        }
+        """);
   }
 
   @Test
@@ -192,15 +194,16 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
   @Test
   public void testClassPropModified_lambda() {
     testSame(
-        lines(
-            "class C { ",
-            "  constructor() { ",
-            "    /** @private */",
-            "    this.foo_ = 2;",
-            "",
-            "    (() => { this.foo_ = 1; })();",
-            "  }",
-            "}"));
+        """
+        class C {
+          constructor() {
+            /** @private */
+            this.foo_ = 2;
+
+            (() => { this.foo_ = 1; })();
+          }
+        }
+        """);
   }
 
   @Test
@@ -280,14 +283,15 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
     // In the repro below, there was a spurious warning that Foo.SOME_PROP was an effectively
     // constant private property, and the JSDoc "/** @private {number} */" should be @const.
     testNoWarning(
-        lines(
-            "class Foo {}",
-            "class C {",
-            "  constructor() {",
-            "    /** @private {number} */",
-            "    this.nonConstProp_ = Foo.SOME_PROP;",
-            "    this.nonConstProp_ = 4;", // change this.nonConstProp_ to avoid a warning
-            "  }",
-            "}"));
+        """
+        class Foo {}
+        class C {
+          constructor() {
+            /** @private {number} */
+            this.nonConstProp_ = Foo.SOME_PROP;
+            this.nonConstProp_ = 4; // change this.nonConstProp_ to avoid a warning
+          }
+        }
+        """);
   }
 }

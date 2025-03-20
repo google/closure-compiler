@@ -286,35 +286,38 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   @Test
   public void testReturnsInShorthandFunctionOfObjLit() {
     testSame(
-        lines(
-            "var obj = {",
-            "  f() { ",
-            "    switch(x) { ",
-            "      default: return; ",
-            "      case 1: x++; ",
-            "    }",
-            "  }",
-            "}"));
+        """
+        var obj = {
+          f() {
+            switch(x) {
+              default: return;
+              case 1: x++;
+            }
+          }
+        }
+        """);
     assertUnreachable(
-        lines(
-            "var obj = {f() {",
-            "  switch(x) { ",
-            "    default: return; ",
-            "    case 1: return; ",
-            "  }",
-            "  return; ",
-            "}}"));
+        """
+        var obj = {f() {
+          switch(x) {
+            default: return;
+            case 1: return;
+          }
+          return;
+        }}
+        """);
     testSame("var obj = {f() { if(x) {return;} else {return; }}}");
     assertUnreachable(
-        lines(
-            "var obj = {f() { ",
-            "  if(x) {",
-            "    return;",
-            "  } else {",
-            "    return;",
-            "  }",
-            "  return; ",
-            "}}"));
+        """
+        var obj = {f() {
+          if(x) {
+            return;
+          } else {
+            return;
+          }
+          return;
+        }}
+        """);
   }
 
   @Test
@@ -350,7 +353,10 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   @Test
   public void testSubclass() {
     testSame(
-        lines("class D {foo() {if (true) {return;}}}", "class C extends D {foo() {super.foo();}}"));
+        """
+        class D {foo() {if (true) {return;}}}
+        class C extends D {foo() {super.foo();}}
+        """);
   }
 
   @Test
@@ -368,47 +374,58 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
 
   @Test
   public void testGenerators() {
-    testSame(lines("function* f() {", "  var i = 0;", "  while(true)", "    yield i++;", "}"));
+    testSame(
+        """
+        function* f() {
+          var i = 0;
+          while(true)
+            yield i++;
+        }
+        """);
 
     assertUnreachable(
-        lines(
-            "function* f() {",
-            "  var i = 0;",
-            "  while(true) {",
-            "    yield i++;",
-            "  }",
-            "  i = 1;",
-            "}"));
+        """
+        function* f() {
+          var i = 0;
+          while(true) {
+            yield i++;
+          }
+          i = 1;
+        }
+        """);
 
     testSame(
-        lines(
-            "function* f() {",
-            "  var i = 0;",
-            "  while(true) {",
-            "    yield i;",
-            "    i++;",
-            "  }",
-            "}"));
+        """
+        function* f() {
+          var i = 0;
+          while(true) {
+            yield i;
+            i++;
+          }
+        }
+        """);
 
     testSame(
-        lines(
-            "function *f() {",
-            "  try {",
-            "    yield;",
-            "  } catch (e) {",
-            "    alert(e);",
-            "  }",
-            "}"));
+        """
+        function *f() {
+          try {
+            yield;
+          } catch (e) {
+            alert(e);
+          }
+        }
+        """);
 
     testSame(
-        lines(
-            "function *f() {",
-            "  try {",
-            "    yield 1;",
-            "  } catch (e) {",
-            "    alert(e);",
-            "  }",
-            "}"));
+        """
+        function *f() {
+          try {
+            yield 1;
+          } catch (e) {
+            alert(e);
+          }
+        }
+        """);
   }
 
   @Test
@@ -423,10 +440,11 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   public void testForAwait() {
     testSame("async function f(iter) { for await (const item of iter) { item; } }");
     assertUnreachable(
-        lines(
-            "async function f(iter) {",
-            "  for await (const item of iter) { if (false) { 3; } }",
-            "}"));
+        """
+        async function f(iter) {
+          for await (const item of iter) { if (false) { 3; } }
+        }
+        """);
   }
 
   @Test

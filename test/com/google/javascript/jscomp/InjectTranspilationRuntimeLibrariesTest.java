@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 
 import com.google.common.collect.ImmutableList;
@@ -129,11 +128,12 @@ public class InjectTranspilationRuntimeLibrariesTest {
   public void testAllowsEs5GetterSetterWithEs5Out() {
     this.languageOut = LanguageMode.ECMASCRIPT5;
     parseAndRunInjectionPass(
-        lines(
-            "var o = {", //
-            "  get x() {},",
-            "  set x(val) {}",
-            "};"));
+        """
+        var o = {
+          get x() {},
+          set x(val) {}
+        };
+        """);
 
     assertThat(compiler.getErrors()).isEmpty();
     assertThat(compiler.getInjected()).isEmpty();

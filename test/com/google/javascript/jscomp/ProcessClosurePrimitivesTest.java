@@ -401,17 +401,19 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   public void testValidBase_googProvide_googRequiredInOtherModule() {
     test(
         srcs(
-            lines(
-                "goog.provide('my.Foo');",
-                "/** @constructor */",
-                "my.Foo = function() {}",
-                "goog.inherits(my.Foo, BaseFoo);"),
-            lines(
-                "goog.module('test');",
-                "const Foo = goog.require('my.Foo');",
-                "Foo.prototype.method = function() {",
-                "  Foo.base(this, 'method');",
-                "};")),
+            """
+            goog.provide('my.Foo');
+            /** @constructor */
+            my.Foo = function() {}
+            goog.inherits(my.Foo, BaseFoo);
+            """,
+            """
+            goog.module('test');
+            const Foo = goog.require('my.Foo');
+            Foo.prototype.method = function() {
+              Foo.base(this, 'method');
+            };
+            """),
         error(POSSIBLE_BASE_CLASS_ERROR));
   }
 
@@ -419,30 +421,34 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   public void testValidBase_googModule_googRequiredInOtherModule() {
     test(
         srcs(
-            lines(
-                "goog.module('FooModule');",
-                "/** @constructor */ function Foo() {}",
-                "goog.inherits(Foo, BaseFoo);",
-                "exports = {Foo};"),
-            lines(
-                "goog.module('test');",
-                "const {Foo: FooRequired} = goog.require('FooModule');",
-                "FooRequired.prototype.method = function() {",
-                "  FooRequired.base(this, 'method');",
-                "};")),
+            """
+            goog.module('FooModule');
+            /** @constructor */ function Foo() {}
+            goog.inherits(Foo, BaseFoo);
+            exports = {Foo};
+            """,
+            """
+            goog.module('test');
+            const {Foo: FooRequired} = goog.require('FooModule');
+            FooRequired.prototype.method = function() {
+              FooRequired.base(this, 'method');
+            };
+            """),
         error(POSSIBLE_BASE_CLASS_ERROR));
   }
 
   @Test
   public void testValidPrimitiveCalls() {
     testNoWarning(
-        lines(
-            "goog.module('c');", //
-            "goog.forwardDeclare('A.b');"));
+        """
+        goog.module('c');
+        goog.forwardDeclare('A.b');
+        """);
     testNoWarning(
-        lines(
-            "goog.module('d');", //
-            "goog.addDependency('C.D');"));
+        """
+        goog.module('d');
+        goog.addDependency('C.D');
+        """);
   }
 
   @Test

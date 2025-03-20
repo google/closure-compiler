@@ -34,55 +34,56 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
   private boolean keepLocals = true;
   private boolean keepGlobals = true;
   private static final String EXTERNS =
-      lines(
-          "/**",
-          " * @constructor",
-          " * @param {*=} opt_value",
-          " * @return {!Object}",
-          " */",
-          "function Object(opt_value) {}",
-          "/**",
-          " * @constructor",
-          " * @param {...*} var_args",
-          " */",
-          "function Function(var_args) {}",
-          "/**",
-          " * @constructor",
-          " * @param {*=} arg",
-          " * @return {string}",
-          " */",
-          "function String(arg) {}",
-          "/**",
-          " * @record",
-          " * @template VALUE",
-          " */",
-          "/**",
-          " * @template T",
-          " * @constructor ",
-          " * @param {...*} var_args",
-          " * @return {!Array<?>}",
-          " */",
-          "function Array(var_args) {}",
-          "var window;",
-          "function alert(a) {}",
-          "function use(x) {}",
-          "var EXT = {};",
-          "EXT.ext;",
-          "var externVar;",
-          "function externFunction() {}",
-          "/** @type {Function} */",
-          "Object.defineProperties = function() {};",
-          "/** @type {Function} */",
-          "Object.prototype.constructor = function() {};",
-          // NOTE: The following are needed to prevent NTI inexistent property warnings.
-          "var $jscomp = {};",
-          "$jscomp.global = {}",
-          "/** @type {?} */",
-          "$jscomp.global.Object",
-          "function JSCompiler_renameProperty(p) {}",
-          "var goog = {};",
-          "goog.reflect = {};",
-          "goog.reflect.object = function(a, b) {};");
+      """
+      /**
+       * @constructor
+       * @param {*=} opt_value
+       * @return {!Object}
+       */
+      function Object(opt_value) {}
+      /**
+       * @constructor
+       * @param {...*} var_args
+       */
+      function Function(var_args) {}
+      /**
+       * @constructor
+       * @param {*=} arg
+       * @return {string}
+       */
+      function String(arg) {}
+      /**
+       * @record
+       * @template VALUE
+       */
+      /**
+       * @template T
+       * @constructor
+       * @param {...*} var_args
+       * @return {!Array<?>}
+       */
+      function Array(var_args) {}
+      var window;
+      function alert(a) {}
+      function use(x) {}
+      var EXT = {};
+      EXT.ext;
+      var externVar;
+      function externFunction() {}
+      /** @type {Function} */
+      Object.defineProperties = function() {};
+      /** @type {Function} */
+      Object.prototype.constructor = function() {};
+      // NOTE: The following are needed to prevent NTI inexistent property warnings.
+      var $jscomp = {};
+      $jscomp.global = {}
+      /** @type {?} */
+      $jscomp.global.Object
+      function JSCompiler_renameProperty(p) {}
+      var goog = {};
+      goog.reflect = {};
+      goog.reflect.object = function(a, b) {};
+      """;
 
   public RemoveUnusedCodeClassPropertiesTest() {
     super(EXTERNS);
@@ -213,10 +214,11 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
   @Test
   public void testDestructuringRest() {
     testSame(
-        lines(
-            "function Foo() {}", //
-            "Foo.a = function() {};",
-            "({ ...Foo.a.b } = 0);"));
+        """
+        function Foo() {}
+        Foo.a = function() {};
+        ({ ...Foo.a.b } = 0);
+        """);
   }
 
   @Test
@@ -258,10 +260,11 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
   public void testObjectReflection1() {
     // Verify reflection prevents removal.
     testSame(
-        lines(
-            "/** @constructor */", // preserve newlines
-            "function A() { this.foo = 1; }",
-            "use(goog.reflect.object(A, {foo: 'foo'}));"));
+        """
+        /** @constructor */ // preserve newlines
+        function A() { this.foo = 1; }
+        use(goog.reflect.object(A, {foo: 'foo'}));
+        """);
   }
 
   @Test
@@ -269,10 +272,11 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     // Any object literal definition prevents removal.
     // Type based removal would allow this to be removed.
     testSame(
-        lines(
-            "/** @constructor */", // preserve newlines
-            "function A() {this.foo = 1;}",
-            "use({foo: 'foo'});"));
+        """
+        /** @constructor */ // preserve newlines
+        function A() {this.foo = 1;}
+        use({foo: 'foo'});
+        """);
   }
 
   @Test
@@ -280,26 +284,29 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     // Partial removal of properties can causes problems if the object is
     // sealed.
     testSame(
-        lines(
-            "function A() {this.foo = 0;}",
-            "function B() {this.a = new A();}",
-            "B.prototype.dostuff = function() { this.a.foo++; alert('hi'); }",
-            "new B().dostuff();"));
+        """
+        function A() {this.foo = 0;}
+        function B() {this.a = new A();}
+        B.prototype.dostuff = function() { this.a.foo++; alert('hi'); }
+        new B().dostuff();
+        """);
   }
 
   @Test
   public void testPrototypeProps1() {
     test(
-        lines(
-            "function A() {this.foo = 1;}",
-            "A.prototype.foo = 0;",
-            "A.prototype.method = function() {this.foo++};",
-            "new A().method()"),
-        lines(
-            "function A() {             }",
-            "                    ",
-            "A.prototype.method = function() {          };",
-            "new A().method()"));
+        """
+        function A() {this.foo = 1;}
+        A.prototype.foo = 0;
+        A.prototype.method = function() {this.foo++};
+        new A().method()
+        """,
+        """
+        function A() {             }
+
+        A.prototype.method = function() {          };
+        new A().method()
+        """);
   }
 
   @Test
@@ -326,11 +333,12 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     enableTypeCheck();
 
     testSame(
-        lines(
-            "/** @constructor */ function C() {} ",
-            "C.prop = 1; ",
-            "function foo(a) { alert(a.prop) }; ",
-            "foo(C)"));
+        """
+        /** @constructor */ function C() {}
+        C.prop = 1;
+        function foo(a) { alert(a.prop) };
+        foo(C)
+        """);
   }
 
   @Test
@@ -350,11 +358,12 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     enableTypeCheck();
 
     testSame(
-        lines(
-            "/** @constructor */ function C() {}",
-            "Object.defineProperties(C, {prop:{value:1}});",
-            "function foo(a) { alert(a.prop) };",
-            "foo(C)"));
+        """
+        /** @constructor */ function C() {}
+        Object.defineProperties(C, {prop:{value:1}});
+        function foo(a) { alert(a.prop) };
+        foo(C)
+        """);
   }
 
   @Test
@@ -362,9 +371,14 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     enableTypeCheck();
 
     test(
-        lines(
-            "/** @constructor */ function C() {}", "Object.defineProperties(C, {prop:{value:1}});"),
-        lines("/** @constructor */ function C() {}", "Object.defineProperties(C, {});"));
+        """
+        /** @constructor */ function C() {}
+        Object.defineProperties(C, {prop:{value:1}});
+        """,
+        """
+        /** @constructor */ function C() {}
+        Object.defineProperties(C, {});
+        """);
   }
 
   @Test
@@ -372,14 +386,18 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     enableTypeCheck();
 
     test(
-        lines(
-            "/** @constructor */ function C() {}",
-            "Object.defineProperties(C, ",
-            "  {prop:{",
-            "    get:function(){},",
-            "    set:function(a){},",
-            "}});"),
-        lines("/** @constructor */ function C() {}", "Object.defineProperties(C, {});"));
+        """
+        /** @constructor */ function C() {}
+        Object.defineProperties(C,
+          {prop:{
+            get:function(){},
+            set:function(a){},
+        }});
+        """,
+        """
+        /** @constructor */ function C() {}
+        Object.defineProperties(C, {});
+        """);
   }
 
   // side-effect in definition retains property definition, but doesn't count as a reference
@@ -388,12 +406,14 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     enableTypeCheck();
 
     test(
-        lines(
-            "/** @constructor */ function C() { this.prop = 3; }",
-            "Object.defineProperties(C, {prop:alert('')});"),
-        lines(
-            "/** @constructor */ function C() {                }",
-            "Object.defineProperties(C, {prop:alert('')});"));
+        """
+        /** @constructor */ function C() { this.prop = 3; }
+        Object.defineProperties(C, {prop:alert('')});
+        """,
+        """
+        /** @constructor */ function C() {                }
+        Object.defineProperties(C, {prop:alert('')});
+        """);
   }
 
   // quoted properties retains property
@@ -402,9 +422,10 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     enableTypeCheck();
 
     testSame(
-        lines(
-            "/** @constructor */ function C() {}",
-            "Object.defineProperties(C, {'prop': {value: 1}});"));
+        """
+        /** @constructor */ function C() {}
+        Object.defineProperties(C, {'prop': {value: 1}});
+        """);
   }
 
   @Test
@@ -422,10 +443,14 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     enableTypeCheck();
 
     test(
-        lines(
-            "/** @constructor */ function C() {}",
-            "Object.defineProperties(C, {prop:{get:function () {return new C}}});"),
-        lines("/** @constructor */ function C() {}", "Object.defineProperties(C, {});"));
+        """
+        /** @constructor */ function C() {}
+        Object.defineProperties(C, {prop:{get:function () {return new C}}});
+        """,
+        """
+        /** @constructor */ function C() {}
+        Object.defineProperties(C, {});
+        """);
   }
 
   @Test
@@ -433,10 +458,14 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     enableTypeCheck();
 
     test(
-        lines(
-            "/** @constructor */ function C() {}",
-            "Object.defineProperties(C, {prop:{set:function (a) {return alert(a)}}});"),
-        lines("/** @constructor */ function C() {}", "Object.defineProperties(C, {});"));
+        """
+        /** @constructor */ function C() {}
+        Object.defineProperties(C, {prop:{set:function (a) {return alert(a)}}});
+        """,
+        """
+        /** @constructor */ function C() {}
+        Object.defineProperties(C, {});
+        """);
   }
 
   @Test
@@ -444,9 +473,10 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     enableTypeCheck();
 
     testSame(
-        lines(
-            "/** @constructor */ function C() { this.prop = 1; }",
-            "Object.defineProperties(C, {'prop':{set:function (a) {return alert(a.prop)}}});"));
+        """
+        /** @constructor */ function C() { this.prop = 1; }
+        Object.defineProperties(C, {'prop':{set:function (a) {return alert(a.prop)}}});
+        """);
   }
 
   @Test
@@ -454,10 +484,11 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     enableTypeCheck();
 
     testSame(
-        lines(
-            "/** @constructor */ function C() {}",
-            "Object.defineProperties(C, {prop:{set:function (a) {alert(2)}}});",
-            "C.prop = 2;"));
+        """
+        /** @constructor */ function C() {}
+        Object.defineProperties(C, {prop:{set:function (a) {alert(2)}}});
+        C.prop = 2;
+        """);
   }
 
   @Test
@@ -465,15 +496,17 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     enableTypeCheck();
 
     test(
-        lines(
-            "/** @constructor */ function C() {}",
-            "Object.defineProperties(C, {prop:{set:function (a) {alert(2)}}});",
-            "/** @constructor */ function D () {}",
-            "D.prototype.prop = function() {};"),
-        lines(
-            "/** @constructor */ function C() {}",
-            "Object.defineProperties(C, {});",
-            "/** @constructor */ function D () {}"));
+        """
+        /** @constructor */ function C() {}
+        Object.defineProperties(C, {prop:{set:function (a) {alert(2)}}});
+        /** @constructor */ function D () {}
+        D.prototype.prop = function() {};
+        """,
+        """
+        /** @constructor */ function C() {}
+        Object.defineProperties(C, {});
+        /** @constructor */ function D () {}
+        """);
   }
 
   @Test
@@ -499,18 +532,19 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
         "class C { set value(val) { this.internalVal = val; } } (new C()).value = 3;",
         "class C { set value(val) {                         } } (new C()).value = 3;");
     testSame(
-        lines(
-            "class C {",
-            "  set value(val) {",
-            "    this.internalVal = val;",
-            "  }",
-            "  get value() {",
-            "    return this.internalVal;",
-            "  }",
-            "}",
-            "const y = new C();",
-            "y.value = 3;",
-            "const x = y.value;"));
+        """
+        class C {
+          set value(val) {
+            this.internalVal = val;
+          }
+          get value() {
+            return this.internalVal;
+          }
+        }
+        const y = new C();
+        y.value = 3;
+        const x = y.value;
+        """);
   }
 
   // All object literal fields are not removed, but the following
@@ -518,25 +552,27 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
   @Test
   public void testEs6EnhancedObjLiteralsComputedValuesNotRemoved() {
     testSame(
-        lines(
-            "function getCar(make, model, value) {",
-            "  return {",
-            "    ['make' + make] : true",
-            "  };",
-            "}"));
+        """
+        function getCar(make, model, value) {
+          return {
+            ['make' + make] : true
+          };
+        }
+        """);
   }
 
   @Test
   public void testEs6EnhancedObjLiteralsMethodShortHandNotRemoved() {
     testSame(
-        lines(
-            "function getCar(make, model, value) {",
-            "  return {",
-            "    getModel() {",
-            "      return model;",
-            "    }",
-            "  };",
-            "}"));
+        """
+        function getCar(make, model, value) {
+          return {
+            getModel() {
+              return model;
+            }
+          };
+        }
+        """);
   }
 
   @Test
@@ -550,24 +586,26 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     test(
         // This is the output of ES6->ES5 class getter converter.
         // See Es6TranspilationIntegrationTest.testEs5GettersAndSettersClasses test method.
-        lines(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "/** @type {?} */",
-            "C.prototype.value = 0;",
-            "$jscomp.global.Object.defineProperties(C.prototype, {",
-            "  value: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    /** @this {C} */",
-            "    get: function() {",
-            "      return 0;",
-            "    }",
-            "  }",
-            "});"),
-        lines(
-            "/** @constructor @struct */var C=function(){};",
-            "$jscomp.global.Object.defineProperties(C.prototype, {});"));
+        """
+        /** @constructor @struct */
+        var C = function() {};
+        /** @type {?} */
+        C.prototype.value = 0;
+        $jscomp.global.Object.defineProperties(C.prototype, {
+          value: {
+            configurable: true,
+            enumerable: true,
+            /** @this {C} */
+            get: function() {
+              return 0;
+            }
+          }
+        });
+        """,
+        """
+        /** @constructor @struct */var C=function(){};
+        $jscomp.global.Object.defineProperties(C.prototype, {});
+        """);
   }
 
   @Test
@@ -576,26 +614,28 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     test(
         // This is the output of ES6->ES5 class setter converter.
         // See Es6TranspilationIntegrationTest.testEs5GettersAndSettersClasses test method.
-        lines(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "/** @type {?} */",
-            "C.prototype.value;",
-            "/** @type {?} */",
-            "C.prototype.internalVal;",
-            "$jscomp.global.Object.defineProperties(C.prototype, {",
-            "  value: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    /** @this {C} */",
-            "    set: function(val) {",
-            "      this.internalVal = val;",
-            "    }",
-            "  }",
-            "});"),
-        lines(
-            "/** @constructor @struct */var C=function(){};",
-            "$jscomp.global.Object.defineProperties(C.prototype, {});"));
+        """
+        /** @constructor @struct */
+        var C = function() {};
+        /** @type {?} */
+        C.prototype.value;
+        /** @type {?} */
+        C.prototype.internalVal;
+        $jscomp.global.Object.defineProperties(C.prototype, {
+          value: {
+            configurable: true,
+            enumerable: true,
+            /** @this {C} */
+            set: function(val) {
+              this.internalVal = val;
+            }
+          }
+        });
+        """,
+        """
+        /** @constructor @struct */var C=function(){};
+        $jscomp.global.Object.defineProperties(C.prototype, {});
+        """);
   }
 
   @Test
@@ -606,24 +646,26 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     testSame("const arrow = () => ({a: 2})");
     testSame("var y = {}; const arrow = () => {y.a = 2; this.a = 2;}");
     test(
-        lines(
-            "function A() {",
-            "  this.foo = 1;",
-            "}",
-            "A.prototype.foo = 0;",
-            "A.prototype.getIncr = function() {",
-            "  return () => { this.foo++; };",
-            "};",
-            "new A().getIncr()"),
-        lines(
-            "function A() {",
-            "               ",
-            "}",
-            "                  ",
-            "A.prototype.getIncr = function() {",
-            "  return () => {             };",
-            "};",
-            "new A().getIncr()"));
+        """
+        function A() {
+          this.foo = 1;
+        }
+        A.prototype.foo = 0;
+        A.prototype.getIncr = function() {
+          return () => { this.foo++; };
+        };
+        new A().getIncr()
+        """,
+        """
+        function A() {
+
+        }
+
+        A.prototype.getIncr = function() {
+          return () => {             };
+        };
+        new A().getIncr()
+        """);
   }
 
   @Test
@@ -643,12 +685,14 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
 
     // Test normal destructuring, assignment prevent removal
     test(
-        lines(
-            "[this.x, this.y] = [1, 2]", // preserve newline
-            "var p = this.x;"),
-        lines(
-            "[this.x        ] = [1, 2]", // preserve newline
-            "var p = this.x;"));
+        """
+        [this.x, this.y] = [1, 2] // preserve newline
+        var p = this.x;
+        """,
+        """
+        [this.x        ] = [1, 2] // preserve newline
+        var p = this.x;
+        """);
 
     // Test rest destructuring, `this` property
     test(
@@ -662,20 +706,23 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
 
     // Test rest destructuring, assignment prevent removal
     test(
-        lines(
-            "[this.x, ...this.y] = [1, 2];", // preserve newline
-            "var p = this.y;"),
-        lines(
-            "[      , ...this.y] = [1, 2];", // preserve newline
-            "var p = this.y;"));
+        """
+        [this.x, ...this.y] = [1, 2]; // preserve newline
+        var p = this.y;
+        """,
+        """
+        [      , ...this.y] = [1, 2]; // preserve newline
+        var p = this.y;
+        """);
 
     // Test destructuring rhs prevent removal
     testSame(
-        lines(
-            "let a;",
-            "this.x = 1;", // preserve newline
-            "this.y = 2;",
-            "[...a] = [this.x, this.y];"));
+        """
+        let a;
+        this.x = 1; // preserve newline
+        this.y = 2;
+        [...a] = [this.x, this.y];
+        """);
 
     // Test nested destructuring
     test(
@@ -690,73 +737,85 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
 
     // Test obj destructuring prevent removal
     test(
-        lines("({a: this.x, b: this.y} = {a: 1, b: 2});", "var p = this.x;"),
-        lines("({a: this.x} = {a: 1, b: 2});", "var p = this.x;"));
+        """
+        ({a: this.x, b: this.y} = {a: 1, b: 2});
+        var p = this.x;
+        """,
+        """
+        ({a: this.x} = {a: 1, b: 2});
+        var p = this.x;
+        """);
 
     // Test obj destructuring with old style class
     testSame(
-        lines(
-            "/** @constructor */ function C () {",
-            "  this.a = 1;",
-            "}",
-            "let x;",
-            "({a: x} = new C());"));
+        """
+        /** @constructor */ function C () {
+          this.a = 1;
+        }
+        let x;
+        ({a: x} = new C());
+        """);
 
     // Test obj destructuring with new style class
     testSame(
-        lines(
-            "class C {",
-            "  constructor() {",
-            "     this.a = 1;",
-            "  }",
-            "}",
-            "let x;",
-            "({a: x} = new C());"));
+        """
+        class C {
+          constructor() {
+             this.a = 1;
+          }
+        }
+        let x;
+        ({a: x} = new C());
+        """);
 
     // Test let destructuring
     testSame(
-        lines(
-            "class C {",
-            "  constructor() {",
-            "     this.a = 1;",
-            "  }",
-            "}",
-            "let {a: x} = new C();"));
+        """
+        class C {
+          constructor() {
+             this.a = 1;
+          }
+        }
+        let {a: x} = new C();
+        """);
 
     // Test obj created at a different location and later used in destructuring
     testSame(
-        lines(
-            "class C {",
-            "  constructor() {",
-            "     this.a = 1;",
-            "  }",
-            "}",
-            "var obj = new C()",
-            "let x;",
-            "({a: x} = obj);"));
+        """
+        class C {
+          constructor() {
+             this.a = 1;
+          }
+        }
+        var obj = new C()
+        let x;
+        ({a: x} = obj);
+        """);
 
     // Test obj destructuring with default value
     testSame(
-        lines(
-            "class C {",
-            "  constructor() {",
-            "     this.a = 1;",
-            "  }",
-            "}",
-            "let a;",
-            "({a = 2} = new C());"));
+        """
+        class C {
+          constructor() {
+             this.a = 1;
+          }
+        }
+        let a;
+        ({a = 2} = new C());
+        """);
 
     // Test obj nested destructuring
     testSame(
-        lines(
-            "class C {",
-            "  constructor() {",
-            "     this.a = 1;",
-            "  }",
-            "}",
-            "var obj = new C()",
-            "let a;",
-            "({x: {a}} = {x: obj});"));
+        """
+        class C {
+          constructor() {
+             this.a = 1;
+          }
+        }
+        var obj = new C()
+        let a;
+        ({x: {a}} = {x: obj});
+        """);
 
     // Computed Property string expression doesn't prevent removal.
     test(
@@ -767,14 +826,15 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
   @Test
   public void testDestrucuturing_assginmentToProperty_consideredUse() {
     testSame(
-        lines(
-            "class Foo {",
-            "  constructor() {",
-            "    this.x = 0;",
-            "  }",
-            "}",
-            "",
-            "({a: new Foo().x} = {a: 0});"));
+        """
+        class Foo {
+          constructor() {
+            this.x = 0;
+          }
+        }
+
+        ({a: new Foo().x} = {a: 0});
+        """);
   }
 
   @Test
@@ -788,38 +848,54 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
   @Test
   public void testEs8AsyncFunction() {
     test(
-        lines(
-            "async function foo(promise) {", // preserve newlines
-            "   this.x = 1;",
-            "   return await promise;",
-            "}"),
-        lines(
-            "async function foo(promise) {", // preserve newlines
-            "              ",
-            "   return await promise;",
-            "}"));
+        """
+        async function foo(promise) { // preserve newlines
+           this.x = 1;
+           return await promise;
+        }
+        """,
+        """
+        async function foo(promise) { // preserve newlines
 
-    testSame(lines("async function foo() {", "   this.x = 1;", "   return await this.x;", "}"));
+           return await promise;
+        }
+        """);
 
-    testSame(lines("this.x = 1;", "async function foo() {", "   return await this.x;", "}"));
+    testSame(
+        """
+        async function foo() {
+           this.x = 1;
+           return await this.x;
+        }
+        """);
+
+    testSame(
+        """
+        this.x = 1;
+        async function foo() {
+           return await this.x;
+        }
+        """);
   }
 
   @Test
   public void testField() {
     test(
-        lines(
-            "class C {", //
-            "  x = 1;",
-            "  y;",
-            "  z = 'hi';",
-            "  static x = 1;",
-            "  static y;",
-            "  static z = 'hi';",
-            "}"),
-        lines(
-            "class C {", //
-            "         ",
-            "}"));
+        """
+        class C {
+          x = 1;
+          y;
+          z = 'hi';
+          static x = 1;
+          static y;
+          static z = 'hi';
+        }
+        """,
+        """
+        class C {
+
+        }
+        """);
   }
 
   @Test
@@ -828,138 +904,150 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     this.keepLocals = false;
 
     test(
-        lines(
-            "const C = class {",
-            "  constructor() {",
-            "  }",
-            "  static x = new C();",
-            "  static method() {",
-            "    return C.x;",
-            "  }",
-            "}"),
-        lines(
-            "const C = class {", //
-            "  constructor() {",
-            "  }",
-            "  static x = new C();",
-            "}"));
+        """
+        const C = class {
+          constructor() {
+          }
+          static x = new C();
+          static method() {
+            return C.x;
+          }
+        }
+        """,
+        """
+        const C = class {
+          constructor() {
+          }
+          static x = new C();
+        }
+        """);
 
     test(
-        lines(
-            "const C = class {",
-            "  constructor() {",
-            "  }",
-            "  static x = new C();",
-            "  static y = alert();",
-            "  static method() {",
-            "    return C.x;",
-            "  }",
-            "}"),
-        lines(
-            "const C = class {", //
-            "  constructor() {",
-            "  }",
-            "  static x = new C();",
-            "  static y = alert();",
-            "}"));
+        """
+        const C = class {
+          constructor() {
+          }
+          static x = new C();
+          static y = alert();
+          static method() {
+            return C.x;
+          }
+        }
+        """,
+        """
+        const C = class {
+          constructor() {
+          }
+          static x = new C();
+          static y = alert();
+        }
+        """);
   }
 
   @Test
   public void testComputedField() {
     testSame(
-        lines(
-            "class C {", //
-            "  ['x'] = 1;",
-            "  'y';",
-            "  1 = 'hi';",
-            "  static ['x'] = 1;",
-            "  static 'y';",
-            "  static 1 = 'hi';",
-            "}"));
+        """
+        class C {
+          ['x'] = 1;
+          'y';
+          1 = 'hi';
+          static ['x'] = 1;
+          static 'y';
+          static 1 = 'hi';
+        }
+        """);
   }
 
   @Test
   public void testMixedField() {
     // Computed properties cannot be removed, so only non-computed properties are removed
     test(
-        lines(
-            "class C {", //
-            "  x = 1;",
-            "  y;",
-            "  z = 'hi';",
-            "  static x = 1;",
-            "  static y;",
-            "  static z = 'hi';",
-            "  ['x'] = 1;",
-            "  'y';",
-            "  1 = 'hi';",
-            "  static ['x'] = 1;",
-            "  static 'y';",
-            "  static 1 = 'hi';",
-            "}"),
-        lines(
-            "class C {", //
-            "  ['x'] = 1;",
-            "  'y';",
-            "  1 = 'hi';",
-            "  static ['x'] = 1;",
-            "  static 'y';",
-            "  static 1 = 'hi';",
-            "}"));
+        """
+        class C {
+          x = 1;
+          y;
+          z = 'hi';
+          static x = 1;
+          static y;
+          static z = 'hi';
+          ['x'] = 1;
+          'y';
+          1 = 'hi';
+          static ['x'] = 1;
+          static 'y';
+          static 1 = 'hi';
+        }
+        """,
+        """
+        class C {
+          ['x'] = 1;
+          'y';
+          1 = 'hi';
+          static ['x'] = 1;
+          static 'y';
+          static 1 = 'hi';
+        }
+        """);
 
     testSame(
-        lines(
-            "class C {", //
-            "  [alert()] = 5;",
-            "}"));
+        """
+        class C {
+          [alert()] = 5;
+        }
+        """);
 
     testSame(
-        lines(
-            "class C {", //
-            "  static x = alert();",
-            "}"));
+        """
+        class C {
+          static x = alert();
+        }
+        """);
 
     testSame(
-        lines(
-            "class C {", //
-            "  x = alert();",
-            "}"));
+        """
+        class C {
+          x = alert();
+        }
+        """);
   }
 
   @Test
   public void testPureOrBreakMyCode() {
     test(
-        lines(
-            "class C {",
-            "  constructor() {",
-            "   /** @const */this.used = /** @pureOrBreakMyCode */(alert());",
-            "   /** @const */this.unused = /** @pureOrBreakMyCode */(alert());",
-            "  }",
-            "};",
-            "/** @const */C.used = /** @pureOrBreakMyCode */(alert());",
-            "/** @const */C.unused = /** @pureOrBreakMyCode */(alert());",
-            "function foo() {",
-            "  return C.used;",
-            "}",
-            "foo();",
-            "function bar() {",
-            "  return new C().used;",
-            "}",
-            "bar();"),
-        lines(
-            "class C {",
-            "  constructor() {",
-            "    /** @const */this.used = /** @pureOrBreakMyCode */(alert());",
-            "  }",
-            "};",
-            "/** @const */C.used = /** @pureOrBreakMyCode */(alert());",
-            "function foo() {",
-            "  return C.used;",
-            "}",
-            "foo();",
-            "function bar() {",
-            "  return new C().used;",
-            "}",
-            "bar();"));
+        """
+        class C {
+          constructor() {
+           /** @const */this.used = /** @pureOrBreakMyCode */(alert());
+           /** @const */this.unused = /** @pureOrBreakMyCode */(alert());
+          }
+        };
+        /** @const */C.used = /** @pureOrBreakMyCode */(alert());
+        /** @const */C.unused = /** @pureOrBreakMyCode */(alert());
+        function foo() {
+          return C.used;
+        }
+        foo();
+        function bar() {
+          return new C().used;
+        }
+        bar();
+        """,
+        """
+        class C {
+          constructor() {
+            /** @const */this.used = /** @pureOrBreakMyCode */(alert());
+          }
+        };
+        /** @const */C.used = /** @pureOrBreakMyCode */(alert());
+        function foo() {
+          return C.used;
+        }
+        foo();
+        function bar() {
+          return new C().used;
+        }
+        bar();
+        """);
   }
 }

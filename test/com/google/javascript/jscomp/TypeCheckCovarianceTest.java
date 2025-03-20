@@ -51,10 +51,11 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             "}",
             "export {};")
         .addDiagnostic(
-            lines(
-                "actual parameter 1 of f does not match formal parameter",
-                "found   : Iterable<number>",
-                "required: Iterable<(number|string)>"))
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : Iterable<number>
+            required: Iterable<(number|string)>
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -68,10 +69,11 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             "    f(arr);",
             "}")
         .addDiagnostic(
-            lines(
-                "actual parameter 1 of f does not match formal parameter",
-                "found   : Iterable<(number|string),?,?>",
-                "required: Iterable<number,?,?>"))
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : Iterable<(number|string),?,?>
+            required: Iterable<number,?,?>
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -157,10 +159,11 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             "    f(arr);",
             "}")
         .addDiagnostic(
-            lines(
-                "actual parameter 1 of f does not match formal parameter",
-                "found   : Set<number>",
-                "required: Set<(number|string)>"))
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : Set<number>
+            required: Set<(number|string)>
+            """)
         .run();
   }
 
@@ -273,12 +276,16 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             "var r2;",
             "r1 = r2;")
         .addDiagnostic(
-            lines(
-                "assignment",
-                "found   : {prop: (C2|null)}",
-                "required: {\n  prop: (C|null),\n  prop2: (C|null)\n}",
-                "missing : [prop2]",
-                "mismatch: []"))
+            """
+            assignment
+            found   : {prop: (C2|null)}
+            required: {
+              prop: (C|null),
+              prop2: (C|null)
+            }
+            missing : [prop2]
+            mismatch: []
+            """)
         .run();
   }
 
@@ -297,12 +304,13 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             "var r2;",
             "r1 = r2;")
         .addDiagnostic(
-            lines(
-                "assignment",
-                "found   : {prop: (C2|null)}",
-                "required: {prop: (C|null)}",
-                "missing : []",
-                "mismatch: [prop]"))
+            """
+            assignment
+            found   : {prop: (C2|null)}
+            required: {prop: (C|null)}
+            missing : []
+            mismatch: [prop]
+            """)
         .run();
   }
 
@@ -321,12 +329,13 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             "var r2;",
             "r1 = r2;")
         .addDiagnostic(
-            lines(
-                "assignment",
-                "found   : {prop: (C|null)}",
-                "required: {prop: (C2|null)}",
-                "missing : []",
-                "mismatch: [prop]"))
+            """
+            assignment
+            found   : {prop: (C|null)}
+            required: {prop: (C2|null)}
+            missing : []
+            mismatch: [prop]
+            """)
         .run();
   }
 
@@ -345,12 +354,19 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             "var r2;",
             "r1 = r2;")
         .addDiagnostic(
-            lines(
-                "assignment",
-                "found   : {\n  prop: (C2|null),\n  prop2: (C|null)\n}",
-                "required: {\n  prop: (C2|null),\n  prop2: (C2|null)\n}",
-                "missing : []",
-                "mismatch: [prop2]"))
+            """
+            assignment
+            found   : {
+              prop: (C2|null),
+              prop2: (C|null)
+            }
+            required: {
+              prop: (C2|null),
+              prop2: (C2|null)
+            }
+            missing : []
+            mismatch: [prop2]
+            """)
         .run();
   }
 
@@ -393,10 +409,14 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             "var f = new Foo();",
             "f = r1;")
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : {\n  x: number,\n  y: string\n}",
-                "required: Foo"))
+            """
+            assignment
+            found   : {
+              x: number,
+              y: string
+            }
+            required: Foo
+            """)
         .run();
   }
 
@@ -416,12 +436,13 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             "var r = {x : new Foo()};",
             "r = o;")
         .addDiagnostic(
-            lines(
-                "assignment",
-                "found   : Foo",
-                "required: {x: Foo}",
-                "missing : []",
-                "mismatch: [x]"))
+            """
+            assignment
+            found   : Foo
+            required: {x: Foo}
+            missing : []
+            mismatch: [x]
+            """)
         .run();
   }
 
@@ -946,12 +967,13 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             "var r2;",
             "r1 = r2")
         .addDiagnostic(
-            lines(
-                "assignment",
-                "found   : {prop1: (A|null|undefined)}",
-                "required: {prop1: (A|null)}",
-                "missing : []",
-                "mismatch: [prop1]"))
+            """
+            assignment
+            found   : {prop1: (A|null|undefined)}
+            required: {prop1: (A|null)}
+            missing : []
+            mismatch: [prop1]
+            """)
         .run();
   }
 
@@ -972,12 +994,13 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             "var r2;",
             "r1 = r2")
         .addDiagnostic(
-            lines(
-                "assignment",
-                "found   : {prop1: (A|null|undefined)}",
-                "required: {prop1: (A|null)}",
-                "missing : []",
-                "mismatch: [prop1]"))
+            """
+            assignment
+            found   : {prop1: (A|null|undefined)}
+            required: {prop1: (A|null)}
+            missing : []
+            mismatch: [prop1]
+            """)
         .run();
   }
 
@@ -1001,10 +1024,11 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             "  x = a;",
             "}")
         .addDiagnostic(
-            lines(
-                "assignment",
-                "found   : IThenable<(number|string)>",
-                "required: IThenable<string>"))
+            """
+            assignment
+            found   : IThenable<(number|string)>
+            required: IThenable<string>
+            """)
         .run();
   }
 
@@ -1029,10 +1053,11 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             "  x = a;",
             "}")
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : Promise<(number|string)>",
-                "required: Promise<string>"))
+            """
+            assignment
+            found   : Promise<(number|string)>
+            required: Promise<string>
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1046,10 +1071,11 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             "  x = a;",
             "}")
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : IThenable<string>",
-                "required: Array<string>"))
+            """
+            assignment
+            found   : IThenable<string>
+            required: Array<string>
+            """)
         .run();
   }
 
@@ -1062,10 +1088,11 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             "  x = a;",
             "}")
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : Array<string>",
-                "required: IThenable<string>"))
+            """
+            assignment
+            found   : Array<string>
+            required: IThenable<string>
+            """)
         .run();
   }
 
@@ -1083,10 +1110,11 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             "  x = a;",
             "}")
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : IThenable<string>",
-                "required: C<string>"))
+            """
+            assignment
+            found   : IThenable<string>
+            required: C<string>
+            """)
         .run();
   }
 
@@ -1104,10 +1132,11 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             "  x = a;",
             "}")
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : C<string>",
-                "required: IThenable<string>"))
+            """
+            assignment
+            found   : C<string>
+            required: IThenable<string>
+            """)
         .run();
   }
 

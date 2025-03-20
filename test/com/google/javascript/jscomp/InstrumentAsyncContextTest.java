@@ -29,37 +29,38 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   private static final boolean SUPPORT_TOP_LEVEL_AWAIT = false;
 
   private static final String EXTERNS =
-      lines(
-          "/** @const */",
-          "var AsyncContext = {};",
-          "",
-          "AsyncContext.wrap = function(f) {};",
-          "/** @constructor */",
-          "AsyncContext.Snapshot = function() {};",
-          "/**",
-          " * @param {!Function} f",
-          " * @return {!Function}",
-          " */",
-          "AsyncContext.Snapshot.prototype.run = function(f) {};",
-          "/**",
-          " * @constructor",
-          " * @param {string=} name",
-          " * @param {*=} defaultValue",
-          " */",
-          "",
-          "AsyncContext.Variable = function(name, defaultValue) {};",
-          "/** @return {*} */",
-          "AsyncContext.Variable.prototype.get = function() {};",
-          "/**",
-          " * @param {*} value",
-          " * @param {!Function} f",
-          " * @return {*}",
-          " */",
-          "AsyncContext.Variable.prototype.run = function(value, f) {};",
-          "",
-          "/** @const */",
-          "var console = {};",
-          "console.log = function(arg) {};");
+      """
+      /** @const */
+      var AsyncContext = {};
+
+      AsyncContext.wrap = function(f) {};
+      /** @constructor */
+      AsyncContext.Snapshot = function() {};
+      /**
+       * @param {!Function} f
+       * @return {!Function}
+       */
+      AsyncContext.Snapshot.prototype.run = function(f) {};
+      /**
+       * @constructor
+       * @param {string=} name
+       * @param {*=} defaultValue
+       */
+
+      AsyncContext.Variable = function(name, defaultValue) {};
+      /** @return {*} */
+      AsyncContext.Variable.prototype.get = function() {};
+      /**
+       * @param {*} value
+       * @param {!Function} f
+       * @return {*}
+       */
+      AsyncContext.Variable.prototype.run = function(value, f) {};
+
+      /** @const */
+      var console = {};
+      console.log = function(arg) {};
+      """;
 
   public InstrumentAsyncContextTest() {
     super(EXTERNS);
@@ -104,23 +105,25 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testAwait() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  await 1;",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
-            "  try {",
-            "    $jscomp$swapContext(await $jscomp$swapContext(1), 1);",
-            "  } finally {",
-            "    $jscomp$swapContext();",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          await 1;
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          try {
+            $jscomp$swapContext(await $jscomp$swapContext(1), 1);
+          } finally {
+            $jscomp$swapContext();
+          }
+        }
+        """);
   }
 
   // BEFORE: for await (const x of EXPR) { BODY }
@@ -139,33 +142,35 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testForAwait() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  for await (const x of gen()) {",
-            "    use(x);",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
-            "  try {",
-            "    for await (const x of $jscomp$swapContext(gen())) {",
-            "      $jscomp$swapContext(0, 1);",
-            "      try {",
-            "        use(x);",
-            "      } finally {",
-            "        $jscomp$swapContext();",
-            "      }",
-            "    }",
-            "    $jscomp$swapContext(0, 1);",
-            "  } finally {",
-            "    $jscomp$swapContext();",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          for await (const x of gen()) {
+            use(x);
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          try {
+            for await (const x of $jscomp$swapContext(gen())) {
+              $jscomp$swapContext(0, 1);
+              try {
+                use(x);
+              } finally {
+                $jscomp$swapContext();
+              }
+            }
+            $jscomp$swapContext(0, 1);
+          } finally {
+            $jscomp$swapContext();
+          }
+        }
+        """);
   }
 
   // TODO: b/371578480 - test break and continue inside for-await
@@ -174,72 +179,76 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testForAwaitNotInBlock() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  if (1)",
-            "    for await (const x of gen()) {",
-            "      use(x);",
-            "    }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
-            "  try {",
-            "    if (1) {",
-            "      for await (const x of $jscomp$swapContext(gen())) {",
-            "        $jscomp$swapContext(0, 1);",
-            "        try {",
-            "          use(x);",
-            "        } finally {",
-            "          $jscomp$swapContext();",
-            "        }",
-            "      }",
-            "      $jscomp$swapContext(0, 1);",
-            "    }",
-            "  } finally {",
-            "    $jscomp$swapContext();",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          if (1)
+            for await (const x of gen()) {
+              use(x);
+            }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          try {
+            if (1) {
+              for await (const x of $jscomp$swapContext(gen())) {
+                $jscomp$swapContext(0, 1);
+                try {
+                  use(x);
+                } finally {
+                  $jscomp$swapContext();
+                }
+              }
+              $jscomp$swapContext(0, 1);
+            }
+          } finally {
+            $jscomp$swapContext();
+          }
+        }
+        """);
   }
 
   // Await nodes within the for-await should also be instrumented appropriately.
   @Test
   public void testForAwaitMixedWithAwait() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  for await (const x of await gen()) {",
-            "    await use(x);",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
-            "  try {",
-            "    for await (const x of",
-            "                   $jscomp$swapContext(",
-            "                       $jscomp$swapContext(await $jscomp$swapContext(gen()), 1))) {",
-            "      $jscomp$swapContext(0, 1);",
-            "      try {",
-            "        $jscomp$swapContext(",
-            "            await $jscomp$swapContext(use(x)), 1);",
-            "      } finally {",
-            "        $jscomp$swapContext();",
-            "      }",
-            "    }",
-            "    $jscomp$swapContext(0, 1);",
-            "  } finally {",
-            "    $jscomp$swapContext();",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          for await (const x of await gen()) {
+            await use(x);
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          try {
+            for await (const x of
+                           $jscomp$swapContext(
+                               $jscomp$swapContext(await $jscomp$swapContext(gen()), 1))) {
+              $jscomp$swapContext(0, 1);
+              try {
+                $jscomp$swapContext(
+                    await $jscomp$swapContext(use(x)), 1);
+              } finally {
+                $jscomp$swapContext();
+              }
+            }
+            $jscomp$swapContext(0, 1);
+          } finally {
+            $jscomp$swapContext();
+          }
+        }
+        """);
   }
 
   // NOTE: This test is disabled because we do not yet support top-level await.  But if it becomes
@@ -250,17 +259,19 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
       return;
     }
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "await 1;",
-            "await 2;"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "var $jscomp$swapContext = $jscomp.asyncContextEnter();",
-            "$jscomp$swapContext(await $jscomp$swapContext(1), 1);",
-            "$jscomp$swapContext(await $jscomp$swapContext(2), 1);"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        await 1;
+        await 2;
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        var $jscomp$swapContext = $jscomp.asyncContextEnter();
+        $jscomp$swapContext(await $jscomp$swapContext(1), 1);
+        $jscomp$swapContext(await $jscomp$swapContext(2), 1);
+        """);
   }
 
   // Multiple awaits should each get instrumented separately, but the top-level function
@@ -268,25 +279,27 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testMultipleAwaits() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  await 1;",
-            "  await 2;",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
-            "  try {",
-            "    $jscomp$swapContext(await $jscomp$swapContext(1), 1);",
-            "    $jscomp$swapContext(await $jscomp$swapContext(2), 1);",
-            "  } finally {",
-            "    $jscomp$swapContext();",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          await 1;
+          await 2;
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          try {
+            $jscomp$swapContext(await $jscomp$swapContext(1), 1);
+            $jscomp$swapContext(await $jscomp$swapContext(2), 1);
+          } finally {
+            $jscomp$swapContext();
+          }
+        }
+        """);
   }
 
   // BEFORE: try { ... } catch { BODY }
@@ -300,32 +313,34 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testAwaitInsideTryCatch() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  try {",
-            "    await 1;",
-            "  } catch (e) {",
-            "    console.log(e);",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
-            "  try {",
-            "    try {",
-            "      $jscomp$swapContext(await $jscomp$swapContext(1), 1);",
-            "    } catch (e) {",
-            "      $jscomp$swapContext(0, 1);",
-            "      console.log(e);",
-            "    }",
-            "  } finally {",
-            "    $jscomp$swapContext();",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          try {
+            await 1;
+          } catch (e) {
+            console.log(e);
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          try {
+            try {
+              $jscomp$swapContext(await $jscomp$swapContext(1), 1);
+            } catch (e) {
+              $jscomp$swapContext(0, 1);
+              console.log(e);
+            }
+          } finally {
+            $jscomp$swapContext();
+          }
+        }
+        """);
   }
 
   // BEFORE: try { ... } catch { BODY1 } finally { BODY2 }
@@ -338,36 +353,38 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testAwaitInsideTryCatchFinally() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  try {",
-            "    await 1;",
-            "  } catch (e) {",
-            "    console.log(e);",
-            "  } finally {",
-            "    console.log('finally');",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
-            "  try {",
-            "    try {",
-            "      $jscomp$swapContext(await $jscomp$swapContext(1), 1);",
-            "    } catch (e) {",
-            "      $jscomp$swapContext(0, 1);",
-            "      console.log(e);",
-            "    } finally {",
-            "      console.log('finally');",
-            "    }",
-            "  } finally {",
-            "    $jscomp$swapContext();",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          try {
+            await 1;
+          } catch (e) {
+            console.log(e);
+          } finally {
+            console.log('finally');
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          try {
+            try {
+              $jscomp$swapContext(await $jscomp$swapContext(1), 1);
+            } catch (e) {
+              $jscomp$swapContext(0, 1);
+              console.log(e);
+            } finally {
+              console.log('finally');
+            }
+          } finally {
+            $jscomp$swapContext();
+          }
+        }
+        """);
   }
 
   // BEFORE: try { ... } finally { BODY }
@@ -375,44 +392,47 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testAwaitInsideTryFinally() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  try {",
-            "    await 1;",
-            "  } finally {",
-            "    console.log('finally');",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
-            "  try {",
-            "    try {",
-            "      $jscomp$swapContext(await $jscomp$swapContext(1), 1);",
-            "    } finally {",
-            "      $jscomp$swapContext(0, 1);",
-            "      console.log('finally');",
-            "    }",
-            "  } finally {",
-            "    $jscomp$swapContext();",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          try {
+            await 1;
+          } finally {
+            console.log('finally');
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          try {
+            try {
+              $jscomp$swapContext(await $jscomp$swapContext(1), 1);
+            } finally {
+              $jscomp$swapContext(0, 1);
+              console.log('finally');
+            }
+          } finally {
+            $jscomp$swapContext();
+          }
+        }
+        """);
   }
 
   // `return await` does not require any instrumentation if it's not inside a try block.
   @Test
   public void testReturnAwait() {
     testSame(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  return await 1;",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          return await 1;
+        }
+        """);
   }
 
   // `return await` does not require any instrumentation if it's not inside a try block.
@@ -421,32 +441,34 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testReturnAwaitInsideTryCatch() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  try {",
-            "    return await 1;",
-            "  } catch (e) {",
-            "    console.log(e);",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
-            "  try {",
-            "    try {",
-            "      return $jscomp$swapContext(await $jscomp$swapContext(1), 1);",
-            "    } catch (e) {",
-            "      $jscomp$swapContext(0, 1);",
-            "      console.log(e);",
-            "    }",
-            "  } finally {",
-            "    $jscomp$swapContext();",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          try {
+            return await 1;
+          } catch (e) {
+            console.log(e);
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          try {
+            try {
+              return $jscomp$swapContext(await $jscomp$swapContext(1), 1);
+            } catch (e) {
+              $jscomp$swapContext(0, 1);
+              console.log(e);
+            }
+          } finally {
+            $jscomp$swapContext();
+          }
+        }
+        """);
   }
 
   // `return await` does not require any instrumentation if it's not inside a try block.
@@ -454,32 +476,34 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testReturnAwaitInsideTryFinally() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  try {",
-            "    return await 1;",
-            "  } finally {",
-            "    console.log('finally');",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
-            "  try {",
-            "    try {",
-            "      return $jscomp$swapContext(await $jscomp$swapContext(1), 1);",
-            "    } finally {",
-            "      $jscomp$swapContext(0, 1);",
-            "      console.log('finally');",
-            "    }",
-            "  } finally {",
-            "    $jscomp$swapContext();",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          try {
+            return await 1;
+          } finally {
+            console.log('finally');
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          try {
+            try {
+              return $jscomp$swapContext(await $jscomp$swapContext(1), 1);
+            } finally {
+              $jscomp$swapContext(0, 1);
+              console.log('finally');
+            }
+          } finally {
+            $jscomp$swapContext();
+          }
+        }
+        """);
   }
 
   // `return await` does not require any instrumentation if it's the entire arrow function
@@ -488,10 +512,11 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testAwaitImmediatelyReturnedFromBodylessArrow() {
     testSame(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "(async () => await 1)();"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        (async () => await 1)();
+        """);
   }
 
   // A shorthand arrow with a nested await needs instrumentation, since there's ECMAScript code that
@@ -500,21 +525,23 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testAwaitInsideBodylessArrow() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "(async () => use(await 1))();"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "(async () => {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
-            "  try {",
-            "    return use($jscomp$swapContext(await $jscomp$swapContext(1), 1));",
-            "  } finally {",
-            "    $jscomp$swapContext();",
-            "  }",
-            "})();"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        (async () => use(await 1))();
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        (async () => {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          try {
+            return use($jscomp$swapContext(await $jscomp$swapContext(1), 1));
+          } finally {
+            $jscomp$swapContext();
+          }
+        })();
+        """);
   }
 
   // Instrumentation is tied to `await`, not `async`.  If there is no await, then there's no reentry
@@ -522,12 +549,13 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testAsyncFunctionWithNoAwait() {
     testSame(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  return 1;",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          return 1;
+        }
+        """);
   }
 
   // BEFORE: function* f() { BODY }
@@ -550,100 +578,106 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testGenerator() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "function* f() {",
-            "  yield 1;",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "  return function*() {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      $jscomp$swapContext(yield $jscomp$swapContext(1), 1);",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }();",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function* f() {
+          yield 1;
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          return function*() {
+            $jscomp$swapContext(0, 1);
+            try {
+              $jscomp$swapContext(yield $jscomp$swapContext(1), 1);
+            } finally {
+              $jscomp$swapContext();
+            }
+          }();
+        }
+        """);
   }
 
   // yield has the same behavior as await w.r.t. try blocks
   @Test
   public void testGeneratorWithTryCatchFinally() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "function* f() {",
-            "  try {",
-            "    yield 1;",
-            "  } catch (e) {",
-            "    yield 2;",
-            "  } finally {",
-            "    yield 3;",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "  return function*() {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      try {",
-            "        $jscomp$swapContext(yield $jscomp$swapContext(1), 1);",
-            "      } catch (e) {",
-            "        $jscomp$swapContext(0, 1);",
-            "        $jscomp$swapContext(yield $jscomp$swapContext(2), 1);",
-            "      } finally {",
-            "        $jscomp$swapContext(yield $jscomp$swapContext(3), 1);",
-            "      }",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }();",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function* f() {
+          try {
+            yield 1;
+          } catch (e) {
+            yield 2;
+          } finally {
+            yield 3;
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          return function*() {
+            $jscomp$swapContext(0, 1);
+            try {
+              try {
+                $jscomp$swapContext(yield $jscomp$swapContext(1), 1);
+              } catch (e) {
+                $jscomp$swapContext(0, 1);
+                $jscomp$swapContext(yield $jscomp$swapContext(2), 1);
+              } finally {
+                $jscomp$swapContext(yield $jscomp$swapContext(3), 1);
+              }
+            } finally {
+              $jscomp$swapContext();
+            }
+          }();
+        }
+        """);
   }
 
   // yield has the same behavior as await w.r.t. try blocks
   @Test
   public void testGeneratorWithTryFinally() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "function* f() {",
-            "  try {",
-            "    yield 1;",
-            "  } finally {",
-            "    yield 3;",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "  return function*() {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      try {",
-            "        $jscomp$swapContext(yield $jscomp$swapContext(1), 1);",
-            "      } finally {",
-            "        $jscomp$swapContext(0, 1);",
-            "        $jscomp$swapContext(yield $jscomp$swapContext(3), 1);",
-            "      }",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }();",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function* f() {
+          try {
+            yield 1;
+          } finally {
+            yield 3;
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          return function*() {
+            $jscomp$swapContext(0, 1);
+            try {
+              try {
+                $jscomp$swapContext(yield $jscomp$swapContext(1), 1);
+              } finally {
+                $jscomp$swapContext(0, 1);
+                $jscomp$swapContext(yield $jscomp$swapContext(3), 1);
+              }
+            } finally {
+              $jscomp$swapContext();
+            }
+          }();
+        }
+        """);
   }
 
   // yield has the same behavior as await w.r.t. try blocks: only the inner try-catch gets
@@ -651,43 +685,45 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testGeneratorWithNestedTry() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "function* f() {",
-            "  try {",
-            "    try {",
-            "      yield 1;",
-            "    } catch (e) {",
-            "      console.log(e);",
-            "    }",
-            "  } catch (e) {",
-            "    console.log(e);",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "  return function*() {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      try {",
-            "        try {",
-            "          $jscomp$swapContext(yield $jscomp$swapContext(1), 1);",
-            "        } catch (e) {",
-            "          $jscomp$swapContext(0, 1);",
-            "          console.log(e);",
-            "        }",
-            "      } catch (e) {",
-            "        console.log(e);",
-            "      }",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }();",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function* f() {
+          try {
+            try {
+              yield 1;
+            } catch (e) {
+              console.log(e);
+            }
+          } catch (e) {
+            console.log(e);
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          return function*() {
+            $jscomp$swapContext(0, 1);
+            try {
+              try {
+                try {
+                  $jscomp$swapContext(yield $jscomp$swapContext(1), 1);
+                } catch (e) {
+                  $jscomp$swapContext(0, 1);
+                  console.log(e);
+                }
+              } catch (e) {
+                console.log(e);
+              }
+            } finally {
+              $jscomp$swapContext();
+            }
+          }();
+        }
+        """);
   }
 
   // Empty yield is a special case that wasn't present with await (you can't have an empty await).
@@ -696,26 +732,28 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testGeneratorWithEmptyYield() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "function* f() {",
-            "  yield;",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "  return function*() {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      $jscomp$swapContext(yield $jscomp$swapContext(), 1);",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }();",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function* f() {
+          yield;
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          return function*() {
+            $jscomp$swapContext(0, 1);
+            try {
+              $jscomp$swapContext(yield $jscomp$swapContext(), 1);
+            } finally {
+              $jscomp$swapContext();
+            }
+          }();
+        }
+        """);
   }
 
   // Yield-less generators still need instrumentation, unlike await-less async functions, since the
@@ -723,34 +761,39 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testGeneratorWithNoYield() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "function* f() {",
-            "  console.log(1);",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "  return function*() {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      console.log(1);",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }();",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function* f() {
+          console.log(1);
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          return function*() {
+            $jscomp$swapContext(0, 1);
+            try {
+              console.log(1);
+            } finally {
+              $jscomp$swapContext();
+            }
+          }();
+        }
+        """);
   }
 
   // No instrumentation is needed because there's no code inside to observe any variables.
   @Test
   public void testGeneratorWithEmptyBody() {
     testSame(
-        lines(
-            "const v = new AsyncContext.Variable();", "v.run(100, () => {});", "function* f() {}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function* f() {}
+        """);
   }
 
   // Because of the nested generator (which cannot be an arrow because generator arrow don't exist),
@@ -758,28 +801,30 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testGeneratorWithArguments() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "function* f(a) {",
-            "  yield a + arguments[1];",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "function f(a) {",
-            "  const $jscomp$arguments$m1146332801$0 = arguments;",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "  return function*() {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      $jscomp$swapContext(",
-            "          yield $jscomp$swapContext(a + $jscomp$arguments$m1146332801$0[1]), 1);",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }();",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function* f(a) {
+          yield a + arguments[1];
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function f(a) {
+          const $jscomp$arguments$m1146332801$0 = arguments;
+          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          return function*() {
+            $jscomp$swapContext(0, 1);
+            try {
+              $jscomp$swapContext(
+                  yield $jscomp$swapContext(a + $jscomp$arguments$m1146332801$0[1]), 1);
+            } finally {
+              $jscomp$swapContext();
+            }
+          }();
+        }
+        """);
   }
 
   // Generator methods are transpiled the same as generator functions, as long as there is no
@@ -787,30 +832,32 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testGeneratorMethod() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  *f() {",
-            "    yield 1;",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  f() {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "    return (function*() {",
-            "      $jscomp$swapContext(0, 1);",
-            "      try {",
-            "        $jscomp$swapContext(yield $jscomp$swapContext(1), 1);",
-            "      } finally {",
-            "        $jscomp$swapContext();",
-            "      }",
-            "    })();",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          *f() {
+            yield 1;
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          f() {
+            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            return (function*() {
+              $jscomp$swapContext(0, 1);
+              try {
+                $jscomp$swapContext(yield $jscomp$swapContext(1), 1);
+              } finally {
+                $jscomp$swapContext();
+              }
+            })();
+          }
+        }
+        """);
   }
 
   // Generator methods are transpiled the same as generator functions, as long as there is no
@@ -818,30 +865,32 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testGeneratorMethodWithNoYield() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  *f() {",
-            "    console.log(42);",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  f() {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "    return (function*() {",
-            "      $jscomp$swapContext(0, 1);",
-            "      try {",
-            "        console.log(42);",
-            "      } finally {",
-            "        $jscomp$swapContext();",
-            "      }",
-            "    })();",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          *f() {
+            console.log(42);
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          f() {
+            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            return (function*() {
+              $jscomp$swapContext(0, 1);
+              try {
+                console.log(42);
+              } finally {
+                $jscomp$swapContext();
+              }
+            })();
+          }
+        }
+        """);
   }
 
   // Generator methods are transpiled the same as generator functions, as long as there is no
@@ -853,32 +902,34 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testGeneratorMethodWithThis() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  *g() {",
-            "    yield this;",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  g() {",
-            "    const $jscomp$this$m1146332801$0 = this;",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "    return (function*() {",
-            "      $jscomp$swapContext(0, 1);",
-            "      try {",
-            "        $jscomp$swapContext(",
-            "            yield $jscomp$swapContext($jscomp$this$m1146332801$0), 1);",
-            "      } finally {",
-            "        $jscomp$swapContext();",
-            "      }",
-            "    })();",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          *g() {
+            yield this;
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          g() {
+            const $jscomp$this$m1146332801$0 = this;
+            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            return (function*() {
+              $jscomp$swapContext(0, 1);
+              try {
+                $jscomp$swapContext(
+                    yield $jscomp$swapContext($jscomp$this$m1146332801$0), 1);
+              } finally {
+                $jscomp$swapContext();
+              }
+            })();
+          }
+        }
+        """);
   }
 
   // Generator methods are transpiled the same as generator functions, as long as there is no
@@ -886,32 +937,34 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testGeneratorMethodWithArguments() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  *g() {",
-            "    yield arguments.length;",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  g() {",
-            "    const $jscomp$arguments$m1146332801$0 = arguments;",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "    return (function*() {",
-            "      $jscomp$swapContext(0, 1);",
-            "      try {",
-            "        $jscomp$swapContext(",
-            "            yield $jscomp$swapContext($jscomp$arguments$m1146332801$0.length), 1);",
-            "      } finally {",
-            "        $jscomp$swapContext();",
-            "      }",
-            "    })();",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          *g() {
+            yield arguments.length;
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          g() {
+            const $jscomp$arguments$m1146332801$0 = arguments;
+            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            return (function*() {
+              $jscomp$swapContext(0, 1);
+              try {
+                $jscomp$swapContext(
+                    yield $jscomp$swapContext($jscomp$arguments$m1146332801$0.length), 1);
+              } finally {
+                $jscomp$swapContext();
+              }
+            })();
+          }
+        }
+        """);
   }
 
   // Generator methods that reference "super" need special handling because there's no way to pass
@@ -921,34 +974,36 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testGeneratorMethodSuperStatic() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  /** @nocollapse */",
-            "  static *f() {",
-            "    yield* super.f();",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  /** @nocollapse */",
-            "  static f() {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "    return this.f$jscomp$m1146332801$0($jscomp$swapContext);",
-            "  }",
-            "  /** @nocollapse */",
-            "  static *f$jscomp$m1146332801$0($jscomp$swapContext) {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      $jscomp$swapContext(yield* $jscomp$swapContext(super.f()), 1);",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          /** @nocollapse */
+          static *f() {
+            yield* super.f();
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          /** @nocollapse */
+          static f() {
+            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            return this.f$jscomp$m1146332801$0($jscomp$swapContext);
+          }
+          /** @nocollapse */
+          static *f$jscomp$m1146332801$0($jscomp$swapContext) {
+            $jscomp$swapContext(0, 1);
+            try {
+              $jscomp$swapContext(yield* $jscomp$swapContext(super.f()), 1);
+            } finally {
+              $jscomp$swapContext();
+            }
+          }
+        }
+        """);
   }
 
   // Generator methods that reference "super" need special handling because there's no way to pass
@@ -958,93 +1013,99 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testGeneratorMethodSuper() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  *f() {",
-            "    yield super.f();",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  f() {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "    return this.f$jscomp$m1146332801$0($jscomp$swapContext);",
-            "  }",
-            "  *f$jscomp$m1146332801$0($jscomp$swapContext) {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      $jscomp$swapContext(yield $jscomp$swapContext(super.f()), 1);",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          *f() {
+            yield super.f();
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          f() {
+            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            return this.f$jscomp$m1146332801$0($jscomp$swapContext);
+          }
+          *f$jscomp$m1146332801$0($jscomp$swapContext) {
+            $jscomp$swapContext(0, 1);
+            try {
+              $jscomp$swapContext(yield $jscomp$swapContext(super.f()), 1);
+            } finally {
+              $jscomp$swapContext();
+            }
+          }
+        }
+        """);
   }
 
   // This is the same as the case with yield.
   @Test
   public void testGeneratorMethodSuperWithNoYield() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  *f() {",
-            "    return super.f();",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  f() {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "    return this.f$jscomp$m1146332801$0($jscomp$swapContext);",
-            "  }",
-            "  *f$jscomp$m1146332801$0($jscomp$swapContext) {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      return super.f();",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          *f() {
+            return super.f();
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          f() {
+            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            return this.f$jscomp$m1146332801$0($jscomp$swapContext);
+          }
+          *f$jscomp$m1146332801$0($jscomp$swapContext) {
+            $jscomp$swapContext(0, 1);
+            try {
+              return super.f();
+            } finally {
+              $jscomp$swapContext();
+            }
+          }
+        }
+        """);
   }
 
   // Parameters are copied over and forwarded to the new method.
   @Test
   public void testGeneratorMethodSuperWithParameters() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  *f(a, b, c) {",
-            "    yield super.x;",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  f(a, b, c) {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "    return this.f$jscomp$m1146332801$0($jscomp$swapContext, a, b, c);",
-            "  }",
-            "  *f$jscomp$m1146332801$0($jscomp$swapContext, a, b, c) {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      $jscomp$swapContext(yield $jscomp$swapContext(super.x), 1);",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          *f(a, b, c) {
+            yield super.x;
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          f(a, b, c) {
+            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            return this.f$jscomp$m1146332801$0($jscomp$swapContext, a, b, c);
+          }
+          *f$jscomp$m1146332801$0($jscomp$swapContext, a, b, c) {
+            $jscomp$swapContext(0, 1);
+            try {
+              $jscomp$swapContext(yield $jscomp$swapContext(super.x), 1);
+            } finally {
+              $jscomp$swapContext();
+            }
+          }
+        }
+        """);
   }
 
   // Because of the additional context parameter, we can't just read arguments directly in the inner
@@ -1053,34 +1114,36 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testGeneratorMethodSuperReadsArgumentsArray() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  *f(a) {",
-            "    yield super.x + arguments.length;",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  f(a) {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "    return this.f$jscomp$m1146332801$0($jscomp$swapContext, arguments, a);",
-            "  }",
-            "  *f$jscomp$m1146332801$0($jscomp$swapContext, $jscomp$arguments$m1146332801$1, a) {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      $jscomp$swapContext(",
-            "          yield $jscomp$swapContext(",
-            "              super.x + $jscomp$arguments$m1146332801$1.length),",
-            "          1);",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          *f(a) {
+            yield super.x + arguments.length;
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          f(a) {
+            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            return this.f$jscomp$m1146332801$0($jscomp$swapContext, arguments, a);
+          }
+          *f$jscomp$m1146332801$0($jscomp$swapContext, $jscomp$arguments$m1146332801$1, a) {
+            $jscomp$swapContext(0, 1);
+            try {
+              $jscomp$swapContext(
+                  yield $jscomp$swapContext(
+                      super.x + $jscomp$arguments$m1146332801$1.length),
+                  1);
+            } finally {
+              $jscomp$swapContext();
+            }
+          }
+        }
+        """);
   }
 
   // Default parameter initializers are retained on the inner method, rather than the outer method.
@@ -1090,65 +1153,69 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testGeneratorMethodSuperWithDefaultParameter() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  *f(a = 1) {",
-            "    yield super.y;",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  f(a) {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "    return this.f$jscomp$m1146332801$0($jscomp$swapContext, a);",
-            "  }",
-            "  *f$jscomp$m1146332801$0($jscomp$swapContext, a = 1) {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      $jscomp$swapContext(yield $jscomp$swapContext(super.y), 1);",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          *f(a = 1) {
+            yield super.y;
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          f(a) {
+            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            return this.f$jscomp$m1146332801$0($jscomp$swapContext, a);
+          }
+          *f$jscomp$m1146332801$0($jscomp$swapContext, a = 1) {
+            $jscomp$swapContext(0, 1);
+            try {
+              $jscomp$swapContext(yield $jscomp$swapContext(super.y), 1);
+            } finally {
+              $jscomp$swapContext();
+            }
+          }
+        }
+        """);
   }
 
   // Destructurd parameters are also retained on the inner method, for similar reasons to defaults.
   @Test
   public void testGeneratorMethodSuperWithDestructuredParameters() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  *f({a}, [b = 1]) {",
-            "    yield super.x;",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  f($jscomp$m1146332801$1, $jscomp$m1146332801$2) {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "    return this.f$jscomp$m1146332801$0(",
-            "        $jscomp$swapContext, ",
-            "        $jscomp$m1146332801$1, ",
-            "        $jscomp$m1146332801$2);",
-            "  }",
-            "  *f$jscomp$m1146332801$0($jscomp$swapContext, {a}, [b = 1]) {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      $jscomp$swapContext(yield $jscomp$swapContext(super.x), 1);",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          *f({a}, [b = 1]) {
+            yield super.x;
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          f($jscomp$m1146332801$1, $jscomp$m1146332801$2) {
+            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            return this.f$jscomp$m1146332801$0(
+                $jscomp$swapContext,
+                $jscomp$m1146332801$1,
+                $jscomp$m1146332801$2);
+          }
+          *f$jscomp$m1146332801$0($jscomp$swapContext, {a}, [b = 1]) {
+            $jscomp$swapContext(0, 1);
+            try {
+              $jscomp$swapContext(yield $jscomp$swapContext(super.x), 1);
+            } finally {
+              $jscomp$swapContext();
+            }
+          }
+        }
+        """);
   }
 
   // Rest parameters are copied on both the original generator-turned-ordinary-method as well as on
@@ -1156,63 +1223,67 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testGeneratorMethodSuperWithRestParameter() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  *f(...a) {",
-            "    yield super.foo;",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  f(...a) {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "    return this.f$jscomp$m1146332801$0($jscomp$swapContext, ...a);",
-            "  }",
-            "  *f$jscomp$m1146332801$0($jscomp$swapContext, ...a) {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      $jscomp$swapContext(yield $jscomp$swapContext(super.foo), 1);",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          *f(...a) {
+            yield super.foo;
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          f(...a) {
+            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            return this.f$jscomp$m1146332801$0($jscomp$swapContext, ...a);
+          }
+          *f$jscomp$m1146332801$0($jscomp$swapContext, ...a) {
+            $jscomp$swapContext(0, 1);
+            try {
+              $jscomp$swapContext(yield $jscomp$swapContext(super.foo), 1);
+            } finally {
+              $jscomp$swapContext();
+            }
+          }
+        }
+        """);
   }
 
   // This case just combines all the earlier cases into one.
   @Test
   public void testGeneratorMethodSuperWithComplicatedParameters() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  *f(a, {b}, c = 1, ...[d]) {",
-            "    yield super.foo;",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  f(a, $jscomp$m1146332801$1, c, ...$jscomp$m1146332801$2) {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "    return this.f$jscomp$m1146332801$0(",
-            "        $jscomp$swapContext, a, $jscomp$m1146332801$1, c, ...$jscomp$m1146332801$2);",
-            "  }",
-            "  *f$jscomp$m1146332801$0($jscomp$swapContext, a, {b}, c = 1, ...[d]) {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      $jscomp$swapContext(yield $jscomp$swapContext(super.foo), 1);",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          *f(a, {b}, c = 1, ...[d]) {
+            yield super.foo;
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          f(a, $jscomp$m1146332801$1, c, ...$jscomp$m1146332801$2) {
+            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            return this.f$jscomp$m1146332801$0(
+                $jscomp$swapContext, a, $jscomp$m1146332801$1, c, ...$jscomp$m1146332801$2);
+          }
+          *f$jscomp$m1146332801$0($jscomp$swapContext, a, {b}, c = 1, ...[d]) {
+            $jscomp$swapContext(0, 1);
+            try {
+              $jscomp$swapContext(yield $jscomp$swapContext(super.foo), 1);
+            } finally {
+              $jscomp$swapContext();
+            }
+          }
+        }
+        """);
   }
 
   // When the generator method has a computed key, we can't include the name in the new inner
@@ -1220,154 +1291,164 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testGeneratorMethodSuperWithComputedKey() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  *[Symbol.iterator]() {",
-            "    yield super.foo();",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  [Symbol.iterator]() {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "    return this.$jscomp$m1146332801$0($jscomp$swapContext);",
-            "  }",
-            "  *$jscomp$m1146332801$0($jscomp$swapContext) {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      $jscomp$swapContext(yield $jscomp$swapContext(super.foo()), 1);",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          *[Symbol.iterator]() {
+            yield super.foo();
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          [Symbol.iterator]() {
+            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            return this.$jscomp$m1146332801$0($jscomp$swapContext);
+          }
+          *$jscomp$m1146332801$0($jscomp$swapContext) {
+            $jscomp$swapContext(0, 1);
+            try {
+              $jscomp$swapContext(yield $jscomp$swapContext(super.foo()), 1);
+            } finally {
+              $jscomp$swapContext();
+            }
+          }
+        }
+        """);
   }
 
   // Async generators combine both async and generator transpilations into one.
   @Test
   public void testAsyncGenerator() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function* f() {",
-            "  yield await 1;",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "  return async function*() {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      $jscomp$swapContext(",
-            "          yield $jscomp$swapContext(",
-            "              $jscomp$swapContext(await $jscomp$swapContext(1), 1)),",
-            "          1);",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }();",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function* f() {
+          yield await 1;
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          return async function*() {
+            $jscomp$swapContext(0, 1);
+            try {
+              $jscomp$swapContext(
+                  yield $jscomp$swapContext(
+                      $jscomp$swapContext(await $jscomp$swapContext(1), 1)),
+                  1);
+            } finally {
+              $jscomp$swapContext();
+            }
+          }();
+        }
+        """);
   }
 
   // The generator transpilation is still required, even when there's no yields or awaits.
   @Test
   public void testAsyncGeneratorWithNoYieldNorAwait() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function* f() {",
-            "  return 1;",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "  return async function*() {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      return 1;",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }();",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function* f() {
+          return 1;
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          return async function*() {
+            $jscomp$swapContext(0, 1);
+            try {
+              return 1;
+            } finally {
+              $jscomp$swapContext();
+            }
+          }();
+        }
+        """);
   }
 
   // Async generator methods are transpiled the same as functions as long as there is no super.
   @Test
   public void testAsyncGeneratorMethod() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  async *f() {",
-            "    yield await 1;",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  f() {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "    return (async function*() {",
-            "      $jscomp$swapContext(0, 1);",
-            "      try {",
-            "        $jscomp$swapContext(",
-            "            yield $jscomp$swapContext(",
-            "                $jscomp$swapContext(await $jscomp$swapContext(1), 1)),",
-            "            1);",
-            "      } finally {",
-            "        $jscomp$swapContext();",
-            "      }",
-            "    })();",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          async *f() {
+            yield await 1;
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          f() {
+            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            return (async function*() {
+              $jscomp$swapContext(0, 1);
+              try {
+                $jscomp$swapContext(
+                    yield $jscomp$swapContext(
+                        $jscomp$swapContext(await $jscomp$swapContext(1), 1)),
+                    1);
+              } finally {
+                $jscomp$swapContext();
+              }
+            })();
+          }
+        }
+        """);
   }
 
   // Async generator methods get the same treatment as generator methods if they access super.
   @Test
   public void testAsyncGeneratorMethodSuper() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  async *f() {",
-            "    yield await super.f();",
-            "  }",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "class Foo {",
-            "  f() {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "    return this.f$jscomp$m1146332801$0($jscomp$swapContext);",
-            "  }",
-            "  async *f$jscomp$m1146332801$0($jscomp$swapContext) {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      $jscomp$swapContext(",
-            "          yield $jscomp$swapContext(",
-            "              $jscomp$swapContext(",
-            "                  await $jscomp$swapContext(super.f()), 1)),",
-            "          1);",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          async *f() {
+            yield await super.f();
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo {
+          f() {
+            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            return this.f$jscomp$m1146332801$0($jscomp$swapContext);
+          }
+          async *f$jscomp$m1146332801$0($jscomp$swapContext) {
+            $jscomp$swapContext(0, 1);
+            try {
+              $jscomp$swapContext(
+                  yield $jscomp$swapContext(
+                      $jscomp$swapContext(
+                          await $jscomp$swapContext(super.f()), 1)),
+                  1);
+            } finally {
+              $jscomp$swapContext();
+            }
+          }
+        }
+        """);
   }
 
   // Test that we don't do anything with async functions when instrumentAwait is false.
@@ -1379,12 +1460,13 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testNoInstrumentAwait_await() {
     instrumentAwait = false;
     testSame(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  await 1;",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          await 1;
+        }
+        """);
   }
 
   // No "await" instrumentation.
@@ -1392,14 +1474,15 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testNoInstrumentAwait_forAwait() {
     instrumentAwait = false;
     testSame(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  for await (const x of gen()) {",
-            "    use(x);",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          for await (const x of gen()) {
+            use(x);
+          }
+        }
+        """);
   }
 
   // This test is unaffected by instrumentAwait=false because generators still need to be
@@ -1409,26 +1492,28 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testNoInstrumentAwait_generator() {
     instrumentAwait = false;
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "function* f() {",
-            "  yield 1;",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "  return function*() {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      $jscomp$swapContext(yield $jscomp$swapContext(1), 1);",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }();",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function* f() {
+          yield 1;
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          return function*() {
+            $jscomp$swapContext(0, 1);
+            try {
+              $jscomp$swapContext(yield $jscomp$swapContext(1), 1);
+            } finally {
+              $jscomp$swapContext();
+            }
+          }();
+        }
+        """);
   }
 
   // Test that only the yield is instrumented, but that awaits are left alone.
@@ -1436,39 +1521,42 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void testNoInstrumentAwait_asyncGenerator() {
     instrumentAwait = false;
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function* f() {",
-            "  yield await 1;",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter(1);",
-            "  return async function*() {",
-            "    $jscomp$swapContext(0, 1);",
-            "    try {",
-            "      $jscomp$swapContext(yield $jscomp$swapContext(await 1), 1);",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }();",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function* f() {
+          yield await 1;
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          return async function*() {
+            $jscomp$swapContext(0, 1);
+            try {
+              $jscomp$swapContext(yield $jscomp$swapContext(await 1), 1);
+            } finally {
+              $jscomp$swapContext();
+            }
+          }();
+        }
+        """);
   }
 
   // Test that if the input is already instrumented, we don't double-instrument.
   @Test
   public void testAlreadyInstrumented() {
     testSame(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
-            "  $jscomp$swapContext(await $jscomp$swapContext(42), 1);",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          $jscomp$swapContext(await $jscomp$swapContext(42), 1);
+        }
+        """);
   }
 
   // Already-instrumented check applies on the function level: `f` is skipped, but
@@ -1476,41 +1564,43 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   @Test
   public void testAlreadyInstrumented_partial() {
     test(
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
-            "  $jscomp$swapContext(await $jscomp$swapContext(2), 1);",
-            "  async function g() {",
-            "    await 3;",
-            "  }",
-            "}",
-            "async function h() {",
-            "  await 4;",
-            "}"),
-        lines(
-            "const v = new AsyncContext.Variable();",
-            "v.run(100, () => {});",
-            "async function f() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
-            "  $jscomp$swapContext(await $jscomp$swapContext(2), 1);",
-            "  async function g() {",
-            "    var $jscomp$swapContext = $jscomp.asyncContextEnter();",
-            "    try {",
-            "      $jscomp$swapContext(await $jscomp$swapContext(3), 1);",
-            "    } finally {",
-            "      $jscomp$swapContext();",
-            "    }",
-            "  }",
-            "}",
-            "async function h() {",
-            "  var $jscomp$swapContext = $jscomp.asyncContextEnter();",
-            "  try {",
-            "    $jscomp$swapContext(await $jscomp$swapContext(4), 1);",
-            "  } finally {",
-            "    $jscomp$swapContext();",
-            "  }",
-            "}"));
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          $jscomp$swapContext(await $jscomp$swapContext(2), 1);
+          async function g() {
+            await 3;
+          }
+        }
+        async function h() {
+          await 4;
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          $jscomp$swapContext(await $jscomp$swapContext(2), 1);
+          async function g() {
+            var $jscomp$swapContext = $jscomp.asyncContextEnter();
+            try {
+              $jscomp$swapContext(await $jscomp$swapContext(3), 1);
+            } finally {
+              $jscomp$swapContext();
+            }
+          }
+        }
+        async function h() {
+          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          try {
+            $jscomp$swapContext(await $jscomp$swapContext(4), 1);
+          } finally {
+            $jscomp$swapContext();
+          }
+        }
+        """);
   }
 }

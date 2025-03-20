@@ -101,14 +101,24 @@ public final class CheckGoogJsImportTest extends CompilerTestCase {
     testError("export * from './closure/goog.js';", GOOG_JS_REEXPORTED);
 
     testError(
-        lines("import * as goog from './closure/goog.js';", "export {goog};"), GOOG_JS_REEXPORTED);
-
-    testError(
-        lines("import * as goog from './closure/goog.js';", "export {goog as GOOG};"),
+        """
+        import * as goog from './closure/goog.js';
+        export {goog};
+        """,
         GOOG_JS_REEXPORTED);
 
     testError(
-        lines("import * as goog from './closure/goog.js';", "export default goog;"),
+        """
+        import * as goog from './closure/goog.js';
+        export {goog as GOOG};
+        """,
+        GOOG_JS_REEXPORTED);
+
+    testError(
+        """
+        import * as goog from './closure/goog.js';
+        export default goog;
+        """,
         GOOG_JS_REEXPORTED);
   }
 

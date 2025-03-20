@@ -151,227 +151,278 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
   @Test
   public void testDirectLoad() {
     doTest(
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "/** @closureUnaware */",
-            "(function() {",
-            "  window['foo'] = 5;",
-            "}).call(globalThis);"),
-        lines(
-            "/** @fileoverview @closureUnaware */",
-            "goog.module('foo.bar.baz_raw');",
-            "$jscomp_wrap_closure_unaware_code.call(globalThis)"),
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        /** @closureUnaware */
+        (function() {
+          window['foo'] = 5;
+        }).call(globalThis);
+        """,
+        """
+        /** @fileoverview @closureUnaware */
+        goog.module('foo.bar.baz_raw');
+        $jscomp_wrap_closure_unaware_code.call(globalThis)
+        """,
         ImmutableList.of(
-            lines("/** @closureUnaware */", "(function() {", "  window['foo'] = 5;", "})")));
+            """
+            /** @closureUnaware */
+            (function() {
+              window['foo'] = 5;
+            })
+            """));
   }
 
   @Test
   public void testDirectLoadWithRequireAndExports() {
     doTest(
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "goog.require('foo.bar');",
-            "const {a} = goog.require('foo.baz');",
-            "/** @closureUnaware */",
-            "(function() {",
-            "  window['foo'] = 5;",
-            "}).call(globalThis);",
-            "exports = globalThis['foo'];"),
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "goog.require('foo.bar');",
-            "const {a} = goog.require('foo.baz');",
-            "$jscomp_wrap_closure_unaware_code.call(globalThis)",
-            "exports = globalThis['foo'];"),
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        goog.require('foo.bar');
+        const {a} = goog.require('foo.baz');
+        /** @closureUnaware */
+        (function() {
+          window['foo'] = 5;
+        }).call(globalThis);
+        exports = globalThis['foo'];
+        """,
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        goog.require('foo.bar');
+        const {a} = goog.require('foo.baz');
+        $jscomp_wrap_closure_unaware_code.call(globalThis)
+        exports = globalThis['foo'];
+        """,
         ImmutableList.of(
-            lines("/** @closureUnaware */", "(function() {", "  window['foo'] = 5;", "})")));
+            """
+            /** @closureUnaware */
+            (function() {
+              window['foo'] = 5;
+            })
+            """));
   }
 
   @Test
   public void testConditionalLoad() {
     doTest(
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "if (!window['foo']) {",
-            "  /** @closureUnaware */",
-            "  (function() {",
-            "    window['foo'] = 5;",
-            "  }).call(globalThis);",
-            "}"),
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "if (!window['foo']) {",
-            "  $jscomp_wrap_closure_unaware_code.call(globalThis)",
-            "}"),
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        if (!window['foo']) {
+          /** @closureUnaware */
+          (function() {
+            window['foo'] = 5;
+          }).call(globalThis);
+        }
+        """,
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        if (!window['foo']) {
+          $jscomp_wrap_closure_unaware_code.call(globalThis)
+        }
+        """,
         ImmutableList.of(
-            lines("/** @closureUnaware */", "(function() {", "  window['foo'] = 5;", "})")));
+            """
+            /** @closureUnaware */
+            (function() {
+              window['foo'] = 5;
+            })
+            """));
   }
 
   @Test
   public void testDebugSrcLoad() {
     doTest(
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "if (goog.DEBUG) {",
-            "  /** @closureUnaware */",
-            "  (function() {",
-            "    window['foo'] = 5;",
-            "  }).call(globalThis);",
-            "} else {",
-            "  /** @closureUnaware */",
-            "  (function() {",
-            "     window['foo'] = 10;",
-            "  }).call(globalThis);",
-            "}"),
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "if (goog.DEBUG) {",
-            "  $jscomp_wrap_closure_unaware_code.call(globalThis)",
-            "} else {",
-            "  $jscomp_wrap_closure_unaware_code.call(globalThis)",
-            "}"),
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        if (goog.DEBUG) {
+          /** @closureUnaware */
+          (function() {
+            window['foo'] = 5;
+          }).call(globalThis);
+        } else {
+          /** @closureUnaware */
+          (function() {
+             window['foo'] = 10;
+          }).call(globalThis);
+        }
+        """,
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        if (goog.DEBUG) {
+          $jscomp_wrap_closure_unaware_code.call(globalThis)
+        } else {
+          $jscomp_wrap_closure_unaware_code.call(globalThis)
+        }
+        """,
         ImmutableList.of(
-            lines("/** @closureUnaware */", "(function() {", "  window['foo'] = 5;", "})"),
-            lines("/** @closureUnaware */", "(function() {", "  window['foo'] = 10;", "})")));
+            """
+            /** @closureUnaware */
+            (function() {
+              window['foo'] = 5;
+            })
+            """,
+            """
+            /** @closureUnaware */
+            (function() {
+              window['foo'] = 10;
+            })
+            """));
   }
 
   @Test
   public void testConditionalAndDebugSrcLoad() {
     doTest(
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "if (!window['foo']) {",
-            "  if (goog.DEBUG) {",
-            "    /** @closureUnaware */",
-            "    (function() {",
-            "      window['foo'] = 5;",
-            "    }).call(globalThis);",
-            "  } else {",
-            "    /** @closureUnaware */",
-            "    (function() {",
-            "       window['foo'] = 10;",
-            "    }).call(globalThis);",
-            "  }",
-            "}"),
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "if (!window['foo']) {",
-            "  if (goog.DEBUG) {",
-            "    $jscomp_wrap_closure_unaware_code.call(globalThis)",
-            "  } else {",
-            "    $jscomp_wrap_closure_unaware_code.call(globalThis)",
-            "  }",
-            "}"),
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        if (!window['foo']) {
+          if (goog.DEBUG) {
+            /** @closureUnaware */
+            (function() {
+              window['foo'] = 5;
+            }).call(globalThis);
+          } else {
+            /** @closureUnaware */
+            (function() {
+               window['foo'] = 10;
+            }).call(globalThis);
+          }
+        }
+        """,
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        if (!window['foo']) {
+          if (goog.DEBUG) {
+            $jscomp_wrap_closure_unaware_code.call(globalThis)
+          } else {
+            $jscomp_wrap_closure_unaware_code.call(globalThis)
+          }
+        }
+        """,
         ImmutableList.of(
-            lines("/** @closureUnaware */", "(function() {", "  window['foo'] = 5;", "})"),
-            lines("/** @closureUnaware */", "(function() {", "  window['foo'] = 10;", "})")));
+            """
+            /** @closureUnaware */
+            (function() {
+              window['foo'] = 5;
+            })
+            """,
+            """
+            /** @closureUnaware */
+            (function() {
+              window['foo'] = 10;
+            })
+            """));
   }
 
   @Test
   public void testDirectLoad_nestedChangeScopes() {
     doTest(
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "if (goog.DEBUG) {",
-            "  /** @closureUnaware */",
-            "  (function() {",
-            "    function bar() {",
-            "      window['foo'] = 5;",
-            "    }",
-            "    bar();",
-            "  }).call(globalThis);",
-            "}"),
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "if (goog.DEBUG) {",
-            "  $jscomp_wrap_closure_unaware_code.call(globalThis)",
-            "}"),
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        if (goog.DEBUG) {
+          /** @closureUnaware */
+          (function() {
+            function bar() {
+              window['foo'] = 5;
+            }
+            bar();
+          }).call(globalThis);
+        }
+        """,
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        if (goog.DEBUG) {
+          $jscomp_wrap_closure_unaware_code.call(globalThis)
+        }
+        """,
         ImmutableList.of(
-            lines(
-                "/** @closureUnaware */",
-                "(function() {",
-                "  function bar() { window['foo'] = 5;} bar();",
-                "})")));
+            """
+            /** @closureUnaware */
+            (function() {
+              function bar() { window['foo'] = 5;} bar();
+            })
+            """));
   }
 
   @Test
   public void testDirectLoad_nestedGlobalThisIIFEIsNotRewritten() {
     doTest(
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "if (goog.DEBUG) {",
-            "  /** @closureUnaware */",
-            "  (function() {",
-            "    (function() {",
-            "      window['foo'] = 10;",
-            "    }).call(globalThis);",
-            "  }).call(globalThis);",
-            "}"),
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "if (goog.DEBUG) {",
-            "  $jscomp_wrap_closure_unaware_code.call(globalThis)",
-            "}"),
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        if (goog.DEBUG) {
+          /** @closureUnaware */
+          (function() {
+            (function() {
+              window['foo'] = 10;
+            }).call(globalThis);
+          }).call(globalThis);
+        }
+        """,
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        if (goog.DEBUG) {
+          $jscomp_wrap_closure_unaware_code.call(globalThis)
+        }
+        """,
         ImmutableList.of(
-            lines(
-                "/** @closureUnaware */",
-                "(function() {",
-                " (function() {",
-                "    window['foo'] = 10;",
-                "  }).call(globalThis);",
-                "})")));
+            """
+            /** @closureUnaware */
+            (function() {
+             (function() {
+                window['foo'] = 10;
+              }).call(globalThis);
+            })
+            """));
   }
 
   @Test
@@ -381,38 +432,41 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
     languageInOverride = Optional.of(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
 
     testNoWarning(
-        lines(
-            "/** @fileoverview @closureUnaware */",
-            "goog.module('foo.bar.baz_raw');",
-            "$jscomp_wrap_closure_unaware_code('{class C { foo = \"bar\"; } }');"));
+        """
+        /** @fileoverview @closureUnaware */
+        goog.module('foo.bar.baz_raw');
+        $jscomp_wrap_closure_unaware_code('{class C { foo = "bar"; } }');
+        """);
   }
 
   @Test
   public void testErrorsOnWrapping_invalidAnnotation_statement() {
     testError(
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "/** @closureUnaware */",
-            "exports.bar = 10;"),
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        /** @closureUnaware */
+        exports.bar = 10;
+        """,
         ManageClosureUnawareCode.UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_CODE);
   }
 
   @Test
   public void testErrorsForScriptsWithoutFileoverviewClosureUnawareAnnotation() {
     testError(
-        lines(
-            "/**",
-            " * @fileoverview",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "/** @closureUnaware */",
-            "(function() {",
-            "  window['foo'] = 10;",
-            "}).call(globalThis);"),
+        """
+        /**
+         * @fileoverview
+         */
+        goog.module('foo.bar.baz_raw');
+        /** @closureUnaware */
+        (function() {
+          window['foo'] = 10;
+        }).call(globalThis);
+        """,
         ManageClosureUnawareCode.UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_CODE);
   }
 
@@ -421,76 +475,87 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
     // It is an error to have a file-level @closureUnaware annotation, but no annotation on some
     // other node to indicate the start of the closure-unaware sub-AST.
     testError(
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "$jscomp_wrap_closure_unaware_code(5)"),
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        $jscomp_wrap_closure_unaware_code(5)
+        """,
         ManageClosureUnawareCode.UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_CODE);
   }
 
   @Test
   public void testNoErrorsForConfusingNestedAnnotations() {
     doTest(
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "(/** @closureUnaware */ function() {",
-            // This nested usage of the @closureUnaware annotation is not a parse error, but it
-            // could be confusing if a human author expected there to be multiple shadowed ASTs /
-            // sections of closure-aware and closure-unaware code.
-            // This test-case is just codifying that it is always the top-most AST node that is
-            // converted into a shadow AST node, and that there won't be nested shadow ASTs.
-            "  (/** @closureUnaware */ function() {",
-            "    window['foo'] = 10;",
-            "  }).call(globalThis);",
-            "}).call(globalThis);"),
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "$jscomp_wrap_closure_unaware_code.call(globalThis)"),
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        (/** @closureUnaware */ function() {
+        // This nested usage of the @closureUnaware annotation is not a parse error, but it
+        // could be confusing if a human author expected there to be multiple shadowed ASTs /
+        // sections of closure-aware and closure-unaware code.
+        // This test-case is just codifying that it is always the top-most AST node that is
+        // converted into a shadow AST node, and that there won't be nested shadow ASTs.
+          (/** @closureUnaware */ function() {
+            window['foo'] = 10;
+          }).call(globalThis);
+        }).call(globalThis);
+        """,
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        $jscomp_wrap_closure_unaware_code.call(globalThis)
+        """,
         ImmutableList.of(
-            lines(
-                "/** @closureUnaware */",
-                "(function() {",
-                // Note that there isn't a JSDoc closureUnaware annotation on the inner function, as
-                // it was never created during parsing of the AST.
-                "  (function() {",
-                "    window['foo'] = 10;",
-                "  }).call(globalThis);",
-                "})")));
+            """
+            /** @closureUnaware */
+            (function() {
+            // Note that there isn't a JSDoc closureUnaware annotation on the inner function, as
+            // it was never created during parsing of the AST.
+              (function() {
+                window['foo'] = 10;
+              }).call(globalThis);
+            })
+            """));
   }
 
   @Test
   public void testAllowsSpecifyingAnnotationOnIIFE() {
     doTest(
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "/** @closureUnaware */",
-            "(function() {",
-            "  window['foo'] = 5;",
-            "}).call(globalThis);"),
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "$jscomp_wrap_closure_unaware_code.call(globalThis)"),
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        /** @closureUnaware */
+        (function() {
+          window['foo'] = 5;
+        }).call(globalThis);
+        """,
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        $jscomp_wrap_closure_unaware_code.call(globalThis)
+        """,
         ImmutableList.of(
-            lines("/** @closureUnaware */", "(function() {", "  window['foo'] = 5;", "})")));
+            """
+            /** @closureUnaware */
+            (function() {
+              window['foo'] = 5;
+            })
+            """));
   }
 
   @Test
@@ -498,25 +563,32 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
     // @dependency is not a valid JSDoc tag, and for normal code we would issue a parser error.
     // However, for closure-unaware code we don't care at all what is in jsdoc comments.
     doTest(
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "/** @closureUnaware */",
-            "(function() {",
-            "  /** @dependency */",
-            "  window['foo'] = 5;",
-            "}).call(globalThis);"),
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('foo.bar.baz_raw');",
-            "$jscomp_wrap_closure_unaware_code.call(globalThis)"),
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        /** @closureUnaware */
+        (function() {
+          /** @dependency */
+          window['foo'] = 5;
+        }).call(globalThis);
+        """,
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        $jscomp_wrap_closure_unaware_code.call(globalThis)
+        """,
         ImmutableList.of(
-            lines("/** @closureUnaware */", "(function() {", "  window['foo'] = 5;", "})")));
+            """
+            /** @closureUnaware */
+            (function() {
+              window['foo'] = 5;
+            })
+            """));
   }
 }

@@ -70,16 +70,17 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             .addMath()
             .addExtra(
                 // stubs of runtime libraries
-                lines(
-                    "/** @const */",
-                    "var $jscomp = {};",
-                    "$jscomp.generator = {};",
-                    "$jscomp.generator.createGenerator = function() {};",
-                    "/** @constructor */",
-                    "$jscomp.generator.Context = function() {};",
-                    "/** @constructor */",
-                    "$jscomp.generator.Context.PropertyIterator = function() {};",
-                    "$jscomp.asyncExecutePromiseGeneratorFunction = function(program) {};"))
+                """
+                /** @const */
+                var $jscomp = {};
+                $jscomp.generator = {};
+                $jscomp.generator.createGenerator = function() {};
+                /** @constructor */
+                $jscomp.generator.Context = function() {};
+                /** @constructor */
+                $jscomp.generator.Context.PropertyIterator = function() {};
+                $jscomp.asyncExecutePromiseGeneratorFunction = function(program) {};
+                """)
             .build());
   }
 
@@ -169,64 +170,68 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testGeneratorForAsyncFunction() {
     rewriteGeneratorsTest(
         srcs(
-            lines(
-                "f = function() {",
-                "  return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-                "      function *() {",
-                "        var x = 6;",
-                "        yield x;",
-                "      });",
-                "}")),
+            """
+            f = function() {
+              return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                  function *() {
+                    var x = 6;
+                    yield x;
+                  });
+            }
+            """),
         expected(
-            lines(
-                "f = function () {",
-                "  var x;",
-                "  return (0, $jscomp.asyncExecutePromiseGeneratorProgram)(",
-                "      function (GEN_CONTEXT$0) {",
-                "         x = 6;",
-                "         return GEN_CONTEXT$0.yield(x, 0);",
-                "      });",
-                "}")));
+            """
+            f = function () {
+              var x;
+              return (0, $jscomp.asyncExecutePromiseGeneratorProgram)(
+                  function (GEN_CONTEXT$0) {
+                     x = 6;
+                     return GEN_CONTEXT$0.yield(x, 0);
+                  });
+            }
+            """));
 
     rewriteGeneratorsTest(
         srcs(
-            lines(
-                "f = function(x) {",
-                "  var $jscomp$restParams = [];",
-                "  for (var $jscomp$restIndex = 0;",
-                "      $jscomp$restIndex < arguments.length;",
-                "      ++$jscomp$restIndex) {",
-                "    $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];",
-                "  }",
-                "  {",
-                "    var bla$0 = $jscomp$restParams;",
-                "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-                "        function *() {",
-                "          var y = bla$0[0];",
-                "          yield y;",
-                "        });",
-                "  }",
-                "}")),
+            """
+            f = function(x) {
+              var $jscomp$restParams = [];
+              for (var $jscomp$restIndex = 0;
+                  $jscomp$restIndex < arguments.length;
+                  ++$jscomp$restIndex) {
+                $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];
+              }
+              {
+                var bla$0 = $jscomp$restParams;
+                return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                    function *() {
+                      var y = bla$0[0];
+                      yield y;
+                    });
+              }
+            }
+            """),
         expected(
-            lines(
-                "f = function (x) {",
-                "  var $jscomp$restParams = [];",
-                "  var $jscomp$restIndex = 0;",
-                "  for (;",
-                "      $jscomp$restIndex < arguments.length;",
-                "      ++$jscomp$restIndex) {",
-                "    $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];",
-                "  }",
-                "  {",
-                "    var bla$0 = $jscomp$restParams;",
-                "    var y;",
-                "    return (0, $jscomp.asyncExecutePromiseGeneratorProgram)(",
-                "        function (GEN_CONTEXT$0) {",
-                "          y = bla$0[0];",
-                "          return GEN_CONTEXT$0.yield(y, 0);",
-                "        });",
-                "  }",
-                "}")));
+            """
+            f = function (x) {
+              var $jscomp$restParams = [];
+              var $jscomp$restIndex = 0;
+              for (;
+                  $jscomp$restIndex < arguments.length;
+                  ++$jscomp$restIndex) {
+                $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];
+              }
+              {
+                var bla$0 = $jscomp$restParams;
+                var y;
+                return (0, $jscomp.asyncExecutePromiseGeneratorProgram)(
+                    function (GEN_CONTEXT$0) {
+                      y = bla$0[0];
+                      return GEN_CONTEXT$0.yield(y, 0);
+                    });
+              }
+            }
+            """));
   }
 
   @Test
@@ -234,170 +239,178 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorsTest(
         srcs(lines("f = function *() {};")),
         expected(
-            lines(
-                "f = function GEN_FUNC$0() {",
-                "  return $jscomp.generator.createGenerator(",
-                "      GEN_FUNC$0,",
-                "      function (GEN_CONTEXT$0) {",
-                "         GEN_CONTEXT$0.jumpToEnd();",
-                "      });",
-                "}")));
+            """
+            f = function GEN_FUNC$0() {
+              return $jscomp.generator.createGenerator(
+                  GEN_FUNC$0,
+                  function (GEN_CONTEXT$0) {
+                     GEN_CONTEXT$0.jumpToEnd();
+                  });
+            }
+            """));
   }
 
   @Test
   public void testConst() {
     rewriteGeneratorsTest(
         srcs(
-            lines(
-                "/** @const */", //
-                "var f = function *() {};")),
+            """
+            /** @const */
+            var f = function *() {};
+            """),
         expected(
-            lines(
-                "/** @const */", //
-                "var f = function GEN_FUNC$0() {",
-                "  return $jscomp.generator.createGenerator(",
-                "      GEN_FUNC$0,",
-                "      function (GEN_CONTEXT$0) {",
-                "         GEN_CONTEXT$0.jumpToEnd();",
-                "      });",
-                "}")));
+            """
+            /** @const */
+            var f = function GEN_FUNC$0() {
+              return $jscomp.generator.createGenerator(
+                  GEN_FUNC$0,
+                  function (GEN_CONTEXT$0) {
+                     GEN_CONTEXT$0.jumpToEnd();
+                  });
+            }
+            """));
   }
 
   @Test
   public void testContainsClosure() {
     rewriteGeneratorsTest(
         srcs(
-            lines(
-                "function *f(o) {", //
-                "  var i = 0",
-                "  var pp;",
-                "  function msg(p) {",
-                "    return i++ + ' ' + p + '\\n';",
-                "  }",
-                "  for (pp in obj) {",
-                "    yield msg(pp);",
-                "  }",
-                "}")),
+            """
+            function *f(o) {
+              var i = 0
+              var pp;
+              function msg(p) {
+                return i++ + ' ' + p + '\\n';
+              }
+              for (pp in obj) {
+                yield msg(pp);
+              }
+            }
+            """),
         expected(
-            lines(
-                "function f(o) {",
-                "  function msg(p) {",
-                "    return i++ + ' ' + p + '\\n';",
-                "  }",
-                "  var i",
-                "  var pp;",
-                "  var GEN_FORIN$0$0;",
-                "  return $jscomp.generator.createGenerator(",
-                "      f,",
-                "      function (GEN_CONTEXT$0) {",
-                "         if (GEN_CONTEXT$0.nextAddress == 1) {",
-                "           i = 0;",
-                "           GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(obj);",
-                "         }",
-                "         if (!((pp = GEN_FORIN$0$0.getNext()) != null)) {",
-                "           return GEN_CONTEXT$0.jumpTo(0);",
-                "         }",
-                "         return GEN_CONTEXT$0.yield(msg(pp), 2);",
-                "      });",
-                "}")));
+            """
+            function f(o) {
+              function msg(p) {
+                return i++ + ' ' + p + '\\n';
+              }
+              var i
+              var pp;
+              var GEN_FORIN$0$0;
+              return $jscomp.generator.createGenerator(
+                  f,
+                  function (GEN_CONTEXT$0) {
+                     if (GEN_CONTEXT$0.nextAddress == 1) {
+                       i = 0;
+                       GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(obj);
+                     }
+                     if (!((pp = GEN_FORIN$0$0.getNext()) != null)) {
+                       return GEN_CONTEXT$0.jumpTo(0);
+                     }
+                     return GEN_CONTEXT$0.yield(msg(pp), 2);
+                  });
+            }
+            """));
   }
 
   @Test
   public void testContainsClosureAssignedToVariable() {
     rewriteGeneratorsTest(
         srcs(
-            lines(
-                "function *f(o) {", //
-                "  var i = 0",
-                "  var pp;",
-                "  var msg = function(p) {",
-                "    return i++ + ' ' + p + '\\n';",
-                "  }",
-                "  for (pp in obj) {",
-                "    yield msg(pp);",
-                "  }",
-                "}")),
+            """
+            function *f(o) {
+              var i = 0
+              var pp;
+              var msg = function(p) {
+                return i++ + ' ' + p + '\\n';
+              }
+              for (pp in obj) {
+                yield msg(pp);
+              }
+            }
+            """),
         expected(
-            lines(
-                "function f(o) {",
-                "  var i",
-                "  var pp;",
-                "  var msg;",
-                "  var GEN_FORIN$0$0;",
-                "  return $jscomp.generator.createGenerator(",
-                "      f,",
-                "      function (GEN_CONTEXT$0) {",
-                "         if (GEN_CONTEXT$0.nextAddress == 1) {",
-                "           i = 0;",
-                // TODO(bradfordcsmith): Maybe it would be better if we hoisted this function
-                // expression out so it doesn't create a new closure every time we enter this
-                // callback function?
-                "           msg = function(p) {",
-                "             return i++ + ' ' + p + '\\n';",
-                "           };",
-                "           GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(obj);",
-                "         }",
-                "         if (!((pp = GEN_FORIN$0$0.getNext()) != null)) {",
-                "           return GEN_CONTEXT$0.jumpTo(0);",
-                "         }",
-                "         return GEN_CONTEXT$0.yield(msg(pp), 2);",
-                "      });",
-                "}")));
+            """
+            function f(o) {
+              var i
+              var pp;
+              var msg;
+              var GEN_FORIN$0$0;
+              return $jscomp.generator.createGenerator(
+                  f,
+                  function (GEN_CONTEXT$0) {
+                     if (GEN_CONTEXT$0.nextAddress == 1) {
+                       i = 0;
+            // TODO(bradfordcsmith): Maybe it would be better if we hoisted this function
+            // expression out so it doesn't create a new closure every time we enter this
+            // callback function?
+                       msg = function(p) {
+                         return i++ + ' ' + p + '\\n';
+                       };
+                       GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(obj);
+                     }
+                     if (!((pp = GEN_FORIN$0$0.getNext()) != null)) {
+                       return GEN_CONTEXT$0.jumpTo(0);
+                     }
+                     return GEN_CONTEXT$0.yield(msg(pp), 2);
+                  });
+            }
+            """));
   }
 
   @Test
   public void testContainsClosureAndTranspiledFromAsync() {
     rewriteGeneratorsTest(
         srcs(
-            lines(
-                "function f(o) {",
-                "  use(o);",
-                "  return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-                "      function *() {", //
-                "        var i = 0",
-                "        var pp;",
-                "        function msg(p) {",
-                "          return i++ + ' ' + p + '\\n';",
-                "        }",
-                "        for (pp in obj) {",
-                "          yield msg(pp);",
-                "        }",
-                "      });",
-                "}")),
+            """
+            function f(o) {
+              use(o);
+              return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                  function *() {
+                    var i = 0
+                    var pp;
+                    function msg(p) {
+                      return i++ + ' ' + p + '\\n';
+                    }
+                    for (pp in obj) {
+                      yield msg(pp);
+                    }
+                  });
+            }
+            """),
         expected(
-            lines(
-                "function f(o) {",
-                // When Es6RewriteGenerators recognizes that it is transpiling code that was
-                // originally an async function, it will use the body of that function as the
-                // place to move variable declarations instead of putting them in the generator
-                // function body itself.
-                //
-                // To maintain normalization, all function declarations must go to the top
-                "  function msg(p) {",
-                "    return i++ + ' ' + p + '\\n';",
-                "  }",
-                // In a real situation the only thing that is likely to be here is code that
-                // was generated by transpilations that occurred after async function transpilation
-                // and before generator transpilation. For example code for handling parameter
-                // destructuring.
-                "  use(o);",
-                // Regular var declarations just go in the order they originally appeared
-                // immediately before the executor call.
-                "  var i",
-                "  var pp;",
-                "  var GEN_FORIN$0$0;",
-                "  return (0, $jscomp.asyncExecutePromiseGeneratorProgram)(",
-                "      function (GEN_CONTEXT$0) {",
-                "         if (GEN_CONTEXT$0.nextAddress == 1) {",
-                "           i = 0;",
-                "           GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(obj);",
-                "         }",
-                "         if (!((pp = GEN_FORIN$0$0.getNext()) != null)) {",
-                "           return GEN_CONTEXT$0.jumpTo(0);",
-                "         }",
-                "         return GEN_CONTEXT$0.yield(msg(pp), 2);",
-                "      });",
-                "}")));
+            """
+            function f(o) {
+            // When Es6RewriteGenerators recognizes that it is transpiling code that was
+            // originally an async function, it will use the body of that function as the
+            // place to move variable declarations instead of putting them in the generator
+            // function body itself.
+            // To maintain normalization, all function declarations must go to the top
+              function msg(p) {
+                return i++ + ' ' + p + '\\n';
+              }
+            // In a real situation the only thing that is likely to be here is code that
+            // was generated by transpilations that occurred after async function transpilation
+            // and before generator transpilation. For example code for handling parameter
+            // destructuring.
+              use(o);
+            // Regular var declarations just go in the order they originally appeared
+            // immediately before the executor call.
+              var i
+              var pp;
+              var GEN_FORIN$0$0;
+              return (0, $jscomp.asyncExecutePromiseGeneratorProgram)(
+                  function (GEN_CONTEXT$0) {
+                     if (GEN_CONTEXT$0.nextAddress == 1) {
+                       i = 0;
+                       GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(obj);
+                     }
+                     if (!((pp = GEN_FORIN$0$0.getNext()) != null)) {
+                       return GEN_CONTEXT$0.jumpTo(0);
+                     }
+                     return GEN_CONTEXT$0.yield(msg(pp), 2);
+                  });
+            }
+            """));
   }
 
   @Test
@@ -411,86 +424,93 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     Sources srcs = srcs("/** @param {*} x */ function *f(x, y) {}");
     Expected originalExpected =
         expected(
-            lines(
-                "function f(x, y) {",
-                "  return $jscomp.generator.createGenerator(",
-                "      f,",
-                "      function(GEN_CONTEXT$0) {",
-                "        GEN_CONTEXT$0.jumpToEnd();",
-                "      });",
-                "}"));
+            """
+            function f(x, y) {
+              return $jscomp.generator.createGenerator(
+                  f,
+                  function(GEN_CONTEXT$0) {
+                    GEN_CONTEXT$0.jumpToEnd();
+                  });
+            }
+            """);
     rewriteGeneratorsTest(srcs, originalExpected);
 
     rewriteGeneratorBodyWithVars(
         "var i = 0, j = 2;",
-        lines(
-            "var i;", //
-            "var j;"),
-        lines(
-            "i = 0;", //
-            "j = 2;",
-            "GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        var i;
+        var j;
+        """,
+        """
+        i = 0;
+        j = 2;
+        GEN_CONTEXT$0.jumpToEnd();
+        """);
 
     rewriteGeneratorBodyWithVars(
         "var i = 0; yield i; i = 1; yield i; i = i + 1; yield i;",
         "var i;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  i = 0;",
-            "  return GEN_CONTEXT$0.yield(i, 2);",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 3) {",
-            "  i = 1;",
-            "  return GEN_CONTEXT$0.yield(i, 3);",
-            "}",
-            "i = i + 1;",
-            "return GEN_CONTEXT$0.yield(i, 0);"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          i = 0;
+          return GEN_CONTEXT$0.yield(i, 2);
+        }
+        if (GEN_CONTEXT$0.nextAddress != 3) {
+          i = 1;
+          return GEN_CONTEXT$0.yield(i, 3);
+        }
+        i = i + 1;
+        return GEN_CONTEXT$0.yield(i, 0);
+        """);
   }
 
   @Test
   public void testForLoopWithExtraVarDeclaration() {
     rewriteGeneratorsTest(
         srcs(
-            lines(
-                "function *gen() {",
-                "  var i = 2;",
-                "  yield i;",
-                "  use(i);",
-                "  for (var i = 0; i < 3; i++) {",
-                "    use(i);",
-                "  }",
-                "}")),
+            """
+            function *gen() {
+              var i = 2;
+              yield i;
+              use(i);
+              for (var i = 0; i < 3; i++) {
+                use(i);
+              }
+            }
+            """),
         expected(
-            lines(
-                "function gen(){",
-                "  var i;",
-                "  return $jscomp.generator.createGenerator(",
-                "      gen,",
-                "      function(GEN_CONTEXT$0) {",
-                "        if (GEN_CONTEXT$0.nextAddress==1) {",
-                "          i=2;",
-                "          return GEN_CONTEXT$0.yield(i,2);",
-                "        }",
-                "        use(i);",
-                "        i = 0;",
-                "        for (; i < 3 ; i++) use(i);",
-                "        GEN_CONTEXT$0.jumpToEnd();",
-                "      })",
-                "}")));
+            """
+            function gen(){
+              var i;
+              return $jscomp.generator.createGenerator(
+                  gen,
+                  function(GEN_CONTEXT$0) {
+                    if (GEN_CONTEXT$0.nextAddress==1) {
+                      i=2;
+                      return GEN_CONTEXT$0.yield(i,2);
+                    }
+                    use(i);
+                    i = 0;
+                    for (; i < 3 ; i++) use(i);
+                    GEN_CONTEXT$0.jumpToEnd();
+                  })
+            }
+            """));
   }
 
   @Test
   public void testUnreachableCodeGeneration() {
     rewriteGeneratorBody(
         "if (i) return 1; else return 2;",
-        lines(
-            "  if (i) {",
-            "    return GEN_CONTEXT$0.return(1);",
-            "  } else {",
-            "    return GEN_CONTEXT$0.return(2);",
-            "  }",
-            // TODO(b/73762053): Avoid generating unreachable statements.
-            "  GEN_CONTEXT$0.jumpToEnd();"));
+        """
+          if (i) {
+            return GEN_CONTEXT$0.return(1);
+          } else {
+            return GEN_CONTEXT$0.return(2);
+          }
+        // TODO(b/73762053): Avoid generating unreachable statements.
+          GEN_CONTEXT$0.jumpToEnd();
+        """);
   }
 
   @Test
@@ -498,16 +518,17 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorsTest(
         srcs("function f() { return function *g() {yield 1;} }"),
         expected(
-            lines(
-                "function f() {",
-                "  return function g() {",
-                "    return $jscomp.generator.createGenerator(",
-                "        g,",
-                "        function(GEN_CONTEXT$0) {",
-                "          return GEN_CONTEXT$0.yield(1, 0);",
-                "        });",
-                "  }",
-                "}")));
+            """
+            function f() {
+              return function g() {
+                return $jscomp.generator.createGenerator(
+                    g,
+                    function(GEN_CONTEXT$0) {
+                      return GEN_CONTEXT$0.yield(1, 0);
+                    });
+              }
+            }
+            """));
   }
 
   @Test
@@ -515,21 +536,22 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorsTest(
         srcs("function *f() { function *g() {yield 2;} yield 1; }"),
         expected(
-            lines(
-                "function f() {",
-                "  function g() {",
-                "    return $jscomp.generator.createGenerator(",
-                "        g,",
-                "        function(GEN_CONTEXT$0) {",
-                "          return GEN_CONTEXT$0.yield(2, 0);",
-                "        });",
-                "  }",
-                "  return $jscomp.generator.createGenerator(",
-                "      f,",
-                "      function(GEN_CONTEXT$1) {",
-                "        return GEN_CONTEXT$1.yield(1, 0);",
-                "      });",
-                "}")));
+            """
+            function f() {
+              function g() {
+                return $jscomp.generator.createGenerator(
+                    g,
+                    function(GEN_CONTEXT$0) {
+                      return GEN_CONTEXT$0.yield(2, 0);
+                    });
+              }
+              return $jscomp.generator.createGenerator(
+                  f,
+                  function(GEN_CONTEXT$1) {
+                    return GEN_CONTEXT$1.yield(1, 0);
+                  });
+            }
+            """));
   }
 
   @Test
@@ -537,74 +559,79 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "var i = 0; for (var j = 0; j < 10; j++) { i += j; }",
         "var i; var j;",
-        lines(
-            "i = 0;", //
-            "j = 0;",
-            "for (; j < 10; j++) {",
-            "  i = i + j;", // normalization rewrote this
-            "}",
-            "GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        i = 0;
+        j = 0;
+        for (; j < 10; j++) {
+          i = i + j; // normalization rewrote this
+        }
+        GEN_CONTEXT$0.jumpToEnd();
+        """);
 
     rewriteGeneratorBodyWithVars(
         "var i = 0; for (var j = yield; j < 10; j++) { i += j; }",
         "var i; var j;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  i = 0;",
-            "  return GEN_CONTEXT$0.yield(void 0, 2);",
-            "}",
-            "j = GEN_CONTEXT$0.yieldResult;",
-            "for (; j < 10; j++) {",
-            "  i = i + j;", // normalization rewrote this
-            "}",
-            "GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          i = 0;
+          return GEN_CONTEXT$0.yield(void 0, 2);
+        }
+        j = GEN_CONTEXT$0.yieldResult;
+        for (; j < 10; j++) {
+          i = i + j; // normalization rewrote this
+        }
+        GEN_CONTEXT$0.jumpToEnd();
+        """);
 
     rewriteGeneratorBody("for (;;) { yield 1; }", lines("  return GEN_CONTEXT$0.yield(1, 1);"));
 
     rewriteGeneratorBodyWithVars(
         "for (var yieldResult; yieldResult === undefined; yieldResult = yield 1) {}",
         "var yieldResult;",
-        lines(
-            "  if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "    if (!(yieldResult === undefined)) return GEN_CONTEXT$0.jumpTo(0);",
-            "    return GEN_CONTEXT$0.yield(1,5);",
-            "  }",
-            "  yieldResult = GEN_CONTEXT$0.yieldResult;",
-            "  return GEN_CONTEXT$0.jumpTo(1);"));
+        """
+          if (GEN_CONTEXT$0.nextAddress == 1) {
+            if (!(yieldResult === undefined)) return GEN_CONTEXT$0.jumpTo(0);
+            return GEN_CONTEXT$0.yield(1,5);
+          }
+          yieldResult = GEN_CONTEXT$0.yieldResult;
+          return GEN_CONTEXT$0.jumpTo(1);
+        """);
 
     rewriteGeneratorBodyWithVars(
         "for (var j = 0; j < 10; j++) { yield j; }",
         "var j;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  j = 0;",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 3) {",
-            "  if (!(j < 10)) {",
-            "    return GEN_CONTEXT$0.jumpTo(0);",
-            "  }",
-            "  return GEN_CONTEXT$0.yield(j, 3);",
-            "}",
-            "j++;",
-            "return GEN_CONTEXT$0.jumpTo(2);"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          j = 0;
+        }
+        if (GEN_CONTEXT$0.nextAddress != 3) {
+          if (!(j < 10)) {
+            return GEN_CONTEXT$0.jumpTo(0);
+          }
+          return GEN_CONTEXT$0.yield(j, 3);
+        }
+        j++;
+        return GEN_CONTEXT$0.jumpTo(2);
+        """);
 
     rewriteGeneratorBodyWithVars(
         "var i = 0; for (var j = 0; j < 10; j++) { i += j; yield 5; }",
         "var i; var j;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  i = 0;",
-            "  j = 0;",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 3) {",
-            "  if (!(j < 10)) {",
-            "    return GEN_CONTEXT$0.jumpTo(0);",
-            "  }",
-            "  i = i + j;", // normalization rewrote this
-            "  return GEN_CONTEXT$0.yield(5, 3);",
-            "}",
-            "j++;",
-            "return GEN_CONTEXT$0.jumpTo(2);"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          i = 0;
+          j = 0;
+        }
+        if (GEN_CONTEXT$0.nextAddress != 3) {
+          if (!(j < 10)) {
+            return GEN_CONTEXT$0.jumpTo(0);
+          }
+          i = i + j; // normalization rewrote this
+          return GEN_CONTEXT$0.yield(5, 3);
+        }
+        j++;
+        return GEN_CONTEXT$0.jumpTo(2);
+        """);
   }
 
   @Test
@@ -612,105 +639,111 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "var i = 0; while (i < 10) { i++; i++; i++; } yield i;",
         "  var i;",
-        lines(
-            "i = 0;", //
-            "for (; i < 10;) { i ++; i++; i++; }",
-            "return GEN_CONTEXT$0.yield(i, 0);"));
+        """
+        i = 0;
+        for (; i < 10;) { i ++; i++; i++; }
+        return GEN_CONTEXT$0.yield(i, 0);
+        """);
 
     rewriteGeneratorSwitchBodyWithVars(
         "var j = 0; while (j < 10) { yield j; j++; } j += 10;",
         "var j;",
-        lines(
-            "  j = 0;",
-            "case 2:",
-            "  if (!(j < 10)) {",
-            "    GEN_CONTEXT$0.jumpTo(4);",
-            "    break;",
-            "  }",
-            "  return GEN_CONTEXT$0.yield(j, 5)",
-            "case 5:",
-            "  j++;",
-            "  GEN_CONTEXT$0.jumpTo(2);",
-            "  break;",
-            "case 4:",
-            "  j = j + 10;", // normalization rewrote this
-            "  GEN_CONTEXT$0.jumpToEnd();"));
+        """
+          j = 0;
+        case 2:
+          if (!(j < 10)) {
+            GEN_CONTEXT$0.jumpTo(4);
+            break;
+          }
+          return GEN_CONTEXT$0.yield(j, 5)
+        case 5:
+          j++;
+          GEN_CONTEXT$0.jumpTo(2);
+          break;
+        case 4:
+          j = j + 10; // normalization rewrote this
+          GEN_CONTEXT$0.jumpToEnd();
+        """);
 
     rewriteGeneratorBodyWithVars(
         "var j = 0; while (j < 10) { yield j; j++; } yield 5",
         "var j;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  j = 0;",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 5) {",
-            "  if (!(j < 10)) {",
-            "    return GEN_CONTEXT$0.yield(5, 0);",
-            "  }",
-            "  return GEN_CONTEXT$0.yield(j, 5)",
-            "}",
-            "  j++;",
-            "  return GEN_CONTEXT$0.jumpTo(2);"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          j = 0;
+        }
+        if (GEN_CONTEXT$0.nextAddress != 5) {
+          if (!(j < 10)) {
+            return GEN_CONTEXT$0.yield(5, 0);
+          }
+          return GEN_CONTEXT$0.yield(j, 5)
+        }
+          j++;
+          return GEN_CONTEXT$0.jumpTo(2);
+        """);
 
     rewriteGeneratorBodyWithVars(
         "var j = 0; while (yield) { j++; }",
         "var j;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  j = 0;",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 5) {",
-            "  return GEN_CONTEXT$0.yield(void 0, 5);",
-            "}",
-            "if (!(GEN_CONTEXT$0.yieldResult)) {",
-            "  return GEN_CONTEXT$0.jumpTo(0);",
-            "}",
-            "j++;",
-            "return GEN_CONTEXT$0.jumpTo(2);"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          j = 0;
+        }
+        if (GEN_CONTEXT$0.nextAddress != 5) {
+          return GEN_CONTEXT$0.yield(void 0, 5);
+        }
+        if (!(GEN_CONTEXT$0.yieldResult)) {
+          return GEN_CONTEXT$0.jumpTo(0);
+        }
+        j++;
+        return GEN_CONTEXT$0.jumpTo(2);
+        """);
   }
 
   @Test
   public void testDecomposeComplexYieldExpression() {
     rewriteGeneratorsTest(
         srcs(
-            lines(
-                "/* @return {?} */ function *f() {",
-                "  var o = {bar: function(x) {}};",
-                "  (yield 5) && o.bar(yield 5);",
-                "}")),
+            """
+            /* @return {?} */ function *f() {
+              var o = {bar: function(x) {}};
+              (yield 5) && o.bar(yield 5);
+            }
+            """),
         expected(
-            lines(
-                "function f(){",
-                "  var o;",
-                "  var JSCompiler_temp$jscomp$0;",
-                "  var JSCompiler_temp_const$jscomp$2;",
-                "  var JSCompiler_temp_const$jscomp$1;",
-                "  var JSCompiler_temp_const$jscomp$3;",
-                "  return $jscomp.generator.createGenerator(f, function(GEN_CONTEXT$0) {",
-                "    switch(GEN_CONTEXT$0.nextAddress) {",
-                "      case 1:",
-                "        o = {bar:function(x) {}};",
-                "        return GEN_CONTEXT$0.yield(5, 2);",
-                "      case 2:",
-                "        if (!(JSCompiler_temp$jscomp$0 = GEN_CONTEXT$0.yieldResult)) {",
-                "          GEN_CONTEXT$0.jumpTo(3);",
-                "          break;",
-                "        }",
-                "        JSCompiler_temp_const$jscomp$2 = o;",
-                "        JSCompiler_temp_const$jscomp$1 = JSCompiler_temp_const$jscomp$2.bar;",
-                "        JSCompiler_temp_const$jscomp$3 = JSCompiler_temp_const$jscomp$2;",
-                "        return GEN_CONTEXT$0.yield(5, 4);",
-                "      case 4:",
-                "        JSCompiler_temp$jscomp$0 =",
-                "            JSCompiler_temp_const$jscomp$1.call(",
-                "                JSCompiler_temp_const$jscomp$3,",
-                "                GEN_CONTEXT$0.yieldResult);",
-                "      case 3:",
-                "        JSCompiler_temp$jscomp$0;",
-                "        GEN_CONTEXT$0.jumpToEnd();",
-                "    }",
-                "  });",
-                "}")));
+            """
+            function f(){
+              var o;
+              var JSCompiler_temp$jscomp$0;
+              var JSCompiler_temp_const$jscomp$2;
+              var JSCompiler_temp_const$jscomp$1;
+              var JSCompiler_temp_const$jscomp$3;
+              return $jscomp.generator.createGenerator(f, function(GEN_CONTEXT$0) {
+                switch(GEN_CONTEXT$0.nextAddress) {
+                  case 1:
+                    o = {bar:function(x) {}};
+                    return GEN_CONTEXT$0.yield(5, 2);
+                  case 2:
+                    if (!(JSCompiler_temp$jscomp$0 = GEN_CONTEXT$0.yieldResult)) {
+                      GEN_CONTEXT$0.jumpTo(3);
+                      break;
+                    }
+                    JSCompiler_temp_const$jscomp$2 = o;
+                    JSCompiler_temp_const$jscomp$1 = JSCompiler_temp_const$jscomp$2.bar;
+                    JSCompiler_temp_const$jscomp$3 = JSCompiler_temp_const$jscomp$2;
+                    return GEN_CONTEXT$0.yield(5, 4);
+                  case 4:
+                    JSCompiler_temp$jscomp$0 =
+                        JSCompiler_temp_const$jscomp$1.call(
+                            JSCompiler_temp_const$jscomp$3,
+                            GEN_CONTEXT$0.yieldResult);
+                  case 3:
+                    JSCompiler_temp$jscomp$0;
+                    GEN_CONTEXT$0.jumpToEnd();
+                }
+              });
+            }
+            """));
   }
 
   @Test
@@ -718,42 +751,48 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "return a + (a = b) + (b = yield) + a;",
         lines("var JSCompiler_temp_const$jscomp$0;"),
-        lines(
-            "  if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "    JSCompiler_temp_const$jscomp$0 = a + (a = b);",
-            "    return GEN_CONTEXT$0.yield(void 0, 2);",
-            "  }",
-            "  return GEN_CONTEXT$0.return(",
-            "JSCompiler_temp_const$jscomp$0 + (b = GEN_CONTEXT$0.yieldResult) + a);"));
+        """
+          if (GEN_CONTEXT$0.nextAddress == 1) {
+            JSCompiler_temp_const$jscomp$0 = a + (a = b);
+            return GEN_CONTEXT$0.yield(void 0, 2);
+          }
+          return GEN_CONTEXT$0.return(
+        JSCompiler_temp_const$jscomp$0 + (b = GEN_CONTEXT$0.yieldResult) + a);
+        """);
 
     rewriteGeneratorSwitchBodyWithVars(
         "return (yield ((yield 1) + (yield 2)));",
         lines("var JSCompiler_temp_const$jscomp$0;"),
-        lines(
-            "  return GEN_CONTEXT$0.yield(1, 3);",
-            "case 3:",
-            "  JSCompiler_temp_const$jscomp$0=GEN_CONTEXT$0.yieldResult;",
-            "  return GEN_CONTEXT$0.yield(2, 4);",
-            "case 4:",
-            "  return GEN_CONTEXT$0.yield(",
-            "      JSCompiler_temp_const$jscomp$0 + GEN_CONTEXT$0.yieldResult, 2);",
-            "case 2:",
-            "  return GEN_CONTEXT$0.return(GEN_CONTEXT$0.yieldResult);"));
+        """
+          return GEN_CONTEXT$0.yield(1, 3);
+        case 3:
+          JSCompiler_temp_const$jscomp$0=GEN_CONTEXT$0.yieldResult;
+          return GEN_CONTEXT$0.yield(2, 4);
+        case 4:
+          return GEN_CONTEXT$0.yield(
+              JSCompiler_temp_const$jscomp$0 + GEN_CONTEXT$0.yieldResult, 2);
+        case 2:
+          return GEN_CONTEXT$0.return(GEN_CONTEXT$0.yieldResult);
+        """);
 
     rewriteGeneratorBodyWithVars(
         "var o = {bar: function(x) {}}; o.bar(yield 5);",
-        lines(
-            "var o;", "var JSCompiler_temp_const$jscomp$1;", "var JSCompiler_temp_const$jscomp$0;"),
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  o = {bar: function(x) {}};",
-            "  JSCompiler_temp_const$jscomp$1 = o;",
-            "  JSCompiler_temp_const$jscomp$0 = JSCompiler_temp_const$jscomp$1.bar;",
-            "  return GEN_CONTEXT$0.yield(5, 2);",
-            "}",
-            "JSCompiler_temp_const$jscomp$0.call(",
-            "    JSCompiler_temp_const$jscomp$1, GEN_CONTEXT$0.yieldResult);",
-            "GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        var o;
+        var JSCompiler_temp_const$jscomp$1;
+        var JSCompiler_temp_const$jscomp$0;
+        """,
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          o = {bar: function(x) {}};
+          JSCompiler_temp_const$jscomp$1 = o;
+          JSCompiler_temp_const$jscomp$0 = JSCompiler_temp_const$jscomp$1.bar;
+          return GEN_CONTEXT$0.yield(5, 2);
+        }
+        JSCompiler_temp_const$jscomp$0.call(
+            JSCompiler_temp_const$jscomp$1, GEN_CONTEXT$0.yieldResult);
+        GEN_CONTEXT$0.jumpToEnd();
+        """);
   }
 
   @Test
@@ -772,56 +811,61 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testLabels() {
     rewriteGeneratorBody(
         "l: if (true) { break l; }",
-        lines(
-            "  l: {", //
-            "    if (true) { break l; }",
-            "  }",
-            "  GEN_CONTEXT$0.jumpToEnd();"));
+        """
+          l: {
+            if (true) { break l; }
+          }
+          GEN_CONTEXT$0.jumpToEnd();
+        """);
 
     rewriteGeneratorBody(
         "l: if (yield) { break l; }",
-        lines(
-            "  if (GEN_CONTEXT$0.nextAddress == 1)",
-            "    return GEN_CONTEXT$0.yield(void 0, 3);",
-            "  if (GEN_CONTEXT$0.yieldResult) {",
-            "    return GEN_CONTEXT$0.jumpTo(0);",
-            "  }",
-            "  GEN_CONTEXT$0.jumpToEnd();"));
+        """
+          if (GEN_CONTEXT$0.nextAddress == 1)
+            return GEN_CONTEXT$0.yield(void 0, 3);
+          if (GEN_CONTEXT$0.yieldResult) {
+            return GEN_CONTEXT$0.jumpTo(0);
+          }
+          GEN_CONTEXT$0.jumpToEnd();
+        """);
 
     rewriteGeneratorBody(
         "l: if (yield) { while (1) {break l;} }",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  return GEN_CONTEXT$0.yield(void 0, 3);",
-            "}",
-            "if (GEN_CONTEXT$0.yieldResult) {",
-            "  for (; 1;) {",
-            "    return GEN_CONTEXT$0.jumpTo(0);",
-            "  }",
-            "}",
-            "GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          return GEN_CONTEXT$0.yield(void 0, 3);
+        }
+        if (GEN_CONTEXT$0.yieldResult) {
+          for (; 1;) {
+            return GEN_CONTEXT$0.jumpTo(0);
+          }
+        }
+        GEN_CONTEXT$0.jumpToEnd();
+        """);
 
     rewriteGeneratorBody(
         "l: for (;;) { yield i; continue l; }",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  return GEN_CONTEXT$0.yield(i, 5);",
-            "}",
-            "return GEN_CONTEXT$0.jumpTo(1);",
-            "return GEN_CONTEXT$0.jumpTo(1);"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          return GEN_CONTEXT$0.yield(i, 5);
+        }
+        return GEN_CONTEXT$0.jumpTo(1);
+        return GEN_CONTEXT$0.jumpTo(1);
+        """);
 
     rewriteGeneratorBody(
         "l1: l2: if (yield) break l1; else break l2;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  return GEN_CONTEXT$0.yield(void 0, 3);",
-            "}",
-            "if(GEN_CONTEXT$0.yieldResult) {",
-            "  return GEN_CONTEXT$0.jumpTo(0);",
-            "} else {",
-            "  return GEN_CONTEXT$0.jumpTo(0);",
-            "}",
-            "GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          return GEN_CONTEXT$0.yield(void 0, 3);
+        }
+        if(GEN_CONTEXT$0.yieldResult) {
+          return GEN_CONTEXT$0.jumpTo(0);
+        } else {
+          return GEN_CONTEXT$0.jumpTo(0);
+        }
+        GEN_CONTEXT$0.jumpToEnd();
+        """);
   }
 
   @Test
@@ -829,76 +873,80 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     // TODO(skill): The generator transpilation should not produce any unreachable code
     rewriteGeneratorBody(
         "while (true) {yield; break;}",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  if (!true) {",
-            "    return GEN_CONTEXT$0.jumpTo(0);",
-            "  }",
-            "  return GEN_CONTEXT$0.yield(void 0, 5);",
-            "}",
-            "return GEN_CONTEXT$0.jumpTo(0);",
-            "return GEN_CONTEXT$0.jumpTo(1);"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          if (!true) {
+            return GEN_CONTEXT$0.jumpTo(0);
+          }
+          return GEN_CONTEXT$0.yield(void 0, 5);
+        }
+        return GEN_CONTEXT$0.jumpTo(0);
+        return GEN_CONTEXT$0.jumpTo(1);
+        """);
   }
 
   @Test
   public void testCaseNumberOptimization() {
     rewriteGeneratorBodyWithVars(
-        lines(
-            "for (;;) {",
-            "  var gen = generatorSrc();",
-            "  var gotResponse = false;",
-            "  for (var response in gen) {",
-            "    yield response;",
-            "    gotResponse = true;",
-            "  }",
-            "  if (!gotResponse) {",
-            "    return;",
-            "  }",
-            "}"),
-        lines(
-            "var gen;", //
-            "var gotResponse;",
-            "var response;",
-            "var GEN_FORIN$0$0;"),
-        lines(
-            "switch (GEN_CONTEXT$0.nextAddress) {",
-            "  case 1:",
-            "    gen = generatorSrc();",
-            "    gotResponse = false;",
-            "    GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(gen);",
-            "  case 5:",
-            "    if (!((response=GEN_FORIN$0$0.getNext()) != null)) {",
-            "      GEN_CONTEXT$0.jumpTo(7);",
-            "      break;",
-            "    }",
-            "    return GEN_CONTEXT$0.yield(response, 8);",
-            "  case 8:",
-            "    gotResponse = true;",
-            "    GEN_CONTEXT$0.jumpTo(5);",
-            "    break;",
-            "  case 7:",
-            "    if (!gotResponse) return GEN_CONTEXT$0.return();",
-            "    GEN_CONTEXT$0.jumpTo(1);",
-            "    break;",
-            "}",
-            ""));
+        """
+        for (;;) {
+          var gen = generatorSrc();
+          var gotResponse = false;
+          for (var response in gen) {
+            yield response;
+            gotResponse = true;
+          }
+          if (!gotResponse) {
+            return;
+          }
+        }
+        """,
+        """
+        var gen;
+        var gotResponse;
+        var response;
+        var GEN_FORIN$0$0;
+        """,
+        """
+        switch (GEN_CONTEXT$0.nextAddress) {
+          case 1:
+            gen = generatorSrc();
+            gotResponse = false;
+            GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(gen);
+          case 5:
+            if (!((response=GEN_FORIN$0$0.getNext()) != null)) {
+              GEN_CONTEXT$0.jumpTo(7);
+              break;
+            }
+            return GEN_CONTEXT$0.yield(response, 8);
+          case 8:
+            gotResponse = true;
+            GEN_CONTEXT$0.jumpTo(5);
+            break;
+          case 7:
+            if (!gotResponse) return GEN_CONTEXT$0.return();
+            GEN_CONTEXT$0.jumpTo(1);
+            break;
+        }
+        """);
 
     rewriteGeneratorBody(
         "do { do { do { yield; } while (3) } while (2) } while (1)",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  return GEN_CONTEXT$0.yield(void 0, 10);",
-            "}",
-            "if (3) {",
-            "  return GEN_CONTEXT$0.jumpTo(1);",
-            "}",
-            "if (2) {",
-            "  return GEN_CONTEXT$0.jumpTo(1);",
-            "}",
-            "if (1) {",
-            "  return GEN_CONTEXT$0.jumpTo(1);",
-            "}",
-            "GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          return GEN_CONTEXT$0.yield(void 0, 10);
+        }
+        if (3) {
+          return GEN_CONTEXT$0.jumpTo(1);
+        }
+        if (2) {
+          return GEN_CONTEXT$0.jumpTo(1);
+        }
+        if (1) {
+          return GEN_CONTEXT$0.jumpTo(1);
+        }
+        GEN_CONTEXT$0.jumpToEnd();
+        """);
   }
 
   @Test
@@ -906,125 +954,135 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "var j = 0; if (yield) { j = 1; }",
         "var j;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  j = 0;",
-            "  return GEN_CONTEXT$0.yield(void 0, 2);",
-            "}",
-            "if (GEN_CONTEXT$0.yieldResult) { j = 1; }",
-            "GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          j = 0;
+          return GEN_CONTEXT$0.yield(void 0, 2);
+        }
+        if (GEN_CONTEXT$0.yieldResult) { j = 1; }
+        GEN_CONTEXT$0.jumpToEnd();
+        """);
 
     rewriteGeneratorBodyWithVars(
         "var j = 0; if (j < 1) { j = 5; } else { yield j; }",
         "var j;",
-        lines(
-            "j = 0;",
-            "if (j < 1) {",
-            "  j = 5;",
-            "  return GEN_CONTEXT$0.jumpTo(0);",
-            "}",
-            "return GEN_CONTEXT$0.yield(j, 0);"));
+        """
+        j = 0;
+        if (j < 1) {
+          j = 5;
+          return GEN_CONTEXT$0.jumpTo(0);
+        }
+        return GEN_CONTEXT$0.yield(j, 0);
+        """);
 
     // When "else" doesn't contain yields, it's more optimal to swap "if" and else "blocks" and
     // negate the condition.
     rewriteGeneratorBodyWithVars(
         "var j = 0; if (j < 1) { yield j; } else { j = 5; }",
         "var j;",
-        lines(
-            "j = 0;",
-            "if (!(j < 1)) {",
-            "  j = 5;",
-            "  return GEN_CONTEXT$0.jumpTo(0);",
-            "}",
-            "return GEN_CONTEXT$0.yield(j, 0);"));
+        """
+        j = 0;
+        if (!(j < 1)) {
+          j = 5;
+          return GEN_CONTEXT$0.jumpTo(0);
+        }
+        return GEN_CONTEXT$0.yield(j, 0);
+        """);
 
     // No "else" block, pretend as it's empty
     rewriteGeneratorBodyWithVars(
         "var j = 0; if (j < 1) { yield j; }",
         "var j;",
-        lines(
-            "j = 0;",
-            "if (!(j < 1)) {",
-            "  return GEN_CONTEXT$0.jumpTo(0);",
-            "}",
-            "return GEN_CONTEXT$0.yield(j, 0);"));
+        """
+        j = 0;
+        if (!(j < 1)) {
+          return GEN_CONTEXT$0.jumpTo(0);
+        }
+        return GEN_CONTEXT$0.yield(j, 0);
+        """);
 
     rewriteGeneratorBody(
         "if (i < 1) { yield i; } else { yield 1; }",
-        lines(
-            "if (i < 1) {",
-            "  return GEN_CONTEXT$0.yield(i, 0);",
-            "}",
-            "return GEN_CONTEXT$0.yield(1, 0);"));
+        """
+        if (i < 1) {
+          return GEN_CONTEXT$0.yield(i, 0);
+        }
+        return GEN_CONTEXT$0.yield(1, 0);
+        """);
 
     rewriteGeneratorSwitchBody(
         "if (i < 1) { yield i; yield i + 1; i = 10; } else { yield 1; yield 2; i = 5;}",
-        lines(
-            "  if (i < 1) {",
-            "    return GEN_CONTEXT$0.yield(i, 6);",
-            "  }",
-            "  return GEN_CONTEXT$0.yield(1, 4);",
-            "case 4:",
-            "  return GEN_CONTEXT$0.yield(2, 5);",
-            "case 5:",
-            "  i = 5;",
-            "  GEN_CONTEXT$0.jumpTo(0);",
-            "  break;",
-            "case 6:",
-            "  return GEN_CONTEXT$0.yield(i + 1, 7)",
-            "case 7:",
-            "  i = 10;",
-            "  GEN_CONTEXT$0.jumpToEnd();"));
+        """
+          if (i < 1) {
+            return GEN_CONTEXT$0.yield(i, 6);
+          }
+          return GEN_CONTEXT$0.yield(1, 4);
+        case 4:
+          return GEN_CONTEXT$0.yield(2, 5);
+        case 5:
+          i = 5;
+          GEN_CONTEXT$0.jumpTo(0);
+          break;
+        case 6:
+          return GEN_CONTEXT$0.yield(i + 1, 7)
+        case 7:
+          i = 10;
+          GEN_CONTEXT$0.jumpToEnd();
+        """);
 
     rewriteGeneratorBody(
-        lines(
-            "if (i < 1) {",
-            "  while (true) {",
-            "    yield 1;",
-            "  }",
-            "} else {",
-            "  while (false) {",
-            "    yield 2;",
-            "  }",
-            "}"),
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  if (i < 1) {",
-            "    return GEN_CONTEXT$0.jumpTo(8);",
-            "  }",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 8) {",
-            "  if (!false) {",
-            "    return GEN_CONTEXT$0.jumpTo(0);",
-            "  }",
-            "  return GEN_CONTEXT$0.yield(2, 4);",
-            "}",
-            "if (!true) {",
-            "  return GEN_CONTEXT$0.jumpTo(0);",
-            "}",
-            "return GEN_CONTEXT$0.yield(1, 8);"));
+        """
+        if (i < 1) {
+          while (true) {
+            yield 1;
+          }
+        } else {
+          while (false) {
+            yield 2;
+          }
+        }
+        """,
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          if (i < 1) {
+            return GEN_CONTEXT$0.jumpTo(8);
+          }
+        }
+        if (GEN_CONTEXT$0.nextAddress != 8) {
+          if (!false) {
+            return GEN_CONTEXT$0.jumpTo(0);
+          }
+          return GEN_CONTEXT$0.yield(2, 4);
+        }
+        if (!true) {
+          return GEN_CONTEXT$0.jumpTo(0);
+        }
+        return GEN_CONTEXT$0.yield(1, 8);
+        """);
 
     rewriteGeneratorBody(
         "if (i < 1) { if (i < 2) {yield 2; } } else { yield 1; }",
-        lines(
-            "if (i < 1) {",
-            "  if (!(i < 2)) {",
-            "    return GEN_CONTEXT$0.jumpTo(0);",
-            "  }",
-            "  return GEN_CONTEXT$0.yield(2, 0);",
-            "}",
-            "return GEN_CONTEXT$0.yield(1, 0)"));
+        """
+        if (i < 1) {
+          if (!(i < 2)) {
+            return GEN_CONTEXT$0.jumpTo(0);
+          }
+          return GEN_CONTEXT$0.yield(2, 0);
+        }
+        return GEN_CONTEXT$0.yield(1, 0)
+        """);
 
     rewriteGeneratorBody(
         "if (i < 1) { if (i < 2) {yield 2; } else { yield 3; } } else { yield 1; }",
-        lines(
-            "if (i < 1) {",
-            "  if (i < 2) {",
-            "    return GEN_CONTEXT$0.yield(2, 0);",
-            "  }",
-            "  return GEN_CONTEXT$0.yield(3, 0);",
-            "}",
-            "return GEN_CONTEXT$0.yield(1, 0)"));
+        """
+        if (i < 1) {
+          if (i < 2) {
+            return GEN_CONTEXT$0.yield(2, 0);
+          }
+          return GEN_CONTEXT$0.yield(3, 0);
+        }
+        return GEN_CONTEXT$0.yield(1, 0)
+        """);
   }
 
   @Test
@@ -1039,16 +1097,20 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "return this.test({value: this});",
         "var GEN_THIS$0 = this;",
-        lines("return GEN_CONTEXT$0.return(", "    GEN_THIS$0.test({value: GEN_THIS$0}));"));
+        """
+        return GEN_CONTEXT$0.return(
+            GEN_THIS$0.test({value: GEN_THIS$0}));
+        """);
 
     rewriteGeneratorBodyWithVars(
         "return this[yield];",
         "var GEN_THIS$0 = this;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1)",
-            "  return GEN_CONTEXT$0.yield(void 0, 2);",
-            "return GEN_CONTEXT$0.return(",
-            "    GEN_THIS$0[GEN_CONTEXT$0.yieldResult]);"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1)
+          return GEN_CONTEXT$0.yield(void 0, 2);
+        return GEN_CONTEXT$0.return(
+            GEN_THIS$0[GEN_CONTEXT$0.yieldResult]);
+        """);
   }
 
   @Test
@@ -1056,95 +1118,101 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "var j = 0; while (j < 10) { yield j; break; }",
         "var j;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  j = 0;",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 5) {",
-            "  if (!(j < 10)) {",
-            "    return GEN_CONTEXT$0.jumpTo(0);",
-            "  }",
-            "  return GEN_CONTEXT$0.yield(j, 5);",
-            "}",
-            "return GEN_CONTEXT$0.jumpTo(0);",
-            "return GEN_CONTEXT$0.jumpTo(2)"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          j = 0;
+        }
+        if (GEN_CONTEXT$0.nextAddress != 5) {
+          if (!(j < 10)) {
+            return GEN_CONTEXT$0.jumpTo(0);
+          }
+          return GEN_CONTEXT$0.yield(j, 5);
+        }
+        return GEN_CONTEXT$0.jumpTo(0);
+        return GEN_CONTEXT$0.jumpTo(2)
+        """);
 
     rewriteGeneratorBodyWithVars(
         "var j = 0; while (j < 10) { yield j; continue; }",
         "var j;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  j = 0;",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 5) {",
-            "  if (!(j < 10)) {",
-            "    return GEN_CONTEXT$0.jumpTo(0);",
-            "  }",
-            "  return GEN_CONTEXT$0.yield(j, 5);",
-            "}",
-            "return GEN_CONTEXT$0.jumpTo(2);",
-            "return GEN_CONTEXT$0.jumpTo(2)"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          j = 0;
+        }
+        if (GEN_CONTEXT$0.nextAddress != 5) {
+          if (!(j < 10)) {
+            return GEN_CONTEXT$0.jumpTo(0);
+          }
+          return GEN_CONTEXT$0.yield(j, 5);
+        }
+        return GEN_CONTEXT$0.jumpTo(2);
+        return GEN_CONTEXT$0.jumpTo(2)
+        """);
 
     rewriteGeneratorBodyWithVars(
         "for (var j = 0; j < 10; j++) { yield j; break; }",
         "var j;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  j = 0;",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 5) {",
-            "  if (!(j < 10)) {",
-            "    return GEN_CONTEXT$0.jumpTo(0);",
-            "  }",
-            "  return GEN_CONTEXT$0.yield(j, 5);",
-            "}",
-            "return GEN_CONTEXT$0.jumpTo(0);",
-            "j++;",
-            "return GEN_CONTEXT$0.jumpTo(2)"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          j = 0;
+        }
+        if (GEN_CONTEXT$0.nextAddress != 5) {
+          if (!(j < 10)) {
+            return GEN_CONTEXT$0.jumpTo(0);
+          }
+          return GEN_CONTEXT$0.yield(j, 5);
+        }
+        return GEN_CONTEXT$0.jumpTo(0);
+        j++;
+        return GEN_CONTEXT$0.jumpTo(2)
+        """);
 
     rewriteGeneratorSwitchBodyWithVars(
         "for (var j = 0; j < 10; j++) { yield j; continue; }",
         "var j;",
-        lines(
-            "  j = 0;",
-            "case 2:",
-            "  if (!(j < 10)) {",
-            "    GEN_CONTEXT$0.jumpTo(0);",
-            "    break;",
-            "  }",
-            "  return GEN_CONTEXT$0.yield(j, 5);",
-            "case 5:",
-            "  GEN_CONTEXT$0.jumpTo(3);",
-            "  break;",
-            "case 3:",
-            "  j++;",
-            "  GEN_CONTEXT$0.jumpTo(2)",
-            "  break;"));
+        """
+          j = 0;
+        case 2:
+          if (!(j < 10)) {
+            GEN_CONTEXT$0.jumpTo(0);
+            break;
+          }
+          return GEN_CONTEXT$0.yield(j, 5);
+        case 5:
+          GEN_CONTEXT$0.jumpTo(3);
+          break;
+        case 3:
+          j++;
+          GEN_CONTEXT$0.jumpTo(2)
+          break;
+        """);
   }
 
   @Test
   public void testDoWhileLoops() {
     rewriteGeneratorBody(
         "do { yield j; } while (j < 10);",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  return GEN_CONTEXT$0.yield(j, 4);",
-            "}",
-            "if (j<10) {",
-            "  return GEN_CONTEXT$0.jumpTo(1);",
-            "}",
-            "GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          return GEN_CONTEXT$0.yield(j, 4);
+        }
+        if (j<10) {
+          return GEN_CONTEXT$0.jumpTo(1);
+        }
+        GEN_CONTEXT$0.jumpToEnd();
+        """);
 
     rewriteGeneratorBody(
         "do {} while (yield 1);",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  return GEN_CONTEXT$0.yield(1, 5);",
-            "}",
-            "if (GEN_CONTEXT$0.yieldResult) {",
-            "  return GEN_CONTEXT$0.jumpTo(1);",
-            "}",
-            "GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          return GEN_CONTEXT$0.yield(1, 5);
+        }
+        if (GEN_CONTEXT$0.yieldResult) {
+          return GEN_CONTEXT$0.jumpTo(1);
+        }
+        GEN_CONTEXT$0.jumpToEnd();
+        """);
   }
 
   @Test
@@ -1163,11 +1231,12 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testYieldExpression() {
     rewriteGeneratorBody(
         "return (yield 1);",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  return GEN_CONTEXT$0.yield(1, 2);",
-            "}",
-            "return GEN_CONTEXT$0.return(GEN_CONTEXT$0.yieldResult);"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          return GEN_CONTEXT$0.yield(1, 2);
+        }
+        return GEN_CONTEXT$0.return(GEN_CONTEXT$0.yieldResult);
+        """);
   }
 
   @Test
@@ -1187,12 +1256,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "var i = yield * n;",
         "var i;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  return GEN_CONTEXT$0.yieldAll(n, 2);",
-            "}",
-            "i = GEN_CONTEXT$0.yieldResult;",
-            "GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          return GEN_CONTEXT$0.yieldAll(n, 2);
+        }
+        i = GEN_CONTEXT$0.yieldResult;
+        GEN_CONTEXT$0.jumpToEnd();
+        """);
   }
 
   @Test
@@ -1214,167 +1284,187 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "0 || (yield 1);",
         "var JSCompiler_temp$jscomp$0;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  if(JSCompiler_temp$jscomp$0 = 0) {",
-            "    return GEN_CONTEXT$0.jumpTo(2);",
-            "  }",
-            "  return GEN_CONTEXT$0.yield(1, 3);",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 2) {",
-            "  JSCompiler_temp$jscomp$0=GEN_CONTEXT$0.yieldResult;",
-            "}",
-            "JSCompiler_temp$jscomp$0;",
-            "GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          if(JSCompiler_temp$jscomp$0 = 0) {
+            return GEN_CONTEXT$0.jumpTo(2);
+          }
+          return GEN_CONTEXT$0.yield(1, 3);
+        }
+        if (GEN_CONTEXT$0.nextAddress != 2) {
+          JSCompiler_temp$jscomp$0=GEN_CONTEXT$0.yieldResult;
+        }
+        JSCompiler_temp$jscomp$0;
+        GEN_CONTEXT$0.jumpToEnd();
+        """);
 
     rewriteGeneratorBodyWithVars(
         "0 && (yield 1);",
         "var JSCompiler_temp$jscomp$0;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  if(!(JSCompiler_temp$jscomp$0=0)) {",
-            "    return GEN_CONTEXT$0.jumpTo(2);",
-            "  }",
-            "  return GEN_CONTEXT$0.yield(1, 3);",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 2) {",
-            "  JSCompiler_temp$jscomp$0=GEN_CONTEXT$0.yieldResult;",
-            "}",
-            "JSCompiler_temp$jscomp$0;",
-            "GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          if(!(JSCompiler_temp$jscomp$0=0)) {
+            return GEN_CONTEXT$0.jumpTo(2);
+          }
+          return GEN_CONTEXT$0.yield(1, 3);
+        }
+        if (GEN_CONTEXT$0.nextAddress != 2) {
+          JSCompiler_temp$jscomp$0=GEN_CONTEXT$0.yieldResult;
+        }
+        JSCompiler_temp$jscomp$0;
+        GEN_CONTEXT$0.jumpToEnd();
+        """);
 
     rewriteGeneratorBodyWithVars(
         "0 ? 1 : (yield 1);",
         "var JSCompiler_temp$jscomp$0;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  if(0) {",
-            "    JSCompiler_temp$jscomp$0 = 1;",
-            "    return GEN_CONTEXT$0.jumpTo(2);",
-            "  }",
-            "  return GEN_CONTEXT$0.yield(1, 3);",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 2) {",
-            "  JSCompiler_temp$jscomp$0 = GEN_CONTEXT$0.yieldResult;",
-            "}",
-            "JSCompiler_temp$jscomp$0;",
-            "GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          if(0) {
+            JSCompiler_temp$jscomp$0 = 1;
+            return GEN_CONTEXT$0.jumpTo(2);
+          }
+          return GEN_CONTEXT$0.yield(1, 3);
+        }
+        if (GEN_CONTEXT$0.nextAddress != 2) {
+          JSCompiler_temp$jscomp$0 = GEN_CONTEXT$0.yieldResult;
+        }
+        JSCompiler_temp$jscomp$0;
+        GEN_CONTEXT$0.jumpToEnd();
+        """);
   }
 
   @Test
   public void testVar() {
     rewriteGeneratorBodyWithVars(
         "var va = 10, vb, vc = yield 10, vd = yield 20, vf, vg='test';",
-        lines(
-            "var va;", //
-            "var vb;", "var vc;", "var vd;", "var vf;", "var vg;"),
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  va = 10;",
-            "  return GEN_CONTEXT$0.yield(10, 2);",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 3) {",
-            "  vc = GEN_CONTEXT$0.yieldResult;",
-            "  return GEN_CONTEXT$0.yield(20, 3);",
-            "}",
-            "vd = GEN_CONTEXT$0.yieldResult;",
-            "vg = 'test';",
-            "GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        var va;
+        var vb;
+        var vc;
+        var vd;
+        var vf;
+        var vg;
+        """,
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          va = 10;
+          return GEN_CONTEXT$0.yield(10, 2);
+        }
+        if (GEN_CONTEXT$0.nextAddress != 3) {
+          vc = GEN_CONTEXT$0.yieldResult;
+          return GEN_CONTEXT$0.yield(20, 3);
+        }
+        vd = GEN_CONTEXT$0.yieldResult;
+        vg = 'test';
+        GEN_CONTEXT$0.jumpToEnd();
+        """);
 
     rewriteGeneratorBodyWithVars(
         lines("var /** @const */ va = 10, vb, vc = yield 10, vd = yield 20, vf, vg='test';"),
-        lines(
-            "var /** @const */ va;", //
-            "var vb;",
-            "var vc;",
-            "var vd",
-            "var vf;",
-            "var vg;"),
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  va = 10;",
-            "  return GEN_CONTEXT$0.yield(10, 2);",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 3) {",
-            "  vc = GEN_CONTEXT$0.yieldResult;",
-            "  return GEN_CONTEXT$0.yield(20, 3);",
-            "}",
-            "vd = GEN_CONTEXT$0.yieldResult;",
-            "vg = 'test';",
-            "GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        var /** @const */ va;
+        var vb;
+        var vc;
+        var vd
+        var vf;
+        var vg;
+        """,
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          va = 10;
+          return GEN_CONTEXT$0.yield(10, 2);
+        }
+        if (GEN_CONTEXT$0.nextAddress != 3) {
+          vc = GEN_CONTEXT$0.yieldResult;
+          return GEN_CONTEXT$0.yield(20, 3);
+        }
+        vd = GEN_CONTEXT$0.yieldResult;
+        vg = 'test';
+        GEN_CONTEXT$0.jumpToEnd();
+        """);
   }
 
   @Test
   public void testYieldSwitch() {
     rewriteGeneratorSwitchBody(
-        lines(
-            "while (1) {",
-            "  switch (i) {",
-            "    case 1:",
-            "      ++i;",
-            "      break;",
-            "    case 2:",
-            "      yield 3;",
-            "      continue;",
-            "    case 10:",
-            "    case 3:",
-            "      yield 4;",
-            "    case 4:",
-            "      return 1;",
-            "    case 5:",
-            "      return 2;",
-            "    default:",
-            "      yield 5;",
-            "  }",
-            "}"),
-        lines(
-            "  if (!1) {",
-            "    GEN_CONTEXT$0.jumpTo(0);",
-            "    break;",
-            "  }",
-            "  switch (i) {",
-            "    case 1: ++i; break;",
-            "    case 2: return GEN_CONTEXT$0.jumpTo(5);",
-            "    case 10:",
-            "    case 3: return GEN_CONTEXT$0.jumpTo(6);",
-            "    case 4: return GEN_CONTEXT$0.jumpTo(7);",
-            "    case 5: return GEN_CONTEXT$0.return(2);",
-            "    default: return GEN_CONTEXT$0.jumpTo(8);",
-            "  }",
-            "  GEN_CONTEXT$0.jumpTo(1);",
-            "  break;",
-            "case 5: return GEN_CONTEXT$0.yield(3, 10);",
-            "case 10:",
-            "  GEN_CONTEXT$0.jumpTo(1);",
-            "  break;",
-            "case 6: return GEN_CONTEXT$0.yield(4, 7);",
-            "case 7: return GEN_CONTEXT$0.return(1);",
-            "case 8: return GEN_CONTEXT$0.yield(5, 1);"));
+        """
+        while (1) {
+          switch (i) {
+            case 1:
+              ++i;
+              break;
+            case 2:
+              yield 3;
+              continue;
+            case 10:
+            case 3:
+              yield 4;
+            case 4:
+              return 1;
+            case 5:
+              return 2;
+            default:
+              yield 5;
+          }
+        }
+        """,
+        """
+          if (!1) {
+            GEN_CONTEXT$0.jumpTo(0);
+            break;
+          }
+          switch (i) {
+            case 1: ++i; break;
+            case 2: return GEN_CONTEXT$0.jumpTo(5);
+            case 10:
+            case 3: return GEN_CONTEXT$0.jumpTo(6);
+            case 4: return GEN_CONTEXT$0.jumpTo(7);
+            case 5: return GEN_CONTEXT$0.return(2);
+            default: return GEN_CONTEXT$0.jumpTo(8);
+          }
+          GEN_CONTEXT$0.jumpTo(1);
+          break;
+        case 5: return GEN_CONTEXT$0.yield(3, 10);
+        case 10:
+          GEN_CONTEXT$0.jumpTo(1);
+          break;
+        case 6: return GEN_CONTEXT$0.yield(4, 7);
+        case 7: return GEN_CONTEXT$0.return(1);
+        case 8: return GEN_CONTEXT$0.yield(5, 1);
+        """);
 
     rewriteGeneratorBody(
-        lines("switch (yield) {", "  default:", "  case 1:", "    yield 1;}"),
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  return GEN_CONTEXT$0.yield(void 0, 2);",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 3) {",
-            "  switch (GEN_CONTEXT$0.yieldResult) {",
-            "    default:",
-            "    case 1:",
-            "      return GEN_CONTEXT$0.jumpTo(3)",
-            "  }",
-            "  return GEN_CONTEXT$0.jumpTo(0);",
-            "}",
-            "return GEN_CONTEXT$0.yield(1, 0);"));
+        """
+        switch (yield) {
+          default:
+          case 1:
+            yield 1;}
+        """,
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          return GEN_CONTEXT$0.yield(void 0, 2);
+        }
+        if (GEN_CONTEXT$0.nextAddress != 3) {
+          switch (GEN_CONTEXT$0.yieldResult) {
+            default:
+            case 1:
+              return GEN_CONTEXT$0.jumpTo(3)
+          }
+          return GEN_CONTEXT$0.jumpTo(0);
+        }
+        return GEN_CONTEXT$0.yield(1, 0);
+        """);
   }
 
   @Test
   public void testNoTranslate() {
     rewriteGeneratorBody(
         "if (1) { try {} catch (e) {} throw 1; }",
-        lines(
-            "if (1) { try {} catch (e) {} throw 1; }", //
-            "GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        if (1) { try {} catch (e) {} throw 1; }
+        GEN_CONTEXT$0.jumpToEnd();
+        """);
   }
 
   @Test
@@ -1382,61 +1472,67 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "for (var i in yield) { }",
         "var i;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  return GEN_CONTEXT$0.yield(void 0, 2);",
-            "}",
-            "for (i in GEN_CONTEXT$0.yieldResult) { }",
-            "GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          return GEN_CONTEXT$0.yield(void 0, 2);
+        }
+        for (i in GEN_CONTEXT$0.yieldResult) { }
+        GEN_CONTEXT$0.jumpToEnd();
+        """);
 
     rewriteGeneratorBodyWithVars(
         "for (var i in j) { yield i; }",
-        lines(
-            "var i;", //
-            "var GEN_FORIN$0$0;"),
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(j);",
-            "}",
-            "if (!((i = GEN_FORIN$0$0.getNext()) != null)) {",
-            "  return GEN_CONTEXT$0.jumpTo(0);",
-            "}",
-            "return GEN_CONTEXT$0.yield(i, 2);"));
+        """
+        var i;
+        var GEN_FORIN$0$0;
+        """,
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(j);
+        }
+        if (!((i = GEN_FORIN$0$0.getNext()) != null)) {
+          return GEN_CONTEXT$0.jumpTo(0);
+        }
+        return GEN_CONTEXT$0.yield(i, 2);
+        """);
 
     rewriteGeneratorBodyWithVars(
         "for (var i in yield) { yield i; }",
-        lines(
-            "var i;", //
-            "var GEN_FORIN$0$0;"),
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  return GEN_CONTEXT$0.yield(void 0, 2)",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 3) {",
-            "  GEN_FORIN$0$0 = ",
-            "      GEN_CONTEXT$0.forIn(GEN_CONTEXT$0.yieldResult);",
-            "}",
-            "if (!((i = GEN_FORIN$0$0.getNext()) != null)) {",
-            "  return GEN_CONTEXT$0.jumpTo(0);",
-            "}",
-            "return GEN_CONTEXT$0.yield(i, 3);"));
+        """
+        var i;
+        var GEN_FORIN$0$0;
+        """,
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          return GEN_CONTEXT$0.yield(void 0, 2)
+        }
+        if (GEN_CONTEXT$0.nextAddress != 3) {
+          GEN_FORIN$0$0 =
+              GEN_CONTEXT$0.forIn(GEN_CONTEXT$0.yieldResult);
+        }
+        if (!((i = GEN_FORIN$0$0.getNext()) != null)) {
+          return GEN_CONTEXT$0.jumpTo(0);
+        }
+        return GEN_CONTEXT$0.yield(i, 3);
+        """);
 
     rewriteGeneratorBodyWithVars(
         "for (i[yield] in j) {}",
         "var GEN_FORIN$0$0; var JSCompiler_temp_const$jscomp$0;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(j);",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 5) {",
-            "  JSCompiler_temp_const$jscomp$0 = i;",
-            "  return GEN_CONTEXT$0.yield(void 0, 5);",
-            "}",
-            "if (!((JSCompiler_temp_const$jscomp$0[GEN_CONTEXT$0.yieldResult] =",
-            "    GEN_FORIN$0$0.getNext()) != null)) {",
-            "  return GEN_CONTEXT$0.jumpTo(0);",
-            "}",
-            "return GEN_CONTEXT$0.jumpTo(2);"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(j);
+        }
+        if (GEN_CONTEXT$0.nextAddress != 5) {
+          JSCompiler_temp_const$jscomp$0 = i;
+          return GEN_CONTEXT$0.yield(void 0, 5);
+        }
+        if (!((JSCompiler_temp_const$jscomp$0[GEN_CONTEXT$0.yieldResult] =
+            GEN_FORIN$0$0.getNext()) != null)) {
+          return GEN_CONTEXT$0.jumpTo(0);
+        }
+        return GEN_CONTEXT$0.jumpTo(2);
+        """);
   }
 
   @Test
@@ -1444,59 +1540,64 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "try {yield 1;} catch (e) {}",
         "var e;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  GEN_CONTEXT$0.setCatchFinallyBlocks(2);",
-            "  return GEN_CONTEXT$0.yield(1, 4);",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 2) {",
-            "  return GEN_CONTEXT$0.leaveTryBlock(0)",
-            "}",
-            "e = GEN_CONTEXT$0.enterCatchBlock();",
-            "GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          GEN_CONTEXT$0.setCatchFinallyBlocks(2);
+          return GEN_CONTEXT$0.yield(1, 4);
+        }
+        if (GEN_CONTEXT$0.nextAddress != 2) {
+          return GEN_CONTEXT$0.leaveTryBlock(0)
+        }
+        e = GEN_CONTEXT$0.enterCatchBlock();
+        GEN_CONTEXT$0.jumpToEnd();
+        """);
 
     rewriteGeneratorSwitchBodyWithVars(
-        lines(
-            "try {yield 1;} catch (e) { use('first ' + e); }", //
-            "try {yield 1;} catch (e) { use('second ' + e)}"),
-        lines(
-            "var e;",
-            // The second catch variable was renamed by normalization
-            "var e$jscomp$1;"),
-        lines(
-            "  GEN_CONTEXT$0.setCatchFinallyBlocks(2);",
-            "  return GEN_CONTEXT$0.yield(1, 4);",
-            "case 4:",
-            "  GEN_CONTEXT$0.leaveTryBlock(3)",
-            "  break;",
-            "case 2:",
-            "  e=GEN_CONTEXT$0.enterCatchBlock();",
-            "  use('first ' + e);",
-            "case 3:",
-            "  GEN_CONTEXT$0.setCatchFinallyBlocks(5);",
-            "  return GEN_CONTEXT$0.yield(1, 7);",
-            "case 7:",
-            "  GEN_CONTEXT$0.leaveTryBlock(0)",
-            "  break;",
-            "case 5:",
-            "  e$jscomp$1 = GEN_CONTEXT$0.enterCatchBlock();",
-            "  use('second ' + e$jscomp$1);",
-            "  GEN_CONTEXT$0.jumpToEnd();"));
+        """
+        try {yield 1;} catch (e) { use('first ' + e); }
+        try {yield 1;} catch (e) { use('second ' + e)}
+        """,
+        """
+        var e;
+        // The second catch variable was renamed by normalization
+        var e$jscomp$1;
+        """,
+        """
+          GEN_CONTEXT$0.setCatchFinallyBlocks(2);
+          return GEN_CONTEXT$0.yield(1, 4);
+        case 4:
+          GEN_CONTEXT$0.leaveTryBlock(3)
+          break;
+        case 2:
+          e=GEN_CONTEXT$0.enterCatchBlock();
+          use('first ' + e);
+        case 3:
+          GEN_CONTEXT$0.setCatchFinallyBlocks(5);
+          return GEN_CONTEXT$0.yield(1, 7);
+        case 7:
+          GEN_CONTEXT$0.leaveTryBlock(0)
+          break;
+        case 5:
+          e$jscomp$1 = GEN_CONTEXT$0.enterCatchBlock();
+          use('second ' + e$jscomp$1);
+          GEN_CONTEXT$0.jumpToEnd();
+        """);
 
     rewriteGeneratorBodyWithVars(
         "l1: try { break l1; } catch (e) { yield; } finally {}",
         "var e;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  GEN_CONTEXT$0.setCatchFinallyBlocks(3, 4);",
-            "  return GEN_CONTEXT$0.jumpThroughFinallyBlocks(0);",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 3) {",
-            "  GEN_CONTEXT$0.enterFinallyBlock();",
-            "  return GEN_CONTEXT$0.leaveFinallyBlock(0);",
-            "}",
-            "e = GEN_CONTEXT$0.enterCatchBlock();",
-            "return GEN_CONTEXT$0.yield(void 0, 4)"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          GEN_CONTEXT$0.setCatchFinallyBlocks(3, 4);
+          return GEN_CONTEXT$0.jumpThroughFinallyBlocks(0);
+        }
+        if (GEN_CONTEXT$0.nextAddress != 3) {
+          GEN_CONTEXT$0.enterFinallyBlock();
+          return GEN_CONTEXT$0.leaveFinallyBlock(0);
+        }
+        e = GEN_CONTEXT$0.enterCatchBlock();
+        return GEN_CONTEXT$0.yield(void 0, 4)
+        """);
   }
 
   @Test
@@ -1504,59 +1605,62 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "try {yield 1;} catch (e) {} finally {b();}",
         "var e;",
-        lines(
-            "if (GEN_CONTEXT$0.nextAddress == 1) {",
-            "  GEN_CONTEXT$0.setCatchFinallyBlocks(2, 3);",
-            "  return GEN_CONTEXT$0.yield(1, 3);",
-            "}",
-            "if (GEN_CONTEXT$0.nextAddress != 2) {",
-            "  GEN_CONTEXT$0.enterFinallyBlock();",
-            "  b();",
-            "  return GEN_CONTEXT$0.leaveFinallyBlock(0);",
-            "}",
-            "e = GEN_CONTEXT$0.enterCatchBlock();",
-            "return GEN_CONTEXT$0.jumpTo(3);"));
+        """
+        if (GEN_CONTEXT$0.nextAddress == 1) {
+          GEN_CONTEXT$0.setCatchFinallyBlocks(2, 3);
+          return GEN_CONTEXT$0.yield(1, 3);
+        }
+        if (GEN_CONTEXT$0.nextAddress != 2) {
+          GEN_CONTEXT$0.enterFinallyBlock();
+          b();
+          return GEN_CONTEXT$0.leaveFinallyBlock(0);
+        }
+        e = GEN_CONTEXT$0.enterCatchBlock();
+        return GEN_CONTEXT$0.jumpTo(3);
+        """);
 
     rewriteGeneratorSwitchBodyWithVars(
-        lines(
-            "try {",
-            "  try {",
-            "    yield 1;",
-            "    throw 2;",
-            "  } catch (x) {",
-            "    throw yield x;",
-            "  } finally {",
-            "    yield 5;",
-            "  }",
-            "} catch (thrown) {",
-            "  yield thrown;",
-            "}"),
+        """
+        try {
+          try {
+            yield 1;
+            throw 2;
+          } catch (x) {
+            throw yield x;
+          } finally {
+            yield 5;
+          }
+        } catch (thrown) {
+          yield thrown;
+        }
+        """,
         "var x; var thrown;",
-        lines(
-            "  GEN_CONTEXT$0.setCatchFinallyBlocks(2);",
-            "  GEN_CONTEXT$0.setCatchFinallyBlocks(4, 5);",
-            "  return GEN_CONTEXT$0.yield(1, 7);",
-            "case 7:",
-            "  throw 2;",
-            "case 5:",
-            "  GEN_CONTEXT$0.enterFinallyBlock(2);",
-            "  return GEN_CONTEXT$0.yield(5, 8);",
-            "case 8:",
-            "  GEN_CONTEXT$0.leaveFinallyBlock(6);",
-            "  break;",
-            "case 4:",
-            "  x = GEN_CONTEXT$0.enterCatchBlock();",
-            "  return GEN_CONTEXT$0.yield(x, 9);",
-            "case 9:",
-            "  throw GEN_CONTEXT$0.yieldResult;",
-            "  GEN_CONTEXT$0.jumpTo(5);",
-            "  break;",
-            "case 6:",
-            "  GEN_CONTEXT$0.leaveTryBlock(0);",
-            "  break;",
-            "case 2:",
-            "  thrown = GEN_CONTEXT$0.enterCatchBlock();",
-            "  return GEN_CONTEXT$0.yield(thrown,0)"));
+        """
+          GEN_CONTEXT$0.setCatchFinallyBlocks(2);
+          GEN_CONTEXT$0.setCatchFinallyBlocks(4, 5);
+          return GEN_CONTEXT$0.yield(1, 7);
+        case 7:
+          throw 2;
+        case 5:
+          GEN_CONTEXT$0.enterFinallyBlock(2);
+          return GEN_CONTEXT$0.yield(5, 8);
+        case 8:
+          GEN_CONTEXT$0.leaveFinallyBlock(6);
+          break;
+        case 4:
+          x = GEN_CONTEXT$0.enterCatchBlock();
+          return GEN_CONTEXT$0.yield(x, 9);
+        case 9:
+          throw GEN_CONTEXT$0.yieldResult;
+          GEN_CONTEXT$0.jumpTo(5);
+          break;
+        case 6:
+          GEN_CONTEXT$0.leaveTryBlock(0);
+          break;
+        case 2:
+          thrown = GEN_CONTEXT$0.enterCatchBlock();
+          return GEN_CONTEXT$0.yield(thrown,0)
+        """);
   }
 
   /** Tests correctness of type information after transpilation */
@@ -1631,21 +1735,23 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     Node case1Node =
         testAndReturnBodyForNumericGenerator(
             "for (var i in []) { yield 3; };",
-            lines(
-                "var i;", //
-                "var GEN_FORIN$0$0;"),
-            lines(
-                "if (GEN_CONTEXT$0.nextAddress == 1) {",
-                "  GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn([]);",
-                "}",
-                "if (GEN_CONTEXT$0.nextAddress != 4) {",
-                "  if (!((i = GEN_FORIN$0$0.getNext()) != null)) {",
-                "    return GEN_CONTEXT$0.jumpTo(4);",
-                "  }",
-                "  return GEN_CONTEXT$0.yield(3, 2);",
-                "}",
-                ";",
-                "GEN_CONTEXT$0.jumpToEnd();"));
+            """
+            var i;
+            var GEN_FORIN$0$0;
+            """,
+            """
+            if (GEN_CONTEXT$0.nextAddress == 1) {
+              GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn([]);
+            }
+            if (GEN_CONTEXT$0.nextAddress != 4) {
+              if (!((i = GEN_FORIN$0$0.getNext()) != null)) {
+                return GEN_CONTEXT$0.jumpTo(4);
+              }
+              return GEN_CONTEXT$0.yield(3, 2);
+            }
+            ;
+            GEN_CONTEXT$0.jumpToEnd();
+            """);
 
     // GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn([]);
     Node assign = case1Node.getSecondChild().getFirstFirstChild();
@@ -1715,16 +1821,17 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         testAndReturnBodyForNumericGenerator(
             "try {yield 1;} catch (e) {}",
             "var e;",
-            lines(
-                "if (GEN_CONTEXT$0.nextAddress == 1) {",
-                "  GEN_CONTEXT$0.setCatchFinallyBlocks(2);",
-                "  return GEN_CONTEXT$0.yield(1, 4);",
-                "}",
-                "if (GEN_CONTEXT$0.nextAddress != 2) {",
-                "  return GEN_CONTEXT$0.leaveTryBlock(0)",
-                "}",
-                "e = GEN_CONTEXT$0.enterCatchBlock();",
-                "GEN_CONTEXT$0.jumpToEnd();"));
+            """
+            if (GEN_CONTEXT$0.nextAddress == 1) {
+              GEN_CONTEXT$0.setCatchFinallyBlocks(2);
+              return GEN_CONTEXT$0.yield(1, 4);
+            }
+            if (GEN_CONTEXT$0.nextAddress != 2) {
+              return GEN_CONTEXT$0.leaveTryBlock(0)
+            }
+            e = GEN_CONTEXT$0.enterCatchBlock();
+            GEN_CONTEXT$0.jumpToEnd();
+            """);
     Node case2Node = case1Node.getNext().getNext();
 
     // Test that "e = GEN_CONTEXT$0.enterCatchBlock();" has the unknown type
@@ -1745,13 +1852,15 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     Node firstStatementExprResult =
         testAndReturnBodyForNumericGenerator(
             "var x = 1, y = '2';", //
-            lines(
-                "var x;", //
-                "var y;"),
-            lines(
-                "x = 1;", //
-                "y = '2';",
-                "GEN_CONTEXT$0.jumpToEnd();"));
+            """
+            var x;
+            var y;
+            """,
+            """
+            x = 1;
+            y = '2';
+            GEN_CONTEXT$0.jumpToEnd();
+            """);
     // x = 1
     final NodeSubject firstStatementSubject = assertNode(firstStatementExprResult).isExprResult();
     final NodeSubject assignASubject = firstStatementSubject.hasOneChildThat().isAssign();

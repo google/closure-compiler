@@ -76,40 +76,46 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     test(
         options,
         new String[] {
-          lines(
-              "goog.provide('goog.string.Const');",
-              "/** @constructor */goog.string.Const = function() {};",
-              "goog.string.Const.from = function(x) { console.log(x)};"),
-          lines(
-              "goog.module('test');",
-              "const Const = goog.require('goog.string.Const');",
-              "Const.from('foo');")
+          """
+          goog.provide('goog.string.Const');
+          /** @constructor */goog.string.Const = function() {};
+          goog.string.Const.from = function(x) { console.log(x)};
+          """,
+          """
+          goog.module('test');
+          const Const = goog.require('goog.string.Const');
+          Const.from('foo');
+          """
         },
         new String[] {
-          lines(
-              "goog.string = {};",
-              "goog.string.Const = function() {};",
-              "goog.string.Const.from = function() { console.log('foo')};"),
+          """
+          goog.string = {};
+          goog.string.Const = function() {};
+          goog.string.Const.from = function() { console.log('foo')};
+          """,
           lines("goog.string.Const.from();")
         });
 
     test(
         options,
         new String[] {
-          lines(
-              "goog.provide('goog.string.Const');",
-              "/** @constructor */goog.string.Const = function() {};",
-              "goog.string.Const.from = function(x) { console.log(x)};"),
-          lines(
-              "goog.module('test');",
-              "const {from} = goog.require('goog.string.Const');",
-              "from('foo');")
+          """
+          goog.provide('goog.string.Const');
+          /** @constructor */goog.string.Const = function() {};
+          goog.string.Const.from = function(x) { console.log(x)};
+          """,
+          """
+          goog.module('test');
+          const {from} = goog.require('goog.string.Const');
+          from('foo');
+          """
         },
         new String[] {
-          lines(
-              "goog.string = {};",
-              "goog.string.Const = function() {};",
-              "goog.string.Const.from = function() { console.log('foo')};"),
+          """
+          goog.string = {};
+          goog.string.Const = function() {};
+          goog.string.Const.from = function() { console.log('foo')};
+          """,
           lines("(0,goog.string.Const.from)();")
         });
   }
@@ -130,51 +136,53 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             new TestExternsBuilder().addObject().addConsole().buildExternsFile("externs.js"));
     test(
         options,
-        lines(
-            "/** @suppress {uselessCode} */",
-            "function isDeclaredInLoop(path) {",
-            "  for (let {",
-            "      parentPath,",
-            "      key",
-            "    } = path;",
-            "    parentPath; {",
-            "      parentPath,",
-            "      key",
-            "    } = parentPath) {",
-            "    return isDeclaredInLoop(parentPath);",
-            "  }",
-            "  return false;",
-            "}",
-            "isDeclaredInLoop({parentPath: 'jh', key: 2});"),
-        lines(
-            "/** @suppress {uselessCode} */",
-            "function isDeclaredInLoop(path) {",
-            "  var $jscomp$loop$98447280$2 = {parentPath:void 0, key:void 0};",
-            "  for (function($jscomp$loop$98447280$2) {",
-            "    return function() {",
-            "      $jscomp$loop$98447280$2.parentPath = path.parentPath;",
-            "      $jscomp$loop$98447280$2.key = path.key;",
-            "      return path;",
-            "    };",
-            "  }($jscomp$loop$98447280$2)();",
-            "  $jscomp$loop$98447280$2.parentPath;",
-            "  $jscomp$loop$98447280$2 = {",
-            "    parentPath:$jscomp$loop$98447280$2.parentPath,",
-            "    key:$jscomp$loop$98447280$2.key",
-            "  },",
-            "  function($jscomp$loop$98447280$2) { ",
-            "    return function() { ",
-            "      var $jscomp$destructuring$var3 = $jscomp$loop$98447280$2.parentPath; ",
-            "      $jscomp$loop$98447280$2.parentPath = $jscomp$destructuring$var3.parentPath; ",
-            "      $jscomp$loop$98447280$2.key = $jscomp$destructuring$var3.key; ",
-            "      return $jscomp$destructuring$var3; ",
-            "    }; ",
-            "  }($jscomp$loop$98447280$2)()) {",
-            "    return isDeclaredInLoop($jscomp$loop$98447280$2.parentPath);",
-            "   }",
-            "  return !1;",
-            " }",
-            "isDeclaredInLoop({parentPath:\"jh\", key:2});"));
+        """
+        /** @suppress {uselessCode} */
+        function isDeclaredInLoop(path) {
+          for (let {
+              parentPath,
+              key
+            } = path;
+            parentPath; {
+              parentPath,
+              key
+            } = parentPath) {
+            return isDeclaredInLoop(parentPath);
+          }
+          return false;
+        }
+        isDeclaredInLoop({parentPath: 'jh', key: 2});
+        """,
+        """
+        /** @suppress {uselessCode} */
+        function isDeclaredInLoop(path) {
+          var $jscomp$loop$98447280$2 = {parentPath:void 0, key:void 0};
+          for (function($jscomp$loop$98447280$2) {
+            return function() {
+              $jscomp$loop$98447280$2.parentPath = path.parentPath;
+              $jscomp$loop$98447280$2.key = path.key;
+              return path;
+            };
+          }($jscomp$loop$98447280$2)();
+          $jscomp$loop$98447280$2.parentPath;
+          $jscomp$loop$98447280$2 = {
+            parentPath:$jscomp$loop$98447280$2.parentPath,
+            key:$jscomp$loop$98447280$2.key
+          },
+          function($jscomp$loop$98447280$2) {
+            return function() {
+              var $jscomp$destructuring$var3 = $jscomp$loop$98447280$2.parentPath;
+              $jscomp$loop$98447280$2.parentPath = $jscomp$destructuring$var3.parentPath;
+              $jscomp$loop$98447280$2.key = $jscomp$destructuring$var3.key;
+              return $jscomp$destructuring$var3;
+            };
+          }($jscomp$loop$98447280$2)()) {
+            return isDeclaredInLoop($jscomp$loop$98447280$2.parentPath);
+           }
+          return !1;
+         }
+        isDeclaredInLoop({parentPath:"jh", key:2});
+        """);
   }
 
   @Test
@@ -192,20 +200,22 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             new TestExternsBuilder().addObject().addConsole().buildExternsFile("externs.js"));
     test(
         options,
-        lines(
-            "let value = 10;",
-            "function add(a,b) {",
-            " return (value = 0)+a+b;",
-            "}",
-            "let f = function() {",
-            "  return add(++value, ++value);",
-            "};",
-            "console.log(f());"),
-        lines(
-            "let a = 10;",
-            "var b = console, c = b.log, d, e = ++a, f = ++a;",
-            "d = (a = 0) + e + f;",
-            "c.call(b, d);"));
+        """
+        let value = 10;
+        function add(a,b) {
+         return (value = 0)+a+b;
+        }
+        let f = function() {
+          return add(++value, ++value);
+        };
+        console.log(f());
+        """,
+        """
+        let a = 10;
+        var b = console, c = b.log, d, e = ++a, f = ++a;
+        d = (a = 0) + e + f;
+        c.call(b, d);
+        """);
   }
 
   @Test
@@ -224,95 +234,96 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
                 .addClosureExterns()
                 .addExtra(
                     // simulate "const tslib_1 = goog.require('tslib');",
-                    lines(
-                        "var tslib_1 = {", //
-                        "  __decorate: function(decorators, clazz) {}",
-                        "};"))
+                    """
+                    var tslib_1 = {
+                      __decorate: function(decorators, clazz) {}
+                    };
+                    """)
                 .buildExternsFile("externs.js"));
     test(
         options,
-        lines(
-            "/* output - 1387 characters long */", //
-            "goog.module('main');",
-            "var module = module || { id: 'main.ts' };",
-            "var Foo_1;",
-            "/**",
-            " * @fileoverview added by tsickle",
-            " * Generated from: main.ts",
-            " * @suppress {checkTypes} added by tsickle",
-            " * @suppress {extraRequire} added by tsickle",
-            " * @suppress {missingRequire} added by tsickle",
-            " * @suppress {uselessCode} added by tsickle",
-            " * @suppress {missingReturn} added by tsickle",
-            " * @suppress {missingOverride} added by tsickle",
-            " * @suppress {const} added by tsickle",
-            " */",
-            "/**",
-            " * @param {?} arg",
-            " * @return {?}",
-            " */",
-            "function noopDecorator(arg) { return arg; }",
-            "let Foo = Foo_1 = class Foo {",
-            "    /**",
-            "     * @public",
-            "     * @return {void}",
-            "     */",
-            "    static foo() {",
-            "        console.log('Hello');",
-            "    }",
-            "    /**",
-            "     * @public",
-            "     * @return {void}",
-            "     */",
-            "    bar() {",
-            "        Foo_1.foo();",
-            "        console.log('ID: ' + Foo_1.ID + '');",
-            "    }",
-            "};",
-            "Foo.ID = 'original';",
-            "Foo.ID2 = Foo_1.ID;",
-            "(() => {",
-            "    Foo_1.foo();",
-            "    console.log('ID: ' + Foo_1.ID + '');",
-            "})();",
-            "Foo = Foo_1 = tslib_1.__decorate([",
-            "    noopDecorator",
-            "], Foo);",
-            "/* istanbul ignore if */",
-            "if (false) {",
-            "    /**",
-            "     * @type {string}",
-            "     * @public",
-            "     */",
-            "    Foo.ID;",
-            "    /**",
-            "     * @type {string}",
-            "     * @public",
-            "     */",
-            "    Foo.ID2;",
-            "    /* Skipping unhandled member: static {",
-            "        Foo.foo();",
-            "        console.log('ID: ' + Foo.ID + '');",
-            "      }*/",
-            "}",
-            "new Foo().bar();",
-            ""),
-        lines(
-            "var a, b = a = function() {",
-            "};",
-            "b.a = 'original';",
-            "b.c = a.a;",
-            // TODO: b/299055739 - a.b() is not defined because its definition was removed
-            "a.b();",
-            "console.log('ID: ' + a.a);",
-            "b = a = tslib_1.__decorate([function(c) {",
-            "  return c;",
-            "}], b);",
-            "new b();",
-            // TODO: b/299055739 - a.b() is not defined because its definition was removed
-            "a.b();",
-            "console.log('ID: ' + a.a);",
-            ""));
+        """
+        /* output - 1387 characters long */
+        goog.module('main');
+        var module = module || { id: 'main.ts' };
+        var Foo_1;
+        /**
+         * @fileoverview added by tsickle
+         * Generated from: main.ts
+         * @suppress {checkTypes} added by tsickle
+         * @suppress {extraRequire} added by tsickle
+         * @suppress {missingRequire} added by tsickle
+         * @suppress {uselessCode} added by tsickle
+         * @suppress {missingReturn} added by tsickle
+         * @suppress {missingOverride} added by tsickle
+         * @suppress {const} added by tsickle
+         */
+        /**
+         * @param {?} arg
+         * @return {?}
+         */
+        function noopDecorator(arg) { return arg; }
+        let Foo = Foo_1 = class Foo {
+            /**
+             * @public
+             * @return {void}
+             */
+            static foo() {
+                console.log('Hello');
+            }
+            /**
+             * @public
+             * @return {void}
+             */
+            bar() {
+                Foo_1.foo();
+                console.log('ID: ' + Foo_1.ID + '');
+            }
+        };
+        Foo.ID = 'original';
+        Foo.ID2 = Foo_1.ID;
+        (() => {
+            Foo_1.foo();
+            console.log('ID: ' + Foo_1.ID + '');
+        })();
+        Foo = Foo_1 = tslib_1.__decorate([
+            noopDecorator
+        ], Foo);
+        /* istanbul ignore if */
+        if (false) {
+            /**
+             * @type {string}
+             * @public
+             */
+            Foo.ID;
+            /**
+             * @type {string}
+             * @public
+             */
+            Foo.ID2;
+            /* Skipping unhandled member: static {
+                Foo.foo();
+                console.log('ID: ' + Foo.ID + '');
+              }*/
+        }
+        new Foo().bar();
+        """,
+        """
+        var a, b = a = function() {
+        };
+        b.a = 'original';
+        b.c = a.a;
+        // TODO: b/299055739 - a.b() is not defined because its definition was removed
+        a.b();
+        console.log('ID: ' + a.a);
+        b = a = tslib_1.__decorate([function(c) {
+          return c;
+        }], b);
+        new b();
+        // TODO: b/299055739 - a.b() is not defined because its definition was removed
+        a.b();
+        console.log('ID: ' + a.a);
+        """);
   }
 
   @Test
@@ -399,22 +410,22 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             new TestExternsBuilder().addObject().addConsole().buildExternsFile("externs.js"));
     test(
         options,
-        lines(
-            "function foo() {",
-            "  const {a, ...rest} = {a: 1, b: 2, c: 3};",
-            "  return {a, rest};",
-            "};",
-            "console.log(foo());",
-            ""),
-        lines(
-            "var a = console,",
-            "    b = a.log,",
-            "    c = {a:1, b:2, c:3},",
-            "    d = Object.assign({}, c),",
-            "    e = c.a,",
-            "    f = (delete d.a, d);",
-            "b.call(a, {a:e, d:f});",
-            ""));
+        """
+        function foo() {
+          const {a, ...rest} = {a: 1, b: 2, c: 3};
+          return {a, rest};
+        };
+        console.log(foo());
+        """,
+        """
+        var a = console,
+            b = a.log,
+            c = {a:1, b:2, c:3},
+            d = Object.assign({}, c),
+            e = c.a,
+            f = (delete d.a, d);
+        b.call(a, {a:e, d:f});
+        """);
     assertThat(((NoninjectingCompiler) lastCompiler).getInjected()).contains("es6/object/assign");
   }
 
@@ -456,43 +467,39 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
                 .buildExternsFile("externs.js"));
     test(
         options,
-        lines(
-            "", //
-            "async function foo() {",
-            "  for await (const [key, value] of asyncIterator) {",
-            "    console.log(key,value);",
-            "  }",
-            "}",
-            "foo();"),
-        lines(
-            "(async function() {",
-            "  var $$jscomp$forAwait$retFn0$$;",
-            "  try {",
-            "    for (var $$jscomp$forAwait$tempIterator0$$ ="
-                + " (0, $jscomp.makeAsyncIterator)(asyncIterator);;) {",
-            "      var $$jscomp$forAwait$tempResult0$$ = await"
-                + " $$jscomp$forAwait$tempIterator0$$.next();",
-            "      if ($$jscomp$forAwait$tempResult0$$.done) {",
-            "        break;",
-            "      }",
-            "      const [$key$$, $value$jscomp$2$$] = $$jscomp$forAwait$tempResult0$$.value;",
-            "      console.log($key$$, $value$jscomp$2$$);",
-            "}",
-            "  } catch ($$jscomp$forAwait$catchErrParam0$$) {",
-            "    var $$jscomp$forAwait$errResult0$$ ="
-                + " {$error$:$$jscomp$forAwait$catchErrParam0$$};",
-            "  } finally {",
-            "    try {",
-            "      $$jscomp$forAwait$tempResult0$$ && !$$jscomp$forAwait$tempResult0$$.done &&"
-                + " ($$jscomp$forAwait$retFn0$$ = $$jscomp$forAwait$tempIterator0$$.return) &&"
-                + " await $$jscomp$forAwait$retFn0$$.$call$($$jscomp$forAwait$tempIterator0$$);",
-            "    } finally {",
-            "      if ($$jscomp$forAwait$errResult0$$) {",
-            "        throw $$jscomp$forAwait$errResult0$$.$error$;",
-            "      }",
-            "    }",
-            "   }",
-            "})();"));
+        """
+        async function foo() {
+          for await (const [key, value] of asyncIterator) {
+            console.log(key,value);
+          }
+        }
+        foo();
+        """,
+        """
+(async function() {
+  var $$jscomp$forAwait$retFn0$$;
+  try {
+    for (var $$jscomp$forAwait$tempIterator0$$ = (0, $jscomp.makeAsyncIterator)(asyncIterator);;) {
+      var $$jscomp$forAwait$tempResult0$$ = await $$jscomp$forAwait$tempIterator0$$.next();
+      if ($$jscomp$forAwait$tempResult0$$.done) {
+        break;
+      }
+      const [$key$$, $value$jscomp$2$$] = $$jscomp$forAwait$tempResult0$$.value;
+      console.log($key$$, $value$jscomp$2$$);
+}
+  } catch ($$jscomp$forAwait$catchErrParam0$$) {
+    var $$jscomp$forAwait$errResult0$$ = {$error$:$$jscomp$forAwait$catchErrParam0$$};
+  } finally {
+    try {
+      $$jscomp$forAwait$tempResult0$$ && !$$jscomp$forAwait$tempResult0$$.done && ($$jscomp$forAwait$retFn0$$ = $$jscomp$forAwait$tempIterator0$$.return) && await $$jscomp$forAwait$retFn0$$.$call$($$jscomp$forAwait$tempIterator0$$);
+    } finally {
+      if ($$jscomp$forAwait$errResult0$$) {
+        throw $$jscomp$forAwait$errResult0$$.$error$;
+      }
+    }
+  }
+})();
+""");
   }
 
   @Test
@@ -513,79 +520,79 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     test(
         options,
         new String[] {
-          lines(
-              "goog.module('base');", //
-              "class Base {", //
-              "  constructor({paramProblemFunc = problemFunc} = {}) {",
-              "    /** @public */",
-              "    this.prop = paramProblemFunc();",
-              "  }",
-              "}",
-              "",
-              "const problemFunc = () => 1;",
-              "Base.problemFunc = problemFunc;",
-              "",
-              "exports = {Base};",
-              ""),
-          lines(
-              "goog.module('child');", //
-              "",
-              "const {Base} = goog.require('base');",
-              "",
-              "class Child extends Base {",
-              "  constructor({paramProblemFunc = Base.problemFunc} = {}) {",
-              "    super({paramProblemFunc});",
-              "  }",
-              "}",
-              "",
-              "exports = {Child};",
-              ""),
-          lines(
-              "goog.module('grandchild');",
-              "",
-              "const {Child} = goog.require('child');",
-              "",
-              "class GrandChild extends Child {",
-              "  constructor() {",
-              "    super({paramProblemFunc: () => GrandChild.problemFunc() + 1});",
-              "  }",
-              "}",
-              "",
-              "console.log(new GrandChild().prop);",
-              ""),
+          """
+          goog.module('base');
+          class Base {
+            constructor({paramProblemFunc = problemFunc} = {}) {
+              /** @public */
+              this.prop = paramProblemFunc();
+            }
+          }
+
+          const problemFunc = () => 1;
+          Base.problemFunc = problemFunc;
+
+          exports = {Base};
+          """,
+          """
+          goog.module('child');
+
+          const {Base} = goog.require('base');
+
+          class Child extends Base {
+            constructor({paramProblemFunc = Base.problemFunc} = {}) {
+              super({paramProblemFunc});
+            }
+          }
+
+          exports = {Child};
+          """,
+          """
+          goog.module('grandchild');
+
+          const {Child} = goog.require('child');
+
+          class GrandChild extends Child {
+            constructor() {
+              super({paramProblemFunc: () => GrandChild.problemFunc() + 1});
+            }
+          }
+
+          console.log(new GrandChild().prop);
+          """,
         },
         new String[] {
           "",
           "",
-          lines(
-              "const $module$contents$base_problemFunc$$ = () => 1;",
-              "var $module$exports$base$Base$$ = class {",
-              "  constructor(",
-              "      {",
-              "        $paramProblemFunc$:$paramProblemFunc$$ =",
-              "            $module$contents$base_problemFunc$$",
-              "      } = {}) {",
-              "    this.$a$ = $paramProblemFunc$$();",
-              "  }",
-              "}, $module$exports$child$Child$$ = class extends $module$exports$base$Base$$ {",
-              "  constructor(",
-              "      {",
-              "        $paramProblemFunc$:$paramProblemFunc$jscomp$1$$ =",
-              "            $module$contents$base_problemFunc$$",
-              "      } = {}) {",
-              "    super({$paramProblemFunc$:$paramProblemFunc$jscomp$1$$});",
-              "  }",
-              "};",
-              "class $module$contents$grandchild_GrandChild$$",
-              "    extends $module$exports$child$Child$$ {",
-              "  constructor() {",
-              // TODO(b/196083761): Fix this!
-              // NOTE the call to `null()` here!
-              "    super({$paramProblemFunc$:() => null() + 1});",
-              "  }",
-              "}",
-              "console.log((new $module$contents$grandchild_GrandChild$$).$a$);",
-              "")
+          """
+          const $module$contents$base_problemFunc$$ = () => 1;
+          var $module$exports$base$Base$$ = class {
+            constructor(
+                {
+                  $paramProblemFunc$:$paramProblemFunc$$ =
+                      $module$contents$base_problemFunc$$
+                } = {}) {
+              this.$a$ = $paramProblemFunc$$();
+            }
+          }, $module$exports$child$Child$$ = class extends $module$exports$base$Base$$ {
+            constructor(
+                {
+                  $paramProblemFunc$:$paramProblemFunc$jscomp$1$$ =
+                      $module$contents$base_problemFunc$$
+                } = {}) {
+              super({$paramProblemFunc$:$paramProblemFunc$jscomp$1$$});
+            }
+          };
+          class $module$contents$grandchild_GrandChild$$
+              extends $module$exports$child$Child$$ {
+            constructor() {
+          // TODO(b/196083761): Fix this!
+          // NOTE the call to `null()` here!
+              super({$paramProblemFunc$:() => null() + 1});
+            }
+          }
+          console.log((new $module$contents$grandchild_GrandChild$$).$a$);
+          """
         });
   }
 
@@ -601,48 +608,48 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs.js"));
     test(
         options,
-        lines(
-            "",
-            // base class doesn't say it implements AliasedInterface,
-            // but it does have a matching `foo()` method.
-            "class MyBaseClass {",
-            "    /** @return {void} */",
-            "    foo() {",
-            "        console.log('I should exist');",
-            "    }",
-            "}",
-            "",
-            // subclass claims to implement the interface, relying on the superclass implementation
-            // of `foo()`.
-            // Note that `AliasedInterface` isn't defined yet.
-            "/** @implements {AliasedInterface} */",
-            "class MyClass extends MyBaseClass {",
-            "}",
-            "",
-            // AliasedInterface is originally defined using a different name.
-            // This can happen due to module rewriting even if the original
-            // code doesn't appear to do this.
-            "/** @record */",
-            "function OriginalInterface() { }",
-            "/** @return {void} */",
-            "OriginalInterface.prototype.foo = function () { };",
-            "",
-            // AliasedInterface is defined after it was used above.
-            // Because of this the compiler previously failed to connect the `foo()` property
-            // on `OriginalInterface` with the one on `MyBaseClass`, leading to a disambiguation
-            // error.
-            "/** @const */",
-            "const AliasedInterface = OriginalInterface;",
-            "",
-            // Factory function ensures that the call to `foo()` below
-            // is seen as `AliasedInterface.prototype.foo` rather than
-            // `MyClass.prototype.foo`.
-            "/** @return {!AliasedInterface} */",
-            "function magicFactory() {",
-            "    return new MyClass();",
-            "}",
-            "",
-            "magicFactory().foo();"),
+        """
+        // base class doesn't say it implements AliasedInterface,
+        // but it does have a matching `foo()` method.
+        class MyBaseClass {
+            /** @return {void} */
+            foo() {
+                console.log('I should exist');
+            }
+        }
+
+        // subclass claims to implement the interface, relying on the superclass implementation
+        // of `foo()`.
+        // Note that `AliasedInterface` isn't defined yet.
+        /** @implements {AliasedInterface} */
+        class MyClass extends MyBaseClass {
+        }
+
+        // AliasedInterface is originally defined using a different name.
+        // This can happen due to module rewriting even if the original
+        // code doesn't appear to do this.
+        /** @record */
+        function OriginalInterface() { }
+        /** @return {void} */
+        OriginalInterface.prototype.foo = function () { };
+
+        // AliasedInterface is defined after it was used above.
+        // Because of this the compiler previously failed to connect the `foo()` property
+        // on `OriginalInterface` with the one on `MyBaseClass`, leading to a disambiguation
+        // error.
+        /** @const */
+        const AliasedInterface = OriginalInterface;
+
+        // Factory function ensures that the call to `foo()` below
+        // is seen as `AliasedInterface.prototype.foo` rather than
+        // `MyClass.prototype.foo`.
+        /** @return {!AliasedInterface} */
+        function magicFactory() {
+            return new MyClass();
+        }
+
+        magicFactory().foo();
+        """,
         // Compiler correctly recognises the call to `foo()` as referencing
         // the implementation in MyBaseClass, so that implementation ends
         // up inlined as the only output statement.
@@ -665,52 +672,52 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs.js"));
     test(
         options,
-        lines(
-            "",
-            // base class doesn't say it implements AliasedInterface,
-            // but it does have a matching `foo()` method.
-            "class MyBaseClass {",
-            "    /** @return {string} */",
-            "    foo() {",
-            "        console.log('I should exist');",
-            "        return 'return value';",
-            "    }",
-            "}",
-            "",
-            // subclass claims to implement the interface, relying on the superclass implementation
-            // of `foo()`.
-            // Note that `AliasedInterface` isn't defined yet.
-            "/** @implements {AliasedInterface<string>} */",
-            "class MyClass extends MyBaseClass {",
-            "}",
-            "",
-            // AliasedInterface is originally defined using a different name.
-            // This can happen due to module rewriting even if the original
-            // code doesn't appear to do this.
-            "/**",
-            " * @record",
-            " * @template T",
-            " */",
-            "function OriginalInterface() { }",
-            "/** @return {T} */",
-            "OriginalInterface.prototype.foo = function () { };",
-            "",
-            // AliasedInterface is defined after it was used above.
-            // Because of this the compiler previously failed to connect the `foo()` property
-            // on `OriginalInterface` with the one on `MyBaseClass`, leading to a disambiguation
-            // error.
-            "/** @const */",
-            "const AliasedInterface = OriginalInterface;",
-            "",
-            // Factory function ensures that the call to `foo()` below
-            // is seen as `AliasedInterface.prototype.foo` rather than
-            // `MyClass.prototype.foo`.
-            "/** @return {!AliasedInterface<string>} */",
-            "function magicFactory() {",
-            "    return new MyClass();",
-            "}",
-            "",
-            "magicFactory().foo();"),
+        """
+        // base class doesn't say it implements AliasedInterface,
+        // but it does have a matching `foo()` method.
+        class MyBaseClass {
+            /** @return {string} */
+            foo() {
+                console.log('I should exist');
+                return 'return value';
+            }
+        }
+
+        // subclass claims to implement the interface, relying on the superclass implementation
+        // of `foo()`.
+        // Note that `AliasedInterface` isn't defined yet.
+        /** @implements {AliasedInterface<string>} */
+        class MyClass extends MyBaseClass {
+        }
+
+        // AliasedInterface is originally defined using a different name.
+        // This can happen due to module rewriting even if the original
+        // code doesn't appear to do this.
+        /**
+         * @record
+         * @template T
+         */
+        function OriginalInterface() { }
+        /** @return {T} */
+        OriginalInterface.prototype.foo = function () { };
+
+        // AliasedInterface is defined after it was used above.
+        // Because of this the compiler previously failed to connect the `foo()` property
+        // on `OriginalInterface` with the one on `MyBaseClass`, leading to a disambiguation
+        // error.
+        /** @const */
+        const AliasedInterface = OriginalInterface;
+
+        // Factory function ensures that the call to `foo()` below
+        // is seen as `AliasedInterface.prototype.foo` rather than
+        // `MyClass.prototype.foo`.
+        /** @return {!AliasedInterface<string>} */
+        function magicFactory() {
+            return new MyClass();
+        }
+
+        magicFactory().foo();
+        """,
         // Compiler correctly recognises the call to `foo()` as referencing
         // the implementation in MyBaseClass, so that implementation ends
         // up inlined as the only output statement.
@@ -750,15 +757,16 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             new TestExternsBuilder().addBigInt().addConsole().buildExternsFile("externs.js"));
     test(
         options,
-        lines(
-            "/**",
-            " * @param {bigint} value",
-            " * @return {bigint}",
-            " */",
-            "function bigintTimes3(value){",
-            "  return value * 3n;",
-            "}",
-            "console.log(bigintTimes3(5n));"),
+        """
+        /**
+         * @param {bigint} value
+         * @return {bigint}
+         */
+        function bigintTimes3(value){
+          return value * 3n;
+        }
+        console.log(bigintTimes3(5n));
+        """,
         "console.log(15n);");
   }
 
@@ -809,21 +817,21 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
                 .buildExternsFile("externs.js"));
     test(
         options,
-        lines(
-            "var i18n_7;",
-            "var ngI18nClosureMode = true;",
-            "if (ngI18nClosureMode) {",
-            "    /**",
-            "     * @desc Some message",
-            "     */",
-            "    const MSG_A = goog.getMsg(\"test\");",
-            "    i18n_7 = MSG_A;",
-            "}",
-            "else {",
-            "    i18n_7 = $localize `...`;",
-            "}",
-            "console.log(i18n_7);",
-            ""),
+        """
+        var i18n_7;
+        var ngI18nClosureMode = true;
+        if (ngI18nClosureMode) {
+            /**
+             * @desc Some message
+             */
+            const MSG_A = goog.getMsg("test");
+            i18n_7 = MSG_A;
+        }
+        else {
+            i18n_7 = $localize `...`;
+        }
+        console.log(i18n_7);
+        """,
         lines(
             // Tagged template literal was correctly removed.
             "console.log(goog.getMsg('test'));"));
@@ -839,21 +847,22 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     testSame(
         options,
-        lines(
-            "function Super() { }", // A pure function that *might* be used as a constructor.
-            "",
-            "class Sub extends Super {",
-            "  constructor() {",
-            // We can't delete this call despite being pointless. It's syntactically required.
-            "    super();",
-            // NOTE: this alert is here to prevent the entire constructor from being removed. Any
-            // statement after the super call will do.
-            "    alert('hi');",
-            "  }",
-            "}",
-            "",
-            // We have to use the class somehow or the entire this is removable.
-            "alert(new Sub());"));
+        """
+        function Super() { } // A pure function that *might* be used as a constructor.
+
+        class Sub extends Super {
+          constructor() {
+        // We can't delete this call despite being pointless. It's syntactically required.
+            super();
+        // NOTE: this alert is here to prevent the entire constructor from being removed. Any
+        // statement after the super call will do.
+            alert('hi');
+          }
+        }
+
+        // We have to use the class somehow or the entire this is removable.
+        alert(new Sub());
+        """);
   }
 
   @Test
@@ -868,32 +877,34 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     useNoninjectingCompiler = true;
     test(
         options,
-        lines(
-            "class C {",
-            "  constructor(elements) {",
-            "    this.elements = elements;",
-            // This call will be preserved, but inlined, because it has side effects.
-            "    this.m1();",
-            "  }",
-            // m1() must be considered to have side effects because it taints a non-local object
-            // through basically this.elements[i].sompProp.
-            "  m1() {",
-            "    for (const element of this.elements) {",
-            "      element.someProp = 1;",
-            "    }",
-            "  }",
-            "}",
-            "new C([]);"),
-        lines(
-            "class C {",
-            "  constructor(        ) {",
-            "    this.elements =       [];",
-            "    for (const element of this.elements) {",
-            "      element.someProp = 1;",
-            "    }",
-            "  }",
-            "}",
-            "new C(  );"));
+        """
+        class C {
+          constructor(elements) {
+            this.elements = elements;
+        // This call will be preserved, but inlined, because it has side effects.
+            this.m1();
+          }
+        // m1() must be considered to have side effects because it taints a non-local object
+        // through basically this.elements[i].sompProp.
+          m1() {
+            for (const element of this.elements) {
+              element.someProp = 1;
+            }
+          }
+        }
+        new C([]);
+        """,
+        """
+        class C {
+          constructor(        ) {
+            this.elements =       [];
+            for (const element of this.elements) {
+              element.someProp = 1;
+            }
+          }
+        }
+        new C(  );
+        """);
   }
 
   @Test
@@ -902,32 +913,32 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
-        lines(
-            // this method will get inlined into the constructor
-            "function classCallCheck(obj, ctor) {",
-            "  if (!(obj instanceof ctor)) {",
-            "    throw new Error('cannot call a class as a function');",
-            "  }",
-            "}",
-            "/** @constructor */",
-            "var C = function InnerC() {",
-            // Before inlining happens RemoveUnusedCode sees one use of InnerC,
-            // which prevents its removal.
-            // After inlining it sees `this instanceof InnerC` as the only use of InnerC.
-            // Make sure RemoveUnusedCode recognizes that the value of InnerC escapes.
-            "  classCallCheck(this, InnerC);",
-            "};",
-            // This creates an instance of InnerC, so RemoveUnusedCode should not replace
-            // `this instanceof InnerC` with `false`.
-            "alert(new C());"),
-        lines(
-            "alert(",
-            "    new function a() {",
-            "      if (!(this instanceof a)) {",
-            "        throw Error(\"cannot call a class as a function\");",
-            "      }",
-            "    })",
-            ""));
+        """
+        function classCallCheck(obj, ctor) {
+          if (!(obj instanceof ctor)) {
+            throw new Error('cannot call a class as a function');
+          }
+        }
+        /** @constructor */
+        var C = function InnerC() {
+        // Before inlining happens RemoveUnusedCode sees one use of InnerC,
+        // which prevents its removal.
+        // After inlining it sees `this instanceof InnerC` as the only use of InnerC.
+        // Make sure RemoveUnusedCode recognizes that the value of InnerC escapes.
+          classCallCheck(this, InnerC);
+        };
+        // This creates an instance of InnerC, so RemoveUnusedCode should not replace
+        // `this instanceof InnerC` with `false`.
+        alert(new C());
+        """,
+        """
+        alert(
+            new function a() {
+              if (!(this instanceof a)) {
+                throw Error("cannot call a class as a function");
+              }
+            })
+        """);
   }
 
   @Test
@@ -936,19 +947,22 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
-        lines(
-            "var namespace = {};", // preserve newlines
-            "/** @noinline */ namespace.foo = function() { alert('foo'); };",
-            "namespace.foo();"),
-        lines(
-            "function a() { alert('foo'); }", // preserve newlines
-            "a();"));
+        """
+        var namespace = {}; // preserve newlines
+        /** @noinline */ namespace.foo = function() { alert('foo'); };
+        namespace.foo();
+        """,
+        """
+        function a() { alert('foo'); } // preserve newlines
+        a();
+        """);
     test(
         options,
-        lines(
-            "var namespace = {};", // preserve newlines
-            "namespace.foo = function() { alert('foo'); };",
-            "namespace.foo();"),
+        """
+        var namespace = {}; // preserve newlines
+        namespace.foo = function() { alert('foo'); };
+        namespace.foo();
+        """,
         "alert('foo');");
   }
 
@@ -975,13 +989,14 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
-        lines(
-            "(function() {",
-            "  /** @constructor} */",
-            "  function Bar() {}",
-            "  var y = Bar;",
-            "  new y();",
-            "})();"),
+        """
+        (function() {
+          /** @constructor} */
+          function Bar() {}
+          var y = Bar;
+          new y();
+        })();
+        """,
         "");
   }
 
@@ -991,7 +1006,13 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
-        new String[] {lines("var x = 1;"), lines("import * as y from './i0.js';", "const z = y.x")},
+        new String[] {
+          lines("var x = 1;"),
+          """
+          import * as y from './i0.js';
+          const z = y.x
+          """
+        },
         // Property x never defined on module$i0
         DiagnosticGroups.MISSING_PROPERTIES);
   }
@@ -1012,26 +1033,25 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         options,
         new String[] {
           TestExternsBuilder.getClosureExternsAsSource(),
-          lines(
-              "goog.module('a.b.c');",
-              "exports = class Foo {",
-              // Reference to static property via inner class name must be changed
-              // to reference via global name (AggressiveInlineAliases), then collapsed
-              // (CollapseProperties) to get full optimization and avoid generating broken code.
-              "  method() { return Foo.EventType.E1; }",
-              "};",
-              "",
-              "/** @enum {number} */",
-              "exports.EventType = {",
-              "  E1: 1,",
-              "};",
-              ""),
-          lines(
-              "", //
-              "goog.module('a.b.d');",
-              "const Foo = goog.require('a.b.c');",
-              "use(new Foo().method());",
-              "")
+          """
+          goog.module('a.b.c');
+          exports = class Foo {
+          // Reference to static property via inner class name must be changed
+          // to reference via global name (AggressiveInlineAliases), then collapsed
+          // (CollapseProperties) to get full optimization and avoid generating broken code.
+            method() { return Foo.EventType.E1; }
+          };
+
+          /** @enum {number} */
+          exports.EventType = {
+            E1: 1,
+          };
+          """,
+          """
+          goog.module('a.b.d');
+          const Foo = goog.require('a.b.c');
+          use(new Foo().method());
+          """
         },
         new String[] {"", "", "use(1)"});
   }
@@ -1052,18 +1072,17 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         options,
         new String[] {
           TestExternsBuilder.getClosureExternsAsSource(),
-          lines(
-              "goog.module('a.b.c');",
-              "/** @noinline */",
-              "function foo() {}",
-              "exports.foo = foo;",
-              ""),
-          lines(
-              "", //
-              "goog.module('a.b.d');",
-              "const {foo} = goog.require('a.b.c');",
-              "use(foo());",
-              "")
+          """
+          goog.module('a.b.c');
+          /** @noinline */
+          function foo() {}
+          exports.foo = foo;
+          """,
+          """
+          goog.module('a.b.d');
+          const {foo} = goog.require('a.b.c');
+          use(foo());
+          """
         },
         new String[] {"", "", "function a() {} use(a())"});
 
@@ -1086,7 +1105,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     assertNode(referenceToFoo)
         .isName("a")
         .hasSourceFileName(usageScript.getSourceFileName())
-        .hasLineno(4)
+        .hasLineno(3)
         .hasCharno(4); // `use(` is 4 chars
   }
 
@@ -1134,9 +1153,10 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
     test(
         options,
-        lines(
-            "for (var x of []);", // Force injection of es6_runtime.js
-            "var /** number */ y = window;"),
+        """
+        for (var x of []); // Force injection of es6_runtime.js
+        var /** number */ y = window;
+        """,
         DiagnosticGroups.CHECK_TYPES);
   }
 
@@ -1145,9 +1165,10 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     String code =
-        lines(
-            "/** @constructor */ function Foo() { this.bar(); }",
-            "Foo.prototype.bar = function() { return new Foo(); };");
+        """
+        /** @constructor */ function Foo() { this.bar(); }
+        Foo.prototype.bar = function() { return new Foo(); };
+        """;
     test(options, code, "");
   }
 
@@ -1197,13 +1218,13 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     test(
         options,
-        lines(
-            "",
-            "/** @export */",
-            "class C {",
-            "  /** @export @return {string} */ static get exportedName() {}",
-            "};",
-            "alert(C.exportedName);"),
+        """
+        /** @export */
+        class C {
+          /** @export @return {string} */ static get exportedName() {}
+        };
+        alert(C.exportedName);
+        """,
         "class a {static get exportedName(){}} goog.exportSymbol('C', a); alert(a.exportedName)");
   }
 
@@ -1219,24 +1240,25 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     useNoninjectingCompiler = true;
     test(
         options,
-        lines(
-            // hack replacement for compiler injected code
-            "var $jscomp = { global: window };",
-            "",
-            "class C {",
-            "  /** @export @param {number} x */ static set exportedName(x) {}",
-            "};",
-            "C.exportedName = 0;"),
-        lines(
-            "var a = window;",
-            "function b() {}",
-            "b.exportedName;",
-            "a.Object.defineProperties(",
-            "    b,",
-            "    {",
-            "      exportedName: { configurable:!0, enumerable:!0, set:function() {} }",
-            "    });",
-            "b.exportedName = 0;"));
+        """
+        var $jscomp = { global: window };
+
+        class C {
+          /** @export @param {number} x */ static set exportedName(x) {}
+        };
+        C.exportedName = 0;
+        """,
+        """
+        var a = window;
+        function b() {}
+        b.exportedName;
+        a.Object.defineProperties(
+            b,
+            {
+              exportedName: { configurable:!0, enumerable:!0, set:function() {} }
+            });
+        b.exportedName = 0;
+        """);
   }
 
   // Github issue #1540: https://github.com/google/closure-compiler/issues/1540
@@ -1248,13 +1270,14 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setCheckSymbols(false);
     test(
         options,
-        lines(
-            "function f(x) {",
-            "  var a = x + 1;",
-            "  var b = x + 1;",
-            "  window.c = x > 5 ? a : b;",
-            "}",
-            "f(g);"),
+        """
+        function f(x) {
+          var a = x + 1;
+          var b = x + 1;
+          window.c = x > 5 ? a : b;
+        }
+        f(g);
+        """,
         "window.a = g + 1;");
   }
 
@@ -1266,20 +1289,20 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setCheckSymbols(false);
     options.setCheckTypes(false);
     String code =
-        lines(
-            "isFunction = function(functionToCheck) {",
-            "  var getType = {};",
-            "  return functionToCheck && ",
-            "      getType.toString.apply(functionToCheck) === '[object Function]';",
-            "};");
+        """
+        isFunction = function(functionToCheck) {
+          var getType = {};
+          return functionToCheck &&
+              getType.toString.apply(functionToCheck) === '[object Function]';
+        };
+        """;
     String result =
-        lines(
-            "",
-            "isFunction = function(a){",
-            "  var b={};",
-            "  return a && b.toString.apply(a) === '[object Function]';",
-            "}",
-            "");
+        """
+        isFunction = function(a){
+          var b={};
+          return a && b.toString.apply(a) === '[object Function]';
+        }
+        """;
 
     test(options, code, result);
   }
@@ -1415,10 +1438,11 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "goog.addSingletonGetter(Foo);",
             "alert(Foo.f());");
     String expected =
-        lines(
-            "function Foo(){}",
-            "Foo.f = function() { return Foo.i || (Foo.i = new Foo()); };",
-            "alert(Foo.f());");
+        """
+        function Foo(){}
+        Foo.f = function() { return Foo.i || (Foo.i = new Foo()); };
+        alert(Foo.f());
+        """;
 
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -1442,31 +1466,32 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.syntheticBlockEndMarker = "END";
     test(
         options,
-        lines(
-            "const D = false;",
-            "/**",
-            " * @param {string} m",
-            " */",
-            "function b(m) {",
-            " if (!D) return;",
-            "",
-            " START('debug');",
-            " alert('Shouldnt be here' + m);",
-            " END('debug');",
-            "}",
-            "/**",
-            " * @param {string} arg",
-            " */",
-            "function a(arg) {",
-            "  if (arg == 'log') {",
-            "    b('logging 1');",
-            "    b('logging 2');",
-            "  } else {",
-            "    alert('Hi!');",
-            "  }",
-            "}",
-            "",
-            "a(input);"),
+        """
+        const D = false;
+        /**
+         * @param {string} m
+         */
+        function b(m) {
+         if (!D) return;
+
+         START('debug');
+         alert('Shouldnt be here' + m);
+         END('debug');
+        }
+        /**
+         * @param {string} arg
+         */
+        function a(arg) {
+          if (arg == 'log') {
+            b('logging 1');
+            b('logging 2');
+          } else {
+            alert('Hi!');
+          }
+        }
+
+        a(input);
+        """,
         "input != 'log' && alert('Hi!')");
   }
 
@@ -1492,21 +1517,22 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
-        lines(
-            "var ns = {};",
-            "/**",
-            " * @constructor",
-            " * @extends {ns.PageSelectionModel.FooEvent}",
-            " */",
-            "ns.PageSelectionModel.ChangeEvent = function() {};",
-            "/** @constructor */",
-            "ns.PageSelectionModel = function() {};",
-            "/** @constructor */",
-            "ns.PageSelectionModel.FooEvent = function() {};",
-            "/** @constructor */",
-            "ns.PageSelectionModel.SelectEvent = function() {};",
-            "goog.inherits(ns.PageSelectionModel.ChangeEvent,",
-            "    ns.PageSelectionModel.FooEvent);"),
+        """
+        var ns = {};
+        /**
+         * @constructor
+         * @extends {ns.PageSelectionModel.FooEvent}
+         */
+        ns.PageSelectionModel.ChangeEvent = function() {};
+        /** @constructor */
+        ns.PageSelectionModel = function() {};
+        /** @constructor */
+        ns.PageSelectionModel.FooEvent = function() {};
+        /** @constructor */
+        ns.PageSelectionModel.SelectEvent = function() {};
+        goog.inherits(ns.PageSelectionModel.ChangeEvent,
+            ns.PageSelectionModel.FooEvent);
+        """,
         "");
   }
 
@@ -1518,11 +1544,12 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
     test(
         options,
-        lines(
-            "goog.scope(function () {",
-            "  /** @constructor */ function F(x) { this.x = x; }",
-            "  alert(new F(1));",
-            "});"),
+        """
+        goog.scope(function () {
+          /** @constructor */ function F(x) { this.x = x; }
+          alert(new F(1));
+        });
+        """,
         "alert(new function(){}(1));");
   }
 
@@ -1540,12 +1567,13 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
     String code =
-        lines(
-            "goog.provide('i.am.on.a.Horse');",
-            "i.am.on.a.Horse = function() {};",
-            "i.am.on.a.Horse.prototype.x = function() {};",
-            "i.am.on.a.Boat = function() {};",
-            "i.am.on.a.Boat.prototype.y = function() {}");
+        """
+        goog.provide('i.am.on.a.Horse');
+        i.am.on.a.Horse = function() {};
+        i.am.on.a.Horse.prototype.x = function() {};
+        i.am.on.a.Boat = function() {};
+        i.am.on.a.Boat.prototype.y = function() {}
+        """;
     test(options, code, "");
   }
 
@@ -1649,20 +1677,19 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
-        lines(
-            "", //
-            // Previously ConcretizeStaticInheritanceForInlining failed to take scope into account,
-            // so it produced DUPLICATE_CLASS errors for code like this.
-            "function f1() {",
-            "  class Base {}",
-            "  class Sub extends Base {}",
-            "}",
-            "function f2() {",
-            "  class Base {}",
-            "  class Sub extends Base {}",
-            "}",
-            "alert(1);",
-            ""),
+        """
+        // Previously ConcretizeStaticInheritanceForInlining failed to take scope into account,
+        // so it produced DUPLICATE_CLASS errors for code like this.
+        function f1() {
+          class Base {}
+          class Sub extends Base {}
+        }
+        function f2() {
+          class Base {}
+          class Sub extends Base {}
+        }
+        alert(1);
+        """,
         "alert(1)");
   }
 
@@ -1674,12 +1701,11 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
-        lines(
-            "", //
-            "class Base {}",
-            "class Sub extends Base {}",
-            "alert(1);",
-            ""),
+        """
+        class Base {}
+        class Sub extends Base {}
+        alert(1);
+        """,
         "alert(1)");
   }
 
@@ -1708,29 +1734,31 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testES6StaticsAreRemoved1() {
     testES6StaticsAreRemoved(
-        lines(
-            "class Base {",
-            "  static called() { alert('I am called'); }",
-            "  static notCalled() { alert('No one ever calls me'); }",
-            "}",
-            "class Sub extends Base {",
-            "  static called() { super.called(); alert('I am called too'); }",
-            "  static notCalled() { alert('No one ever calls me'); }",
-            "}",
-            "Sub.called();"));
+        """
+        class Base {
+          static called() { alert('I am called'); }
+          static notCalled() { alert('No one ever calls me'); }
+        }
+        class Sub extends Base {
+          static called() { super.called(); alert('I am called too'); }
+          static notCalled() { alert('No one ever calls me'); }
+        }
+        Sub.called();
+        """);
   }
 
   @Test
   public void testES6StaticsAreRemoved2() {
     testES6StaticsAreRemoved(
-        lines(
-            "class Base {",
-            "  static calledInSubclassOnly() { alert('No one ever calls me'); }",
-            "}",
-            "class Sub extends Base {",
-            "  static calledInSubclassOnly() { alert('I am called'); }",
-            "}",
-            "Sub.calledInSubclassOnly();"));
+        """
+        class Base {
+          static calledInSubclassOnly() { alert('No one ever calls me'); }
+        }
+        class Sub extends Base {
+          static calledInSubclassOnly() { alert('I am called'); }
+        }
+        Sub.calledInSubclassOnly();
+        """);
   }
 
   @Test
@@ -1767,16 +1795,17 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     // unreferenced property not removed due to export.
     test(
         options,
-        lines(
-            "/** @constructor */ var X = function() {",
-            "  /** @export */ this.abc = 1;",
-            "};",
-            "",
-            "/** @constructor */ var Y = function() {",
-            "  /** @export */ this.abc = 1;",
-            "};",
-            "",
-            "alert(new X() + new Y());"),
+        """
+        /** @constructor */ var X = function() {
+          /** @export */ this.abc = 1;
+        };
+
+        /** @constructor */ var Y = function() {
+          /** @export */ this.abc = 1;
+        };
+
+        alert(new X() + new Y());
+        """,
         "alert((new function(){this.abc = 1}) + (new function(){this.abc = 1}));");
 
     // disambiguate and ambiguate properties respect the exports.
@@ -1812,19 +1841,20 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
-        lines(
-            "function f() {",
-            "  var x = '';",
-            "  x += '1';",
-            "  x += '2';",
-            "  x += '3';",
-            "  x += '4';",
-            "  x += '5';",
-            "  x += '6';",
-            "  x += '7';",
-            "  return x;",
-            "}",
-            "window.f = f;"),
+        """
+        function f() {
+          var x = '';
+          x += '1';
+          x += '2';
+          x += '3';
+          x += '4';
+          x += '5';
+          x += '6';
+          x += '7';
+          return x;
+        }
+        window.f = f;
+        """,
         "window.a = function() { return '1234567'; }");
   }
 
@@ -1836,19 +1866,20 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setCheckSymbols(false);
     test(
         options,
-        lines(
-            "var exit;",
-            "switch ('a') {",
-            "  case 'a':",
-            "    break;",
-            "  default:",
-            "    exit = 21;",
-            "    break;",
-            "}",
-            "switch(exit) {",
-            "  case 21: throw 'x';",
-            "  default : console.log('good');",
-            "}"),
+        """
+        var exit;
+        switch ('a') {
+          case 'a':
+            break;
+          default:
+            exit = 21;
+            break;
+        }
+        switch(exit) {
+          case 21: throw 'x';
+          default : console.log('good');
+        }
+        """,
         "console.a('good');");
   }
 
@@ -1890,10 +1921,11 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "  Bar.base(this, 'resize', width);",
             "};",
             "(new Bar).resize(100, 200);"),
-        lines(
-            "function a(){}a.prototype.a=function(b,e){window.c=b*e};",
-            "function d(){}d.b=a.prototype;d.prototype.a=function(b){d.b.a.call(this,b)};",
-            "(new d).a(100, 200);"));
+        """
+        function a(){}a.prototype.a=function(b,e){window.c=b*e};
+        function d(){}d.b=a.prototype;d.prototype.a=function(b){d.b.a.call(this,b)};
+        (new d).a(100, 200);
+        """);
   }
 
   // GitHub issue #2203: https://github.com/google/closure-compiler/issues/2203
@@ -1903,12 +1935,13 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
-        lines(
-            "var SetCustomData1 = function SetCustomData2(element, dataName, dataValue) {",
-            "    var x = element['_customData'];",
-            "    x[dataName] = dataValue;",
-            "}",
-            "SetCustomData1(window, 'foo', 'bar');"),
+        """
+        var SetCustomData1 = function SetCustomData2(element, dataName, dataValue) {
+            var x = element['_customData'];
+            x[dataName] = dataValue;
+        }
+        SetCustomData1(window, 'foo', 'bar');
+        """,
         "window._customData.foo='bar';");
   }
 
@@ -1929,20 +1962,21 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     test(
         options,
-        lines(
-            "", // preserve newlines
-            "class A {",
-            "  constructor(a, b) {",
-            "    this.a = a;",
-            "    this.b = b;",
-            "  }",
-            "}",
-            "class B extends A {",
-            "  constructor() {",
-            "    super(...arguments);",
-            "  }",
-            "}",
-            "var b = new B();"),
+        """
+         // preserve newlines
+        class A {
+          constructor(a, b) {
+            this.a = a;
+            this.b = b;
+          }
+        }
+        class B extends A {
+          constructor() {
+            super(...arguments);
+          }
+        }
+        var b = new B();
+        """,
         "");
   }
 
@@ -2018,16 +2052,18 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     test(
         options,
-        lines(
-            "function foo() {",
-            "  var f = (...args) => args[0];",
-            "  return f(8);",
-            "}",
-            "alert(foo());"),
-        lines(
-            "alert(function() {",
-            "  return $jscomp.getRestArguments.apply(0, arguments)[0];",
-            "}(8))"));
+        """
+        function foo() {
+          var f = (...args) => args[0];
+          return f(8);
+        }
+        alert(foo());
+        """,
+        """
+        alert(function() {
+          return $jscomp.getRestArguments.apply(0, arguments)[0];
+        }(8))
+        """);
   }
 
   @Test
@@ -2037,12 +2073,13 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
-        lines(
-            "function foo() {",
-            "  var f = (...args) => args[0];",
-            "  return f(8);",
-            "}",
-            "alert(foo());"),
+        """
+        function foo() {
+          var f = (...args) => args[0];
+          return f(8);
+        }
+        alert(foo());
+        """,
         "alert(8)");
   }
 
@@ -2054,11 +2091,12 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     test(
         options,
-        lines(
-            "function foo(a, b = {foo: 5}) {",
-            "  return a + b.foo;",
-            "}",
-            "alert(foo(3, {foo: 9}));"),
+        """
+        function foo(a, b = {foo: 5}) {
+          return a + b.foo;
+        }
+        alert(foo(3, {foo: 9}));
+        """,
         "var a={a:9}; a=a===void 0?{a:5}:a;alert(3+a.a)");
   }
 
@@ -2072,11 +2110,12 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     test(
         options,
-        lines(
-            "function foo(a, b = {foo: 5}) {",
-            "  return a + b.foo;",
-            "}",
-            "alert(foo(3, {foo: 9}));"),
+        """
+        function foo(a, b = {foo: 5}) {
+          return a + b.foo;
+        }
+        alert(foo(3, {foo: 9}));
+        """,
         "alert(12);");
   }
 
@@ -2107,15 +2146,17 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     test(
         options,
-        lines(
-            "function countArgs(x, ...{length}) {",
-            "  return length;",
-            "}",
-            "alert(countArgs(1, 1, 1, 1, 1));"),
-        lines(
-            "alert(function (a) {",
-            "  return $jscomp.getRestArguments.apply(1, arguments).length;",
-            "}(1,1,1,1,1))"));
+        """
+        function countArgs(x, ...{length}) {
+          return length;
+        }
+        alert(countArgs(1, 1, 1, 1, 1));
+        """,
+        """
+        alert(function (a) {
+          return $jscomp.getRestArguments.apply(1, arguments).length;
+        }(1,1,1,1,1))
+        """);
   }
 
   @Ignore
@@ -2130,11 +2171,12 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     test(
         options,
-        lines(
-            "function countArgs(x, ...{length}) {",
-            "  return length;",
-            "}",
-            "alert(countArgs(1, 1, 1, 1, 1));"),
+        """
+        function countArgs(x, ...{length}) {
+          return length;
+        }
+        alert(countArgs(1, 1, 1, 1, 1));
+        """,
         "alert(4);");
   }
 
@@ -2163,45 +2205,45 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             new TestExternsBuilder().addMath().addConsole().buildExternsFile("externs.js"));
     test(
         options,
-        lines(
-            "const X = { a: 1, b: 2 };", //
-            "const { a, b } = X;",
-            "console.log(a, b);",
-            ""),
+        """
+        const X = { a: 1, b: 2 };
+        const { a, b } = X;
+        console.log(a, b);
+        """,
         "console.log(1,2);");
 
     test(
         options,
-        lines(
-            "const X = { a: 1, b: 2 };", //
-            "let { a, b } = X;",
-            "const Y = { a: 4, b: 5 };",
-            "({ a, b } = Y);",
-            "console.log(a, b);",
-            ""),
-        lines(
-            "", //
-            "let {a, b} = {a:1, b:2};",
-            "({a, b} = {a:4, b:5});",
-            "console.log(a, b);"));
+        """
+        const X = { a: 1, b: 2 };
+        let { a, b } = X;
+        const Y = { a: 4, b: 5 };
+        ({ a, b } = Y);
+        console.log(a, b);
+        """,
+        """
+        let {a, b} = {a:1, b:2};
+        ({a, b} = {a:4, b:5});
+        console.log(a, b);
+        """);
 
     // Demonstrates https://github.com/google/closure-compiler/issues/3671
     test(
         options,
-        lines(
-            "const X = { a: 1, b: 2 };", //
-            "const Y = { a: 1, b: 2 };",
-            // Conditional destructuring assignment makes it unsafe to collapse
-            // the properties on X and Y.
-            "const { a, b } = Math.random() ? X : Y;",
-            "console.log(a, b);",
-            ""),
-        lines(
-            "const a = { a: 1, b: 2},", //
-            "      b = { a: 1, b: 2},",
-            "      {a:c, b:d} = Math.random() ? a : b;",
-            "console.log(c, d);",
-            ""));
+        """
+        const X = { a: 1, b: 2 };
+        const Y = { a: 1, b: 2 };
+        // Conditional destructuring assignment makes it unsafe to collapse
+        // the properties on X and Y.
+        const { a, b } = Math.random() ? X : Y;
+        console.log(a, b);
+        """,
+        """
+        const a = { a: 1, b: 2},
+              b = { a: 1, b: 2},
+              {a:c, b:d} = Math.random() ? a : b;
+        console.log(c, d);
+        """);
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */
@@ -2242,16 +2284,18 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     // TODO(b/116532470): the compiler should compile this down to nothing.
     test(
         options,
-        lines(
-            "class C { f() {} }",
-            "(new C()).f();",
-            "const obj = {f: 3};",
-            "const {f, ...rest} = obj;"),
-        lines(
-            "function a() {}",
-            "a.prototype.a = function() {};",
-            "(new a).a();",
-            "delete Object.assign({}, {a: 3}).a"));
+        """
+        class C { f() {} }
+        (new C()).f();
+        const obj = {f: 3};
+        const {f, ...rest} = obj;
+        """,
+        """
+        function a() {}
+        a.prototype.a = function() {};
+        (new a).a();
+        delete Object.assign({}, {a: 3}).a
+        """);
   }
 
   @Test
@@ -2264,30 +2308,32 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     test(
         options,
         new String[] {
-          lines(
-              "/**",
-              " * @param {{a: number, b: string}} x",
-              " * @return {*}",
-              " */",
-              "function fun({a, b, ...c}) {", //
-              "  const /** !{a: string, b: number} */ x = {a, b, ...c};",
-              "  const y = {...x};",
-              "  y['a'] = 5;",
-              "",
-              "  let {...z} = y;",
-              "  return z;",
-              "}",
-              "",
-              "alert(fun({a: 1, b: 'hello', c: null}));")
+          """
+          /**
+           * @param {{a: number, b: string}} x
+           * @return {*}
+           */
+          function fun({a, b, ...c}) {
+            const /** !{a: string, b: number} */ x = {a, b, ...c};
+            const y = {...x};
+            y['a'] = 5;
+
+            let {...z} = y;
+            return z;
+          }
+
+          alert(fun({a: 1, b: 'hello', c: null}));
+          """
         },
         new String[] {
-          lines(
-              "alert(function({b:a, c:b,...c}) {",
-              // TODO(b/123102446): We'd really like to collapse these chained assignments.
-              "  a = {b:a, c:b, ...c, a:5};",
-              "  ({...a} = a);",
-              "  return a;",
-              "}({b:1, c:'hello', d:null}));")
+          """
+          alert(function({b:a, c:b,...c}) {
+          // TODO(b/123102446): We'd really like to collapse these chained assignments.
+            a = {b:a, c:b, ...c, a:5};
+            ({...a} = a);
+            return a;
+          }({b:1, c:'hello', d:null}));
+          """
         },
         DiagnosticGroups.CHECK_TYPES);
   }
@@ -2305,42 +2351,44 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     // aren't important so much as trying out lots of combinations.
     test(
         options,
-        lines(
-            "const a = {",
-            "  aa: 2,",
-            "  ab: 'hello',",
-            "};",
-            "",
-            "a.ac = {",
-            "  aca: true,",
-            "  ...a,",
-            "  acb: false,",
-            "};",
-            "",
-            "const {ab, ac,...c} = a;",
-            "",
-            "const d = ac;",
-            "",
-            "({aa: d.acc} = a);",
-            "",
-            "alert(d.acc);"),
-        lines(
-            "const a = {",
-            "  $aa$: 2,",
-            "  $ab$: 'hello',",
-            "};",
-            "",
-            "a.$ac$ = {",
-            "  $aca$: !0,",
-            "  ...a,",
-            "  $acb$: !1,",
-            "};",
-            "",
-            "const {$ab$: $ab$$, $ac$: $ac$$, ...$c$$} = a;",
-            "",
-            "({$aa$: $ac$$.$acc$} = a);",
-            "",
-            "alert($ac$$.$acc$);"));
+        """
+        const a = {
+          aa: 2,
+          ab: 'hello',
+        };
+
+        a.ac = {
+          aca: true,
+          ...a,
+          acb: false,
+        };
+
+        const {ab, ac,...c} = a;
+
+        const d = ac;
+
+        ({aa: d.acc} = a);
+
+        alert(d.acc);
+        """,
+        """
+        const a = {
+          $aa$: 2,
+          $ab$: 'hello',
+        };
+
+        a.$ac$ = {
+          $aca$: !0,
+          ...a,
+          $acb$: !1,
+        };
+
+        const {$ab$: $ab$$, $ac$: $ac$$, ...$c$$} = a;
+
+        ({$aa$: $ac$$.$acc$} = a);
+
+        alert($ac$$.$acc$);
+        """);
   }
 
   @Test
@@ -2364,16 +2412,17 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     // "JSC_PARTIAL_NAMESPACE. Partial alias created for namespace $jscomp"
     test(
         options,
-        lines(
-            "window['Foo'] = class Foo {",
-            "async method() {",
-            "          const [resultA, resultB] = await Promise.all([",
-            "            bar(),",
-            "            bar(),",
-            "          ]);",
-            "  }",
-            "",
-            "}"),
+        """
+        window['Foo'] = class Foo {
+        async method() {
+                  const [resultA, resultB] = await Promise.all([
+                    bar(),
+                    bar(),
+                  ]);
+          }
+
+        }
+        """,
         lines("window.Foo = function() {};"));
   }
 
@@ -2387,44 +2436,48 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     testSame(
         options,
         new String[] {
-          lines(
-              "try {", //
-              "  alert('try');",
-              "} catch {",
-              "  alert('caught');",
-              "}")
+          """
+          try {
+            alert('try');
+          } catch {
+            alert('caught');
+          }
+          """
         });
 
     test(
         options,
         new String[] {
-          lines(
-              "function doNothing() {}",
-              "try {",
-              " doNothing();",
-              "} catch {",
-              "  alert('caught');",
-              "}")
+          """
+          function doNothing() {}
+          try {
+           doNothing();
+          } catch {
+            alert('caught');
+          }
+          """
         },
         new String[] {});
 
     test(
         options,
         new String[] {
-          lines(
-              "function doNothing() {}",
-              "try {",
-              " alert('try');",
-              "} catch {",
-              "  doNothing();",
-              "}")
+          """
+          function doNothing() {}
+          try {
+           alert('try');
+          } catch {
+            doNothing();
+          }
+          """
         },
         new String[] {
-          lines(
-              "try {", //
-              " alert('try');",
-              "} catch {",
-              "}")
+          """
+          try {
+           alert('try');
+          } catch {
+          }
+          """
         });
   }
 
@@ -2545,13 +2598,14 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     // test out-of-date.
     test(
         options,
-        lines(
-            "goog.module('mod');",
-            "function alwaysNull() { return null; }",
-            // transpiled form of `const y = alwaysNull() ? 42;`
-            "var _a;",
-            "const y = (_a = alwaysNull()) !== null && _a !== void 0 ? _a : 42;",
-            "alert(y);"),
+        """
+        goog.module('mod');
+        function alwaysNull() { return null; }
+        // transpiled form of `const y = alwaysNull() ? 42;`
+        var _a;
+        const y = (_a = alwaysNull()) !== null && _a !== void 0 ? _a : 42;
+        alert(y);
+        """,
         "alert(42);");
   }
 
@@ -2564,15 +2618,16 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     // Ensure the compiler can optimize TS 3.8's transpilation of nullish coalescing.
     test(
         options,
-        lines(
-            "goog.module('mod');",
-            "function alwaysNull() { return null; }",
-            "function getDefaultValue(maybeNull) {",
-            // transpiled form of `return maybeNull ?? 42;`
-            "  var _a;",
-            "  return (_a = maybeNull) !== null && _a !== void 0 ? _a : 42;",
-            "}",
-            "alert(getDefaultValue(alwaysNull()));"),
+        """
+        goog.module('mod');
+        function alwaysNull() { return null; }
+        function getDefaultValue(maybeNull) {
+        // transpiled form of `return maybeNull ?? 42;`
+          var _a;
+          return (_a = maybeNull) !== null && _a !== void 0 ? _a : 42;
+        }
+        alert(getDefaultValue(alwaysNull()));
+        """,
         "alert(42);");
   }
 
@@ -2736,14 +2791,15 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     test(
         options,
-        lines(
-            "function installBaa({ obj }) {",
-            " obj.baa = 'foo';",
-            "}",
-            "",
-            "const obj = {};",
-            "installBaa({ obj });",
-            "alert(obj.baa);"),
+        """
+        function installBaa({ obj }) {
+         obj.baa = 'foo';
+        }
+
+        const obj = {};
+        installBaa({ obj });
+        alert(obj.baa);
+        """,
         "alert('foo');");
   }
 
@@ -2759,20 +2815,22 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     test(
         options,
-        lines(
-            "function installBaa({ obj }) {",
-            " obj.baa = 'foo';",
-            "}",
-            "",
-            "const obj = {};",
-            "installBaa({ obj });",
-            "alert(obj.baa);"),
-        lines(
-            "const a = {};", //
-            "(function({b}){",
-            "  b.a = 'foo';",
-            "})({b: a});",
-            "alert(a.a);"));
+        """
+        function installBaa({ obj }) {
+         obj.baa = 'foo';
+        }
+
+        const obj = {};
+        installBaa({ obj });
+        alert(obj.baa);
+        """,
+        """
+        const a = {};
+        (function({b}){
+          b.a = 'foo';
+        })({b: a});
+        alert(a.a);
+        """);
   }
 
   @Test
@@ -2785,43 +2843,45 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     test(
         options,
-        lines(
-            "class Foo {", //
-            "  constructor(foo) {",
-            "    this.foo = foo;",
-            "  }",
-            "}",
-            "class Bar {",
-            "  constructor(bar) {",
-            "    this.bar = bar;",
-            "  }",
-            "}",
-            "window['Foo'] = Foo;",
-            "window['Bar'] = Bar;",
-            "/**",
-            " * @param {!Foo} foo",
-            " * @param {!Bar} bar",
-            " */",
-            "window['foobar'] = function(foo, bar) {",
-            "  return foo.foo + bar.bar;",
-            "}"),
-        lines(
-            "class b {", //
-            "  constructor(a) {",
-            "    this.a = a;",
-            "  }",
-            "}",
-            "class c {",
-            "  constructor(a) {",
-            "    this.a = a;",
-            "  }",
-            "}",
-            "window.Foo = b;",
-            "window.Bar = c",
-            "window.foobar = function(a, d) {",
-            // Property ambiguation renames both ".foo" and ".bar" to ".a".
-            "  return a.a + d.a;",
-            "}"));
+        """
+        class Foo {
+          constructor(foo) {
+            this.foo = foo;
+          }
+        }
+        class Bar {
+          constructor(bar) {
+            this.bar = bar;
+          }
+        }
+        window['Foo'] = Foo;
+        window['Bar'] = Bar;
+        /**
+         * @param {!Foo} foo
+         * @param {!Bar} bar
+         */
+        window['foobar'] = function(foo, bar) {
+          return foo.foo + bar.bar;
+        }
+        """,
+        """
+        class b {
+          constructor(a) {
+            this.a = a;
+          }
+        }
+        class c {
+          constructor(a) {
+            this.a = a;
+          }
+        }
+        window.Foo = b;
+        window.Bar = c
+        window.foobar = function(a, d) {
+        // Property ambiguation renames both ".foo" and ".bar" to ".a".
+          return a.a + d.a;
+        }
+        """);
   }
 
   @Test
@@ -2833,29 +2893,30 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     test(
         options,
-        lines(
-            "/** @interface */",
-            "class Speaker {",
-            "  speak() {}",
-            "}",
-            "/** @implements {Speaker} */",
-            "class SpeakerImpl {",
-            "  speak() { alert('Speaker'); }",
-            "}",
-            "/** @interface @extends {Speaker} */",
-            "class SpeakerChild {}",
-            "/** @param {!Speaker} speaker */",
-            "function speak(speaker) {",
-            // cast is invalid: a SpeakerImpl is passed. Note that this function is needed because
-            // the compiler is smart enough to detect invalid casts in
-            // /** @type {!SpeakerImpl} (/** @type {!Speaker} */ (new SpeakerImpl()));
-            "  /** @type {!SpeakerChild} */ (speaker).speak();",
-            "}",
-            "speak(new SpeakerImpl());",
-            "class Other {",
-            "  speak() { alert('other'); }",
-            "}",
-            "new Other().speak();"),
+        """
+        /** @interface */
+        class Speaker {
+          speak() {}
+        }
+        /** @implements {Speaker} */
+        class SpeakerImpl {
+          speak() { alert('Speaker'); }
+        }
+        /** @interface @extends {Speaker} */
+        class SpeakerChild {}
+        /** @param {!Speaker} speaker */
+        function speak(speaker) {
+        // cast is invalid: a SpeakerImpl is passed. Note that this function is needed because
+        // the compiler is smart enough to detect invalid casts in
+        // /** @type {!SpeakerImpl} (/** @type {!Speaker} */ (new SpeakerImpl()));
+          /** @type {!SpeakerChild} */ (speaker).speak();
+        }
+        speak(new SpeakerImpl());
+        class Other {
+          speak() { alert('other'); }
+        }
+        new Other().speak();
+        """,
         lines(
             // Compiler calls SpeakerImpl.prototype.speak even though it's called off SpeakerChild.
             "alert('Speaker'); alert('other');"));
@@ -2920,85 +2981,87 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     test(
         options,
-        lines(
-            "/** @interface */",
-            "class Interface {",
-            "  /** @return {number} */",
-            "  getField() {}",
-            "}",
-            "/** @interface */",
-            "class Interface2 {",
-            "  /** @return {number} */",
-            "  getOtherField() {}",
-            "}",
-            "/** ",
-            " * @implements {Interface}",
-            " * @implements {Interface2}",
-            " */",
-            "class Foo {",
-            "  constructor(/** number */ bar) {",
-            "    this.bar = bar;",
-            "  }",
-            "  /** @override @noinline */",
-            "  getOtherField() {",
-            "    return this.bar + this.bar;",
-            "  }",
-            "  /** @override @noinline */",
-            "  getField() {",
-            "    return this.bar;",
-            "  }",
-            "}",
-            "/** @implements {Interface} */",
-            "class Bar {",
-            "  constructor(baz) {",
-            "    this.baz = baz;",
-            "  }",
-            "  /** @override @noinline */",
-            "  getField() {",
-            "    return this.baz;",
-            "  }",
-            "}",
-            // Needed or jscomp will devirtualize getOtherField().
-            "window['Interface2'] = Interface2;",
-            "window['Foo'] = Foo;",
-            "window['Bar'] = Bar;",
-            "/**",
-            " * @param {!Foo} foo",
-            " * @param {!Bar} bar",
-            " */",
-            "window['foobar'] = function(foo, bar) {",
-            "  return foo.getField() + foo.getOtherField() + bar.getField();",
-            "};"),
-        lines(
-            "class b {",
-            "  c() {}",
-            "}",
-            "class c {",
-            "  constructor(a) {",
-            "    this.a = a;",
-            "  }",
-            "  c() {",
-            "    return this.a + this.a;",
-            "  }",
-            "  b() {",
-            "    return this.a;",
-            "  }",
-            "}",
-            "class d {",
-            "  constructor(a) {",
-            "    this.a = a;",
-            "  }",
-            "  b() {",
-            "    return this.a;",
-            "  }",
-            "}",
-            "window.Interface2 = b;",
-            "window.Foo = c;",
-            "window.Bar = d;",
-            "window.foobar = function(a, e) {",
-            // Property disambiguation renames both ".getField()" calls to .b().
-            "  return a.b() + a.c() + e.b();",
-            "};"));
+        """
+        /** @interface */
+        class Interface {
+          /** @return {number} */
+          getField() {}
+        }
+        /** @interface */
+        class Interface2 {
+          /** @return {number} */
+          getOtherField() {}
+        }
+        /**
+         * @implements {Interface}
+         * @implements {Interface2}
+         */
+        class Foo {
+          constructor(/** number */ bar) {
+            this.bar = bar;
+          }
+          /** @override @noinline */
+          getOtherField() {
+            return this.bar + this.bar;
+          }
+          /** @override @noinline */
+          getField() {
+            return this.bar;
+          }
+        }
+        /** @implements {Interface} */
+        class Bar {
+          constructor(baz) {
+            this.baz = baz;
+          }
+          /** @override @noinline */
+          getField() {
+            return this.baz;
+          }
+        }
+        // Needed or jscomp will devirtualize getOtherField().
+        window['Interface2'] = Interface2;
+        window['Foo'] = Foo;
+        window['Bar'] = Bar;
+        /**
+         * @param {!Foo} foo
+         * @param {!Bar} bar
+         */
+        window['foobar'] = function(foo, bar) {
+          return foo.getField() + foo.getOtherField() + bar.getField();
+        };
+        """,
+        """
+        class b {
+          c() {}
+        }
+        class c {
+          constructor(a) {
+            this.a = a;
+          }
+          c() {
+            return this.a + this.a;
+          }
+          b() {
+            return this.a;
+          }
+        }
+        class d {
+          constructor(a) {
+            this.a = a;
+          }
+          b() {
+            return this.a;
+          }
+        }
+        window.Interface2 = b;
+        window.Foo = c;
+        window.Bar = d;
+        window.foobar = function(a, e) {
+        // Property disambiguation renames both ".getField()" calls to .b().
+          return a.b() + a.c() + e.b();
+        };
+        """);
   }
 
   /**
@@ -3016,69 +3079,71 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     test(
         options,
-        lines(
-            "/** @interface */",
-            "class Interface {",
-            "  /** @return {number} */",
-            "  getField() {}",
-            "}",
-            "/** @interface */",
-            "class Interface2 {",
-            "  /** @return {number} */",
-            "  getOtherField() {}",
-            "}",
-            "/** ",
-            " * @implements {Interface}",
-            " * @implements {Interface2}",
-            " */",
-            "class Foo {",
-            "  constructor(/** number */ bar) {",
-            "    this.bar = bar;",
-            "  }",
-            "  /** @override @noinline */",
-            "  getOtherField() {",
-            "    return this.bar + this.bar;",
-            "  }",
-            "  /** @override @noinline */",
-            "  getField() {",
-            "    return this.bar;",
-            "  }",
-            "}",
-            "/** @implements {Interface} */",
-            "class Bar {",
-            "  constructor(baz) {",
-            "    this.baz = baz;",
-            "  }",
-            "  /** @override @noinline */",
-            "  getField() {",
-            "    return this.baz;",
-            "  }",
-            "}",
-            // Needed or jscomp will devirtualize getOtherField().
-            "window['Foo'] = Foo;",
-            "/**",
-            " * @param {!Foo} foo",
-            " * @param {!Bar} bar",
-            " */",
-            "window['foobar'] = function(foo, bar) {",
-            "  return foo.getField() + foo.getOtherField() + bar.getField();",
-            "};"),
-        lines(
-            "function b(a) {",
-            "  return a.a + a.a;",
-            "}",
-            "function c(a) {",
-            "  return a.a;",
-            "}",
-            "class d {",
-            "  constructor(a) {",
-            "    this.a = a;",
-            "  }",
-            "}",
-            "window.Foo = d;",
-            "window.foobar = function(a, e) {",
-            "  return c(a) + b(a) + c(e);",
-            "};"));
+        """
+        /** @interface */
+        class Interface {
+          /** @return {number} */
+          getField() {}
+        }
+        /** @interface */
+        class Interface2 {
+          /** @return {number} */
+          getOtherField() {}
+        }
+        /**
+         * @implements {Interface}
+         * @implements {Interface2}
+         */
+        class Foo {
+          constructor(/** number */ bar) {
+            this.bar = bar;
+          }
+          /** @override @noinline */
+          getOtherField() {
+            return this.bar + this.bar;
+          }
+          /** @override @noinline */
+          getField() {
+            return this.bar;
+          }
+        }
+        /** @implements {Interface} */
+        class Bar {
+          constructor(baz) {
+            this.baz = baz;
+          }
+          /** @override @noinline */
+          getField() {
+            return this.baz;
+          }
+        }
+        // Needed or jscomp will devirtualize getOtherField().
+        window['Foo'] = Foo;
+        /**
+         * @param {!Foo} foo
+         * @param {!Bar} bar
+         */
+        window['foobar'] = function(foo, bar) {
+          return foo.getField() + foo.getOtherField() + bar.getField();
+        };
+        """,
+        """
+        function b(a) {
+          return a.a + a.a;
+        }
+        function c(a) {
+          return a.a;
+        }
+        class d {
+          constructor(a) {
+            this.a = a;
+          }
+        }
+        window.Foo = d;
+        window.foobar = function(a, e) {
+          return c(a) + b(a) + c(e);
+        };
+        """);
   }
 
   @Test
@@ -3100,29 +3165,29 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     // one called via `Selector.create().build();`
     test(
         options,
-        lines(
-            "goog.module('main');",
-            "",
-            "retrieveElementRef();",
-            "class SelectorBuilder {",
-            "    /** @return {!Selector} */",
-            "    build() {",
-            "        return new Selector(retrieveElementRef());",
-            "    }",
-            "}",
-            "class Selector {",
-            "    /** @param {string} s */",
-            "    constructor(s) {",
-            "        /** @type {string} */",
-            "        this.s = s;",
-            "    }",
-            "    /** @return {!SelectorBuilder} */",
-            "    static create() {",
-            "        return new SelectorBuilder();",
-            "    }",
-            "}",
-            "Selector.create().build();",
-            ""),
+        """
+        goog.module('main');
+
+        retrieveElementRef();
+        class SelectorBuilder {
+            /** @return {!Selector} */
+            build() {
+                return new Selector(retrieveElementRef());
+            }
+        }
+        class Selector {
+            /** @param {string} s */
+            constructor(s) {
+                /** @type {string} */
+                this.s = s;
+            }
+            /** @return {!SelectorBuilder} */
+            static create() {
+                return new SelectorBuilder();
+            }
+        }
+        Selector.create().build();
+        """,
         "retrieveElementRef(); class a { constructor() { retrieveElementRef(); } } new a();");
   }
 }

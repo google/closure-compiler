@@ -285,39 +285,43 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   @Test
   public void testIconImage2() {
     testScoped(
-        lines(
-            "var getIconImage = (function(){",
-            " let _iconsImage;", //
-            " function getIconImage(){",
-            "   _iconsImage = 3;",
-            "   return _iconsImage;",
-            " }",
-            "})"),
-        lines(
-            "var $jscomp$scope$m1146332801$0$getIconImage = (function(){",
-            " let _iconsImage;", //
-            " function getIconImage(){",
-            "   _iconsImage = 3;",
-            "   return _iconsImage;",
-            " }",
-            "})"));
+        """
+        var getIconImage = (function(){
+         let _iconsImage;
+         function getIconImage(){
+           _iconsImage = 3;
+           return _iconsImage;
+         }
+        })
+        """,
+        """
+        var $jscomp$scope$m1146332801$0$getIconImage = (function(){
+         let _iconsImage;
+         function getIconImage(){
+           _iconsImage = 3;
+           return _iconsImage;
+         }
+        })
+        """);
   }
 
   @Test
   public void testIconImage() {
     testScoped(
-        lines(
-            "let _iconsImage;", //
-            "function getIconImage(){",
-            "  _iconsImage = 3;",
-            "  return _iconsImage;",
-            "}"),
-        lines(
-            "var $jscomp$scope$m1146332801$1$getIconImage = function() {",
-            "  $jscomp$scope$m1146332801$0$_iconsImage = 3;",
-            "  return $jscomp$scope$m1146332801$0$_iconsImage;",
-            "};",
-            "var $jscomp$scope$m1146332801$0$_iconsImage;"));
+        """
+        let _iconsImage;
+        function getIconImage(){
+          _iconsImage = 3;
+          return _iconsImage;
+        }
+        """,
+        """
+        var $jscomp$scope$m1146332801$1$getIconImage = function() {
+          $jscomp$scope$m1146332801$0$_iconsImage = 3;
+          return $jscomp$scope$m1146332801$0$_iconsImage;
+        };
+        var $jscomp$scope$m1146332801$0$_iconsImage;
+        """);
   }
 
   @Test
@@ -428,29 +432,45 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   @Test
   public void testObjectLiteral() {
     testScoped(
-        lines(
-            "var Foo = goog.Foo;",
-            "goog.x = {",
-            "  /** @param {Foo} foo */",
-            "  y: function(foo) { }",
-            "};"),
-        lines("goog.x = {", "  /** @param {goog.Foo} foo */", "  y: function(foo) {}", "};"));
+        """
+        var Foo = goog.Foo;
+        goog.x = {
+          /** @param {Foo} foo */
+          y: function(foo) { }
+        };
+        """,
+        """
+        goog.x = {
+          /** @param {goog.Foo} foo */
+          y: function(foo) {}
+        };
+        """);
 
     testScoped(
-        lines(
-            "var Foo = goog.Foo;",
-            "goog.x = {",
-            "  y: /** @param {Foo} foo */ function(foo) {}",
-            "};"),
-        lines("goog.x = {", "  y: /** @param {goog.Foo} foo */ function(foo) {}", "};"));
+        """
+        var Foo = goog.Foo;
+        goog.x = {
+          y: /** @param {Foo} foo */ function(foo) {}
+        };
+        """,
+        """
+        goog.x = {
+          y: /** @param {goog.Foo} foo */ function(foo) {}
+        };
+        """);
 
     testScoped(
-        lines(
-            "var Foo = goog.Foo;",
-            "goog.x = {",
-            "  y: /** @type {function(Foo)} */ (function(foo) {})",
-            "};"),
-        lines("goog.x = {", "  y: /** @type {function(goog.Foo)} */ (function(foo) {})", "};"));
+        """
+        var Foo = goog.Foo;
+        goog.x = {
+          y: /** @type {function(Foo)} */ (function(foo) {})
+        };
+        """,
+        """
+        goog.x = {
+          y: /** @type {function(goog.Foo)} */ (function(foo) {})
+        };
+        """);
   }
 
   @Test
@@ -493,25 +513,27 @@ public final class ScopedAliasesTest extends CompilerTestCase {
             "goog.scope = function(fn) {}");
 
     String js =
-        lines(
-            "goog.scope(function() {",
-            "  var Foo = ns.Foo;",
-            "  var x = {",
-            "    /** @param {Foo} foo */ y: function(foo) {}",
-            "  };",
-            "  x.y('');",
-            "});");
+        """
+        goog.scope(function() {
+          var Foo = ns.Foo;
+          var x = {
+            /** @param {Foo} foo */ y: function(foo) {}
+          };
+          x.y('');
+        });
+        """;
     test(externs(externs), srcs(js), warning(TypeValidator.TYPE_MISMATCH_WARNING));
 
     js =
-        lines(
-            "goog.scope(function() {",
-            "  var Foo = ns.Foo;",
-            "  var x = {",
-            "    y: /** @param {Foo} foo */ function(foo) {}",
-            "  };",
-            "  x.y('');",
-            "});");
+        """
+        goog.scope(function() {
+          var Foo = ns.Foo;
+          var x = {
+            y: /** @param {Foo} foo */ function(foo) {}
+          };
+          x.y('');
+        });
+        """;
     test(externs(externs), srcs(js), warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
@@ -549,117 +571,137 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   public void testJsDocType() {
     testTypes(
         "var x = goog.Timer;",
-        lines(
-            "/** @type {goog.Timer} */ types.actual;",
-            "/** @type {goog.Timer} */ types.expected;"));
+        """
+        /** @type {goog.Timer} */ types.actual;
+        /** @type {goog.Timer} */ types.expected;
+        """);
   }
 
   @Test
   public void testJsDocParameter() {
     testTypes(
         "var x = goog.Timer;",
-        lines(
-            "/** @param {goog.Timer} a */ types.actual;",
-            "/** @param {goog.Timer} a */ types.expected;"));
+        """
+        /** @param {goog.Timer} a */ types.actual;
+        /** @param {goog.Timer} a */ types.expected;
+        """);
   }
 
   @Test
   public void testJsDocExtends() {
     testTypes(
         "var x = goog.Timer;",
-        lines(
-            "/** @extends {goog.Timer} */ types.actual;",
-            "/** @extends {goog.Timer} */ types.expected;"));
+        """
+        /** @extends {goog.Timer} */ types.actual;
+        /** @extends {goog.Timer} */ types.expected;
+        """);
   }
 
   @Test
   public void testJsDocImplements() {
     testTypes(
         "var x = goog.Timer;",
-        lines(
-            "/** @implements {goog.Timer} */ types.actual;",
-            "/** @implements {goog.Timer} */ types.expected;"));
+        """
+        /** @implements {goog.Timer} */ types.actual;
+        /** @implements {goog.Timer} */ types.expected;
+        """);
   }
 
   @Test
   public void testJsDocEnum() {
     testTypes(
         "var x = goog.Timer;",
-        lines(
-            "",
-            "/** @enum {goog.Timer} */ types.actual;",
-            "/** @enum {goog.Timer} */ types.expected;"));
+        """
+        /** @enum {goog.Timer} */ types.actual;
+        /** @enum {goog.Timer} */ types.expected;
+        """);
   }
 
   @Test
   public void testJsDocReturn() {
     testTypes(
         "var x = goog.Timer;",
-        lines(
-            "/** @return {goog.Timer} */ types.actual;",
-            "/** @return {goog.Timer} */ types.expected;"));
+        """
+        /** @return {goog.Timer} */ types.actual;
+        /** @return {goog.Timer} */ types.expected;
+        """);
   }
 
   @Test
   public void testJsDocThis() {
     testTypes(
         "var x = goog.Timer;",
-        lines(
-            "/** @this {goog.Timer} */ types.actual;",
-            "/** @this {goog.Timer} */ types.expected;"));
+        """
+        /** @this {goog.Timer} */ types.actual;
+        /** @this {goog.Timer} */ types.expected;
+        """);
   }
 
   @Test
   public void testJsDocThrows() {
     testTypes(
         "var x = goog.Timer;",
-        lines(
-            "/** @throws {goog.Timer} */ types.actual;",
-            "/** @throws {goog.Timer} */ types.expected;"));
+        """
+        /** @throws {goog.Timer} */ types.actual;
+        /** @throws {goog.Timer} */ types.expected;
+        """);
   }
 
   @Test
   public void testJsDocSubType() {
     testTypes(
         "var x = goog.Timer;",
-        lines(
-            "/** @type {goog.Timer.Enum} */ types.actual;",
-            "/** @type {goog.Timer.Enum} */ types.expected;"));
+        """
+        /** @type {goog.Timer.Enum} */ types.actual;
+        /** @type {goog.Timer.Enum} */ types.expected;
+        """);
   }
 
   @Test
   public void testJsDocTypedef() {
     testTypes(
         "var x = goog.Timer;",
-        lines(
-            "/** @typedef {goog.Timer} */ types.actual;",
-            "/** @typedef {goog.Timer} */ types.expected;"));
+        """
+        /** @typedef {goog.Timer} */ types.actual;
+        /** @typedef {goog.Timer} */ types.expected;
+        """);
 
     testScoped(
-        lines("/** @typedef {string} */ var s;", "/** @type {s} */ var t;"),
-        lines(
-            "/** @typedef {string} */ var $jscomp$scope$m1146332801$0$s;",
-            "/** @type {$jscomp$scope$m1146332801$0$s} */ var $jscomp$scope$m1146332801$1$t;"));
+        """
+        /** @typedef {string} */ var s;
+        /** @type {s} */ var t;
+        """,
+        """
+        /** @typedef {string} */ var $jscomp$scope$m1146332801$0$s;
+        /** @type {$jscomp$scope$m1146332801$0$s} */ var $jscomp$scope$m1146332801$1$t;
+        """);
 
     testScoped(
-        lines("/** @typedef {string} */ let s;", "/** @type {s} */ var t;"),
-        lines(
-            "/** @typedef {string} */ var $jscomp$scope$m1146332801$0$s;",
-            "/** @type {$jscomp$scope$m1146332801$0$s} */ var $jscomp$scope$m1146332801$1$t;"));
+        """
+        /** @typedef {string} */ let s;
+        /** @type {s} */ var t;
+        """,
+        """
+        /** @typedef {string} */ var $jscomp$scope$m1146332801$0$s;
+        /** @type {$jscomp$scope$m1146332801$0$s} */ var $jscomp$scope$m1146332801$1$t;
+        """);
   }
 
   @Test
   public void testJsDocRecord() {
     enableTypeCheck();
     test(
-        lines(
-            "/** @const */ var ns = {};",
-            "goog.scope(function () {",
-            "  var x = goog.Timer;",
-            "  /** @type {{x: string}} */ ns.y = {'goog.Timer': 'x'};",
-            "});"),
-        lines(
-            "/** @const */ var ns = {};", "/** @type {{x: string}} */ ns.y = {'goog.Timer': 'x'};"),
+        """
+        /** @const */ var ns = {};
+        goog.scope(function () {
+          var x = goog.Timer;
+          /** @type {{x: string}} */ ns.y = {'goog.Timer': 'x'};
+        });
+        """,
+        """
+        /** @const */ var ns = {};
+        /** @type {{x: string}} */ ns.y = {'goog.Timer': 'x'};
+        """,
         warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
@@ -667,32 +709,36 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   public void testArrayJsDoc() {
     testTypes(
         "var x = goog.Timer;",
-        lines(
-            "/** @type {Array.<goog.Timer>} */ types.actual;",
-            "/** @type {Array.<goog.Timer>} */ types.expected;"));
+        """
+        /** @type {Array.<goog.Timer>} */ types.actual;
+        /** @type {Array.<goog.Timer>} */ types.expected;
+        """);
   }
 
   @Test
   public void testObjectJsDoc() {
     testTypes(
         "var x = goog.Timer;",
-        lines(
-            "/** @type {{someKey: goog.Timer}} */ types.actual;",
-            "/** @type {{someKey: goog.Timer}} */ types.expected;"));
+        """
+        /** @type {{someKey: goog.Timer}} */ types.actual;
+        /** @type {{someKey: goog.Timer}} */ types.expected;
+        """);
     testTypes(
         "var x = goog.Timer;",
-        lines(
-            "/** @type {{x: number}} */ types.actual;",
-            "/** @type {{x: number}} */ types.expected;"));
+        """
+        /** @type {{x: number}} */ types.actual;
+        /** @type {{x: number}} */ types.expected;
+        """);
   }
 
   @Test
   public void testObjectJsDoc2() {
     testTypes(
         "var x = goog$Timer;",
-        lines(
-            "/** @type {{someKey: goog$Timer}} */ types.actual;",
-            "/** @type {{someKey: goog$Timer}} */ types.expected;"));
+        """
+        /** @type {{someKey: goog$Timer}} */ types.actual;
+        /** @type {{someKey: goog$Timer}} */ types.expected;
+        """);
   }
 
   @Test
@@ -721,23 +767,25 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   @Test
   public void testForwardJsDoc() {
     testScoped(
-        lines(
-            "/**",
-            " * @constructor",
-            " */",
-            "foo.Foo = function() {};",
-            "/** @param {Foo.Bar} x */ foo.Foo.actual = function(x) {3};",
-            "var Foo = foo.Foo;",
-            "/** @constructor */ Foo.Bar = function() {};",
-            "/** @param {foo.Foo.Bar} x */ foo.Foo.expected = function(x) {};"),
-        lines(
-            "/**",
-            " * @constructor",
-            " */",
-            "foo.Foo = function() {};",
-            "/** @param {foo.Foo.Bar} x */ foo.Foo.actual = function(x) {3};",
-            "/** @constructor */ foo.Foo.Bar = function() {};",
-            "/** @param {foo.Foo.Bar} x */ foo.Foo.expected = function(x) {};"),
+        """
+        /**
+         * @constructor
+         */
+        foo.Foo = function() {};
+        /** @param {Foo.Bar} x */ foo.Foo.actual = function(x) {3};
+        var Foo = foo.Foo;
+        /** @constructor */ Foo.Bar = function() {};
+        /** @param {foo.Foo.Bar} x */ foo.Foo.expected = function(x) {};
+        """,
+        """
+        /**
+         * @constructor
+         */
+        foo.Foo = function() {};
+        /** @param {foo.Foo.Bar} x */ foo.Foo.actual = function(x) {3};
+        /** @constructor */ foo.Foo.Bar = function() {};
+        /** @param {foo.Foo.Bar} x */ foo.Foo.expected = function(x) {};
+        """,
         VERIFY_TYPES);
   }
 
@@ -788,18 +836,20 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     enableTypeCheck();
     test(
         srcs(
-            lines(
-                "/** @const */ var ns = {};",
-                "/** @constructor */ ns.A = function() {};",
-                "goog.scope(function() {",
-                "  /** @const */ var A = ns.A;",
-                "  var /** @type {?A} */ b = null;",
-                "});")),
+            """
+            /** @const */ var ns = {};
+            /** @constructor */ ns.A = function() {};
+            goog.scope(function() {
+              /** @const */ var A = ns.A;
+              var /** @type {?A} */ b = null;
+            });
+            """),
         expected(
-            lines(
-                "/** @const */ var ns = {};",
-                "/** @constructor */ ns.A = function() {};",
-                "/** @type {?ns.A} */ var $jscomp$scope$m1146332801$0$b = null;")),
+            """
+            /** @const */ var ns = {};
+            /** @constructor */ ns.A = function() {};
+            /** @type {?ns.A} */ var $jscomp$scope$m1146332801$0$b = null;
+            """),
         VERIFY_TYPES);
   }
 
@@ -808,20 +858,22 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     enableTypeCheck();
     test(
         srcs(
-            lines(
-                "/** @const */ var ns = {};",
-                "/** @constructor */ ns.A = function() {};",
-                "goog.scope(function() {",
-                "  /** @const */ var A = ns.A;",
-                "  function /** ?A */ b() { return null; }",
-                "});")),
+            """
+            /** @const */ var ns = {};
+            /** @constructor */ ns.A = function() {};
+            goog.scope(function() {
+              /** @const */ var A = ns.A;
+              function /** ?A */ b() { return null; }
+            });
+            """),
         expected(
-            lines(
-                "/** @const */ var ns = {};",
-                "/** @constructor */ ns.A = function() {};",
-                // TODO(moz): See if we can avoid generating duplicate @return's
-                "/** @return {?ns.A} */ var $jscomp$scope$m1146332801$0$b = ",
-                "    /** @return {?ns.A} */ function() { return null; };")),
+            """
+            /** @const */ var ns = {};
+            /** @constructor */ ns.A = function() {};
+            // TODO(moz): See if we can avoid generating duplicate @return's
+            /** @return {?ns.A} */ var $jscomp$scope$m1146332801$0$b =
+                /** @return {?ns.A} */ function() { return null; };
+            """),
         VERIFY_TYPES);
   }
 
@@ -830,18 +882,20 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     enableTypeCheck();
     test(
         srcs(
-            lines(
-                "/** @const */ var ns = {};",
-                "/** @constructor */ ns.A = function() {};",
-                "goog.scope(function() {",
-                "  /** @const */ var A = ns.A;",
-                "  function b(/** ?A */ bee) {}",
-                "});")),
+            """
+            /** @const */ var ns = {};
+            /** @constructor */ ns.A = function() {};
+            goog.scope(function() {
+              /** @const */ var A = ns.A;
+              function b(/** ?A */ bee) {}
+            });
+            """),
         expected(
-            lines(
-                "/** @const */ var ns = {};",
-                "/** @constructor */ ns.A = function() {};",
-                "var $jscomp$scope$m1146332801$0$b = function(/** ?ns.A */ bee) {};")),
+            """
+            /** @const */ var ns = {};
+            /** @constructor */ ns.A = function() {};
+            var $jscomp$scope$m1146332801$0$b = function(/** ?ns.A */ bee) {};
+            """),
         VERIFY_TYPES);
   }
 
@@ -1064,116 +1118,129 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   @Test
   public void testIssue2211() {
     test(
-        lines(
-            "var ns = {};",
-            "var y = 1;",
-            "goog.scope(function () {",
-            "  ns.fact = function y(n) {",
-            "    return n == 1 ? 1 : n * y(n - 1);",
-            "  };",
-            "});"),
-        lines(
-            "var ns = {};",
-            "var y = 1;",
-            "ns.fact = function y$jscomp$scopedAliases$0(n) {",
-            "  return n == 1 ? 1 : n * y$jscomp$scopedAliases$0(n - 1);",
-            "};"));
+        """
+        var ns = {};
+        var y = 1;
+        goog.scope(function () {
+          ns.fact = function y(n) {
+            return n == 1 ? 1 : n * y(n - 1);
+          };
+        });
+        """,
+        """
+        var ns = {};
+        var y = 1;
+        ns.fact = function y$jscomp$scopedAliases$0(n) {
+          return n == 1 ? 1 : n * y$jscomp$scopedAliases$0(n - 1);
+        };
+        """);
   }
 
   // https://github.com/google/closure-compiler/issues/2211
   @Test
   public void testIssue2211b() {
     test(
-        lines(
-            "var ns = {};",
-            "var y = 1;",
-            "goog.scope(function () {",
-            "  function x(y) {}",
-            "  ns.fact = function y(n) {",
-            "    return n == 1 ? 1 : n * y(n - 1);",
-            "  };",
-            "});"),
-        lines(
-            "var ns = {};",
-            "var y = 1;",
-            "var $jscomp$scope$m1146332801$0$x = function (y) {};",
-            "ns.fact = function y$jscomp$scopedAliases$0(n) {",
-            "  return n == 1 ? 1 : n * y$jscomp$scopedAliases$0(n - 1);",
-            "};"));
+        """
+        var ns = {};
+        var y = 1;
+        goog.scope(function () {
+          function x(y) {}
+          ns.fact = function y(n) {
+            return n == 1 ? 1 : n * y(n - 1);
+          };
+        });
+        """,
+        """
+        var ns = {};
+        var y = 1;
+        var $jscomp$scope$m1146332801$0$x = function (y) {};
+        ns.fact = function y$jscomp$scopedAliases$0(n) {
+          return n == 1 ? 1 : n * y$jscomp$scopedAliases$0(n - 1);
+        };
+        """);
   }
 
   // https://github.com/google/closure-compiler/issues/2211
   @Test
   public void testIssue2211c() {
     testScoped(
-        lines("foo(() => {", "  const y = function y() {", "    use(y);", "  };", "});"),
-        lines(
-            "foo(() => {",
-            "  const y = function y$jscomp$scopedAliases$0() {",
-            "    use(y$jscomp$scopedAliases$0);",
-            "  };",
-            "});"));
+        """
+        foo(() => {
+          const y = function y() {
+            use(y);
+          };
+        });
+        """,
+        """
+        foo(() => {
+          const y = function y$jscomp$scopedAliases$0() {
+            use(y$jscomp$scopedAliases$0);
+          };
+        });
+        """);
   }
 
   @Test
   public void testGoogModuleGet1() {
     test(
-        lines(
-            "goog.provide('provided');",
-            "goog.provide('other.name.Foo');",
-            "goog.scope(function() {",
-            "  var Foo = goog.module.get('other.name.Foo')",
-            "  /** @type {!Foo} */",
-            "  provided.f = new Foo;",
-            "});",
-            ""),
-        lines(
-            "goog.provide('provided');",
-            "goog.provide('other.name.Foo');",
-            "/** @type {!other.name.Foo} */",
-            "provided.f = new (goog.module.get('other.name.Foo'));",
-            ""));
+        """
+        goog.provide('provided');
+        goog.provide('other.name.Foo');
+        goog.scope(function() {
+          var Foo = goog.module.get('other.name.Foo')
+          /** @type {!Foo} */
+          provided.f = new Foo;
+        });
+        """,
+        """
+        goog.provide('provided');
+        goog.provide('other.name.Foo');
+        /** @type {!other.name.Foo} */
+        provided.f = new (goog.module.get('other.name.Foo'));
+        """);
   }
 
   @Test
   public void testGoogModuleGet2() {
     test(
-        lines(
-            "goog.provide('foo.baz');",
-            "goog.provide('other.thing');",
-            "",
-            "goog.scope(function() {",
-            "",
-            "const a = goog.module.get('other.thing');",
-            "const b = a.b;",
-            "foo.baz = b",
-            "",
-            "}); // goog.scope"),
-        lines(
-            "goog.provide('foo.baz');",
-            "goog.provide('other.thing');",
-            "foo.baz = goog.module.get('other.thing').b;",
-            ""));
+        """
+        goog.provide('foo.baz');
+        goog.provide('other.thing');
+
+        goog.scope(function() {
+
+        const a = goog.module.get('other.thing');
+        const b = a.b;
+        foo.baz = b
+
+        }); // goog.scope
+        """,
+        """
+        goog.provide('foo.baz');
+        goog.provide('other.thing');
+        foo.baz = goog.module.get('other.thing').b;
+        """);
   }
 
   @Test
   public void testGoogModuleGet3() {
     test(
-        lines(
-            "goog.provide('foo.baz');",
-            "goog.provide('other.thing');",
-            "",
-            "goog.scope(function() {",
-            "",
-            "const a = goog.module.get('other.thing').b;",
-            "foo.baz = a",
-            "",
-            "}); // goog.scope"),
-        lines(
-            "goog.provide('foo.baz');",
-            "goog.provide('other.thing');",
-            "foo.baz = goog.module.get('other.thing').b;",
-            ""));
+        """
+        goog.provide('foo.baz');
+        goog.provide('other.thing');
+
+        goog.scope(function() {
+
+        const a = goog.module.get('other.thing').b;
+        foo.baz = a
+
+        }); // goog.scope
+        """,
+        """
+        goog.provide('foo.baz');
+        goog.provide('other.thing');
+        foo.baz = goog.module.get('other.thing').b;
+        """);
   }
 
   @Test
@@ -1181,141 +1248,141 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     test(
         srcs(
             "goog.module('other.name.Foo');",
-            lines(
-                "goog.provide('provided');",
-                "goog.scope(function() {",
-                "  var Foo = goog.module.get('other.name.Foo')",
-                "  /** @type {!Foo} */",
-                "  provided.f = new Foo;",
-                "});",
-                "")),
+            """
+            goog.provide('provided');
+            goog.scope(function() {
+              var Foo = goog.module.get('other.name.Foo')
+              /** @type {!Foo} */
+              provided.f = new Foo;
+            });
+            """),
         expected(
             "goog.module('other.name.Foo');",
-            lines(
-                "goog.provide('provided');",
-                "/** @type {!other.name.Foo} */",
-                "provided.f = new (goog.module.get('other.name.Foo'));",
-                "")));
+            """
+            goog.provide('provided');
+            /** @type {!other.name.Foo} */
+            provided.f = new (goog.module.get('other.name.Foo'));
+            """));
   }
 
   @Test
   public void testGoogModuleGet_missing_noDeletion() {
     invalidModuleGetHandling = InvalidModuleGetHandling.PRESERVE;
     test(
-        lines(
-            "goog.provide('provided');",
-            "",
-            "goog.scope(function() {",
-            "  var Foo = goog.module.get('missing.name.Foo');",
-            "  /** @type {!Foo} */",
-            "  provided.f = new Foo;",
-            "});",
-            ""),
-        lines(
-            "goog.provide('provided');", //
-            "",
-            "/** @type {!missing.name.Foo} */",
-            "provided.f = new (goog.module.get('missing.name.Foo'));",
-            ""));
+        """
+        goog.provide('provided');
+
+        goog.scope(function() {
+          var Foo = goog.module.get('missing.name.Foo');
+          /** @type {!Foo} */
+          provided.f = new Foo;
+        });
+        """,
+        """
+        goog.provide('provided');
+
+        /** @type {!missing.name.Foo} */
+        provided.f = new (goog.module.get('missing.name.Foo'));
+        """);
   }
 
   @Test
   public void testGoogModuleGet_missing() {
     test(
-        lines(
-            "goog.provide('provided');",
-            "",
-            "goog.scope(function() {",
-            "  var Foo = goog.module.get('missing.name.Foo')",
-            "  /** @type {!Foo} */",
-            "  provided.f = new Foo;",
-            "});",
-            ""),
-        lines(
-            "goog.provide('provided');", //
-            "",
-            "/** @type {!Foo} */",
-            "provided.f = new Foo();",
-            ""));
+        """
+        goog.provide('provided');
+
+        goog.scope(function() {
+          var Foo = goog.module.get('missing.name.Foo')
+          /** @type {!Foo} */
+          provided.f = new Foo;
+        });
+        """,
+        """
+        goog.provide('provided');
+
+        /** @type {!Foo} */
+        provided.f = new Foo();
+        """);
   }
 
   @Test
   public void testGoogModuleGet_missingUsedInRhs() {
     test(
-        lines(
-            "goog.provide('provided');",
-            "",
-            "goog.scope(function() {",
-            "  var Foo = goog.module.get('missing.name.Foo')",
-            "  provided.Bar = class extends Foo {};",
-            "});",
-            ""),
-        lines(
-            "goog.provide('provided');", //
-            "",
-            "provided.Bar=class extends Foo {}",
-            ""));
+        """
+        goog.provide('provided');
+
+        goog.scope(function() {
+          var Foo = goog.module.get('missing.name.Foo')
+          provided.Bar = class extends Foo {};
+        });
+        """,
+        """
+        goog.provide('provided');
+
+        provided.Bar=class extends Foo {}
+        """);
   }
 
   @Test
   public void testGoogModuleGet_missingRecursive() {
     test(
-        lines(
-            "goog.provide('provided');",
-            "",
-            "goog.scope(function() {",
-            "  var Foo = goog.module.get('missing.name.Foo')",
-            "  /** @type {!Foo.Bar} */",
-            "  provided.f = new Foo.Bar;",
-            "});",
-            ""),
-        lines(
-            "goog.provide('provided');",
-            "",
-            "/** @type {!Foo.Bar} */",
-            "provided.f = new Foo.Bar();",
-            ""));
+        """
+        goog.provide('provided');
+
+        goog.scope(function() {
+          var Foo = goog.module.get('missing.name.Foo')
+          /** @type {!Foo.Bar} */
+          provided.f = new Foo.Bar;
+        });
+        """,
+        """
+        goog.provide('provided');
+
+        /** @type {!Foo.Bar} */
+        provided.f = new Foo.Bar();
+        """);
   }
 
   @Test
   public void testGoogModuleGet_missingProperty() {
     test(
-        lines(
-            "goog.provide('provided');",
-            "",
-            "goog.scope(function() {",
-            "  var Bar = goog.module.get('missing.name.Foo').Bar",
-            "  /** @type {!Bar} */",
-            "  provided.f = new Bar;",
-            "});",
-            ""),
-        lines(
-            "goog.provide('provided');", //
-            "",
-            "/** @type {!Bar} */",
-            "provided.f = new Bar;",
-            ""));
+        """
+        goog.provide('provided');
+
+        goog.scope(function() {
+          var Bar = goog.module.get('missing.name.Foo').Bar
+          /** @type {!Bar} */
+          provided.f = new Bar;
+        });
+        """,
+        """
+        goog.provide('provided');
+
+        /** @type {!Bar} */
+        provided.f = new Bar;
+        """);
   }
 
   @Test
   public void testGoogModuleGet_aliasOfDeletedModuleGetAlias() {
     test(
-        lines(
-            "goog.provide('provided');",
-            "",
-            "goog.scope(function() {",
-            "  var Foo = goog.module.get('missing.name.Foo');",
-            "  var Bar = Foo.Bar",
-            "  /** @type {!Bar} */",
-            "  provided.f = new Bar;",
-            "});",
-            ""),
-        lines(
-            "goog.provide('provided');",
-            "",
-            "/** @type {!Foo.Bar} */",
-            "provided.f = new Foo.Bar();",
-            ""));
+        """
+        goog.provide('provided');
+
+        goog.scope(function() {
+          var Foo = goog.module.get('missing.name.Foo');
+          var Bar = Foo.Bar
+          /** @type {!Bar} */
+          provided.f = new Bar;
+        });
+        """,
+        """
+        goog.provide('provided');
+
+        /** @type {!Foo.Bar} */
+        provided.f = new Foo.Bar();
+        """);
   }
 
   @Test
@@ -1328,18 +1395,20 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     enableTypeCheck();
 
     test(
-        lines(
-            "goog.scope(function () {",
-            "  /** @constructor */ function F() {}",
-            "  /** @return {F} */ function createFoo() { return 1; }",
-            "});"),
-        lines(
-            "/** @return {$jscomp$scope$m1146332801$0$F} */",
-            "var $jscomp$scope$m1146332801$1$createFoo = ",
-            "/** @return {$jscomp$scope$m1146332801$0$F} */",
-            "function() { return 1; };",
-            "/** @constructor */ var $jscomp$scope$m1146332801$0$F =",
-            "/** @constructor */ function() { };"),
+        """
+        goog.scope(function () {
+          /** @constructor */ function F() {}
+          /** @return {F} */ function createFoo() { return 1; }
+        });
+        """,
+        """
+        /** @return {$jscomp$scope$m1146332801$0$F} */
+        var $jscomp$scope$m1146332801$1$createFoo =
+        /** @return {$jscomp$scope$m1146332801$0$F} */
+        function() { return 1; };
+        /** @constructor */ var $jscomp$scope$m1146332801$0$F =
+        /** @constructor */ function() { };
+        """,
         warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 

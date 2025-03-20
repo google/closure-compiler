@@ -83,9 +83,22 @@ public final class RenameLabelsTest extends CompilerTestCase {
   @Test
   public void testRenameForOf() {
     test(
-        lines(
-            "loop:", "for (let x of [1, 2, 3]) {", "  if (x > 2) {", "    break loop;", "  }", "}"),
-        lines("a:", "for (let x of [1, 2, 3]) {", "  if (x > 2) {", "    break a;", "  }", "}"));
+        """
+        loop:
+        for (let x of [1, 2, 3]) {
+          if (x > 2) {
+            break loop;
+          }
+        }
+        """,
+        """
+        a:
+        for (let x of [1, 2, 3]) {
+          if (x > 2) {
+            break a;
+          }
+        }
+        """);
   }
 
   @Test

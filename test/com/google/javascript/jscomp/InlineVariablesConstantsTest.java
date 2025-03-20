@@ -89,22 +89,18 @@ public final class InlineVariablesConstantsTest extends CompilerTestCase {
     // However, see also AliasStrings, which attempts to reduce this redundancy after we
     // have already pre-computed all of the logic we can.
     test(
-        lines(
-            "", //
-            "/** @const */",
-            "var aa = '1234567890';",
-            "foo(aa);",
-            "foo(aa);",
-            "foo(aa);",
-            ""),
-        lines(
-            "", //
-            "",
-            "",
-            "foo('1234567890');",
-            "foo('1234567890');",
-            "foo('1234567890');",
-            ""));
+        """
+        /** @const */
+        var aa = '1234567890';
+        foo(aa);
+        foo(aa);
+        foo(aa);
+        """,
+        """
+        foo('1234567890');
+        foo('1234567890');
+        foo('1234567890');
+        """);
 
     test("/** @const */var aa = '123456789012345';aa;", "'123456789012345'");
   }

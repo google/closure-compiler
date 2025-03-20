@@ -130,14 +130,15 @@ public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
   @Test
   public void testVarNotImmediatelyBelowScriptOrBlock2() {
     testSame(
-        lines(
-            "var x = 1;",
-            "if (x == 1) {",
-            "  var f = function () { alert('b')}",
-            "} else {",
-            "  f = function() { alert('c')}",
-            "}",
-            "f();"));
+        """
+        var x = 1;
+        if (x == 1) {
+          var f = function () { alert('b')}
+        } else {
+          f = function() { alert('c')}
+        }
+        f();
+        """);
   }
 
   @Test
@@ -236,17 +237,19 @@ public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
   @Test
   public void testInnerFunction1() {
     test(
-        lines(
-            "function f() { ",
-            "  var x = 3;",
-            "  var y = function() { return 4; };",
-            "  return x + y();",
-            "}"),
-        lines(
-            "function f() { ",
-            "  function y() { return 4; }",
-            "  var x = 3;",
-            "  return x + y();",
-            "}"));
+        """
+        function f() {
+          var x = 3;
+          var y = function() { return 4; };
+          return x + y();
+        }
+        """,
+        """
+        function f() {
+          function y() { return 4; }
+          var x = 3;
+          return x + y();
+        }
+        """);
   }
 }

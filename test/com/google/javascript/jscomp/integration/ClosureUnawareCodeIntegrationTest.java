@@ -17,7 +17,6 @@ package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
@@ -71,52 +70,60 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .addAll(externs)
             .add(
                 SourceFile.fromCode(
-                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+                    "globalthis.js",
+                    """
+                    /**
+                     * @type {?}
+                     */
+                    var globalThis;
+                    """))
             .build();
 
     test(
         options,
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('a.b');",
-            "/** @closureUnaware */",
-            "(function() {",
-            "  class ClazzWithStatic {",
-            "    constructor() {}",
-            "",
-            "    /** @nosideeffects */",
-            "    static Create() {",
-            "      if (Math.random() > .5) {",
-            "        throw new Error('Bad input');",
-            "      }",
-            "      return new ClazzWithStatic();",
-            "    }",
-            "  }",
-            "",
-            "  const xUnused = ClazzWithStatic.Create();",
-            "  globalThis['a_b'] = xUnused;",
-            "}).call(globalThis);",
-            "exports = globalThis['a_b'];"),
-        lines(
-            "(function() {",
-            "  class ClazzWithStatic {",
-            "    constructor() {}",
-            "",
-            "    /** @nosideeffects */",
-            "    static Create() {",
-            "      if (Math.random() > .5) {",
-            "        throw new Error('Bad input');",
-            "      }",
-            "      return new ClazzWithStatic();",
-            "    }",
-            "  }",
-            "",
-            "  const xUnused = ClazzWithStatic.Create();",
-            "  globalThis['a_b'] = xUnused;",
-            "}).call(globalThis);"));
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('a.b');
+        /** @closureUnaware */
+        (function() {
+          class ClazzWithStatic {
+            constructor() {}
+
+            /** @nosideeffects */
+            static Create() {
+              if (Math.random() > .5) {
+                throw new Error('Bad input');
+              }
+              return new ClazzWithStatic();
+            }
+          }
+
+          const xUnused = ClazzWithStatic.Create();
+          globalThis['a_b'] = xUnused;
+        }).call(globalThis);
+        exports = globalThis['a_b'];
+        """,
+        """
+        (function() {
+          class ClazzWithStatic {
+            constructor() {}
+
+            /** @nosideeffects */
+            static Create() {
+              if (Math.random() > .5) {
+                throw new Error('Bad input');
+              }
+              return new ClazzWithStatic();
+            }
+          }
+
+          const xUnused = ClazzWithStatic.Create();
+          globalThis['a_b'] = xUnused;
+        }).call(globalThis);
+        """);
   }
 
   @Test
@@ -130,7 +137,13 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .addAll(externs)
             .add(
                 SourceFile.fromCode(
-                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+                    "globalthis.js",
+                    """
+                    /**
+                     * @type {?}
+                     */
+                    var globalThis;
+                    """))
             .build();
 
     // Sadly, we can't use 'test' to validate this, because it will parse the "use strict" pragma
@@ -145,30 +158,31 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
         compile(
             options,
             new String[] {
-              lines(
-                  "/**",
-                  " * @fileoverview",
-                  " * @closureUnaware",
-                  " */",
-                  "goog.module('a.b');",
-                  "/** @closureUnaware */",
-                  "(function() {",
-                  "  class ClazzWithStatic {",
-                  "    constructor() {}",
-                  "",
-                  "    /** @nosideeffects */",
-                  "    static Create() {",
-                  "      if (Math.random() > .5) {",
-                  "        throw new Error('Bad input');",
-                  "      }",
-                  "      return new ClazzWithStatic();",
-                  "    }",
-                  "  }",
-                  "",
-                  "  const xUnused = ClazzWithStatic.Create();",
-                  "  globalThis['a_b'] = xUnused;",
-                  "}).call(globalThis);",
-                  "exports = globalThis['a_b'];"),
+              """
+              /**
+               * @fileoverview
+               * @closureUnaware
+               */
+              goog.module('a.b');
+              /** @closureUnaware */
+              (function() {
+                class ClazzWithStatic {
+                  constructor() {}
+
+                  /** @nosideeffects */
+                  static Create() {
+                    if (Math.random() > .5) {
+                      throw new Error('Bad input');
+                    }
+                    return new ClazzWithStatic();
+                  }
+                }
+
+                const xUnused = ClazzWithStatic.Create();
+                globalThis['a_b'] = xUnused;
+              }).call(globalThis);
+              exports = globalThis['a_b'];
+              """,
             });
 
     Node root = compiler.getRoot().getLastChild();
@@ -186,28 +200,28 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
 
     assertThat(compiler.toSource(root))
         .isEqualTo(
-            lines(
-                "goog.loadModule(function(exports) {",
-                "  \"use strict\";",
-                "  goog.module(\"a.b\");",
-                "  (function() {",
-                "    class ClazzWithStatic {",
-                "      constructor() {",
-                "      }",
-                "      static Create() {",
-                "        if (Math.random() > .5) {",
-                "          throw new Error(\"Bad input\");",
-                "        }",
-                "        return new ClazzWithStatic();",
-                "      }",
-                "    }",
-                "    const xUnused = ClazzWithStatic.Create();",
-                "    globalThis[\"a_b\"] = xUnused;",
-                "  }).call(globalThis);",
-                "  exports = globalThis[\"a_b\"];",
-                "  return exports;",
-                "});",
-                ""));
+            """
+            goog.loadModule(function(exports) {
+              "use strict";
+              goog.module("a.b");
+              (function() {
+                class ClazzWithStatic {
+                  constructor() {
+                  }
+                  static Create() {
+                    if (Math.random() > .5) {
+                      throw new Error("Bad input");
+                    }
+                    return new ClazzWithStatic();
+                  }
+                }
+                const xUnused = ClazzWithStatic.Create();
+                globalThis["a_b"] = xUnused;
+              }).call(globalThis);
+              exports = globalThis["a_b"];
+              return exports;
+            });
+            """);
   }
 
   @Test
@@ -222,22 +236,33 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .addAll(externs)
             .add(
                 SourceFile.fromCode(
-                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+                    "globalthis.js",
+                    """
+                    /**
+                     * @type {?}
+                     */
+                    var globalThis;
+                    """))
             .build();
 
     test(
         options,
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('a.b');",
-            "/** @closureUnaware */",
-            "(function() {",
-            "  const x = 5;",
-            "}).call(globalThis);"),
-        lines("(function() {", "  const x = 5;", "}).call(globalThis);"));
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('a.b');
+        /** @closureUnaware */
+        (function() {
+          const x = 5;
+        }).call(globalThis);
+        """,
+        """
+        (function() {
+          const x = 5;
+        }).call(globalThis);
+        """);
   }
 
   @Test
@@ -254,25 +279,35 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .addAll(externs)
             .add(
                 SourceFile.fromCode(
-                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+                    "globalthis.js",
+                    """
+                    /**
+                     * @type {?}
+                     */
+                    var globalThis;
+                    """))
             .build();
 
     // These compile and test steps are mostly copied from `test`, but instead of doing an AST level
     // validation we do a byte-for-byte comparison of the source output.
     String original =
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('a.b');",
-            "/** @closureUnaware */",
-            "(function() {",
-            "  // This is a comment that should be removed",
-            "  \n\n\t\n       ",
-            "  // and so is this one?",
-            "  const x = 5;",
-            "}).call(globalThis);");
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('a.b');
+        /** @closureUnaware */
+        (function() {
+          // This is a comment that should be removed
+
+
+        \t
+
+          // and so is this one?
+          const x = 5;
+        }).call(globalThis);
+        """;
 
     String expected = "'use strict';(function(){const x=5}).call(globalThis);";
 
@@ -304,30 +339,41 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .addAll(externs)
             .add(
                 SourceFile.fromCode(
-                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+                    "globalthis.js",
+                    """
+                    /**
+                     * @type {?}
+                     */
+                    var globalThis;
+                    """))
             .build();
 
     test(
         options,
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " * @suppress {uselessCode}",
-            " */",
-            "goog.module('a.b');",
-            "if (false) {",
-            "  /** @closureUnaware */",
-            "  (function() {",
-            "    const x = 5;",
-            "  }).call(globalThis);",
-            "} else {",
-            "  /** @closureUnaware */",
-            "  (function() {",
-            "    const x = 10;",
-            "  }).call(globalThis);",
-            "}"),
-        lines("(function() {", "  const x = 10;", "}).call(globalThis);"));
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         * @suppress {uselessCode}
+         */
+        goog.module('a.b');
+        if (false) {
+          /** @closureUnaware */
+          (function() {
+            const x = 5;
+          }).call(globalThis);
+        } else {
+          /** @closureUnaware */
+          (function() {
+            const x = 10;
+          }).call(globalThis);
+        }
+        """,
+        """
+        (function() {
+          const x = 10;
+        }).call(globalThis);
+        """);
   }
 
   @Test
@@ -343,42 +389,54 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .addAll(externs)
             .add(
                 SourceFile.fromCode(
-                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+                    "globalthis.js",
+                    """
+                    /**
+                     * @type {?}
+                     */
+                    var globalThis;
+                    """))
             .build();
 
     test(
         options,
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " * @suppress {uselessCode}",
-            " */",
-            "goog.module('a.b');",
-            "if (true) {",
-            "  /** @closureUnaware */",
-            "  (function() {",
-            "    const x = 5;",
-            "  }).call(globalThis);",
-            "} else {",
-            "  /** @closureUnaware */",
-            "  (function() {",
-            "    const x = 10;",
-            "  }).call(globalThis);",
-            "}"),
-        lines("(function() {", "  const x = 5;", "}).call(globalThis);"));
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         * @suppress {uselessCode}
+         */
+        goog.module('a.b');
+        if (true) {
+          /** @closureUnaware */
+          (function() {
+            const x = 5;
+          }).call(globalThis);
+        } else {
+          /** @closureUnaware */
+          (function() {
+            const x = 10;
+          }).call(globalThis);
+        }
+        """,
+        """
+        (function() {
+          const x = 5;
+        }).call(globalThis);
+        """);
   }
 
   @Test
   public void
       testNoOptimizeClosureUnawareCode_doesNotHideHumanAuthoredWrapperCallsFromConformance() {
     String balEvalConfig =
-        lines(
-            "requirement: {",
-            "  type: BANNED_NAME_CALL",
-            "  value: '$jscomp_wrap_closure_unaware_code'",
-            "   error_message: '$jscomp_wrap_closure_unaware_code is not allowed'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_NAME_CALL
+          value: '$jscomp_wrap_closure_unaware_code'
+           error_message: '$jscomp_wrap_closure_unaware_code is not allowed'
+        }
+        """;
 
     ConformanceConfig.Builder conformanceBuilder = ConformanceConfig.newBuilder();
     try {
@@ -398,26 +456,34 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .addAll(externs)
             .add(
                 SourceFile.fromCode(
-                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+                    "globalthis.js",
+                    """
+                    /**
+                     * @type {?}
+                     */
+                    var globalThis;
+                    """))
             .add(
                 SourceFile.fromCode(
                     "user_defined_externs.js",
-                    lines(
-                        "/**",
-                        " * @type {function(string):?}",
-                        " */",
-                        "var $jscomp_wrap_closure_unaware_code;")))
+                    """
+                    /**
+                     * @type {function(string):?}
+                     */
+                    var $jscomp_wrap_closure_unaware_code;
+                    """))
             .build();
 
     test(
         options,
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('a.b');",
-            "$jscomp_wrap_closure_unaware_code('{ const x = 5 }');"),
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('a.b');
+        $jscomp_wrap_closure_unaware_code('{ const x = 5 }');
+        """,
         // This error is currently reported as "invalid structure for @closureUnaware annotated
         // code"
         // but if we loosen the restrictions then this should be replaced with
@@ -429,12 +495,13 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
   public void
       testNoOptimizeClosureUnawareCode_doesNotHideHumanAuthoredWrapperCallsFromConformance_notClosureUnaware() {
     String balEvalConfig =
-        lines(
-            "requirement: {",
-            "  type: BANNED_NAME_CALL",
-            "  value: '$jscomp_wrap_closure_unaware_code'",
-            "   error_message: '$jscomp_wrap_closure_unaware_code is not allowed'",
-            "}");
+        """
+        requirement: {
+          type: BANNED_NAME_CALL
+          value: '$jscomp_wrap_closure_unaware_code'
+           error_message: '$jscomp_wrap_closure_unaware_code is not allowed'
+        }
+        """;
 
     ConformanceConfig.Builder conformanceBuilder = ConformanceConfig.newBuilder();
     try {
@@ -454,20 +521,30 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .addAll(externs)
             .add(
                 SourceFile.fromCode(
-                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+                    "globalthis.js",
+                    """
+                    /**
+                     * @type {?}
+                     */
+                    var globalThis;
+                    """))
             .add(
                 SourceFile.fromCode(
                     "user_defined_externs.js",
-                    lines(
-                        "/**",
-                        " * @type {function(string):?}",
-                        " */",
-                        "var $jscomp_wrap_closure_unaware_code;")))
+                    """
+                    /**
+                     * @type {function(string):?}
+                     */
+                    var $jscomp_wrap_closure_unaware_code;
+                    """))
             .build();
 
     test(
         options,
-        lines("goog.module('a.b');", "$jscomp_wrap_closure_unaware_code('{ const x = 5 }');"),
+        """
+        goog.module('a.b');
+        $jscomp_wrap_closure_unaware_code('{ const x = 5 }');
+        """,
         DiagnosticGroups.CONFORMANCE_VIOLATIONS);
   }
 
@@ -482,28 +559,39 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .addAll(externs)
             .add(
                 SourceFile.fromCode(
-                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+                    "globalthis.js",
+                    """
+                    /**
+                     * @type {?}
+                     */
+                    var globalThis;
+                    """))
             .build();
 
     test(
         options,
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('a.b');",
-            "/** @closureUnaware */",
-            "(function() {",
-            "  /**",
-            "   * @prop {number} a - scale x",
-            // @defaults isn't a valid jsdoc tag, but within  the closure-unaware portions of the
-            // AST we should not raise a warning.
-            "   * @defaults",
-            "   */",
-            "  const x = /** @inline */ (5);",
-            "}).call(globalThis);"),
-        lines("(function() {", "  const x = 5;", "}).call(globalThis);"));
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('a.b');
+        /** @closureUnaware */
+        (function() {
+          /**
+           * @prop {number} a - scale x
+        // @defaults isn't a valid jsdoc tag, but within  the closure-unaware portions of the
+        // AST we should not raise a warning.
+           * @defaults
+           */
+          const x = /** @inline */ (5);
+        }).call(globalThis);
+        """,
+        """
+        (function() {
+          const x = 5;
+        }).call(globalThis);
+        """);
   }
 
   @Test
@@ -518,7 +606,13 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .addAll(externs)
             .add(
                 SourceFile.fromCode(
-                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+                    "globalthis.js",
+                    """
+                    /**
+                     * @type {?}
+                     */
+                    var globalThis;
+                    """))
             .build();
 
     // this test-case is trying to ensure that even when there are jsdoc comments in the
@@ -529,22 +623,27 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
 
     test(
         options,
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('a.b');",
-            "/** @closureUnaware */",
-            "(function() {",
-            "  /** @defaults */", // JSDoc comment not attached to any node
-            "  /**",
-            "   * @prop {number} a - scale x",
-            "   * @defaults",
-            "   */",
-            "  const x = 5;",
-            "}).call(globalThis);"),
-        lines("(function() {", "  const x = 5;", "}).call(globalThis);"));
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('a.b');
+        /** @closureUnaware */
+        (function() {
+          /** @defaults */ // JSDoc comment not attached to any node
+          /**
+           * @prop {number} a - scale x
+           * @defaults
+           */
+          const x = 5;
+        }).call(globalThis);
+        """,
+        """
+        (function() {
+          const x = 5;
+        }).call(globalThis);
+        """);
   }
 
   @Test
@@ -559,7 +658,13 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .addAll(externs)
             .add(
                 SourceFile.fromCode(
-                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+                    "globalthis.js",
+                    """
+                    /**
+                     * @type {?}
+                     */
+                    var globalThis;
+                    """))
             .build();
 
     // this test-case is trying to ensure that even when there are jsdoc comments in the
@@ -571,23 +676,28 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
 
     test(
         options,
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('a.b');",
-            "/** @closureUnaware */",
-            "(function() {",
-            "  /** @type [string] */",
-            "",
-            "  /**",
-            "   * @prop {number} a - scale x",
-            "   * @defaults",
-            "   */",
-            "  const x = 5;",
-            "}).call(globalThis);"),
-        lines("(function() {", "  const x = 5;", "}).call(globalThis);"));
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('a.b');
+        /** @closureUnaware */
+        (function() {
+          /** @type [string] */
+
+          /**
+           * @prop {number} a - scale x
+           * @defaults
+           */
+          const x = 5;
+        }).call(globalThis);
+        """,
+        """
+        (function() {
+          const x = 5;
+        }).call(globalThis);
+        """);
   }
 
   @Test
@@ -602,7 +712,13 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .addAll(externs)
             .add(
                 SourceFile.fromCode(
-                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+                    "globalthis.js",
+                    """
+                    /**
+                     * @type {?}
+                     */
+                    var globalThis;
+                    """))
             .build();
 
     // this test-case is trying to ensure that even when the special handling for JSDoc comments in
@@ -610,26 +726,27 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     // closure-unaware subsection of the AST.
     test(
         options,
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('a.b');",
-            // This is invalid JSDoc, but it isn't within the subtree of a node annotated as
-            // `@closureUnaware`.
-            // NOTE: The `@closureUnaware` in the `@fileoverview` comment does not apply this
-            // subtree suppression
-            // mechanism to the whole script - it is only to indicate that the file contains some
-            // closure-unaware code
-            // (e.g. a performance optimization).
-            "/**",
-            " * @prop {number} a - scale x",
-            " */",
-            "/** @closureUnaware */",
-            "(function() {",
-            "  const x = 5;",
-            "}).call(globalThis);"),
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('a.b');
+        // This is invalid JSDoc, but it isn't within the subtree of a node annotated as
+        // `@closureUnaware`.
+        // NOTE: The `@closureUnaware` in the `@fileoverview` comment does not apply this
+        // subtree suppression
+        // mechanism to the whole script - it is only to indicate that the file contains some
+        // closure-unaware code
+        // (e.g. a performance optimization).
+        /**
+         * @prop {number} a - scale x
+         */
+        /** @closureUnaware */
+        (function() {
+          const x = 5;
+        }).call(globalThis);
+        """,
         DiagnosticGroups.NON_STANDARD_JSDOC);
   }
 
@@ -645,7 +762,13 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .addAll(externs)
             .add(
                 SourceFile.fromCode(
-                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+                    "globalthis.js",
+                    """
+                    /**
+                     * @type {?}
+                     */
+                    var globalThis;
+                    """))
             .build();
 
     // this test-case is trying to ensure that even when the special handling for JSDoc comments in
@@ -655,20 +778,20 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     // subsection of the AST don't have their jsdoc parse errors suppressed.
     test(
         options,
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('a.b');",
-            "/** @closureUnaware */",
-            "(function() {",
-            "  const x = 5;",
-            "}).call(globalThis);",
-            "/**",
-            " * @prop {number} a - scale x",
-            " */",
-            ""),
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('a.b');
+        /** @closureUnaware */
+        (function() {
+          const x = 5;
+        }).call(globalThis);
+        /**
+         * @prop {number} a - scale x
+         */
+        """,
         DiagnosticGroups.NON_STANDARD_JSDOC);
   }
 
@@ -683,7 +806,13 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .addAll(externs)
             .add(
                 SourceFile.fromCode(
-                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+                    "globalthis.js",
+                    """
+                    /**
+                     * @type {?}
+                     */
+                    var globalThis;
+                    """))
             .build();
 
     // Normally, the RemoveCastNodes would remove all the CAST nodes from the AST before it is ever
@@ -691,17 +820,22 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     // so instead this test validates that during parsing we never create CAST nodes to begin with.
     test(
         options,
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('a.b');",
-            "/** @closureUnaware */",
-            "(function() {",
-            "  const x = /** @type {string | number} */ (5);",
-            "}).call(globalThis);"),
-        lines("(function() {", "  const x = /** string */ (5);", "}).call(globalThis);"));
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('a.b');
+        /** @closureUnaware */
+        (function() {
+          const x = /** @type {string | number} */ (5);
+        }).call(globalThis);
+        """,
+        """
+        (function() {
+          const x = /** string */ (5);
+        }).call(globalThis);
+        """);
 
     Node fn =
         lastCompiler
@@ -733,7 +867,13 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .addAll(externs)
             .add(
                 SourceFile.fromCode(
-                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+                    "globalthis.js",
+                    """
+                    /**
+                     * @type {?}
+                     */
+                    var globalThis;
+                    """))
             .build();
 
     // Normally, the RemoveCastNodes would remove all the CAST nodes from the AST before it is ever
@@ -741,24 +881,29 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     // so instead this test validates that during parsing we never create CAST nodes to begin with.
     test(
         options,
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('a.b');",
-            "/** @closureUnaware */",
-            "(function() {",
-            "  /**",
-            // This @date tag is ignored - it isn't parsed as JSDoc and doesn't end up in the
-            // license text.
-            "   * @date 1900-01-01",
-            "   * @license FOO BAR BAZ!",
-            "   */",
-            "  const z = /** hello world! */ (5);",
-            "  const x = /** @type {string | number} */ (5);",
-            "}).call(globalThis);"),
-        lines("(function() {", "  const z = 5; const x = 5;", "}).call(globalThis);"));
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('a.b');
+        /** @closureUnaware */
+        (function() {
+          /**
+        // This @date tag is ignored - it isn't parsed as JSDoc and doesn't end up in the
+        // license text.
+           * @date 1900-01-01
+           * @license FOO BAR BAZ!
+           */
+          const z = /** hello world! */ (5);
+          const x = /** @type {string | number} */ (5);
+        }).call(globalThis);
+        """,
+        """
+        (function() {
+          const z = 5; const x = 5;
+        }).call(globalThis);
+        """);
 
     Node script = lastCompiler.getRoot().getSecondChild().getFirstChild();
     assertNode(script).isScript();
@@ -810,7 +955,13 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .addAll(externs)
             .add(
                 SourceFile.fromCode(
-                    "globalthis.js", lines("/**", " * @type {?}", " */", "var globalThis;")))
+                    "globalthis.js",
+                    """
+                    /**
+                     * @type {?}
+                     */
+                    var globalThis;
+                    """))
             .build();
 
     // Normally, the RemoveCastNodes would remove all the CAST nodes from the AST before it is ever
@@ -818,20 +969,25 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     // so instead this test validates that during parsing we never create CAST nodes to begin with.
     test(
         options,
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @closureUnaware",
-            " */",
-            "goog.module('a.b');",
-            "/** @closureUnaware */",
-            "(function() {",
-            "  // A B C ",
-            "  /** FOO BAR BAZ! */",
-            "  // D E F",
-            "  const z = 5;",
-            "}).call(globalThis);"),
-        lines("(function() {", "  const z = 5;", "}).call(globalThis);"));
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('a.b');
+        /** @closureUnaware */
+        (function() {
+          // A B C
+          /** FOO BAR BAZ! */
+          // D E F
+          const z = 5;
+        }).call(globalThis);
+        """,
+        """
+        (function() {
+          const z = 5;
+        }).call(globalThis);
+        """);
 
     Node script = lastCompiler.getRoot().getSecondChild().getFirstChild();
     assertNode(script).isScript();

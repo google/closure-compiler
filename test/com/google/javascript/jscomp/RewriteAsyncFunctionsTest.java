@@ -95,35 +95,37 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   @Test
   public void testDefaultParameterUsingThis() {
     testAsyncRewriting(
-        lines(
-            "class X {",
-            "  /**",
-            "   * @param {number} a",
-            "   */",
-            "  constructor(a) {",
-            "    /** @const */ this.a = a;",
-            "  }",
-            "  /**",
-            "   * @param {number} b",
-            "   * @return {!Promise<number>}",
-            "   */",
-            "  async m(b = this.a) {",
-            "      return this.a + b;",
-            "  }",
-            "}"),
-        lines(
-            "class X {",
-            "  constructor(a) {",
-            "    /** @const */ this.a = a;",
-            "  }",
-            "  m(b = this.a) {", // this in parameter default value doesn't get changed
-            "    const ASYNC_THIS$3 = this;",
-            "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-            "        function* () {",
-            "            return ASYNC_THIS$3.a + b;",
-            "        });",
-            "  }",
-            "}"));
+        """
+        class X {
+          /**
+           * @param {number} a
+           */
+          constructor(a) {
+            /** @const */ this.a = a;
+          }
+          /**
+           * @param {number} b
+           * @return {!Promise<number>}
+           */
+          async m(b = this.a) {
+              return this.a + b;
+          }
+        }
+        """,
+        """
+        class X {
+          constructor(a) {
+            /** @const */ this.a = a;
+          }
+          m(b = this.a) { // this in parameter default value doesn't get changed
+            const ASYNC_THIS$3 = this;
+            return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                function* () {
+                    return ASYNC_THIS$3.a + b;
+                });
+          }
+        }
+        """);
 
     Color classXInstanceType = getGlobalInstanceColor("X");
 
@@ -148,26 +150,28 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   @Test
   public void testInnerArrowFunctionUsingThis() {
     testAsyncRewriting(
-        lines(
-            "class X {",
-            "  async m() {",
-            "    return new Promise((resolve, reject) => {",
-            "      return this;",
-            "    });",
-            "  }",
-            "}"),
-        lines(
-            "class X {",
-            "  m() {",
-            "    const ASYNC_THIS$1 = this;",
-            "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-            "        function* () {",
-            "          return new Promise((resolve, reject) => {",
-            "            return ASYNC_THIS$1;",
-            "          });",
-            "        });",
-            "  }",
-            "}"));
+        """
+        class X {
+          async m() {
+            return new Promise((resolve, reject) => {
+              return this;
+            });
+          }
+        }
+        """,
+        """
+        class X {
+          m() {
+            const ASYNC_THIS$1 = this;
+            return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                function* () {
+                  return new Promise((resolve, reject) => {
+                    return ASYNC_THIS$1;
+                  });
+                });
+          }
+        }
+        """);
 
     Color classXInstanceType = getGlobalInstanceColor("X");
 
@@ -194,36 +198,38 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     testAsyncRewriting(
         externs(new TestExternsBuilder().addPromise().addJSCompLibraries().build()),
         srcs(
-            lines(
-                "class A {",
-                "  m() {",
-                "    return Promise.resolve(this);",
-                "  }",
-                "}",
-                "class X extends A {",
-                "  async m() {",
-                "    return super.m();",
-                "  }",
-                "}")),
+            """
+            class A {
+              m() {
+                return Promise.resolve(this);
+              }
+            }
+            class X extends A {
+              async m() {
+                return super.m();
+              }
+            }
+            """),
         expected(
-            lines(
-                "class A {",
-                "  m() {",
-                "    return Promise.resolve(this);",
-                "  }",
-                "}",
-                "class X extends A {",
-                "  m() {",
-                "    const ASYNC_THIS$3 = this;",
-                "    const ASYNC_SUPER_GET$5$m = () => {",
-                "      return super.m;",
-                "    };",
-                "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-                "        function* () {",
-                "          return" + " ASYNC_SUPER_GET$5$m().call(ASYNC_THIS$3);",
-                "        });",
-                "  }",
-                "}")));
+            """
+            class A {
+              m() {
+                return Promise.resolve(this);
+              }
+            }
+            class X extends A {
+              m() {
+                const ASYNC_THIS$3 = this;
+                const ASYNC_SUPER_GET$5$m = () => {
+                  return super.m;
+                };
+                return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                    function* () {
+                      return ASYNC_SUPER_GET$5$m().call(ASYNC_THIS$3);
+                    });
+              }
+            }
+            """));
 
     Color classAInstanceType = getGlobalInstanceColor("A");
     // type of A.prototype.m
@@ -285,38 +291,40 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     testAsyncRewriting(
         externs(new TestExternsBuilder().addFunction().addJSCompLibraries().build()),
         srcs(
-            lines(
-                "class A {",
-                "  m() {",
-                "    return this;",
-                "  }",
-                "}",
-                "class X extends A {",
-                "  async m() {",
-                "    const tmp = super.m;",
-                "    return tmp.call(null);",
-                "  }",
-                "}")),
+            """
+            class A {
+              m() {
+                return this;
+              }
+            }
+            class X extends A {
+              async m() {
+                const tmp = super.m;
+                return tmp.call(null);
+              }
+            }
+            """),
         expected(
-            lines(
-                "class A {",
-                "  m() {",
-                "    return this;",
-                "  }",
-                "}",
-                "class X extends A {",
-                "  m() {",
-                "    const ASYNC_SUPER_GET$5$m = () => {",
-                "      return super.m;",
-                "    };",
-                "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-                "        function* () {",
-                "          const tmp = ASYNC_SUPER_GET$5$m();",
-                // type of tmp will indicate it requires `this` be provided, but will allow null.
-                "          return tmp.call(null);",
-                "        });",
-                "  }",
-                "}")));
+            """
+            class A {
+              m() {
+                return this;
+              }
+            }
+            class X extends A {
+              m() {
+                const ASYNC_SUPER_GET$5$m = () => {
+                  return super.m;
+                };
+                return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                    function* () {
+                      const tmp = ASYNC_SUPER_GET$5$m();
+            // type of tmp will indicate it requires `this` be provided, but will allow null.
+                      return tmp.call(null);
+                    });
+              }
+            }
+            """));
 
     // type of A.prototype.m
     Color classAPropertyMType =
@@ -371,62 +379,66 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   @Test
   public void testMultipleSuperAccessesInAsyncFunction_havingNonIdenticalUnknownTypes() {
     testAsyncRewriting(
-        lines(
-            "class UpdatingElement {",
-            "  getUpdateComplete() {",
-            "  }",
-            "}",
-            "",
-            "class TextFieldBase extends UpdatingElement {",
-            "  async _getUpdateComplete() {",
-            "    if (super.getUpdateComplete) {", // `?` type
-            "      await super.getUpdateComplete();", // `??` type
-            "    }",
-            "  }",
-            "}"),
-        lines(
-            "class UpdatingElement {",
-            "  getUpdateComplete() {",
-            "  }",
-            "}",
-            "class TextFieldBase extends UpdatingElement {",
-            "  _getUpdateComplete() {",
-            "    const ASYNC_THIS$3 = this;",
-            "    const ASYNC_SUPER_GET$5$getUpdateComplete = () => {",
-            "      return super.getUpdateComplete;",
-            "    };",
-            "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(function*() {",
-            "      if (ASYNC_SUPER_GET$5$getUpdateComplete()) {",
-            "        yield" + " ASYNC_SUPER_GET$5$getUpdateComplete().call(ASYNC_THIS$3);",
-            "      }",
-            "    });",
-            "  }",
-            "}"));
+        """
+        class UpdatingElement {
+          getUpdateComplete() {
+          }
+        }
+
+        class TextFieldBase extends UpdatingElement {
+          async _getUpdateComplete() {
+            if (super.getUpdateComplete) { // `?` type
+              await super.getUpdateComplete(); // `??` type
+            }
+          }
+        }
+        """,
+        """
+        class UpdatingElement {
+          getUpdateComplete() {
+          }
+        }
+        class TextFieldBase extends UpdatingElement {
+          _getUpdateComplete() {
+            const ASYNC_THIS$3 = this;
+            const ASYNC_SUPER_GET$5$getUpdateComplete = () => {
+              return super.getUpdateComplete;
+            };
+            return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(function*() {
+              if (ASYNC_SUPER_GET$5$getUpdateComplete()) {
+                yield ASYNC_SUPER_GET$5$getUpdateComplete().call(ASYNC_THIS$3);
+              }
+            });
+          }
+        }
+        """);
   }
 
   @Test
   public void testNestedArrowFunctionUsingThis() {
     testAsyncRewriting(
-        lines(
-            "class X {", //
-            "  m() {",
-            "    return async () => (() => this);",
-            "  }",
-            "}"),
-        lines(
-            "class X {",
-            "  m() {",
-            "    return () => {",
-            "      const ASYNC_THIS$3 = this;",
-            "      return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-            "          function* () {",
-            "            return () => {",
-            "              return ASYNC_THIS$3;",
-            "            };",
-            "          })",
-            "    }",
-            "  }",
-            "}"));
+        """
+        class X {
+          m() {
+            return async () => (() => this);
+          }
+        }
+        """,
+        """
+        class X {
+          m() {
+            return () => {
+              const ASYNC_THIS$3 = this;
+              return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                  function* () {
+                    return () => {
+                      return ASYNC_THIS$3;
+                    };
+                  })
+            }
+          }
+        }
+        """);
   }
 
   @Test
@@ -434,27 +446,29 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     testAsyncRewriting(
         externs(new TestExternsBuilder().addArguments().addJSCompLibraries().build()),
         srcs(
-            lines(
-                "class X {",
-                "  async m() {",
-                "    return new Promise((resolve, reject) => {",
-                "      return arguments;",
-                "    });",
-                "  }",
-                "}")),
+            """
+            class X {
+              async m() {
+                return new Promise((resolve, reject) => {
+                  return arguments;
+                });
+              }
+            }
+            """),
         expected(
-            lines(
-                "class X {",
-                "  m() {",
-                "    const ASYNC_ARGUMENTS$1 = arguments;",
-                "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-                "        function* () {",
-                "          return new Promise((resolve, reject) => {",
-                "            return ASYNC_ARGUMENTS$1",
-                "          });",
-                "        });",
-                "  }",
-                "}")));
+            """
+            class X {
+              m() {
+                const ASYNC_ARGUMENTS$1 = arguments;
+                return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                    function* () {
+                      return new Promise((resolve, reject) => {
+                        return ASYNC_ARGUMENTS$1
+                      });
+                    });
+              }
+            }
+            """));
 
     ImmutableList<Node> argumentsAliasRefs =
         findClassDefinition(getLastCompiler(), "X")
@@ -490,13 +504,14 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   public void testAwaitReplacement() {
     testAsyncRewriting(
         "async function foo(promise) { return await promise; }",
-        lines(
-            "function foo(promise) {",
-            "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-            "        function* () {",
-            "          return yield promise;",
-            "        });",
-            "}"));
+        """
+        function foo(promise) {
+            return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                function* () {
+                  return yield promise;
+                });
+        }
+        """);
   }
 
   @Test
@@ -513,39 +528,42 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   public void testArgumentsReplacement_asyncFunction() {
     testAsyncRewriting(
         "async function f(a, b, ...rest) { return arguments.length; }",
-        lines(
-            "function f(a, b, ...rest) {",
-            "  const ASYNC_ARGUMENTS$1 = arguments;",
-            "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-            "        function* () {",
-            "          return ASYNC_ARGUMENTS$1.length;", // arguments replaced
-            "        });",
-            "}"));
+        """
+        function f(a, b, ...rest) {
+          const ASYNC_ARGUMENTS$1 = arguments;
+            return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                function* () {
+                  return ASYNC_ARGUMENTS$1.length; // arguments replaced
+                });
+        }
+        """);
   }
 
   @Test
   public void testArgumentsReplacement_asyncClosure() {
     testAsyncRewriting(
-        lines(
-            "function outer() {",
-            "  /**",
-            "   * @param {...?} varArgs",
-            "   * @return {!Promise<number>}",
-            "   */",
-            "  async function f(varArgs) { return arguments.length; }",
-            "  return f(arguments)",
-            "}"),
-        lines(
-            "function outer() {",
-            "  function f(varArgs) {",
-            "    const ASYNC_ARGUMENTS$3 = arguments;",
-            "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-            "        function* () {",
-            "          return ASYNC_ARGUMENTS$3.length;", // arguments replaced
-            "        });",
-            "  }",
-            "  return f(arguments)", // unchanged
-            "}"));
+        """
+        function outer() {
+          /**
+           * @param {...?} varArgs
+           * @return {!Promise<number>}
+           */
+          async function f(varArgs) { return arguments.length; }
+          return f(arguments)
+        }
+        """,
+        """
+        function outer() {
+          function f(varArgs) {
+            const ASYNC_ARGUMENTS$3 = arguments;
+            return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                function* () {
+                  return ASYNC_ARGUMENTS$3.length; // arguments replaced
+                });
+          }
+          return f(arguments) // unchanged
+        }
+        """);
   }
 
   @Test
@@ -553,55 +571,59 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     testAsyncRewriting(
         externs(new TestExternsBuilder().addFunction().addJSCompLibraries().build()),
         srcs(
-            lines(
-                "async function a() {",
-                "  function inner() {",
-                "    return arguments.length;",
-                "  }",
-                "  return inner.apply(undefined, arguments);", // this should get replaced
-                "}")),
+            """
+            async function a() {
+              function inner() {
+                return arguments.length;
+              }
+              return inner.apply(undefined, arguments); // this should get replaced
+            }
+            """),
         expected(
-            lines(
-                "function a() {",
-                "  const ASYNC_ARGUMENTS$1 = arguments;",
-                "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-                "        function* () {",
-                "          function inner() {",
-                "            return arguments.length;", // unchanged
-                "          }",
-                "          return inner.apply(undefined, ASYNC_ARGUMENTS$1);",
-                "        });",
-                "}")));
+            """
+            function a() {
+              const ASYNC_ARGUMENTS$1 = arguments;
+                return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                    function* () {
+                      function inner() {
+                        return arguments.length; // unchanged
+                      }
+                      return inner.apply(undefined, ASYNC_ARGUMENTS$1);
+                    });
+            }
+            """));
   }
 
   @Test
   public void testClassMethod() {
     testAsyncRewriting(
-        lines(
-            "class A {",
-            "  /**",
-            "   * @param {number} x",
-            "   */",
-            "  constructor(x) {",
-            "    /** @type {number} */ this.x = x;",
-            "  }",
-            "  async f() {",
-            "    return this.x;",
-            "  }",
-            "}"),
-        lines(
-            "class A {",
-            "  constructor(x) {",
-            "    this.x = x;",
-            "  }",
-            "  f() {",
-            "    const ASYNC_THIS$3 = this;",
-            "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-            "        function *() {",
-            "          return ASYNC_THIS$3.x;", // this replaced
-            "        });",
-            "  }",
-            "}"));
+        """
+        class A {
+          /**
+           * @param {number} x
+           */
+          constructor(x) {
+            /** @type {number} */ this.x = x;
+          }
+          async f() {
+            return this.x;
+          }
+        }
+        """,
+        """
+        class A {
+          constructor(x) {
+            this.x = x;
+          }
+          f() {
+            const ASYNC_THIS$3 = this;
+            return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                function *() {
+                  return ASYNC_THIS$3.x; // this replaced
+                });
+          }
+        }
+        """);
   }
 
   @Test
@@ -609,31 +631,33 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     testAsyncRewriting(
         externs(new TestExternsBuilder().addConsole().addJSCompLibraries().build()),
         srcs(
-            lines(
-                "class A {",
-                "  async f() {",
-                "    let g = async () => { console.log(this, arguments); };",
-                "    g();",
-                "  }",
-                "}")),
+            """
+            class A {
+              async f() {
+                let g = async () => { console.log(this, arguments); };
+                g();
+              }
+            }
+            """),
         expected(
-            lines(
-                "class A {",
-                "  f() {",
-                "    const ASYNC_THIS$1 = this;",
-                "    const ASYNC_ARGUMENTS$1 = arguments;",
-                "      return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-                "          function *() {",
-                "            let g = () => {",
-                "              return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-                "                  function *() {",
-                "                    console.log(ASYNC_THIS$1," + " ASYNC_ARGUMENTS$1);",
-                "                  });",
-                "            };",
-                "            g();",
-                "          });",
-                "  }",
-                "}")));
+            """
+            class A {
+              f() {
+                const ASYNC_THIS$1 = this;
+                const ASYNC_ARGUMENTS$1 = arguments;
+                  return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                      function *() {
+                        let g = () => {
+                          return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                              function *() {
+                                console.log(ASYNC_THIS$1, ASYNC_ARGUMENTS$1);
+                              });
+                        };
+                        g();
+                      });
+              }
+            }
+            """));
   }
 
   @Test
@@ -641,102 +665,111 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     testAsyncRewriting(
         externs(new TestExternsBuilder().addConsole().addJSCompLibraries().build()),
         srcs(
-            lines(
-                "class A {",
-                "  f() {",
-                "    let g = async () => { console.log(this, arguments); };",
-                "    g();",
-                "  }",
-                "}")),
+            """
+            class A {
+              f() {
+                let g = async () => { console.log(this, arguments); };
+                g();
+              }
+            }
+            """),
         expected(
-            lines(
-                "class A {",
-                "  f() {",
-                "    let g = () => {",
-                "      const ASYNC_THIS$3 = this;",
-                "      const ASYNC_ARGUMENTS$3 = arguments;",
-                "      return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-                "          function *() {",
-                "            console.log(ASYNC_THIS$3," + " ASYNC_ARGUMENTS$3);",
-                "          });",
-                "    };",
-                "    g();",
-                "  }",
-                "}")));
+            """
+            class A {
+              f() {
+                let g = () => {
+                  const ASYNC_THIS$3 = this;
+                  const ASYNC_ARGUMENTS$3 = arguments;
+                  return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                      function *() {
+                        console.log(ASYNC_THIS$3, ASYNC_ARGUMENTS$3);
+                      });
+                };
+                g();
+              }
+            }
+            """));
   }
 
   @Test
   public void testArrowFunctionExpressionBody() {
     testAsyncRewriting(
         "let f = async () => 1;",
-        lines(
-            "let f = () => {",
-            "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-            "        function* () {",
-            "          return 1;",
-            "        });",
-            "}"));
+        """
+        let f = () => {
+            return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                function* () {
+                  return 1;
+                });
+        }
+        """);
   }
 
   @Test
   public void testGlobalScopeArrowFunctionRefersToThis() {
     testAsyncRewriting(
         "let f = async () => this;",
-        lines(
-            "let f = () => {",
-            "    const ASYNC_THIS$1 = this;",
-            "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-            "        function* () {",
-            "          return ASYNC_THIS$1;",
-            "        });",
-            "}"));
+        """
+        let f = () => {
+            const ASYNC_THIS$1 = this;
+            return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                function* () {
+                  return ASYNC_THIS$1;
+                });
+        }
+        """);
   }
 
   @Test
   public void testGlobalScopeAsyncArrowFunctionDefaultParamValueRefersToThis() {
     testAsyncRewriting(
         "let f = async (t = this) => t;",
-        lines(
-            "let f = (t = this) => {",
-            "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-            "        function* () {",
-            "          return t;",
-            "        });",
-            "}"));
+        """
+        let f = (t = this) => {
+            return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                function* () {
+                  return t;
+                });
+        }
+        """);
   }
 
   @Test
   public void testNestedAsyncArrowFunctionDefaultParamValueRefersToThis() {
     testAsyncRewriting(
-        lines("let f = async function(outerT = this) {", "  return async (t = this) => t;", "};"),
-        lines(
-            // `this` is not aliased here
-            "let f = function(outerT = this) {",
-            "  const ASYNC_THIS$1 = this;",
-            "  return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-            "      function* () {",
-            // `this` is aliased here
-            "        return (t = ASYNC_THIS$1) => {",
-            "          return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(",
-            "              function* () {",
-            "                return t;",
-            "              });",
-            "        };",
-            "      });",
-            "};",
-            ""));
+        """
+        let f = async function(outerT = this) {
+          return async (t = this) => t;
+        };
+        """,
+        """
+        let f = function(outerT = this) {
+          const ASYNC_THIS$1 = this;
+          return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+              function* () {
+        // `this` is aliased here
+                return (t = ASYNC_THIS$1) => {
+                  return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                      function* () {
+                        return t;
+                      });
+                };
+              });
+        };
+        """);
   }
 
   @Test
   public void testSuperPropAssignment() {
     testError(
-        lines(
-            "class A {}", //
-            "class B extends A {",
-            "  async f() {",
-            "    super.x = 5;",
-            "  }",
-            "}"),
+        """
+        class A {}
+        class B extends A {
+          async f() {
+            super.x = 5;
+          }
+        }
+        """,
         TranspilationUtil.CANNOT_CONVERT_YET,
         "Transpilation of 'assignment to super property' is not yet implemented.");
   }

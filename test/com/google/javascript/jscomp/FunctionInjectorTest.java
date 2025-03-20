@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Predicates.alwaysTrue;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.FunctionInjector.isDirectCallNodeReplacementPossible;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
@@ -1166,18 +1165,19 @@ public final class FunctionInjectorTest {
     // This doesn't bring names into the global name space.
     helperInlineReferenceToFunction(
         "function foo(a){var b;return a;} function x() { foo(goo()); }",
-        lines(
-            "function foo(a) {",
-            "  var b;",
-            "  return a;",
-            "}",
-            "function x() {",
-            "  {",
-            "    var a$jscomp$inline_0 = goo();",
-            "    var b$jscomp$inline_1;",
-            "    a$jscomp$inline_0;",
-            "  }",
-            "}"),
+        """
+        function foo(a) {
+          var b;
+          return a;
+        }
+        function x() {
+          {
+            var a$jscomp$inline_0 = goo();
+            var b$jscomp$inline_1;
+            a$jscomp$inline_0;
+          }
+        }
+        """,
         "foo",
         INLINE_BLOCK);
   }
@@ -1203,24 +1203,26 @@ public final class FunctionInjectorTest {
   @Test
   public void testInline19b() {
     helperInlineReferenceToFunction(
-        lines(
-            "var x = 1; var y = 2;",
-            "function foo(a, b) {",
-            "  y = a; x = b;",
-            "};",
-            "function bar() { foo(x,y); }"),
-        lines(
-            "var x = 1; var y = 2;",
-            "function foo(a,b){",
-            "  y = a; x = b;",
-            "};",
-            "function bar() {",
-            "{",
-            "  var a$jscomp$inline_0=x;",
-            "  var b$jscomp$inline_1=y;",
-            "  y=a$jscomp$inline_0;",
-            "  x=b$jscomp$inline_1}",
-            "}"),
+        """
+        var x = 1; var y = 2;
+        function foo(a, b) {
+          y = a; x = b;
+        };
+        function bar() { foo(x,y); }
+        """,
+        """
+        var x = 1; var y = 2;
+        function foo(a,b){
+          y = a; x = b;
+        };
+        function bar() {
+        {
+          var a$jscomp$inline_0=x;
+          var b$jscomp$inline_1=y;
+          y=a$jscomp$inline_0;
+          x=b$jscomp$inline_1}
+        }
+        """,
         "foo",
         INLINE_BLOCK);
   }
@@ -1306,9 +1308,10 @@ public final class FunctionInjectorTest {
     // Call with inner function expression.
     helperInlineReferenceToFunction(
         "function foo(){return function() {var a; return true;}}; foo();",
-        lines(
-            "function foo(){return function() {var a; return true;}};",
-            "{(function() {var a$jscomp$inline_0; return true;});}"),
+        """
+        function foo(){return function() {var a; return true;}};
+        {(function() {var a$jscomp$inline_0; return true;});}
+        """,
         "foo",
         INLINE_BLOCK);
   }
@@ -1318,18 +1321,19 @@ public final class FunctionInjectorTest {
     // Call with inner function statement.
     helperInlineReferenceToFunction(
         "function foo(){function x() {var a; return true;} return x} foo();",
-        lines(
-            "function foo() {",
-            "  function x() { var a; return true; }",
-            "  return x;",
-            "}",
-            "{",
-            "  var x$jscomp$inline_0 = function(){",
-            "    var a$jscomp$inline_1;",
-            "    return true;",
-            "  };",
-            "  x$jscomp$inline_0;",
-            "}"),
+        """
+        function foo() {
+          function x() { var a; return true; }
+          return x;
+        }
+        {
+          var x$jscomp$inline_0 = function(){
+            var a$jscomp$inline_1;
+            return true;
+          };
+          x$jscomp$inline_0;
+        }
+        """,
         "foo",
         INLINE_BLOCK);
   }
@@ -1338,7 +1342,10 @@ public final class FunctionInjectorTest {
   public void testInlineFunctionWithInnerArrowFunction1() {
     helperInlineReferenceToFunction(
         "function foo(){ () => { alert(1); }; } foo();",
-        lines("function foo(){ () => { alert(1); }; }", "{ () => { alert(1); }; }"),
+        """
+        function foo(){ () => { alert(1); }; }
+        { () => { alert(1); }; }
+        """,
         "foo",
         INLINE_BLOCK);
   }
@@ -1666,28 +1673,30 @@ public final class FunctionInjectorTest {
     // Call in within a call
     allowDecomposition = true;
     helperInlineReferenceToFunction(
-        lines(
-            "class A { constructor(g) {} }", //
-            "class B extends A {",
-            "  constructor() { super(foo()); }",
-            "}",
-            "function foo() {",
-            "  return '';",
-            "}"),
-        lines(
-            "class A { constructor(g) {} }", //
-            "class B extends A {",
-            "  constructor() {",
-            "    var JSCompiler_inline_result$jscomp$0;",
-            "    {", //
-            "      JSCompiler_inline_result$jscomp$0 = '';",
-            "    }",
-            "    super(JSCompiler_inline_result$jscomp$0)",
-            "  }", //
-            "}", //
-            "function foo() {",
-            "  return '';",
-            "}"),
+        """
+        class A { constructor(g) {} }
+        class B extends A {
+          constructor() { super(foo()); }
+        }
+        function foo() {
+          return '';
+        }
+        """,
+        """
+        class A { constructor(g) {} }
+        class B extends A {
+          constructor() {
+            var JSCompiler_inline_result$jscomp$0;
+            {
+              JSCompiler_inline_result$jscomp$0 = '';
+            }
+            super(JSCompiler_inline_result$jscomp$0)
+          }
+        }
+        function foo() {
+          return '';
+        }
+        """,
         "foo",
         INLINE_BLOCK);
   }
@@ -1697,29 +1706,31 @@ public final class FunctionInjectorTest {
     // Call in within a call
     allowDecomposition = true;
     helperInlineReferenceToFunction(
-        lines(
-            "class A { constructor(g) {} }", //
-            "class B extends A {",
-            "  constructor() { super(goo(), foo()); }",
-            "}",
-            "function foo() {",
-            "  return '';",
-            "}"),
-        lines(
-            "class A { constructor(g) {} }", //
-            "class B extends A {",
-            "  constructor() {",
-            "    var JSCompiler_temp_const$jscomp$0=goo();",
-            "    var JSCompiler_inline_result$jscomp$1;",
-            "    {",
-            "      JSCompiler_inline_result$jscomp$1 = '';",
-            "    }",
-            "    super(JSCompiler_temp_const$jscomp$0, JSCompiler_inline_result$jscomp$1)",
-            "  }",
-            "}",
-            "function foo() {",
-            "  return '';",
-            "}"),
+        """
+        class A { constructor(g) {} }
+        class B extends A {
+          constructor() { super(goo(), foo()); }
+        }
+        function foo() {
+          return '';
+        }
+        """,
+        """
+        class A { constructor(g) {} }
+        class B extends A {
+          constructor() {
+            var JSCompiler_temp_const$jscomp$0=goo();
+            var JSCompiler_inline_result$jscomp$1;
+            {
+              JSCompiler_inline_result$jscomp$1 = '';
+            }
+            super(JSCompiler_temp_const$jscomp$0, JSCompiler_inline_result$jscomp$1)
+          }
+        }
+        function foo() {
+          return '';
+        }
+        """,
         "foo",
         INLINE_BLOCK);
   }
@@ -1783,9 +1794,10 @@ public final class FunctionInjectorTest {
   public void testCanInlineReference_isNo_ifCalledWithSpread() {
     helperCanInlineReferenceToFunction(
         CanInlineResult.NO, //
-        lines(
-            "function foo(a) { return a; };", //
-            "foo(...b);"),
+        """
+        function foo(a) { return a; };
+        foo(...b);
+        """,
         "foo",
         INLINE_DIRECT);
   }
@@ -1793,12 +1805,14 @@ public final class FunctionInjectorTest {
   @Test
   public void testCanInlineReference_direct_ifArgExpression_containsSpread() {
     helperInlineReferenceToFunction(
-        lines(
-            "function foo(a) { return a; };", //
-            "foo([...b]);"),
-        lines(
-            "function foo(a) { return a; };", //
-            "[...b]"),
+        """
+        function foo(a) { return a; };
+        foo([...b]);
+        """,
+        """
+        function foo(a) { return a; };
+        [...b]
+        """,
         "foo",
         INLINE_DIRECT);
   }
@@ -1806,12 +1820,14 @@ public final class FunctionInjectorTest {
   @Test
   public void testCanInlineReference_direct_ifResultIsSpread() {
     helperInlineReferenceToFunction(
-        lines(
-            "function foo(b) { return [1, 2, b]; }", //
-            "bar(...foo(5));"),
-        lines(
-            "function foo(b) { return [1, 2, b]; }", //
-            "bar(...[1, 2, 5]);"),
+        """
+        function foo(b) { return [1, 2, b]; }
+        bar(...foo(5));
+        """,
+        """
+        function foo(b) { return [1, 2, b]; }
+        bar(...[1, 2, 5]);
+        """,
         "foo",
         INLINE_DIRECT);
   }
@@ -1820,24 +1836,26 @@ public final class FunctionInjectorTest {
   public void testCanInlineReference_block_ifResultIsSpread() {
     allowDecomposition = true;
     helperInlineReferenceToFunction(
-        lines(
-            "function foo(b) {",
-            "  return [1, 2, b];",
-            "}", //
-            "const bar = function() { };",
-            "",
-            "bar(...foo(5));"),
-        lines(
-            "function foo(b) {",
-            "  return [1, 2, b];",
-            "}", //
-            "const bar = function() { };",
-            "",
-            "var JSCompiler_inline_result$jscomp$0",
-            "{",
-            "  JSCompiler_inline_result$jscomp$0 = [1, 2, 5];",
-            "}",
-            "bar(...JSCompiler_inline_result$jscomp$0);"),
+        """
+        function foo(b) {
+          return [1, 2, b];
+        }
+        const bar = function() { };
+
+        bar(...foo(5));
+        """,
+        """
+        function foo(b) {
+          return [1, 2, b];
+        }
+        const bar = function() { };
+
+        var JSCompiler_inline_result$jscomp$0
+        {
+          JSCompiler_inline_result$jscomp$0 = [1, 2, 5];
+        }
+        bar(...JSCompiler_inline_result$jscomp$0);
+        """,
         "foo",
         INLINE_BLOCK);
   }
@@ -1845,12 +1863,14 @@ public final class FunctionInjectorTest {
   @Test
   public void testCanInlineReference_direct_ifPreviousSibling_isSpread() {
     helperInlineReferenceToFunction(
-        lines(
-            "function foo(b) { return b + 1; }", //
-            "bar(...qux(), foo(5));"),
-        lines(
-            "function foo(b) { return b + 1; }", //
-            "bar(...qux(), 5 + 1);"),
+        """
+        function foo(b) { return b + 1; }
+        bar(...qux(), foo(5));
+        """,
+        """
+        function foo(b) { return b + 1; }
+        bar(...qux(), 5 + 1);
+        """,
         "foo",
         INLINE_DIRECT);
   }
@@ -1859,25 +1879,27 @@ public final class FunctionInjectorTest {
   public void testCanInlineReference_block_ifPreviousSibling_isSpread() {
     allowDecomposition = true;
     helperInlineReferenceToFunction(
-        lines(
-            "function foo(b) {",
-            "  return [1, 2, b];",
-            "}", //
-            "const bar = function() { };",
-            "",
-            "bar(...qux(), foo(5));"),
-        lines(
-            "function foo(b) {",
-            "  return [1, 2, b];",
-            "}",
-            "const bar = function() { };",
-            "",
-            "var JSCompiler_temp_const$jscomp$0 = [...qux()];",
-            "var JSCompiler_inline_result$jscomp$1",
-            "{",
-            "  JSCompiler_inline_result$jscomp$1 = [1, 2, 5];",
-            "}",
-            "bar(...JSCompiler_temp_const$jscomp$0, JSCompiler_inline_result$jscomp$1);"),
+        """
+        function foo(b) {
+          return [1, 2, b];
+        }
+        const bar = function() { };
+
+        bar(...qux(), foo(5));
+        """,
+        """
+        function foo(b) {
+          return [1, 2, b];
+        }
+        const bar = function() { };
+
+        var JSCompiler_temp_const$jscomp$0 = [...qux()];
+        var JSCompiler_inline_result$jscomp$1
+        {
+          JSCompiler_inline_result$jscomp$1 = [1, 2, 5];
+        }
+        bar(...JSCompiler_temp_const$jscomp$0, JSCompiler_inline_result$jscomp$1);
+        """,
         "foo",
         INLINE_BLOCK);
   }

@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp.integration;
 
-import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilationLevel;
@@ -35,25 +34,27 @@ public final class J2clIntegrationTest extends IntegrationTestCase {
             new TestExternsBuilder().addFunction().addConsole().buildExternsFile("externs.js"));
     test(
         createCompilerOptions(),
-        lines(
-            "var A = class {",
-            "  static $clinit() {",
-            "    A.$x = 2;",
-            "  }",
-            "  static get x() {",
-            "    return A.$clinit(), A.$x;",
-            "  }",
-            "  static set x(value) {",
-            "    A.$clinit(), A.$x = value;",
-            "  }",
-            "};",
-            "A.x = 3;",
-            "console.log(A.x);"),
-        lines(
-            "var a;", //
-            "a = 2;",
-            "a = 3;",
-            "console.log(a);"));
+        """
+        var A = class {
+          static $clinit() {
+            A.$x = 2;
+          }
+          static get x() {
+            return A.$clinit(), A.$x;
+          }
+          static set x(value) {
+            A.$clinit(), A.$x = value;
+          }
+        };
+        A.x = 3;
+        console.log(A.x);
+        """,
+        """
+        var a;
+        a = 2;
+        a = 3;
+        console.log(a);
+        """);
   }
 
   @Test
@@ -67,71 +68,75 @@ public final class J2clIntegrationTest extends IntegrationTestCase {
                 .buildExternsFile("externs.js"));
     test(
         createCompilerOptions(),
-        lines(
-            "/** @constructor */",
-            "var A = function() {};",
-            "A.$clinit = function() {",
-            "  A.$x = 2;",
-            "};",
-            "Object.defineProperties(",
-            "    A,",
-            "    {",
-            "      x: {",
-            "        configurable:true,",
-            "        enumerable:true,",
-            "        get: function() {",
-            "          return A.$clinit(), A.$x;",
-            "        },",
-            "        set: function(value) {",
-            "          A.$clinit(), A.$x = value;",
-            "        }",
-            "      }",
-            "    });",
-            "A.x = 3;",
-            "console.log(A.x);"),
-        lines(
-            "var a;", //
-            "a = 2;",
-            "a = 3;",
-            "console.log(a);"));
+        """
+        /** @constructor */
+        var A = function() {};
+        A.$clinit = function() {
+          A.$x = 2;
+        };
+        Object.defineProperties(
+            A,
+            {
+              x: {
+                configurable:true,
+                enumerable:true,
+                get: function() {
+                  return A.$clinit(), A.$x;
+                },
+                set: function(value) {
+                  A.$clinit(), A.$x = value;
+                }
+              }
+            });
+        A.x = 3;
+        console.log(A.x);
+        """,
+        """
+        var a;
+        a = 2;
+        a = 3;
+        console.log(a);
+        """);
   }
 
   @Test
   public void testStripNoSideEffectsClinit() {
     String source =
-        lines(
-            "class Preconditions {",
-            "  static $clinit() {",
-            "    Preconditions.$clinit = function() {};",
-            "  }",
-            "  static check(str) {",
-            "    Preconditions.$clinit();",
-            "    if (str[0] > 'a') {",
-            "      return Preconditions.check(str + str);",
-            "    }",
-            "    return str;",
-            "  }",
-            "}",
-            "class Main {",
-            "  static main() {",
-            "    var a = Preconditions.check('a');",
-            "    alert('hello');",
-            "  }",
-            "}",
-            "Main.main();");
+        """
+        class Preconditions {
+          static $clinit() {
+            Preconditions.$clinit = function() {};
+          }
+          static check(str) {
+            Preconditions.$clinit();
+            if (str[0] > 'a') {
+              return Preconditions.check(str + str);
+            }
+            return str;
+          }
+        }
+        class Main {
+          static main() {
+            var a = Preconditions.check('a');
+            alert('hello');
+          }
+        }
+        Main.main();
+        """;
     test(createCompilerOptions(), source, "alert('hello')");
   }
 
   @Test
   public void testFoldJ2clClinits() {
     String code =
-        lines(
-            "function InternalWidget(){}",
-            "InternalWidget.$clinit = function () {",
-            "  InternalWidget.$clinit = function() {};",
-            "  InternalWidget.$clinit();",
-            "};",
-            "InternalWidget.$clinit();");
+        """
+        function InternalWidget(){}
+        InternalWidget.$clinit = function () {
+          InternalWidget.$clinit = function() {};
+          InternalWidget.$clinit();
+        };
+        InternalWidget.$clinit();
+        """;
 
     test(createCompilerOptions(), code, "");
   }

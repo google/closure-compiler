@@ -879,7 +879,14 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testTypenameSourceInfo_qualifiedName_multiline() {
-    Node node = parse(lines("@type {bar.", "       baz.Foo} */")).getType().getRoot();
+    Node node =
+        parse(
+                """
+                @type {bar.
+                       baz.Foo} */
+                """)
+            .getType()
+            .getRoot();
     assertNode(node).hasToken(Token.STRINGLIT);
     assertThat(node.getLineno()).isEqualTo(0);
     assertThat(node.getCharno()).isEqualTo(7);
@@ -890,9 +897,10 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testTypenameSourceInfo_qualifiedName_leadingWhitespace() {
     Node node =
         parse(
-                lines(
-                    "@type {", //
-                    "    Foo} */"))
+                """
+                @type {
+                    Foo} */
+                """)
             .getType()
             .getRoot();
     assertNode(node).hasToken(Token.STRINGLIT);
@@ -2492,13 +2500,14 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testRegression8() {
     String comment =
-        lines(
-            " * @name random tag here",
-            " * @desc description here",
-            " *",
-            " * @param {boolean} flag and some more description",
-            " *     nicely formatted",
-            " */");
+        """
+         * @name random tag here
+         * @desc description here
+         *
+         * @param {boolean} flag and some more description
+         *     nicely formatted
+         */
+        """;
 
     JSDocInfo info = parse(comment);
     assertThat(info.getParameterCount()).isEqualTo(1);
@@ -3028,7 +3037,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testSuppressWithDescription_repeatedWarnings1() {
     String jsDocComment =
-        lines("@suppress {x} Some description.", " * @suppress {x} Another description.", "*/");
+        """
+        @suppress {x} Some description.
+         * @suppress {x} Another description.
+        */
+        """;
     JSDocInfo info = parse(jsDocComment, /* parseDocumentation= */ true);
     assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x"));
     assertThat(info.getSuppressionsAndTheirDescription())
@@ -3039,7 +3052,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testSuppressWithDescription_repeatedWarnings2() {
     String jsDocComment =
-        lines("@suppress {x} Some description.", " * @suppress {x, y} Another description.", "*/");
+        """
+        @suppress {x} Some description.
+         * @suppress {x, y} Another description.
+        */
+        """;
     JSDocInfo info = parse(jsDocComment, /* parseDocumentation= */ true);
     assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x", "y"));
     assertThat(info.getSuppressionsAndTheirDescription()).hasSize(2);
@@ -5374,7 +5391,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testGetMultilineDesc() {
-    String comment = lines(" * @desc description here", "         continued here", " */");
+    String comment =
+        """
+         * @desc description here
+                 continued here
+         */
+        """;
     JSDocInfo info = parse(comment);
     assertThat(info.getDescription()).isEqualTo("description here continued here");
   }

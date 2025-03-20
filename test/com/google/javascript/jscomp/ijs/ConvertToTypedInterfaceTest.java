@@ -76,67 +76,73 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   @Test
   public void testComputedFieldNoRHS() {
     test(
-        lines(
-            "const s = Symbol();", //
-            "class Foo { ",
-            "  [s]",
-            "}"),
-        lines(
-            "const s = Symbol();", //
-            "class Foo {",
-            "}"));
+        """
+        const s = Symbol();
+        class Foo {
+          [s]
+        }
+        """,
+        """
+        const s = Symbol();
+        class Foo {
+        }
+        """);
   }
 
   @Test
   public void testDoubleAssignmentField() {
     test(
-        lines(
-            "let Snackbar = Snackbar1 = class Snackbar {", //
-            "  x = 5",
-            "}"),
+        """
+        let Snackbar = Snackbar1 = class Snackbar {
+          x = 5
+        }
+        """,
         "/** @const @type {UnusableType} */ var Snackbar;");
   }
 
   @Test
   public void testDoubleAssignmentStaticField() {
     test(
-        lines(
-            "let A = B = class C {", //
-            "  static y = true",
-            "}"),
+        """
+        let A = B = class C {
+          static y = true
+        }
+        """,
         "/** @const @type {UnusableType} */ var A;");
   }
 
   @Test
   public void testSuperClassFields() {
     test(
-        lines(
-            "class First{", //
-            "  /** @const {number} */ fromFirst;",
-            "  constructor() {",
-            "    this.fromFirst = 1;",
-            "  };",
-            "};",
-            "class Second extends First {", //
-            "   /** @const {number} */ fromSecond;",
-            "  constructor() {",
-            "    super();",
-            "    /** @override */this.fromFirst = 7;",
-            "    this.fromSecond = 5;",
-            "  };",
-            "};"),
-        lines(
-            "class First {", //
-            "  /** @const {number} */ fromFirst;",
-            "  constructor() {",
-            "  }",
-            "}",
-            "class Second extends First {", //
-            "   /** @const {number} */ fromSecond;",
-            "  constructor() {",
-            "  }",
-            "}",
-            " /** @override */ Second.prototype.fromFirst;"));
+        """
+        class First{
+          /** @const {number} */ fromFirst;
+          constructor() {
+            this.fromFirst = 1;
+          };
+        };
+        class Second extends First {
+           /** @const {number} */ fromSecond;
+          constructor() {
+            super();
+            /** @override */this.fromFirst = 7;
+            this.fromSecond = 5;
+          };
+        };
+        """,
+        """
+        class First {
+          /** @const {number} */ fromFirst;
+          constructor() {
+          }
+        }
+        class Second extends First {
+           /** @const {number} */ fromSecond;
+          constructor() {
+          }
+        }
+         /** @override */ Second.prototype.fromFirst;
+        """);
   }
 
   @Test
@@ -144,263 +150,297 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     // When a public field is created and assigned with a constructor, we only care about the
     // declaration.
     test(
-        lines(
-            "class Foo {", //
-            "  /** @const {number} */ unique;",
-            "  constructor() {",
-            "    this.unique = 5;",
-            "   }",
-            "}"),
-        lines(
-            "class Foo {", //
-            "  /** @const {number}*/ unique;",
-            "  constructor() {",
-            "  }",
-            "}"));
+        """
+        class Foo {
+          /** @const {number} */ unique;
+          constructor() {
+            this.unique = 5;
+           }
+        }
+        """,
+        """
+        class Foo {
+          /** @const {number}*/ unique;
+          constructor() {
+          }
+        }
+        """);
     test(
-        lines(
-            "class Foo {", //
-            "  /** @const {number} */ fieldOne;",
-            "  /** @const {boolean} */ fieldTwo;",
-            "  /** @const {string} */ fieldThree;",
-            "  constructor() {",
-            "    this.fieldOne = 1;",
-            "    this.fieldTwo = true",
-            "    this.fieldThree = 'three'",
-            "   }",
-            "}"),
-        lines(
-            "class Foo {", //
-            "  /** @const {number} */ fieldOne;",
-            "  /** @const {boolean} */ fieldTwo;",
-            "  /** @const {string} */ fieldThree;",
-            "  constructor() {",
-            "  }",
-            "}"));
+        """
+        class Foo {
+          /** @const {number} */ fieldOne;
+          /** @const {boolean} */ fieldTwo;
+          /** @const {string} */ fieldThree;
+          constructor() {
+            this.fieldOne = 1;
+            this.fieldTwo = true
+            this.fieldThree = 'three'
+           }
+        }
+        """,
+        """
+        class Foo {
+          /** @const {number} */ fieldOne;
+          /** @const {boolean} */ fieldTwo;
+          /** @const {string} */ fieldThree;
+          constructor() {
+          }
+        }
+        """);
 
     test(
-        lines(
-            "class Foo {", //
-            "  /** @const {number} */ fieldOne;",
-            "  /** @const {boolean} */ fieldTwo;",
-            "  /** @const {string} */ fieldThree;",
-            "  constructor(x,y,z) {",
-            "    this.fieldOne = x;",
-            "    this.fieldTwo = y",
-            "    this.fieldThree = z",
-            "   }",
-            "}"),
-        lines(
-            "class Foo {", //
-            "  /** @const {number} */ fieldOne;",
-            "  /** @const {boolean} */ fieldTwo;",
-            "  /** @const {string} */ fieldThree;",
-            "  constructor(x,y,z) {",
-            "  }",
-            "}"));
+        """
+        class Foo {
+          /** @const {number} */ fieldOne;
+          /** @const {boolean} */ fieldTwo;
+          /** @const {string} */ fieldThree;
+          constructor(x,y,z) {
+            this.fieldOne = x;
+            this.fieldTwo = y
+            this.fieldThree = z
+           }
+        }
+        """,
+        """
+        class Foo {
+          /** @const {number} */ fieldOne;
+          /** @const {boolean} */ fieldTwo;
+          /** @const {string} */ fieldThree;
+          constructor(x,y,z) {
+          }
+        }
+        """);
   }
 
   @Test
   public void testPrototypeDeclared() {
     // When the prototype is declared, we only care about the initial declaration for public fields.
     test(
-        lines(
-            "class Foo {", //
-            "  /** @const {number} */sameField = 10;",
-            "}",
-            "Foo.prototype.sameField = 8;"),
-        lines(
-            "class Foo {", //
-            "  /** @const {number} */ sameField;",
-            "}"));
+        """
+        class Foo {
+          /** @const {number} */sameField = 10;
+        }
+        Foo.prototype.sameField = 8;
+        """,
+        """
+        class Foo {
+          /** @const {number} */ sameField;
+        }
+        """);
   }
 
   @Test
   public void testThisAndPrototype() {
     test(
-        lines(
-            "class Foo {", //
-            "  /** @const @type {number} */sameField = 10;",
-            "  constructor() {",
-            "    this.sameField = 5;",
-            "   }",
-            "}",
-            "Foo.prototype.sameField = 8;"),
-        lines(
-            "class Foo {", //
-            "  /** @const @type {number} */ sameField;",
-            "  constructor() {",
-            "  }",
-            "}"));
+        """
+        class Foo {
+          /** @const @type {number} */sameField = 10;
+          constructor() {
+            this.sameField = 5;
+           }
+        }
+        Foo.prototype.sameField = 8;
+        """,
+        """
+        class Foo {
+          /** @const @type {number} */ sameField;
+          constructor() {
+          }
+        }
+        """);
   }
 
   @Test
   public void testComputedFieldDef() {
     // Computed Field Def's are unanalyzable to the compiler so they will be dropped.
     test(
-        lines(
-            "const PREFIX = 'prefix';", //
-            "/** @unrestricted*/ class Foo {",
-            "  [`${PREFIX}Field`] = 'prefixed field';",
-            "}"),
-        lines(
-            " /** @const @type {string} */", //
-            "var PREFIX;",
-            "/** @unrestricted*/ class Foo {",
-            "}"));
+        """
+        const PREFIX = 'prefix';
+        /** @unrestricted*/ class Foo {
+          [`${PREFIX}Field`] = 'prefixed field';
+        }
+        """,
+        """
+         /** @const @type {string} */
+        var PREFIX;
+        /** @unrestricted*/ class Foo {
+        }
+        """);
     test(
-        lines(
-            "/** @unrestricted*/ class Foo {", //
-            "  [Math.random()] = 'gone';",
-            "}"),
-        lines(
-            "/** @unrestricted*/ class Foo {", //
-            "}"));
+        """
+        /** @unrestricted*/ class Foo {
+          [Math.random()] = 'gone';
+        }
+        """,
+        """
+        /** @unrestricted*/ class Foo {
+        }
+        """);
   }
 
   @Test
   public void testJSDocMemberFieldDef() {
     // Add type if not present
     test(
-        lines(
-            "class Foo {", //
-            "  /** @const  */ myField = 5;",
-            "}"),
-        lines(
-            "class Foo {", //
-            "  /** @const {number} */ myField;",
-            "}"));
+        """
+        class Foo {
+          /** @const  */ myField = 5;
+        }
+        """,
+        """
+        class Foo {
+          /** @const {number} */ myField;
+        }
+        """);
     // If no JSdoc present, set to UnusableType
     test(
-        lines(
-            "class Foo {", //
-            "  myField = 5;",
-            "}"),
-        lines(
-            "class Foo {", //
-            "  /** @const @type {UnusableType} */ myField;",
-            "}"));
+        """
+        class Foo {
+          myField = 5;
+        }
+        """,
+        """
+        class Foo {
+          /** @const @type {UnusableType} */ myField;
+        }
+        """);
   }
 
   @Test
   public void testStaticMemberFieldDef() {
     // check that static remains in the declaration even when the assignment is removed
     test(
-        lines(
-            "class Foo {", //
-            "  /** @const @type {number}*/ static myField = 5;",
-            "}"),
-        lines(
-            "class Foo {", //
-            "  /** @const @type {number}*/ static myField;",
-            "}"));
+        """
+        class Foo {
+          /** @const @type {number}*/ static myField = 5;
+        }
+        """,
+        """
+        class Foo {
+          /** @const @type {number}*/ static myField;
+        }
+        """);
   }
 
   @Test
   public void testUpdatingStaticField() {
     // Updating the static field should not be included in i.js
     test(
-        lines(
-            "class Foo {", //
-            "  /** @const {number}*/static myField = 1;",
-            "}",
-            "Foo.myField = 2;"),
-        lines(
-            "class Foo {", //
-            "  /** @const {number}*/static myField;",
-            "}"));
+        """
+        class Foo {
+          /** @const {number}*/static myField = 1;
+        }
+        Foo.myField = 2;
+        """,
+        """
+        class Foo {
+          /** @const {number}*/static myField;
+        }
+        """);
   }
 
   @Test
   public void testThisInFieldInitializer() {
     test(
-        lines(
-            "class Base {", //
-            "  /** @const @type {string}*/ baseField = 'base field';",
-            "  /** @const @type {string}*/anotherBaseField = this.baseField;",
-            "}"),
-        lines(
-            "class Base {", //
-            "  /** @const @type {string}*/ baseField;",
-            "  /** @const @type {string}*/ anotherBaseField;",
-            "}"));
+        """
+        class Base {
+          /** @const @type {string}*/ baseField = 'base field';
+          /** @const @type {string}*/anotherBaseField = this.baseField;
+        }
+        """,
+        """
+        class Base {
+          /** @const @type {string}*/ baseField;
+          /** @const @type {string}*/ anotherBaseField;
+        }
+        """);
     test(
-        lines(
-            "class Base {", //
-            "  /** @const @type {string}*/ static fieldOne = 'I am static';",
-            "  /** @const @type {string}*/ static fieldTwo = this.fieldOne;",
-            "}"),
-        lines(
-            "class Base {", //
-            "  /** @const @type {string}*/ static fieldOne;",
-            "  /** @const @type {string}*/ static fieldTwo;",
-            "}"));
+        """
+        class Base {
+          /** @const @type {string}*/ static fieldOne = 'I am static';
+          /** @const @type {string}*/ static fieldTwo = this.fieldOne;
+        }
+        """,
+        """
+        class Base {
+          /** @const @type {string}*/ static fieldOne;
+          /** @const @type {string}*/ static fieldTwo;
+        }
+        """);
 
     test(
-        lines(
-            "class Base {", //
-            "  /** @const @type {string}*/ static fieldStatic = 'I am static';",
-            "  /** @const @type {string}*/ instanceField = this.fieldStatic;",
-            "}"),
-        lines(
-            "class Base {", //
-            "  /** @const @type {string}*/ static fieldStatic;",
-            "  /** @const @type {string}*/ instanceField;",
-            "}"));
+        """
+        class Base {
+          /** @const @type {string}*/ static fieldStatic = 'I am static';
+          /** @const @type {string}*/ instanceField = this.fieldStatic;
+        }
+        """,
+        """
+        class Base {
+          /** @const @type {string}*/ static fieldStatic;
+          /** @const @type {string}*/ instanceField;
+        }
+        """);
   }
 
   @Test
   public void testSameFieldNameInDifferentClass() {
     test(
-        lines(
-            "class Base {", //
-            "  /** @const @type {string}*/ sameField;",
-            "}",
-            "class Foo {",
-            "  constructor() {", //
-            "    /** @const {number}*/ this.sameField;",
-            "  }",
-            "}"),
-        lines(
-            "class Base {", //
-            "   /** @const @type {string}*/ sameField;", //
-            "}",
-            "class Foo {",
-            "  constructor(){",
-            "  }",
-            "}",
-            "/** @const {number}*/ Foo.prototype.sameField"));
+        """
+        class Base {
+          /** @const @type {string}*/ sameField;
+        }
+        class Foo {
+          constructor() {
+            /** @const {number}*/ this.sameField;
+          }
+        }
+        """,
+        """
+        class Base {
+           /** @const @type {string}*/ sameField;
+        }
+        class Foo {
+          constructor(){
+          }
+        }
+        /** @const {number}*/ Foo.prototype.sameField
+        """);
   }
 
   @Test
   public void testSameFieldDeclared() {
     // If the one of the duplicated fields contains type annotation, we will keep that one.
     test(
-        lines(
-            "class Base {", //
-            "  sameField;",
-            "  /** @const @type {string}*/ sameField = 'first';",
-            "}"),
-        lines(
-            "class Base {", //
-            "  /** @const @type {string}*/ sameField",
-            "}"));
+        """
+        class Base {
+          sameField;
+          /** @const @type {string}*/ sameField = 'first';
+        }
+        """,
+        """
+        class Base {
+          /** @const @type {string}*/ sameField
+        }
+        """);
 
     test(
-        lines(
-            "class Base {", //
-            "  /** @const @type {string}*/ sameField = 'first';",
-            "}",
-            "class Foo {",
-            "  /** @const {number}*/ sameField = 3;",
-            "}"),
-        lines(
-            "class Base {", //
-            "  /** @const @type {string}*/ sameField",
-            "}",
-            "class Foo {", //
-            " /** @const @type {number}*/ sameField",
-            "}"));
+        """
+        class Base {
+          /** @const @type {string}*/ sameField = 'first';
+        }
+        class Foo {
+          /** @const {number}*/ sameField = 3;
+        }
+        """,
+        """
+        class Base {
+          /** @const @type {string}*/ sameField
+        }
+        class Foo {
+         /** @const @type {number}*/ sameField
+        }
+        """);
   }
 
   @Test
@@ -436,10 +476,11 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
     test(
         "const x = 5, y = 'str', z = /abc/;",
-        lines(
-            "/** @const {number} */ var x;",
-            "/** @const {string} */ var y;",
-            "/** @const {!RegExp} */ var z;"));
+        """
+        /** @const {number} */ var x;
+        /** @const {string} */ var y;
+        /** @const {!RegExp} */ var z;
+        """);
 
     test(
         "const x = cond ? true : 5;",
@@ -505,19 +546,24 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   @Test
   public void testThisPropertiesInConstructorsAndPrototype() {
     test(
-        lines(
-            "/** @constructor */ function Foo() { this.x = null; }",
-            "/** @type {?number} */ Foo.prototype.x = 5;"),
+        """
+        /** @constructor */ function Foo() { this.x = null; }
+        /** @type {?number} */ Foo.prototype.x = 5;
+        """,
         "/** @constructor */ function Foo() {} \n /** @type {?number} */ Foo.prototype.x;");
 
     test(
-        lines(
-            "/** @constructor */ function Foo() { this.x = null; }",
-            "/** @type {?number} */ Foo.prototype.x;"),
+        """
+        /** @constructor */ function Foo() { this.x = null; }
+        /** @type {?number} */ Foo.prototype.x;
+        """,
         "/** @constructor */ function Foo() {} \n /** @type {?number} */ Foo.prototype.x;");
 
     test(
-        lines("/** @constructor */ function Foo() { this.x = null; }", "Foo.prototype.x = 5;"),
+        """
+        /** @constructor */ function Foo() { this.x = null; }
+        Foo.prototype.x = 5;
+        """,
         "/** @constructor */ function Foo() {} \n /** @const {UnusableType} */ Foo.prototype.x;");
   }
 
@@ -535,109 +581,125 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   @Test
   public void testConstJsdocPropagationForConstructorNames() {
     test(
-        lines(
-            "/** @constructor */",
-            "function Foo(/** number */ x) {",
-            "  /** @const */ this.x = x;",
-            "}"),
-        lines(
-            "/** @constructor */ function Foo(/** number */ x) {}",
-            "/** @const {number} */ Foo.prototype.x;"));
+        """
+        /** @constructor */
+        function Foo(/** number */ x) {
+          /** @const */ this.x = x;
+        }
+        """,
+        """
+        /** @constructor */ function Foo(/** number */ x) {}
+        /** @const {number} */ Foo.prototype.x;
+        """);
 
     test(
-        lines(
-            "/** @constructor @param {!Array<string>} arr */",
-            "function Foo(arr) {",
-            "  /** @const */ this.arr = arr;",
-            "}"),
-        lines(
-            "/** @constructor @param {!Array<string>} arr */ function Foo(arr) {}",
-            "/** @const {!Array<string>} */ Foo.prototype.arr;"));
+        """
+        /** @constructor @param {!Array<string>} arr */
+        function Foo(arr) {
+          /** @const */ this.arr = arr;
+        }
+        """,
+        """
+        /** @constructor @param {!Array<string>} arr */ function Foo(arr) {}
+        /** @const {!Array<string>} */ Foo.prototype.arr;
+        """);
 
     test(
-        lines(
-            "class Foo {",
-            "  constructor(/** number */ x) {",
-            "    /** @const */ this.x = x;",
-            "  }",
-            "}"),
-        lines(
-            "class Foo {",
-            "  constructor(/** number */ x) {}",
-            "}",
-            "/** @const {number} */ Foo.prototype.x;"));
+        """
+        class Foo {
+          constructor(/** number */ x) {
+            /** @const */ this.x = x;
+          }
+        }
+        """,
+        """
+        class Foo {
+          constructor(/** number */ x) {}
+        }
+        /** @const {number} */ Foo.prototype.x;
+        """);
 
     test(
-        lines(
-            "class Foo {",
-            "  /** @param {number} x */",
-            "  constructor(x) {",
-            "    /** @const */ this.x = x;",
-            "  }",
-            "}"),
-        lines(
-            "class Foo {",
-            "  /** @param {number} x */",
-            "  constructor(x) {}",
-            "}",
-            "/** @const {number} */ Foo.prototype.x;"));
+        """
+        class Foo {
+          /** @param {number} x */
+          constructor(x) {
+            /** @const */ this.x = x;
+          }
+        }
+        """,
+        """
+        class Foo {
+          /** @param {number} x */
+          constructor(x) {}
+        }
+        /** @const {number} */ Foo.prototype.x;
+        """);
   }
 
   @Test
   public void testClassMethodsConflictWithOtherAssignment() {
     test(
-        lines(
-            "class Foo {",
-            "  /** @return {number} */",
-            "  method() {}",
-            "}",
-            "Foo.prototype.method = wrap(Foo.prototype.method);"),
-        lines("class Foo {", "  /** @return {number} */", "  method() {}", "}", ""));
+        """
+        class Foo {
+          /** @return {number} */
+          method() {}
+        }
+        Foo.prototype.method = wrap(Foo.prototype.method);
+        """,
+        """
+        class Foo {
+          /** @return {number} */
+          method() {}
+        }
+        """);
 
     test(
-        lines(
-            "class Foo {",
-            "  constructor() {",
-            "    this.method = wrap(Foo.prototype.method);",
-            "  }",
-            "  /** @return {number} */",
-            "  method() {}",
-            "}",
-            ""),
-        lines(
-            "class Foo {",
-            "  constructor() {}",
-            "  /** @return {number} */",
-            "  method() {}",
-            "}",
-            ""));
+        """
+        class Foo {
+          constructor() {
+            this.method = wrap(Foo.prototype.method);
+          }
+          /** @return {number} */
+          method() {}
+        }
+        """,
+        """
+        class Foo {
+          constructor() {}
+          /** @return {number} */
+          method() {}
+        }
+        """);
   }
 
   @Test
   public void testMultipleSameNamedThisProperties() {
     test(
-        lines(
-            "class Foo {",
-            "  constructor(/** number */ x) {",
-            "    /** @const */ this.x = x;",
-            "  }",
-            "}",
-            "/** @template T */",
-            "class Bar {",
-            "  constructor(/** T */ x) {",
-            "    /** @const */ this.x = x;",
-            "  }",
-            "}"),
-        lines(
-            "class Foo {",
-            "  constructor(/** number */ x) {}",
-            "}",
-            "/** @const {number} */ Foo.prototype.x;",
-            "/** @template T */",
-            "class Bar {",
-            "  constructor(/** T */ x) {}",
-            "}",
-            "/** @const {T} */ Bar.prototype.x;"));
+        """
+        class Foo {
+          constructor(/** number */ x) {
+            /** @const */ this.x = x;
+          }
+        }
+        /** @template T */
+        class Bar {
+          constructor(/** T */ x) {
+            /** @const */ this.x = x;
+          }
+        }
+        """,
+        """
+        class Foo {
+          constructor(/** number */ x) {}
+        }
+        /** @const {number} */ Foo.prototype.x;
+        /** @template T */
+        class Bar {
+          constructor(/** T */ x) {}
+        }
+        /** @const {T} */ Bar.prototype.x;
+        """);
   }
 
   @Test
@@ -656,11 +718,12 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   @Test
   public void testLegacyGoogModule() {
     testSame(
-        lines(
-            "goog.module('a.b.c');",
-            "goog.module.declareLegacyNamespace();",
-            "",
-            "exports = class {};"));
+        """
+        goog.module('a.b.c');
+        goog.module.declareLegacyNamespace();
+
+        exports = class {};
+        """);
   }
 
   @Test
@@ -672,194 +735,230 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   @Test
   public void testConstructorAlias1() {
     testSame(
-        lines("/** @constructor */", "function Foo() {}", "/** @const */ var FooAlias = Foo;"));
+        """
+        /** @constructor */
+        function Foo() {}
+        /** @const */ var FooAlias = Foo;
+        """);
   }
 
   @Test
   public void testConstructorAlias2() {
     testSame(
-        lines(
-            "goog.module('a.b.c');",
-            "",
-            "/** @constructor */",
-            "function Foo() {}",
-            "/** @const */ var FooAlias = Foo;"));
+        """
+        goog.module('a.b.c');
+
+        /** @constructor */
+        function Foo() {}
+        /** @const */ var FooAlias = Foo;
+        """);
   }
 
   @Test
   public void testConstructorAlias3() {
-    testSame(lines("class Foo {}", "/** @const */ var FooAlias = Foo;"));
+    testSame(
+        """
+        class Foo {}
+        /** @const */ var FooAlias = Foo;
+        """);
   }
 
   @Test
   public void testConstructorAlias4() {
     testSame(
-        lines(
-            "goog.module('a.b.c');",
-            "",
-            "class Foo {}",
-            "/** @constructor */ var FooAlias = Foo;"));
+        """
+        goog.module('a.b.c');
+
+        class Foo {}
+        /** @constructor */ var FooAlias = Foo;
+        """);
   }
 
   @Test
   public void testConstructorAlias5() {
     testSame(
-        lines(
-            "/** @constructor */", "function Foo() {}", "/** @constructor */ var FooAlias = Foo;"));
+        """
+        /** @constructor */
+        function Foo() {}
+        /** @constructor */ var FooAlias = Foo;
+        """);
   }
 
   @Test
   public void testConstructorAlias6() {
     testSame(
-        lines(
-            "goog.provide('a.b.c.Foo');",
-            "goog.provide('FooAlias');",
-            "",
-            "/** @constructor */",
-            "a.b.c.Foo = function() {};",
-            "",
-            "/** @const */ var FooAlias = a.b.c.Foo;"));
+        """
+        goog.provide('a.b.c.Foo');
+        goog.provide('FooAlias');
+
+        /** @constructor */
+        a.b.c.Foo = function() {};
+
+        /** @const */ var FooAlias = a.b.c.Foo;
+        """);
   }
 
   @Test
   public void testConstructorAlias7() {
-    testSame(lines("class Foo {}", "const FooAlias = Foo;"));
+    testSame(
+        """
+        class Foo {}
+        const FooAlias = Foo;
+        """);
   }
 
   @Test
   public void testConstructorAlias8() {
-    testSame(lines("goog.module('a.b.c');", "", "class Foo {}", "const FooAlias = Foo;"));
+    testSame(
+        """
+        goog.module('a.b.c');
+
+        class Foo {}
+        const FooAlias = Foo;
+        """);
   }
 
   @Test
   public void testRequireAlias1() {
     testSame(
-        lines(
-            "goog.provide('FooAlias');",
-            "",
-            "goog.require('a.b.c.Foo');",
-            "",
-            "/** @const */ var FooAlias = a.b.c.Foo;"));
+        """
+        goog.provide('FooAlias');
+
+        goog.require('a.b.c.Foo');
+
+        /** @const */ var FooAlias = a.b.c.Foo;
+        """);
   }
 
   @Test
   public void testRequireAlias2() {
     testSame(
-        lines(
-            "goog.provide('FooAlias');",
-            "goog.provide('BarAlias');",
-            "",
-            "goog.require('a.b.c');",
-            "",
-            "/** @const */ var FooAlias = a.b.c.Foo;",
-            "/** @const */ var BarAlias = a.b.c.Bar;"));
+        """
+        goog.provide('FooAlias');
+        goog.provide('BarAlias');
+
+        goog.require('a.b.c');
+
+        /** @const */ var FooAlias = a.b.c.Foo;
+        /** @const */ var BarAlias = a.b.c.Bar;
+        """);
   }
 
   @Test
   public void testRequireAlias3() {
     testSame(
-        lines(
-            "goog.module('FooAlias');",
-            "",
-            "const Foo = goog.require('a.b.c.Foo');",
-            "",
-            "exports = Foo;"));
+        """
+        goog.module('FooAlias');
+
+        const Foo = goog.require('a.b.c.Foo');
+
+        exports = Foo;
+        """);
   }
 
   @Test
   public void testRequireAlias4() {
     testSame(
-        lines(
-            "goog.module('FooAlias');",
-            "",
-            "const {Foo} = goog.require('a.b.c');",
-            "",
-            "exports = Foo;"));
+        """
+        goog.module('FooAlias');
+
+        const {Foo} = goog.require('a.b.c');
+
+        exports = Foo;
+        """);
   }
 
   @Test
   public void testRequireAlias5() {
     test(
-        lines(
-            "goog.module('FooAlias');",
-            "",
-            "const {Foo} = goog.require('a.b.c');",
-            "/** @const {number} */",
-            "Foo = 1;",
-            "",
-            "exports = Foo;"),
-        lines(
-            "goog.module('FooAlias');",
-            "",
-            "/** @const @type {number} */ var Foo;",
-            "",
-            "exports = Foo;"));
+        """
+        goog.module('FooAlias');
+
+        const {Foo} = goog.require('a.b.c');
+        /** @const {number} */
+        Foo = 1;
+
+        exports = Foo;
+        """,
+        """
+        goog.module('FooAlias');
+
+        /** @const @type {number} */ var Foo;
+
+        exports = Foo;
+        """);
   }
 
   @Test
   public void testRequireTypeAlias1() {
     testSame(
-        lines(
-            "goog.provide('FooAlias');",
-            "",
-            "goog.requireType('a.b.c.Foo');",
-            "",
-            "/** @const */ var FooAlias = a.b.c.Foo;"));
+        """
+        goog.provide('FooAlias');
+
+        goog.requireType('a.b.c.Foo');
+
+        /** @const */ var FooAlias = a.b.c.Foo;
+        """);
   }
 
   @Test
   public void testRequireTypeAlias2() {
     testSame(
-        lines(
-            "goog.provide('FooAlias');",
-            "goog.provide('BarAlias');",
-            "",
-            "goog.requireType('a.b.c');",
-            "",
-            "/** @const */ var FooAlias = a.b.c.Foo;",
-            "/** @const */ var BarAlias = a.b.c.Bar;"));
+        """
+        goog.provide('FooAlias');
+        goog.provide('BarAlias');
+
+        goog.requireType('a.b.c');
+
+        /** @const */ var FooAlias = a.b.c.Foo;
+        /** @const */ var BarAlias = a.b.c.Bar;
+        """);
   }
 
   @Test
   public void testRequireTypeAlias3() {
     testSame(
-        lines(
-            "goog.module('FooAlias');",
-            "",
-            "const Foo = goog.requireType('a.b.c.Foo');",
-            "",
-            "exports = Foo;"));
+        """
+        goog.module('FooAlias');
+
+        const Foo = goog.requireType('a.b.c.Foo');
+
+        exports = Foo;
+        """);
   }
 
   @Test
   public void testRequireTypeAlias4() {
     testSame(
-        lines(
-            "goog.module('FooAlias');",
-            "",
-            "const {Foo} = goog.requireType('a.b.c');",
-            "",
-            "exports = Foo;"));
+        """
+        goog.module('FooAlias');
+
+        const {Foo} = goog.requireType('a.b.c');
+
+        exports = Foo;
+        """);
   }
 
   @Test
   public void testRequireTypeAlias5() {
     test(
-        lines(
-            "goog.module('FooAlias');",
-            "",
-            "const {Foo, Bar} = goog.requireType('a.b.c');",
-            "/** @const {string} */",
-            "Foo = 'foo';",
-            "",
-            "exports = Foo;"),
-        lines(
-            "goog.module('FooAlias');",
-            "",
-            "const {Bar} = goog.requireType('a.b.c');",
-            "/** @const @type {string} */ var Foo;",
-            "",
-            "exports = Foo;"));
+        """
+        goog.module('FooAlias');
+
+        const {Foo, Bar} = goog.requireType('a.b.c');
+        /** @const {string} */
+        Foo = 'foo';
+
+        exports = Foo;
+        """,
+        """
+        goog.module('FooAlias');
+
+        const {Bar} = goog.requireType('a.b.c');
+        /** @const @type {string} */ var Foo;
+
+        exports = Foo;
+        """);
   }
 
   @Test
@@ -875,13 +974,17 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   @Test
   public void testDestructuredAlias3() {
     test(
-        lines("const {Foo} = a.b.c, bar = 1;", "exports = Foo;"),
-        lines(
-            "const {Foo} = a.b.c;",
-            "",
-            "/** @const @type {number} */ var bar;",
-            "",
-            "exports = Foo;"));
+        """
+        const {Foo} = a.b.c, bar = 1;
+        exports = Foo;
+        """,
+        """
+        const {Foo} = a.b.c;
+
+        /** @const @type {number} */ var bar;
+
+        exports = Foo;
+        """);
   }
 
   @Test
@@ -894,157 +997,176 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   @Test
   public void testDuplicateDeclarationWAliasRemoved1() {
     test(
-        lines(
-            "const {Foo, Bar} = x.y;", //
-            "/** @const {number} */",
-            "Bar = 1;",
-            "",
-            "exports = Foo;"),
-        lines(
-            "const {Foo} = x.y",
-            "",
-            "/** @const @type {number} */ var Bar;",
-            "",
-            "exports = Foo;"));
+        """
+        const {Foo, Bar} = x.y;
+        /** @const {number} */
+        Bar = 1;
+
+        exports = Foo;
+        """,
+        """
+        const {Foo} = x.y
+
+        /** @const @type {number} */ var Bar;
+
+        exports = Foo;
+        """);
   }
 
   @Test
   public void testDuplicateDeclarationWAliasRemoved2() {
     test(
-        lines(
-            "/** @const {string} */",
-            "Foo = 'hello';",
-            "",
-            "const {Foo, Bar} = x.y;",
-            "",
-            "/** @const {number} */",
-            "Bar = 1;",
-            "",
-            "exports = Foo;"),
-        lines(
-            "/** @const @type {string} */ var Foo;",
-            "",
-            "/** @const @type {number} */ var Bar;",
-            "",
-            "exports = Foo;"));
+        """
+        /** @const {string} */
+        Foo = 'hello';
+
+        const {Foo, Bar} = x.y;
+
+        /** @const {number} */
+        Bar = 1;
+
+        exports = Foo;
+        """,
+        """
+        /** @const @type {string} */ var Foo;
+
+        /** @const @type {number} */ var Bar;
+
+        exports = Foo;
+        """);
   }
 
   @Test
   public void testDuplicateDeclarationWAliasRemoved3() {
     test(
-        lines(
-            "/** @const {string} */",
-            "Foo = 'hello';",
-            "",
-            "const {Foo, Bar, Baz} = x.y;",
-            "",
-            "/** @const {number} */",
-            "Baz = 1;",
-            "",
-            "exports = Foo;"),
-        lines(
-            "/** @const @type {string} */ var Foo;",
-            "",
-            "const {Bar} = x.y;",
-            "",
-            "/** @const @type {number} */ var Baz;",
-            "",
-            "exports = Foo;"));
+        """
+        /** @const {string} */
+        Foo = 'hello';
+
+        const {Foo, Bar, Baz} = x.y;
+
+        /** @const {number} */
+        Baz = 1;
+
+        exports = Foo;
+        """,
+        """
+        /** @const @type {string} */ var Foo;
+
+        const {Bar} = x.y;
+
+        /** @const @type {number} */ var Baz;
+
+        exports = Foo;
+        """);
   }
 
   @Test
   public void testBreakDownDestructuringForConst() {
 
     test(
-        lines(
-            "goog.module('m');", //
-            "const {x,y}=fn();",
-            "exports.x=x;",
-            "exports.y=y;"),
-        lines(
-            "goog.module(\"m\");",
-            "/** @const @type {UnusableType} */",
-            "var x;",
-            "/** @const @type {UnusableType} */",
-            "var y;",
-            "exports.x=x;",
-            "exports.y = y;"),
+        """
+        goog.module('m');
+        const {x,y}=fn();
+        exports.x=x;
+        exports.y=y;
+        """,
+        """
+        goog.module("m");
+        /** @const @type {UnusableType} */
+        var x;
+        /** @const @type {UnusableType} */
+        var y;
+        exports.x=x;
+        exports.y = y;
+        """,
         warning(ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
 
     test(
-        lines(
-            "goog.module('m');", //
-            "const {x=0} = fn();",
-            "exports.x = x;"),
-        lines(
-            "goog.module(\"m\");",
-            "/** @const @type {UnusableType} */",
-            "var x;",
-            "exports.x = x;"),
+        """
+        goog.module('m');
+        const {x=0} = fn();
+        exports.x = x;
+        """,
+        """
+        goog.module("m");
+        /** @const @type {UnusableType} */
+        var x;
+        exports.x = x;
+        """,
         warning(ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
 
     test(
-        lines(
-            "goog.module('m');", //
-            "const {x:{y}} = fn();",
-            "exports.x = x;"),
-        lines(
-            "goog.module(\"m\");",
-            "/** @const @type {UnusableType} */",
-            "var y;",
-            "exports.x = x;"),
+        """
+        goog.module('m');
+        const {x:{y}} = fn();
+        exports.x = x;
+        """,
+        """
+        goog.module("m");
+        /** @const @type {UnusableType} */
+        var y;
+        exports.x = x;
+        """,
         warning(ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
 
     test(
-        lines(
-            "goog.module('m');", //
-            "const {[x()]:x} = fn();",
-            "exports.x = x;"),
-        lines(
-            "goog.module(\"m\");",
-            "/** @const @type {UnusableType} */",
-            "var x;",
-            "exports.x = x;"),
+        """
+        goog.module('m');
+        const {[x()]:x} = fn();
+        exports.x = x;
+        """,
+        """
+        goog.module("m");
+        /** @const @type {UnusableType} */
+        var x;
+        exports.x = x;
+        """,
         warning(ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
   }
 
   @Test
   public void testBreakDownDestructuringWarning() {
     testWarning(
-        lines(
-            "goog.module('m');", //
-            "const x = ({y: obj.y} = fn());",
-            "exports.x = x;"),
+        """
+        goog.module('m');
+        const x = ({y: obj.y} = fn());
+        exports.x = x;
+        """,
         ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
   }
 
   @Test
   public void testDuplicateDeclarationWAliasNotRemoved() {
     test(
-        lines(
-            "const {Foo, Bar} = x.y;", //
-            "",
-            "Bar = z;",
-            "",
-            "exports = Foo;"),
-        lines(
-            "const {Foo, Bar} = x.y;", //
-            "",
-            "exports = Foo;"));
+        """
+        const {Foo, Bar} = x.y;
+
+        Bar = z;
+
+        exports = Foo;
+        """,
+        """
+        const {Foo, Bar} = x.y;
+
+        exports = Foo;
+        """);
   }
 
   @Test
   public void testBreakDownDestructuringForLet() {
     test(
-        lines(
-            "let {Foo, Bar} = a.b.c;", //
-            "exports = Foo;"),
-        lines(
-            "/** @const @type {UnusableType} */",
-            "var Foo",
-            "/** @const @type {UnusableType} */",
-            "var Bar;",
-            "exports = Foo;"),
+        """
+        let {Foo, Bar} = a.b.c;
+        exports = Foo;
+        """,
+        """
+        /** @const @type {UnusableType} */
+        var Foo
+        /** @const @type {UnusableType} */
+        var Bar;
+        exports = Foo;
+        """,
         warning(ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
   }
 
@@ -1058,125 +1180,137 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   @Test
   public void testConstPropagationPrivateProperties1() {
     test(
-        lines(
-            "/** @constructor */",
-            "function Foo() {",
-            "  /** @const @private */ this.x = someComplicatedExpression();",
-            "}"),
-        lines(
-            "/** @constructor */ function Foo() {}",
-            "/** @const @private {UnusableType} */ Foo.prototype.x;"));
+        """
+        /** @constructor */
+        function Foo() {
+          /** @const @private */ this.x = someComplicatedExpression();
+        }
+        """,
+        """
+        /** @constructor */ function Foo() {}
+        /** @const @private {UnusableType} */ Foo.prototype.x;
+        """);
   }
 
   @Test
   public void testConstPropagationPrivateProperties2() {
     test(
-        lines(
-            "goog.provide('a.b.c');",
-            "",
-            "/** @private @const */",
-            "a.b.c.helper_ = someComplicatedExpression();"),
+        """
+        goog.provide('a.b.c');
+
+        /** @private @const */
+        a.b.c.helper_ = someComplicatedExpression();
+        """,
         "goog.provide('a.b.c');   /** @private @const {UnusableType} */ a.b.c.helper_;");
   }
 
   @Test
   public void testOverrideAnnotationCountsAsDeclaration() {
     testSame(
-        lines(
-            "goog.provide('x.y.z.Bar');",
-            "",
-            "goog.require('a.b.c.Foo');",
-            "",
-            "/** @constructor @extends {a.b.c.Foo} */",
-            "x.y.z.Bar = function() {};",
-            "",
-            "/** @override */",
-            "x.y.z.Bar.prototype.method = function(a, b, c) {};"));
+        """
+        goog.provide('x.y.z.Bar');
+
+        goog.require('a.b.c.Foo');
+
+        /** @constructor @extends {a.b.c.Foo} */
+        x.y.z.Bar = function() {};
+
+        /** @override */
+        x.y.z.Bar.prototype.method = function(a, b, c) {};
+        """);
 
     testSame(
-        lines(
-            "goog.module('x.y.z');",
-            "",
-            "const {Foo} = goog.require('a.b.c');",
-            "",
-            "/** @constructor @extends {Foo} */",
-            "const Bar = class {",
-            "   /** @override */",
-            "   method(a, b, c) {}",
-            "}",
-            "exports.Bar = Bar;"));
+        """
+        goog.module('x.y.z');
+
+        const {Foo} = goog.require('a.b.c');
+
+        /** @constructor @extends {Foo} */
+        const Bar = class {
+           /** @override */
+           method(a, b, c) {}
+        }
+        exports.Bar = Bar;
+        """);
   }
 
   @Test
   public void testConstJsdocPropagationForNames_optional() {
     test(
-        lines(
-            "/** @constructor */",
-            "function Foo(/** number= */ opt_x) {",
-            "  /** @const */ this.x = opt_x;",
-            "}"),
-        lines(
-            "/** @constructor */ function Foo(/** number= */ opt_x) {}",
-            "/** @const {number|undefined} */ Foo.prototype.x;"));
+        """
+        /** @constructor */
+        function Foo(/** number= */ opt_x) {
+          /** @const */ this.x = opt_x;
+        }
+        """,
+        """
+        /** @constructor */ function Foo(/** number= */ opt_x) {}
+        /** @const {number|undefined} */ Foo.prototype.x;
+        """);
   }
 
   @Test
   public void testNotConfusedByOutOfOrderDeclarations() {
     test(
-        lines(
-            "/** @constructor */",
-            "function Foo(/** boolean= */ opt_tag) {",
-            "  if (opt_tag) {",
-            "    Foo.tag = opt_tag;",
-            "  }",
-            "}",
-            "/** @type {boolean} */ Foo.tag = true;",
-            ""),
-        lines(
-            "/** @constructor */",
-            "function Foo(/** boolean= */ opt_tag) {}",
-            "/** @type {boolean} */ Foo.tag;"));
+        """
+        /** @constructor */
+        function Foo(/** boolean= */ opt_tag) {
+          if (opt_tag) {
+            Foo.tag = opt_tag;
+          }
+        }
+        /** @type {boolean} */ Foo.tag = true;
+        """,
+        """
+        /** @constructor */
+        function Foo(/** boolean= */ opt_tag) {}
+        /** @type {boolean} */ Foo.tag;
+        """);
   }
 
   @Test
   public void testConstJsdocPropagationForNames_rest() {
     test(
-        lines(
-            "/**",
-            " * @constructor",
-            " * @param {...number} nums",
-            " */",
-            "function Foo(...nums) {",
-            "  /** @const */ this.nums = nums;",
-            "}"),
-        lines(
-            "/**",
-            " * @constructor",
-            " * @param {...number} nums",
-            " */",
-            "function Foo(...nums) {}",
-            "/** @const {!Array<number>} */ Foo.prototype.nums;"));
+        """
+        /**
+         * @constructor
+         * @param {...number} nums
+         */
+        function Foo(...nums) {
+          /** @const */ this.nums = nums;
+        }
+        """,
+        """
+        /**
+         * @constructor
+         * @param {...number} nums
+         */
+        function Foo(...nums) {}
+        /** @const {!Array<number>} */ Foo.prototype.nums;
+        """);
   }
 
   @Test
   public void testOptionalRestParamFunction() {
     test(
-        lines(
-            "/**",
-            " * @param {?Object} o",
-            " * @param {string=} str",
-            " * @param {number=} num",
-            " * @param {...!Object} rest",
-            " */",
-            "function foo(o, str = '', num = 5, ...rest) {}"),
-        lines(
-            "/**",
-            " * @param {?Object} o",
-            " * @param {string=} str",
-            " * @param {number=} num",
-            " * @param {...!Object} rest",
-            " */",
-            "function foo(o, str=void 0, num=void 0, ...rest) {}"));
+        """
+        /**
+         * @param {?Object} o
+         * @param {string=} str
+         * @param {number=} num
+         * @param {...!Object} rest
+         */
+        function foo(o, str = '', num = 5, ...rest) {}
+        """,
+        """
+        /**
+         * @param {?Object} o
+         * @param {string=} str
+         * @param {number=} num
+         * @param {...!Object} rest
+         */
+        function foo(o, str=void 0, num=void 0, ...rest) {}
+        """);
   }
 
   @Test
@@ -1188,36 +1322,40 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   @Test
   public void testConstJsdocPropagationForNames_defaultValue() {
     test(
-        lines(
-            "/**",
-            " * @constructor",
-            " * @param {string=} str",
-            " */",
-            "function Foo(str = '') {",
-            "  /** @const */ this.s = str;",
-            "}"),
-        lines(
-            "/**",
-            " * @constructor",
-            " * @param {string=} str",
-            " */",
-            "function Foo(str = void 0) {}",
-            "/** @const {string} */ Foo.prototype.s;"));
+        """
+        /**
+         * @constructor
+         * @param {string=} str
+         */
+        function Foo(str = '') {
+          /** @const */ this.s = str;
+        }
+        """,
+        """
+        /**
+         * @constructor
+         * @param {string=} str
+         */
+        function Foo(str = void 0) {}
+        /** @const {string} */ Foo.prototype.s;
+        """);
 
     test(
-        lines(
-            "class Foo {",
-            "  /** @param {string=} str */",
-            "  constructor(str = '') {",
-            "    /** @const */ this.s = str;",
-            "  }",
-            "}"),
-        lines(
-            "class Foo {",
-            "  /** @param {string=} str */",
-            "  constructor(str = void 0) {}",
-            "}",
-            "/** @const {string} */ Foo.prototype.s;"));
+        """
+        class Foo {
+          /** @param {string=} str */
+          constructor(str = '') {
+            /** @const */ this.s = str;
+          }
+        }
+        """,
+        """
+        class Foo {
+          /** @param {string=} str */
+          constructor(str = void 0) {}
+        }
+        /** @const {string} */ Foo.prototype.s;
+        """);
   }
 
   @Test
@@ -1277,37 +1415,41 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     testSame("import {Foo} from '/foo';");
 
     testSame(
-        lines(
-            "import {Baz} from '/baz';",
-            "",
-            "export /** @constructor */ function Foo() {}",
-            "/** @type {!Baz} */ Foo.prototype.baz"));
+        """
+        import {Baz} from '/baz';
+
+        export /** @constructor */ function Foo() {}
+        /** @type {!Baz} */ Foo.prototype.baz
+        """);
 
     testSame(
-        lines(
-            "import {Bar, Baz} from '/a/b/c';",
-            "",
-            "class Foo extends Bar {",
-            "  /** @return {!Baz} */ getBaz() {}",
-            "}",
-            "",
-            "export {Foo};"));
+        """
+        import {Bar, Baz} from '/a/b/c';
+
+        class Foo extends Bar {
+          /** @return {!Baz} */ getBaz() {}
+        }
+
+        export {Foo};
+        """);
 
     test(
-        lines(
-            "export class Foo {",
-            "  /** @return {number} */ getTime() { return Date.now(); }",
-            "}",
-            "export default /** @return {number} */ () => 6",
-            "const BLAH = 'foobar';",
-            "export {BLAH};"),
-        lines(
-            "export class Foo {",
-            "  /** @return {number} */ getTime() {}",
-            "}",
-            "export default /** @return {number} */ () => {}",
-            "/** @const {string} */ var BLAH;",
-            "export {BLAH};"));
+        """
+        export class Foo {
+          /** @return {number} */ getTime() { return Date.now(); }
+        }
+        export default /** @return {number} */ () => 6
+        const BLAH = 'foobar';
+        export {BLAH};
+        """,
+        """
+        export class Foo {
+          /** @return {number} */ getTime() {}
+        }
+        export default /** @return {number} */ () => {}
+        /** @const {string} */ var BLAH;
+        export {BLAH};
+        """);
   }
 
   @Test
@@ -1327,187 +1469,225 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   @Test
   public void testEs6ModulesDeclareModuleId() {
-    testSame(lines("goog.declareModuleId('foo');", "/** @type {number} */ export var x;"));
+    testSame(
+        """
+        goog.declareModuleId('foo');
+        /** @type {number} */ export var x;
+        """);
   }
 
   @Test
   public void testGoogModules() {
     testSame(
-        lines(
-            "goog.module('x.y.z');",
-            "",
-            "/** @constructor */ function Foo() {}",
-            "",
-            "exports = Foo;"));
+        """
+        goog.module('x.y.z');
+
+        /** @constructor */ function Foo() {}
+
+        exports = Foo;
+        """);
 
     testSame(
-        lines(
-            "goog.module('x.y.z');",
-            "",
-            "const Baz = goog.require('a.b.c');",
-            "",
-            "/** @constructor */ function Foo() {}",
-            "/** @type {!Baz} */ Foo.prototype.baz",
-            "",
-            "exports = Foo;"));
+        """
+        goog.module('x.y.z');
+
+        const Baz = goog.require('a.b.c');
+
+        /** @constructor */ function Foo() {}
+        /** @type {!Baz} */ Foo.prototype.baz
+
+        exports = Foo;
+        """);
 
     testSame(
-        lines(
-            "goog.module('x.y.z');",
-            "",
-            "const {Bar, Baz} = goog.require('a.b.c');",
-            "",
-            "/** @constructor */ function Foo() {}",
-            "/** @type {!Baz} */ Foo.prototype.baz",
-            "",
-            "exports = Foo;"));
+        """
+        goog.module('x.y.z');
 
-    testSame(
-        srcs(
-            lines(
-                "goog.module('a.b.c');",
-                "/** @constructor */ function Foo() {}",
-                "Foo.prototype.display = function() {};",
-                "exports = Foo;"),
-            lines(
-                "goog.module('x.y.z');",
-                "/** @constructor */ function Foo() {}",
-                "Foo.prototype.display = function() {};",
-                "exports = Foo;")));
+        const {Bar, Baz} = goog.require('a.b.c');
+
+        /** @constructor */ function Foo() {}
+        /** @type {!Baz} */ Foo.prototype.baz
+
+        exports = Foo;
+        """);
 
     testSame(
         srcs(
-            lines(
-                "/** @constructor */ function Foo() {}", "Foo.prototype.display = function() {};"),
-            lines(
-                "goog.module('x.y.z');",
-                "/** @constructor */ function Foo() {}",
-                "Foo.prototype.display = function() {};",
-                "exports = Foo;")));
+            """
+            goog.module('a.b.c');
+            /** @constructor */ function Foo() {}
+            Foo.prototype.display = function() {};
+            exports = Foo;
+            """,
+            """
+            goog.module('x.y.z');
+            /** @constructor */ function Foo() {}
+            Foo.prototype.display = function() {};
+            exports = Foo;
+            """));
+
+    testSame(
+        srcs(
+            """
+            /** @constructor */ function Foo() {}
+            Foo.prototype.display = function() {};
+            """,
+            """
+            goog.module('x.y.z');
+            /** @constructor */ function Foo() {}
+            Foo.prototype.display = function() {};
+            exports = Foo;
+            """));
 
     test(
         srcs(
-            lines(
-                "goog.module('a.b.c');",
-                "/** @constructor */ function Foo() {",
-                "  /** @type {number} */ this.x = 5;",
-                "}",
-                "exports = Foo;"),
-            lines(
-                "goog.module('x.y.z');",
-                "/** @constructor */ function Foo() {",
-                "  /** @type {number} */ this.x = 99;",
-                "}",
-                "exports = Foo;")),
+            """
+            goog.module('a.b.c');
+            /** @constructor */ function Foo() {
+              /** @type {number} */ this.x = 5;
+            }
+            exports = Foo;
+            """,
+            """
+            goog.module('x.y.z');
+            /** @constructor */ function Foo() {
+              /** @type {number} */ this.x = 99;
+            }
+            exports = Foo;
+            """),
         expected(
-            lines(
-                "goog.module('a.b.c');",
-                "/** @constructor */ function Foo() {}",
-                "/** @type {number} */ Foo.prototype.x;",
-                "exports = Foo;"),
-            lines(
-                "goog.module('x.y.z');",
-                "/** @constructor */ function Foo() {}",
-                "/** @type {number} */ Foo.prototype.x;",
-                "exports = Foo;")));
+            """
+            goog.module('a.b.c');
+            /** @constructor */ function Foo() {}
+            /** @type {number} */ Foo.prototype.x;
+            exports = Foo;
+            """,
+            """
+            goog.module('x.y.z');
+            /** @constructor */ function Foo() {}
+            /** @type {number} */ Foo.prototype.x;
+            exports = Foo;
+            """));
   }
 
   @Test
   public void testGoogModulesWithTypedefExports() {
-    testSame(lines("goog.module('x.y.z');", "", "/** @typedef {number} */", "exports.Foo;"));
+    testSame(
+        """
+        goog.module('x.y.z');
+
+        /** @typedef {number} */
+        exports.Foo;
+        """);
   }
 
   @Test
   public void testGoogModulesWithUndefinedExports() {
     testWarning(
-        lines(
-            "goog.module('x.y.z');",
-            "",
-            "const Baz = goog.require('x.y.z.Baz');",
-            "const Foobar = goog.require('f.b.Foobar');",
-            "",
-            "exports = (new Baz).getFoobar();"),
+        """
+        goog.module('x.y.z');
+
+        const Baz = goog.require('x.y.z.Baz');
+        const Foobar = goog.require('f.b.Foobar');
+
+        exports = (new Baz).getFoobar();
+        """,
         ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
 
     testWarning(
-        lines(
-            "goog.module('x.y.z');",
-            "",
-            "const Baz = goog.require('x.y.z.Baz');",
-            "const Foobar = goog.require('f.b.Foobar');",
-            "",
-            "exports.foobar = (new Baz).getFoobar();"),
+        """
+        goog.module('x.y.z');
+
+        const Baz = goog.require('x.y.z.Baz');
+        const Foobar = goog.require('f.b.Foobar');
+
+        exports.foobar = (new Baz).getFoobar();
+        """,
         ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
   }
 
   @Test
   public void testGoogModulesWithAnnotatedUninferrableExports() {
     test(
-        lines(
-            "goog.module('x.y.z');",
-            "",
-            "const Baz = goog.require('x.y.z.Baz');",
-            "const Foobar = goog.require('f.b.Foobar');",
-            "",
-            "/** @type {Foobar} */",
-            "exports.foobar = (new Baz).getFoobar();"),
-        lines(
-            "goog.module('x.y.z');",
-            "",
-            "const Baz = goog.require('x.y.z.Baz');",
-            "const Foobar = goog.require('f.b.Foobar');",
-            "",
-            "/** @type {Foobar} */",
-            "exports.foobar;"));
+        """
+        goog.module('x.y.z');
+
+        const Baz = goog.require('x.y.z.Baz');
+        const Foobar = goog.require('f.b.Foobar');
+
+        /** @type {Foobar} */
+        exports.foobar = (new Baz).getFoobar();
+        """,
+        """
+        goog.module('x.y.z');
+
+        const Baz = goog.require('x.y.z.Baz');
+        const Foobar = goog.require('f.b.Foobar');
+
+        /** @type {Foobar} */
+        exports.foobar;
+        """);
 
     test(
-        lines(
-            "goog.module('x.y.z');",
-            "",
-            "const Baz = goog.require('x.y.z.Baz');",
-            "const Foobar = goog.require('f.b.Foobar');",
-            "",
-            "/** @type {Foobar} */",
-            "exports = (new Baz).getFoobar();"),
-        lines(
-            "goog.module('x.y.z');",
-            "",
-            "const Baz = goog.require('x.y.z.Baz');",
-            "const Foobar = goog.require('f.b.Foobar');",
-            "",
-            "/** @type {Foobar} */",
-            "exports = /** @type {?} */ (0);"));
+        """
+        goog.module('x.y.z');
+
+        const Baz = goog.require('x.y.z.Baz');
+        const Foobar = goog.require('f.b.Foobar');
+
+        /** @type {Foobar} */
+        exports = (new Baz).getFoobar();
+        """,
+        """
+        goog.module('x.y.z');
+
+        const Baz = goog.require('x.y.z.Baz');
+        const Foobar = goog.require('f.b.Foobar');
+
+        /** @type {Foobar} */
+        exports = /** @type {?} */ (0);
+        """);
   }
 
   @Test
   public void testCrossFileModifications() {
     test(
-        lines(
-            "goog.module('a.b.c');",
-            "othermodule.modify.something = othermodule.modify.something + 1;"),
+        """
+        goog.module('a.b.c');
+        othermodule.modify.something = othermodule.modify.something + 1;
+        """,
         "goog.module('a.b.c');");
 
     test(
-        lines(
-            "goog.module('a.b.c');",
-            "class Foo {}",
-            "Foo.something = othermodule.modify.something + 1;",
-            "exports = Foo;"),
-        lines(
-            "goog.module('a.b.c');",
-            "class Foo {}",
-            "/** @const {UnusableType} */ Foo.something",
-            "exports = Foo;"));
+        """
+        goog.module('a.b.c');
+        class Foo {}
+        Foo.something = othermodule.modify.something + 1;
+        exports = Foo;
+        """,
+        """
+        goog.module('a.b.c');
+        class Foo {}
+        /** @const {UnusableType} */ Foo.something
+        exports = Foo;
+        """);
 
     test(
-        lines(
-            "goog.provide('a.b.c');",
-            "otherfile.modify.something = otherfile.modify.something + 1;"),
+        """
+        goog.provide('a.b.c');
+        otherfile.modify.something = otherfile.modify.something + 1;
+        """,
         "goog.provide('a.b.c');");
 
     test(
-        lines("goog.provide('a.b.c');", "a.b.c.something = otherfile.modify.something + 1;"),
-        lines("goog.provide('a.b.c');", "/** @const {UnusableType} */ a.b.c.something;"));
+        """
+        goog.provide('a.b.c');
+        a.b.c.something = otherfile.modify.something + 1;
+        """,
+        """
+        goog.provide('a.b.c');
+        /** @const {UnusableType} */ a.b.c.something;
+        """);
   }
 
   @Test
@@ -1558,13 +1738,14 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "/** @type {number} */ var n;");
 
     test(
-        lines(
-            "try {",
-            "  /** @type {number} */ var start = Date.now();",
-            "  doStuff();",
-            "} finally {",
-            "  /** @type {number} */ var end = Date.now();",
-            "}"),
+        """
+        try {
+          /** @type {number} */ var start = Date.now();
+          doStuff();
+        } finally {
+          /** @type {number} */ var end = Date.now();
+        }
+        """,
         "/** @type {number} */ var start; /** @type {number} */ var end;");
   }
 
@@ -1572,19 +1753,21 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   public void testTemplatedClass() {
 
     test(
-        lines(
-            "/** @template T */",
-            "class Foo {",
-            "  /** @param {T} x */",
-            "  constructor(x) { /** @const */ this.x = x;}",
-            "}"),
-        lines(
-            "/** @template T */",
-            "class Foo {",
-            "  /** @param {T} x */",
-            "  constructor(x) {}",
-            "}",
-            "/** @const {T} */ Foo.prototype.x;"));
+        """
+        /** @template T */
+        class Foo {
+          /** @param {T} x */
+          constructor(x) { /** @const */ this.x = x;}
+        }
+        """,
+        """
+        /** @template T */
+        class Foo {
+          /** @param {T} x */
+          constructor(x) {}
+        }
+        /** @const {T} */ Foo.prototype.x;
+        """);
   }
 
   @Test
@@ -1840,11 +2023,12 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     testSame("goog.module('x.y.z'); class Foo {} exports = {Foo};");
 
     testSame(
-        lines(
-            "goog.module('x.y.z');",
-            "const C = goog.require('a.b.C');",
-            "class Foo extends C {}",
-            "exports = Foo;"));
+        """
+        goog.module('x.y.z');
+        const C = goog.require('a.b.C');
+        class Foo extends C {}
+        exports = Foo;
+        """);
   }
 
   @Test
@@ -1862,147 +2046,175 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   @Test
   public void testAliasOfRequirePreserved() {
     testSame(
-        lines(
-            "goog.provide('a.b.c');",
-            "",
-            "goog.require('ns.Foo');",
-            "",
-            "/** @const */",
-            "a.b.c.FooAlias = ns.Foo;"));
+        """
+        goog.provide('a.b.c');
+
+        goog.require('ns.Foo');
+
+        /** @const */
+        a.b.c.FooAlias = ns.Foo;
+        """);
 
     testSame(
-        lines(
-            "goog.provide('a.b.c');",
-            "",
-            "goog.require('ns.Foo');",
-            "",
-            "/** @constructor */",
-            "a.b.c.FooAlias = ns.Foo;"));
+        """
+        goog.provide('a.b.c');
+
+        goog.require('ns.Foo');
+
+        /** @constructor */
+        a.b.c.FooAlias = ns.Foo;
+        """);
 
     testSame(
-        lines(
-            "goog.module('mymod');",
-            "",
-            "const {Foo} = goog.require('ns.Foo');",
-            "",
-            "/** @const */",
-            "var FooAlias = Foo;",
-            "",
-            "/** @param {!FooAlias} f */",
-            "exports = function (f) {};"));
+        """
+        goog.module('mymod');
+
+        const {Foo} = goog.require('ns.Foo');
+
+        /** @const */
+        var FooAlias = Foo;
+
+        /** @param {!FooAlias} f */
+        exports = function (f) {};
+        """);
 
     testSame(
-        lines(
-            "goog.module('mymod');",
-            "",
-            "var Foo = goog.require('ns.Foo');",
-            "",
-            "/** @constructor */",
-            "var FooAlias = Foo;",
-            "",
-            "/** @param {!FooAlias} f */",
-            "exports = function (f) {};"));
+        """
+        goog.module('mymod');
+
+        var Foo = goog.require('ns.Foo');
+
+        /** @constructor */
+        var FooAlias = Foo;
+
+        /** @param {!FooAlias} f */
+        exports = function (f) {};
+        """);
   }
 
   @Test
   public void testAliasOfNonRequiredName() {
-    testSame(lines("goog.provide('a.b.c');", "", "/** @const */", "a.b.c.FooAlias = ns.Foo;"));
+    testSame(
+        """
+        goog.provide('a.b.c');
+
+        /** @const */
+        a.b.c.FooAlias = ns.Foo;
+        """);
 
     testWarning(
-        lines(
-            "goog.provide('a.b.c');",
-            "",
-            "/** @constructor */",
-            "a.b.c.Bar = function() {",
-            "  /** @const */",
-            "  this.FooAlias = ns.Foo;",
-            "};"),
+        """
+        goog.provide('a.b.c');
+
+        /** @constructor */
+        a.b.c.Bar = function() {
+          /** @const */
+          this.FooAlias = ns.Foo;
+        };
+        """,
         ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
 
     testWarning(
-        lines(
-            "goog.module('a.b.c');",
-            "",
-            "class FooAlias {",
-            "  constructor() {",
-            "    /** @const */",
-            "    this.FooAlias = window.Foo;",
-            "  }",
-            "};"),
+        """
+        goog.module('a.b.c');
+
+        class FooAlias {
+          constructor() {
+            /** @const */
+            this.FooAlias = window.Foo;
+          }
+        };
+        """,
         ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
   }
 
   @Test
   public void testDuplicateClassMethods() {
     test(
-        lines(
-            "/** @constructor */ var Foo = function() {};",
-            "Foo.prototype.method = function() {};",
-            "",
-            "Foo = class {",
-            "  method() {}",
-            "};"),
-        lines(
-            "/** @constructor */ var Foo = function() {};",
-            "Foo.prototype.method = function() {};",
-            ""));
+        """
+        /** @constructor */ var Foo = function() {};
+        Foo.prototype.method = function() {};
+
+        Foo = class {
+          method() {}
+        };
+        """,
+        """
+        /** @constructor */ var Foo = function() {};
+        Foo.prototype.method = function() {};
+        """);
   }
 
   @Test
   public void testGoogScopeLeftoversAreRemoved() {
     test(
-        lines(
-            "goog.provide('a.b.c.d.e.f.g');",
-            "",
-            "/** @const */ var $jscomp = $jscomp || {};",
-            "/** @const */ $jscomp.scope = {};",
-            "",
-            "$jscomp.scope.strayVariable = function() {};",
-            "",
-            "a.b.c.d.e.f.g.Foo = class {};"),
-        lines("goog.provide('a.b.c.d.e.f.g');", "", "a.b.c.d.e.f.g.Foo = class {};"));
+        """
+        goog.provide('a.b.c.d.e.f.g');
+
+        /** @const */ var $jscomp = $jscomp || {};
+        /** @const */ $jscomp.scope = {};
+
+        $jscomp.scope.strayVariable = function() {};
+
+        a.b.c.d.e.f.g.Foo = class {};
+        """,
+        """
+        goog.provide('a.b.c.d.e.f.g');
+
+        a.b.c.d.e.f.g.Foo = class {};
+        """);
 
     test(
-        lines(
-            "goog.provide('a.b.c.d.e.f.g');",
-            "",
-            "/** @const */ var $jscomp = $jscomp || {};",
-            "/** @const */ $jscomp.scope = {};",
-            "",
-            "/** @constructor */",
-            "$jscomp.scope.strayCtor = function() { this.x = 5; };",
-            "",
-            "a.b.c.d.e.f.g.Foo = class {};"),
-        lines("goog.provide('a.b.c.d.e.f.g');", "", "a.b.c.d.e.f.g.Foo = class {};"),
+        """
+        goog.provide('a.b.c.d.e.f.g');
+
+        /** @const */ var $jscomp = $jscomp || {};
+        /** @const */ $jscomp.scope = {};
+
+        /** @constructor */
+        $jscomp.scope.strayCtor = function() { this.x = 5; };
+
+        a.b.c.d.e.f.g.Foo = class {};
+        """,
+        """
+        goog.provide('a.b.c.d.e.f.g');
+
+        a.b.c.d.e.f.g.Foo = class {};
+        """,
         warning(ConvertToTypedInterface.GOOG_SCOPE_HIDDEN_TYPE));
 
     test(
-        lines(
-            "goog.provide('a.b.c.d.e.f.g');",
-            "",
-            "/** @const */ var $jscomp = $jscomp || {};",
-            "/** @const */ $jscomp.scope = {};",
-            "",
-            "$jscomp.scope.strayClass = class {",
-            "  constructor() { this.x = 5 };",
-            "  method() {};",
-            "};",
-            "",
-            "a.b.c.d.e.f.g.Foo = class {};"),
-        lines("goog.provide('a.b.c.d.e.f.g');", "", "a.b.c.d.e.f.g.Foo = class {};"),
+        """
+        goog.provide('a.b.c.d.e.f.g');
+
+        /** @const */ var $jscomp = $jscomp || {};
+        /** @const */ $jscomp.scope = {};
+
+        $jscomp.scope.strayClass = class {
+          constructor() { this.x = 5 };
+          method() {};
+        };
+
+        a.b.c.d.e.f.g.Foo = class {};
+        """,
+        """
+        goog.provide('a.b.c.d.e.f.g');
+
+        a.b.c.d.e.f.g.Foo = class {};
+        """,
         warning(ConvertToTypedInterface.GOOG_SCOPE_HIDDEN_TYPE));
 
     test(
-        lines(
-            "/** @const */ var $jscomp = $jscomp || {};",
-            "/** @const */ $jscomp.scope = {};",
-            "",
-            "$jscomp.scope.strayClass = class {",
-            "  constructor() {",
-            "    this.Foo = class {};",
-            "  };",
-            "};",
-            ""),
+        """
+        /** @const */ var $jscomp = $jscomp || {};
+        /** @const */ $jscomp.scope = {};
+
+        $jscomp.scope.strayClass = class {
+          constructor() {
+            this.Foo = class {};
+          };
+        };
+        """,
         "",
         warning(ConvertToTypedInterface.GOOG_SCOPE_HIDDEN_TYPE));
   }
@@ -2010,74 +2222,80 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   @Test
   public void testDestructuringDoesntCrash() {
     test(
-        lines(
-            "goog.module('a.b.c');",
-            "",
-            "const Enum = goog.require('Enum');",
-            "const Foo = goog.require('Foo');",
-            "",
-            "const {A, B} = Enum;",
-            "",
-            "/** @type {Foo} */",
-            "exports.foo = use(A, B);",
-            ""),
-        lines(
-            "goog.module('a.b.c');",
-            "",
-            "const Enum = goog.require('Enum');",
-            "const Foo = goog.require('Foo');",
-            "",
-            "const {A, B} = Enum;",
-            "",
-            "/** @type {Foo} */",
-            "exports.foo;",
-            ""));
+        """
+        goog.module('a.b.c');
+
+        const Enum = goog.require('Enum');
+        const Foo = goog.require('Foo');
+
+        const {A, B} = Enum;
+
+        /** @type {Foo} */
+        exports.foo = use(A, B);
+        """,
+        """
+        goog.module('a.b.c');
+
+        const Enum = goog.require('Enum');
+        const Foo = goog.require('Foo');
+
+        const {A, B} = Enum;
+
+        /** @type {Foo} */
+        exports.foo;
+        """);
   }
 
   @Test
   public void testSameNamedStaticAndNonstaticMethodsDontCrash() {
-    testSame(lines("const Foo = class {", "  static method() {}", "  method() {}", "}", ""));
+    testSame(
+        """
+        const Foo = class {
+          static method() {}
+          method() {}
+        }
+        """);
   }
 
   @Test
   public void testRedeclarationOfClassMethodDoesntCrash() {
     test(
-        lines(
-            "class Foo {",
-            "  constructor() {",
-            "    /** @private */",
-            "    this.handleEvent_ = this.handleEvent_.bind(this);",
-            "  }",
-            "  /** @private @param {Event} e */",
-            "  handleEvent_(e) {}",
-            "}",
-            ""),
-        lines(
-            "class Foo {",
-            "  constructor() {}",
-            "  /** @private @param {Event} e */",
-            "  handleEvent_(e) {}",
-            "}",
-            ""));
+        """
+        class Foo {
+          constructor() {
+            /** @private */
+            this.handleEvent_ = this.handleEvent_.bind(this);
+          }
+          /** @private @param {Event} e */
+          handleEvent_(e) {}
+        }
+        """,
+        """
+        class Foo {
+          constructor() {}
+          /** @private @param {Event} e */
+          handleEvent_(e) {}
+        }
+        """);
 
     test(
-        lines(
-            "class Foo {",
-            "  constructor() {",
-            "    /** @param {Event} e */",
-            "    this.handleEvent_ = function (e) {};",
-            "  }",
-            "  handleEvent_(e) {}",
-            "}",
-            ""),
-        lines(
-            "class Foo {",
-            "  constructor() {",
-            "    /** @param {Event} e */",
-            "    this.handleEvent_ = function (e) {};",
-            "  }",
-            "}",
-            ""));
+        """
+        class Foo {
+          constructor() {
+            /** @param {Event} e */
+            this.handleEvent_ = function (e) {};
+          }
+          handleEvent_(e) {}
+        }
+        """,
+        """
+        class Foo {
+          constructor() {
+            /** @param {Event} e */
+            this.handleEvent_ = function (e) {};
+          }
+        }
+        """);
   }
 
   @Test
@@ -2100,26 +2318,26 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "/** @const {UnusableType} */ var Foo;");
 
     test(
-        lines(
-            "let Foo = fooFactory(class {",
-            "  constructor() {",
-            "    /** @type {number} */",
-            "    this.n = 5;",
-            "  }",
-            "});",
-            ""),
+        """
+        let Foo = fooFactory(class {
+          constructor() {
+            /** @type {number} */
+            this.n = 5;
+          }
+        });
+        """,
         "/** @const {UnusableType} */ var Foo;");
 
     test(
-        lines(
-            "/** @type {function(new:Int)} */",
-            "let Foo = fooFactory(class {",
-            "  constructor() {",
-            "    /** @type {number} */",
-            "    this.n = 5;",
-            "  }",
-            "});",
-            ""),
+        """
+        /** @type {function(new:Int)} */
+        let Foo = fooFactory(class {
+          constructor() {
+            /** @type {number} */
+            this.n = 5;
+          }
+        });
+        """,
         "/** @type {function(new:Int)} */ var Foo;");
   }
 
@@ -2149,22 +2367,28 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   @Test
   public void testDescAnnotationCountsAsTyped() {
     test(
-        lines("/** @desc Some description */", "var MSG_DESCRIPTION = goog.getMsg('Text');", ""),
-        lines("/** @const {string} @desc Some description */", "var MSG_DESCRIPTION;", ""));
+        """
+        /** @desc Some description */
+        var MSG_DESCRIPTION = goog.getMsg('Text');
+        """,
+        """
+        /** @const {string} @desc Some description */
+        var MSG_DESCRIPTION;
+        """);
 
     test(
-        lines(
-            "goog.module('a.b.c');",
-            "",
-            "/** @desc Some description */",
-            "exports.MSG_DESCRIPTION = goog.getMsg('Text');",
-            ""),
-        lines(
-            "goog.module('a.b.c');",
-            "",
-            "/** @const {string} @desc Some description */",
-            "exports.MSG_DESCRIPTION;",
-            ""));
+        """
+        goog.module('a.b.c');
+
+        /** @desc Some description */
+        exports.MSG_DESCRIPTION = goog.getMsg('Text');
+        """,
+        """
+        goog.module('a.b.c');
+
+        /** @const {string} @desc Some description */
+        exports.MSG_DESCRIPTION;
+        """);
   }
 
   @Test
@@ -2172,30 +2396,37 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     testSame("const foo = require('./foo.js');");
 
     testSame(
-        lines(
-            "const {Baz} = require('./baz.js');",
-            "",
-            "exports.Foo = class {",
-            "  /** @return {!Baz} */ getBaz() {}",
-            "};"));
+        """
+        const {Baz} = require('./baz.js');
+
+        exports.Foo = class {
+          /** @return {!Baz} */ getBaz() {}
+        };
+        """);
 
     test(
-        lines(
-            "module.exports = class Foo {",
-            "  /** @return {number} */ get42() { return 40 + 2; }",
-            "};"),
-        lines("module.exports = class Foo {", "  /** @return {number} */ get42() {}", "};"));
+        """
+        module.exports = class Foo {
+          /** @return {number} */ get42() { return 40 + 2; }
+        };
+        """,
+        """
+        module.exports = class Foo {
+          /** @return {number} */ get42() {}
+        };
+        """);
 
     testSame(
-        lines(
-            "const {Bar, Baz} = require('./a/b/c.js');",
-            "",
-            "class Foo extends Bar {",
-            "  /** @return {!Baz} */ getBaz() {}",
-            "}",
-            "",
-            "exports = {Foo};",
-            "module.exports = {Foo};"));
+        """
+        const {Bar, Baz} = require('./a/b/c.js');
+
+        class Foo extends Bar {
+          /** @return {!Baz} */ getBaz() {}
+        }
+
+        exports = {Foo};
+        module.exports = {Foo};
+        """);
   }
 
   @Test
@@ -2223,166 +2454,175 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     // These tests also exposes a bug tracked in b/124946590
     // TODO(b/124946590): Modify these tests when fixing the bug.
     test(
-        lines(
-            "goog.module('fooo');",
-            "var Foo;",
-            "Foo = class {",
-            "    constructor() {",
-            "        this.boundOnMouseMove = null;",
-            "    }",
-            "};"),
-        lines("goog.module('fooo');", "/** @const @type {UnusableType} */ var Foo;"));
+        """
+        goog.module('fooo');
+        var Foo;
+        Foo = class {
+            constructor() {
+                this.boundOnMouseMove = null;
+            }
+        };
+        """,
+        """
+        goog.module('fooo');
+        /** @const @type {UnusableType} */ var Foo;
+        """);
 
     test(
-        lines(
-            "goog.module('fooo');",
-            "var Foo;",
-            "let Bar = Foo = class {",
-            "    constructor() {",
-            "        /** @type {null} */",
-            "        this.boundOnMouseMove = null;",
-            "    }",
-            "};"),
-        lines(
-            "goog.module('fooo');",
-            "/** @const @type {UnusableType} */ var Foo;",
-            "/** @const @type {UnusableType} */ var Bar"));
+        """
+        goog.module('fooo');
+        var Foo;
+        let Bar = Foo = class {
+            constructor() {
+                /** @type {null} */
+                this.boundOnMouseMove = null;
+            }
+        };
+        """,
+        """
+        goog.module('fooo');
+        /** @const @type {UnusableType} */ var Foo;
+        /** @const @type {UnusableType} */ var Bar
+        """);
   }
 
   @Test
   public void testPolymerBehavior() {
     test(
-        lines(
-            "/** @polymerBehavior */",
-            "export const MyBehavior = {",
-            "  properties: {",
-            "    foo: String,",
-            "    /** @type {string|number} */",
-            "    bar: Number,",
-            "    /** @type {string|number} */",
-            "    baz: {",
-            "      type: String,",
-            "      value: function() {",
-            "        return \"foo\";",
-            "      },",
-            "      reflectToAttribute: true,",
-            "      observer: \"bazChanged\",",
-            "      readOnly: true",
-            "    }",
-            "  },",
-            "  observers: [",
-            "    \"abc(foo)\",",
-            "  ],",
-            "  /** @return {boolean} */",
-            "  abc() { return true; },",
-            "  /** @return {boolean} */",
-            "  xyz: function() { return false; }",
-            "};",
-            "/** @polymerBehavior */",
-            "export const MyBehaviorAlias = MyBehavior;",
-            "/** @polymerBehavior */",
-            "export const MyBehaviorArray = [MyBehavior];",
-            "/** @polymerBehavior */",
-            "exports.MyBehaviorAlias = MyBehavior;",
-            "/** @polymerBehavior */",
-            "exports.MyBehaviorArray = [MyBehavior];",
-            "/** @polymerBehavior */",
-            "export let InvalidBehavior1 = \"foo\";",
-            "/** @polymerBehavior */",
-            "exports.InvalidBehavior2 = function() { return \"foo\" };",
-            "export const NotABehavior = {",
-            "  properties: {",
-            "    foo: String",
-            "  }",
-            "};"),
-        lines(
-            // The @polymerBehavior annotation matters.
-            "/** @polymerBehavior */",
-            "export const MyBehavior = {",
-            // The "properties" configuration matters.
-            "  properties: {",
-            "    foo: String,",
-            // @type annotations on the properties matter.
-            "    /** @type {string|number} */",
-            "    bar: Number,",
-            "    /** @type {string|number} */",
-            "    baz: {",
-            // If the property definition is an object, only the "type" and "readOnly"
-            // sub-properties matter.
-            "      type: String,",
-            "      readOnly: true",
-            "    }",
-            "  },",
-            // The "observers" configuration doesn't matter.
-            "  /** @const @type {UnusableType} */",
-            "  observers: 0,",
-            // Methods matter, but only their signatures.
-            "  /** @return {boolean} */",
-            "  abc() {},",
-            "  /** @return {boolean} */",
-            "  xyz: function() {}",
-            "};",
-
-            // Behaviors can also be aliased or combined into arrays, and the RHS values matter.
-            "/** @polymerBehavior */",
-            "export const MyBehaviorAlias = MyBehavior;",
-            "/** @polymerBehavior */",
-            "export const MyBehaviorArray = [MyBehavior];",
-            "/** @polymerBehavior */",
-            "exports.MyBehaviorAlias = MyBehavior;",
-            "/** @polymerBehavior */",
-            "exports.MyBehaviorArray = [MyBehavior];",
-
-            // Not valid behavior types, can be simplified.
-            "/**",
-            " * @const",
-            " * @polymerBehavior",
-            " * @type {UnusableType}",
-            " */",
-            "export var InvalidBehavior1",
-            "/** @polymerBehavior */",
-            "exports.InvalidBehavior2 = function() {};",
-
-            // There's no @polymerBehavior annotation here, so don't preserve "properties".
-            "export const NotABehavior = {",
-            "  /** @const @type {UnusableType} */",
-            "  properties: 0",
-            "};"));
+        """
+        /** @polymerBehavior */
+        export const MyBehavior = {
+          properties: {
+            foo: String,
+            /** @type {string|number} */
+            bar: Number,
+            /** @type {string|number} */
+            baz: {
+              type: String,
+              value: function() {
+                return "foo";
+              },
+              reflectToAttribute: true,
+              observer: "bazChanged",
+              readOnly: true
+            }
+          },
+          observers: [
+            "abc(foo)",
+          ],
+          /** @return {boolean} */
+          abc() { return true; },
+          /** @return {boolean} */
+          xyz: function() { return false; }
+        };
+        /** @polymerBehavior */
+        export const MyBehaviorAlias = MyBehavior;
+        /** @polymerBehavior */
+        export const MyBehaviorArray = [MyBehavior];
+        /** @polymerBehavior */
+        exports.MyBehaviorAlias = MyBehavior;
+        /** @polymerBehavior */
+        exports.MyBehaviorArray = [MyBehavior];
+        /** @polymerBehavior */
+        export let InvalidBehavior1 = "foo";
+        /** @polymerBehavior */
+        exports.InvalidBehavior2 = function() { return "foo" };
+        export const NotABehavior = {
+          properties: {
+            foo: String
+          }
+        };
+        """,
+        """
+        /** @polymerBehavior */
+        export const MyBehavior = {
+        // The "properties" configuration matters.
+          properties: {
+            foo: String,
+        // @type annotations on the properties matter.
+            /** @type {string|number} */
+            bar: Number,
+            /** @type {string|number} */
+            baz: {
+        // If the property definition is an object, only the "type" and "readOnly"
+        // sub-properties matter.
+              type: String,
+              readOnly: true
+            }
+          },
+        // The "observers" configuration doesn't matter.
+          /** @const @type {UnusableType} */
+          observers: 0,
+        // Methods matter, but only their signatures.
+          /** @return {boolean} */
+          abc() {},
+          /** @return {boolean} */
+          xyz: function() {}
+        };
+        // Behaviors can also be aliased or combined into arrays, and the RHS values matter.
+        /** @polymerBehavior */
+        export const MyBehaviorAlias = MyBehavior;
+        /** @polymerBehavior */
+        export const MyBehaviorArray = [MyBehavior];
+        /** @polymerBehavior */
+        exports.MyBehaviorAlias = MyBehavior;
+        /** @polymerBehavior */
+        exports.MyBehaviorArray = [MyBehavior];
+        // Not valid behavior types, can be simplified.
+        /**
+         * @const
+         * @polymerBehavior
+         * @type {UnusableType}
+         */
+        export var InvalidBehavior1
+        /** @polymerBehavior */
+        exports.InvalidBehavior2 = function() {};
+        // There's no @polymerBehavior annotation here, so don't preserve "properties".
+        export const NotABehavior = {
+          /** @const @type {UnusableType} */
+          properties: 0
+        };
+        """);
   }
 
   @Test
   public void testGoogModuleGet() {
     test(
-        lines(
-            "goog.provide('a.b.c');",
-            "goog.provide('a.b.c.d');",
-            "goog.require('x.y.z');",
-            "",
-            "/** @const */",
-            "a.b.c = {};",
-            "/** @const */",
-            "a.b.c.d = goog.module.get('x.y.z').d;",
-            ""),
-        lines(
-            "goog.provide('a.b.c');",
-            "goog.provide('a.b.c.d');",
-            "goog.require('x.y.z');",
-            "",
-            "/** @const */",
-            "a.b.c = {};",
-            "/** @const */",
-            "a.b.c.d = goog.module.get('x.y.z').d;",
-            ""));
+        """
+        goog.provide('a.b.c');
+        goog.provide('a.b.c.d');
+        goog.require('x.y.z');
+
+        /** @const */
+        a.b.c = {};
+        /** @const */
+        a.b.c.d = goog.module.get('x.y.z').d;
+        """,
+        """
+        goog.provide('a.b.c');
+        goog.provide('a.b.c.d');
+        goog.require('x.y.z');
+
+        /** @const */
+        a.b.c = {};
+        /** @const */
+        a.b.c.d = goog.module.get('x.y.z').d;
+        """);
   }
 
   @Test
   public void testRemovesClosureUnawareCodeAnnotationIfPresent() {
     test(
-        lines("/** @fileoverview @closureUnaware */", "goog.module('a.b.c');", "exports.foo = 10;"),
-        lines(
-            "/**@fileoverview */",
-            "goog.module('a.b.c');",
-            "/** @const @type {number} */",
-            "exports.foo;"));
+        """
+        /** @fileoverview @closureUnaware */
+        goog.module('a.b.c');
+        exports.foo = 10;
+        """,
+        """
+        /**@fileoverview */
+        goog.module('a.b.c');
+        /** @const @type {number} */
+        exports.foo;
+        """);
   }
 }

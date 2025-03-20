@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.serialization;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static java.util.Arrays.stream;
 
 import com.google.common.collect.ImmutableList;
@@ -127,11 +126,12 @@ public final class SerializeTypesToPointersTest {
     Node root =
         parseAndTypecheckFiles(
             "/** @typeSummary @externs */ class Foo { serializeMe() {} doNotSerializeMe() {} }",
-            lines(
-                "/** @externs */",
-                "class Bar { serializeMe() {} }",
-                "/** @type {string} */",
-                "Foo.prototype.andMe;"));
+            """
+            /** @externs */
+            class Bar { serializeMe() {} }
+            /** @type {string} */
+            Foo.prototype.andMe;
+            """);
     JSType fooPrototypeType = getGlobalType("Foo").toObjectType().getImplicitPrototype();
 
     SerializeTypesToPointers serializer =

@@ -165,7 +165,7 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     }
 
     public TypeTestBuilder addDiagnostic(String x) {
-      this.diagnosticDescriptions.add(x);
+      this.diagnosticDescriptions.add(x.trim());
       return this;
     }
 

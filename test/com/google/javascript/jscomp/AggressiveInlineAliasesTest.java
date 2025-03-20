@@ -32,12 +32,13 @@ import org.junit.runners.JUnit4;
 public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   private static final String EXTERNS =
-      lines(
-          "var window", //
-          "function alert(s) {}",
-          "function parseInt(s) {}",
-          "function String() {};",
-          "var arguments");
+      """
+      var window
+      function alert(s) {}
+      function parseInt(s) {}
+      function String() {};
+      var arguments
+      """;
 
   public AggressiveInlineAliasesTest() {
     super(EXTERNS);
@@ -69,241 +70,259 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   @Test
   public void test_b19179602() {
     test(
-        lines(
-            "var a = {};",
-            "/** @constructor */ a.b = function() {};",
-            "a.b.staticProp = 5;",
-            "/** @constructor */",
-            "function f() { ",
-            "  while (true) { ",
-            "    var b = a.b;",
-            "    alert(b.staticProp);",
-            "  }",
-            "}"),
-        lines(
-            "var a = {};",
-            "/** @constructor */ a.b = function() {};",
-            "a.b.staticProp = 5;",
-            "/** @constructor */",
-            "function f() {",
-            "  for(; true; ) {",
-            "    var b = null;", // replaced with null
-            "    alert(a.b.staticProp);", // value inlined
-            "  }",
-            "}"));
+        """
+        var a = {};
+        /** @constructor */ a.b = function() {};
+        a.b.staticProp = 5;
+        /** @constructor */
+        function f() {
+          while (true) {
+            var b = a.b;
+            alert(b.staticProp);
+          }
+        }
+        """,
+        """
+        var a = {};
+        /** @constructor */ a.b = function() {};
+        a.b.staticProp = 5;
+        /** @constructor */
+        function f() {
+          for(; true; ) {
+            var b = null; // replaced with null
+            alert(a.b.staticProp); // value inlined
+          }
+        }
+        """);
     test(
-        lines(
-            "var a = {};",
-            "/** @constructor */ a.b = function() {};",
-            "a.b.staticProp = 5;",
-            "/** @constructor */",
-            "function f() { ",
-            "  while (true) { ",
-            "    var b = a.b;",
-            "    alert(b?.staticProp);",
-            "  }",
-            "}"),
-        lines(
-            "var a = {};",
-            "/** @constructor */ a.b = function() {};",
-            "a.b.staticProp = 5;",
-            "/** @constructor */",
-            "function f() {",
-            "  for(; true; ) {",
-            "    var b = null;", // replaced with null
-            "    alert(a.b?.staticProp);", // value inlined
-            "  }",
-            "}"));
+        """
+        var a = {};
+        /** @constructor */ a.b = function() {};
+        a.b.staticProp = 5;
+        /** @constructor */
+        function f() {
+          while (true) {
+            var b = a.b;
+            alert(b?.staticProp);
+          }
+        }
+        """,
+        """
+        var a = {};
+        /** @constructor */ a.b = function() {};
+        a.b.staticProp = 5;
+        /** @constructor */
+        function f() {
+          for(; true; ) {
+            var b = null; // replaced with null
+            alert(a.b?.staticProp); // value inlined
+          }
+        }
+        """);
     testSame(
-        lines(
-            "var a = {};",
-            "/** @constructor */ a.b = function() {};",
-            "a.b.staticProp = 5;",
-            "/** @constructor */",
-            "function f() { ",
-            "  for (; true;) { ",
-            "    var b = a?.b;", // not inlined when optional chain
-            "    alert(b?.staticProp);",
-            "  }",
-            "}"));
+        """
+        var a = {};
+        /** @constructor */ a.b = function() {};
+        a.b.staticProp = 5;
+        /** @constructor */
+        function f() {
+          for (; true;) {
+            var b = a?.b; // not inlined when optional chain
+            alert(b?.staticProp);
+          }
+        }
+        """);
   }
 
   @Test
   public void test_b19179602_declareOutsideLoop() {
     test(
-        lines(
-            "var a = {};",
-            "a.b = function() {};",
-            "a.b.staticProp = 5;",
-            "function f() { ",
-            "  var b = a.b;",
-            "  while (true) { ",
-            "    alert(b.staticProp);",
-            "  }",
-            "}"),
-        lines(
-            "var a = {};",
-            "a.b = function() {};",
-            "a.b.staticProp = 5;",
-            "function f() {",
-            "  var b = null;", // replaced with null
-            "  for (;true;)", // converted to for-loop
-            "    alert(a.b.staticProp);", // inlined
-            "}"));
+        """
+        var a = {};
+        a.b = function() {};
+        a.b.staticProp = 5;
+        function f() {
+          var b = a.b;
+          while (true) {
+            alert(b.staticProp);
+          }
+        }
+        """,
+        """
+        var a = {};
+        a.b = function() {};
+        a.b.staticProp = 5;
+        function f() {
+          var b = null; // replaced with null
+          for (;true;) // converted to for-loop
+            alert(a.b.staticProp); // inlined
+        }
+        """);
     test(
-        lines(
-            "var a = {};",
-            "a.b = function() {};",
-            "a.b.staticProp = 5;",
-            "function f() { ",
-            "  var b = a.b;",
-            "  while (true) { ",
-            "    alert(b?.staticProp);", // reference with opt chain
-            "  }",
-            "}"),
-        lines(
-            "var a = {};",
-            "a.b = function() {};",
-            "a.b.staticProp = 5;",
-            "function f() {",
-            "  var b = null;", // replaced with null
-            "  for (;true;)", // converted to for-loop
-            "    alert(a.b?.staticProp);", // inlined
-            "}"));
+        """
+        var a = {};
+        a.b = function() {};
+        a.b.staticProp = 5;
+        function f() {
+          var b = a.b;
+          while (true) {
+            alert(b?.staticProp); // reference with opt chain
+          }
+        }
+        """,
+        """
+        var a = {};
+        a.b = function() {};
+        a.b.staticProp = 5;
+        function f() {
+          var b = null; // replaced with null
+          for (;true;) // converted to for-loop
+            alert(a.b?.staticProp); // inlined
+        }
+        """);
 
     testSame(
-        lines(
-            "var a = {};",
-            "a.b = function() {};",
-            "a.b.staticProp = 5;",
-            "function f() { ",
-            // Not an alias for `a.b` when it's an optional chain.
-            "  var b = a?.b;",
-            "  for (; true;) { ",
-            "    alert(b?.staticProp);",
-            "  }",
-            "}"));
+        """
+        var a = {};
+        a.b = function() {};
+        a.b.staticProp = 5;
+        function f() {
+        // Not an alias for `a.b` when it's an optional chain.
+          var b = a?.b;
+          for (; true;) {
+            alert(b?.staticProp);
+          }
+        }
+        """);
   }
 
   @Test
   public void testCtorAliasedMultipleTimesNoWarning1() {
     // We can't inline the alias, but there are no unsafe property accesses.
     testSame(
-        lines(
-            "/** @constructor */",
-            "function a() {}",
-            "function f() {",
-            "  var alias = a;",
-            "  use(alias.prototype);", // The prototype is not collapsible.
-            "  alias.apply();", // Can't collapse externs properties.
-            "  alias = function() {}",
-            "}"));
+        """
+        /** @constructor */
+        function a() {}
+        function f() {
+          var alias = a;
+          use(alias.prototype); // The prototype is not collapsible.
+          alias.apply(); // Can't collapse externs properties.
+          alias = function() {}
+        }
+        """);
   }
 
   @Test
   public void testCtorAliasedMultipleTimesNoWarning2() {
     testSame(
-        lines(
-            "/** @constructor */",
-            "function a() {}",
-            "/** @nocollapse */",
-            "a.staticProp = 5;", // Explicitly forbid collapsing a.staticProp.
-            "function f() {",
-            "  var alias = a;",
-            "  use(alias.staticProp);", // Safe because we don't collapse a.staticProp
-            "  alias = function() {}",
-            "}"));
+        """
+        /** @constructor */
+        function a() {}
+        /** @nocollapse */
+        a.staticProp = 5; // Explicitly forbid collapsing a.staticProp.
+        function f() {
+          var alias = a;
+          use(alias.staticProp); // Safe because we don't collapse a.staticProp
+          alias = function() {}
+        }
+        """);
   }
 
   @Test
   public void testGlobalCtorAliasedMultipleTimes() {
     // TODO(lharker): Also warn for unsafe global ctor aliasing
     testSame(
-        lines(
-            "/** @constructor */",
-            "function a() {}",
-            "a.staticProp = 5;",
-            "var alias = a;",
-            "use(alias.staticProp);", // Unsafe because a.staticProp becomes a$staticProp.
-            "alias = function() {}"));
+        """
+        /** @constructor */
+        function a() {}
+        a.staticProp = 5;
+        var alias = a;
+        use(alias.staticProp); // Unsafe because a.staticProp becomes a$staticProp.
+        alias = function() {}
+        """);
   }
 
   @Test
   public void testCtorAliasedMultipleTimesWarning1() {
     testSame(
-        lines(
-            "/** @constructor */",
-            "function a() {}",
-            "a.staticProp = 5;",
-            "function f() {",
-            "  var alias = a;",
-            "  use(alias.staticProp);", // Unsafe because a.staticProp becomes a$staticProp.
-            "  alias = function() {}",
-            "}"),
+        """
+        /** @constructor */
+        function a() {}
+        a.staticProp = 5;
+        function f() {
+          var alias = a;
+          use(alias.staticProp); // Unsafe because a.staticProp becomes a$staticProp.
+          alias = function() {}
+        }
+        """,
         InlineAndCollapseProperties.UNSAFE_CTOR_ALIASING);
   }
 
   @Test
   public void testCtorAliasedMultipleTimesWarning2() {
     testSame(
-        lines(
-            "/** @constructor */",
-            "function a() {}",
-            "a.b = {};",
-            "a.b.staticProp = 5;",
-            "function f() {",
-            "  var alias = a;",
-            "  use(alias.b.staticProp);", // Unsafe because a.b.staticProp becomes a$b$staticProp.
-            "  alias = function() {}",
-            "}"),
+        """
+        /** @constructor */
+        function a() {}
+        a.b = {};
+        a.b.staticProp = 5;
+        function f() {
+          var alias = a;
+          use(alias.b.staticProp); // Unsafe because a.b.staticProp becomes a$b$staticProp.
+          alias = function() {}
+        }
+        """,
         InlineAndCollapseProperties.UNSAFE_CTOR_ALIASING);
     testSame(
-        lines(
-            "/** @constructor */",
-            "function a() {}",
-            "a.b = {};",
-            "a.b.staticProp = 5;",
-            "function f() {",
-            "  var alias = a;",
-            // Make sure a property reference via optional chain is still
-            // recognized as unsafe.
-            "  use(alias?.b.staticProp);", // Unsafe because a.b.staticProp becomes a$b$staticProp.
-            "  alias = function() {}",
-            "}"),
+        """
+        /** @constructor */
+        function a() {}
+        a.b = {};
+        a.b.staticProp = 5;
+        function f() {
+          var alias = a;
+        // Make sure a property reference via optional chain is still
+        // recognized as unsafe.
+          use(alias?.b.staticProp); // Unsafe because a.b.staticProp becomes a$b$staticProp.
+          alias = function() {}
+        }
+        """,
         InlineAndCollapseProperties.UNSAFE_CTOR_ALIASING);
   }
 
   @Test
   public void testCtorAliasedMultipleTimesWarning3() {
     testSame(
-        lines(
-            "/** @constructor */",
-            "function a() {}",
-            "a.staticProp = 5;",
-            "function f(alias) {",
-            "  alias();",
-            "  alias = a;",
-            "  use(alias.staticProp);", // Unsafe because a.staticProp becomes a$staticProp.
-            "}"),
+        """
+        /** @constructor */
+        function a() {}
+        a.staticProp = 5;
+        function f(alias) {
+          alias();
+          alias = a;
+          use(alias.staticProp); // Unsafe because a.staticProp becomes a$staticProp.
+        }
+        """,
         InlineAndCollapseProperties.UNSAFE_CTOR_ALIASING);
   }
 
   @Test
   public void testCtorAliasedMultipleTimesWarning4() {
     testWarning(
-        lines(
-            "/** @constructor */",
-            "function a() {}",
-            "a.staticProp = 5;",
-            "function f() {",
-            "  if (true) {",
-            "    var alias = a;",
-            "    use(alias.staticProp);",
-            "  } else {",
-            "    alias = {staticProp: 34};",
-            "    use(alias.staticProp);",
-            "  }",
-            "}"),
+        """
+        /** @constructor */
+        function a() {}
+        a.staticProp = 5;
+        function f() {
+          if (true) {
+            var alias = a;
+            use(alias.staticProp);
+          } else {
+            alias = {staticProp: 34};
+            use(alias.staticProp);
+          }
+        }
+        """,
         InlineAndCollapseProperties.UNSAFE_CTOR_ALIASING);
   }
 
@@ -331,29 +350,32 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     // has multiple definitions. Not inlining "foo" to "ns.ctor.foo" actually causes bad code later,
     // because CollapseProperties unsafely collapses aliased ctor properties.
     test(
-        lines(
-            "var ns = {};",
-            "/** @constructor */ ns.ctor = function() {};",
-            "ns.ctor.foo = 3;",
-            "var foo = ns.ctor.foo;",
-            "ns = ns || {};", // safe reinitialization of ns.
-            "alert(foo);"),
-        lines(
-            "var ns = {};",
-            "/** @constructor */ ns.ctor = function() {};",
-            "ns.ctor.foo = 3;",
-            "var foo = null;",
-            "ns = ns || {};",
-            "alert(ns.ctor.foo);"));
+        """
+        var ns = {};
+        /** @constructor */ ns.ctor = function() {};
+        ns.ctor.foo = 3;
+        var foo = ns.ctor.foo;
+        ns = ns || {}; // safe reinitialization of ns.
+        alert(foo);
+        """,
+        """
+        var ns = {};
+        /** @constructor */ ns.ctor = function() {};
+        ns.ctor.foo = 3;
+        var foo = null;
+        ns = ns || {};
+        alert(ns.ctor.foo);
+        """);
     testSame(
-        lines(
-            "var ns = {};",
-            "/** @constructor */ ns.ctor = function() {};",
-            "ns.ctor.foo = 3;",
-            // optional chain means this isn't a real alias
-            "var foo = ns.ctor?.foo;",
-            "ns = ns || {};", // safe reinitialization of ns.
-            "alert(foo);"));
+        """
+        var ns = {};
+        /** @constructor */ ns.ctor = function() {};
+        ns.ctor.foo = 3;
+        // optional chain means this isn't a real alias
+        var foo = ns.ctor?.foo;
+        ns = ns || {}; // safe reinitialization of ns.
+        alert(foo);
+        """);
   }
 
   @Test
@@ -366,506 +388,560 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   @Test
   public void testAddPropertyToChildFuncOfUncollapsibleObjectInLocalScope() {
     test(
-        lines(
-            "var a = {};",
-            "a.b = function () {};",
-            "a.b.x = 0;",
-            "var c = a;",
-            "(function() { a.b.y = 1; })();",
-            "a.b.x;",
-            "a.b.y;"),
-        lines(
-            "var a = {};",
-            "a.b = function() {};",
-            "a.b.x = 0;",
-            "var c = null;",
-            "(function() { a.b.y = 1; })();",
-            "a.b.x;",
-            "a.b.y;"));
+        """
+        var a = {};
+        a.b = function () {};
+        a.b.x = 0;
+        var c = a;
+        (function() { a.b.y = 1; })();
+        a.b.x;
+        a.b.y;
+        """,
+        """
+        var a = {};
+        a.b = function() {};
+        a.b.x = 0;
+        var c = null;
+        (function() { a.b.y = 1; })();
+        a.b.x;
+        a.b.y;
+        """);
   }
 
   @Test
   public void testAddPropertyToChildOfUncollapsibleCtorInLocalScope() {
     test(
-        lines(
-            "var a = function() {};",
-            "a.b = { x: 0 };",
-            "var c = a;",
-            "(function() { a.b.y = 0; })();",
-            "a.b.y;"),
-        lines(
-            "var a = function() {};",
-            "a.b = { x: 0 };",
-            "var c = null;",
-            "(function() { a.b.y = 0; })();",
-            "a.b.y;"));
+        """
+        var a = function() {};
+        a.b = { x: 0 };
+        var c = a;
+        (function() { a.b.y = 0; })();
+        a.b.y;
+        """,
+        """
+        var a = function() {};
+        a.b = { x: 0 };
+        var c = null;
+        (function() { a.b.y = 0; })();
+        a.b.y;
+        """);
   }
 
   @Test
   public void testAddPropertyToChildOfUncollapsibleFunctionInLocalScope() {
     test(
-        lines(
-            "function a() {} a.b = { x: 0 };",
-            "var c = a;",
-            "(function() { a.b.y = 0; })();",
-            "a.b.y;"),
-        lines(
-            "function a() {} a.b = { x: 0 };",
-            "var c = null;",
-            "(function() { a.b.y = 0; })();",
-            "a.b.y;"));
+        """
+        function a() {} a.b = { x: 0 };
+        var c = a;
+        (function() { a.b.y = 0; })();
+        a.b.y;
+        """,
+        """
+        function a() {} a.b = { x: 0 };
+        var c = null;
+        (function() { a.b.y = 0; })();
+        a.b.y;
+        """);
   }
 
   @Test
   public void testAddPropertyToChildTypeOfUncollapsibleObjectInLocalScope() {
     test(
-        lines(
-            "var a = {};",
-            "a.b = function () {};",
-            "a.b.x = 0;",
-            "var c = a;",
-            "(function() { a.b.y = 1; })();",
-            "a.b.x;",
-            "a.b.y;"),
-        lines(
-            "var a = {};",
-            "a.b = function() {};",
-            "a.b.x = 0;",
-            "var c = null;",
-            "(function() { a.b.y = 1; })();",
-            "a.b.x;",
-            "a.b.y;"));
+        """
+        var a = {};
+        a.b = function () {};
+        a.b.x = 0;
+        var c = a;
+        (function() { a.b.y = 1; })();
+        a.b.x;
+        a.b.y;
+        """,
+        """
+        var a = {};
+        a.b = function() {};
+        a.b.x = 0;
+        var c = null;
+        (function() { a.b.y = 1; })();
+        a.b.x;
+        a.b.y;
+        """);
   }
 
   @Test
   public void testAddPropertyToUncollapsibleCtorInLocalScopeDepth1() {
     test(
-        lines(
-            "var a = function() {};", //
-            "var c = a;",
-            "(function() { a.b = 0;",
-            "})();",
-            "a.b;"),
-        lines(
-            "var a = function() {};", //
-            "var c = null;",
-            "(function() { a.b = 0 })();",
-            "a.b;"));
+        """
+        var a = function() {};
+        var c = a;
+        (function() { a.b = 0;
+        })();
+        a.b;
+        """,
+        """
+        var a = function() {};
+        var c = null;
+        (function() { a.b = 0 })();
+        a.b;
+        """);
   }
 
   @Test
   public void testAddPropertyToUncollapsibleCtorInLocalScopeDepth2() {
     test(
-        lines(
-            "var a = {};",
-            "a.b = function () {};",
-            "var d = a.b;",
-            "(function() { a.b.c = 0; })();",
-            "a.b.c;"),
-        lines(
-            "var a = {};",
-            "a.b = function() {};",
-            "var d = null;",
-            "(function() { a.b.c = 0; })();",
-            "a.b.c;"));
+        """
+        var a = {};
+        a.b = function () {};
+        var d = a.b;
+        (function() { a.b.c = 0; })();
+        a.b.c;
+        """,
+        """
+        var a = {};
+        a.b = function() {};
+        var d = null;
+        (function() { a.b.c = 0; })();
+        a.b.c;
+        """);
   }
 
   @Test
   public void testAddPropertyToUncollapsibleNamedCtorInLocalScopeDepth1() {
     test(
-        lines(
-            "function a() {} var a$b;", //
-            "var c = a;",
-            "(function() { a$b = 0;",
-            "})();",
-            "a$b;"),
-        lines(
-            "function a() {} var a$b;",
-            "var c = null;",
-            "(function() { a$b = 0;",
-            "})();",
-            "a$b;"));
+        """
+        function a() {} var a$b;
+        var c = a;
+        (function() { a$b = 0;
+        })();
+        a$b;
+        """,
+        """
+        function a() {} var a$b;
+        var c = null;
+        (function() { a$b = 0;
+        })();
+        a$b;
+        """);
   }
 
   @Test
   public void testAddPropertyToUncollapsibleObjectInLocalScopeDepth1() {
     test(
-        lines(
-            "var a = {};", //
-            "var c = a;",
-            "use(c);",
-            "(function() { a.b = 0;",
-            "})();",
-            "a.b;"),
-        lines(
-            "var a = {};", //
-            "var c = null;",
-            "use(a);",
-            "(function() { a.b = 0;",
-            "})();",
-            "a.b;"));
+        """
+        var a = {};
+        var c = a;
+        use(c);
+        (function() { a.b = 0;
+        })();
+        a.b;
+        """,
+        """
+        var a = {};
+        var c = null;
+        use(a);
+        (function() { a.b = 0;
+        })();
+        a.b;
+        """);
   }
 
   @Test
   public void testAddPropertyToUncollapsibleObjectInLocalScopeDepth2() {
     test(
-        lines(
-            "var a = {};",
-            "a.b = {};",
-            "var d = a.b;",
-            "use(d);",
-            "(function() { a.b.c = 0; })();",
-            "a.b.c;"),
-        lines(
-            "var a = {};",
-            "a.b = {};",
-            "var d = null;",
-            "use(a.b);",
-            "(function() { a.b.c = 0; })();",
-            "a.b.c;"));
+        """
+        var a = {};
+        a.b = {};
+        var d = a.b;
+        use(d);
+        (function() { a.b.c = 0; })();
+        a.b.c;
+        """,
+        """
+        var a = {};
+        a.b = {};
+        var d = null;
+        use(a.b);
+        (function() { a.b.c = 0; })();
+        a.b.c;
+        """);
     testSame(
-        lines(
-            "var a = {};",
-            "a.b = {};",
-            "var d = a?.b;", // optional chain makes this no longer an alias
-            "use(d);",
-            "(function() { a.b.c = 0; })();",
-            "a.b.c;"));
+        """
+        var a = {};
+        a.b = {};
+        var d = a?.b; // optional chain makes this no longer an alias
+        use(d);
+        (function() { a.b.c = 0; })();
+        a.b.c;
+        """);
   }
 
   @Test
   public void testAliasCreatedForClassDepth1_1() {
     test(
-        lines(
-            "var a = {};", //
-            "a.b = function() {};",
-            "var c = a;",
-            "c.b = 0;",
-            "a.b != c.b;"),
-        lines(
-            "var a = {};", //
-            "a.b = function() {};",
-            "var c = null;",
-            "a.b = 0;",
-            "a.b != a.b;"));
+        """
+        var a = {};
+        a.b = function() {};
+        var c = a;
+        c.b = 0;
+        a.b != c.b;
+        """,
+        """
+        var a = {};
+        a.b = function() {};
+        var c = null;
+        a.b = 0;
+        a.b != a.b;
+        """);
 
     test(
-        lines(
-            "var a = {};", //
-            "a.b = function() {};",
-            "var c = a;",
-            "c.b = 0;",
-            "a.b == c.b;"),
-        lines(
-            "var a = {};", //
-            "a.b = function() {};",
-            "var c = null;",
-            "a.b = 0;",
-            "a.b == a.b;"));
+        """
+        var a = {};
+        a.b = function() {};
+        var c = a;
+        c.b = 0;
+        a.b == c.b;
+        """,
+        """
+        var a = {};
+        a.b = function() {};
+        var c = null;
+        a.b = 0;
+        a.b == a.b;
+        """);
   }
 
   @Test
   public void testAliasCreatedForCtorDepth1_1() {
     test(
-        lines(
-            "var a = function() {};", //
-            "a.b = 1;",
-            "var c = a;",
-            "c.b = 2;",
-            "a.b == c.b;"),
-        lines(
-            "var a = function() {};", //
-            "a.b = 1;",
-            "var c = null;",
-            "a.b = 2;",
-            "a.b == a.b;"));
+        """
+        var a = function() {};
+        a.b = 1;
+        var c = a;
+        c.b = 2;
+        a.b == c.b;
+        """,
+        """
+        var a = function() {};
+        a.b = 1;
+        var c = null;
+        a.b = 2;
+        a.b == a.b;
+        """);
 
     test(
-        lines(
-            "var a = function() {};", //
-            "a.b = 1;",
-            "var c = a;",
-            "c.b = 2;",
-            "a?.b == c?.b;"),
-        lines(
-            "var a = function() {};", //
-            "a.b = 1;",
-            "var c = null;",
-            "a.b = 2;",
-            "a?.b == a?.b;"));
+        """
+        var a = function() {};
+        a.b = 1;
+        var c = a;
+        c.b = 2;
+        a?.b == c?.b;
+        """,
+        """
+        var a = function() {};
+        a.b = 1;
+        var c = null;
+        a.b = 2;
+        a?.b == a?.b;
+        """);
   }
 
   @Test
   public void testAliasCreatedForCtorDepth2() {
     test(
-        lines(
-            "var a = {};", //
-            "a.b = function() {};",
-            "a.b.c = 1;",
-            "var d = a.b;",
-            "a.b.c == d.c;"),
-        lines(
-            "var a = {};", //
-            "a.b = function() {};",
-            "a.b.c = 1;",
-            "var d = null;",
-            "a.b.c == a.b.c"));
+        """
+        var a = {};
+        a.b = function() {};
+        a.b.c = 1;
+        var d = a.b;
+        a.b.c == d.c;
+        """,
+        """
+        var a = {};
+        a.b = function() {};
+        a.b.c = 1;
+        var d = null;
+        a.b.c == a.b.c
+        """);
     testSame(
-        lines(
-            "var a = {};", //
-            "a.b = function() {};",
-            "a.b.c = 1;",
-            "var d = a?.b;", // optional chain prevents this being a true alias
-            "a.b.c == d?.c;"));
+        """
+        var a = {};
+        a.b = function() {};
+        a.b.c = 1;
+        var d = a?.b; // optional chain prevents this being a true alias
+        a.b.c == d?.c;
+        """);
   }
 
   @Test
   public void testAliasCreatedForFunctionDepth2() {
     test(
-        lines(
-            "var a = {};", //
-            "a.b = function() {};",
-            "a.b.c = 1;",
-            "var d = a.b;",
-            "a.b.c != d.c;"),
-        lines(
-            "var a = {};", //
-            "a.b = function() {};",
-            "a.b.c = 1;",
-            "var d = null;",
-            "a.b.c != a.b.c"));
+        """
+        var a = {};
+        a.b = function() {};
+        a.b.c = 1;
+        var d = a.b;
+        a.b.c != d.c;
+        """,
+        """
+        var a = {};
+        a.b = function() {};
+        a.b.c = 1;
+        var d = null;
+        a.b.c != a.b.c
+        """);
 
     test(
-        lines(
-            "var a = {};", //
-            "a.b = function() {};",
-            "a.b.c = 1;",
-            "var d = a.b;",
-            "a.b.c == d.c;"),
-        lines(
-            "var a = {};", //
-            "a.b = function() {};",
-            "a.b.c = 1;",
-            "var d = null;",
-            "a.b.c == a.b.c"));
+        """
+        var a = {};
+        a.b = function() {};
+        a.b.c = 1;
+        var d = a.b;
+        a.b.c == d.c;
+        """,
+        """
+        var a = {};
+        a.b = function() {};
+        a.b.c = 1;
+        var d = null;
+        a.b.c == a.b.c
+        """);
   }
 
   @Test
   public void testAliasCreatedForObjectDepth1_1() {
     test(
-        lines(
-            "var a = { b: 0 }", //
-            "var c = a;",
-            "c.b = 1;",
-            "a.b == c.b;"),
-        lines(
-            "var a = { b: 0 }", //
-            "var c = null;",
-            "a.b = 1;",
-            "a.b == a.b;"));
+        """
+        var a = { b: 0 }
+        var c = a;
+        c.b = 1;
+        a.b == c.b;
+        """,
+        """
+        var a = { b: 0 }
+        var c = null;
+        a.b = 1;
+        a.b == a.b;
+        """);
 
     test(
-        lines(
-            "var a = { b: 0 }", //
-            "var c = a;",
-            "c.b = 1;",
-            "a.b == c.b;",
-            "use(c);"),
-        lines(
-            "var a = { b: 0 }", //
-            "var c = null;",
-            "a.b = 1;",
-            "a.b == a.b;",
-            "use(a);"));
+        """
+        var a = { b: 0 }
+        var c = a;
+        c.b = 1;
+        a.b == c.b;
+        use(c);
+        """,
+        """
+        var a = { b: 0 }
+        var c = null;
+        a.b = 1;
+        a.b == a.b;
+        use(a);
+        """);
   }
 
   @Test
   public void testLocalAliasCreatedAfterVarDeclaration1() {
     test(
-        lines(
-            "var a = { b : 3 };",
-            "function f() {",
-            "  var tmp;",
-            "  if (true) {",
-            "    tmp = a;",
-            "    use(tmp);",
-            "  }",
-            "}"),
-        lines(
-            "var a = { b : 3 };",
-            "function f() {",
-            "  var tmp;",
-            "  if (true) {",
-            "    tmp = null;",
-            "    use(a);",
-            "  }",
-            "}"));
+        """
+        var a = { b : 3 };
+        function f() {
+          var tmp;
+          if (true) {
+            tmp = a;
+            use(tmp);
+          }
+        }
+        """,
+        """
+        var a = { b : 3 };
+        function f() {
+          var tmp;
+          if (true) {
+            tmp = null;
+            use(a);
+          }
+        }
+        """);
   }
 
   @Test
   public void testLocalAliasCreatedAfterVarDeclaration2() {
     test(
-        lines(
-            "var a = { b : 3 };",
-            "function f() {",
-            "  var tmp;",
-            "  if (true) {",
-            "    tmp = a;",
-            "    use(tmp);",
-            "  }",
-            "}"),
-        lines(
-            "var a = { b : 3 };",
-            "function f() {",
-            "  var tmp;",
-            "  if (true) {",
-            "    tmp = null;",
-            "    use(a);",
-            "  }",
-            "}"));
+        """
+        var a = { b : 3 };
+        function f() {
+          var tmp;
+          if (true) {
+            tmp = a;
+            use(tmp);
+          }
+        }
+        """,
+        """
+        var a = { b : 3 };
+        function f() {
+          var tmp;
+          if (true) {
+            tmp = null;
+            use(a);
+          }
+        }
+        """);
   }
 
   @Test
   public void testLocalAliasCreatedAfterVarDeclaration3() {
     testSame(
-        lines(
-            "var a = { b : 3 };",
-            "function f() {",
-            "  var tmp;",
-            "  if (true) {",
-            "    tmp = a;",
-            "  }",
-            "  use(tmp);",
-            "}"));
+        """
+        var a = { b : 3 };
+        function f() {
+          var tmp;
+          if (true) {
+            tmp = a;
+          }
+          use(tmp);
+        }
+        """);
   }
 
   @Test
   public void testLocalCtorAliasCreatedAfterVarDeclaration1() {
     test(
-        lines(
-            "/** @constructor @struct */ var Main = function() {};",
-            "Main.doSomething = function(i) {}",
-            "function f() {",
-            "  var tmp;",
-            "  tmp = Main;",
-            "  tmp.doSomething(5);",
-            "}"),
-        lines(
-            "/** @constructor */ var Main = function() {};",
-            "Main.doSomething = function(i) {}",
-            "function f() {",
-            "  var tmp;",
-            "  tmp = null;",
-            "  Main.doSomething(5);",
-            "}"));
+        """
+        /** @constructor @struct */ var Main = function() {};
+        Main.doSomething = function(i) {}
+        function f() {
+          var tmp;
+          tmp = Main;
+          tmp.doSomething(5);
+        }
+        """,
+        """
+        /** @constructor */ var Main = function() {};
+        Main.doSomething = function(i) {}
+        function f() {
+          var tmp;
+          tmp = null;
+          Main.doSomething(5);
+        }
+        """);
     test(
-        lines(
-            "/** @constructor @struct */ var Main = function() {};",
-            "Main.doSomething = function(i) {}",
-            "function f() {",
-            "  var tmp;",
-            "  tmp = Main;",
-            "  tmp?.doSomething(5);",
-            "}"),
-        lines(
-            "/** @constructor */ var Main = function() {};",
-            "Main.doSomething = function(i) {}",
-            "function f() {",
-            "  var tmp;",
-            "  tmp = null;",
-            "  Main?.doSomething(5);",
-            "}"));
+        """
+        /** @constructor @struct */ var Main = function() {};
+        Main.doSomething = function(i) {}
+        function f() {
+          var tmp;
+          tmp = Main;
+          tmp?.doSomething(5);
+        }
+        """,
+        """
+        /** @constructor */ var Main = function() {};
+        Main.doSomething = function(i) {}
+        function f() {
+          var tmp;
+          tmp = null;
+          Main?.doSomething(5);
+        }
+        """);
   }
 
   @Test
   public void testLocalCtorAliasCreatedAfterVarDeclaration2() {
     test(
-        lines(
-            "/** @constructor @struct */ var Main = function() {};",
-            "Main.doSomething = function(i) {}",
-            "function f() {",
-            "  tmp = Main;",
-            "  tmp.doSomething(5);",
-            "  if (true) {",
-            "    tmp.doSomething(6);",
-            "  }",
-            "  var tmp;",
-            "}"),
-        lines(
-            "/** @constructor */ var Main = function() {};",
-            "Main.doSomething = function(i) {}",
-            "function f() {",
-            "  tmp = null;",
-            "  Main.doSomething(5);",
-            "  if (true) {",
-            "    Main.doSomething(6);",
-            "  }",
-            "  var tmp;",
-            "}"));
+        """
+        /** @constructor @struct */ var Main = function() {};
+        Main.doSomething = function(i) {}
+        function f() {
+          tmp = Main;
+          tmp.doSomething(5);
+          if (true) {
+            tmp.doSomething(6);
+          }
+          var tmp;
+        }
+        """,
+        """
+        /** @constructor */ var Main = function() {};
+        Main.doSomething = function(i) {}
+        function f() {
+          tmp = null;
+          Main.doSomething(5);
+          if (true) {
+            Main.doSomething(6);
+          }
+          var tmp;
+        }
+        """);
   }
 
   @Test
   public void testLocalCtorAliasCreatedAfterVarDeclaration3() {
     test(
-        lines(
-            "/** @constructor @struct */ var Main = function() {};",
-            "Main.doSomething = function(i) {}",
-            "function f() {",
-            "  if (tmp = Main) {",
-            "    tmp.doSomething(6);",
-            "  }",
-            "  var tmp;",
-            "}"),
-        lines(
-            "/** @constructor */ var Main = function() {};",
-            "Main.doSomething = function(i) {}",
-            "function f() {",
-            "  if (tmp = Main) {", // Don't set "tmp = null" because that would change control flow.
-            "    Main.doSomething(6);",
-            "  }",
-            "  var tmp;",
-            "}"));
+        """
+        /** @constructor @struct */ var Main = function() {};
+        Main.doSomething = function(i) {}
+        function f() {
+          if (tmp = Main) {
+            tmp.doSomething(6);
+          }
+          var tmp;
+        }
+        """,
+        """
+        /** @constructor */ var Main = function() {};
+        Main.doSomething = function(i) {}
+        function f() {
+          if (tmp = Main) { // Don't set "tmp = null" because that would change control flow.
+            Main.doSomething(6);
+          }
+          var tmp;
+        }
+        """);
   }
 
   @Test
   public void testLocalCtorAliasCreatedAfterVarDeclaration4() {
     test(
-        lines(
-            "/** @constructor @struct */ var Main = function() {};",
-            "Main.doSomething = function(i) {}",
-            "function f() {",
-            "  var a = tmp = Main;",
-            "  tmp.doSomething(6);",
-            "  a.doSomething(7);",
-            "  var tmp;",
-            "}"),
-        lines(
-            "/** @constructor */ var Main = function() {};",
-            "Main.doSomething = function(i) {}",
-            "function f() {",
-            "  var a = tmp = Main;", // Don't set "tmp = null" because that would mess up a's value.
-            "  Main.doSomething(6);",
-            "  a.doSomething(7);", // Main doesn't get inlined here, which makes collapsing unsafe.
-            "  var tmp;",
-            "}"));
+        """
+        /** @constructor @struct */ var Main = function() {};
+        Main.doSomething = function(i) {}
+        function f() {
+          var a = tmp = Main;
+          tmp.doSomething(6);
+          a.doSomething(7);
+          var tmp;
+        }
+        """,
+        """
+        /** @constructor */ var Main = function() {};
+        Main.doSomething = function(i) {}
+        function f() {
+          var a = tmp = Main; // Don't set "tmp = null" because that would mess up a's value.
+          Main.doSomething(6);
+          a.doSomething(7); // Main doesn't get inlined here, which makes collapsing unsafe.
+          var tmp;
+        }
+        """);
   }
 
   @Test
   public void testLocalCtorAliasAssignedInLoop1() {
     testWarning(
-        lines(
-            "/** @constructor @struct */ var Main = function() {};",
-            "Main.doSomething = function(i) {}",
-            "function f() {",
-            "  var tmp;",
-            "  for (let i = 0; i < n(); i++) {",
-            "    tmp = Main;",
-            "    tmp.doSomething(5);",
-            "    use(tmp);",
-            "  }",
-            "  use(tmp);",
-            "  use(tmp.doSomething);",
-            "}"),
+        """
+        /** @constructor @struct */ var Main = function() {};
+        Main.doSomething = function(i) {}
+        function f() {
+          var tmp;
+          for (let i = 0; i < n(); i++) {
+            tmp = Main;
+            tmp.doSomething(5);
+            use(tmp);
+          }
+          use(tmp);
+          use(tmp.doSomething);
+        }
+        """,
         InlineAndCollapseProperties.UNSAFE_CTOR_ALIASING);
   }
 
@@ -873,18 +949,19 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void testLocalCtorAliasAssignedInLoop2() {
     // Test when the alias is assigned in a loop after being used.
     testWarning(
-        lines(
-            "/** @constructor @struct */ var Main = function() {};",
-            "Main.doSomething = function(i) {}",
-            "function f() {",
-            "  var tmp;",
-            "  for (let i = 0; i < n(); i++) {",
-            "    use(tmp);", // Don't inline tmp here since it changes between loop iterations.
-            "    tmp = Main;",
-            "  }",
-            "  use(tmp);",
-            "  use(tmp.doSomething);",
-            "}"),
+        """
+        /** @constructor @struct */ var Main = function() {};
+        Main.doSomething = function(i) {}
+        function f() {
+          var tmp;
+          for (let i = 0; i < n(); i++) {
+            use(tmp); // Don't inline tmp here since it changes between loop iterations.
+            tmp = Main;
+          }
+          use(tmp);
+          use(tmp.doSomething);
+        }
+        """,
         InlineAndCollapseProperties.UNSAFE_CTOR_ALIASING);
   }
 
@@ -892,722 +969,775 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void testLocalCtorAliasAssignedInSwitchCase() {
     // This mimics how the async generator polyfill behaves.
     test(
-        lines(
-            "/** @constructor @struct */ var Main = function() {};",
-            "Main.doSomething = function(i) {}",
-            "function f() {",
-            "  function g() {",
-            "    for (;;) {",
-            "      switch(state) {",
-            "        case 0:",
-            "          tmp1 = Main;",
-            "          tmp2 = tmp1.doSomething;",
-            "          state = 1;",
-            "          return;",
-            "         case 1:",
-            "           return tmp2.call(tmp1, 3);",
-            "      }",
-            "    }",
-            "  }",
-            "  var tmp1;",
-            "  var tmp2;",
-            "  var state = 0;",
-            "  g();",
-            "  return g();",
-            "}"),
-        lines(
-            "/** @constructor */ var Main = function() {};",
-            "Main.doSomething = function(i) {}",
-            "function f() {",
-            "  function g() {",
-            "    for (;;) {",
-            "      switch(state) {",
-            "        case 0:",
-            "          tmp1 = Main;",
-            "          tmp2 = Main.doSomething;",
-            "          state = 1;",
-            "          return;",
-            "         case 1:",
-            "           return tmp2.call(tmp1, 3);",
-            "      }",
-            "    }",
-            "  }",
-            "  var tmp1;",
-            "  var tmp2;",
-            "  var state = 0;",
-            "  g();",
-            "  return g();",
-            "}"));
+        """
+        /** @constructor @struct */ var Main = function() {};
+        Main.doSomething = function(i) {}
+        function f() {
+          function g() {
+            for (;;) {
+              switch(state) {
+                case 0:
+                  tmp1 = Main;
+                  tmp2 = tmp1.doSomething;
+                  state = 1;
+                  return;
+                 case 1:
+                   return tmp2.call(tmp1, 3);
+              }
+            }
+          }
+          var tmp1;
+          var tmp2;
+          var state = 0;
+          g();
+          return g();
+        }
+        """,
+        """
+        /** @constructor */ var Main = function() {};
+        Main.doSomething = function(i) {}
+        function f() {
+          function g() {
+            for (;;) {
+              switch(state) {
+                case 0:
+                  tmp1 = Main;
+                  tmp2 = Main.doSomething;
+                  state = 1;
+                  return;
+                 case 1:
+                   return tmp2.call(tmp1, 3);
+              }
+            }
+          }
+          var tmp1;
+          var tmp2;
+          var state = 0;
+          g();
+          return g();
+        }
+        """);
   }
 
   @Test
   public void testCodeGeneratedByGoogModule() {
     test(
-        lines(
-            "var $jscomp = {}", //
-            "$jscomp.scope = {};",
-            "$jscomp.scope.Foo = function() {};",
-            "var exports = $jscomp.scope.Foo;",
-            "exports.staticprop = { A: 1 };",
-            "var y = exports.staticprop.A;"),
-        lines(
-            "var $jscomp = {}", //
-            "$jscomp.scope = {};",
-            "$jscomp.scope.Foo = function() {};",
-            "var exports = null;",
-            "$jscomp.scope.Foo.staticprop = { A: 1 };",
-            "var y = null;"));
+        """
+        var $jscomp = {}
+        $jscomp.scope = {};
+        $jscomp.scope.Foo = function() {};
+        var exports = $jscomp.scope.Foo;
+        exports.staticprop = { A: 1 };
+        var y = exports.staticprop.A;
+        """,
+        """
+        var $jscomp = {}
+        $jscomp.scope = {};
+        $jscomp.scope.Foo = function() {};
+        var exports = null;
+        $jscomp.scope.Foo.staticprop = { A: 1 };
+        var y = null;
+        """);
 
     test(
-        lines(
-            "var $jscomp = {}", //
-            "$jscomp.scope = {};",
-            "$jscomp.scope.Foo = function() {};",
-            "$jscomp.scope.Foo.staticprop = { A: 1 };",
-            "var exports = $jscomp.scope.Foo;",
-            "var y = exports.staticprop.A;"),
-        lines(
-            "var $jscomp = {}", //
-            "$jscomp.scope = {};",
-            "$jscomp.scope.Foo = function() {};",
-            "$jscomp.scope.Foo.staticprop = { A: 1 };",
-            "var exports = null;",
-            "var y = null;"));
+        """
+        var $jscomp = {}
+        $jscomp.scope = {};
+        $jscomp.scope.Foo = function() {};
+        $jscomp.scope.Foo.staticprop = { A: 1 };
+        var exports = $jscomp.scope.Foo;
+        var y = exports.staticprop.A;
+        """,
+        """
+        var $jscomp = {}
+        $jscomp.scope = {};
+        $jscomp.scope.Foo = function() {};
+        $jscomp.scope.Foo.staticprop = { A: 1 };
+        var exports = null;
+        var y = null;
+        """);
   }
 
   @Test
   public void testCollapse() {
     test(
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "var c = a.b;"),
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "var c = null"));
+        """
+        var a = {}
+        a.b = {};
+        var c = a.b;
+        """,
+        """
+        var a = {}
+        a.b = {};
+        var c = null
+        """);
 
     test(
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "var c = a.b;",
-            "use(c);"),
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "var c = null;",
-            "use(a.b)"));
+        """
+        var a = {}
+        a.b = {};
+        var c = a.b;
+        use(c);
+        """,
+        """
+        var a = {}
+        a.b = {};
+        var c = null;
+        use(a.b)
+        """);
 
     testSame(
-        lines(
-            "var a = {};", //
-            "a.b;"));
+        """
+        var a = {};
+        a.b;
+        """);
   }
 
   @Test
   public void testCollapsePropertiesOfClass1() {
     test(
-        lines(
-            "/** @constructor */ var namespace = function() {};",
-            "goog.inherits(namespace, Object);",
-            "namespace.includeExtraParam = true;",
-            "/** @enum { number } */",
-            "namespace.Param = { param1: 1, param2: 2 };",
-            "if (namespace.includeExtraParam) namespace.Param.optParam = 3;",
-            "/** @constructor */",
-            "function f() { ",
-            "  var Param = namespace.Param;",
-            "  log(namespace.Param.optParam);",
-            "  log(Param.optParam);",
-            "}"),
-        lines(
-            "/** @constructor */ var namespace = function() {};",
-            "goog.inherits(namespace,Object);",
-            "namespace.includeExtraParam = true;",
-            "/** @enum {JSDocSerializer_placeholder_type} */",
-            "namespace.Param = { param1: 1,param2: 2 };",
-            "if(namespace.includeExtraParam) namespace.Param.optParam = 3;",
-            "/** @constructor */",
-            "function f() {",
-            "  var Param = null;",
-            "  log(namespace.Param.optParam);",
-            "  log(namespace.Param.optParam);",
-            "}"));
+        """
+        /** @constructor */ var namespace = function() {};
+        goog.inherits(namespace, Object);
+        namespace.includeExtraParam = true;
+        /** @enum { number } */
+        namespace.Param = { param1: 1, param2: 2 };
+        if (namespace.includeExtraParam) namespace.Param.optParam = 3;
+        /** @constructor */
+        function f() {
+          var Param = namespace.Param;
+          log(namespace.Param.optParam);
+          log(Param.optParam);
+        }
+        """,
+        """
+        /** @constructor */ var namespace = function() {};
+        goog.inherits(namespace,Object);
+        namespace.includeExtraParam = true;
+        /** @enum {JSDocSerializer_placeholder_type} */
+        namespace.Param = { param1: 1,param2: 2 };
+        if(namespace.includeExtraParam) namespace.Param.optParam = 3;
+        /** @constructor */
+        function f() {
+          var Param = null;
+          log(namespace.Param.optParam);
+          log(namespace.Param.optParam);
+        }
+        """);
   }
 
   @Test
   public void testCollapsePropertiesOfClass2() {
     test(
-        lines(
-            "var goog = goog || {}", //
-            "goog.addSingletonGetter = function(cls) {};",
-            "var a = {};",
-            "a.b = function() {};",
-            "goog.addSingletonGetter(a.b);",
-            "a.b.prototype.get = function(key) {};",
-            "a.b.c = function() {};",
-            "a.b.c.XXX = new a.b.c;",
-            "function f() { ",
-            "  var x = a.b.getInstance();",
-            "  var Key = a.b.c;",
-            "  x.get(Key.XXX);",
-            "}"),
-        lines(
-            "var goog = goog || {}", //
-            "goog.addSingletonGetter = function(cls) {};",
-            "var a = {};",
-            "a.b = function() {};",
-            "goog.addSingletonGetter(a.b);",
-            "a.b.prototype.get = function(key) {};",
-            "a.b.c = function() {};",
-            "a.b.c.XXX = new a.b.c;",
-            "function f() {",
-            "  var x = a.b.getInstance();",
-            "  var Key = null;",
-            "  x.get(a.b.c.XXX);",
-            "}"));
+        """
+        var goog = goog || {}
+        goog.addSingletonGetter = function(cls) {};
+        var a = {};
+        a.b = function() {};
+        goog.addSingletonGetter(a.b);
+        a.b.prototype.get = function(key) {};
+        a.b.c = function() {};
+        a.b.c.XXX = new a.b.c;
+        function f() {
+          var x = a.b.getInstance();
+          var Key = a.b.c;
+          x.get(Key.XXX);
+        }
+        """,
+        """
+        var goog = goog || {}
+        goog.addSingletonGetter = function(cls) {};
+        var a = {};
+        a.b = function() {};
+        goog.addSingletonGetter(a.b);
+        a.b.prototype.get = function(key) {};
+        a.b.c = function() {};
+        a.b.c.XXX = new a.b.c;
+        function f() {
+          var x = a.b.getInstance();
+          var Key = null;
+          x.get(a.b.c.XXX);
+        }
+        """);
   }
 
   @Test
   public void testCommaOperator() {
     test(
-        lines(
-            "var ns = {}", //
-            "ns.Foo = {};",
-            "var Baz = {};",
-            "Baz.Foo = ns.Foo;",
-            "Baz.Foo.bar = 10, 123;"),
-        lines(
-            "var ns = {}", //
-            "ns.Foo = {};",
-            "var Baz = {};",
-            "Baz.Foo = null;",
-            "ns.Foo.bar = 10, 123;"));
+        """
+        var ns = {}
+        ns.Foo = {};
+        var Baz = {};
+        Baz.Foo = ns.Foo;
+        Baz.Foo.bar = 10, 123;
+        """,
+        """
+        var ns = {}
+        ns.Foo = {};
+        var Baz = {};
+        Baz.Foo = null;
+        ns.Foo.bar = 10, 123;
+        """);
   }
 
   @Test
   public void testDontCrashCtorAliasWithEnum() {
     test(
-        lines(
-            "var ns = {};",
-            "/** @constructor */ ns.Foo = function () {};",
-            "var Bar = ns.Foo;",
-            "/** @const @enum */",
-            "Bar.prop = { A: 1 };"),
-        lines(
-            "var ns = {};",
-            "/** @constructor */ ns.Foo = function() {};",
-            "var Bar = null;",
-            "/** @const @enum {JSDocSerializer_placeholder_type} */",
-            "ns.Foo.prop = { A: 1 }"));
+        """
+        var ns = {};
+        /** @constructor */ ns.Foo = function () {};
+        var Bar = ns.Foo;
+        /** @const @enum */
+        Bar.prop = { A: 1 };
+        """,
+        """
+        var ns = {};
+        /** @constructor */ ns.Foo = function() {};
+        var Bar = null;
+        /** @const @enum {JSDocSerializer_placeholder_type} */
+        ns.Foo.prop = { A: 1 }
+        """);
   }
 
   @Test
   public void testFunctionAlias2() {
     test(
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "a.b.c = function() {};",
-            "a.b.d = a.b.c;",
-            "use(a.b.d);"),
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "a.b.c = function() {};",
-            "a.b.d = null;",
-            "use(a.b.c);"));
+        """
+        var a = {}
+        a.b = {};
+        a.b.c = function() {};
+        a.b.d = a.b.c;
+        use(a.b.d);
+        """,
+        """
+        var a = {}
+        a.b = {};
+        a.b.c = function() {};
+        a.b.d = null;
+        use(a.b.c);
+        """);
     testSame(
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "a.b.c = function() {};",
-            "a.b.d = a.b.c;",
-            // reference to alias via optional chain stops inlining
-            "use(a.b?.d);"));
+        """
+        var a = {}
+        a.b = {};
+        a.b.c = function() {};
+        a.b.d = a.b.c;
+        // reference to alias via optional chain stops inlining
+        use(a.b?.d);
+        """);
   }
 
   @Test
   public void testGlobalAliasOfAncestor() {
     test(
-        lines(
-            "var a = { b: { c: 5 } }", //
-            "function f() {",
-            "  var x = a.b;",
-            "  f(x.c);",
-            "}"),
-        lines(
-            "var a = { b: { c: 5 } }", //
-            "function f() {",
-            "  var x = null;",
-            "  f(a.b.c);",
-            "}"));
+        """
+        var a = { b: { c: 5 } }
+        function f() {
+          var x = a.b;
+          f(x.c);
+        }
+        """,
+        """
+        var a = { b: { c: 5 } }
+        function f() {
+          var x = null;
+          f(a.b.c);
+        }
+        """);
     test(
-        lines(
-            "var a = { b: { c: 5 } }", //
-            "function f() {",
-            "  var x = a.b;",
-            "  f(x?.c);",
-            "}"),
-        lines(
-            "var a = { b: { c: 5 } }", //
-            "function f() {",
-            "  var x = null;",
-            "  f(a.b?.c);",
-            "}"));
+        """
+        var a = { b: { c: 5 } }
+        function f() {
+          var x = a.b;
+          f(x?.c);
+        }
+        """,
+        """
+        var a = { b: { c: 5 } }
+        function f() {
+          var x = null;
+          f(a.b?.c);
+        }
+        """);
   }
 
   @Test
   public void testGlobalES5ClassVarWithInnerNameDotPropReference() {
     test(
-        lines(
-            "", //
-            "/** @constructor */",
-            "var GlobalName = function InnerName() {",
-            "    InnerName.staticMethod();", // replace InnerName with GlobalName
-            "};",
-            "GlobalName.staticMethod = function() {",
-            "  console.log('staticMethod');",
-            "};",
-            ""),
-        lines(
-            "", //
-            "/** @constructor */",
-            "var GlobalName = function InnerName() {",
-            "    GlobalName.staticMethod();",
-            "};",
-            "GlobalName.staticMethod = function() {",
-            "  console.log('staticMethod');",
-            "};",
-            ""));
+        """
+        /** @constructor */
+        var GlobalName = function InnerName() {
+            InnerName.staticMethod(); // replace InnerName with GlobalName
+        };
+        GlobalName.staticMethod = function() {
+          console.log('staticMethod');
+        };
+        """,
+        """
+        /** @constructor */
+        var GlobalName = function InnerName() {
+            GlobalName.staticMethod();
+        };
+        GlobalName.staticMethod = function() {
+          console.log('staticMethod');
+        };
+        """);
   }
 
   @Test
   public void testGlobalClassVarWithInnerNameDotPropReference() {
     test(
-        lines(
-            "", //
-            "const GlobalName = class InnerName {",
-            "  method() {",
-            "    return InnerName.staticMethod();", // replace InnerName with GlobalName
-            "  }",
-            "  static staticMethod() {",
-            "    console.log('staticMethod');",
-            "  }",
-            "};",
-            ""),
-        lines(
-            "", //
-            "const GlobalName = class InnerName {",
-            "  method() {",
-            "    return GlobalName.staticMethod();",
-            "  }",
-            "  static staticMethod() {",
-            "    console.log('staticMethod');",
-            "  }",
-            "};",
-            ""));
+        """
+        const GlobalName = class InnerName {
+          method() {
+            return InnerName.staticMethod(); // replace InnerName with GlobalName
+          }
+          static staticMethod() {
+            console.log('staticMethod');
+          }
+        };
+        """,
+        """
+        const GlobalName = class InnerName {
+          method() {
+            return GlobalName.staticMethod();
+          }
+          static staticMethod() {
+            console.log('staticMethod');
+          }
+        };
+        """);
   }
 
   @Test
   public void testGlobalClassPropWithInnerNameDotPropReference() {
     test(
-        lines(
-            "", //
-            "const GlobalName = {};",
-            "GlobalName.prop = class InnerName {",
-            "  method() {",
-            "    return InnerName.staticMethod();", // replace InnerName with GlobalName.prop
-            "  }",
-            "  static staticMethod() {",
-            "    console.log('staticMethod');",
-            "  }",
-            "};",
-            ""),
-        lines(
-            "", //
-            "const GlobalName = {};",
-            "GlobalName.prop = class InnerName {",
-            "  method() {",
-            "    return GlobalName.prop.staticMethod();",
-            "  }",
-            "  static staticMethod() {",
-            "    console.log('staticMethod');",
-            "  }",
-            "};",
-            ""));
+        """
+        const GlobalName = {};
+        GlobalName.prop = class InnerName {
+          method() {
+            return InnerName.staticMethod(); // replace InnerName with GlobalName.prop
+          }
+          static staticMethod() {
+            console.log('staticMethod');
+          }
+        };
+        """,
+        """
+        const GlobalName = {};
+        GlobalName.prop = class InnerName {
+          method() {
+            return GlobalName.prop.staticMethod();
+          }
+          static staticMethod() {
+            console.log('staticMethod');
+          }
+        };
+        """);
   }
 
   @Test
   public void testGlobalClassVarSetTwiceWithInnerNameDotPropReference() {
     testSame(
-        lines(
-            "", //
-            "let GlobalName = class InnerName {",
-            "  method() {",
-            "    return InnerName.staticMethod();", // replace InnerName with GlobalName
-            "  }",
-            "  static staticMethod() {",
-            "    console.log('staticMethod');",
-            "  }",
-            "};",
-            // second assignment prevents inlining
-            "GlobalName = function SecondValue() {}",
-            ""));
+        """
+        let GlobalName = class InnerName {
+          method() {
+            return InnerName.staticMethod(); // replace InnerName with GlobalName
+          }
+          static staticMethod() {
+            console.log('staticMethod');
+          }
+        };
+        // second assignment prevents inlining
+        GlobalName = function SecondValue() {}
+        """);
   }
 
   @Test
   public void testGlobalClassPropWithInnerNameInstanceOfReference() {
     testSame(
-        lines(
-            "", //
-            "const GlobalName = {};",
-            "GlobalName.prop = class InnerName {",
-            "  method() {",
-            // We don't want to inline this use of InnerName.
-            // CollapseProperties won't break this code as it is.
-            // Adding a reference to a global here could prevent
-            // this method from being inlined.
-            "    return this instanceof InnerName;",
-            "  }",
-            "};",
-            ""));
+        """
+        const GlobalName = {};
+        GlobalName.prop = class InnerName {
+          method() {
+        // We don't want to inline this use of InnerName.
+        // CollapseProperties won't break this code as it is.
+        // Adding a reference to a global here could prevent
+        // this method from being inlined.
+            return this instanceof InnerName;
+          }
+        };
+        """);
   }
 
   @Test
   public void testGlobalAliasWithProperties1() {
     test(
-        lines(
-            "var ns = {}", //
-            "ns.Foo = function() {};",
-            "/** @enum { number } */ ns.Foo.EventType = { A: 1, B: 2 };",
-            "ns.Bar = ns.Foo;",
-            "var x = function() { use(ns.Bar.EventType.A) };",
-            "use(x);"),
-        lines(
-            "var ns = {}", //
-            "ns.Foo = function() {};",
-            "/** @enum {JSDocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };",
-            "ns.Bar = null;",
-            "var x = function() { use(ns.Foo.EventType.A) };",
-            "use(x);"));
+        """
+        var ns = {}
+        ns.Foo = function() {};
+        /** @enum { number } */ ns.Foo.EventType = { A: 1, B: 2 };
+        ns.Bar = ns.Foo;
+        var x = function() { use(ns.Bar.EventType.A) };
+        use(x);
+        """,
+        """
+        var ns = {}
+        ns.Foo = function() {};
+        /** @enum {JSDocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };
+        ns.Bar = null;
+        var x = function() { use(ns.Foo.EventType.A) };
+        use(x);
+        """);
   }
 
   @Test
   public void testGlobalAliasWithProperties2() {
     test(
-        lines(
-            "var ns = {}", //
-            "ns.Foo = function() {};",
-            "/** @enum { number } */ ns.Foo.EventType = { A: 1, B: 2 };",
-            "ns.Bar = ns.Foo;",
-            "/** @const */ ns.Bar.EventType = ns.Foo.EventType;",
-            "var x = function() { use(ns.Bar.EventType.A) };",
-            "use(x)"),
-        lines(
-            "var ns = {}", //
-            "ns.Foo = function() {};",
-            "/** @enum {JSDocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };",
-            "ns.Bar = null;",
-            "/** @const */ ns.Foo.EventType = ns.Foo.EventType;",
-            "var x = function() { use(ns.Foo.EventType.A) };",
-            "use(x)"));
+        """
+        var ns = {}
+        ns.Foo = function() {};
+        /** @enum { number } */ ns.Foo.EventType = { A: 1, B: 2 };
+        ns.Bar = ns.Foo;
+        /** @const */ ns.Bar.EventType = ns.Foo.EventType;
+        var x = function() { use(ns.Bar.EventType.A) };
+        use(x)
+        """,
+        """
+        var ns = {}
+        ns.Foo = function() {};
+        /** @enum {JSDocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };
+        ns.Bar = null;
+        /** @const */ ns.Foo.EventType = ns.Foo.EventType;
+        var x = function() { use(ns.Foo.EventType.A) };
+        use(x)
+        """);
   }
 
   @Test
   public void testGlobalAliasWithProperties3() {
     test(
-        lines(
-            "var ns = {}", //
-            "ns.Foo = function() {};",
-            "/** @enum { number } */ ns.Foo.EventType = { A: 1, B: 2 };",
-            "ns.Bar = ns.Foo;",
-            "/** @const */ ns.Bar.Other = { X: 1, Y: 2 };",
-            "var x = function() { use(ns.Bar.Other.X) };",
-            "use(x)"),
-        lines(
-            "var ns = {}", //
-            "ns.Foo = function() {};",
-            "/** @enum {JSDocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };",
-            "ns.Bar = null;",
-            "/** @const */ ns.Foo.Other = { X: 1, Y: 2 };",
-            "var x = function() { use(ns.Foo.Other.X) };",
-            "use(x)"));
+        """
+        var ns = {}
+        ns.Foo = function() {};
+        /** @enum { number } */ ns.Foo.EventType = { A: 1, B: 2 };
+        ns.Bar = ns.Foo;
+        /** @const */ ns.Bar.Other = { X: 1, Y: 2 };
+        var x = function() { use(ns.Bar.Other.X) };
+        use(x)
+        """,
+        """
+        var ns = {}
+        ns.Foo = function() {};
+        /** @enum {JSDocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };
+        ns.Bar = null;
+        /** @const */ ns.Foo.Other = { X: 1, Y: 2 };
+        var x = function() { use(ns.Foo.Other.X) };
+        use(x)
+        """);
   }
 
   @Test
   public void testGlobalAliasWithPropertiesAndOptChainReference() {
     test(
-        lines(
-            "var ns = {}", //
-            "ns.Foo = function() {};",
-            "/** @enum { number } */ ns.Foo.EventType = { A: 1, B: 2 };",
-            "ns.Bar = ns.Foo;",
-            "/** @const */ ns.Bar.Other = { X: 1, Y: 2 };",
-            "var x = function() { use(ns.Bar?.Other.X) };",
-            "use(x)"),
-        lines(
-            "var ns = {}", //
-            "ns.Foo = function() {};",
-            "/** @enum {JSDocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };",
-            "ns.Bar = null;",
-            "/** @const */ ns.Foo.Other = { X: 1, Y: 2 };",
-            "var x = function() { use(ns.Foo?.Other.X) };",
-            "use(x)"));
+        """
+        var ns = {}
+        ns.Foo = function() {};
+        /** @enum { number } */ ns.Foo.EventType = { A: 1, B: 2 };
+        ns.Bar = ns.Foo;
+        /** @const */ ns.Bar.Other = { X: 1, Y: 2 };
+        var x = function() { use(ns.Bar?.Other.X) };
+        use(x)
+        """,
+        """
+        var ns = {}
+        ns.Foo = function() {};
+        /** @enum {JSDocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };
+        ns.Bar = null;
+        /** @const */ ns.Foo.Other = { X: 1, Y: 2 };
+        var x = function() { use(ns.Foo?.Other.X) };
+        use(x)
+        """);
   }
 
   @Test
   public void testGlobalAliasWithPropertiesAsNestedObjectLits() {
     test(
         lines(
-            lines(
-                "var ns = {}", //
-                "ns.Foo = function() {};",
-                "ns.Bar = ns.Foo;",
-                "/** @enum { number } */ ns.Bar.Other = { X: {Y: 1}};",
-                "var x = function() { use(ns.Bar.Other.X.Y) };",
-                "use(x)")),
+            """
+            var ns = {}
+            ns.Foo = function() {};
+            ns.Bar = ns.Foo;
+            /** @enum { number } */ ns.Bar.Other = { X: {Y: 1}};
+            var x = function() { use(ns.Bar.Other.X.Y) };
+            use(x)
+            """),
         lines(
-            lines(
-                "var ns = {}", //
-                "ns.Foo = function() {};",
-                "ns.Bar = null;",
-                "/** @enum {JSDocSerializer_placeholder_type} */ ns.Foo.Other = { X: {Y: 1}};",
-                "var x = function() { use(ns.Foo.Other.X.Y) };",
-                "use(x)")));
+            """
+            var ns = {}
+            ns.Foo = function() {};
+            ns.Bar = null;
+            /** @enum {JSDocSerializer_placeholder_type} */ ns.Foo.Other = { X: {Y: 1}};
+            var x = function() { use(ns.Foo.Other.X.Y) };
+            use(x)
+            """));
   }
 
   @Test
   public void testGlobalWriteToNonAncestor() {
     test(
-        lines(
-            "var a = { b: 3 }", //
-            "function f() {",
-            "  var x = a;",
-            "  f(a.b);",
-            "}",
-            "a.b = 5;"),
-        lines(
-            "var a = { b: 3 }", //
-            "function f() {",
-            "  var x = null;",
-            "  f(a.b);",
-            "}",
-            "a.b = 5;"));
+        """
+        var a = { b: 3 }
+        function f() {
+          var x = a;
+          f(a.b);
+        }
+        a.b = 5;
+        """,
+        """
+        var a = { b: 3 }
+        function f() {
+          var x = null;
+          f(a.b);
+        }
+        a.b = 5;
+        """);
   }
 
   @Test
   public void testInlineCtorInObjLit() {
     test(
-        lines(
-            "function Foo() {}", //
-            "var Bar = Foo;",
-            "var objlit = { 'prop' : Bar };"),
-        lines(
-            "function Foo() {}", //
-            "var Bar = null;",
-            "var objlit = { 'prop': Foo };"));
+        """
+        function Foo() {}
+        var Bar = Foo;
+        var objlit = { 'prop' : Bar };
+        """,
+        """
+        function Foo() {}
+        var Bar = null;
+        var objlit = { 'prop': Foo };
+        """);
   }
 
   @Test
   public void testLocalAlias1() {
     test(
-        lines(
-            "var a = { b: 3 }", //
-            "function f() {",
-            "  var x = a;",
-            "  f(x.b);",
-            "}"),
-        lines(
-            "var a = { b: 3 }", //
-            "function f() {",
-            "  var x = null;",
-            "  f(a.b);",
-            "}"));
+        """
+        var a = { b: 3 }
+        function f() {
+          var x = a;
+          f(x.b);
+        }
+        """,
+        """
+        var a = { b: 3 }
+        function f() {
+          var x = null;
+          f(a.b);
+        }
+        """);
   }
 
   @Test
   public void testLocalAlias2() {
     test(
-        lines(
-            "var a = { b: 3, c: 4 }", //
-            "function f() { var x = a;",
-            "f(x.b);",
-            "f(x.c);",
-            "}"),
-        lines(
-            "var a = { b: 3, c: 4 }", //
-            "function f() { var x = null;",
-            "f(a.b);",
-            "f(a.c);",
-            "}"));
+        """
+        var a = { b: 3, c: 4 }
+        function f() { var x = a;
+        f(x.b);
+        f(x.c);
+        }
+        """,
+        """
+        var a = { b: 3, c: 4 }
+        function f() { var x = null;
+        f(a.b);
+        f(a.c);
+        }
+        """);
   }
 
   @Test
   public void testLocalAlias3() {
     test(
-        lines(
-            "var a = { b: 3, c: { d: 5 } }", //
-            "function f() {",
-            "  var x = a;",
-            "  f(x.b);",
-            "  f(x.c);",
-            "  f(x.c?.d);",
-            "}"),
-        lines(
-            "var a = { b: 3, c: { d: 5 } }", //
-            "function f() {",
-            "  var x = null;",
-            "  f(a.b);",
-            "  f(a.c);",
-            "  f(a.c?.d)",
-            "}"));
+        """
+        var a = { b: 3, c: { d: 5 } }
+        function f() {
+          var x = a;
+          f(x.b);
+          f(x.c);
+          f(x.c?.d);
+        }
+        """,
+        """
+        var a = { b: 3, c: { d: 5 } }
+        function f() {
+          var x = null;
+          f(a.b);
+          f(a.c);
+          f(a.c?.d)
+        }
+        """);
   }
 
   @Test
   public void testLocalAlias4() {
     test(
-        lines(
-            "var a = { b: 3 }", //
-            "var c = { d: 5 };",
-            "function f() {",
-            "  var x = a;",
-            "  var y = c;",
-            "  f(x.b);",
-            "  f(y.d);",
-            "}"),
-        lines(
-            "var a = { b: 3 }", //
-            "var c = { d: 5 };",
-            "function f() {",
-            "  var x = null;",
-            "  var y = null;",
-            "  f(a.b);",
-            "  f(c.d)",
-            "}"));
+        """
+        var a = { b: 3 }
+        var c = { d: 5 };
+        function f() {
+          var x = a;
+          var y = c;
+          f(x.b);
+          f(y.d);
+        }
+        """,
+        """
+        var a = { b: 3 }
+        var c = { d: 5 };
+        function f() {
+          var x = null;
+          var y = null;
+          f(a.b);
+          f(c.d)
+        }
+        """);
   }
 
   @Test
   public void testLocalAlias5() {
     test(
-        lines(
-            "var a = { b: { c: 5 } }", //
-            "function f() {",
-            "  var x = a;",
-            "  var y = x.b;",
-            "  f(a.b.c);",
-            "  f(y.c);",
-            "}"),
-        lines(
-            "var a = { b: { c: 5 } }", //
-            "function f() {",
-            "  var x = null;",
-            "  var y = null;",
-            "  f(a.b.c);",
-            "  f(a.b.c);",
-            "}"));
+        """
+        var a = { b: { c: 5 } }
+        function f() {
+          var x = a;
+          var y = x.b;
+          f(a.b.c);
+          f(y.c);
+        }
+        """,
+        """
+        var a = { b: { c: 5 } }
+        function f() {
+          var x = null;
+          var y = null;
+          f(a.b.c);
+          f(a.b.c);
+        }
+        """);
   }
 
   @Test
   public void testLocalAlias6() {
     test(
-        lines(
-            "var a = { b: 3 }", //
-            "function f() {",
-            "  var x = a;",
-            "  if (x.b) f(x.b);",
-            "}"),
-        lines(
-            "var a = { b: 3 }", //
-            "function f() {",
-            "  var x = null;",
-            "  if (a.b) f(a.b);",
-            "}"));
+        """
+        var a = { b: 3 }
+        function f() {
+          var x = a;
+          if (x.b) f(x.b);
+        }
+        """,
+        """
+        var a = { b: 3 }
+        function f() {
+          var x = null;
+          if (a.b) f(a.b);
+        }
+        """);
   }
 
   @Test
   public void testLocalAlias7() {
     test(
-        lines(
-            "var a = { b: { c: 5 } }", //
-            "function f() {",
-            "  var x = a.b;",
-            "  f(x.c);",
-            "}"),
-        lines(
-            "var a = { b: { c: 5 } }", //
-            "function f() {",
-            "  var x = null;",
-            "  f(a.b.c);",
-            "}"));
+        """
+        var a = { b: { c: 5 } }
+        function f() {
+          var x = a.b;
+          f(x.c);
+        }
+        """,
+        """
+        var a = { b: { c: 5 } }
+        function f() {
+          var x = null;
+          f(a.b.c);
+        }
+        """);
   }
 
   @Test
   public void testLocalAlias8() {
     testSame(
-        lines(
-            "var a = { b: 3 };",
-            "function f() { if (true) { var x = a; f(x.b); } x = { b : 4}; }"));
+        """
+        var a = { b: 3 };
+        function f() { if (true) { var x = a; f(x.b); } x = { b : 4}; }
+        """);
   }
 
   @Test
   public void testLocalAliasOfEnumWithInstanceofCheck() {
     test(
-        lines(
-            "/** @constructor */ var Enums = function() {};",
-            "/** @enum { number } */",
-            "Enums.Fruit = { APPLE: 1, BANANA: 2 };",
-            "/** @constructor */ function foo(f) {",
-            "if (f instanceof Enums) { alert('what?'); return; }",
-            "var Fruit = Enums.Fruit;",
-            "if (f == Fruit.APPLE) alert('apple');",
-            "if (f == Fruit.BANANA) alert('banana'); }"),
-        lines(
-            "/** @constructor */ var Enums = function() {};",
-            "/** @enum {JSDocSerializer_placeholder_type} */",
-            "Enums.Fruit = { APPLE: 1,BANANA: 2 };",
-            "/** @constructor */ function foo(f) {",
-            "if (f instanceof Enums) { alert('what?'); return; }",
-            "var Fruit = null;",
-            "if(f == Enums.Fruit.APPLE) alert('apple');",
-            "if(f == Enums.Fruit.BANANA) alert('banana'); }"));
+        """
+        /** @constructor */ var Enums = function() {};
+        /** @enum { number } */
+        Enums.Fruit = { APPLE: 1, BANANA: 2 };
+        /** @constructor */ function foo(f) {
+        if (f instanceof Enums) { alert('what?'); return; }
+        var Fruit = Enums.Fruit;
+        if (f == Fruit.APPLE) alert('apple');
+        if (f == Fruit.BANANA) alert('banana'); }
+        """,
+        """
+        /** @constructor */ var Enums = function() {};
+        /** @enum {JSDocSerializer_placeholder_type} */
+        Enums.Fruit = { APPLE: 1,BANANA: 2 };
+        /** @constructor */ function foo(f) {
+        if (f instanceof Enums) { alert('what?'); return; }
+        var Fruit = null;
+        if(f == Enums.Fruit.APPLE) alert('apple');
+        if(f == Enums.Fruit.BANANA) alert('banana'); }
+        """);
   }
 
   @Test
   public void testLocalAliasOfFunction() {
     test(
-        lines(
-            "var a = function() {}", //
-            "a.b = 5;",
-            "function f() { var x = a.b;",
-            "f(x);",
-            "}"),
-        lines(
-            "var a = function() {}", //
-            "a.b = 5;",
-            "function f() { var x = null;",
-            "f(a.b);",
-            "}"));
+        """
+        var a = function() {}
+        a.b = 5;
+        function f() { var x = a.b;
+        f(x);
+        }
+        """,
+        """
+        var a = function() {}
+        a.b = 5;
+        function f() { var x = null;
+        f(a.b);
+        }
+        """);
   }
 
   @Test
   public void testLocalWriteToNonAncestor() {
     test(
-        lines(
-            "var a = { b: 3 }", //
-            "function f() {",
-            "  a.b = 5;",
-            "  var x = a;",
-            "  f(a.b);",
-            "}"),
-        lines(
-            "var a = { b: 3 }", //
-            "function f() {",
-            "  a.b = 5;",
-            "  var x = null;",
-            "  f(a.b);",
-            "}"));
+        """
+        var a = { b: 3 }
+        function f() {
+          a.b = 5;
+          var x = a;
+          f(a.b);
+        }
+        """,
+        """
+        var a = { b: 3 }
+        function f() {
+          a.b = 5;
+          var x = null;
+          f(a.b);
+        }
+        """);
   }
 
   @Test
@@ -1618,336 +1748,381 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   @Test
   public void testMisusedConstructorTag() {
     test(
-        lines(
-            "var a = {}", //
-            "var d = a;",
-            "a.b = function() {};",
-            "a.b.c = 0;",
-            "a.b.c;"),
-        lines(
-            "var a = {}", //
-            "var d = null;",
-            "a.b = function() {};",
-            "a.b.c = 0;",
-            "a.b.c;"));
+        """
+        var a = {}
+        var d = a;
+        a.b = function() {};
+        a.b.c = 0;
+        a.b.c;
+        """,
+        """
+        var a = {}
+        var d = null;
+        a.b = function() {};
+        a.b.c = 0;
+        a.b.c;
+        """);
   }
 
   @Test
   public void testNoInlineGetpropIntoCall() {
     test(
-        lines(
-            "var b = x", //
-            "function f() {",
-            "  var a = b;",
-            "  a();",
-            "}"),
-        lines(
-            "var b = x", //
-            "function f() {",
-            "  var a = null;",
-            "  b()",
-            "}"));
+        """
+        var b = x
+        function f() {
+          var a = b;
+          a();
+        }
+        """,
+        """
+        var b = x
+        function f() {
+          var a = null;
+          b()
+        }
+        """);
   }
 
   @Test
   public void testObjLitAssignmentDepth3() {
     test(
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "a.b.c = { d: 1, e: 2 };",
-            "var f = a.b.c.d;"),
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "a.b.c = { d: 1,e: 2 };",
-            "var f = null;"));
+        """
+        var a = {}
+        a.b = {};
+        a.b.c = { d: 1, e: 2 };
+        var f = a.b.c.d;
+        """,
+        """
+        var a = {}
+        a.b = {};
+        a.b.c = { d: 1,e: 2 };
+        var f = null;
+        """);
 
     test(
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "a.b.c = { d: 1, e: 2 };",
-            "var f = a.b.c.d;",
-            "use(f);"),
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "a.b.c = { d: 1,e: 2 };",
-            "var f = null;",
-            "use(a.b.c.d);"));
+        """
+        var a = {}
+        a.b = {};
+        a.b.c = { d: 1, e: 2 };
+        var f = a.b.c.d;
+        use(f);
+        """,
+        """
+        var a = {}
+        a.b = {};
+        a.b.c = { d: 1,e: 2 };
+        var f = null;
+        use(a.b.c.d);
+        """);
 
     test(
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "a.b.c = { d: 1, e: 2 };",
-            "var f = a.b.c.d;",
-            "var g = a.b.c.e;"),
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "a.b.c = { d: 1, e: 2 };",
-            "var f = null;",
-            "var g = null;"));
+        """
+        var a = {}
+        a.b = {};
+        a.b.c = { d: 1, e: 2 };
+        var f = a.b.c.d;
+        var g = a.b.c.e;
+        """,
+        """
+        var a = {}
+        a.b = {};
+        a.b.c = { d: 1, e: 2 };
+        var f = null;
+        var g = null;
+        """);
 
     test(
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "a.b.c = { d: 1, e: 2 };",
-            "var f = a.b.c.d;",
-            "var g = a.b.c.e;",
-            "use(f, g);"),
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "a.b.c = { d: 1, e: 2 };",
-            "var f = null;",
-            "var g = null;",
-            "use(a.b.c.d, a.b.c.e);"));
+        """
+        var a = {}
+        a.b = {};
+        a.b.c = { d: 1, e: 2 };
+        var f = a.b.c.d;
+        var g = a.b.c.e;
+        use(f, g);
+        """,
+        """
+        var a = {}
+        a.b = {};
+        a.b.c = { d: 1, e: 2 };
+        var f = null;
+        var g = null;
+        use(a.b.c.d, a.b.c.e);
+        """);
 
     testSame(
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "a.b.c = { d: 1, e: 2 };",
-            "var f = null;",
-            "var g = null;"));
+        """
+        var a = {}
+        a.b = {};
+        a.b.c = { d: 1, e: 2 };
+        var f = null;
+        var g = null;
+        """);
   }
 
   @Test
   public void testObjLitAssignmentDepth4() {
     test(
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "a.b.c = {};",
-            "a.b.c.d = { e: 1, f: 2 };",
-            "var g = a.b.c.d.e;"),
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "a.b.c = {};",
-            "a.b.c.d = { e: 1, f: 2 };",
-            "var g = null;"));
+        """
+        var a = {}
+        a.b = {};
+        a.b.c = {};
+        a.b.c.d = { e: 1, f: 2 };
+        var g = a.b.c.d.e;
+        """,
+        """
+        var a = {}
+        a.b = {};
+        a.b.c = {};
+        a.b.c.d = { e: 1, f: 2 };
+        var g = null;
+        """);
 
     test(
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "a.b.c = {};",
-            "a.b.c.d = { e: 1, f: 2 };",
-            "var g = a.b.c.d.e;",
-            "use(g);"),
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "a.b.c = {};",
-            "a.b.c.d = { e: 1, f: 2 };",
-            "var g = null;",
-            "use(a.b.c.d.e);"));
+        """
+        var a = {}
+        a.b = {};
+        a.b.c = {};
+        a.b.c.d = { e: 1, f: 2 };
+        var g = a.b.c.d.e;
+        use(g);
+        """,
+        """
+        var a = {}
+        a.b = {};
+        a.b.c = {};
+        a.b.c.d = { e: 1, f: 2 };
+        var g = null;
+        use(a.b.c.d.e);
+        """);
   }
 
   @Test
   public void testObjLitDeclaration() {
     test(
-        lines(
-            "var a = { b: {}, c: {} }", //
-            "var d = a.b;",
-            "var e = a.c;"),
-        lines(
-            "var a = { b: {}, c: {} }", //
-            "var d = null;",
-            "var e = null;"));
+        """
+        var a = { b: {}, c: {} }
+        var d = a.b;
+        var e = a.c;
+        """,
+        """
+        var a = { b: {}, c: {} }
+        var d = null;
+        var e = null;
+        """);
 
     test(
-        lines(
-            "var a = { b: {}, c: {} }", //
-            "var d = a.b;",
-            "var e = a.c;",
-            "use(d, e);"),
-        lines(
-            "var a = { b: {}, c: {} }", //
-            "var d = null;",
-            "var e = null;",
-            "use(a.b,a.c);"));
+        """
+        var a = { b: {}, c: {} }
+        var d = a.b;
+        var e = a.c;
+        use(d, e);
+        """,
+        """
+        var a = { b: {}, c: {} }
+        var d = null;
+        var e = null;
+        use(a.b,a.c);
+        """);
 
     test(
-        lines(
-            "var a = { b: {}, c: {} }", //
-            "var d = a.b;",
-            "var e = a.c;"),
-        lines(
-            "var a = { b: {}, c: {} }", //
-            "var d = null;",
-            "var e = null;"));
+        """
+        var a = { b: {}, c: {} }
+        var d = a.b;
+        var e = a.c;
+        """,
+        """
+        var a = { b: {}, c: {} }
+        var d = null;
+        var e = null;
+        """);
 
     test(
-        lines(
-            "var a = { b: {}, c: {} }", //
-            "var d = a.b;",
-            "var e = a.c;",
-            "use(d, e);"),
-        lines(
-            "var a = { b: {}, c: {} }", //
-            "var d = null;",
-            "var e = null;",
-            "use(a.b, a.c);"));
+        """
+        var a = { b: {}, c: {} }
+        var d = a.b;
+        var e = a.c;
+        use(d, e);
+        """,
+        """
+        var a = { b: {}, c: {} }
+        var d = null;
+        var e = null;
+        use(a.b, a.c);
+        """);
   }
 
   @Test
   public void testObjLitDeclarationUsedInSameVarList() {
     test(
-        lines(
-            "var a = { b: {}, c: {} }", //
-            "var d = a.b;",
-            "var e = a.c;",
-            "use(d, e);"),
-        lines(
-            "var a = { b: {}, c: {} }", //
-            "var d = null;",
-            "var e = null;",
-            "use(a.b, a.c)"));
+        """
+        var a = { b: {}, c: {} }
+        var d = a.b;
+        var e = a.c;
+        use(d, e);
+        """,
+        """
+        var a = { b: {}, c: {} }
+        var d = null;
+        var e = null;
+        use(a.b, a.c)
+        """);
   }
 
   @Test
   public void testObjLitDeclarationWithGet2() {
     test(
-        lines(
-            "var a = { b: {}, get c() {} }", //
-            "var d = a.b;",
-            "var e = a.c;"),
-        lines(
-            "var a = { b: {}, get c() {} }", //
-            "var d = null;",
-            "var e = a.c;"));
+        """
+        var a = { b: {}, get c() {} }
+        var d = a.b;
+        var e = a.c;
+        """,
+        """
+        var a = { b: {}, get c() {} }
+        var d = null;
+        var e = a.c;
+        """);
 
     test(
-        lines(
-            "var a = { b: {}, get c() {} }", //
-            "var d = a.b;",
-            "var e = a.c;",
-            "use(d);"),
-        lines(
-            "var a = { b: {}, get c() {} }", //
-            "var d = null;",
-            "var e = a.c;",
-            "use(a.b);"));
+        """
+        var a = { b: {}, get c() {} }
+        var d = a.b;
+        var e = a.c;
+        use(d);
+        """,
+        """
+        var a = { b: {}, get c() {} }
+        var d = null;
+        var e = a.c;
+        use(a.b);
+        """);
   }
 
   @Test
   public void testObjLitDeclarationWithSet2() {
     test(
-        lines(
-            "var a = { b: {}, set c(a) {} }", //
-            "var d = a.b;",
-            "var e = a.c"),
-        lines(
-            "var a = { b: {}, set c(a$jscomp$1) {} }", //
-            "var d = null;",
-            "var e = a.c;"));
+        """
+        var a = { b: {}, set c(a) {} }
+        var d = a.b;
+        var e = a.c
+        """,
+        """
+        var a = { b: {}, set c(a$jscomp$1) {} }
+        var d = null;
+        var e = a.c;
+        """);
 
     test(
-        lines(
-            "var a = { b: {}, set c(a) {} }", //
-            "var d = a.b;",
-            "var e = a.c;",
-            "use(d);"),
-        lines(
-            "var a = { b: {}, set c(a$jscomp$1) {} }", //
-            "var d = null;",
-            "var e = a.c;",
-            "use(a.b);"));
+        """
+        var a = { b: {}, set c(a) {} }
+        var d = a.b;
+        var e = a.c;
+        use(d);
+        """,
+        """
+        var a = { b: {}, set c(a$jscomp$1) {} }
+        var d = null;
+        var e = a.c;
+        use(a.b);
+        """);
   }
 
   @Test
   public void testPropertyOfChildFuncOfUncollapsibleObjectDepth1() {
     test(
-        lines(
-            "var a = {}", //
-            "var c = a;",
-            "a.b = function () {};",
-            "a.b.x = 0;",
-            "a.b.x;"),
-        lines(
-            "var a = {}", //
-            "var c = null;",
-            "a.b = function() {};",
-            "a.b.x = 0;",
-            "a.b.x;"));
+        """
+        var a = {}
+        var c = a;
+        a.b = function () {};
+        a.b.x = 0;
+        a.b.x;
+        """,
+        """
+        var a = {}
+        var c = null;
+        a.b = function() {};
+        a.b.x = 0;
+        a.b.x;
+        """);
 
     test(
-        lines(
-            "var a = {}", //
-            "var c = a;",
-            "a.b = function () {};",
-            "a.b.x = 0;",
-            "a.b.x;",
-            "use(c);"),
-        lines(
-            "var a = {}", //
-            "var c = null;",
-            "a.b = function() {};",
-            "a.b.x = 0;",
-            "a.b.x;",
-            "use(a);"));
+        """
+        var a = {}
+        var c = a;
+        a.b = function () {};
+        a.b.x = 0;
+        a.b.x;
+        use(c);
+        """,
+        """
+        var a = {}
+        var c = null;
+        a.b = function() {};
+        a.b.x = 0;
+        a.b.x;
+        use(a);
+        """);
   }
 
   @Test
   public void testPropertyOfChildFuncOfUncollapsibleObjectDepth2() {
     test(
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "var c = a.b;",
-            "a.b.c = function () {};",
-            "a.b.c.x = 0;",
-            "a.b.c.x;"),
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "var c = null;",
-            "a.b.c = function() {};",
-            "a.b.c.x = 0;",
-            "a.b.c.x"));
+        """
+        var a = {}
+        a.b = {};
+        var c = a.b;
+        a.b.c = function () {};
+        a.b.c.x = 0;
+        a.b.c.x;
+        """,
+        """
+        var a = {}
+        a.b = {};
+        var c = null;
+        a.b.c = function() {};
+        a.b.c.x = 0;
+        a.b.c.x
+        """);
 
     test(
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "var c = a.b;",
-            "a.b.c = function () {};",
-            "a.b.c.x = 0;",
-            "a.b.c.x;",
-            "use(c);"),
-        lines(
-            "var a = {}", //
-            "a.b = {};",
-            "var c = null;",
-            "a.b.c = function() {};",
-            "a.b.c.x = 0;",
-            "a.b.c.x;",
-            "use(a.b)"));
+        """
+        var a = {}
+        a.b = {};
+        var c = a.b;
+        a.b.c = function () {};
+        a.b.c.x = 0;
+        a.b.c.x;
+        use(c);
+        """,
+        """
+        var a = {}
+        a.b = {};
+        var c = null;
+        a.b.c = function() {};
+        a.b.c.x = 0;
+        a.b.c.x;
+        use(a.b)
+        """);
   }
 
   @Test
   public void testTypeDefAlias1() {
     test(
-        lines(
-            "var D = function() {}", //
-            "D.L = function() {};",
-            "/** @type { D.L } */ D.L.A = new D.L();",
-            "/** @const */ var M = {};",
-            "/** @typedef { D.L } */ M.L = D.L;",
-            "use(M.L.A);"),
-        lines(
-            "var D = function() {}", //
-            "D.L = function() {};",
-            " D.L.A = new D.L;",
-            "/** @const */ var M = {};",
-            "M.L = null;",
-            "use(D.L.A);"));
+        """
+        var D = function() {}
+        D.L = function() {};
+        /** @type { D.L } */ D.L.A = new D.L();
+        /** @const */ var M = {};
+        /** @typedef { D.L } */ M.L = D.L;
+        use(M.L.A);
+        """,
+        """
+        var D = function() {}
+        D.L = function() {};
+         D.L.A = new D.L;
+        /** @const */ var M = {};
+        M.L = null;
+        use(D.L.A);
+        """);
   }
 
   @Test
@@ -1980,49 +2155,53 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void testGlobalAliasWithLet2() {
     // Inlining ns is unsafe because ns2 may or may not be equal to ns.
     testSame(
-        lines(
-            "let ns = {};",
-            "ns.foo = 'bar';",
-            "let ns2;",
-            "if (true) {",
-            "  ns2 = ns;",
-            "}",
-            "use(ns2.foo);"));
+        """
+        let ns = {};
+        ns.foo = 'bar';
+        let ns2;
+        if (true) {
+          ns2 = ns;
+        }
+        use(ns2.foo);
+        """);
 
     // In this case, it would be safe to inline ns, as long as all subsequent references
     // to ns2 are inside the if block, but the algorithm is not complex enough to know that.
     testSame(
-        lines(
-            "let ns = {};",
-            "ns.foo = 'bar';",
-            "let ns2;",
-            "if (true) {",
-            "  ns2 = ns;",
-            "  use(ns2.foo);",
-            "}"));
+        """
+        let ns = {};
+        ns.foo = 'bar';
+        let ns2;
+        if (true) {
+          ns2 = ns;
+          use(ns2.foo);
+        }
+        """);
   }
 
   @Test
   public void testLocalAliasWithLet1() {
     test(
-        lines(
-            "var a = {};",
-            "a.b = {};",
-            "function f() {",
-            "  if (true) {",
-            "    let c = a.b;",
-            "    alert(c);",
-            "  }",
-            "}"),
-        lines(
-            "var a = {};",
-            "a.b = {};",
-            "function f() {",
-            "  if (true) {",
-            "    let c = null;",
-            "    alert(a.b);",
-            "  }",
-            "}"));
+        """
+        var a = {};
+        a.b = {};
+        function f() {
+          if (true) {
+            let c = a.b;
+            alert(c);
+          }
+        }
+        """,
+        """
+        var a = {};
+        a.b = {};
+        function f() {
+          if (true) {
+            let c = null;
+            alert(a.b);
+          }
+        }
+        """);
   }
 
   @Test
@@ -2113,11 +2292,12 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void testComputedPropertyNames() {
     // We don't support computed properties.
     testSame(
-        lines(
-            "var foo = {['ba' + 'r']: {}};",
-            "var foobar = foo.bar;",
-            "foobar.baz = 5;",
-            "use(foo.bar.baz);"));
+        """
+        var foo = {['ba' + 'r']: {}};
+        var foobar = foo.bar;
+        foobar.baz = 5;
+        use(foo.bar.baz);
+        """);
   }
 
   @Test
@@ -2145,33 +2325,37 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void testClassStaticInheritance_methodsFromMultipleClasses() {
     // C is an alias of B
     test(
-        lines(
-            "class A { static a() {} }",
-            "class B extends A { static b() {} }",
-            "const C = B;",
-            "C.a();",
-            "C.b()"),
-        lines(
-            "class A { static a() {} }",
-            "class B extends A { static b() {} }",
-            "const C = null;",
-            "A.a();",
-            "B.b()"));
+        """
+        class A { static a() {} }
+        class B extends A { static b() {} }
+        const C = B;
+        C.a();
+        C.b()
+        """,
+        """
+        class A { static a() {} }
+        class B extends A { static b() {} }
+        const C = null;
+        A.a();
+        B.b()
+        """);
 
     // C is a subclass of A and B
     test(
-        lines(
-            "class A { static a() {} }",
-            "class B extends A { static b() {} }",
-            "class C extends B {}",
-            "C.a();",
-            "C.b()"),
-        lines(
-            "class A { static a() {} }",
-            "class B extends A { static b() {} }",
-            "class C extends B {}",
-            "A.a();",
-            "B.b()"));
+        """
+        class A { static a() {} }
+        class B extends A { static b() {} }
+        class C extends B {}
+        C.a();
+        C.b()
+        """,
+        """
+        class A { static a() {} }
+        class B extends A { static b() {} }
+        class C extends B {}
+        A.a();
+        B.b()
+        """);
   }
 
   @Test
@@ -2187,11 +2371,12 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void testChainedClassStaticInheritance_methodWithNoCollapse() {
     // verify we also don't replace C.s with B.s, and inherit the 'non-collapsibility' from 'A.s'
     testSame(
-        lines(
-            "class A {/** @nocollapse */ static s() {}}",
-            "class B extends A {}",
-            "class C extends B {}",
-            "C.s();"));
+        """
+        class A {/** @nocollapse */ static s() {}}
+        class B extends A {}
+        class C extends B {}
+        C.s();
+        """);
   }
 
   @Test
@@ -2272,55 +2457,61 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   @Test
   public void testClassStaticInheritance_namespacedClass() {
     test(
-        lines(
-            "var ns1 = {}, ns2 = {};",
-            "ns1.A = class {};",
-            "ns1.A.staticProp = {foo: 'bar'};",
-            "ns2.B = class extends ns1.A {}",
-            "use(ns2.B.staticProp.bar);"),
-        lines(
-            "var ns1 = {};",
-            "var ns2 = {};",
-            "ns1.A = class {};",
-            "ns1.A.staticProp = {foo: 'bar'};",
-            "ns2.B = class extends ns1.A {}",
-            "use(ns1.A.staticProp.bar);"));
+        """
+        var ns1 = {}, ns2 = {};
+        ns1.A = class {};
+        ns1.A.staticProp = {foo: 'bar'};
+        ns2.B = class extends ns1.A {}
+        use(ns2.B.staticProp.bar);
+        """,
+        """
+        var ns1 = {};
+        var ns2 = {};
+        ns1.A = class {};
+        ns1.A.staticProp = {foo: 'bar'};
+        ns2.B = class extends ns1.A {}
+        use(ns1.A.staticProp.bar);
+        """);
     test(
-        lines(
-            "var ns1 = {}, ns2 = {};",
-            "ns1.A = class {};",
-            "ns1.A.staticProp = {foo: 'bar'};",
-            "ns2.B = class extends ns1.A {}",
-            "use(ns2.B.staticProp?.bar);"),
-        lines(
-            "var ns1 = {};",
-            "var ns2 = {};",
-            "ns1.A = class {};",
-            "ns1.A.staticProp = {foo: 'bar'};",
-            "ns2.B = class extends ns1.A {}",
-            "use(ns1.A.staticProp?.bar);"));
+        """
+        var ns1 = {}, ns2 = {};
+        ns1.A = class {};
+        ns1.A.staticProp = {foo: 'bar'};
+        ns2.B = class extends ns1.A {}
+        use(ns2.B.staticProp?.bar);
+        """,
+        """
+        var ns1 = {};
+        var ns2 = {};
+        ns1.A = class {};
+        ns1.A.staticProp = {foo: 'bar'};
+        ns2.B = class extends ns1.A {}
+        use(ns1.A.staticProp?.bar);
+        """);
     testSame(
-        lines(
-            "var ns1 = {};",
-            "var ns2 = {};",
-            "ns1.A = class {};",
-            "ns1.A.staticProp = {foo: 'bar'};",
-            "ns2.B = class extends ns1.A {}",
-            // ns2.B isn't an alias for ns1.A, so it isn't inlined.
-            // ns2.B?.staticProp isn't an alias, because it's an optional chain.
-            "use(ns2.B?.staticProp.bar);"));
+        """
+        var ns1 = {};
+        var ns2 = {};
+        ns1.A = class {};
+        ns1.A.staticProp = {foo: 'bar'};
+        ns2.B = class extends ns1.A {}
+        // ns2.B isn't an alias for ns1.A, so it isn't inlined.
+        // ns2.B?.staticProp isn't an alias, because it's an optional chain.
+        use(ns2.B?.staticProp.bar);
+        """);
   }
 
   @Test
   public void testClassStaticInheritance_es5Class() {
     // ES6 classes do not inherit static properties of ES5 class constructors.
     testSame(
-        lines(
-            "/** @constructor */",
-            "function A() {}",
-            "A.staticProp = 5;",
-            "class B extends A {}",
-            "use(B.staticProp);")); // undefined
+        """
+        /** @constructor */
+        function A() {}
+        A.staticProp = 5;
+        class B extends A {}
+        use(B.staticProp);
+        """); // undefined
   }
 
   @Test
@@ -2328,14 +2519,15 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     // Currently we only inline inherited properties when the extends clause contains a simple or
     // qualified name.
     testSame(
-        lines(
-            "class A {}",
-            "A.foo = 5;",
-            "class B {}",
-            "B.foo = 6;",
-            "function getSuperclass() { return A; }",
-            "class C extends getSuperclass() {}",
-            "use(C.foo);"));
+        """
+        class A {}
+        A.foo = 5;
+        class B {}
+        B.foo = 6;
+        function getSuperclass() { return A; }
+        class C extends getSuperclass() {}
+        use(C.foo);
+        """);
   }
 
   @Test
@@ -2355,139 +2547,153 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   @Test
   public void testAliasForSuperclassNamespace() {
     test(
-        lines(
-            "var ns = {};",
-            "class Foo {}",
-            "ns.clazz = Foo;",
-            "var Bar = class extends ns.clazz.Baz {}"),
-        lines(
-            "var ns = {};",
-            "class Foo {}",
-            "ns.clazz = null;",
-            "var Bar = class extends Foo.Baz {}"));
+        """
+        var ns = {};
+        class Foo {}
+        ns.clazz = Foo;
+        var Bar = class extends ns.clazz.Baz {}
+        """,
+        """
+        var ns = {};
+        class Foo {}
+        ns.clazz = null;
+        var Bar = class extends Foo.Baz {}
+        """);
 
     test(
-        lines(
-            "var ns = {};",
-            "class Foo {}",
-            "Foo.Builder = class {}",
-            "ns.clazz = Foo;",
-            "var Bar = class extends ns.clazz.Builder {}"),
-        lines(
-            "var ns = {};",
-            "class Foo {}",
-            "Foo.Builder = class {}",
-            "ns.clazz = null;",
-            "var Bar = class extends Foo.Builder {}"));
+        """
+        var ns = {};
+        class Foo {}
+        Foo.Builder = class {}
+        ns.clazz = Foo;
+        var Bar = class extends ns.clazz.Builder {}
+        """,
+        """
+        var ns = {};
+        class Foo {}
+        Foo.Builder = class {}
+        ns.clazz = null;
+        var Bar = class extends Foo.Builder {}
+        """);
   }
 
   @Test
   public void testAliasForSuperclass_withStaticInheritance() {
     test(
-        lines(
-            "var ns = {};",
-            "class Foo {}",
-            "Foo.baz = 3;",
-            "ns.clazz = Foo;",
-            "var Bar = class extends ns.clazz {}",
-            "use(Bar.baz);"),
-        lines(
-            "var ns = {};",
-            "class Foo {}",
-            "Foo.baz = 3;",
-            "ns.clazz = null;",
-            "var Bar = class extends Foo {}",
-            "use(Foo.baz);"));
+        """
+        var ns = {};
+        class Foo {}
+        Foo.baz = 3;
+        ns.clazz = Foo;
+        var Bar = class extends ns.clazz {}
+        use(Bar.baz);
+        """,
+        """
+        var ns = {};
+        class Foo {}
+        Foo.baz = 3;
+        ns.clazz = null;
+        var Bar = class extends Foo {}
+        use(Foo.baz);
+        """);
   }
 
   @Test
   public void testStaticInheritance_superclassIsStaticProperty() {
     test(
-        lines(
-            "class Foo {}",
-            "Foo.Builder = class {}",
-            "Foo.Builder.baz = 3;",
-            "var Bar = class extends Foo.Builder {}",
-            "use(Bar.baz);"),
-        lines(
-            "class Foo {}",
-            "Foo.Builder = class {}",
-            "Foo.Builder.baz = 3;",
-            "var Bar = class extends Foo.Builder {}",
-            "use(Foo.Builder.baz);"));
+        """
+        class Foo {}
+        Foo.Builder = class {}
+        Foo.Builder.baz = 3;
+        var Bar = class extends Foo.Builder {}
+        use(Bar.baz);
+        """,
+        """
+        class Foo {}
+        Foo.Builder = class {}
+        Foo.Builder.baz = 3;
+        var Bar = class extends Foo.Builder {}
+        use(Foo.Builder.baz);
+        """);
   }
 
   @Test
   public void testAliasForSuperclassNamespace_withStaticInheritance() {
     test(
-        lines(
-            "var ns = {};",
-            "class Foo {}",
-            "Foo.Builder = class {}",
-            "Foo.Builder.baz = 3;",
-            "ns.clazz = Foo;",
-            "var Bar = class extends ns.clazz.Builder {}",
-            "use(Bar.baz);"),
-        lines(
-            "var ns = {};",
-            "class Foo {}",
-            "Foo.Builder = class {}",
-            "Foo.Builder.baz = 3;",
-            "ns.clazz = null;",
-            "var Bar = class extends Foo.Builder {}",
-            "use(Foo.Builder.baz);"));
+        """
+        var ns = {};
+        class Foo {}
+        Foo.Builder = class {}
+        Foo.Builder.baz = 3;
+        ns.clazz = Foo;
+        var Bar = class extends ns.clazz.Builder {}
+        use(Bar.baz);
+        """,
+        """
+        var ns = {};
+        class Foo {}
+        Foo.Builder = class {}
+        Foo.Builder.baz = 3;
+        ns.clazz = null;
+        var Bar = class extends Foo.Builder {}
+        use(Foo.Builder.baz);
+        """);
   }
 
   @Test
   public void testGithubIssue2754() {
     testSame(
-        lines(
-            "var ns = {};",
-            "/** @constructor */",
-            "ns.Bean = function() {}",
-            "",
-            "ns.Bean.x = function(a=null) {",
-            "  if (a == null || a === undefined) {",
-            "    a = ns.Bean;",
-            "  }",
-            "  return new a();",
-            "}"));
+        """
+        var ns = {};
+        /** @constructor */
+        ns.Bean = function() {}
+
+        ns.Bean.x = function(a=null) {
+          if (a == null || a === undefined) {
+            a = ns.Bean;
+          }
+          return new a();
+        }
+        """);
   }
 
   @Test
   public void testParameterDefaultIsAlias() {
     testSame(
-        lines(
-            "/** @constructor */",
-            "function a() {}",
-            "a.staticProp = 5;",
-            "",
-            "function f(param = a) {",
-            "  return new param();",
-            "}"));
+        """
+        /** @constructor */
+        function a() {}
+        a.staticProp = 5;
+
+        function f(param = a) {
+          return new param();
+        }
+        """);
   }
 
   @Test
   public void testInliningPropertyAliasBeforeNamespace_withConstructorProperty() {
     test(
-        lines(
-            "var prop = 1;",
-            "/** @constructor */",
-            "var Foo = function() {}",
-            "",
-            "Foo.prop = prop;",
-            "",
-            "var aliasOfFoo = Foo;",
-            "alert(aliasOfFoo.prop);"),
-        lines(
-            "var prop = 1;",
-            "/** @constructor */",
-            "var Foo = function() {}",
-            "",
-            "Foo.prop = null;",
-            "",
-            "var aliasOfFoo = null;",
-            "alert(prop);"));
+        """
+        var prop = 1;
+        /** @constructor */
+        var Foo = function() {}
+
+        Foo.prop = prop;
+
+        var aliasOfFoo = Foo;
+        alert(aliasOfFoo.prop);
+        """,
+        """
+        var prop = 1;
+        /** @constructor */
+        var Foo = function() {}
+
+        Foo.prop = null;
+
+        var aliasOfFoo = null;
+        alert(prop);
+        """);
   }
 
   @Test
@@ -2495,24 +2701,26 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     // NOTE: the only difference between this input and the above input is that the
     // above has annotated Foo with @constructor. The @constructor case used to generate bad output
     test(
-        lines(
-            "var prop = 1;",
-            "/** @const */",
-            "var Foo = {}",
-            "",
-            "Foo.prop = prop;",
-            "",
-            "var aliasOfFoo = Foo;",
-            "alert(aliasOfFoo.prop);"),
-        lines(
-            "var prop = 1;",
-            "/** @const */",
-            "var Foo = {};",
-            "",
-            "Foo.prop = null;",
-            "",
-            "var aliasOfFoo = null;",
-            "alert(prop);"));
+        """
+        var prop = 1;
+        /** @const */
+        var Foo = {}
+
+        Foo.prop = prop;
+
+        var aliasOfFoo = Foo;
+        alert(aliasOfFoo.prop);
+        """,
+        """
+        var prop = 1;
+        /** @const */
+        var Foo = {};
+
+        Foo.prop = null;
+
+        var aliasOfFoo = null;
+        alert(prop);
+        """);
   }
 
   @Test
@@ -2521,65 +2729,71 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     // CollapseProperties behavior.
     //
     test(
-        lines(
-            "var prop = 1;",
-            "/** @constructor */",
-            "var Foo = function() {}",
-            "",
-            "Foo.prop = prop;",
-            "",
-            "/** @constructor */",
-            "function Bar() {}",
-            "Bar.aliasOfFoo = Foo;",
-            "use(Bar);",
-            "alert(Bar.aliasOfFoo.prop);"),
-        lines(
-            "var prop = 1;",
-            "/** @constructor */",
-            "var Foo = function() {}",
-            "",
-            "Foo.prop = prop;",
-            "",
-            "/** @constructor */",
-            "function Bar() {}",
-            "Bar.aliasOfFoo = Foo;", // don't remove this initialization
-            "use(Bar);", // this might write to Bar.aliasOfFoo.prop
-            "alert(prop);")); // but set this to prop anyway to fix CollapseProperties
+        """
+        var prop = 1;
+        /** @constructor */
+        var Foo = function() {}
+
+        Foo.prop = prop;
+
+        /** @constructor */
+        function Bar() {}
+        Bar.aliasOfFoo = Foo;
+        use(Bar);
+        alert(Bar.aliasOfFoo.prop);
+        """,
+        """
+        var prop = 1;
+        /** @constructor */
+        var Foo = function() {}
+
+        Foo.prop = prop;
+
+        /** @constructor */
+        function Bar() {}
+        Bar.aliasOfFoo = Foo; // don't remove this initialization
+        use(Bar); // this might write to Bar.aliasOfFoo.prop
+        alert(prop);
+        """); // but set this to prop anyway to fix CollapseProperties
   }
 
   @Test
   public void testAliasChain() {
     test(
-        lines(
-            "var goog = {};",
-            "goog.DEBUG = false;",
-            "var foo = {};",
-            "var global_DEBUG = goog.DEBUG;",
-            "foo.DEBUG = global_DEBUG;",
-            "alert(foo.DEBUG);"),
-        lines(
-            "var goog = {};",
-            "goog.DEBUG = false;",
-            "var foo = {};",
-            "var global_DEBUG = null;",
-            "foo.DEBUG = null;",
-            "alert(goog.DEBUG);"));
+        """
+        var goog = {};
+        goog.DEBUG = false;
+        var foo = {};
+        var global_DEBUG = goog.DEBUG;
+        foo.DEBUG = global_DEBUG;
+        alert(foo.DEBUG);
+        """,
+        """
+        var goog = {};
+        goog.DEBUG = false;
+        var foo = {};
+        var global_DEBUG = null;
+        foo.DEBUG = null;
+        alert(goog.DEBUG);
+        """);
     test(
-        lines(
-            "var goog = {};",
-            "goog.DEBUG = false;",
-            "var foo = {};",
-            "var global_DEBUG = goog.DEBUG;",
-            "foo.DEBUG = global_DEBUG;",
-            "alert(foo?.DEBUG);"),
-        lines(
-            "var goog = {};",
-            "goog.DEBUG = false;",
-            "var foo = {};",
-            "var global_DEBUG = null;",
-            // Does not get inlined because of the optional chain reference
-            "foo.DEBUG = goog.DEBUG;",
-            "alert(foo?.DEBUG);"));
+        """
+        var goog = {};
+        goog.DEBUG = false;
+        var foo = {};
+        var global_DEBUG = goog.DEBUG;
+        foo.DEBUG = global_DEBUG;
+        alert(foo?.DEBUG);
+        """,
+        """
+        var goog = {};
+        goog.DEBUG = false;
+        var foo = {};
+        var global_DEBUG = null;
+        // Does not get inlined because of the optional chain reference
+        foo.DEBUG = goog.DEBUG;
+        alert(foo?.DEBUG);
+        """);
   }
 
   @Test
@@ -2588,17 +2802,17 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     // We don't replace "Child.f = Parent.f" with "Child.f = null" because of the @nocollapse
     disableCompareJsDoc(); // multistage compilation erases the @extends
     testSame(
-        lines(
-            "/** @constructor */ var Parent = function() {};",
-            "/** @nocollapse */ Parent.f = function() {};",
-            "/** @constructor @extends {Parent} @param {...?} var_args  */",
-            "var Child = function(var_args) {",
-            "  Parent.apply(this, arguments);",
-            "}",
-            "$jscomp.inherits(Child, Parent);",
-            "/** @nocollapse */ Child.f = Parent.f;",
-            "Child.prototype.g = function() { return this.f(); }",
-            ""));
+        """
+        /** @constructor */ var Parent = function() {};
+        /** @nocollapse */ Parent.f = function() {};
+        /** @constructor @extends {Parent} @param {...?} var_args  */
+        var Child = function(var_args) {
+          Parent.apply(this, arguments);
+        }
+        $jscomp.inherits(Child, Parent);
+        /** @nocollapse */ Child.f = Parent.f;
+        Child.prototype.g = function() { return this.f(); }
+        """);
   }
 
   @Test
@@ -2607,10 +2821,11 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     // AggressiveInlineAliases.
     disableCompareJsDoc(); // multistage compilation erases the @typedef
     testSame(
-        lines(
-            "/** @constructor */ var Item = function() {};",
-            "/** @typedef {number} */ Item.Models;",
-            "Item.Models = Item.Models;"));
+        """
+        /** @constructor */ var Item = function() {};
+        /** @typedef {number} */ Item.Models;
+        Item.Models = Item.Models;
+        """);
   }
 
   @Test
@@ -2618,17 +2833,18 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     testSame(
         externs("function use(obj) {}"),
         srcs(
-            lines(
-                "function Foo() {}",
-                "Foo.Bar = {};",
-                "Foo.Bar.baz = {A: 1, B: 2};",
-                "",
-                "var $jscomp$destructuring$var1 = Foo.Bar;",
-                // This call could potentially have changed the value of Foo.Bar, so don't replace
-                // $jscomp$destructuring$var1.baz with Foo.Bar.baz
-                "use(Foo);",
-                "var baz = $jscomp$destructuring$var1.baz;",
-                "use(baz.A);")));
+            """
+            function Foo() {}
+            Foo.Bar = {};
+            Foo.Bar.baz = {A: 1, B: 2};
+
+            var $jscomp$destructuring$var1 = Foo.Bar;
+            // This call could potentially have changed the value of Foo.Bar, so don't replace
+            // $jscomp$destructuring$var1.baz with Foo.Bar.baz
+            use(Foo);
+            var baz = $jscomp$destructuring$var1.baz;
+            use(baz.A);
+            """));
   }
 
   @Test
@@ -2636,37 +2852,39 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     test(
         externs("function use(obj) {}"),
         srcs(
-            lines(
-                "/** @constructor */",
-                "function Foo() {}",
-                "/** @constructor */",
-                "Foo.Bar = function() {};",
-                "/** @enum {number} */",
-                "Foo.Bar.baz = {A: 1, B: 2};",
-                "",
-                "var $jscomp$destructuring$var1 = Foo.Bar;",
-                // This call could potentially have changed the value of Foo.Bar.
-                "use(Foo);",
-                "var baz = $jscomp$destructuring$var1.baz;",
-                "use(baz.A);")),
+            """
+            /** @constructor */
+            function Foo() {}
+            /** @constructor */
+            Foo.Bar = function() {};
+            /** @enum {number} */
+            Foo.Bar.baz = {A: 1, B: 2};
+
+            var $jscomp$destructuring$var1 = Foo.Bar;
+            // This call could potentially have changed the value of Foo.Bar.
+            use(Foo);
+            var baz = $jscomp$destructuring$var1.baz;
+            use(baz.A);
+            """),
         expected(
-            lines(
-                "/** @constructor */",
-                "function Foo() {}",
-                "/** @constructor */",
-                "Foo.Bar = function() {};",
-                "/** @enum {JSDocSerializer_placeholder_type} */",
-                "Foo.Bar.baz = {A: 1, B: 2};",
-                "",
-                "var $jscomp$destructuring$var1 = null;",
-                "use(Foo);",
-                "var baz = null;",
-                // If we didn't unsafely replace baz.A with Foo.Bar.baz.A, this reference would
-                // break after CollapseProperties runs because Foo.Bar.baz -> Foo$Bar$baz
-                // So although inlining this is technically unsafe, because use(Foo) could have
-                // changed the value of Foo.Bar, it actually fixes a breakage caused by
-                // CollapseProperties.
-                "use(Foo.Bar.baz.A);")));
+            """
+            /** @constructor */
+            function Foo() {}
+            /** @constructor */
+            Foo.Bar = function() {};
+            /** @enum {JSDocSerializer_placeholder_type} */
+            Foo.Bar.baz = {A: 1, B: 2};
+
+            var $jscomp$destructuring$var1 = null;
+            use(Foo);
+            var baz = null;
+            // If we didn't unsafely replace baz.A with Foo.Bar.baz.A, this reference would
+            // break after CollapseProperties runs because Foo.Bar.baz -> Foo$Bar$baz
+            // So although inlining this is technically unsafe, because use(Foo) could have
+            // changed the value of Foo.Bar, it actually fixes a breakage caused by
+            // CollapseProperties.
+            use(Foo.Bar.baz.A);
+            """));
   }
 
   @Test
@@ -2675,61 +2893,66 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     testSame(
         externs("function use(obj) {}"),
         srcs(
-            lines(
-                "/** @constructor */",
-                "function Foo() {}",
-                "/** @constructor @nocollapse */",
-                "Foo.Bar = function() {};",
-                "/** @enum {number} @nocollapse */",
-                "Foo.Bar.baz = {A: 1, B: 2};",
-                "",
-                "var $jscomp$destructuring$var1 = Foo.Bar;",
-                "use(Foo);",
-                "var baz = $jscomp$destructuring$var1.baz;",
-                "use(baz.A);")));
+            """
+            /** @constructor */
+            function Foo() {}
+            /** @constructor @nocollapse */
+            Foo.Bar = function() {};
+            /** @enum {number} @nocollapse */
+            Foo.Bar.baz = {A: 1, B: 2};
+
+            var $jscomp$destructuring$var1 = Foo.Bar;
+            use(Foo);
+            var baz = $jscomp$destructuring$var1.baz;
+            use(baz.A);
+            """));
   }
 
   @Test
   public void testNestedAssignWithAlias() {
     test(
-        lines(
-            "var ns = {a: {}};",
-            "var Letters = { B: 'b'};",
-            "ns.c = ns.a.b = Letters.B;",
-            "use(ns.c);",
-            "use(ns.a.b);"),
-        lines(
-            "var ns = {a: {}};",
-            "var Letters = {B: 'b'};",
-            // test that we handle nested assigns correctly
-            "ns.c = null;",
-            "use(Letters.B);",
-            "use(Letters.B);"));
+        """
+        var ns = {a: {}};
+        var Letters = { B: 'b'};
+        ns.c = ns.a.b = Letters.B;
+        use(ns.c);
+        use(ns.a.b);
+        """,
+        """
+        var ns = {a: {}};
+        var Letters = {B: 'b'};
+        // test that we handle nested assigns correctly
+        ns.c = null;
+        use(Letters.B);
+        use(Letters.B);
+        """);
   }
 
   @Test
   public void testCommaExpression() {
     test(
-        lines(
-            "/** @const */ var exports = {};",
-            "/** @const @enum {string} */ var Letters = {",
-            "  A: 'a', ",
-            "  B: 'b'};",
-            "exports.A = Letters.A, exports.B = Letters.B;",
-            "use(exports.B);"),
-        lines(
-            "/** @const */ var exports = {};",
-            "/** @const @enum {JSDocSerializer_placeholder_type} */ var Letters = {",
-            "  A: 'a', ",
-            "  B: 'b'};",
-            // this used to become
-            //   exports.A = null, Letters.B = null;
-            // breaking all references to Letters.B
-            // GlobalNamespace treats 'exports.B' as both a read and write of
-            // 'exports.B', and AggressiveInlineAliases used to replace all reads of exports.B with
-            // `Letters.B` without verifying that the read was not also a write.
-            "Letters.A, Letters.B;",
-            "use(Letters.B);"));
+        """
+        /** @const */ var exports = {};
+        /** @const @enum {string} */ var Letters = {
+          A: 'a',
+          B: 'b'};
+        exports.A = Letters.A, exports.B = Letters.B;
+        use(exports.B);
+        """,
+        """
+        /** @const */ var exports = {};
+        /** @const @enum {JSDocSerializer_placeholder_type} */ var Letters = {
+          A: 'a',
+          B: 'b'};
+        // this used to become
+        //   exports.A = null, Letters.B = null;
+        // breaking all references to Letters.B
+        // GlobalNamespace treats 'exports.B' as both a read and write of
+        // 'exports.B', and AggressiveInlineAliases used to replace all reads of exports.B with
+        // `Letters.B` without verifying that the read was not also a write.
+        Letters.A, Letters.B;
+        use(Letters.B);
+        """);
   }
 
   @Test
@@ -2748,84 +2971,91 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void testInlineDestructuredAliasPropWithKeyBefore() {
     test(
         "var a = {x: 2}; var b = {z: 3}; b.y = a.x; b.z = 4; const {z, y} = b; use(y + z);",
-        lines(
-            "var a = {x: 2};",
-            "var b = {z: 3};",
-            "b.y = null;",
-            "b.z = 4;",
-            "const z = b.z;",
-            "const y = null;",
-            "use(a.x + z);"));
+        """
+        var a = {x: 2};
+        var b = {z: 3};
+        b.y = null;
+        b.z = 4;
+        const z = b.z;
+        const y = null;
+        use(a.x + z);
+        """);
   }
 
   @Test
   public void testInlineDestructuredAliasPropWithKeyAfter() {
     test(
         "var a = {x: 2}; var b = {z: 3}; b.y = a.x; b.z = 4; const {y, z} = b; use(y + z);",
-        lines(
-            "var a = {x: 2};",
-            "var b = {z: 3};",
-            "b.y = null;",
-            "b.z = 4;",
-            "const y = null;",
-            "const z = b.z;",
-            "use(a.x + z);"));
+        """
+        var a = {x: 2};
+        var b = {z: 3};
+        b.y = null;
+        b.z = 4;
+        const y = null;
+        const z = b.z;
+        use(a.x + z);
+        """);
   }
 
   @Test
   public void testInlineDestructuredAliasPropWithKeyBeforeAndAfter() {
     test(
-        lines(
-            "var a = {x: 2};",
-            "var b = {z: 3};",
-            "b.y = a.x;",
-            "b.z = 4;", // add second assign so that this won't get inlined
-            "const {x, y, z} = b;",
-            "use(y + z);"),
-        lines(
-            "var a = {x: 2};",
-            "var b = {z: 3};",
-            "b.y = null;",
-            "b.z = 4;",
-            "const x = b.x;",
-            "const y = null;",
-            "const z = b.z;",
-            "use(a.x + z);"));
+        """
+        var a = {x: 2};
+        var b = {z: 3};
+        b.y = a.x;
+        b.z = 4; // add second assign so that this won't get inlined
+        const {x, y, z} = b;
+        use(y + z);
+        """,
+        """
+        var a = {x: 2};
+        var b = {z: 3};
+        b.y = null;
+        b.z = 4;
+        const x = b.x;
+        const y = null;
+        const z = b.z;
+        use(a.x + z);
+        """);
   }
 
   @Test
   public void testDestructuredPropAccessInAssignWithKeyBefore() {
     testSame(
-        lines(
-            "var a = {x: 2};",
-            "var b = {};",
-            "b.y = a.x;",
-            "var obj = {};",
-            "({missing: obj.foo, y: obj.foo} = b);",
-            "use(obj.foo);"));
+        """
+        var a = {x: 2};
+        var b = {};
+        b.y = a.x;
+        var obj = {};
+        ({missing: obj.foo, y: obj.foo} = b);
+        use(obj.foo);
+        """);
   }
 
   @Test
   public void testDestructuredPropAccessInAssignWithKeyAfter() {
     testSame(
-        lines(
-            "var a = {x: 2};",
-            "var b = {};",
-            "b.y = a.x;",
-            "var obj = {};",
-            "({y: obj.foo, missing: obj.foo} = b);",
-            "use(obj.foo);"));
+        """
+        var a = {x: 2};
+        var b = {};
+        b.y = a.x;
+        var obj = {};
+        ({y: obj.foo, missing: obj.foo} = b);
+        use(obj.foo);
+        """);
   }
 
   @Test
   public void testDestructuredPropAccessInDeclarationWithDefault() {
     testSame(
-        lines(
-            "var a = {x: {}};", //
-            "var b = {};",
-            "b.y = a.x;",
-            "const {y = 0} = b;",
-            "use(y);"));
+        """
+        var a = {x: {}};
+        var b = {};
+        b.y = a.x;
+        const {y = 0} = b;
+        use(y);
+        """);
   }
 
   @Test
@@ -2833,20 +3063,22 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     // We can inline a part of a getprop chain on the rhs of a destructuring pattern:
     //   replace 'alias -> a.b' in 'const {c} = alias.Enum;'
     test(
-        lines(
-            "const a = {};",
-            "/** @const */ a.b = {};",
-            "/** @enum {string} */ a.b.Enum = {c: 'c'};",
-            "",
-            "const alias = a.b;",
-            "function f() { const {c} = alias.Enum; use(c); }"),
-        lines(
-            "const a = {}; ",
-            "/** @const */ a.b = {};",
-            "/** @enum {JSDocSerializer_placeholder_type} */ a.b.Enum = {c: 'c'};",
-            "",
-            "const alias = null;",
-            "function f() { const c = null; use(a.b.Enum.c); }"));
+        """
+        const a = {};
+        /** @const */ a.b = {};
+        /** @enum {string} */ a.b.Enum = {c: 'c'};
+
+        const alias = a.b;
+        function f() { const {c} = alias.Enum; use(c); }
+        """,
+        """
+        const a = {};
+        /** @const */ a.b = {};
+        /** @enum {JSDocSerializer_placeholder_type} */ a.b.Enum = {c: 'c'};
+
+        const alias = null;
+        function f() { const c = null; use(a.b.Enum.c); }
+        """);
   }
 
   @Test
@@ -2859,27 +3091,31 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   @Test
   public void testReplaceSuperInArrowInStaticMethod() {
     test(
-        lines(
-            "class Foo { static m() {} }",
-            "class Bar extends Foo { static m() { return () =>       super.m(); } }"),
-        lines(
-            "class Foo { static m() {} }",
-            "class Bar extends Foo { static m() { return () => { return Foo.m(); }; } }"));
+        """
+        class Foo { static m() {} }
+        class Bar extends Foo { static m() { return () =>       super.m(); } }
+        """,
+        """
+        class Foo { static m() {} }
+        class Bar extends Foo { static m() { return () => { return Foo.m(); }; } }
+        """);
   }
 
   @Test
   public void testReplaceSuperInStaticMethodWithQualifiedNameSuperclass() {
     test(
-        lines(
-            "const a = {b: {}};",
-            "/** @const */",
-            "a.b.Foo = class { static m() {} };",
-            "class Bar extends a.b.Foo { static m() {   super.m(); } }"),
-        lines(
-            "const a = {b: {}};",
-            "/** @const */",
-            "a.b.Foo = class { static m() {} };",
-            "class Bar extends a.b.Foo { static m() { a.b.Foo.m(); } }"));
+        """
+        const a = {b: {}};
+        /** @const */
+        a.b.Foo = class { static m() {} };
+        class Bar extends a.b.Foo { static m() {   super.m(); } }
+        """,
+        """
+        const a = {b: {}};
+        /** @const */
+        a.b.Foo = class { static m() {} };
+        class Bar extends a.b.Foo { static m() { a.b.Foo.m(); } }
+        """);
   }
 
   @Test
@@ -2890,42 +3126,45 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   @Test
   public void testDontReplaceSuperInObjectLitFnInStaticClassMethod() {
     testSame(
-        lines(
-            "class Foo { static m() {} }",
-            // `super.n` refers to a different object than `Foo.n`
-            "class Bar extends Foo { static m() { return {m() { super.n(); }}; } }"));
+        """
+        class Foo { static m() {} }
+        // `super.n` refers to a different object than `Foo.n`
+        class Bar extends Foo { static m() { return {m() { super.n(); }}; } }
+        """);
   }
 
   @Test
   public void testDestructuredClassAlias() {
     test(
-        lines(
-            "const ns = {};",
-            "ns.Foo = class {};",
-            "ns.Foo.STR = '';",
-            "const {Foo} = ns;",
-            "foo(Foo.STR);",
-            ""),
-        lines(
-            "const ns = {};",
-            "ns.Foo = class {};",
-            "ns.Foo.STR = '';",
-            "const Foo = null;",
-            "foo(ns.Foo.STR);",
-            ""));
+        """
+        const ns = {};
+        ns.Foo = class {};
+        ns.Foo.STR = '';
+        const {Foo} = ns;
+        foo(Foo.STR);
+        """,
+        """
+        const ns = {};
+        ns.Foo = class {};
+        ns.Foo.STR = '';
+        const Foo = null;
+        foo(ns.Foo.STR);
+        """);
   }
 
   @Test
   public void testReplaceChainedSuperRefInStaticMethod() {
     test(
-        lines(
-            "class Foo { static m() {} }",
-            "class Bar extends Foo {}",
-            "class Baz extends Bar { static m() { super.m(); } }"),
-        lines(
-            "class Foo { static m() {} }",
-            "class Bar extends Foo {}",
-            "class Baz extends Bar { static m() {   Foo.m(); } }"));
+        """
+        class Foo { static m() {} }
+        class Bar extends Foo {}
+        class Baz extends Bar { static m() { super.m(); } }
+        """,
+        """
+        class Foo { static m() {} }
+        class Bar extends Foo {}
+        class Baz extends Bar { static m() {   Foo.m(); } }
+        """);
   }
 
   @Test

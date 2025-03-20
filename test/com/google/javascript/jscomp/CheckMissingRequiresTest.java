@@ -48,69 +48,79 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   @Test
   public void testNoWarning_existingRequire_withAlias() throws Exception {
     checkNoWarning(
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "const Bar = goog.require('foo.Bar');",
-            "let x = new Bar();"));
+        """
+        goog.module('foo.Bar');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        const Bar = goog.require('foo.Bar');
+        let x = new Bar();
+        """);
   }
 
   @Test
   public void testNoWarning_existingRequire_withDestructure() throws Exception {
     checkNoWarning(
-        lines(
-            "goog.module('foo.bar');", //
-            "/** @constructor */",
-            "exports.Baz = function() {}"),
-        lines(
-            "goog.module('test');",
-            "const {Bar} = goog.require('foo.Bar');",
-            "let x = new Bar();"));
+        """
+        goog.module('foo.bar');
+        /** @constructor */
+        exports.Baz = function() {}
+        """,
+        """
+        goog.module('test');
+        const {Bar} = goog.require('foo.Bar');
+        let x = new Bar();
+        """);
   }
 
   @Test
   public void testWarning_missingRequire_inProvide() throws Exception {
     checkRequireInProvidesFileWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');",
-            "goog.module.declareLegacyNamespace();",
-            "/** @constructor */",
-            "exports = function() {};"),
-        lines(
-            "goog.provide('test');", //
-            "let x = new foo.Bar();"));
+        """
+        goog.module('foo.Bar');
+        goog.module.declareLegacyNamespace();
+        /** @constructor */
+        exports = function() {};
+        """,
+        """
+        goog.provide('test');
+        let x = new foo.Bar();
+        """);
   }
 
   @Test
   public void testWarning_missingRequire_inScript() throws Exception {
     checkRequireInProvidesFileWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');",
-            "goog.module.declareLegacyNamespace();",
-            "/** @constructor */",
-            "exports = function() {};"),
-        lines(
-            "goog.provide('test');", //
-            "let x = new foo.Bar();"));
+        """
+        goog.module('foo.Bar');
+        goog.module.declareLegacyNamespace();
+        /** @constructor */
+        exports = function() {};
+        """,
+        """
+        goog.provide('test');
+        let x = new foo.Bar();
+        """);
   }
 
   @Test
   public void testMissingRequire_inEsModuleExport() throws Exception {
     checkRequireWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');",
-            "goog.module.declareLegacyNamespace();",
-            "/** @constructor */",
-            "exports = function() {};"),
-        lines(
-            "let x = new foo.Bar();", //
-            "export default 42;"));
+        """
+        goog.module('foo.Bar');
+        goog.module.declareLegacyNamespace();
+        /** @constructor */
+        exports = function() {};
+        """,
+        """
+        let x = new foo.Bar();
+        export default 42;
+        """);
   }
 
   @Test
@@ -118,93 +128,106 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
     ignoreWarnings(LOAD_WARNING);
     checkRequireWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');",
-            "goog.module.declareLegacyNamespace();",
-            "/** @constructor */",
-            "exports = function() {};"),
-        lines(
-            "import * as quux from './quux.js';", //
-            "let x = new foo.Bar();"));
+        """
+        goog.module('foo.Bar');
+        goog.module.declareLegacyNamespace();
+        /** @constructor */
+        exports = function() {};
+        """,
+        """
+        import * as quux from './quux.js';
+        let x = new foo.Bar();
+        """);
   }
 
   @Test
   public void testNoWarning_missingRequire_externs() throws Exception {
     checkNoWarning(
-        lines(
-            "/** @externs */", //
-            "var foo = {}",
-            "/** @constructor */",
-            "foo.Bar = function() {};"),
-        lines(
-            "goog.provide('test');", //
-            "let x = new foo.Bar();"));
+        """
+        /** @externs */
+        var foo = {}
+        /** @constructor */
+        foo.Bar = function() {};
+        """,
+        """
+        goog.provide('test');
+        let x = new foo.Bar();
+        """);
   }
 
   @Test
   public void testNoWarning_missingRequire_unknown() throws Exception {
     checkNoWarning(
-        lines(
-            "goog.provide('test');", //
-            "let x = new foo.Bar();"));
+        """
+        goog.provide('test');
+        let x = new foo.Bar();
+        """);
   }
 
   @Test
   public void testNoWarning_missingRequire_sameProvide() throws Exception {
     checkNoWarning(
-        lines(
-            "goog.provide('foo.Bar');", //
-            "let x = new foo.Bar();"));
+        """
+        goog.provide('foo.Bar');
+        let x = new foo.Bar();
+        """);
   }
 
   @Test
   public void testNoWarning_missingRequire_sameNestedProvide() throws Exception {
     checkNoWarning(
         lines("goog.provide('foo');"),
-        lines(
-            "goog.provide('foo.Bar');", //
-            "let x = new foo.Bar();"));
+        """
+        goog.provide('foo.Bar');
+        let x = new foo.Bar();
+        """);
   }
 
   @Test
   public void testWarning_missingRequire_strongRef_withRequireType() throws Exception {
     checkRequireInProvidesFileWarning(
         "a.b.C",
-        lines(
-            "goog.provide('a.b.C');", //
-            "",
-            "/** @constructor */",
-            "a.b.C = function() { };"),
-        lines(
-            "goog.requireType('a.b.C');", //
-            "",
-            "new a.b.C;"));
+        """
+        goog.provide('a.b.C');
+
+        /** @constructor */
+        a.b.C = function() { };
+        """,
+        """
+        goog.requireType('a.b.C');
+
+        new a.b.C;
+        """);
   }
 
   @Test
   public void testNoWarning_missingRequire_withParentRequire_fromSameFile() throws Exception {
     checkNoWarning(
-        lines(
-            "goog.provide('a.b');", //
-            "goog.provide('a.b.C');"),
-        lines(
-            "goog.require('a.b');", //
-            "",
-            "new a.b.C;"));
+        """
+        goog.provide('a.b');
+        goog.provide('a.b.C');
+        """,
+        """
+        goog.require('a.b');
+
+        new a.b.C;
+        """);
   }
 
   @Test
   public void testWarning_missingRequire_withSiblingRequire_fromSameFile() throws Exception {
     checkRequireInProvidesFileWarning(
         "a.b.D",
-        lines(
-            "goog.provide('a.b');",
-            "goog.provide('a.b.C');", //
-            "goog.provide('a.b.D');"),
-        lines(
-            "goog.require('a.b.C');", //
-            "",
-            "new a.b.D;"));
+        """
+        goog.provide('a.b');
+        goog.provide('a.b.C');
+        goog.provide('a.b.D');
+        """,
+        """
+        goog.require('a.b.C');
+
+        new a.b.D;
+        """);
   }
 
   @Test
@@ -212,32 +235,36 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
     checkRequireInProvidesFileWarning(
         "a.b.C",
         lines("goog.provide('a.b');"),
-        lines(
-            "goog.require('a.b');", //
-            "goog.provide('a.b.C');"),
-        lines(
-            "goog.require('a.b');", //
-            "",
-            "new a.b.C;"));
+        """
+        goog.require('a.b');
+        goog.provide('a.b.C');
+        """,
+        """
+        goog.require('a.b');
+
+        new a.b.C;
+        """);
   }
 
   @Test
   public void testNoWarning_missingRequire_sameModule() throws Exception {
     checkNoWarning(
-        lines(
-            "goog.module('foo.Bar');", //
-            "let x = new foo.Bar();"));
+        """
+        goog.module('foo.Bar');
+        let x = new foo.Bar();
+        """);
   }
 
   @Test
   public void testNoWarning_missingRequire_sameModule_nestedProvide() throws Exception {
     checkNoWarning(
         "goog.provide('foo.bar');",
-        lines(
-            "goog.module('foo.bar.Baz');",
-            "/** @constructor */",
-            "exports.Baz = function() {}",
-            "let x = new foo.bar.Baz();"));
+        """
+        goog.module('foo.bar.Baz');
+        /** @constructor */
+        exports.Baz = function() {}
+        let x = new foo.bar.Baz();
+        """);
   }
 
   @Test
@@ -245,69 +272,78 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
       throws Exception {
     checkNoWarning(
         "goog.provide('foo.bar');",
-        lines(
-            "goog.module('foo.bar.Baz');",
-            "goog.module.declareLegacyNamespace();",
-            "/** @constructor */",
-            "exports.Baz = function() {}",
-            "let x = new foo.bar.Baz();"));
+        """
+        goog.module('foo.bar.Baz');
+        goog.module.declareLegacyNamespace();
+        /** @constructor */
+        exports.Baz = function() {}
+        let x = new foo.bar.Baz();
+        """);
   }
 
   @Test
   public void testNoWarning_existingRequireType_withAlias() throws Exception {
     checkNoWarning(
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');",
-            "const Bar = goog.requireType('foo.Bar');",
-            "/** @type {!Bar} */",
-            "let x;"));
+        """
+        goog.module('foo.Bar');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        const Bar = goog.requireType('foo.Bar');
+        /** @type {!Bar} */
+        let x;
+        """);
   }
 
   @Test
   public void testNoWarning_existingRequireType_withDestructure() throws Exception {
     checkNoWarning(
-        lines(
-            "goog.module('foo.bar');", //
-            "/** @constructor */",
-            "exports.Baz = function() {}"),
-        lines(
-            "goog.module('test');",
-            "const {Bar} = goog.requireType('foo.Bar');",
-            "/** @type {!Bar} */",
-            "let x;"));
+        """
+        goog.module('foo.bar');
+        /** @constructor */
+        exports.Baz = function() {}
+        """,
+        """
+        goog.module('test');
+        const {Bar} = goog.requireType('foo.Bar');
+        /** @type {!Bar} */
+        let x;
+        """);
   }
 
   @Test
   public void testWarning_missingRequireType_inProvide() throws Exception {
     checkRequireTypeInProvidesFileWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');",
-            "goog.module.declareLegacyNamespace();",
-            "/** @constructor */",
-            "exports = function() {};"),
-        lines(
-            "goog.provide('test');", //
-            "/** @type {!foo.Bar} */",
-            "let x;"));
+        """
+        goog.module('foo.Bar');
+        goog.module.declareLegacyNamespace();
+        /** @constructor */
+        exports = function() {};
+        """,
+        """
+        goog.provide('test');
+        /** @type {!foo.Bar} */
+        let x;
+        """);
   }
 
   @Test
   public void testWarning_missingRequireType_inScript() throws Exception {
     checkRequireTypeInProvidesFileWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');",
-            "goog.module.declareLegacyNamespace();",
-            "/** @constructor */",
-            "exports = function() {};"),
-        lines(
-            "/** @type {!foo.Bar} */", //
-            "let x;"));
+        """
+        goog.module('foo.Bar');
+        goog.module.declareLegacyNamespace();
+        /** @constructor */
+        exports = function() {};
+        """,
+        """
+        /** @type {!foo.Bar} */
+        let x;
+        """);
   }
 
   @Test
@@ -315,15 +351,17 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
     ignoreWarnings(LOAD_WARNING);
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');",
-            "goog.module.declareLegacyNamespace();",
-            "/** @constructor */",
-            "exports = function() {};"),
-        lines(
-            "/** @type {!foo.Bar} */", //
-            "let x;",
-            "export default 42;"));
+        """
+        goog.module('foo.Bar');
+        goog.module.declareLegacyNamespace();
+        /** @constructor */
+        exports = function() {};
+        """,
+        """
+        /** @type {!foo.Bar} */
+        let x;
+        export default 42;
+        """);
   }
 
   @Test
@@ -331,42 +369,48 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
     ignoreWarnings(LOAD_WARNING);
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');",
-            "goog.module.declareLegacyNamespace();",
-            "/** @constructor */",
-            "exports = function() {};"),
-        lines(
-            "import * as quux from './quux.js';", //
-            "/** @type {!foo.Bar} */",
-            "let x;"));
+        """
+        goog.module('foo.Bar');
+        goog.module.declareLegacyNamespace();
+        /** @constructor */
+        exports = function() {};
+        """,
+        """
+        import * as quux from './quux.js';
+        /** @type {!foo.Bar} */
+        let x;
+        """);
   }
 
   @Test
   public void testWarning_missingRequire_forProvide() throws Exception {
     checkRequireWarning(
         "foo.Bar",
-        lines(
-            "goog.provide('foo.Bar');", //
-            "/** @constructor */",
-            "foo.Bar = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "let x = new foo.Bar();"));
+        """
+        goog.provide('foo.Bar');
+        /** @constructor */
+        foo.Bar = function() {}
+        """,
+        """
+        goog.module('test');
+        let x = new foo.Bar();
+        """);
   }
 
   @Test
   public void testWarning_missingRequire_forProvide_usingProperty() throws Exception {
     checkRequireWarning(
         "foo.bar",
-        lines(
-            "goog.provide('foo.bar');", //
-            "foo.bar = {};",
-            "/** @constructor */",
-            "foo.bar.Baz = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "let x = new foo.bar.Baz();"));
+        """
+        goog.provide('foo.bar');
+        foo.bar = {};
+        /** @constructor */
+        foo.bar.Baz = function() {}
+        """,
+        """
+        goog.module('test');
+        let x = new foo.bar.Baz();
+        """);
   }
 
   @Test
@@ -374,14 +418,16 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
     checkRequireWarning(
         "foo.Bar",
         lines("goog.provide('foo');"),
-        lines(
-            "goog.provide('foo.Bar');", //
-            "/** @constructor */",
-            "foo.Bar = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "goog.require('foo');",
-            "let x = new foo.Bar();"));
+        """
+        goog.provide('foo.Bar');
+        /** @constructor */
+        foo.Bar = function() {}
+        """,
+        """
+        goog.module('test');
+        goog.require('foo');
+        let x = new foo.Bar();
+        """);
   }
 
   @Test
@@ -389,113 +435,129 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
     checkRequireWarning(
         "foo.bar",
         lines("goog.provide('foo');"),
-        lines(
-            "goog.provide('foo.bar');", //
-            "foo.bar = {};",
-            "/** @constructor */",
-            "foo.bar.Baz = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "goog.require('foo');",
-            "let x = new foo.bar.Baz();"));
+        """
+        goog.provide('foo.bar');
+        foo.bar = {};
+        /** @constructor */
+        foo.bar.Baz = function() {}
+        """,
+        """
+        goog.module('test');
+        goog.require('foo');
+        let x = new foo.bar.Baz();
+        """);
   }
 
   @Test
   public void testWarning_missingRequire_forModule() throws Exception {
     checkRequireWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "goog.module.declareLegacyNamespace();",
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "let x = new foo.Bar();"));
+        """
+        goog.module('foo.Bar');
+        goog.module.declareLegacyNamespace();
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        let x = new foo.Bar();
+        """);
   }
 
   @Test
   public void testWarning_missingRequire_forModule_usingProperty() throws Exception {
     checkRequireWarning(
         "foo.bar",
-        lines(
-            "goog.module('foo.bar');",
-            "goog.module.declareLegacyNamespace();",
-            "/** @constructor */",
-            "function Baz() {}",
-            "exports = { Baz }"),
-        lines(
-            "goog.module('test');", //
-            "let x = new foo.bar.Baz();"));
+        """
+        goog.module('foo.bar');
+        goog.module.declareLegacyNamespace();
+        /** @constructor */
+        function Baz() {}
+        exports = { Baz }
+        """,
+        """
+        goog.module('test');
+        let x = new foo.bar.Baz();
+        """);
   }
 
   @Test
   public void testWarning_missingRequire_forModuleWithLegacyNamespace() throws Exception {
     checkRequireWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');",
-            "goog.module.declareLegacyNamespace();",
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "let x = new foo.Bar();"));
+        """
+        goog.module('foo.Bar');
+        goog.module.declareLegacyNamespace();
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        let x = new foo.Bar();
+        """);
   }
 
   @Test
   public void testWarning_missingRequire_forLateModule() throws Exception {
     checkRequireWarning(
         "foo.Bar",
-        lines(
-            "goog.module('test');", //
-            "let x = new foo.Bar();"),
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @constructor */",
-            "exports = function() {}"));
+        """
+        goog.module('test');
+        let x = new foo.Bar();
+        """,
+        """
+        goog.module('foo.Bar');
+        /** @constructor */
+        exports = function() {}
+        """);
   }
 
   @Test
   public void testWarning_existingRequire_standalone() throws Exception {
     checkRequireWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "goog.module.declareLegacyNamespace();",
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "goog.require('foo.Bar');",
-            "let x = new foo.Bar();"));
+        """
+        goog.module('foo.Bar');
+        goog.module.declareLegacyNamespace();
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        goog.require('foo.Bar');
+        let x = new foo.Bar();
+        """);
   }
 
   @Test
   public void testWarning_missingRequireType_forProvide() throws Exception {
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.provide('foo.Bar');", //
-            "/** @constructor */",
-            "foo.Bar = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "/** @type {!foo.Bar} */ let x;"));
+        """
+        goog.provide('foo.Bar');
+        /** @constructor */
+        foo.Bar = function() {}
+        """,
+        """
+        goog.module('test');
+        /** @type {!foo.Bar} */ let x;
+        """);
   }
 
   @Test
   public void testWarning_missingRequireType_forProvide_usingProperty() throws Exception {
     checkRequireTypeWarning(
         "foo.bar",
-        lines(
-            "goog.provide('foo.bar');", //
-            "foo.bar = {};",
-            "/** @constructor */",
-            "foo.bar.Baz = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "/** @type {!foo.bar.Baz} */ let x;"));
+        """
+        goog.provide('foo.bar');
+        foo.bar = {};
+        /** @constructor */
+        foo.bar.Baz = function() {}
+        """,
+        """
+        goog.module('test');
+        /** @type {!foo.bar.Baz} */ let x;
+        """);
   }
 
   @Test
@@ -503,14 +565,16 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
     checkRequireTypeWarning(
         "foo.Bar",
         lines("goog.provide('foo');"),
-        lines(
-            "goog.provide('foo.Bar');", //
-            "/** @constructor */",
-            "foo.Bar = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "goog.requireType('foo');",
-            "/** @type {!foo.Bar} */ let x;"));
+        """
+        goog.provide('foo.Bar');
+        /** @constructor */
+        foo.Bar = function() {}
+        """,
+        """
+        goog.module('test');
+        goog.requireType('foo');
+        /** @type {!foo.Bar} */ let x;
+        """);
   }
 
   @Test
@@ -518,145 +582,164 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
     checkRequireTypeWarning(
         "foo.bar",
         lines("goog.provide('foo');"),
-        lines(
-            "goog.provide('foo.bar');", //
-            "foo.bar = {};",
-            "/** @constructor */",
-            "foo.bar.Baz = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "goog.require('foo');",
-            "/** @type {!foo.bar.Baz} */ let x;"));
+        """
+        goog.provide('foo.bar');
+        foo.bar = {};
+        /** @constructor */
+        foo.bar.Baz = function() {}
+        """,
+        """
+        goog.module('test');
+        goog.require('foo');
+        /** @type {!foo.bar.Baz} */ let x;
+        """);
   }
 
   @Test
   public void testWarning_missingRequireType_forModule() throws Exception {
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "/** @type {!foo.Bar} */ let x;"));
+        """
+        goog.module('foo.Bar');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        /** @type {!foo.Bar} */ let x;
+        """);
   }
 
   @Test
   public void testWarning_missingRequireType_forModule_usingProperty() throws Exception {
     checkRequireTypeWarning(
         "foo.bar",
-        lines(
-            "goog.module('foo.bar');",
-            "goog.module.declareLegacyNamespace();",
-            "/** @constructor */",
-            "function Baz() {}",
-            "exports = { Baz }"),
-        lines(
-            "goog.module('test');", //
-            "/** @type {!foo.bar.Baz} */ let x;"));
+        """
+        goog.module('foo.bar');
+        goog.module.declareLegacyNamespace();
+        /** @constructor */
+        function Baz() {}
+        exports = { Baz }
+        """,
+        """
+        goog.module('test');
+        /** @type {!foo.bar.Baz} */ let x;
+        """);
   }
 
   @Test
   public void testWarning_missingRequireType_forModuleWithLegacyNamespace() throws Exception {
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');",
-            "goog.module.declareLegacyNamespace();",
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "/** @type {!foo.Bar} */ let x;"));
+        """
+        goog.module('foo.Bar');
+        goog.module.declareLegacyNamespace();
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        /** @type {!foo.Bar} */ let x;
+        """);
   }
 
   @Test
   public void testWarning_missingRequireType_forLateModule() throws Exception {
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.provide('foo.Bar');", //
-            "/** @type {!foo.Bar} */ let x;"),
-        lines(
-            "goog.module('test');", //
-            "/** @type {!foo.Bar} */ let x;"));
+        """
+        goog.provide('foo.Bar');
+        /** @type {!foo.Bar} */ let x;
+        """,
+        """
+        goog.module('test');
+        /** @type {!foo.Bar} */ let x;
+        """);
   }
 
   @Test
   public void testWarning_existingRequireType_standalone() throws Exception {
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');",
-            "goog.requireType('foo.Bar');",
-            "/** @type {!foo.Bar} */ let x;"));
+        """
+        goog.module('foo.Bar');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        goog.requireType('foo.Bar');
+        /** @type {!foo.Bar} */ let x;
+        """);
   }
 
   @Test
   public void testNoWarning_missingRequireType_externs() throws Exception {
     checkNoWarning(
-        lines(
-            "/** @externs */", //
-            "var foo = {}",
-            "/** @constructor */",
-            "foo.Bar = function() {};"),
-        lines(
-            "goog.provide('test');", //
-            "/** @type {!foo.Bar} */",
-            "let x;"));
+        """
+        /** @externs */
+        var foo = {}
+        /** @constructor */
+        foo.Bar = function() {};
+        """,
+        """
+        goog.provide('test');
+        /** @type {!foo.Bar} */
+        let x;
+        """);
   }
 
   @Test
   public void testNoWarning_missingRequireType_unknown() throws Exception {
     checkNoWarning(
-        lines(
-            "goog.provide('test');", //
-            "/** @type {!foo.Bar} */",
-            "let x;"));
+        """
+        goog.provide('test');
+        /** @type {!foo.Bar} */
+        let x;
+        """);
   }
 
   @Test
   public void testNoWarning_missingRequireType_sameProvide() throws Exception {
     checkNoWarning(
-        lines(
-            "goog.provide('foo.Bar');", //
-            "/** @type {!foo.Bar} */",
-            "let x;"));
+        """
+        goog.provide('foo.Bar');
+        /** @type {!foo.Bar} */
+        let x;
+        """);
   }
 
   @Test
   public void testNoWarning_missingRequireType_sameNestedProvide() throws Exception {
     checkNoWarning(
         lines("goog.provide('foo');"),
-        lines(
-            "goog.provide('foo.Bar');", //
-            "/** @type {!foo.Bar} */",
-            "let x;"));
+        """
+        goog.provide('foo.Bar');
+        /** @type {!foo.Bar} */
+        let x;
+        """);
   }
 
   @Test
   public void testNoWarning_missingRequireType_sameModule() throws Exception {
     checkNoWarning(
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @type {!foo.Bar} */",
-            "let x;"));
+        """
+        goog.module('foo.Bar');
+        /** @type {!foo.Bar} */
+        let x;
+        """);
   }
 
   @Test
   public void testNoWarning_missingRequireType_sameModule_nestedProvide() throws Exception {
     checkNoWarning(
         "goog.provide('foo.bar');",
-        lines(
-            "goog.module('foo.bar.Baz');",
-            "/** @constructor */",
-            "exports.Baz = function() {}",
-            "/** @type {!foo.bar.Baz} */ let x;"));
+        """
+        goog.module('foo.bar.Baz');
+        /** @constructor */
+        exports.Baz = function() {}
+        /** @type {!foo.bar.Baz} */ let x;
+        """);
   }
 
   @Test
@@ -665,11 +748,12 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
         "foo.bar.Baz",
         "goog.provide('foo.bar');",
         "goog.provide('foo.bar.Baz');",
-        lines(
-            "goog.module('another');",
-            "const {Baz} = goog.require('foo.bar');",
-            "function ref(a) {};",
-            "ref(Baz);"));
+        """
+        goog.module('another');
+        const {Baz} = goog.require('foo.bar');
+        function ref(a) {};
+        ref(Baz);
+        """);
   }
 
   @Test
@@ -678,10 +762,11 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
         "foo.bar.Baz",
         "goog.provide('foo.bar');",
         "goog.provide('foo.bar.Baz');foo.bar.Baz = class {};",
-        lines(
-            "goog.module('another');",
-            "const {Baz} = goog.requireType('foo.bar');",
-            "let /** !Baz */ x;"));
+        """
+        goog.module('another');
+        const {Baz} = goog.requireType('foo.bar');
+        let /** !Baz */ x;
+        """);
   }
 
   @Test
@@ -689,10 +774,11 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
     checkNoWarning(
         "goog.provide('foo.bar');",
         "goog.provide('foo.bar.Baz');foo.bar.Baz = class {};",
-        lines(
-            "goog.module('another');",
-            "const {Baz} = goog.requireType('foo.bar.Baz');",
-            "let /** !Baz */ x;"));
+        """
+        goog.module('another');
+        const {Baz} = goog.requireType('foo.bar.Baz');
+        let /** !Baz */ x;
+        """);
   }
 
   @Test
@@ -701,11 +787,12 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
         "foo.bar.Baz",
         "goog.module('foo.bar'); goog.module.declareLegacyNamespace();",
         "goog.module('foo.bar.Baz'); goog.module.declareLegacyNamespace();",
-        lines(
-            "goog.module('another');",
-            "const {Baz} = goog.require('foo.bar');",
-            "function ref(a) {};",
-            "ref(Baz);"));
+        """
+        goog.module('another');
+        const {Baz} = goog.require('foo.bar');
+        function ref(a) {};
+        ref(Baz);
+        """);
   }
 
   @Test
@@ -714,10 +801,11 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
         "foo.bar.Baz",
         "goog.module('foo.bar'); goog.module.declareLegacyNamespace();",
         "goog.module('foo.bar.Baz'); goog.module.declareLegacyNamespace(); exports = class {};",
-        lines(
-            "goog.module('another');",
-            "const {Baz} = goog.requireType('foo.bar');",
-            "let /** Baz */ x;"));
+        """
+        goog.module('another');
+        const {Baz} = goog.requireType('foo.bar');
+        let /** Baz */ x;
+        """);
   }
 
   @Test
@@ -726,11 +814,12 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
         "foo.bar.Baz",
         "goog.provide('foo.bar');",
         "goog.provide('foo.bar.Baz');",
-        lines(
-            "goog.module('another');",
-            "const bar = goog.require('foo.bar');",
-            "function ref(a) {};",
-            "ref(bar.Baz);"));
+        """
+        goog.module('another');
+        const bar = goog.require('foo.bar');
+        function ref(a) {};
+        ref(bar.Baz);
+        """);
   }
 
   @Test
@@ -739,10 +828,11 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
         "foo.bar.Baz",
         "goog.provide('foo.bar');",
         "goog.provide('foo.bar.Baz');foo.bar.Baz = class {};",
-        lines(
-            "goog.module('another');",
-            "const bar = goog.requireType('foo.bar');",
-            "let /** bar.Baz */ x;"));
+        """
+        goog.module('another');
+        const bar = goog.requireType('foo.bar');
+        let /** bar.Baz */ x;
+        """);
   }
 
   @Test
@@ -751,11 +841,12 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
         "foo.bar.Baz",
         "goog.module('foo.bar'); goog.module.declareLegacyNamespace();",
         "goog.module('foo.bar.Baz'); goog.module.declareLegacyNamespace();",
-        lines(
-            "goog.module('another');",
-            "const bar = goog.require('foo.bar');",
-            "function ref(a) {};",
-            "ref(bar.Baz);"));
+        """
+        goog.module('another');
+        const bar = goog.require('foo.bar');
+        function ref(a) {};
+        ref(bar.Baz);
+        """);
   }
 
   @Test
@@ -764,10 +855,11 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
         "foo.bar.Baz",
         "goog.module('foo.bar'); goog.module.declareLegacyNamespace();",
         "goog.module('foo.bar.Baz'); goog.module.declareLegacyNamespace();exports = class {};",
-        lines(
-            "goog.module('another');",
-            "const bar = goog.requireType('foo.bar');",
-            "let /** bar.Baz */ x;"));
+        """
+        goog.module('another');
+        const bar = goog.requireType('foo.bar');
+        let /** bar.Baz */ x;
+        """);
   }
 
   @Test
@@ -776,11 +868,12 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
         "foo.bar.Baz",
         "goog.module('foo.bar'); goog.module.declareLegacyNamespace();",
         "goog.module('foo.bar.Baz'); goog.module.declareLegacyNamespace();exports = class {};",
-        lines(
-            "goog.module('another');",
-            "const bar = goog.requireType('foo.bar');",
-            "const Baz = goog.requireType('foo.bar.Baz');",
-            "let /** bar.Baz */ x;")); // error should be "Baz"
+        """
+        goog.module('another');
+        const bar = goog.requireType('foo.bar');
+        const Baz = goog.requireType('foo.bar.Baz');
+        let /** bar.Baz */ x;
+        """); // error should be "Baz"
   }
 
   @Test
@@ -789,11 +882,12 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
         "foo.bar.Baz",
         "goog.module('foo.bar'); goog.module.declareLegacyNamespace();",
         "goog.module('foo.bar.Baz'); goog.module.declareLegacyNamespace();exports = class {};",
-        lines(
-            "goog.module('another');",
-            "const bar = goog.require('foo.bar');",
-            "const Baz = goog.requireType('foo.bar.Baz');",
-            "let x = bar.Baz;")); // error should be "Baz"
+        """
+        goog.module('another');
+        const bar = goog.require('foo.bar');
+        const Baz = goog.requireType('foo.bar.Baz');
+        let x = bar.Baz;
+        """); // error should be "Baz"
   }
 
   @Test
@@ -801,10 +895,11 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
     checkNoWarning(
         "goog.module('foo.bar'); goog.module.declareLegacyNamespace();",
         "goog.module('foo.bar.Baz'); goog.module.declareLegacyNamespace();exports = class {};",
-        lines(
-            "goog.module('another');",
-            "const Baz = goog.require('foo.bar.Baz');",
-            "let x = new Baz.C();"));
+        """
+        goog.module('another');
+        const Baz = goog.require('foo.bar.Baz');
+        let x = new Baz.C();
+        """);
   }
 
   @Test
@@ -812,25 +907,28 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
     checkNoWarning(
         "goog.module('foo.bar'); goog.module.declareLegacyNamespace();",
         "goog.module('foo.bar.Baz'); goog.module.declareLegacyNamespace();exports = class {};",
-        lines(
-            "goog.module('another');",
-            "const Baz = goog.requireType('foo.bar.Baz');",
-            "let /** !Baz.C */ x = null;"));
+        """
+        goog.module('another');
+        const Baz = goog.requireType('foo.bar.Baz');
+        let /** !Baz.C */ x = null;
+        """);
   }
 
   @Test
   public void testNoWarning_overlapping_module_id_and_legacy_namespace() throws Exception {
     checkNoWarning(
         "goog.module('jspb'); exports = {Message: class {}};",
-        lines(
-            "goog.module('jspb.Message');",
-            "goog.module.declareLegacyNamespace();",
-            "const {Message} = goog.require('jspb');",
-            "exports = Message;"),
-        lines(
-            "goog.module('another');",
-            "const {Message} = goog.requireType('jspb');",
-            "let /** !Message */ x = null;"));
+        """
+        goog.module('jspb.Message');
+        goog.module.declareLegacyNamespace();
+        const {Message} = goog.require('jspb');
+        exports = Message;
+        """,
+        """
+        goog.module('another');
+        const {Message} = goog.requireType('jspb');
+        let /** !Message */ x = null;
+        """);
   }
 
   @Test
@@ -838,15 +936,17 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
     checkNoWarning(
         "goog.provide('wiz');",
         "goog.provide('wiz.controller');",
-        lines(
-            "goog.module('wiz.controller.idomcompatiblecontroller');",
-            "goog.module.declareLegacyNamespace();",
-            "class IdomCompatibleController {}",
-            "exports = {IdomCompatibleController};"),
-        lines(
-            "goog.module('another');",
-            "const SomeRandomThing = goog.require('wiz.controller.idomcompatiblecontroller');",
-            "let /** !SomeRandomThing.IdomCompatibleController */ x = null;"));
+        """
+        goog.module('wiz.controller.idomcompatiblecontroller');
+        goog.module.declareLegacyNamespace();
+        class IdomCompatibleController {}
+        exports = {IdomCompatibleController};
+        """,
+        """
+        goog.module('another');
+        const SomeRandomThing = goog.require('wiz.controller.idomcompatiblecontroller');
+        let /** !SomeRandomThing.IdomCompatibleController */ x = null;
+        """);
   }
 
   @Test
@@ -854,404 +954,459 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
       throws Exception {
     checkNoWarning(
         "goog.provide('foo.bar');",
-        lines(
-            "goog.module('foo.bar.Baz');",
-            "goog.module.declareLegacyNamespace();",
-            "/** @constructor */",
-            "exports.Baz = function() {}",
-            "/** @type {!foo.bar.Baz} */ let x;"));
+        """
+        goog.module('foo.bar.Baz');
+        goog.module.declareLegacyNamespace();
+        /** @constructor */
+        exports.Baz = function() {}
+        /** @type {!foo.bar.Baz} */ let x;
+        """);
   }
 
   @Test
   public void testWarning_jsDocParam() throws Exception {
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "/** @param {!foo.Bar} x */",
-            "function f(x) {}"));
+        """
+        goog.module('foo.Bar');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        /** @param {!foo.Bar} x */
+        function f(x) {}
+        """);
   }
 
   @Test
   public void testWarning_jsDocThis() throws Exception {
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "/** @this {foo.Bar} */",
-            "function f() {}"));
+        """
+        goog.module('foo.Bar');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        /** @this {foo.Bar} */
+        function f() {}
+        """);
   }
 
   @Test
   public void testWarning_jsDocReturn() throws Exception {
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "/** @return {!foo.Bar} */",
-            "function f() {}"));
+        """
+        goog.module('foo.Bar');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        /** @return {!foo.Bar} */
+        function f() {}
+        """);
   }
 
   @Test
   public void testWarning_jsDocEnum() throws Exception {
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "/** @enum {foo.Bar} */",
-            "let x;"));
+        """
+        goog.module('foo.Bar');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        /** @enum {foo.Bar} */
+        let x;
+        """);
   }
 
   @Test
   public void testWarning_jsDocTypedef() throws Exception {
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "/** @typedef {foo.Bar} */",
-            "let x;"));
+        """
+        goog.module('foo.Bar');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        /** @typedef {foo.Bar} */
+        let x;
+        """);
   }
 
   @Test
   public void testWarning_jsDocExtendsClass() throws Exception {
     checkRequireWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');",
-            "/**",
-            " * @constructor",
-            " * @extends {foo.Bar}",
-            " */",
-            "function Bar() {}"));
+        """
+        goog.module('foo.Bar');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        /**
+         * @constructor
+         * @extends {foo.Bar}
+         */
+        function Bar() {}
+        """);
   }
 
   @Test
   public void testWarning_jsDocExtendsInterface() throws Exception {
     checkRequireWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @interface */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');",
-            "/**",
-            " * @interface",
-            " * @extends {foo.Bar}",
-            " */",
-            "function Bar() {}"));
+        """
+        goog.module('foo.Bar');
+        /** @interface */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        /**
+         * @interface
+         * @extends {foo.Bar}
+         */
+        function Bar() {}
+        """);
   }
 
   @Test
   public void testWarning_jsDocImplements() throws Exception {
     checkRequireWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @interface */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');",
-            "/**",
-            " * @constructor",
-            " * @implements {foo.Bar}",
-            " */",
-            "function Bar() {}"));
+        """
+        goog.module('foo.Bar');
+        /** @interface */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        /**
+         * @constructor
+         * @implements {foo.Bar}
+         */
+        function Bar() {}
+        """);
   }
 
   @Test
   public void testWarning_jsDocUnion() throws Exception {
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "/** @type {string|foo.Bar} */",
-            "let x;"));
+        """
+        goog.module('foo.Bar');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        /** @type {string|foo.Bar} */
+        let x;
+        """);
   }
 
   @Test
   public void testWarning_jsDocTemplate() throws Exception {
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');",
-            "/** @template T */",
-            "class Quux {}",
-            "/** @type {!Quux<!foo.Bar>} */",
-            "let x;"));
+        """
+        goog.module('foo.Bar');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        /** @template T */
+        class Quux {}
+        /** @type {!Quux<!foo.Bar>} */
+        let x;
+        """);
   }
 
   @Test
   public void testWarning_jsDocRecord() throws Exception {
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "/** @type {{foo: !foo.Bar}} */",
-            "let x;"));
+        """
+        goog.module('foo.Bar');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        /** @type {{foo: !foo.Bar}} */
+        let x;
+        """);
   }
 
   @Test
   public void testWarning_jsDocFunctionParam() throws Exception {
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "/** @type {function(!foo.Bar)} */",
-            "let x;"));
+        """
+        goog.module('foo.Bar');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        /** @type {function(!foo.Bar)} */
+        let x;
+        """);
   }
 
   @Test
   public void testWarning_jsDocFunctionReturn() throws Exception {
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "/** @type {function():!foo.Bar} */",
-            "let x;"));
+        """
+        goog.module('foo.Bar');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        /** @type {function():!foo.Bar} */
+        let x;
+        """);
   }
 
   @Test
   public void testWarning_jsDocFunctionNew() throws Exception {
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "/** @type {function(new:foo.Bar)} */",
-            "let x;"));
+        """
+        goog.module('foo.Bar');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        /** @type {function(new:foo.Bar)} */
+        let x;
+        """);
   }
 
   @Test
   public void testWarning_jsDocFunctionThis() throws Exception {
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "/** @type {function(this:foo.Bar)} */",
-            "let x;"));
+        """
+        goog.module('foo.Bar');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        /** @type {function(this:foo.Bar)} */
+        let x;
+        """);
   }
 
   @Test
   public void testWarning_jsDocTypeof() throws Exception {
     checkRequireTypeWarning(
         "foo.Bar",
-        lines(
-            "goog.module('foo.Bar');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.module('test');", //
-            "/** @type {typeof foo.Bar} */",
-            "let x;"));
+        """
+        goog.module('foo.Bar');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.module('test');
+        /** @type {typeof foo.Bar} */
+        let x;
+        """);
   }
 
   @Test
   public void testNoWarning_jsDocClassTemplateParam() throws Exception {
     checkNoWarning(
-        lines(
-            "goog.module('MyType');", //
-            "goog.module.declareLegacyNamespace();"),
-        lines(
-            "goog.module('test');",
-            "/** @template MyType */",
-            "class Foo {",
-            "  /** @param {!MyType} x */",
-            "  constructor(x) {}",
-            "}"));
+        """
+        goog.module('MyType');
+        goog.module.declareLegacyNamespace();
+        """,
+        """
+        goog.module('test');
+        /** @template MyType */
+        class Foo {
+          /** @param {!MyType} x */
+          constructor(x) {}
+        }
+        """);
   }
 
   @Test
   public void testNoWarning_jsDocFunctionTemplateParam() throws Exception {
     checkNoWarning(
-        lines(
-            "goog.module('MyType');", //
-            "goog.module.declareLegacyNamespace();"),
-        lines(
-            "goog.module('test');",
-            "/**",
-            " * @param {!MyType} x",
-            " * @return {!MyType}",
-            " * @template MyType",
-            " */",
-            "function foo(x) {",
-            "  return x;",
-            "}"));
+        """
+        goog.module('MyType');
+        goog.module.declareLegacyNamespace();
+        """,
+        """
+        goog.module('test');
+        /**
+         * @param {!MyType} x
+         * @return {!MyType}
+         * @template MyType
+         */
+        function foo(x) {
+          return x;
+        }
+        """);
   }
 
   @Test
   public void testNoWarning_jsDocTtlParam() throws Exception {
     checkNoWarning(
-        lines(
-            "goog.module('MyType');", //
-            "goog.module.declareLegacyNamespace();"),
-        lines(
-            "goog.module('YourType');", //
-            "goog.module.declareLegacyNamespace();"),
-        lines(
-            "goog.module('test');",
-            "/**",
-            " * @param {!MyType} x",
-            " * @return {!YourType}",
-            " * @template MyType",
-            " * @template YourType := MyType =:",
-            " */",
-            "function foo(x) {",
-            "  return x;",
-            "}"));
+        """
+        goog.module('MyType');
+        goog.module.declareLegacyNamespace();
+        """,
+        """
+        goog.module('YourType');
+        goog.module.declareLegacyNamespace();
+        """,
+        """
+        goog.module('test');
+        /**
+         * @param {!MyType} x
+         * @return {!YourType}
+         * @template MyType
+         * @template YourType := MyType =:
+         */
+        function foo(x) {
+          return x;
+        }
+        """);
   }
 
   @Test
   public void testNoWarning_shadow_moduleScope() throws Exception {
     checkNoWarning(
-        lines(
-            "goog.module('Bar');", //
-            "goog.module.declareLegacyNamespace();"),
-        lines(
-            "goog.module('test');", //
-            "class Bar {}",
-            "/** @type {!Bar} */",
-            "let x = new Bar();"));
+        """
+        goog.module('Bar');
+        goog.module.declareLegacyNamespace();
+        """,
+        """
+        goog.module('test');
+        class Bar {}
+        /** @type {!Bar} */
+        let x = new Bar();
+        """);
   }
 
   @Test
   public void testNoWarning_shadow_localScope() throws Exception {
     checkNoWarning(
-        lines(
-            "goog.module('Bar');", //
-            "goog.module.declareLegacyNamespace();"),
-        lines(
-            "goog.module('test');",
-            "function foo() {",
-            "  class Bar {}",
-            "  /** @type {!Bar} */",
-            "  let x = new Bar();",
-            "}"));
+        """
+        goog.module('Bar');
+        goog.module.declareLegacyNamespace();
+        """,
+        """
+        goog.module('test');
+        function foo() {
+          class Bar {}
+          /** @type {!Bar} */
+          let x = new Bar();
+        }
+        """);
   }
 
   @Test
   public void testNoWarning_shadow_parentScope() throws Exception {
     checkNoWarning(
-        lines(
-            "goog.module('Bar');", //
-            "goog.module.declareLegacyNamespace();"),
-        lines(
-            "goog.module('test');",
-            "class Bar {}",
-            "function foo() {",
-            "  /** @type {!Bar} */",
-            "  let x = new Bar();",
-            "}"));
+        """
+        goog.module('Bar');
+        goog.module.declareLegacyNamespace();
+        """,
+        """
+        goog.module('test');
+        class Bar {}
+        function foo() {
+          /** @type {!Bar} */
+          let x = new Bar();
+        }
+        """);
   }
 
   @Test
   public void testNoWarning_providedGoogModule() throws Exception {
     checkNoWarning(
-        lines(
-            "goog.provide('goog.module');", //
-            "goog.module = goog.module || {};"),
-        lines(
-            "goog.module('test');", //
-            "goog.module.declareLegacyNamespace();"));
+        """
+        goog.provide('goog.module');
+        goog.module = goog.module || {};
+        """,
+        """
+        goog.module('test');
+        goog.module.declareLegacyNamespace();
+        """);
   }
 
   @Test
   public void testWarning_providedGoogModule_missingRequireForNestedProvide() throws Exception {
     checkRequireWarning(
         "goog.module.ModuleManager",
-        lines(
-            "goog.provide('goog.module');", //
-            "goog.module = goog.module || {};"),
-        lines(
-            "goog.provide('goog.module.ModuleManager');",
-            "/** @constructor */",
-            "goog.module.ModuleManager = function() {};"),
-        lines(
-            "goog.module('test');", //
-            "let x = new goog.module.ModuleManager();"));
+        """
+        goog.provide('goog.module');
+        goog.module = goog.module || {};
+        """,
+        """
+        goog.provide('goog.module.ModuleManager');
+        /** @constructor */
+        goog.module.ModuleManager = function() {};
+        """,
+        """
+        goog.module('test');
+        let x = new goog.module.ModuleManager();
+        """);
   }
 
   @Test
   public void testWarning_providedGoogModule_missingRequireTypeForNestedProvide() throws Exception {
     checkRequireTypeWarning(
         "goog.module.ModuleManager",
-        lines(
-            "goog.provide('goog.module');", //
-            "goog.module = goog.module || {};"),
-        lines(
-            "goog.provide('goog.module.ModuleManager');",
-            "/** @constructor */",
-            "goog.module.ModuleManager = function() {};"),
-        lines(
-            "goog.module('test');", //
-            "/** @type {!goog.module.ModuleManager} */",
-            "let x;"));
+        """
+        goog.provide('goog.module');
+        goog.module = goog.module || {};
+        """,
+        """
+        goog.provide('goog.module.ModuleManager');
+        /** @constructor */
+        goog.module.ModuleManager = function() {};
+        """,
+        """
+        goog.module('test');
+        /** @type {!goog.module.ModuleManager} */
+        let x;
+        """);
   }
 
   @Test
   public void testNoCrashOnGetprops() throws Exception {
     checkNoWarning(
-        lines(
-            "goog.module('test');",
-            "class Class {",
-            "  constructor() {",
-            "    foo().bar;",
-            "    foo['bar'].baz;",
-            "    this.foo;",
-            "    super.foo;",
-            "  }",
-            "}"));
+        """
+        goog.module('test');
+        class Class {
+          constructor() {
+            foo().bar;
+            foo['bar'].baz;
+            this.foo;
+            super.foo;
+          }
+        }
+        """);
   }
 
   @Test
@@ -1314,168 +1469,188 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   public void testWarning_googScope_googModuleGet_noRequire() {
     checkRequireForGoogModuleGetWarning(
         "foo.bar.Baz",
-        lines(
-            "goog.module('foo.bar.Baz');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.provide('test');", //
-            "",
-            "goog.scope(function() {",
-            "const Baz = goog.module.get('foo.bar.Baz');",
-            "exports.fn = function() { new Baz(); }",
-            "});"));
+        """
+        goog.module('foo.bar.Baz');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.provide('test');
+
+        goog.scope(function() {
+        const Baz = goog.module.get('foo.bar.Baz');
+        exports.fn = function() { new Baz(); }
+        });
+        """);
   }
 
   @Test
   public void testWarning_script_googModuleGet_inProvideInitialization_noRequire() {
     checkRequireForGoogModuleGetWarning(
         "foo.bar.Baz",
-        lines(
-            "goog.module('foo.bar.Baz');", //
-            "/** @constructor */",
-            "exports.Boo = function() {}"),
-        lines(
-            "goog.provide('test');", //
-            "",
-            "test.boo = new (goog.module.get('foo.bar.Baz').Boo)();"));
+        """
+        goog.module('foo.bar.Baz');
+        /** @constructor */
+        exports.Boo = function() {}
+        """,
+        """
+        goog.provide('test');
+
+        test.boo = new (goog.module.get('foo.bar.Baz').Boo)();
+        """);
   }
 
   @Test
   public void testWarning_script_googModuleGet_inScriptIfBlock_noRequire() {
     checkRequireForGoogModuleGetWarning(
         "foo.bar.Baz",
-        lines(
-            "goog.module('foo.bar.Baz');", //
-            "/** @constructor */",
-            "exports.Boo = function() {}"),
-        lines(
-            "goog.provide('test');", //
-            "",
-            "if (true) { console.log(new (goog.module.get('foo.bar.Baz').Boo)()); }"));
+        """
+        goog.module('foo.bar.Baz');
+        /** @constructor */
+        exports.Boo = function() {}
+        """,
+        """
+        goog.provide('test');
+
+        if (true) { console.log(new (goog.module.get('foo.bar.Baz').Boo)()); }
+        """);
   }
 
   @Test
   public void testWarning_script_googModuleGet_inScript_inTopLevelIIFE_noRequire() {
     checkRequireForGoogModuleGetWarning(
         "foo.bar.Baz",
-        lines(
-            "goog.module('foo.bar.Baz');", //
-            "/** @constructor */",
-            "exports.Boo = function() {}"),
-        lines(
-            "goog.provide('test');", //
-            "",
-            "(() => console.log(new (goog.module.get('foo.bar.Baz').Boo)()))();"));
+        """
+        goog.module('foo.bar.Baz');
+        /** @constructor */
+        exports.Boo = function() {}
+        """,
+        """
+        goog.provide('test');
+
+        (() => console.log(new (goog.module.get('foo.bar.Baz').Boo)()))();
+        """);
   }
 
   @Test
   public void testWarning_googScope_googModuleGet_withPropAccess_noRequire() {
     checkRequireForGoogModuleGetWarning(
         "foo.bar.Baz",
-        lines(
-            "goog.module('foo.bar.Baz');", //
-            "/** @constructor */",
-            "exports.Boo = function() {}"),
-        lines(
-            "goog.provide('test');", //
-            "",
-            "goog.scope(function() {",
-            "const Woo = goog.module.get('foo.bar.Baz').Boo.Goo.Woo;",
-            "exports.fn = function() { new Woo(); }",
-            "});"));
+        """
+        goog.module('foo.bar.Baz');
+        /** @constructor */
+        exports.Boo = function() {}
+        """,
+        """
+        goog.provide('test');
+
+        goog.scope(function() {
+        const Woo = goog.module.get('foo.bar.Baz').Boo.Goo.Woo;
+        exports.fn = function() { new Woo(); }
+        });
+        """);
   }
 
   @Test
   public void testNoWarning_googScope_googModuleGet_hasRequire() {
     checkNoWarning(
-        lines(
-            "goog.module('foo.bar.Baz');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.provide('test');", //
-            "goog.require('foo.bar.Baz');",
-            "",
-            "goog.scope(function() {",
-            "const Baz = goog.module.get('foo.bar.Baz');",
-            "function fn() { new Baz(); }",
-            "});"));
+        """
+        goog.module('foo.bar.Baz');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.provide('test');
+        goog.require('foo.bar.Baz');
+
+        goog.scope(function() {
+        const Baz = goog.module.get('foo.bar.Baz');
+        function fn() { new Baz(); }
+        });
+        """);
   }
 
   @Test
   public void testWarning_googScope_googModuleGet_IIFE_noRequire() {
     checkRequireForGoogModuleGetWarning(
         "foo.bar.Baz",
-        lines(
-            "goog.module('foo.bar.Baz');", //
-            "/** @constructor */",
-            "exports.Boo = function() {}"),
-        lines(
-            "goog.provide('test');", //
-            "",
-            "goog.scope(function() {",
-            "  (() => console.log(new (goog.module.get('foo.bar.Baz').Boo)()))();",
-            "});"));
+        """
+        goog.module('foo.bar.Baz');
+        /** @constructor */
+        exports.Boo = function() {}
+        """,
+        """
+        goog.provide('test');
+
+        goog.scope(function() {
+          (() => console.log(new (goog.module.get('foo.bar.Baz').Boo)()))();
+        });
+        """);
   }
 
   @Test
   public void testWarning_script_googModuleGet_inFunctionInScript_noRequire_noWarning() {
     checkNoWarning(
-        lines(
-            "goog.module('foo.bar.Baz');", //
-            "/** @constructor */",
-            "exports.Boo = function() {}"),
-        lines(
-            "goog.provide('test');", //
-            "",
-            // We allow this goog.module.get despite the lack of goog.require: it's possible that
-            // the foo.bar.Baz module will have been loaded by the time test.fn is called. It's up
-            // to the caller to ensure that it's loaded.
-            "test.fn = function() {",
-            "  console.log(new (goog.module.get('foo.bar.Baz').Boo)());",
-            "}"));
+        """
+        goog.module('foo.bar.Baz');
+        /** @constructor */
+        exports.Boo = function() {}
+        """,
+        """
+        goog.provide('test');
+
+        // We allow this goog.module.get despite the lack of goog.require: it's possible that
+        // the foo.bar.Baz module will have been loaded by the time test.fn is called. It's up
+        // to the caller to ensure that it's loaded.
+        test.fn = function() {
+          console.log(new (goog.module.get('foo.bar.Baz').Boo)());
+        }
+        """);
   }
 
   @Test
   public void
       testWarning_script_googModuleGet_inFunctionInScript_inNonTopLevelIIFE_noRequire_noWarning() {
     checkNoWarning(
-        lines(
-            "goog.module('foo.bar.Baz');", //
-            "/** @constructor */",
-            "exports.Boo = function() {}"),
-        lines(
-            "goog.provide('test');", //
-            "",
-            // We allow this goog.module.get despite the lack of goog.require: it's possible that
-            // the foo.bar.Baz module will have been loaded by the time test.fn is called. It's up
-            // to the caller to ensure that it's loaded.
-            "test.fn = function() {",
-            "  (() => console.log(new (goog.module.get('foo.bar.Baz').Boo)()))();",
-            "}"));
+        """
+        goog.module('foo.bar.Baz');
+        /** @constructor */
+        exports.Boo = function() {}
+        """,
+        """
+        goog.provide('test');
+
+        // We allow this goog.module.get despite the lack of goog.require: it's possible that
+        // the foo.bar.Baz module will have been loaded by the time test.fn is called. It's up
+        // to the caller to ensure that it's loaded.
+        test.fn = function() {
+          (() => console.log(new (goog.module.get('foo.bar.Baz').Boo)()))();
+        }
+        """);
   }
 
   @Test
   public void testNoWarning_nestedInGoogScope_googModuleGet_noRequire() {
     checkNoWarning(
-        lines(
-            "goog.module('foo.bar.Baz');", //
-            "/** @constructor */",
-            "exports = function() {}"),
-        lines(
-            "goog.provide('test');", //
-            "",
-            "goog.scope(function() {",
-            "test.fn = function() {",
-            // We allow this goog.module.get despite the lack of goog.require: it's possible that
-            // the foo.bar.Baz module will have been loaded by the time test.fn is called. It's up
-            // to the caller to ensure that it's loaded.
-            "  const Baz = goog.module.get('foo.bar.Baz');",
-            "  new Baz();",
-            "  new goog.module.get('foo.bar.Baz');",
-            "}",
-            "});"));
+        """
+        goog.module('foo.bar.Baz');
+        /** @constructor */
+        exports = function() {}
+        """,
+        """
+        goog.provide('test');
+
+        goog.scope(function() {
+        test.fn = function() {
+        // We allow this goog.module.get despite the lack of goog.require: it's possible that
+        // the foo.bar.Baz module will have been loaded by the time test.fn is called. It's up
+        // to the caller to ensure that it's loaded.
+          const Baz = goog.module.get('foo.bar.Baz');
+          new Baz();
+          new goog.module.get('foo.bar.Baz');
+        }
+        });
+        """);
   }
 
   private void checkNoWarning(String... js) {

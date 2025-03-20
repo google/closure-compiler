@@ -87,84 +87,88 @@ public class PolymerPassSuppressBehaviorsAndProtectKeysTest extends CompilerTest
   @Test
   public void testPropertyTypeRemoval() {
     test(
-        lines(
-            "/** @polymerBehavior */",
-            "var FunBehavior = {",
-            "  properties: {",
-            "    /** @type {boolean} */",
-            "    isFun: {",
-            "      type: Boolean,",
-            "      value: true,",
-            "    },",
-            "    /** @type {!Element} */",
-            "    funObject: {",
-            "      type: Object,",
-            "    },",
-            "    /** @type {!Array<String>} */",
-            "    funArray: {",
-            "      type: Array,",
-            "    },",
-            "  },",
-            "};"),
-        lines(
-            "/** @polymerBehavior @nocollapse */",
-            "var FunBehavior = {",
-            "  properties: {",
-            "    isFun: {",
-            "      type: Boolean,",
-            "      value: true,",
-            "    },",
-            "    funObject: {",
-            "      type: Object,",
-            "    },",
-            "    funArray: {",
-            "      type: Array,",
-            "    },",
-            "  },",
-            "};"));
+        """
+        /** @polymerBehavior */
+        var FunBehavior = {
+          properties: {
+            /** @type {boolean} */
+            isFun: {
+              type: Boolean,
+              value: true,
+            },
+            /** @type {!Element} */
+            funObject: {
+              type: Object,
+            },
+            /** @type {!Array<String>} */
+            funArray: {
+              type: Array,
+            },
+          },
+        };
+        """,
+        """
+        /** @polymerBehavior @nocollapse */
+        var FunBehavior = {
+          properties: {
+            isFun: {
+              type: Boolean,
+              value: true,
+            },
+            funObject: {
+              type: Object,
+            },
+            funArray: {
+              type: Array,
+            },
+          },
+        };
+        """);
   }
 
   @Test
   public void testDefaultValueSuppression() {
     test(
-        lines(
-            "/** @polymerBehavior */",
-            "var FunBehavior = {",
-            "  properties: {",
-            "    isFun: {",
-            "      type: Boolean,",
-            "      value: true,",
-            "    },",
-            "    funObject: {",
-            "      type: Object,",
-            "      value: function() { return {fun: this.isFun }; },",
-            "    },",
-            "    funArray: {",
-            "      type: Array,",
-            "      value: function() { return [this.isFun]; },",
-            "    },",
-            "  },",
-            "};"),
-        lines(
-            "/** @polymerBehavior @nocollapse */",
-            "var FunBehavior = {",
-            "  properties: {",
-            "    isFun: {",
-            "      type: Boolean,",
-            "      value: true,",
-            "    },",
-            "    funObject: {",
-            "      type: Object,",
-            "      /** @suppress {checkTypes|globalThis|visibility} */",
-            "      value: function() { return {fun: this.isFun }; },",
-            "    },",
-            "    funArray: {",
-            "      type: Array,",
-            "      /** @suppress {checkTypes|globalThis|visibility} */",
-            "      value: function() { return [this.isFun]; },",
-            "    },",
-            "  },",
-            "};"));
+        """
+        /** @polymerBehavior */
+        var FunBehavior = {
+          properties: {
+            isFun: {
+              type: Boolean,
+              value: true,
+            },
+            funObject: {
+              type: Object,
+              value: function() { return {fun: this.isFun }; },
+            },
+            funArray: {
+              type: Array,
+              value: function() { return [this.isFun]; },
+            },
+          },
+        };
+        """,
+        """
+        /** @polymerBehavior @nocollapse */
+        var FunBehavior = {
+          properties: {
+            isFun: {
+              type: Boolean,
+              value: true,
+            },
+            funObject: {
+              type: Object,
+              /** @suppress {checkTypes|globalThis|visibility} */
+              value: function() { return {fun: this.isFun }; },
+            },
+            funArray: {
+              type: Array,
+              /** @suppress {checkTypes|globalThis|visibility} */
+              value: function() { return [this.isFun]; },
+            },
+          },
+        };
+        """);
   }
 
   @Test
@@ -172,8 +176,16 @@ public class PolymerPassSuppressBehaviorsAndProtectKeysTest extends CompilerTest
     disableTypeCheck();
 
     test(
-        lines("/** @polymerBehavior */", "const FunBehavior = {", "};"),
-        lines("/** @polymerBehavior @nocollapse */", "const FunBehavior = {", "};"));
+        """
+        /** @polymerBehavior */
+        const FunBehavior = {
+        };
+        """,
+        """
+        /** @polymerBehavior @nocollapse */
+        const FunBehavior = {
+        };
+        """);
   }
 
   @Test
@@ -181,8 +193,16 @@ public class PolymerPassSuppressBehaviorsAndProtectKeysTest extends CompilerTest
     disableTypeCheck();
 
     test(
-        lines("/** @polymerBehavior */", "let FunBehavior = {", "};"),
-        lines("/** @polymerBehavior @nocollapse */", "let FunBehavior = {", "};"));
+        """
+        /** @polymerBehavior */
+        let FunBehavior = {
+        };
+        """,
+        """
+        /** @polymerBehavior @nocollapse */
+        let FunBehavior = {
+        };
+        """);
   }
 
   @Test

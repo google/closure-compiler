@@ -733,9 +733,10 @@ public final class CommandLineRunnerTest {
   public void browserFeaturesetYearFlagDefinesGoogFeaturesetYear() {
     args.add("--browser_featureset_year=2019");
     String original =
-        lines(
-            "/** @define {number} */", //
-            "goog.FEATURESET_YEAR = goog.define('goog.FEATURESET_YEAR', 2012);");
+        """
+        /** @define {number} */
+        goog.FEATURESET_YEAR = goog.define('goog.FEATURESET_YEAR', 2012);
+        """;
     String expected = "goog.FEATURESET_YEAR=2019";
     test(original, expected);
     assertThat(lastCompiler.getOptions().getDefineReplacements())
@@ -786,9 +787,10 @@ public final class CommandLineRunnerTest {
   public void browserFeatureSetYearSetsLanguageOut1() {
     args.add("--browser_featureset_year=2012");
     String original =
-        lines(
-            "/** @define {number} */", //
-            "goog.FEATURESET_YEAR = goog.define('goog.FEATURESET_YEAR', 2012);");
+        """
+        /** @define {number} */
+        goog.FEATURESET_YEAR = goog.define('goog.FEATURESET_YEAR', 2012);
+        """;
     String expected = "goog.FEATURESET_YEAR=2012";
     test(original, expected);
     /* Browser's year is not expected to match output language's year
@@ -802,9 +804,10 @@ public final class CommandLineRunnerTest {
   public void browserFeatureSetYearSetsLanguageOut2() {
     args.add("--browser_featureset_year=2019");
     String original =
-        lines(
-            "/** @define {number} */", //
-            "goog.FEATURESET_YEAR = goog.define('goog.FEATURESET_YEAR', 2012);");
+        """
+        /** @define {number} */
+        goog.FEATURESET_YEAR = goog.define('goog.FEATURESET_YEAR', 2012);
+        """;
     String expected = "goog.FEATURESET_YEAR=2019";
     test(original, expected);
     /* Browser's year is not expected to match output language's year
@@ -818,9 +821,10 @@ public final class CommandLineRunnerTest {
   public void browserFeatureSetYearSetsLanguageOut3() {
     args.add("--browser_featureset_year=2018");
     String original =
-        lines(
-            "/** @define {number} */", //
-            "goog.FEATURESET_YEAR = goog.define('goog.FEATURESET_YEAR', 2012);");
+        """
+        /** @define {number} */
+        goog.FEATURESET_YEAR = goog.define('goog.FEATURESET_YEAR', 2012);
+        """;
     String expected = "goog.FEATURESET_YEAR=2018";
     test(original, expected);
     /* Browser's year is not expected to match output language's year
@@ -1279,7 +1283,10 @@ public final class CommandLineRunnerTest {
               "/** @externs */", //
               "var externVar;",
               new TestExternsBuilder().addClosureExterns().build()),
-          lines("goog.provide('scotch');", "var x = externVar;")
+          """
+          goog.provide('scotch');
+          var x = externVar;
+          """
         },
         new String[] {
           "var scotch = {}, x = externVar;",
@@ -2118,10 +2125,11 @@ public final class CommandLineRunnerTest {
     test(
         new String[] {
           lines("const /** string */ typeError = 0;"),
-          lines(
-              "{", //
-              "  \"name\": \"test\"",
-              "}")
+          """
+          {
+            "name": "test"
+          }
+          """
         },
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
@@ -2780,15 +2788,15 @@ public final class CommandLineRunnerTest {
 
     test(
         "function foo(){ const answerToAll = 42; }",
-        lines(
-            "(function(a){a.window||(a.window=a,a.window.top=a)})(typeof"
-                + " self!==\"undefined\"?self:globalThis);var __jscov=window.top.__jscov||",
-            "(window.top.__jscov={fileNames:[],instrumentedLines:[],executedLines:[]}),",
-            "JSCompiler_lcov_data_input0=[];",
-            "__jscov.executedLines.push(JSCompiler_lcov_data_input0);",
-            "__jscov.instrumentedLines.push(\"01\");",
-            "__jscov.fileNames.push(\"input0\");",
-            "function foo(){JSCompiler_lcov_data_input0[0]=!0}"));
+        """
+(function(a){a.window||(a.window=a,a.window.top=a)})(typeof self!=="undefined"?self:globalThis);var __jscov=window.top.__jscov||
+(window.top.__jscov={fileNames:[],instrumentedLines:[],executedLines:[]}),
+JSCompiler_lcov_data_input0=[];
+__jscov.executedLines.push(JSCompiler_lcov_data_input0);
+__jscov.instrumentedLines.push("01");
+__jscov.fileNames.push("input0");
+function foo(){JSCompiler_lcov_data_input0[0]=!0}
+""");
   }
 
   @Test
@@ -2797,12 +2805,12 @@ public final class CommandLineRunnerTest {
 
     test(
         "function foo(){ const answerToAll = 42; }",
-        lines(
-            "(function(a){a.window||(a.window=a,a.window.top=a)})(typeof"
-                + " self!==\"undefined\"?self:globalThis);",
-            "var __jscov=window.top.__jscov||(window.top.__jscov= ",
-            "{fileNames:[],branchPresent:[],branchesInLine:[],branchesTaken:[]}); ",
-            "function foo(){}"));
+        """
+(function(a){a.window||(a.window=a,a.window.top=a)})(typeof self!=="undefined"?self:globalThis);
+var __jscov=window.top.__jscov||(window.top.__jscov=
+{fileNames:[],branchPresent:[],branchesInLine:[],branchesTaken:[]});
+function foo(){}
+""");
   }
 
   @Test
@@ -2904,14 +2912,20 @@ public final class CommandLineRunnerTest {
     args.add("--language_out=NO_TRANSPILE");
     args.add("--formatting=PRETTY_PRINT");
 
-    String source = lines("function foo() { ", "   console.log('Hello'); ", "}");
+    String source =
+        """
+        function foo() {
+           console.log('Hello');
+        }
+        """;
     String expected =
-        lines(
-            "var ist_arr = [];",
-            "function foo() {",
-            "  ist_arr.push('C');",
-            "  console.log('Hello');",
-            "}");
+        """
+        var ist_arr = [];
+        function foo() {
+          ist_arr.push('C');
+          console.log('Hello');
+        }
+        """;
 
     externs =
         ImmutableList.of(
@@ -2956,58 +2970,62 @@ public final class CommandLineRunnerTest {
 
     test(
         "let Foo; const x = `${Foo}`;",
-        lines(
-            "var $jscomp=$jscomp||{};$jscomp.scope={};",
-            "$jscomp.createTemplateTagFirstArg=function(a){",
-            "  return $jscomp.createTemplateTagFirstArgWithRaw(a,a)",
-            "};",
-            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){",
-            "  a.raw=b;",
-            "  Object.freeze && (Object.freeze(a), Object.freeze(b));",
-            "  return a",
-            "}",
-            "var Foo,x=\"\"+Foo"));
+        """
+        var $jscomp=$jscomp||{};$jscomp.scope={};
+        $jscomp.createTemplateTagFirstArg=function(a){
+          return $jscomp.createTemplateTagFirstArgWithRaw(a,a)
+        };
+        $jscomp.createTemplateTagFirstArgWithRaw=function(a,b){
+          a.raw=b;
+          Object.freeze && (Object.freeze(a), Object.freeze(b));
+          return a
+        }
+        var Foo,x=""+Foo
+        """);
 
     test(
         "const x = `\\${Foo}`;",
-        lines(
-            "var $jscomp=$jscomp||{};$jscomp.scope={};",
-            "$jscomp.createTemplateTagFirstArg=function(a){",
-            "  return $jscomp.createTemplateTagFirstArgWithRaw(a,a)",
-            "};",
-            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){",
-            "  a.raw=b;",
-            "  Object.freeze && (Object.freeze(a), Object.freeze(b));",
-            "  return a",
-            "}",
-            "var x=\"${Foo}\""));
+        """
+        var $jscomp=$jscomp||{};$jscomp.scope={};
+        $jscomp.createTemplateTagFirstArg=function(a){
+          return $jscomp.createTemplateTagFirstArgWithRaw(a,a)
+        };
+        $jscomp.createTemplateTagFirstArgWithRaw=function(a,b){
+          a.raw=b;
+          Object.freeze && (Object.freeze(a), Object.freeze(b));
+          return a
+        }
+        var x="${Foo}"
+        """);
 
     test(
         "let Foo; const x = `${Foo}\\${Foo}`;",
-        lines(
-            "var $jscomp=$jscomp||{};$jscomp.scope={};",
-            "$jscomp.createTemplateTagFirstArg=function(a){",
-            "  return $jscomp.createTemplateTagFirstArgWithRaw(a,a)",
-            "};",
-            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){",
-            "  a.raw=b;",
-            "  Object.freeze && (Object.freeze(a), Object.freeze(b));",
-            "  return a",
-            "}",
-            "var Foo,x=Foo+\"${Foo}\""));
+        """
+        var $jscomp=$jscomp||{};$jscomp.scope={};
+        $jscomp.createTemplateTagFirstArg=function(a){
+          return $jscomp.createTemplateTagFirstArgWithRaw(a,a)
+        };
+        $jscomp.createTemplateTagFirstArgWithRaw=function(a,b){
+          a.raw=b;
+          Object.freeze && (Object.freeze(a), Object.freeze(b));
+          return a
+        }
+        var Foo,x=Foo+"${Foo}"
+        """);
     test(
         "let Foo; const x = `\\${Foo}${Foo}`;",
-        lines(
-            "var $jscomp=$jscomp||{};$jscomp.scope={};",
-            "$jscomp.createTemplateTagFirstArg=function(a){",
-            "  return $jscomp.createTemplateTagFirstArgWithRaw(a,a)",
-            "};",
-            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){",
-            "  a.raw=b;",
-            "  Object.freeze && (Object.freeze(a), Object.freeze(b));",
-            "  return a",
-            "}",
-            "var Foo,x=\"${Foo}\"+Foo"));
+        """
+        var $jscomp=$jscomp||{};$jscomp.scope={};
+        $jscomp.createTemplateTagFirstArg=function(a){
+          return $jscomp.createTemplateTagFirstArgWithRaw(a,a)
+        };
+        $jscomp.createTemplateTagFirstArgWithRaw=function(a,b){
+          a.raw=b;
+          Object.freeze && (Object.freeze(a), Object.freeze(b));
+          return a
+        }
+        var Foo,x="${Foo}"+Foo
+        """);
   }
 
   /** windows shells can add extra quotes to an argument */

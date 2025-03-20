@@ -32,31 +32,27 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   public PeepholeReplaceKnownMethodsTest() {
     super(
         MINIMAL_EXTERNS
-            + lines(
-                // NOTE: these are defined as variadic to avoid wrong-argument-count warnings,
-                // which enables testing that the pass does not touch calls with wrong argument
-                // count.
-                "/** @type {function(this: string, ...*): string} */ String.prototype.replaceAll;",
-                "/** @type {function(this: string, ...*): string} */ String.prototype.replace;",
-                "/** @type {function(this: string, ...*): string} */ String.prototype.substring;",
-                "/** @type {function(this: string, ...*): string} */ String.prototype.substr;",
-                "/** @type {function(this: string, ...*): string} */ String.prototype.slice;",
-                "/** @type {function(this: string, ...*): string} */ String.prototype.charAt;",
-                "/** @type {function(this: Array, ...*): !Array} */ Array.prototype.slice;",
-                "/** @type {function(this: Array, ...*): !Array<?>} */ Array.prototype.concat;",
-                "/** @type {function(this: Array, ...*): !Array<?>} */ function returnArrayType()"
-                    + " {}",
-                "/** @type {function(this: Array, ...*): !Array<?>|string} */ function"
-                    + " returnUnionType(){}",
-                "/** @constructor */ function Foo(){}",
-                "/** @type {function(this: Foo, ...*): !Foo} */ Foo.prototype.concat",
-                "var obj = new Foo();",
-                "/**",
-                " * @param {...T} var_args",
-                " * @return {!Array<T>}",
-                " * @template T",
-                " */",
-                "Array.of = function(var_args) {};"));
+            + """
+/** @type {function(this: string, ...*): string} */ String.prototype.replaceAll;
+/** @type {function(this: string, ...*): string} */ String.prototype.replace;
+/** @type {function(this: string, ...*): string} */ String.prototype.substring;
+/** @type {function(this: string, ...*): string} */ String.prototype.substr;
+/** @type {function(this: string, ...*): string} */ String.prototype.slice;
+/** @type {function(this: string, ...*): string} */ String.prototype.charAt;
+/** @type {function(this: Array, ...*): !Array} */ Array.prototype.slice;
+/** @type {function(this: Array, ...*): !Array<?>} */ Array.prototype.concat;
+/** @type {function(this: Array, ...*): !Array<?>} */ function returnArrayType() {}
+/** @type {function(this: Array, ...*): !Array<?>|string} */ function returnUnionType(){}
+/** @constructor */ function Foo(){}
+/** @type {function(this: Foo, ...*): !Foo} */ Foo.prototype.concat
+var obj = new Foo();
+/**
+ * @param {...T} var_args
+ * @return {!Array<T>}
+ * @template T
+ */
+Array.of = function(var_args) {};
+""");
   }
 
   @Override
@@ -378,15 +374,16 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("var x = [x,y,z].join();");
 
     foldSame(
-        lines(
-            "shape['matrix'] = [",
-            "    Number(headingCos2).toFixed(4),",
-            "    Number(-headingSin2).toFixed(4),",
-            "    Number(headingSin2 * yScale).toFixed(4),",
-            "    Number(headingCos2 * yScale).toFixed(4),",
-            "    0,",
-            "    0",
-            "  ].join()"));
+        """
+        shape['matrix'] = [
+            Number(headingCos2).toFixed(4),
+            Number(-headingSin2).toFixed(4),
+            Number(headingSin2 * yScale).toFixed(4),
+            Number(headingCos2 * yScale).toFixed(4),
+            0,
+            0
+          ].join()
+        """);
   }
 
   @Test
@@ -773,15 +770,17 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("function f(/** ? */ a) { a.substring(0, 1); }");
     foldSame("function f(/** ? */ a) { a.substr(0, 1); }");
     foldSame(
-        lines(
-            "/** @constructor */ function A() {};",
-            "A.prototype.substring = function(begin, end) {};",
-            "function f(/** !A */ a) { a.substring(0, 1); }"));
+        """
+        /** @constructor */ function A() {};
+        A.prototype.substring = function(begin, end) {};
+        function f(/** !A */ a) { a.substring(0, 1); }
+        """);
     foldSame(
-        lines(
-            "/** @constructor */ function A() {};",
-            "A.prototype.slice = function(begin, end) {};",
-            "function f(/** !A */ a) { a.slice(0, 1); }"));
+        """
+        /** @constructor */ function A() {};
+        A.prototype.slice = function(begin, end) {};
+        function f(/** !A */ a) { a.slice(0, 1); }
+        """);
 
     useTypes = false;
     foldSameStringTyped("a.substring(0, 1)");

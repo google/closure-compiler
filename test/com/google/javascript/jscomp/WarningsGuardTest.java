@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CheckLevel.ERROR;
 import static com.google.javascript.jscomp.CheckLevel.OFF;
 import static com.google.javascript.jscomp.CheckLevel.WARNING;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.TypeCheck.DETERMINISTIC_TEST;
 import static com.google.javascript.jscomp.TypeCheck.ILLEGAL_PROPERTY_CREATION_ON_UNION_TYPE;
 
@@ -333,13 +332,14 @@ public final class WarningsGuardTest {
 
     Node code =
         compiler.parseTestCode(
-            lines(
-                "class C {}",
-                "class D{}",
-                "/** @type {(C|D)} */",
-                "let obj;",
-                "/** @suppress {strictMissingProperties} */",
-                "obj.prop"));
+            """
+            class C {}
+            class D{}
+            /** @type {(C|D)} */
+            let obj;
+            /** @suppress {strictMissingProperties} */
+            obj.prop
+            """);
     assertThat(
             guard.level(
                 JSError.make(
@@ -410,11 +410,12 @@ public final class WarningsGuardTest {
 
     Node code =
         compiler.parseTestCode(
-            lines(
-                "class Foo {", //
-                "  /** @suppress {deprecated} */",
-                "  [a]() { }",
-                "}"));
+            """
+            class Foo {
+              /** @suppress {deprecated} */
+              [a]() { }
+            }
+            """);
 
     assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
   }

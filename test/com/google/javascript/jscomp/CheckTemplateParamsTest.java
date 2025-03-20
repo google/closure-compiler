@@ -106,21 +106,24 @@ public final class CheckTemplateParamsTest extends CompilerTestCase {
     testSame("/** @constructor */ function SomeClass() {}; /** @type {!SomeClass} */ var x;");
     test(
         srcs(
-            lines(
-                "/** @constructor */ function SomeClass() {};",
-                "/** @type {!SomeClass<string>} */ var x;")),
+            """
+            /** @constructor */ function SomeClass() {};
+            /** @type {!SomeClass<string>} */ var x;
+            """),
         warning(TOO_MANY_TEMPLATE_PARAMS));
 
     testSame(
-        lines(
-            "/** @constructor @template T */ function SomeClass() {};",
-            "/** @type {!SomeClass<string>} */ var x;"));
+        """
+        /** @constructor @template T */ function SomeClass() {};
+        /** @type {!SomeClass<string>} */ var x;
+        """);
 
     test(
         srcs(
-            lines(
-                "/** @constructor @template T */ function SomeClass() {};",
-                "/** @type {!SomeClass<number, string>} */ var x;")),
+            """
+            /** @constructor @template T */ function SomeClass() {};
+            /** @type {!SomeClass<number, string>} */ var x;
+            """),
         warning(TOO_MANY_TEMPLATE_PARAMS));
   }
 
@@ -131,9 +134,10 @@ public final class CheckTemplateParamsTest extends CompilerTestCase {
     // TODO(b/287880204): this should warn TOO_MANY_TEMPLATE_PARAMS
     test(
         srcs(
-            lines(
-                "/** @type {NumberType<null>} */ var x;", //
-                "/** @typedef {number} */",
-                "let NumberType;")));
+            """
+            /** @type {NumberType<null>} */ var x;
+            /** @typedef {number} */
+            let NumberType;
+            """));
   }
 }

@@ -32,25 +32,28 @@ public final class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCa
   @Test
   public void test36122565a() {
     testSame(
-        lines(
-            "var foo = { bar: g(), baz: 4 };",
-            "foo.bar = 3;",
-            "foo.baz = 3;",
-            "console.log(foo.bar);",
-            "console.log(foo.baz);"));
+        """
+        var foo = { bar: g(), baz: 4 };
+        foo.bar = 3;
+        foo.baz = 3;
+        console.log(foo.bar);
+        console.log(foo.baz);
+        """);
 
     test(
-        lines(
-            "var foo = { bar: g(), baz: 4 };",
-            "foo.baz = 3;",
-            "foo.bar = 3;",
-            "console.log(foo.bar);",
-            "console.log(foo.baz);"),
-        lines(
-            "var foo = { bar: g(), baz: 3 };",
-            "foo.bar = 3;",
-            "console.log(foo.bar);",
-            "console.log(foo.baz);"));
+        """
+        var foo = { bar: g(), baz: 4 };
+        foo.baz = 3;
+        foo.bar = 3;
+        console.log(foo.bar);
+        console.log(foo.baz);
+        """,
+        """
+        var foo = { bar: g(), baz: 3 };
+        foo.bar = 3;
+        console.log(foo.bar);
+        console.log(foo.baz);
+        """);
   }
 
   @Test
@@ -335,40 +338,72 @@ public final class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCa
   @Test
   public void testObjectComputedProp1() {
     testSame(
-        lines(
-            "var a = {['computed']: 10};",
-            "var alsoComputed = 'someValue';",
-            "a[alsoComputed] = 20;"));
+        """
+        var a = {['computed']: 10};
+        var alsoComputed = 'someValue';
+        a[alsoComputed] = 20;
+        """);
   }
 
   @Test
   public void testObjectComputedProp2() {
     test(
-        lines("var a = {['computed']: 10};", "a.prop = 20;"),
-        lines("var a = {", "  ['computed']: 10,", "  prop: 20,", "};"));
+        """
+        var a = {['computed']: 10};
+        a.prop = 20;
+        """,
+        """
+        var a = {
+          ['computed']: 10,
+          prop: 20,
+        };
+        """);
   }
 
   @Test
   public void testObjectMemberFunction1() {
     test(
-        lines("var a = { member() {} };", "a.prop = 20;"),
-        lines("var a = {", "  member() {},", "  prop: 20,", "};"));
+        """
+        var a = { member() {} };
+        a.prop = 20;
+        """,
+        """
+        var a = {
+          member() {},
+          prop: 20,
+        };
+        """);
   }
 
   @Test
   public void testObjectMemberFunction2() {
     test(
-        lines("var a = { member() {} };", "a.member = 20;"),
-        lines("var a = {", "  member: 20,", "};"));
+        """
+        var a = { member() {} };
+        a.member = 20;
+        """,
+        """
+        var a = {
+          member: 20,
+        };
+        """);
   }
 
   @Test
   public void testObjectGetter() {
-    testSame(lines("var a = { get x() {} };", "a.x = 20;"));
+    testSame(
+        """
+        var a = { get x() {} };
+        a.x = 20;
+        """);
   }
 
   @Test
   public void testObjectSetter() {
-    testSame(lines("var a = { set x(value) {} };", "a.x = 20;"));
+    testSame(
+        """
+        var a = { set x(value) {} };
+        a.x = 20;
+        """);
   }
 }

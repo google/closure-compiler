@@ -44,10 +44,11 @@ import org.junit.runners.JUnit4;
 public final class PolymerIntegrationTest extends IntegrationTestCase {
 
   private static final String EXPORT_PROPERTY_DEF =
-      lines(
-          "goog.exportProperty = function(object, publicName, symbol) {",
-          "  object[publicName] = symbol;",
-          "};");
+      """
+      goog.exportProperty = function(object, publicName, symbol) {
+        object[publicName] = symbol;
+      };
+      """;
 
   /** Creates a CompilerOptions object with google coding conventions. */
   public CompilerOptions createCompilerOptions() {
@@ -111,32 +112,34 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        lines(
-            "/** @typedef {{foo: string}} */",
-            "let MyTypedef;",
-            "(function() {",
-            "Polymer({",
-            "is: 'x-foo',",
-            "properties: {",
-            "/** @type {!MyTypedef} */",
-            "value: string,",
-            "},",
-            "});",
-            "})();"),
-        lines(
-            "var $jscomp = $jscomp || {};",
-            "$jscomp.scope = {};",
-            "$jscomp.reflectObject = function(type, object) { return object; };",
-            "var XFooElement=function(){};",
-            "var MyTypedef;",
-            "(function(){",
-            "XFooElement.prototype.value;",
-            "Polymer({",
-            "  is:'x-foo',",
-            "  properties: $jscomp.reflectObject(XFooElement, {",
-            "    value:string})",
-            "  });",
-            "})()"));
+        """
+        /** @typedef {{foo: string}} */
+        let MyTypedef;
+        (function() {
+        Polymer({
+        is: 'x-foo',
+        properties: {
+        /** @type {!MyTypedef} */
+        value: string,
+        },
+        });
+        })();
+        """,
+        """
+        var $jscomp = $jscomp || {};
+        $jscomp.scope = {};
+        $jscomp.reflectObject = function(type, object) { return object; };
+        var XFooElement=function(){};
+        var MyTypedef;
+        (function(){
+        XFooElement.prototype.value;
+        Polymer({
+          is:'x-foo',
+          properties: $jscomp.reflectObject(XFooElement, {
+            value:string})
+          });
+        })()
+        """);
   }
 
   @Test
@@ -155,18 +158,19 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        lines(
-            "(function() {",
-            "  Polymer({",
-            "    is: 'foo',",
-            "    properties: {",
-            "     /** @type {{randomProperty: string}} */",
-            "     value: Object",
-            "  }",
-            "  });",
-            "})();",
-            "",
-            "const obj = {randomProperty: 0, otherProperty: 1};"),
+        """
+        (function() {
+          Polymer({
+            is: 'foo',
+            properties: {
+             /** @type {{randomProperty: string}} */
+             value: Object
+          }
+          });
+        })();
+
+        const obj = {randomProperty: 0, otherProperty: 1};
+        """,
         EMPTY_JOINER.join(
             "var $$jscomp$$ = $$jscomp$$ || {};",
             "$$jscomp$$.scope = {};",
@@ -199,18 +203,19 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        lines(
-            "(function() {",
-            "  Polymer({",
-            "    is: 'foo',",
-            "    properties: {",
-            "     /** @type {{randomProperty}} */",
-            "     value: Object",
-            "  }",
-            "  });",
-            "})();",
-            "",
-            "const obj = {randomProperty: 0, otherProperty: 1};"),
+        """
+        (function() {
+          Polymer({
+            is: 'foo',
+            properties: {
+             /** @type {{randomProperty}} */
+             value: Object
+          }
+          });
+        })();
+
+        const obj = {randomProperty: 0, otherProperty: 1};
+        """,
         EMPTY_JOINER.join(
             "var $$jscomp$$ = $$jscomp$$ || {};",
             "$$jscomp$$.scope = {};",
@@ -238,30 +243,32 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        lines(
-            "(function() {",
-            "/** @typedef {{foo: string}} */",
-            "let localTypeDef;",
-            "Polymer({",
-            "is: 'x-foo',",
-            "properties: {",
-            "/** @type {localTypeDef} */",
-            "value: string,",
-            "},",
-            "});",
-            "})();"),
-        lines(
-            "var $jscomp = $jscomp || {};",
-            "$jscomp.scope = {};",
-            "$jscomp.reflectObject = function(type, object) { return object; };",
-            "var XFooElement=function(){};",
-            "(function(){",
-            "XFooElement.prototype.value;",
-            "var localTypeDef;",
-            "Polymer({",
-            "  is:'x-foo',",
-            "  properties: $jscomp.reflectObject(XFooElement, {value:string})",
-            "})})()"));
+        """
+        (function() {
+        /** @typedef {{foo: string}} */
+        let localTypeDef;
+        Polymer({
+        is: 'x-foo',
+        properties: {
+        /** @type {localTypeDef} */
+        value: string,
+        },
+        });
+        })();
+        """,
+        """
+        var $jscomp = $jscomp || {};
+        $jscomp.scope = {};
+        $jscomp.reflectObject = function(type, object) { return object; };
+        var XFooElement=function(){};
+        (function(){
+        XFooElement.prototype.value;
+        var localTypeDef;
+        Polymer({
+          is:'x-foo',
+          properties: $jscomp.reflectObject(XFooElement, {value:string})
+        })})()
+        """);
   }
 
   @Test
@@ -276,27 +283,29 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        lines(
-            "(function() {",
-            "Polymer({",
-            "is: 'x-foo',",
-            "properties: {",
-            "/** @type {string} */",
-            "value: string,",
-            "},",
-            "});",
-            "})();"),
-        lines(
-            "var $jscomp = $jscomp || {};",
-            "$jscomp.scope = {};",
-            "$jscomp.reflectObject = function(type, object) { return object; };",
-            "var XFooElement=function(){};",
-            "(function(){",
-            "XFooElement.prototype.value;",
-            "Polymer({",
-            "  is:'x-foo',",
-            "  properties: $jscomp.reflectObject(XFooElement, {value:string}) })",
-            "})()"));
+        """
+        (function() {
+        Polymer({
+        is: 'x-foo',
+        properties: {
+        /** @type {string} */
+        value: string,
+        },
+        });
+        })();
+        """,
+        """
+        var $jscomp = $jscomp || {};
+        $jscomp.scope = {};
+        $jscomp.reflectObject = function(type, object) { return object; };
+        var XFooElement=function(){};
+        (function(){
+        XFooElement.prototype.value;
+        Polymer({
+          is:'x-foo',
+          properties: $jscomp.reflectObject(XFooElement, {value:string}) })
+        })()
+        """);
   }
 
   @Test
@@ -310,29 +319,31 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     addPolymerExterns();
     test(
         options,
-        lines(
-            "goog.module('a');",
-            "/** @typedef {{foo: number}} */",
-            "let MyTypedef;",
-            "Polymer({",
-            "is: 'x-foo',",
-            "properties: {",
-            "/** @type {MyTypedef} */",
-            "value: number,",
-            "},",
-            "});"),
-        lines(
-            "var $jscomp = $jscomp || {};",
-            "$jscomp.scope = {};",
-            "$jscomp.reflectObject = function(type, object) { return object; };",
-            "var XFooElement=function(){};",
-            "var module$exports$a={};",
-            "XFooElement.prototype.value;",
-            "var module$contents$a_MyTypedef;",
-            "Polymer({",
-            "is:\"x-foo\",",
-            "properties: $jscomp.reflectObject(XFooElement, {value:number})",
-            "})"));
+        """
+        goog.module('a');
+        /** @typedef {{foo: number}} */
+        let MyTypedef;
+        Polymer({
+        is: 'x-foo',
+        properties: {
+        /** @type {MyTypedef} */
+        value: number,
+        },
+        });
+        """,
+        """
+        var $jscomp = $jscomp || {};
+        $jscomp.scope = {};
+        $jscomp.reflectObject = function(type, object) { return object; };
+        var XFooElement=function(){};
+        var module$exports$a={};
+        XFooElement.prototype.value;
+        var module$contents$a_MyTypedef;
+        Polymer({
+        is:"x-foo",
+        properties: $jscomp.reflectObject(XFooElement, {value:number})
+        })
+        """);
   }
 
   @Test
@@ -346,20 +357,22 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
 
     String srcs =
-        lines(
-            "Polymer({", //
-            "  is: 'x',",
-            "});",
-            "export {}");
+        """
+        Polymer({
+          is: 'x',
+        });
+        export {}
+        """;
 
     String compiledOut =
-        lines(
-            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface0} */",
-            "var XElement = function() {};",
-            "Polymer(/** @lends {X.prototype} */ {", //
-            "  is: 'x',",
-            "});",
-            "var module$i0={}");
+        """
+        /** @constructor @extends {PolymerElement} @implements {PolymerXInterface0} */
+        var XElement = function() {};
+        Polymer(/** @lends {X.prototype} */ {
+          is: 'x',
+        });
+        var module$i0={}
+        """;
 
     test(options, srcs, compiledOut);
   }
@@ -390,21 +403,23 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     test(
         options,
         new String[] {
-          lines(
-              "goog.module('behaviors.FunBehavior');",
-              "goog.module.declareLegacyNamespace();",
-              "/** @polymerBehavior */",
-              "exports = {};"),
+          """
+          goog.module('behaviors.FunBehavior');
+          goog.module.declareLegacyNamespace();
+          /** @polymerBehavior */
+          exports = {};
+          """,
           "var XFoo = Polymer({ is: 'x-foo', behaviors: [ behaviors.FunBehavior ] });"
         },
         new String[] {
           "var behaviors = {}; behaviors.FunBehavior = {};",
-          lines(
-              "var XFoo=function(){};",
-              "XFoo = Polymer({",
-              "  is:'x-foo',",
-              "  behaviors: [ behaviors.FunBehavior ]",
-              "});")
+          """
+          var XFoo=function(){};
+          XFoo = Polymer({
+            is:'x-foo',
+            behaviors: [ behaviors.FunBehavior ]
+          });
+          """
         });
   }
 
@@ -419,39 +434,41 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     testNoWarnings(
         options,
         new String[] {
-          lines(
-              "goog.module('A');",
-              "/** @polymerBehavior */",
-              "const FunBehavior = {",
-              "  properties: {",
-              "    isFun: Boolean",
-              "  },",
-              "};",
-              "",
-              "/** @polymerBehavior */",
-              "const RadBehavior = {",
-              "  properties: {",
-              "    howRad: Number",
-              "  },",
-              "};",
-              "",
-              "/** @polymerBehavior */",
-              "const SuperCoolBehaviors = [FunBehavior, RadBehavior];",
-              "exports = {SuperCoolBehaviors, FunBehavior}"),
-          lines(
-              "goog.module('B')",
-              "const {SuperCoolBehaviors, FunBehavior} = goog.require('A')",
-              "A = Polymer({",
-              "  is: 'x-element',",
-              "  properties: {",
-              "    isFun: {",
-              "      type: Array,",
-              "      notify: true,",
-              "    },",
-              "    name: String,",
-              "  },",
-              "  behaviors: [ SuperCoolBehaviors, FunBehavior ],",
-              "});")
+          """
+          goog.module('A');
+          /** @polymerBehavior */
+          const FunBehavior = {
+            properties: {
+              isFun: Boolean
+            },
+          };
+
+          /** @polymerBehavior */
+          const RadBehavior = {
+            properties: {
+              howRad: Number
+            },
+          };
+
+          /** @polymerBehavior */
+          const SuperCoolBehaviors = [FunBehavior, RadBehavior];
+          exports = {SuperCoolBehaviors, FunBehavior}
+          """,
+          """
+          goog.module('B')
+          const {SuperCoolBehaviors, FunBehavior} = goog.require('A')
+          A = Polymer({
+            is: 'x-element',
+            properties: {
+              isFun: {
+                type: Array,
+                notify: true,
+              },
+              name: String,
+            },
+            behaviors: [ SuperCoolBehaviors, FunBehavior ],
+          });
+          """
         });
   }
 
@@ -470,32 +487,34 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     testNoWarnings(
         options,
         new String[] {
-          lines(
-              "goog.module('Data');",
-              "class Item {",
-              "}",
-              "exports.Item = Item;",
-              "/**",
-              " * A Polymer behavior providing common data access and formatting methods.",
-              " * @polymerBehavior",
-              " */",
-              "exports.SummaryDataBehavior = {",
-              "  /**",
-              "   * @param {?Item} item",
-              "   * @return {*}",
-              "   * @export",
-              "   */",
-              "  getValue(item) {",
-              "    return item;",
-              "  },",
-              "};"),
-          lines(
-              "goog.module('Client');",
-              "const Data = goog.require('Data');",
-              "var A = Polymer({",
-              "  is: 'x-element',",
-              "  behaviors: [ Data.SummaryDataBehavior ],",
-              "});")
+          """
+          goog.module('Data');
+          class Item {
+          }
+          exports.Item = Item;
+          /**
+           * A Polymer behavior providing common data access and formatting methods.
+           * @polymerBehavior
+           */
+          exports.SummaryDataBehavior = {
+            /**
+             * @param {?Item} item
+             * @return {*}
+             * @export
+             */
+            getValue(item) {
+              return item;
+            },
+          };
+          """,
+          """
+          goog.module('Client');
+          const Data = goog.require('Data');
+          var A = Polymer({
+            is: 'x-element',
+            behaviors: [ Data.SummaryDataBehavior ],
+          });
+          """
         });
   }
 
@@ -522,32 +541,33 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     test(
         options,
         new String[] {
-          lines(
-              "class DeviceConfigEditor extends Polymer.Element {",
-              "",
-              "  static get is() {",
-              "    return 'device-config-editor';",
-              "  }",
-              "",
-              "  static get properties() {",
-              "    return {};",
-              "  }",
-              "}",
-              "",
-              "window.customElements.define(DeviceConfigEditor.is, DeviceConfigEditor);"),
-          lines(
-              "(function() {",
-              "  /**",
-              "   * @customElement",
-              "   * @polymer",
-              "   * @memberof Polymer",
-              "   * @constructor",
-              "   * @implements {Polymer_ElementMixin}",
-              "   * @extends {HTMLElement}",
-              "   */",
-              "  const Element = Polymer.ElementMixin(HTMLElement);",
-              "})();",
-              ""),
+          """
+          class DeviceConfigEditor extends Polymer.Element {
+
+            static get is() {
+              return 'device-config-editor';
+            }
+
+            static get properties() {
+              return {};
+            }
+          }
+
+          window.customElements.define(DeviceConfigEditor.is, DeviceConfigEditor);
+          """,
+          """
+          (function() {
+            /**
+             * @customElement
+             * @polymer
+             * @memberof Polymer
+             * @constructor
+             * @implements {Polymer_ElementMixin}
+             * @extends {HTMLElement}
+             */
+            const Element = Polymer.ElementMixin(HTMLElement);
+          })();
+          """,
         },
         (String[]) null);
   }
@@ -563,20 +583,24 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     test(
         options,
         new String[] {
-          lines("Polymer({", "  is: 'paper-button'", "});"),
-          lines(
-              "(function() {",
-              "  /**",
-              "   * @customElement",
-              "   * @polymer",
-              "   * @memberof Polymer",
-              "   * @constructor",
-              "   * @implements {Polymer_ElementMixin}",
-              "   * @extends {HTMLElement}",
-              "   */",
-              "  const Element = Polymer.ElementMixin(HTMLElement);",
-              "})();",
-              ""),
+          """
+          Polymer({
+            is: 'paper-button'
+          });
+          """,
+          """
+          (function() {
+            /**
+             * @customElement
+             * @polymer
+             * @memberof Polymer
+             * @constructor
+             * @implements {Polymer_ElementMixin}
+             * @extends {HTMLElement}
+             */
+            const Element = Polymer.ElementMixin(HTMLElement);
+          })();
+          """,
         },
         (String[]) null);
   }
@@ -592,11 +616,12 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     Compiler compiler =
         compile(
             options,
-            lines(
-                "class XFoo extends Polymer.Element {",
-                "  get is() { return 'x-foo'; }",
-                "  static get properties() { return {}; }",
-                "}"));
+            """
+            class XFoo extends Polymer.Element {
+              get is() { return 'x-foo'; }
+              static get properties() { return {}; }
+            }
+            """);
     assertThat(compiler.getErrors()).isEmpty();
     assertThat(compiler.getWarnings()).isEmpty();
   }
@@ -614,16 +639,17 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             options,
             new String[] {
               lines("export class PolymerElement {};"),
-              lines(
-                  "import {PolymerElement} from './i0.js';",
-                  "class Foo extends PolymerElement {",
-                  "  get is() { return 'foo-element'; }",
-                  "  static get properties() { return { fooProp: String }; }",
-                  "}",
-                  "const foo = new Foo();",
-                  // This property access would be an unknown property error unless the PolymerPass
-                  // had successfully parsed the element definition.
-                  "foo.fooProp;")
+              """
+              import {PolymerElement} from './i0.js';
+              class Foo extends PolymerElement {
+                get is() { return 'foo-element'; }
+                static get properties() { return { fooProp: String }; }
+              }
+              const foo = new Foo();
+              // This property access would be an unknown property error unless the PolymerPass
+              // had successfully parsed the element definition.
+              foo.fooProp;
+              """
             });
     assertThat(compiler.getErrors()).isEmpty();
     assertThat(compiler.getWarnings()).isEmpty();
@@ -642,16 +668,17 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             options,
             new String[] {
               lines("export function Polymer(def) {};"),
-              lines(
-                  "import {Polymer} from './i0.js';",
-                  "Polymer({",
-                  "  is: 'foo-element',",
-                  "  properties: { fooProp: String },",
-                  "});",
-                  // This interface cast and property access would be an error unless the
-                  // PolymerPass had successfully parsed the element definition.
-                  "const foo = /** @type{!FooElementElement} */({});",
-                  "foo.fooProp;")
+              """
+              import {Polymer} from './i0.js';
+              Polymer({
+                is: 'foo-element',
+                properties: { fooProp: String },
+              });
+              // This interface cast and property access would be an error unless the
+              // PolymerPass had successfully parsed the element definition.
+              const foo = /** @type{!FooElementElement} */({});
+              foo.fooProp;
+              """
             });
     assertThat(compiler.getErrors()).isEmpty();
     assertThat(compiler.getWarnings()).isEmpty();
@@ -668,22 +695,24 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        lines(
-            "Polymer({",
-            "  is: 'foo-element',",
-            "  behaviors: [",
-            "    ((/** @type {?} */ (Polymer))).SomeBehavior",
-            "  ]",
-            "});",
-            "/** @polymerBehavior */",
-            "Polymer.SomeBehavior = {};"),
-        lines(
-            "var FooElementElement=function(){};",
-            "Polymer({",
-            "  is:\"foo-element\",",
-            "  behaviors:[Polymer.SomeBehavior]",
-            "});",
-            "Polymer.SomeBehavior={}"));
+        """
+        Polymer({
+          is: 'foo-element',
+          behaviors: [
+            ((/** @type {?} */ (Polymer))).SomeBehavior
+          ]
+        });
+        /** @polymerBehavior */
+        Polymer.SomeBehavior = {};
+        """,
+        """
+        var FooElementElement=function(){};
+        Polymer({
+          is:"foo-element",
+          behaviors:[Polymer.SomeBehavior]
+        });
+        Polymer.SomeBehavior={}
+        """);
   }
 
   @Test
@@ -844,33 +873,35 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             .build();
 
     String fooElement =
-        lines(
-            "const FooElement = Polymer({",
-            "  is: \"foo-element\",",
-            "  properties: {",
-            "    longUnusedProperty: String,",
-            "  },",
-            "  longUnusedMethod: function() {",
-            "    return this.longUnusedProperty;",
-            "  },",
-            "});",
-            "class Other { longUnusedProperty() {} }",
-            "console.log(new Other().longUnusedProperty());");
+        """
+        const FooElement = Polymer({
+          is: "foo-element",
+          properties: {
+            longUnusedProperty: String,
+          },
+          longUnusedMethod: function() {
+            return this.longUnusedProperty;
+          },
+        });
+        class Other { longUnusedProperty() {} }
+        console.log(new Other().longUnusedProperty());
+        """;
     test(
         options,
         new String[] {fooElement, "function unused() { console.log(FooElement); }"},
         new String[] {
-          lines(
-              "Polymer({",
-              "  $is$: 'foo-element',",
-              // Ensure the compiler doesn't rename the references to longUnusedProperty here and in
-              // longUnusedMethod. They may be referenced from templates or computed property
-              // definitions. It's ok to disambiguate/rename the longUnusedProperty method on the
-              // `class Other {` though.
-              "  $properties$: { longUnusedProperty: String },",
-              "  longUnusedMethod: function(){ return this.longUnusedProperty; }",
-              "});",
-              "console.log(void 0);"),
+          """
+          Polymer({
+            $is$: 'foo-element',
+          // Ensure the compiler doesn't rename the references to longUnusedProperty here and in
+          // longUnusedMethod. They may be referenced from templates or computed property
+          // definitions. It's ok to disambiguate/rename the longUnusedProperty method on the
+          // `class Other {` though.
+            $properties$: { longUnusedProperty: String },
+            longUnusedMethod: function(){ return this.longUnusedProperty; }
+          });
+          console.log(void 0);
+          """,
           ""
         });
   }

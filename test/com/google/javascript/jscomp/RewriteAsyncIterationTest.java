@@ -88,161 +88,158 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
   @Test
   public void testForAwaitWithThrow() {
     test(
-        lines(
-            "async function test() {",
-            "    for await (const i of source()) {",
-            "      if (i === 2) {",
-            "        throw new Error('');",
-            "      }",
-            "    }",
-            "}"),
-        lines(
-            "", //
-            "async function test() {",
-            "  var $jscomp$forAwait$errResult0;",
-            "  var $jscomp$forAwait$tempResult0;",
-            "  var $jscomp$forAwait$retFn0;",
-            "  try {",
-            "var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(source());",
-            "    for (;;)" + " {",
-            "      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
-            "      if ($jscomp$forAwait$tempResult0.done) {",
-            "        break;",
-            "      }",
-            "      const i = $jscomp$forAwait$tempResult0.value;",
-            "      {",
-            "        if (i === 2) {",
-            "          throw new Error(\"\");",
-            "        }",
-            "      }",
-            "    }",
-            "  } catch ($jscomp$forAwait$catchErrParam0) {",
-            "      $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};",
-            "  } finally {",
-            "    try {",
-            "      if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&"
-                + " ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
-            "         await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);",
-            "      }",
-            "    }",
-            "    finally {",
-            "      if ($jscomp$forAwait$errResult0) {",
-            "        throw $jscomp$forAwait$errResult0.error;",
-            "      }",
-            "  }",
-            "}",
-            "}"));
+        """
+        async function test() {
+            for await (const i of source()) {
+              if (i === 2) {
+                throw new Error('');
+              }
+            }
+        }
+        """,
+        """
+async function test() {
+  var $jscomp$forAwait$errResult0;
+  var $jscomp$forAwait$tempResult0;
+  var $jscomp$forAwait$retFn0;
+  try {
+    var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(source());
+    for (;;) {
+      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
+      if ($jscomp$forAwait$tempResult0.done) {
+        break;
+      }
+      const i = $jscomp$forAwait$tempResult0.value;
+      {
+        if (i === 2) {
+          throw new Error("");
+        }
+      }
+    }
+  } catch ($jscomp$forAwait$catchErrParam0) {
+      $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};
+  } finally {
+    try {
+      if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done && ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {
+        await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);
+      }
+    }
+    finally {
+      if ($jscomp$forAwait$errResult0) {
+        throw $jscomp$forAwait$errResult0.error;
+      }
+    }
+  }
+}
+""");
   }
 
   @Test
   public void testBug173319540() {
     test(
         srcs(
-            lines(
-                "", //
-                "let key;",
-                "let value;",
-                "window.onload = async function() {",
-                "  for await ([key,value] of window[\"unknownAsyncIterable\"]) {",
-                "    alert(key,value);",
-                "  }",
-                "}",
-                "")),
+            """
+            let key;
+            let value;
+            window.onload = async function() {
+              for await ([key,value] of window["unknownAsyncIterable"]) {
+                alert(key,value);
+              }
+            }
+            """),
         expected(
-            lines(
-                "", //
-                "let key;",
-                "let value;",
-                "window.onload = async function() {",
-                "  var $jscomp$forAwait$errResult0;",
-                "  var $jscomp$forAwait$tempResult0;",
-                "  var $jscomp$forAwait$retFn0;",
-                "  try {",
-                "var $jscomp$forAwait$tempIterator0 ="
-                    + " (0, $jscomp.makeAsyncIterator)(window[\"unknownAsyncIterable\"]);",
-                "    for (;;) {",
-                "      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
-                "      if ($jscomp$forAwait$tempResult0.done) {",
-                "        break;",
-                "      }",
-                "      [key, value] = $jscomp$forAwait$tempResult0.value;",
-                "      { alert(key, value);}",
-                "    }",
-                "  } catch ($jscomp$forAwait$catchErrParam0) {",
-                "    $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};",
-                "  } finally {",
-                "    try {",
-                "      if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done && ",
-                "        ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
-                "        await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);",
-                "      }",
-                "    } finally {",
-                "      if ($jscomp$forAwait$errResult0) {",
-                "        throw $jscomp$forAwait$errResult0.error;",
-                "      }",
-                "    }",
-                "  }",
-                "};",
-                "")));
+            """
+let key;
+let value;
+window.onload = async function() {
+  var $jscomp$forAwait$errResult0;
+  var $jscomp$forAwait$tempResult0;
+  var $jscomp$forAwait$retFn0;
+  try {
+var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(window["unknownAsyncIterable"]);
+    for (;;) {
+      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
+      if ($jscomp$forAwait$tempResult0.done) {
+        break;
+      }
+      [key, value] = $jscomp$forAwait$tempResult0.value;
+      { alert(key, value);}
+    }
+  } catch ($jscomp$forAwait$catchErrParam0) {
+    $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};
+  } finally {
+    try {
+      if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&
+        ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {
+        await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);
+      }
+    } finally {
+      if ($jscomp$forAwait$errResult0) {
+        throw $jscomp$forAwait$errResult0.error;
+      }
+    }
+  }
+};
+
+"""));
 
     test(
         srcs(
-            lines(
-                "", //
-                "window.onload = async function() {",
-                "  for await (const [key,value] of window[\"unknownAsyncIterable\"]) {",
-                "    alert(key,value);",
-                "  }",
-                "}",
-                "")),
+            """
+            window.onload = async function() {
+              for await (const [key,value] of window["unknownAsyncIterable"]) {
+                alert(key,value);
+              }
+            }
+            """),
         expected(
-            lines(
-                "", //
-                "window.onload = async function() {",
-                "  var $jscomp$forAwait$errResult0;",
-                "  var $jscomp$forAwait$tempResult0;",
-                "  var $jscomp$forAwait$retFn0;",
-                "  try {",
-                "var $jscomp$forAwait$tempIterator0 ="
-                    + " (0, $jscomp.makeAsyncIterator)(window[\"unknownAsyncIterable\"]);",
-                "    for (;;) {",
-                "      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
-                "      if ($jscomp$forAwait$tempResult0.done) {",
-                "        break;",
-                "      }",
-                "      const [key, value$jscomp$3] = $jscomp$forAwait$tempResult0.value;",
-                "      {",
-                "        alert(key, value$jscomp$3);",
-                "      }",
-                "    }",
-                "  } catch ($jscomp$forAwait$catchErrParam0) {",
-                "    $jscomp$forAwait$errResult0 = { error:$jscomp$forAwait$catchErrParam0 };",
-                "  } finally {",
-                "    try {",
-                "      if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&",
-                "        ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
-                "        await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);",
-                "      }",
-                "    } finally {",
-                "      if ($jscomp$forAwait$errResult0) {",
-                "        throw $jscomp$forAwait$errResult0.error;",
-                "      }",
-                "    }",
-                "  }",
-                "};",
-                "")));
+            """
+window.onload = async function() {
+  var $jscomp$forAwait$errResult0;
+  var $jscomp$forAwait$tempResult0;
+  var $jscomp$forAwait$retFn0;
+  try {
+var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(window["unknownAsyncIterable"]);
+    for (;;) {
+      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
+      if ($jscomp$forAwait$tempResult0.done) {
+        break;
+      }
+      const [key, value$jscomp$3] = $jscomp$forAwait$tempResult0.value;
+      {
+        alert(key, value$jscomp$3);
+      }
+    }
+  } catch ($jscomp$forAwait$catchErrParam0) {
+    $jscomp$forAwait$errResult0 = { error:$jscomp$forAwait$catchErrParam0 };
+  } finally {
+    try {
+      if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&
+        ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {
+        await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);
+      }
+    } finally {
+      if ($jscomp$forAwait$errResult0) {
+        throw $jscomp$forAwait$errResult0.error;
+      }
+    }
+  }
+};
+
+"""));
   }
 
   @Test
   public void testAsyncGenerator() {
     test(
         "async function* baz() { foo() }",
-        lines(
-            "function baz() {",
-            "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
-            "    foo();",
-            "  })());",
-            "}"));
+        """
+        function baz() {
+          return new $jscomp.AsyncGeneratorWrapper((function*() {
+            foo();
+          })());
+        }
+        """);
 
     CodeSubTree bazSubTree = findFunctionDefinition(getLastCompiler(), "baz");
     Node wrapper = bazSubTree.findMatchingQNameReferences("$jscomp.AsyncGeneratorWrapper").get(0);
@@ -259,18 +256,20 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
   @Test
   public void testAwaitInAsyncGenerator() {
     test(
-        lines(
-            "let /** function(): !Promise<number> */ foo;",
-            "/** @return {!AsyncGenerator<undefined>} */",
-            "async function* baz() { await foo() }"),
-        lines(
-            "let foo;",
-            "function baz() {",
-            "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
-            "    yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "      $jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE, foo());",
-            "  })());",
-            "}"));
+        """
+        let /** function(): !Promise<number> */ foo;
+        /** @return {!AsyncGenerator<undefined>} */
+        async function* baz() { await foo() }
+        """,
+        """
+        let foo;
+        function baz() {
+          return new $jscomp.AsyncGeneratorWrapper((function*() {
+            yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(
+              $jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE, foo());
+          })());
+        }
+        """);
 
     CodeSubTree bazSubTree = findFunctionDefinition(getLastCompiler(), "baz");
     Node wrapper = bazSubTree.findMatchingQNameReferences("$jscomp.AsyncGeneratorWrapper").get(0);
@@ -284,17 +283,19 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
         .isEqualTo(getGlobalColor(StandardColors.GENERATOR_ID));
 
     test(
-        lines(
-            "let /** function(): !Promise<number> */ foo;",
-            "async function* baz() { bar = await foo() }"),
-        lines(
-            "let foo;",
-            "function baz() {",
-            "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
-            "    bar = yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "      $jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE, foo());",
-            "  })());",
-            "}"));
+        """
+        let /** function(): !Promise<number> */ foo;
+        async function* baz() { bar = await foo() }
+        """,
+        """
+        let foo;
+        function baz() {
+          return new $jscomp.AsyncGeneratorWrapper((function*() {
+            bar = yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(
+              $jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE, foo());
+          })());
+        }
+        """);
 
     Node bar =
         findFunctionDefinition(getLastCompiler(), "baz").findMatchingQNameReferences("bar").get(0);
@@ -305,16 +306,18 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
   @Test
   public void testYieldInAsyncGenerator() {
     test(
-        lines(
-            "/** @return {!AsyncGenerator<number>} */", //
-            "async function* baz() { yield 2+2 }"),
-        lines(
-            "function baz() {",
-            "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
-            "    yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "      $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE, 2+2);",
-            "  })());",
-            "}"));
+        """
+        /** @return {!AsyncGenerator<number>} */
+        async function* baz() { yield 2+2 }
+        """,
+        """
+        function baz() {
+          return new $jscomp.AsyncGeneratorWrapper((function*() {
+            yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(
+              $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE, 2+2);
+          })());
+        }
+        """);
 
     CodeSubTree bazSubTree = findFunctionDefinition(getLastCompiler(), "baz");
     Node wrapper = bazSubTree.findMatchingQNameReferences("$jscomp.AsyncGeneratorWrapper").get(0);
@@ -328,16 +331,18 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
         .isEqualTo(getGlobalColor(StandardColors.GENERATOR_ID));
 
     test(
-        lines(
-            "/** @return {!AsyncGenerator<number>} */", //
-            "async function* baz() { bar = yield 2+2 }"),
-        lines(
-            "function baz() {", //
-            "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
-            "    bar = yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "      $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE, 2+2);",
-            "  })());",
-            "}"));
+        """
+        /** @return {!AsyncGenerator<number>} */
+        async function* baz() { bar = yield 2+2 }
+        """,
+        """
+        function baz() {
+          return new $jscomp.AsyncGeneratorWrapper((function*() {
+            bar = yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(
+              $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE, 2+2);
+          })());
+        }
+        """);
 
     Node bar =
         findFunctionDefinition(getLastCompiler(), "baz").findMatchingQNameReferences("bar").get(0);
@@ -350,210 +355,220 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
   public void testYieldAllInAsyncGenerator() {
     test(
         "async function* baz() { yield* foo() }",
-        lines(
-            "function baz() {",
-            "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
-            "    yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "      $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_STAR, foo());",
-            "  })());",
-            "}"));
+        """
+        function baz() {
+          return new $jscomp.AsyncGeneratorWrapper((function*() {
+            yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(
+              $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_STAR, foo());
+          })());
+        }
+        """);
 
     test(
         "async function* baz() { bar = yield* foo() }",
-        lines(
-            "function baz() {",
-            "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
-            "    bar = yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "      $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_STAR, foo());",
-            "  })());",
-            "}"));
+        """
+        function baz() {
+          return new $jscomp.AsyncGeneratorWrapper((function*() {
+            bar = yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(
+              $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_STAR, foo());
+          })());
+        }
+        """);
   }
 
   @Test
   public void testComplexAsyncGeneratorStatements() {
     test(
         "async function* baz() { yield* (await foo()); }",
-        lines(
-            "function baz() {",
-            "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
-            "    yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "      $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_STAR,",
-            "      yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "          $jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE,",
-            "          foo()));",
-            "  })());",
-            "}"));
+        """
+        function baz() {
+          return new $jscomp.AsyncGeneratorWrapper((function*() {
+            yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(
+              $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_STAR,
+              yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(
+                  $jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE,
+                  foo()));
+          })());
+        }
+        """);
   }
 
   @Test
   public void testThisInAsyncGenerator() {
     test(
         "async function* baz() { yield this; }",
-        lines(
-            "function baz() {",
-            "  const $jscomp$asyncIter$this$m1146332801$0 = this;",
-            "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
-            "    yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "      $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,"
-                + " $jscomp$asyncIter$this$m1146332801$0);",
-            "  })());",
-            "}"));
+        """
+function baz() {
+  const $jscomp$asyncIter$this$m1146332801$0 = this;
+  return new $jscomp.AsyncGeneratorWrapper((function*() {
+    yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(
+      $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE, $jscomp$asyncIter$this$m1146332801$0);
+  })());
+}
+""");
   }
 
   @Test
   public void testThisInAsyncGeneratorNestedInAsyncGenerator() {
     test(
-        lines(
-            "async function* baz(outerT = this) {",
-            "  return async function*(innerT = this) {",
-            "    yield innerT || this;",
-            "  }",
-            "}"),
-        lines(
-            // `this` in parameter list shouldn't be aliased
-            "function baz(outerT = this) {",
-            "  return new $jscomp.AsyncGeneratorWrapper(",
-            "      (function*() {",
-            "        return new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "            $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
-            // `this` in parameter list shouldn't be aliased
-            "            function(innerT = this) {",
-            "              const $jscomp$asyncIter$this$m1146332801$1 = this;",
-            "              return new $jscomp.AsyncGeneratorWrapper(",
-            "                  (function*() {",
-            "                    yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "                        $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
-            // `this` in body should be aliased
-            "                        innerT || $jscomp$asyncIter$this$m1146332801$1);",
-            "                  })());",
-            "            });",
-            "      })());",
-            "}"));
+        """
+        async function* baz(outerT = this) {
+          return async function*(innerT = this) {
+            yield innerT || this;
+          }
+        }
+        """,
+        """
+        function baz(outerT = this) {
+          return new $jscomp.AsyncGeneratorWrapper(
+              (function*() {
+                return new $jscomp.AsyncGeneratorWrapper$ActionRecord(
+                    $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,
+        // `this` in parameter list shouldn't be aliased
+                    function(innerT = this) {
+                      const $jscomp$asyncIter$this$m1146332801$1 = this;
+                      return new $jscomp.AsyncGeneratorWrapper(
+                          (function*() {
+                            yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(
+                                $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,
+        // `this` in body should be aliased
+                                innerT || $jscomp$asyncIter$this$m1146332801$1);
+                          })());
+                    });
+              })());
+        }
+        """);
   }
 
   @Test
   public void testThisInArrowNestedInAsyncGenerator() {
     test(
-        lines(
-            "async function* baz() {",
-            // both instances of `this` musts be changed to aliases
-            "  return (t = this) => t || this;",
-            "}"),
-        lines(
-            "function baz() {",
-            "  const $jscomp$asyncIter$this$m1146332801$0 = this;",
-            "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
-            "    return new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "        $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
-            "        (t = $jscomp$asyncIter$this$m1146332801$0) => {",
-            "         return t || $jscomp$asyncIter$this$m1146332801$0});",
-            "  })());",
-            "}",
-            ""));
+        """
+        async function* baz() {
+        // both instances of `this` musts be changed to aliases
+          return (t = this) => t || this;
+        }
+        """,
+        """
+        function baz() {
+          const $jscomp$asyncIter$this$m1146332801$0 = this;
+          return new $jscomp.AsyncGeneratorWrapper((function*() {
+            return new $jscomp.AsyncGeneratorWrapper$ActionRecord(
+                $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,
+                (t = $jscomp$asyncIter$this$m1146332801$0) => {
+                 return t || $jscomp$asyncIter$this$m1146332801$0});
+          })());
+        }
+        """);
   }
 
   @Test
   public void testThisInFunctionNestedInAsyncGenerator() {
     test(
         lines("async function* baz() {  return function() { return this; }; }"),
-        lines(
-            "function baz() {",
-            "  return new $jscomp.AsyncGeneratorWrapper(",
-            "      (function*() {",
-            "        return new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "            $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
-            "            function() { return this; });",
-            "      })());",
-            "}"));
+        """
+        function baz() {
+          return new $jscomp.AsyncGeneratorWrapper(
+              (function*() {
+                return new $jscomp.AsyncGeneratorWrapper$ActionRecord(
+                    $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,
+                    function() { return this; });
+              })());
+        }
+        """);
 
     test(
         lines("async function* baz() {  return () => this; }"),
-        lines(
-            "function baz() {",
-            "  const $jscomp$asyncIter$this$m1146332801$0 = this;",
-            "  return new $jscomp.AsyncGeneratorWrapper(",
-            "      (function*() {",
-            "        return new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "            $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
-            "            () => { ",
-            "               return $jscomp$asyncIter$this$m1146332801$0;",
-            "             });",
-            "      })());",
-            "}"));
+        """
+        function baz() {
+          const $jscomp$asyncIter$this$m1146332801$0 = this;
+          return new $jscomp.AsyncGeneratorWrapper(
+              (function*() {
+                return new $jscomp.AsyncGeneratorWrapper$ActionRecord(
+                    $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,
+                    () => {
+                       return $jscomp$asyncIter$this$m1146332801$0;
+                     });
+              })());
+        }
+        """);
   }
 
   @Test
   public void testInnerSuperReferenceInAsyncGenerator() {
     test(
-        lines(
-            "class A {",
-            "  m() {",
-            "    return this;",
-            "  }",
-            "}",
-            "class X extends A {",
-            "  async *m() {",
-            "    const tmp = super.m;",
-            "    return tmp.call(null);",
-            "  }",
-            "}"),
-        lines(
-            "class A {",
-            "  m() {",
-            "    return this;",
-            "  }",
-            "}",
-            "class X extends A {",
-            "  m() {",
-            "    const $jscomp$asyncIter$super$get$m = () => {",
-            "            return super.m; ",
-            "    };",
-            "    return new $jscomp.AsyncGeneratorWrapper(",
-            "        function* () {",
-            "          const tmp = $jscomp$asyncIter$super$get$m();",
-            "          return new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "              $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
-            "              tmp.call(null));",
-            "        }());",
-            "  }",
-            "}"));
+        """
+        class A {
+          m() {
+            return this;
+          }
+        }
+        class X extends A {
+          async *m() {
+            const tmp = super.m;
+            return tmp.call(null);
+          }
+        }
+        """,
+        """
+        class A {
+          m() {
+            return this;
+          }
+        }
+        class X extends A {
+          m() {
+            const $jscomp$asyncIter$super$get$m = () => {
+                    return super.m;
+            };
+            return new $jscomp.AsyncGeneratorWrapper(
+                function* () {
+                  const tmp = $jscomp$asyncIter$super$get$m();
+                  return new $jscomp.AsyncGeneratorWrapper$ActionRecord(
+                      $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,
+                      tmp.call(null));
+                }());
+          }
+        }
+        """);
   }
 
   @Test
   public void testInnerSuperCallInAsyncGenerator() {
     test(
-        lines(
-            "class A {",
-            "  m() {",
-            "    return this;",
-            "  }",
-            "}",
-            "class X extends A {",
-            "  async *m() {",
-            "    return super.m();",
-            "  }",
-            "}"),
-        lines(
-            "class A {",
-            "  m() {",
-            "    return this;",
-            "  }",
-            "}",
-            "class X extends A {",
-            "  m() {",
-            "    const $jscomp$asyncIter$this$m1146332801$1 = this;",
-            "    const $jscomp$asyncIter$super$get$m = () => {",
-            "         return super.m;",
-            "    };",
-            "    return new $jscomp.AsyncGeneratorWrapper(",
-            "        function* () {",
-            "          return new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "              $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
-            "             "
-                + " $jscomp$asyncIter$super$get$m().call($jscomp$asyncIter$this$m1146332801$1));",
-            "        }());",
-            "  }",
-            "}"));
+        """
+        class A {
+          m() {
+            return this;
+          }
+        }
+        class X extends A {
+          async *m() {
+            return super.m();
+          }
+        }
+        """,
+        """
+        class A {
+          m() {
+            return this;
+          }
+        }
+        class X extends A {
+          m() {
+            const $jscomp$asyncIter$this$m1146332801$1 = this;
+            const $jscomp$asyncIter$super$get$m = () => {
+                 return super.m;
+            };
+            return new $jscomp.AsyncGeneratorWrapper(
+                function* () {
+                  return new $jscomp.AsyncGeneratorWrapper$ActionRecord(
+                      $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,
+                      $jscomp$asyncIter$super$get$m().call($jscomp$asyncIter$this$m1146332801$1));
+                }());
+          }
+        }
+        """);
   }
 
   @Test
@@ -563,18 +578,19 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
     // error message. (AST validation is not enabled in normal execution, just developer mode.)
     disableAstValidation();
     testError(
-        lines(
-            "class A {",
-            "  m() {",
-            "    return this;",
-            "  }",
-            "}",
-            "class X extends A {",
-            "  async *m() {",
-            "    const tmp = super['m'];",
-            "    return tmp.call(null);",
-            "  }",
-            "}"),
+        """
+        class A {
+          m() {
+            return this;
+          }
+        }
+        class X extends A {
+          async *m() {
+            const tmp = super['m'];
+            return tmp.call(null);
+          }
+        }
+        """,
         RewriteAsyncIteration.CANNOT_CONVERT_ASYNCGEN,
         RewriteAsyncIteration.CANNOT_CONVERT_ASYNCGEN.format(
             "super only allowed with getprop (like super.foo(), not super['foo']())"));
@@ -583,74 +599,77 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
   @Test
   public void testInnerArrowFunctionUsingArguments() {
     test(
-        lines(
-            "class X {",
-            "  async *m() {",
-            "    return new Promise((resolve, reject) => {",
-            "      resolve(arguments);",
-            "    });",
-            "  }",
-            "}"),
-        lines(
-            "class X {",
-            "  m() {",
-            "    const $jscomp$asyncIter$arguments = arguments;",
-            "    return new $jscomp.AsyncGeneratorWrapper(",
-            "        function* () {",
-            "          return new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "              $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
-            "              new Promise((resolve, reject) => {",
-            "                resolve($jscomp$asyncIter$arguments);",
-            "              }));",
-            "        }());",
-            "  }",
-            "}"));
+        """
+        class X {
+          async *m() {
+            return new Promise((resolve, reject) => {
+              resolve(arguments);
+            });
+          }
+        }
+        """,
+        """
+        class X {
+          m() {
+            const $jscomp$asyncIter$arguments = arguments;
+            return new $jscomp.AsyncGeneratorWrapper(
+                function* () {
+                  return new $jscomp.AsyncGeneratorWrapper$ActionRecord(
+                      $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,
+                      new Promise((resolve, reject) => {
+                        resolve($jscomp$asyncIter$arguments);
+                      }));
+                }());
+          }
+        }
+        """);
   }
 
   @Test
   public void testForAwaitOfDeclarations() {
     test(
-        lines(
-            "/** @type {number|undefined} */",
-            "let a;",
-            "async function abc() { for await (a of foo()) { bar(); } }",
-            "/** @return {!AsyncGenerator<number>} */",
-            "function foo() {}"),
-        lines(
-            "let a;",
-            "async function abc() {",
-            "  var $jscomp$forAwait$errResult0;",
-            "  var $jscomp$forAwait$tempResult0;",
-            "  var $jscomp$forAwait$retFn0;",
-            "  try {",
-            "    var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());",
-            "    for (;;) {",
-            "      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
-            "      if ($jscomp$forAwait$tempResult0.done) {",
-            "        break;",
-            "      }",
-            "      a = $jscomp$forAwait$tempResult0.value;",
-            "      {",
-            "        bar();",
-            "      }",
-            "     }",
-            "  } catch ($jscomp$forAwait$catchErrParam0) {",
-            "    $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};",
-            "  } finally {",
-            "    try {",
-            "      if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&"
-                + " ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
-            "        await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);",
-            "      }",
-            "    } finally {",
-            "      if ($jscomp$forAwait$errResult0) {",
-            "        throw $jscomp$forAwait$errResult0.error;",
-            "      }",
-            "     }",
-            "   }",
-            "}",
-            "function foo() {",
-            "}"));
+        """
+        /** @type {number|undefined} */
+        let a;
+        async function abc() { for await (a of foo()) { bar(); } }
+        /** @return {!AsyncGenerator<number>} */
+        function foo() {}
+        """,
+        """
+let a;
+async function abc() {
+  var $jscomp$forAwait$errResult0;
+  var $jscomp$forAwait$tempResult0;
+  var $jscomp$forAwait$retFn0;
+  try {
+    var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());
+    for (;;) {
+      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
+      if ($jscomp$forAwait$tempResult0.done) {
+        break;
+      }
+      a = $jscomp$forAwait$tempResult0.value;
+      {
+        bar();
+      }
+     }
+  } catch ($jscomp$forAwait$catchErrParam0) {
+    $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};
+  } finally {
+    try {
+      if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done && ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {
+        await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);
+      }
+    } finally {
+      if ($jscomp$forAwait$errResult0) {
+        throw $jscomp$forAwait$errResult0.error;
+      }
+     }
+   }
+}
+function foo() {
+}
+""");
 
     Node abcFunction = findFunctionDefinition(getLastCompiler(), "abc").getRootNode();
     Node firstTry =
@@ -697,242 +716,238 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
 
     test(
         lines("async function abc() { for await (var a of foo()) { bar(); } }"),
-        lines(
-            "async function abc() {",
-            " var a$jscomp$3;",
-            " var $jscomp$forAwait$errResult0;",
-            " var $jscomp$forAwait$tempResult0;",
-            " var $jscomp$forAwait$retFn0;",
-            " try {",
-            "   var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo()); ",
-            "   for (;;) {",
-            "     $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
-            "     if ($jscomp$forAwait$tempResult0.done) {",
-            "       break;",
-            "     }",
-            "     a$jscomp$3 = $jscomp$forAwait$tempResult0.value;",
-            "     {",
-            "       bar();",
-            "     }",
-            "    }",
-            " } catch ($jscomp$forAwait$catchErrParam0) {",
-            "   $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};",
-            " } finally {",
-            "   try {",
-            "     if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&"
-                + " ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
-            "       await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);",
-            "     }",
-            "   } finally {",
-            "     if ($jscomp$forAwait$errResult0) {",
-            "       throw $jscomp$forAwait$errResult0.error;",
-            "     }",
-            "    }",
-            "  }",
-            "}"));
+        """
+async function abc() {
+ var a$jscomp$3;
+ var $jscomp$forAwait$errResult0;
+ var $jscomp$forAwait$tempResult0;
+ var $jscomp$forAwait$retFn0;
+ try {
+   var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());
+   for (;;) {
+     $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
+     if ($jscomp$forAwait$tempResult0.done) {
+       break;
+     }
+     a$jscomp$3 = $jscomp$forAwait$tempResult0.value;
+     {
+       bar();
+     }
+    }
+ } catch ($jscomp$forAwait$catchErrParam0) {
+   $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};
+ } finally {
+   try {
+     if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done && ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {
+       await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);
+     }
+   } finally {
+     if ($jscomp$forAwait$errResult0) {
+       throw $jscomp$forAwait$errResult0.error;
+     }
+    }
+  }
+}
+""");
 
     test(
         lines("async function abc() { for await (let a of foo()) { bar(); } }"),
-        lines(
-            "async function abc() {",
-            " var $jscomp$forAwait$errResult0;",
-            " var $jscomp$forAwait$tempResult0;",
-            " var $jscomp$forAwait$retFn0;",
-            " try {",
-            "   var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());",
-            "   for (;;) {",
-            "     $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
-            "     if ($jscomp$forAwait$tempResult0.done) {",
-            "       break;",
-            "     }",
-            "     let a$jscomp$3 = $jscomp$forAwait$tempResult0.value;",
-            "     {",
-            "       bar();",
-            "     }",
-            "    }",
-            " } catch ($jscomp$forAwait$catchErrParam0) {",
-            "   $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};",
-            " } finally {",
-            "   try {",
-            "     if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&"
-                + " ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
-            "       await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);",
-            "     }",
-            "   } finally {",
-            "     if ($jscomp$forAwait$errResult0) {",
-            "       throw $jscomp$forAwait$errResult0.error;",
-            "     }",
-            "    }",
-            "  }",
-            "}"));
+        """
+async function abc() {
+ var $jscomp$forAwait$errResult0;
+ var $jscomp$forAwait$tempResult0;
+ var $jscomp$forAwait$retFn0;
+ try {
+   var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());
+   for (;;) {
+     $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
+     if ($jscomp$forAwait$tempResult0.done) {
+       break;
+     }
+     let a$jscomp$3 = $jscomp$forAwait$tempResult0.value;
+     {
+       bar();
+     }
+    }
+ } catch ($jscomp$forAwait$catchErrParam0) {
+   $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};
+ } finally {
+   try {
+     if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done && ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {
+       await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);
+     }
+   } finally {
+     if ($jscomp$forAwait$errResult0) {
+       throw $jscomp$forAwait$errResult0.error;
+     }
+    }
+  }
+}
+""");
 
     test(
         lines("async function abc() { for await (const a of foo()) { bar(); } }"),
-        lines(
-            "async function abc() {",
-            " var $jscomp$forAwait$errResult0;",
-            " var $jscomp$forAwait$tempResult0;",
-            " var $jscomp$forAwait$retFn0;",
-            " try {",
-            "   var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());",
-            "   for (;;) {",
-            "     $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
-            "     if ($jscomp$forAwait$tempResult0.done) {",
-            "       break;",
-            "     }",
-            "     const a$jscomp$3 = $jscomp$forAwait$tempResult0.value;",
-            "     {",
-            "       bar();",
-            "     }",
-            "    }",
-            " } catch ($jscomp$forAwait$catchErrParam0) {",
-            "   $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};",
-            " } finally {",
-            "   try {",
-            "     if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&"
-                + " ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
-            "       await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);",
-            "     }",
-            "   } finally {",
-            "     if ($jscomp$forAwait$errResult0) {",
-            "       throw $jscomp$forAwait$errResult0.error;",
-            "     }",
-            "    }",
-            "  }",
-            "}"));
+        """
+async function abc() {
+ var $jscomp$forAwait$errResult0;
+ var $jscomp$forAwait$tempResult0;
+ var $jscomp$forAwait$retFn0;
+ try {
+   var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());
+   for (;;) {
+     $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
+     if ($jscomp$forAwait$tempResult0.done) {
+       break;
+     }
+     const a$jscomp$3 = $jscomp$forAwait$tempResult0.value;
+     {
+       bar();
+     }
+    }
+ } catch ($jscomp$forAwait$catchErrParam0) {
+   $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};
+ } finally {
+   try {
+     if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done && ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {
+       await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);
+     }
+   } finally {
+     if ($jscomp$forAwait$errResult0) {
+       throw $jscomp$forAwait$errResult0.error;
+     }
+    }
+  }
+}
+""");
   }
 
   @Test
   public void testForAwaitOfInAsyncArrow() {
     test(
         lines("async () => { for await (let a of foo()) { bar(); } }"),
-        lines(
-            "async() => {",
-            "  var $jscomp$forAwait$errResult0;",
-            "  var $jscomp$forAwait$tempResult0;",
-            "  var $jscomp$forAwait$retFn0;",
-            "  try {",
-            "var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());",
-            "    for (;;) {",
-            "      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
-            "      if ($jscomp$forAwait$tempResult0.done) {",
-            "        break;",
-            "      }",
-            "      let a$jscomp$3 = $jscomp$forAwait$tempResult0.value;",
-            "      {",
-            "        bar();",
-            "      }",
-            "    }",
-            "  } catch ($jscomp$forAwait$catchErrParam0) {",
-            "    $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};",
-            "  } finally {",
-            "    try {",
-            "      if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&"
-                + " ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
-            "        await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);",
-            "      }",
-            "    } finally {",
-            "      if ($jscomp$forAwait$errResult0) {",
-            "        throw $jscomp$forAwait$errResult0.error;",
-            "      }",
-            "    }",
-            "  }",
-            "};"));
+        """
+async() => {
+  var $jscomp$forAwait$errResult0;
+  var $jscomp$forAwait$tempResult0;
+  var $jscomp$forAwait$retFn0;
+  try {
+var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());
+    for (;;) {
+      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
+      if ($jscomp$forAwait$tempResult0.done) {
+        break;
+      }
+      let a$jscomp$3 = $jscomp$forAwait$tempResult0.value;
+      {
+        bar();
+      }
+    }
+  } catch ($jscomp$forAwait$catchErrParam0) {
+    $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};
+  } finally {
+    try {
+      if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done && ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {
+        await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);
+      }
+    } finally {
+      if ($jscomp$forAwait$errResult0) {
+        throw $jscomp$forAwait$errResult0.error;
+      }
+    }
+  }
+};
+""");
   }
 
   @Test
   public void testLabelledForAwaitOf() {
     test(
-        lines(
-            "async () => {",
-            "  label:",
-            "  for await (let a of foo()) {",
-            "    bar();",
-            "  }",
-            "}"),
-        lines(
-            "async() => {",
-            "  var $jscomp$forAwait$errResult0;",
-            "  var $jscomp$forAwait$tempResult0;",
-            "  var $jscomp$forAwait$retFn0;",
-            "  try {",
-            // rewriting does not lose the label with the for await of statement
-            "  var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());",
-            "    label: for (;;) {",
-            "      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
-            "      if ($jscomp$forAwait$tempResult0.done) {",
-            "        break;",
-            "      }",
-            "      let a$jscomp$3 = $jscomp$forAwait$tempResult0.value;",
-            "      {",
-            "        bar();",
-            "      }",
-            "    }",
-            "  } catch ($jscomp$forAwait$catchErrParam0) {",
-            "    $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};",
-            "  } finally {",
-            "    try {",
-            "      if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&"
-                + " ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
-            "        await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);",
-            "      }",
-            "    } finally {",
-            "      if ($jscomp$forAwait$errResult0) {",
-            "        throw $jscomp$forAwait$errResult0.error;",
-            "      }",
-            "    }",
-            "  }",
-            "};"));
+        """
+        async () => {
+          label:
+          for await (let a of foo()) {
+            bar();
+          }
+        }
+        """,
+        """
+async() => {
+  var $jscomp$forAwait$errResult0;
+  var $jscomp$forAwait$tempResult0;
+  var $jscomp$forAwait$retFn0;
+  try {
+// rewriting does not lose the label with the for await of statement
+  var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());
+    label: for (;;) {
+      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
+      if ($jscomp$forAwait$tempResult0.done) {
+        break;
+      }
+      let a$jscomp$3 = $jscomp$forAwait$tempResult0.value;
+      {
+        bar();
+      }
+    }
+  } catch ($jscomp$forAwait$catchErrParam0) {
+    $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};
+  } finally {
+    try {
+      if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done && ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {
+        await $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0);
+      }
+    } finally {
+      if ($jscomp$forAwait$errResult0) {
+        throw $jscomp$forAwait$errResult0.error;
+      }
+    }
+  }
+};
+""");
   }
 
   @Test
   public void testForAwaitOfInAsyncGenerator() {
     test(
-        lines(
-            "async function* foo() {",
-            "  for await (let val of bar()) {",
-            "    yield* val;",
-            "  }",
-            "}"),
-        lines(
-            "function foo() {",
-            "  return new $jscomp.AsyncGeneratorWrapper(function*() {",
-            "    var $jscomp$forAwait$errResult0;",
-            "    var $jscomp$forAwait$tempResult0;",
-            "    var $jscomp$forAwait$retFn0;",
-            "    try {",
-            "var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(bar());",
-            "      for (;;) {",
-            "        $jscomp$forAwait$tempResult0 = yield new"
-                + " $jscomp.AsyncGeneratorWrapper$ActionRecord($jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE,"
-                + " $jscomp$forAwait$tempIterator0.next());",
-            "        if ($jscomp$forAwait$tempResult0.done) {",
-            "          break;",
-            "        }",
-            "        let val = $jscomp$forAwait$tempResult0.value;",
-            "        {",
-            "          yield new"
-                + " $jscomp.AsyncGeneratorWrapper$ActionRecord($jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_STAR,"
-                + " val);",
-            "        }",
-            "      }",
-            "    } catch ($jscomp$forAwait$catchErrParam0) {",
-            "      $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};",
-            "    } finally {",
-            "      try {",
-            "        if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done &&"
-                + " ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {",
-            "          yield new"
-                + " $jscomp.AsyncGeneratorWrapper$ActionRecord($jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE,"
-                + " $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0));",
-            "        }",
-            "      } finally {",
-            "        if ($jscomp$forAwait$errResult0) {",
-            "          throw $jscomp$forAwait$errResult0.error;",
-            "        }",
-            "      }",
-            "    }",
-            "  }());",
-            "}"));
+        """
+        async function* foo() {
+          for await (let val of bar()) {
+            yield* val;
+          }
+        }
+        """,
+        """
+function foo() {
+  return new $jscomp.AsyncGeneratorWrapper(function*() {
+    var $jscomp$forAwait$errResult0;
+    var $jscomp$forAwait$tempResult0;
+    var $jscomp$forAwait$retFn0;
+    try {
+var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(bar());
+      for (;;) {
+        $jscomp$forAwait$tempResult0 = yield new $jscomp.AsyncGeneratorWrapper$ActionRecord($jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE, $jscomp$forAwait$tempIterator0.next());
+        if ($jscomp$forAwait$tempResult0.done) {
+          break;
+        }
+        let val = $jscomp$forAwait$tempResult0.value;
+        {
+          yield new $jscomp.AsyncGeneratorWrapper$ActionRecord($jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_STAR, val);
+        }
+      }
+    } catch ($jscomp$forAwait$catchErrParam0) {
+      $jscomp$forAwait$errResult0 = {error:$jscomp$forAwait$catchErrParam0};
+    } finally {
+      try {
+        if ($jscomp$forAwait$tempResult0 && !$jscomp$forAwait$tempResult0.done && ($jscomp$forAwait$retFn0 = $jscomp$forAwait$tempIterator0.return)) {
+          yield new $jscomp.AsyncGeneratorWrapper$ActionRecord($jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE, $jscomp$forAwait$retFn0.call($jscomp$forAwait$tempIterator0));
+        }
+      } finally {
+        if ($jscomp$forAwait$errResult0) {
+          throw $jscomp$forAwait$errResult0.error;
+        }
+      }
+    }
+  }());
+}
+""");
   }
 }

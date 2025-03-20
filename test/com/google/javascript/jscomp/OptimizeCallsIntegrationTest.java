@@ -77,108 +77,110 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
   @Test
   public void testUnusedTaggedTemplateLiteralSubstitutionsAreNotRemoved() {
     test(
-        lines(
-            "var f = function(strings, x, y) {",
-            // x and y are unused
-            "  return strings;",
-            "};",
-            "f`tagged${1} ${2}`;",
-            "f();"),
-        lines(
-            "var f = function(strings) {",
-            // x and y are unused
-            "  return strings;",
-            "};",
-            "f`tagged${1} ${2}`;",
-            "f();"));
+        """
+        var f = function(strings, x, y) {
+        // x and y are unused
+          return strings;
+        };
+        f`tagged${1} ${2}`;
+        f();
+        """,
+        """
+        var f = function(strings) {
+        // x and y are unused
+          return strings;
+        };
+        f`tagged${1} ${2}`;
+        f();
+        """);
 
     test(
-        lines(
-            "var f = function(strings, ...rest) {",
-            // `rest` is unused
-            "  return strings;",
-            "};",
-            "f`tagged ${1} ${2}`;",
-            "f();",
-            ""),
-        lines(
-            "var f = function(strings) {",
-            // `rest` is unused
-            "  return strings;",
-            "};",
-            "f`tagged ${1} ${2}`;",
-            "f();",
-            ""));
+        """
+        var f = function(strings, ...rest) {
+        // `rest` is unused
+          return strings;
+        };
+        f`tagged ${1} ${2}`;
+        f();
+        """,
+        """
+        var f = function(strings) {
+        // `rest` is unused
+          return strings;
+        };
+        f`tagged ${1} ${2}`;
+        f();
+        """);
 
     testSame(
-        lines(
-            "var f = function(strings, ...rest) {",
-            // all arguments are used
-            "  return [strings, rest];",
-            "};",
-            "f`tagged ${1} ${2}`;",
-            "f();",
-            ""));
+        """
+        var f = function(strings, ...rest) {
+        // all arguments are used
+          return [strings, rest];
+        };
+        f`tagged ${1} ${2}`;
+        f();
+        """);
   }
 
   @Test
   public void testConvertTaggedTemplateLiteralToANormalCall() {
     test(
-        lines(
-            "var f = function(strings, x, y) {",
-            //  `strings` parameter is unused
-            "  return [x, y];",
-            "};",
-            "f`tagged${1} ${2}`;",
-            "f();",
-            ""),
-        lines(
-            "var f = function(x$jscomp$1, y) {",
-            "  return [x$jscomp$1, y];",
-            "};",
-            // Tagged template literal gets converted to a normal call
-            "f(1, 2);",
-            "f();",
-            ""));
+        """
+        var f = function(strings, x, y) {
+        //  `strings` parameter is unused
+          return [x, y];
+        };
+        f`tagged${1} ${2}`;
+        f();
+        """,
+        """
+        var f = function(x$jscomp$1, y) {
+          return [x$jscomp$1, y];
+        };
+        // Tagged template literal gets converted to a normal call
+        f(1, 2);
+        f();
+        """);
   }
 
   @Test
   public void testConvertTaggedTemplateLiteralToANormalCallThenOptimized() {
     test(
-        lines(
-            "var f = function(strings, x, y) {",
-            //  all parameters are unused
-            "  return '';",
-            "};",
-            "f`tagged${1} ${2}`;",
-            "f();",
-            ""),
-        lines(
-            "var f = function() {",
-            "  return '';",
-            "};",
-            // Tagged template literal gets converted to a normal call
-            "f();",
-            "f();",
-            ""));
+        """
+        var f = function(strings, x, y) {
+        //  all parameters are unused
+          return '';
+        };
+        f`tagged${1} ${2}`;
+        f();
+        """,
+        """
+        var f = function() {
+          return '';
+        };
+        // Tagged template literal gets converted to a normal call
+        f();
+        f();
+        """);
   }
 
   @Test
   public void testInlineWindow() {
     test(
-        lines(
-            "function foo(window) {", //
-            "  alert(window);",
-            "}",
-            "foo(window);",
-            ""),
-        lines(
-            "function foo(      ) {", //
-            "  var window$jscomp$1 = window;",
-            "  alert(window$jscomp$1);",
-            "}",
-            "foo(      );",
-            ""));
+        """
+        function foo(window) {
+          alert(window);
+        }
+        foo(window);
+        """,
+        """
+        function foo(      ) {
+          var window$jscomp$1 = window;
+          alert(window$jscomp$1);
+        }
+        foo(      );
+        """);
   }
 
   @Test
@@ -186,57 +188,61 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
     test(
         externs(new TestExternsBuilder().addConsole().build()),
         srcs(
-            lines(
-                "class C {",
-                "  constructor(unusedValue = () => {}, value = 3) {",
-                "    this.value = value;",
-                "  }",
-                "  getValue() {",
-                "    return this.value;",
-                "  }",
-                "}",
-                "console.log(new C(() => {}, 25).getValue());")),
+            """
+            class C {
+              constructor(unusedValue = () => {}, value = 3) {
+                this.value = value;
+              }
+              getValue() {
+                return this.value;
+              }
+            }
+            console.log(new C(() => {}, 25).getValue());
+            """),
         expected(
-            lines(
-                "class C {",
-                "  constructor(                                 ) {",
-                "    var value = 25;",
-                "    this.value = value;",
-                "  }",
-                "  getValue() {",
-                "    return this.value;",
-                "  }",
-                "}",
-                "console.log(new C(            ).getValue());")));
+            """
+            class C {
+              constructor(                                 ) {
+                var value = 25;
+                this.value = value;
+              }
+              getValue() {
+                return this.value;
+              }
+            }
+            console.log(new C(            ).getValue());
+            """));
 
     test(
         externs(new TestExternsBuilder().addConsole().build()),
         srcs(
-            lines(
-                "class C {",
-                "  constructor(unusedValue = () => {}, value = 3) {",
-                "    this.value = value;",
-                "  }",
-                "  getValue() {",
-                "    return this.value;",
-                "  }",
-                "}",
-                // 2 calls to the constructor with different used values,
-                // so the second parameter cannot actually be removed.
-                "console.log(new C(() => {}, 15).getValue());",
-                "console.log(new C(() => {}, 25).getValue());")),
+            """
+            class C {
+              constructor(unusedValue = () => {}, value = 3) {
+                this.value = value;
+              }
+              getValue() {
+                return this.value;
+              }
+            }
+            // 2 calls to the constructor with different used values,
+            // so the second parameter cannot actually be removed.
+            console.log(new C(() => {}, 15).getValue());
+            console.log(new C(() => {}, 25).getValue());
+            """),
         expected(
-            lines(
-                "class C {",
-                "  constructor(                        value = 3) {",
-                "    this.value = value;",
-                "  }",
-                "  getValue() {",
-                "    return this.value;",
-                "  }",
-                "}",
-                "console.log(new C(          15).getValue());",
-                "console.log(new C(          25).getValue());")));
+            """
+            class C {
+              constructor(                        value = 3) {
+                this.value = value;
+              }
+              getValue() {
+                return this.value;
+              }
+            }
+            console.log(new C(          15).getValue());
+            console.log(new C(          25).getValue());
+            """));
   }
 
   @Test
@@ -244,33 +250,35 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
     test(
         externs(new TestExternsBuilder().addConsole().build()),
         srcs(
-            lines(
-                "class C {",
-                "  constructor(unusedValue = () => {}, value = 3) {",
-                "    this.value = value;",
-                "  }",
-                "  getValue() {",
-                "    return this.value;",
-                "  }",
-                "}",
-                "class SubC extends C {}", // no declared constructor
-                "console.log(new SubC(() => {}, 25).getValue());",
-                "console.log(new C(() => {}, 25).getValue());")),
+            """
+            class C {
+              constructor(unusedValue = () => {}, value = 3) {
+                this.value = value;
+              }
+              getValue() {
+                return this.value;
+              }
+            }
+            class SubC extends C {} // no declared constructor
+            console.log(new SubC(() => {}, 25).getValue());
+            console.log(new C(() => {}, 25).getValue());
+            """),
         expected(
-            lines(
-                "class C {",
-                // default value removed, but no arguments removed or inlined
-                // due to subclass.
-                "  constructor(unusedValue           , value = 3) {",
-                "    this.value = value;",
-                "  }",
-                "  getValue() {",
-                "    return this.value;",
-                "  }",
-                "}",
-                "class SubC extends C {}",
-                "console.log(new SubC(() => {}, 25).getValue());",
-                "console.log(new C(() => {}, 25).getValue());")));
+            """
+            class C {
+            // default value removed, but no arguments removed or inlined
+            // due to subclass.
+              constructor(unusedValue           , value = 3) {
+                this.value = value;
+              }
+              getValue() {
+                return this.value;
+              }
+            }
+            class SubC extends C {}
+            console.log(new SubC(() => {}, 25).getValue());
+            console.log(new C(() => {}, 25).getValue());
+            """));
   }
 
   @Test
@@ -278,142 +286,144 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
     test(
         externs(new TestExternsBuilder().addConsole().build()),
         srcs(
-            lines(
-                "class C {",
-                "  constructor(unusedValue = () => {}, value = 3) {",
-                "    this.value = value;",
-                "  }",
-                "  getValue() {",
-                "    return this.value;",
-                "  }",
-                "}",
-                "class SubC extends C {",
-                "  constructor(value) {",
-                "    super(0, value);", // calls super constructor
-                "  }",
-                "}",
-                "console.log(new SubC(25).getValue());",
-                "console.log(new C(() => {}, 25).getValue());")),
+            """
+            class C {
+              constructor(unusedValue = () => {}, value = 3) {
+                this.value = value;
+              }
+              getValue() {
+                return this.value;
+              }
+            }
+            class SubC extends C {
+              constructor(value) {
+                super(0, value); // calls super constructor
+              }
+            }
+            console.log(new SubC(25).getValue());
+            console.log(new C(() => {}, 25).getValue());
+            """),
         expected(
-            lines(
-                "class C {",
-                // First parameter removed because it was never used.
-                "  constructor(                        value = 3) {",
-                "    this.value = value;",
-                "  }",
-                "  getValue() {",
-                "    return this.value;",
-                "  }",
-                "}",
-                "class SubC extends C {",
-                // Parameter was inlined with the only value ever passed to it.
-                "  constructor(     ) {",
-                "    var value$jscomp$1 = 25;",
-                // first parameter to super() was removed to match its removal in the
-                // definition above.
-                "    super(   value$jscomp$1);",
-                "  }",
-                "}",
-                "console.log(new SubC(  ).getValue());",
-                // unused parameter removed.
-                "console.log(new C(          25).getValue());")));
+            """
+            class C {
+            // First parameter removed because it was never used.
+              constructor(                        value = 3) {
+                this.value = value;
+              }
+              getValue() {
+                return this.value;
+              }
+            }
+            class SubC extends C {
+            // Parameter was inlined with the only value ever passed to it.
+              constructor(     ) {
+                var value$jscomp$1 = 25;
+            // first parameter to super() was removed to match its removal in the
+            // definition above.
+                super(   value$jscomp$1);
+              }
+            }
+            console.log(new SubC(  ).getValue());
+            // unused parameter removed.
+            console.log(new C(          25).getValue());
+            """));
     // Same test as above, but with class expressions instead of declarations.
     test(
         externs(new TestExternsBuilder().addConsole().build()),
         srcs(
-            lines(
-                "const C = class {", // class expression instead of declaration
-                "  constructor(unusedValue = () => {}, value = 3) {",
-                "    this.value = value;",
-                "  }",
-                "  getValue() {",
-                "    return this.value;",
-                "  }",
-                "}",
-                "const SubC = class extends C {", // class expression instead of declaration
-                "  constructor(value) {",
-                "    super(0, value);", // calls super constructor
-                "  }",
-                "}",
-                "console.log(new SubC(25).getValue());",
-                "console.log(new C(() => {}, 25).getValue());")),
+            """
+            const C = class { // class expression instead of declaration
+              constructor(unusedValue = () => {}, value = 3) {
+                this.value = value;
+              }
+              getValue() {
+                return this.value;
+              }
+            }
+            const SubC = class extends C { // class expression instead of declaration
+              constructor(value) {
+                super(0, value); // calls super constructor
+              }
+            }
+            console.log(new SubC(25).getValue());
+            console.log(new C(() => {}, 25).getValue());
+            """),
         expected(
-            lines(
-                "const C = class {",
-                // First parameter removed because it was never used.
-                "  constructor(                        value = 3) {",
-                "    this.value = value;",
-                "  }",
-                "  getValue() {",
-                "    return this.value;",
-                "  }",
-                "}",
-                "const SubC = class extends C {",
-                // Parameter was inlined with the only value ever passed to it.
-                "  constructor(     ) {",
-                "    var value$jscomp$1 = 25;",
-                // first parameter to super() was removed to match its removal in the
-                // definition above.
-                "    super(   value$jscomp$1);",
-                "  }",
-                "}",
-                "console.log(new SubC(  ).getValue());",
-                // unused parameter removed.
-                "console.log(new C(          25).getValue());")));
+            """
+            const C = class {
+            // First parameter removed because it was never used.
+              constructor(                        value = 3) {
+                this.value = value;
+              }
+              getValue() {
+                return this.value;
+              }
+            }
+            const SubC = class extends C {
+            // Parameter was inlined with the only value ever passed to it.
+              constructor(     ) {
+                var value$jscomp$1 = 25;
+            // first parameter to super() was removed to match its removal in the
+            // definition above.
+                super(   value$jscomp$1);
+              }
+            }
+            console.log(new SubC(  ).getValue());
+            // unused parameter removed.
+            console.log(new C(          25).getValue());
+            """));
   }
 
   @Test
   public void testAliasOfAFunction() {
     testSame(
-        lines(
-            "", //
-            "function foo(arg1) {",
-            "  return arg1",
-            "}",
-            "",
-            // first definition of bar
-            "let bar = foo;",
-            // really calls foo(1)
-            // the `1` cannot be inlined because bar is an alias of
-            // `foo`
-            "bar(1);", // return value unused
-            // redefinition of bar with a function literal
-            "bar = function(arg1) {",
-            "  return arg1 + 1;",
-            "};",
-            "bar(1)", // return value unused & same argument
-            ""));
+        """
+        function foo(arg1) {
+          return arg1
+        }
+
+        // first definition of bar
+        let bar = foo;
+        // really calls foo(1)
+        // the `1` cannot be inlined because bar is an alias of
+        // `foo`
+        bar(1); // return value unused
+        // redefinition of bar with a function literal
+        bar = function(arg1) {
+          return arg1 + 1;
+        };
+        bar(1) // return value unused & same argument
+        """);
   }
 
   @Test
   public void testAliasingAssignment() {
     testSame(
-        lines(
-            "", //
-            "/** @constructor */",
-            "function MyClass() {",
-            "  this.myField = null;",
-            "}",
-            "",
-            // This assignment creates an alias, so we can't know all of the callers and cannot
-            // safely optimize away `myArgument`.
-            "MyClass.prototype[\"myMethod\"] =",
-            "    MyClass.prototype.myMethod = function (myArgument) {",
-            "  if (undefined === myArgument) {",
-            "      myArgument = this.myField;",
-            "  }",
-            "  return \"myMethod with argument: \" + myArgument;",
-            "};",
-            "",
-            "function globalMyMethod(oMyClass) {",
-            // One call to `myMethod` exists, and it doesn't use the optional argument.
-            "  return oMyClass.myMethod();",
-            "}",
-            "",
-            // These both escape, so they won't be removed as unused.
-            "window[\"MyClass\"] = MyClass;",
-            "window[\"globalMyMethod\"] = globalMyMethod;",
-            ""));
+        """
+        /** @constructor */
+        function MyClass() {
+          this.myField = null;
+        }
+
+        // This assignment creates an alias, so we can't know all of the callers and cannot
+        // safely optimize away `myArgument`.
+        MyClass.prototype["myMethod"] =
+            MyClass.prototype.myMethod = function (myArgument) {
+          if (undefined === myArgument) {
+              myArgument = this.myField;
+          }
+          return "myMethod with argument: " + myArgument;
+        };
+
+        function globalMyMethod(oMyClass) {
+        // One call to `myMethod` exists, and it doesn't use the optional argument.
+          return oMyClass.myMethod();
+        }
+
+        // These both escape, so they won't be removed as unused.
+        window["MyClass"] = MyClass;
+        window["globalMyMethod"] = globalMyMethod;
+        """);
   }
 
   @Test
@@ -443,16 +453,18 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
   @Test
   public void testNestingFunctionCallWithUnsedParams() {
     test(
-        lines(
-            "function f1(x) { }",
-            "function f2(x) { }",
-            "function f3(x) { }",
-            "function f4(x) { }",
-            "f3(f1(f2()));"),
-        lines(
-            "function f1(){f2()}",
-            "function f2(){}", //
-            "function f3(){f1()}f3()"));
+        """
+        function f1(x) { }
+        function f2(x) { }
+        function f3(x) { }
+        function f4(x) { }
+        f3(f1(f2()));
+        """,
+        """
+        function f1(){f2()}
+        function f2(){}
+        function f3(){f1()}f3()
+        """);
   }
 
   @Test
@@ -585,14 +597,16 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
     // Unused parmeters to constructors invoked with .call
     // can be removed.
     test(
-        lines(
-            "var Ctor1=function(a,b){return a};", // preserve newlines
-            "Ctor1.call(this, 1, 2);",
-            "Ctor1(3, 4)"),
-        lines(
-            "var Ctor1=function(a  ){a; return};", // preserve newlines
-            "Ctor1.call(this,1);",
-            "Ctor1(3)"));
+        """
+        var Ctor1=function(a,b){return a}; // preserve newlines
+        Ctor1.call(this, 1, 2);
+        Ctor1(3, 4)
+        """,
+        """
+        var Ctor1=function(a  ){a; return}; // preserve newlines
+        Ctor1.call(this,1);
+        Ctor1(3)
+        """);
   }
 
   @Test
@@ -602,34 +616,38 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
 
     // For now, goog.inherits prevents optimizations
     test(
-        lines(
-            "var Ctor1=function(a,b){use(a)};",
-            "var Ctor2=function(x,y){};",
-            "goog$inherits(Ctor2, Ctor1);",
-            "new Ctor2(1,2);new Ctor2(3,4);"),
-        lines(
-            "var Ctor1=function(a){use(a)};",
-            "var Ctor2=function(){};",
-            "goog$inherits(Ctor2, Ctor1);",
-            "new Ctor2(1,2);new Ctor2(3,4);"));
+        """
+        var Ctor1=function(a,b){use(a)};
+        var Ctor2=function(x,y){};
+        goog$inherits(Ctor2, Ctor1);
+        new Ctor2(1,2);new Ctor2(3,4);
+        """,
+        """
+        var Ctor1=function(a){use(a)};
+        var Ctor2=function(){};
+        goog$inherits(Ctor2, Ctor1);
+        new Ctor2(1,2);new Ctor2(3,4);
+        """);
   }
 
   @Test
   public void testCallSiteInteraction_constructors2() {
     // For now, goog.inherits prevents call site optimizations
     String code =
-        lines(
-            "var Ctor1=function(a,b){return a};",
-            "var Ctor2=function(x,y){Ctor1.call(this,x,y)};",
-            "goog$inherits(Ctor2, Ctor1);",
-            "new Ctor2(1,2);new Ctor2(3,4)");
+        """
+        var Ctor1=function(a,b){return a};
+        var Ctor2=function(x,y){Ctor1.call(this,x,y)};
+        goog$inherits(Ctor2, Ctor1);
+        new Ctor2(1,2);new Ctor2(3,4)
+        """;
 
     String expected =
-        lines(
-            "var Ctor1=function(a){return a};",
-            "var Ctor2=function(x,y){Ctor1.call(this,x,y)};",
-            "goog$inherits(Ctor2, Ctor1);",
-            "new Ctor2(1,2);new Ctor2(3,4)");
+        """
+        var Ctor1=function(a){return a};
+        var Ctor2=function(x,y){Ctor1.call(this,x,y)};
+        goog$inherits(Ctor2, Ctor1);
+        new Ctor2(1,2);new Ctor2(3,4)
+        """;
 
     test(code, expected);
   }
@@ -640,24 +658,27 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
     // contains a call site in its subtree (will cause the call site's parent
     // pointer to be null).
     test(
-        lines(
-            "var a=function(x,y){};", //
-            "var b=function(z){};",
-            "a(new b, b)"),
-        lines(
-            "var a=function(){new b;b};", //
-            "var b=function(){};",
-            "a()"));
+        """
+        var a=function(x,y){};
+        var b=function(z){};
+        a(new b, b)
+        """,
+        """
+        var a=function(){new b;b};
+        var b=function(){};
+        a()
+        """);
   }
 
   @Test
   public void testRemoveUnusedVarsPossibleNpeCase() {
     test(
-        lines(
-            "var a = [];",
-            "var register = function(callback) {a[0] = callback};",
-            "register(function(transformer) {});",
-            "register(function(transformer) {});"),
+        """
+        var a = [];
+        var register = function(callback) {a[0] = callback};
+        register(function(transformer) {});
+        register(function(transformer) {});
+        """,
         lines("var register=function(){};register();register()"));
   }
 
@@ -665,12 +686,14 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
   public void testDoNotOptimizeJSCompiler_renameProperty() {
     // Only the function definition can be modified, none of the call sites.
     test(
-        lines(
-            "function JSCompiler_renameProperty(a) {};", //
-            "JSCompiler_renameProperty('a');"),
-        lines(
-            "function JSCompiler_renameProperty() {};", //
-            "JSCompiler_renameProperty('a');"));
+        """
+        function JSCompiler_renameProperty(a) {};
+        JSCompiler_renameProperty('a');
+        """,
+        """
+        function JSCompiler_renameProperty() {};
+        JSCompiler_renameProperty('a');
+        """);
   }
 
   @Test
@@ -825,68 +848,69 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
   @Test
   public void testReflectedMethods() {
     testSame(
-        lines(
-            "/** @constructor */",
-            "function Foo() {}",
-            "Foo.prototype.handle = function(x, y) { alert(y); };",
-            "var x = goog.reflect.object(Foo, {handle: 1});",
-            "for (var i in x) { x[i].call(x); }",
-            "window['Foo'] = Foo;"));
+        """
+        /** @constructor */
+        function Foo() {}
+        Foo.prototype.handle = function(x, y) { alert(y); };
+        var x = goog.reflect.object(Foo, {handle: 1});
+        for (var i in x) { x[i].call(x); }
+        window['Foo'] = Foo;
+        """);
   }
 
   @Test
   public void testExistenceOfAGetter_preventsParamOptimization() {
     testSame(
-        lines(
-            "class Bar {",
-            // TODO(nickreid): Use `declareAccessor rather than specifying in snippet. We can't do
-            // that currently because `RemoveUnusedCode` unilaterally runs another collection.
-            "  get foo() {",
-            "    return (x) => x;",
-            "  }",
-            "}",
-            "",
-            "class Foo {", //
-            "  foo() {}",
-            "}",
-            "",
-            "new (Foo || Bar)().foo('onlyUsedByGetter');"));
+        """
+        class Bar {
+        // TODO(nickreid): Use `declareAccessor rather than specifying in snippet. We can't do
+        // that currently because `RemoveUnusedCode` unilaterally runs another collection.
+          get foo() {
+            return (x) => x;
+          }
+        }
+
+        class Foo {
+          foo() {}
+        }
+
+        new (Foo || Bar)().foo('onlyUsedByGetter');
+        """);
   }
 
   @Test
   public void testExistenceOfASetter_preventsParamOptimization() {
     testSame(
-        lines(
-            "class Bar {",
-            // TODO(nickreid): Use `declareAccessor rather than specifying in snippet. We can't do
-            // that currently because `RemoveUnusedCode` unilaterally runs another collection.
-            "  set foo(f) {",
-            "    this.bar = f;",
-            "  }",
-            "}",
-            "",
-            // This is a defnition for `.bar`. It would be dangerous to optimize it as if it were a
-            // definition of `.foo`
-            "var x = new Bar();",
-            "x.foo = function(param) { return param; };",
-            "x.foo();"));
+        """
+        class Bar {
+        // TODO(nickreid): Use `declareAccessor rather than specifying in snippet. We can't do
+        // that currently because `RemoveUnusedCode` unilaterally runs another collection.
+          set foo(f) {
+            this.bar = f;
+          }
+        }
+
+        // This is a defnition for `.bar`. It would be dangerous to optimize it as if it were a
+        // definition of `.foo`
+        var x = new Bar();
+        x.foo = function(param) { return param; };
+        x.foo();
+        """);
   }
 
   @Test
   public void testUndefinedLiterals_beforeOtherUnused() {
     test(
-        lines(
-            "", //
-            "function foo(a, b) { use(a); }",
-            // check that this undefined gets removed if it is before another unused param
-            "foo(undefined, 3);",
-            "foo(void 0, 4);",
-            ""),
-        lines(
-            "", //
-            "function foo(a) { use(a); }",
-            "foo();",
-            "foo();",
-            ""));
+        """
+        function foo(a, b) { use(a); }
+        // check that this undefined gets removed if it is before another unused param
+        foo(undefined, 3);
+        foo(void 0, 4);
+        """,
+        """
+        function foo(a) { use(a); }
+        foo();
+        foo();
+        """);
   }
 }

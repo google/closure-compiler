@@ -300,23 +300,26 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     this.useDefaultRenamer = true;
     // Changes the parameter name if it's the same as loop object name
     test(
-        lines(
-            "var loopObjName = {};", //
-            "for(;;) {",
-            "   var fn = (function f(loopObjName){ return function() {}; })(loopObjName);",
-            "}"),
-        lines(
-            "var loopObjName = {};", //
-            "for(;;) {",
-            "   var fn = (function f(loopObjName$jscomp$1){ return function() {}; })(loopObjName);",
-            "}"));
+        """
+        var loopObjName = {};
+        for(;;) {
+           var fn = (function f(loopObjName){ return function() {}; })(loopObjName);
+        }
+        """,
+        """
+        var loopObjName = {};
+        for(;;) {
+           var fn = (function f(loopObjName$jscomp$1){ return function() {}; })(loopObjName);
+        }
+        """);
 
     // parameter name is already unique; no change
     testSame(
-        lines(
-            "var foo = {};",
-            "for(;;) {",
-            "   var fn = (function f(bar){ return function() {}; })(foo);}"));
+        """
+        var foo = {};
+        for(;;) {
+           var fn = (function f(bar){ return function() {}; })(foo);}
+        """);
   }
 
   @Test
@@ -382,33 +385,53 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testLetsInSeparateBlocks() {
     useDefaultRenamer = true;
     test(
-        lines(
-            "if (x) {", "  let e;", "  alert(e);", "}", "if (y) {", "  let e;", "  alert(e);", "}"),
-        lines(
-            "if (x) {",
-            "  let e;",
-            "  alert(e);",
-            "}",
-            "if (y) {",
-            "  let e$jscomp$1;",
-            "  alert(e$jscomp$1);",
-            "}"));
+        """
+        if (x) {
+          let e;
+          alert(e);
+        }
+        if (y) {
+          let e;
+          alert(e);
+        }
+        """,
+        """
+        if (x) {
+          let e;
+          alert(e);
+        }
+        if (y) {
+          let e$jscomp$1;
+          alert(e$jscomp$1);
+        }
+        """);
   }
 
   @Test
   public void testConstInGlobalHoistScope() {
     useDefaultRenamer = true;
-    testSame(lines("if (true) {", "  const x = 1; alert(x);", "}"));
+    testSame(
+        """
+        if (true) {
+          const x = 1; alert(x);
+        }
+        """);
 
     test(
-        lines(
-            "if (true) {", "  const x = 1; alert(x);", "} else {", "  const x = 1; alert(x);", "}"),
-        lines(
-            "if (true) {",
-            "  const x = 1; alert(x);",
-            "} else {",
-            "  const x$jscomp$1 = 1; alert(x$jscomp$1);",
-            "}"));
+        """
+        if (true) {
+          const x = 1; alert(x);
+        } else {
+          const x = 1; alert(x);
+        }
+        """,
+        """
+        if (true) {
+          const x = 1; alert(x);
+        } else {
+          const x$jscomp$1 = 1; alert(x$jscomp$1);
+        }
+        """);
   }
 
   @Test
@@ -423,44 +446,54 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
     // Local names are made unique.
     test(
-        lines(
-            "var a;", //
-            "function foo(a){var b;a}"),
-        lines(
-            "var a$jscomp$unique_0;",
-            "function foo$jscomp$unique_1(a$jscomp$unique_2){",
-            "  var b$jscomp$unique_3;a$jscomp$unique_2}"));
+        """
+        var a;
+        function foo(a){var b;a}
+        """,
+        """
+        var a$jscomp$unique_0;
+        function foo$jscomp$unique_1(a$jscomp$unique_2){
+          var b$jscomp$unique_3;a$jscomp$unique_2}
+        """);
     test(
-        lines(
-            "var a;", //
-            "function foo(){var b;a}",
-            "function boo(){var b;a}"),
-        lines(
-            "var a$jscomp$unique_0;",
-            "function foo$jscomp$unique_1(){var b$jscomp$unique_3;a$jscomp$unique_0}",
-            "function boo$jscomp$unique_2(){var b$jscomp$unique_4;a$jscomp$unique_0}"));
+        """
+        var a;
+        function foo(){var b;a}
+        function boo(){var b;a}
+        """,
+        """
+        var a$jscomp$unique_0;
+        function foo$jscomp$unique_1(){var b$jscomp$unique_3;a$jscomp$unique_0}
+        function boo$jscomp$unique_2(){var b$jscomp$unique_4;a$jscomp$unique_0}
+        """);
 
     test(
         "let a; function foo(a) {let b; a; }",
-        lines(
-            "let a$jscomp$unique_0;",
-            "function foo$jscomp$unique_1(a$jscomp$unique_2) {",
-            "  let b$jscomp$unique_3;",
-            "  a$jscomp$unique_2;",
-            "}"));
+        """
+        let a$jscomp$unique_0;
+        function foo$jscomp$unique_1(a$jscomp$unique_2) {
+          let b$jscomp$unique_3;
+          a$jscomp$unique_2;
+        }
+        """);
 
     test(
-        lines("let a;", "function foo() { let b; a; }", "function boo() { let b; a; }"),
-        lines(
-            "let a$jscomp$unique_0;",
-            "function foo$jscomp$unique_1() {",
-            "  let b$jscomp$unique_3;",
-            "  a$jscomp$unique_0;",
-            "}",
-            "function boo$jscomp$unique_2() {",
-            "  let b$jscomp$unique_4;",
-            "  a$jscomp$unique_0;",
-            "}"));
+        """
+        let a;
+        function foo() { let b; a; }
+        function boo() { let b; a; }
+        """,
+        """
+        let a$jscomp$unique_0;
+        function foo$jscomp$unique_1() {
+          let b$jscomp$unique_3;
+          a$jscomp$unique_0;
+        }
+        function boo$jscomp$unique_2() {
+          let b$jscomp$unique_4;
+          a$jscomp$unique_0;
+        }
+        """);
 
     // Verify function expressions are renamed.
     test(
@@ -539,62 +572,67 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testOnlyInversion3() {
     invert = true;
     test(
-        lines(
-            "function x1() {",
-            "  var a$jscomp$1;",
-            "  function x2() {",
-            "    var a$jscomp$2;",
-            "  }",
-            "  function x3() {",
-            "    var a$jscomp$3;",
-            "  }",
-            "}"),
-        lines(
-            "function x1() {",
-            "  var a;",
-            "  function x2() {",
-            "    var a;",
-            "  }",
-            "  function x3() {",
-            "    var a;",
-            "  }",
-            "}"));
+        """
+        function x1() {
+          var a$jscomp$1;
+          function x2() {
+            var a$jscomp$2;
+          }
+          function x3() {
+            var a$jscomp$3;
+          }
+        }
+        """,
+        """
+        function x1() {
+          var a;
+          function x2() {
+            var a;
+          }
+          function x3() {
+            var a;
+          }
+        }
+        """);
   }
 
   @Test
   public void testOnlyInversion4() {
     invert = true;
     testSame(
-        lines(
-            "function x1() {",
-            // The attempt to rename will re-generate this same exact name.
-            // The purpose of this test is to make sure we don't accidentally report
-            // this "renaming" to the same name as a change.
-            "  var a$jscomp$0;",
-            "  function x2() {",
-            "    var a;a$jscomp$0++",
-            "  }",
-            "}"));
+        """
+        function x1() {
+        // The attempt to rename will re-generate this same exact name.
+        // The purpose of this test is to make sure we don't accidentally report
+        // this "renaming" to the same name as a change.
+          var a$jscomp$0;
+          function x2() {
+            var a;a$jscomp$0++
+          }
+        }
+        """);
   }
 
   @Test
   public void testOnlyInversion5() {
     invert = true;
     test(
-        lines(
-            "function x1() {",
-            "  const a$jscomp$1 = 0;",
-            "  function x2() {",
-            "    const b$jscomp$1 = 0;",
-            "  }",
-            "}"),
-        lines(
-            "function x1() {",
-            "  const a = 0;",
-            "  function x2() {",
-            "    const b = 0;",
-            "  }",
-            "}"));
+        """
+        function x1() {
+          const a$jscomp$1 = 0;
+          function x2() {
+            const b$jscomp$1 = 0;
+          }
+        }
+        """,
+        """
+        function x1() {
+          const a = 0;
+          function x2() {
+            const b = 0;
+          }
+        }
+        """);
   }
 
   @Test
@@ -632,38 +670,63 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testRestParamWithContextWithInversion() {
     this.useDefaultRenamer = true;
     testWithInversion(
-        lines("let x = 0;", "function foo(...x) {", "  return x[0];", "}"),
-        lines("let x = 0;", "function foo(...x$jscomp$1) {", "  return x$jscomp$1[0]", "}"));
+        """
+        let x = 0;
+        function foo(...x) {
+          return x[0];
+        }
+        """,
+        """
+        let x = 0;
+        function foo(...x$jscomp$1) {
+          return x$jscomp$1[0]
+        }
+        """);
   }
 
   @Test
   public void testVarParamSameName0() {
     test(
-        lines("function f(x) {", "  if (!x) var x = 6;", "}"),
-        lines(
-            "function f$jscomp$unique_0(x$jscomp$unique_1) {",
-            "  if (!x$jscomp$unique_1) var x$jscomp$unique_1 = 6;",
-            "}"));
+        """
+        function f(x) {
+          if (!x) var x = 6;
+        }
+        """,
+        """
+        function f$jscomp$unique_0(x$jscomp$unique_1) {
+          if (!x$jscomp$unique_1) var x$jscomp$unique_1 = 6;
+        }
+        """);
   }
 
   @Test
   public void testVarParamSameName1() {
     test(
-        lines("function f(x) {", "  if (!x) x = 6;", "}"),
-        lines(
-            "function f$jscomp$unique_0(x$jscomp$unique_1) {",
-            "  if (!x$jscomp$unique_1) x$jscomp$unique_1 = 6; ",
-            "}"));
+        """
+        function f(x) {
+          if (!x) x = 6;
+        }
+        """,
+        """
+        function f$jscomp$unique_0(x$jscomp$unique_1) {
+          if (!x$jscomp$unique_1) x$jscomp$unique_1 = 6;
+        }
+        """);
   }
 
   @Test
   public void testVarParamSameAsLet0() {
     test(
-        lines("function f(x) {", "  if (!x) { let x = 6; }", "}"),
-        lines(
-            "function f$jscomp$unique_0(x$jscomp$unique_1) {",
-            "  if (!x$jscomp$unique_1) { let x$jscomp$unique_2 = 6; }",
-            "}"));
+        """
+        function f(x) {
+          if (!x) { let x = 6; }
+        }
+        """,
+        """
+        function f$jscomp$unique_0(x$jscomp$unique_1) {
+          if (!x$jscomp$unique_1) { let x$jscomp$unique_2 = 6; }
+        }
+        """);
   }
 
   @Test
@@ -678,44 +741,57 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testClassesWithContextWithInversion() {
     this.useDefaultRenamer = true;
     testWithInversion(
-        lines(
-            "var a;",
-            "class Foo {",
-            "  constructor(a) {",
-            "    this.a = a;",
-            "  }",
-            "  f() {",
-            "    var x = 1;",
-            "    return a + x;",
-            "  }",
-            "}"),
-        lines(
-            "var a;",
-            "class Foo {",
-            "  constructor(a$jscomp$1) {",
-            "    this.a = a$jscomp$1;",
-            "  }",
-            "  f() {",
-            "    var x = 1;",
-            "    return a + x;",
-            "  }",
-            "}"));
+        """
+        var a;
+        class Foo {
+          constructor(a) {
+            this.a = a;
+          }
+          f() {
+            var x = 1;
+            return a + x;
+          }
+        }
+        """,
+        """
+        var a;
+        class Foo {
+          constructor(a$jscomp$1) {
+            this.a = a$jscomp$1;
+          }
+          f() {
+            var x = 1;
+            return a + x;
+          }
+        }
+        """);
 
     // class declarations are block-scoped but not hoisted.
     testSameWithInversion(
-        lines(
-            "{",
-            "  let x = new Foo();", // ReferenceError
-            "  class Foo {}",
-            "}"));
+        """
+        {
+          let x = new Foo(); // ReferenceError
+          class Foo {}
+        }
+        """);
   }
 
   @Test
   public void testBlockScopesWithContextWithInversion1() {
     this.useDefaultRenamer = true;
     testWithInversion(
-        lines("{let a;", "  {", "    let a;", "  }}"),
-        lines("{let a;", "  {", "  let a$jscomp$1;", "  }}"));
+        """
+        {let a;
+          {
+            let a;
+          }}
+        """,
+        """
+        {let a;
+          {
+          let a$jscomp$1;
+          }}
+        """);
   }
 
   @Test
@@ -723,220 +799,262 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     this.useDefaultRenamer = true;
     // function declarations are block-scoped
     testWithInversion(
-        lines(
-            "function foo() {",
-            "  function bar() {",
-            "    return 1;",
-            "  }",
-            "}",
-            "function boo() {",
-            "  function bar() {",
-            "    return 2;",
-            "  }",
-            "}"),
-        lines(
-            "function foo() {",
-            "  function bar() {",
-            "    return 1;",
-            "  }",
-            "}",
-            "function boo() {",
-            "  function bar$jscomp$1() {",
-            "    return 2;",
-            "  }",
-            "}"));
+        """
+        function foo() {
+          function bar() {
+            return 1;
+          }
+        }
+        function boo() {
+          function bar() {
+            return 2;
+          }
+        }
+        """,
+        """
+        function foo() {
+          function bar() {
+            return 1;
+          }
+        }
+        function boo() {
+          function bar$jscomp$1() {
+            return 2;
+          }
+        }
+        """);
   }
 
   @Test
   public void testBlockScopesWithContextWithInversion3() {
     this.useDefaultRenamer = true;
     test(
-        lines(
-            "function foo() {",
-            "  function bar() {",
-            "    return 1;",
-            "  }",
-            "  if (true) {",
-            "    function bar() {",
-            "      return 2;",
-            "    }",
-            "  }",
-            "}"),
-        lines(
-            "function foo() {",
-            "  function bar() {",
-            "    return 1;",
-            "  }",
-            "  if (true) {",
-            "    function bar$jscomp$1() {",
-            "      return 2;",
-            "    }",
-            "  }",
-            "}"));
+        """
+        function foo() {
+          function bar() {
+            return 1;
+          }
+          if (true) {
+            function bar() {
+              return 2;
+            }
+          }
+        }
+        """,
+        """
+        function foo() {
+          function bar() {
+            return 1;
+          }
+          if (true) {
+            function bar$jscomp$1() {
+              return 2;
+            }
+          }
+        }
+        """);
   }
 
   @Test
   public void testBlockScopesWithContextWithInversion4() {
     this.useDefaultRenamer = true;
     test(
-        lines(
-            "var f1=function(){",
-            "  var x",
-            "};",
-            "(function() {",
-            "  function f2() {",
-            "    alert(x)",
-            "  }",
-            "  {",
-            "    var x=0",
-            "  }",
-            "  f2()",
-            "})()"),
-        lines(
-            "var f1=function(){",
-            "  var x",
-            "};",
-            "(function() {",
-            "  function f2() {",
-            "    alert(x$jscomp$1)",
-            "  }",
-            "  {",
-            "    var x$jscomp$1=0",
-            "  }",
-            "  f2()",
-            "})()"));
+        """
+        var f1=function(){
+          var x
+        };
+        (function() {
+          function f2() {
+            alert(x)
+          }
+          {
+            var x=0
+          }
+          f2()
+        })()
+        """,
+        """
+        var f1=function(){
+          var x
+        };
+        (function() {
+          function f2() {
+            alert(x$jscomp$1)
+          }
+          {
+            var x$jscomp$1=0
+          }
+          f2()
+        })()
+        """);
   }
 
   @Test
   public void testBlockScopesWithContextWithInversion5() {
     this.useDefaultRenamer = true;
-    testSame(lines("if (true) {", "  function f(){};", "}", "f();"));
+    testSame(
+        """
+        if (true) {
+          function f(){};
+        }
+        f();
+        """);
   }
 
   @Test
   public void testBlockScopesWithoutContext() {
     this.useDefaultRenamer = false;
     test(
-        lines(
-            "{",
-            "  function foo() {return 1;}",
-            "  if (true) {",
-            "    function foo() {return 2;}",
-            "  }",
-            "}"),
-        lines(
-            "{",
-            "  function foo$jscomp$unique_0() {return 1;}",
-            "  if (true) {",
-            "    function foo$jscomp$unique_1() {return 2;}",
-            "  }",
-            "}"));
+        """
+        {
+          function foo() {return 1;}
+          if (true) {
+            function foo() {return 2;}
+          }
+        }
+        """,
+        """
+        {
+          function foo$jscomp$unique_0() {return 1;}
+          if (true) {
+            function foo$jscomp$unique_1() {return 2;}
+          }
+        }
+        """);
 
     test(
-        lines("function foo(x) {", "  return foo(x) - 1;", "}"),
-        lines(
-            "function foo$jscomp$unique_0(x$jscomp$unique_1) {",
-            "  return foo$jscomp$unique_0(x$jscomp$unique_1) - 1;",
-            "}"));
+        """
+        function foo(x) {
+          return foo(x) - 1;
+        }
+        """,
+        """
+        function foo$jscomp$unique_0(x$jscomp$unique_1) {
+          return foo$jscomp$unique_0(x$jscomp$unique_1) - 1;
+        }
+        """);
 
     test(
-        lines("export function foo(x) {", "  return foo(x) - 1;", "}"),
-        lines(
-            "export function foo$jscomp$unique_0(x$jscomp$unique_1) {",
-            "  return foo$jscomp$unique_0(x$jscomp$unique_1) - 1;",
-            "}"));
+        """
+        export function foo(x) {
+          return foo(x) - 1;
+        }
+        """,
+        """
+        export function foo$jscomp$unique_0(x$jscomp$unique_1) {
+          return foo$jscomp$unique_0(x$jscomp$unique_1) - 1;
+        }
+        """);
   }
 
   @Test
   public void testRecursiveFunctionsWithContextWithInversion() {
     this.useDefaultRenamer = true;
-    testSameWithInversion(lines("function foo(x) {", "  return foo(x) - 1;", "}"));
+    testSameWithInversion(
+        """
+        function foo(x) {
+          return foo(x) - 1;
+        }
+        """);
   }
 
   @Test
   public void testInvertShadowedParameterNames() {
     useDefaultRenamer = true;
     testWithInversion(
-        lines(
-            "var p;", //
-            "function f(p) {",
-            "  return function g(p) {",
-            "    return p;",
-            "  }",
-            "}"),
-        lines(
-            "var p;", //
-            "function f(p$jscomp$1) {",
-            "  return function g(p$jscomp$2) {",
-            "    return p$jscomp$2;",
-            "  }",
-            "}"));
+        """
+        var p;
+        function f(p) {
+          return function g(p) {
+            return p;
+          }
+        }
+        """,
+        """
+        var p;
+        function f(p$jscomp$1) {
+          return function g(p$jscomp$2) {
+            return p$jscomp$2;
+          }
+        }
+        """);
   }
 
   @Test
   public void testArrowFunctionWithContextWithInversion() {
     this.useDefaultRenamer = true;
     testWithInversion(
-        lines(
-            "function foo() {",
-            "  var f = (x) => x;",
-            "  return f(1);",
-            "}",
-            "function boo() {",
-            "  var f = (x) => x;",
-            "  return f(2);",
-            "}"),
-        lines(
-            "function foo() {",
-            "  var f = (x) => x;",
-            "  return f(1);",
-            "}",
-            "function boo() {",
-            "  var f$jscomp$1 = (x$jscomp$1) => x$jscomp$1;",
-            "  return f$jscomp$1(2);",
-            "}"));
+        """
+        function foo() {
+          var f = (x) => x;
+          return f(1);
+        }
+        function boo() {
+          var f = (x) => x;
+          return f(2);
+        }
+        """,
+        """
+        function foo() {
+          var f = (x) => x;
+          return f(1);
+        }
+        function boo() {
+          var f$jscomp$1 = (x$jscomp$1) => x$jscomp$1;
+          return f$jscomp$1(2);
+        }
+        """);
 
     testWithInversion(
-        lines(
-            "function foo() {",
-            "  var f = (x, ...y) => x + y[0];",
-            "  return f(1, 2);",
-            "}",
-            "function boo() {",
-            "  var f = (x, ...y) => x + y[0];",
-            "  return f(1, 2);",
-            "}"),
-        lines(
-            "function foo() {",
-            "  var f = (x, ...y) => x + y[0];",
-            "  return f(1, 2);",
-            "}",
-            "function boo() {",
-            "  var f$jscomp$1 = (x$jscomp$1, ...y$jscomp$1) => x$jscomp$1 + y$jscomp$1[0];",
-            "  return f$jscomp$1(1, 2);",
-            "}"));
+        """
+        function foo() {
+          var f = (x, ...y) => x + y[0];
+          return f(1, 2);
+        }
+        function boo() {
+          var f = (x, ...y) => x + y[0];
+          return f(1, 2);
+        }
+        """,
+        """
+        function foo() {
+          var f = (x, ...y) => x + y[0];
+          return f(1, 2);
+        }
+        function boo() {
+          var f$jscomp$1 = (x$jscomp$1, ...y$jscomp$1) => x$jscomp$1 + y$jscomp$1[0];
+          return f$jscomp$1(1, 2);
+        }
+        """);
   }
 
   @Test
   public void testDefaultParameterWithContextWithInversion1() {
     this.useDefaultRenamer = true;
     testWithInversion(
-        lines(
-            "function foo(x = 1) {",
-            "  return x;",
-            "}",
-            "function boo(x = 1) {",
-            "  return x;",
-            "}"),
-        lines(
-            "function foo(x = 1) {",
-            "  return x;",
-            "}",
-            "function boo(x$jscomp$1 = 1) {",
-            "  return x$jscomp$1;",
-            "}"));
+        """
+        function foo(x = 1) {
+          return x;
+        }
+        function boo(x = 1) {
+          return x;
+        }
+        """,
+        """
+        function foo(x = 1) {
+          return x;
+        }
+        function boo(x$jscomp$1 = 1) {
+          return x$jscomp$1;
+        }
+        """);
 
-    testSameWithInversion(lines("function foo(x = 1, y = x) {", "  return x + y;", "}"));
+    testSameWithInversion(
+        """
+        function foo(x = 1, y = x) {
+          return x + y;
+        }
+        """);
   }
 
   @Test
@@ -947,74 +1065,87 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     // Methods or functions defined "inside" parameter default values don't see the local variables
     // of the body.
     testWithInversion(
-        lines(
-            "let x = 'outer';",
-            "function foo(bar = baz => x) {",
-            "  let x = 'inner';",
-            "  console.log(bar());",
-            "}"),
-        lines(
-            "let x = 'outer';",
-            "function foo(bar = baz => x) {",
-            "  let x$jscomp$1 = 'inner';",
-            "  console.log(bar());",
-            "}"));
+        """
+        let x = 'outer';
+        function foo(bar = baz => x) {
+          let x = 'inner';
+          console.log(bar());
+        }
+        """,
+        """
+        let x = 'outer';
+        function foo(bar = baz => x) {
+          let x$jscomp$1 = 'inner';
+          console.log(bar());
+        }
+        """);
 
     testWithInversion(
-        lines(
-            "const x = 'outer';",
-            "function foo(a = x) {",
-            "  const x = 'inner';",
-            "  return a;",
-            "}"),
-        lines(
-            "const x = 'outer';",
-            "function foo(a = x) {",
-            "  const x$jscomp$1 = 'inner';",
-            "  return a;",
-            "}"));
+        """
+        const x = 'outer';
+        function foo(a = x) {
+          const x = 'inner';
+          return a;
+        }
+        """,
+        """
+        const x = 'outer';
+        function foo(a = x) {
+          const x$jscomp$1 = 'inner';
+          return a;
+        }
+        """);
 
     testWithInversion(
-        lines(
-            "const x = 'outerouter';",
-            "{",
-            "  const x = 'outer';",
-            "  function foo(a = x) {",
-            "    return a;",
-            "  }",
-            "foo();",
-            "}"),
-        lines(
-            "const x = 'outerouter';",
-            "{",
-            "  const x$jscomp$1 = 'outer';",
-            "  function foo(a = x$jscomp$1) {",
-            "    return a;",
-            "  }",
-            "foo();",
-            "}"));
+        """
+        const x = 'outerouter';
+        {
+          const x = 'outer';
+          function foo(a = x) {
+            return a;
+          }
+        foo();
+        }
+        """,
+        """
+        const x = 'outerouter';
+        {
+          const x$jscomp$1 = 'outer';
+          function foo(a = x$jscomp$1) {
+            return a;
+          }
+        foo();
+        }
+        """);
 
-    testSameWithInversion(lines("function foo(x, y = x) {", "  return x + y;", "}"));
+    testSameWithInversion(
+        """
+        function foo(x, y = x) {
+          return x + y;
+        }
+        """);
   }
 
   @Test
   public void testObjectLiteralsWithContextWithInversion() {
     this.useDefaultRenamer = true;
     testWithInversion(
-        lines(
-            "function foo({x:y}) {",
-            "  return y;",
-            "}",
-            "function boo({x:y}) {",
-            "  return y;",
-            "}"),
-        lines(
-            "function foo({x:y}) {",
-            "  return y;",
-            "}",
-            "function boo({x:y$jscomp$1}) {",
-            "  return y$jscomp$1",
-            "}"));
+        """
+        function foo({x:y}) {
+          return y;
+        }
+        function boo({x:y}) {
+          return y;
+        }
+        """,
+        """
+        function foo({x:y}) {
+          return y;
+        }
+        function boo({x:y$jscomp$1}) {
+          return y$jscomp$1
+        }
+        """);
   }
 
   @Test
@@ -1041,91 +1172,99 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     // that same name when renaming this declaration.
     test(
         "function foo() {var a; a;} function bar() {let a; let a$jscomp$1; a + a$jscomp$1;}",
-        lines(
-            "function foo() {var a; a;}",
-            "function bar() {",
-            "  let a$jscomp$1; let a$jscomp$1$jscomp$1; ",
-            "  a$jscomp$1 + a$jscomp$1$jscomp$1;",
-            "}"));
+        """
+        function foo() {var a; a;}
+        function bar() {
+          let a$jscomp$1; let a$jscomp$1$jscomp$1;
+          a$jscomp$1 + a$jscomp$1$jscomp$1;
+        }
+        """);
 
     test(
         "function bar() {let a; let a$jscomp$1; a + a$jscomp$1;} function foo() {var a; a;}",
-        lines(
-            "function bar() {",
-            "  let a; let a$jscomp$1; ",
-            "  a + a$jscomp$1;",
-            "}",
-            "function foo() {var a$jscomp$2; a$jscomp$2;}"));
+        """
+        function bar() {
+          let a; let a$jscomp$1;
+          a + a$jscomp$1;
+        }
+        function foo() {var a$jscomp$2; a$jscomp$2;}
+        """);
 
     // tests when name with $jscomp$1 suffix comes first
     test(
         "function bar() {let a$jscomp$1; let a; a + a$jscomp$1;} function foo() {var a; a;}",
-        lines(
-            "function bar() {",
-            "  let a$jscomp$1; let a;",
-            "  a + a$jscomp$1;",
-            "}",
-            "function foo() {var a$jscomp$2; a$jscomp$2;}"));
+        """
+        function bar() {
+          let a$jscomp$1; let a;
+          a + a$jscomp$1;
+        }
+        function foo() {var a$jscomp$2; a$jscomp$2;}
+        """);
 
     test(
-        lines(
-            "function bar() {",
-            "  let a; let a$jscomp$1; ",
-            "  a + a$jscomp$1;",
-            "}",
-            "function foo() {",
-            // tests when a$jscomp$2 declared later in the same scope
-
-            "  var a; a; var a$jscomp$2; a$jscomp$2;",
-            "}"),
-        lines(
-            "function bar() {",
-            "  let a; let a$jscomp$1; a + a$jscomp$1;",
-            "}",
-            "function foo() {",
-            "  var a$jscomp$2; a$jscomp$2; ",
-            "  var a$jscomp$2$jscomp$1; a$jscomp$2$jscomp$1;",
-            "}"));
-
-    test(
-        lines(
-            "function bar() {",
-            "  let a; let a$jscomp$1; a + a$jscomp$1;",
-            "}",
-            "function foo() {",
-            // tests when a$jscomp$2 declared first in the same scope
-            "  var a$jscomp$2; a$jscomp$2; var a; a;",
-            "}"),
-        lines(
-            "function bar() {",
-            "  let a; let a$jscomp$1; a + a$jscomp$1;",
-            "}",
-            "function foo() {",
-            "  var a$jscomp$2; a$jscomp$2; var a$jscomp$3; a$jscomp$3;",
-            "}"));
+        """
+        function bar() {
+          let a; let a$jscomp$1;
+          a + a$jscomp$1;
+        }
+        function foo() {
+        // tests when a$jscomp$2 declared later in the same scope
+          var a; a; var a$jscomp$2; a$jscomp$2;
+        }
+        """,
+        """
+        function bar() {
+          let a; let a$jscomp$1; a + a$jscomp$1;
+        }
+        function foo() {
+          var a$jscomp$2; a$jscomp$2;
+          var a$jscomp$2$jscomp$1; a$jscomp$2$jscomp$1;
+        }
+        """);
 
     test(
-        lines(
-            "function bar() {",
-            "  let a; let a$jscomp$1; a + a$jscomp$1;",
-            "}",
-            "function foo() {",
-            // tests when a$jscomp$2 is declared in another scope
-            "  var a; a;",
-            "}",
-            "function baz() { ",
-            "  var a$jscomp$2; a$jscomp$2;",
-            "}"),
-        lines(
-            "function bar() {",
-            "  let a; let a$jscomp$1; a + a$jscomp$1;",
-            "}",
-            "function foo() {",
-            "  var a$jscomp$2; a$jscomp$2;",
-            "}",
-            "function baz() { ",
-            "  var a$jscomp$2$jscomp$1; a$jscomp$2$jscomp$1;",
-            "}"));
+        """
+        function bar() {
+          let a; let a$jscomp$1; a + a$jscomp$1;
+        }
+        function foo() {
+        // tests when a$jscomp$2 declared first in the same scope
+          var a$jscomp$2; a$jscomp$2; var a; a;
+        }
+        """,
+        """
+        function bar() {
+          let a; let a$jscomp$1; a + a$jscomp$1;
+        }
+        function foo() {
+          var a$jscomp$2; a$jscomp$2; var a$jscomp$3; a$jscomp$3;
+        }
+        """);
+
+    test(
+        """
+        function bar() {
+          let a; let a$jscomp$1; a + a$jscomp$1;
+        }
+        function foo() {
+        // tests when a$jscomp$2 is declared in another scope
+          var a; a;
+        }
+        function baz() {
+          var a$jscomp$2; a$jscomp$2;
+        }
+        """,
+        """
+        function bar() {
+          let a; let a$jscomp$1; a + a$jscomp$1;
+        }
+        function foo() {
+          var a$jscomp$2; a$jscomp$2;
+        }
+        function baz() {
+          var a$jscomp$2$jscomp$1; a$jscomp$2$jscomp$1;
+        }
+        """);
   }
 
   @Test

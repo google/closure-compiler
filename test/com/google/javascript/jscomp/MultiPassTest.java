@@ -139,19 +139,21 @@ public final class MultiPassTest extends CompilerTestCase {
     setDestructuringArrowFunctionOptions();
 
     test(
-        lines(
-            "var foo = (x,y) => x===y;",
-            "var f = ({key: value}) => foo('v', value);",
-            "f({key: 'v'})"),
-        lines(
-            "var foo = function(x,y) {return x===y;};",
-            "var f = function ($jscomp$destructuring$var0) {",
-            "   var value;",
-            "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "   value = $jscomp$destructuring$var1.key;",
-            "   return foo('v', value);",
-            "};",
-            "f({key:'v'})"));
+        """
+        var foo = (x,y) => x===y;
+        var f = ({key: value}) => foo('v', value);
+        f({key: 'v'})
+        """,
+        """
+        var foo = function(x,y) {return x===y;};
+        var f = function ($jscomp$destructuring$var0) {
+           var value;
+           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+           value = $jscomp$destructuring$var1.key;
+           return foo('v', value);
+        };
+        f({key:'v'})
+        """);
   }
 
   @Test
@@ -160,18 +162,23 @@ public final class MultiPassTest extends CompilerTestCase {
 
     test(
         externs(new TestExternsBuilder().addJSCompLibraries().build()),
-        srcs(lines("var x, a, b;", "x = ([a,b] = [1,2])")),
+        srcs(
+            """
+            var x, a, b;
+            x = ([a,b] = [1,2])
+            """),
         expected(
-            lines(
-                "var x; var a; var b;",
-                "x = function () {",
-                "   let $jscomp$destructuring$var0 = [1,2];",
-                "   var $jscomp$destructuring$var1 = ",
-                "       (0, $jscomp.makeIterator)($jscomp$destructuring$var0);",
-                "   a = $jscomp$destructuring$var1.next().value;",
-                "   b = $jscomp$destructuring$var1.next().value;",
-                "   return $jscomp$destructuring$var0;",
-                "} ();")));
+            """
+            var x; var a; var b;
+            x = function () {
+               let $jscomp$destructuring$var0 = [1,2];
+               var $jscomp$destructuring$var1 =
+                   (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+               a = $jscomp$destructuring$var1.next().value;
+               b = $jscomp$destructuring$var1.next().value;
+               return $jscomp$destructuring$var0;
+            } ();
+            """));
   }
 
   @Test
@@ -180,21 +187,26 @@ public final class MultiPassTest extends CompilerTestCase {
 
     test(
         externs(new TestExternsBuilder().addJSCompLibraries().addConsole().build()),
-        srcs(lines("var x, a, b;", "x = (() => {console.log(); return [a,b] = [1,2];})()")),
+        srcs(
+            """
+            var x, a, b;
+            x = (() => {console.log(); return [a,b] = [1,2];})()
+            """),
         expected(
-            lines(
-                "var x; var a; var b;",
-                "x = function () {",
-                "   console.log();",
-                "   return function () {",
-                "       let $jscomp$destructuring$var0 = [1,2];",
-                "       var $jscomp$destructuring$var1 = ",
-                "(0, $jscomp.makeIterator)($jscomp$destructuring$var0);",
-                "       a = $jscomp$destructuring$var1.next().value;",
-                "       b = $jscomp$destructuring$var1.next().value;",
-                "       return $jscomp$destructuring$var0;",
-                "       } ();",
-                "} ();")));
+            """
+            var x; var a; var b;
+            x = function () {
+               console.log();
+               return function () {
+                   let $jscomp$destructuring$var0 = [1,2];
+                   var $jscomp$destructuring$var1 =
+            (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+                   a = $jscomp$destructuring$var1.next().value;
+                   b = $jscomp$destructuring$var1.next().value;
+                   return $jscomp$destructuring$var0;
+                   } ();
+            } ();
+            """));
   }
 
   @Test
@@ -204,22 +216,28 @@ public final class MultiPassTest extends CompilerTestCase {
     test(
         externs(new TestExternsBuilder().addJSCompLibraries().build()),
         srcs(
-            lines(
-                "var foo = function () {", "var x, a, b;", "x = ([a,b] = [1,2]);", "}", "foo();")),
+            """
+            var foo = function () {
+            var x, a, b;
+            x = ([a,b] = [1,2]);
+            }
+            foo();
+            """),
         expected(
-            lines(
-                "var foo = function () {",
-                "var x; var a; var b;",
-                " x = function () {",
-                "   let $jscomp$destructuring$var0 = [1,2];",
-                "   var $jscomp$destructuring$var1 = ",
-                "       (0, $jscomp.makeIterator)($jscomp$destructuring$var0);",
-                "   a = $jscomp$destructuring$var1.next().value;",
-                "   b = $jscomp$destructuring$var1.next().value;",
-                "   return $jscomp$destructuring$var0;",
-                " } ();",
-                "}",
-                "foo();")));
+            """
+            var foo = function () {
+            var x; var a; var b;
+             x = function () {
+               let $jscomp$destructuring$var0 = [1,2];
+               var $jscomp$destructuring$var1 =
+                   (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+               a = $jscomp$destructuring$var1.next().value;
+               b = $jscomp$destructuring$var1.next().value;
+               return $jscomp$destructuring$var0;
+             } ();
+            }
+            foo();
+            """));
   }
 
   @Test
@@ -229,23 +247,25 @@ public final class MultiPassTest extends CompilerTestCase {
     test(
         externs(new TestExternsBuilder().addJSCompLibraries().build()),
         srcs(
-            lines(
-                "var prefix;",
-                "for (;;[, prefix] = /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix))){",
-                "}")),
+            """
+            var prefix;
+            for (;;[, prefix] = /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix))){
+            }
+            """),
         expected(
-            lines(
-                "var prefix;",
-                "for (;;function () {",
-                "   let $jscomp$destructuring$var0 = ",
-                "       /\\.?([^.]+)$/.exec(prefix);",
-                "   var $jscomp$destructuring$var1 = ",
-                "(0, $jscomp.makeIterator)($jscomp$destructuring$var0);",
-                "   $jscomp$destructuring$var1.next();",
-                "   prefix = $jscomp$destructuring$var1.next().value;",
-                "   return $jscomp$destructuring$var0;",
-                " }()){",
-                "}")));
+            """
+            var prefix;
+            for (;;function () {
+               let $jscomp$destructuring$var0 =
+                   /\\.?([^.]+)$/.exec(prefix);
+               var $jscomp$destructuring$var1 =
+            (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+               $jscomp$destructuring$var1.next();
+               prefix = $jscomp$destructuring$var1.next().value;
+               return $jscomp$destructuring$var0;
+             }()){
+            }
+            """));
   }
 
   @Test
@@ -255,25 +275,27 @@ public final class MultiPassTest extends CompilerTestCase {
     test(
         externs(new TestExternsBuilder().addJSCompLibraries().addConsole().build()),
         srcs(
-            lines(
-                "var prefix;",
-                "for (;;[, prefix] = /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix))){",
-                "   console.log(prefix);",
-                "}")),
+            """
+            var prefix;
+            for (;;[, prefix] = /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix))){
+               console.log(prefix);
+            }
+            """),
         expected(
-            lines(
-                "var prefix;",
-                "for (;;function () {",
-                "   let $jscomp$destructuring$var0 = ",
-                "       /\\.?([^.]+)$/.exec(prefix)",
-                "   var $jscomp$destructuring$var1 = ",
-                "(0, $jscomp.makeIterator)($jscomp$destructuring$var0);",
-                "   $jscomp$destructuring$var1.next();",
-                "   prefix = $jscomp$destructuring$var1.next().value;",
-                "   return $jscomp$destructuring$var0;",
-                " } ()){",
-                " console.log(prefix);",
-                "}")));
+            """
+            var prefix;
+            for (;;function () {
+               let $jscomp$destructuring$var0 =
+                   /\\.?([^.]+)$/.exec(prefix)
+               var $jscomp$destructuring$var1 =
+            (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+               $jscomp$destructuring$var1.next();
+               prefix = $jscomp$destructuring$var1.next().value;
+               return $jscomp$destructuring$var0;
+             } ()){
+             console.log(prefix);
+            }
+            """));
   }
 
   @Test
@@ -282,19 +304,25 @@ public final class MultiPassTest extends CompilerTestCase {
 
     test(
         externs("" + new TestExternsBuilder().addJSCompLibraries().build()),
-        srcs(lines("for (var x = 1; x < 3; [x,] = [3,4]){", "  x;", "}")),
+        srcs(
+            """
+            for (var x = 1; x < 3; [x,] = [3,4]){
+              x;
+            }
+            """),
         expected(
-            lines(
-                "var x = 1;",
-                "for (; x < 3; function () {",
-                "   let $jscomp$destructuring$var0 = [3,4]",
-                "   var $jscomp$destructuring$var1 = ",
-                "       (0, $jscomp.makeIterator)($jscomp$destructuring$var0);",
-                "   x = $jscomp$destructuring$var1.next().value;",
-                "   return $jscomp$destructuring$var0;",
-                " } ()){",
-                "x;",
-                "}")));
+            """
+            var x = 1;
+            for (; x < 3; function () {
+               let $jscomp$destructuring$var0 = [3,4]
+               var $jscomp$destructuring$var1 =
+                   (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+               x = $jscomp$destructuring$var1.next().value;
+               return $jscomp$destructuring$var0;
+             } ()){
+            x;
+            }
+            """));
   }
 
   @Test
@@ -304,16 +332,17 @@ public final class MultiPassTest extends CompilerTestCase {
 
     test(
         "var b; var d;function foo(){ return {a:1, c:2};} var x = ({a: b, c: d} = foo());",
-        lines(
-            "var b;var d;",
-            "function foo(){return {a:1, c:2};}",
-            "var x = function () {",
-            "   let $jscomp$destructuring$var0 = foo();",
-            "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "   b = $jscomp$destructuring$var1.a;",
-            "   d = $jscomp$destructuring$var1.c;",
-            "   return $jscomp$destructuring$var0;",
-            "} ();"));
+        """
+        var b;var d;
+        function foo(){return {a:1, c:2};}
+        var x = function () {
+           let $jscomp$destructuring$var0 = foo();
+           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+           b = $jscomp$destructuring$var1.a;
+           d = $jscomp$destructuring$var1.c;
+           return $jscomp$destructuring$var0;
+        } ();
+        """);
   }
 
   @Test
@@ -323,15 +352,16 @@ public final class MultiPassTest extends CompilerTestCase {
 
     test(
         "function foo(){return {a:1};} var x; var y = ({a: x} = foo());",
-        lines(
-            "function foo(){return {a:1};}",
-            "var x;",
-            "var y = function () {",
-            "   let $jscomp$destructuring$var0 = foo();",
-            "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "   x = $jscomp$destructuring$var1.a;",
-            "   return $jscomp$destructuring$var0;",
-            "} ();"));
+        """
+        function foo(){return {a:1};}
+        var x;
+        var y = function () {
+           let $jscomp$destructuring$var0 = foo();
+           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+           x = $jscomp$destructuring$var1.a;
+           return $jscomp$destructuring$var0;
+        } ();
+        """);
   }
 
   @Test
@@ -342,18 +372,19 @@ public final class MultiPassTest extends CompilerTestCase {
     test(
         "var a; var b; function foo(){ return {a:1,b:2};} var x; var y = (() => {return {a,b} ="
             + " foo();})();",
-        lines(
-            "var a; var b; function foo(){return {a:1,b:2};} ",
-            "var x;",
-            "var y = function () {",
-            "   return function () {",
-            "       let $jscomp$destructuring$var0 = foo();",
-            "       var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "       a = $jscomp$destructuring$var1.a;",
-            "       b = $jscomp$destructuring$var1.b;",
-            "       return $jscomp$destructuring$var0;",
-            "   } ();",
-            "} ();"));
+        """
+        var a; var b; function foo(){return {a:1,b:2};}
+        var x;
+        var y = function () {
+           return function () {
+               let $jscomp$destructuring$var0 = foo();
+               var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+               a = $jscomp$destructuring$var1.a;
+               b = $jscomp$destructuring$var1.b;
+               return $jscomp$destructuring$var0;
+           } ();
+        } ();
+        """);
   }
 
   private void setDestructuringArrowFunctionOptions() {

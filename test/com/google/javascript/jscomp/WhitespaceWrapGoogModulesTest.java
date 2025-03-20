@@ -42,7 +42,11 @@ public class WhitespaceWrapGoogModulesTest extends CompilerTestCase {
   @Test
   public void testGoogModuleRewrite() {
     test(
-        lines("goog.module('test');", "var f = 5;", "exports = f;"),
+        """
+        goog.module('test');
+        var f = 5;
+        exports = f;
+        """,
         "goog.loadModule(function(exports){"
             + "\"use strict\";"
             + "goog.module(\"test\");"

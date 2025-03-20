@@ -124,18 +124,18 @@ public final class RenameVarsTest extends CompilerTestCase {
   @Test
   public void testRenameSimple() {
     test(
-        lines(
-            "function foo(v1, v2) {", //
-            "  return v1;",
-            "}",
-            "foo();",
-            ""),
-        lines(
-            "function a(b, c) {", //
-            "  return b;",
-            "}",
-            "a();",
-            ""));
+        """
+        function foo(v1, v2) {
+          return v1;
+        }
+        foo();
+        """,
+        """
+        function a(b, c) {
+          return b;
+        }
+        a();
+        """);
 
     // Do a sanity check on the source info
     final Node lastScript =
@@ -291,26 +291,30 @@ public final class RenameVarsTest extends CompilerTestCase {
   @Test
   public void testRenameRedeclaredGlobals() {
     test(
-        lines(
-            "function f1(v1, v2) {f1()};",
-            "/** @suppress {duplicate} */",
-            "function f1(v3, v4) {f1()};"),
-        lines(
-            "function a(b, c) {a()};", //
-            "/** @suppress {duplicate} */",
-            "function a(b, c) {a()};"));
+        """
+        function f1(v1, v2) {f1()};
+        /** @suppress {duplicate} */
+        function f1(v3, v4) {f1()};
+        """,
+        """
+        function a(b, c) {a()};
+        /** @suppress {duplicate} */
+        function a(b, c) {a()};
+        """);
 
     localRenamingOnly = true;
 
     test(
-        lines(
-            "function f1(v1, v2) {f1()};",
-            "/** @suppress {duplicate} */",
-            "function f1(v3, v4) {f1()};"),
-        lines(
-            "function f1(a, b) {f1()};",
-            "/** @suppress {duplicate} */",
-            "function f1(a, b) {f1()};"));
+        """
+        function f1(v1, v2) {f1()};
+        /** @suppress {duplicate} */
+        function f1(v3, v4) {f1()};
+        """,
+        """
+        function f1(a, b) {f1()};
+        /** @suppress {duplicate} */
+        function f1(a, b) {f1()};
+        """);
   }
 
   @Test
@@ -349,57 +353,65 @@ public final class RenameVarsTest extends CompilerTestCase {
     // they are in the same scope. In the below example, we want to be
     // sure that a and b get separate names.
     test(
-        lines(
-            "var x = function a(x) { return x ? 1 : a(1); };",
-            "var y = function b(x) { return x ? 2 : b(2); };"),
-        lines(
-            "var c = function b(a) { return a ? 1 : b(1); };",
-            "var e = function d(a) { return a ? 2 : d(2); };"));
+        """
+        var x = function a(x) { return x ? 1 : a(1); };
+        var y = function b(x) { return x ? 2 : b(2); };
+        """,
+        """
+        var c = function b(a) { return a ? 1 : b(1); };
+        var e = function d(a) { return a ? 2 : d(2); };
+        """);
   }
 
   @Test
   public void testBleedingRecursiveFunctions2() {
     test(
-        lines(
-            "function f() {",
-            "  var x = function a(x) { return x ? 1 : a(1); };",
-            "  var y = function b(x) { return x ? 2 : b(2); };",
-            "}"),
-        lines(
-            "function d() {",
-            "  var e = function a(b) { return b ? 1 : a(1); };",
-            "  var f = function c(a) { return a ? 2 : c(2); };",
-            "}"));
+        """
+        function f() {
+          var x = function a(x) { return x ? 1 : a(1); };
+          var y = function b(x) { return x ? 2 : b(2); };
+        }
+        """,
+        """
+        function d() {
+          var e = function a(b) { return b ? 1 : a(1); };
+          var f = function c(a) { return a ? 2 : c(2); };
+        }
+        """);
   }
 
   @Test
   public void testBleedingRecursiveFunctions3() {
     test(
-        lines(
-            "function f() {",
-            "  var x = function a(x) { return x ? 1 : a(1); };",
-            "  var y = function b(x) { return x ? 2 : b(2); };",
-            "  var z = function c(x) { return x ? y : c(2); };",
-            "}"),
-        lines(
-            "function f() {",
-            "  var g = function a(c) { return c ? 1 : a(1); };",
-            "  var d = function b(a) { return a ? 2 : b(2); };",
-            "  var h = function e(b) { return b ? d : e(2); };",
-            "}"));
+        """
+        function f() {
+          var x = function a(x) { return x ? 1 : a(1); };
+          var y = function b(x) { return x ? 2 : b(2); };
+          var z = function c(x) { return x ? y : c(2); };
+        }
+        """,
+        """
+        function f() {
+          var g = function a(c) { return c ? 1 : a(1); };
+          var d = function b(a) { return a ? 2 : b(2); };
+          var h = function e(b) { return b ? d : e(2); };
+        }
+        """);
   }
 
   @Test
   public void testBleedingFunctionInBlocks() {
     test(
-        lines(
-            "if (true) {", //
-            "   var x = function a(x) {return x;}",
-            "}"),
-        lines(
-            "if (true) {", //
-            "   var c = function b(a) {return a;}",
-            "}"));
+        """
+        if (true) {
+           var x = function a(x) {return x;}
+        }
+        """,
+        """
+        if (true) {
+           var c = function b(a) {return a;}
+        }
+        """);
   }
 
   @Test
@@ -457,20 +469,22 @@ public final class RenameVarsTest extends CompilerTestCase {
   public void testRenameWithPrefix3() {
     prefix = "a";
     test(
-        lines(
-            "function Foo() {return 1;}", //
-            "function Bar() {",
-            "  var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,",
-            "      A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,aa,ab;",
-            "  Foo();",
-            "} Bar();"),
-        lines(
-            "function a() {return 1;}", //
-            "function aa() {",
-            "  var b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,",
-            "      B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,$,ba,ca;",
-            "  a();",
-            "} aa();"));
+        """
+        function Foo() {return 1;}
+        function Bar() {
+          var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,
+              A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,aa,ab;
+          Foo();
+        } Bar();
+        """,
+        """
+        function a() {return 1;}
+        function aa() {
+          var b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,
+              B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,$,ba,ca;
+          a();
+        } aa();
+        """);
     prefix = DEFAULT_PREFIX;
   }
 
@@ -480,14 +494,16 @@ public final class RenameVarsTest extends CompilerTestCase {
         "var q,p,m,n,l,k; try { } catch(r) {try {} catch(s) {}}; var t = q + q;",
         "var a,b,c,d,e,f; try { } catch(g) {try {} catch(h) {}}; var i = a + a;");
     test(
-        lines(
-            "(function(A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,",
-            "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,$){});",
-            "var a4,a3,a2,a1,b4,b3,b2,b1,ab,ac,ad,fg;function foo(){};"),
-        lines(
-            "(function(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,",
-            "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,$){});",
-            "var aa,ba,ca,da,ea,fa,ga,ha,ia,ja,ka,la;function ma(){};"));
+        """
+        (function(A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,
+        a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,$){});
+        var a4,a3,a2,a1,b4,b3,b2,b1,ab,ac,ad,fg;function foo(){};
+        """,
+        """
+        (function(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,
+        A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,$){});
+        var aa,ba,ca,da,ea,fa,ga,ha,ia,ja,ka,la;function ma(){};
+        """);
   }
 
   @Test
@@ -501,28 +517,30 @@ public final class RenameVarsTest extends CompilerTestCase {
         "try {try {} catch(a) {}} catch(a) {};");
 
     test(
-        lines(
-            "try {",
-            "  try { ",
-            "  } catch(p) {",
-            "    try { ",
-            "    } catch(r) {}",
-            "  }",
-            "} catch(s) {",
-            "  try { ",
-            "  } catch(q) {}",
-            "};"),
-        lines(
-            "try {",
-            "  try { ",
-            "  } catch(a) {",
-            "    try { ",
-            "    } catch(b) {}",
-            "  }",
-            "} catch(a) {",
-            "  try { ",
-            "  } catch(b) {}",
-            "};"));
+        """
+        try {
+          try {
+          } catch(p) {
+            try {
+            } catch(r) {}
+          }
+        } catch(s) {
+          try {
+          } catch(q) {}
+        };
+        """,
+        """
+        try {
+          try {
+          } catch(a) {
+            try {
+            } catch(b) {}
+          }
+        } catch(a) {
+          try {
+          } catch(b) {}
+        };
+        """);
   }
 
   @Test
@@ -713,41 +731,45 @@ public final class RenameVarsTest extends CompilerTestCase {
   public void testStableRenameWithPrefix2() {
     prefix = "a";
     test(
-        lines(
-            "function Foo() {return 1;}", //
-            "function Bar() {",
-            "  var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,",
-            "      A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,aa,ab;",
-            "  Foo();",
-            "} Bar();"),
-        lines(
-            "function a() {return 1;}",
-            "function aa() {",
-            "  var b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,",
-            "      B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,$,ba,ca;",
-            "  a();",
-            "} aa();"));
+        """
+        function Foo() {return 1;}
+        function Bar() {
+          var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,
+              A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,aa,ab;
+          Foo();
+        } Bar();
+        """,
+        """
+        function a() {return 1;}
+        function aa() {
+          var b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,
+              B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,$,ba,ca;
+          a();
+        } aa();
+        """);
 
     previouslyUsedMap = renameVars.getVariableMap();
 
     prefix = "a";
     test(
-        lines(
-            "function Foo() {return 1;}",
-            "function Baz() {return 1;}",
-            "function Bar() {",
-            "  var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,",
-            "      A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,aa,ab;",
-            "  Foo();",
-            "} Bar();"),
-        lines(
-            "function a() {return 1;}",
-            "function ab() {return 1;}",
-            "function aa() {",
-            "  var b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,",
-            "      B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,$,ba,ca;",
-            "  a();",
-            "} aa();"));
+        """
+        function Foo() {return 1;}
+        function Baz() {return 1;}
+        function Bar() {
+          var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,
+              A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,aa,ab;
+          Foo();
+        } Bar();
+        """,
+        """
+        function a() {return 1;}
+        function ab() {return 1;}
+        function aa() {
+          var b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,
+              B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,$,ba,ca;
+          a();
+        } aa();
+        """);
   }
 
   @Test
@@ -882,48 +904,52 @@ public final class RenameVarsTest extends CompilerTestCase {
         "class      a {}");
 
     test(
-        lines(
-            "class fooBar {",
-            "  constructor(foo, bar) {",
-            "    this.foo = foo;",
-            "    this.bar = bar;",
-            "  }",
-            "}",
-            "var x = new fooBar(2, 3);"),
-        lines(
-            "class a {",
-            "  constructor(b, c) {",
-            "    this.foo = b;",
-            "    this.bar = c;",
-            "  }",
-            "}",
-            "var d = new a(2, 3);"));
+        """
+        class fooBar {
+          constructor(foo, bar) {
+            this.foo = foo;
+            this.bar = bar;
+          }
+        }
+        var x = new fooBar(2, 3);
+        """,
+        """
+        class a {
+          constructor(b, c) {
+            this.foo = b;
+            this.bar = c;
+          }
+        }
+        var d = new a(2, 3);
+        """);
 
     test(
-        lines(
-            "class fooBar {",
-            "  constructor(foo, bar) {",
-            "    this.foo = foo;",
-            "    this.bar = bar;",
-            "  }",
-            "  func(x) {",
-            "    return this.foo + x;",
-            "  }",
-            "}",
-            "var x = new fooBar(2,3);",
-            "var abcd = x.func(5);"),
-        lines(
-            "class b {",
-            "  constructor(a, c) {",
-            "    this.foo = a;",
-            "    this.bar = c;",
-            "  }",
-            "  func(a) {",
-            "    return this.foo + a;",
-            "  }",
-            "}",
-            "var d = new b(2,3);",
-            "var e = d.func(5);"));
+        """
+        class fooBar {
+          constructor(foo, bar) {
+            this.foo = foo;
+            this.bar = bar;
+          }
+          func(x) {
+            return this.foo + x;
+          }
+        }
+        var x = new fooBar(2,3);
+        var abcd = x.func(5);
+        """,
+        """
+        class b {
+          constructor(a, c) {
+            this.foo = a;
+            this.bar = c;
+          }
+          func(a) {
+            return this.foo + a;
+          }
+        }
+        var d = new b(2,3);
+        var e = d.func(5);
+        """);
   }
 
   @Test
@@ -937,39 +963,43 @@ public final class RenameVarsTest extends CompilerTestCase {
         "const   a = 1");
 
     test(
-        lines(
-            "let zyx = 1; {",
-            "  const xyz = 1;",
-            "  let zyx = 2;",
-            "  zyx = 3;",
-            "}",
-            "let xyz = 'potato';",
-            "zyx = 4;"),
-        lines(
-            "let a = 1; {",
-            "  const c = 1;",
-            "  let b = 2;",
-            "  b = 3;",
-            "}",
-            "let d = 'potato';",
-            "a = 4;"));
+        """
+        let zyx = 1; {
+          const xyz = 1;
+          let zyx = 2;
+          zyx = 3;
+        }
+        let xyz = 'potato';
+        zyx = 4;
+        """,
+        """
+        let a = 1; {
+          const c = 1;
+          let b = 2;
+          b = 3;
+        }
+        let d = 'potato';
+        a = 4;
+        """);
   }
 
   @Test
   public void testGenerators() {
     test(
-        lines(
-            "function* gen() {", //
-            "  var xyz = 3;",
-            "  yield xyz + 4;",
-            "}",
-            "gen().next()"),
-        lines(
-            "function* a() {", //
-            "  var b = 3;",
-            "  yield b + 4;",
-            "}",
-            "a().next()"));
+        """
+        function* gen() {
+          var xyz = 3;
+          yield xyz + 4;
+        }
+        gen().next()
+        """,
+        """
+        function* a() {
+          var b = 3;
+          yield b + 4;
+        }
+        a().next()
+        """);
   }
 
   @Test
@@ -982,12 +1012,14 @@ public final class RenameVarsTest extends CompilerTestCase {
   @Test
   public void testTemplateStrings() {
     test(
-        lines(
-            "var name = 'Foo';", //
-            "`My name is ${name}`;"),
-        lines(
-            "var a = 'Foo';", //
-            "`My name is ${a}`;"));
+        """
+        var name = 'Foo';
+        `My name is ${name}`;
+        """,
+        """
+        var a = 'Foo';
+        `My name is ${a}`;
+        """);
   }
 
   @Test
@@ -1008,75 +1040,85 @@ public final class RenameVarsTest extends CompilerTestCase {
     // scopes, so we probably need to do the comparison per scope.
     // Also, this is only relevant if language_out >= ES6.
     test(
-        lines(
-            "var obj = {p: 5, h: false};", //
-            "var {p, h} = obj;"),
-        lines(
-            "var a = {p: 5, h: false};", //
-            "var {p: b, h: c} = a;"));
+        """
+        var obj = {p: 5, h: false};
+        var {p, h} = obj;
+        """,
+        """
+        var a = {p: 5, h: false};
+        var {p: b, h: c} = a;
+        """);
 
     test(
-        lines(
-            "var obj = {p: 5, h: false};", //
-            "var {p: x, h: y} = obj;"),
-        lines(
-            "var a = {p: 5, h: false};", //
-            "var {p: b, h: c} = a;"));
+        """
+        var obj = {p: 5, h: false};
+        var {p: x, h: y} = obj;
+        """,
+        """
+        var a = {p: 5, h: false};
+        var {p: b, h: c} = a;
+        """);
   }
 
   @Test
   public void testDefaultFunction() {
     test(
-        lines(
-            "function f(x, y=12) {", //
-            "  return x * y;",
-            "}"),
-        lines(
-            "function c(a, b=12) {", //
-            "  return a * b;",
-            "}"));
+        """
+        function f(x, y=12) {
+          return x * y;
+        }
+        """,
+        """
+        function c(a, b=12) {
+          return a * b;
+        }
+        """);
   }
 
   @Test
   public void testRestFunction() {
     test(
-        lines(
-            "function f(x, ...y) {", //
-            "  return x * y[0];",
-            "}"),
-        lines(
-            "function c(a, ...b) {", //
-            "  return a * b[0];",
-            "}"));
+        """
+        function f(x, ...y) {
+          return x * y[0];
+        }
+        """,
+        """
+        function c(a, ...b) {
+          return a * b[0];
+        }
+        """);
   }
 
   @Test
   public void testObjectLiterals() {
     test(
-        lines(
-            "var objSuper = {",
-            "  f: 'potato'",
-            "};",
-            "var obj = {",
-            "  __proto__: objSuper,",
-            "  g: false,",
-            "  x() {",
-            "    return super.f;",
-            "  }",
-            "};",
-            "obj.x();"),
-        lines(
-            "var a = {",
-            "  f: 'potato'",
-            "};",
-            "var b = {",
-            "  __proto__: a,",
-            "  g: false,",
-            "  x() {",
-            "    return super.f;",
-            "  }",
-            "};",
-            "b.x();"));
+        """
+        var objSuper = {
+          f: 'potato'
+        };
+        var obj = {
+          __proto__: objSuper,
+          g: false,
+          x() {
+            return super.f;
+          }
+        };
+        obj.x();
+        """,
+        """
+        var a = {
+          f: 'potato'
+        };
+        var b = {
+          __proto__: a,
+          g: false,
+          x() {
+            return super.f;
+          }
+        };
+        b.x();
+        """);
   }
 
   @Test

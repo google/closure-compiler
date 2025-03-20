@@ -126,33 +126,36 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
     checkNoWarning("/** @param {T} x @template T */", "function f(x){}");
     checkNoWarning("/** @param {S} x @return {T} @template S,T */", "function f(x){}");
     checkNoWarning(
-        lines(
-            "/** @constructor @template T */ function Foo(){}",
-            "/** @param {T} x */ Foo.prototype.bar = function(x){};"));
+        """
+        /** @constructor @template T */ function Foo(){}
+        /** @param {T} x */ Foo.prototype.bar = function(x){};
+        """);
   }
 
   @Test
   public void testTemplateDefinitionTypeWithTtl() {
     checkNoWarning(
-        lines(
-            "/**",
-            " * @param {T} x",
-            " * @param {U} y",
-            " * @template T",
-            " * @template U := T =:",
-            " */",
-            "function f(x, y) {}"));
+        """
+        /**
+         * @param {T} x
+         * @param {U} y
+         * @template T
+         * @template U := T =:
+         */
+        function f(x, y) {}
+        """);
 
     checkNoWarning(
-        lines(
-            "/**",
-            " * @param {T} x",
-            " * @param {U} y",
-            " * @template T",
-            // note that "Object" below is /not/ nullable
-            " * @template U := cond(isUnknown(T), \"Object\", T) =:",
-            " */",
-            "function f(x, y) {}"));
+        """
+        /**
+         * @param {T} x
+         * @param {U} y
+         * @template T
+        // note that "Object" below is /not/ nullable
+         * @template U := cond(isUnknown(T), "Object", T) =:
+         */
+        function f(x, y) {}
+        """);
   }
 
   @Test

@@ -65,45 +65,49 @@ public final class CheckSuperTest extends CompilerTestCase {
   @Test
   public void testFieldSuperCall() {
     testSame(
-        lines(
-            "class Foo {",
-            "  x() {",
-            "    return 5;",
-            "  }",
-            "}",
-            "class Bar extends Foo {",
-            "  y = () => super.x()",
-            "}"));
+        """
+        class Foo {
+          x() {
+            return 5;
+          }
+        }
+        class Bar extends Foo {
+          y = () => super.x()
+        }
+        """);
 
     testError(
-        lines(
-            "class A {}", //
-            "class B extends A { ",
-            "  x = super();",
-            "}"),
+        """
+        class A {}
+        class B extends A {
+          x = super();
+        }
+        """,
         INVALID_SUPER_CALL);
   }
 
   @Test
   public void testComputedSuperFields() {
     testError(
-        lines(
-            "class A {", //
-            "  x = 'fieldOne'",
-            "}",
-            "class B extends A { ",
-            "  [super.x] = 2;",
-            "}"),
+        """
+        class A {
+          x = 'fieldOne'
+        }
+        class B extends A {
+          [super.x] = 2;
+        }
+        """,
         INVALID_SUPER_ACCESS);
 
     testError(
-        lines(
-            "class A {", //
-            "  x = 'fieldOne'",
-            "}",
-            "class B extends A { ",
-            "  static [super.x] = 2;",
-            "}"),
+        """
+        class A {
+          x = 'fieldOne'
+        }
+        class B extends A {
+          static [super.x] = 2;
+        }
+        """,
         INVALID_SUPER_ACCESS);
   }
 
@@ -111,12 +115,13 @@ public final class CheckSuperTest extends CompilerTestCase {
   public void testMissingSuper_nestedClass() {
     // Note that super is only called for anonymous class "E", not C.
     testError(
-        lines(
-            "class C extends D {",
-            "  constructor() { ",
-            "    const E = class extends D { constructor() { super(); } };",
-            "  }",
-            "}"),
+        """
+        class C extends D {
+          constructor() {
+            const E = class extends D { constructor() { super(); } };
+          }
+        }
+        """,
         MISSING_CALL_TO_SUPER);
   }
 
@@ -202,169 +207,159 @@ public final class CheckSuperTest extends CompilerTestCase {
   @Test
   public void testSuperAccessInNestedOrdinaryFunction() {
     testError(
-        lines(
-            "", //
-            "class C {",
-            "  method() {}",
-            "}",
-            "class Sub extends C {",
-            "  method() {",
-            "    (function() { super.method() }).call(this);",
-            "  }",
-            "}",
-            ""),
+        """
+        class C {
+          method() {}
+        }
+        class Sub extends C {
+          method() {
+            (function() { super.method() }).call(this);
+          }
+        }
+        """,
         INVALID_SUPER_ACCESS);
   }
 
   @Test
   public void testSuperAccessInNestedArrowFunction() {
     testSame(
-        lines(
-            "", //
-            "class C {",
-            "  method() {}",
-            "}",
-            "class Sub extends C {",
-            "  method() {",
-            "    (() => { super.method() })();",
-            "  }",
-            "}",
-            ""));
+        """
+        class C {
+          method() {}
+        }
+        class Sub extends C {
+          method() {
+            (() => { super.method() })();
+          }
+        }
+        """);
   }
 
   @Test
   public void testSuperAccessInNestedOrdinaryFunctionInGetter() {
     testError(
-        lines(
-            "", //
-            "class C {",
-            "  get value() { return 1; }",
-            "}",
-            "class Sub extends C {",
-            "  get value() {",
-            "    return (function() { super.value }).call(this);",
-            "  }",
-            "}",
-            ""),
+        """
+        class C {
+          get value() { return 1; }
+        }
+        class Sub extends C {
+          get value() {
+            return (function() { super.value }).call(this);
+          }
+        }
+        """,
         INVALID_SUPER_ACCESS);
   }
 
   @Test
   public void testSuperAccessInNestedArrowFunctionInGetter() {
     testSame(
-        lines(
-            "", //
-            "class C {",
-            "  get value() { return 1; }",
-            "}",
-            "class Sub extends C {",
-            "  get value() {",
-            "    return (() => super.value)();",
-            "  }",
-            "}",
-            ""));
+        """
+        class C {
+          get value() { return 1; }
+        }
+        class Sub extends C {
+          get value() {
+            return (() => super.value)();
+          }
+        }
+        """);
   }
 
   @Test
   public void testSuperCallInNestedOrdinaryFunction() {
     testError(
-        lines(
-            "", //
-            "class C {",
-            "  constructor() {}",
-            "}",
-            "class Sub extends C {",
-            "  constructor() {",
-            "    super();", // avoid getting missing super call warning
-            "    (function() { super() }).call(this);",
-            "  }",
-            "}",
-            ""),
+        """
+        class C {
+          constructor() {}
+        }
+        class Sub extends C {
+          constructor() {
+            super(); // avoid getting missing super call warning
+            (function() { super() }).call(this);
+          }
+        }
+        """,
         INVALID_SUPER_CALL);
   }
 
   @Test
   public void testSuperCallInNestedObjectLiteralMethod() {
     testError(
-        lines(
-            "", //
-            "class C {",
-            "  constructor() {}",
-            "}",
-            "class Sub extends C {",
-            "  constructor() {",
-            "    super();", // avoid getting missing super call warning
-            "    this.objLit = {",
-            // Object literals don't have special constructor methods, so calling super()
-            // makes no sense. We nest this one inside of a method named constructor
-            // to make sure that doesn't fool our logic.
-            "      constructor() { super(); }",
-            "    };",
-            "  }",
-            "}",
-            ""),
+        """
+        class C {
+          constructor() {}
+        }
+        class Sub extends C {
+          constructor() {
+            super(); // avoid getting missing super call warning
+            this.objLit = {
+        // Object literals don't have special constructor methods, so calling super()
+        // makes no sense. We nest this one inside of a method named constructor
+        // to make sure that doesn't fool our logic.
+              constructor() { super(); }
+            };
+          }
+        }
+        """,
         INVALID_SUPER_CALL);
   }
 
   @Test
   public void testObjLitMethodCanAccessSuperProps() {
     testSame(
-        lines(
-            "", //
-            "const objLit = {",
-            // Object literals don't have special constructor methods, so calling super()
-            // makes no sense. We nest this one inside of a method named constructor
-            // to make sure that doesn't fool our logic.
-            "      method() { super.toString(); }",
-            "};",
-            ""));
+        """
+        const objLit = {
+        // Object literals don't have special constructor methods, so calling super()
+        // makes no sense. We nest this one inside of a method named constructor
+        // to make sure that doesn't fool our logic.
+              method() { super.toString(); }
+        };
+        """);
   }
 
   @Test
   public void testObjLitPropDefinedWithArrowFunctionCannotAccessSuperProps() {
     testError(
-        lines(
-            "", //
-            "const objLit = {",
-            // This is not a proper object literal method, so it cannot refer to properties using
-            // `super`
-            "      method: () => { super.toString(); }",
-            "};",
-            ""),
+        """
+        const objLit = {
+        // This is not a proper object literal method, so it cannot refer to properties using
+        // `super`
+              method: () => { super.toString(); }
+        };
+        """,
         INVALID_SUPER_ACCESS);
   }
 
   @Test
   public void testObjLitDoesNotFoolArrowFunctionAccessLogicInMethod() {
     testSame(
-        lines(
-            "", //
-            "class C {",
-            "  method() {",
-            "    this.objLit = {",
-            // This is not a proper object literal method, but the arrow function is wrapped in
-            // a class method, so reference to `super` properties is allowed here.
-            "      method: () => { super.toString(); }",
-            "    };",
-            "  }",
-            "}",
-            ""));
+        """
+        class C {
+          method() {
+            this.objLit = {
+        // This is not a proper object literal method, but the arrow function is wrapped in
+        // a class method, so reference to `super` properties is allowed here.
+              method: () => { super.toString(); }
+            };
+          }
+        }
+        """);
   }
 
   @Test
   public void testSuperCallInNestedArrowFunction() {
     testError(
-        lines(
-            "", //
-            "class C {",
-            "  constructor() {}",
-            "}",
-            "class Sub extends C {",
-            "  constructor() {",
-            "    (() => { super() })();",
-            "  }",
-            "}",
-            ""),
+        """
+        class C {
+          constructor() {}
+        }
+        class Sub extends C {
+          constructor() {
+            (() => { super() })();
+          }
+        }
+        """,
         SUPER_CALL_IN_ARROW);
   }
 

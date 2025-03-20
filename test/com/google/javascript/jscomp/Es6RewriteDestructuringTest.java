@@ -83,186 +83,202 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   @Test
   public void testObjectDestructuring_forLoopInitializer_doesNotCrash() {
     test(
-        lines(
-            "function isDeclaredInLoop(path) {",
-            "  for (let {",
-            "      parentPath,",
-            "      key",
-            "    } = path;",
-            "    parentPath; ({",
-            "      parentPath,",
-            "      key",
-            "    } = parentPath)) {",
-            "    return isDeclaredInLoop(parentPath);",
-            "  }",
-            "  return false;",
-            "}"),
-        lines(
-            "function isDeclaredInLoop(path) {",
-            "  for (let parentPath, key, $jscomp$destructuring$var0$unused = (() => {",
-            "    let $jscomp$destructuring$var1 = path;",
-            "    var $jscomp$destructuring$var2 = $jscomp$destructuring$var1;",
-            "    parentPath = $jscomp$destructuring$var2.parentPath;",
-            "    key = $jscomp$destructuring$var2.key;",
-            "    return $jscomp$destructuring$var1;",
-            "  })(); parentPath; (() => {",
-            "    let $jscomp$destructuring$var3 = parentPath;",
-            "    var $jscomp$destructuring$var4 = $jscomp$destructuring$var3;",
-            "    parentPath = $jscomp$destructuring$var4.parentPath;",
-            "    key = $jscomp$destructuring$var4.key;",
-            "    return $jscomp$destructuring$var3;",
-            "  })()) {",
-            "    return isDeclaredInLoop(parentPath);",
-            "  }",
-            "  return false;",
-            "}"));
+        """
+        function isDeclaredInLoop(path) {
+          for (let {
+              parentPath,
+              key
+            } = path;
+            parentPath; ({
+              parentPath,
+              key
+            } = parentPath)) {
+            return isDeclaredInLoop(parentPath);
+          }
+          return false;
+        }
+        """,
+        """
+        function isDeclaredInLoop(path) {
+          for (let parentPath, key, $jscomp$destructuring$var0$unused = (() => {
+            let $jscomp$destructuring$var1 = path;
+            var $jscomp$destructuring$var2 = $jscomp$destructuring$var1;
+            parentPath = $jscomp$destructuring$var2.parentPath;
+            key = $jscomp$destructuring$var2.key;
+            return $jscomp$destructuring$var1;
+          })(); parentPath; (() => {
+            let $jscomp$destructuring$var3 = parentPath;
+            var $jscomp$destructuring$var4 = $jscomp$destructuring$var3;
+            parentPath = $jscomp$destructuring$var4.parentPath;
+            key = $jscomp$destructuring$var4.key;
+            return $jscomp$destructuring$var3;
+          })()) {
+            return isDeclaredInLoop(parentPath);
+          }
+          return false;
+        }
+        """);
   }
 
   @Test
   public void testObjectDestructuring() {
     test(
         "var {a: b, c: d} = foo();",
-        lines(
-            "var b; var d;",
-            "var $jscomp$destructuring$var0 = foo();",
-            "b = $jscomp$destructuring$var0.a;",
-            "d = $jscomp$destructuring$var0.c;"));
+        """
+        var b; var d;
+        var $jscomp$destructuring$var0 = foo();
+        b = $jscomp$destructuring$var0.a;
+        d = $jscomp$destructuring$var0.c;
+        """);
 
     test(
         "var {a,b} = foo();",
-        lines(
-            "var a; var b;",
-            "var $jscomp$destructuring$var0 = foo();",
-            "a = $jscomp$destructuring$var0.a;",
-            "b = $jscomp$destructuring$var0.b;"));
+        """
+        var a; var b;
+        var $jscomp$destructuring$var0 = foo();
+        a = $jscomp$destructuring$var0.a;
+        b = $jscomp$destructuring$var0.b;
+        """);
 
     test(
         "let {a,b} = foo();",
-        lines(
-            "var $jscomp$destructuring$var0 = foo();",
-            "let a = $jscomp$destructuring$var0.a;",
-            "let b = $jscomp$destructuring$var0.b;"));
+        """
+        var $jscomp$destructuring$var0 = foo();
+        let a = $jscomp$destructuring$var0.a;
+        let b = $jscomp$destructuring$var0.b;
+        """);
 
     test(
         "const {a,b} = foo();",
-        lines(
-            "/** @const */ var $jscomp$destructuring$var0 = foo();",
-            "const a = $jscomp$destructuring$var0.a;",
-            "const b = $jscomp$destructuring$var0.b;"));
+        """
+        /** @const */ var $jscomp$destructuring$var0 = foo();
+        const a = $jscomp$destructuring$var0.a;
+        const b = $jscomp$destructuring$var0.b;
+        """);
 
     test(
         "var x; ({a: x} = foo());",
-        lines(
-            "var x;",
-            "var $jscomp$destructuring$var0 = foo();",
-            "x = $jscomp$destructuring$var0.a;"));
+        """
+        var x;
+        var $jscomp$destructuring$var0 = foo();
+        x = $jscomp$destructuring$var0.a;
+        """);
   }
 
   @Test
   public void testObjectDestructuringWithInitializer() {
     test(
         "var {a : b = 'default'} = foo();",
-        lines(
-            "var b;",
-            "var $jscomp$destructuring$var0 = foo();",
-            "b = ($jscomp$destructuring$var0.a === void 0) ?",
-            "    'default' :",
-            "    $jscomp$destructuring$var0.a"));
+        """
+        var b;
+        var $jscomp$destructuring$var0 = foo();
+        b = ($jscomp$destructuring$var0.a === void 0) ?
+            'default' :
+            $jscomp$destructuring$var0.a
+        """);
 
     test(
         "var {a = 'default'} = foo();",
-        lines(
-            "var a;",
-            "var $jscomp$destructuring$var0 = foo();",
-            "a = ($jscomp$destructuring$var0.a === void 0) ?",
-            "    'default' :",
-            "    $jscomp$destructuring$var0.a"));
+        """
+        var a;
+        var $jscomp$destructuring$var0 = foo();
+        a = ($jscomp$destructuring$var0.a === void 0) ?
+            'default' :
+            $jscomp$destructuring$var0.a
+        """);
   }
 
   @Test
   public void testObjectDestructuring_inVanillaForInitialize_var() {
     test(
-        lines(
-            "A: B: for (",
-            "    var z = 1, {x: {a: b = 'default'}} = foo(), x = 0, {c} = bar();",
-            "    true;",
-            "    c++) {",
-            "}"),
-        lines(
-            "var z = 1;",
-            "var b;",
-            "var $jscomp$destructuring$var0 = foo();",
-            "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.x;",
-            "b = $jscomp$destructuring$var1.a === void 0 ?",
-            "    'default' : $jscomp$destructuring$var1.a;",
-            "",
-            "var x = 0;",
-            "var c;",
-            "var $jscomp$destructuring$var2 = bar();",
-            "c = $jscomp$destructuring$var2.c;",
-            "A: B: for (; true; c++) {}"));
+        """
+        A: B: for (
+            var z = 1, {x: {a: b = 'default'}} = foo(), x = 0, {c} = bar();
+            true;
+            c++) {
+        }
+        """,
+        """
+        var z = 1;
+        var b;
+        var $jscomp$destructuring$var0 = foo();
+        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.x;
+        b = $jscomp$destructuring$var1.a === void 0 ?
+            'default' : $jscomp$destructuring$var1.a;
+
+        var x = 0;
+        var c;
+        var $jscomp$destructuring$var2 = bar();
+        c = $jscomp$destructuring$var2.c;
+        A: B: for (; true; c++) {}
+        """);
   }
 
   @Test
   public void testObjectDestructuring_inVanillaForInitialize_const() {
     test(
-        lines(
-            "A: B: for (",
-            "    const z = 1, {x: {a: b = 'default'}} = foo(), x = 0, {c} = bar();",
-            "    true;",
-            "    c++) {",
-            "}"),
-        lines(
-            "{",
-            "  const z = 1;",
-            "  /** @const */ var $jscomp$destructuring$var0 = foo();",
-            "  /** @const */ var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.x;",
-            "  const b = $jscomp$destructuring$var1.a === void 0 ?",
-            "      'default' : $jscomp$destructuring$var1.a;",
-            "  {",
-            "    const x = 0;",
-            "    /** @const */ var $jscomp$destructuring$var2 = bar();",
-            "    const c = $jscomp$destructuring$var2.c;",
-            "    A: B: for (; true; c++) {}",
-            "  }",
-            "}"));
+        """
+        A: B: for (
+            const z = 1, {x: {a: b = 'default'}} = foo(), x = 0, {c} = bar();
+            true;
+            c++) {
+        }
+        """,
+        """
+        {
+          const z = 1;
+          /** @const */ var $jscomp$destructuring$var0 = foo();
+          /** @const */ var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.x;
+          const b = $jscomp$destructuring$var1.a === void 0 ?
+              'default' : $jscomp$destructuring$var1.a;
+          {
+            const x = 0;
+            /** @const */ var $jscomp$destructuring$var2 = bar();
+            const c = $jscomp$destructuring$var2.c;
+            A: B: for (; true; c++) {}
+          }
+        }
+        """);
   }
 
   @Test
   public void testObjectDestructuring_inVanillaForInitialize_let() {
     test(
-        lines(
-            "A: B: for (",
-            "    let z = 1, {x: {a: b = 'default'}} = foo(), x = 0, {c} = bar();",
-            "    true;",
-            "    c++) {",
-            "}"),
-        lines(
-            "A: B: for (let z = 1, b, $jscomp$destructuring$var0$unused = (() => {",
-            "     let $jscomp$destructuring$var1 = foo();",
-            "     var $jscomp$destructuring$var2 = $jscomp$destructuring$var1;",
-            "     var $jscomp$destructuring$var3 = $jscomp$destructuring$var2.x;",
-            "     b = $jscomp$destructuring$var3.a === void 0 ? ",
-            "         'default' : $jscomp$destructuring$var3.a;",
-            "     return $jscomp$destructuring$var1;",
-            "   })(), x = 0, c, $jscomp$destructuring$var4$unused = (() => {",
-            "     let $jscomp$destructuring$var5 = bar();",
-            "     var $jscomp$destructuring$var6 = $jscomp$destructuring$var5;",
-            "     c = $jscomp$destructuring$var6.c;",
-            "     return $jscomp$destructuring$var5;",
-            "   })(); true; c++) {",
-            "}"));
+        """
+        A: B: for (
+            let z = 1, {x: {a: b = 'default'}} = foo(), x = 0, {c} = bar();
+            true;
+            c++) {
+        }
+        """,
+        """
+        A: B: for (let z = 1, b, $jscomp$destructuring$var0$unused = (() => {
+             let $jscomp$destructuring$var1 = foo();
+             var $jscomp$destructuring$var2 = $jscomp$destructuring$var1;
+             var $jscomp$destructuring$var3 = $jscomp$destructuring$var2.x;
+             b = $jscomp$destructuring$var3.a === void 0 ?
+                 'default' : $jscomp$destructuring$var3.a;
+             return $jscomp$destructuring$var1;
+           })(), x = 0, c, $jscomp$destructuring$var4$unused = (() => {
+             let $jscomp$destructuring$var5 = bar();
+             var $jscomp$destructuring$var6 = $jscomp$destructuring$var5;
+             c = $jscomp$destructuring$var6.c;
+             return $jscomp$destructuring$var5;
+           })(); true; c++) {
+        }
+        """);
   }
 
   @Test
   public void testObjectDestructuringNested() {
     test(
         "var {a: {b}} = foo();",
-        lines(
-            "var b;",
-            "var $jscomp$destructuring$var0 = foo();",
-            "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.a;",
-            "b = $jscomp$destructuring$var1.b"));
+        """
+        var b;
+        var $jscomp$destructuring$var0 = foo();
+        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.a;
+        b = $jscomp$destructuring$var1.b
+        """);
   }
 
   @Test
@@ -277,21 +293,23 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
     test(
         "var {[foo()]: x = 5} = {};",
-        lines(
-            "var x;",
-            "var $jscomp$destructuring$var0 = {};",
-            "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0[foo()];",
-            "x = $jscomp$destructuring$var1 === void 0 ?",
-            "    5 : $jscomp$destructuring$var1"));
+        """
+        var x;
+        var $jscomp$destructuring$var0 = {};
+        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0[foo()];
+        x = $jscomp$destructuring$var1 === void 0 ?
+            5 : $jscomp$destructuring$var1
+        """);
 
     test(
         "function f({['KEY']: x}) {}",
-        lines(
-            "function f($jscomp$destructuring$var0) {",
-            "  var x;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
-            "  x = $jscomp$destructuring$var1['KEY']",
-            "}"));
+        """
+        function f($jscomp$destructuring$var0) {
+          var x;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0
+          x = $jscomp$destructuring$var1['KEY']
+        }
+        """);
   }
 
   // https://github.com/google/closure-compiler/issues/2189
@@ -299,18 +317,20 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   public void testGithubIssue2189() {
     setExpectParseWarningsInThisTest();
     test(
-        lines(
-            "/**",
-            " * @param {string} a",
-            " * @param {{b: ?<?>}} __1",
-            " */",
-            "function x(a, { b }) {}"),
-        lines(
-            "function x(a, $jscomp$destructuring$var0) {",
-            "  var b;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "  b=$jscomp$destructuring$var1.b;",
-            "}"));
+        """
+        /**
+         * @param {string} a
+         * @param {{b: ?<?>}} __1
+         */
+        function x(a, { b }) {}
+        """,
+        """
+        function x(a, $jscomp$destructuring$var0) {
+          var b;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          b=$jscomp$destructuring$var1.b;
+        }
+        """);
   }
 
   @Test
@@ -321,92 +341,101 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
     test(
         "var {0.1: b} = foo();",
-        lines(
-            "var b;",
-            "var $jscomp$destructuring$var0 = foo();",
-            "b = $jscomp$destructuring$var0['0.1']"));
+        """
+        var b;
+        var $jscomp$destructuring$var0 = foo();
+        b = $jscomp$destructuring$var0['0.1']
+        """);
 
     test(
         "var {'str': b} = foo();",
-        lines(
-            "var b;",
-            "var $jscomp$destructuring$var0 = foo();",
-            "b = $jscomp$destructuring$var0['str']"));
+        """
+        var b;
+        var $jscomp$destructuring$var0 = foo();
+        b = $jscomp$destructuring$var0['str']
+        """);
   }
 
   @Test
   public void testObjectDestructuringFunction() {
     test(
         "function f({a: b}) {}",
-        lines(
-            "function f($jscomp$destructuring$var0) {",
-            "  var b;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
-            "  b = $jscomp$destructuring$var1.a",
-            "}"));
+        """
+        function f($jscomp$destructuring$var0) {
+          var b;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0
+          b = $jscomp$destructuring$var1.a
+        }
+        """);
 
     test(
         "function f({a}) {}",
-        lines(
-            "function f($jscomp$destructuring$var0) {",
-            "  var a;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
-            "  a = $jscomp$destructuring$var1.a",
-            "}"));
+        """
+        function f($jscomp$destructuring$var0) {
+          var a;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0
+          a = $jscomp$destructuring$var1.a
+        }
+        """);
 
     test(
         "function f({k: {subkey : a}}) {}",
-        lines(
-            "function f($jscomp$destructuring$var0) {",
-            "  var a;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
-            "  var $jscomp$destructuring$var2 = $jscomp$destructuring$var1.k;",
-            "  a = $jscomp$destructuring$var2.subkey;",
-            "}"));
+        """
+        function f($jscomp$destructuring$var0) {
+          var a;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0
+          var $jscomp$destructuring$var2 = $jscomp$destructuring$var1.k;
+          a = $jscomp$destructuring$var2.subkey;
+        }
+        """);
 
     test(
         "function f({k: [x, y, z]}) {}",
-        lines(
-            "function f($jscomp$destructuring$var0) {",
-            "  var x; var y; var z;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
-            "  var $jscomp$destructuring$var2 =",
-            "      (0, $jscomp.makeIterator)($jscomp$destructuring$var1.k);",
-            "  x = $jscomp$destructuring$var2.next().value;",
-            "  y = $jscomp$destructuring$var2.next().value;",
-            "  z = $jscomp$destructuring$var2.next().value;",
-            "}"));
+        """
+        function f($jscomp$destructuring$var0) {
+          var x; var y; var z;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0
+          var $jscomp$destructuring$var2 =
+              (0, $jscomp.makeIterator)($jscomp$destructuring$var1.k);
+          x = $jscomp$destructuring$var2.next().value;
+          y = $jscomp$destructuring$var2.next().value;
+          z = $jscomp$destructuring$var2.next().value;
+        }
+        """);
 
     test(
         "function f({key: x = 5}) {}",
-        lines(
-            "function f($jscomp$destructuring$var0) {",
-            "  var x;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
-            "  x = $jscomp$destructuring$var1.key === void 0 ?",
-            "      5 : $jscomp$destructuring$var1.key",
-            "}"));
+        """
+        function f($jscomp$destructuring$var0) {
+          var x;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0
+          x = $jscomp$destructuring$var1.key === void 0 ?
+              5 : $jscomp$destructuring$var1.key
+        }
+        """);
 
     test(
         "function f({[key]: x = 5}) {}",
-        lines(
-            "function f($jscomp$destructuring$var0) {",
-            "  var x;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
-            "  var $jscomp$destructuring$var2 = $jscomp$destructuring$var1[key]",
-            "  x = $jscomp$destructuring$var2 === void 0 ?",
-            "      5 : $jscomp$destructuring$var2",
-            "}"));
+        """
+        function f($jscomp$destructuring$var0) {
+          var x;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0
+          var $jscomp$destructuring$var2 = $jscomp$destructuring$var1[key]
+          x = $jscomp$destructuring$var2 === void 0 ?
+              5 : $jscomp$destructuring$var2
+        }
+        """);
 
     test(
         "function f({x = 5}) {}",
-        lines(
-            "function f($jscomp$destructuring$var0) {",
-            "  var x;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
-            "  x = $jscomp$destructuring$var1.x === void 0 ?",
-            "      5 : $jscomp$destructuring$var1.x",
-            "}"));
+        """
+        function f($jscomp$destructuring$var0) {
+          var x;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0
+          x = $jscomp$destructuring$var1.x === void 0 ?
+              5 : $jscomp$destructuring$var1.x
+        }
+        """);
   }
 
   @Test
@@ -415,200 +444,213 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     setExpectParseWarningsInThisTest(); // intentionally pass bad JSDoc
     ignoreWarnings(TypeCheck.INEXISTENT_PROPERTY);
     test(
-        lines(
-            "/**",
-            " * @param {{foo: string[]}} obj",
-            " * @param {string} id",
-            " */",
-            "function f({foo}, id) {}"),
-        lines(
-            "function f($jscomp$destructuring$var0, id) {",
-            "  var foo;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "  foo = $jscomp$destructuring$var1.foo;",
-            "}"));
+        """
+        /**
+         * @param {{foo: string[]}} obj
+         * @param {string} id
+         */
+        function f({foo}, id) {}
+        """,
+        """
+        function f($jscomp$destructuring$var0, id) {
+          var foo;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          foo = $jscomp$destructuring$var1.foo;
+        }
+        """);
   }
 
   @Test
   public void testObjectDestructuringFunctionJsDoc() {
     test(
         "function f(/** {x: number, y: number} */ {x, y}) {}",
-        lines(
-            "function f($jscomp$destructuring$var0) {",
-            "  var x; var y;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "  x = $jscomp$destructuring$var1.x;",
-            "  y = $jscomp$destructuring$var1.y;",
-            "}"));
+        """
+        function f($jscomp$destructuring$var0) {
+          var x; var y;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          x = $jscomp$destructuring$var1.x;
+          y = $jscomp$destructuring$var1.y;
+        }
+        """);
   }
 
   @Test
   public void testDefaultParametersDestructuring() {
     test(
         "function f({a,b} = foo()) {}",
-        lines(
-            "function f($jscomp$destructuring$var0){",
-            "  var a; var b;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0=== void 0 ?",
-            "    foo() : $jscomp$destructuring$var0;",
-            "  a = $jscomp$destructuring$var1.a;",
-            "  b = $jscomp$destructuring$var1.b;",
-            "}"));
+        """
+        function f($jscomp$destructuring$var0){
+          var a; var b;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0=== void 0 ?
+            foo() : $jscomp$destructuring$var0;
+          a = $jscomp$destructuring$var1.a;
+          b = $jscomp$destructuring$var1.b;
+        }
+        """);
   }
 
   @Test
   public void testArrayDestructuring() {
     test(
         "var [x,y] = z();",
-        lines(
-            "var x;",
-            "var y;",
-            "var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(z());",
-            "x = $jscomp$destructuring$var0.next().value;",
-            "y = $jscomp$destructuring$var0.next().value;"));
+        """
+        var x;
+        var y;
+        var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(z());
+        x = $jscomp$destructuring$var0.next().value;
+        y = $jscomp$destructuring$var0.next().value;
+        """);
 
     test(
         "var x,y;\n" + "[x,y] = z();",
-        lines(
-            "var x;",
-            "var y;",
-            "var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(z());",
-            "x = $jscomp$destructuring$var0.next().value;",
-            "y = $jscomp$destructuring$var0.next().value;"));
+        """
+        var x;
+        var y;
+        var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(z());
+        x = $jscomp$destructuring$var0.next().value;
+        y = $jscomp$destructuring$var0.next().value;
+        """);
 
     test(
         "var [a,b] = c();" + "var [x,y] = z();",
-        lines(
-            "var a;",
-            "var b;",
-            "var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(c());",
-            "a = $jscomp$destructuring$var0.next().value;",
-            "b = $jscomp$destructuring$var0.next().value;",
-            "var x;",
-            "var y;",
-            "var $jscomp$destructuring$var1 = (0, $jscomp.makeIterator)(z());",
-            "x = $jscomp$destructuring$var1.next().value;",
-            "y = $jscomp$destructuring$var1.next().value;"));
+        """
+        var a;
+        var b;
+        var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(c());
+        a = $jscomp$destructuring$var0.next().value;
+        b = $jscomp$destructuring$var0.next().value;
+        var x;
+        var y;
+        var $jscomp$destructuring$var1 = (0, $jscomp.makeIterator)(z());
+        x = $jscomp$destructuring$var1.next().value;
+        y = $jscomp$destructuring$var1.next().value;
+        """);
   }
 
   @Test
   public void testArrayDestructuringDefaultValues() {
     test(
         "var a; [a=1] = b();",
-        lines(
-            "var a;",
-            "var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(b())",
-            "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value",
-            "a = ($jscomp$destructuring$var1 === void 0) ?",
-            "    1 :",
-            "    $jscomp$destructuring$var1;"));
+        """
+        var a;
+        var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(b())
+        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value
+        a = ($jscomp$destructuring$var1 === void 0) ?
+            1 :
+            $jscomp$destructuring$var1;
+        """);
 
     test(
         "var [a=1] = b();",
-        lines(
-            "var a;",
-            "var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(b())",
-            "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value",
-            "a = ($jscomp$destructuring$var1 === void 0) ?",
-            "    1 :",
-            "    $jscomp$destructuring$var1;"));
+        """
+        var a;
+        var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(b())
+        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value
+        a = ($jscomp$destructuring$var1 === void 0) ?
+            1 :
+            $jscomp$destructuring$var1;
+        """);
 
     test(
         "var [a, b=1, c] = d();",
-        lines(
-            "var a;",
-            "var b;",
-            "var c;",
-            "var $jscomp$destructuring$var0=(0, $jscomp.makeIterator)(d());",
-            "a = $jscomp$destructuring$var0.next().value;",
-            "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value;",
-            "b = ($jscomp$destructuring$var1 === void 0) ?",
-            "    1 :",
-            "    $jscomp$destructuring$var1;",
-            "c=$jscomp$destructuring$var0.next().value"));
+        """
+        var a;
+        var b;
+        var c;
+        var $jscomp$destructuring$var0=(0, $jscomp.makeIterator)(d());
+        a = $jscomp$destructuring$var0.next().value;
+        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value;
+        b = ($jscomp$destructuring$var1 === void 0) ?
+            1 :
+            $jscomp$destructuring$var1;
+        c=$jscomp$destructuring$var0.next().value
+        """);
 
     test(
         srcs("var a; [[a] = ['b']] = [];"),
         expected(
-            lines(
-                "var a;",
-                "var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)([]);",
-                "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value;",
-                "var $jscomp$destructuring$var2 = (0, $jscomp.makeIterator)(",
-                "    $jscomp$destructuring$var1 === void 0",
-                "        ? ['b']",
-                "        : $jscomp$destructuring$var1);",
-                "a = $jscomp$destructuring$var2.next().value")));
+            """
+            var a;
+            var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)([]);
+            var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value;
+            var $jscomp$destructuring$var2 = (0, $jscomp.makeIterator)(
+                $jscomp$destructuring$var1 === void 0
+                    ? ['b']
+                    : $jscomp$destructuring$var1);
+            a = $jscomp$destructuring$var2.next().value
+            """));
   }
 
   @Test
   public void testArrayDestructuringParam() {
     test(
         "function f([x,y]) { use(x); use(y); }",
-        lines(
-            "function f($jscomp$destructuring$var0) {",
-            "  var x; var y;",
-            "  var $jscomp$destructuring$var1 = (0,"
-                + " $jscomp.makeIterator)($jscomp$destructuring$var0);",
-            "  x = $jscomp$destructuring$var1.next().value;",
-            "  y = $jscomp$destructuring$var1.next().value;",
-            "  use(x);",
-            "  use(y);",
-            "}"));
+        """
+        function f($jscomp$destructuring$var0) {
+          var x; var y;
+          var $jscomp$destructuring$var1 = (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+          x = $jscomp$destructuring$var1.next().value;
+          y = $jscomp$destructuring$var1.next().value;
+          use(x);
+          use(y);
+        }
+        """);
 
     test(
         "function f([x, , y]) { use(x); use(y); }",
-        lines(
-            "function f($jscomp$destructuring$var0) {",
-            "  var x; var y;",
-            "  var $jscomp$destructuring$var1 = (0,"
-                + " $jscomp.makeIterator)($jscomp$destructuring$var0);",
-            "  x = $jscomp$destructuring$var1.next().value;",
-            "  $jscomp$destructuring$var1.next();",
-            "  y = $jscomp$destructuring$var1.next().value;",
-            "  use(x);",
-            "  use(y);",
-            "}"));
+        """
+        function f($jscomp$destructuring$var0) {
+          var x; var y;
+          var $jscomp$destructuring$var1 = (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+          x = $jscomp$destructuring$var1.next().value;
+          $jscomp$destructuring$var1.next();
+          y = $jscomp$destructuring$var1.next().value;
+          use(x);
+          use(y);
+        }
+        """);
   }
 
   @Test
   public void testArrayDestructuring_inVanillaForInitializer_var() {
     test(
         "A: B: for (var z = 1, [a = 'default'] = foo(), x = 0, [c] = bar(); true; c++) { }",
-        lines(
-            "var z = 1;",
-            "var a;",
-            "var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(foo());",
-            "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value;",
-            "a = $jscomp$destructuring$var1 === void 0 ?",
-            "    'default' : $jscomp$destructuring$var1;",
-            "",
-            "var x = 0;",
-            "var c;",
-            "var $jscomp$destructuring$var2 = (0, $jscomp.makeIterator)(bar());",
-            "c = $jscomp$destructuring$var2.next().value;",
-            "",
-            "A: B: for (; true; c++) {}"));
+        """
+        var z = 1;
+        var a;
+        var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(foo());
+        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value;
+        a = $jscomp$destructuring$var1 === void 0 ?
+            'default' : $jscomp$destructuring$var1;
+
+        var x = 0;
+        var c;
+        var $jscomp$destructuring$var2 = (0, $jscomp.makeIterator)(bar());
+        c = $jscomp$destructuring$var2.next().value;
+
+        A: B: for (; true; c++) {}
+        """);
   }
 
   @Test
   public void testArrayDestructuring_inVanillaForInitializer_const() {
     test(
         "A: B: for (const z = 1, [a = 'default'] = foo(), x = 0, [c] = bar(); true; c++) { }",
-        lines(
-            "{",
-            "  const z = 1;",
-            "  var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(foo());",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value;",
-            "  const a = $jscomp$destructuring$var1 === void 0 ?",
-            "      'default' : $jscomp$destructuring$var1;",
-            "  {",
-            "    const x = 0;",
-            "    var $jscomp$destructuring$var2 = (0, $jscomp.makeIterator)(bar());",
-            "    const c = $jscomp$destructuring$var2.next().value;",
-            "    A: B: for (; true; c++) {}",
-            "  }",
-            "}"));
+        """
+        {
+          const z = 1;
+          var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(foo());
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value;
+          const a = $jscomp$destructuring$var1 === void 0 ?
+              'default' : $jscomp$destructuring$var1;
+          {
+            const x = 0;
+            var $jscomp$destructuring$var2 = (0, $jscomp.makeIterator)(bar());
+            const c = $jscomp$destructuring$var2.next().value;
+            A: B: for (; true; c++) {}
+          }
+        }
+        """);
   }
 
   @Test
@@ -616,23 +658,22 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
     test(
         "A: B: for (let z = 1, [a = 'default'] = foo(), x = 0, [c] = bar(); true; c++) { }",
-        lines(
-            "A: B: for (let z = 1, a, $jscomp$destructuring$var0$unused = (() => {",
-            "   let $jscomp$destructuring$var1 = foo();",
-            "   var $jscomp$destructuring$var2 = (0,"
-                + " $jscomp.makeIterator)($jscomp$destructuring$var1);",
-            "   var $jscomp$destructuring$var3 = $jscomp$destructuring$var2.next().value;",
-            "   a = $jscomp$destructuring$var3 === void 0 ?",
-            "       'default' : $jscomp$destructuring$var3;",
-            "   return $jscomp$destructuring$var1;",
-            " })(), x = 0, c, $jscomp$destructuring$var4$unused = (() => {",
-            "   let $jscomp$destructuring$var5 = bar();",
-            "   var $jscomp$destructuring$var6 = (0,"
-                + " $jscomp.makeIterator)($jscomp$destructuring$var5);",
-            "   c = $jscomp$destructuring$var6.next().value;",
-            "   return $jscomp$destructuring$var5;",
-            " })();",
-            "true; c++) {}"));
+        """
+        A: B: for (let z = 1, a, $jscomp$destructuring$var0$unused = (() => {
+           let $jscomp$destructuring$var1 = foo();
+           var $jscomp$destructuring$var2 = (0, $jscomp.makeIterator)($jscomp$destructuring$var1);
+           var $jscomp$destructuring$var3 = $jscomp$destructuring$var2.next().value;
+           a = $jscomp$destructuring$var3 === void 0 ?
+               'default' : $jscomp$destructuring$var3;
+           return $jscomp$destructuring$var1;
+         })(), x = 0, c, $jscomp$destructuring$var4$unused = (() => {
+           let $jscomp$destructuring$var5 = bar();
+           var $jscomp$destructuring$var6 = (0, $jscomp.makeIterator)($jscomp$destructuring$var5);
+           c = $jscomp$destructuring$var6.next().value;
+           return $jscomp$destructuring$var5;
+         })();
+        true; c++) {}
+        """);
   }
 
   @Test
@@ -641,12 +682,13 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     test(
         "function foo(...{length}) {}",
         // pull destructuring out of params first.
-        lines(
-            "function foo(...$jscomp$destructuring$var0) {",
-            "  var length;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "  length = $jscomp$destructuring$var1.length;",
-            "}"));
+        """
+        function foo(...$jscomp$destructuring$var0) {
+          var length;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          length = $jscomp$destructuring$var1.length;
+        }
+        """);
     Node script = getLastCompiler().getJsRoot().getFirstChild();
     checkState(script.isScript());
     Node func = script.getFirstChild();
@@ -664,38 +706,38 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   public void testArrayDestructuringRest() {
     test(
         "let [one, ...others] = f();",
-        lines(
-            "var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(f());",
-            "let one = $jscomp$destructuring$var0.next().value;",
-            "let others = (0, $jscomp.arrayFromIterator)($jscomp$destructuring$var0);"));
+        """
+        var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(f());
+        let one = $jscomp$destructuring$var0.next().value;
+        let others = (0, $jscomp.arrayFromIterator)($jscomp$destructuring$var0);
+        """);
 
     test(
         "function f([first, ...rest]) {}",
-        lines(
-            "function f($jscomp$destructuring$var0) {",
-            "  var first; var rest;",
-            "  var $jscomp$destructuring$var1 = (0,"
-                + " $jscomp.makeIterator)($jscomp$destructuring$var0);",
-            "  first = $jscomp$destructuring$var1.next().value;",
-            "  rest = (0, $jscomp.arrayFromIterator)($jscomp$destructuring$var1);",
-            "}"));
+        """
+        function f($jscomp$destructuring$var0) {
+          var first; var rest;
+          var $jscomp$destructuring$var1 = (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+          first = $jscomp$destructuring$var1.next().value;
+          rest = (0, $jscomp.arrayFromIterator)($jscomp$destructuring$var1);
+        }
+        """);
   }
 
   @Test
   public void testRestParamDestructuring() {
     test(
         "function f(first, ...[re, st, ...{length: num_left}]) {}",
-        lines(
-            "function f(first, ...$jscomp$destructuring$var0) {",
-            "  var re; var st; var num_left;",
-            "  var $jscomp$destructuring$var1 = (0,"
-                + " $jscomp.makeIterator)($jscomp$destructuring$var0);",
-            "  re = $jscomp$destructuring$var1.next().value;",
-            "  st = $jscomp$destructuring$var1.next().value;",
-            "  var $jscomp$destructuring$var2 = "
-                + "(0, $jscomp.arrayFromIterator)($jscomp$destructuring$var1);",
-            "  num_left = $jscomp$destructuring$var2.length;",
-            "}"));
+        """
+function f(first, ...$jscomp$destructuring$var0) {
+  var re; var st; var num_left;
+  var $jscomp$destructuring$var1 = (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+  re = $jscomp$destructuring$var1.next().value;
+  st = $jscomp$destructuring$var1.next().value;
+  var $jscomp$destructuring$var2 = (0, $jscomp.arrayFromIterator)($jscomp$destructuring$var1);
+  num_left = $jscomp$destructuring$var2.length;
+}
+""");
   }
 
   @Test
@@ -703,72 +745,76 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     test(
         srcs("let [first, ...[re, st, ...{length: num_left}]] = f();"),
         expected(
-            lines(
-                "var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(f());",
-                "let first = $jscomp$destructuring$var0.next().value;",
-                "var $jscomp$destructuring$var1 = ",
-                "    (0, $jscomp.makeIterator)(",
-                "        (0, $jscomp.arrayFromIterator)($jscomp$destructuring$var0));",
-                "let re = $jscomp$destructuring$var1.next().value;",
-                "let st = $jscomp$destructuring$var1.next().value;",
-                "var $jscomp$destructuring$var2 = ",
-                "    (0, $jscomp.arrayFromIterator)($jscomp$destructuring$var1);",
-                "let num_left = $jscomp$destructuring$var2.length;")));
+            """
+            var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(f());
+            let first = $jscomp$destructuring$var0.next().value;
+            var $jscomp$destructuring$var1 =
+                (0, $jscomp.makeIterator)(
+                    (0, $jscomp.arrayFromIterator)($jscomp$destructuring$var0));
+            let re = $jscomp$destructuring$var1.next().value;
+            let st = $jscomp$destructuring$var1.next().value;
+            var $jscomp$destructuring$var2 =
+                (0, $jscomp.arrayFromIterator)($jscomp$destructuring$var1);
+            let num_left = $jscomp$destructuring$var2.length;
+            """));
   }
 
   @Test
   public void testArrayDestructuringArguments() {
     test(
         "function f() { var [x, y] = arguments; }",
-        lines(
-            "function f() {",
-            "  var x;",
-            "  var y;",
-            "  var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(arguments);",
-            "  x = $jscomp$destructuring$var0.next().value;",
-            "  y = $jscomp$destructuring$var0.next().value;",
-            "}"));
+        """
+        function f() {
+          var x;
+          var y;
+          var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(arguments);
+          x = $jscomp$destructuring$var0.next().value;
+          y = $jscomp$destructuring$var0.next().value;
+        }
+        """);
   }
 
   @Test
   public void testMixedDestructuring() {
     test(
         "var [a,{b,c}] = foo();",
-        lines(
-            "var a;",
-            "var b;",
-            "var c;",
-            "var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(foo());",
-            "a = $jscomp$destructuring$var0.next().value;",
-            "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value;",
-            "b = $jscomp$destructuring$var1.b;",
-            "c = $jscomp$destructuring$var1.c"));
+        """
+        var a;
+        var b;
+        var c;
+        var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(foo());
+        a = $jscomp$destructuring$var0.next().value;
+        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value;
+        b = $jscomp$destructuring$var1.b;
+        c = $jscomp$destructuring$var1.c
+        """);
 
     test(
         "var {a,b:[c,d]} = foo();",
-        lines(
-            "var a;",
-            "var c;",
-            "var d;",
-            "var $jscomp$destructuring$var0 = foo();",
-            "a = $jscomp$destructuring$var0.a;",
-            "var $jscomp$destructuring$var1 = (0,"
-                + " $jscomp.makeIterator)($jscomp$destructuring$var0.b);",
-            "c = $jscomp$destructuring$var1.next().value;",
-            "d = $jscomp$destructuring$var1.next().value"));
+        """
+        var a;
+        var c;
+        var d;
+        var $jscomp$destructuring$var0 = foo();
+        a = $jscomp$destructuring$var0.a;
+        var $jscomp$destructuring$var1 = (0, $jscomp.makeIterator)($jscomp$destructuring$var0.b);
+        c = $jscomp$destructuring$var1.next().value;
+        d = $jscomp$destructuring$var1.next().value
+        """);
   }
 
   @Test
   public void testDestructuringForOf() {
     test(
         "for ({x} of y) { console.log(x); }",
-        lines(
-            "var $jscomp$destructuring$var0;",
-            "for ($jscomp$destructuring$var0 of y) {",
-            "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "   x = $jscomp$destructuring$var1.x;",
-            "   console.log(x);",
-            "}"));
+        """
+        var $jscomp$destructuring$var0;
+        for ($jscomp$destructuring$var0 of y) {
+           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+           x = $jscomp$destructuring$var1.x;
+           console.log(x);
+        }
+        """);
   }
 
   @Test
@@ -776,15 +822,16 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     test(
         srcs("for (const [x] of []) { const y = 0; }"),
         expected(
-            lines(
-                "for (const $jscomp$destructuring$var0 of []) {",
-                "  var $jscomp$destructuring$var1 =",
-                "      (0, $jscomp.makeIterator)($jscomp$destructuring$var0);",
-                "  const x = $jscomp$destructuring$var1.next().value;",
-                "  {",
-                "    const y = 0;",
-                "  }",
-                "}")));
+            """
+            for (const $jscomp$destructuring$var0 of []) {
+              var $jscomp$destructuring$var1 =
+                  (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+              const x = $jscomp$destructuring$var1.next().value;
+              {
+                const y = 0;
+              }
+            }
+            """));
   }
 
   @Test
@@ -792,29 +839,31 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     test(
         srcs("for (const [x] in {}) { const y = 0; }"),
         expected(
-            lines(
-                "for (const $jscomp$destructuring$var0 in {}) {",
-                "  var $jscomp$destructuring$var1 =",
-                "      (0, $jscomp.makeIterator)($jscomp$destructuring$var0);",
-                "  const x = $jscomp$destructuring$var1.next().value;",
-                "  {",
-                "    const y = 0;",
-                "  }",
-                "}")));
+            """
+            for (const $jscomp$destructuring$var0 in {}) {
+              var $jscomp$destructuring$var1 =
+                  (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+              const x = $jscomp$destructuring$var1.next().value;
+              {
+                const y = 0;
+              }
+            }
+            """));
   }
 
   @Test
   public void testDefaultValueInObjectPattern() {
     test(
         "function f({x = a()}, y = b()) {}",
-        lines(
-            "function f($jscomp$destructuring$var0, y) {",
-            "  var x;",
-            "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "x = $jscomp$destructuring$var1.x === void 0",
-            "       ? a() : $jscomp$destructuring$var1.x;",
-            "y = y === void 0 ? b() : y",
-            "}"));
+        """
+        function f($jscomp$destructuring$var0, y) {
+          var x;
+        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+        x = $jscomp$destructuring$var1.x === void 0
+               ? a() : $jscomp$destructuring$var1.x;
+        y = y === void 0 ? b() : y
+        }
+        """);
   }
 
   @Test
@@ -823,21 +872,23 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
     test(
         "function f(/** ? */ zero, /** ?= */ one = 1, /** ?= */ two = 2) {}; f(1); f(1,2,3);",
-        lines(
-            "function f(zero, one, two) {",
-            "  one = (one === void 0) ? 1 : one;",
-            "  two = (two === void 0) ? 2 : two;",
-            "};",
-            "f(1); f(1,2,3);"));
+        """
+        function f(zero, one, two) {
+          one = (one === void 0) ? 1 : one;
+          two = (two === void 0) ? 2 : two;
+        };
+        f(1); f(1,2,3);
+        """);
 
     test(
         srcs("function f(/** ? */ zero, /** ?= */ one = 1, /** ?= */ two = 2) {}; f();"),
         expected(
-            lines(
-                "function f(zero, one, two) {",
-                "  one = (one === void 0) ? 1 : one;",
-                "  two = (two === void 0) ? 2 : two;",
-                "}; f();")),
+            """
+            function f(zero, one, two) {
+              one = (one === void 0) ? 1 : one;
+              two = (two === void 0) ? 2 : two;
+            }; f();
+            """),
         warning(TypeCheck.WRONG_ARGUMENT_COUNT));
   }
 
@@ -845,11 +896,19 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   public void testDefaultAndRestParameters() {
     test(
         "function f(zero, one = 1, ...two) {}",
-        lines("function f(zero, one, ...two) {", "  one = (one === void 0) ? 1 : one;", "}"));
+        """
+        function f(zero, one, ...two) {
+          one = (one === void 0) ? 1 : one;
+        }
+        """);
 
     test(
         "function f(/** number= */ x = 5) {}",
-        lines("function f(x) {", "  x = (x === void 0) ? 5 : x;", "}"));
+        """
+        function f(x) {
+          x = (x === void 0) ? 5 : x;
+        }
+        """);
   }
 
   @Test
@@ -877,11 +936,12 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   public void testCatch() {
     test(
         "try {} catch ({message}) {}",
-        lines(
-            "try {} catch($jscomp$destructuring$var0) {",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "  let message = $jscomp$destructuring$var1.message",
-            "}"));
+        """
+        try {} catch($jscomp$destructuring$var0) {
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          let message = $jscomp$destructuring$var1.message
+        }
+        """);
   }
 
   @Test
@@ -890,63 +950,86 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
     test(
         "/** @param {{x: number}} obj */ function f({x}) {}",
-        lines(
-            "function f($jscomp$destructuring$var0) {",
-            "  var x;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "  x = $jscomp$destructuring$var1.x;",
-            "}"));
+        """
+        function f($jscomp$destructuring$var0) {
+          var x;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          x = $jscomp$destructuring$var1.x;
+        }
+        """);
 
     test(
-        srcs(lines("/** @param {{x: number}} obj */", "function f({x}) {}", "f({ x: 'str'});")),
+        srcs(
+            """
+            /** @param {{x: number}} obj */
+            function f({x}) {}
+            f({ x: 'str'});
+            """),
         warning(TypeValidator.TYPE_MISMATCH_WARNING));
 
     test(
-        lines("/** @param {{x: number}} obj */", "var f = function({x}) {}"),
-        lines(
-            "var f = function($jscomp$destructuring$var0) {",
-            "  var x;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "  x = $jscomp$destructuring$var1.x;",
-            "}"));
+        """
+        /** @param {{x: number}} obj */
+        var f = function({x}) {}
+        """,
+        """
+        var f = function($jscomp$destructuring$var0) {
+          var x;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          x = $jscomp$destructuring$var1.x;
+        }
+        """);
 
     test(
-        lines("/** @param {{x: number}} obj */", "f = function({x}) {}"),
-        lines(
-            "f = function($jscomp$destructuring$var0) {",
-            "  var x;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "  x = $jscomp$destructuring$var1.x;",
-            "}"));
+        """
+        /** @param {{x: number}} obj */
+        f = function({x}) {}
+        """,
+        """
+        f = function($jscomp$destructuring$var0) {
+          var x;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          x = $jscomp$destructuring$var1.x;
+        }
+        """);
 
     test(
-        lines("/** @param {{x: number}} obj */", "ns.f = function({x}) {}"),
-        lines(
-            "ns.f = function($jscomp$destructuring$var0) {",
-            "  var x;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "  x = $jscomp$destructuring$var1.x;",
-            "}"));
+        """
+        /** @param {{x: number}} obj */
+        ns.f = function({x}) {}
+        """,
+        """
+        ns.f = function($jscomp$destructuring$var0) {
+          var x;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          x = $jscomp$destructuring$var1.x;
+        }
+        """);
 
     test(
         "ns.f = function({x} = {x: 0}) {};",
-        lines(
-            "ns.f = function($jscomp$destructuring$var0) {",
-            "  var x;",
-            "  var $jscomp$destructuring$var1 =",
-            "      $jscomp$destructuring$var0 === void 0 ? {x:0} : $jscomp$destructuring$var0;",
-            "  x = $jscomp$destructuring$var1.x",
-            "};"));
+        """
+        ns.f = function($jscomp$destructuring$var0) {
+          var x;
+          var $jscomp$destructuring$var1 =
+              $jscomp$destructuring$var0 === void 0 ? {x:0} : $jscomp$destructuring$var0;
+          x = $jscomp$destructuring$var1.x
+        };
+        """);
 
     test(
-        lines("/** @param {{x: number}=} obj */", "ns.f = function({x} = {x: 0}) {};"),
-        lines(
-            "ns.f = function($jscomp$destructuring$var0) {",
-            "  var x;",
-            "  var $jscomp$destructuring$var1 = ",
-            "      $jscomp$destructuring$var0=== void 0 ? {x:0} : $jscomp$destructuring$var0;",
-            "  x = $jscomp$destructuring$var1.x",
-            "};"));
+        """
+        /** @param {{x: number}=} obj */
+        ns.f = function({x} = {x: 0}) {};
+        """,
+        """
+        ns.f = function($jscomp$destructuring$var0) {
+          var x;
+          var $jscomp$destructuring$var1 =
+              $jscomp$destructuring$var0=== void 0 ? {x:0} : $jscomp$destructuring$var0;
+          x = $jscomp$destructuring$var1.x
+        };
+        """);
   }
 
   @Test
@@ -972,161 +1055,192 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
     test(
         "function f(/** {x: number} */ {x}) {}",
-        lines(
-            "function f($jscomp$destructuring$var0) {",
-            "  var x;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "  x = $jscomp$destructuring$var1.x;",
-            "}"));
+        """
+        function f($jscomp$destructuring$var0) {
+          var x;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          x = $jscomp$destructuring$var1.x;
+        }
+        """);
 
     test(
-        srcs(lines("function f(/** {x: number} */ {x}) {}", "f({ x: 'str'});")),
+        srcs(
+            """
+            function f(/** {x: number} */ {x}) {}
+            f({ x: 'str'});
+            """),
         warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
   @Test
   public void testDestructuringArrayNotInExprResult() {
     test(
-        srcs(lines("var x, a, b;", "x = ([a,b] = [1,2])")),
+        srcs(
+            """
+            var x, a, b;
+            x = ([a,b] = [1,2])
+            """),
         expected(
-            lines(
-                "var x;",
-                "var a;",
-                "var b;",
-                "x = (()=>{",
-                "   let $jscomp$destructuring$var0 = [1,2];",
-                "   var $jscomp$destructuring$var1 =",
-                "       (0, $jscomp.makeIterator)($jscomp$destructuring$var0);",
-                "   a = $jscomp$destructuring$var1.next().value;",
-                "   b = $jscomp$destructuring$var1.next().value;",
-                "   return $jscomp$destructuring$var0;",
-                "})();")));
+            """
+            var x;
+            var a;
+            var b;
+            x = (()=>{
+               let $jscomp$destructuring$var0 = [1,2];
+               var $jscomp$destructuring$var1 =
+                   (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+               a = $jscomp$destructuring$var1.next().value;
+               b = $jscomp$destructuring$var1.next().value;
+               return $jscomp$destructuring$var0;
+            })();
+            """));
 
     test(
         srcs(
-            lines(
-                "var foo = function () {", "var x, a, b;", "x = ([a,b] = [1,2]);", "}", "foo();")),
+            """
+            var foo = function () {
+            var x, a, b;
+            x = ([a,b] = [1,2]);
+            }
+            foo();
+            """),
         expected(
-            lines(
-                "var foo = function () {",
-                " var x; var a; var b;",
-                " x = (()=>{",
-                "   let $jscomp$destructuring$var0 = [1,2];",
-                "   var $jscomp$destructuring$var1 =",
-                "       (0, $jscomp.makeIterator)($jscomp$destructuring$var0);",
-                "   a = $jscomp$destructuring$var1.next().value;",
-                "   b = $jscomp$destructuring$var1.next().value;",
-                "   return $jscomp$destructuring$var0;",
-                " })();",
-                "}",
-                "foo();")));
+            """
+            var foo = function () {
+             var x; var a; var b;
+             x = (()=>{
+               let $jscomp$destructuring$var0 = [1,2];
+               var $jscomp$destructuring$var1 =
+                   (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+               a = $jscomp$destructuring$var1.next().value;
+               b = $jscomp$destructuring$var1.next().value;
+               return $jscomp$destructuring$var0;
+             })();
+            }
+            foo();
+            """));
 
     test(
         srcs(
-            lines(
-                "var prefix;",
-                "for (;;[, prefix] = /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix))){",
-                "}")),
+            """
+            var prefix;
+            for (;;[, prefix] = /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix))){
+            }
+            """),
         expected(
-            lines(
-                "var prefix;",
-                "for (;;(() => {",
-                "   let $jscomp$destructuring$var0 =",
-                "       /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix));",
-                "   var $jscomp$destructuring$var1 = ",
-                "       (0, $jscomp.makeIterator)($jscomp$destructuring$var0);",
-                "   $jscomp$destructuring$var1.next();",
-                "   prefix = $jscomp$destructuring$var1.next().value;",
-                "   return $jscomp$destructuring$var0;",
-                " })()){",
-                "}")));
+            """
+            var prefix;
+            for (;;(() => {
+               let $jscomp$destructuring$var0 =
+                   /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix));
+               var $jscomp$destructuring$var1 =
+                   (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+               $jscomp$destructuring$var1.next();
+               prefix = $jscomp$destructuring$var1.next().value;
+               return $jscomp$destructuring$var0;
+             })()){
+            }
+            """));
 
     test(
         srcs(
-            lines(
-                "var prefix;",
-                "for (;;[, prefix] = /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix))){",
-                "   console.log(prefix);",
-                "}")),
+            """
+            var prefix;
+            for (;;[, prefix] = /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix))){
+               console.log(prefix);
+            }
+            """),
         expected(
-            lines(
-                "var prefix;",
-                "for (;;(() => {",
-                "   let $jscomp$destructuring$var0 =",
-                "       /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix));",
-                "   var $jscomp$destructuring$var1 = ",
-                "(0, $jscomp.makeIterator)($jscomp$destructuring$var0);",
-                "   $jscomp$destructuring$var1.next();",
-                "   prefix = $jscomp$destructuring$var1.next().value;",
-                "   return $jscomp$destructuring$var0;",
-                " })()){",
-                " console.log(prefix);",
-                "}")));
+            """
+            var prefix;
+            for (;;(() => {
+               let $jscomp$destructuring$var0 =
+                   /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix));
+               var $jscomp$destructuring$var1 =
+            (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+               $jscomp$destructuring$var1.next();
+               prefix = $jscomp$destructuring$var1.next().value;
+               return $jscomp$destructuring$var0;
+             })()){
+             console.log(prefix);
+            }
+            """));
 
     test(
-        srcs(lines("var x = 1;", "for (; x < 3; [x,] = [3,4]){", "   console.log(x);", "}")),
+        srcs(
+            """
+            var x = 1;
+            for (; x < 3; [x,] = [3,4]){
+               console.log(x);
+            }
+            """),
         expected(
-            lines(
-                "var x = 1;",
-                "for (; x < 3; (()=>{",
-                "   let $jscomp$destructuring$var0 = [3,4]",
-                "   var $jscomp$destructuring$var1 = ",
-                "       (0, $jscomp.makeIterator)($jscomp$destructuring$var0);",
-                "   x = $jscomp$destructuring$var1.next().value;",
-                "   return $jscomp$destructuring$var0;",
-                " })()){",
-                "console.log(x);",
-                "}")));
+            """
+            var x = 1;
+            for (; x < 3; (()=>{
+               let $jscomp$destructuring$var0 = [3,4]
+               var $jscomp$destructuring$var1 =
+                   (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+               x = $jscomp$destructuring$var1.next().value;
+               return $jscomp$destructuring$var0;
+             })()){
+            console.log(x);
+            }
+            """));
   }
 
   @Test
   public void testDestructuringObjectNotInExprResult() {
     test(
         "var x = ({a: b, c: d} = foo());",
-        lines(
-            "var x = (()=>{",
-            "   let $jscomp$destructuring$var0 = foo();",
-            "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "   b = $jscomp$destructuring$var1.a;",
-            "   d = $jscomp$destructuring$var1.c;",
-            "   return $jscomp$destructuring$var0;",
-            "})();"));
+        """
+        var x = (()=>{
+           let $jscomp$destructuring$var0 = foo();
+           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+           b = $jscomp$destructuring$var1.a;
+           d = $jscomp$destructuring$var1.c;
+           return $jscomp$destructuring$var0;
+        })();
+        """);
 
     test(
         "var x = ({a: b, c: d} = foo());",
-        lines(
-            "var x = (()=>{",
-            "   let $jscomp$destructuring$var0 = foo();",
-            "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "   b = $jscomp$destructuring$var1.a;",
-            "   d = $jscomp$destructuring$var1.c;",
-            "   return $jscomp$destructuring$var0;",
-            "})();"));
+        """
+        var x = (()=>{
+           let $jscomp$destructuring$var0 = foo();
+           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+           b = $jscomp$destructuring$var1.a;
+           d = $jscomp$destructuring$var1.c;
+           return $jscomp$destructuring$var0;
+        })();
+        """);
 
     test(
         "var x; var y = ({a: x} = foo());",
-        lines(
-            "var x;",
-            "var y = (()=>{",
-            "   let $jscomp$destructuring$var0 = foo();",
-            "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "   x = $jscomp$destructuring$var1.a;",
-            "   return $jscomp$destructuring$var0;",
-            "})();"));
+        """
+        var x;
+        var y = (()=>{
+           let $jscomp$destructuring$var0 = foo();
+           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+           x = $jscomp$destructuring$var1.a;
+           return $jscomp$destructuring$var0;
+        })();
+        """);
 
     test(
         "var x; var y = (() => {return {a,b} = foo();})();",
-        lines(
-            "var x;",
-            "var y = (()=>{",
-            "   return (()=>{",
-            "       let $jscomp$destructuring$var0 = foo();",
-            "       var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "       a = $jscomp$destructuring$var1.a;",
-            "       b = $jscomp$destructuring$var1.b;",
-            "       return $jscomp$destructuring$var0;",
-            "   })();",
-            "})();"));
+        """
+        var x;
+        var y = (()=>{
+           return (()=>{
+               let $jscomp$destructuring$var0 = foo();
+               var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+               a = $jscomp$destructuring$var1.a;
+               b = $jscomp$destructuring$var1.b;
+               return $jscomp$destructuring$var0;
+           })();
+        })();
+        """);
   }
 
   @Test
@@ -1134,582 +1248,627 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     test(
         srcs("var [[x]] = [[1]];"),
         expected(
-            lines(
-                "var x;",
-                "var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)([[1]]);",
-                "var $jscomp$destructuring$var1 = ",
-                "(0, $jscomp.makeIterator)($jscomp$destructuring$var0.next().value);",
-                "x = $jscomp$destructuring$var1.next().value;")));
+            """
+            var x;
+            var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)([[1]]);
+            var $jscomp$destructuring$var1 =
+            (0, $jscomp.makeIterator)($jscomp$destructuring$var0.next().value);
+            x = $jscomp$destructuring$var1.next().value;
+            """));
 
     test(
         srcs("var [[x,y],[z]] = [[1,2],[3]];"),
         expected(
-            lines(
-                "var x;",
-                "var y;",
-                "var z;",
-                "var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)([[1,2],[3]]);",
-                "var $jscomp$destructuring$var1 = ",
-                "(0, $jscomp.makeIterator)($jscomp$destructuring$var0.next().value);",
-                "x = $jscomp$destructuring$var1.next().value;",
-                "y = $jscomp$destructuring$var1.next().value;",
-                "var $jscomp$destructuring$var2 = ",
-                "(0, $jscomp.makeIterator)($jscomp$destructuring$var0.next().value);",
-                "z = $jscomp$destructuring$var2.next().value;")));
+            """
+            var x;
+            var y;
+            var z;
+            var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)([[1,2],[3]]);
+            var $jscomp$destructuring$var1 =
+            (0, $jscomp.makeIterator)($jscomp$destructuring$var0.next().value);
+            x = $jscomp$destructuring$var1.next().value;
+            y = $jscomp$destructuring$var1.next().value;
+            var $jscomp$destructuring$var2 =
+            (0, $jscomp.makeIterator)($jscomp$destructuring$var0.next().value);
+            z = $jscomp$destructuring$var2.next().value;
+            """));
 
     test(
         srcs("var [[x,y],z] = [[1,2],3];"),
         expected(
-            lines(
-                "var x;",
-                "var y;",
-                "var z;",
-                "var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)([[1,2],3]);",
-                "var $jscomp$destructuring$var1 = ",
-                "(0, $jscomp.makeIterator)($jscomp$destructuring$var0.next().value);",
-                "x = $jscomp$destructuring$var1.next().value;",
-                "y = $jscomp$destructuring$var1.next().value;",
-                "z = $jscomp$destructuring$var0.next().value;")));
+            """
+            var x;
+            var y;
+            var z;
+            var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)([[1,2],3]);
+            var $jscomp$destructuring$var1 =
+            (0, $jscomp.makeIterator)($jscomp$destructuring$var0.next().value);
+            x = $jscomp$destructuring$var1.next().value;
+            y = $jscomp$destructuring$var1.next().value;
+            z = $jscomp$destructuring$var0.next().value;
+            """));
   }
 
   @Test
   public void testTryCatch() {
     test(
-        lines("var a = 1;", "try {", "  throw [];", "} catch ([x]) {}"),
-        lines(
-            "var a = 1;",
-            "try {",
-            "  throw [];",
-            "} catch ($jscomp$destructuring$var0) {",
-            "   var $jscomp$destructuring$var1 = (0,"
-                + " $jscomp.makeIterator)($jscomp$destructuring$var0);",
-            "   let x = $jscomp$destructuring$var1.next().value;",
-            "}"));
+        """
+        var a = 1;
+        try {
+          throw [];
+        } catch ([x]) {}
+        """,
+        """
+        var a = 1;
+        try {
+          throw [];
+        } catch ($jscomp$destructuring$var0) {
+           var $jscomp$destructuring$var1 = (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+           let x = $jscomp$destructuring$var1.next().value;
+        }
+        """);
 
     test(
-        lines("var a = 1;", "try {", "  throw [[]];", "} catch ([[x]]) {}"),
-        lines(
-            "var a = 1;",
-            "try {",
-            "  throw [[]];",
-            "} catch ($jscomp$destructuring$var0) {",
-            "   var $jscomp$destructuring$var1 = (0,"
-                + " $jscomp.makeIterator)($jscomp$destructuring$var0);",
-            "   var $jscomp$destructuring$var2 = ",
-            "(0, $jscomp.makeIterator)($jscomp$destructuring$var1.next().value);",
-            "   let x = $jscomp$destructuring$var2.next().value;",
-            "}"));
+        """
+        var a = 1;
+        try {
+          throw [[]];
+        } catch ([[x]]) {}
+        """,
+        """
+        var a = 1;
+        try {
+          throw [[]];
+        } catch ($jscomp$destructuring$var0) {
+           var $jscomp$destructuring$var1 = (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+           var $jscomp$destructuring$var2 =
+        (0, $jscomp.makeIterator)($jscomp$destructuring$var1.next().value);
+           let x = $jscomp$destructuring$var2.next().value;
+        }
+        """);
   }
 
   @Test
   public void testObjectPatternWithRestDecl() {
     test(
         "var {a: b, c: d, ...rest} = foo();",
-        lines(
-            "var b; var d; var rest",
-            "var $jscomp$destructuring$var0 = foo();",
-            "var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);",
-            "b = $jscomp$destructuring$var0.a;",
-            "d = $jscomp$destructuring$var0.c;",
-            "rest = (delete $jscomp$destructuring$var1.a,",
-            "            delete $jscomp$destructuring$var1.c,",
-            "            $jscomp$destructuring$var1);"));
+        """
+        var b; var d; var rest
+        var $jscomp$destructuring$var0 = foo();
+        var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);
+        b = $jscomp$destructuring$var0.a;
+        d = $jscomp$destructuring$var0.c;
+        rest = (delete $jscomp$destructuring$var1.a,
+                    delete $jscomp$destructuring$var1.c,
+                    $jscomp$destructuring$var1);
+        """);
 
     test(
         "const {a: b, c: d, ...rest} = foo();",
-        lines(
-            "/** @const */ var $jscomp$destructuring$var0 = foo();",
-            "var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);",
-            "const b = $jscomp$destructuring$var0.a;",
-            "const d = $jscomp$destructuring$var0.c;",
-            "const rest = (delete $jscomp$destructuring$var1.a,",
-            "              delete $jscomp$destructuring$var1.c,",
-            "              $jscomp$destructuring$var1);"));
+        """
+        /** @const */ var $jscomp$destructuring$var0 = foo();
+        var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);
+        const b = $jscomp$destructuring$var0.a;
+        const d = $jscomp$destructuring$var0.c;
+        const rest = (delete $jscomp$destructuring$var1.a,
+                      delete $jscomp$destructuring$var1.c,
+                      $jscomp$destructuring$var1);
+        """);
 
     test(
         "let {a: b, c: d, ...rest} = foo();",
-        lines(
-            "var $jscomp$destructuring$var0 = foo();",
-            "var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);",
-            "let b = $jscomp$destructuring$var0.a;",
-            "let d = $jscomp$destructuring$var0.c;",
-            "let rest = (delete $jscomp$destructuring$var1.a,",
-            "            delete $jscomp$destructuring$var1.c,",
-            "            $jscomp$destructuring$var1);"));
+        """
+        var $jscomp$destructuring$var0 = foo();
+        var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);
+        let b = $jscomp$destructuring$var0.a;
+        let d = $jscomp$destructuring$var0.c;
+        let rest = (delete $jscomp$destructuring$var1.a,
+                    delete $jscomp$destructuring$var1.c,
+                    $jscomp$destructuring$var1);
+        """);
 
     test(
         "var pre = foo(); var {a: b, c: d, ...rest} = foo();",
-        lines(
-            "var pre = foo();",
-            "var b; var d; var rest;",
-            "var $jscomp$destructuring$var0 = foo();",
-            "var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);",
-            "b = $jscomp$destructuring$var0.a;",
-            "d = $jscomp$destructuring$var0.c;",
-            "rest = (delete $jscomp$destructuring$var1.a,",
-            "            delete $jscomp$destructuring$var1.c,",
-            "            $jscomp$destructuring$var1);"));
+        """
+        var pre = foo();
+        var b; var d; var rest;
+        var $jscomp$destructuring$var0 = foo();
+        var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);
+        b = $jscomp$destructuring$var0.a;
+        d = $jscomp$destructuring$var0.c;
+        rest = (delete $jscomp$destructuring$var1.a,
+                    delete $jscomp$destructuring$var1.c,
+                    $jscomp$destructuring$var1);
+        """);
 
     test(
         "var {a: b, c: d, ...rest} = foo(); var post = foo();",
-        lines(
-            "var b; var d; var rest;",
-            "var $jscomp$destructuring$var0 = foo();",
-            "var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);",
-            "b = $jscomp$destructuring$var0.a;",
-            "d = $jscomp$destructuring$var0.c;",
-            "rest = (delete $jscomp$destructuring$var1.a,",
-            "            delete $jscomp$destructuring$var1.c,",
-            "            $jscomp$destructuring$var1);",
-            "var post = foo();"));
+        """
+        var b; var d; var rest;
+        var $jscomp$destructuring$var0 = foo();
+        var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);
+        b = $jscomp$destructuring$var0.a;
+        d = $jscomp$destructuring$var0.c;
+        rest = (delete $jscomp$destructuring$var1.a,
+                    delete $jscomp$destructuring$var1.c,
+                    $jscomp$destructuring$var1);
+        var post = foo();
+        """);
 
     test(
         "var pre = foo(); var {a: b, c: d, ...rest} = foo(); var post = foo();",
-        lines(
-            "var pre = foo();",
-            "var b; var d; var rest;",
-            "var $jscomp$destructuring$var0 = foo();",
-            "var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);",
-            "b = $jscomp$destructuring$var0.a;",
-            "d = $jscomp$destructuring$var0.c;",
-            "rest = (delete $jscomp$destructuring$var1.a,",
-            "            delete $jscomp$destructuring$var1.c,",
-            "            $jscomp$destructuring$var1);",
-            "var post = foo();"));
+        """
+        var pre = foo();
+        var b; var d; var rest;
+        var $jscomp$destructuring$var0 = foo();
+        var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);
+        b = $jscomp$destructuring$var0.a;
+        d = $jscomp$destructuring$var0.c;
+        rest = (delete $jscomp$destructuring$var1.a,
+                    delete $jscomp$destructuring$var1.c,
+                    $jscomp$destructuring$var1);
+        var post = foo();
+        """);
 
     test(
         "var {a: b1, c: d1, ...rest1} = foo(); var {a: b2, c: d2, ...rest2} = foo();",
-        lines(
-            "var b1; var d1; var rest1;",
-            "var $jscomp$destructuring$var0 = foo();",
-            "var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);",
-            "b1 = $jscomp$destructuring$var0.a;",
-            "d1 = $jscomp$destructuring$var0.c;",
-            "rest1 = (delete $jscomp$destructuring$var1.a,",
-            "             delete $jscomp$destructuring$var1.c,",
-            "             $jscomp$destructuring$var1);",
-            "var b2; var d2; var rest2;",
-            "var $jscomp$destructuring$var2 = foo();",
-            "var $jscomp$destructuring$var3 = Object.assign({}, $jscomp$destructuring$var2);",
-            "b2 = $jscomp$destructuring$var2.a;",
-            "d2 = $jscomp$destructuring$var2.c;",
-            "rest2 = (delete $jscomp$destructuring$var3.a,",
-            "             delete $jscomp$destructuring$var3.c,",
-            "             $jscomp$destructuring$var3);"));
+        """
+        var b1; var d1; var rest1;
+        var $jscomp$destructuring$var0 = foo();
+        var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);
+        b1 = $jscomp$destructuring$var0.a;
+        d1 = $jscomp$destructuring$var0.c;
+        rest1 = (delete $jscomp$destructuring$var1.a,
+                     delete $jscomp$destructuring$var1.c,
+                     $jscomp$destructuring$var1);
+        var b2; var d2; var rest2;
+        var $jscomp$destructuring$var2 = foo();
+        var $jscomp$destructuring$var3 = Object.assign({}, $jscomp$destructuring$var2);
+        b2 = $jscomp$destructuring$var2.a;
+        d2 = $jscomp$destructuring$var2.c;
+        rest2 = (delete $jscomp$destructuring$var3.a,
+                     delete $jscomp$destructuring$var3.c,
+                     $jscomp$destructuring$var3);
+        """);
 
     test(
         "var {...rest} = foo();",
-        lines(
-            "var rest;",
-            "var $jscomp$destructuring$var0 = foo();",
-            "var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);",
-            "rest = ($jscomp$destructuring$var1);"));
+        """
+        var rest;
+        var $jscomp$destructuring$var0 = foo();
+        var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);
+        rest = ($jscomp$destructuring$var1);
+        """);
 
     test(
         "const {...rest} = foo();",
-        lines(
-            "/** @const */ var $jscomp$destructuring$var0 = foo();",
-            "var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);",
-            "const rest = ($jscomp$destructuring$var1);"));
+        """
+        /** @const */ var $jscomp$destructuring$var0 = foo();
+        var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);
+        const rest = ($jscomp$destructuring$var1);
+        """);
   }
 
   @Test
   public void testObjectPatternWithRestAssignStatement() {
     test(
         "var b,d,rest; ({a: b, c: d, ...rest} = foo());",
-        lines(
-            "var b;",
-            "var d;",
-            "var rest;",
-            "var $jscomp$destructuring$var0 = foo();",
-            "var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);",
-            "b = $jscomp$destructuring$var0.a;",
-            "d = $jscomp$destructuring$var0.c;",
-            "rest = (delete $jscomp$destructuring$var1.a,",
-            "            delete $jscomp$destructuring$var1.c,",
-            "            $jscomp$destructuring$var1);"));
+        """
+        var b;
+        var d;
+        var rest;
+        var $jscomp$destructuring$var0 = foo();
+        var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);
+        b = $jscomp$destructuring$var0.a;
+        d = $jscomp$destructuring$var0.c;
+        rest = (delete $jscomp$destructuring$var1.a,
+                    delete $jscomp$destructuring$var1.c,
+                    $jscomp$destructuring$var1);
+        """);
 
     test(
         "var b,d,rest,pre; pre = foo(), {a: b, c: d, ...rest} = foo();",
-        lines(
-            "var b;",
-            "var d;",
-            "var rest;",
-            "var pre;",
-            "pre = foo(),",
-            "      (() => {",
-            "        let $jscomp$destructuring$var0 = foo();",
-            "        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "        var $jscomp$destructuring$var2=Object.assign({},$jscomp$destructuring$var1);",
-            "        b = $jscomp$destructuring$var1.a;",
-            "        d = $jscomp$destructuring$var1.c;",
-            "        rest = (delete $jscomp$destructuring$var2.a,",
-            "                delete $jscomp$destructuring$var2.c,",
-            "                $jscomp$destructuring$var2);",
-            "        return $jscomp$destructuring$var0",
-            "      })();"));
+        """
+        var b;
+        var d;
+        var rest;
+        var pre;
+        pre = foo(),
+              (() => {
+                let $jscomp$destructuring$var0 = foo();
+                var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+                var $jscomp$destructuring$var2=Object.assign({},$jscomp$destructuring$var1);
+                b = $jscomp$destructuring$var1.a;
+                d = $jscomp$destructuring$var1.c;
+                rest = (delete $jscomp$destructuring$var2.a,
+                        delete $jscomp$destructuring$var2.c,
+                        $jscomp$destructuring$var2);
+                return $jscomp$destructuring$var0
+              })();
+        """);
 
     test(
         "var b,d,rest,post; ({a: b, c: d, ...rest} = foo()), post = foo();",
-        lines(
-            "var b;",
-            "var d;",
-            "var rest;",
-            "var post;",
-            "(() => {",
-            "  let $jscomp$destructuring$var0 = foo();",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "  var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);",
-            "  b = $jscomp$destructuring$var1.a;",
-            "  d = $jscomp$destructuring$var1.c;",
-            "  rest = (delete $jscomp$destructuring$var2.a,",
-            "          delete $jscomp$destructuring$var2.c,",
-            "          $jscomp$destructuring$var2);",
-            "  return $jscomp$destructuring$var0",
-            "})(), post = foo();"));
+        """
+        var b;
+        var d;
+        var rest;
+        var post;
+        (() => {
+          let $jscomp$destructuring$var0 = foo();
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);
+          b = $jscomp$destructuring$var1.a;
+          d = $jscomp$destructuring$var1.c;
+          rest = (delete $jscomp$destructuring$var2.a,
+                  delete $jscomp$destructuring$var2.c,
+                  $jscomp$destructuring$var2);
+          return $jscomp$destructuring$var0
+        })(), post = foo();
+        """);
 
     test(
         "var b,d,rest,pre,post; pre = foo(), {a: b, c: d, ...rest} = foo(), post = foo();",
-        lines(
-            "var b; var d; var rest; var pre; var post;",
-            "pre = foo(),",
-            "      (() => {",
-            "        let $jscomp$destructuring$var0 = foo();",
-            "        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "        var $jscomp$destructuring$var2=Object.assign({},$jscomp$destructuring$var1);",
-            "        b = $jscomp$destructuring$var1.a;",
-            "        d = $jscomp$destructuring$var1.c;",
-            "        rest = (delete $jscomp$destructuring$var2.a,",
-            "                delete $jscomp$destructuring$var2.c,",
-            "                $jscomp$destructuring$var2);",
-            "        return $jscomp$destructuring$var0",
-            "      })(),",
-            "      post = foo();"));
+        """
+        var b; var d; var rest; var pre; var post;
+        pre = foo(),
+              (() => {
+                let $jscomp$destructuring$var0 = foo();
+                var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+                var $jscomp$destructuring$var2=Object.assign({},$jscomp$destructuring$var1);
+                b = $jscomp$destructuring$var1.a;
+                d = $jscomp$destructuring$var1.c;
+                rest = (delete $jscomp$destructuring$var2.a,
+                        delete $jscomp$destructuring$var2.c,
+                        $jscomp$destructuring$var2);
+                return $jscomp$destructuring$var0
+              })(),
+              post = foo();
+        """);
 
     test(
-        lines(
-            "var b1,d1,rest1,b2,d2,rest2;",
-            "({a: b1, c: d1, ...rest1} = foo(),",
-            " {a: b2, c: d2, ...rest2} = foo());"),
-        lines(
-            "var b1; var d1; var rest1; var b2; var d2; var rest2;",
-            "      (() => {",
-            "        let $jscomp$destructuring$var0 = foo();",
-            "        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "        var $jscomp$destructuring$var2=Object.assign({},$jscomp$destructuring$var1);",
-            "        b1 = $jscomp$destructuring$var1.a;",
-            "        d1 = $jscomp$destructuring$var1.c;",
-            "        rest1 = (delete $jscomp$destructuring$var2.a,",
-            "                 delete $jscomp$destructuring$var2.c,",
-            "                 $jscomp$destructuring$var2);",
-            "        return $jscomp$destructuring$var0",
-            "      })(),",
-            "      (() => {",
-            "        let $jscomp$destructuring$var3 = foo();",
-            "        var $jscomp$destructuring$var4 = $jscomp$destructuring$var3;",
-            "        var $jscomp$destructuring$var5=Object.assign({},$jscomp$destructuring$var4);",
-            "        b2 = $jscomp$destructuring$var4.a;",
-            "        d2 = $jscomp$destructuring$var4.c;",
-            "        rest2 = (delete $jscomp$destructuring$var5.a,",
-            "                 delete $jscomp$destructuring$var5.c,",
-            "                 $jscomp$destructuring$var5);",
-            "        return $jscomp$destructuring$var3",
-            "      })();"));
+        """
+        var b1,d1,rest1,b2,d2,rest2;
+        ({a: b1, c: d1, ...rest1} = foo(),
+         {a: b2, c: d2, ...rest2} = foo());
+        """,
+        """
+        var b1; var d1; var rest1; var b2; var d2; var rest2;
+              (() => {
+                let $jscomp$destructuring$var0 = foo();
+                var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+                var $jscomp$destructuring$var2=Object.assign({},$jscomp$destructuring$var1);
+                b1 = $jscomp$destructuring$var1.a;
+                d1 = $jscomp$destructuring$var1.c;
+                rest1 = (delete $jscomp$destructuring$var2.a,
+                         delete $jscomp$destructuring$var2.c,
+                         $jscomp$destructuring$var2);
+                return $jscomp$destructuring$var0
+              })(),
+              (() => {
+                let $jscomp$destructuring$var3 = foo();
+                var $jscomp$destructuring$var4 = $jscomp$destructuring$var3;
+                var $jscomp$destructuring$var5=Object.assign({},$jscomp$destructuring$var4);
+                b2 = $jscomp$destructuring$var4.a;
+                d2 = $jscomp$destructuring$var4.c;
+                rest2 = (delete $jscomp$destructuring$var5.a,
+                         delete $jscomp$destructuring$var5.c,
+                         $jscomp$destructuring$var5);
+                return $jscomp$destructuring$var3
+              })();
+        """);
   }
 
   @Test
   public void testObjectPatternWithRestAssignExpr() {
     test(
         "var x,b,d,rest; x = ({a: b, c: d, ...rest} = foo());",
-        lines(
-            "var x; var b; var d; var rest;",
-            "x = (()=>{",
-            "    let $jscomp$destructuring$var0 = foo();",
-            "    var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "    var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);",
-            "    b = $jscomp$destructuring$var1.a;",
-            "    d = $jscomp$destructuring$var1.c;",
-            "    rest = (delete $jscomp$destructuring$var2.a,",
-            "            delete $jscomp$destructuring$var2.c,",
-            "            $jscomp$destructuring$var2);",
-            "    return $jscomp$destructuring$var0",
-            "})();"));
+        """
+        var x; var b; var d; var rest;
+        x = (()=>{
+            let $jscomp$destructuring$var0 = foo();
+            var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+            var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);
+            b = $jscomp$destructuring$var1.a;
+            d = $jscomp$destructuring$var1.c;
+            rest = (delete $jscomp$destructuring$var2.a,
+                    delete $jscomp$destructuring$var2.c,
+                    $jscomp$destructuring$var2);
+            return $jscomp$destructuring$var0
+        })();
+        """);
 
     test(
         "var x,b,d,rest; baz({a: b, c: d, ...rest} = foo());",
-        lines(
-            "var x; var b; var d; var rest;",
-            "baz((()=>{",
-            "    let $jscomp$destructuring$var0 = foo();",
-            "    var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "    var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);",
-            "    b = $jscomp$destructuring$var1.a;",
-            "    d = $jscomp$destructuring$var1.c;",
-            "    rest = (delete $jscomp$destructuring$var2.a,",
-            "            delete $jscomp$destructuring$var2.c,",
-            "            $jscomp$destructuring$var2);",
-            "    return $jscomp$destructuring$var0;",
-            "})());"));
+        """
+        var x; var b; var d; var rest;
+        baz((()=>{
+            let $jscomp$destructuring$var0 = foo();
+            var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+            var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);
+            b = $jscomp$destructuring$var1.a;
+            d = $jscomp$destructuring$var1.c;
+            rest = (delete $jscomp$destructuring$var2.a,
+                    delete $jscomp$destructuring$var2.c,
+                    $jscomp$destructuring$var2);
+            return $jscomp$destructuring$var0;
+        })());
+        """);
   }
 
   @Test
   public void testObjectPatternWithRestForOf() {
     test(
         "for ({a: b, c: d, ...rest} of foo()) { console.log(rest.z); }",
-        lines(
-            "var $jscomp$destructuring$var0;",
-            "for ($jscomp$destructuring$var0 of foo()) {",
-            "    var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "    var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);",
-            "    b = $jscomp$destructuring$var1.a;",
-            "    d = $jscomp$destructuring$var1.c;",
-            "    rest = (delete $jscomp$destructuring$var2.a,",
-            "            delete $jscomp$destructuring$var2.c,",
-            "            $jscomp$destructuring$var2);",
-            "    console.log(rest.z);",
-            "}"));
+        """
+        var $jscomp$destructuring$var0;
+        for ($jscomp$destructuring$var0 of foo()) {
+            var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+            var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);
+            b = $jscomp$destructuring$var1.a;
+            d = $jscomp$destructuring$var1.c;
+            rest = (delete $jscomp$destructuring$var2.a,
+                    delete $jscomp$destructuring$var2.c,
+                    $jscomp$destructuring$var2);
+            console.log(rest.z);
+        }
+        """);
 
     test(
         "for (var {a: b, c: d, ...rest} of foo()) { console.log(rest.z); }",
-        lines(
-            "var b;",
-            "var d;",
-            "var rest;",
-            "var $jscomp$destructuring$var0;",
-            "for ($jscomp$destructuring$var0 of foo()) {",
-            "    var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "    var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);",
-            "    b = $jscomp$destructuring$var1.a;",
-            "    d = $jscomp$destructuring$var1.c;",
-            "    rest = (delete $jscomp$destructuring$var2.a,",
-            "            delete $jscomp$destructuring$var2.c,",
-            "            $jscomp$destructuring$var2);",
-            "    console.log(rest.z);",
-            "}"));
+        """
+        var b;
+        var d;
+        var rest;
+        var $jscomp$destructuring$var0;
+        for ($jscomp$destructuring$var0 of foo()) {
+            var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+            var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);
+            b = $jscomp$destructuring$var1.a;
+            d = $jscomp$destructuring$var1.c;
+            rest = (delete $jscomp$destructuring$var2.a,
+                    delete $jscomp$destructuring$var2.c,
+                    $jscomp$destructuring$var2);
+            console.log(rest.z);
+        }
+        """);
 
     test(
         "for (let {a: b, c: d, ...rest} of foo()) { console.log(rest.z); }",
-        lines(
-            "for (let $jscomp$destructuring$var0 of foo()) {",
-            "    var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "    var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);",
-            "    let b = $jscomp$destructuring$var1.a;",
-            "    let d = $jscomp$destructuring$var1.c;",
-            "    let rest = (delete $jscomp$destructuring$var2.a,",
-            "            delete $jscomp$destructuring$var2.c,",
-            "            $jscomp$destructuring$var2);",
-            "    {",
-            "      console.log(rest.z);",
-            "    }",
-            "}"));
+        """
+        for (let $jscomp$destructuring$var0 of foo()) {
+            var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+            var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);
+            let b = $jscomp$destructuring$var1.a;
+            let d = $jscomp$destructuring$var1.c;
+            let rest = (delete $jscomp$destructuring$var2.a,
+                    delete $jscomp$destructuring$var2.c,
+                    $jscomp$destructuring$var2);
+            {
+              console.log(rest.z);
+            }
+        }
+        """);
 
     test(
         "for (const {a: b, c: d, ...rest} of foo()) { console.log(rest.z); }",
-        lines(
-            "for (const $jscomp$destructuring$var0 of foo()) {",
-            "    /** @const */ var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "    var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);",
-            "    const b = $jscomp$destructuring$var1.a;",
-            "    const d = $jscomp$destructuring$var1.c;",
-            "    const rest = (delete $jscomp$destructuring$var2.a,",
-            "            delete $jscomp$destructuring$var2.c,",
-            "            $jscomp$destructuring$var2);",
-            "    {",
-            "      console.log(rest.z);",
-            "    }",
-            "}"));
+        """
+        for (const $jscomp$destructuring$var0 of foo()) {
+            /** @const */ var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+            var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);
+            const b = $jscomp$destructuring$var1.a;
+            const d = $jscomp$destructuring$var1.c;
+            const rest = (delete $jscomp$destructuring$var2.a,
+                    delete $jscomp$destructuring$var2.c,
+                    $jscomp$destructuring$var2);
+            {
+              console.log(rest.z);
+            }
+        }
+        """);
 
     test(
         "for (var {a: b, [baz()]: d, ...rest} of foo()) { console.log(rest.z); }",
-        lines(
-            "var b;",
-            "var d;",
-            "var rest;",
-            "var $jscomp$destructuring$var0;",
-            "for ($jscomp$destructuring$var0 of foo()) {",
-            "    var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "    var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);",
-            "    b = $jscomp$destructuring$var1.a;",
-            "    var $jscomp$destructuring$var3 = baz();",
-            "    d = $jscomp$destructuring$var1[$jscomp$destructuring$var3];",
-            "    rest = (delete $jscomp$destructuring$var2.a,",
-            "            delete $jscomp$destructuring$var2[$jscomp$destructuring$var3],",
-            "            $jscomp$destructuring$var2);",
-            "    console.log(rest.z);",
-            "}"));
+        """
+        var b;
+        var d;
+        var rest;
+        var $jscomp$destructuring$var0;
+        for ($jscomp$destructuring$var0 of foo()) {
+            var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+            var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);
+            b = $jscomp$destructuring$var1.a;
+            var $jscomp$destructuring$var3 = baz();
+            d = $jscomp$destructuring$var1[$jscomp$destructuring$var3];
+            rest = (delete $jscomp$destructuring$var2.a,
+                    delete $jscomp$destructuring$var2[$jscomp$destructuring$var3],
+                    $jscomp$destructuring$var2);
+            console.log(rest.z);
+        }
+        """);
 
     test(
         "for (var {a: b, [baz()]: d = 1, ...rest} of foo()) { console.log(rest.z); }",
-        lines(
-            "var b;",
-            "var d;",
-            "var rest;",
-            "var $jscomp$destructuring$var0;",
-            "for ($jscomp$destructuring$var0 of foo()) {",
-            "    var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "    var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);",
-            "    b = $jscomp$destructuring$var1.a;",
-            "    var $jscomp$destructuring$var3 = baz();",
-            "    var $jscomp$destructuring$var4 = ",
-            "        $jscomp$destructuring$var1[$jscomp$destructuring$var3];",
-            "    d = $jscomp$destructuring$var4=== void 0 ? 1 : $jscomp$destructuring$var4;",
-            "    rest = (delete $jscomp$destructuring$var2.a,",
-            "            delete $jscomp$destructuring$var2[$jscomp$destructuring$var3],",
-            "            $jscomp$destructuring$var2);",
-            "    console.log(rest.z);",
-            "}"));
+        """
+        var b;
+        var d;
+        var rest;
+        var $jscomp$destructuring$var0;
+        for ($jscomp$destructuring$var0 of foo()) {
+            var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+            var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);
+            b = $jscomp$destructuring$var1.a;
+            var $jscomp$destructuring$var3 = baz();
+            var $jscomp$destructuring$var4 =
+                $jscomp$destructuring$var1[$jscomp$destructuring$var3];
+            d = $jscomp$destructuring$var4=== void 0 ? 1 : $jscomp$destructuring$var4;
+            rest = (delete $jscomp$destructuring$var2.a,
+                    delete $jscomp$destructuring$var2[$jscomp$destructuring$var3],
+                    $jscomp$destructuring$var2);
+            console.log(rest.z);
+        }
+        """);
   }
 
   @Test
   public void testObjectPatternWithRestAndComputedPropertyName() {
     test(
         "var {a: b = 3, [bar()]: d, [baz()]: e, ...rest} = foo();",
-        lines(
-            "var b; var d; var e; var rest;",
-            "var $jscomp$destructuring$var0 = foo();",
-            "var $jscomp$destructuring$var1 = Object.assign({},$jscomp$destructuring$var0);",
-            "b = $jscomp$destructuring$var0.a=== void 0 ? 3 : $jscomp$destructuring$var0.a;",
-            "var $jscomp$destructuring$var2 = bar();",
-            "d = $jscomp$destructuring$var0[$jscomp$destructuring$var2];",
-            "var $jscomp$destructuring$var3 = baz();",
-            "e = $jscomp$destructuring$var0[$jscomp$destructuring$var3];",
-            "rest = (delete $jscomp$destructuring$var1.a,",
-            "            delete $jscomp$destructuring$var1[$jscomp$destructuring$var2],",
-            "            delete $jscomp$destructuring$var1[$jscomp$destructuring$var3],",
-            "            $jscomp$destructuring$var1);"));
+        """
+        var b; var d; var e; var rest;
+        var $jscomp$destructuring$var0 = foo();
+        var $jscomp$destructuring$var1 = Object.assign({},$jscomp$destructuring$var0);
+        b = $jscomp$destructuring$var0.a=== void 0 ? 3 : $jscomp$destructuring$var0.a;
+        var $jscomp$destructuring$var2 = bar();
+        d = $jscomp$destructuring$var0[$jscomp$destructuring$var2];
+        var $jscomp$destructuring$var3 = baz();
+        e = $jscomp$destructuring$var0[$jscomp$destructuring$var3];
+        rest = (delete $jscomp$destructuring$var1.a,
+                    delete $jscomp$destructuring$var1[$jscomp$destructuring$var2],
+                    delete $jscomp$destructuring$var1[$jscomp$destructuring$var3],
+                    $jscomp$destructuring$var1);
+        """);
   }
 
   @Test
   public void testObjectPatternWithRestAndDefaults() {
     test(
         "var {a = 3, ...rest} = foo();",
-        lines(
-            "var a; var rest;",
-            "var $jscomp$destructuring$var0 = foo();",
-            "var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);",
-            "a = $jscomp$destructuring$var0.a=== void 0 ? 3 : $jscomp$destructuring$var0.a;",
-            "rest = (delete $jscomp$destructuring$var1.a,",
-            "            $jscomp$destructuring$var1);"));
+        """
+        var a; var rest;
+        var $jscomp$destructuring$var0 = foo();
+        var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);
+        a = $jscomp$destructuring$var0.a=== void 0 ? 3 : $jscomp$destructuring$var0.a;
+        rest = (delete $jscomp$destructuring$var1.a,
+                    $jscomp$destructuring$var1);
+        """);
 
     test(
         "var {[bar()]:a = 3, 'b c':b = 12, ...rest} = foo();",
-        lines(
-            "var a; var b; var rest;",
-            "var $jscomp$destructuring$var0=foo();",
-            "var $jscomp$destructuring$var1 = Object.assign({},$jscomp$destructuring$var0);",
-            "var $jscomp$destructuring$var2 = bar();",
-            "var $jscomp$destructuring$var3 =",
-            "    $jscomp$destructuring$var0[$jscomp$destructuring$var2];",
-            "a = $jscomp$destructuring$var3=== void 0 ? 3 : $jscomp$destructuring$var3;",
-            "b = $jscomp$destructuring$var0[\"b c\"]=== void 0",
-            "    ? 12 : $jscomp$destructuring$var0[\"b c\"];",
-            "rest=(delete $jscomp$destructuring$var1[$jscomp$destructuring$var2],",
-            "          delete $jscomp$destructuring$var1[\"b c\"],",
-            "          $jscomp$destructuring$var1);"));
+        """
+        var a; var b; var rest;
+        var $jscomp$destructuring$var0=foo();
+        var $jscomp$destructuring$var1 = Object.assign({},$jscomp$destructuring$var0);
+        var $jscomp$destructuring$var2 = bar();
+        var $jscomp$destructuring$var3 =
+            $jscomp$destructuring$var0[$jscomp$destructuring$var2];
+        a = $jscomp$destructuring$var3=== void 0 ? 3 : $jscomp$destructuring$var3;
+        b = $jscomp$destructuring$var0["b c"]=== void 0
+            ? 12 : $jscomp$destructuring$var0["b c"];
+        rest=(delete $jscomp$destructuring$var1[$jscomp$destructuring$var2],
+                  delete $jscomp$destructuring$var1["b c"],
+                  $jscomp$destructuring$var1);
+        """);
   }
 
   @Test
   public void testObjectPatternWithRestInCatch() {
     test(
         "try {} catch ({first, second, ...rest}) { console.log(rest.z); }",
-        lines(
-            "try {}",
-            "catch ($jscomp$destructuring$var0) {",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "  var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);",
-            "  let first = $jscomp$destructuring$var1.first;",
-            "  let second = $jscomp$destructuring$var1.second;",
-            "  let rest = (delete $jscomp$destructuring$var2.first, ",
-            "              delete $jscomp$destructuring$var2.second, ",
-            "              $jscomp$destructuring$var2);",
-            "  console.log(rest.z);",
-            "}"));
+        """
+        try {}
+        catch ($jscomp$destructuring$var0) {
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);
+          let first = $jscomp$destructuring$var1.first;
+          let second = $jscomp$destructuring$var1.second;
+          let rest = (delete $jscomp$destructuring$var2.first,
+                      delete $jscomp$destructuring$var2.second,
+                      $jscomp$destructuring$var2);
+          console.log(rest.z);
+        }
+        """);
   }
 
   @Test
   public void testObjectPatternWithRestAssignReturn() {
     test(
         "function f() { return {x:a, ...rest} = foo(); }",
-        lines(
-            "function f() {",
-            "  return (() => {",
-            "    let $jscomp$destructuring$var0 = foo();",
-            "    var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "    var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);",
-            "    a = $jscomp$destructuring$var1.x;",
-            "    rest = (delete $jscomp$destructuring$var2.x,",
-            "            $jscomp$destructuring$var2);",
-            "    return $jscomp$destructuring$var0",
-            "  })();",
-            "}"));
+        """
+        function f() {
+          return (() => {
+            let $jscomp$destructuring$var0 = foo();
+            var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+            var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);
+            a = $jscomp$destructuring$var1.x;
+            rest = (delete $jscomp$destructuring$var2.x,
+                    $jscomp$destructuring$var2);
+            return $jscomp$destructuring$var0
+          })();
+        }
+        """);
   }
 
   @Test
   public void testObjectPatternWithRestParamList() {
     test(
         "function f({x = a(), ...rest}, y=b()) { console.log(y); }",
-        lines(
-            "function f($jscomp$destructuring$var0,y) {",
-            "  var x; var rest;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "  var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);",
-            "  x = $jscomp$destructuring$var1.x === void 0",
-            "      ? a() : $jscomp$destructuring$var1.x;",
-            "  rest= (delete $jscomp$destructuring$var2.x,",
-            "             $jscomp$destructuring$var2);",
-            "  y = y=== void 0 ? b() : y;",
-            "  console.log(y)",
-            "}"));
+        """
+        function f($jscomp$destructuring$var0,y) {
+          var x; var rest;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);
+          x = $jscomp$destructuring$var1.x === void 0
+              ? a() : $jscomp$destructuring$var1.x;
+          rest= (delete $jscomp$destructuring$var2.x,
+                     $jscomp$destructuring$var2);
+          y = y=== void 0 ? b() : y;
+          console.log(y)
+        }
+        """);
 
     test(
         "function f({x = a(), ...rest}={}, y=b()) { console.log(y); }",
-        lines(
-            "function f($jscomp$destructuring$var0,y) {",
-            "  var x; var rest;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0=== void 0",
-            "      ? {} : $jscomp$destructuring$var0;",
-            "  var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);",
-            "  x = $jscomp$destructuring$var1.x=== void 0",
-            "      ? a() : $jscomp$destructuring$var1.x;",
-            "  rest= (delete $jscomp$destructuring$var2.x,",
-            "             $jscomp$destructuring$var2);",
-            "  y = y=== void 0 ? b() : y;",
-            "  console.log(y)",
-            "}"));
+        """
+        function f($jscomp$destructuring$var0,y) {
+          var x; var rest;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0=== void 0
+              ? {} : $jscomp$destructuring$var0;
+          var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);
+          x = $jscomp$destructuring$var1.x=== void 0
+              ? a() : $jscomp$destructuring$var1.x;
+          rest= (delete $jscomp$destructuring$var2.x,
+                     $jscomp$destructuring$var2);
+          y = y=== void 0 ? b() : y;
+          console.log(y)
+        }
+        """);
   }
 
   @Test
   public void testObjectPatternWithRestArrowParamList() {
     test(
         "var f = ({x = a(), ...rest}, y=b()) => { console.log(y); };",
-        lines(
-            "var f = ($jscomp$destructuring$var0,y) => {",
-            "  var x; var rest;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
-            "  var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);",
-            "  x = $jscomp$destructuring$var1.x=== void 0",
-            "      ? a() : $jscomp$destructuring$var1.x;",
-            "  rest = (delete $jscomp$destructuring$var2.x,",
-            "              $jscomp$destructuring$var2);",
-            "  y = y=== void 0 ? b() : y;",
-            "  console.log(y)",
-            "}"));
+        """
+        var f = ($jscomp$destructuring$var0,y) => {
+          var x; var rest;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);
+          x = $jscomp$destructuring$var1.x=== void 0
+              ? a() : $jscomp$destructuring$var1.x;
+          rest = (delete $jscomp$destructuring$var2.x,
+                      $jscomp$destructuring$var2);
+          y = y=== void 0 ? b() : y;
+          console.log(y)
+        }
+        """);
 
     test(
         "var f = ({x = a(), ...rest}={}, y=b()) => { console.log(y); };",
-        lines(
-            "var f = ($jscomp$destructuring$var0,y) => {",
-            "  var x; var rest;",
-            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0=== void 0",
-            "      ? {} : $jscomp$destructuring$var0;",
-            "  var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);",
-            "  x = $jscomp$destructuring$var1.x=== void 0",
-            "      ? a() : $jscomp$destructuring$var1.x;",
-            "  rest= (delete $jscomp$destructuring$var2.x,",
-            "             $jscomp$destructuring$var2);",
-            "  y = y=== void 0 ? b() : y;",
-            "  console.log(y)",
-            "}"));
+        """
+        var f = ($jscomp$destructuring$var0,y) => {
+          var x; var rest;
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0=== void 0
+              ? {} : $jscomp$destructuring$var0;
+          var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);
+          x = $jscomp$destructuring$var1.x=== void 0
+              ? a() : $jscomp$destructuring$var1.x;
+          rest= (delete $jscomp$destructuring$var2.x,
+                     $jscomp$destructuring$var2);
+          y = y=== void 0 ? b() : y;
+          console.log(y)
+        }
+        """);
   }
 
   @Test
@@ -1718,53 +1877,57 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
     test(
         "var {a} = foo();",
-        lines(
-            "var a; var $jscomp$destructuring$var0 = foo();", "a = $jscomp$destructuring$var0.a;"));
+        """
+        var a; var $jscomp$destructuring$var0 = foo();
+        a = $jscomp$destructuring$var0.a;
+        """);
 
     test(
         "var {a} = foo(); var {...b} = bar();",
-        lines(
-            "var a;",
-            "var $jscomp$destructuring$var0 = foo();",
-            "a = $jscomp$destructuring$var0.a;",
-            "var b;",
-            "var $jscomp$destructuring$var1 = bar();",
-            "var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);",
-            "b = $jscomp$destructuring$var2;"));
+        """
+        var a;
+        var $jscomp$destructuring$var0 = foo();
+        a = $jscomp$destructuring$var0.a;
+        var b;
+        var $jscomp$destructuring$var1 = bar();
+        var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);
+        b = $jscomp$destructuring$var2;
+        """);
 
     test(
         "var {[foo0()]: {[foo1()]: a, ...r}, [foo2()]: { [foo3()]: b}, [foo4()]: c } = bar();",
-        lines(
-            "var a; var r; var b; var c;",
-            "var $jscomp$destructuring$var0 = bar();",
-            "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0[foo0()];",
-            "var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);",
-            "var $jscomp$destructuring$var3 = foo1();",
-            "a = $jscomp$destructuring$var1[$jscomp$destructuring$var3];",
-            "r = (delete $jscomp$destructuring$var2[$jscomp$destructuring$var3],",
-            "         $jscomp$destructuring$var2);",
-            "var $jscomp$destructuring$var4 = $jscomp$destructuring$var0[foo2()];",
-            "b = $jscomp$destructuring$var4[foo3()];",
-            "c = $jscomp$destructuring$var0[foo4()]"));
+        """
+        var a; var r; var b; var c;
+        var $jscomp$destructuring$var0 = bar();
+        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0[foo0()];
+        var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);
+        var $jscomp$destructuring$var3 = foo1();
+        a = $jscomp$destructuring$var1[$jscomp$destructuring$var3];
+        r = (delete $jscomp$destructuring$var2[$jscomp$destructuring$var3],
+                 $jscomp$destructuring$var2);
+        var $jscomp$destructuring$var4 = $jscomp$destructuring$var0[foo2()];
+        b = $jscomp$destructuring$var4[foo3()];
+        c = $jscomp$destructuring$var0[foo4()]
+        """);
 
     test(
         "var [a] = foo(); var [{b}] = foo(); var [{...c}] = foo();",
-        lines(
-            // var [a] = foo();
-            "var a;",
-            "var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(foo());",
-            "a = $jscomp$destructuring$var0.next().value;",
-            // var [{b}] = foo();
-            "var b;",
-            "var $jscomp$destructuring$var1 = (0, $jscomp.makeIterator)(foo());",
-            "var $jscomp$destructuring$var2 = $jscomp$destructuring$var1.next().value;",
-            "b = $jscomp$destructuring$var2.b;",
-            // var [{...c}] = foo();
-            "var c;",
-            "var $jscomp$destructuring$var3 = (0, $jscomp.makeIterator)(foo());",
-            "var $jscomp$destructuring$var4 = $jscomp$destructuring$var3.next().value;",
-            "var $jscomp$destructuring$var5 = Object.assign({},$jscomp$destructuring$var4);",
-            "c = $jscomp$destructuring$var5"));
+        """
+        var a;
+        var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(foo());
+        a = $jscomp$destructuring$var0.next().value;
+        // var [{b}] = foo();
+        var b;
+        var $jscomp$destructuring$var1 = (0, $jscomp.makeIterator)(foo());
+        var $jscomp$destructuring$var2 = $jscomp$destructuring$var1.next().value;
+        b = $jscomp$destructuring$var2.b;
+        // var [{...c}] = foo();
+        var c;
+        var $jscomp$destructuring$var3 = (0, $jscomp.makeIterator)(foo());
+        var $jscomp$destructuring$var4 = $jscomp$destructuring$var3.next().value;
+        var $jscomp$destructuring$var5 = Object.assign({},$jscomp$destructuring$var4);
+        c = $jscomp$destructuring$var5
+        """);
   }
 
   @Test
@@ -1775,44 +1938,46 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
     test(
         "var {a} = foo(); var {...b} = bar();",
-        lines(
-            "var a; ({a} = foo());",
-            "var b;",
-            "var $jscomp$destructuring$var0 = bar();",
-            "var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);",
-            "b = $jscomp$destructuring$var1;"));
+        """
+        var a; ({a} = foo());
+        var b;
+        var $jscomp$destructuring$var0 = bar();
+        var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);
+        b = $jscomp$destructuring$var1;
+        """);
 
     // test that object patterns are rewritten if they have a rest property nested within
     test(
         "var {[foo0()]: {[foo1()]: a, ...r}, [foo2()]: { [foo3()]: b}, [foo4()]: c } = bar();",
-        lines(
-            "var a; var r; var b; var c;",
-            "var $jscomp$destructuring$var0 = bar();",
-            "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0[foo0()];",
-            "var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);",
-            "var $jscomp$destructuring$var3 = foo1();",
-            "a = $jscomp$destructuring$var1[$jscomp$destructuring$var3];",
-            "r = (delete $jscomp$destructuring$var2[$jscomp$destructuring$var3],",
-            "         $jscomp$destructuring$var2);",
-            "var $jscomp$destructuring$var4 = $jscomp$destructuring$var0[foo2()];",
-            "b = $jscomp$destructuring$var4[foo3()];",
-            "c = $jscomp$destructuring$var0[foo4()]"));
+        """
+        var a; var r; var b; var c;
+        var $jscomp$destructuring$var0 = bar();
+        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0[foo0()];
+        var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);
+        var $jscomp$destructuring$var3 = foo1();
+        a = $jscomp$destructuring$var1[$jscomp$destructuring$var3];
+        r = (delete $jscomp$destructuring$var2[$jscomp$destructuring$var3],
+                 $jscomp$destructuring$var2);
+        var $jscomp$destructuring$var4 = $jscomp$destructuring$var0[foo2()];
+        b = $jscomp$destructuring$var4[foo3()];
+        c = $jscomp$destructuring$var0[foo4()]
+        """);
 
     test(
         "var [a] = foo(); var [{b}] = foo(); var [{...c}] = foo();",
-        lines(
-            // var [a] = foo();
-            "var a;",
-            "[a] = foo();",
-            // var [{b}] = foo();
-            "var b;",
-            "[{b}] = foo();",
-            // var [{...c}] = foo();
-            "var c;",
-            "var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(foo());",
-            "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value;",
-            "var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);",
-            "c = $jscomp$destructuring$var2"));
+        """
+        var a;
+        [a] = foo();
+        // var [{b}] = foo();
+        var b;
+        [{b}] = foo();
+        // var [{...c}] = foo();
+        var c;
+        var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(foo());
+        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value;
+        var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);
+        c = $jscomp$destructuring$var2
+        """);
   }
 
   @Test
@@ -1820,16 +1985,18 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
     test(
         srcs(
-            lines(
-                "function takesIterable(/** !Iterable<number> */ iterableVar) {", //
-                "  const [a] = iterableVar;",
-                "}")),
+            """
+            function takesIterable(/** !Iterable<number> */ iterableVar) {
+              const [a] = iterableVar;
+            }
+            """),
         expected(
-            lines(
-                "function takesIterable(iterableVar) {", //
-                "  var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(iterableVar);",
-                "  const a = $jscomp$destructuring$var0.next().value;",
-                "}")));
+            """
+            function takesIterable(iterableVar) {
+              var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(iterableVar);
+              const a = $jscomp$destructuring$var0.next().value;
+            }
+            """));
 
     Compiler lastCompiler = getLastCompiler();
 
@@ -1857,17 +2024,19 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   public void testArrayDestructuringRest_getsCorrectTypes() {
     test(
         srcs(
-            lines(
-                "function takesIterable(/** !Iterable<number> */ iterableVar) {", //
-                "  const [a, ...rest] = iterableVar;",
-                "}")),
+            """
+            function takesIterable(/** !Iterable<number> */ iterableVar) {
+              const [a, ...rest] = iterableVar;
+            }
+            """),
         expected(
-            lines(
-                "function takesIterable(iterableVar) {", //
-                "  var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(iterableVar);",
-                "  const a = $jscomp$destructuring$var0.next().value;",
-                "  const rest = (0, $jscomp.arrayFromIterator)($jscomp$destructuring$var0);",
-                "}")));
+            """
+            function takesIterable(iterableVar) {
+              var $jscomp$destructuring$var0 = (0, $jscomp.makeIterator)(iterableVar);
+              const a = $jscomp$destructuring$var0.next().value;
+              const rest = (0, $jscomp.arrayFromIterator)($jscomp$destructuring$var0);
+            }
+            """));
 
     Compiler lastCompiler = getLastCompiler();
 
@@ -1890,13 +2059,15 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   @Test
   public void testObjectDestructuring_getsCorrectTypes() {
     test(
-        lines(
-            "const obj = {a: 3, b: 'string', c: null};", //
-            "const {a} = obj;"),
-        lines(
-            "const obj = {a: 3, b: 'string', c: null};",
-            "/** @const */ var $jscomp$destructuring$var0=obj;",
-            "const a = $jscomp$destructuring$var0.a;"));
+        """
+        const obj = {a: 3, b: 'string', c: null};
+        const {a} = obj;
+        """,
+        """
+        const obj = {a: 3, b: 'string', c: null};
+        /** @const */ var $jscomp$destructuring$var0=obj;
+        const a = $jscomp$destructuring$var0.a;
+        """);
 
     Node jsRoot = getLastCompiler().getJsRoot();
 
@@ -1912,14 +2083,16 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   @Test
   public void testObjectDestructuringDefaultValue_getsCorrectTypes() {
     test(
-        lines(
-            "const obj = {a: 3, b: 'string', c: null};", //
-            "const {a = 4} = obj;"),
-        lines(
-            "const obj = {a: 3, b: 'string', c: null};",
-            "/** @const */ var $jscomp$destructuring$var0=obj;",
-            "const a = $jscomp$destructuring$var0.a === void 0",
-            "    ? 4: $jscomp$destructuring$var0.a;"));
+        """
+        const obj = {a: 3, b: 'string', c: null};
+        const {a = 4} = obj;
+        """,
+        """
+        const obj = {a: 3, b: 'string', c: null};
+        /** @const */ var $jscomp$destructuring$var0=obj;
+        const a = $jscomp$destructuring$var0.a === void 0
+            ? 4: $jscomp$destructuring$var0.a;
+        """);
 
     Node jsRoot = getLastCompiler().getJsRoot();
 
@@ -1939,15 +2112,17 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   @Test
   public void testObjectDestructuringComputedPropWithDefault_getsCorrectTypes() {
     test(
-        lines(
-            "const /** !Object<string, number> */ obj = {['a']: 3};", //
-            "const {['a']: a = 4} = obj;"),
-        lines(
-            "const obj = {['a']: 3};",
-            "/** @const */ var $jscomp$destructuring$var0=obj;",
-            "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0['a'];",
-            "const a = $jscomp$destructuring$var1 === void 0",
-            "    ? 4: $jscomp$destructuring$var1;"));
+        """
+        const /** !Object<string, number> */ obj = {['a']: 3};
+        const {['a']: a = 4} = obj;
+        """,
+        """
+        const obj = {['a']: 3};
+        /** @const */ var $jscomp$destructuring$var0=obj;
+        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0['a'];
+        const a = $jscomp$destructuring$var1 === void 0
+            ? 4: $jscomp$destructuring$var1;
+        """);
 
     Node jsRoot = getLastCompiler().getJsRoot();
 
@@ -1969,14 +2144,16 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   @Test
   public void testObjectDestructuringRest_typesRestAsObject() {
     test(
-        lines(
-            "const obj = {a: 3, b: 'string', c: null};", //
-            "const {...rest} = obj;"),
-        lines(
-            "const obj = {a: 3, b: 'string', c: null};",
-            "/** @const */ var $jscomp$destructuring$var0=obj;",
-            "var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);",
-            "const rest = $jscomp$destructuring$var1;"));
+        """
+        const obj = {a: 3, b: 'string', c: null};
+        const {...rest} = obj;
+        """,
+        """
+        const obj = {a: 3, b: 'string', c: null};
+        /** @const */ var $jscomp$destructuring$var0=obj;
+        var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);
+        const rest = $jscomp$destructuring$var1;
+        """);
 
     Node jsRoot = getLastCompiler().getJsRoot();
 

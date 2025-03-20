@@ -102,72 +102,74 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   @Test
   public void testCoalesceLetRequiresInitWithinALoop() {
     inFunction(
-        lines(
-            "", //
-            "for (let i = 0; i < 3; ++i) {",
-            "  let something;",
-            "  if (i == 0) {",
-            "    const x = 'hi';",
-            "    alert(x);",
-            "    something = x + ' there';",
-            "  }",
-            "  alert(something);",
-            "}",
-            ""),
-        lines(
-            "", //
-            "for (let i = 0; i < 3; ++i) {",
-            // we must initialize `something` on each loop iteration
-            "  var something = void 0;",
-            "  if (i == 0) {",
-            "    something = 'hi';",
-            "    alert(something);", // always alerts 'hi'
-            "    something = something + ' there';",
-            "  }",
-            "  alert(something);",
-            "}",
-            ""));
+        """
+        for (let i = 0; i < 3; ++i) {
+          let something;
+          if (i == 0) {
+            const x = 'hi';
+            alert(x);
+            something = x + ' there';
+          }
+          alert(something);
+        }
+        """,
+        """
+        for (let i = 0; i < 3; ++i) {
+        // we must initialize `something` on each loop iteration
+          var something = void 0;
+          if (i == 0) {
+            something = 'hi';
+            alert(something); // always alerts 'hi'
+            something = something + ' there';
+          }
+          alert(something);
+        }
+        """);
   }
 
   @Test
   public void testCoalesceVariableNames_doesNotWronglyUndeclareOuterName() {
     disableValidateAstChangeMarking();
     test(
-        lines(
-            "const [{localKey:localKey$jscomp$2} = {localKey:void 0}] =", //
-            " entries.filter(a => { var b; [, b] = a; return b === c; });",
-            "alert(localKey$jscomp$2);"),
+        """
+        const [{localKey:localKey$jscomp$2} = {localKey:void 0}] =
+         entries.filter(a => { var b; [, b] = a; return b === c; });
+        alert(localKey$jscomp$2);
+        """,
         // The CoalesceVariableNames pass merges the names `a` and `b` in the arrow function, but in
         // doing so does not delete the const keyword which declared the outer name
         // `localKey$jscomp$2`
-        lines(
-            "const [{localKey:localKey$jscomp$2} = {localKey:void 0}] = ", //
-            "entries.filter(a => { [, a] = a; return a === c; })",
-            "alert(localKey$jscomp$2);"));
+        """
+        const [{localKey:localKey$jscomp$2} = {localKey:void 0}] =
+        entries.filter(a => { [, a] = a; return a === c; })
+        alert(localKey$jscomp$2);
+        """);
   }
 
   @Test
   public void testCoalesceVariableNames_worksInsideExpressionResults() {
     inFunction(
-        lines(
-            "a.b = function() { ", //
-            "  const [{localKey:localKey$jscomp$2} = {localKey:void 0}] =",
-            "    entries.filter(a => { ",
-            "      var b;",
-            "      [, b] = a;",
-            "      return b === c;",
-            "    });",
-            "  alert(localKey$jscomp$2);",
-            "}"),
-        lines(
-            "a.b = function() { ", //
-            "  const [{localKey:localKey$jscomp$2} = {localKey:void 0}] =",
-            "    entries.filter(a => { ",
-            "      [, a] = a;",
-            "      return a === c;",
-            "    })",
-            "  alert(localKey$jscomp$2);",
-            "}"));
+        """
+        a.b = function() {
+          const [{localKey:localKey$jscomp$2} = {localKey:void 0}] =
+            entries.filter(a => {
+              var b;
+              [, b] = a;
+              return b === c;
+            });
+          alert(localKey$jscomp$2);
+        }
+        """,
+        """
+        a.b = function() {
+          const [{localKey:localKey$jscomp$2} = {localKey:void 0}] =
+            entries.filter(a => {
+              [, a] = a;
+              return a === c;
+            })
+          alert(localKey$jscomp$2);
+        }
+        """);
   }
 
   @Test
@@ -361,38 +363,41 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   public void testUsePseudoName_forWithUninitializedLetInside() {
     usePseudoName = false;
     String src =
-        lines(
-            "for( var i = 0;i < 10; i++) {", //
-            "  let x;",
-            "  if(true) {x=3} else { x = undefined;}",
-            "  i;",
-            "}",
-            "const y = new Set();",
-            "i; y;");
+        """
+        for( var i = 0;i < 10; i++) {
+          let x;
+          if(true) {x=3} else { x = undefined;}
+          i;
+        }
+        const y = new Set();
+        i; y;
+        """;
     String expected =
-        lines(
-            "var i = 0;", //
-            "for(; i < 10; i++) {",
-            "  var x = void 0;",
-            "  if(true) {x=3} else { x = undefined;}",
-            "  i;",
-            "}",
-            "x = new Set();",
-            "i; x;");
+        """
+        var i = 0;
+        for(; i < 10; i++) {
+          var x = void 0;
+          if(true) {x=3} else { x = undefined;}
+          i;
+        }
+        x = new Set();
+        i; x;
+        """;
     inFunction(src, expected);
 
     // make sure we generate the correct code with `usePseudoName = true`
     usePseudoName = true;
     String expectedPseudoNames =
-        lines(
-            "var i = 0;", //
-            "for(; i < 10; i++) {",
-            "  var x_y = void 0;", // preserves "reset" before every iteration
-            "  if(true) {x_y=3} else { x_y = undefined;}",
-            "  i;",
-            "}",
-            "x_y = new Set();",
-            "i; x_y;");
+        """
+        var i = 0;
+        for(; i < 10; i++) {
+          var x_y = void 0; // preserves "reset" before every iteration
+          if(true) {x_y=3} else { x_y = undefined;}
+          i;
+        }
+        x_y = new Set();
+        i; x_y;
+        """;
     inFunction(src, expectedPseudoNames);
   }
 
@@ -400,41 +405,45 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   public void test_doesNotCoalesceOverlappingLiveRange() {
     usePseudoName = false;
     String src =
-        lines(
-            "for( var i = 0;i < 10; i++) {", //
-            "  let x = i;",
-            "  let y;",
-            "  x;",
-            "  y;",
-            "}");
+        """
+        for( var i = 0;i < 10; i++) {
+          let x = i;
+          let y;
+          x;
+          y;
+        }
+        """;
     String expected =
-        lines(
-            "var i = 0;", //
-            "for(; i < 10; i++) {",
-            "  let x = i;",
-            "  let y;",
-            "  x;",
-            "  y;",
-            "}");
+        """
+        var i = 0;
+        for(; i < 10; i++) {
+          let x = i;
+          let y;
+          x;
+          y;
+        }
+        """;
     inFunction(src, expected);
 
     src =
-        lines(
-            "for( var i = 0;i < 10; i++) {", //
-            "  let x = i;",
-            "  let y;",
-            "  y;",
-            "  x;",
-            "}");
+        """
+        for( var i = 0;i < 10; i++) {
+          let x = i;
+          let y;
+          y;
+          x;
+        }
+        """;
     expected =
-        lines(
-            "var i = 0;", //
-            "for(; i < 10; i++) {",
-            "  let x = i;",
-            "  let y;",
-            "  y;",
-            "  x;",
-            "}");
+        """
+        var i = 0;
+        for(; i < 10; i++) {
+          let x = i;
+          let y;
+          y;
+          x;
+        }
+        """;
     inFunction(src, expected);
 
     usePseudoName = true; // same for usePseudoName = true code path
@@ -446,22 +455,24 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   public void test_doesNotCoalesceNonOverlappingLiveRange() {
     usePseudoName = false;
     String src =
-        lines(
-            "for( var i = 0;i < 10; i++) {", //
-            "  let x;",
-            "  x;",
-            "  let y;",
-            "  y;",
-            "}");
+        """
+        for( var i = 0;i < 10; i++) {
+          let x;
+          x;
+          let y;
+          y;
+        }
+        """;
     String expected =
-        lines(
-            "var i = 0;", //
-            "for(; i < 10; i++) {",
-            "  let x;",
-            "  x;",
-            "  let y;",
-            "  y;",
-            "}");
+        """
+        var i = 0;
+        for(; i < 10; i++) {
+          let x;
+          x;
+          let y;
+          y;
+        }
+        """;
     inFunction(src, expected);
     usePseudoName = true; // same for usePseudoName = true code path
     inFunction(src, expected);
@@ -471,21 +482,23 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   public void test_doesNotUsePseudoName_coalesces_deletesUninitializedDeclInLoop() {
     usePseudoName = false;
     String src =
-        lines(
-            "for( var i = 0;i < 10; i++) {", //
-            "  const x = i;",
-            "  let y;", // safe to delete when coalesced
-            "  x;",
-            "  y = x;",
-            "}");
+        """
+        for( var i = 0;i < 10; i++) {
+          const x = i;
+          let y; // safe to delete when coalesced
+          x;
+          y = x;
+        }
+        """;
     String expected =
-        lines(
-            "var i = 0;", //
-            "for(; i < 10; i++) {",
-            "  var x = i;",
-            "  x;",
-            "  x = x;",
-            "}");
+        """
+        var i = 0;
+        for(; i < 10; i++) {
+          var x = i;
+          x;
+          x = x;
+        }
+        """;
     inFunction(src, expected);
   }
 
@@ -493,21 +506,23 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   public void test_usePseudoName_coalesces_deletesUninitializedDeclInLoop() {
     usePseudoName = true;
     String src =
-        lines(
-            "for( var i = 0;i < 10; i++) {", //
-            "  const x = i;",
-            "  let y;", // safe to delete when coalesced
-            "  x;",
-            "  y=x;",
-            "}");
+        """
+        for( var i = 0;i < 10; i++) {
+          const x = i;
+          let y; // safe to delete when coalesced
+          x;
+          y=x;
+        }
+        """;
     String expected =
-        lines(
-            "var i = 0;", //
-            "for(; i < 10; i++) {",
-            "  var x_y = i;",
-            "  x_y;",
-            "  x_y = x_y;",
-            "}");
+        """
+        var i = 0;
+        for(; i < 10; i++) {
+          var x_y = i;
+          x_y;
+          x_y = x_y;
+        }
+        """;
     inFunction(src, expected);
   }
 
@@ -515,24 +530,26 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   public void testUsePseudoName_forWithUninitializedLetInside2() {
     usePseudoName = true;
     String src =
-        lines(
-            "for( var i = 0;i < 10; i++) {",
-            "  let x;",
-            "  if(someExtern) {x=3}",
-            "  i; x;",
-            "}",
-            "const y = new Set();",
-            "i; y;");
+        """
+        for( var i = 0;i < 10; i++) {
+          let x;
+          if(someExtern) {x=3}
+          i; x;
+        }
+        const y = new Set();
+        i; y;
+        """;
     String expected =
-        lines(
-            "var i = 0;",
-            "for(; i < 10; i++) {",
-            "  var x_y = void 0;", // preserves "reset" before every iteration
-            "  if(someExtern) {x_y=3}",
-            "  i; x_y;",
-            "}",
-            "x_y = new Set();",
-            "i; x_y;");
+        """
+        var i = 0;
+        for(; i < 10; i++) {
+          var x_y = void 0; // preserves "reset" before every iteration
+          if(someExtern) {x_y=3}
+          i; x_y;
+        }
+        x_y = new Set();
+        i; x_y;
+        """;
     inFunction(src, expected);
   }
 
@@ -585,79 +602,85 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   @Test
   public void testCoalesceVarinStaticBlock() {
     test(
-        lines(
-            "function foo() {",
-            "   var x = 0;",
-            "   var y = 2;",
-            "   const C = class{",
-            "      static{",
-            "       print(x);",
-            "      }",
-            "   }",
-            "}"),
-        lines(
-            "function foo() {",
-            "   var x = 0;",
-            "   var y = 2;",
-            "   y = class{",
-            "     static{",
-            "      print(x);",
-            "     }",
-            "   }",
-            "}"));
+        """
+        function foo() {
+           var x = 0;
+           var y = 2;
+           const C = class{
+              static{
+               print(x);
+              }
+           }
+        }
+        """,
+        """
+        function foo() {
+           var x = 0;
+           var y = 2;
+           y = class{
+             static{
+              print(x);
+             }
+           }
+        }
+        """);
 
     test(
-        lines(
-            "function foo() {",
-            "   var x = 0;",
-            "   var y = 2;",
-            "   const C = class {",
-            "      function(){",
-            "       print(x);",
-            "      }",
-            "   }",
-            "}"),
-        lines(
-            "function foo() {",
-            "   var x = 0;",
-            "   var y = 2;",
-            "   y = class {",
-            "     function(){",
-            "      print(x);",
-            "     }",
-            "  }",
-            "}"));
+        """
+        function foo() {
+           var x = 0;
+           var y = 2;
+           const C = class {
+              function(){
+               print(x);
+              }
+           }
+        }
+        """,
+        """
+        function foo() {
+           var x = 0;
+           var y = 2;
+           y = class {
+             function(){
+              print(x);
+             }
+          }
+        }
+        """);
   }
 
   @Test
   public void testBug65688660() {
     test(
-        lines(
-            "function f(param) {",
-            "  if (true) {",
-            "    const b1 = [];",
-            "    for (const [key, value] of []) {}",
-            "  }",
-            "  if (true) {",
-            "    const b2 = [];",
-            "    for (const kv of []) {",
-            "      const key2 = kv.key;",
-            "    }",
-            "  }",
-            "}"),
-        lines(
-            "function f(param) {",
-            "  if (true) {",
-            "    param = [];",
-            "    for (const [key, value] of []) {}",
-            "  }",
-            "  if (true) {",
-            "    param = [];",
-            "    for (const kv of []) {",
-            "      param = kv.key;",
-            "    }",
-            "  }",
-            "}"));
+        """
+        function f(param) {
+          if (true) {
+            const b1 = [];
+            for (const [key, value] of []) {}
+          }
+          if (true) {
+            const b2 = [];
+            for (const kv of []) {
+              const key2 = kv.key;
+            }
+          }
+        }
+        """,
+        """
+        function f(param) {
+          if (true) {
+            param = [];
+            for (const [key, value] of []) {}
+          }
+          if (true) {
+            param = [];
+            for (const kv of []) {
+              param = kv.key;
+            }
+          }
+        }
+        """);
   }
 
   @Test
@@ -665,16 +688,17 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     // Verify that we don't wrongly merge "opt_a2" and "i" without considering
     // arguments[0] aliasing it.
     String src =
-        lines(
-            "function f(opt_a2){",
-            "  var buffer;",
-            "  if(opt_a2){",
-            "    var i=0;",
-            "    for(;i<arguments.length;i++)",
-            "      buffer=buffer+arguments[i];",
-            "  }",
-            "  return buffer;",
-            "}");
+        """
+        function f(opt_a2){
+          var buffer;
+          if(opt_a2){
+            var i=0;
+            for(;i<arguments.length;i++)
+              buffer=buffer+arguments[i];
+          }
+          return buffer;
+        }
+        """;
     testSame(src);
   }
 
@@ -689,12 +713,13 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   @Test
   public void testDontCoalesceClassDeclarationsWithConstDeclaration() {
     testSame(
-        lines(
-            "function f() {", // preserve newline
-            "  class A {}",
-            "  const b = {};",
-            "  return b;",
-            "}"));
+        """
+        function f() { // preserve newline
+          class A {}
+          const b = {};
+          return b;
+        }
+        """);
   }
 
   @Test
@@ -703,143 +728,156 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     // error by coalescing `B` and `C` without converting `class B {}` to a non-block-scoped
     // declaration.
     testSame(
-        lines(
-            "function f(obj) {",
-            "  class B {}",
-            "  console.log(B);",
-            "  const {default: C} = obj;",
-            "  return {obj, C};",
-            "}"));
+        """
+        function f(obj) {
+          class B {}
+          console.log(B);
+          const {default: C} = obj;
+          return {obj, C};
+        }
+        """);
   }
 
   @Test
   public void testObjDestructuringConst() {
     test(
-        lines(
-            "function f(obj) {",
-            "  {",
-            "    const {foo: foo} = obj;",
-            "    alert(foo);",
-            "  }",
-            "}"),
-        lines(
-            "function f(obj) {", //
-            "  {",
-            "    ({foo: obj} = obj);",
-            "    alert(obj);",
-            "  }",
-            "}"));
+        """
+        function f(obj) {
+          {
+            const {foo: foo} = obj;
+            alert(foo);
+          }
+        }
+        """,
+        """
+        function f(obj) {
+          {
+            ({foo: obj} = obj);
+            alert(obj);
+          }
+        }
+        """);
   }
 
   @Test
   public void testObjDestructuringConstWithMultipleDeclarations() {
     test(
-        lines(
-            "function f(obj) {",
-            "  {",
-            "    const {foo: foo} = obj;",
-            "    alert(foo);",
-            "  }",
-            "  {",
-            "    const {bar: bar} = obj;",
-            "    alert(bar);",
-            "  }",
-            "}"),
-        lines(
-            "function f(obj) {",
-            "  {",
-            "    const {foo: foo} = obj;",
-            "    alert(foo);",
-            "  }",
-            "  {",
-            "    ({bar: obj} = obj);",
-            "    alert(obj);",
-            "  }",
-            "}"));
+        """
+        function f(obj) {
+          {
+            const {foo: foo} = obj;
+            alert(foo);
+          }
+          {
+            const {bar: bar} = obj;
+            alert(bar);
+          }
+        }
+        """,
+        """
+        function f(obj) {
+          {
+            const {foo: foo} = obj;
+            alert(foo);
+          }
+          {
+            ({bar: obj} = obj);
+            alert(obj);
+          }
+        }
+        """);
   }
 
   @Test
   public void testObjDestructuringConstWithMultipleLvaluesInDecl() {
     testSame(
-        lines(
-            "function f() {",
-            "  const obj = {};",
-            "  const {prop1: foo, prop2: bar} = obj;",
-            "  alert(foo);",
-            "}"));
+        """
+        function f() {
+          const obj = {};
+          const {prop1: foo, prop2: bar} = obj;
+          alert(foo);
+        }
+        """);
   }
 
   @Test
   public void testObjDestructuringVar() {
     testSame(
-        lines(
-            "function f(param) {", //
-            "  var bar;",
-            "  ({prop1:param, prop2:bar} = param);",
-            "  alert(param);",
-            "}"));
+        """
+        function f(param) {
+          var bar;
+          ({prop1:param, prop2:bar} = param);
+          alert(param);
+        }
+        """);
   }
 
   @Test
   public void testObjDestructuringVarInAsyncFn() {
     testSame(
-        lines(
-            "async function f(param) {",
-            "  var bar;",
-            "  ({prop1:param, prop2:bar} = param);",
-            "  alert(param);",
-            "}"));
+        """
+        async function f(param) {
+          var bar;
+          ({prop1:param, prop2:bar} = param);
+          alert(param);
+        }
+        """);
   }
 
   @Test
   public void testObjDestructuringVarInGeneratorFn() {
     testSame(
-        lines(
-            "function *f(param) {",
-            "  var bar;",
-            "  ({prop1:param, prop2:bar} = param);",
-            "  alert(param);",
-            "}"));
+        """
+        function *f(param) {
+          var bar;
+          ({prop1:param, prop2:bar} = param);
+          alert(param);
+        }
+        """);
   }
 
   @Test
   public void testObjDestructuringVarInAsyncGeneratorFn() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     testSame(
-        lines(
-            "async function *f(param) {",
-            "  var bar;",
-            "  ({prop1:param, prop2:bar} = param);",
-            "  alert(param);",
-            "}"));
+        """
+        async function *f(param) {
+          var bar;
+          ({prop1:param, prop2:bar} = param);
+          alert(param);
+        }
+        """);
   }
 
   @Test
   public void testLetWithSingleLValuesInForLoopCoalesced() {
     test(
-        lines(
-            "function f(x) {", //
-            "  for (let y = x + 1;;) {",
-            "    alert(y);",
-            "  }",
-            "}"),
-        lines(
-            "function f(x) {", //
-            "  for (x = x + 1;;) {",
-            "    alert(x);",
-            "  }",
-            "}"));
+        """
+        function f(x) {
+          for (let y = x + 1;;) {
+            alert(y);
+          }
+        }
+        """,
+        """
+        function f(x) {
+          for (x = x + 1;;) {
+            alert(x);
+          }
+        }
+        """);
   }
 
   @Test
   public void testLetWithMultipleLValuesInForLoopNotCoalesced() {
     testSame(
-        lines(
-            "function f(x) {", //
-            "  for (let y = x + 1, z = 0;;) {",
-            "    alert(y + z);",
-            "  }",
-            "}"));
+        """
+        function f(x) {
+          for (let y = x + 1, z = 0;;) {
+            alert(y + z);
+          }
+        }
+        """);
   }
 
   @Test
@@ -867,11 +905,12 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     usePseudoName = true;
     inFunction(
         "let unused = 0; let arr = [1, 2, 3]; const [a, b, c] = arr; alert(a + b + c);",
-        lines(
-            "var arr_unused = 0;",
-            "arr_unused = [1, 2, 3];",
-            "const [a, b, c] = arr_unused;",
-            "alert(a + b + c);"));
+        """
+        var arr_unused = 0;
+        arr_unused = [1, 2, 3];
+        const [a, b, c] = arr_unused;
+        alert(a + b + c);
+        """);
   }
 
   @Test
@@ -886,125 +925,137 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   @Test
   public void testSpread_ofArray_consideredRead() {
     testSame(
-        lines(
-            "function f() {", //
-            "  var a = 9;",
-            "  var b = 6;",
-            "",
-            "  ([...a]);", // Read `a`.
-            "  return b;",
-            "}"));
+        """
+        function f() {
+          var a = 9;
+          var b = 6;
+
+          ([...a]); // Read `a`.
+          return b;
+        }
+        """);
 
     test(
-        lines(
-            "function f() {", //
-            "  var a = 9;",
-            "  read(a);",
-            "",
-            "  var b = 6;",
-            "  ([...b]);", // Read `b`.
-            "}"),
-        lines(
-            "function f() {", //
-            "  var a = 9;",
-            "  read(a);",
-            "",
-            "  a = 6;",
-            "  ([...a]);",
-            "}"));
+        """
+        function f() {
+          var a = 9;
+          read(a);
+
+          var b = 6;
+          ([...b]); // Read `b`.
+        }
+        """,
+        """
+        function f() {
+          var a = 9;
+          read(a);
+
+          a = 6;
+          ([...a]);
+        }
+        """);
   }
 
   @Test
   public void testSpread_ofObject_consideredRead() {
     testSame(
-        lines(
-            "function f() {", //
-            "  var a = 9;",
-            "  var b = 6;",
-            "",
-            "  ({...a});", // Read `a`.
-            "  return b;",
-            "}"));
+        """
+        function f() {
+          var a = 9;
+          var b = 6;
+
+          ({...a}); // Read `a`.
+          return b;
+        }
+        """);
 
     test(
-        lines(
-            "function f() {", //
-            "  var a = 9;",
-            "  read(a);",
-            "",
-            "  var b = 6;",
-            "  ({...b});", // Read `b`.
-            "}"),
-        lines(
-            "function f() {", //
-            "  var a = 9;",
-            "  read(a);",
-            "",
-            "  a = 6;",
-            "  ({...a});",
-            "}"));
+        """
+        function f() {
+          var a = 9;
+          read(a);
+
+          var b = 6;
+          ({...b}); // Read `b`.
+        }
+        """,
+        """
+        function f() {
+          var a = 9;
+          read(a);
+
+          a = 6;
+          ({...a});
+        }
+        """);
   }
 
   @Test
   public void testRest_fromArray_consideredWrite() {
     testSame(
-        lines(
-            "function f() {", //
-            "  var a = 9;",
-            "  var b = 6;",
-            "",
-            "  ([...a] = itr);", // Write `a`.
-            "  return b;",
-            "}"));
+        """
+        function f() {
+          var a = 9;
+          var b = 6;
+
+          ([...a] = itr); // Write `a`.
+          return b;
+        }
+        """);
 
     test(
-        lines(
-            "function f() {", //
-            "  var a = 9;",
-            "  read(a);",
-            "",
-            "  var b = 6;",
-            "  ([...b] = itr);", // Write `b`.
-            "}"),
-        lines(
-            "function f() {", //
-            "  var a = 9;",
-            "  read(a);",
-            "",
-            "  a = 6;",
-            "  ([...a] = itr);",
-            "}"));
+        """
+        function f() {
+          var a = 9;
+          read(a);
+
+          var b = 6;
+          ([...b] = itr); // Write `b`.
+        }
+        """,
+        """
+        function f() {
+          var a = 9;
+          read(a);
+
+          a = 6;
+          ([...a] = itr);
+        }
+        """);
   }
 
   @Test
   public void testRest_fromObject_consideredWrite() {
     testSame(
-        lines(
-            "function f() {", //
-            "  var a = 9;",
-            "  var b = 6;",
-            "",
-            "  ({...a} = obj);", // Write `a`.
-            "  return b;",
-            "}"));
+        """
+        function f() {
+          var a = 9;
+          var b = 6;
+
+          ({...a} = obj); // Write `a`.
+          return b;
+        }
+        """);
 
     test(
-        lines(
-            "function f() {", //
-            "  var a = 9;",
-            "  read(a);",
-            "",
-            "  var b = 6;",
-            "  ({...b} = itr);", // Write `b`.
-            "}"),
-        lines(
-            "function f() {", //
-            "  var a = 9;",
-            "  read(a);",
-            "",
-            "  a = 6;",
-            "  ({...a} = itr);",
-            "}"));
+        """
+        function f() {
+          var a = 9;
+          read(a);
+
+          var b = 6;
+          ({...b} = itr); // Write `b`.
+        }
+        """,
+        """
+        function f() {
+          var a = 9;
+          read(a);
+
+          a = 6;
+          ({...a} = itr);
+        }
+        """);
   }
 
   @Test
@@ -1019,14 +1070,15 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   @Test
   public void testCaptureLet() {
     testSame(
-        lines(
-            "function f(param) {",
-            "  for (let [key, val] of foo()) {",
-            "    param = (x) => { return val(x); };",
-            "  }",
-            "  let collidesWithKey = 5;",
-            "  return param(collidesWithKey);",
-            "}"));
+        """
+        function f(param) {
+          for (let [key, val] of foo()) {
+            param = (x) => { return val(x); };
+          }
+          let collidesWithKey = 5;
+          return param(collidesWithKey);
+        }
+        """);
   }
 
   // Compare to the earlier case. Since the two-lvalue declaration `var [key, val]` gets normalized
@@ -1034,31 +1086,38 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   @Test
   public void testCaptureVar() {
     test(
-        lines(
-            "function f(param) {",
-            "  for (var [key, val] of foo()) {",
-            "    param = (x) => { return val(x); };",
-            "  }",
-            "  let collidesWithKey = 5;",
-            "  return param(collidesWithKey);",
-            "}"),
-        lines(
-            "function f(param) {",
-            "  var key;",
-            "  var val;",
-            "  for ([key, val] of foo()) {",
-            "    param = (x) => { return val(x); };",
-            "  }",
-            "  key = 5;",
-            "  return param(key);",
-            "}"));
+        """
+        function f(param) {
+          for (var [key, val] of foo()) {
+            param = (x) => { return val(x); };
+          }
+          let collidesWithKey = 5;
+          return param(collidesWithKey);
+        }
+        """,
+        """
+        function f(param) {
+          var key;
+          var val;
+          for ([key, val] of foo()) {
+            param = (x) => { return val(x); };
+          }
+          key = 5;
+          return param(key);
+        }
+        """);
   }
 
   @Test
   public void testDestructuring() {
     testSame(
-        lines(
-            "function f() {", "  const [x, y] = foo(5);", "  let z = foo(x);", "  return x;", "}"));
+        """
+        function f() {
+          const [x, y] = foo(5);
+          let z = foo(x);
+          return x;
+        }
+        """);
   }
 
   @Test
@@ -1137,34 +1196,37 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   public void testBug1445366() {
     // An assignment might not be complete if the RHS throws an exception.
     inFunction(
-        lines(
-            "var iframe = getFrame();",
-            "try {",
-            "  var win = iframe.contentWindow;",
-            "} catch (e) {",
-            "} finally {",
-            "  if (win)",
-            "    this.setupWinUtil_();",
-            "  else",
-            "    this.load();",
-            "}"));
+        """
+        var iframe = getFrame();
+        try {
+          var win = iframe.contentWindow;
+        } catch (e) {
+        } finally {
+          if (win)
+            this.setupWinUtil_();
+          else
+            this.load();
+        }
+        """);
 
     // Verify that we can still coalesce it if there are no handlers.
     inFunction(
-        lines(
-            "var iframe = getFrame();",
-            "var win = iframe.contentWindow;",
-            "if (win)",
-            "  this.setupWinUtil_();",
-            "else",
-            "  this.load();"),
-        lines(
-            "var iframe = getFrame();",
-            "iframe = iframe.contentWindow;",
-            "if (iframe)",
-            "  this.setupWinUtil_();",
-            "else",
-            "  this.load();"));
+        """
+        var iframe = getFrame();
+        var win = iframe.contentWindow;
+        if (win)
+          this.setupWinUtil_();
+        else
+          this.load();
+        """,
+        """
+        var iframe = getFrame();
+        iframe = iframe.contentWindow;
+        if (iframe)
+          this.setupWinUtil_();
+        else
+          this.load();
+        """);
   }
 
   // Parameter 'e' is never used, but if we coalesce 'command' with 'e' then the 'if (command)'
@@ -1172,65 +1234,67 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   @Test
   public void testCannotReuseAnyParamsBug() {
     testSame(
-        lines(
-            "function handleKeyboardShortcut(e, key, isModifierPressed) {",
-            "  if (!isModifierPressed) {",
-            "    return false;",
-            "  }",
-            "  var command;",
-            "  switch (key) {",
-            "    case 'b': // Ctrl+B",
-            "      command = COMMAND.BOLD;",
-            "      break;",
-            "    case 'i': // Ctrl+I",
-            "      command = COMMAND.ITALIC;",
-            "      break;",
-            "    case 'u': // Ctrl+U",
-            "      command = COMMAND.UNDERLINE;",
-            "      break;",
-            "    case 's': // Ctrl+S",
-            "      return true;",
-            "  }",
-            "",
-            "  if (command) {",
-            "    this.fieldObject.execCommand(command);",
-            "    return true;",
-            "  }",
-            "",
-            "  return false;",
-            "};"));
+        """
+        function handleKeyboardShortcut(e, key, isModifierPressed) {
+          if (!isModifierPressed) {
+            return false;
+          }
+          var command;
+          switch (key) {
+            case 'b': // Ctrl+B
+              command = COMMAND.BOLD;
+              break;
+            case 'i': // Ctrl+I
+              command = COMMAND.ITALIC;
+              break;
+            case 'u': // Ctrl+U
+              command = COMMAND.UNDERLINE;
+              break;
+            case 's': // Ctrl+S
+              return true;
+          }
+
+          if (command) {
+            this.fieldObject.execCommand(command);
+            return true;
+          }
+
+          return false;
+        };
+        """);
   }
 
   @Test
   public void testCannotReuseAnyParamsBugWithDestructuring() {
     testSame(
-        lines(
-            "function handleKeyboardShortcut({type: type}, key, isModifierPressed) {",
-            "  if (!isModifierPressed) {",
-            "    return false;",
-            "  }",
-            "  var command;",
-            "  switch (key) {",
-            "    case 'b': // Ctrl+B",
-            "      command = COMMAND.BOLD;",
-            "      break;",
-            "    case 'i': // Ctrl+I",
-            "      command = COMMAND.ITALIC;",
-            "      break;",
-            "    case 'u': // Ctrl+U",
-            "      command = COMMAND.UNDERLINE;",
-            "      break;",
-            "    case 's': // Ctrl+S",
-            "      return true;",
-            "  }",
-            "",
-            "  if (command) {",
-            "    this.fieldObject.execCommand(command);",
-            "    return true;",
-            "  }",
-            "",
-            "  return false;",
-            "};"));
+        """
+        function handleKeyboardShortcut({type: type}, key, isModifierPressed) {
+          if (!isModifierPressed) {
+            return false;
+          }
+          var command;
+          switch (key) {
+            case 'b': // Ctrl+B
+              command = COMMAND.BOLD;
+              break;
+            case 'i': // Ctrl+I
+              command = COMMAND.ITALIC;
+              break;
+            case 'u': // Ctrl+U
+              command = COMMAND.UNDERLINE;
+              break;
+            case 's': // Ctrl+S
+              return true;
+          }
+
+          if (command) {
+            this.fieldObject.execCommand(command);
+            return true;
+          }
+
+          return false;
+        };
+        """);
   }
 
   @Test
@@ -1264,68 +1328,74 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         "var x_y = 1; var x_y$ = 0; print(x_y$);      x_y$ = 1; print(x_y$); print(x_y);");
 
     inFunction(
-        lines(
-            "var x_y = 1; ",
-            "function f() {",
-            "  var x    = 0;",
-            "  print(x  );",
-            "  var y = 1;",
-            "  print( y);",
-            "  print(x_y);",
-            "}"),
-        lines(
-            "function f(){",
-            "  var x_y$=0;",
-            "  print(x_y$);",
-            "  x_y$=1;",
-            "  print(x_y$);",
-            "  print(x_y)",
-            "}",
-            "var x_y=1"));
+        """
+        var x_y = 1;
+        function f() {
+          var x    = 0;
+          print(x  );
+          var y = 1;
+          print( y);
+          print(x_y);
+        }
+        """,
+        """
+        function f(){
+          var x_y$=0;
+          print(x_y$);
+          x_y$=1;
+          print(x_y$);
+          print(x_y)
+        }
+        var x_y=1
+        """);
 
     inFunction(
-        lines(
-            "var x   = 0;",
-            "print(x  );",
-            "var   y = 1;",
-            "print(  y); ",
-            "var closure_var;",
-            "function bar() {",
-            "  print(closure_var);",
-            "}"),
-        lines(
-            "function bar(){",
-            "  print(closure_var)",
-            "}",
-            "var x_y=0;",
-            "print(x_y);",
-            "x_y=1;",
-            "print(x_y);",
-            "var closure_var"));
+        """
+        var x   = 0;
+        print(x  );
+        var   y = 1;
+        print(  y);
+        var closure_var;
+        function bar() {
+          print(closure_var);
+        }
+        """,
+        """
+        function bar(){
+          print(closure_var)
+        }
+        var x_y=0;
+        print(x_y);
+        x_y=1;
+        print(x_y);
+        var closure_var
+        """);
   }
 
   @Test
   public void testUsePseudoNamesWithLets() {
     usePseudoName = true;
     inFunction(
-        lines(
-            "var x_y = 1; ",
-            "function f() {",
-            "  let x    = 0;",
-            "  print(x  );",
-            "  let y = 1;",
-            "  print( y);",
-            "  print(x_y);",
-            "}"),
-        lines(
-            "function f(){",
-            "  var x_y$=0;",
-            "  print(x_y$);",
-            "  x_y$ = 1;",
-            "  print(x_y$);",
-            "  print(x_y)",
-            "}",
-            "var x_y=1"));
+        """
+        var x_y = 1;
+        function f() {
+          let x    = 0;
+          print(x  );
+          let y = 1;
+          print( y);
+          print(x_y);
+        }
+        """,
+        """
+        function f(){
+          var x_y$=0;
+          print(x_y$);
+          x_y$ = 1;
+          print(x_y$);
+          print(x_y)
+        }
+        var x_y=1
+        """);
   }
 
   @Test
@@ -1384,24 +1454,26 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         "if(1) { var x = 0; x } else {     x = 0; x }");
 
     inFunction(
-        lines(
-            "if (a) {",
-            "   return a;",
-            " } else {",
-            "   let b = a;",
-            "   let c = 1;",
-            "   return c;",
-            " }",
-            " return a;"),
-        lines(
-            "if (a) {",
-            "    return a;",
-            "  } else {",
-            "    var b = a;",
-            "        b = 1;",
-            "    return b;",
-            "  }",
-            "  return a;"));
+        """
+        if (a) {
+           return a;
+         } else {
+           let b = a;
+           let c = 1;
+           return c;
+         }
+         return a;
+        """,
+        """
+        if (a) {
+            return a;
+          } else {
+            var b = a;
+                b = 1;
+            return b;
+          }
+          return a;
+        """);
   }
 
   @Test
@@ -1472,60 +1544,70 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   public void testCodeWithTwoFunctions() {
     // We only want to coalesce within a function, not across functions
     test(
-        lines(
-            "function FUNC1() {",
-            "  var x = 1; ",
-            "  var y = 2; ",
-            "          y; ",
-            "}",
-            "function FUNC2() {",
-            "  var z = 3; ",
-            "  var w = 4; ",
-            "          w; ",
-            "}"),
-        lines(
-            "function FUNC1() {",
-            "  var x = 1; ",
-            "      x = 2; ",
-            "          x; ",
-            "}",
-            "function FUNC2() {",
-            "  var z = 3; ",
-            "      z = 4; ",
-            "          z; ",
-            "}"));
+        """
+        function FUNC1() {
+          var x = 1;
+          var y = 2;
+                  y;
+        }
+        function FUNC2() {
+          var z = 3;
+          var w = 4;
+                  w;
+        }
+        """,
+        """
+        function FUNC1() {
+          var x = 1;
+              x = 2;
+                  x;
+        }
+        function FUNC2() {
+          var z = 3;
+              z = 4;
+                  z;
+        }
+        """);
 
     // Two arrow functions
     test(
-        lines("() => { var x = 1; var y = 2; y; };", "() => { var z = 3; var w = 4; w; };"),
-        lines("() => { var x = 1;     x = 2; x; };", "() => { var z = 3;     z = 4; z; };"));
+        """
+        () => { var x = 1; var y = 2; y; };
+        () => { var z = 3; var w = 4; w; };
+        """,
+        """
+        () => { var x = 1;     x = 2; x; };
+        () => { var z = 3;     z = 4; z; };
+        """);
   }
 
   @Test
   public void testNestedFunctionCoalescing() {
     test(
-        lines(
-            "function FUNC1() {",
-            "  var x = 1; ",
-            "  var y = 2; ",
-            "          y; ",
-            "  function FUNC2() {",
-            "    var z = 3; ",
-            "    var w = 4; ",
-            "            w; ",
-            "  }",
-            "}"),
-        lines(
-            "function FUNC1() {",
-            "  function FUNC2() {",
-            "    var z = 3;",
-            "        z = 4;",
-            "            z",
-            "  }",
-            "  var x = 1;",
-            "  x = 2;",
-            "  x",
-            "}"));
+        """
+        function FUNC1() {
+          var x = 1;
+          var y = 2;
+                  y;
+          function FUNC2() {
+            var z = 3;
+            var w = 4;
+                    w;
+          }
+        }
+        """,
+        """
+        function FUNC1() {
+          function FUNC2() {
+            var z = 3;
+                z = 4;
+                    z
+          }
+          var x = 1;
+          x = 2;
+          x
+        }
+        """);
   }
 
   private void inFunction(String src) {

@@ -22,7 +22,6 @@ import static com.google.javascript.jscomp.TypeMatchingStrategy.LOOSE;
 import static com.google.javascript.jscomp.TypeMatchingStrategy.STRICT_NULLABILITY;
 import static com.google.javascript.jscomp.TypeMatchingStrategy.SUBTYPES;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.TypeMatchingStrategy.MatchResult;
 import com.google.javascript.rhino.Node;
@@ -35,14 +34,14 @@ import org.junit.runners.JUnit4;
 public final class TypeMatchingStrategyTest {
 
   private static final String EXTERNS =
-      Joiner.on("\n")
-          .join(
-              "/** @constructor */",
-              "var OtherType = function() {};",
-              "/** @constructor */",
-              "var SuperType = function() {};",
-              "/** @constructor @extends {SuperType} */",
-              "var SubType = function() {};");
+      """
+      /** @constructor */
+      var OtherType = function() {};
+      /** @constructor */
+      var SuperType = function() {};
+      /** @constructor @extends {SuperType} */
+      var SubType = function() {};
+      """;
 
   @Test
   public void testMatch_default() {

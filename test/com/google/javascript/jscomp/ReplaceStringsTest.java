@@ -178,46 +178,50 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   @Test
   public void testThrowError3a() {
     testDebugStrings(
-        lines(
-            "/** @const */ var preposition = 'in';",
-            "/** @const */ var action = 'search';",
-            "/** @const */ var error = 'Unhandled ' + action;",
-            "throw Error(error + ' ' + type + ' ' + preposition + ' ' + search);"),
-        lines(
-            "/** @const */ var preposition = 'in';",
-            "/** @const */ var action = 'search';",
-            "/** @const */ var error = 'Unhandled ' + action;",
-            "throw Error('a' + '`' + type + '`' + search);"),
+        """
+        /** @const */ var preposition = 'in';
+        /** @const */ var action = 'search';
+        /** @const */ var error = 'Unhandled ' + action;
+        throw Error(error + ' ' + type + ' ' + preposition + ' ' + search);
+        """,
+        """
+        /** @const */ var preposition = 'in';
+        /** @const */ var action = 'search';
+        /** @const */ var error = 'Unhandled ' + action;
+        throw Error('a' + '`' + type + '`' + search);
+        """,
         (new String[] {"a", "Unhandled search ` in `"}));
   }
 
   @Test
   public void testThrowError4() {
     testDebugStrings(
-        lines(
-            "/** @constructor */",
-            "var A = function() {};",
-            "A.prototype.m = function(child) {",
-            "  if (this.haveChild(child)) {",
-            "    throw Error('Node: ' + this.getDataPath() +",
-            "                ' already has a child named ' + child);",
-            "  } else if (child.parentNode) {",
-            "    throw Error('Node: ' + child.getDataPath() +",
-            "                ' already has a parent');",
-            "  }",
-            "  child.parentNode = this;",
-            "};"),
-        lines(
-            "/** @constructor */",
-            "var A = function(){};",
-            "A.prototype.m = function(child) {",
-            "  if (this.haveChild(child)) {",
-            "    throw Error('a' + '`' + this.getDataPath() + '`' + child);",
-            "  } else if (child.parentNode) {",
-            "    throw Error('b' + '`' + child.getDataPath());",
-            "  }",
-            "  child.parentNode = this;",
-            "};"),
+        """
+        /** @constructor */
+        var A = function() {};
+        A.prototype.m = function(child) {
+          if (this.haveChild(child)) {
+            throw Error('Node: ' + this.getDataPath() +
+                        ' already has a child named ' + child);
+          } else if (child.parentNode) {
+            throw Error('Node: ' + child.getDataPath() +
+                        ' already has a parent');
+          }
+          child.parentNode = this;
+        };
+        """,
+        """
+        /** @constructor */
+        var A = function(){};
+        A.prototype.m = function(child) {
+          if (this.haveChild(child)) {
+            throw Error('a' + '`' + this.getDataPath() + '`' + child);
+          } else if (child.parentNode) {
+            throw Error('b' + '`' + child.getDataPath());
+          }
+          child.parentNode = this;
+        };
+        """,
         (new String[] {
           "a", "Node: ` already has a child named `", "b", "Node: ` already has a parent",
         }));
@@ -234,16 +238,18 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   @Test
   public void testThrowError_templateLiteralWithConstantTerms() {
     testDebugStrings(
-        lines(
-            "const preposition = 'in';",
-            "const action = 'search';",
-            "const error = `Unhandled ${action}`;",
-            "throw Error(`${error} ${'type ' + getType()} ${preposition} ${search}`);"),
-        lines(
-            "const preposition = 'in';",
-            "const action = 'search';",
-            "const error = `Unhandled ${action}`;",
-            "throw Error('a' + '`' + getType() + '`' + search);"),
+        """
+        const preposition = 'in';
+        const action = 'search';
+        const error = `Unhandled ${action}`;
+        throw Error(`${error} ${'type ' + getType()} ${preposition} ${search}`);
+        """,
+        """
+        const preposition = 'in';
+        const action = 'search';
+        const error = `Unhandled ${action}`;
+        throw Error('a' + '`' + getType() + '`' + search);
+        """,
         (new String[] {"a", "Unhandled search type ` in `"}));
   }
 
@@ -253,12 +259,14 @@ public final class ReplaceStringsTest extends CompilerTestCase {
     // since any transitive strings may have changed, and we certainly don't want to call functions
     // a second time.
     testDebugStrings(
-        lines(
-            "const error = `Unhandled ${action}`;",
-            "throw Error(`${error} ${type} in ${search}`);"),
-        lines(
-            "const error = `Unhandled ${action}`;",
-            "throw Error('a' + '`' + error + '`' + type + '`' + search);"),
+        """
+        const error = `Unhandled ${action}`;
+        throw Error(`${error} ${type} in ${search}`);
+        """,
+        """
+        const error = `Unhandled ${action}`;
+        throw Error('a' + '`' + error + '`' + type + '`' + search);
+        """,
         (new String[] {"a", "` ` in `"}));
   }
 

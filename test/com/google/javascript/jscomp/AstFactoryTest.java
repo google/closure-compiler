@@ -19,7 +19,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.AstFactory.type;
-import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import static org.junit.Assert.assertThrows;
@@ -433,11 +432,11 @@ public class AstFactoryTest {
 
     Node root =
         parseAndAddTypes(
-            lines(
-                "class C {", //
-                "  method() {}",
-                "}",
-                ""));
+            """
+            class C {
+              method() {}
+            }
+            """);
 
     Node classNode =
         root.getFirstChild() // script
@@ -460,11 +459,11 @@ public class AstFactoryTest {
 
     Node root =
         parseAndAddColors(
-            lines(
-                "class C {", //
-                "  method() {}",
-                "}",
-                ""));
+            """
+            class C {
+              method() {}
+            }
+            """);
 
     Node classNode =
         root.getFirstChild() // script
@@ -487,11 +486,11 @@ public class AstFactoryTest {
 
     Node root =
         parseAndAddTypes(
-            lines(
-                "class C {", //
-                "  static method() {}",
-                "}",
-                ""));
+            """
+            class C {
+              static method() {}
+            }
+            """);
 
     Node classNode =
         root.getFirstChild() // script
@@ -512,11 +511,11 @@ public class AstFactoryTest {
 
     Node root =
         parseAndAddColors(
-            lines(
-                "class C {", //
-                "  static method() {}",
-                "}",
-                ""));
+            """
+            class C {
+              static method() {}
+            }
+            """);
 
     Node classNode =
         root.getFirstChild() // script
@@ -537,11 +536,11 @@ public class AstFactoryTest {
 
     Node root =
         parseAndAddTypes(
-            lines(
-                "class C {", //
-                "  method() {}",
-                "}",
-                ""));
+            """
+            class C {
+              method() {}
+            }
+            """);
 
     Node classNode =
         root.getFirstChild() // script
@@ -560,11 +559,11 @@ public class AstFactoryTest {
 
     Node root =
         parseWithoutTypes(
-            lines(
-                "class C {", //
-                "  method() {}",
-                "}",
-                ""));
+            """
+            class C {
+              method() {}
+            }
+            """);
 
     Node classNode =
         root.getFirstChild() // script
@@ -1178,14 +1177,14 @@ public class AstFactoryTest {
 
     Node root =
         parseAndAddTypes(
-            lines(
-                "/**",
-                " * @param {string} arg1",
-                " * @param {number} arg2",
-                " * @return {string}",
-                " */",
-                "function foo() { return arg1; }",
-                ""));
+            """
+            /**
+             * @param {string} arg1
+             * @param {number} arg2
+             * @return {string}
+             */
+            function foo() { return arg1; }
+            """);
     Scope scope = getScope(root);
 
     // foo("hi", 2112)
@@ -1206,14 +1205,14 @@ public class AstFactoryTest {
 
     Node root =
         parseAndAddColors(
-            lines(
-                "/**",
-                " * @param {string} arg1",
-                " * @param {number} arg2",
-                " * @return {string}",
-                " */",
-                "function foo() { return arg1; }",
-                ""));
+            """
+            /**
+             * @param {string} arg1
+             * @param {number} arg2
+             * @return {string}
+             */
+            function foo() { return arg1; }
+            """);
     Scope scope = getScope(root);
 
     // foo("hi", 2112)
@@ -1234,14 +1233,14 @@ public class AstFactoryTest {
 
     Node root =
         parseAndAddTypes(
-            lines(
-                "/**",
-                " * @param {string} arg1",
-                " * @param {number} arg2",
-                " * @return {string}",
-                " */",
-                "function foo() { return arg1; }",
-                ""));
+            """
+            /**
+             * @param {string} arg1
+             * @param {number} arg2
+             * @return {string}
+             */
+            function foo() { return arg1; }
+            """);
     Scope scope = getScope(root);
 
     // foo("hi", 2112)
@@ -1261,16 +1260,17 @@ public class AstFactoryTest {
     AstFactory astFactory = createTestAstFactory();
 
     parseAndAddTypes(
-        lines(
-            "class Foo {",
-            "  /**",
-            "   * @param {string} arg1",
-            "   * @param {number} arg2",
-            "   * @return {string}",
-            "   */",
-            "  method(arg1, arg2) { return arg1; }",
-            "}",
-            "const foo = new Foo();"));
+        """
+        class Foo {
+          /**
+           * @param {string} arg1
+           * @param {number} arg2
+           * @return {string}
+           */
+          method(arg1, arg2) { return arg1; }
+        }
+        const foo = new Foo();
+        """);
     StaticScope scope = compiler.getTranspilationNamespace();
 
     // createQName only accepts globally qualified qnames. foo.method is a prototype method access.
@@ -1284,15 +1284,16 @@ public class AstFactoryTest {
     AstFactory astFactory = createTestAstFactory();
 
     parseAndAddTypes(
-        lines(
-            "class Foo {",
-            "  /**",
-            "   * @param {string} arg1",
-            "   * @param {number} arg2",
-            "   * @return {string}",
-            "   */",
-            "  static method(arg1, arg2) { return arg1; }",
-            "}"));
+        """
+        class Foo {
+          /**
+           * @param {string} arg1
+           * @param {number} arg2
+           * @return {string}
+           */
+          static method(arg1, arg2) { return arg1; }
+        }
+        """);
     StaticScope scope = compiler.getTranspilationNamespace();
 
     // createQName only accepts globally qualified qnames. While Foo.method is a global qualified
@@ -1336,14 +1337,13 @@ public class AstFactoryTest {
     AstFactory astFactory = createTestAstFactory();
 
     parseAndAddTypes(
-        lines(
-            "", //
-            "const obj = {",
-            "  inner: {",
-            "    str: 'hi',",
-            "  }",
-            "};",
-            ""));
+        """
+        const obj = {
+          inner: {
+            str: 'hi',
+          }
+        };
+        """);
     StaticScope scope = compiler.getTranspilationNamespace();
 
     Node objDotInnerDotStr = astFactory.createQName(scope, "obj.inner.str");
@@ -1362,14 +1362,13 @@ public class AstFactoryTest {
     AstFactory astFactory = createTestAstFactory();
 
     parseAndAddTypes(
-        lines(
-            "", //
-            "const obj = {",
-            "  inner: {",
-            "    str: 'hi',",
-            "  }",
-            "};",
-            ""));
+        """
+        const obj = {
+          inner: {
+            str: 'hi',
+          }
+        };
+        """);
     StaticScope scope = compiler.getTranspilationNamespace();
 
     Node objDotInnerDotStr = astFactory.createQName(scope, "obj", ImmutableList.of("inner", "str"));
@@ -1409,14 +1408,13 @@ public class AstFactoryTest {
     AstFactory astFactory = createTestAstFactory();
 
     parseAndAddTypes(
-        lines(
-            "", //
-            "const obj = {",
-            "  inner: {",
-            "    str: 'hi',",
-            "  }",
-            "};",
-            ""));
+        """
+        const obj = {
+          inner: {
+            str: 'hi',
+          }
+        };
+        """);
 
     Node objDotInnerDotStr =
         astFactory.createQName(compiler.getTranspilationNamespace(), "obj", "inner", "str");
@@ -1493,9 +1491,10 @@ public class AstFactoryTest {
 
     Node root =
         parseAndAddTypes(
-            lines(
-                "class A {}", //
-                "class B extends A {}"));
+            """
+            class A {}
+            class B extends A {}
+            """);
 
     Node classBNode =
         root.getFirstChild() // script node
@@ -1644,19 +1643,18 @@ public class AstFactoryTest {
     // to compare types with
     Node root =
         parseAndAddTypes(
-            lines(
-                "",
-                "class C {",
-                "  /** @return {number} */",
-                "  foo() {",
-                // TODO(b/118435472): compiler should be able to infer the return type
-                "    /**",
-                "     * @return {number}",
-                "     */",
-                "    const orig = () => 1;", // new arrow function exactly like this one
-                "  }",
-                "}",
-                ""));
+            """
+            class C {
+              /** @return {number} */
+              foo() {
+            // TODO(b/118435472): compiler should be able to infer the return type
+                /**
+                 * @return {number}
+                 */
+                const orig = () => 1; // new arrow function exactly like this one
+              }
+            }
+            """);
 
     Node existingArrowFunctionNode =
         root.getFirstChild() // script
@@ -1975,9 +1973,10 @@ public class AstFactoryTest {
 
     Node classNode =
         parseAndAddTypes(
-                lines(
-                    "class Example { constructor(arg0, arg1) {} }", //
-                    "new Example(0, 1);"))
+                """
+                class Example { constructor(arg0, arg1) {} }
+                new Example(0, 1);
+                """)
             .getFirstChild() // Script
             .getFirstChild(); // class
 
@@ -2005,9 +2004,10 @@ public class AstFactoryTest {
 
     Node classNode =
         parseAndAddColors(
-                lines(
-                    "class Example { constructor(arg0, arg1) {} }", //
-                    "new Example(0, 1);"))
+                """
+                class Example { constructor(arg0, arg1) {} }
+                new Example(0, 1);
+                """)
             .getFirstChild() // Script
             .getFirstChild(); // class
 

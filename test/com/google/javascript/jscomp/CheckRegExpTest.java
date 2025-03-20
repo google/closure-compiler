@@ -123,14 +123,15 @@ public final class CheckRegExpTest extends CompilerTestCase {
 
     // Class property is also OK.
     testReference(
-        lines(
-            "class x {",
-            "  constructor() {this.RegExp = {};}",
-            "  method() {",
-            "    this.RegExp.$1;",
-            "    this.RegExp.test();",
-            "  }",
-            "}"),
+        """
+        class x {
+          constructor() {this.RegExp = {};}
+          method() {
+            this.RegExp.$1;
+            this.RegExp.test();
+          }
+        }
+        """,
         false);
   }
 

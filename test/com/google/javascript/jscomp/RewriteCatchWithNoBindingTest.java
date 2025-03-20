@@ -70,20 +70,22 @@ public class RewriteCatchWithNoBindingTest extends CompilerTestCase {
   public void transpileCatchWithoutBinding() {
     Sources srcs =
         srcs(
-            lines(
-                "try {", //
-                "  stuff();",
-                "} catch {",
-                "  onError();",
-                "}"));
+            """
+            try {
+              stuff();
+            } catch {
+              onError();
+            }
+            """);
     Expected originalExpected =
         expected(
-            lines(
-                "try {", //
-                "  stuff();",
-                "} catch (UNUSED_CATCH$0) {",
-                "  onError();",
-                "}"));
+            """
+            try {
+              stuff();
+            } catch (UNUSED_CATCH$0) {
+              onError();
+            }
+            """);
     rewriteCatchTest(srcs, originalExpected);
     assertThat(getLastCompiler().getAllowableFeatures().contains(Feature.OPTIONAL_CATCH_BINDING))
         .isFalse();
@@ -93,28 +95,30 @@ public class RewriteCatchWithNoBindingTest extends CompilerTestCase {
   public void transpileCatchWithNoBindingNested() {
     Sources srcs =
         srcs(
-            lines(
-                "try {", //
-                "  stuff();",
-                "} catch {",
-                "  try {",
-                "    onError();",
-                "  } catch {",
-                "    shruggie();",
-                "  }",
-                "}"));
+            """
+            try {
+              stuff();
+            } catch {
+              try {
+                onError();
+              } catch {
+                shruggie();
+              }
+            }
+            """);
     Expected originalExpected =
         expected(
-            lines(
-                "try {", //
-                "  stuff();",
-                "} catch (UNUSED_CATCH$1) {",
-                "  try {",
-                "    onError();",
-                "  } catch (UNUSED_CATCH$0) {",
-                "    shruggie();",
-                "  }",
-                "}"));
+            """
+            try {
+              stuff();
+            } catch (UNUSED_CATCH$1) {
+              try {
+                onError();
+              } catch (UNUSED_CATCH$0) {
+                shruggie();
+              }
+            }
+            """);
     rewriteCatchTest(srcs, originalExpected);
   }
 
@@ -122,20 +126,22 @@ public class RewriteCatchWithNoBindingTest extends CompilerTestCase {
   public void typeOfAddedBindingIsUnknown() {
     Sources srcs =
         srcs(
-            lines(
-                "try {", //
-                "  stuff();",
-                "} catch {",
-                "  onError();",
-                "}"));
+            """
+            try {
+              stuff();
+            } catch {
+              onError();
+            }
+            """);
     Expected originalExpected =
         expected(
-            lines(
-                "try {", //
-                "  stuff();",
-                "} catch (UNUSED_CATCH$0) {",
-                "  onError();",
-                "}"));
+            """
+            try {
+              stuff();
+            } catch (UNUSED_CATCH$0) {
+              onError();
+            }
+            """);
     rewriteCatchTest(srcs, originalExpected);
 
     Node binding =
@@ -154,11 +160,12 @@ public class RewriteCatchWithNoBindingTest extends CompilerTestCase {
   @Test
   public void noTranspileCatchWithBinding() {
     testSame(
-        lines(
-            "try {", //
-            "  stuff();",
-            "} catch (err) {",
-            "  onError(err);",
-            "}"));
+        """
+        try {
+          stuff();
+        } catch (err) {
+          onError(err);
+        }
+        """);
   }
 }

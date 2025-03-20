@@ -82,23 +82,25 @@ public final class UnusedLocalsCheckTest extends CompilerTestCase {
   @Test
   public void testAliasInModule() {
     testSame(
-        lines(
-            "goog.module('m');",
-            "const x = goog.require('x');",
-            "const y = x.y;",
-            "/** @type {y} */ var z;",
-            "alert(z);"));
+        """
+        goog.module('m');
+        const x = goog.require('x');
+        const y = x.y;
+        /** @type {y} */ var z;
+        alert(z);
+        """);
   }
 
   @Test
   public void testAliasInES6Module() {
     testSame(
-        lines(
-            "import 'm';",
-            "import x from 'x';",
-            "export const y = x.y;",
-            "export /** @type {y} */ var z;",
-            "alert(z);"));
+        """
+        import 'm';
+        import x from 'x';
+        export const y = x.y;
+        export /** @type {y} */ var z;
+        alert(z);
+        """);
   }
 
   @Test
@@ -109,7 +111,11 @@ public final class UnusedLocalsCheckTest extends CompilerTestCase {
 
   @Test
   public void testExportedType() {
-    testSame(lines("export class Foo {}", "export /** @type {Foo} */ var y;"));
+    testSame(
+        """
+        export class Foo {}
+        export /** @type {Foo} */ var y;
+        """);
   }
 
   /** Inside a goog.scope, don't warn because the alias might be used in a type annotation. */
@@ -252,40 +258,44 @@ public final class UnusedLocalsCheckTest extends CompilerTestCase {
     assertNoWarning("var x = 0; function f() { return x += 1; }");
     assertNoWarning("var x = 0; var f = () => x += 1;");
     assertNoWarning(
-        lines(
-            "function f(elapsed) {",
-            "  let fakeMs = 0;",
-            "  stubs.replace(Date, 'now', () => fakeMs += elapsed);",
-            "}"));
+        """
+        function f(elapsed) {
+          let fakeMs = 0;
+          stubs.replace(Date, 'now', () => fakeMs += elapsed);
+        }
+        """);
     assertNoWarning(
-        lines(
-            "function f(elapsed) {",
-            "  let fakeMs = 0;",
-            "  stubs.replace(Date, 'now', () => fakeMs -= elapsed);",
-            "}"));
+        """
+        function f(elapsed) {
+          let fakeMs = 0;
+          stubs.replace(Date, 'now', () => fakeMs -= elapsed);
+        }
+        """);
   }
 
   @Test
   public void testUnusedCompoundAssign_withES6Modules() {
     assertNoWarning(
-        lines(
-            "export function f(elapsed) {",
-            "  let fakeMs = 0;",
-            "  stubs.replace(Date, 'now', () => fakeMs -= elapsed);",
-            "}"));
+        """
+        export function f(elapsed) {
+          let fakeMs = 0;
+          stubs.replace(Date, 'now', () => fakeMs -= elapsed);
+        }
+        """);
   }
 
   @Test
   public void testChainedAssign() {
     assertNoWarning("var a, b = 0, c; a = b = c; alert(a);");
     assertUnused(
-        lines(
-            "function foo() {",
-            "  var a, b = 0, c;",
-            "  a = b = c;",
-            "  alert(a); ",
-            "}",
-            "foo();"));
+        """
+        function foo() {
+          var a, b = 0, c;
+          a = b = c;
+          alert(a);
+        }
+        foo();
+        """);
   }
 
   @Test
@@ -346,13 +356,14 @@ public final class UnusedLocalsCheckTest extends CompilerTestCase {
   @Test
   public void testGoogModule_forwardDeclare() {
     assertNoWarning(
-        lines(
-            "goog.module('example');",
-            "",
-            "var X = goog.forwardDeclare('foo.X');",
-            "",
-            "/** @type {X} */ var x = 0;",
-            "alert(x);"));
+        """
+        goog.module('example');
+
+        var X = goog.forwardDeclare('foo.X');
+
+        /** @type {X} */ var x = 0;
+        alert(x);
+        """);
 
     assertNoWarning("goog.module('example'); var X = goog.forwardDeclare('foo.X');");
   }

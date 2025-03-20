@@ -58,16 +58,17 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         .addMath()
         .addExtra(
             // stubs of runtime libraries
-            lines(
-                "/** @const */",
-                "var $jscomp = {};",
-                "$jscomp.generator = {};",
-                "$jscomp.generator.createGenerator = function() {};",
-                "/** @constructor */",
-                "$jscomp.generator.Context = function() {};",
-                "/** @constructor */",
-                "$jscomp.generator.Context.PropertyIterator = function() {};",
-                "$jscomp.asyncExecutePromiseGeneratorFunction = function(program) {};"));
+            """
+            /** @const */
+            var $jscomp = {};
+            $jscomp.generator = {};
+            $jscomp.generator.createGenerator = function() {};
+            /** @constructor */
+            $jscomp.generator.Context = function() {};
+            /** @constructor */
+            $jscomp.generator.Context.PropertyIterator = function() {};
+            $jscomp.asyncExecutePromiseGeneratorFunction = function(program) {};
+            """);
   }
 
   @Override
@@ -175,82 +176,94 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test("class C { constructor() {} }", "/** @constructor */ var C = function() {};");
     test(
         "class C { method() {}; }",
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "C.prototype.method = function() {};"));
+        """
+        /** @constructor */
+        var C = function() {};
+        C.prototype.method = function() {};
+        """);
     test(
         "class C { constructor(a) { this.a = a; } }",
         "/** @constructor */ var C = function(a) { this.a = a; };");
 
     test(
         "class C { constructor() {} foo() {} }",
-        lines("/** @constructor */", "var C = function() {};", "C.prototype.foo = function() {};"));
+        """
+        /** @constructor */
+        var C = function() {};
+        C.prototype.foo = function() {};
+        """);
 
     test(
         "class C { constructor() {}; foo() {}; bar() {} }",
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "C.prototype.foo = function() {};",
-            "C.prototype.bar = function() {};"));
+        """
+        /** @constructor */
+        var C = function() {};
+        C.prototype.foo = function() {};
+        C.prototype.bar = function() {};
+        """);
 
     test(
         "class C { foo() {}; bar() {} }",
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "C.prototype.foo = function() {};",
-            "C.prototype.bar = function() {};"));
+        """
+        /** @constructor */
+        var C = function() {};
+        C.prototype.foo = function() {};
+        C.prototype.bar = function() {};
+        """);
 
     test(
-        lines(
-            "class C {",
-            "  constructor(a) { this.a = a; }",
-            "",
-            "  foo() { console.log(this.a); }",
-            "",
-            "  bar() { alert(this.a); }",
-            "}"),
-        lines(
-            "/** @constructor */",
-            "var C = function(a) { this.a = a; };",
-            "C.prototype.foo = function() { console.log(this.a); };",
-            "C.prototype.bar = function() { alert(this.a); };"));
+        """
+        class C {
+          constructor(a) { this.a = a; }
+
+          foo() { console.log(this.a); }
+
+          bar() { alert(this.a); }
+        }
+        """,
+        """
+        /** @constructor */
+        var C = function(a) { this.a = a; };
+        C.prototype.foo = function() { console.log(this.a); };
+        C.prototype.bar = function() { alert(this.a); };
+        """);
 
     rewriteUniqueIdAndTest(
         srcs(
-            lines(
-                "if (true) {", //
-                "   class Foo{}",
-                "} else {",
-                "   class Foo{}",
-                "}")),
+            """
+            if (true) {
+               class Foo{}
+            } else {
+               class Foo{}
+            }
+            """),
         expected(
-            lines(
-                "if (true) {",
-                "    /** @constructor */",
-                "    var Foo = function() {};",
-                "} else {",
-                "    /** @constructor */",
-                "    var Foo$jscomp$1 = function() {};",
-                "}")));
+            """
+            if (true) {
+                /** @constructor */
+                var Foo = function() {};
+            } else {
+                /** @constructor */
+                var Foo$jscomp$1 = function() {};
+            }
+            """));
   }
 
   @Test
   public void testAnonymousSuper() {
     test(
         "f(class extends D { f() { super.g() } })",
-        lines(
-            "/** @constructor @const",
-            " * @extends {D}",
-            " */",
-            "var testcode$classdecl$var0 = function() {",
-            "  return D.apply(this,arguments) || this; ",
-            "};",
-            "$jscomp.inherits(testcode$classdecl$var0, D);",
-            "testcode$classdecl$var0.prototype.f = function() { D.prototype.g.call(this); };",
-            "f(testcode$classdecl$var0)"));
+        """
+        /** @constructor @const
+         * @extends {D}
+         */
+        var testcode$classdecl$var0 = function() {
+          return D.apply(this,arguments) || this;
+        };
+        $jscomp.inherits(testcode$classdecl$var0, D);
+        testcode$classdecl$var0.prototype.f = function() { D.prototype.g.call(this); };
+        f(testcode$classdecl$var0)
+        """);
   }
 
   @Test
@@ -281,71 +294,76 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   @Test
   public void testInterfaceWithJsDoc() {
     test(
-        lines(
-            "/**",
-            " * Converts Xs to Ys.",
-            " * @interface",
-            " */",
-            "class Converter {",
-            "  /**",
-            "   * @param {X} x",
-            "   * @return {Y}",
-            "   */",
-            "  convert(x) {}",
-            "}"),
-        lines(
-            "/**",
-            " * Converts Xs to Ys.",
-            " * @interface",
-            " */",
-            "var Converter = function() { };",
-            "",
-            "/**",
-            " * @param {X} x",
-            " * @return {Y}",
-            " */",
-            "Converter.prototype.convert = function(x) {};"));
+        """
+        /**
+         * Converts Xs to Ys.
+         * @interface
+         */
+        class Converter {
+          /**
+           * @param {X} x
+           * @return {Y}
+           */
+          convert(x) {}
+        }
+        """,
+        """
+        /**
+         * Converts Xs to Ys.
+         * @interface
+         */
+        var Converter = function() { };
+
+        /**
+         * @param {X} x
+         * @return {Y}
+         */
+        Converter.prototype.convert = function(x) {};
+        """);
   }
 
   @Test
   public void testRecordWithJsDoc() {
     test(
-        lines(
-            "/**",
-            " * @record",
-            " */",
-            "class Converter {",
-            "  /**",
-            "   * @param {X} x",
-            "   * @return {Y}",
-            "   */",
-            "  convert(x) {}",
-            "}"),
-        lines(
-            "/**",
-            " * @record",
-            " */",
-            "var Converter = function() { };",
-            "",
-            "/**",
-            " * @param {X} x",
-            " * @return {Y}",
-            " */",
-            "Converter.prototype.convert = function(x) {};"));
+        """
+        /**
+         * @record
+         */
+        class Converter {
+          /**
+           * @param {X} x
+           * @return {Y}
+           */
+          convert(x) {}
+        }
+        """,
+        """
+        /**
+         * @record
+         */
+        var Converter = function() { };
+
+        /**
+         * @param {X} x
+         * @return {Y}
+         */
+        Converter.prototype.convert = function(x) {};
+        """);
   }
 
   @Test
   public void testMemberWithJsDoc() {
     test(
         "class C { /** @param {boolean} b */ foo(b) {} }",
-        lines(
-            "/**",
-            " * @constructor",
-            " */",
-            "var C = function() {};",
-            "",
-            "/** @param {boolean} b */",
-            "C.prototype.foo = function(b) {};"));
+        """
+        /**
+         * @constructor
+         */
+        var C = function() {};
+
+        /** @param {boolean} b */
+        C.prototype.foo = function(b) {};
+        """);
   }
 
   @Test
@@ -362,25 +380,31 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
     test(
         "var C = class { foo() {} }",
-        lines("/** @constructor */ var C = function() {}", "", "C.prototype.foo = function() {}"));
+        """
+        /** @constructor */ var C = function() {}
+
+        C.prototype.foo = function() {}
+        """);
 
     test(
         "var C = class C { }",
-        lines(
-            "/** @constructor @const */",
-            "var testcode$classdecl$var0 = function() {};",
-            "/** @constructor */",
-            "var C = testcode$classdecl$var0;"));
+        """
+        /** @constructor @const */
+        var testcode$classdecl$var0 = function() {};
+        /** @constructor */
+        var C = testcode$classdecl$var0;
+        """);
 
     test(
         "var C = class C { foo() {} }",
-        lines(
-            "/** @constructor @const */",
-            "var testcode$classdecl$var0 = function() {}",
-            "testcode$classdecl$var0.prototype.foo = function() {};",
-            "",
-            "/** @constructor */",
-            "var C = testcode$classdecl$var0;"));
+        """
+        /** @constructor @const */
+        var testcode$classdecl$var0 = function() {}
+        testcode$classdecl$var0.prototype.foo = function() {};
+
+        /** @constructor */
+        var C = testcode$classdecl$var0;
+        """);
   }
 
   /** Class expressions that are the RHS of an assignment. */
@@ -390,35 +414,39 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
     test(
         "goog.example.C = class { foo() {} }",
-        lines(
-            "/** @constructor */ goog.example.C = function() {}",
-            "goog.example.C.prototype.foo = function() {};"));
+        """
+        /** @constructor */ goog.example.C = function() {}
+        goog.example.C.prototype.foo = function() {};
+        """);
   }
 
   @Test
   public void testClassExpressionInAssignment_getElem() {
     test(
         "window['MediaSource'] = class {};",
-        lines(
-            "/** @constructor @const */",
-            "var testcode$classdecl$var0 = function() {};",
-            "window['MediaSource'] = testcode$classdecl$var0;"));
+        """
+        /** @constructor @const */
+        var testcode$classdecl$var0 = function() {};
+        window['MediaSource'] = testcode$classdecl$var0;
+        """);
   }
 
   @Test
   public void testClassExpression() {
     test(
         "var C = new (class {})();",
-        lines(
-            "/** @constructor @const */",
-            "var testcode$classdecl$var0=function(){};",
-            "var C=new testcode$classdecl$var0"));
+        """
+        /** @constructor @const */
+        var testcode$classdecl$var0=function(){};
+        var C=new testcode$classdecl$var0
+        """);
     test(
         "(condition ? obj1 : obj2).prop = class C { };",
-        lines(
-            "/** @constructor @const */",
-            "var testcode$classdecl$var0 = function(){};",
-            "(condition ? obj1 : obj2).prop = testcode$classdecl$var0;"));
+        """
+        /** @constructor @const */
+        var testcode$classdecl$var0 = function(){};
+        (condition ? obj1 : obj2).prop = testcode$classdecl$var0;
+        """);
   }
 
   @Test
@@ -435,487 +463,521 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   public void testClassExpression_cannotConvert() {
     test(
         "var C = new (foo || (foo = class { }))();",
-        lines(
-            "var JSCompiler_temp$jscomp$0;",
-            "if (JSCompiler_temp$jscomp$0 = foo) {",
-            "} else {",
-            "  /** @const @constructor */ var testcode$classdecl$var0 = function(){};",
-            "  JSCompiler_temp$jscomp$0 = foo = testcode$classdecl$var0;",
-            "}",
-            "var C = new JSCompiler_temp$jscomp$0;"));
+        """
+        var JSCompiler_temp$jscomp$0;
+        if (JSCompiler_temp$jscomp$0 = foo) {
+        } else {
+          /** @const @constructor */ var testcode$classdecl$var0 = function(){};
+          JSCompiler_temp$jscomp$0 = foo = testcode$classdecl$var0;
+        }
+        var C = new JSCompiler_temp$jscomp$0;
+        """);
   }
 
   @Test
   public void testExtends() {
     test(
         "class D {} class C extends D {}",
-        lines(
-            "/** @constructor */",
-            "var D = function() {};",
-            "/** @constructor",
-            " * @extends {D}",
-            " */",
-            "var C = function() { D.apply(this, arguments); };",
-            "$jscomp.inherits(C, D);"));
+        """
+        /** @constructor */
+        var D = function() {};
+        /** @constructor
+         * @extends {D}
+         */
+        var C = function() { D.apply(this, arguments); };
+        $jscomp.inherits(C, D);
+        """);
     assertThat(getLastCompiler().getInjected())
         .containsExactly("es6/util/inherits", "es6/util/construct", "es6/util/arrayfromiterable");
 
     test(
         "class D {} class C extends D { constructor() { super(); } }",
-        lines(
-            "/** @constructor */",
-            "var D = function() {};",
-            "/** @constructor @extends {D} */",
-            "var C = function() {",
-            "  D.call(this);",
-            "}",
-            "$jscomp.inherits(C, D);"));
+        """
+        /** @constructor */
+        var D = function() {};
+        /** @constructor @extends {D} */
+        var C = function() {
+          D.call(this);
+        }
+        $jscomp.inherits(C, D);
+        """);
 
     test(
         "class D {} class C extends D { constructor(str) { super(str); } }",
-        lines(
-            "/** @constructor */",
-            "var D = function() {};",
-            "/** @constructor @extends {D} */",
-            "var C = function(str) { ",
-            "  D.call(this, str);",
-            "}",
-            "$jscomp.inherits(C, D);"));
+        """
+        /** @constructor */
+        var D = function() {};
+        /** @constructor @extends {D} */
+        var C = function(str) {
+          D.call(this, str);
+        }
+        $jscomp.inherits(C, D);
+        """);
 
     test(
         "class C extends ns.D { }",
-        lines(
-            "/** @constructor",
-            " * @extends {ns.D}",
-            " */",
-            "var C = function() {",
-            " return ns.D.apply(this, arguments) || this;",
-            "};",
-            "$jscomp.inherits(C, ns.D);"));
+        """
+        /** @constructor
+         * @extends {ns.D}
+         */
+        var C = function() {
+         return ns.D.apply(this, arguments) || this;
+        };
+        $jscomp.inherits(C, ns.D);
+        """);
   }
 
   @Test
   public void testExtendNonNativeError() {
     test(
-        lines(
-            "class Error {",
-            "  /** @param {string} msg */",
-            "  constructor(msg) {",
-            "    /** @const */ this.message = msg;",
-            "  }",
-            "}",
-            "class C extends Error {}"), // autogenerated constructor
-        lines(
-            "/** @constructor",
-            " */",
-            "var Error = function(msg) {",
-            "  /** @const */ this.message = msg;",
-            "};",
-            "/** @constructor",
-            " * @extends {Error}",
-            " */",
-            "var C = function() { Error.apply(this, arguments); };",
-            "$jscomp.inherits(C, Error);"));
+        """
+        class Error {
+          /** @param {string} msg */
+          constructor(msg) {
+            /** @const */ this.message = msg;
+          }
+        }
+        class C extends Error {}
+        """, // autogenerated constructor
+        """
+        /** @constructor
+         */
+        var Error = function(msg) {
+          /** @const */ this.message = msg;
+        };
+        /** @constructor
+         * @extends {Error}
+         */
+        var C = function() { Error.apply(this, arguments); };
+        $jscomp.inherits(C, Error);
+        """);
     test(
-        lines(
-            "",
-            "class Error {",
-            "  /** @param {string} msg */",
-            "  constructor(msg) {",
-            "    /** @const */ this.message = msg;",
-            "  }",
-            "}",
-            "class C extends Error {",
-            "  constructor() {",
-            "    super('C error');", // explicit super() call
-            "  }",
-            "}"),
-        lines(
-            "/** @constructor",
-            " */",
-            "var Error = function(msg) {",
-            "  /** @const */ this.message = msg;",
-            "};",
-            "/** @constructor",
-            " * @extends {Error}",
-            " */",
-            "var C = function() { Error.call(this, 'C error'); };",
-            "$jscomp.inherits(C, Error);"));
+        """
+        class Error {
+          /** @param {string} msg */
+          constructor(msg) {
+            /** @const */ this.message = msg;
+          }
+        }
+        class C extends Error {
+          constructor() {
+            super('C error'); // explicit super() call
+          }
+        }
+        """,
+        """
+        /** @constructor
+         */
+        var Error = function(msg) {
+          /** @const */ this.message = msg;
+        };
+        /** @constructor
+         * @extends {Error}
+         */
+        var C = function() { Error.call(this, 'C error'); };
+        $jscomp.inherits(C, Error);
+        """);
   }
 
   @Test
   public void testExtendNativeError() {
     test(
         "class C extends Error {}", // autogenerated constructor
-        lines(
-            "/** @constructor",
-            " * @extends {Error}",
-            " */",
-            "var C = function() {",
-            "  var $jscomp$tmp$error$m1146332801$1;",
-            "  $jscomp$tmp$error$m1146332801$1 = Error.apply(this, arguments),",
-            "      this.message = $jscomp$tmp$error$m1146332801$1.message,",
-            "      ('stack' in $jscomp$tmp$error$m1146332801$1) && (this.stack ="
-                + " $jscomp$tmp$error$m1146332801$1.stack),",
-            "      this;",
-            "};",
-            "$jscomp.inherits(C, Error);"));
+        """
+/** @constructor
+ * @extends {Error}
+ */
+var C = function() {
+  var $jscomp$tmp$error$m1146332801$1;
+  $jscomp$tmp$error$m1146332801$1 = Error.apply(this, arguments),
+      this.message = $jscomp$tmp$error$m1146332801$1.message,
+      ('stack' in $jscomp$tmp$error$m1146332801$1) && (this.stack = $jscomp$tmp$error$m1146332801$1.stack),
+      this;
+};
+$jscomp.inherits(C, Error);
+""");
     test(
-        lines(
-            "",
-            "class C extends Error {",
-            "  constructor() {",
-            "    var self = super('C error') || this;", // explicit super() call in an expression
-            "  }",
-            "}"),
-        lines(
-            "/** @constructor",
-            " * @extends {Error}",
-            " */",
-            "var C = function() {",
-            "  var $jscomp$tmp$error$m1146332801$1;",
-            "  var self =",
-            "      ($jscomp$tmp$error$m1146332801$1 = Error.call(this, 'C error'),",
-            "          this.message = $jscomp$tmp$error$m1146332801$1.message,",
-            "          ('stack' in $jscomp$tmp$error$m1146332801$1) && (this.stack ="
-                + " $jscomp$tmp$error$m1146332801$1.stack),",
-            "          this)",
-            "      || this;",
-            "};",
-            "$jscomp.inherits(C, Error);"));
+        """
+        class C extends Error {
+          constructor() {
+            var self = super('C error') || this; // explicit super() call in an expression
+          }
+        }
+        """,
+        """
+/** @constructor
+ * @extends {Error}
+ */
+var C = function() {
+  var $jscomp$tmp$error$m1146332801$1;
+  var self =
+      ($jscomp$tmp$error$m1146332801$1 = Error.call(this, 'C error'),
+          this.message = $jscomp$tmp$error$m1146332801$1.message,
+          ('stack' in $jscomp$tmp$error$m1146332801$1) && (this.stack = $jscomp$tmp$error$m1146332801$1.stack),
+          this)
+      || this;
+};
+$jscomp.inherits(C, Error);
+""");
   }
 
   @Test
   public void testDynamicExtends() {
     test(
         "class C extends foo() {}",
-        lines(
-            "/** @const */ var testcode$classextends$var0 = foo();",
-            "/** @constructor @extends {testcode$classextends$var0} */",
-            "var C = function() {",
-            "  return testcode$classextends$var0.apply(this, arguments) || this;",
-            "};",
-            "$jscomp.inherits(C, testcode$classextends$var0);"));
+        """
+        /** @const */ var testcode$classextends$var0 = foo();
+        /** @constructor @extends {testcode$classextends$var0} */
+        var C = function() {
+          return testcode$classextends$var0.apply(this, arguments) || this;
+        };
+        $jscomp.inherits(C, testcode$classextends$var0);
+        """);
 
     test(
         "class C extends function(){} {}",
-        lines(
-            "/** @const */ var testcode$classextends$var0 = function(){};",
-            "/** @constructor @extends {testcode$classextends$var0} */",
-            "var C = function() {",
-            "  testcode$classextends$var0.apply(this, arguments);",
-            "};",
-            "$jscomp.inherits(C, testcode$classextends$var0);"));
+        """
+        /** @const */ var testcode$classextends$var0 = function(){};
+        /** @constructor @extends {testcode$classextends$var0} */
+        var C = function() {
+          testcode$classextends$var0.apply(this, arguments);
+        };
+        $jscomp.inherits(C, testcode$classextends$var0);
+        """);
   }
 
   @Test
   public void testExtendsInterface() {
     test(
-        lines(
-            "/** @interface */",
-            "class D {",
-            "  f() {}",
-            "}",
-            "/** @interface */",
-            "class C extends D {",
-            "  g() {}",
-            "}"),
-        lines(
-            "/** @interface */",
-            "var D = function() {};",
-            "D.prototype.f = function() {};",
-            "/**",
-            " * @interface",
-            " * @extends{D} */",
-            "var C = function() {};",
-            "$jscomp.inherits(C, D);",
-            "C.prototype.g = function() {};"));
+        """
+        /** @interface */
+        class D {
+          f() {}
+        }
+        /** @interface */
+        class C extends D {
+          g() {}
+        }
+        """,
+        """
+        /** @interface */
+        var D = function() {};
+        D.prototype.f = function() {};
+        /**
+         * @interface
+         * @extends{D} */
+        var C = function() {};
+        $jscomp.inherits(C, D);
+        C.prototype.g = function() {};
+        """);
   }
 
   @Test
   public void testExtendsRecord() {
     test(
-        lines(
-            "/** @record */",
-            "class D {",
-            "  f() {}",
-            "}",
-            "/** @record */",
-            "class C extends D {",
-            "  g() {}",
-            "}"),
-        lines(
-            "/** @record */",
-            "var D = function() {};",
-            "D.prototype.f = function() {};",
-            "/**",
-            " * @record",
-            " * @extends{D} */",
-            "var C = function() {};",
-            "$jscomp.inherits(C, D);",
-            "C.prototype.g = function() {};"));
+        """
+        /** @record */
+        class D {
+          f() {}
+        }
+        /** @record */
+        class C extends D {
+          g() {}
+        }
+        """,
+        """
+        /** @record */
+        var D = function() {};
+        D.prototype.f = function() {};
+        /**
+         * @record
+         * @extends{D} */
+        var C = function() {};
+        $jscomp.inherits(C, D);
+        C.prototype.g = function() {};
+        """);
   }
 
   @Test
   public void testImplementsInterface() {
     test(
-        lines(
-            "/** @interface */",
-            "class D {",
-            "  f() {}",
-            "}",
-            "/** @implements {D} */",
-            "class C {",
-            "  f() {console.log('hi');}",
-            "}"),
-        lines(
-            "/** @interface */",
-            "var D = function() {};",
-            "D.prototype.f = function() {};",
-            "/** @constructor @implements{D} */",
-            "var C = function() {};",
-            "C.prototype.f = function() {console.log('hi');};"));
+        """
+        /** @interface */
+        class D {
+          f() {}
+        }
+        /** @implements {D} */
+        class C {
+          f() {console.log('hi');}
+        }
+        """,
+        """
+        /** @interface */
+        var D = function() {};
+        D.prototype.f = function() {};
+        /** @constructor @implements{D} */
+        var C = function() {};
+        C.prototype.f = function() {console.log('hi');};
+        """);
   }
 
   @Test
   public void testSuperCall() {
     test(
         "class D {} class C extends D { constructor() { super(); } }",
-        lines(
-            "/** @constructor */",
-            "var D = function() {};",
-            "/** @constructor @extends {D} */",
-            "var C = function() {",
-            "  D.call(this);",
-            "}",
-            "$jscomp.inherits(C, D);"));
+        """
+        /** @constructor */
+        var D = function() {};
+        /** @constructor @extends {D} */
+        var C = function() {
+          D.call(this);
+        }
+        $jscomp.inherits(C, D);
+        """);
 
     test(
         "class D {} class C extends D { constructor(str) { super(str); } }",
-        lines(
-            "/** @constructor */",
-            "var D = function() {}",
-            "/** @constructor @extends {D} */",
-            "var C = function(str) {",
-            "  D.call(this,str);",
-            "}",
-            "$jscomp.inherits(C, D);"));
+        """
+        /** @constructor */
+        var D = function() {}
+        /** @constructor @extends {D} */
+        var C = function(str) {
+          D.call(this,str);
+        }
+        $jscomp.inherits(C, D);
+        """);
 
     test(
         "class D {} class C extends D { constructor(str, n) { super(str); this.n = n; } }",
-        lines(
-            "/** @constructor */",
-            "var D = function() {}",
-            "/** @constructor @extends {D} */",
-            "var C = function(str, n) {",
-            "  D.call(this,str);",
-            "  this.n = n;",
-            "}",
-            "$jscomp.inherits(C, D);"));
+        """
+        /** @constructor */
+        var D = function() {}
+        /** @constructor @extends {D} */
+        var C = function(str, n) {
+          D.call(this,str);
+          this.n = n;
+        }
+        $jscomp.inherits(C, D);
+        """);
 
     test(
-        lines(
-            "class D {}",
-            "class C extends D {",
-            "  constructor() { }",
-            "  foo() { return super.foo(); }",
-            "}"),
-        lines(
-            "/** @constructor */",
-            "var D = function() {}",
-            "/** @constructor @extends {D} */",
-            "var C = function() { }",
-            "$jscomp.inherits(C, D);",
-            "C.prototype.foo = function() {",
-            "  return D.prototype.foo.call(this);",
-            "}"));
+        """
+        class D {}
+        class C extends D {
+          constructor() { }
+          foo() { return super.foo(); }
+        }
+        """,
+        """
+        /** @constructor */
+        var D = function() {}
+        /** @constructor @extends {D} */
+        var C = function() { }
+        $jscomp.inherits(C, D);
+        C.prototype.foo = function() {
+          return D.prototype.foo.call(this);
+        }
+        """);
 
     test(
-        lines(
-            "class D {}",
-            "class C extends D {",
-            "  constructor() {}",
-            "  foo(bar) { return super.foo(bar); }",
-            "}"),
-        lines(
-            "/** @constructor */",
-            "var D = function() {}",
-            "/** @constructor @extends {D} */",
-            "var C = function() {};",
-            "$jscomp.inherits(C, D);",
-            "C.prototype.foo = function(bar) {",
-            "  return D.prototype.foo.call(this, bar);",
-            "}"));
+        """
+        class D {}
+        class C extends D {
+          constructor() {}
+          foo(bar) { return super.foo(bar); }
+        }
+        """,
+        """
+        /** @constructor */
+        var D = function() {}
+        /** @constructor @extends {D} */
+        var C = function() {};
+        $jscomp.inherits(C, D);
+        C.prototype.foo = function(bar) {
+          return D.prototype.foo.call(this, bar);
+        }
+        """);
 
     test(
         "class C { method() { class D extends C { constructor() { super(); }}}}",
-        lines(
-            "/** @constructor */",
-            "var C = function() {}",
-            "C.prototype.method = function() {",
-            "  /** @constructor @extends{C} */",
-            "  var D = function() {",
-            "    C.call(this);",
-            "  }",
-            "  $jscomp.inherits(D, C);",
-            "};"));
+        """
+        /** @constructor */
+        var C = function() {}
+        C.prototype.method = function() {
+          /** @constructor @extends{C} */
+          var D = function() {
+            C.call(this);
+          }
+          $jscomp.inherits(D, C);
+        };
+        """);
   }
 
   @Test
   public void testSuperKnownNotToChangeThis() {
     test(
-        lines(
-            "class D {",
-            "  /** @param {string} str */",
-            "  constructor(str) {",
-            "    this.str = str;",
-            "    return;", // Empty return should not trigger this-changing behavior.
-            "  }",
-            "}",
-            "class C extends D {",
-            "  /**",
-            "   * @param {string} str",
-            "   * @param {number} n",
-            "   */",
-            "  constructor(str, n) {",
-            // This is nuts, but confirms that super() used in an expression works.
-            "    super(str).n = n;",
-            // Also confirm that an existing empty return is handled correctly.
-            "    return;",
-            "  }",
-            "}"),
-        lines(
-            "/**",
-            " * @constructor",
-            " */",
-            "var D = function(str) {",
-            "  this.str = str;",
-            "  return;",
-            "}",
-            "/**",
-            " * @constructor @extends {D}",
-            " */",
-            "var C = function(str, n) {",
-            "  (D.call(this,str), this).n = n;", // super() returns `this`.
-            "  return;",
-            "}",
-            "$jscomp.inherits(C, D);"));
+        """
+        class D {
+          /** @param {string} str */
+          constructor(str) {
+            this.str = str;
+            return; // Empty return should not trigger this-changing behavior.
+          }
+        }
+        class C extends D {
+          /**
+           * @param {string} str
+           * @param {number} n
+           */
+          constructor(str, n) {
+        // This is nuts, but confirms that super() used in an expression works.
+            super(str).n = n;
+        // Also confirm that an existing empty return is handled correctly.
+            return;
+          }
+        }
+        """,
+        """
+        /**
+         * @constructor
+         */
+        var D = function(str) {
+          this.str = str;
+          return;
+        }
+        /**
+         * @constructor @extends {D}
+         */
+        var C = function(str, n) {
+          (D.call(this,str), this).n = n; // super() returns `this`.
+          return;
+        }
+        $jscomp.inherits(C, D);
+        """);
   }
 
   @Test
   public void testSuperMightChangeThis() {
     // Class D is unknown, so we must assume its constructor could change `this`.
     test(
-        lines(
-            "class C extends D {",
-            "  constructor(str, n) {",
-            // This is nuts, but confirms that super() used in an expression works.
-            "    super(str).n = n;",
-            // Also confirm that an existing empty return is handled correctly.
-            "    return;",
-            "  }",
-            "}"),
-        lines(
-            "/** @constructor @extends {D} */",
-            "var C = function(str, n) {",
-            "  var $jscomp$super$this$m1146332801$0;",
-            "  ($jscomp$super$this$m1146332801$0 = D.call(this,str) || this).n = n;",
-            "  return $jscomp$super$this$m1146332801$0;", // Duplicate because of existing return
-            // statement.
-            "  return $jscomp$super$this$m1146332801$0;",
-            "}",
-            "$jscomp.inherits(C, D);"));
+        """
+        class C extends D {
+          constructor(str, n) {
+        // This is nuts, but confirms that super() used in an expression works.
+            super(str).n = n;
+        // Also confirm that an existing empty return is handled correctly.
+            return;
+          }
+        }
+        """,
+        """
+        /** @constructor @extends {D} */
+        var C = function(str, n) {
+          var $jscomp$super$this$m1146332801$0;
+          ($jscomp$super$this$m1146332801$0 = D.call(this,str) || this).n = n;
+          return $jscomp$super$this$m1146332801$0; // Duplicate because of existing return
+        // statement.
+          return $jscomp$super$this$m1146332801$0;
+        }
+        $jscomp.inherits(C, D);
+        """);
   }
 
   @Test
   public void testAlternativeSuperCalls() {
     test(
-        lines(
-            "class D {",
-            "  /** @param {string} name */",
-            "  constructor(name) {",
-            "    this.name = name;",
-            "  }",
-            "}",
-            "class C extends D {",
-            "  /** @param {string} str",
-            "   * @param {number} n */",
-            "  constructor(str, n) {",
-            "    if (n >= 0) {",
-            "      super('positive: ' + str);",
-            "    } else {",
-            "      super('negative: ' + str);",
-            "    }",
-            "    this.n = n;",
-            "  }",
-            "}"),
-        lines(
-            "/** @constructor */",
-            "var D = function(name) {",
-            "  this.name = name;",
-            "}",
-            "/** @constructor @extends {D} */",
-            "var C = function(str, n) {",
-            "  if (n >= 0) {",
-            "    D.call(this, 'positive: ' + str);",
-            "  } else {",
-            "    D.call(this, 'negative: ' + str);",
-            "  }",
-            "  this.n = n;",
-            "}",
-            "$jscomp.inherits(C, D);"));
+        """
+        class D {
+          /** @param {string} name */
+          constructor(name) {
+            this.name = name;
+          }
+        }
+        class C extends D {
+          /** @param {string} str
+           * @param {number} n */
+          constructor(str, n) {
+            if (n >= 0) {
+              super('positive: ' + str);
+            } else {
+              super('negative: ' + str);
+            }
+            this.n = n;
+          }
+        }
+        """,
+        """
+        /** @constructor */
+        var D = function(name) {
+          this.name = name;
+        }
+        /** @constructor @extends {D} */
+        var C = function(str, n) {
+          if (n >= 0) {
+            D.call(this, 'positive: ' + str);
+          } else {
+            D.call(this, 'negative: ' + str);
+          }
+          this.n = n;
+        }
+        $jscomp.inherits(C, D);
+        """);
 
     // Class being extended is unknown, so we must assume super() could change the value of `this`.
     test(
-        lines(
-            "class C extends D {",
-            "  /** @param {string} str",
-            "   * @param {number} n */",
-            "  constructor(str, n) {",
-            "    if (n >= 0) {",
-            "      super('positive: ' + str);",
-            "    } else {",
-            "      super('negative: ' + str);",
-            "    }",
-            "    this.n = n;",
-            "  }",
-            "}"),
-        lines(
-            "/** @constructor @extends {D} */",
-            "var C = function(str, n) {",
-            "  var $jscomp$super$this$m1146332801$0;",
-            "  if (n >= 0) {",
-            "    $jscomp$super$this$m1146332801$0 = D.call(this, 'positive: ' + str) || this;",
-            "  } else {",
-            "    $jscomp$super$this$m1146332801$0 = D.call(this, 'negative: ' + str) || this;",
-            "  }",
-            "  $jscomp$super$this$m1146332801$0.n = n;",
-            "  return $jscomp$super$this$m1146332801$0;",
-            "}",
-            "$jscomp.inherits(C, D);"));
+        """
+        class C extends D {
+          /** @param {string} str
+           * @param {number} n */
+          constructor(str, n) {
+            if (n >= 0) {
+              super('positive: ' + str);
+            } else {
+              super('negative: ' + str);
+            }
+            this.n = n;
+          }
+        }
+        """,
+        """
+        /** @constructor @extends {D} */
+        var C = function(str, n) {
+          var $jscomp$super$this$m1146332801$0;
+          if (n >= 0) {
+            $jscomp$super$this$m1146332801$0 = D.call(this, 'positive: ' + str) || this;
+          } else {
+            $jscomp$super$this$m1146332801$0 = D.call(this, 'negative: ' + str) || this;
+          }
+          $jscomp$super$this$m1146332801$0.n = n;
+          return $jscomp$super$this$m1146332801$0;
+        }
+        $jscomp.inherits(C, D);
+        """);
   }
 
   @Test
   public void testComputedSuper() {
     test(
-        lines(
-            "class Foo {",
-            "  ['m']() { return 1; }",
-            "}",
-            "",
-            "class Bar extends Foo {",
-            "  ['m']() {",
-            "    return super['m']() + 1;",
-            "  }",
-            "}"),
-        lines(
-            "/** @constructor */",
-            "var Foo = function() {};",
-            "Foo.prototype['m'] = function() { return 1; };",
-            "/** @constructor @extends {Foo} */",
-            "var Bar = function() { Foo.apply(this, arguments); };",
-            "$jscomp.inherits(Bar, Foo);",
-            "Bar.prototype['m'] = function () { return Foo.prototype['m'].call(this) + 1; };"));
+        """
+        class Foo {
+          ['m']() { return 1; }
+        }
+
+        class Bar extends Foo {
+          ['m']() {
+            return super['m']() + 1;
+          }
+        }
+        """,
+        """
+        /** @constructor */
+        var Foo = function() {};
+        Foo.prototype['m'] = function() { return 1; };
+        /** @constructor @extends {Foo} */
+        var Bar = function() { Foo.apply(this, arguments); };
+        $jscomp.inherits(Bar, Foo);
+        Bar.prototype['m'] = function () { return Foo.prototype['m'].call(this) + 1; };
+        """);
   }
 
   @Test
@@ -923,38 +985,40 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     test(
-        lines(
-            "class Base {",
-            "  method() {",
-            "    return 5;",
-            "  }",
-            "}",
-            "",
-            "class Subclass extends Base {",
-            "  constructor() {",
-            "    super();",
-            "  }",
-            "",
-            "  get x() {",
-            "    return super.method();",
-            "  }",
-            "}"),
-        lines(
-            "/** @constructor */",
-            "var Base = function() {};",
-            "Base.prototype.method = function() { return 5; };",
-            "",
-            "/** @constructor @extends {Base} */",
-            "var Subclass = function() { Base.call(this); };",
-            "",
-            "$jscomp.inherits(Subclass, Base);",
-            "$jscomp.global.Object.defineProperties(Subclass.prototype, {",
-            "  x: {",
-            "    configurable:true,",
-            "    enumerable:true,",
-            "    get: function() { return Base.prototype.method.call(this); },",
-            "  }",
-            "});"));
+        """
+        class Base {
+          method() {
+            return 5;
+          }
+        }
+
+        class Subclass extends Base {
+          constructor() {
+            super();
+          }
+
+          get x() {
+            return super.method();
+          }
+        }
+        """,
+        """
+        /** @constructor */
+        var Base = function() {};
+        Base.prototype.method = function() { return 5; };
+
+        /** @constructor @extends {Base} */
+        var Subclass = function() { Base.call(this); };
+
+        $jscomp.inherits(Subclass, Base);
+        $jscomp.global.Object.defineProperties(Subclass.prototype, {
+          x: {
+            configurable:true,
+            enumerable:true,
+            get: function() { return Base.prototype.method.call(this); },
+          }
+        });
+        """);
   }
 
   @Test
@@ -962,80 +1026,83 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     test(
-        lines(
-            "class Base {",
-            "  method() {",
-            "    this._x = 5;",
-            "  }",
-            "}",
-            "",
-            "class Subclass extends Base {",
-            "  constructor() {",
-            "    super();",
-            "  }",
-            "",
-            "  set x(value) {",
-            "    super.method();",
-            "  }",
-            "}"),
-        lines(
-            "/** @constructor */",
-            "var Base = function() {};",
-            "Base.prototype.method = function() { this._x = 5; };",
-            "",
-            "/** @constructor @extends {Base} */",
-            "var Subclass = function() { Base.call(this); };",
-            "",
-            "$jscomp.inherits(Subclass, Base);",
-            "$jscomp.global.Object.defineProperties(Subclass.prototype, {",
-            "  x: {",
-            "    configurable:true,",
-            "    enumerable:true,",
-            "    set: function(value) { Base.prototype.method.call(this); },",
-            "  }",
-            "});"));
+        """
+        class Base {
+          method() {
+            this._x = 5;
+          }
+        }
+
+        class Subclass extends Base {
+          constructor() {
+            super();
+          }
+
+          set x(value) {
+            super.method();
+          }
+        }
+        """,
+        """
+        /** @constructor */
+        var Base = function() {};
+        Base.prototype.method = function() { this._x = 5; };
+
+        /** @constructor @extends {Base} */
+        var Subclass = function() { Base.call(this); };
+
+        $jscomp.inherits(Subclass, Base);
+        $jscomp.global.Object.defineProperties(Subclass.prototype, {
+          x: {
+            configurable:true,
+            enumerable:true,
+            set: function(value) { Base.prototype.method.call(this); },
+          }
+        });
+        """);
   }
 
   @Test
   public void testExtendNativeClass() {
     test(
-        lines(
-            "class FooPromise extends Promise {",
-            "  /** @param {string} msg */",
-            // explicit constructor
-            "  constructor(callback, msg) {",
-            "    super(callback);",
-            "    this.msg = msg;",
-            "  }",
-            "}"),
-        lines(
-            "/**",
-            " * @constructor",
-            " * @extends {Promise}",
-            " */",
-            "var FooPromise = function(callback, msg) {",
-            "  var $jscomp$super$this$m1146332801$0;",
-            "  $jscomp$super$this$m1146332801$0 = $jscomp.construct(Promise, [callback],"
-                + " this.constructor)",
-            "  $jscomp$super$this$m1146332801$0.msg = msg;",
-            "  return $jscomp$super$this$m1146332801$0;",
-            "}",
-            "$jscomp.inherits(FooPromise, Promise);",
-            ""));
+        """
+        class FooPromise extends Promise {
+          /** @param {string} msg */
+        // explicit constructor
+          constructor(callback, msg) {
+            super(callback);
+            this.msg = msg;
+          }
+        }
+        """,
+        """
+/**
+ * @constructor
+ * @extends {Promise}
+ */
+var FooPromise = function(callback, msg) {
+  var $jscomp$super$this$m1146332801$0;
+  $jscomp$super$this$m1146332801$0 = $jscomp.construct(Promise, [callback], this.constructor)
+  $jscomp$super$this$m1146332801$0.msg = msg;
+  return $jscomp$super$this$m1146332801$0;
+}
+$jscomp.inherits(FooPromise, Promise);
+
+""");
 
     test(
         // automatically generated constructor
         "class FooPromise extends Promise {}",
-        lines(
-            "/**",
-            " * @constructor",
-            " * @extends {Promise}",
-            " */",
-            "var FooPromise = function() {",
-            "  return $jscomp.construct(Promise, arguments, this.constructor)",
-            "}",
-            "$jscomp.inherits(FooPromise, Promise);",
-            ""));
+        """
+        /**
+         * @constructor
+         * @extends {Promise}
+         */
+        var FooPromise = function() {
+          return $jscomp.construct(Promise, arguments, this.constructor)
+        }
+        $jscomp.inherits(FooPromise, Promise);
+        """);
   }
 
   @Test
@@ -1044,33 +1111,36 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     // the `Object()` constructor in place of `super()`. Just replace `super()` with `this` instead.
     // Test both explicit and automatically generated constructors.
     test(
-        lines(
-            "class Foo extends Object {",
-            "  /** @param {string} msg */",
-            "  constructor(msg) {",
-            "    super();",
-            "    this.msg = msg;",
-            "  }",
-            "}"),
-        lines(
-            "/**",
-            " * @constructor @extends {Object}",
-            " */",
-            "var Foo = function(msg) {",
-            "  this;", // super() replaced with its return value
-            "  this.msg = msg;",
-            "};",
-            "$jscomp.inherits(Foo, Object);"));
+        """
+        class Foo extends Object {
+          /** @param {string} msg */
+          constructor(msg) {
+            super();
+            this.msg = msg;
+          }
+        }
+        """,
+        """
+        /**
+         * @constructor @extends {Object}
+         */
+        var Foo = function(msg) {
+          this; // super() replaced with its return value
+          this.msg = msg;
+        };
+        $jscomp.inherits(Foo, Object);
+        """);
     test(
         "class Foo extends Object {}",
-        lines(
-            "/**",
-            " * @constructor @extends {Object}",
-            " */",
-            "var Foo = function() {",
-            "  this;", // super.apply(this, arguments) replaced with its return value
-            "};",
-            "$jscomp.inherits(Foo, Object);"));
+        """
+        /**
+         * @constructor @extends {Object}
+         */
+        var Foo = function() {
+          this; // super.apply(this, arguments) replaced with its return value
+        };
+        $jscomp.inherits(Foo, Object);
+        """);
   }
 
   @Test
@@ -1091,83 +1161,90 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 .addMath()
                 .addExtra(
                     // stubs of runtime libraries
-                    lines(
-                        "/** @const */",
-                        "var $jscomp = {};",
-                        "$jscomp.generator = {};",
-                        "$jscomp.generator.createGenerator = function() {};",
-                        "/** @constructor */",
-                        "$jscomp.generator.Context = function() {};",
-                        "/** @constructor */",
-                        "$jscomp.generator.Context.PropertyIterator = function() {};",
-                        "$jscomp.asyncExecutePromiseGeneratorFunction = function(program) {};"))
+                    """
+                    /** @const */
+                    var $jscomp = {};
+                    $jscomp.generator = {};
+                    $jscomp.generator.createGenerator = function() {};
+                    /** @constructor */
+                    $jscomp.generator.Context = function() {};
+                    /** @constructor */
+                    $jscomp.generator.Context.PropertyIterator = function() {};
+                    $jscomp.asyncExecutePromiseGeneratorFunction = function(program) {};
+                    """)
                 .build());
     test(
         customExterns,
         srcs(
-            lines(
-                "class Object {}",
-                "class Foo extends Object {",
-                "  /** @param {string} msg */",
-                "  constructor(msg) {",
-                "    super();",
-                "    this.msg = msg;",
-                "  }",
-                "}")),
+            """
+            class Object {}
+            class Foo extends Object {
+              /** @param {string} msg */
+              constructor(msg) {
+                super();
+                this.msg = msg;
+              }
+            }
+            """),
         expected(
-            lines(
-                "/**",
-                " * @constructor",
-                " */",
-                "var Object = function() {",
-                "};",
-                "/**",
-                " * @constructor @extends {Object}",
-                " */",
-                "var Foo = function(msg) {",
-                "  Object.call(this);",
-                "  this.msg = msg;",
-                "};",
-                "$jscomp.inherits(Foo, Object);")));
+            """
+            /**
+             * @constructor
+             */
+            var Object = function() {
+            };
+            /**
+             * @constructor @extends {Object}
+             */
+            var Foo = function(msg) {
+              Object.call(this);
+              this.msg = msg;
+            };
+            $jscomp.inherits(Foo, Object);
+            """));
     test(
         customExterns,
         srcs(
-            lines(
-                "class Object {}", //
-                "class Foo extends Object {}")), // autogenerated constructor
+            """
+            class Object {}
+            class Foo extends Object {}
+            """), // autogenerated constructor
         expected(
-            lines(
-                "/**",
-                " * @constructor",
-                " */",
-                "var Object = function() {",
-                "};",
-                "/**",
-                " * @constructor @extends {Object}",
-                " */",
-                "var Foo = function() {",
-                "  Object.apply(this, arguments);", // all arguments passed on to super()
-                "};",
-                "$jscomp.inherits(Foo, Object);")));
+            """
+            /**
+             * @constructor
+             */
+            var Object = function() {
+            };
+            /**
+             * @constructor @extends {Object}
+             */
+            var Foo = function() {
+              Object.apply(this, arguments); // all arguments passed on to super()
+            };
+            $jscomp.inherits(Foo, Object);
+            """));
   }
 
   @Test
   public void testMultiNameClass() {
     test(
         "var F = class G {}",
-        lines(
-            "/** @constructor @const */",
-            "var testcode$classdecl$var0 = function(){};",
-            "/** @constructor */",
-            "var F = testcode$classdecl$var0;"));
+        """
+        /** @constructor @const */
+        var testcode$classdecl$var0 = function(){};
+        /** @constructor */
+        var F = testcode$classdecl$var0;
+        """);
 
     test(
         "F = class G {}",
-        lines(
-            "/** @constructor @const */",
-            "var testcode$classdecl$var0 = function(){};",
-            "/** @constructor */",
-            "F = testcode$classdecl$var0;"));
+        """
+        /** @constructor @const */
+        var testcode$classdecl$var0 = function(){};
+        /** @constructor */
+        F = testcode$classdecl$var0;
+        """);
   }
 
   @Test
@@ -1175,13 +1252,14 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     test(
         "class C { f() { class D {} } }",
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "C.prototype.f = function() {",
-            "  /** @constructor */",
-            "  var D = function() {}",
-            "};"));
+        """
+        /** @constructor */
+        var C = function() {};
+        C.prototype.f = function() {
+          /** @constructor */
+          var D = function() {}
+        };
+        """);
     // The compiler feature set gets updated to ES3.
     assertThat(getLastCompiler().getAllowableFeatures()).isEqualTo(FeatureSet.ES3);
   }
@@ -1231,163 +1309,173 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   public void testClassNested() {
     test(
         "class C { f() { class D {} } }",
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "C.prototype.f = function() {",
-            "  /** @constructor */",
-            "  var D = function() {}",
-            "};"));
+        """
+        /** @constructor */
+        var C = function() {};
+        C.prototype.f = function() {
+          /** @constructor */
+          var D = function() {}
+        };
+        """);
 
     test(
         "class C { f() { class D extends C {} } }",
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "C.prototype.f = function() {",
-            "  /**",
-            " * @constructor",
-            " * @extends{C} */",
-            "  var D = function() {",
-            "    C.apply(this, arguments); ",
-            "  };",
-            "  $jscomp.inherits(D, C);",
-            "};"));
+        """
+        /** @constructor */
+        var C = function() {};
+        C.prototype.f = function() {
+          /**
+         * @constructor
+         * @extends{C} */
+          var D = function() {
+            C.apply(this, arguments);
+          };
+          $jscomp.inherits(D, C);
+        };
+        """);
   }
 
   @Test
   public void testSuperGet() {
     test(
         "class D { d() {} } class C extends D { f() {var i = super.d;} }",
-        lines(
-            "/** @constructor */",
-            "var D = function() {};",
-            "D.prototype.d = function() {};",
-            "/**",
-            " * @constructor",
-            " * @extends{D} */",
-            "var C = function() {",
-            "  D.apply(this, arguments); ",
-            "};",
-            "$jscomp.inherits(C, D);",
-            "C.prototype.f = function() {",
-            "  var i = D.prototype.d;",
-            "};"));
+        """
+        /** @constructor */
+        var D = function() {};
+        D.prototype.d = function() {};
+        /**
+         * @constructor
+         * @extends{D} */
+        var C = function() {
+          D.apply(this, arguments);
+        };
+        $jscomp.inherits(C, D);
+        C.prototype.f = function() {
+          var i = D.prototype.d;
+        };
+        """);
 
     test(
         "class D { ['d']() {} } class C extends D { f() {var i = super['d'];} }",
-        lines(
-            "/** @constructor */",
-            "var D = function() {};",
-            "D.prototype['d'] = function() {};",
-            "/**",
-            " * @constructor",
-            " * @extends{D} */",
-            "var C = function() {",
-            "  D.apply(this, arguments); ",
-            "};",
-            "$jscomp.inherits(C, D);",
-            "C.prototype.f = function() {",
-            "  var i = D.prototype['d'];",
-            "};"));
+        """
+        /** @constructor */
+        var D = function() {};
+        D.prototype['d'] = function() {};
+        /**
+         * @constructor
+         * @extends{D} */
+        var C = function() {
+          D.apply(this, arguments);
+        };
+        $jscomp.inherits(C, D);
+        C.prototype.f = function() {
+          var i = D.prototype['d'];
+        };
+        """);
 
     test(
         "class D { d() {}} class C extends D { static f() {var i = super.d;} }",
-        lines(
-            "/** @constructor */",
-            "var D = function() {};",
-            "D.prototype.d = function() {};",
-            "/**",
-            " * @constructor",
-            " * @extends{D} */",
-            "var C = function() {",
-            "  D.apply(this, arguments); ",
-            "};",
-            "$jscomp.inherits(C, D);",
-            "C.f = function() {",
-            "  var i = D.d;",
-            "};"));
+        """
+        /** @constructor */
+        var D = function() {};
+        D.prototype.d = function() {};
+        /**
+         * @constructor
+         * @extends{D} */
+        var C = function() {
+          D.apply(this, arguments);
+        };
+        $jscomp.inherits(C, D);
+        C.f = function() {
+          var i = D.d;
+        };
+        """);
 
     test(
         "class D { ['d']() {}} class C extends D { static f() {var i = super['d'];} }",
-        lines(
-            "/** @constructor */",
-            "var D = function() {};",
-            "D.prototype['d'] = function() {};",
-            "/**",
-            " * @constructor",
-            " * @extends{D} */",
-            "var C = function() {",
-            "  D.apply(this, arguments); ",
-            "};",
-            "$jscomp.inherits(C, D);",
-            "C.f = function() {",
-            "  var i = D['d'];",
-            "};"));
+        """
+        /** @constructor */
+        var D = function() {};
+        D.prototype['d'] = function() {};
+        /**
+         * @constructor
+         * @extends{D} */
+        var C = function() {
+          D.apply(this, arguments);
+        };
+        $jscomp.inherits(C, D);
+        C.f = function() {
+          var i = D['d'];
+        };
+        """);
 
     test(
         "class D {} class C extends D { f() {return super.s;} }",
-        lines(
-            "/** @constructor */",
-            "var D = function() {};",
-            "/**",
-            " * @constructor",
-            " * @extends{D} */",
-            "var C = function() {",
-            "  D.apply(this, arguments); ",
-            "};",
-            "$jscomp.inherits(C, D);",
-            "C.prototype.f = function() {",
-            "  return D.prototype.s;",
-            "};"));
+        """
+        /** @constructor */
+        var D = function() {};
+        /**
+         * @constructor
+         * @extends{D} */
+        var C = function() {
+          D.apply(this, arguments);
+        };
+        $jscomp.inherits(C, D);
+        C.prototype.f = function() {
+          return D.prototype.s;
+        };
+        """);
 
     test(
         "class D {} class C extends D { f() { m(super.s);} }",
-        lines(
-            "/** @constructor */",
-            "var D = function() {};",
-            "/**",
-            " * @constructor",
-            " * @extends{D} */",
-            "var C = function() {",
-            "  D.apply(this, arguments); ",
-            "};",
-            "$jscomp.inherits(C, D);",
-            "C.prototype.f = function() {",
-            "  m(D.prototype.s);",
-            "};"));
+        """
+        /** @constructor */
+        var D = function() {};
+        /**
+         * @constructor
+         * @extends{D} */
+        var C = function() {
+          D.apply(this, arguments);
+        };
+        $jscomp.inherits(C, D);
+        C.prototype.f = function() {
+          m(D.prototype.s);
+        };
+        """);
 
     test(
         "class D {} class C extends D { foo() { return super.m.foo();} }",
-        lines(
-            "/** @constructor */",
-            "var D = function() {};",
-            "/**",
-            " * @constructor",
-            " * @extends{D} */",
-            "var C = function() {",
-            "  D.apply(this, arguments); ",
-            "};",
-            "$jscomp.inherits(C, D);",
-            "C.prototype.foo = function() {",
-            "  return D.prototype.m.foo();",
-            "};"));
+        """
+        /** @constructor */
+        var D = function() {};
+        /**
+         * @constructor
+         * @extends{D} */
+        var C = function() {
+          D.apply(this, arguments);
+        };
+        $jscomp.inherits(C, D);
+        C.prototype.foo = function() {
+          return D.prototype.m.foo();
+        };
+        """);
 
     test(
         "class D {} class C extends D { static foo() { return super.m.foo();} }",
-        lines(
-            "/** @constructor */",
-            "var D = function() {};",
-            "/**",
-            " * @constructor",
-            " * @extends{D} */",
-            "var C = function() {",
-            "  D.apply(this, arguments); ",
-            "};",
-            "$jscomp.inherits(C, D);",
-            "C.foo = function() {",
-            "  return D.m.foo();",
-            "};"));
+        """
+        /** @constructor */
+        var D = function() {};
+        /**
+         * @constructor
+         * @extends{D} */
+        var C = function() {
+          D.apply(this, arguments);
+        };
+        $jscomp.inherits(C, D);
+        C.foo = function() {
+          return D.m.foo();
+        };
+        """);
   }
 
   @Test
@@ -1395,56 +1483,58 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     // Getters cannot be transpiled to ES3
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
-        lines(
-            "class Base {",
-            "  get g() { return 'base'; }",
-            "  set g(v) { alert('base.prototype.g = ' + v); }",
-            "}",
-            "class Sub extends Base {",
-            "  get g() { return super.g + '-sub'; }",
-            "}"),
-        lines(
-            "/** @constructor */",
-            "var Base = function() {};",
-            "$jscomp.global.Object.defineProperties(",
-            "    Base.prototype,",
-            "    {",
-            "        g:{",
-            "            configurable:true,",
-            "            enumerable:true,",
-            "            get:function(){return\"base\"},",
-            "            set:function(v){alert(\"base.prototype.g = \" + v);}",
-            "        }",
-            "    });",
-            "/**",
-            " * @constructor",
-            " * @extends {Base}",
-            " */",
-            "var Sub = function() {",
-            "  Base.apply(this, arguments);",
-            "};",
-            "$jscomp.inherits(Sub, Base);",
-            "$jscomp.global.Object.defineProperties(",
-            "    Sub.prototype,",
-            "    {",
-            "        g:{",
-            "            configurable:true,",
-            "            enumerable:true,",
-            "            get:function(){return Base.prototype.g + \"-sub\";},",
-            "        }",
-            "    });",
-            ""));
+        """
+        class Base {
+          get g() { return 'base'; }
+          set g(v) { alert('base.prototype.g = ' + v); }
+        }
+        class Sub extends Base {
+          get g() { return super.g + '-sub'; }
+        }
+        """,
+        """
+        /** @constructor */
+        var Base = function() {};
+        $jscomp.global.Object.defineProperties(
+            Base.prototype,
+            {
+                g:{
+                    configurable:true,
+                    enumerable:true,
+                    get:function(){return"base"},
+                    set:function(v){alert("base.prototype.g = " + v);}
+                }
+            });
+        /**
+         * @constructor
+         * @extends {Base}
+         */
+        var Sub = function() {
+          Base.apply(this, arguments);
+        };
+        $jscomp.inherits(Sub, Base);
+        $jscomp.global.Object.defineProperties(
+            Sub.prototype,
+            {
+                g:{
+                    configurable:true,
+                    enumerable:true,
+                    get:function(){return Base.prototype.g + "-sub";},
+                }
+            });
+        """);
 
     testError(
-        lines(
-            "class Base {",
-            "  get g() { return 'base'; }",
-            "  set g(v) { alert('base.prototype.g = ' + v); }",
-            "}",
-            "class Sub extends Base {",
-            "  get g() { return super.g + '-sub'; }",
-            "  set g(v) { super.g = v + '-sub'; }",
-            "}"),
+        """
+        class Base {
+          get g() { return 'base'; }
+          set g(v) { alert('base.prototype.g = ' + v); }
+        }
+        class Sub extends Base {
+          get g() { return super.g + '-sub'; }
+          set g(v) { super.g = v + '-sub'; }
+        }
+        """,
         CANNOT_CONVERT_YET);
   }
 
@@ -1452,9 +1542,10 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   public void testStaticThis() {
     test(
         "class F { static f() { return this; } }",
-        lines(
-            "/** @constructor */ var F = function() {}",
-            "/** @this {?} */ F.f = function() { return this; };"));
+        """
+        /** @constructor */ var F = function() {}
+        /** @this {?} */ F.f = function() { return this; };
+        """);
   }
 
   @Test
@@ -1465,83 +1556,91 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
     test(
         "class C { static foo() {}; foo() {} }",
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "",
-            "C.foo = function() {};",
-            "",
-            "C.prototype.foo = function() {};"));
+        """
+        /** @constructor */
+        var C = function() {};
+
+        C.foo = function() {};
+
+        C.prototype.foo = function() {};
+        """);
 
     test(
         "class C { static foo() {}; bar() { C.foo(); } }",
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "",
-            "C.foo = function() {};",
-            "",
-            "C.prototype.bar = function() { C.foo(); };"));
+        """
+        /** @constructor */
+        var C = function() {};
+
+        C.foo = function() {};
+
+        C.prototype.bar = function() { C.foo(); };
+        """);
   }
 
   @Test
   public void testStaticInheritance() {
 
     test(
-        lines(
-            "class D {",
-            "  static f() {}",
-            "}",
-            "class C extends D { constructor() {} }",
-            "C.f();"),
-        lines(
-            "/** @constructor */",
-            "var D = function() {};",
-            "D.f = function () {};",
-            "/** @constructor @extends{D} */",
-            "var C = function() {};",
-            "$jscomp.inherits(C, D);",
-            "C.f();"));
+        """
+        class D {
+          static f() {}
+        }
+        class C extends D { constructor() {} }
+        C.f();
+        """,
+        """
+        /** @constructor */
+        var D = function() {};
+        D.f = function () {};
+        /** @constructor @extends{D} */
+        var C = function() {};
+        $jscomp.inherits(C, D);
+        C.f();
+        """);
 
     test(
-        lines(
-            "class D {",
-            "  static f() {}",
-            "}",
-            "class C extends D {",
-            "  constructor() {}",
-            "  f() {}",
-            "}",
-            "C.f();"),
-        lines(
-            "/** @constructor */",
-            "var D = function() {};",
-            "D.f = function() {};",
-            "/** @constructor @extends{D} */",
-            "var C = function() { };",
-            "$jscomp.inherits(C, D);",
-            "C.prototype.f = function() {};",
-            "C.f();"));
+        """
+        class D {
+          static f() {}
+        }
+        class C extends D {
+          constructor() {}
+          f() {}
+        }
+        C.f();
+        """,
+        """
+        /** @constructor */
+        var D = function() {};
+        D.f = function() {};
+        /** @constructor @extends{D} */
+        var C = function() { };
+        $jscomp.inherits(C, D);
+        C.prototype.f = function() {};
+        C.f();
+        """);
 
     test(
-        lines(
-            "class D {",
-            "  static f() {}",
-            "}",
-            "class C extends D {",
-            "  constructor() {}",
-            "  static f() {}",
-            "  g() {}",
-            "}"),
-        lines(
-            "/** @constructor */",
-            "var D = function() {};",
-            "D.f = function() {};",
-            "/** @constructor @extends{D} */",
-            "var C = function() { };",
-            "$jscomp.inherits(C, D);",
-            "C.f = function() {};",
-            "C.prototype.g = function() {};"));
+        """
+        class D {
+          static f() {}
+        }
+        class C extends D {
+          constructor() {}
+          static f() {}
+          g() {}
+        }
+        """,
+        """
+        /** @constructor */
+        var D = function() {};
+        D.f = function() {};
+        /** @constructor @extends{D} */
+        var C = function() { };
+        $jscomp.inherits(C, D);
+        C.f = function() {};
+        C.prototype.g = function() {};
+        """);
   }
 
   @Test
@@ -1550,20 +1649,22 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         externs(
             getDefaultExternsBuilder()
                 .addExtra(
-                    lines(
-                        "/** @constructor */ function ExternsClass() {}",
-                        "ExternsClass.m = function() {};"))
+                    """
+                    /** @constructor */ function ExternsClass() {}
+                    ExternsClass.m = function() {};
+                    """)
                 .build()),
         srcs("class CodeClass extends ExternsClass {}"),
         expected(
-            lines(
-                "/** @constructor",
-                " * @extends {ExternsClass}",
-                " */",
-                "var CodeClass = function() {",
-                "  return ExternsClass.apply(this,arguments) || this;",
-                "};",
-                "$jscomp.inherits(CodeClass,ExternsClass)")));
+            """
+            /** @constructor
+             * @extends {ExternsClass}
+             */
+            var CodeClass = function() {
+              return ExternsClass.apply(this,arguments) || this;
+            };
+            $jscomp.inherits(CodeClass,ExternsClass)
+            """));
   }
 
   // Make sure we don't crash on this code.
@@ -1572,22 +1673,24 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   public void testGithub752() {
     test(
         "function f() { var a = b = class {};}",
-        lines(
-            "function f() {",
-            "  /** @constructor @const */",
-            "  var testcode$classdecl$var0 = function() {};",
-            "  var a = b = testcode$classdecl$var0;",
-            "}"));
+        """
+        function f() {
+          /** @constructor @const */
+          var testcode$classdecl$var0 = function() {};
+          var a = b = testcode$classdecl$var0;
+        }
+        """);
 
     test(
         "var ns = {}; function f() { var self = ns.Child = class {};}",
-        lines(
-            "var ns = {};",
-            "function f() {",
-            "  /** @constructor @const */",
-            "  var testcode$classdecl$var0 = function() {};",
-            "  var self = ns.Child = testcode$classdecl$var0",
-            "}"));
+        """
+        var ns = {};
+        function f() {
+          /** @constructor @const */
+          var testcode$classdecl$var0 = function() {};
+          var self = ns.Child = testcode$classdecl$var0
+        }
+        """);
   }
 
   @Test
@@ -1605,64 +1708,70 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         externs(externsFile),
         srcs(
-            lines(
-                "/** @constructor */",
-                "function Foo() {}",
-                "Foo.prototype.f = function() {};",
-                "class Sub extends Foo {}",
-                "(new Sub).f();")),
+            """
+            /** @constructor */
+            function Foo() {}
+            Foo.prototype.f = function() {};
+            class Sub extends Foo {}
+            (new Sub).f();
+            """),
         expected(
-            lines(
-                "/** @constructor */",
-                "function Foo() {}",
-                "Foo.prototype.f = function() {};",
-                "/**",
-                " * @constructor",
-                " * @extends {Foo}",
-                " */",
-                "var Sub=function() { Foo.apply(this, arguments); }",
-                "$jscomp.inherits(Sub, Foo);",
-                "(new Sub).f();")));
+            """
+            /** @constructor */
+            function Foo() {}
+            Foo.prototype.f = function() {};
+            /**
+             * @constructor
+             * @extends {Foo}
+             */
+            var Sub=function() { Foo.apply(this, arguments); }
+            $jscomp.inherits(Sub, Foo);
+            (new Sub).f();
+            """));
 
     test(
         externs(externsFile),
         srcs(
-            lines(
-                "/** @constructor @struct */",
-                "function Foo() {}",
-                "Foo.f = function() {};",
-                "class Sub extends Foo {}",
-                "Sub.f();")),
+            """
+            /** @constructor @struct */
+            function Foo() {}
+            Foo.f = function() {};
+            class Sub extends Foo {}
+            Sub.f();
+            """),
         expected(
-            lines(
-                "/** @constructor @struct */",
-                "function Foo() {}",
-                "Foo.f = function() {};",
-                "/** @constructor",
-                " * @extends {Foo}",
-                " */",
-                "var Sub = function() { Foo.apply(this, arguments); };",
-                "$jscomp.inherits(Sub, Foo);",
-                "Sub.f();")));
+            """
+            /** @constructor @struct */
+            function Foo() {}
+            Foo.f = function() {};
+            /** @constructor
+             * @extends {Foo}
+             */
+            var Sub = function() { Foo.apply(this, arguments); };
+            $jscomp.inherits(Sub, Foo);
+            Sub.f();
+            """));
 
     test(
         externs(externsFile),
         srcs(
-            lines(
-                "/** @constructor */",
-                "function Foo() {}",
-                "Foo.f = function() {};",
-                "class Sub extends Foo {}")),
+            """
+            /** @constructor */
+            function Foo() {}
+            Foo.f = function() {};
+            class Sub extends Foo {}
+            """),
         expected(
-            lines(
-                "/** @constructor */",
-                "function Foo() {}",
-                "Foo.f = function() {};",
-                "/** @constructor",
-                " * @extends {Foo}",
-                " */",
-                "var Sub = function() { Foo.apply(this, arguments); };",
-                "$jscomp.inherits(Sub, Foo);")));
+            """
+            /** @constructor */
+            function Foo() {}
+            Foo.f = function() {};
+            /** @constructor
+             * @extends {Foo}
+             */
+            var Sub = function() { Foo.apply(this, arguments); };
+            $jscomp.inherits(Sub, Foo);
+            """));
   }
 
   /**
@@ -1675,90 +1784,96 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
     test(
         "class C { get value() { return 0; } }",
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "$jscomp.global.Object.defineProperties(C.prototype, {",
-            "  value: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    get: function() {",
-            "      return 0;",
-            "    }",
-            "  }",
-            "});"));
+        """
+        /** @constructor */
+        var C = function() {};
+        $jscomp.global.Object.defineProperties(C.prototype, {
+          value: {
+            configurable: true,
+            enumerable: true,
+            get: function() {
+              return 0;
+            }
+          }
+        });
+        """);
 
     test(
         "class C { set value(val) { this.internalVal = val; } }",
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "$jscomp.global.Object.defineProperties(C.prototype, {",
-            "  value: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    set: function(val) {",
-            "      this.internalVal = val;",
-            "    }",
-            "  }",
-            "});"));
+        """
+        /** @constructor */
+        var C = function() {};
+        $jscomp.global.Object.defineProperties(C.prototype, {
+          value: {
+            configurable: true,
+            enumerable: true,
+            set: function(val) {
+              this.internalVal = val;
+            }
+          }
+        });
+        """);
 
     test(
-        lines(
-            "class C {",
-            "  set value(val) {",
-            "    this.internalVal = val;",
-            "  }",
-            "  get value() {",
-            "    return this.internalVal;",
-            "  }",
-            "}"),
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "$jscomp.global.Object.defineProperties(C.prototype, {",
-            "  value: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    set: function(val) {",
-            "      this.internalVal = val;",
-            "    },",
-            "    get: function() {",
-            "      return this.internalVal;",
-            "    }",
-            "  }",
-            "});"));
+        """
+        class C {
+          set value(val) {
+            this.internalVal = val;
+          }
+          get value() {
+            return this.internalVal;
+          }
+        }
+        """,
+        """
+        /** @constructor */
+        var C = function() {};
+        $jscomp.global.Object.defineProperties(C.prototype, {
+          value: {
+            configurable: true,
+            enumerable: true,
+            set: function(val) {
+              this.internalVal = val;
+            },
+            get: function() {
+              return this.internalVal;
+            }
+          }
+        });
+        """);
 
     test(
-        lines(
-            "class C {",
-            "  get alwaysTwo() {",
-            "    return 2;",
-            "  }",
-            "",
-            "  get alwaysThree() {",
-            "    return 3;",
-            "  }",
-            "}"),
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "$jscomp.global.Object.defineProperties(C.prototype, {",
-            "  alwaysTwo: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    get: function() {",
-            "      return 2;",
-            "    }",
-            "  },",
-            "  alwaysThree: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    get: function() {",
-            "      return 3;",
-            "    }",
-            "  },",
-            "});"));
+        """
+        class C {
+          get alwaysTwo() {
+            return 2;
+          }
+
+          get alwaysThree() {
+            return 3;
+          }
+        }
+        """,
+        """
+        /** @constructor */
+        var C = function() {};
+        $jscomp.global.Object.defineProperties(C.prototype, {
+          alwaysTwo: {
+            configurable: true,
+            enumerable: true,
+            get: function() {
+              return 2;
+            }
+          },
+          alwaysThree: {
+            configurable: true,
+            enumerable: true,
+            get: function() {
+              return 3;
+            }
+          },
+        });
+        """);
   }
 
   @Test
@@ -1766,34 +1881,35 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
         "class C { static get value() {} }  class D extends C { static get value() {} }",
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "/** @nocollapse */",
-            "C.value;",
-            "$jscomp.global.Object.defineProperties(C, {",
-            "  value: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    get: function() {}",
-            "  }",
-            "});",
-            "/** @constructor",
-            " * @extends {C}",
-            " */",
-            "var D = function() {",
-            "  C.apply(this,arguments); ",
-            "};",
-            "/** @nocollapse */",
-            "D.value;",
-            "$jscomp.inherits(D, C);",
-            "$jscomp.global.Object.defineProperties(D, {",
-            "  value: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    get: function() {}",
-            "  }",
-            "});"));
+        """
+        /** @constructor */
+        var C = function() {};
+        /** @nocollapse */
+        C.value;
+        $jscomp.global.Object.defineProperties(C, {
+          value: {
+            configurable: true,
+            enumerable: true,
+            get: function() {}
+          }
+        });
+        /** @constructor
+         * @extends {C}
+         */
+        var D = function() {
+          C.apply(this,arguments);
+        };
+        /** @nocollapse */
+        D.value;
+        $jscomp.inherits(D, C);
+        $jscomp.global.Object.defineProperties(D, {
+          value: {
+            configurable: true,
+            enumerable: true,
+            get: function() {}
+          }
+        });
+        """);
   }
 
   /** Check that the types from the getter/setter are copied to the declaration on the prototype. */
@@ -1803,37 +1919,39 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
     test(
         "class C { /** @return {number} */ get value() { return 0; } }",
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "$jscomp.global.Object.defineProperties(C.prototype, {",
-            "  value: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    /**",
-            "     * @return {number}",
-            "     */",
-            "    get: function() {",
-            "      return 0;",
-            "    }",
-            "  }",
-            "});"));
+        """
+        /** @constructor */
+        var C = function() {};
+        $jscomp.global.Object.defineProperties(C.prototype, {
+          value: {
+            configurable: true,
+            enumerable: true,
+            /**
+             * @return {number}
+             */
+            get: function() {
+              return 0;
+            }
+          }
+        });
+        """);
 
     test(
         "class C { /** @param {string} v */ set value(v) { } }",
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "$jscomp.global.Object.defineProperties(C.prototype, {",
-            "  value: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    /**",
-            "     * @param {string} v",
-            "     */",
-            "    set: function(v) {}",
-            "  }",
-            "});"));
+        """
+        /** @constructor */
+        var C = function() {};
+        $jscomp.global.Object.defineProperties(C.prototype, {
+          value: {
+            configurable: true,
+            enumerable: true,
+            /**
+             * @param {string} v
+             */
+            set: function(v) {}
+          }
+        });
+        """);
   }
 
   @Test
@@ -1857,34 +1975,36 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         externs(externsFile),
         srcs("class C { /** @type {string} */ get value() { } }"),
         expected(
-            lines(
-                "/** @constructor */",
-                "var C = function() {};",
-                "$jscomp.global.Object.defineProperties(C.prototype, {",
-                "  value: {",
-                "    configurable: true,",
-                "    enumerable: true,",
-                "    /** @type {string} */",
-                "    get: function() {}",
-                "  }",
-                "});")));
+            """
+            /** @constructor */
+            var C = function() {};
+            $jscomp.global.Object.defineProperties(C.prototype, {
+              value: {
+                configurable: true,
+                enumerable: true,
+                /** @type {string} */
+                get: function() {}
+              }
+            });
+            """));
 
     // Using @type instead of @param on a setter.
     test(
         externs(externsFile),
         srcs("class C { /** @type {string} */ set value(v) { } }"),
         expected(
-            lines(
-                "/** @constructor */",
-                "var C = function() {};",
-                "$jscomp.global.Object.defineProperties(C.prototype, {",
-                "  value: {",
-                "    configurable: true,",
-                "    enumerable: true,",
-                "    /** @type {string} */",
-                "    set: function(v) {}",
-                "  }",
-                "});")));
+            """
+            /** @constructor */
+            var C = function() {};
+            $jscomp.global.Object.defineProperties(C.prototype, {
+              value: {
+                configurable: true,
+                enumerable: true,
+                /** @type {string} */
+                set: function(v) {}
+              }
+            });
+            """));
   }
 
   /**
@@ -1896,41 +2016,46 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
     test(
         "class C { static get foo() {} }",
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "/** @nocollapse */",
-            "C.foo;",
-            "$jscomp.global.Object.defineProperties(C, {",
-            "  foo: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    get: function() {}",
-            "  }",
-            "})"));
+        """
+        /** @constructor */
+        var C = function() {};
+        /** @nocollapse */
+        C.foo;
+        $jscomp.global.Object.defineProperties(C, {
+          foo: {
+            configurable: true,
+            enumerable: true,
+            get: function() {}
+          }
+        })
+        """);
 
     test(
-        lines("class C { static get foo() {} }", "class Sub extends C {}"),
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "/** @nocollapse */",
-            "C.foo;",
-            "$jscomp.global.Object.defineProperties(C, {",
-            "  foo: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    get: function() {}",
-            "  }",
-            "})",
-            "",
-            "/** @constructor",
-            " * @extends {C}",
-            " */",
-            "var Sub = function() {",
-            "  C.apply(this, arguments);",
-            "};",
-            "$jscomp.inherits(Sub, C)"));
+        """
+        class C { static get foo() {} }
+        class Sub extends C {}
+        """,
+        """
+        /** @constructor */
+        var C = function() {};
+        /** @nocollapse */
+        C.foo;
+        $jscomp.global.Object.defineProperties(C, {
+          foo: {
+            configurable: true,
+            enumerable: true,
+            get: function() {}
+          }
+        })
+
+        /** @constructor
+         * @extends {C}
+         */
+        var Sub = function() {
+          C.apply(this, arguments);
+        };
+        $jscomp.inherits(Sub, C)
+        """);
   }
 
   @Test
@@ -1938,18 +2063,19 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
         "class C { static set foo(x) {} }",
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "/** @nocollapse */",
-            "C.foo;",
-            "$jscomp.global.Object.defineProperties(C, {",
-            "  foo: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    set: function(x) {}",
-            "  }",
-            "});"));
+        """
+        /** @constructor */
+        var C = function() {};
+        /** @nocollapse */
+        C.foo;
+        $jscomp.global.Object.defineProperties(C, {
+          foo: {
+            configurable: true,
+            enumerable: true,
+            set: function(x) {}
+          }
+        });
+        """);
   }
 
   @Test
@@ -1976,63 +2102,69 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         externs(externsFileWithSymbol),
         srcs(
-            lines(
-                "function f() {", //
-                "  let x = 1;",
-                "  let y = Symbol('nimble');",
-                "}")),
+            """
+            function f() {
+              let x = 1;
+              let y = Symbol('nimble');
+            }
+            """),
         expected(
-            lines(
-                "function f() {", //
-                "  var x = 1;",
-                "  var y = Symbol('nimble');",
-                "}")));
+            """
+            function f() {
+              var x = 1;
+              var y = Symbol('nimble');
+            }
+            """));
     Externs externs = externs(externsFileWithSymbol);
     Sources srcs =
         srcs(
-            lines(
-                "function f() {",
-                "  if (true) {",
-                "     let Symbol = function() {};",
-                "  }",
-                // This Symbol is the global one
-                "  alert(Symbol.ism)",
-                "}"));
+            """
+            function f() {
+              if (true) {
+                 let Symbol = function() {};
+              }
+            // This Symbol is the global one
+              alert(Symbol.ism)
+            }
+            """);
     Expected expected =
         expected(
-            lines(
-                "function f() {",
-                "  if (true) {",
-                // normalization renames the local Symbol to be different from the global Symbol
-                "     var Symbol$jscomp$0 = function() {};",
-                "  }",
-                "  alert(Symbol.ism)",
-                "}"));
+            """
+            function f() {
+              if (true) {
+            // normalization renames the local Symbol to be different from the global Symbol
+                 var Symbol$jscomp$0 = function() {};
+              }
+              alert(Symbol.ism)
+            }
+            """);
     test(externs, srcs, expected);
 
     externs = externs(externsFileWithSymbol);
     srcs =
         srcs(
-            lines(
-                "function f() {",
-                "  if (true) {",
-                "    let Symbol = function() {};",
-                // This Symbol is the local definition. There's no use of the global Symbol in
-                // this function.
-                "    alert(Symbol.ism)",
-                "  }",
-                "}"));
+            """
+            function f() {
+              if (true) {
+                let Symbol = function() {};
+            // This Symbol is the local definition. There's no use of the global Symbol in
+            // this function.
+                alert(Symbol.ism)
+              }
+            }
+            """);
     expected =
         expected(
-            lines(
-                "function f() {",
-                "  if (true) {",
-                // The local definition of Symbol doesn't have to be renamed, because there's
-                // no usage of the global Symbol to conflict with it.
-                "    var Symbol = function() {};",
-                "    alert(Symbol.ism)",
-                "  }",
-                "}"));
+            """
+            function f() {
+              if (true) {
+            // The local definition of Symbol doesn't have to be renamed, because there's
+            // no usage of the global Symbol to conflict with it.
+                var Symbol = function() {};
+                alert(Symbol.ism)
+              }
+            }
+            """);
     test(externs, srcs, expected);
     // No $jscomp.initSymbol in externs
     testExternChanges(
@@ -2043,10 +2175,11 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   public void testInitSymbolIterator() {
     test(
         "var x = {[Symbol.iterator]: function() { return this; }};",
-        lines(
-            "var $jscomp$compprop0 = {};",
-            "var x = ($jscomp$compprop0[Symbol.iterator] = function() {return this;},",
-            "         $jscomp$compprop0)"));
+        """
+        var $jscomp$compprop0 = {};
+        var x = ($jscomp$compprop0[Symbol.iterator] = function() {return this;},
+                 $jscomp$compprop0)
+        """);
   }
 
   /** ES5 getters and setters should report an error if the languageOut is ES3. */
@@ -2070,21 +2203,22 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     Sources srcs = srcs("var i = 'outer'; for (let i of [1, 2, 3]) { alert(i); } alert(i);");
     Expected expected =
         expected(
-            lines(
-                "var i = 'outer';",
-                "var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1, 2, 3]);",
-                // Normalize runs before for-of rewriting. Therefore, first Normalize renames the
-                // `let i` to `let i$jscomp$1` to avoid conficting it with outer `i`. Then, the
-                // for-of rewriting prepends the unique ID `$jscomp$key$m123..456$0` to its declared
-                // name as it does to all for-of loop keys.
-                "var KEY$0$i$jscomp$1 = $jscomp$iter$0.next();",
-                "for (; !KEY$0$i$jscomp$1.done; KEY$0$i$jscomp$1 =" + " $jscomp$iter$0.next()) {",
-                "  var i$jscomp$1 = KEY$0$i$jscomp$1.value;",
-                "  {",
-                "    alert(i$jscomp$1);",
-                "  }",
-                "}",
-                "alert(i);"));
+            """
+            var i = 'outer';
+            var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1, 2, 3]);
+            // Normalize runs before for-of rewriting. Therefore, first Normalize renames the
+            // `let i` to `let i$jscomp$1` to avoid conficting it with outer `i`. Then, the
+            // for-of rewriting prepends the unique ID `$jscomp$key$m123..456$0` to its declared
+            // name as it does to all for-of loop keys.
+            var KEY$0$i$jscomp$1 = $jscomp$iter$0.next();
+            for (; !KEY$0$i$jscomp$1.done; KEY$0$i$jscomp$1 = $jscomp$iter$0.next()) {
+              var i$jscomp$1 = KEY$0$i$jscomp$1.value;
+              {
+                alert(i$jscomp$1);
+              }
+            }
+            alert(i);
+            """);
     testForOf(srcs, expected);
   }
 
@@ -2095,20 +2229,21 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     Sources srcs = srcs("for(const i of [1,2]) {i;}");
     Expected expected =
         expected(
-            lines(
-                "var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1, 2]);",
-                // Normalize runs before for-of rewriting. Normalize does not rename the `const i`
-                // if there is no other conflicting `i` declaration. Then, the  for-of rewriting
-                // prepends `$jscomp$key$m123..456$0` to its declared name as it does to all for-of
-                // loop keys.
-                "var KEY$0$i = $jscomp$iter$0.next();",
-                "for (; !KEY$0$i.done; KEY$0$i =" + " $jscomp$iter$0.next()) {",
-                "  /** @const */ ",
-                "  var i = KEY$0$i.value;", // marked as const name
-                "  {",
-                "    i;", // marked as const name
-                "  }",
-                "}"));
+            """
+            var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1, 2]);
+            // Normalize runs before for-of rewriting. Normalize does not rename the `const i`
+            // if there is no other conflicting `i` declaration. Then, the  for-of rewriting
+            // prepends `$jscomp$key$m123..456$0` to its declared name as it does to all for-of
+            // loop keys.
+            var KEY$0$i = $jscomp$iter$0.next();
+            for (; !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {
+              /** @const */
+              var i = KEY$0$i.value; // marked as const name
+              {
+                i; // marked as const name
+              }
+            }
+            """);
     testForOf(srcs, expected);
   }
 
@@ -2117,57 +2252,58 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     enableNormalize();
     Sources srcs =
         srcs(
-            lines(
-                "function* inorder1(t) {",
-                "    for (var x of []) {",
-                "      yield x;",
-                "    }",
-                "    for (var x of []) {",
-                "      yield x;",
-                "    }",
-                "}"));
+            """
+            function* inorder1(t) {
+                for (var x of []) {
+                  yield x;
+                }
+                for (var x of []) {
+                  yield x;
+                }
+            }
+            """);
     Expected expected =
         expected(
-            lines(
-                "function inorder1(t) {",
-                "  var x;",
-                "  var $jscomp$iter$0;",
-                "  var KEY$0$x;", // key for first for-of loop
-                "  var $jscomp$iter$1;",
-                "  var KEY$1$x;", // key for second for-of loop
-                "  return $jscomp.generator.createGenerator(inorder1,"
-                    + " function($jscomp$generator$context$m1146332801$2) {",
-                "    switch($jscomp$generator$context$m1146332801$2.nextAddress) {",
-                "      case 1:",
-                "        $jscomp$iter$0 = (0, $jscomp.makeIterator)([]);",
-                "        KEY$0$x = $jscomp$iter$0.next();",
-                "      case 2:",
-                "        if (!!KEY$0$x.done) {",
-                "          $jscomp$generator$context$m1146332801$2.jumpTo(4);",
-                "          break;",
-                "        }",
-                "        x = KEY$0$x.value;",
-                "        return $jscomp$generator$context$m1146332801$2.yield(x, 3);",
-                "      case 3:",
-                "        KEY$0$x = $jscomp$iter$0.next();",
-                "        $jscomp$generator$context$m1146332801$2.jumpTo(2);",
-                "        break;",
-                "      case 4:",
-                "        $jscomp$iter$1 = (0, $jscomp.makeIterator)([]);",
-                "        KEY$1$x = $jscomp$iter$1.next();",
-                "      case 6:",
-                "        if (!!KEY$1$x.done) {",
-                "          $jscomp$generator$context$m1146332801$2.jumpTo(0);",
-                "          break;",
-                "        }",
-                "        x = KEY$1$x.value;",
-                "        return $jscomp$generator$context$m1146332801$2.yield(x, 7);",
-                "      case 7:",
-                "        KEY$1$x = $jscomp$iter$1.next();",
-                "        $jscomp$generator$context$m1146332801$2.jumpTo(6);",
-                "        break;",
-                "    }",
-                "  });}"));
+            """
+function inorder1(t) {
+  var x;
+  var $jscomp$iter$0;
+  var KEY$0$x; // key for first for-of loop
+  var $jscomp$iter$1;
+  var KEY$1$x;
+  return $jscomp.generator.createGenerator(inorder1, function($jscomp$generator$context$m1146332801$2) {
+    switch($jscomp$generator$context$m1146332801$2.nextAddress) {
+      case 1:
+        $jscomp$iter$0 = (0, $jscomp.makeIterator)([]);
+        KEY$0$x = $jscomp$iter$0.next();
+      case 2:
+        if (!!KEY$0$x.done) {
+          $jscomp$generator$context$m1146332801$2.jumpTo(4);
+          break;
+        }
+        x = KEY$0$x.value;
+        return $jscomp$generator$context$m1146332801$2.yield(x, 3);
+      case 3:
+        KEY$0$x = $jscomp$iter$0.next();
+        $jscomp$generator$context$m1146332801$2.jumpTo(2);
+        break;
+      case 4:
+        $jscomp$iter$1 = (0, $jscomp.makeIterator)([]);
+        KEY$1$x = $jscomp$iter$1.next();
+      case 6:
+        if (!!KEY$1$x.done) {
+          $jscomp$generator$context$m1146332801$2.jumpTo(0);
+          break;
+        }
+        x = KEY$1$x.value;
+        return $jscomp$generator$context$m1146332801$2.yield(x, 7);
+      case 7:
+        KEY$1$x = $jscomp$iter$1.next();
+        $jscomp$generator$context$m1146332801$2.jumpTo(6);
+        break;
+    }
+  });}
+""");
     testForOf(srcs, expected);
   }
 
@@ -2175,29 +2311,32 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   public void testForOfRedeclaredVar() {
     testForOf(
         srcs(
-            lines(
-                "for (let x of []) {", //
-                "  let x = 0;",
-                "}")),
+            """
+            for (let x of []) {
+              let x = 0;
+            }
+            """),
         expected(
-            lines(
-                "var $jscomp$iter$0 = (0, $jscomp.makeIterator)([]);",
-                "var KEY$0$x = $jscomp$iter$0.next();",
-                "for (; !KEY$0$x.done; KEY$0$x = $jscomp$iter$0.next()) {",
-                "  var x = KEY$0$x.value;",
-                "  {",
-                "    var x$jscomp$1 = 0;",
-                "  }",
-                "}")));
+            """
+            var $jscomp$iter$0 = (0, $jscomp.makeIterator)([]);
+            var KEY$0$x = $jscomp$iter$0.next();
+            for (; !KEY$0$x.done; KEY$0$x = $jscomp$iter$0.next()) {
+              var x = KEY$0$x.value;
+              {
+                var x$jscomp$1 = 0;
+              }
+            }
+            """));
   }
 
   @Test
   public void testArgumentsEscaped() {
     testSame(
-        lines(
-            "function f() {", //
-            "  return g(arguments);",
-            "}"));
+        """
+        function f() {
+          return g(arguments);
+        }
+        """);
   }
 
   @Test
@@ -2215,100 +2354,113 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   public void testComputedPropertiesWithMethod() {
     test(
         "var obj = { ['f' + 1]: 1, m() {}, ['g' + 1]: 1, };",
-        lines(
-            "var $jscomp$compprop0 = {};",
-            "var obj = ($jscomp$compprop0['f' + 1] = 1,",
-            "  ($jscomp$compprop0.m = function() {}, ",
-            "     ($jscomp$compprop0['g' + 1] = 1, $jscomp$compprop0)));"));
+        """
+        var $jscomp$compprop0 = {};
+        var obj = ($jscomp$compprop0['f' + 1] = 1,
+          ($jscomp$compprop0.m = function() {},
+             ($jscomp$compprop0['g' + 1] = 1, $jscomp$compprop0)));
+        """);
   }
 
   @Test
   public void testComputedProperties() {
     test(
         "var obj = { ['f' + 1] : 1, ['g' + 1] : 1 };",
-        lines(
-            "var $jscomp$compprop0 = {};",
-            "var obj = ($jscomp$compprop0['f' + 1] = 1,",
-            "  ($jscomp$compprop0['g' + 1] = 1, $jscomp$compprop0));"));
+        """
+        var $jscomp$compprop0 = {};
+        var obj = ($jscomp$compprop0['f' + 1] = 1,
+          ($jscomp$compprop0['g' + 1] = 1, $jscomp$compprop0));
+        """);
 
     test(
         "var obj = { ['f'] : 1};",
-        lines(
-            "var $jscomp$compprop0 = {};",
-            "var obj = ($jscomp$compprop0['f'] = 1,",
-            "  $jscomp$compprop0);"));
+        """
+        var $jscomp$compprop0 = {};
+        var obj = ($jscomp$compprop0['f'] = 1,
+          $jscomp$compprop0);
+        """);
 
     test(
         "var o = { ['f'] : 1}; var p = { ['g'] : 1};",
-        lines(
-            "var $jscomp$compprop0 = {};",
-            "var o = ($jscomp$compprop0['f'] = 1,",
-            "  $jscomp$compprop0);",
-            "var $jscomp$compprop1 = {};",
-            "var p = ($jscomp$compprop1['g'] = 1,",
-            "  $jscomp$compprop1);"));
+        """
+        var $jscomp$compprop0 = {};
+        var o = ($jscomp$compprop0['f'] = 1,
+          $jscomp$compprop0);
+        var $jscomp$compprop1 = {};
+        var p = ($jscomp$compprop1['g'] = 1,
+          $jscomp$compprop1);
+        """);
 
     test(
         "({['f' + 1] : 1})",
-        lines(
-            "var $jscomp$compprop0 = {};",
-            "($jscomp$compprop0['f' + 1] = 1,",
-            "  $jscomp$compprop0)"));
+        """
+        var $jscomp$compprop0 = {};
+        ($jscomp$compprop0['f' + 1] = 1,
+          $jscomp$compprop0)
+        """);
 
     test(
         "({'a' : 2, ['f' + 1] : 1})",
-        lines(
-            "var $jscomp$compprop0 = {};",
-            "($jscomp$compprop0['a'] = 2,",
-            "  ($jscomp$compprop0['f' + 1] = 1, $jscomp$compprop0));"));
+        """
+        var $jscomp$compprop0 = {};
+        ($jscomp$compprop0['a'] = 2,
+          ($jscomp$compprop0['f' + 1] = 1, $jscomp$compprop0));
+        """);
 
     test(
         "({['f' + 1] : 1, 'a' : 2})",
-        lines(
-            "var $jscomp$compprop0 = {};",
-            "($jscomp$compprop0['f' + 1] = 1,",
-            "  ($jscomp$compprop0['a'] = 2, $jscomp$compprop0));"));
+        """
+        var $jscomp$compprop0 = {};
+        ($jscomp$compprop0['f' + 1] = 1,
+          ($jscomp$compprop0['a'] = 2, $jscomp$compprop0));
+        """);
 
     test(
         "({'a' : 1, ['f' + 1] : 1, 'b' : 1})", //
-        lines(
-            "var $jscomp$compprop0 = {};", //
-            "($jscomp$compprop0['a'] = 1,",
-            "  ($jscomp$compprop0['f' + 1] = 1,",
-            "    ($jscomp$compprop0['b'] = 1,",
-            "      $jscomp$compprop0)));"));
+        """
+        var $jscomp$compprop0 = {};
+        ($jscomp$compprop0['a'] = 1,
+          ($jscomp$compprop0['f' + 1] = 1,
+            ($jscomp$compprop0['b'] = 1,
+              $jscomp$compprop0)));
+        """);
 
     test(
         "({'a' : x++, ['f' + x++] : 1, 'b' : x++})",
-        lines(
-            "var $jscomp$compprop0 = {};",
-            "($jscomp$compprop0['a'] = x++, ($jscomp$compprop0['f' + x++] = 1,",
-            "  ($jscomp$compprop0['b'] = x++, $jscomp$compprop0)))"));
+        """
+        var $jscomp$compprop0 = {};
+        ($jscomp$compprop0['a'] = x++, ($jscomp$compprop0['f' + x++] = 1,
+          ($jscomp$compprop0['b'] = x++, $jscomp$compprop0)))
+        """);
 
     test(
         "({a : x++, ['f' + x++] : 1, b : x++})",
-        lines(
-            "var $jscomp$compprop0 = {};",
-            "($jscomp$compprop0.a = x++, ($jscomp$compprop0['f' + x++] = 1,",
-            "  ($jscomp$compprop0.b = x++, $jscomp$compprop0)))"));
+        """
+        var $jscomp$compprop0 = {};
+        ($jscomp$compprop0.a = x++, ($jscomp$compprop0['f' + x++] = 1,
+          ($jscomp$compprop0.b = x++, $jscomp$compprop0)))
+        """);
 
     test(
         "({a, ['f' + 1] : 1})",
-        lines(
-            "var $jscomp$compprop0 = {};",
-            "  ($jscomp$compprop0.a = a, ($jscomp$compprop0['f' + 1] = 1, $jscomp$compprop0))"));
+        """
+        var $jscomp$compprop0 = {};
+          ($jscomp$compprop0.a = a, ($jscomp$compprop0['f' + 1] = 1, $jscomp$compprop0))
+        """);
 
     test(
         "({['f' + 1] : 1, a})",
-        lines(
-            "var $jscomp$compprop0 = {};",
-            "  ($jscomp$compprop0['f' + 1] = 1, ($jscomp$compprop0.a = a, $jscomp$compprop0))"));
+        """
+        var $jscomp$compprop0 = {};
+          ($jscomp$compprop0['f' + 1] = 1, ($jscomp$compprop0.a = a, $jscomp$compprop0))
+        """);
 
     test(
         "var obj = { [foo]() {}}",
-        lines(
-            "var $jscomp$compprop0 = {};",
-            "var obj = ($jscomp$compprop0[foo] = function(){}, $jscomp$compprop0)"));
+        """
+        var $jscomp$compprop0 = {};
+        var obj = ($jscomp$compprop0[foo] = function(){}, $jscomp$compprop0)
+        """);
   }
 
   @Test
@@ -2319,32 +2471,36 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     testSame("var obj = {set latest (str) {}}");
     test(
         "var obj = {'a' : 2, get l () {return null;}, ['f' + 1] : 1}",
-        lines(
-            "var $jscomp$compprop0 = {get l () {return null;}};",
-            "var obj = ($jscomp$compprop0['a'] = 2,",
-            "  ($jscomp$compprop0['f' + 1] = 1, $jscomp$compprop0));"));
+        """
+        var $jscomp$compprop0 = {get l () {return null;}};
+        var obj = ($jscomp$compprop0['a'] = 2,
+          ($jscomp$compprop0['f' + 1] = 1, $jscomp$compprop0));
+        """);
     test(
         "var obj = {['a' + 'b'] : 2, set l (str) {}}",
-        lines(
-            "var $jscomp$compprop0 = {set l (str) {}};",
-            "var obj = ($jscomp$compprop0['a' + 'b'] = 2, $jscomp$compprop0);"));
+        """
+        var $jscomp$compprop0 = {set l (str) {}};
+        var obj = ($jscomp$compprop0['a' + 'b'] = 2, $jscomp$compprop0);
+        """);
   }
 
   @Test
   public void testComputedPropClass() {
     test(
         "class C { [foo]() { alert(1); } }",
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "C.prototype[foo] = function() { alert(1); };"));
+        """
+        /** @constructor */
+        var C = function() {};
+        C.prototype[foo] = function() { alert(1); };
+        """);
 
     test(
         "class C { static [foo]() { alert(2); } }",
-        lines(
-            "/** @constructor */", //
-            "var C = function() {};",
-            "C[foo] = function() { alert(2); };"));
+        """
+        /** @constructor */
+        var C = function() {};
+        C[foo] = function() { alert(2); };
+        """);
   }
 
   @Test
@@ -2404,49 +2560,53 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   public void testObjectLiteralShorthand() {
     rewriteUniqueIdAndTest(
         srcs(
-            lines(
-                "function f() {",
-                "  var x = 1;",
-                "  if (a) {",
-                "    let x = 2;",
-                "    return {x};",
-                "  }",
-                "  return x;",
-                "}")),
+            """
+            function f() {
+              var x = 1;
+              if (a) {
+                let x = 2;
+                return {x};
+              }
+              return x;
+            }
+            """),
         expected(
-            lines(
-                "function f() {",
-                "  var x = 1;",
-                "  if (a) {",
-                "    var x$jscomp$0 = 2;",
-                "    return {x: x$jscomp$0};",
-                "  }",
-                "  return x;",
-                "}")));
+            """
+            function f() {
+              var x = 1;
+              if (a) {
+                var x$jscomp$0 = 2;
+                return {x: x$jscomp$0};
+              }
+              return x;
+            }
+            """));
 
     rewriteUniqueIdAndTest(
         srcs(
-            lines(
-                "function f(a) {",
-                "  var {x} = a;",
-                "  if (a) {",
-                "    let x = 2;",
-                "    return x;",
-                "  }",
-                "  return x;",
-                "}")),
+            """
+            function f(a) {
+              var {x} = a;
+              if (a) {
+                let x = 2;
+                return x;
+              }
+              return x;
+            }
+            """),
         expected(
-            lines(
-                "function f(a) {",
-                "  var x;",
-                "  var $jscomp$destructuring$var0 = a;",
-                "  x = $jscomp$destructuring$var0.x;",
-                "  if (a) {",
-                "    var x$jscomp$0 = 2;",
-                "    return x$jscomp$0;",
-                "  }",
-                "  return x;",
-                "}")));
+            """
+            function f(a) {
+              var x;
+              var $jscomp$destructuring$var0 = a;
+              x = $jscomp$destructuring$var0.x;
+              if (a) {
+                var x$jscomp$0 = 2;
+                return x$jscomp$0;
+              }
+              return x;
+            }
+            """));
 
     // Note: if the inner `let` declaration is defined as a destructuring assignment
     // then the test would fail because Es6RewriteBlockScopeDeclaration does not even

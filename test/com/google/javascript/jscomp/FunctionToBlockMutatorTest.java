@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
@@ -80,19 +79,20 @@ public final class FunctionToBlockMutatorTest {
     needsDefaultResult = true;
     helperMutate(
         "function foo(){ if (0) {return 0} else {return 1} }; var result=foo();",
-        lines(
-            "{",
-            "  JSCompiler_inline_label_foo_0: {",
-            "    if (0) {",
-            "      result = 0;",
-            "      break JSCompiler_inline_label_foo_0",
-            "    } else {",
-            "      result = 1;",
-            "      break JSCompiler_inline_label_foo_0",
-            "    }",
-            "    result=void 0",
-            "  }",
-            "}"),
+        """
+        {
+          JSCompiler_inline_label_foo_0: {
+            if (0) {
+              result = 0;
+              break JSCompiler_inline_label_foo_0
+            } else {
+              result = 1;
+              break JSCompiler_inline_label_foo_0
+            }
+            result=void 0
+          }
+        }
+        """,
         "foo");
   }
 
@@ -138,17 +138,18 @@ public final class FunctionToBlockMutatorTest {
   public void testMutateInitializeUninitializedVars2() {
     helperMutate(
         "function foo(a) {var b; for(b in c)return a;}; foo(1);",
-        lines(
-            "{",
-            "  JSCompiler_inline_label_foo_2:",
-            "  {",
-            "    var b$jscomp$inline_1;",
-            "    for (b$jscomp$inline_1 in c) {",
-            "      1;",
-            "      break JSCompiler_inline_label_foo_2;",
-            "    }",
-            "  }",
-            "}"),
+        """
+        {
+          JSCompiler_inline_label_foo_2:
+          {
+            var b$jscomp$inline_1;
+            for (b$jscomp$inline_1 in c) {
+              1;
+              break JSCompiler_inline_label_foo_2;
+            }
+          }
+        }
+        """,
         "foo",
         null);
   }
@@ -167,23 +168,31 @@ public final class FunctionToBlockMutatorTest {
   public void testMutateInitializeUninitializedLets2() {
     helperMutate(
         "function foo(a) {for(let b in c)return a;}; foo(1);",
-        lines(
-            "{",
-            "  JSCompiler_inline_label_foo_2:",
-            "  {",
-            "    for (let b$jscomp$inline_1 in c) {",
-            "      1;",
-            "      break JSCompiler_inline_label_foo_2;",
-            "    }",
-            "  }",
-            "}"),
+        """
+        {
+          JSCompiler_inline_label_foo_2:
+          {
+            for (let b$jscomp$inline_1 in c) {
+              1;
+              break JSCompiler_inline_label_foo_2;
+            }
+          }
+        }
+        """,
         "foo",
         null);
   }
 
   @Test
   public void testMutateCallInLoopVars1() {
-    String src = lines("function foo(a) {", "  var B = bar();", "  a;", "};", "foo(1);");
+    String src =
+        """
+        function foo(a) {
+          var B = bar();
+          a;
+        };
+        foo(1);
+        """;
 
     // baseline: outside a loop, the constant remains constant.
     isCallInLoop = false;
@@ -207,23 +216,25 @@ public final class FunctionToBlockMutatorTest {
   @Test
   public void testMutateFunctionDefinitionHoisting() {
     helperMutate(
-        lines(
-            "function foo(a){",
-            "  var b = g(a);",
-            "  function g(c){ return c; }",
-            "  var c = i();",
-            "  function h(){}",
-            "  function i(){}",
-            "}",
-            "foo(1);"),
-        lines(
-            "{",
-            "  var g$jscomp$inline_1 = function(c$jscomp$inline_6) {return c$jscomp$inline_6};",
-            "  var h$jscomp$inline_2 = function(){};",
-            "  var i$jscomp$inline_3 = function(){};",
-            "  var b$jscomp$inline_4 = g$jscomp$inline_1(1);",
-            "  var c$jscomp$inline_5 = i$jscomp$inline_3();",
-            "}"),
+        """
+        function foo(a){
+          var b = g(a);
+          function g(c){ return c; }
+          var c = i();
+          function h(){}
+          function i(){}
+        }
+        foo(1);
+        """,
+        """
+        {
+          var g$jscomp$inline_1 = function(c$jscomp$inline_6) {return c$jscomp$inline_6};
+          var h$jscomp$inline_2 = function(){};
+          var i$jscomp$inline_3 = function(){};
+          var b$jscomp$inline_4 = g$jscomp$inline_1(1);
+          var c$jscomp$inline_5 = i$jscomp$inline_3();
+        }
+        """,
         "foo",
         null);
   }

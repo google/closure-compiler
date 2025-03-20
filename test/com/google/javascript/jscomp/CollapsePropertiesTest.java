@@ -36,12 +36,13 @@ import org.junit.runners.JUnit4;
 public final class CollapsePropertiesTest extends CompilerTestCase {
 
   private static final String EXTERNS =
-      lines(
-          "var window;",
-          "function alert(s) {}",
-          "function parseInt(s) {}",
-          "/** @constructor */ function String() {};",
-          "var arguments");
+      """
+      var window;
+      function alert(s) {}
+      function parseInt(s) {}
+      /** @constructor */ function String() {};
+      var arguments
+      """;
 
   private PropertyCollapseLevel propertyCollapseLevel = PropertyCollapseLevel.ALL;
 
@@ -75,100 +76,100 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void doNotCollapseAStaticPropertyUsedInAGetter() {
     test(
         srcs(
-            lines(
-                "class C {",
-                "  /** @type {number} */",
-                "  static get p() { return this.p_; }",
-                "}",
-                // declaration and initialization of private static field
-                "/** @private {number} */",
-                "C.p_ = 1;",
-                // reference via getter
-                "alert(C.p);",
-                "")),
+            """
+            class C {
+              /** @type {number} */
+              static get p() { return this.p_; }
+            }
+            // declaration and initialization of private static field
+            /** @private {number} */
+            C.p_ = 1;
+            // reference via getter
+            alert(C.p);
+            """),
         expected(
-            lines(
-                "class C {",
-                "  /** @type {number} */",
-                "  static get p() { return this.p_; }",
-                "}",
-                // TODO(b/130682799): C.p_ should not be collapsed
-                "/** @private {number} */",
-                "var C$p_ = 1;",
-                "alert(C.p);",
-                "")));
+            """
+            class C {
+              /** @type {number} */
+              static get p() { return this.p_; }
+            }
+            // TODO(b/130682799): C.p_ should not be collapsed
+            /** @private {number} */
+            var C$p_ = 1;
+            alert(C.p);
+            """));
   }
 
   @Test
   public void doNotCollapseAStaticPropertyUsedInASetter() {
     test(
         srcs(
-            lines(
-                "class C {",
-                "  /** @param {number} v */",
-                "  static set p(v) { this.p_ = v; }",
-                "}",
-                // declaration and initialization of private static field
-                "/** @private {number} */",
-                "C.p_ = 0;",
-                // changing private static field through setter property
-                "C.p = 1;",
-                "alert(C.p_);",
-                "")),
+            """
+            class C {
+              /** @param {number} v */
+              static set p(v) { this.p_ = v; }
+            }
+            // declaration and initialization of private static field
+            /** @private {number} */
+            C.p_ = 0;
+            // changing private static field through setter property
+            C.p = 1;
+            alert(C.p_);
+            """),
         expected(
-            lines(
-                "class C {",
-                "  /** @param {number} v */",
-                "  static set p(v) { this.p_ = v; }",
-                "}",
-                // TODO(b/130682799): C.p_ should not be collapsed
-                "/** @private {number} */",
-                "var C$p_ = 0;",
-                "C.p = 1;",
-                "alert(C$p_);",
-                "")));
+            """
+            class C {
+              /** @param {number} v */
+              static set p(v) { this.p_ = v; }
+            }
+            // TODO(b/130682799): C.p_ should not be collapsed
+            /** @private {number} */
+            var C$p_ = 0;
+            C.p = 1;
+            alert(C$p_);
+            """));
     test(
         srcs(
-            lines(
-                "class C {",
-                "  /** @param {number} v */",
-                "  static set p(v) { this.p_ = v; }",
-                "}",
-                // declaration and initialization of private static field
-                "/** @private {number} */",
-                "C.p_ = 0;",
-                // changing private static field through setter property
-                "C.p = 1;",
-                "alert?.(C?.p_);",
-                "")),
+            """
+            class C {
+              /** @param {number} v */
+              static set p(v) { this.p_ = v; }
+            }
+            // declaration and initialization of private static field
+            /** @private {number} */
+            C.p_ = 0;
+            // changing private static field through setter property
+            C.p = 1;
+            alert?.(C?.p_);
+            """),
         expected(
-            lines(
-                "class C {",
-                "  /** @param {number} v */",
-                "  static set p(v) { this.p_ = v; }",
-                "}",
-                // TODO(b/130682799): C.p_ should not be collapsed
-                "/** @private {number} */",
-                "var C$p_ = 0;",
-                "C.p = 1;",
-                "alert?.(C?.p_);",
-                "")));
+            """
+            class C {
+              /** @param {number} v */
+              static set p(v) { this.p_ = v; }
+            }
+            // TODO(b/130682799): C.p_ should not be collapsed
+            /** @private {number} */
+            var C$p_ = 0;
+            C.p = 1;
+            alert?.(C?.p_);
+            """));
   }
 
   @Test
   public void doNotCollapseAStaticPropertyReadInAStaticMethod() {
     testWarning(
-        lines(
-            "class C {",
-            "  /** @return {number} */",
-            "  static getP() { return this.p_; }",
-            "}",
-            // declaration and initialization of private static field
-            "/** @private {number} */",
-            "C.p_ = 1;",
-            // reference via method
-            "alert(C.getP());",
-            ""),
+        """
+        class C {
+          /** @return {number} */
+          static getP() { return this.p_; }
+        }
+        // declaration and initialization of private static field
+        /** @private {number} */
+        C.p_ = 1;
+        // reference via method
+        alert(C.getP());
+        """,
         // TODO(b/117437011): should recognize type of `this` in a static method
         RECEIVER_AFFECTED_BY_COLLAPSE);
   }
@@ -176,18 +177,18 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   @Test
   public void doNotCollapseAStaticPropertyAssignedInAStaticMethod() {
     testWarning(
-        lines(
-            "class C {",
-            "  /** @param {number} v */",
-            "  static setP(v) { this.p_ = v; }",
-            "}",
-            // declaration and initialization of private static field
-            "/** @private {number} */",
-            "C.p_ = 0;",
-            // changing private static field through method
-            "C.setP(1);",
-            "alert(C.p_);",
-            ""),
+        """
+        class C {
+          /** @param {number} v */
+          static setP(v) { this.p_ = v; }
+        }
+        // declaration and initialization of private static field
+        /** @private {number} */
+        C.p_ = 0;
+        // changing private static field through method
+        C.setP(1);
+        alert(C.p_);
+        """,
         // TODO(b/117437011): should recognize type of `this` in a static method
         RECEIVER_AFFECTED_BY_COLLAPSE);
   }
@@ -196,139 +197,135 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void doNotCollapseAPropertyReadByAnObjectLiteralMethod() {
     test(
         srcs(
-            lines(
-                "const obj = {",
-                "  /** @private {number} */",
-                "  p_: 0,",
-                "  /**",
-                "   * @this {{p_: number}}",
-                "   * @return {number}",
-                "   */",
-                "  getP() { return this.p_; }",
-                "};",
-                "alert(obj.getP());",
-                "")),
+            """
+            const obj = {
+              /** @private {number} */
+              p_: 0,
+              /**
+               * @this {{p_: number}}
+               * @return {number}
+               */
+              getP() { return this.p_; }
+            };
+            alert(obj.getP());
+            """),
         expected(
-            lines(
-                // TODO(b/130829946): Should not collapse obj.p_ and obj.getP
-                "var obj$p_ = 0;",
-                "var obj$getP = function() { return this.p_; };",
-                "alert(obj$getP());",
-                "")));
+            """
+            var obj$p_ = 0;
+            var obj$getP = function() { return this.p_; };
+            alert(obj$getP());
+            """));
   }
 
   @Test
   public void doNotCollapseAPropertyAssignedInAnObjectLiteralMethod() {
     test(
         srcs(
-            lines(
-                "const obj = {",
-                "  /** @private {number} */",
-                "  p_: 0,",
-                "  /**",
-                "   * @this {{p_: number}}",
-                "   * @param {number} v",
-                "   */",
-                "  setP(v) { this.p_ = v; }",
-                "}",
-                "obj.setP(1);",
-                "alert(obj.p_);",
-                "")),
+            """
+            const obj = {
+              /** @private {number} */
+              p_: 0,
+              /**
+               * @this {{p_: number}}
+               * @param {number} v
+               */
+              setP(v) { this.p_ = v; }
+            }
+            obj.setP(1);
+            alert(obj.p_);
+            """),
         expected(
-            lines(
-                // TODO(b/130829946): Should not collapse obj.p_ and obj.getP
-                "var obj$p_ = 0;",
-                "var obj$setP = function(v) { this.p_ = v; };",
-                "obj$setP(1);",
-                "alert(obj$p_);",
-                "")));
+            """
+            var obj$p_ = 0;
+            var obj$setP = function(v) { this.p_ = v; };
+            obj$setP(1);
+            alert(obj$p_);
+            """));
     testSame(
-        lines(
-            "const obj = {",
-            "  /** @private {number} */",
-            "  p_: 0,",
-            "  /**",
-            "   * @this {{p_: number}}",
-            "   * @param {number} v",
-            "   */",
-            "  setP(v) { this.p_ = v; }",
-            "}",
-            "obj.setP?.(1);",
-            "alert(obj?.p_);",
-            ""));
+        """
+        const obj = {
+          /** @private {number} */
+          p_: 0,
+          /**
+           * @this {{p_: number}}
+           * @param {number} v
+           */
+          setP(v) { this.p_ = v; }
+        }
+        obj.setP?.(1);
+        alert(obj?.p_);
+        """);
   }
 
   @Test
   public void doNotCollapseAPropertyUsedInAnObjectLiteralGetter() {
     test(
         srcs(
-            lines(
-                "const obj = {",
-                "  /** @private {number} */",
-                "  p_: 0,",
-                "  /** @type {number} */",
-                "  get p() { return this.p_; }",
-                "}",
-                "alert(obj.p);",
-                "")),
+            """
+            const obj = {
+              /** @private {number} */
+              p_: 0,
+              /** @type {number} */
+              get p() { return this.p_; }
+            }
+            alert(obj.p);
+            """),
         expected(
-            lines(
-                // TODO(b/130829946): Should not collapse obj.p_
-                "var obj$p_ = 0;",
-                "const obj = {",
-                "  /** @type {number} */",
-                "  get p() { return this.p_; }",
-                "}",
-                "alert(obj.p);",
-                "")));
+            """
+            var obj$p_ = 0;
+            const obj = {
+              /** @type {number} */
+              get p() { return this.p_; }
+            }
+            alert(obj.p);
+            """));
     testSame(
-        lines(
-            "const obj = {",
-            "  /** @private {number} */",
-            "  p_: 0,",
-            "  /** @type {number} */",
-            "  get p() { return this?.p_; }",
-            "}",
-            "alert(obj?.p);",
-            ""));
+        """
+        const obj = {
+          /** @private {number} */
+          p_: 0,
+          /** @type {number} */
+          get p() { return this?.p_; }
+        }
+        alert(obj?.p);
+        """);
   }
 
   @Test
   public void doNotCollapseAPropertyUsedInAnObjectLiteralSetter() {
     test(
         srcs(
-            lines(
-                "const obj = {",
-                "  /** @private {number} */",
-                "  p_: 0,",
-                "  /** @param {number} v */",
-                "  set p(v) { this.p_ = v; }",
-                "}",
-                "obj.p = 1;",
-                "alert(obj.p_);",
-                "")),
+            """
+            const obj = {
+              /** @private {number} */
+              p_: 0,
+              /** @param {number} v */
+              set p(v) { this.p_ = v; }
+            }
+            obj.p = 1;
+            alert(obj.p_);
+            """),
         expected(
-            lines(
-                // TODO(b/130829946): Should not collapse obj.p_
-                "var obj$p_ = 0;",
-                "const obj = {",
-                "  /** @param {number} v */",
-                "  set p(v) { this.p_ = v; }",
-                "}",
-                "obj.p = 1;",
-                "alert(obj$p_);",
-                "")));
+            """
+            var obj$p_ = 0;
+            const obj = {
+              /** @param {number} v */
+              set p(v) { this.p_ = v; }
+            }
+            obj.p = 1;
+            alert(obj$p_);
+            """));
     testSame(
-        lines(
-            "const obj = {",
-            "  /** @private {number} */",
-            "  p_: 0,",
-            "  /** @param {number} v */",
-            "  set p(v) { this.p_ = v; }",
-            "}",
-            "obj.p = 1;",
-            "alert?.(obj?.p_);",
-            ""));
+        """
+        const obj = {
+          /** @private {number} */
+          p_: 0,
+          /** @param {number} v */
+          set p(v) { this.p_ = v; }
+        }
+        obj.p = 1;
+        alert?.(obj?.p_);
+        """);
   }
 
   @Test
@@ -388,13 +385,14 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   @Test
   public void testObjLitDeclarationDoesntCollapsePropertiesOnGetter() {
     testSame(
-        lines(
-            "var a = {",
-            "  get b() { return class {}; },",
-            "  set b(c) {}",
-            "};",
-            "a.b = class {};",
-            "a.b.c = 4;"));
+        """
+        var a = {
+          get b() { return class {}; },
+          set b(c) {}
+        };
+        a.b = class {};
+        a.b.c = 4;
+        """);
   }
 
   @Test
@@ -414,20 +412,22 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     test(
         srcs(
-            lines(
-                "var a = {b: {}, /** @nocollapse */ c: {}};",
-                "var d = 1;",
-                "d = a.b;",
-                "var e = 1;",
-                "e = a.c;")),
+            """
+            var a = {b: {}, /** @nocollapse */ c: {}};
+            var d = 1;
+            d = a.b;
+            var e = 1;
+            e = a.c;
+            """),
         expected(
-            lines(
-                "var a$b = {};",
-                "var a = { /** @nocollapse */c: {}};",
-                "var d = 1;",
-                "d = a$b;",
-                "var e = 1;",
-                "e = a.c;")));
+            """
+            var a$b = {};
+            var a = { /** @nocollapse */c: {}};
+            var d = 1;
+            d = a$b;
+            var e = 1;
+            e = a.c;
+            """));
     testSame("var a = {b: {}, /** @nocollapse */ c: {}}; var d = 1; d = a?.b; var e = 1; e = a?.c");
   }
 
@@ -444,22 +444,26 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     test(
         srcs(
-            lines(
-                "var a = {}; a.b = {c: {}, /** @nocollapse */ d: {}}; var e = 1; e = a.b.c;",
-                "var f = 1; f = a.b.d")),
+            """
+            var a = {}; a.b = {c: {}, /** @nocollapse */ d: {}}; var e = 1; e = a.b.c;
+            var f = 1; f = a.b.d
+            """),
         expected(
-            lines(
-                "var a$b$c = {}; var a$b = { /** @nocollapse */ d: {}}; var e = 1; e = a$b$c;",
-                "var f = 1; f = a$b.d;")));
+            """
+            var a$b$c = {}; var a$b = { /** @nocollapse */ d: {}}; var e = 1; e = a$b$c;
+            var f = 1; f = a$b.d;
+            """));
     test(
         srcs(
-            lines(
-                "var a = {}; a.b = {c: {}, /** @nocollapse */ d: {}}; var e = 1; e = a.b?.c;",
-                "var f = 1; f = a.b?.d")),
+            """
+            var a = {}; a.b = {c: {}, /** @nocollapse */ d: {}}; var e = 1; e = a.b?.c;
+            var f = 1; f = a.b?.d
+            """),
         expected(
-            lines(
-                "var         a$b = {c: {}, /** @nocollapse */ d: {}}; var e = 1; e = a$b?.c;",
-                "var f = 1; f = a$b?.d;")));
+            """
+            var         a$b = {c: {}, /** @nocollapse */ d: {}}; var e = 1; e = a$b?.c;
+            var f = 1; f = a$b?.d;
+            """));
   }
 
   @Test
@@ -592,12 +596,14 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // a.b *is* safely collapsible, the Boolean logic should be smart enough to
     // only consider the right side of the && as aliasing.
     test(
-        lines(
-            "var a = {}; a.b = {}; /** @constructor */ a.b.c = function(){};",
-            " a.b.z = 1; var d = a.b && a.b.c;"),
-        lines(
-            "var a$b = {}; /** @constructor */ a$b.c = function(){};",
-            " a$b.z = 1; var d = a$b && a$b.c;"),
+        """
+        var a = {}; a.b = {}; /** @constructor */ a.b.c = function(){};
+         a.b.z = 1; var d = a.b && a.b.c;
+        """,
+        """
+        var a$b = {}; /** @constructor */ a$b.c = function(){};
+         a$b.z = 1; var d = a$b && a$b.c;
+        """,
         warning(PARTIAL_NAMESPACE_WARNING));
   }
 
@@ -623,21 +629,24 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     testSame("var a = {b: function(){}}; a.b.c = 1; if (a?.b) x?.(a.b?.c);");
 
     testSame(
-        lines(
-            "var a = {/** @nocollapse */ b: function(){}}; a.b.c = 1; ", //
-            "if (a.b) x(a.b.c);"));
+        """
+        var a = {/** @nocollapse */ b: function(){}}; a.b.c = 1;
+        if (a.b) x(a.b.c);
+        """);
 
     test(
         srcs(
-            lines(
-                "var a = {b: function(){}}; /** @nocollapse */ a.b.c = 1; ", //
-                "if (a.b) x(a.b.c);")),
+            """
+            var a = {b: function(){}}; /** @nocollapse */ a.b.c = 1;
+            if (a.b) x(a.b.c);
+            """),
         expected("var a$b = function(){}; /** @nocollapse */ a$b.c = 1; if (a$b) x(a$b.c);"));
     testSame(
-        lines(
-            "var a = {b: function(){}};", //
-            "/** @nocollapse */ a.b.c = 1;",
-            "if (a?.b) x?.(a.b?.c);"));
+        """
+        var a = {b: function(){}};
+        /** @nocollapse */ a.b.c = 1;
+        if (a?.b) x?.(a.b?.c);
+        """);
   }
 
   @Test
@@ -648,14 +657,15 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // Another solution to the issue would be to explicitly initialize obj.val to undefined at the
     // start of the loop, but that requires some more refactoring of CollapseProperties.
     testSame(
-        lines(
-            "for (var i = 0; i < 2; i++) {",
-            "  var obj = {};",
-            "  if (i == 0) {",
-            "    obj.val = 1;",
-            "  }",
-            "  alert(obj.val);",
-            "}"));
+        """
+        for (var i = 0; i < 2; i++) {
+          var obj = {};
+          if (i == 0) {
+            obj.val = 1;
+          }
+          alert(obj.val);
+        }
+        """);
   }
 
   @Test
@@ -665,24 +675,26 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // we can collapse `obj.x` but not `obj.x.val`
     test(
         srcs(
-            lines(
-                "var obj = {};",
-                "for (var i = 0; i < 2; i++) {",
-                "  obj.x = {};",
-                "  if (i == 0) {",
-                "    obj.x.val = 1;",
-                "  }",
-                "  alert(obj.x.val);",
-                "}")),
+            """
+            var obj = {};
+            for (var i = 0; i < 2; i++) {
+              obj.x = {};
+              if (i == 0) {
+                obj.x.val = 1;
+              }
+              alert(obj.x.val);
+            }
+            """),
         expected(
-            lines(
-                "for (var i = 0; i < 2; i++) {",
-                "  var obj$x = {};",
-                "  if (i == 0) {",
-                "    obj$x.val = 1;",
-                "  }",
-                "  alert(obj$x.val);",
-                "}")));
+            """
+            for (var i = 0; i < 2; i++) {
+              var obj$x = {};
+              if (i == 0) {
+                obj$x.val = 1;
+              }
+              alert(obj$x.val);
+            }
+            """));
   }
 
   @Test
@@ -690,15 +702,16 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     testSame(
-        lines(
-            "for (var i = 0; i < 2; i++) {",
-            "  /** @constructor */",
-            "  var Foo = function () {}",
-            "  if (i == 0) {",
-            "    Foo.val = 1;",
-            "  }",
-            "  alert(Foo.val);",
-            "}"));
+        """
+        for (var i = 0; i < 2; i++) {
+          /** @constructor */
+          var Foo = function () {}
+          if (i == 0) {
+            Foo.val = 1;
+          }
+          alert(Foo.val);
+        }
+        """);
   }
 
   @Test
@@ -708,31 +721,34 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // It's okay that this property is declared inside a loop as long as the object it's on is not.
     test(
         srcs(
-            lines(
-                "var obj = {};",
-                "for (var i = 0; i < 2; i++) {",
-                "  if (i == 0) {",
-                "    obj.val = 1;",
-                "  }",
-                "  alert(obj.val);",
-                "}")),
+            """
+            var obj = {};
+            for (var i = 0; i < 2; i++) {
+              if (i == 0) {
+                obj.val = 1;
+              }
+              alert(obj.val);
+            }
+            """),
         expected(
-            lines(
-                "for (var i = 0; i < 2; i++) {",
-                "  if (i == 0) {",
-                "    var obj$val = 1;",
-                "  }",
-                "  alert(obj$val);",
-                "}")));
+            """
+            for (var i = 0; i < 2; i++) {
+              if (i == 0) {
+                var obj$val = 1;
+              }
+              alert(obj$val);
+            }
+            """));
     testSame(
-        lines(
-            "var obj = {};",
-            "for (var i = 0; i < 2; i++) {",
-            "  if (i == 0) {",
-            "    obj.val = 1;",
-            "  }",
-            "  alert?.(obj?.val);",
-            "}"));
+        """
+        var obj = {};
+        for (var i = 0; i < 2; i++) {
+          if (i == 0) {
+            obj.val = 1;
+          }
+          alert?.(obj?.val);
+        }
+        """);
   }
 
   @Test
@@ -754,9 +770,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     test(
         srcs(
-            lines(
-                "var a = {}; /** @nocollapse */ a.b = {c: 0}; var d = 1; d = a.b; ", //
-                "a.b.c == d.c;")),
+            """
+            var a = {}; /** @nocollapse */ a.b = {c: 0}; var d = 1; d = a.b;
+            a.b.c == d.c;
+            """),
         expected("var a = {}; /** @nocollapse */ a.b = {c: 0}; var d = 1; d = a.b; a.b.c == d.c;"));
   }
 
@@ -799,36 +816,40 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "var a$b = 0; /** @enum */ var a = {b: a$b}; var c = 1; c = a; c.b = 1; a$b != c.b;"));
     test(
         srcs(
-            lines(
-                "/** @enum */ var a = {b:   0};",
-                "var c = 1;",
-                "c = a;",
-                "c.b = 1;",
-                "a?.b != c?.b;")),
+            """
+            /** @enum */ var a = {b:   0};
+            var c = 1;
+            c = a;
+            c.b = 1;
+            a?.b != c?.b;
+            """),
         expected(
-            lines(
-                "var a$b = 0;",
-                "/** @enum */ var a = {b: a$b};",
-                "var c = 1;",
-                "c = a;",
-                "c.b = 1;",
-                "a?.b != c?.b")));
+            """
+            var a$b = 0;
+            /** @enum */ var a = {b: a$b};
+            var c = 1;
+            c = a;
+            c.b = 1;
+            a?.b != c?.b
+            """));
 
     test(
         srcs(
-            lines(
-                "/** @enum */ var a = { /** @nocollapse */ b: 0};",
-                "var c = 1;",
-                "c = a;",
-                "c.b = 1;",
-                "a.b == c.b")),
+            """
+            /** @enum */ var a = { /** @nocollapse */ b: 0};
+            var c = 1;
+            c = a;
+            c.b = 1;
+            a.b == c.b
+            """),
         expected(
-            lines(
-                "/** @enum */ var a = { /** @nocollapse */ b: 0};",
-                "var c = 1;",
-                "c = a;",
-                "c.b = 1;",
-                "a.b == c.b")));
+            """
+            /** @enum */ var a = { /** @nocollapse */ b: 0};
+            var c = 1;
+            c = a;
+            c.b = 1;
+            a.b == c.b
+            """));
   }
 
   @Test
@@ -858,45 +879,53 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testAliasCreatedForEnumDepth2_1() {
     test(
         srcs(
-            lines(
-                "var a = {}; /** @enum */ a.b = {c: 0};", //
-                "var d = 1; d = a.b; d.c = 1; a.b.c != d.c;")),
+            """
+            var a = {}; /** @enum */ a.b = {c: 0};
+            var d = 1; d = a.b; d.c = 1; a.b.c != d.c;
+            """),
         expected(
-            lines(
-                "var a$b$c = 0; /** @enum */ var a$b = {c: a$b$c};",
-                "var d = 1; d = a$b; d.c = 1; a$b$c != d.c;")));
+            """
+            var a$b$c = 0; /** @enum */ var a$b = {c: a$b$c};
+            var d = 1; d = a$b; d.c = 1; a$b$c != d.c;
+            """));
     testSame(
         srcs(
-            lines(
-                "var a = {}; /** @enum */ a.b = {c: 0};", //
-                "var d = 1; d = a?.b; d.c = 1; a.b?.c != d?.c;")),
+            """
+            var a = {}; /** @enum */ a.b = {c: 0};
+            var d = 1; d = a?.b; d.c = 1; a.b?.c != d?.c;
+            """),
         warning(PARTIAL_NAMESPACE_WARNING));
 
     testSame(
-        lines(
-            "var a = {}; /** @nocollapse @enum */ a.b = {c: 0};",
-            "var d = 1; d = a.b; d.c = 1; a.b.c == d.c;"));
+        """
+        var a = {}; /** @nocollapse @enum */ a.b = {c: 0};
+        var d = 1; d = a.b; d.c = 1; a.b.c == d.c;
+        """);
     testSame(
         srcs(
-            lines(
-                "var a = {}; /** @nocollapse @enum */ a.b = {c: 0};",
-                "var d = 1; d = a?.b; d.c = 1; a.b?.c == d?.c;")),
+            """
+            var a = {}; /** @nocollapse @enum */ a.b = {c: 0};
+            var d = 1; d = a?.b; d.c = 1; a.b?.c == d?.c;
+            """),
         warning(PARTIAL_NAMESPACE_WARNING));
 
     test(
         srcs(
-            lines(
-                "var a = {}; /** @enum */ a.b = {/** @nocollapse */ c: 0};",
-                "var d = 1; d = a.b; d.c = 1; a.b.c == d.c;")),
+            """
+            var a = {}; /** @enum */ a.b = {/** @nocollapse */ c: 0};
+            var d = 1; d = a.b; d.c = 1; a.b.c == d.c;
+            """),
         expected(
-            lines(
-                "/** @enum */ var a$b = { /** @nocollapse */ c: 0};",
-                "var d = 1; d = a$b; d.c = 1; a$b.c == d.c;")));
+            """
+            /** @enum */ var a$b = { /** @nocollapse */ c: 0};
+            var d = 1; d = a$b; d.c = 1; a$b.c == d.c;
+            """));
     testSame(
         srcs(
-            lines(
-                "var a = {}; /** @enum */ a.b = {/** @nocollapse */ c: 0};",
-                "var d = 1; d = a?.b; d.c = 1; a.b?.c == d?.c;")),
+            """
+            var a = {}; /** @enum */ a.b = {/** @nocollapse */ c: 0};
+            var d = 1; d = a?.b; d.c = 1; a.b?.c == d?.c;
+            """),
         warning(PARTIAL_NAMESPACE_WARNING));
   }
 
@@ -906,18 +935,21 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     enableNormalizeExpectedOutput();
     test(
         srcs(
-            lines(
-                "var a = {}; /** @enum */ a.b = {c: 0};", //
-                "for (var p in a.b) { f(a.b[p]); }")),
+            """
+            var a = {}; /** @enum */ a.b = {c: 0};
+            for (var p in a.b) { f(a.b[p]); }
+            """),
         expected(
-            lines(
-                "var a$b$c = 0; /** @enum */ var a$b = {c: a$b$c};",
-                "for (var p in a$b) { f(a$b[p]); }")));
+            """
+            var a$b$c = 0; /** @enum */ var a$b = {c: a$b$c};
+            for (var p in a$b) { f(a$b[p]); }
+            """));
     testSame(
         srcs(
-            lines(
-                "var a = {}; /** @enum */ a.b = {c: 0};", //
-                "for (var p in a?.b) { f?.(a.b?.[p]); }")),
+            """
+            var a = {}; /** @enum */ a.b = {c: 0};
+            for (var p in a?.b) { f?.(a.b?.[p]); }
+            """),
         warning(PARTIAL_NAMESPACE_WARNING));
   }
 
@@ -926,9 +958,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     testSame(
-        lines(
-            "var a = {}; var d = 1; d = a; /** @enum */ a.b = {c: 0};",
-            "for (var p in a.b) { f(a.b[p]); }"),
+        """
+        var a = {}; var d = 1; d = a; /** @enum */ a.b = {c: 0};
+        for (var p in a.b) { f(a.b[p]); }
+        """,
         PARTIAL_NAMESPACE_WARNING);
   }
 
@@ -936,25 +969,28 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testAliasCreatedForEnumOfObjects() {
     test(
         srcs(
-            lines(
-                "var a = {};",
-                "/** @enum {Object} */ a.b = {c: {d: 1}};",
-                "a.b.c;",
-                "searchEnum(a.b);")),
+            """
+            var a = {};
+            /** @enum {Object} */ a.b = {c: {d: 1}};
+            a.b.c;
+            searchEnum(a.b);
+            """),
         expected(
-            lines(
-                "var a$b$c = {d: 1};",
-                "/** @enum {Object} */ var a$b = {c: a$b$c};",
-                "a$b$c;",
-                "searchEnum(a$b)")));
+            """
+            var a$b$c = {d: 1};
+            /** @enum {Object} */ var a$b = {c: a$b$c};
+            a$b$c;
+            searchEnum(a$b)
+            """));
     testSame(
         srcs(
-            lines(
-                "var a = {};", //
-                "/** @enum {Object} */",
-                "a.b = {c: {d: 1}};",
-                "a.b?.c;",
-                "searchEnum(a?.b);")),
+            """
+            var a = {};
+            /** @enum {Object} */
+            a.b = {c: {d: 1}};
+            a.b?.c;
+            searchEnum(a?.b);
+            """),
         warning(PARTIAL_NAMESPACE_WARNING));
   }
 
@@ -962,21 +998,24 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testAliasCreatedForEnumOfObjects2() {
     test(
         srcs(
-            lines(
-                "var a = {}; ",
-                "/** @enum {Object} */ a.b = {c: {d: 1}}; a.b.c.d;",
-                "searchEnum(a.b);")),
+            """
+            var a = {};
+            /** @enum {Object} */ a.b = {c: {d: 1}}; a.b.c.d;
+            searchEnum(a.b);
+            """),
         expected(
-            lines(
-                "var a$b$c = {d: 1}; /** @enum {Object} */ var a$b = {c: a$b$c}; a$b$c.d; ",
-                "searchEnum(a$b)")));
+            """
+            var a$b$c = {d: 1}; /** @enum {Object} */ var a$b = {c: a$b$c}; a$b$c.d;
+            searchEnum(a$b)
+            """));
     testSame(
         srcs(
-            lines(
-                "var a = {}; ",
-                "/** @enum {Object} */ a.b = {c: {d: 1}};",
-                "a.b.c?.d;",
-                "searchEnum?.(a?.b);")),
+            """
+            var a = {};
+            /** @enum {Object} */ a.b = {c: {d: 1}};
+            a.b.c?.d;
+            searchEnum?.(a?.b);
+            """),
         warning(PARTIAL_NAMESPACE_WARNING));
   }
 
@@ -984,49 +1023,55 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testAliasCreatedForPropertyOfEnumOfObjects() {
     test(
         srcs(
-            lines(
-                "var a = {}; ",
-                "/** @enum {Object} */ a.b = {c: {d: 1}}; a.b.c;",
-                "searchEnum(a.b.c);")),
+            """
+            var a = {};
+            /** @enum {Object} */ a.b = {c: {d: 1}}; a.b.c;
+            searchEnum(a.b.c);
+            """),
         expected("var a$b$c = {d: 1}; a$b$c; searchEnum(a$b$c);"));
     test(
         srcs(
-            lines(
-                "var a = {}; ",
-                "/** @enum {Object} */ a.b = {c: {d: 1}}; a.b?.c;",
-                "searchEnum?.(a.b?.c);")),
+            """
+            var a = {};
+            /** @enum {Object} */ a.b = {c: {d: 1}}; a.b?.c;
+            searchEnum?.(a.b?.c);
+            """),
         expected(
-            lines(
-                "var a$b$c = {d:1};",
-                "/** @enum {!Object} */ var a$b = {c:a$b$c};",
-                "a$b?.c;",
-                "searchEnum?.(a$b?.c);")));
+            """
+            var a$b$c = {d:1};
+            /** @enum {!Object} */ var a$b = {c:a$b$c};
+            a$b?.c;
+            searchEnum?.(a$b?.c);
+            """));
   }
 
   @Test
   public void testAliasCreatedForPropertyOfEnumOfObjects2() {
     test(
         srcs(
-            lines(
-                "var a = {}; ",
-                "/** @enum {Object} */ a.b = {c: {d: 1}}; a.b.c.d;",
-                "searchEnum(a.b.c);")),
+            """
+            var a = {};
+            /** @enum {Object} */ a.b = {c: {d: 1}}; a.b.c.d;
+            searchEnum(a.b.c);
+            """),
         expected("var a$b$c = {d: 1}; a$b$c.d; searchEnum(a$b$c);"));
     test(
         srcs(
-            lines(
-                "var a = {}; ",
-                "/** @enum {Object} */",
-                "a.b = {c: {d: 1}};",
-                "a.b.c?.d;",
-                "searchEnum?.(a.b?.c);")),
+            """
+            var a = {};
+            /** @enum {Object} */
+            a.b = {c: {d: 1}};
+            a.b.c?.d;
+            searchEnum?.(a.b?.c);
+            """),
         expected(
-            lines(
-                "var a$b$c = {d:1};",
-                "/** @enum {!Object} */",
-                "var a$b = {c:a$b$c};",
-                "a$b$c?.d;",
-                "searchEnum?.(a$b?.c);")));
+            """
+            var a$b$c = {d:1};
+            /** @enum {!Object} */
+            var a$b = {c:a$b$c};
+            a$b$c?.d;
+            searchEnum?.(a$b?.c);
+            """));
   }
 
   @Test
@@ -1065,9 +1110,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         expected("/** @constructor */ var a = function(){}; var a$b = 1; new f(a); a$b;"));
 
     testSame(
-        lines(
-            "/** @constructor */ var a = function(){};",
-            "/** @nocollapse */ a.b = 1; new f(a); a.b;"));
+        """
+        /** @constructor */ var a = function(){};
+        /** @nocollapse */ a.b = 1; new f(a); a.b;
+        """);
   }
 
   @Test
@@ -1088,63 +1134,70 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testAliasCreatedForClassDepth2_1() {
     test(
         srcs(
-            lines(
-                "var a = {};", //
-                "a.b = {};",
-                "/** @constructor */",
-                "a.b.c = function(){};",
-                "a.b.c;")),
+            """
+            var a = {};
+            a.b = {};
+            /** @constructor */
+            a.b.c = function(){};
+            a.b.c;
+            """),
         expected(
-            lines(
-                "/** @constructor */", //
-                "var a$b$c = function(){};",
-                "a$b$c;")));
+            """
+            /** @constructor */
+            var a$b$c = function(){};
+            a$b$c;
+            """));
 
     test(
         srcs(
-            lines(
-                "var a = {};", //
-                "a.b = {};",
-                " /** @constructor @nocollapse */",
-                " a.b.c = function(){}; ",
-                "a.b.c;")),
+            """
+            var a = {};
+            a.b = {};
+             /** @constructor @nocollapse */
+             a.b.c = function(){};
+            a.b.c;
+            """),
         expected(
-            lines(
-                "var a$b = {};", //
-                "/** @constructor @nocollapse */",
-                "a$b.c = function(){};",
-                "a$b.c;")));
+            """
+            var a$b = {};
+            /** @constructor @nocollapse */
+            a$b.c = function(){};
+            a$b.c;
+            """));
   }
 
   @Test
   public void testDontCollapseClassIfParentNamespaceAliased() {
     test(
-        lines(
-            "var a = {};",
-            "a.b = {};",
-            "/** @constructor */",
-            "a.b.c = function(){};",
-            "var d = 1;",
-            "d = a.b;",
-            "a.b.c == d.c;"),
-        lines(
-            "var a$b = {}; ",
-            "/** @constructor */",
-            "a$b.c = function(){};",
-            "var d = 1;",
-            "d = a$b;",
-            "a$b.c == d.c;"),
+        """
+        var a = {};
+        a.b = {};
+        /** @constructor */
+        a.b.c = function(){};
+        var d = 1;
+        d = a.b;
+        a.b.c == d.c;
+        """,
+        """
+        var a$b = {};
+        /** @constructor */
+        a$b.c = function(){};
+        var d = 1;
+        d = a$b;
+        a$b.c == d.c;
+        """,
         warning(PARTIAL_NAMESPACE_WARNING));
     testSame(
         srcs(
-            lines(
-                "var a = {};",
-                "a.b = {};",
-                "/** @constructor */",
-                "a.b.c = function(){};",
-                "var d = 1;",
-                "d = a?.b;",
-                "a.b?.c == d?.c;")),
+            """
+            var a = {};
+            a.b = {};
+            /** @constructor */
+            a.b.c = function(){};
+            var d = 1;
+            d = a?.b;
+            a.b?.c == d?.c;
+            """),
         // 2 warnings (for `a` and for `a.b`)
         warning(PARTIAL_NAMESPACE_WARNING),
         warning(PARTIAL_NAMESPACE_WARNING));
@@ -1171,12 +1224,13 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         warning(PARTIAL_NAMESPACE_WARNING));
     testSame(
         srcs(
-            lines(
-                "var a = {};",
-                "a.b = {};",
-                "/** @constructor */",
-                "a.b.c = function(){};",
-                "new f(a?.b); a.b?.c;")),
+            """
+            var a = {};
+            a.b = {};
+            /** @constructor */
+            a.b.c = function(){};
+            new f(a?.b); a.b?.c;
+            """),
         // 2 warnings (`a` and `a.b`)
         warning(PARTIAL_NAMESPACE_WARNING),
         warning(PARTIAL_NAMESPACE_WARNING));
@@ -1186,60 +1240,67 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testAliasCreatedForClassProperty() {
     test(
         srcs(
-            lines(
-                "var a = {};",
-                "/** @constructor */ a.b = function(){};",
-                "a.b.c = {d:3};",
-                "new f(a.b.c);",
-                "a.b.c.d")),
+            """
+            var a = {};
+            /** @constructor */ a.b = function(){};
+            a.b.c = {d:3};
+            new f(a.b.c);
+            a.b.c.d
+            """),
         expected(
-            lines(
-                "/** @constructor */ var a$b = function(){};",
-                "var a$b$c = {d:3};",
-                "new f(a$b$c);",
-                "a$b$c.d")));
+            """
+            /** @constructor */ var a$b = function(){};
+            var a$b$c = {d:3};
+            new f(a$b$c);
+            a$b$c.d
+            """));
 
     test(
         srcs(
-            lines(
-                "var a = {};", //
-                "/** @constructor */",
-                "a.b = function(){};",
-                "a.b.c = {d:3};",
-                "new f(a.b?.c);",
-                "a.b.c?.d;")),
+            """
+            var a = {};
+            /** @constructor */
+            a.b = function(){};
+            a.b.c = {d:3};
+            new f(a.b?.c);
+            a.b.c?.d;
+            """),
         expected(
-            lines(
-                "/** @constructor */",
-                "var a$b = function(){};",
-                "var a$b$c = {d:3};",
-                // TODO(b/148237949): Collapsing breaks this reference
-                "new f(a$b?.c);",
-                "a$b$c?.d;")));
+            """
+            /** @constructor */
+            var a$b = function(){};
+            var a$b$c = {d:3};
+            // TODO(b/148237949): Collapsing breaks this reference
+            new f(a$b?.c);
+            a$b$c?.d;
+            """));
 
     testSame(
-        lines(
-            "var a = {}; /** @constructor @nocollapse */ a.b = function(){};",
-            "a.b.c = {d: 3}; new f(a.b.c); a.b.c.d;"));
+        """
+        var a = {}; /** @constructor @nocollapse */ a.b = function(){};
+        a.b.c = {d: 3}; new f(a.b.c); a.b.c.d;
+        """);
 
     test(
         srcs(
-            lines(
-                "var a = {};",
-                "/** @constructor */",
-                "a.b = function(){};",
-                "/** @nocollapse */",
-                " a.b.c = {d: 3};",
-                " new f(a.b.c);",
-                " a.b.c.d;")),
+            """
+            var a = {};
+            /** @constructor */
+            a.b = function(){};
+            /** @nocollapse */
+             a.b.c = {d: 3};
+             new f(a.b.c);
+             a.b.c.d;
+            """),
         expected(
-            lines(
-                "/** @constructor */",
-                " var a$b = function(){};",
-                " /** @nocollapse */",
-                " a$b.c = {d:3};",
-                " new f(a$b.c); ",
-                "a$b.c.d;")));
+            """
+            /** @constructor */
+             var a$b = function(){};
+             /** @nocollapse */
+             a$b.c = {d:3};
+             new f(a$b.c);
+            a$b.c.d;
+            """));
   }
 
   @Test
@@ -1284,9 +1345,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         expected("var x = {}; x.y = 1; var         a$b = { /** @nocollapse */ c: x?.y};"));
 
     testSame(
-        lines(
-            "var x = {}; /** @nocollapse */ x.y = 1; var a = {};",
-            "/** @nocollapse */ a.b = {c: x.y}"));
+        """
+        var x = {}; /** @nocollapse */ x.y = 1; var a = {};
+        /** @nocollapse */ a.b = {c: x.y}
+        """);
   }
 
   @Test
@@ -1362,9 +1424,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         expected("var a$b = function() {}; a$b['d'] = 1; f(a$b['d']);"));
 
     testSame(
-        lines(
-            "var a = {}; /** @nocollapse */ a.b = function() {};", //
-            "a.b['d'] = 1; f(a.b['d']);"));
+        """
+        var a = {}; /** @nocollapse */ a.b = function() {};
+        a.b['d'] = 1; f(a.b['d']);
+        """);
 
     test(
         srcs("var a = {}; a.b = function() {}; /** @nocollapse */ a.b['d'] = 1; f(a.b['d']);"),
@@ -1377,9 +1440,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     testSame("var a = b = {c: 0, d: 1}; var e = a.c; var f = b.d;");
 
     testSame(
-        lines(
-            "var a = b = {c: 0, /** @nocollapse */ d: 1}; var e = a.c;", //
-            "var f = b.d;"));
+        """
+        var a = b = {c: 0, /** @nocollapse */ d: 1}; var e = a.c;
+        var f = b.d;
+        """);
   }
 
   @Test
@@ -1403,9 +1467,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // redefinition with @nocollapse
     test(
         srcs(
-            lines(
-                "var a = {}; a.b = {c: 0}; ",
-                "function d() { a.b = {/** @nocollapse */ c: 1}; } e(a.b.c);")),
+            """
+            var a = {}; a.b = {c: 0};
+            function d() { a.b = {/** @nocollapse */ c: 1}; } e(a.b.c);
+            """),
         expected("var a$b = {c: 0}; function d() { a$b = {/** @nocollapse */ c: 1}; } e(a$b.c);"));
   }
 
@@ -1449,9 +1514,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     testSame("var a; if (x) a = {b: 0}; else a = {b: 1}; var c = a.b;");
 
     testSame(
-        lines(
-            "var a; if (x) a = {b: 0}; else a = {/** @nocollapse */ b: 1};", //
-            "var c = a.b;"));
+        """
+        var a; if (x) a = {b: 0}; else a = {/** @nocollapse */ b: 1};
+        var c = a.b;
+        """);
   }
 
   @Test
@@ -1470,28 +1536,32 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         srcs("function a() {} if (x) a.b = {c: 0}; var d = a.b ? a.b.c : 0;"),
         expected(
-            lines(
-                "function a() {} if (x){ var a$b$c = 0; var a$b = {} }", //
-                "var d = a$b ? a$b$c : 0;")));
+            """
+            function a() {} if (x){ var a$b$c = 0; var a$b = {} }
+            var d = a$b ? a$b$c : 0;
+            """));
 
     testSame(
-        lines(
-            "function a() {} if (x) /** @nocollapse */ a.b = {c: 0};", //
-            "var d = a.b ? a.b.c : 0;"));
+        """
+        function a() {} if (x) /** @nocollapse */ a.b = {c: 0};
+        var d = a.b ? a.b.c : 0;
+        """);
 
     test(
         srcs(
-            lines(
-                "function a() {}",
-                "if (x) a.b = {/** @nocollapse */ c: 0};",
-                "var d = a.b ? a.b.c : 0;")),
+            """
+            function a() {}
+            if (x) a.b = {/** @nocollapse */ c: 0};
+            var d = a.b ? a.b.c : 0;
+            """),
         expected(
-            lines(
-                "function a() {}",
-                "if (x) {",
-                "  var a$b = {/** @nocollapse */ c: 0};",
-                "}",
-                "var d = a$b ? a$b.c : 0")));
+            """
+            function a() {}
+            if (x) {
+              var a$b = {/** @nocollapse */ c: 0};
+            }
+            var d = a$b ? a$b.c : 0
+            """));
   }
 
   @Test
@@ -1501,9 +1571,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         expected("var a$b = function(){}; a$b.prototype.c = {d: 0};"));
 
     testSame(
-        lines(
-            "var a = {/** @nocollapse */ b: function(){}};", //
-            "a.b.prototype.c = {d: 0};"));
+        """
+        var a = {/** @nocollapse */ b: function(){}};
+        a.b.prototype.c = {d: 0};
+        """);
   }
 
   @Test
@@ -1515,14 +1586,16 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     testSame("var z = {}; z.a = 0; function f() {z.a = 5; return z?.a}");
 
     testSame(
-        lines(
-            "var z = {}; z.a = 0;", //
-            "function f() { /** @nocollapse */ z.a = 5; return z.a}"));
+        """
+        var z = {}; z.a = 0;
+        function f() { /** @nocollapse */ z.a = 5; return z.a}
+        """);
 
     testSame(
-        lines(
-            "var z = {}; /** @nocollapse */ z.a = 0;", //
-            "function f() {z.a = 5; return z.a}"));
+        """
+        var z = {}; /** @nocollapse */ z.a = 0;
+        function f() {z.a = 5; return z.a}
+        """);
   }
 
   @Test
@@ -1534,14 +1607,16 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     testSame("function z() {} z.a = 0; function f() {z.a = 5; return z?.a}");
 
     testSame(
-        lines(
-            "function z() {} /** @nocollapse */ z.a = 0;", //
-            "function f() {z.a = 5; return z.a}"));
+        """
+        function z() {} /** @nocollapse */ z.a = 0;
+        function f() {z.a = 5; return z.a}
+        """);
 
     testSame(
-        lines(
-            "function z() {} z.a = 0;", //
-            "function f() { /** @nocollapse */ z.a = 5; return z.a}"));
+        """
+        function z() {} z.a = 0;
+        function f() { /** @nocollapse */ z.a = 5; return z.a}
+        """);
   }
 
   @Test
@@ -1552,9 +1627,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         warning(NAMESPACE_REDEFINED_WARNING));
 
     testSame(
-        lines(
-            "var a = {}; /** @constructor @nocollapse */a.b = function() {};", //
-            "a = {};"),
+        """
+        var a = {}; /** @constructor @nocollapse */a.b = function() {};
+        a = {};
+        """,
         NAMESPACE_REDEFINED_WARNING);
   }
 
@@ -1598,9 +1674,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         warning(NAMESPACE_REDEFINED_WARNING));
 
     testSame(
-        lines(
-            "var a = {}; /** @constructor @nocollapse */a.b = function() {};",
-            " function f() { a = {}; }"),
+        """
+        var a = {}; /** @constructor @nocollapse */a.b = function() {};
+         function f() { a = {}; }
+        """,
         NAMESPACE_REDEFINED_WARNING);
   }
 
@@ -1612,9 +1689,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         warning(NAMESPACE_REDEFINED_WARNING));
 
     testSame(
-        lines(
-            "var a = {}; function f() { a = {}; }",
-            " /** @constructor @nocollapse */a.b = function() {};"),
+        """
+        var a = {}; function f() { a = {}; }
+         /** @constructor @nocollapse */a.b = function() {};
+        """,
         NAMESPACE_REDEFINED_WARNING);
   }
 
@@ -1622,35 +1700,41 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testNamespaceDefinedInLocalScope() {
     test(
         srcs(
-            lines(
-                "var a = {};",
-                "(function() { a.b = {}; })();",
-                "/** @constructor */ a.b.c = function() {};")),
+            """
+            var a = {};
+            (function() { a.b = {}; })();
+            /** @constructor */ a.b.c = function() {};
+            """),
         expected(
-            lines(
-                "var a$b;",
-                "(function() { a$b = {}; })();",
-                "/** @constructor */ var a$b$c = function() {}")));
+            """
+            var a$b;
+            (function() { a$b = {}; })();
+            /** @constructor */ var a$b$c = function() {}
+            """));
 
     test(
         srcs(
-            lines(
-                "var a = {}; (function() { /** @nocollapse */ a.b = {}; })();",
-                " /** @constructor */a.b.c = function() {};")),
+            """
+            var a = {}; (function() { /** @nocollapse */ a.b = {}; })();
+             /** @constructor */a.b.c = function() {};
+            """),
         expected(
-            lines(
-                "var a = {}; (function() { /** @nocollapse */ a.b = {}; })();",
-                " /** @constructor */ var a$b$c = function() {};")));
+            """
+            var a = {}; (function() { /** @nocollapse */ a.b = {}; })();
+             /** @constructor */ var a$b$c = function() {};
+            """));
 
     test(
         srcs(
-            lines(
-                "var a = {}; (function() { a.b = {}; })();",
-                " /** @constructor @nocollapse */a.b.c = function() {};")),
+            """
+            var a = {}; (function() { a.b = {}; })();
+             /** @constructor @nocollapse */a.b.c = function() {};
+            """),
         expected(
-            lines(
-                "var a$b; (function() { a$b = {}; })();",
-                "/** @constructor @nocollapse */ a$b.c = function() {};")));
+            """
+            var a$b; (function() { a$b = {}; })();
+            /** @constructor @nocollapse */ a$b.c = function() {};
+            """));
   }
 
   @Test
@@ -1695,17 +1779,20 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testAddPropertyToUncollapsibleFunctionInLocalScopeDepth2() {
     test(
         srcs(
-            lines(
-                "var a = {}; a.b = function (){}; var d = 1; d = a.b;",
-                "(function() {a.b.c = 0;})(); a.b.c;")),
+            """
+            var a = {}; a.b = function (){}; var d = 1; d = a.b;
+            (function() {a.b.c = 0;})(); a.b.c;
+            """),
         expected(
-            lines(
-                "var a$b = function (){}; var d = 1; d = a$b;", //
-                "(function() {a$b.c = 0;})(); a$b.c;")));
+            """
+            var a$b = function (){}; var d = 1; d = a$b;
+            (function() {a$b.c = 0;})(); a$b.c;
+            """));
     testSame(
-        lines(
-            "var a = {}; a.b = function (){}; var d = 1; d = a?.b;",
-            "(function() {a.b.c = 0;})(); a.b?.c;"));
+        """
+        var a = {}; a.b = function (){}; var d = 1; d = a?.b;
+        (function() {a.b.c = 0;})(); a.b?.c;
+        """);
   }
 
   @Test
@@ -1745,30 +1832,34 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   @Test
   public void testTwiceDefinedGlobalNameDepth1_1() {
     testSame(
-        lines(
-            "var a = {}; function f() { a.b(); }", //
-            "a = function() {}; a.b = function() {};"));
+        """
+        var a = {}; function f() { a.b(); }
+        a = function() {}; a.b = function() {};
+        """);
   }
 
   @Test
   public void testTwiceDefinedGlobalNameDepth1_2() {
     testSame(
-        lines(
-            "var a = {}; /** @constructor */ a = function() {};",
-            "a.b = {}; a.b.c = 0; function f() { a.b.d = 1; }"));
+        """
+        var a = {}; /** @constructor */ a = function() {};
+        a.b = {}; a.b.c = 0; function f() { a.b.d = 1; }
+        """);
   }
 
   @Test
   public void testTwiceDefinedGlobalNameDepth2() {
     test(
         srcs(
-            lines(
-                "var a = {}; a.b = {}; function f() { a.b.c(); }",
-                "a.b = function() {}; a.b.c = function() {};")),
+            """
+            var a = {}; a.b = {}; function f() { a.b.c(); }
+            a.b = function() {}; a.b.c = function() {};
+            """),
         expected(
-            lines(
-                "var a$b = {}; function f() { a$b.c(); }",
-                "a$b = function() {}; a$b.c = function() {};")));
+            """
+            var a$b = {}; function f() { a$b.c(); }
+            a$b = function() {}; a$b.c = function() {};
+            """));
   }
 
   @Test
@@ -1807,35 +1898,41 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testCollapsePrototypeName() {
     test(
         srcs(
-            lines(
-                "var a = {}; a.b = {}; a.b.c = function(){}; ",
-                "a.b.c.prototype.d = function(){}; (new a.b.c()).d();")),
+            """
+            var a = {}; a.b = {}; a.b.c = function(){};
+            a.b.c.prototype.d = function(){}; (new a.b.c()).d();
+            """),
         expected(
-            lines(
-                "var a$b$c = function(){}; a$b$c.prototype.d = function(){}; ", //
-                "new a$b$c().d();")));
+            """
+            var a$b$c = function(){}; a$b$c.prototype.d = function(){};
+            new a$b$c().d();
+            """));
     test(
         srcs(
-            lines(
-                "var a = {}; a.b = {}; a.b.c = function(){}; ",
-                "a.b.c.prototype.d = function(){}; (new a.b.c()).d?.();")),
+            """
+            var a = {}; a.b = {}; a.b.c = function(){};
+            a.b.c.prototype.d = function(){}; (new a.b.c()).d?.();
+            """),
         expected(
-            lines(
-                "var a$b$c = function(){}; a$b$c.prototype.d = function(){}; ", //
-                "(new a$b$c).d?.();")));
+            """
+            var a$b$c = function(){}; a$b$c.prototype.d = function(){};
+            (new a$b$c).d?.();
+            """));
   }
 
   @Test
   public void testReferencedPrototypeProperty() {
     test(
         srcs(
-            lines(
-                "var a = {b: {}}; a.b.c = function(){}; a.b.c.prototype.d = {};",
-                "e = a.b.c.prototype.d;")),
+            """
+            var a = {b: {}}; a.b.c = function(){}; a.b.c.prototype.d = {};
+            e = a.b.c.prototype.d;
+            """),
         expected(
-            lines(
-                "var a$b$c = function(){}; a$b$c.prototype.d = {};", //
-                "e = a$b$c.prototype.d;")));
+            """
+            var a$b$c = function(){}; a$b$c.prototype.d = {};
+            e = a$b$c.prototype.d;
+            """));
   }
 
   @Test
@@ -1932,9 +2029,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testConstructorReferencingThis() {
     test(
         srcs(
-            lines(
-                "var a = {}; ", //
-                "/** @constructor */ a.b = function() { this.a = 3; };")),
+            """
+            var a = {};
+            /** @constructor */ a.b = function() { this.a = 3; };
+            """),
         expected("/** @constructor */ var a$b = function() { this.a = 3; };"));
   }
 
@@ -1942,9 +2040,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testRecordReferencingThis() {
     test(
         srcs(
-            lines(
-                "/** @const */ var a = {}; ",
-                "/** @record */ a.b = function() { /** @type {string} */ this.a; };")),
+            """
+            /** @const */ var a = {};
+            /** @record */ a.b = function() { /** @type {string} */ this.a; };
+            """),
         expected("/** @record */ var a$b = function() { /** @type {string} */ this.a; };"));
   }
 
@@ -1996,9 +2095,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "      'beep': 'xxxxx',",
             "    },",
             "  }",
-            lines(
-                "};", //
-                "alert(FOO);")));
+            """
+            };
+            alert(FOO);
+            """));
   }
 
   @Test
@@ -2086,17 +2186,20 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     test(
         srcs(
-            lines(
-                "var x = {}; var a = x.y = 0; x.w = 1; x.y.z = 2;", //
-                "b = x.w; c = x.y.z;")),
+            """
+            var x = {}; var a = x.y = 0; x.w = 1; x.y.z = 2;
+            b = x.w; c = x.y.z;
+            """),
         expected(
-            lines(
-                "var x$y; var a = x$y = 0; var x$w = 1; x$y.z = 2;", //
-                "b = x$w; c = x$y.z;")));
+            """
+            var x$y; var a = x$y = 0; var x$w = 1; x$y.z = 2;
+            b = x$w; c = x$y.z;
+            """));
     testSame(
-        lines(
-            "var x = {}; var a = x.y = 0; x.w = 1; x.y.z = 2;", //
-            "b = x?.w; c = x.y?.z;"));
+        """
+        var x = {}; var a = x.y = 0; x.w = 1; x.y.z = 2;
+        b = x?.w; c = x.y?.z;
+        """);
   }
 
   @Test
@@ -2133,17 +2236,19 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testObjLitDefinedInLocalScopeIsLeftAlone() {
     test(
         srcs(
-            lines(
-                "var a = {}; a.b = function() {};",
-                "a.b.prototype.f_ = function() {",
-                "  var x = { p: '', q: '', r: ''}; var y = x.q;",
-                "};")),
+            """
+            var a = {}; a.b = function() {};
+            a.b.prototype.f_ = function() {
+              var x = { p: '', q: '', r: ''}; var y = x.q;
+            };
+            """),
         expected(
-            lines(
-                "var a$b = function() {};",
-                "a$b.prototype.f_ = function() {",
-                "  var x = { p: '', q: '', r: ''}; var y = x.q;",
-                "};")));
+            """
+            var a$b = function() {};
+            a$b.prototype.f_ = function() {
+              var x = { p: '', q: '', r: ''}; var y = x.q;
+            };
+            """));
   }
 
   @Test
@@ -2177,13 +2282,15 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // has come into existence some other way.
     test(
         srcs(
-            lines(
-                "var a = {b: function(){}}; a.b.prototype.c =",
-                "function() { a.b.superClass_.c.call(this); }")),
+            """
+            var a = {b: function(){}}; a.b.prototype.c =
+            function() { a.b.superClass_.c.call(this); }
+            """),
         expected(
-            lines(
-                "var a$b = function(){}; a$b.prototype.c =",
-                "function() { a$b.superClass_.c.call(this); }")));
+            """
+            var a$b = function(){}; a$b.prototype.c =
+            function() { a$b.superClass_.c.call(this); }
+            """));
   }
 
   @Test
@@ -2194,9 +2301,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   @Test
   public void testNonWellformedAlias2() {
     testSame(
-        lines(
-            "var a = {b: 3}; ", //
-            "function f() { if (false) { var x = a; f(x.b); } f(x); }"));
+        """
+        var a = {b: 3};
+        function f() { if (false) { var x = a; f(x.b); } f(x); }
+        """);
   }
 
   @Test
@@ -2222,12 +2330,13 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   @Test
   public void testBug1704733() {
     String prelude =
-        lines(
-            "function protect(x) { return x; }",
-            "function O() {}",
-            "protect(O).m1 = function() {};",
-            "protect(O).m2 = function() {};",
-            "protect(O).m3 = function() {};");
+        """
+        function protect(x) { return x; }
+        function O() {}
+        protect(O).m1 = function() {};
+        protect(O).m2 = function() {};
+        protect(O).m3 = function() {};
+        """;
 
     testSame(lines(prelude + "alert(O.m1); alert(O.m2()); alert(!O.m3);"));
   }
@@ -2244,10 +2353,11 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         srcs("/** @enum {Object} */ var Foo = {A: {c: 2}, B: {c: 3}}; for (var key in Foo) {}"),
         expected(
-            lines(
-                "var Foo$A = {c: 2}; var Foo$B = {c: 3};",
-                "/** @enum {Object} */ var Foo = {A: Foo$A, B: Foo$B};",
-                "for (var key in Foo) {}")));
+            """
+            var Foo$A = {c: 2}; var Foo$B = {c: 3};
+            /** @enum {Object} */ var Foo = {A: Foo$A, B: Foo$B};
+            for (var key in Foo) {}
+            """));
   }
 
   @Test
@@ -2260,14 +2370,15 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   @Test
   public void testHasOwnPropertyOnNonGlobalName() {
     testSame(
-        lines(
-            "/** @constructor */",
-            "function A() {",
-            "  this.foo = {a: 1, b: 1};",
-            "}",
-            "A.prototype.bar = function(prop) {",
-            "  return this.foo.hasOwnProperty(prop);",
-            "}"));
+        """
+        /** @constructor */
+        function A() {
+          this.foo = {a: 1, b: 1};
+        }
+        A.prototype.bar = function(prop) {
+          return this.foo.hasOwnProperty(prop);
+        }
+        """);
     testSame("var a = {'b': {'c': 1}}; a['b'].hasOwnProperty('c');");
     testSame("var a = {b: 3}; if (Object.prototype.hasOwnProperty.call(a, 'b')) { alert('ok'); }");
   }
@@ -2313,45 +2424,56 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     enableNormalizeExpectedOutput();
     test(
         srcs(
-            lines(
-                "/** @enum {Object} */", //
-                "var Foo = {A: {c: 2}, B: {c: 3}};",
-                "for (var key in Foo.A) {}")),
+            """
+            /** @enum {Object} */
+            var Foo = {A: {c: 2}, B: {c: 3}};
+            for (var key in Foo.A) {}
+            """),
         expected(
-            lines(
-                "var Foo$A = {c: 2};", //
-                "var Foo$B$c = 3;",
-                "for (var key in Foo$A) {}")));
+            """
+            var Foo$A = {c: 2};
+            var Foo$B$c = 3;
+            for (var key in Foo$A) {}
+            """));
     test(
         srcs(
-            lines(
-                "/** @enum {Object} */", //
-                "var Foo = {A: {c: 2}, B: {c: 3}};",
-                "for (var key in Foo?.A) {}")),
+            """
+            /** @enum {Object} */
+            var Foo = {A: {c: 2}, B: {c: 3}};
+            for (var key in Foo?.A) {}
+            """),
         expected(
-            lines(
-                "var Foo$A = {c: 2};",
-                "var Foo$B = {c: 3};",
-                "/** @enum {!Object} */",
-                "var Foo = {A:Foo$A, B:Foo$B};",
-                "for (var key in Foo?.A) {}")));
+            """
+            var Foo$A = {c: 2};
+            var Foo$B = {c: 3};
+            /** @enum {!Object} */
+            var Foo = {A:Foo$A, B:Foo$B};
+            for (var key in Foo?.A) {}
+            """));
   }
 
   @Test
   public void testEnumOfObjects2() {
     test(
         srcs(
-            lines(
-                "/** @enum {Object} */ var Foo = {A: {c: 2}, B: {c: 3}};", //
-                "foo(Foo.A.c);")),
+            """
+            /** @enum {Object} */ var Foo = {A: {c: 2}, B: {c: 3}};
+            foo(Foo.A.c);
+            """),
         expected("var Foo$A$c = 2; var Foo$B$c = 3; foo(Foo$A$c);"));
     test(
         srcs(
-            lines(
-                "/** @enum {Object} */", //
-                "var Foo = {A: {c: 2}, B: {c: 3}};",
-                "foo?.(Foo.A?.c);")),
-        expected(lines("var Foo$A = {c: 2};", "var Foo$B$c = 3;", "foo?.(Foo$A?.c);")));
+            """
+            /** @enum {Object} */
+            var Foo = {A: {c: 2}, B: {c: 3}};
+            foo?.(Foo.A?.c);
+            """),
+        expected(
+            """
+            var Foo$A = {c: 2};
+            var Foo$B$c = 3;
+            foo?.(Foo$A?.c);
+            """));
   }
 
   @Test
@@ -2360,21 +2482,23 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     enableNormalizeExpectedOutput();
     test(
         srcs(
-            lines(
-                "var x = {c: 2};",
-                "var y = {c: 3};",
-                "/** @enum {Object} */",
-                "var Foo = {A: x, B: y};",
-                "for (var key in Foo) {}")),
+            """
+            var x = {c: 2};
+            var y = {c: 3};
+            /** @enum {Object} */
+            var Foo = {A: x, B: y};
+            for (var key in Foo) {}
+            """),
         expected(
-            lines(
-                "var x = {c: 2};",
-                "var y = {c: 3};",
-                "var Foo$A = x;",
-                "var Foo$B = y;",
-                "/** @enum {Object} */",
-                "var Foo = {A: Foo$A, B: Foo$B};",
-                "for (var key in Foo) {}")));
+            """
+            var x = {c: 2};
+            var y = {c: 3};
+            var Foo$A = x;
+            var Foo$B = y;
+            /** @enum {Object} */
+            var Foo = {A: Foo$A, B: Foo$B};
+            for (var key in Foo) {}
+            """));
   }
 
   @Test
@@ -2387,25 +2511,29 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // (enum values have to be constant).
     test(
         srcs(
-            lines(
-                "/** @enum {Object} */ var Foo = {A: {c: 2}, B: {c: 3}};",
-                "for (var key in Foo) {} Foo.A = 3; alert(Foo.A);")),
+            """
+            /** @enum {Object} */ var Foo = {A: {c: 2}, B: {c: 3}};
+            for (var key in Foo) {} Foo.A = 3; alert(Foo.A);
+            """),
         expected(
-            lines(
-                "var Foo$A = {c: 2}; var Foo$B = {c: 3};",
-                "/** @enum {Object} */ var Foo = {A: Foo$A, B: Foo$B};",
-                "for (var key in Foo) {} Foo$A = 3; alert(Foo$A);")));
+            """
+            var Foo$A = {c: 2}; var Foo$B = {c: 3};
+            /** @enum {Object} */ var Foo = {A: Foo$A, B: Foo$B};
+            for (var key in Foo) {} Foo$A = 3; alert(Foo$A);
+            """));
     test(
         srcs(
-            lines(
-                "/** @enum {Object} */ var Foo = {A: {c: 2}, B: {c: 3}};",
-                "for (var key in Foo) {} Foo.A = 3; alert?.(Foo?.A);")),
+            """
+            /** @enum {Object} */ var Foo = {A: {c: 2}, B: {c: 3}};
+            for (var key in Foo) {} Foo.A = 3; alert?.(Foo?.A);
+            """),
         expected(
-            lines(
-                "var Foo$A = {c: 2}; var Foo$B = {c: 3};",
-                "/** @enum {Object} */ var Foo = {A: Foo$A, B: Foo$B};",
-                "var key;",
-                "for (key in Foo) {} Foo$A = 3; alert?.(Foo?.A);")));
+            """
+            var Foo$A = {c: 2}; var Foo$B = {c: 3};
+            /** @enum {Object} */ var Foo = {A: Foo$A, B: Foo$B};
+            var key;
+            for (key in Foo) {} Foo$A = 3; alert?.(Foo?.A);
+            """));
   }
 
   @Test
@@ -2420,96 +2548,108 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testReferenceInAnonymousObject0() {
     test(
         srcs(
-            lines(
-                "var a = {};",
-                "a.b = function(){};",
-                "a.b.prototype.c = function(){};",
-                "var d = a.b.prototype.c;")),
+            """
+            var a = {};
+            a.b = function(){};
+            a.b.prototype.c = function(){};
+            var d = a.b.prototype.c;
+            """),
         expected(
-            lines(
-                "var a$b = function(){};",
-                "a$b.prototype.c = function(){};",
-                "var d = a$b.prototype.c;")));
+            """
+            var a$b = function(){};
+            a$b.prototype.c = function(){};
+            var d = a$b.prototype.c;
+            """));
   }
 
   @Test
   public void testReferenceInAnonymousObject1() {
     test(
         srcs(
-            lines(
-                "var a = {};", //
-                "a.b = function(){};",
-                "var d = a.b.prototype.c;")),
+            """
+            var a = {};
+            a.b = function(){};
+            var d = a.b.prototype.c;
+            """),
         expected(
-            lines(
-                "var a$b = function(){};", //
-                "var d = a$b.prototype.c;")));
+            """
+            var a$b = function(){};
+            var d = a$b.prototype.c;
+            """));
   }
 
   @Test
   public void testReferenceInAnonymousObject2() {
     test(
         srcs(
-            lines(
-                "var a = {};",
-                "a.b = function(){};",
-                "a.b.prototype.c = function(){};",
-                "var d = {c: a.b.prototype.c};")),
+            """
+            var a = {};
+            a.b = function(){};
+            a.b.prototype.c = function(){};
+            var d = {c: a.b.prototype.c};
+            """),
         expected(
-            lines(
-                "var a$b = function(){};",
-                "a$b.prototype.c = function(){};",
-                "var d$c = a$b.prototype.c;")));
+            """
+            var a$b = function(){};
+            a$b.prototype.c = function(){};
+            var d$c = a$b.prototype.c;
+            """));
   }
 
   @Test
   public void testReferenceInAnonymousObject3() {
     test(
         srcs(
-            lines(
-                "function CreateClass(a$jscomp$1) {}",
-                "var a = {};",
-                "a.b = function(){};",
-                "a.b.prototype.c = function(){};",
-                "a.d = CreateClass({c: a.b.prototype.c});")),
+            """
+            function CreateClass(a$jscomp$1) {}
+            var a = {};
+            a.b = function(){};
+            a.b.prototype.c = function(){};
+            a.d = CreateClass({c: a.b.prototype.c});
+            """),
         expected(
-            lines(
-                "function CreateClass(a$jscomp$1) {}",
-                "var a$b = function(){};",
-                "a$b.prototype.c = function(){};",
-                "var a$d = CreateClass({c: a$b.prototype.c});")));
+            """
+            function CreateClass(a$jscomp$1) {}
+            var a$b = function(){};
+            a$b.prototype.c = function(){};
+            var a$d = CreateClass({c: a$b.prototype.c});
+            """));
   }
 
   @Test
   public void testReferenceInAnonymousObject4() {
     test(
         srcs(
-            lines(
-                "function CreateClass(a) {}",
-                "var a = {};",
-                "a.b = CreateClass({c: function() {}});",
-                "a.d = CreateClass({c: a.b.c});")),
+            """
+            function CreateClass(a) {}
+            var a = {};
+            a.b = CreateClass({c: function() {}});
+            a.d = CreateClass({c: a.b.c});
+            """),
         expected(
-            lines(
-                "function CreateClass(a$jscomp$1) {}",
-                "var a$b = CreateClass({c: function() {}});",
-                "var a$d = CreateClass({c: a$b.c});")));
+            """
+            function CreateClass(a$jscomp$1) {}
+            var a$b = CreateClass({c: function() {}});
+            var a$d = CreateClass({c: a$b.c});
+            """));
   }
 
   @Test
   public void testReferenceInAnonymousObject5() {
     test(
         srcs(
-            lines(
-                "function CreateClass(a) {}",
-                "var a = {};",
-                "a.b = CreateClass({c: function() {}});",
-                "a.d = CreateClass({c: a.b.prototype.c});")),
+            """
+            function CreateClass(a) {}
+            var a = {};
+            a.b = CreateClass({c: function() {}});
+            a.d = CreateClass({c: a.b.prototype.c});
+            """),
         expected(
-            lines(
-                "function CreateClass(a$jscomp$1) {}",
-                "var a$b = CreateClass({c: function() {}});",
-                "var a$d = CreateClass({c: a$b.prototype.c});")));
+            """
+            function CreateClass(a$jscomp$1) {}
+            var a$b = CreateClass({c: function() {}});
+            var a$d = CreateClass({c: a$b.prototype.c});
+            """));
   }
 
   @Test
@@ -2582,72 +2722,78 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   @Test
   public void testIssue389() {
     testSame(
-        lines(
-            "function alias() {}",
-            "var dojo = {};",
-            "dojo.gfx = {};",
-            "dojo.declare = function() {};",
-            "/** @constructor */",
-            "dojo.gfx.Shape = function() {};",
-            "dojo.gfx.Shape = dojo.declare('dojo.gfx.Shape');",
-            "alias(dojo);"),
+        """
+        function alias() {}
+        var dojo = {};
+        dojo.gfx = {};
+        dojo.declare = function() {};
+        /** @constructor */
+        dojo.gfx.Shape = function() {};
+        dojo.gfx.Shape = dojo.declare('dojo.gfx.Shape');
+        alias(dojo);
+        """,
         PARTIAL_NAMESPACE_WARNING);
   }
 
   @Test
   public void testAliasedTopLevelName() {
     testSame(
-        lines(
-            "function alias() {}",
-            "var dojo = {};",
-            "dojo.gfx = {};",
-            "dojo.declare = function() {};",
-            "dojo.gfx.Shape = {SQUARE: 2};",
-            "dojo.gfx.Shape = dojo.declare('dojo.gfx.Shape');",
-            "alias(dojo);",
-            "alias(dojo$gfx$Shape$SQUARE);"));
+        """
+        function alias() {}
+        var dojo = {};
+        dojo.gfx = {};
+        dojo.declare = function() {};
+        dojo.gfx.Shape = {SQUARE: 2};
+        dojo.gfx.Shape = dojo.declare('dojo.gfx.Shape');
+        alias(dojo);
+        alias(dojo$gfx$Shape$SQUARE);
+        """);
   }
 
   @Test
   public void testAliasedTopLevelEnum() {
     testSame(
-        lines(
-            "function alias() {}",
-            "var dojo = {};",
-            "dojo.gfx = {};",
-            "dojo.declare = function() {};",
-            "/** @enum {number} */",
-            "dojo.gfx.Shape = {SQUARE: 2};",
-            "dojo.gfx.Shape = dojo.declare('dojo.gfx.Shape');",
-            "alias(dojo);",
-            "alias(dojo.gfx.Shape.SQUARE);"),
+        """
+        function alias() {}
+        var dojo = {};
+        dojo.gfx = {};
+        dojo.declare = function() {};
+        /** @enum {number} */
+        dojo.gfx.Shape = {SQUARE: 2};
+        dojo.gfx.Shape = dojo.declare('dojo.gfx.Shape');
+        alias(dojo);
+        alias(dojo.gfx.Shape.SQUARE);
+        """,
         PARTIAL_NAMESPACE_WARNING);
   }
 
   @Test
   public void testAssignFunctionBeforeDefinition() {
     testSame(
-        lines(
-            "f = function() {};", //
-            "var f = null;"));
+        """
+        f = function() {};
+        var f = null;
+        """);
   }
 
   @Test
   public void testObjectLitBeforeDefinition() {
     testSame(
-        lines(
-            "a = {b: 3};", //
-            "var a = null;",
-            "this.c = a.b;"));
+        """
+        a = {b: 3};
+        var a = null;
+        this.c = a.b;
+        """);
   }
 
   @Test
   public void testTypedef1() {
     test(
         srcs(
-            lines(
-                "var foo = {};", //
-                "/** @typedef {number} */ foo.Baz;")),
+            """
+            var foo = {};
+            /** @typedef {number} */ foo.Baz;
+            """),
         expected("var foo = {}; var foo$Baz;"));
   }
 
@@ -2655,195 +2801,220 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testTypedef2() {
     test(
         srcs(
-            lines(
-                "var foo = {};",
-                "/** @typedef {number} */ foo.Bar.Baz;",
-                "foo.Bar = function() {};")),
+            """
+            var foo = {};
+            /** @typedef {number} */ foo.Bar.Baz;
+            foo.Bar = function() {};
+            """),
         expected("var foo$Bar$Baz; var foo$Bar = function(){};"));
   }
 
   @Test
   public void testDelete1() {
     testSame(
-        lines(
-            "var foo = {};", //
-            "foo.bar = 3;",
-            "delete foo.bar;"));
+        """
+        var foo = {};
+        foo.bar = 3;
+        delete foo.bar;
+        """);
   }
 
   @Test
   public void testDelete2() {
     test(
         srcs(
-            lines(
-                "var foo = {};", //
-                "foo.bar = 3;",
-                "foo.baz = 3;",
-                "delete foo.bar;")),
+            """
+            var foo = {};
+            foo.bar = 3;
+            foo.baz = 3;
+            delete foo.bar;
+            """),
         expected(
-            lines(
-                "var foo = {};", //
-                "foo.bar = 3;",
-                "var foo$baz = 3;",
-                "delete foo.bar;")));
+            """
+            var foo = {};
+            foo.bar = 3;
+            var foo$baz = 3;
+            delete foo.bar;
+            """));
     testSame(
-        lines(
-            "var foo = {};", //
-            "foo.bar = 3;",
-            "foo.baz = 3;",
-            "delete foo?.bar;"));
+        """
+        var foo = {};
+        foo.bar = 3;
+        foo.baz = 3;
+        delete foo?.bar;
+        """);
   }
 
   @Test
   public void testDelete3() {
     testSame(
-        lines(
-            "var foo = {bar: 3};", //
-            "delete foo.bar;"));
+        """
+        var foo = {bar: 3};
+        delete foo.bar;
+        """);
   }
 
   @Test
   public void testDelete4() {
     test(
         srcs(
-            lines(
-                "var foo = {bar: 3, baz: 3};", //
-                "delete foo.bar;")),
+            """
+            var foo = {bar: 3, baz: 3};
+            delete foo.bar;
+            """),
         expected("var foo$baz=3;var foo={bar:3};delete foo.bar"));
     testSame(
-        lines(
-            "var foo = {bar: 3, baz: 3};", //
-            "delete foo?.bar;"));
+        """
+        var foo = {bar: 3, baz: 3};
+        delete foo?.bar;
+        """);
   }
 
   @Test
   public void testDelete5() {
     test(
         srcs(
-            lines(
-                "var x = {};", //
-                "x.foo = {};",
-                "x.foo.bar = 3;",
-                "delete x.foo.bar;")),
+            """
+            var x = {};
+            x.foo = {};
+            x.foo.bar = 3;
+            delete x.foo.bar;
+            """),
         expected(
-            lines(
-                "var x$foo = {};", //
-                "x$foo.bar = 3;",
-                "delete x$foo.bar;")));
+            """
+            var x$foo = {};
+            x$foo.bar = 3;
+            delete x$foo.bar;
+            """));
   }
 
   @Test
   public void testDelete6() {
     test(
         srcs(
-            lines(
-                "var x = {};", //
-                "x.foo = {};",
-                "x.foo.bar = 3;",
-                "x.foo.baz = 3;",
-                "delete x.foo.bar;")),
+            """
+            var x = {};
+            x.foo = {};
+            x.foo.bar = 3;
+            x.foo.baz = 3;
+            delete x.foo.bar;
+            """),
         expected(
-            lines(
-                "var x$foo = {};", //
-                "x$foo.bar = 3;",
-                "var x$foo$baz = 3;",
-                "delete x$foo.bar;")));
+            """
+            var x$foo = {};
+            x$foo.bar = 3;
+            var x$foo$baz = 3;
+            delete x$foo.bar;
+            """));
     test(
         srcs(
-            lines(
-                "var x = {};", //
-                "x.foo = {};",
-                "x.foo.bar = 3;",
-                "x.foo.baz = 3;",
-                "delete x.foo?.bar;")),
+            """
+            var x = {};
+            x.foo = {};
+            x.foo.bar = 3;
+            x.foo.baz = 3;
+            delete x.foo?.bar;
+            """),
         expected(
-            lines(
-                "var x$foo = {};", //
-                "x$foo.bar = 3;",
-                "x$foo.baz = 3;",
-                "delete x$foo?.bar;")));
+            """
+            var x$foo = {};
+            x$foo.bar = 3;
+            x$foo.baz = 3;
+            delete x$foo?.bar;
+            """));
   }
 
   @Test
   public void testDelete7() {
     test(
         srcs(
-            lines(
-                "var x = {};", //
-                "x.foo = {bar: 3};",
-                "delete x.foo.bar;")),
+            """
+            var x = {};
+            x.foo = {bar: 3};
+            delete x.foo.bar;
+            """),
         expected(
-            lines(
-                "var x$foo = {bar: 3};", //
-                "delete x$foo.bar;")));
+            """
+            var x$foo = {bar: 3};
+            delete x$foo.bar;
+            """));
   }
 
   @Test
   public void testDelete8() {
     test(
         srcs(
-            lines(
-                "var x = {};", //
-                "x.foo = {bar: 3, baz: 3};",
-                "delete x.foo.bar;")),
+            """
+            var x = {};
+            x.foo = {bar: 3, baz: 3};
+            delete x.foo.bar;
+            """),
         expected(
-            lines(
-                "var x$foo$baz = 3; var x$foo = {bar: 3};", //
-                "delete x$foo.bar;")));
+            """
+            var x$foo$baz = 3; var x$foo = {bar: 3};
+            delete x$foo.bar;
+            """));
     test(
         srcs(
-            lines(
-                "var x = {};", //
-                "x.foo = {bar: 3, baz: 3};",
-                "delete x.foo?.bar;")),
+            """
+            var x = {};
+            x.foo = {bar: 3, baz: 3};
+            delete x.foo?.bar;
+            """),
         expected(
-            lines(
-                "var x$foo = {bar:3, baz:3};", //
-                "delete x$foo?.bar;")));
+            """
+            var x$foo = {bar:3, baz:3};
+            delete x$foo?.bar;
+            """));
   }
 
   @Test
   public void testDelete9() {
     testSame(
-        lines(
-            "var x = {};", //
-            "x.foo = {};",
-            "x.foo.bar = 3;",
-            "delete x.foo;"));
+        """
+        var x = {};
+        x.foo = {};
+        x.foo.bar = 3;
+        delete x.foo;
+        """);
   }
 
   @Test
   public void testDelete10() {
     testSame(
-        lines(
-            "var x = {};", //
-            "x.foo = {bar: 3};",
-            "delete x.foo;"));
+        """
+        var x = {};
+        x.foo = {bar: 3};
+        delete x.foo;
+        """);
   }
 
   @Test
   public void testDelete11() {
     // Constructors are always collapsed.
     test(
-        lines(
-            "var x = {};",
-            "x.foo = {};",
-            "/** @constructor */ x.foo.Bar = function() {};",
-            "delete x.foo;"),
-        lines(
-            "var x = {};",
-            "x.foo = {};",
-            "/** @constructor */ var x$foo$Bar = function() {};",
-            "delete x.foo;"),
+        """
+        var x = {};
+        x.foo = {};
+        /** @constructor */ x.foo.Bar = function() {};
+        delete x.foo;
+        """,
+        """
+        var x = {};
+        x.foo = {};
+        /** @constructor */ var x$foo$Bar = function() {};
+        delete x.foo;
+        """,
         warning(NAMESPACE_REDEFINED_WARNING));
     testSame(
         srcs(
-            lines(
-                "var x = {};",
-                "x.foo = {};",
-                "/** @constructor */",
-                "x.foo.Bar = function() {};",
-                "delete x?.foo;")),
+            """
+            var x = {};
+            x.foo = {};
+            /** @constructor */
+            x.foo.Bar = function() {};
+            delete x?.foo;
+            """),
         warning(PARTIAL_NAMESPACE_WARNING));
   }
 
@@ -2851,26 +3022,28 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testDelete11WithOptionalChain() {
     testWarning(
         lines(
-            lines(
-                "var x = {};",
-                "x.foo = {};",
-                "/** @constructor */ x.foo.Bar = function() {};",
-                // It's weird, but it is allowed to delete an optional chain.
-                "delete x?.foo;")),
+            """
+            var x = {};
+            x.foo = {};
+            /** @constructor */ x.foo.Bar = function() {};
+            // It's weird, but it is allowed to delete an optional chain.
+            delete x?.foo;
+            """),
         // The optional chain effectively creates an alias for `x`,
         // so we get a partial namespace warning instead of a namespase
         // redefined warning.
         PARTIAL_NAMESPACE_WARNING);
     testWarning(
         lines(
-            lines(
-                "var x = {};",
-                "x.foo = {};",
-                "/** @constructor */ x.foo.Bar = function() {};",
-                "delete x.foo;",
-                // The optional chain starts late enough that it doesn't generate
-                // a partial namespace warning.
-                "x.foo.Bar?.baz")),
+            """
+            var x = {};
+            x.foo = {};
+            /** @constructor */ x.foo.Bar = function() {};
+            delete x.foo;
+            // The optional chain starts late enough that it doesn't generate
+            // a partial namespace warning.
+            x.foo.Bar?.baz
+            """),
         NAMESPACE_REDEFINED_WARNING);
   }
 
@@ -2890,79 +3063,86 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // the pass about goog.inherits and similiar calls.
     test(
         srcs(
-            lines(
-                "/** @constructor */ var D = function() {};",
-                "/** @constructor */ D.L = function() {};",
-                "/** @type {D.L} */ D.L.A = new D.L();",
-                "",
-                "/** @const */ var M = {};",
-                "if (random) { /** @typedef {D.L} */ M.L = D.L; }",
-                "",
-                "use(M.L);",
-                "use(M.L.A);")),
+            """
+            /** @constructor */ var D = function() {};
+            /** @constructor */ D.L = function() {};
+            /** @type {D.L} */ D.L.A = new D.L();
+
+            /** @const */ var M = {};
+            if (random) { /** @typedef {D.L} */ M.L = D.L; }
+
+            use(M.L);
+            use(M.L.A);
+            """),
         expected(
-            lines(
-                "/** @constructor */ var D = function() {};",
-                "/** @constructor */ var D$L = function() {};",
-                "/** @type {D.L} */ var D$L$A = new D$L();",
-                "if (random) { /** @typedef {D.L} */ var M$L = D$L; }",
-                "use(M$L);",
-                "use(M$L.A);")));
+            """
+            /** @constructor */ var D = function() {};
+            /** @constructor */ var D$L = function() {};
+            /** @type {D.L} */ var D$L$A = new D$L();
+            if (random) { /** @typedef {D.L} */ var M$L = D$L; }
+            use(M$L);
+            use(M$L.A);
+            """));
     test(
         srcs(
-            lines(
-                "/** @constructor */ var D = function() {};",
-                "/** @constructor */ D.L = function() {};",
-                "/** @type {D.L} */ D.L.A = new D.L();",
-                "",
-                "/** @const */ var M = {};",
-                "if (random) { /** @typedef {D.L} */ M.L = D?.L; }",
-                "",
-                "use?.(M?.L);",
-                "use?.(M.L?.A);")),
+            """
+            /** @constructor */ var D = function() {};
+            /** @constructor */ D.L = function() {};
+            /** @type {D.L} */ D.L.A = new D.L();
+
+            /** @const */ var M = {};
+            if (random) { /** @typedef {D.L} */ M.L = D?.L; }
+
+            use?.(M?.L);
+            use?.(M.L?.A);
+            """),
         expected(
-            lines(
-                "/** @constructor */ var D = function() {};",
-                "/** @constructor */ var D$L = function() {};",
-                "/** @type {D.L} */ var D$L$A = new D$L();",
-                "/** @const */ var M = {};",
-                "if (random) { /** @typedef {D.L} */ M.L = D?.L; }",
-                // Similar to above, these optional chain references are broken by collapsing.
-                "use?.(M?.L);",
-                "use?.(M.L?.A);")));
+            """
+            /** @constructor */ var D = function() {};
+            /** @constructor */ var D$L = function() {};
+            /** @type {D.L} */ var D$L$A = new D$L();
+            /** @const */ var M = {};
+            if (random) { /** @typedef {D.L} */ M.L = D?.L; }
+            // Similar to above, these optional chain references are broken by collapsing.
+            use?.(M?.L);
+            use?.(M.L?.A);
+            """));
   }
 
   @Test
   public void testGlobalCatch() {
     testSame(
-        lines(
-            "try {", //
-            "  throw Error();",
-            "} catch (e) {",
-            "  console.log(e.name)",
-            "}"));
+        """
+        try {
+          throw Error();
+        } catch (e) {
+          console.log(e.name)
+        }
+        """);
   }
 
   @Test
   public void testCtorManyAssignmentsDontInlineDontWarn() {
     test(
         srcs(
-            lines(
-                "var a = {};",
-                "/** @constructor */ a.b = function() {};",
-                "a.b.staticProp = 5;",
-                "function f(y, z) {",
-                "  var x = a.b;",
-                "  if (y) {",
-                "    x = z;",
-                "  }",
-                "  return new x();",
-                "}")),
+            """
+            var a = {};
+            /** @constructor */ a.b = function() {};
+            a.b.staticProp = 5;
+            function f(y, z) {
+              var x = a.b;
+              if (y) {
+                x = z;
+              }
+              return new x();
+            }
+            """),
         expected(
             lines(
-                lines(
-                    "/** @constructor */", //
-                    "var a$b = function() {};"),
+                """
+                /** @constructor */
+                var a$b = function() {};
+                """,
                 "var a$b$staticProp = 5;",
                 "function f(y, z) {",
                 "  var x = a$b;",
@@ -2977,17 +3157,19 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testExpressionResultReferenceWontPreventCollapse() {
     test(
         srcs(
-            lines(
-                "var ns = {};", //
-                "ns.Outer = {};",
-                "",
-                "ns.Outer;",
-                "ns.Outer.Inner = function() {}\n")),
+            """
+            var ns = {};
+            ns.Outer = {};
+
+            ns.Outer;
+            ns.Outer.Inner = function() {}
+            """),
         expected(
-            lines(
-                "var ns$Outer={};", //
-                "ns$Outer;",
-                "var ns$Outer$Inner=function(){};\n")));
+            """
+            var ns$Outer={};
+            ns$Outer;
+            var ns$Outer$Inner=function(){};
+            """));
   }
 
   @Test
@@ -2995,9 +3177,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         srcs(
             lines(
-                lines(
-                    "/** @enum { { a: { b: number}} } */",
-                    "var e = { KEY1: { a: { /** @nocollapse */ b: 123}},"),
+                """
+                /** @enum { { a: { b: number}} } */
+                var e = { KEY1: { a: { /** @nocollapse */ b: 123}},
+                """,
                 "  KEY2: { a: { b: 456}}",
                 "}")),
         expected("var e$KEY1$a={/** @nocollapse */ b:123}; var e$KEY2$a$b=456;"));
@@ -3006,37 +3189,41 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         srcs(
             lines(
                 "/** @enum */ var e = { A: 1, B: 2 };",
-                lines(
-                    "/** @type {{ c: { d: number } }} */ e.name1 = {",
-                    "  c: { /** @nocollapse */ d: 123 } };"))),
+                """
+                /** @type {{ c: { d: number } }} */ e.name1 = {
+                  c: { /** @nocollapse */ d: 123 } };
+                """)),
         expected(
             "var e$A=1; var e$B=2; var e$name1$c={/** @nocollapse */ /** @nocollapse */ d:123};"));
 
     test(
         srcs(
-            lines(
-                "/** @enum */ var e = { A: 1, B: 2};",
-                "/** @nocollapse */ e.foo = { bar: true };")),
+            """
+            /** @enum */ var e = { A: 1, B: 2};
+            /** @nocollapse */ e.foo = { bar: true };
+            """),
         expected(
-            lines(
-                "var e$A=1;",
-                "var e$B=2;",
-                "/** @enum */ var e = {};",
-                "/** @nocollapse */ e.foo = { bar: true }")));
+            """
+            var e$A=1;
+            var e$B=2;
+            /** @enum */ var e = {};
+            /** @nocollapse */ e.foo = { bar: true }
+            """));
   }
 
   @Test
   public void testDontCrashNamespaceAliasAcrossScopes() {
     test(
-        lines(
-            "var ns = {};",
-            "ns.VALUE = 0.01;",
-            "function f() {",
-            "    var constants = ns;",
-            "    (function() {",
-            "       var x = constants.VALUE;",
-            "    })();",
-            "}"),
+        """
+        var ns = {};
+        ns.VALUE = 0.01;
+        function f() {
+            var constants = ns;
+            (function() {
+               var x = constants.VALUE;
+            })();
+        }
+        """,
         null);
   }
 
@@ -3044,17 +3231,19 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testCollapsedNameAlreadyTaken() {
     test(
         srcs(
-            lines(
-                "/** @constructor */ function Funny$Name(){};",
-                "function Funny(){};",
-                "Funny.Name = 5;",
-                "var x = new Funny$Name();")),
+            """
+            /** @constructor */ function Funny$Name(){};
+            function Funny(){};
+            Funny.Name = 5;
+            var x = new Funny$Name();
+            """),
         expected(
-            lines(
-                "/** @constructor */ function Funny$Name(){};",
-                "function Funny(){};",
-                "var Funny$Name$1 = 5;",
-                "var x = new Funny$Name();")));
+            """
+            /** @constructor */ function Funny$Name(){};
+            function Funny(){};
+            var Funny$Name$1 = 5;
+            var x = new Funny$Name();
+            """));
 
     test(
         srcs("var ns$x = 0; var ns$x$0 = 1; var ns = {}; ns.x = 8;"),
@@ -3070,19 +3259,21 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     test(
         srcs(
-            lines(
-                "var ns$x = {};",
-                "ns$x.y = 1;",
-                "var ns = {};",
-                "ns.x$ = {};",
-                "ns.x$.y = 2;",
-                "ns.x = {};",
-                "ns.x.y = 3")),
+            """
+            var ns$x = {};
+            ns$x.y = 1;
+            var ns = {};
+            ns.x$ = {};
+            ns.x$.y = 2;
+            ns.x = {};
+            ns.x.y = 3
+            """),
         expected(
-            lines(
-                "var ns$x$y = 1;", //
-                "var ns$x$0$y = 2;",
-                "var ns$x$1$y = 3;")));
+            """
+            var ns$x$y = 1;
+            var ns$x$0$y = 2;
+            var ns$x$1$y = 3;
+            """));
   }
 
   // New Es6 Feature Tests - Some do not pass yet.
@@ -3126,32 +3317,32 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   @Test
   public void testConditionalDestructuringAssignment() {
     testSame(
-        lines(
-            "const X = { a: 1, b: 2 };", //
-            // Destructuring assignment effectively creates an alias for
-            // X and its properties.
-            // Make sure conditional assignment doesn't hide this.
-            "const {a, b} = false || X;",
-            "console.log(a, b);",
-            ""));
+        """
+        const X = { a: 1, b: 2 };
+        // Destructuring assignment effectively creates an alias for
+        // X and its properties.
+        // Make sure conditional assignment doesn't hide this.
+        const {a, b} = false || X;
+        console.log(a, b);
+        """);
   }
 
   @Test
   public void testDestructuredClassAlias() {
     test(
-        lines(
-            "const ns = {}",
-            "ns.Foo = class {};",
-            "ns.Foo.STR = '';",
-            "const {Foo} = ns;",
-            "foo(Foo.STR);",
-            ""),
-        lines(
-            "var ns$Foo = class {};",
-            "var ns$Foo$STR = '';",
-            "const Foo = null;",
-            "foo(ns$Foo$STR);",
-            ""));
+        """
+        const ns = {}
+        ns.Foo = class {};
+        ns.Foo.STR = '';
+        const {Foo} = ns;
+        foo(Foo.STR);
+        """,
+        """
+        var ns$Foo = class {};
+        var ns$Foo$STR = '';
+        const Foo = null;
+        foo(ns$Foo$STR);
+        """);
   }
 
   @Test
@@ -3257,9 +3448,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     testSame("var a = Object.assign({}, c, {b: 0}); use(a.b);");
 
     testSame(
-        lines(
-            "var a = {...c, b: 0};", //
-            "use?.(a?.b);"));
+        """
+        var a = {...c, b: 0};
+        use?.(a?.b);
+        """);
   }
 
   @Test
@@ -3269,19 +3461,21 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     test(
         srcs(
-            lines(
-                "var a = {", //
-                "  ['val' + ++i]: i,",
-                "  ['val' + ++i]: i",
-                "};",
-                "a.val1;")),
+            """
+            var a = {
+              ['val' + ++i]: i,
+              ['val' + ++i]: i
+            };
+            a.val1;
+            """),
         expected(
-            lines(
-                "var a = {", //
-                "  ['val' + ++i]: i,",
-                "  ['val' + ++i]: i",
-                "};",
-                "var a$val1;")));
+            """
+            var a = {
+              ['val' + ++i]: i,
+              ['val' + ++i]: i
+            };
+            var a$val1;
+            """));
 
     test(
         srcs("var a = { ['val']: i, ['val']: i }; a.val;"),
@@ -3289,48 +3483,51 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     // Computed property method name in class
     testSame(
-        lines(
-            "class Bar {",
-            "  constructor(){}",
-            "  ['f'+'oo']() {",
-            "    return 1",
-            "  }",
-            "}",
-            "var bar = new Bar()",
-            "bar.foo();"));
+        """
+        class Bar {
+          constructor(){}
+          ['f'+'oo']() {
+            return 1
+          }
+        }
+        var bar = new Bar()
+        bar.foo();
+        """);
 
     // Computed property method name in class - no concatenation
     testSame(
-        lines(
-            "class Bar {",
-            "  constructor(){}",
-            "  ['foo']() {",
-            "    return 1",
-            "  }",
-            "}",
-            "var bar = new Bar()",
-            "bar.foo();"));
+        """
+        class Bar {
+          constructor(){}
+          ['foo']() {
+            return 1
+          }
+        }
+        var bar = new Bar()
+        bar.foo();
+        """);
   }
 
   @Test
   public void testClassGetSetMembers() {
     // Get and set methods
     testSame(
-        lines(
-            "class Bar {",
-            "  constructor(x) {",
-            "    this.x = x;",
-            "  }",
-            "  get foo() {",
-            "    return this.x;",
-            "  }",
-            "  set foo(xIn) {",
-            "    x = xIn;",
-            "  }",
-            "}",
-            "var bar = new Bar(1);",
-            "bar.foo;",
-            "bar.foo = 2;"));
+        """
+        class Bar {
+          constructor(x) {
+            this.x = x;
+          }
+          get foo() {
+            return this.x;
+          }
+          set foo(xIn) {
+            x = xIn;
+          }
+        }
+        var bar = new Bar(1);
+        bar.foo;
+        bar.foo = 2;
+        """);
   }
 
   @Test
@@ -3339,43 +3536,46 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     enableNormalizeExpectedOutput();
     // Call class method inside class scope
     testSame(
-        lines(
-            "function getA() {};",
-            "class Bar {",
-            "  constructor(){}",
-            "  getA() {",
-            "    return 1;",
-            "  }",
-            "  getB(x) {",
-            "    this.getA();",
-            "  }",
-            "}"));
+        """
+        function getA() {};
+        class Bar {
+          constructor(){}
+          getA() {
+            return 1;
+          }
+          getB(x) {
+            this.getA();
+          }
+        }
+        """);
 
     // Call class method outside class scope
     testSame(
-        lines(
-            "class Bar {",
-            "  constructor(){}",
-            "  getB(x) {}",
-            "}",
-            "var too;",
-            "var too = new Bar();",
-            "too.getB(too);"));
+        """
+        class Bar {
+          constructor(){}
+          getB(x) {}
+        }
+        var too;
+        var too = new Bar();
+        too.getB(too);
+        """);
 
     // Non-static method
     testSame(
-        lines(
-            "class Bar {",
-            "  constructor(x){",
-            "    this.x = x;",
-            "  }",
-            "  double() {",
-            "    return x*2;",
-            "  }",
-            "}",
-            "var too;",
-            "var too = new Bar();",
-            "too.double(1);"));
+        """
+        class Bar {
+          constructor(x){
+            this.x = x;
+          }
+          double() {
+            return x*2;
+          }
+        }
+        var too;
+        var too = new Bar();
+        too.double(1);
+        """);
   }
 
   @Test
@@ -3389,17 +3589,19 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testClassAssignmentWithStaticMembers() {
     test(
         srcs(
-            lines(
-                "const ns = {};",
-                "ns.Bar = class {",
-                "  static double(n) { return n*2; }",
-                "}",
-                "ns.Bar.double(1)")),
+            """
+            const ns = {};
+            ns.Bar = class {
+              static double(n) { return n*2; }
+            }
+            ns.Bar.double(1)
+            """),
         expected(
-            lines(
-                "var ns$Bar$double = function(n) { return n * 2; }",
-                "var ns$Bar = class {}",
-                "ns$Bar$double(1);")));
+            """
+            var ns$Bar$double = function(n) { return n * 2; }
+            var ns$Bar = class {}
+            ns$Bar$double(1);
+            """));
   }
 
   @Test
@@ -3408,255 +3610,277 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     enableNormalizeExpectedOutput();
     test(
         srcs(
-            lines(
-                "class Bar {",
-                "  static double(n) {",
-                "    return n*2",
-                "  }",
-                "  static triple(n) {",
-                "    return n*3;",
-                "  }",
-                "}",
-                "Bar.double(1);",
-                "Bar.triple(2);")),
+            """
+            class Bar {
+              static double(n) {
+                return n*2
+              }
+              static triple(n) {
+                return n*3;
+              }
+            }
+            Bar.double(1);
+            Bar.triple(2);
+            """),
         expected(
-            lines(
-                "var Bar$double = function(n) { return n * 2; }",
-                "var Bar$triple = function(n) { return n * 3; }",
-                "class Bar {}",
-                "Bar$double(1);",
-                "Bar$triple(2);")));
+            """
+            var Bar$double = function(n) { return n * 2; }
+            var Bar$triple = function(n) { return n * 3; }
+            class Bar {}
+            Bar$double(1);
+            Bar$triple(2);
+            """));
   }
 
   @Test
   public void testClassStaticMembersWithAdditionalUndeclaredProperty() {
     test(
         srcs(
-            lines(
-                "class Bar {",
-                "  static double(n) {",
-                "    return n*2",
-                "  }",
-                "}",
-                "use(Bar.double.trouble);")),
+            """
+            class Bar {
+              static double(n) {
+                return n*2
+              }
+            }
+            use(Bar.double.trouble);
+            """),
         expected(
-            lines(
-                "var Bar$double = function(n) { return n * 2; }",
-                "class Bar {}",
-                "use(Bar$double.trouble);")));
+            """
+            var Bar$double = function(n) { return n * 2; }
+            class Bar {}
+            use(Bar$double.trouble);
+            """));
   }
 
   @Test
   public void testClassStaticMembersWithAdditionalPropertySetLocally() {
     test(
         srcs(
-            lines(
-                "class Bar {",
-                "  static double(n) {",
-                "    return n*2",
-                "  }",
-                "}",
-                "(function() { Bar.double.trouble = -1; })();",
-                "use(Bar.double.trouble);")),
+            """
+            class Bar {
+              static double(n) {
+                return n*2
+              }
+            }
+            (function() { Bar.double.trouble = -1; })();
+            use(Bar.double.trouble);
+            """),
         expected(
-            lines(
-                "var Bar$double = function(n) { return n * 2; }",
-                "class Bar {}",
-                "var Bar$double$trouble;",
-                "(function() { Bar$double$trouble = -1; })();",
-                "use(Bar$double$trouble);")));
+            """
+            var Bar$double = function(n) { return n * 2; }
+            class Bar {}
+            var Bar$double$trouble;
+            (function() { Bar$double$trouble = -1; })();
+            use(Bar$double$trouble);
+            """));
     test(
         srcs(
-            lines(
-                "class Bar {",
-                "  static double(n) {",
-                "    return n*2",
-                "  }",
-                "}",
-                "(function() { Bar.double.trouble = -1; })();",
-                "use?.(Bar.double?.trouble);")),
+            """
+            class Bar {
+              static double(n) {
+                return n*2
+              }
+            }
+            (function() { Bar.double.trouble = -1; })();
+            use?.(Bar.double?.trouble);
+            """),
         expected(
-            lines(
-                "var Bar$double = function(n) { return n * 2; };",
-                "class Bar {}",
-                "(function() { Bar$double.trouble = -1; })();",
-                "use?.(Bar$double?.trouble);")));
+            """
+            var Bar$double = function(n) { return n * 2; };
+            class Bar {}
+            (function() { Bar$double.trouble = -1; })();
+            use?.(Bar$double?.trouble);
+            """));
   }
 
   @Test
   public void testClassStaticMembersWithAdditionalPropertySetGlobally() {
     test(
         srcs(
-            lines(
-                "class Bar {",
-                "  static double(n) {",
-                "    return n*2",
-                "  }",
-                "}",
-                "Bar.double.trouble = -1;",
-                "use(Bar.double.trouble);")),
+            """
+            class Bar {
+              static double(n) {
+                return n*2
+              }
+            }
+            Bar.double.trouble = -1;
+            use(Bar.double.trouble);
+            """),
         expected(
-            lines(
-                "var Bar$double = function(n) { return n * 2; }",
-                "class Bar {}",
-                "var Bar$double$trouble = -1;",
-                "use(Bar$double$trouble);")));
+            """
+            var Bar$double = function(n) { return n * 2; }
+            class Bar {}
+            var Bar$double$trouble = -1;
+            use(Bar$double$trouble);
+            """));
     test(
         srcs(
-            lines(
-                "class Bar {",
-                "  static double(n) {",
-                "    return n*2",
-                "  }",
-                "}",
-                "Bar.double.trouble = -1;",
-                "use?.(Bar.double?.trouble);")),
+            """
+            class Bar {
+              static double(n) {
+                return n*2
+              }
+            }
+            Bar.double.trouble = -1;
+            use?.(Bar.double?.trouble);
+            """),
         expected(
-            lines(
-                "var Bar$double = function(n) {",
-                "  return n * 2;",
-                "}",
-                "class Bar {",
-                "}",
-                "Bar$double.trouble = -1;",
-                "use?.(Bar$double?.trouble);")));
+            """
+            var Bar$double = function(n) {
+              return n * 2;
+            }
+            class Bar {
+            }
+            Bar$double.trouble = -1;
+            use?.(Bar$double?.trouble);
+            """));
   }
 
   @Test
   public void testClassDeclarationWithEscapedStaticMember_collapsesMemberButNotMemberProp() {
     test(
         srcs(
-            lines(
-                "class Bar {", //
-                "  static double(n) {",
-                "    return n*2",
-                "  }",
-                "}",
-                "Bar.double.trouble = 4;",
-                "use(Bar.double);",
-                "use(Bar.double.trouble);")),
+            """
+            class Bar {
+              static double(n) {
+                return n*2
+              }
+            }
+            Bar.double.trouble = 4;
+            use(Bar.double);
+            use(Bar.double.trouble);
+            """),
         expected(
-            lines(
-                "var Bar$double = function(n) { return n * 2; }",
-                "class Bar {}",
-                // don't collapse this property because Bar$double is escaped
-                "Bar$double.trouble = 4;",
-                "use(Bar$double);",
-                "use(Bar$double.trouble);")));
+            """
+            var Bar$double = function(n) { return n * 2; }
+            class Bar {}
+            // don't collapse this property because Bar$double is escaped
+            Bar$double.trouble = 4;
+            use(Bar$double);
+            use(Bar$double.trouble);
+            """));
     test(
         srcs(
-            lines(
-                "class Bar {", //
-                "  static double(n) {",
-                "    return n*2",
-                "  }",
-                "}",
-                "Bar.double.trouble = 4;",
-                "use?.(Bar?.double);",
-                "use?.(Bar.double?.trouble);")),
+            """
+            class Bar {
+              static double(n) {
+                return n*2
+              }
+            }
+            Bar.double.trouble = 4;
+            use?.(Bar?.double);
+            use?.(Bar.double?.trouble);
+            """),
         expected(
-            lines(
-                "var Bar$double = function(n) {",
-                "  return n * 2;",
-                "};",
-                "class Bar {",
-                "}",
-                "Bar$double.trouble = 4;",
-                // TODO(b/148237949): collapsing breaks `Bar?.double` reference
-                "use?.(Bar?.double);",
-                "use?.(Bar$double?.trouble);")));
+            """
+            var Bar$double = function(n) {
+              return n * 2;
+            };
+            class Bar {
+            }
+            Bar$double.trouble = 4;
+            // TODO(b/148237949): collapsing breaks `Bar?.double` reference
+            use?.(Bar?.double);
+            use?.(Bar$double?.trouble);
+            """));
   }
 
   @Test
   public void testClassDeclarationWithStaticMembersWithNoCollapse() {
     testSame(
-        lines(
-            "class Bar {",
-            "  /** @nocollapse */",
-            "  static double(n) {",
-            "    return n*2",
-            "  }",
-            "}",
-            "Bar.double(1);"));
+        """
+        class Bar {
+          /** @nocollapse */
+          static double(n) {
+            return n*2
+          }
+        }
+        Bar.double(1);
+        """);
   }
 
   @Test
   public void testClassStaticMemberWithUnreferencedInnerName() {
     test(
         srcs(
-            lines(
-                "const Bar = class BarInternal {",
-                "  static baz(n) {",
-                "    use(n);",
-                "  }",
-                "}",
-                "Bar.baz();")),
+            """
+            const Bar = class BarInternal {
+              static baz(n) {
+                use(n);
+              }
+            }
+            Bar.baz();
+            """),
         expected(
-            lines(
-                "var Bar$baz = function(n) { use(n); }",
-                "const Bar = class BarInternal {}",
-                "Bar$baz();")));
+            """
+            var Bar$baz = function(n) { use(n); }
+            const Bar = class BarInternal {}
+            Bar$baz();
+            """));
   }
 
   @Test
   public void testDontCollapseClassStaticMemberReferencingInnerName() {
     // probably we could do some rewriting to make this work, but for now just back off.
     testSame(
-        lines(
-            "const Bar = class BarInternal {",
-            "  static baz(n) {",
-            "    use(BarInternal);",
-            "  }",
-            "}",
-            "Bar.baz();"));
+        """
+        const Bar = class BarInternal {
+          static baz(n) {
+            use(BarInternal);
+          }
+        }
+        Bar.baz();
+        """);
   }
 
   @Test
   public void testDontCollapseLateAddedClassStaticMemberReferencedByInnerName() {
     test(
         srcs(
-            lines(
-                "const Bar = class BarInternal {",
-                "  method() {",
-                "    return BarInternal.Enum.E1;", // ref via inner name
-                "  }",
-                "}",
-                "/** @enum {number} */",
-                "Bar.Enum = { E1: 1 };", // added after class definition
-                "")),
+            """
+            const Bar = class BarInternal {
+              method() {
+                return BarInternal.Enum.E1; // ref via inner name
+              }
+            }
+            /** @enum {number} */
+            Bar.Enum = { E1: 1 }; // added after class definition
+            """),
         expected(
-            lines(
-                "const Bar = class BarInternal {", //
-                "  method() {",
-                "    return Bar$Enum$E1;",
-                "  }",
-                "};",
-                "var Bar$Enum$E1 = 1;",
-                "")));
+            """
+            const Bar = class BarInternal {
+              method() {
+                return Bar$Enum$E1;
+              }
+            };
+            var Bar$Enum$E1 = 1;
+            """));
   }
 
   @Test
   public void testDontCollapseClassStaticMemberReferencingInnerNameInNestedFunction() {
     // probably we could do some rewriting to make this work, but for now just back off.
     testSame(
-        lines(
-            "const Bar = class BarInternal {",
-            "  static baz(n) {",
-            "    return function() { use(BarInternal); };",
-            "  }",
-            "}",
-            "Bar.baz();"));
+        """
+        const Bar = class BarInternal {
+          static baz(n) {
+            return function() { use(BarInternal); };
+          }
+        }
+        Bar.baz();
+        """);
   }
 
   @Test
   public void testClassStaticMemberUsingSuperNotCollapsed() {
     testSame(
-        lines(
-            "class Baz extends Bar() {",
-            "  static quadruple(n) {",
-            "    return 2 * super.double(n);",
-            " }",
-            "}"));
+        """
+        class Baz extends Bar() {
+          static quadruple(n) {
+            return 2 * super.double(n);
+         }
+        }
+        """);
   }
 
   @Test
@@ -3664,53 +3888,58 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     testSame(
-        lines(
-            "class Baz extends Bar() {",
-            "  static quadruple(n) {",
-            "    return () => 2 * super.double(n);",
-            " }",
-            "}"));
+        """
+        class Baz extends Bar() {
+          static quadruple(n) {
+            return () => 2 * super.double(n);
+         }
+        }
+        """);
   }
 
   @Test
   public void testClassStaticMemberWithInnerClassUsingSuperIsCollapsed() {
     test(
         srcs(
-            lines(
-                "class Bar extends fn() {",
-                "  static m() {",
-                "    class Inner extends fn() {",
-                "      static n() { super.n(); } ", // does not block collapsing Bar.m
-                "    }",
-                "  }",
-                "}")),
+            """
+            class Bar extends fn() {
+              static m() {
+                class Inner extends fn() {
+                  static n() { super.n(); }  // does not block collapsing Bar.m
+                }
+              }
+            }
+            """),
         expected(
-            lines(
-                "var Bar$m = function() {",
-                "  class Inner extends fn() {",
-                "    static n() { super.n(); } ",
-                "  }",
-                "};",
-                "class Bar extends fn() {}")));
+            """
+            var Bar$m = function() {
+              class Inner extends fn() {
+                static n() { super.n(); }
+              }
+            };
+            class Bar extends fn() {}
+            """));
   }
 
   @Test
   public void testEs6StaticMemberAddedAfterDefinition() {
     test(
         srcs(
-            lines(
-                "class Bar {}", //
-                "Bar.double = function(n) {",
-                "  return n*2",
-                "}",
-                "Bar.double(1);")),
+            """
+            class Bar {}
+            Bar.double = function(n) {
+              return n*2
+            }
+            Bar.double(1);
+            """),
         expected(
-            lines(
-                "class Bar {}",
-                "var Bar$double = function(n) {",
-                "  return n*2",
-                "}",
-                "Bar$double(1);")));
+            """
+            class Bar {}
+            var Bar$double = function(n) {
+              return n*2
+            }
+            Bar$double(1);
+            """));
   }
 
   @Test
@@ -3733,31 +3962,34 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         srcs("class A { static useFoo() { alert(this.foo); } } A.foo = 'bar'; A.useFoo();"),
         expected(
-            lines(
-                "var A$useFoo = function() { alert(this.foo); };",
-                "class A {}",
-                "var A$foo = 'bar';",
-                "A$useFoo();")),
+            """
+            var A$useFoo = function() { alert(this.foo); };
+            class A {}
+            var A$foo = 'bar';
+            A$useFoo();
+            """),
         warning(RECEIVER_AFFECTED_BY_COLLAPSE));
 
     test(
         srcs(
-            lines(
-                "class A {",
-                "  static useFoo() {",
-                "    alert(this.foo);",
-                "  }",
-                "}",
-                "/** @nocollapse */",
-                "A.foo = 'bar';",
-                "A.useFoo();")),
+            """
+            class A {
+              static useFoo() {
+                alert(this.foo);
+              }
+            }
+            /** @nocollapse */
+            A.foo = 'bar';
+            A.useFoo();
+            """),
         expected(
-            lines(
-                "var A$useFoo = function() { alert(this.foo); }; ",
-                "class A {}",
-                "/** @nocollapse */",
-                "A.foo = 'bar';",
-                "A$useFoo();")),
+            """
+            var A$useFoo = function() { alert(this.foo); };
+            class A {}
+            /** @nocollapse */
+            A.foo = 'bar';
+            A$useFoo();
+            """),
         warning(RECEIVER_AFFECTED_BY_COLLAPSE));
   }
 
@@ -3772,90 +4004,98 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testClassStaticProperties_locallyDeclared1() {
     test(
         srcs(
-            lines(
-                "class A {}",
-                "function addStaticPropToA() {",
-                "  A.staticProp = 5;",
-                "}",
-                "if (A.staticProp) {",
-                "  use(A.staticProp);",
-                "}")),
+            """
+            class A {}
+            function addStaticPropToA() {
+              A.staticProp = 5;
+            }
+            if (A.staticProp) {
+              use(A.staticProp);
+            }
+            """),
         expected(
-            lines(
-                "class A {}",
-                "var A$staticProp;",
-                "function addStaticPropToA() {",
-                "  A$staticProp = 5;",
-                "}",
-                "if (A$staticProp) {",
-                "  use(A$staticProp);",
-                "}")));
+            """
+            class A {}
+            var A$staticProp;
+            function addStaticPropToA() {
+              A$staticProp = 5;
+            }
+            if (A$staticProp) {
+              use(A$staticProp);
+            }
+            """));
     test(
         srcs(
-            lines(
-                "class A {}",
-                "function addStaticPropToA() {",
-                "  A.staticProp = 5;",
-                "}",
-                "if (A?.staticProp) {",
-                "  use?.(A?.staticProp);",
-                "}")),
+            """
+            class A {}
+            function addStaticPropToA() {
+              A.staticProp = 5;
+            }
+            if (A?.staticProp) {
+              use?.(A?.staticProp);
+            }
+            """),
         expected(
-            lines(
-                "class A {}",
-                "var A$staticProp;",
-                "function addStaticPropToA() {",
-                "  A$staticProp = 5;",
-                "}",
-                // TODO(b/148237949): collapsing breaks `A?.staticProp` reference
-                "if (A?.staticProp) {",
-                "  use?.(A?.staticProp);",
-                "}")));
+            """
+            class A {}
+            var A$staticProp;
+            function addStaticPropToA() {
+              A$staticProp = 5;
+            }
+            // TODO(b/148237949): collapsing breaks `A?.staticProp` reference
+            if (A?.staticProp) {
+              use?.(A?.staticProp);
+            }
+            """));
   }
 
   @Test
   public void testClassStaticProperties_locallyDeclared2() {
     test(
         srcs(
-            lines(
-                "const A = class {}",
-                "function addStaticPropToA() {",
-                "  A.staticProp = 5;",
-                "}",
-                "if (A.staticProp) {",
-                "  use(A.staticProp);",
-                "}")),
+            """
+            const A = class {}
+            function addStaticPropToA() {
+              A.staticProp = 5;
+            }
+            if (A.staticProp) {
+              use(A.staticProp);
+            }
+            """),
         expected(
-            lines(
-                "const A = class {}",
-                "var A$staticProp;",
-                "function addStaticPropToA() {",
-                "  A$staticProp = 5;",
-                "}",
-                "if (A$staticProp) {",
-                "  use(A$staticProp);",
-                "}")));
+            """
+            const A = class {}
+            var A$staticProp;
+            function addStaticPropToA() {
+              A$staticProp = 5;
+            }
+            if (A$staticProp) {
+              use(A$staticProp);
+            }
+            """));
     test(
         srcs(
-            lines(
-                "const A = class {}",
-                "function addStaticPropToA() {",
-                "  A.staticProp = 5;",
-                "}",
-                "if (A?.staticProp) {",
-                "  use?.(A?.staticProp);",
-                "}")),
+            """
+            const A = class {}
+            function addStaticPropToA() {
+              A.staticProp = 5;
+            }
+            if (A?.staticProp) {
+              use?.(A?.staticProp);
+            }
+            """),
         expected(
-            lines(
-                "const A = class {}",
-                "var A$staticProp;",
-                "function addStaticPropToA() {",
-                "  A$staticProp = 5;",
-                "}",
-                // TODO(b/148237949): collapsing breaks `A?.staticProp` reference
-                "if (A?.staticProp) {",
-                "  use?.(A?.staticProp);",
-                "}")));
+            """
+            const A = class {}
+            var A$staticProp;
+            function addStaticPropToA() {
+              A$staticProp = 5;
+            }
+            // TODO(b/148237949): collapsing breaks `A?.staticProp` reference
+            if (A?.staticProp) {
+              use?.(A?.staticProp);
+            }
+            """));
   }
 
   @Test
@@ -3880,49 +4120,54 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     test(
         srcs(
-            lines(
-                "class A {}",
-                "A.foo = 5;",
-                "class B extends A {}",
-                "use(B.foo);",
-                "B.foo = 6;",
-                "use(B.foo)")),
+            """
+            class A {}
+            A.foo = 5;
+            class B extends A {}
+            use(B.foo);
+            B.foo = 6;
+            use(B.foo)
+            """),
         expected(
-            lines(
-                "class A {}",
-                "var A$foo = 5;",
-                "class B extends A {}",
-                "use(B$foo);",
-                "var B$foo = 6;",
-                "use(B$foo)")));
+            """
+            class A {}
+            var A$foo = 5;
+            class B extends A {}
+            use(B$foo);
+            var B$foo = 6;
+            use(B$foo)
+            """));
     test(
         srcs(
-            lines(
-                "class A {}",
-                "A.foo = 5;",
-                "class B extends A {}",
-                "use(B?.foo);",
-                "B.foo = 6;",
-                "use(B?.foo)")),
+            """
+            class A {}
+            A.foo = 5;
+            class B extends A {}
+            use(B?.foo);
+            B.foo = 6;
+            use(B?.foo)
+            """),
         expected(
-            lines(
-                "class A {}",
-                "var A$foo = 5;",
-                "class B extends A {}",
-                "use(B?.foo);",
-                "var B$foo = 6;",
-                "use(B?.foo)")));
+            """
+            class A {}
+            var A$foo = 5;
+            class B extends A {}
+            use(B?.foo);
+            var B$foo = 6;
+            use(B?.foo)
+            """));
 
     testSame(
-        lines(
-            "class A {}",
-            "/** @nocollapse */",
-            "A.foo = 5;",
-            "class B extends A {}",
-            "use(B.foo);",
-            "/** @nocollapse */",
-            "B.foo = 6;",
-            "use(B.foo);"));
+        """
+        class A {}
+        /** @nocollapse */
+        A.foo = 5;
+        class B extends A {}
+        use(B.foo);
+        /** @nocollapse */
+        B.foo = 6;
+        use(B.foo);
+        """);
   }
 
   @Test
@@ -3930,42 +4175,45 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     test(
         srcs(
-            lines(
-                "class Thing {}",
-                "Thing.Builder = class {};",
-                "class Subthing {}",
-                "Subthing.Builder = class extends Thing.Builder {}")),
+            """
+            class Thing {}
+            Thing.Builder = class {};
+            class Subthing {}
+            Subthing.Builder = class extends Thing.Builder {}
+            """),
         expected(
-            lines(
-                "class Thing {}",
-                "var Thing$Builder = class {};",
-                "class Subthing {}",
-                "var Subthing$Builder = class extends Thing$Builder {}")));
+            """
+            class Thing {}
+            var Thing$Builder = class {};
+            class Subthing {}
+            var Subthing$Builder = class extends Thing$Builder {}
+            """));
   }
 
   @Test
   public void testSuperExtern() {
     testSame(
-        lines(
-            "class Foo {",
-            "  constructor(){",
-            "    this.x = x; ",
-            "  }",
-            "  getX() {",
-            "    return this.x;",
-            "  }",
-            "}",
-            "class Bar extends Foo {",
-            "  constructor(x, y) {",
-            "    super(x);",
-            "    this.y = y;",
-            "  }",
-            "  getX() {",
-            "    return super.getX() + this.y;",
-            "  }",
-            "}",
-            "let too = new Bar();",
-            "too.getX();"));
+        """
+        class Foo {
+          constructor(){
+            this.x = x;
+          }
+          getX() {
+            return this.x;
+          }
+        }
+        class Bar extends Foo {
+          constructor(x, y) {
+            super(x);
+            this.y = y;
+          }
+          getX() {
+            return super.getX() + this.y;
+          }
+        }
+        let too = new Bar();
+        too.getX();
+        """);
   }
 
   @Test
@@ -3974,93 +4222,103 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     enableNormalizeExpectedOutput();
     // ES5 version
     test(
-        lines(
-            "var foo = { ",
-            "  bar: 1, ",
-            "  myFunc: function myFunc() {",
-            "    return this.bar",
-            "  }",
-            "};",
-            "foo.myFunc();"),
-        lines(
-            "var foo$bar = 1;",
-            "var foo$myFunc = function myFunc() {",
-            "  return this.bar",
-            "};",
-            "foo$myFunc();"),
+        """
+        var foo = {
+          bar: 1,
+          myFunc: function myFunc() {
+            return this.bar
+          }
+        };
+        foo.myFunc();
+        """,
+        """
+        var foo$bar = 1;
+        var foo$myFunc = function myFunc() {
+          return this.bar
+        };
+        foo$myFunc();
+        """,
         warning(InlineAndCollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
 
     test(
         srcs(
-            lines(
-                "var foo = { ",
-                "  bar: 1, ",
-                "  myFunc: function myFunc() {",
-                "    function inner() {",
-                "      return this.bar;",
-                "    }",
-                "  }",
-                "};",
-                "foo.myFunc();")),
+            """
+            var foo = {
+              bar: 1,
+              myFunc: function myFunc() {
+                function inner() {
+                  return this.bar;
+                }
+              }
+            };
+            foo.myFunc();
+            """),
         expected(
-            lines(
-                "var foo$bar = 1;",
-                "var foo$myFunc = function myFunc() {",
-                "  function inner() {",
-                "    return this.bar;",
-                "  }",
-                "};",
-                "foo$myFunc();")));
+            """
+            var foo$bar = 1;
+            var foo$myFunc = function myFunc() {
+              function inner() {
+                return this.bar;
+              }
+            };
+            foo$myFunc();
+            """));
 
     // ES6 version
     test(
-        lines(
-            "var foo = { ",
-            "  bar: 1, ",
-            "  myFunc() {",
-            "    return this.bar;",
-            "  }",
-            "};",
-            "foo.myFunc();"),
-        lines(
-            "var foo$bar = 1;",
-            "var foo$myFunc = function() {",
-            "  return this.bar",
-            "};",
-            "foo$myFunc();"),
+        """
+        var foo = {
+          bar: 1,
+          myFunc() {
+            return this.bar;
+          }
+        };
+        foo.myFunc();
+        """,
+        """
+        var foo$bar = 1;
+        var foo$myFunc = function() {
+          return this.bar
+        };
+        foo$myFunc();
+        """,
         warning(InlineAndCollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
 
     // "this" is lexically scoped in arrow functions so collapsing is safe.
     test(
         srcs(
-            lines(
-                "var foo = { ", //
-                "  myFunc: () => {",
-                "    return this;",
-                "  }",
-                "};",
-                "foo.myFunc();")),
+            """
+            var foo = {
+              myFunc: () => {
+                return this;
+              }
+            };
+            foo.myFunc();
+            """),
         expected(
-            lines(
-                "var foo$myFunc = () => {", //
-                "  return this",
-                "};",
-                "foo$myFunc();")));
+            """
+            var foo$myFunc = () => {
+              return this
+            };
+            foo$myFunc();
+            """));
 
     // but not in inner functions
     test(
-        lines(
-            "var foo = {", //
-            "  myFunc: function() {",
-            "    return (() => this);",
-            "  }",
-            "};",
-            "foo.myFunc();"),
-        lines(
-            "var foo$myFunc = function() {", //
-            "  return (() => this);",
-            "};",
-            "foo$myFunc();"),
+        """
+        var foo = {
+          myFunc: function() {
+            return (() => this);
+          }
+        };
+        foo.myFunc();
+        """,
+        """
+        var foo$myFunc = function() {
+          return (() => this);
+        };
+        foo$myFunc();
+        """,
         warning(InlineAndCollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
 
     // `super` is also a receiver reference
@@ -4069,36 +4327,40 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         Exception.class,
         () ->
             test(
-                lines(
-                    "var foo = { ",
-                    "  bar: 1, ",
-                    "  myFunc() {",
-                    "    return super.bar;",
-                    "  }",
-                    "};",
-                    "foo.myFunc();"),
-                lines(
-                    "var foo$bar = 1;",
-                    "var foo$myFunc = function() {",
-                    "  return super.bar", // Unclear what goes here.
-                    "};",
-                    "foo$myFunc();"),
+                """
+                var foo = {
+                  bar: 1,
+                  myFunc() {
+                    return super.bar;
+                  }
+                };
+                foo.myFunc();
+                """,
+                """
+                var foo$bar = 1;
+                var foo$myFunc = function() {
+                  return super.bar // Unclear what goes here.
+                };
+                foo$myFunc();
+                """,
                 warning(InlineAndCollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE)));
 
     // check references in param lists
     test(
-        lines(
-            "var foo = { ", //
-            "  bar: 1, ",
-            "  myFunc(x = this) {",
-            "  }",
-            "};",
-            "foo.myFunc();"),
-        lines(
-            "var foo$bar = 1;", //
-            "var foo$myFunc = function(x = this) {",
-            "};",
-            "foo$myFunc();"),
+        """
+        var foo = {
+          bar: 1,
+          myFunc(x = this) {
+          }
+        };
+        foo.myFunc();
+        """,
+        """
+        var foo$bar = 1;
+        var foo$myFunc = function(x = this) {
+        };
+        foo$myFunc();
+        """,
         warning(InlineAndCollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
   }
 
@@ -4107,61 +4369,67 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // ES5 Version
     test(
         srcs(
-            lines(
-                "var foo = { ",
-                "  bar: 1, ",
-                "  myFunc: function myFunc() {",
-                "    return 5",
-                "  }",
-                "};",
-                "foo.myFunc();")),
+            """
+            var foo = {
+              bar: 1,
+              myFunc: function myFunc() {
+                return 5
+              }
+            };
+            foo.myFunc();
+            """),
         expected(
-            lines(
-                "var foo$bar = 1;",
-                "var foo$myFunc = function myFunc() {",
-                "    return 5;",
-                "};",
-                "foo$myFunc();")));
+            """
+            var foo$bar = 1;
+            var foo$myFunc = function myFunc() {
+                return 5;
+            };
+            foo$myFunc();
+            """));
 
     // ES6 version
     test(
         srcs(
-            lines(
-                "var foo = { ",
-                "  bar: 1, ",
-                "  myFunc() {",
-                "    return 5;",
-                "  }",
-                "};",
-                "foo.myFunc();")),
+            """
+            var foo = {
+              bar: 1,
+              myFunc() {
+                return 5;
+              }
+            };
+            foo.myFunc();
+            """),
         expected(
-            lines(
-                "var foo$bar = 1;",
-                "var foo$myFunc = function() {",
-                "    return 5;",
-                "};",
-                "foo$myFunc();")));
+            """
+            var foo$bar = 1;
+            var foo$myFunc = function() {
+                return 5;
+            };
+            foo$myFunc();
+            """));
   }
 
   @Test
   public void testMethodPropertyShorthand() {
     test(
         srcs(
-            lines(
-                "var foo = { ",
-                "  bar: 1, ",
-                "   myFunc() {",
-                "    return 2",
-                "  }",
-                "};",
-                "foo.myFunc();")),
+            """
+            var foo = {
+              bar: 1,
+               myFunc() {
+                return 2
+              }
+            };
+            foo.myFunc();
+            """),
         expected(
-            lines(
-                "var foo$bar = 1;",
-                "var foo$myFunc = function() {",
-                "    return 2;",
-                "};",
-                "foo$myFunc();")));
+            """
+            var foo$bar = 1;
+            var foo$myFunc = function() {
+                return 2;
+            };
+            foo$myFunc();
+            """));
   }
 
   @Test
@@ -4191,14 +4459,16 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testTemplateStrings() {
     test(
         srcs(
-            lines(
-                "var a = {};", //
-                "a.b = 'foo';",
-                "var c = `Hi ${a.b}`;")),
+            """
+            var a = {};
+            a.b = 'foo';
+            var c = `Hi ${a.b}`;
+            """),
         expected(
-            lines(
-                "var a$b = 'foo';", //
-                "var c = `Hi ${a$b}`;")));
+            """
+            var a$b = 'foo';
+            var c = `Hi ${a$b}`;
+            """));
   }
 
   @Test
@@ -4263,12 +4533,13 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     expected.add(
         SourceFile.fromCode(
             "mod1.js",
-            lines(
-                "var $jscompDefaultExport$$module$mod1=123;",
-                "var bar$$module$mod1 = 'bar';",
-                "/** @const */ var module$mod1={};",
-                "/** @const */ var module$mod1$bar = bar$$module$mod1",
-                "/** @const */ var module$mod1$default = $jscompDefaultExport$$module$mod1;")));
+            """
+            var $jscompDefaultExport$$module$mod1=123;
+            var bar$$module$mod1 = 'bar';
+            /** @const */ var module$mod1={};
+            /** @const */ var module$mod1$bar = bar$$module$mod1
+            /** @const */ var module$mod1$default = $jscompDefaultExport$$module$mod1;
+            """));
     expected.add(
         SourceFile.fromCode(
             "entry.js", "alert($jscompDefaultExport$$module$mod1); alert(bar$$module$mod1);"));
@@ -4285,10 +4556,11 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     inputs.add(
         SourceFile.fromCode(
             "mod1.js",
-            lines(
-                "export default 123;", //
-                "export var bar = 'ba';",
-                "function f() { bar += 'r'; }")));
+            """
+            export default 123;
+            export var bar = 'ba';
+            function f() { bar += 'r'; }
+            """));
     inputs.add(
         SourceFile.fromCode(
             "entry.js", "import mod, {bar} from './mod1.js'; alert(mod); alert(bar)"));
@@ -4297,20 +4569,22 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     expected.add(
         SourceFile.fromCode(
             "mod1.js",
-            lines(
-                "var $jscompDefaultExport$$module$mod1=123;",
-                "var bar$$module$mod1 = 'ba';",
-                "function f$$module$mod1() { bar$$module$mod1 += 'r'; }",
-                "/** @const */ var module$mod1= {",
-                "  /** @return {?} */ get bar() { return bar$$module$mod1; },",
-                "};",
-                "/** @const */ var module$mod1$default = $jscompDefaultExport$$module$mod1;")));
+            """
+            var $jscompDefaultExport$$module$mod1=123;
+            var bar$$module$mod1 = 'ba';
+            function f$$module$mod1() { bar$$module$mod1 += 'r'; }
+            /** @const */ var module$mod1= {
+              /** @return {?} */ get bar() { return bar$$module$mod1; },
+            };
+            /** @const */ var module$mod1$default = $jscompDefaultExport$$module$mod1;
+            """));
     expected.add(
         SourceFile.fromCode(
             "entry.js",
-            lines(
-                "alert($jscompDefaultExport$$module$mod1);", //
-                "alert(bar$$module$mod1);")));
+            """
+            alert($jscompDefaultExport$$module$mod1);
+            alert(bar$$module$mod1);
+            """));
 
     test(srcs(inputs), expected(expected));
   }
@@ -4354,24 +4628,26 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     inputs.add(
         SourceFile.fromCode(
             "mod1.js",
-            lines(
-                "var foo ={};", //
-                "foo.bar = {};",
-                "foo.bar.baz = 123;",
-                "export default foo;")));
+            """
+            var foo ={};
+            foo.bar = {};
+            foo.bar.baz = 123;
+            export default foo;
+            """));
     inputs.add(SourceFile.fromCode("entry.js", "import mod from './mod1.js'; alert(mod.bar.baz);"));
 
     ArrayList<SourceFile> expected = new ArrayList<>();
     expected.add(
         SourceFile.fromCode(
             "mod1.js",
-            lines(
-                "var foo$$module$mod1 = {};",
-                "foo$$module$mod1.bar = {};",
-                "foo$$module$mod1.bar.baz = 123;",
-                "var $jscompDefaultExport$$module$mod1 = foo$$module$mod1;",
-                "/** @const */ var module$mod1={};",
-                "/** @const */ var module$mod1$default = $jscompDefaultExport$$module$mod1;")));
+            """
+            var foo$$module$mod1 = {};
+            foo$$module$mod1.bar = {};
+            foo$$module$mod1.bar.baz = 123;
+            var $jscompDefaultExport$$module$mod1 = foo$$module$mod1;
+            /** @const */ var module$mod1={};
+            /** @const */ var module$mod1$default = $jscompDefaultExport$$module$mod1;
+            """));
     expected.add(
         SourceFile.fromCode("entry.js", "alert($jscompDefaultExport$$module$mod1.bar.baz);"));
 
@@ -4485,32 +4761,35 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     inputs.add(
         SourceFile.fromCode(
             "entry.js",
-            lines(
-                "var mod = require('./mod1.js');",
-                "alert(mod);",
-                "var a = {};",
-                "a.b = {};",
-                "/** @constructor */",
-                "a.b.c = function(){};")));
+            """
+            var mod = require('./mod1.js');
+            alert(mod);
+            var a = {};
+            a.b = {};
+            /** @constructor */
+            a.b.c = function(){};
+            """));
     inputs.add(SourceFile.fromCode("mod1.js", "module.exports = 123;"));
 
     ArrayList<SourceFile> expected = new ArrayList<>();
     expected.add(
         SourceFile.fromCode(
             "entry.js",
-            lines(
-                "var mod = module$mod1$default;",
-                "alert(module$mod1$default);",
-                "var a = {};",
-                "a.b = {};",
-                "/** @constructor */",
-                "a.b.c = function(){};")));
+            """
+            var mod = module$mod1$default;
+            alert(module$mod1$default);
+            var a = {};
+            a.b = {};
+            /** @constructor */
+            a.b.c = function(){};
+            """));
     expected.add(
         SourceFile.fromCode(
             "mod1.js",
-            lines(
-                "/** @const */ var module$mod1 = {};",
-                "/** @const */ var module$mod1$default = 123;")));
+            """
+            /** @const */ var module$mod1 = {};
+            /** @const */ var module$mod1$default = 123;
+            """));
 
     test(srcs(inputs), expected(expected));
   }

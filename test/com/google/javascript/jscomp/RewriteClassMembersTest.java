@@ -71,977 +71,1093 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   @Test
   public void testClassStaticBlock() {
     test(
-        lines(
-            "class C {", //
-            "  static {",
-            "    let x = 2",
-            "    this.y = x",
-            "  }",
-            "}"),
-        lines(
-            "class C {}", //
-            "{",
-            "  let x = 2;",
-            "  C.y = x",
-            "}")); // uses `this` in static block
+        """
+        class C {
+          static {
+            let x = 2
+            this.y = x
+          }
+        }
+        """,
+        """
+        class C {}
+        {
+          let x = 2;
+          C.y = x
+        }
+        """); // uses `this` in static block
 
     test(
-        lines(
-            "class B {",
-            "  static y = 3;",
-            "}",
-            "class C extends B {", //
-            "  static {",
-            "    let x = super.y;",
-            "  }",
-            "}"),
-        lines(
-            "class B {}",
-            "B.y = 3;",
-            "class C extends B {}", //
-            "{",
-            // TODO (user): Object.getPrototypeOf(C) is the technically correct way.
-            //  We are not doing this for code size reasons.
-            "  let x = B.y", /* Object.getPrototypeOf(C).y */
-            "}")); // uses `super`
+        """
+        class B {
+          static y = 3;
+        }
+        class C extends B {
+          static {
+            let x = super.y;
+          }
+        }
+        """,
+        """
+        class B {}
+        B.y = 3;
+        class C extends B {}
+        {
+        // TODO (user): Object.getPrototypeOf(C) is the technically correct way.
+        //  We are not doing this for code size reasons.
+          let x = B.y /* Object.getPrototypeOf(C).y */
+        }
+        """); // uses `super`
 
     test(
-        lines(
-            "class C {", //
-            "  static {",
-            "    C.x = 2",
-            "    const y = this.x",
-            "  }",
-            "}"),
-        lines(
-            "class C {}", //
-            "{",
-            "  C.x = 2;",
-            "  const y = C.x",
-            "}")); // uses `this` in static block
+        """
+        class C {
+          static {
+            C.x = 2
+            const y = this.x
+          }
+        }
+        """,
+        """
+        class C {}
+        {
+          C.x = 2;
+          const y = C.x
+        }
+        """); // uses `this` in static block
 
     test(
-        lines(
-            "var z = 1", //
-            "class C {",
-            "  static {",
-            "    let x = 2",
-            "    var z = 3;",
-            "  }",
-            "}"),
-        lines(
-            "var z = 1", //
-            "class C {}",
-            "{",
-            "  let x = 2",
-            "  var z$jscomp$1 = 3;",
-            "}")); // `var` in static block
+        """
+        var z = 1
+        class C {
+          static {
+            let x = 2
+            var z = 3;
+          }
+        }
+        """,
+        """
+        var z = 1
+        class C {}
+        {
+          let x = 2
+          var z$jscomp$1 = 3;
+        }
+        """); // `var` in static block
 
     test(
-        lines(
-            "let C = class {",
-            "  static prop = 5;",
-            "};",
-            "let D = class extends C {",
-            "  static {",
-            "    this.prop = 10;",
-            "  }",
-            "};"),
-        lines(
-            "let C = class {}",
-            "C.prop = 5;",
-            "let D = class extends C {}",
-            "{",
-            "  D.prop = 10;",
-            "}")); //
+        """
+        let C = class {
+          static prop = 5;
+        };
+        let D = class extends C {
+          static {
+            this.prop = 10;
+          }
+        };
+        """,
+        """
+        let C = class {}
+        C.prop = 5;
+        let D = class extends C {}
+        {
+          D.prop = 10;
+        }
+        """); //
 
     // TODO (user): This will be fixed by moving the RewriteClassMembers pass after
     // normalization, because normalization will split these two declarations into separate let
     // assignments.
     test(
-        lines(
-            "let C = class {",
-            "  static prop = 5;",
-            "},",
-            "D = class extends C {",
-            "  static {",
-            "    this.prop = 10;",
-            "  }",
-            "}"),
-        lines(
-            "let C = class {}",
-            "C.prop = 5;", 
-            "let D = class extends C {}",
-            "{",
-            "  D.prop = 10;",
-            "}")); // defines classes in the same let statement
+        """
+        let C = class {
+          static prop = 5;
+        },
+        D = class extends C {
+          static {
+            this.prop = 10;
+          }
+        }
+        """,
+        """
+        let C = class {}
+        C.prop = 5;
+        let D = class extends C {}
+        {
+          D.prop = 10;
+        }
+        """); // defines classes in the same let statement
   }
 
   @Test
   public void testMultipleStaticBlocks() {
     computedFieldTest(
         srcs(
-            lines(
-                "var z = 1", //
-                "/** @unrestricted */",
-                "class C {",
-                "  static x = 2;",
-                "  static {",
-                "    z = z + this.x;",
-                "  }",
-                "  static [z] = 3;",
-                "  static w = 5;",
-                "  static {",
-                "    z = z + this.w;",
-                "  }",
-                "}")),
+            """
+            var z = 1
+            /** @unrestricted */
+            class C {
+              static x = 2;
+              static {
+                z = z + this.x;
+              }
+              static [z] = 3;
+              static w = 5;
+              static {
+                z = z + this.w;
+              }
+            }
+            """),
         expected(
-            lines(
-                "var z = 1", //
-                "var COMPFIELD$0 = z;",
-                "class C {}",
-                "C.x = 2;",
-                "{",
-                "    z = z + C.x;",
-                "}",
-                "C[COMPFIELD$0] = 3;",
-                "C.w = 5;",
-                "{",
-                "    z = z + C.w;",
-                "}"))); //
+            """
+            var z = 1
+            var COMPFIELD$0 = z;
+            class C {}
+            C.x = 2;
+            {
+                z = z + C.x;
+            }
+            C[COMPFIELD$0] = 3;
+            C.w = 5;
+            {
+                z = z + C.w;
+            }
+            """)); //
   }
 
   @Test
   public void testThisInNonStaticPublicField() {
     test(
-        lines(
-            "class A {", //
-            "  /** @suppress {partialAlias} */",
-            "  b = 'word';",
-            "  c = this.b;",
-            "}"),
-        lines(
-            "class A {",
-            "  constructor() {",
-            "    /** @suppress {partialAlias} */",
-            "    this.b = 'word';",
-            "    this.c = this.b;",
-            "  }",
-            "}"));
+        """
+        class A {
+          /** @suppress {partialAlias} */
+          b = 'word';
+          c = this.b;
+        }
+        """,
+        """
+        class A {
+          constructor() {
+            /** @suppress {partialAlias} */
+            this.b = 'word';
+            this.c = this.b;
+          }
+        }
+        """);
 
     test(
-        lines(
-            "let obj = { bar() { return 9; } };", //
-            "class D {",
-            "  e = obj;",
-            "  f = this.e.bar() * 4;",
-            "}"),
-        lines(
-            "let obj = { bar() { return 9; } };",
-            "class D {",
-            "  constructor() {",
-            "    this.e = obj;",
-            "    this.f = this.e.bar() * 4;",
-            "  }",
-            "}"));
+        """
+        let obj = { bar() { return 9; } };
+        class D {
+          e = obj;
+          f = this.e.bar() * 4;
+        }
+        """,
+        """
+        let obj = { bar() { return 9; } };
+        class D {
+          constructor() {
+            this.e = obj;
+            this.f = this.e.bar() * 4;
+          }
+        }
+        """);
 
     test(
-        lines(
-            "class Foo {", //
-            "  y = 'apple';",
-            "  x = () => { return this.y + ' and banana'; };",
-            "}"),
-        lines(
-            "class Foo {",
-            "  constructor() {",
-            "    this.y = 'apple';",
-            "    this.x = () => { return this.y + ' and banana'; };",
-            "  }",
-            "}"));
+        """
+        class Foo {
+          y = 'apple';
+          x = () => { return this.y + ' and banana'; };
+        }
+        """,
+        """
+        class Foo {
+          constructor() {
+            this.y = 'apple';
+            this.x = () => { return this.y + ' and banana'; };
+          }
+        }
+        """);
 
     test(
-        lines(
-            "class Bar {", //
-            "  x = () => { this.method(); };",
-            "  method() {}",
-            "}"),
-        lines(
-            "class Bar {",
-            "  constructor() {",
-            "    this.x = () => { this.method(); };",
-            "  }",
-            "  method() {}",
-            "}"));
+        """
+        class Bar {
+          x = () => { this.method(); };
+          method() {}
+        }
+        """,
+        """
+        class Bar {
+          constructor() {
+            this.x = () => { this.method(); };
+          }
+          method() {}
+        }
+        """);
   }
 
   @Test
   public void testSuperInNonStaticPublicField() {
     test(
-        lines(
-            "class Foo {",
-            "  x() {",
-            "    return 3;",
-            "  }",
-            "}",
-            "class Bar extends Foo {",
-            "  y = 1 + super.x();",
-            "}"),
-        lines(
-            "class Foo {",
-            "  x() {",
-            "    return 3;",
-            "  }",
-            "}",
-            "class Bar extends Foo {",
-            "  constructor() {",
-            "    super(...arguments);",
-            "    this.y = 1 + super.x();",
-            "  }",
-            "}"));
+        """
+        class Foo {
+          x() {
+            return 3;
+          }
+        }
+        class Bar extends Foo {
+          y = 1 + super.x();
+        }
+        """,
+        """
+        class Foo {
+          x() {
+            return 3;
+          }
+        }
+        class Bar extends Foo {
+          constructor() {
+            super(...arguments);
+            this.y = 1 + super.x();
+          }
+        }
+        """);
   }
 
   @Test
   public void testThisInStaticField() {
     test(
-        lines(
-            "class C {", //
-            "  static x = 2;",
-            "  static y = () => this.x;",
-            "}"),
-        lines(
-            "class C {}", //
-            "C.x = 2;",
-            "C.y = () => { return C.x; }"));
+        """
+        class C {
+          static x = 2;
+          static y = () => this.x;
+        }
+        """,
+        """
+        class C {}
+        C.x = 2;
+        C.y = () => { return C.x; }
+        """);
 
     test(
-        lines(
-            "class F {", //
-            "  static a = 'there';",
-            "  static b = this.c() + this.a;",
-            "  static c() { return 'hi'; }",
-            "}"),
-        lines(
-            "class F {", //
-            "  static c() { return 'hi'; }",
-            "}",
-            "F.a = 'there';",
-            "F.b = F.c() + F.a;"));
+        """
+        class F {
+          static a = 'there';
+          static b = this.c() + this.a;
+          static c() { return 'hi'; }
+        }
+        """,
+        """
+        class F {
+          static c() { return 'hi'; }
+        }
+        F.a = 'there';
+        F.b = F.c() + F.a;
+        """);
   }
 
   @Test
   public void testSuperInStaticField() {
     test(
-        lines(
-            "class Foo {",
-            "  static x() {",
-            "    return 5;",
-            "  }",
-            "  static y() {",
-            "    return 20;",
-            "  }",
-            "}",
-            "class Bar extends Foo {",
-            "  static z = () => super.x() + 12 + super.y();",
-            "}"),
-        lines(
-            "class Foo {",
-            "  static x() {",
-            "    return 5;",
-            "  }",
-            "  static y() {",
-            "    return 20;",
-            "  }",
-            "}",
-            "class Bar extends Foo {}",
-            "Bar.z = () => { return Foo.x() + 12 + Foo.y(); }"));
+        """
+        class Foo {
+          static x() {
+            return 5;
+          }
+          static y() {
+            return 20;
+          }
+        }
+        class Bar extends Foo {
+          static z = () => super.x() + 12 + super.y();
+        }
+        """,
+        """
+        class Foo {
+          static x() {
+            return 5;
+          }
+          static y() {
+            return 20;
+          }
+        }
+        class Bar extends Foo {}
+        Bar.z = () => { return Foo.x() + 12 + Foo.y(); }
+        """);
 
     test(
-        lines(
-            "class Bar {",
-            "  static a = { method1() {} };",
-            "  static b = { method2() { super.method1(); } };",
-            "}"),
-        lines(
-            "class Bar {}",
-            "Bar.a = { method1() {} };",
-            "Bar.b = { method2() { super.method1(); } };"));
+        """
+        class Bar {
+          static a = { method1() {} };
+          static b = { method2() { super.method1(); } };
+        }
+        """,
+        """
+        class Bar {}
+        Bar.a = { method1() {} };
+        Bar.b = { method2() { super.method1(); } };
+        """);
   }
 
   @Test
   public void testComputedPropInNonStaticField() {
     computedFieldTest(
         srcs(
-            lines(
-                "/** @unrestricted */",
-                "class C {", //
-                "  [x+=1];",
-                "  [x+=2] = 3;",
-                "}")),
+            """
+            /** @unrestricted */
+            class C {
+              [x+=1];
+              [x+=2] = 3;
+            }
+            """),
         expected(
-            lines(
-                "var $jscomp$compfield$m1146332801$0 = x = x + 1;",
-                "var $jscomp$compfield$m1146332801$1 = x = x + 2;",
-                "class C {",
-                "  constructor() {",
-                "    this[$jscomp$compfield$m1146332801$0];",
-                "    this[$jscomp$compfield$m1146332801$1] = 3;",
-                "   }",
-                "}")));
+            """
+            var $jscomp$compfield$m1146332801$0 = x = x + 1;
+            var $jscomp$compfield$m1146332801$1 = x = x + 2;
+            class C {
+              constructor() {
+                this[$jscomp$compfield$m1146332801$0];
+                this[$jscomp$compfield$m1146332801$1] = 3;
+               }
+            }
+            """));
 
     test(
-        lines(
-            "/** @unrestricted */",
-            "class C {", //
-            "  [1] = 1;",
-            "  [2] = this[1];",
-            "}"),
-        lines(
-            "class C {",
-            "  constructor() {",
-            "    this[1] = 1;",
-            "    this[2] = this[1];",
-            "  }",
-            "}"));
+        """
+        /** @unrestricted */
+        class C {
+          [1] = 1;
+          [2] = this[1];
+        }
+        """,
+        """
+        class C {
+          constructor() {
+            this[1] = 1;
+            this[2] = this[1];
+          }
+        }
+        """);
 
     test(
-        lines(
-            "/** @unrestricted */",
-            "let c = class C {", //
-            "  static [1] = 2;",
-            "  [2] = C[1]",
-            "}"),
-        lines(
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() {",
-            "    this[2] = testcode$classdecl$var0[1];",
-            "  }",
-            "};",
-            "testcode$classdecl$var0[1] = 2;",
-            "/** @constructor */ ",
-            "let c = testcode$classdecl$var0;"));
+        """
+        /** @unrestricted */
+        let c = class C {
+          static [1] = 2;
+          [2] = C[1]
+        }
+        """,
+        """
+        const testcode$classdecl$var0 = class {
+          constructor() {
+            this[2] = testcode$classdecl$var0[1];
+          }
+        };
+        testcode$classdecl$var0[1] = 2;
+        /** @constructor */
+        let c = testcode$classdecl$var0;
+        """);
 
     test(
-        lines(
-            "foo(/** @unrestricted */ class C {", //
-            "  static [1] = 2;",
-            "  [2] = C[1]",
-            "})"),
-        lines(
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() {",
-            "    this[2] = testcode$classdecl$var0[1];",
-            "  }",
-            "};",
-            "testcode$classdecl$var0[1] = 2;",
-            "foo(testcode$classdecl$var0);"));
+        """
+        foo(/** @unrestricted */ class C {
+          static [1] = 2;
+          [2] = C[1]
+        })
+        """,
+        """
+        const testcode$classdecl$var0 = class {
+          constructor() {
+            this[2] = testcode$classdecl$var0[1];
+          }
+        };
+        testcode$classdecl$var0[1] = 2;
+        foo(testcode$classdecl$var0);
+        """);
 
     test(
-        lines(
-            "let c = class {", //
-            "  x = 1",
-            "  y = this.x",
-            "}",
-            "/** @unrestricted */",
-            "class B {",
-            "  [1] = 2;",
-            "  [2] = this[1]",
-            "}"),
-        lines(
-            "let c = class {",
-            "  constructor() {",
-            "    this.x = 1;",
-            "    this.y = this.x;",
-            "  }",
-            "};",
-            "class B {",
-            "  constructor() {",
-            "    this[1] = 2;",
-            "    this[2] = this[1];",
-            "  }",
-            "}"));
+        """
+        let c = class {
+          x = 1
+          y = this.x
+        }
+        /** @unrestricted */
+        class B {
+          [1] = 2;
+          [2] = this[1]
+        }
+        """,
+        """
+        let c = class {
+          constructor() {
+            this.x = 1;
+            this.y = this.x;
+          }
+        };
+        class B {
+          constructor() {
+            this[1] = 2;
+            this[2] = this[1];
+          }
+        }
+        """);
   }
 
   @Test
   public void testComputedPropInStaticField() {
     test(
-        lines(
-            "/** @unrestricted */",
-            "class C {", //
-            "  static ['x'];",
-            "  static ['y'] = 2;",
-            "}"),
-        lines(
-            "class C {}", //
-            "C['x'];",
-            "C['y'] = 2;"));
+        """
+        /** @unrestricted */
+        class C {
+          static ['x'];
+          static ['y'] = 2;
+        }
+        """,
+        """
+        class C {}
+        C['x'];
+        C['y'] = 2;
+        """);
 
     test(
-        lines(
-            "/** @unrestricted */",
-            "class C {", //
-            "  static [1] = 1;",
-            "  static [2] = this[1];",
-            "}"),
-        lines(
-            "class C {}", //
-            "C[1] = 1;",
-            "C[2] = C[1];"));
+        """
+        /** @unrestricted */
+        class C {
+          static [1] = 1;
+          static [2] = this[1];
+        }
+        """,
+        """
+        class C {}
+        C[1] = 1;
+        C[2] = C[1];
+        """);
 
     test(
-        lines(
-            "/** @unrestricted */",
-            "const C = class {", //
-            "  static [1] = 1;",
-            "  static [2] = this[1];",
-            "}"),
-        lines(
-            "const C = class {}", //
-            "C[1] = 1;",
-            "C[2] = C[1];"));
+        """
+        /** @unrestricted */
+        const C = class {
+          static [1] = 1;
+          static [2] = this[1];
+        }
+        """,
+        """
+        const C = class {}
+        C[1] = 1;
+        C[2] = C[1];
+        """);
 
     test(
-        lines(
-            "/** @unrestricted */",
-            "const C = class InnerC {", //
-            "  static [1] = 1;",
-            "  static [2] = this[1];",
-            "}"),
-        lines(
-            "const testcode$classdecl$var0 = class {}", //
-            "testcode$classdecl$var0[1] = 1;",
-            "testcode$classdecl$var0[2] = testcode$classdecl$var0[1];",
-            "/** @constructor */",
-            "const C = testcode$classdecl$var0;"));
+        """
+        /** @unrestricted */
+        const C = class InnerC {
+          static [1] = 1;
+          static [2] = this[1];
+        }
+        """,
+        """
+        const testcode$classdecl$var0 = class {}
+        testcode$classdecl$var0[1] = 1;
+        testcode$classdecl$var0[2] = testcode$classdecl$var0[1];
+        /** @constructor */
+        const C = testcode$classdecl$var0;
+        """);
 
     test(
-        lines(
-            "/** @unrestricted */",
-            "let c = class C {", //
-            "  static [1] = 2;",
-            "  static [2] = C[1]",
-            "}"),
-        lines(
-            "const testcode$classdecl$var0 = class {};",
-            "testcode$classdecl$var0[1] = 2;",
-            "testcode$classdecl$var0[2] = testcode$classdecl$var0[1];",
-            "/** @constructor */ ",
-            "let c = testcode$classdecl$var0;"));
+        """
+        /** @unrestricted */
+        let c = class C {
+          static [1] = 2;
+          static [2] = C[1]
+        }
+        """,
+        """
+        const testcode$classdecl$var0 = class {};
+        testcode$classdecl$var0[1] = 2;
+        testcode$classdecl$var0[2] = testcode$classdecl$var0[1];
+        /** @constructor */
+        let c = testcode$classdecl$var0;
+        """);
 
     test(
-        lines(
-            "foo(/** @unrestricted */ class C {", //
-            "  static [1] = 2;",
-            "  static [2] = C[1]",
-            "})"),
-        lines(
-            "const testcode$classdecl$var0 = class {};",
-            "testcode$classdecl$var0[1] = 2;",
-            "testcode$classdecl$var0[2] = testcode$classdecl$var0[1];",
-            "foo(testcode$classdecl$var0);"));
+        """
+        foo(/** @unrestricted */ class C {
+          static [1] = 2;
+          static [2] = C[1]
+        })
+        """,
+        """
+        const testcode$classdecl$var0 = class {};
+        testcode$classdecl$var0[1] = 2;
+        testcode$classdecl$var0[2] = testcode$classdecl$var0[1];
+        foo(testcode$classdecl$var0);
+        """);
 
     test(
-        lines(
-            "foo(/** @unrestricted */ class {", //
-            "  static [1] = 1",
-            "})"),
-        lines(
-            "const testcode$classdecl$var0 = class {};",
-            "testcode$classdecl$var0[1] = 1;",
-            "foo(testcode$classdecl$var0);"));
+        """
+        foo(/** @unrestricted */ class {
+          static [1] = 1
+        })
+        """,
+        """
+        const testcode$classdecl$var0 = class {};
+        testcode$classdecl$var0[1] = 1;
+        foo(testcode$classdecl$var0);
+        """);
   }
 
   @Test
   public void testSideEffectsInComputedField() {
     computedFieldTest(
         srcs(
-            lines(
-                "function bar() {",
-                "  this.x = 3;", //
-                "  /** @unrestricted */",
-                "  class Foo {",
-                "    y;",
-                "    [this.x] = 2;",
-                "  }",
-                "}")),
+            """
+            function bar() {
+              this.x = 3;
+              /** @unrestricted */
+              class Foo {
+                y;
+                [this.x] = 2;
+              }
+            }
+            """),
         expected(
-            lines(
-                "function bar() {",
-                "  this.x = 3;",
-                "  var COMPFIELD$0 = this.x;",
-                "  class Foo {",
-                "    constructor() {",
-                "      this.y;",
-                "      this[COMPFIELD$0] = 2;",
-                "    }",
-                "  }",
-                "}")));
+            """
+            function bar() {
+              this.x = 3;
+              var COMPFIELD$0 = this.x;
+              class Foo {
+                constructor() {
+                  this.y;
+                  this[COMPFIELD$0] = 2;
+                }
+              }
+            }
+            """));
 
     computedFieldTest(
         srcs(
-            lines(
-                "class E {",
-                "  y() { return 1; }",
-                "}",
-                "class F extends E {",
-                "  x() {",
-                "    return /** @unrestricted */ class {",
-                "      [super.y()] = 4;",
-                "    }",
-                "  }",
-                "}")),
+            """
+            class E {
+              y() { return 1; }
+            }
+            class F extends E {
+              x() {
+                return /** @unrestricted */ class {
+                  [super.y()] = 4;
+                }
+              }
+            }
+            """),
         expected(
-            lines(
-                "class E {",
-                "  y() { return 1; }",
-                "}",
-                "class F extends E {",
-                "  x() {",
-                "    var COMPFIELD$0 = super.y();",
-                "    const testcode$classdecl$var0 = class {",
-                "      constructor() {",
-                "        this[COMPFIELD$0] = 4;",
-                "      }",
-                "    };",
-                "    return testcode$classdecl$var0;",
-                "  }",
-                "}")));
+            """
+            class E {
+              y() { return 1; }
+            }
+            class F extends E {
+              x() {
+                var COMPFIELD$0 = super.y();
+                const testcode$classdecl$var0 = class {
+                  constructor() {
+                    this[COMPFIELD$0] = 4;
+                  }
+                };
+                return testcode$classdecl$var0;
+              }
+            }
+            """));
 
     computedFieldTest(
         srcs(
-            lines(
-                "function bar(num) {}",
-                "/** @unrestricted */",
-                "class Foo {",
-                "  [bar(1)] = 'a';",
-                "  static b = bar(3);",
-                "  static [bar(2)] = bar(4);",
-                "}")),
+            """
+            function bar(num) {}
+            /** @unrestricted */
+            class Foo {
+              [bar(1)] = 'a';
+              static b = bar(3);
+              static [bar(2)] = bar(4);
+            }
+            """),
         expected(
-            lines(
-                "function bar(num) {}",
-                "var COMPFIELD$0 = bar(1);",
-                "var COMPFIELD$1 = bar(2);",
-                "class Foo {",
-                "  constructor() {",
-                "    this[COMPFIELD$0] = 'a'",
-                "  }",
-                "}",
-                "Foo.b = bar(3);",
-                "Foo[COMPFIELD$1] = bar(4);")));
+            """
+            function bar(num) {}
+            var COMPFIELD$0 = bar(1);
+            var COMPFIELD$1 = bar(2);
+            class Foo {
+              constructor() {
+                this[COMPFIELD$0] = 'a'
+              }
+            }
+            Foo.b = bar(3);
+            Foo[COMPFIELD$1] = bar(4);
+            """));
 
     computedFieldTest(
         srcs(
-            lines(
-                "let x = 'hello';",
-                "/** @unrestricted */ class Foo {",
-                "  static n = (x=5);",
-                "  static [x] = 'world';",
-                "}")),
+            """
+            let x = 'hello';
+            /** @unrestricted */ class Foo {
+              static n = (x=5);
+              static [x] = 'world';
+            }
+            """),
         expected(
-            lines(
-                "let x = 'hello';",
-                "var COMPFIELD$0 = x;",
-                "class Foo {}",
-                "Foo.n = x = 5;",
-                "Foo[COMPFIELD$0] = 'world';")));
+            """
+            let x = 'hello';
+            var COMPFIELD$0 = x;
+            class Foo {}
+            Foo.n = x = 5;
+            Foo[COMPFIELD$0] = 'world';
+            """));
 
     computedFieldTest(
         srcs(
-            lines(
-                "function foo(num) {}",
-                "/** @unrestricted */",
-                "class Baz {",
-                "  ['f' + foo(1)];",
-                "  static x = foo(6);",
-                "  ['m' + foo(2)]() {};",
-                "  static [foo(3)] = foo(7);",
-                "  [foo(4)] = 2;",
-                "  get [foo(5)]() {}",
-                "}")),
+            """
+            function foo(num) {}
+            /** @unrestricted */
+            class Baz {
+              ['f' + foo(1)];
+              static x = foo(6);
+              ['m' + foo(2)]() {};
+              static [foo(3)] = foo(7);
+              [foo(4)] = 2;
+              get [foo(5)]() {}
+            }
+            """),
         expected(
-            lines(
-                "function foo(num) {}",
-                "var COMPFIELD$0 = 'f' + foo(1);",
-                "var COMPFIELD$1 = 'm' + foo(2);",
-                "var COMPFIELD$2 = foo(3);",
-                "var COMPFIELD$3 = foo(4);",
-                "var COMPFIELD$4 = foo(5);",
-                "class Baz {",
-                "  constructor() {",
-                "    this[COMPFIELD$0];",
-                "    this[COMPFIELD$3] = 2;",
-                "  }",
-                "  [COMPFIELD$1]() {}",
-                "  get [COMPFIELD$4]() {}",
-                "}",
-                "Baz.x = foo(6);",
-                "Baz[COMPFIELD$2] = foo(7);")));
+            """
+            function foo(num) {}
+            var COMPFIELD$0 = 'f' + foo(1);
+            var COMPFIELD$1 = 'm' + foo(2);
+            var COMPFIELD$2 = foo(3);
+            var COMPFIELD$3 = foo(4);
+            var COMPFIELD$4 = foo(5);
+            class Baz {
+              constructor() {
+                this[COMPFIELD$0];
+                this[COMPFIELD$3] = 2;
+              }
+              [COMPFIELD$1]() {}
+              get [COMPFIELD$4]() {}
+            }
+            Baz.x = foo(6);
+            Baz[COMPFIELD$2] = foo(7);
+            """));
   }
 
   @Test
   public void testClassStaticBlocksNoFieldAssign() {
     test(
-        lines(
-            "class C {", //
-            "  static {",
-            "  }",
-            "}"),
-        lines(
-            "class C {", //
-            "}",
-            "{}"));
+        """
+        class C {
+          static {
+          }
+        }
+        """,
+        """
+        class C {
+        }
+        {}
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  static {",
-            "    let x = 2",
-            "    const y = x",
-            "  }",
-            "}"),
-        lines(
-            "class C {}", //
-            "{",
-            "  let x = 2;",
-            "  const y = x",
-            "}"));
+        """
+        class C {
+          static {
+            let x = 2
+            const y = x
+          }
+        }
+        """,
+        """
+        class C {}
+        {
+          let x = 2;
+          const y = x
+        }
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  static {",
-            "    let x = 2",
-            "    const y = x",
-            "    let z;",
-            "    if (x - y == 0) {z = 1} else {z = 2}",
-            "    while (x - z > 10) {z++;}",
-            "    for (;;) {break;}",
-            "  }",
-            "}"),
-        lines(
-            "class C {}", //
-            "{",
-            "  let x = 2;",
-            "  const y = x",
-            "  let z;",
-            "    if (x - y == 0) {",
-            "      z = 1;",
-            "    } else {",
-            "      z = 2;",
-            "    }",
-            "    for (; x - z > 10;) {",
-            "      z++;",
-            "    }",
-            "  for (;;) {break;}",
-            "}"));
+        """
+        class C {
+          static {
+            let x = 2
+            const y = x
+            let z;
+            if (x - y == 0) {z = 1} else {z = 2}
+            while (x - z > 10) {z++;}
+            for (;;) {break;}
+          }
+        }
+        """,
+        """
+        class C {}
+        {
+          let x = 2;
+          const y = x
+          let z;
+            if (x - y == 0) {
+              z = 1;
+            } else {
+              z = 2;
+            }
+            for (; x - z > 10;) {
+              z++;
+            }
+          for (;;) {break;}
+        }
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  static {",
-            "    let x = 2",
-            "  }",
-            "  static {",
-            "    const y = x",
-            "  }",
-            "}"),
-        lines(
-            "class C {}", //
-            "{",
-            "  let x = 2;",
-            "}",
-            "{",
-            "  const y = x",
-            "}"));
+        """
+        class C {
+          static {
+            let x = 2
+          }
+          static {
+            const y = x
+          }
+        }
+        """,
+        """
+        class C {}
+        {
+          let x = 2;
+        }
+        {
+          const y = x
+        }
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  static {",
-            "    let x = 2",
-            "  }",
-            "  static {",
-            "    const y = x",
-            "  }",
-            "}",
-            "class D {",
-            "  static {",
-            "    let z = 1",
-            "  }",
-            "}"),
-        lines(
-            "class C {}", //
-            "{",
-            "  let x = 2;",
-            "}",
-            "{",
-            "  const y = x",
-            "}",
-            "class D {}",
-            "{",
-            "  let z = 1;",
-            "}"));
+        """
+        class C {
+          static {
+            let x = 2
+          }
+          static {
+            const y = x
+          }
+        }
+        class D {
+          static {
+            let z = 1
+          }
+        }
+        """,
+        """
+        class C {}
+        {
+          let x = 2;
+        }
+        {
+          const y = x
+        }
+        class D {}
+        {
+          let z = 1;
+        }
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  static {",
-            "    let x = function () {return 1;}",
-            "    const y = () => {return 2;}",
-            "    function a() {return 3;}",
-            "    let z = (() => {return 4;})();",
-            "  }",
-            "}"),
-        lines(
-            "class C {}", //
-            "{",
-            "  function a() {return 3;}",
-            "  let x = function () {return 1;}",
-            "  const y = () => {return 2;}",
-            "  let z = (() => {return 4;})();",
-            "}"));
+        """
+        class C {
+          static {
+            let x = function () {return 1;}
+            const y = () => {return 2;}
+            function a() {return 3;}
+            let z = (() => {return 4;})();
+          }
+        }
+        """,
+        """
+        class C {}
+        {
+          function a() {return 3;}
+          let x = function () {return 1;}
+          const y = () => {return 2;}
+          let z = (() => {return 4;})();
+        }
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  static {",
-            "    C.x = 2",
-            // "    const y = C.x", //TODO(b/235871861) blocked on typechecking, gets
-            // JSC_INEXISTENT_PROPERTY
-            "  }",
-            "}"),
-        lines(
-            "class C {}", //
-            "{",
-            "  C.x = 2;",
-            // "  const y = C.x",
-            "}"));
+        """
+        class C {
+          static {
+            C.x = 2
+        // "    const y = C.x", //TODO(b/235871861) blocked on typechecking, gets
+        // JSC_INEXISTENT_PROPERTY
+          }
+        }
+        """,
+        """
+        class C {}
+        {
+          C.x = 2;
+        // "  const y = C.x",
+        }
+        """);
 
     test(
-        lines(
-            "class Foo {",
-            "  static {",
-            "    let x = 5;",
-            "    class Bar {",
-            "      static {",
-            "        let x = 'str';",
-            "      }",
-            "    }",
-            "  }",
-            "}"),
-        lines(
-            "class Foo {}", //
-            "{",
-            "  let x = 5;",
-            "  class Bar {}",
-            "  {let x$jscomp$1 = 'str';}",
-            "}"));
+        """
+        class Foo {
+          static {
+            let x = 5;
+            class Bar {
+              static {
+                let x = 'str';
+              }
+            }
+          }
+        }
+        """,
+        """
+        class Foo {}
+        {
+          let x = 5;
+          class Bar {}
+          {let x$jscomp$1 = 'str';}
+        }
+        """);
   }
 
   @Test
   public void testStaticNoncomputed() {
     test(
-        lines(
-            "class C {", //
-            "  static x = 2",
-            "}"),
-        lines("class C {}", "C.x = 2;"));
+        """
+        class C {
+          static x = 2
+        }
+        """,
+        """
+        class C {}
+        C.x = 2;
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  static x;",
-            "}"),
-        lines("class C {}", "C.x;"));
+        """
+        class C {
+          static x;
+        }
+        """,
+        """
+        class C {}
+        C.x;
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  static x = 2",
-            "  static y = 'hi'",
-            "  static z;",
-            "}"),
-        lines("class C {}", "C.x = 2;", "C.y = 'hi'", "C.z;"));
+        """
+        class C {
+          static x = 2
+          static y = 'hi'
+          static z;
+        }
+        """,
+        """
+        class C {}
+        C.x = 2;
+        C.y = 'hi'
+        C.z;
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  static x = 2",
-            "  static y = 3",
-            "}",
-            "class D {",
-            "  static z = 1",
-            "}"),
-        lines(
-            "class C {}", //
-            "C.x = 2;",
-            "C.y = 3",
-            "class D {}",
-            "D.z = 1;"));
+        """
+        class C {
+          static x = 2
+          static y = 3
+        }
+        class D {
+          static z = 1
+        }
+        """,
+        """
+        class C {}
+        C.x = 2;
+        C.y = 3
+        class D {}
+        D.z = 1;
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  static w = function () {return 1;};",
-            "  static x = () => {return 2;};",
-            "  static y = (function a() {return 3;})();",
-            "  static z = (() => {return 4;})();",
-            "}"),
-        lines(
-            "class C {}", //
-            "C.w = function () {return 1;};",
-            "C.x = () => {return 2;};",
-            "C.y = (function a() {return 3;})();",
-            "C.z = (() => {return 4;})();"));
+        """
+        class C {
+          static w = function () {return 1;};
+          static x = () => {return 2;};
+          static y = (function a() {return 3;})();
+          static z = (() => {return 4;})();
+        }
+        """,
+        """
+        class C {}
+        C.w = function () {return 1;};
+        C.x = () => {return 2;};
+        C.y = (function a() {return 3;})();
+        C.z = (() => {return 4;})();
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  static x = 2",
-            "  static y = C.x",
-            "}"),
-        lines(
-            "class C {}", //
-            "C.x = 2;",
-            "C.y = C.x"));
+        """
+        class C {
+          static x = 2
+          static y = C.x
+        }
+        """,
+        """
+        class C {}
+        C.x = 2;
+        C.y = C.x
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  static x = 2",
-            "  static {let y = C.x}",
-            "}"),
-        lines(
-            "class C {}", //
-            "C.x = 2;",
-            "{let y = C.x}"));
+        """
+        class C {
+          static x = 2
+          static {let y = C.x}
+        }
+        """,
+        """
+        class C {}
+        C.x = 2;
+        {let y = C.x}
+        """);
   }
 
   @Test
   public void testInstanceNoncomputedWithNonemptyConstructor() {
     test(
-        lines(
-            "class C extends Object {", //
-            "  x = 1;",
-            "  z = 3;",
-            "  constructor() {",
-            "    super();",
-            "    this.y = 2;",
-            "  }",
-            "}"),
-        lines(
-            "class C extends Object{", //
-            "  constructor() {",
-            "    super();",
-            "    this.x = 1",
-            "    this.z = 3",
-            "    this.y = 2;",
-            "  }",
-            "}"));
+        """
+        class C extends Object {
+          x = 1;
+          z = 3;
+          constructor() {
+            super();
+            this.y = 2;
+          }
+        }
+        """,
+        """
+        class C extends Object{
+          constructor() {
+            super();
+            this.x = 1
+            this.z = 3
+            this.y = 2;
+          }
+        }
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  x;",
-            "  constructor() {",
-            "    this.y = 2;",
-            "  }",
-            "}"),
-        lines(
-            "class C {", //
-            "  constructor() {",
-            "    this.x;",
-            "    this.y = 2;",
-            "  }",
-            "}"));
+        """
+        class C {
+          x;
+          constructor() {
+            this.y = 2;
+          }
+        }
+        """,
+        """
+        class C {
+          constructor() {
+            this.x;
+            this.y = 2;
+          }
+        }
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  x = 1",
-            "  y = 2",
-            "  constructor() {",
-            "    this.z = 3;",
-            "  }",
-            "}"),
-        lines(
-            "class C {", //
-            "  constructor() {",
-            "    this.x = 1;",
-            "    this.y = 2;",
-            "    this.z = 3;",
-            "  }",
-            "}"));
+        """
+        class C {
+          x = 1
+          y = 2
+          constructor() {
+            this.z = 3;
+          }
+        }
+        """,
+        """
+        class C {
+          constructor() {
+            this.x = 1;
+            this.y = 2;
+            this.z = 3;
+          }
+        }
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  x = 1",
-            "  y = 2",
-            "  constructor() {",
-            "    alert(3);",
-            "    this.z = 4;",
-            "  }",
-            "}"),
-        lines(
-            "class C {", //
-            "  constructor() {",
-            "    this.x = 1;",
-            "    this.y = 2;",
-            "    alert(3);",
-            "    this.z = 4;",
-            "  }",
-            "}"));
+        """
+        class C {
+          x = 1
+          y = 2
+          constructor() {
+            alert(3);
+            this.z = 4;
+          }
+        }
+        """,
+        """
+        class C {
+          constructor() {
+            this.x = 1;
+            this.y = 2;
+            alert(3);
+            this.z = 4;
+          }
+        }
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  x = 1",
-            "  constructor() {",
-            "    alert(3);",
-            "    this.z = 4;",
-            "  }",
-            "  y = 2",
-            "}"),
-        lines(
-            "class C {", //
-            "  constructor() {",
-            "    this.x = 1;",
-            "    this.y = 2;",
-            "    alert(3);",
-            "    this.z = 4;",
-            "  }",
-            "}"));
+        """
+        class C {
+          x = 1
+          constructor() {
+            alert(3);
+            this.z = 4;
+          }
+          y = 2
+        }
+        """,
+        """
+        class C {
+          constructor() {
+            this.x = 1;
+            this.y = 2;
+            alert(3);
+            this.z = 4;
+          }
+        }
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  x = 1",
-            "  constructor() {",
-            "    alert(3);",
-            "    this.z = 4;",
-            "  }",
-            "  y = 2",
-            "}",
-            "class D {",
-            "  a = 5;",
-            "  constructor() { this.b = 6;}",
-            "}"),
-        lines(
-            "class C {", //
-            "  constructor() {",
-            "    this.x = 1;",
-            "    this.y = 2;",
-            "    alert(3);",
-            "    this.z = 4;",
-            "  }",
-            "}",
-            "class D {",
-            "constructor() {",
-            "  this.a = 5;",
-            "  this.b = 6",
-            "}",
-            "}"));
+        """
+        class C {
+          x = 1
+          constructor() {
+            alert(3);
+            this.z = 4;
+          }
+          y = 2
+        }
+        class D {
+          a = 5;
+          constructor() { this.b = 6;}
+        }
+        """,
+        """
+        class C {
+          constructor() {
+            this.x = 1;
+            this.y = 2;
+            alert(3);
+            this.z = 4;
+          }
+        }
+        class D {
+        constructor() {
+          this.a = 5;
+          this.b = 6
+        }
+        }
+        """);
   }
 
   @Test
@@ -1049,834 +1165,943 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
     computedFieldTest(
         srcs(
-            lines(
-                "class A { constructor() { alert(1); } }",
-                "/** @unrestricted */ class C extends A {", //
-                "  ['x'] = 1;",
-                "  constructor() {",
-                "    super();",
-                "    this['y'] = 2;",
-                "    this['z'] = 3;",
-                "  }",
-                "}")),
+            """
+            class A { constructor() { alert(1); } }
+            /** @unrestricted */ class C extends A {
+              ['x'] = 1;
+              constructor() {
+                super();
+                this['y'] = 2;
+                this['z'] = 3;
+              }
+            }
+            """),
         expected(
-            lines(
-                "class A { constructor() { alert(1); } }",
-                "class C extends A {", //
-                "  constructor() {",
-                "    super()",
-                "    this['x'] = 1",
-                "    this['y'] = 2;",
-                "    this['z'] = 3;",
-                "  }",
-                "}")));
+            """
+            class A { constructor() { alert(1); } }
+            class C extends A {
+              constructor() {
+                super()
+                this['x'] = 1
+                this['y'] = 2;
+                this['z'] = 3;
+              }
+            }
+            """));
   }
 
   @Test
   public void testInstanceNoncomputedWithNonemptyConstructorAndSuper() {
     test(
-        lines(
-            "class A { constructor() { alert(1); } }",
-            "class C extends A {", //
-            "  x = 1;",
-            "  constructor() {",
-            "    super()",
-            "    this.y = 2;",
-            "  }",
-            "}"),
-        lines(
-            "class A { constructor() { alert(1); } }",
-            "class C extends A {", //
-            "  constructor() {",
-            "    super()",
-            "    this.x = 1",
-            "    this.y = 2;",
-            "  }",
-            "}"));
+        """
+        class A { constructor() { alert(1); } }
+        class C extends A {
+          x = 1;
+          constructor() {
+            super()
+            this.y = 2;
+          }
+        }
+        """,
+        """
+        class A { constructor() { alert(1); } }
+        class C extends A {
+          constructor() {
+            super()
+            this.x = 1
+            this.y = 2;
+          }
+        }
+        """);
 
     test(
-        lines(
-            "class A { constructor() { this.x = 1; } }",
-            "class C extends A {", //
-            "  y;",
-            "  constructor() {",
-            "    super()",
-            "    alert(3);",
-            "    this.z = 4;",
-            "  }",
-            "}"),
-        lines(
-            "class A { constructor() { this.x = 1; } }",
-            "class C extends A {", //
-            "  constructor() {",
-            "    super()",
-            "    this.y;",
-            "    alert(3);",
-            "    this.z = 4;",
-            "  }",
-            "}"));
+        """
+        class A { constructor() { this.x = 1; } }
+        class C extends A {
+          y;
+          constructor() {
+            super()
+            alert(3);
+            this.z = 4;
+          }
+        }
+        """,
+        """
+        class A { constructor() { this.x = 1; } }
+        class C extends A {
+          constructor() {
+            super()
+            this.y;
+            alert(3);
+            this.z = 4;
+          }
+        }
+        """);
 
     test(
-        lines(
-            "class A { constructor() { this.x = 1; } }",
-            "class C extends A {", //
-            "  y;",
-            "  constructor() {",
-            "    alert(3);",
-            "    super()",
-            "    this.z = 4;",
-            "  }",
-            "}"),
-        lines(
-            "class A { constructor() { this.x = 1; } }",
-            "class C extends A {", //
-            "  constructor() {",
-            "    alert(3);",
-            "    super()",
-            "    this.y;",
-            "    this.z = 4;",
-            "  }",
-            "}"));
+        """
+        class A { constructor() { this.x = 1; } }
+        class C extends A {
+          y;
+          constructor() {
+            alert(3);
+            super()
+            this.z = 4;
+          }
+        }
+        """,
+        """
+        class A { constructor() { this.x = 1; } }
+        class C extends A {
+          constructor() {
+            alert(3);
+            super()
+            this.y;
+            this.z = 4;
+          }
+        }
+        """);
   }
 
   @Test
   public void testNonComputedInstanceWithEmptyConstructor() {
     test(
-        lines(
-            "class C {", //
-            "  x = 2;",
-            "  constructor() {}",
-            "}"),
-        lines(
-            "class C {", //
-            "  constructor() {",
-            "    this.x = 2;",
-            "  }",
-            "}"));
+        """
+        class C {
+          x = 2;
+          constructor() {}
+        }
+        """,
+        """
+        class C {
+          constructor() {
+            this.x = 2;
+          }
+        }
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  x;",
-            "  constructor() {}",
-            "}"),
-        lines(
-            "class C {", //
-            "  constructor() {",
-            "    this.x;",
-            "  }",
-            "}"));
+        """
+        class C {
+          x;
+          constructor() {}
+        }
+        """,
+        """
+        class C {
+          constructor() {
+            this.x;
+          }
+        }
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  x = 2",
-            "  y = 'hi'",
-            "  z;",
-            "  constructor() {}",
-            "}"),
-        lines(
-            "class C {", //
-            "  constructor() {",
-            "    this.x = 2",
-            "    this.y = 'hi'",
-            "    this.z;",
-            "  }",
-            "}"));
+        """
+        class C {
+          x = 2
+          y = 'hi'
+          z;
+          constructor() {}
+        }
+        """,
+        """
+        class C {
+          constructor() {
+            this.x = 2
+            this.y = 'hi'
+            this.z;
+          }
+        }
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  x = 1",
-            "  constructor() {",
-            "  }",
-            "  y = 2",
-            "}"),
-        lines(
-            "class C {", //
-            "  constructor() {",
-            "    this.x = 1;",
-            "    this.y = 2;",
-            "  }",
-            "}"));
+        """
+        class C {
+          x = 1
+          constructor() {
+          }
+          y = 2
+        }
+        """,
+        """
+        class C {
+          constructor() {
+            this.x = 1;
+            this.y = 2;
+          }
+        }
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  x = 1",
-            "  constructor() {",
-            "  }",
-            "  y = 2",
-            "}",
-            "class D {",
-            "  a = 5;",
-            "  constructor() {}",
-            "}"),
-        lines(
-            "class C {", //
-            "  constructor() {",
-            "    this.x = 1;",
-            "    this.y = 2;",
-            "  }",
-            "}",
-            "class D {",
-            "constructor() {",
-            "  this.a = 5;",
-            "}",
-            "}"));
+        """
+        class C {
+          x = 1
+          constructor() {
+          }
+          y = 2
+        }
+        class D {
+          a = 5;
+          constructor() {}
+        }
+        """,
+        """
+        class C {
+          constructor() {
+            this.x = 1;
+            this.y = 2;
+          }
+        }
+        class D {
+        constructor() {
+          this.a = 5;
+        }
+        }
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  w = function () {return 1;};",
-            "  x = () => {return 2;};",
-            "  y = (function a() {return 3;})();",
-            "  z = (() => {return 4;})();",
-            "  constructor() {}",
-            "}"),
-        lines(
-            "class C {", //
-            "  constructor() {",
-            "    this.w = function () {return 1;};",
-            "    this.x = () => {return 2;};",
-            "    this.y = (function a() {return 3;})();",
-            "    this.z = (() => {return 4;})();",
-            "  }",
-            "}"));
+        """
+        class C {
+          w = function () {return 1;};
+          x = () => {return 2;};
+          y = (function a() {return 3;})();
+          z = (() => {return 4;})();
+          constructor() {}
+        }
+        """,
+        """
+        class C {
+          constructor() {
+            this.w = function () {return 1;};
+            this.x = () => {return 2;};
+            this.y = (function a() {return 3;})();
+            this.z = (() => {return 4;})();
+          }
+        }
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  static x = 2",
-            "  constructor() {}",
-            "  y = C.x",
-            "}"),
-        lines(
-            "class C {", //
-            "  constructor() { this.y = C.x; }",
-            "}",
-            "C.x = 2;"));
+        """
+        class C {
+          static x = 2
+          constructor() {}
+          y = C.x
+        }
+        """,
+        """
+        class C {
+          constructor() { this.y = C.x; }
+        }
+        C.x = 2;
+        """);
   }
 
   @Test
   public void testInstanceNoncomputedNoConstructor() {
     test(
-        lines(
-            "class C {", //
-            "  x = 2;",
-            "}"),
-        lines(
-            "class C {", //
-            "  constructor() {this.x=2;}",
-            "}"));
+        """
+        class C {
+          x = 2;
+        }
+        """,
+        """
+        class C {
+          constructor() {this.x=2;}
+        }
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  x;",
-            "}"),
-        lines(
-            "class C {", //
-            "  constructor() {this.x;}",
-            "}"));
+        """
+        class C {
+          x;
+        }
+        """,
+        """
+        class C {
+          constructor() {this.x;}
+        }
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  x = 2",
-            "  y = 'hi'",
-            "  z;",
-            "}"),
-        lines(
-            "class C {", //
-            "  constructor() {this.x=2; this.y='hi'; this.z;}",
-            "}"));
+        """
+        class C {
+          x = 2
+          y = 'hi'
+          z;
+        }
+        """,
+        """
+        class C {
+          constructor() {this.x=2; this.y='hi'; this.z;}
+        }
+        """);
     test(
-        lines(
-            "class C {", //
-            "  foo() {}",
-            "  x = 1;",
-            "}"),
-        lines(
-            "class C {", //
-            "  constructor() {this.x = 1;}",
-            "  foo() {}",
-            "}"));
+        """
+        class C {
+          foo() {}
+          x = 1;
+        }
+        """,
+        """
+        class C {
+          constructor() {this.x = 1;}
+          foo() {}
+        }
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  static x = 2",
-            "  y = C.x",
-            "}"),
-        lines(
-            "class C {constructor() {",
-            "this.y = C.x",
-            "}}", //
-            "C.x = 2;"));
+        """
+        class C {
+          static x = 2
+          y = C.x
+        }
+        """,
+        """
+        class C {constructor() {
+        this.y = C.x
+        }}
+        C.x = 2;
+        """);
 
     test(
-        lines(
-            "class C {", //
-            "  w = function () {return 1;};",
-            "  x = () => {return 2;};",
-            "  y = (function a() {return 3;})();",
-            "  z = (() => {return 4;})();",
-            "}"),
-        lines(
-            "class C {", //
-            "  constructor() {",
-            "    this.w = function () {return 1;};",
-            "    this.x = () => {return 2;};",
-            "    this.y = (function a() {return 3;})();",
-            "    this.z = (() => {return 4;})();",
-            "  }",
-            "}"));
+        """
+        class C {
+          w = function () {return 1;};
+          x = () => {return 2;};
+          y = (function a() {return 3;})();
+          z = (() => {return 4;})();
+        }
+        """,
+        """
+        class C {
+          constructor() {
+            this.w = function () {return 1;};
+            this.x = () => {return 2;};
+            this.y = (function a() {return 3;})();
+            this.z = (() => {return 4;})();
+          }
+        }
+        """);
   }
 
   @Test
   public void testInstanceNonComputedNoConstructorWithSuperclass() {
     test(
-        lines(
-            "class B {}", //
-            "class C extends B {x = 1;}"),
-        lines(
-            "class B {}",
-            "class C extends B {",
-            "  constructor() {",
-            "    super(...arguments);",
-            "    this.x = 1;",
-            "  }",
-            "}"));
+        """
+        class B {}
+        class C extends B {x = 1;}
+        """,
+        """
+        class B {}
+        class C extends B {
+          constructor() {
+            super(...arguments);
+            this.x = 1;
+          }
+        }
+        """);
     test(
-        lines(
-            "class B {constructor() {}; y = 2;}", //
-            "class C extends B {x = 1;}"),
-        lines(
-            "class B {constructor() {this.y = 2}}",
-            "class C extends B {",
-            "  constructor() {",
-            "    super(...arguments);",
-            "    this.x = 1;",
-            "  }",
-            "}"));
+        """
+        class B {constructor() {}; y = 2;}
+        class C extends B {x = 1;}
+        """,
+        """
+        class B {constructor() {this.y = 2}}
+        class C extends B {
+          constructor() {
+            super(...arguments);
+            this.x = 1;
+          }
+        }
+        """);
     test(
-        lines(
-            "class B {constructor(a, b) {}; y = 2;}", //
-            "class C extends B {x = 1;}"),
-        lines(
-            "class B {constructor(a, b) {this.y = 2}}",
-            "class C extends B {",
-            "  constructor() {",
-            "    super(...arguments);",
-            "    this.x = 1;",
-            "  }",
-            "}"));
+        """
+        class B {constructor(a, b) {}; y = 2;}
+        class C extends B {x = 1;}
+        """,
+        """
+        class B {constructor(a, b) {this.y = 2}}
+        class C extends B {
+          constructor() {
+            super(...arguments);
+            this.x = 1;
+          }
+        }
+        """);
   }
 
   @Test
   public void testClassExpressionsStaticBlocks() {
     test(
-        lines(
-            "let c = class C {", //
-            "  static {",
-            "    C.y = 2;",
-            "    let x = C.y",
-            "  }",
-            "}"),
-        lines(
-            "const testcode$classdecl$var0 = class {};",
-            "{",
-            "  testcode$classdecl$var0.y = 2;",
-            "  let x = testcode$classdecl$var0.y;",
-            "}",
-            "/** @constructor */ ",
-            "let c = testcode$classdecl$var0;"));
+        """
+        let c = class C {
+          static {
+            C.y = 2;
+            let x = C.y
+          }
+        }
+        """,
+        """
+        const testcode$classdecl$var0 = class {};
+        {
+          testcode$classdecl$var0.y = 2;
+          let x = testcode$classdecl$var0.y;
+        }
+        /** @constructor */
+        let c = testcode$classdecl$var0;
+        """);
 
     test(
-        lines(
-            "foo(class C {", //
-            "  static {",
-            "    C.y = 2;",
-            "    let x = C.y",
-            "  }",
-            "})"),
-        lines(
-            "var JSCompiler_temp_const$jscomp$0 = foo;",
-            "const testcode$classdecl$var0 = class {};",
-            "{",
-            "  testcode$classdecl$var0.y = 2;",
-            "  let x = testcode$classdecl$var0.y;",
-            "}",
-            "JSCompiler_temp_const$jscomp$0(testcode$classdecl$var0);"));
+        """
+        foo(class C {
+          static {
+            C.y = 2;
+            let x = C.y
+          }
+        })
+        """,
+        """
+        var JSCompiler_temp_const$jscomp$0 = foo;
+        const testcode$classdecl$var0 = class {};
+        {
+          testcode$classdecl$var0.y = 2;
+          let x = testcode$classdecl$var0.y;
+        }
+        JSCompiler_temp_const$jscomp$0(testcode$classdecl$var0);
+        """);
 
     test(
-        lines(
-            "class A { static b; }",
-            "foo(A.b.c = class C {", //
-            "  static {",
-            "    C.y = 2;",
-            "    let x = C.y",
-            "  }",
-            "})"),
-        lines(
-            "class A {}",
-            "A.b;",
-            "var JSCompiler_temp_const$jscomp$1 = foo;",
-            "var JSCompiler_temp_const$jscomp$0 = A.b;",
-            "const testcode$classdecl$var0 = class {};",
-            "{",
-            "  testcode$classdecl$var0.y = 2;",
-            "  let x = testcode$classdecl$var0.y;",
-            "}",
-            "JSCompiler_temp_const$jscomp$1(JSCompiler_temp_const$jscomp$0.c =",
-            "testcode$classdecl$var0);"));
+        """
+        class A { static b; }
+        foo(A.b.c = class C {
+          static {
+            C.y = 2;
+            let x = C.y
+          }
+        })
+        """,
+        """
+        class A {}
+        A.b;
+        var JSCompiler_temp_const$jscomp$1 = foo;
+        var JSCompiler_temp_const$jscomp$0 = A.b;
+        const testcode$classdecl$var0 = class {};
+        {
+          testcode$classdecl$var0.y = 2;
+          let x = testcode$classdecl$var0.y;
+        }
+        JSCompiler_temp_const$jscomp$1(JSCompiler_temp_const$jscomp$0.c =
+        testcode$classdecl$var0);
+        """);
   }
 
   @Test
   public void testNonClassDeclarationsStaticBlocks() {
     test(
-        lines(
-            "let c = class {", //
-            "  static {",
-            "    let x = 1",
-            "  }",
-            "}"),
-        lines(
-            "let c = class {}", //
-            "{",
-            "  let x = 1",
-            "}"));
+        """
+        let c = class {
+          static {
+            let x = 1
+          }
+        }
+        """,
+        """
+        let c = class {}
+        {
+          let x = 1
+        }
+        """);
 
     test(
-        lines(
-            "class A {}",
-            "A.c = class {", //
-            "  static {",
-            "    let x = 1",
-            "  }",
-            "}"),
-        lines(
-            "class A {}", //
-            "A.c = class {}",
-            "{",
-            "  let x = 1",
-            "}"));
+        """
+        class A {}
+        A.c = class {
+          static {
+            let x = 1
+          }
+        }
+        """,
+        """
+        class A {}
+        A.c = class {}
+        {
+          let x = 1
+        }
+        """);
 
     test(
-        lines(
-            "class A {}",
-            "A[1] = class {", //
-            "  static {",
-            "    let x = 1",
-            "  }",
-            "}"),
-        lines(
-            "class A {}",
-            "var JSCompiler_temp_const$jscomp$0 = A;",
-            "const testcode$classdecl$var0 = class {};",
-            "{",
-            "  let x = 1;",
-            "}",
-            "JSCompiler_temp_const$jscomp$0[1] = testcode$classdecl$var0;"));
+        """
+        class A {}
+        A[1] = class {
+          static {
+            let x = 1
+          }
+        }
+        """,
+        """
+        class A {}
+        var JSCompiler_temp_const$jscomp$0 = A;
+        const testcode$classdecl$var0 = class {};
+        {
+          let x = 1;
+        }
+        JSCompiler_temp_const$jscomp$0[1] = testcode$classdecl$var0;
+        """);
   }
 
   @Test
   public void testNonClassDeclarationsStaticNoncomputedFields() {
     test(
-        lines(
-            "let c = class {", //
-            "  static x = 1",
-            "}"),
-        lines("let c = class {}", "c.x = 1"));
+        """
+        let c = class {
+          static x = 1
+        }
+        """,
+        """
+        let c = class {}
+        c.x = 1
+        """);
 
     test(
-        lines(
-            "class A {}",
-            "A.c = class {", //
-            "  static x = 1",
-            "}"),
-        lines("class A {}", "A.c = class {}", "A.c.x = 1"));
+        """
+        class A {}
+        A.c = class {
+          static x = 1
+        }
+        """,
+        """
+        class A {}
+        A.c = class {}
+        A.c.x = 1
+        """);
 
     test(
-        lines(
-            "class A {}",
-            "A[1] = class {", //
-            "  static x = 1",
-            "}"),
-        lines(
-            "class A {}",
-            "const testcode$classdecl$var0 = class {};",
-            "testcode$classdecl$var0.x = 1;",
-            "A[1] = testcode$classdecl$var0;"));
+        """
+        class A {}
+        A[1] = class {
+          static x = 1
+        }
+        """,
+        """
+        class A {}
+        const testcode$classdecl$var0 = class {};
+        testcode$classdecl$var0.x = 1;
+        A[1] = testcode$classdecl$var0;
+        """);
 
     test(
-        lines(
-            "let c = class C {", //
-            "  static y = 2;",
-            "  static x = C.y",
-            "}"),
-        lines(
-            "const testcode$classdecl$var0 = class {};",
-            "testcode$classdecl$var0.y = 2;",
-            "testcode$classdecl$var0.x = testcode$classdecl$var0.y;",
-            "/** @constructor */ ",
-            "let c = testcode$classdecl$var0;"));
+        """
+        let c = class C {
+          static y = 2;
+          static x = C.y
+        }
+        """,
+        """
+        const testcode$classdecl$var0 = class {};
+        testcode$classdecl$var0.y = 2;
+        testcode$classdecl$var0.x = testcode$classdecl$var0.y;
+        /** @constructor */
+        let c = testcode$classdecl$var0;
+        """);
 
     test(
-        lines(
-            "foo(class C {", //
-            "  static y = 2;",
-            "  static x = C.y",
-            "})"),
-        lines(
-            "const testcode$classdecl$var0 = class {};",
-            "testcode$classdecl$var0.y = 2;",
-            "testcode$classdecl$var0.x = testcode$classdecl$var0.y;",
-            "foo(testcode$classdecl$var0);"));
+        """
+        foo(class C {
+          static y = 2;
+          static x = C.y
+        })
+        """,
+        """
+        const testcode$classdecl$var0 = class {};
+        testcode$classdecl$var0.y = 2;
+        testcode$classdecl$var0.x = testcode$classdecl$var0.y;
+        foo(testcode$classdecl$var0);
+        """);
 
     test(
-        lines(
-            "foo(class C {", //
-            "  static y = 2;",
-            "  x = C.y",
-            "})"),
-        lines(
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() {",
-            "    this.x = testcode$classdecl$var0.y;",
-            "  }",
-            "};",
-            "testcode$classdecl$var0.y = 2;",
-            "foo(testcode$classdecl$var0);"));
+        """
+        foo(class C {
+          static y = 2;
+          x = C.y
+        })
+        """,
+        """
+        const testcode$classdecl$var0 = class {
+          constructor() {
+            this.x = testcode$classdecl$var0.y;
+          }
+        };
+        testcode$classdecl$var0.y = 2;
+        foo(testcode$classdecl$var0);
+        """);
   }
 
   @Test
   public void testNonClassDeclarationsInstanceNoncomputedFields() {
     test(
-        lines(
-            "let c = class {", //
-            "  y = 2;",
-            "}"),
-        lines(
-            "let c = class {", //
-            "  constructor() {",
-            "    this.y = 2;",
-            "  }",
-            "}"));
+        """
+        let c = class {
+          y = 2;
+        }
+        """,
+        """
+        let c = class {
+          constructor() {
+            this.y = 2;
+          }
+        }
+        """);
 
     test(
-        lines(
-            "let c = class C {", //
-            "  y = 2;",
-            "}"),
-        lines(
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() {",
-            "    this.y = 2;",
-            "  }",
-            "};",
-            "/** @constructor */ ",
-            "let c = testcode$classdecl$var0;"));
+        """
+        let c = class C {
+          y = 2;
+        }
+        """,
+        """
+        const testcode$classdecl$var0 = class {
+          constructor() {
+            this.y = 2;
+          }
+        };
+        /** @constructor */
+        let c = testcode$classdecl$var0;
+        """);
 
     test(
-        lines(
-            "class A {}",
-            "A.c = class {", //
-            "  y = 2;",
-            "}"),
-        lines(
-            "class A {}",
-            "A.c = class {", //
-            "  constructor() {",
-            "    this.y = 2;",
-            "  }",
-            "}"));
+        """
+        class A {}
+        A.c = class {
+          y = 2;
+        }
+        """,
+        """
+        class A {}
+        A.c = class {
+          constructor() {
+            this.y = 2;
+          }
+        }
+        """);
 
     test(
-        lines(
-            "A[1] = class {", //
-            "  y = 2;",
-            "}"),
-        lines(
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() {",
-            "    this.y = 2;",
-            "  }",
-            "};",
-            "A[1] = testcode$classdecl$var0;"));
+        """
+        A[1] = class {
+          y = 2;
+        }
+        """,
+        """
+        const testcode$classdecl$var0 = class {
+          constructor() {
+            this.y = 2;
+          }
+        };
+        A[1] = testcode$classdecl$var0;
+        """);
 
     test(
-        lines(
-            "let c = class C {", //
-            "  y = 2;",
-            "}"),
-        lines(
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() {",
-            "    this.y = 2;",
-            "  }",
-            "};",
-            "/** @constructor */ ",
-            "let c = testcode$classdecl$var0;"));
+        """
+        let c = class C {
+          y = 2;
+        }
+        """,
+        """
+        const testcode$classdecl$var0 = class {
+          constructor() {
+            this.y = 2;
+          }
+        };
+        /** @constructor */
+        let c = testcode$classdecl$var0;
+        """);
 
     test(
-        lines(
-            "class A {}",
-            "A.c = class C {", //
-            "  y = 2;",
-            "}"),
-        lines(
-            "class A {}",
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() {",
-            "    this.y = 2;",
-            "  }",
-            "};",
-            "/** @constructor */ ",
-            "A.c = testcode$classdecl$var0;"));
+        """
+        class A {}
+        A.c = class C {
+          y = 2;
+        }
+        """,
+        """
+        class A {}
+        const testcode$classdecl$var0 = class {
+          constructor() {
+            this.y = 2;
+          }
+        };
+        /** @constructor */
+        A.c = testcode$classdecl$var0;
+        """);
 
     test(
-        lines(
-            "A[1] = class C {", //
-            "  y = 2;",
-            "}"),
-        lines(
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() {",
-            "    this.y = 2;",
-            "  }",
-            "};",
-            "A[1] = testcode$classdecl$var0;"));
+        """
+        A[1] = class C {
+          y = 2;
+        }
+        """,
+        """
+        const testcode$classdecl$var0 = class {
+          constructor() {
+            this.y = 2;
+          }
+        };
+        A[1] = testcode$classdecl$var0;
+        """);
 
     test(
-        lines(
-            "foo(class C {", //
-            "  y = 2;",
-            "})"),
-        lines(
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() {",
-            "    this.y = 2;",
-            "  }",
-            "};",
-            "foo(testcode$classdecl$var0);"));
+        """
+        foo(class C {
+          y = 2;
+        })
+        """,
+        """
+        const testcode$classdecl$var0 = class {
+          constructor() {
+            this.y = 2;
+          }
+        };
+        foo(testcode$classdecl$var0);
+        """);
   }
 
   @Test
   public void testConstuctorAndStaticFieldDontConflict() {
     test(
-        lines(
-            "let x = 2;", //
-            "class C {",
-            "  static y = x",
-            "  constructor(x) {}",
-            "}"),
-        lines(
-            "let x = 2;", //
-            "class C {",
-            "  constructor(x$jscomp$1) {}",
-            "}",
-            "C.y = x"));
+        """
+        let x = 2;
+        class C {
+          static y = x
+          constructor(x) {}
+        }
+        """,
+        """
+        let x = 2;
+        class C {
+          constructor(x$jscomp$1) {}
+        }
+        C.y = x
+        """);
   }
 
   @Test
   public void testInstanceInitializerShadowsConstructorDeclaration() {
     test(
-        lines(
-            "let x = 2;", //
-            "class C {",
-            "  y = x",
-            "  constructor(x) {}",
-            "}"),
-        lines(
-            "let x = 2;", //
-            "class C {",
-            "  constructor(x$jscomp$1) {",
-            "    this.y = x;",
-            "  }",
-            "}"));
+        """
+        let x = 2;
+        class C {
+          y = x
+          constructor(x) {}
+        }
+        """,
+        """
+        let x = 2;
+        class C {
+          constructor(x$jscomp$1) {
+            this.y = x;
+          }
+        }
+        """);
 
     test(
-        lines(
-            "let x = 2;", //
-            "class C {",
-            "  y = x;",
-            "  constructor() { let x; }",
-            "}"),
-        lines(
-            "let x = 2;",
-            "class C {",
-            "  constructor() {",
-            "    this.y = x;",
-            "    let x$jscomp$1;",
-            "  }",
-            "}"));
+        """
+        let x = 2;
+        class C {
+          y = x;
+          constructor() { let x; }
+        }
+        """,
+        """
+        let x = 2;
+        class C {
+          constructor() {
+            this.y = x;
+            let x$jscomp$1;
+          }
+        }
+        """);
 
     test(
-        lines(
-            "let x = 2;", //
-            "class C {",
-            "  y = x",
-            "  constructor() { {var x;} }",
-            "}"),
-        lines(
-            "let x = 2;",
-            "class C {",
-            "  constructor() {",
-            "    this.y = x;",
-            "    {",
-            "     var x$jscomp$1;",
-            "    }",
-            "  }",
-            "}"));
+        """
+        let x = 2;
+        class C {
+          y = x
+          constructor() { {var x;} }
+        }
+        """,
+        """
+        let x = 2;
+        class C {
+          constructor() {
+            this.y = x;
+            {
+             var x$jscomp$1;
+            }
+          }
+        }
+        """);
 
     test(
-        lines(
-            "function f() { return 4; }", //
-            "class C {",
-            "  y = f();",
-            "  constructor() {function f() { return 'str'; }}",
-            "}"),
-        lines(
-            "function f() {",
-            "  return 4;",
-            "}",
-            "class C {",
-            "  constructor() {",
-            "    function f$jscomp$1() {",
-            "      return 'str';",
-            "    }",
-            "    this.y = f();",
-            "  }",
-            "}"));
+        """
+        function f() { return 4; }
+        class C {
+          y = f();
+          constructor() {function f() { return 'str'; }}
+        }
+        """,
+        """
+        function f() {
+          return 4;
+        }
+        class C {
+          constructor() {
+            function f$jscomp$1() {
+              return 'str';
+            }
+            this.y = f();
+          }
+        }
+        """);
 
     test(
-        lines(
-            "class Foo {", //
-            "  constructor(x) {}",
-            "  y = (x) => x;",
-            "}"),
-        lines(
-            "class Foo {",
-            "  constructor(x) {",
-            "    this.y = x$jscomp$1 => {",
-            "      return x$jscomp$1;",
-            "    };",
-            "  }",
-            "}"));
+        """
+        class Foo {
+          constructor(x) {}
+          y = (x) => x;
+        }
+        """,
+        """
+        class Foo {
+          constructor(x) {
+            this.y = x$jscomp$1 => {
+              return x$jscomp$1;
+            };
+          }
+        }
+        """);
 
     test(
-        lines(
-            "let x = 2;", //
-            "class C {",
-            "  y = (x) => x;",
-            "  constructor(x) {}",
-            "}"),
-        lines(
-            "let x = 2;",
-            "class C {",
-            "  constructor(x$jscomp$2) {",
-            "    this.y = x$jscomp$1 => {",
-            "      return x$jscomp$1;",
-            "    };",
-            "  }",
-            "}"));
+        """
+        let x = 2;
+        class C {
+          y = (x) => x;
+          constructor(x) {}
+        }
+        """,
+        """
+        let x = 2;
+        class C {
+          constructor(x$jscomp$2) {
+            this.y = x$jscomp$1 => {
+              return x$jscomp$1;
+            };
+          }
+        }
+        """);
   }
 
   @Test
   public void testInstanceInitializerDoesntShadowConstructorDeclaration() {
     test(
-        lines(
-            "let x = 2;", //
-            "class C {",
-            "  y = x;",
-            "  constructor() { {let x;} }",
-            "}"),
-        lines(
-            "let x = 2;",
-            "class C {",
-            "  constructor() {",
-            "    this.y = x;",
-            "    {let x$jscomp$1;}",
-            "  }",
-            "}"));
+        """
+        let x = 2;
+        class C {
+          y = x;
+          constructor() { {let x;} }
+        }
+        """,
+        """
+        let x = 2;
+        class C {
+          constructor() {
+            this.y = x;
+            {let x$jscomp$1;}
+          }
+        }
+        """);
 
     test(
-        lines(
-            "let x = 2;", //
-            "class C {",
-            "  y = x",
-            "  constructor() {() => { let x; };}",
-            "}"),
-        lines(
-            "let x = 2;", //
-            "class C {",
-            "  constructor() {",
-            "    this.y = x;",
-            "    () => { let x$jscomp$1; };",
-            "  }",
-            "}"));
+        """
+        let x = 2;
+        class C {
+          y = x
+          constructor() {() => { let x; };}
+        }
+        """,
+        """
+        let x = 2;
+        class C {
+          constructor() {
+            this.y = x;
+            () => { let x$jscomp$1; };
+          }
+        }
+        """);
 
     test(
-        lines(
-            "let x = 2;", //
-            "class C {",
-            "  y = x",
-            "  constructor() {(x) => 3;}",
-            "}"),
-        lines(
-            "let x = 2;", //
-            "class C {",
-            "  constructor() {",
-            "    this.y = x;",
-            "    (x$jscomp$1) => { return 3; };",
-            "  }",
-            "}"));
+        """
+        let x = 2;
+        class C {
+          y = x
+          constructor() {(x) => 3;}
+        }
+        """,
+        """
+        let x = 2;
+        class C {
+          constructor() {
+            this.y = x;
+            (x$jscomp$1) => { return 3; };
+          }
+        }
+        """);
   }
 
   @Test
   public void testInstanceFieldInitializersDontBleedOut() {
     test(
-        lines(
-            "class C {", //
-            "  y = z",
-            "  method() { x; }",
-            "  constructor(x) {}",
-            "}"),
-        lines(
-            "class C {", //
-            "  method() { x; }",
-            "  constructor(x) {",
-            "    this.y = z;",
-            "  }",
-            "}"));
+        """
+        class C {
+          y = z
+          method() { x; }
+          constructor(x) {}
+        }
+        """,
+        """
+        class C {
+          method() { x; }
+          constructor(x) {
+            this.y = z;
+          }
+        }
+        """);
   }
 
   @Test
   public void testNestedClassesWithShadowingInstanceFields() {
     test(
-        lines(
-            "let x = 2;",
-            "class C {",
-            "  y = () => {",
-            "    class Foo { z = x }",
-            "  };",
-            "  constructor(x) {}",
-            "}"),
-        lines(
-            "let x = 2;",
-            "class C {",
-            "  constructor(x$jscomp$1) {",
-            "    this.y = () => {",
-            "      class Foo {",
-            "        constructor() {",
-            "          this.z = x;",
-            "        }",
-            "      }",
-            "    };",
-            "  }",
-            "}"));
+        """
+        let x = 2;
+        class C {
+          y = () => {
+            class Foo { z = x }
+          };
+          constructor(x) {}
+        }
+        """,
+        """
+        let x = 2;
+        class C {
+          constructor(x$jscomp$1) {
+            this.y = () => {
+              class Foo {
+                constructor() {
+                  this.z = x;
+                }
+              }
+            };
+          }
+        }
+        """);
   }
 
   // Added when fixing transpilation of real-world code that passed a class expression to a
@@ -1884,94 +2109,105 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   @Test
   public void testPublicFieldsInClassExpressionInNew() {
     test(
-        lines(
-            "let foo = new (", //
-            "    class Bar {",
-            "      x;",
-            "      static y;",
-            "    }",
-            ")();"),
-        lines(
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() {",
-            "    this.x;",
-            "  }",
-            "};",
-            "testcode$classdecl$var0.y;",
-            "let foo = new testcode$classdecl$var0();"));
+        """
+        let foo = new (
+            class Bar {
+              x;
+              static y;
+            }
+        )();
+        """,
+        """
+        const testcode$classdecl$var0 = class {
+          constructor() {
+            this.x;
+          }
+        };
+        testcode$classdecl$var0.y;
+        let foo = new testcode$classdecl$var0();
+        """);
   }
 
   @Test
   public void testNonClassDeclarationsFunctionArgs() {
     test(
         "A[foo()] = class {static x;}",
-        lines(
-            "var JSCompiler_temp_const$jscomp$1 = A;",
-            "var JSCompiler_temp_const$jscomp$0 = foo();",
-            "const testcode$classdecl$var0 = class {};",
-            "testcode$classdecl$var0.x;",
-            "JSCompiler_temp_const$jscomp$1[JSCompiler_temp_const$jscomp$0] =",
-            "    testcode$classdecl$var0;"));
+        """
+        var JSCompiler_temp_const$jscomp$1 = A;
+        var JSCompiler_temp_const$jscomp$0 = foo();
+        const testcode$classdecl$var0 = class {};
+        testcode$classdecl$var0.x;
+        JSCompiler_temp_const$jscomp$1[JSCompiler_temp_const$jscomp$0] =
+            testcode$classdecl$var0;
+        """);
 
     test(
         "foo(c = class {static x;})",
-        lines(
-            "const testcode$classdecl$var0 = class {};",
-            "testcode$classdecl$var0.x;",
-            "foo(c = testcode$classdecl$var0);"));
+        """
+        const testcode$classdecl$var0 = class {};
+        testcode$classdecl$var0.x;
+        foo(c = testcode$classdecl$var0);
+        """);
 
     test(
         "function foo(c = class {static x;}) {}",
-        lines(
-            "function foo(c = (() => {",
-            "  const testcode$classdecl$var0 = class {};",
-            "  testcode$classdecl$var0.x;",
-            "  return testcode$classdecl$var0;",
-            "})()) {}"));
+        """
+        function foo(c = (() => {
+          const testcode$classdecl$var0 = class {};
+          testcode$classdecl$var0.x;
+          return testcode$classdecl$var0;
+        })()) {}
+        """);
   }
 
   @Test
   public void testAnonymousClassExpression() {
     test(
-        lines(
-            "function foo() {", //
-            "  return class {",
-            "    y;",
-            "    static x;",
-            "  }",
-            "}"),
-        lines(
-            "function foo() {",
-            "  const testcode$classdecl$var0 = class {",
-            "    constructor() {",
-            "      this.y;",
-            "    }",
-            "  };",
-            "  testcode$classdecl$var0.x;",
-            "  return testcode$classdecl$var0;",
-            "}"));
+        """
+        function foo() {
+          return class {
+            y;
+            static x;
+          }
+        }
+        """,
+        """
+        function foo() {
+          const testcode$classdecl$var0 = class {
+            constructor() {
+              this.y;
+            }
+          };
+          testcode$classdecl$var0.x;
+          return testcode$classdecl$var0;
+        }
+        """);
 
     test(
-        lines(
-            "foo(class {", //
-            "  y = 2;",
-            "})"),
-        lines(
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() {",
-            "    this.y = 2;",
-            "  }",
-            "};",
-            "foo(testcode$classdecl$var0);"));
+        """
+        foo(class {
+          y = 2;
+        })
+        """,
+        """
+        const testcode$classdecl$var0 = class {
+          constructor() {
+            this.y = 2;
+          }
+        };
+        foo(testcode$classdecl$var0);
+        """);
 
     test(
-        lines(
-            "foo(class {", //
-            "  static x = 1;",
-            "})"),
-        lines(
-            "const testcode$classdecl$var0 = class {};",
-            "testcode$classdecl$var0.x = 1;",
-            "foo(testcode$classdecl$var0);"));
+        """
+        foo(class {
+          static x = 1;
+        })
+        """,
+        """
+        const testcode$classdecl$var0 = class {};
+        testcode$classdecl$var0.x = 1;
+        foo(testcode$classdecl$var0);
+        """);
   }
 }

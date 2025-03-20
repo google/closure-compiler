@@ -192,18 +192,27 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   @Test
   public void testErrorHandling2() {
-    inFunction(lines("try {", "} catch (e) {", "  e = 1; ", "  let g = e;", "  print(g)", "}"));
+    inFunction(
+        """
+        try {
+        } catch (e) {
+          e = 1;
+          let g = e;
+          print(g)
+        }
+        """);
 
     inFunction(
-        lines(
-            "try {",
-            "} catch (e) {",
-            "    e = 1;",
-            "    {",
-            "      let g = e;",
-            "      print(g)",
-            "    }",
-            "}"));
+        """
+        try {
+        } catch (e) {
+            e = 1;
+            {
+              let g = e;
+              print(g)
+            }
+        }
+        """);
   }
 
   @Test
@@ -632,34 +641,50 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   @Test
   public void testClassMethods() {
     test(
-        lines("class C{", "  func() {", "    var x;", "    x = 1;", "  }", "}"),
-        lines("class C{", "  func() {", "    var x;", "    1;", "  }", "}"));
+        """
+        class C{
+          func() {
+            var x;
+            x = 1;
+          }
+        }
+        """,
+        """
+        class C{
+          func() {
+            var x;
+            1;
+          }
+        }
+        """);
 
     test(
-        lines(
-            "class C{",
-            "  constructor(x, y) {",
-            "    this.x = x;",
-            "    this.y = y;",
-            "  }",
-            "  func() {",
-            "    var z;",
-            "    z = 1;",
-            "    this.x = 3",
-            "  }",
-            "}"),
-        lines(
-            "class C{",
-            "  constructor(x, y) {",
-            "    this.x = x;",
-            "    this.y = y;",
-            "  }",
-            "  func() {",
-            "    var z;",
-            "    1;",
-            "    this.x = 3",
-            "  }",
-            "}"));
+        """
+        class C{
+          constructor(x, y) {
+            this.x = x;
+            this.y = y;
+          }
+          func() {
+            var z;
+            z = 1;
+            this.x = 3
+          }
+        }
+        """,
+        """
+        class C{
+          constructor(x, y) {
+            this.x = x;
+            this.y = y;
+          }
+          func() {
+            var z;
+            1;
+            this.x = 3
+          }
+        }
+        """);
   }
 
   @Test
@@ -667,24 +692,26 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // TODO(b/240443227): Improve ClassStaticBlock optimization, dead code is not removed in
     // expression.
     testSame(
-        lines(
-            "class C{", //
-            "  static{",
-            "    var x;",
-            "    x = 1;",
-            "  }",
-            "}"));
+        """
+        class C{
+          static{
+            var x;
+            x = 1;
+          }
+        }
+        """);
 
     testSame(
-        lines(
-            " var x = 0;",
-            " print(x);",
-            "  x = 1;",
-            "  class C {",
-            "   static {",
-            "    print(x);",
-            "    }",
-            "  }"));
+        """
+         var x = 0;
+         print(x);
+          x = 1;
+          class C {
+           static {
+            print(x);
+            }
+          }
+        """);
   }
 
   @Test
@@ -692,8 +719,20 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     test(
-        lines("function* f() {", "  var x, y;", "  x = 1; y = 2;", "  yield y;", "}"),
-        lines("function* f() {", "  var x, y;", "  1; y = 2;", "  yield y;", "}"));
+        """
+        function* f() {
+          var x, y;
+          x = 1; y = 2;
+          yield y;
+        }
+        """,
+        """
+        function* f() {
+          var x, y;
+          1; y = 2;
+          yield y;
+        }
+        """);
   }
 
   @Test
@@ -746,48 +785,52 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   public void testDestructuringDeclarationRvalue() {
     // Test array destructuring
     inFunction(
-        lines(
-            "let arr = []",
-            "if (CONDITION) {",
-            "  arr = [3];",
-            "}",
-            "let [foo] = arr;",
-            "use(foo);"));
+        """
+        let arr = []
+        if (CONDITION) {
+          arr = [3];
+        }
+        let [foo] = arr;
+        use(foo);
+        """);
 
     // Test object destructuring
     inFunction(
-        lines(
-            "let obj = {}",
-            "if (CONDITION) {",
-            "  obj = {foo: 3};",
-            "}",
-            "let {foo} = obj;",
-            "use(foo);"));
+        """
+        let obj = {}
+        if (CONDITION) {
+          obj = {foo: 3};
+        }
+        let {foo} = obj;
+        use(foo);
+        """);
   }
 
   @Test
   public void testDestructuringAssignmentRValue() {
     // Test array destructuring
     inFunction(
-        lines(
-            "let arr = []",
-            "if (CONDITION) {",
-            "  arr = [3];",
-            "}",
-            "let foo;",
-            "[foo] = arr;",
-            "use(foo);"));
+        """
+        let arr = []
+        if (CONDITION) {
+          arr = [3];
+        }
+        let foo;
+        [foo] = arr;
+        use(foo);
+        """);
 
     // Test object destructuring
     inFunction(
-        lines(
-            "let obj = {}",
-            "if (CONDITION) {",
-            "  obj = {foo: 3};",
-            "}",
-            "let foo;",
-            "({foo} = obj);",
-            "use(foo);"));
+        """
+        let obj = {}
+        if (CONDITION) {
+          obj = {foo: 3};
+        }
+        let foo;
+        ({foo} = obj);
+        use(foo);
+        """);
   }
 
   @Test
@@ -795,14 +838,20 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     inFunction(
-        lines(
-            "let x;",
-            "x = [];",
-            "var y = 5;", // Don't eliminate because if arr is empty, y will remain 5.
-            "for ([y = x] of arr) { y; }",
-            "y;"));
+        """
+        let x;
+        x = [];
+        var y = 5; // Don't eliminate because if arr is empty, y will remain 5.
+        for ([y = x] of arr) { y; }
+        y;
+        """);
 
-    inFunction(lines("let x;", "x = [];", "for (let [y = x] of arr) { y; }"));
+    inFunction(
+        """
+        let x;
+        x = [];
+        for (let [y = x] of arr) { y; }
+        """);
 
     inFunction("for (let [key, value] of arr) {}");
     inFunction("for (let [key, value] of arr) { key; value; }");
@@ -814,9 +863,20 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   public void testReferenceInDestructuringPatternDefaultValue() {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
-    inFunction(lines("let bar = [];", "const {foo = bar} = obj;", "foo;"));
+    inFunction(
+        """
+        let bar = [];
+        const {foo = bar} = obj;
+        foo;
+        """);
 
-    inFunction(lines("let bar;", "bar = [];", "const {foo = bar} = obj;", "foo;"));
+    inFunction(
+        """
+        let bar;
+        bar = [];
+        const {foo = bar} = obj;
+        foo;
+        """);
 
     inFunction("let bar; bar = 3; const [foo = bar] = arr; foo;");
     inFunction("let foo, bar; bar = 3; [foo = bar] = arr; foo;");
@@ -829,26 +889,51 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     inFunction("let str; str = 'bar'; const {[str + 'baz']: foo} = obj; foo;");
 
     inFunction(
-        lines(
-            "let obj = {};",
-            "let str, foo;",
-            "str = 'bar';",
-            "({[str + 'baz']: foo} = obj);",
-            "foo;"));
+        """
+        let obj = {};
+        let str, foo;
+        str = 'bar';
+        ({[str + 'baz']: foo} = obj);
+        foo;
+        """);
   }
 
   @Test
   public void testDefaultParameter() {
     test(
-        lines("function f(x, y = 12) {", "  var z;", "  z = y;", "}"),
-        lines("function f(x, y = 12) {", "  var z;", "  y;", "}"));
+        """
+        function f(x, y = 12) {
+          var z;
+          z = y;
+        }
+        """,
+        """
+        function f(x, y = 12) {
+          var z;
+          y;
+        }
+        """);
   }
 
   @Test
   public void testObjectLiterals() {
     test(
-        lines("var obj = {", "  f() {", "  var x;", "  x = 2;", "  }", "}"),
-        lines("var obj = {", "  f() {", "  var x;", "  2;", "  }", "}"));
+        """
+        var obj = {
+          f() {
+          var x;
+          x = 2;
+          }
+        }
+        """,
+        """
+        var obj = {
+          f() {
+          var x;
+          2;
+          }
+        }
+        """);
   }
 
   @Test
@@ -859,16 +944,18 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   @Test
   public void testSpread_consideredRead() {
     inFunction(
-        lines(
-            "var a;", //
-            "a = [];", //
-            "[...a];"));
+        """
+        var a;
+        a = [];
+        [...a];
+        """);
 
     inFunction(
-        lines(
-            "var a;", //
-            "a = {};", //
-            "({...a});"));
+        """
+        var a;
+        a = {};
+        ({...a});
+        """);
   }
 
   @Test
@@ -877,18 +964,20 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // code.
 
     inFunction(
-        lines(
-            "var a = 9;", //
-            "[...a] = itr;",
-            "return a;")
+        """
+        var a = 9;
+        [...a] = itr;
+        return a;
+        """
         /* , lines( "var a;", // "[...a] = itr;", "return a;") */
         );
 
     inFunction(
-        lines(
-            "var a = 9;", //
-            "({...a} = obj);",
-            "return a;")
+        """
+        var a = 9;
+        ({...a} = obj);
+        return a;
+        """
         /* , lines( "var a;", // "({...a} = obj);", "return a;") */
         );
   }
@@ -899,18 +988,20 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // code.
 
     inFunction(
-        lines(
-            "var a = 9;", //
-            "[a] = itr;",
-            "return a;")
+        """
+        var a = 9;
+        [a] = itr;
+        return a;
+        """
         /* , lines( "var a;", // "[a] = itr;", "return a;") */
         );
 
     inFunction(
-        lines(
-            "var a = 9;", //
-            "({a} = obj);",
-            "return a;")
+        """
+        var a = 9;
+        ({a} = obj);
+        return a;
+        """
         /* , lines( "var a;", // "({a} = obj);", "return a;") */
         );
   }
@@ -921,14 +1012,16 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // this is the correct behaviour.
 
     inFunction(
-        lines(
-            "var a;", //
-            "[...a] = itr;"));
+        """
+        var a;
+        [...a] = itr;
+        """);
 
     inFunction(
-        lines(
-            "var a;", //
-            "({...a} = obj);"));
+        """
+        var a;
+        ({...a} = obj);
+        """);
   }
 
   @Test
@@ -937,14 +1030,16 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // this is the correct behaviour.
 
     inFunction(
-        lines(
-            "var a;", //
-            "[a] = itr;"));
+        """
+        var a;
+        [a] = itr;
+        """);
 
     inFunction(
-        lines(
-            "var a;", //
-            "({a} = obj);"));
+        """
+        var a;
+        ({a} = obj);
+        """);
   }
 
   @Test
@@ -974,85 +1069,125 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   @Test
   public void testBlockScoping() {
     inFunction(
-        lines("let x;", "{", "  let x;", "  x = 1;", "}", "x = 2;", "return x;"),
-        lines("let x;", "{", "  let x$jscomp$1;", "  1;", "}", "x = 2;", "return x;"));
+        """
+        let x;
+        {
+          let x;
+          x = 1;
+        }
+        x = 2;
+        return x;
+        """,
+        """
+        let x;
+        {
+          let x$jscomp$1;
+          1;
+        }
+        x = 2;
+        return x;
+        """);
 
     inFunction(
-        lines("let x;", "x = 2", "{", "  let x;", "  x = 1;", "}", "print(x);"),
-        lines("let x;", "x = 2;", "{", "  let x$jscomp$1;", "  1;", "}", "print(x);"));
+        """
+        let x;
+        x = 2
+        {
+          let x;
+          x = 1;
+        }
+        print(x);
+        """,
+        """
+        let x;
+        x = 2;
+        {
+          let x$jscomp$1;
+          1;
+        }
+        print(x);
+        """);
   }
 
   @Test
   public void testComputedClassField() {
     inFunction(
-        lines(
-            "let x;", //
-            "class C {",
-            "  static [x = 'field1'] = (x = 5);",
-            "  [x = 'field2'] = 7;",
-            "}"),
-        lines(
-            "let x;", //
-            "class C {",
-            "  static ['field1'] = 5;",
-            "  ['field2'] = 7;",
-            "}"));
+        """
+        let x;
+        class C {
+          static [x = 'field1'] = (x = 5);
+          [x = 'field2'] = 7;
+        }
+        """,
+        """
+        let x;
+        class C {
+          static ['field1'] = 5;
+          ['field2'] = 7;
+        }
+        """);
 
     inFunction(
-        lines(
-            "let x;", //
-            "class C {",
-            "  static [x = 'field1'] = (x = 5);",
-            "  [x = 'field2'] = 7;",
-            "}",
-            "use(x);"));
+        """
+        let x;
+        class C {
+          static [x = 'field1'] = (x = 5);
+          [x = 'field2'] = 7;
+        }
+        use(x);
+        """);
 
     inFunction(
-        lines(
-            "let x;", //
-            "class C {",
-            "  static field1 = x;",
-            "  [x = 'field2'] = 7;",
-            "}",
-            "use(C.field1);"),
-        lines(
-            "let x;", //
-            "class C {",
-            "  static field1 = x;",
-            // TODO(b/189993301): don't remove 'x = field2' because it's read by 'field1 = x'
-            "  ['field2'] = 7;",
-            "}",
-            "use(C.field1);"));
+        """
+        let x;
+        class C {
+          static field1 = x;
+          [x = 'field2'] = 7;
+        }
+        use(C.field1);
+        """,
+        """
+        let x;
+        class C {
+          static field1 = x;
+        // TODO(b/189993301): don't remove 'x = field2' because it's read by 'field1 = x'
+          ['field2'] = 7;
+        }
+        use(C.field1);
+        """);
   }
 
   @Test
   public void testComputedClassMethod() {
     inFunction(
-        lines(
-            "let x;", //
-            "class C {",
-            // NOTE: it would be correct to eliminate the following two assignments
-            "  static [x = 'field1']() {}",
-            "  [x = 'field2']() {}",
-            "}"));
+        """
+        let x;
+        class C {
+        // NOTE: it would be correct to eliminate the following two assignments
+          static [x = 'field1']() {}
+          [x = 'field2']() {}
+        }
+        """);
 
     inFunction(
-        lines(
-            "let x;", //
-            "class C {",
-            "  static [x = 'field1']() {};",
-            "  [x = 'field2']() {}",
-            "}",
-            "use(x);"));
+        """
+        let x;
+        class C {
+          static [x = 'field1']() {};
+          [x = 'field2']() {}
+        }
+        use(x);
+        """);
 
     inFunction(
-        lines(
-            "let x;", //
-            "class C {",
-            "  static field1 = x;",
-            "  [x = 'field2']() {}",
-            "}",
-            "use(C.field1);"));
+        """
+        let x;
+        class C {
+          static field1 = x;
+          [x = 'field2']() {}
+        }
+        use(C.field1);
+        """);
   }
 
   private void inFunction(String src) {

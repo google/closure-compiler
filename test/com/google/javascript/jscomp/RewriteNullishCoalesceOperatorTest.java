@@ -70,10 +70,10 @@ public final class RewriteNullishCoalesceOperatorTest extends CompilerTestCase {
     test(
         srcs("a ?? b ?? c"),
         expected(
-            lines(
-                "let $jscomp$nullish$tmp0; let $jscomp$nullish$tmp1;",
-                "($jscomp$nullish$tmp1 = ($jscomp$nullish$tmp0 = a) != null ? $jscomp$nullish$tmp0"
-                    + " : b) != null",
-                "? $jscomp$nullish$tmp1 : c;")));
+            """
+let $jscomp$nullish$tmp0; let $jscomp$nullish$tmp1;
+($jscomp$nullish$tmp1 = ($jscomp$nullish$tmp0 = a) != null ? $jscomp$nullish$tmp0 : b) != null
+? $jscomp$nullish$tmp1 : c;
+"""));
   }
 }

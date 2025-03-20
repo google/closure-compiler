@@ -104,9 +104,10 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
   public void testBootstrapOrdinals_twoInitializers() {
     test(
         srcs(
-            lines(
-                "var CLOSURE_TOGGLE_ORDINALS = {x: 1, y: 2};", //
-                "var CLOSURE_TOGGLE_ORDINALS = {x: 1, y: 2};")),
+            """
+            var CLOSURE_TOGGLE_ORDINALS = {x: 1, y: 2};
+            var CLOSURE_TOGGLE_ORDINALS = {x: 1, y: 2};
+            """),
         error(ReplaceToggles.INVALID_ORDINAL_MAPPING)
             .withMessageContaining("multiple initialized copies"));
   }
@@ -121,86 +122,97 @@ public final class ReplaceTogglesTest extends CompilerTestCase {
   @Test
   public void testSimpleToggles() {
     test(
-        lines(
-            "var CLOSURE_TOGGLE_ORDINALS = {'foo': 1, 'bar': 30, 'baz': 59};",
-            "const foo = goog.readToggleInternalDoNotCallDirectly('foo');",
-            "const bar = goog.readToggleInternalDoNotCallDirectly('bar');",
-            "const baz = goog.readToggleInternalDoNotCallDirectly('baz');"),
-        lines(
-            "var CLOSURE_TOGGLE_ORDINALS = {'foo': 1, 'bar': 30, 'baz': 59};",
-            "const foo = !!(goog.TOGGLES_[0] & 2);",
-            "const bar = !!(goog.TOGGLES_[1] & 1);",
-            "const baz = !!(goog.TOGGLES_[1] >> 29 & 1);"));
+        """
+        var CLOSURE_TOGGLE_ORDINALS = {'foo': 1, 'bar': 30, 'baz': 59};
+        const foo = goog.readToggleInternalDoNotCallDirectly('foo');
+        const bar = goog.readToggleInternalDoNotCallDirectly('bar');
+        const baz = goog.readToggleInternalDoNotCallDirectly('baz');
+        """,
+        """
+        var CLOSURE_TOGGLE_ORDINALS = {'foo': 1, 'bar': 30, 'baz': 59};
+        const foo = !!(goog.TOGGLES_[0] & 2);
+        const bar = !!(goog.TOGGLES_[1] & 1);
+        const baz = !!(goog.TOGGLES_[1] >> 29 & 1);
+        """);
   }
 
   @Test
   public void testHardcodedToggles() {
     test(
-        lines(
-            "var CLOSURE_TOGGLE_ORDINALS = {'foo': false, 'bar': true};",
-            "const foo = goog.readToggleInternalDoNotCallDirectly('foo');",
-            "const bar = goog.readToggleInternalDoNotCallDirectly('bar');"),
-        lines(
-            "var CLOSURE_TOGGLE_ORDINALS = {'foo': false, 'bar': true};",
-            "const foo = false;",
-            "const bar = true;"));
+        """
+        var CLOSURE_TOGGLE_ORDINALS = {'foo': false, 'bar': true};
+        const foo = goog.readToggleInternalDoNotCallDirectly('foo');
+        const bar = goog.readToggleInternalDoNotCallDirectly('bar');
+        """,
+        """
+        var CLOSURE_TOGGLE_ORDINALS = {'foo': false, 'bar': true};
+        const foo = false;
+        const bar = true;
+        """);
   }
 
   @Test
   public void testBootstrapOrdinals_ignoresExtraUninitializedDefinitions() {
     test(
-        lines(
-            "var CLOSURE_TOGGLE_ORDINALS;", // ignored
-            "var CLOSURE_TOGGLE_ORDINALS = {'foo': 1, 'bar': 30, 'baz': 59};",
-            "var CLOSURE_TOGGLE_ORDINALS;", // ignored
-            "const foo = goog.readToggleInternalDoNotCallDirectly('foo');",
-            "const bar = goog.readToggleInternalDoNotCallDirectly('bar');",
-            "const baz = goog.readToggleInternalDoNotCallDirectly('baz');"),
-        lines(
-            "var CLOSURE_TOGGLE_ORDINALS;",
-            "var CLOSURE_TOGGLE_ORDINALS = {'foo': 1, 'bar': 30, 'baz': 59};",
-            "var CLOSURE_TOGGLE_ORDINALS;",
-            "const foo = !!(goog.TOGGLES_[0] & 2);",
-            "const bar = !!(goog.TOGGLES_[1] & 1);",
-            "const baz = !!(goog.TOGGLES_[1] >> 29 & 1);"));
+        """
+        var CLOSURE_TOGGLE_ORDINALS; // ignored
+        var CLOSURE_TOGGLE_ORDINALS = {'foo': 1, 'bar': 30, 'baz': 59};
+        var CLOSURE_TOGGLE_ORDINALS; // ignored
+        const foo = goog.readToggleInternalDoNotCallDirectly('foo');
+        const bar = goog.readToggleInternalDoNotCallDirectly('bar');
+        const baz = goog.readToggleInternalDoNotCallDirectly('baz');
+        """,
+        """
+        var CLOSURE_TOGGLE_ORDINALS;
+        var CLOSURE_TOGGLE_ORDINALS = {'foo': 1, 'bar': 30, 'baz': 59};
+        var CLOSURE_TOGGLE_ORDINALS;
+        const foo = !!(goog.TOGGLES_[0] & 2);
+        const bar = !!(goog.TOGGLES_[1] & 1);
+        const baz = !!(goog.TOGGLES_[1] >> 29 & 1);
+        """);
   }
 
   @Test
   public void testBootstrapOrdinals_booleanAllowsDuplicates() {
     test(
-        lines(
-            "var CLOSURE_TOGGLE_ORDINALS = ",
-            "    {'foo_bar': false, 'baz': false, 'qux': true, 'corge': true};",
-            "const fooBar = goog.readToggleInternalDoNotCallDirectly('foo_bar');",
-            "const baz = goog.readToggleInternalDoNotCallDirectly('baz');",
-            "const qux = goog.readToggleInternalDoNotCallDirectly('qux');",
-            "const corge = goog.readToggleInternalDoNotCallDirectly('corge');"),
-        lines(
-            "var CLOSURE_TOGGLE_ORDINALS = ",
-            "    {'foo_bar': false, 'baz': false, 'qux': true, 'corge': true};",
-            "const fooBar = false;",
-            "const baz = false;",
-            "const qux = true;",
-            "const corge = true;"));
+        """
+        var CLOSURE_TOGGLE_ORDINALS =
+            {'foo_bar': false, 'baz': false, 'qux': true, 'corge': true};
+        const fooBar = goog.readToggleInternalDoNotCallDirectly('foo_bar');
+        const baz = goog.readToggleInternalDoNotCallDirectly('baz');
+        const qux = goog.readToggleInternalDoNotCallDirectly('qux');
+        const corge = goog.readToggleInternalDoNotCallDirectly('corge');
+        """,
+        """
+        var CLOSURE_TOGGLE_ORDINALS =
+            {'foo_bar': false, 'baz': false, 'qux': true, 'corge': true};
+        const fooBar = false;
+        const baz = false;
+        const qux = true;
+        const corge = true;
+        """);
   }
 
   @Test
   public void testUnknownToggle() {
     test(
-        lines(
-            "var CLOSURE_TOGGLE_ORDINALS = {'foo': 0};",
-            "const bar = goog.readToggleInternalDoNotCallDirectly('bar');"),
-        lines(
-            "var CLOSURE_TOGGLE_ORDINALS = {'foo': 0};", //
-            "const bar = false;"));
+        """
+        var CLOSURE_TOGGLE_ORDINALS = {'foo': 0};
+        const bar = goog.readToggleInternalDoNotCallDirectly('bar');
+        """,
+        """
+        var CLOSURE_TOGGLE_ORDINALS = {'foo': 0};
+        const bar = false;
+        """);
   }
 
   @Test
   public void testBadArgument() {
     testError(
-        lines(
-            "const fooString = 'foo';", //
-            "const foo = goog.readToggleInternalDoNotCallDirectly(fooString);"),
+        """
+        const fooString = 'foo';
+        const foo = goog.readToggleInternalDoNotCallDirectly(fooString);
+        """,
         ReplaceToggles.INVALID_TOGGLE_PARAMETER);
     testError(
         "const foo = goog.readToggleInternalDoNotCallDirectly('foo', 'bar');", //

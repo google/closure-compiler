@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.integration;
 
-import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -42,7 +41,10 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         },
         new String[] {
           "/** @const */ var module$i0 = {}; /** @const */ module$i0.default = function (){};",
-          lines("var Hello = module$i0.default;", "var hello = new module$i0.default();")
+          """
+          var Hello = module$i0.default;
+          var hello = new module$i0.default();
+          """
         });
   }
 
@@ -61,14 +63,16 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
   public void testCrossModuleTypeAnnotation() {
     test(
         createCompilerOptions(),
-        lines(
-            "/** @constructor */ function Hello() {} ",
-            "/** @type {!Hello} */ var hello = new Hello();",
-            "module.exports = Hello;"),
-        lines(
-            "/** @const */ var module$i0 = {};",
-            "module$i0.default = function () {};",
-            "var hello$$module$i0 = new module$i0.default();"));
+        """
+        /** @constructor */ function Hello() {}
+        /** @type {!Hello} */ var hello = new Hello();
+        module.exports = Hello;
+        """,
+        """
+        /** @const */ var module$i0 = {};
+        module$i0.default = function () {};
+        var hello$$module$i0 = new module$i0.default();
+        """);
   }
 
   @Test
@@ -80,9 +84,10 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
           "var Hello = require('./i0'); /** @type {!Hello} */ var hello = new Hello();"
         },
         new String[] {
-          lines(
-              "/** @const */ var module$i0 = {};",
-              "/** @const */ module$i0.default = /** @constructor */ function() {};"),
+          """
+          /** @const */ var module$i0 = {};
+          /** @const */ module$i0.default = /** @constructor */ function() {};
+          """,
           "var Hello = module$i0.default; var hello = new module$i0.default();"
         });
   }
@@ -103,24 +108,33 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
     test(
         createCompilerOptions(),
         new String[] {
-          lines("/** @constructor */ function Hello() {}", "module.exports = Hello;"),
-          lines(
-              "var Hello = require('./i0');",
-              "var util = {inherits: function (x, y){}};",
-              "/**\n",
-              " * @constructor\n",
-              " * @extends {Hello}\n",
-              " */\n",
-              "var SubHello = function () {};",
-              "util.inherits(SubHello, Hello);")
+          """
+          /** @constructor */ function Hello() {}
+          module.exports = Hello;
+          """,
+          """
+          var Hello = require('./i0');
+          var util = {inherits: function (x, y){}};
+          /**
+
+           * @constructor
+
+           * @extends {Hello}
+
+           */
+
+          var SubHello = function () {};
+          util.inherits(SubHello, Hello);
+          """
         },
         new String[] {
           "/** @const */ var module$i0 = {}; /** @const */ module$i0.default = function (){};",
-          lines(
-              "var Hello = module$i0.default;",
-              "var util = { inherits : function(x,y) {} };",
-              "var SubHello = function() {};",
-              "util.inherits(SubHello, module$i0.default);")
+          """
+          var Hello = module$i0.default;
+          var util = { inherits : function(x,y) {} };
+          var SubHello = function() {};
+          util.inherits(SubHello, module$i0.default);
+          """
         });
   }
 
@@ -130,23 +144,25 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         createCompilerOptions(),
         new String[] {
           "/** @constructor */ function Hello() {} module.exports = Hello;",
-          lines(
-              "var Hello = require('./i0');",
-              "var util = {inherits: function (x, y){}};",
-              "/**",
-              " * @constructor",
-              " * @extends {Hello}",
-              " */",
-              "function SubHello() {}",
-              "util.inherits(SubHello, Hello);")
+          """
+          var Hello = require('./i0');
+          var util = {inherits: function (x, y){}};
+          /**
+           * @constructor
+           * @extends {Hello}
+           */
+          function SubHello() {}
+          util.inherits(SubHello, Hello);
+          """
         },
         new String[] {
           "/** @const */ var module$i0 = {}; module$i0.default = function (){};",
-          lines(
-              "var Hello = module$i0.default;",
-              "var util = { inherits : function(x,y) {} };",
-              "function SubHello(){}",
-              "util.inherits(SubHello, module$i0.default);")
+          """
+          var Hello = module$i0.default;
+          var util = { inherits : function(x,y) {} };
+          function SubHello(){}
+          util.inherits(SubHello, module$i0.default);
+          """
         });
   }
 
@@ -156,25 +172,28 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         createCompilerOptions(),
         new String[] {
           "/** @constructor */ function Hello() {}  module.exports = Hello;",
-          lines(
-              "var Hello = require('./i0');",
-              "var util = {inherits: function (x, y){}};",
-              "/**",
-              " * @constructor",
-              " * @extends {Hello}",
-              " */",
-              "function SubHello() { Hello.call(this); }",
-              "util.inherits(SubHello, Hello);")
+          """
+          var Hello = require('./i0');
+          var util = {inherits: function (x, y){}};
+          /**
+           * @constructor
+           * @extends {Hello}
+           */
+          function SubHello() { Hello.call(this); }
+          util.inherits(SubHello, Hello);
+          """
         },
         new String[] {
-          lines(
-              "/** @const */ var module$i0 = {};",
-              "/** @constructor */ module$i0.default = function (){};"),
-          lines(
-              "var Hello = module$i0.default;",
-              "var util = { inherits : function(x,y) {} };",
-              "function SubHello(){ module$i0.default.call(this); }",
-              "util.inherits(SubHello, module$i0.default);")
+          """
+          /** @const */ var module$i0 = {};
+          /** @constructor */ module$i0.default = function (){};
+          """,
+          """
+          var Hello = module$i0.default;
+          var util = { inherits : function(x,y) {} };
+          function SubHello(){ module$i0.default.call(this); }
+          util.inherits(SubHello, module$i0.default);
+          """
         });
   }
 
@@ -184,25 +203,28 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         createCompilerOptions(),
         new String[] {
           "/** @constructor */ function Hello() {}  module.exports = {Hello: Hello};",
-          lines(
-              "var i0 = require('./i0');",
-              "var util = {inherits: function (x, y) {}};",
-              "/**",
-              " * @constructor",
-              " * @extends {i0.Hello}",
-              " */",
-              "function SubHello() { i0.Hello.call(this); }",
-              "util.inherits(SubHello, i0.Hello);")
+          """
+          var i0 = require('./i0');
+          var util = {inherits: function (x, y) {}};
+          /**
+           * @constructor
+           * @extends {i0.Hello}
+           */
+          function SubHello() { i0.Hello.call(this); }
+          util.inherits(SubHello, i0.Hello);
+          """
         },
         new String[] {
-          lines(
-              "/** @const */ var module$i0 = { /** @const */ default: {}};",
-              "module$i0.default.Hello = /** @constructor */ function (){};"),
-          lines(
-              "var i0 = module$i0.default;",
-              "var util = { inherits : function(x,y) {} };",
-              "function SubHello(){ module$i0.default.Hello.call(this); }",
-              "util.inherits(SubHello, module$i0.default.Hello);")
+          """
+          /** @const */ var module$i0 = { /** @const */ default: {}};
+          module$i0.default.Hello = /** @constructor */ function (){};
+          """,
+          """
+          var i0 = module$i0.default;
+          var util = { inherits : function(x,y) {} };
+          function SubHello(){ module$i0.default.Hello.call(this); }
+          util.inherits(SubHello, module$i0.default.Hello);
+          """
         });
   }
 
@@ -212,25 +234,28 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         createCompilerOptions(),
         new String[] {
           "/** @constructor */ function Hello() {} module.exports = Hello;",
-          lines(
-              "var Hello = require('./i0');",
-              "var util = {inherits: function (x, y){}};",
-              "/**",
-              " * @constructor",
-              " * @extends {./i0}",
-              " */",
-              "function SubHello() { Hello.call(this); }",
-              "util.inherits(SubHello, Hello);")
+          """
+          var Hello = require('./i0');
+          var util = {inherits: function (x, y){}};
+          /**
+           * @constructor
+           * @extends {./i0}
+           */
+          function SubHello() { Hello.call(this); }
+          util.inherits(SubHello, Hello);
+          """
         },
         new String[] {
-          lines(
-              "/** @const */ var module$i0 = {};",
-              "/** @constructor */ module$i0.default = function (){};"),
-          lines(
-              "var Hello = module$i0.default;",
-              "var util = { inherits : function(x,y) {} };",
-              "function SubHello(){ module$i0.default.call(this); }",
-              "util.inherits(SubHello, module$i0.default);")
+          """
+          /** @const */ var module$i0 = {};
+          /** @constructor */ module$i0.default = function (){};
+          """,
+          """
+          var Hello = module$i0.default;
+          var util = { inherits : function(x,y) {} };
+          function SubHello(){ module$i0.default.call(this); }
+          util.inherits(SubHello, module$i0.default);
+          """
         });
   }
 
@@ -240,25 +265,28 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         createCompilerOptions(),
         new String[] {
           "/** @constructor */ function Hello() {} module.exports = {Hello: Hello};",
-          lines(
-              "var i0 = require('./i0');",
-              "var util = {inherits: function (x, y){}};",
-              "/**",
-              " * @constructor",
-              " * @extends {./i0.Hello}",
-              " */",
-              "function SubHello() { i0.Hello.call(this); }",
-              "util.inherits(SubHello, i0.Hello);")
+          """
+          var i0 = require('./i0');
+          var util = {inherits: function (x, y){}};
+          /**
+           * @constructor
+           * @extends {./i0.Hello}
+           */
+          function SubHello() { i0.Hello.call(this); }
+          util.inherits(SubHello, i0.Hello);
+          """
         },
         new String[] {
-          lines(
-              "/** @const */ var module$i0 = { /** @const */ default: {}};",
-              "module$i0.default.Hello = /** @constructor */ function (){};"),
-          lines(
-              "var i0 = module$i0.default;",
-              "var util = {inherits:function(x,y){}};",
-              "function SubHello(){ module$i0.default.Hello.call(this); }",
-              "util.inherits(SubHello, module$i0.default.Hello);")
+          """
+          /** @const */ var module$i0 = { /** @const */ default: {}};
+          module$i0.default.Hello = /** @constructor */ function (){};
+          """,
+          """
+          var i0 = module$i0.default;
+          var util = {inherits:function(x,y){}};
+          function SubHello(){ module$i0.default.Hello.call(this); }
+          util.inherits(SubHello, module$i0.default.Hello);
+          """
         });
   }
 
@@ -268,34 +296,38 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
     test(
         createCompilerOptions(),
         new String[] {
-          lines(
-              "/** @constructor */ export default function Hello() {};", //
-              "export const foo = 1;"),
-          lines(
-              "var i0 = require('./i0');",
-              "var util = {inherits: function (x, y){}};",
-              "/**",
-              " * @constructor",
-              " * @extends {./i0.default}",
-              " */",
-              "function SubHello() { i0.default.call(this); }",
-              "util.inherits(SubHello, i0.default);",
-              "const {foo} = i0;")
+          """
+          /** @constructor */ export default function Hello() {};
+          export const foo = 1;
+          """,
+          """
+          var i0 = require('./i0');
+          var util = {inherits: function (x, y){}};
+          /**
+           * @constructor
+           * @extends {./i0.default}
+           */
+          function SubHello() { i0.default.call(this); }
+          util.inherits(SubHello, i0.default);
+          const {foo} = i0;
+          """
         },
         new String[] {
-          lines(
-              "function Hello$$module$i0() {}",
-              "var foo$$module$i0 = 1;",
-              "var module$i0 = {};",
-              "module$i0.default = Hello$$module$i0;",
-              "module$i0.foo = foo$$module$i0;"),
-          lines(
-              "var i0 = module$i0;",
-              "var util = {inherits:function(x,y){}};",
-              "function SubHello(){ module$i0.default.call(this); }",
-              "util.inherits(SubHello, module$i0.default);",
-              "var $jscomp$destructuring$var0 = module$i0;",
-              "var foo = $jscomp$destructuring$var0.foo;")
+          """
+          function Hello$$module$i0() {}
+          var foo$$module$i0 = 1;
+          var module$i0 = {};
+          module$i0.default = Hello$$module$i0;
+          module$i0.foo = foo$$module$i0;
+          """,
+          """
+          var i0 = module$i0;
+          var util = {inherits:function(x,y){}};
+          function SubHello(){ module$i0.default.call(this); }
+          util.inherits(SubHello, module$i0.default);
+          var $jscomp$destructuring$var0 = module$i0;
+          var foo = $jscomp$destructuring$var0.foo;
+          """
         });
   }
 
@@ -305,29 +337,32 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         createCompilerOptions(),
         new String[] {
           "/** @constructor */ function Hello() {} module.exports = Hello;",
-          lines(
-              "import Hello from './i0';",
-              "var util = {inherits: function (x, y){}};",
-              "/**",
-              " * @constructor",
-              " * @extends {Hello}",
-              " */",
-              "function SubHello() { Hello.call(this); }",
-              "util.inherits(SubHello, Hello);")
+          """
+          import Hello from './i0';
+          var util = {inherits: function (x, y){}};
+          /**
+           * @constructor
+           * @extends {Hello}
+           */
+          function SubHello() { Hello.call(this); }
+          util.inherits(SubHello, Hello);
+          """
         },
         new String[] {
-          lines(
-              "/** @const */ var module$i0 = {};",
-              "/** @const */ module$i0.default = /** @constructor */ function (){};"),
-          lines(
-              "var util$$module$i1 = {inherits:function(x,y){}};",
-              "/**",
-              " * @constructor",
-              " * @extends {module$i0.default}",
-              " */",
-              "function SubHello$$module$i1(){ module$i0.default.call(this); }",
-              "util$$module$i1.inherits(SubHello$$module$i1, module$i0.default);",
-              "var module$i1 = {};")
+          """
+          /** @const */ var module$i0 = {};
+          /** @const */ module$i0.default = /** @constructor */ function (){};
+          """,
+          """
+          var util$$module$i1 = {inherits:function(x,y){}};
+          /**
+           * @constructor
+           * @extends {module$i0.default}
+           */
+          function SubHello$$module$i1(){ module$i0.default.call(this); }
+          util$$module$i1.inherits(SubHello$$module$i1, module$i0.default);
+          var module$i1 = {};
+          """
         });
   }
 
@@ -337,25 +372,28 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         createCompilerOptions(),
         new String[] {
           "/** @constructor */ function Hello() {} module.exports = Hello;",
-          lines(
-              "import * as i0 from './i0';",
-              "var util = {inherits: function (x, y){}};",
-              "/**",
-              " * @constructor",
-              " * @extends {i0.default}",
-              " */",
-              "function SubHello() { i0.default.call(this); }",
-              "util.inherits(SubHello, i0.default);")
+          """
+          import * as i0 from './i0';
+          var util = {inherits: function (x, y){}};
+          /**
+           * @constructor
+           * @extends {i0.default}
+           */
+          function SubHello() { i0.default.call(this); }
+          util.inherits(SubHello, i0.default);
+          """
         },
         new String[] {
-          lines(
-              "/** @const */ var module$i0 = {};",
-              "/** @const */ module$i0.default = /** @constructor */ function (){};"),
-          lines(
-              "var util$$module$i1 = {inherits:function(x,y){}};",
-              "function SubHello$$module$i1(){ module$i0.default.call(this); }",
-              "util$$module$i1.inherits(SubHello$$module$i1, module$i0.default);",
-              "var module$i1 = {};")
+          """
+          /** @const */ var module$i0 = {};
+          /** @const */ module$i0.default = /** @constructor */ function (){};
+          """,
+          """
+          var util$$module$i1 = {inherits:function(x,y){}};
+          function SubHello$$module$i1(){ module$i0.default.call(this); }
+          util$$module$i1.inherits(SubHello$$module$i1, module$i0.default);
+          var module$i1 = {};
+          """
         });
   }
 
@@ -365,21 +403,24 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         createCompilerOptions(),
         new String[] {
           "module.exports = {foo: 1, bar: function() { return 'bar'; }};",
-          lines(
-              "import i0 from './i0';", //
-              "const {foo} = i0;",
-              "const b = i0.bar();")
+          """
+          import i0 from './i0';
+          const {foo} = i0;
+          const b = i0.bar();
+          """
         },
         new String[] {
-          lines(
-              "/** @const */ var module$i0 = {/** @const */ default: {}};",
-              "module$i0.default.foo = 1;",
-              "module$i0.default.bar = function() { return 'bar'; };"),
-          lines(
-              "/** @const */ var $jscomp$destructuring$var0 = module$i0.default;",
-              "/** @const */ var foo$$module$i1 = module$i0.default.foo;",
-              "/** @const */ var b$$module$i1 = module$i0.default.bar();",
-              "/** @const */ var module$i1 = {};")
+          """
+          /** @const */ var module$i0 = {/** @const */ default: {}};
+          module$i0.default.foo = 1;
+          module$i0.default.bar = function() { return 'bar'; };
+          """,
+          """
+          /** @const */ var $jscomp$destructuring$var0 = module$i0.default;
+          /** @const */ var foo$$module$i1 = module$i0.default.foo;
+          /** @const */ var b$$module$i1 = module$i0.default.bar();
+          /** @const */ var module$i1 = {};
+          """
         });
   }
 
@@ -403,15 +444,17 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
           "import * as m from './i0'; m.bar();"
         },
         new String[] {
-          lines(
-              "/** @const */ var module$i0 = {/** @const */ default:{}};",
-              "module$i0.default.foo = 1;",
-              "module$i0.default.bar = function() {",
-              "  return \"bar\";",
-              "};"),
-          lines(
-              "module$i0.bar();", //
-              "/** @const */ var module$i1 = {};")
+          """
+          /** @const */ var module$i0 = {/** @const */ default:{}};
+          module$i0.default.foo = 1;
+          module$i0.default.bar = function() {
+            return "bar";
+          };
+          """,
+          """
+          module$i0.bar();
+          /** @const */ var module$i1 = {};
+          """
         },
         DiagnosticGroups.MISSING_PROPERTIES);
   }

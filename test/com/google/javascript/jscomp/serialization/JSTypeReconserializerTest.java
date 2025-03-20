@@ -161,12 +161,13 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
   public void testObjectTypeSerializationFormat() {
     List<TypeProto> typePool =
         compileToTypes(
-            lines(
-                "class Foo { m() {} }",
-                "new Foo().m();",
-                "",
-                "FOO: new Foo();",
-                "FOO_PROTOTYPE: Foo.prototype;"));
+            """
+            class Foo { m() {} }
+            new Foo().m();
+
+            FOO: new Foo();
+            FOO_PROTOTYPE: Foo.prototype;
+            """);
 
     assertThat(typePool)
         .ignoringFieldDescriptors(OBJECT_UUID)
@@ -198,13 +199,14 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
 
     List<TypeProto> typePool =
         compileToTypes(
-            lines(
-                "class Foo {",
-                "  serializeMe() {}",
-                "  doNotSerializeMe() {}",
-                "}",
-                "new Foo().serializeMe();",
-                "new Foo().doNotSerializeMe();"));
+            """
+            class Foo {
+              serializeMe() {}
+              doNotSerializeMe() {}
+            }
+            new Foo().serializeMe();
+            new Foo().doNotSerializeMe();
+            """);
 
     assertThat(typePool)
         .ignoringFieldDescriptors(OBJECT_UUID)
@@ -231,10 +233,11 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
   public void testDisambiguationEdges_pointFromInterfaceToPrototype() {
     TypePool typePool =
         compileToTypePool(
-            lines(
-                "/** @interface */ class IFoo { m() {} }", //
-                "let /** !IFoo */ x;",
-                "IFOO: x;"));
+            """
+            /** @interface */ class IFoo { m() {} }
+            let /** !IFoo */ x;
+            IFOO: x;
+            """);
 
     assertThat(getNonPrimitiveSupertypesFor(typePool, "IFOO"))
         .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
@@ -245,10 +248,11 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
   public void testDisambiguationEdges_pointFromInstanceToInterface() {
     TypePool typePool =
         compileToTypePool(
-            lines(
-                "/** @interface */ class IFoo {}",
-                "/** @implements {IFoo} */ class Foo {}",
-                "FOO: new Foo();"));
+            """
+            /** @interface */ class IFoo {}
+            /** @implements {IFoo} */ class Foo {}
+            FOO: new Foo();
+            """);
 
     assertThat(getNonPrimitiveSupertypesFor(typePool, "FOO"))
         .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
@@ -290,13 +294,14 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
   public void testUnion_proxyLikeTypes_dontPreventUnionCollapsing() {
     List<TypeProto> typePool =
         compileToTypes(
-            lines(
-                "/** @enum {boolean|number} */", //
-                "const Foo = {};",
-                "/** @enum {string|number|!Foo} */", //
-                "const Bar = {};",
-                "",
-                "let /** symbol|!Bar|string */ x;"));
+            """
+            /** @enum {boolean|number} */
+            const Foo = {};
+            /** @enum {string|number|!Foo} */
+            const Bar = {};
+
+            let /** symbol|!Bar|string */ x;
+            """);
 
     ImmutableList<UnionTypeProto> unionsContainingUnions =
         typePool.stream()
@@ -356,12 +361,13 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
   public void marksClosureAssertions() {
     assertThat(
             compileToTypes(
-                lines(
-                    "/** @closurePrimitive {asserts.truthy} */",
-                    "function assert(x) { if (!x) { throw new Error(); }}",
-                    "",
-                    "/** @closurePrimitive {asserts.fail} */",
-                    "function fail() { throw new Error(); }")))
+                """
+                /** @closurePrimitive {asserts.truthy} */
+                function assert(x) { if (!x) { throw new Error(); }}
+
+                /** @closurePrimitive {asserts.fail} */
+                function fail() { throw new Error(); }
+                """))
         .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsAtLeast(
             TypeProto.newBuilder()
@@ -393,16 +399,17 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
   public void serializesTemplateTypesAsUnknown() {
     List<TypeProto> typePool =
         compileToTypes(
-            lines(
-                "/** @interface @template T */",
-                "class Foo {",
-                // Add in this reference to `T` so that it is seen by the serializer.
-                "  constructor() { /** @type {T} */ this.x; }",
-                "}",
-                "",
-                "/** @type {!Foo<string>} */ let foo;",
-                "FOO: foo;",
-                "FOO_PROTOTYPE: Foo.prototype;"));
+            """
+            /** @interface @template T */
+            class Foo {
+            // Add in this reference to `T` so that it is seen by the serializer.
+              constructor() { /** @type {T} */ this.x; }
+            }
+
+            /** @type {!Foo<string>} */ let foo;
+            FOO: foo;
+            FOO_PROTOTYPE: Foo.prototype;
+            """);
     assertThat(typePool)
         .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsAtLeast(
@@ -423,17 +430,18 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
   public void reconcile_literalFunctions_toNativeType() {
     List<TypeProto> output =
         compileToTypes(
-            lines(
-                "const ns = {};", //
-                "",
-                "ns.f = x => x;",
-                "ns.f.a = 0;",
-                "",
-                "ns.f = (/** number */ x) => x;",
-                "ns.f.b = 1;",
-                "",
-                "ns.f = (/** string */ x) => x;",
-                "ns.f.c = 2;"));
+            """
+            const ns = {};
+
+            ns.f = x => x;
+            ns.f.a = 0;
+
+            ns.f = (/** number */ x) => x;
+            ns.f.b = 1;
+
+            ns.f = (/** string */ x) => x;
+            ns.f.c = 2;
+            """);
 
     assertThat(output)
         .ignoringFieldDescriptors(OBJECT_UUID)
@@ -455,14 +463,15 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
   public void discards_differentTemplatizationsOfSameRawType() {
     List<TypeProto> typePool =
         compileToTypes(
-            lines(
-                "/** @interface @template T */",
-                "class Foo {}",
-                "var /** !Foo<string> */ fooString;",
-                "var /** !Foo<number> */ fooNumber;",
-                "",
-                "FOO: fooString;",
-                "FOO_PROTOTYPE: Foo.prototype;"));
+            """
+            /** @interface @template T */
+            class Foo {}
+            var /** !Foo<string> */ fooString;
+            var /** !Foo<number> */ fooNumber;
+
+            FOO: fooString;
+            FOO_PROTOTYPE: Foo.prototype;
+            """);
 
     assertThat(typePool)
         .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
@@ -481,9 +490,10 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
   public void doesntCrashOnFunctionWithNonObjectThisType() {
     List<TypeProto> typePool =
         compileToTypes(
-            lines(
-                "var /** function(new: AllType) */ x = function() {};",
-                "/** @typedef {*} */ let AllType;"));
+            """
+            var /** function(new: AllType) */ x = function() {};
+            /** @typedef {*} */ let AllType;
+            """);
 
     assertThat(typePool)
         .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
@@ -502,23 +512,24 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
   @Test
   public void supertypeListForInterface_includesIllegalExtendedTypes() {
     String source =
-        lines(
-            "class Foo {}", //
-            "/** @interface */",
-            "class Bar {}",
-            "/** @typedef {{x: string}} */",
-            "let RecordType;",
-            "/** @interface",
-            // [JSC_CONFLICTING_EXTENDS_TYPE]: interfaces can only extend interfaces
-            " * @extends {Foo}",
-            " * @extends {Bar}",
-            " * @extends {RecordType}",
-            " * @suppress {checkTypes}",
-            "*/",
-            "class Baz {}",
-            "",
-            "let /** !Baz */ baz;",
-            "BAZ: baz;");
+        """
+        class Foo {}
+        /** @interface */
+        class Bar {}
+        /** @typedef {{x: string}} */
+        let RecordType;
+        /** @interface
+        // [JSC_CONFLICTING_EXTENDS_TYPE]: interfaces can only extend interfaces
+         * @extends {Foo}
+         * @extends {Bar}
+         * @extends {RecordType}
+         * @suppress {checkTypes}
+        */
+        class Baz {}
+
+        let /** !Baz */ baz;
+        BAZ: baz;
+        """;
     TypePool typePool = compileToTypePool(source);
 
     assertThat(getNonPrimitiveSupertypesFor(typePool, "BAZ"))
@@ -566,15 +577,16 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
     // When
     List<TypeProto> typePool =
         compileToTypes(
-            lines(
-                "class Foo { }",
-                "class Bar { }",
-                "",
-                "let /** function(new:Foo) */ x;",
-                "let /** function(new:Bar) */ y;",
-                "",
-                "FOO: new Foo();",
-                "BAR: new Bar();"));
+            """
+            class Foo { }
+            class Bar { }
+
+            let /** function(new:Foo) */ x;
+            let /** function(new:Bar) */ y;
+
+            FOO: new Foo();
+            BAR: new Bar();
+            """);
 
     // Then
     assertThat(typePool)
@@ -601,9 +613,10 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
     // When
     List<TypeProto> typePool =
         compileToTypes(
-            lines(
-                "var Foo = class { a() { } }", //
-                "Foo = class { b() { } }"));
+            """
+            var Foo = class { a() { } }
+            Foo = class { b() { } }
+            """);
 
     // Then
     assertThat(typePool)
@@ -623,15 +636,16 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
     // When
     List<TypeProto> typePool =
         compileToTypes(
-            lines(
-                "var /** ? */ assertFoo;",
-                "",
-                "assertFoo = function(/** ? */ a) { }", //
-                "",
-                "/** @closurePrimitive {asserts.truthy} */",
-                "assertFoo = function(/** ? */ a) { }",
-                "",
-                "assertFoo = function(/** ? */ a) { }"));
+            """
+            var /** ? */ assertFoo;
+
+            assertFoo = function(/** ? */ a) { }
+
+            /** @closurePrimitive {asserts.truthy} */
+            assertFoo = function(/** ? */ a) { }
+
+            assertFoo = function(/** ? */ a) { }
+            """);
 
     // Then
     assertThat(typePool)
@@ -654,12 +668,13 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
     // When
     List<TypeProto> typePool =
         compileToTypes(
-            lines(
-                "var /** ? */ Foo;", //
-                "",
-                "Foo = function() { };",
-                "",
-                "Foo = class { };"));
+            """
+            var /** ? */ Foo;
+
+            Foo = function() { };
+
+            Foo = class { };
+            """);
 
     // Then
     assertThat(typePool)
@@ -680,20 +695,21 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
   public void debugInfo_mismatchLocations() {
     TypePool typePool =
         compileToTypePool(
-            lines(
-                "class A { }",
-                "class B { }",
-                "class C { }",
-                "",
-                "/**",
-                " * @suppress {checkTypes}",
-                " * @type {(!A|!B)}",
-                " */",
-                "const x = new C();",
-                "",
-                "A_CTOR: A;",
-                "B_CTOR: B;",
-                "C_CTOR: C;"));
+            """
+            class A { }
+            class B { }
+            class C { }
+
+            /**
+             * @suppress {checkTypes}
+             * @type {(!A|!B)}
+             */
+            const x = new C();
+
+            A_CTOR: A;
+            B_CTOR: B;
+            C_CTOR: C;
+            """);
 
     ObjectTypeProto aCtor =
         this.typePool.getType(trimOffset(pointerForLabel("A_CTOR"))).getObject();

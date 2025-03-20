@@ -204,10 +204,11 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
             "};",
             "/** @param {number} a */ function g(a) {}")
         .addDiagnostic(
-            lines(
-                "actual parameter 1 of g does not match formal parameter",
-                "found   : Array",
-                "required: number"))
+            """
+            actual parameter 1 of g does not match formal parameter
+            found   : Array
+            required: number
+            """)
         .run();
   }
 
@@ -362,10 +363,11 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
             "function G() {}",
             "/** @type {function(new:G)} */ var x = F;")
         .addDiagnostic(
-            lines(
-                "initializing variable", //
-                "found   : (typeof F)",
-                "required: function(new:G): ?"))
+            """
+            initializing variable
+            found   : (typeof F)
+            required: function(new:G): ?
+            """)
         .run();
   }
 
