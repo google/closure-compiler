@@ -48,7 +48,6 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.verify;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -5213,7 +5212,4 @@ public final class NodeUtilTest {
     return NodeUtil.isValidQualifiedName(FeatureSet.ES3, s);
   }
 
-  private static String lines(String... lines) {
-    return Joiner.on('\n').join(lines);
-  }
 }
