@@ -17,6 +17,7 @@ load("@google_bazel_common//testing:test_defs.bzl", "gen_java_tests")
 
 # Produce an unshaded export jar based on :compiler_lib
 load("@rules_jvm_external//:defs.bzl", "java_export")
+load("@rules_pkg//pkg:zip.bzl", "pkg_zip")
 load("//:bazel/expand_template_with_defines.bzl", "expand_template_with_defines")
 load("//:bazel/oss_java_library.bzl", "oss_java_library")
 load("//:bazel/sonatype_artifact_bundle.bzl", "sonatype_artifact_bundle")
@@ -260,12 +261,11 @@ oss_java_library(
     ),
 )
 
-genrule(
+pkg_zip(
     name = "externs_zip",
     srcs = glob(["externs/**/*.js"]),
-    outs = ["externs.zip"],
-    # Trim the "externs/" prefix from the names of the ziped files.
-    cmd = "OUT=$$(pwd)/$(OUTS) && cd externs && find . -name '*.js' | zip $$OUT -@ &> /dev/null",
+    out = "externs.zip",
+    strip_prefix = "externs",
 )
 
 # It's easier to make a copy of this Java file because the Java compiler can
