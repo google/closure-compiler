@@ -684,7 +684,7 @@ RTCEncodedVideoFrameMetadata.prototype.width;
 function RTCEncodedVideoFrame() {}
 
 /**
- * @const {!ArrayBuffer}
+ * @type {!ArrayBuffer}
  */
 RTCEncodedVideoFrame.prototype.data;
 
@@ -732,7 +732,7 @@ RTCEncodedAudioFrameMetadata.prototype.synchronizationSource;
 function RTCEncodedAudioFrame() {}
 
 /**
- * @const {!ArrayBuffer}
+ * @type {!ArrayBuffer}
  */
 RTCEncodedAudioFrame.prototype.data;
 
