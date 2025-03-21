@@ -672,9 +672,11 @@ public final class CheckJsDocTest extends CompilerTestCase {
   @Test
   public void testAllowedNocollapseAnnotation2() {
     testSame(
-        "/** @constructor */ function Foo() {};\n"
-            + "var ns = {};\n"
-            + "/** @nocollapse */ ns.bar = Foo.prototype.blah;");
+        """
+        /** @constructor */ function Foo() {};
+        var ns = {};
+        /** @nocollapse */ ns.bar = Foo.prototype.blah;
+        """);
   }
 
   @Test

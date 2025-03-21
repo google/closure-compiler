@@ -136,38 +136,63 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         [goog.place.getUniqueId]
         """;
     testMap(
-        "var x = goog.events.getUniqueId('xxx');\n" + "var y = goog.events.getUniqueId('yyy');\n",
-        "var x = 'previous1';\n" + "var y = 'previous2';\n",
-        "[goog.events.getUniqueId]\n"
-            + "\n"
-            + "previous1:testcode:1:32\n"
-            + "previous2:testcode:2:32\n"
-            + "\n");
+        """
+        var x = goog.events.getUniqueId('xxx');
+        var y = goog.events.getUniqueId('yyy');
+        """,
+        """
+        var x = 'previous1';
+        var y = 'previous2';
+        """,
+        """
+        [goog.events.getUniqueId]
+
+        previous1:testcode:1:32
+        previous2:testcode:2:32
+
+        """);
   }
 
   @Test
   public void testReusePreviousSerialization2() {
     previousMappings =
-        "[goog.events.getUniqueId]\n"
-            + "\n"
-            + "a:testcode:1:32\n"
-            + "b:testcode:2:32\n"
-            + "\n"
-            + "[goog.place.getUniqueId]\n"
-            + "\n"
-            + "\n";
+        """
+        [goog.events.getUniqueId]
+
+        a:testcode:1:32
+        b:testcode:2:32
+
+        [goog.place.getUniqueId]
+
+
+        """;
     testMap(
         "var x = goog.events.getUniqueId('xxx');\n"
             + "\n"
             + // new line to change location
             "var y = goog.events.getUniqueId('yyy');\n",
-        "var x = 'a';\n" + "var y = 'c';\n",
-        "[goog.events.getUniqueId]\n" + "\n" + "a:testcode:1:32\n" + "c:testcode:3:32\n" + "\n");
+        """
+        var x = 'a';
+        var y = 'c';
+        """,
+        """
+        [goog.events.getUniqueId]
+
+        a:testcode:1:32
+        c:testcode:3:32
+
+        """);
   }
 
   @Test
   public void testReusePreviousSerializationConsistent1() {
-    previousMappings = "[cid]\n" + "\n" + "a:f1\n" + "\n";
+    previousMappings =
+        """
+        [cid]
+
+        a:f1
+
+        """;
     testMap(
         """
         /** @idGenerator {consistent} */ cid = function() {};
@@ -179,7 +204,12 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         f1 = 'a';
         f1 = 'a'
         """,
-        "[cid]\n" + "\n" + "a:f1\n" + "\n");
+        """
+        [cid]
+
+        a:f1
+
+        """);
   }
 
   @Test

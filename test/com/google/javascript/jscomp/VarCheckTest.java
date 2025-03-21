@@ -787,9 +787,11 @@ public final class VarCheckTest extends CompilerTestCase {
   @Test
   public void testRedeclaration4() {
     String js =
-        " /** @fileoverview @suppress {duplicate} */\n"
-            + " /** @type {string} */ var a;\n"
-            + " var a; ";
+        """
+        /** @fileoverview @suppress {duplicate} */
+        /** @type {string} */ var a;
+        var a;\s
+        """;
     testSame(js);
   }
 

@@ -965,11 +965,13 @@ public class SuggestedFixTest {
   public void testAddGoogRequire_var() {
     String before = "goog.provide('js.Foo');\n";
     String after =
-        "goog.require('js.Bar');\n"
-            + "\n"
-            + "var x;\n"
-            + "/** @private */\n"
-            + "function foo_() {};\n";
+        """
+        goog.require('js.Bar');
+
+        var x;
+        /** @private */
+        function foo_() {};
+        """;
     assertAddGoogRequire(before, after, "abc.def");
   }
 
@@ -977,21 +979,28 @@ public class SuggestedFixTest {
   public void testAddGoogRequire() {
     String before = "goog.provide('js.Foo');\n";
     String after =
-        "goog.require('js.Bar');\n"
-        + "\n"
-        + "/** @private */\n"
-        + "function foo_() {};\n";
+        """
+        goog.require('js.Bar');
+
+        /** @private */
+        function foo_() {};
+        """;
     assertAddGoogRequire(before, after, "abc.def");
   }
 
   @Test
   public void testAddGoogRequire_afterAllOtherGoogRequires() {
-    String before = "goog.provide('js.Foo');\n"
-        + "goog.require('js.Bar');\n";
+    String before =
+        """
+        goog.provide('js.Foo');
+        goog.require('js.Bar');
+        """;
     String after =
-        "\n"
-        + "/** @private */\n"
-        + "function foo_() {};\n";
+        """
+
+        /** @private */
+        function foo_() {};
+        """;
     assertAddGoogRequire(before, after, "zyx.w");
   }
 
@@ -999,9 +1008,11 @@ public class SuggestedFixTest {
   public void testAddGoogRequire_noGoogRequire() {
     String before = "goog.provide('js.Foo');\n";
     String after =
-        "\n"
-        + "/** @private */\n"
-        + "function foo_() {};\n";
+        """
+
+        /** @private */
+        function foo_() {};
+        """;
     assertAddGoogRequire(before, after, "abc.def");
   }
 
@@ -1009,8 +1020,10 @@ public class SuggestedFixTest {
   public void testAddGoogRequire_noGoogRequireOrGoogProvide() {
     String before = "";
     String after =
-        "/** @private */\n"
-        + "function foo_() {};\n";
+        """
+        /** @private */
+        function foo_() {};
+        """;
     assertAddGoogRequire(before, after, "abc.def");
   }
 
@@ -1242,8 +1255,13 @@ public class SuggestedFixTest {
 
   @Test
   public void testRemoveGoogRequire() {
-    String before = "/** @fileoverview blah */\n\n"
-        + "goog.provide('js.Foo');\n\n";
+    String before =
+        """
+        /** @fileoverview blah */
+
+        goog.provide('js.Foo');
+
+        """;
     String googRequire = "goog.require('abc.def');";
     String input =
         before
@@ -1263,8 +1281,14 @@ public class SuggestedFixTest {
 
   @Test
   public void testRemoveGoogRequireAmongSeveralGoogRequires() {
-    String before = "/** @fileoverview blah */\n\n"
-        + "goog.provide('js.Foo');\n\ngoog.require('abc.abc');\n";
+    String before =
+        """
+        /** @fileoverview blah */
+
+        goog.provide('js.Foo');
+
+        goog.require('abc.abc');
+        """;
     String googRequire = "goog.require('abc.def');\n";
     String input =
         before
@@ -1286,10 +1310,12 @@ public class SuggestedFixTest {
   @Test
   public void testRemoveGoogRequire_doesNotExist() {
     String input =
-        "goog.require('abc.def');\n"
-        + "\n"
-        + "/** @private */\n"
-        + "function foo_() {};\n";
+        """
+        goog.require('abc.def');
+
+        /** @private */
+        function foo_() {};
+        """;
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
@@ -1329,8 +1355,13 @@ public class SuggestedFixTest {
 
   @Test
   public void testAttachMatchedNodeInfo() {
-    String before = "/** @fileoverview blah */\n\n"
-        + "goog.provide('js.Foo');\n\n";
+    String before =
+        """
+        /** @fileoverview blah */
+
+        goog.provide('js.Foo');
+
+        """;
     String googRequire = "goog.require('abc.def');";
     String input =
         before

@@ -173,9 +173,8 @@ public final class JsMessageVisitorTest {
                     =1 {I see {INTERPOLATION_1} in {INTERPOLATION_2}.}
                     =2 {I see {INTERPOLATION_1} and one other person in {INTERPOLATION_2}.}
                     other {I see {INTERPOLATION_1} and # other people in {INTERPOLATION_2}.}
-                }
-            """
-                .trim());
+                }\
+            """);
     // NOTE: "testcode" is the file name used by compiler.parseTestCode(code)
     assertThat(msg.getSourceName()).isEqualTo("testcode:1");
   }
@@ -320,8 +319,10 @@ public final class JsMessageVisitorTest {
             new SourceMapInput(SourceFile.fromCode("example.srcmap", output.toString())));
 
     extractMessagesSafely(
-        "/** @desc Hello */ var MSG_HELLO = goog.getMsg('a');\n"
-            + "/** @desc Hi */ var MSG_HI = goog.getMsg('b');\n");
+        """
+        /** @desc Hello */ var MSG_HELLO = goog.getMsg('a');
+        /** @desc Hi */ var MSG_HI = goog.getMsg('b');
+        """);
     assertThat(messages).hasSize(2);
 
     JsMessage msg1 = messages.get(0);
@@ -1122,12 +1123,14 @@ var MSG_WITH_CAMELCASE = goog.getMsg('Slide {$slideNumber}:', {'slideNumber': op
   @Test
   public void testUsingMsgPrefixWithFallback() {
     extractMessagesSafely(
-        "function f() {\n"
-            + "/** @desc Hello */ var MSG_UNNAMED_1 = goog.getMsg('hello');\n"
-            + "/** @desc Hello */ var MSG_UNNAMED_2 = goog.getMsg('hello');\n"
-            + "var x = goog.getMsgWithFallback(\n"
-            + "    MSG_UNNAMED_1, MSG_UNNAMED_2);\n"
-            + "}\n");
+        """
+        function f() {
+        /** @desc Hello */ var MSG_UNNAMED_1 = goog.getMsg('hello');
+        /** @desc Hello */ var MSG_UNNAMED_2 = goog.getMsg('hello');
+        var x = goog.getMsgWithFallback(
+            MSG_UNNAMED_1, MSG_UNNAMED_2);
+        }
+        """);
   }
 
   @Test

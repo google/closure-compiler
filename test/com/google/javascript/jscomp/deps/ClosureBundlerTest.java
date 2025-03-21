@@ -86,7 +86,12 @@ public final class ClosureBundlerTest {
   public void testTraditionalWithSourceURL() throws IOException {
     StringBuilder sb = new StringBuilder();
     new ClosureBundler().withSourceUrl("URL").appendTo(sb, TRADITIONAL, "\"a string\"");
-    assertThat(sb.toString()).isEqualTo("\"a string\"\n" + "//# sourceURL=URL\n");
+    assertThat(sb.toString())
+        .isEqualTo(
+            """
+            "a string"
+            //# sourceURL=URL
+            """);
   }
 
   @Test
@@ -129,16 +134,20 @@ public final class ClosureBundlerTest {
     // Call endsWith because the ES6 module runtime is also injected.
     assertThat(sb.toString())
         .endsWith(
-            "goog.loadModule(function(exports) {'use strict';TRANSPILED;\n"
-                + ";return exports;});\n");
+            """
+            goog.loadModule(function(exports) {'use strict';TRANSPILED;
+            ;return exports;});
+            """);
 
     // Without calling appendRuntimeTo(), the runtime is not included anymore.
     sb = new StringBuilder();
     bundler.appendTo(sb, MODULE, input);
     assertThat(sb.toString())
         .isEqualTo(
-            "goog.loadModule(function(exports) {'use strict';TRANSPILED;\n"
-                + ";return exports;});\n");
+            """
+            goog.loadModule(function(exports) {'use strict';TRANSPILED;
+            ;return exports;});
+            """);
   }
 
   @Test
@@ -162,18 +171,20 @@ public final class ClosureBundlerTest {
     assertThat(result).startsWith("var $jscomp");
     assertThat(result)
         .endsWith(
-            "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {\n"
-                + "  function foo() {\n"
-                + "    return local;\n"
-                + "  }\n"
-                + "  Object.defineProperties($$exports, {foo:{enumerable:true, get:function() {\n"
-                + "    return foo;\n"
-                + "  }}, y:{enumerable:true, get:function() {\n"
-                + "    return module$nested$path$other.x;\n"
-                + "  }}});\n"
-                + "  var module$nested$path$other = $$require(\"nested/path/other.js\");\n"
-                + "  let local;\n"
-                + "}, \"nested/path/foo.js\", [\"nested/path/other.js\"]);\n");
+            """
+            $jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {
+              function foo() {
+                return local;
+              }
+              Object.defineProperties($$exports, {foo:{enumerable:true, get:function() {
+                return foo;
+              }}, y:{enumerable:true, get:function() {
+                return module$nested$path$other.x;
+              }}});
+              var module$nested$path$other = $$require("nested/path/other.js");
+              let local;
+            }, "nested/path/foo.js", ["nested/path/other.js"]);
+            """);
   }
 
   @Test

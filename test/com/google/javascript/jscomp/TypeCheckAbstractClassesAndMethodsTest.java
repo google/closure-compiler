@@ -507,9 +507,11 @@ public final class TypeCheckAbstractClassesAndMethodsTest extends TypeCheckTestC
                 + "/** @param {number} x */ goog.f = abstractFn;"
                 + "goog.f('x');")
         .addDiagnostic(
-            "actual parameter 1 of goog.f does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: number")
+            """
+            actual parameter 1 of goog.f does not match formal parameter
+            found   : string
+            required: number
+            """)
         .run();
   }
 

@@ -1552,11 +1552,13 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    "var m = 1;\n"
-                        + "(function () {\n"
-                        + " var x = 1;\n"
-                        + " m = function() { return x };\n"
-                        + "})();\n")
+                    """
+                    var m = 1;
+                    (function () {
+                     var x = 1;
+                     m = function() { return x };
+                    })();
+                    """)
                 .addChunk("m();")
                 .build()));
   }

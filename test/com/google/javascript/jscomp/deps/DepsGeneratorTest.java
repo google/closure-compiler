@@ -519,7 +519,10 @@ goog.addDependency('../this/is/defined/thrice.js', [], []);
     SourceFile userSrc =
         SourceFile.fromCode(
             "my/package/script.js",
-            "goog.require('a');\n" + "goog.provide('my.package.script');\n");
+            """
+            goog.require('a');
+            goog.provide('my.package.script');
+            """);
 
     // doErrorMessagesRun uses closure_path //javascript/closure and therefore
     // fails to recognize and de-dupe the stub Closure Library at
@@ -543,7 +546,10 @@ goog.addDependency('../this/is/defined/thrice.js', [], []);
     SourceFile userSrc =
         SourceFile.fromCode(
             "my/package/script.js",
-            "goog.require('a');\n" + "goog.provide('my.package.script');\n");
+            """
+            goog.require('a');
+            goog.provide('my.package.script');
+            """);
     DepsGenerator worker =
         new DepsGenerator(
             ImmutableList.of(fauxClosureDeps),

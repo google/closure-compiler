@@ -1314,10 +1314,12 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
     String code =
-        "/** @constructor */function A() {this.foo = 0; Object.seal(this);}\n"
-            + "/** @constructor */function B() {this.a = new A();}\n"
-            + "B.prototype.dostuff = function() {this.a.foo++;alert('hi');}\n"
-            + "new B().dostuff();\n";
+        """
+        /** @constructor */function A() {this.foo = 0; Object.seal(this);}
+        /** @constructor */function B() {this.a = new A();}
+        B.prototype.dostuff = function() {this.a.foo++;alert('hi');}
+        new B().dostuff();
+        """;
 
     test(
         options,
@@ -1611,10 +1613,12 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setCheckSymbols(false);
     test(
         options,
-        "function bar(x) { return x; }\n"
-            + "function foo(x) { print(x / bar(0));\n"
-            + "                 print(x / bar(-0)); }\n"
-            + "foo(3);",
+        """
+        function bar(x) { return x; }
+        function foo(x) { print(x / bar(0));
+                         print(x / bar(-0)); }
+        foo(3);
+        """,
         "print(3/0);print(3/-0);");
   }
 

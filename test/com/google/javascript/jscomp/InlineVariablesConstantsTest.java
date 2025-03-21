@@ -127,19 +127,23 @@ public final class InlineVariablesConstantsTest extends CompilerTestCase {
   @Test
   public void testInlineDefinedConstant() {
     test(
-        "/**\n"
-            + " * @define {string}\n"
-            + " */\n"
-            + "var aa = '1234567890';\n"
-            + "foo(aa); foo(aa); foo(aa);",
+        """
+        /**
+         * @define {string}
+         */
+        var aa = '1234567890';
+        foo(aa); foo(aa); foo(aa);
+        """,
         "foo('1234567890');foo('1234567890');foo('1234567890')");
 
     test(
-        "/**\n"
-            + " * @define {string}\n"
-            + " */\n"
-            + "var ABC = '1234567890';\n"
-            + "foo(ABC); foo(ABC); foo(ABC);",
+        """
+        /**
+         * @define {string}
+         */
+        var ABC = '1234567890';
+        foo(ABC); foo(ABC); foo(ABC);
+        """,
         "foo('1234567890');foo('1234567890');foo('1234567890')");
   }
 

@@ -2284,14 +2284,16 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   @Test
   public void testDecomposeFunctionExpressionInCall() {
     test(
-        "(function(map){descriptions_=map})(\n"
-            + "function(){\n"
-            + "var ret={};\n"
-            + "ret[ONE]='a';\n"
-            + "ret[TWO]='b';\n"
-            + "return ret\n"
-            + "}()\n"
-            + ");",
+        """
+        (function(map){descriptions_=map})(
+        function(){
+        var ret={};
+        ret[ONE]='a';
+        ret[TWO]='b';
+        return ret
+        }()
+        );
+        """,
         "var JSCompiler_inline_result$jscomp$0;"
             + "{"
             + "var ret$jscomp$inline_1={};\n"
@@ -2650,53 +2652,57 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   public void testFunctionExpressionYCombinator() {
     assumeMinimumCapture = false;
     testSame(
-        "var factorial = ((function(M) {\n"
-            + "      return ((function(f) {\n"
-            + "                 return M(function(arg) {\n"
-            + "                            return (f(f))(arg);\n"
-            + "                            })\n"
-            + "               })\n"
-            + "              (function(f) {\n"
-            + "                 return M(function(arg) {\n"
-            + "                            return (f(f))(arg);\n"
-            + "                           })\n"
-            + "                 }));\n"
-            + "     })\n"
-            + "    (function(f) {\n"
-            + "       return function(n) {\n"
-            + "        if (n === 0)\n"
-            + "          return 1;\n"
-            + "        else\n"
-            + "          return n * f(n - 1);\n"
-            + "       };\n"
-            + "     }));\n"
-            + "\n"
-            + "factorial(5)\n");
+        """
+        var factorial = ((function(M) {
+              return ((function(f) {
+                         return M(function(arg) {
+                                    return (f(f))(arg);
+                                    })
+                       })
+                      (function(f) {
+                         return M(function(arg) {
+                                    return (f(f))(arg);
+                                   })
+                         }));
+             })
+            (function(f) {
+               return function(n) {
+                if (n === 0)
+                  return 1;
+                else
+                  return n * f(n - 1);
+               };
+             }));
+
+        factorial(5)
+        """);
 
     assumeMinimumCapture = true;
     test(
-        "var factorial = ((function(M) {\n"
-            + "      return ((function(f) {\n"
-            + "                 return M(function(arg) {\n"
-            + "                            return (f(f))(arg);\n"
-            + "                            })\n"
-            + "               })\n"
-            + "              (function(f) {\n"
-            + "                 return M(function(arg) {\n"
-            + "                            return (f(f))(arg);\n"
-            + "                           })\n"
-            + "                 }));\n"
-            + "     })\n"
-            + "    (function(f) {\n"
-            + "       return function(n) {\n"
-            + "        if (n === 0)\n"
-            + "          return 1;\n"
-            + "        else\n"
-            + "          return n * f(n - 1);\n"
-            + "       };\n"
-            + "     }));\n"
-            + "\n"
-            + "factorial(5)\n",
+        """
+        var factorial = ((function(M) {
+              return ((function(f) {
+                         return M(function(arg) {
+                                    return (f(f))(arg);
+                                    })
+                       })
+                      (function(f) {
+                         return M(function(arg) {
+                                    return (f(f))(arg);
+                                   })
+                         }));
+             })
+            (function(f) {
+               return function(n) {
+                if (n === 0)
+                  return 1;
+                else
+                  return n * f(n - 1);
+               };
+             }));
+
+        factorial(5)
+        """,
         "var factorial;\n"
             + "{\n"
             + "var M$jscomp$inline_4 = function(f$jscomp$2) {\n"
@@ -3275,20 +3281,29 @@ JSCompiler_temp_const$jscomp$2.call(JSCompiler_temp_const$jscomp$3, JSCompiler_t
         "function g() { 123; return 123; }\n" + "g();");
 
     this.maxSizeAfterInlining = 20;
-    test("function g() { 123; return 123; }\n" + "function f() {\n" + "  g();\n" + "}", "");
+    test(
+        """
+        function g() { 123; return 123; }
+        function f() {
+          g();
+        }
+        """,
+        "");
 
     // g's size ends up exceeding the max size because all inlining decisions
     // were made in the same inlining round.
     this.maxSizeAfterInlining = 25;
     test(
-        "function f1() { 1; return 1; }\n"
-            + "function f2() { 2; return 2; }\n"
-            + "function f3() { 3; return 3; }\n"
-            + "function f4() { 4; return 4; }\n"
-            + "function g() {\n"
-            + "  f1(); f2(); f3(); f4();\n"
-            + "}\n"
-            + "g(); g(); g();",
+        """
+        function f1() { 1; return 1; }
+        function f2() { 2; return 2; }
+        function f3() { 3; return 3; }
+        function f4() { 4; return 4; }
+        function g() {
+          f1(); f2(); f3(); f4();
+        }
+        g(); g(); g();
+        """,
         "function g() { {1; 1;} {2; 2;} {3; 3;} {4; 4;} }\ng(); g(); g();");
 
     this.maxSizeAfterInlining = CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING;

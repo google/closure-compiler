@@ -62,11 +62,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
       "Bounded generic semantics are currently still in development";
 
   private static final String SUGGESTION_CLASS =
-      "/** @constructor\n */\n"
-          + "function Suggest() {}\n"
-          + "Suggest.prototype.a = 1;\n"
-          + "Suggest.prototype.veryPossible = 1;\n"
-          + "Suggest.prototype.veryPossible2 = 1;\n";
+      """
+      /** @constructor
+       */
+      function Suggest() {}
+      Suggest.prototype.a = 1;
+      Suggest.prototype.veryPossible = 1;
+      Suggest.prototype.veryPossible2 = 1;
+      """;
 
   private static final String ILLEGAL_PROPERTY_CREATION_MESSAGE =
       "Cannot add a property"
@@ -92,7 +95,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testPrivateType() {
     newTest()
         .addSource("/** @private {number} */ var x = false;")
-        .addDiagnostic("initializing variable\n" + "found   : boolean\n" + "required: number")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -105,7 +113,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testTypeCheck2() {
     newTest()
         .addSource("/**@return {void}*/function foo(){ var x=foo(); x--; }")
-        .addDiagnostic("increment/decrement\n" + "found   : undefined\n" + "required: number")
+        .addDiagnostic(
+            """
+            increment/decrement
+            found   : undefined
+            required: number
+            """)
         .run();
   }
 
@@ -147,7 +160,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testTypeCheck11() {
     newTest()
         .addSource("/**@type {!Number} */var a;" + "/**@type {!String} */var b;" + "a = b;")
-        .addDiagnostic("assignment\n" + "found   : String\n" + "required: Number")
+        .addDiagnostic(
+            """
+            assignment
+            found   : String
+            required: Number
+            """)
         .run();
   }
 
@@ -156,9 +174,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("/**@return {!Object}*/function foo(){var a = 3^foo();}")
         .addDiagnostic(
-            "bad right operand to bitwise operator\n"
-                + "found   : Object\n"
-                + "required: (boolean|null|number|string|undefined)")
+            """
+            bad right operand to bitwise operator
+            found   : Object
+            required: (boolean|null|number|string|undefined)
+            """)
         .run();
   }
 
@@ -166,7 +186,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testTypeCheck13() {
     newTest()
         .addSource("/**@type {!Number|!String}*/var i; i=/xx/;")
-        .addDiagnostic("assignment\n" + "found   : RegExp\n" + "required: (Number|String)")
+        .addDiagnostic(
+            """
+            assignment
+            found   : RegExp
+            required: (Number|String)
+            """)
         .run();
   }
 
@@ -179,7 +204,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testTypeCheck15() {
     newTest()
         .addSource("/**@type {Number|null} */var x;x=null;x=10;")
-        .addDiagnostic("assignment\n" + "found   : number\n" + "required: (Number|null)")
+        .addDiagnostic(
+            """
+            assignment
+            found   : number
+            required: (Number|null)
+            """)
         .run();
   }
 
@@ -187,7 +217,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testTypeCheck16() {
     newTest()
         .addSource("/**@type {Number|null} */var x='';")
-        .addDiagnostic("initializing variable\n" + "found   : string\n" + "required: (Number|null)")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : string
+            required: (Number|null)
+            """)
         .run();
   }
 
@@ -219,8 +254,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testTypeCheckBasicDowncast() {
     newTest()
         .addSource(
-            "/** @constructor */function foo() {}\n"
-                + "/** @type {Object} */ var bar = new foo();\n")
+            """
+            /** @constructor */function foo() {}
+            /** @type {Object} */ var bar = new foo();
+            """)
         .run();
   }
 
@@ -228,9 +265,16 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testTypeCheckNoDowncastToNumber() {
     newTest()
         .addSource(
-            "/** @constructor */function foo() {}\n"
-                + "/** @type {!Number} */ var bar = new foo();\n")
-        .addDiagnostic("initializing variable\n" + "found   : foo\n" + "required: Number")
+            """
+            /** @constructor */function foo() {}
+            /** @type {!Number} */ var bar = new foo();
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : foo
+            required: Number
+            """)
         .run();
   }
 
@@ -243,10 +287,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testTypeCheck22() {
     newTest()
         .addSource(
-            "/** @param {Element|Object} p */\nfunction foo(p){}\n"
-                + "/** @constructor */function Element(){}\n"
-                + "/** @type {Element|Object} */var v;\n"
-                + "foo(v);\n")
+            """
+            /** @param {Element|Object} p */
+            function foo(p){}
+            /** @constructor */function Element(){}
+            /** @type {Element|Object} */var v;
+            foo(v);
+            """)
         .run();
   }
 
@@ -371,7 +418,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource(
             "function /** string */ foo(x) { return x; }" + "var /** number */ a = foo('abc');")
-        .addDiagnostic("initializing variable\n" + "found   : string\n" + "required: number")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -401,9 +453,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .includeDefaultExterns()
         .addSource("/** @param {string} x */ function f(x) {}" + "f([].oogabooga);")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: string")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : boolean
+            required: string
+            """)
         .run();
   }
 
@@ -414,9 +468,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .includeDefaultExterns()
         .addSource("/** @param {Enum} x */ function f(x) {} f(Enum.FOO); f(true);")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: Enum<string>")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : boolean
+            required: Enum<string>
+            """)
         .run();
   }
 
@@ -456,9 +512,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testOptionalAllType() {
     newTest()
         .addSource(
-            "/** @param {*} opt_x */function f(opt_x) { return opt_x }\n"
-                + "/** @type {*} */var y;\n"
-                + "f(y);")
+            """
+            /** @param {*} opt_x */function f(opt_x) { return opt_x }
+            /** @type {*} */var y;
+            f(y);
+            """)
         .run();
   }
 
@@ -482,11 +540,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testOptionalUnknownNamedType() {
     newTest()
         .addSource(
-            "/** @param {!T} opt_x\n@return {undefined} */\n"
-                + "function f(opt_x) { return opt_x; }\n"
-                + "/** @constructor */var T = function() {};")
+            """
+            /** @param {!T} opt_x
+            @return {undefined} */
+            function f(opt_x) { return opt_x; }
+            /** @constructor */var T = function() {};
+            """)
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : (T|undefined)\n" + "required: undefined")
+            """
+            inconsistent return type
+            found   : (T|undefined)
+            required: undefined
+            """)
         .run();
   }
 
@@ -746,16 +811,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testBooleanReduction5() {
     newTest()
         .addSource(
-            "/**\n"
-                + "* @param {Array|string} x\n"
-                + "* @return {string?}\n"
-                + "*/\n"
-                + "var f = function(x) {\n"
-                + "if (!x || typeof x == 'string') {\n"
-                + "return x;\n"
-                + "}\n"
-                + "return null;\n"
-                + "};")
+            """
+            /**
+            * @param {Array|string} x
+            * @return {string?}
+            */
+            var f = function(x) {
+            if (!x || typeof x == 'string') {
+            return x;
+            }
+            return null;
+            };
+            """)
         .run();
   }
 
@@ -763,16 +830,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testBooleanReduction6() {
     newTest()
         .addSource(
-            "/**\n"
-                + "* @param {Array|string|null} x\n"
-                + "* @return {string?}\n"
-                + "*/\n"
-                + "var f = function(x) {\n"
-                + "if (!(x && typeof x != 'string')) {\n"
-                + "return x;\n"
-                + "}\n"
-                + "return null;\n"
-                + "};")
+            """
+            /**
+            * @param {Array|string|null} x
+            * @return {string?}
+            */
+            var f = function(x) {
+            if (!(x && typeof x != 'string')) {
+            return x;
+            }
+            return null;
+            };
+            """)
         .run();
   }
 
@@ -780,17 +849,19 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testBooleanReduction7() {
     newTest()
         .addSource(
-            "/** @constructor */var T = function() {};\n"
-                + "/**\n"
-                + "* @param {Array|T} x\n"
-                + "* @return {null}\n"
-                + "*/\n"
-                + "var f = function(x) {\n"
-                + "if (!x) {\n"
-                + "return x;\n"
-                + "}\n"
-                + "return null;\n"
-                + "};")
+            """
+            /** @constructor */var T = function() {};
+            /**
+            * @param {Array|T} x
+            * @return {null}
+            */
+            var f = function(x) {
+            if (!x) {
+            return x;
+            }
+            return null;
+            };
+            """)
         .run();
   }
 
@@ -891,7 +962,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testNullAnd() {
     newTest()
         .addSource("/** @type {null} */var x;\n" + "/** @type {number} */var r = x && x;")
-        .addDiagnostic("initializing variable\n" + "found   : null\n" + "required: number")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : null
+            required: number
+            """)
         .run();
   }
 
@@ -899,7 +975,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testNullOr() {
     newTest()
         .addSource("/** @type {null} */var x;\n" + "/** @type {number} */var r = x || x;")
-        .addDiagnostic("initializing variable\n" + "found   : null\n" + "required: number")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : null
+            required: number
+            """)
         .run();
   }
 
@@ -907,7 +988,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testBooleanPreservation1() {
     newTest()
         .addSource("/**@type {string} */var x = \"a\";" + "x = ((x == \"a\") && x) || x == \"b\";")
-        .addDiagnostic("assignment\n" + "found   : (boolean|string)\n" + "required: string")
+        .addDiagnostic(
+            """
+            assignment
+            found   : (boolean|string)
+            required: string
+            """)
         .run();
   }
 
@@ -915,7 +1001,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testBooleanPreservation2() {
     newTest()
         .addSource("/**@type {string} */var x = \"a\"; x = (x == \"a\") || x;")
-        .addDiagnostic("assignment\n" + "found   : (boolean|string)\n" + "required: string")
+        .addDiagnostic(
+            """
+            assignment
+            found   : (boolean|string)
+            required: string
+            """)
         .run();
   }
 
@@ -926,7 +1017,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @param {Function?} x\n @return {boolean?} */"
                 + "function f(x) { return x && x == \"a\"; }")
         .addDiagnostic(
-            "condition always evaluates to false\n" + "left : Function\n" + "right: string")
+            """
+            condition always evaluates to false
+            left : Function
+            right: string
+            """)
         .run();
   }
 
@@ -937,7 +1032,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @param {Function?|boolean} x\n @return {boolean} */"
                 + "function f(x) { return x && x == \"a\"; }")
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : (boolean|null)\n" + "required: boolean")
+            """
+            inconsistent return type
+            found   : (boolean|null)
+            required: boolean
+            """)
         .run();
   }
 
@@ -1027,7 +1126,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             function f(x, y) { return x === y; }
             """)
         .addDiagnostic(
-            "condition always evaluates to false\n" + "left : symbol\n" + "right: Symbol")
+            """
+            condition always evaluates to false
+            left : symbol
+            right: Symbol
+            """)
         .run();
   }
 
@@ -1057,7 +1160,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             function f(x, y) { return x === y; }
             """)
         .addDiagnostic(
-            "condition always evaluates to false\n" + "left : symbol\n" + "right: (Symbol|null)")
+            """
+            condition always evaluates to false
+            left : symbol
+            right: (Symbol|null)
+            """)
         .run();
   }
 
@@ -1147,7 +1254,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             function f(x, y) { return x === y; }
             """)
         .addDiagnostic(
-            "condition always evaluates to false\n" + "left : symbol\n" + "right: E<Symbol>")
+            """
+            condition always evaluates to false
+            left : symbol
+            right: E<Symbol>
+            """)
         .run();
   }
 
@@ -1177,7 +1288,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             function f(x, y) { return x === y; }
             """)
         .addDiagnostic(
-            "condition always evaluates to false\n" + "left : symbol\n" + "right: Object")
+            """
+            condition always evaluates to false
+            left : symbol
+            right: Object
+            """)
         .run();
   }
 
@@ -1251,17 +1366,24 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @return {string} */var f = function(x) { "
                 + "return typeof x == 'number' ? x : 'a'; }")
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : (number|string)\n" + "required: string")
+            """
+            inconsistent return type
+            found   : (number|string)
+            required: string
+            """)
         .run();
   }
 
   @Test
   public void testTypeOfReduction11() {
     testClosureTypes(
-        "/** @param {Array|string} x\n@return {Array} */\n"
-            + "function f(x) {\n"
-            + "return goog.isObject(x) ? x : [];\n"
-            + "}",
+        """
+        /** @param {Array|string} x
+        @return {Array} */
+        function f(x) {
+        return goog.isObject(x) ? x : [];
+        }
+        """,
         null);
   }
 
@@ -1313,9 +1435,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testQualifiedNameReduction1() {
     newTest()
         .addSource(
-            "var x = {}; /** @type {string?} */ x.a = 'a';\n"
-                + "/** @return {string} */ var f = function() {\n"
-                + "return x.a ? x.a : 'a'; }")
+            """
+            var x = {}; /** @type {string?} */ x.a = 'a';
+            /** @return {string} */ var f = function() {
+            return x.a ? x.a : 'a'; }
+            """)
         .run();
   }
 
@@ -1345,9 +1469,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testQualifiedNameReduction5a() {
     newTest()
         .addSource(
-            "var x = {/** @type {string} */ a:'b' };\n"
-                + "/** @return {string} */ var f = function() {\n"
-                + "return x.a; }")
+            """
+            var x = {/** @type {string} */ a:'b' };
+            /** @return {string} */ var f = function() {
+            return x.a; }
+            """)
         .run();
   }
 
@@ -1355,12 +1481,19 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testQualifiedNameReduction5b() {
     newTest()
         .addSource(
-            "var x = {/** @type {number} */ a:12 };\n"
-                + "/** @return {string} */\n"
-                + "var f = function() {\n"
-                + "  return x.a;\n"
-                + "}")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+            """
+            var x = {/** @type {number} */ a:12 };
+            /** @return {string} */
+            var f = function() {
+              return x.a;
+            }
+            """)
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -1368,11 +1501,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testQualifiedNameReduction5c() {
     newTest()
         .addSource(
-            "/** @return {string} */ var f = function() {\n"
-                + "var x = {/** @type {number} */ a:0 };\n"
-                + "return (x.a) ? (x.a) : 'a'; }")
+            """
+            /** @return {string} */ var f = function() {
+            var x = {/** @type {number} */ a:0 };
+            return (x.a) ? (x.a) : 'a'; }
+            """)
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : (number|string)\n" + "required: string")
+            """
+            inconsistent return type
+            found   : (number|string)
+            required: string
+            """)
         .run();
   }
 
@@ -1380,9 +1519,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testQualifiedNameReduction6() {
     newTest()
         .addSource(
-            "/** @return {string} */ var f = function() {\n"
-                + "var x = {/** @return {string?} */ get a() {return 'a'}};\n"
-                + "return x.a ? x.a : 'a'; }")
+            """
+            /** @return {string} */ var f = function() {
+            var x = {/** @return {string?} */ get a() {return 'a'}};
+            return x.a ? x.a : 'a'; }
+            """)
         .run();
   }
 
@@ -1390,10 +1531,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testQualifiedNameReduction7() {
     newTest()
         .addSource(
-            "/** @return {string} */ var f = function() {\n"
-                + "var x = {/** @return {number} */ get a() {return 12}};\n"
-                + "return x.a; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+            """
+            /** @return {string} */ var f = function() {
+            var x = {/** @return {number} */ get a() {return 12}};
+            return x.a; }
+            """)
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -1402,9 +1550,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // It would be nice to find a way to make this an error.
     newTest()
         .addSource(
-            "/** @return {string} */ var f = function() {\n"
-                + "var x = {get a() {return 12}};\n"
-                + "return x.a; }")
+            """
+            /** @return {string} */ var f = function() {
+            var x = {get a() {return 12}};
+            return x.a; }
+            """)
         .run();
   }
 
@@ -1412,9 +1562,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testQualifiedNameReduction8() {
     newTest()
         .addSource(
-            "/** @return {string} */ var f = function() {\n"
-                + "var x = {get a() {return 'a'}};\n"
-                + "return x.a ? x.a : 'a'; }")
+            """
+            /** @return {string} */ var f = function() {
+            var x = {get a() {return 'a'}};
+            return x.a ? x.a : 'a'; }
+            """)
         .run();
   }
 
@@ -1422,9 +1574,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testQualifiedNameReduction9() {
     newTest()
         .addSource(
-            "/** @return {string} */ var f = function() {\n"
-                + "var x = { /** @param {string} b */ set a(b) {}};\n"
-                + "return x.a ? x.a : 'a'; }")
+            """
+            /** @return {string} */ var f = function() {
+            var x = { /** @param {string} b */ set a(b) {}};
+            return x.a ? x.a : 'a'; }
+            """)
         .run();
   }
 
@@ -1434,11 +1588,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // types.
     newTest()
         .addSource(
-            "/** @return {string} */ var f = function() {\n"
-                + "var x = { /** @param {number} b */ set a(b) {}};\n"
-                + "return x.a ? x.a : 'a'; }")
+            """
+            /** @return {string} */ var f = function() {
+            var x = { /** @param {number} b */ set a(b) {}};
+            return x.a ? x.a : 'a'; }
+            """)
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : (number|string)\n" + "required: string")
+            """
+            inconsistent return type
+            found   : (number|string)
+            required: string
+            """)
         .run();
   }
 
@@ -1446,14 +1606,22 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testUnknownsDontOverrideDeclaredTypesInLocalScope1() {
     newTest()
         .addSource(
-            "/** @constructor */ var C = function() {\n"
-                + "  /** @type {string} */ this.a = 'str'};\n"
-                + "/** @param {?} a\n @return {number} */\n"
-                + "C.prototype.f = function(a) {\n"
-                + "  this.a = a;\n"
-                + "  return this.a;\n"
-                + "}\n")
-        .addDiagnostic("inconsistent return type\n" + "found   : string\n" + "required: number")
+            """
+            /** @constructor */ var C = function() {
+              /** @type {string} */ this.a = 'str'};
+            /** @param {?} a
+             @return {number} */
+            C.prototype.f = function(a) {
+              this.a = a;
+              return this.a;
+            }
+            """)
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -1470,7 +1638,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "  x.a = a;\n"
                 + "  return x.a;\n"
                 + "}\n")
-        .addDiagnostic("inconsistent return type\n" + "found   : string\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -1479,7 +1652,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("var x = {/** @type {number} */ a:12 };\n" + "x.a = 'a';")
         .addDiagnostic(
-            "assignment to property a of x\n" + "found   : string\n" + "required: number")
+            """
+            assignment to property a of x
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -1493,7 +1670,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "};\n"
                 + "f();")
         .addDiagnostic(
-            "assignment to property a of x\n" + "found   : string\n" + "required: number")
+            """
+            assignment to property a of x
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -1502,7 +1683,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("var x = {/** @param {number} b */ set a(b){} };\n" + "x.a = 'a';")
         .addDiagnostic(
-            "assignment to property a of x\n" + "found   : string\n" + "required: number")
+            """
+            assignment to property a of x
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -1516,7 +1701,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "};\n"
                 + "f();")
         .addDiagnostic(
-            "assignment to property a of x\n" + "found   : string\n" + "required: number")
+            """
+            assignment to property a of x
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -1524,10 +1713,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testObjLitDef3a() {
     newTest()
         .addSource(
-            "/** @type {string} */ var y;\n"
-                + "var x = {/** @return {number} */ get a(){} };\n"
-                + "y = x.a;")
-        .addDiagnostic("assignment\n" + "found   : number\n" + "required: string")
+            """
+            /** @type {string} */ var y;
+            var x = {/** @return {number} */ get a(){} };
+            y = x.a;
+            """)
+        .addDiagnostic(
+            """
+            assignment
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -1541,7 +1737,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "y = x.a;"
                 + "};\n"
                 + "f();")
-        .addDiagnostic("assignment\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            assignment
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -1550,20 +1751,28 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("var x = {" + "/** @return {number} */ a:12 };\n")
         .addDiagnostic(
-            "assignment to property a of {a: function(): number}\n"
-                + "found   : number\n"
-                + "required: function(): number")
+            """
+            assignment to property a of {a: function(): number}
+            found   : number
+            required: function(): number
+            """)
         .run();
   }
 
   @Test
   public void testObjLitDef5() {
     newTest()
-        .addSource("var x = {};\n" + "/** @return {number} */ x.a = 12;\n")
+        .addSource(
+            """
+            var x = {};
+            /** @return {number} */ x.a = 12;
+            """)
         .addDiagnostic(
-            "assignment to property a of x\n"
-                + "found   : number\n"
-                + "required: function(): number")
+            """
+            assignment to property a of x
+            found   : number
+            required: function(): number
+            """)
         .run();
   }
 
@@ -1587,11 +1796,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testInstanceOfReduction1() {
     newTest()
         .addSource(
-            "/** @constructor */ var T = function() {};\n"
-                + "/** @param {T|string} x\n@return {T} */\n"
-                + "var f = function(x) {\n"
-                + "if (x instanceof T) { return x; } else { return new T(); }\n"
-                + "};")
+            """
+            /** @constructor */ var T = function() {};
+            /** @param {T|string} x
+            @return {T} */
+            var f = function(x) {
+            if (x instanceof T) { return x; } else { return new T(); }
+            };
+            """)
         .run();
   }
 
@@ -1599,11 +1811,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testInstanceOfReduction2() {
     newTest()
         .addSource(
-            "/** @constructor */ var T = function() {};\n"
-                + "/** @param {!T|string} x\n@return {string} */\n"
-                + "var f = function(x) {\n"
-                + "if (x instanceof T) { return ''; } else { return x; }\n"
-                + "};")
+            """
+            /** @constructor */ var T = function() {};
+            /** @param {!T|string} x
+            @return {string} */
+            var f = function(x) {
+            if (x instanceof T) { return ''; } else { return x; }
+            };
+            """)
         .run();
   }
 
@@ -1627,9 +1842,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @param {string} a */ function g(a) { }"
                 + "function h() { g(x.y); }")
         .addDiagnostic(
-            "actual parameter 1 of g does not match formal parameter\n"
-                + "found   : (null|number)\n"
-                + "required: string")
+            """
+            actual parameter 1 of g does not match formal parameter
+            found   : (null|number)
+            required: string
+            """)
         .run();
   }
 
@@ -1645,7 +1862,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @param {number} x */ function g(x) {}"
                 + "function h() { g(x.y.z); }")
         .addDiagnostic(
-            "assignment to property z of F\n" + "found   : string\n" + "required: number")
+            """
+            assignment to property z of F
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -1671,7 +1892,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @constructor */ function F() { this.x_ = true; }"
                 + "/** @return {string} */"
                 + "F.prototype.bar = function() { if (this.x_) return this.x_; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : boolean\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : boolean
+            required: string
+            """)
         .run();
   }
 
@@ -1683,7 +1909,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "F.prototype.baz = function() { this.x_ = null; };"
                 + "/** @return {string} */"
                 + "F.prototype.bar = function() { if (this.x_) return this.x_; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : boolean\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : boolean
+            required: string
+            """)
         .run();
   }
 
@@ -1696,7 +1927,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @return {string} */"
                 + "F.prototype.bar = function() { if (this.x_) return this.x_; };")
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : (boolean|number)\n" + "required: string")
+            """
+            inconsistent return type
+            found   : (boolean|number)
+            required: string
+            """)
         .run();
   }
 
@@ -1708,7 +1943,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "F.prototype.x_ = 3;"
                 + "/** @return {string} */"
                 + "F.prototype.bar = function() { if (this.x_) return this.x_; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -1749,7 +1989,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "(new F).x_ = 3;"
                 + "/** @return {string} */"
                 + "F.prototype.bar = function() { return this.x_; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : boolean\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : boolean
+            required: string
+            """)
         .run();
   }
 
@@ -1764,7 +2009,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @return {string} */"
                 + "F.prototype.bar = function() { return this.x_; };")
         .addDiagnostic(
-            "assignment to property x_ of F\n" + "found   : number\n" + "required: string")
+            """
+            assignment to property x_ of F
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -1778,7 +2027,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "}"
                 + "var g = f();"
                 + "/** @type {number} */ g.prototype.bar_ = null;")
-        .addDiagnostic("assignment\n" + "found   : null\n" + "required: number")
+        .addDiagnostic(
+            """
+            assignment
+            found   : null
+            required: number
+            """)
         .run();
   }
 
@@ -1798,7 +2052,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @type {number} */ g.prototype.bar_ = 1;"
                 + "var h = f();"
                 + "/** @type {string} */ h.prototype.bar_ = 1;")
-        .addDiagnostic("assignment\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            assignment
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -1807,14 +2066,20 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     disableStrictMissingPropertyChecks();
     newTest()
         .addSource(
-            "/** @param {Object} o\n@param {string} x */\n"
-                + "function s1(o,x) { o.x = x; }\n"
-                + "/** @param {Object} o\n@return {string} */\n"
-                + "function g1(o) { return typeof o.x == 'undefined' ? '' : o.x; }\n"
-                + "/** @param {Object} o\n@param {number} x */\n"
-                + "function s2(o,x) { o.x = x; }\n"
-                + "/** @param {Object} o\n@return {number} */\n"
-                + "function g2(o) { return typeof o.x == 'undefined' ? 0 : o.x; }")
+            """
+            /** @param {Object} o
+            @param {string} x */
+            function s1(o,x) { o.x = x; }
+            /** @param {Object} o
+            @return {string} */
+            function g1(o) { return typeof o.x == 'undefined' ? '' : o.x; }
+            /** @param {Object} o
+            @param {number} x */
+            function s2(o,x) { o.x = x; }
+            /** @param {Object} o
+            @return {number} */
+            function g2(o) { return typeof o.x == 'undefined' ? 0 : o.x; }
+            """)
         .run();
   }
 
@@ -1823,14 +2088,20 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     disableStrictMissingPropertyChecks();
     newTest()
         .addSource(
-            "/** @param {Function} o\n@param {string} x */\n"
-                + "function s1(o,x) { o.x = x; }\n"
-                + "/** @param {Function} o\n@return {string} */\n"
-                + "function g1(o) { return typeof o.x == 'undefined' ? '' : o.x; }\n"
-                + "/** @param {Function} o\n@param {number} x */\n"
-                + "function s2(o,x) { o.x = x; }\n"
-                + "/** @param {Function} o\n@return {number} */\n"
-                + "function g2(o) { return typeof o.x == 'undefined' ? 0 : o.x; }")
+            """
+            /** @param {Function} o
+            @param {string} x */
+            function s1(o,x) { o.x = x; }
+            /** @param {Function} o
+            @return {string} */
+            function g1(o) { return typeof o.x == 'undefined' ? '' : o.x; }
+            /** @param {Function} o
+            @param {number} x */
+            function s2(o,x) { o.x = x; }
+            /** @param {Function} o
+            @return {number} */
+            function g2(o) { return typeof o.x == 'undefined' ? 0 : o.x; }
+            """)
         .run();
   }
 
@@ -2029,7 +2300,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/**@param {!Object} o\n@param {number?} x\n@return {string}*/"
                 + "function f(o, x) { if (x) {o.x = x;} else {o.x = 'a';}\nreturn o.x; }")
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : (number|string)\n" + "required: string")
+            """
+            inconsistent return type
+            found   : (number|string)
+            required: string
+            """)
         .run();
   }
 
@@ -2080,7 +2355,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @constructor */var T = function() { this.x = ''; };\n"
                 + "/** @type {number} */ T.prototype.x = 0;")
         .addDiagnostic(
-            "assignment to property x of T\n" + "found   : string\n" + "required: number")
+            """
+            assignment to property x of T
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -2091,7 +2370,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @constructor */var T = function() { this.x = ''; };\n"
                 + "/** @type {number} */ T.prototype.x;")
         .addDiagnostic(
-            "assignment to property x of T\n" + "found   : string\n" + "required: number")
+            """
+            assignment to property x of T
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -2100,11 +2383,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     disableStrictMissingPropertyChecks();
     newTest()
         .addSource(
-            "/** @type {Object} */ var n = {};\n"
-                + "/** @constructor */ n.T = function() { this.x = ''; };\n"
-                + "/** @type {number} */ n.T.prototype.x = 0;")
+            """
+            /** @type {Object} */ var n = {};
+            /** @constructor */ n.T = function() { this.x = ''; };
+            /** @type {number} */ n.T.prototype.x = 0;
+            """)
         .addDiagnostic(
-            "assignment to property x of n.T\n" + "found   : string\n" + "required: number")
+            """
+            assignment to property x of n.T
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -2112,11 +2401,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testMismatchingOverridingInferredPropertyBeforeDeclaredProperty4() {
     newTest()
         .addSource(
-            "var n = {};\n"
-                + "/** @constructor */ n.T = function() { this.x = ''; };\n"
-                + "/** @type {number} */ n.T.prototype.x = 0;")
+            """
+            var n = {};
+            /** @constructor */ n.T = function() { this.x = ''; };
+            /** @type {number} */ n.T.prototype.x = 0;
+            """)
         .addDiagnostic(
-            "assignment to property x of n.T\n" + "found   : string\n" + "required: number")
+            """
+            assignment to property x of n.T
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -2128,7 +2423,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @return {string} */"
                 + "T.prototype.f = function() { return this.g(); };\n"
                 + "/** @return {number} */ T.prototype.g = function() { return 1; };\n")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -2141,7 +2441,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @return {string} */"
                 + "n.T.prototype.f = function() { return this.g(); };\n"
                 + "/** @return {number} */ n.T.prototype.g = function() { return 1; };\n")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -2202,7 +2507,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @type {number} */ var a = 5;"
                 + "/** @type {string} */ var b = 'b';"
                 + "/** @type {number} */ var c = a + b;")
-        .addDiagnostic("initializing variable\n" + "found   : string\n" + "required: number")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -2213,7 +2523,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @type {string} */ var a = 'a';"
                 + "/** @type {number} */ var b = 5;"
                 + "/** @type {number} */ var c = a + b;")
-        .addDiagnostic("initializing variable\n" + "found   : string\n" + "required: number")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -2224,7 +2539,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @type {number} */ var a = 5;"
                 + "/** @type {number} */ var b = 5;"
                 + "/** @type {string} */ var c = a + b;")
-        .addDiagnostic("initializing variable\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -2258,7 +2578,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @type {number} */ var b = 5;"
                 + "/** @type {boolean} */ var c = a() + b;")
         .addDiagnostic(
-            "initializing variable\n" + "found   : (number|string)\n" + "required: boolean")
+            """
+            initializing variable
+            found   : (number|string)
+            required: boolean
+            """)
         .run();
   }
 
@@ -2270,7 +2594,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @return {(number|string)} */ function b() { return 5; }"
                 + "/** @type {boolean} */ var c = a + b();")
         .addDiagnostic(
-            "initializing variable\n" + "found   : (number|string)\n" + "required: boolean")
+            """
+            initializing variable
+            found   : (number|string)
+            required: boolean
+            """)
         .run();
   }
 
@@ -2282,7 +2610,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @type {number} */ var b = 5;"
                 + "/** @type {boolean} */ var c = a + b;")
         .addDiagnostic(
-            "initializing variable\n" + "found   : (number|string)\n" + "required: boolean")
+            """
+            initializing variable
+            found   : (number|string)
+            required: boolean
+            """)
         .run();
   }
 
@@ -2294,7 +2626,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @return {(number|string)} */ function b() { return 5; }"
                 + "/** @type {boolean} */ var c = a + b();")
         .addDiagnostic(
-            "initializing variable\n" + "found   : (number|string)\n" + "required: boolean")
+            """
+            initializing variable
+            found   : (number|string)
+            required: boolean
+            """)
         .run();
   }
 
@@ -2306,7 +2642,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @type {number} */ var b = 5;"
                 + "/** @type {boolean} */ var c = a + b;")
         .addDiagnostic(
-            "initializing variable\n" + "found   : (number|string)\n" + "required: boolean")
+            """
+            initializing variable
+            found   : (number|string)
+            required: boolean
+            """)
         .run();
   }
 
@@ -2318,7 +2658,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @type {(undefined|string)} */ var b = unknown;"
                 + "/** @type {boolean} */ var c = a + b;")
         .addDiagnostic(
-            "initializing variable\n" + "found   : (number|string)\n" + "required: boolean")
+            """
+            initializing variable
+            found   : (number|string)
+            required: boolean
+            """)
         .run();
   }
 
@@ -2329,7 +2673,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function f() {};"
                 + "/** @type {string} */ var a = 'a';"
                 + "/** @type {number} */ var c = a + f();")
-        .addDiagnostic("initializing variable\n" + "found   : string\n" + "required: number")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -2466,7 +2815,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .setWarningLevel(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     newTest()
         .addSource("/**@return {void} */ " + "function foo() { if ('a' >= foo()) return; }")
-        .addDiagnostic("right side of comparison\n" + "found   : undefined\n" + "required: string")
+        .addDiagnostic(
+            """
+            right side of comparison
+            found   : undefined
+            required: string
+            """)
         .run();
   }
 
@@ -2536,7 +2890,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("function foo(){" + "if (bar instanceof 3)return;}")
         .addDiagnostic(
-            "instanceof requires an object\n" + "found   : number\n" + "required: Object")
+            """
+            instanceof requires an object
+            found   : number
+            required: Object
+            """)
         .run();
   }
 
@@ -2545,9 +2903,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("/**@return {void}*/function foo(){" + "if (foo() instanceof Object)return;}")
         .addDiagnostic(
-            "deterministic instanceof yields false\n"
-                + "found   : undefined\n"
-                + "required: NoObject")
+            """
+            deterministic instanceof yields false
+            found   : undefined
+            required: NoObject
+            """)
         .run();
   }
 
@@ -2588,14 +2948,16 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testInstanceOfReduction3() {
     newTest()
         .addSource(
-            "/** \n"
-                + " * @param {Object} x \n"
-                + " * @param {Function} y \n"
-                + " * @return {boolean} \n"
-                + " */\n"
-                + "var f = function(x, y) {\n"
-                + "  return x instanceof y;\n"
-                + "};")
+            """
+            /**\s
+             * @param {Object} x\s
+             * @param {Function} y\s
+             * @return {boolean}\s
+             */
+            var f = function(x, y) {
+              return x instanceof y;
+            };
+            """)
         .run();
   }
 
@@ -2660,7 +3022,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testScoping7() {
     newTest()
         .addSource("/** @constructor */function A() {" + "  /** @type {!A} */this.a = null;" + "}")
-        .addDiagnostic("assignment to property a of A\n" + "found   : null\n" + "required: A")
+        .addDiagnostic(
+            """
+            assignment to property a of A
+            found   : null
+            required: A
+            """)
         .run();
   }
 
@@ -2672,7 +3039,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @constructor */function B() {"
                 + "  /** @type {!A} */this.a = null;"
                 + "}")
-        .addDiagnostic("assignment to property a of B\n" + "found   : null\n" + "required: A")
+        .addDiagnostic(
+            """
+            assignment to property a of B
+            found   : null
+            required: A
+            """)
         .run();
   }
 
@@ -2684,7 +3056,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "  /** @type {!A} */this.a = null;"
                 + "}"
                 + "/** @constructor */function A() {}")
-        .addDiagnostic("assignment to property a of B\n" + "found   : null\n" + "required: A")
+        .addDiagnostic(
+            """
+            assignment to property a of B
+            found   : null
+            required: A
+            """)
         .run();
   }
 
@@ -2813,7 +3190,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @return {number} */var a = function b(){ return b };")
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : function(): number\n" + "required: number")
+            """
+            inconsistent return type
+            found   : function(): number
+            required: number
+            """)
         .run();
   }
 
@@ -2829,7 +3210,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "    return f.bar;"
                 + "  }"
                 + "}")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -2935,7 +3321,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @return {boolean} */ function u() { return true; }"
                 + "/** @param {boolean} b\n@return {?boolean} */"
                 + "function f(b) { if (u()) { b = null; } return b; }")
-        .addDiagnostic("assignment\n" + "found   : null\n" + "required: boolean")
+        .addDiagnostic(
+            """
+            assignment
+            found   : null
+            required: boolean
+            """)
         .run();
   }
 
@@ -3356,7 +3747,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + " function g() { x = null; }"
                 + " return x;"
                 + "}")
-        .addDiagnostic("assignment\n" + "found   : null\n" + "required: number")
+        .addDiagnostic(
+            """
+            assignment
+            found   : null
+            required: number
+            """)
         .run();
   }
 
@@ -3372,7 +3768,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + " return x;"
                 + "}")
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : (null|number)\n" + "required: number")
+            """
+            inconsistent return type
+            found   : (null|number)
+            required: number
+            """)
         .run();
   }
 
@@ -3388,7 +3788,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + " function g() { x = true; return x; }"
                 + " return x;"
                 + "}")
-        .addDiagnostic("inconsistent return type\n" + "found   : boolean\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -3404,7 +3809,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + " function g() { x = 3; return x; }"
                 + " return x;"
                 + "}")
-        .addDiagnostic("inconsistent return type\n" + "found   : string\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -3419,7 +3829,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + " function g() { var x = 3;x = true; return x; }"
                 + " return x;"
                 + "}")
-        .addDiagnostic("inconsistent return type\n" + "found   : boolean\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -3494,7 +3909,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "    return x;"
                 + "  }"
                 + "}")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -3530,7 +3950,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @constructor \n * @extends {F} */ "
                 + "function G() {}"
                 + "/** @override */ G.prototype.foo = function() { return true; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : boolean\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -3545,7 +3970,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @constructor \n * @extends {goog.F} */ "
                 + "goog.G = function() {};"
                 + "/** @override */ goog.G.prototype.foo = function() { return true; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : boolean\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -3560,7 +3990,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "function G() {}"
                 + "/** @override */ "
                 + "G.prototype.foo = function(x) { return x; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : boolean\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -3575,7 +4010,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "function G() {}"
                 + "/** @override */ "
                 + "G.prototype.foo = function(y) { return y; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : boolean\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -3591,7 +4031,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @type {number} */ G.prototype.num = 3;"
                 + "/** @override */ "
                 + "G.prototype.foo = function(y) { return this.num + y; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -3660,9 +4105,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @constructor */ function F() { F.foo(true); }"
                 + "/** @param {number} x */ F.foo = function(x) {};")
         .addDiagnostic(
-            "actual parameter 1 of F.foo does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: number")
+            """
+            actual parameter 1 of F.foo does not match formal parameter
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -3673,9 +4120,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var goog = goog || {}; function f() { goog.foo(true); }"
                 + "/** @param {number} x */ goog.foo = function(x) {};")
         .addDiagnostic(
-            "actual parameter 1 of goog.foo does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: number")
+            """
+            actual parameter 1 of goog.foo does not match formal parameter
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -3761,7 +4210,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testDuplicateStaticMethodDecl7() {
     newTest()
-        .addSource("/** @type {string} */ var foo;\n" + "var z = function foo() {};\n")
+        .addSource(
+            """
+            /** @type {string} */ var foo;
+            var z = function foo() {};
+            """)
         .addDiagnostic(TypeCheck.FUNCTION_MASKS_VARIABLE)
         .run();
   }
@@ -3770,9 +4223,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testDuplicateStaticMethodDecl8() {
     newTest()
         .addSource(
-            "/** @fileoverview @suppress {duplicate} */\n"
-                + "/** @type {string} */ var foo;\n"
-                + "var z = function foo() {};\n")
+            """
+            /** @fileoverview @suppress {duplicate} */
+            /** @type {string} */ var foo;
+            var z = function foo() {};
+            """)
         .run();
   }
 
@@ -3833,7 +4288,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             + "/** @type {string}\n * @suppress {duplicate} */ goog.foo = 'x';"
             + "/** @constructor */ function Foo() {}",
         ImmutableList.of(
-            "assignment to property foo of goog\n" + "found   : string\n" + "required: Foo"));
+            """
+            assignment to property foo of goog
+            found   : string
+            required: Foo\
+            """));
   }
 
   @Test
@@ -3900,7 +4359,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             // NOTE: "testcode" is the file name used by compiler.parseTestCode(code)
             "variable x redefined with type string, original definition"
                 + " at testcode:2 with type number",
-            "initializing variable\n" + "found   : string\n" + "required: number"));
+            """
+            initializing variable
+            found   : string
+            required: number\
+            """));
   }
 
   @Test
@@ -3985,7 +4448,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "};"
                 + "/** jsdoc \n * @suppress {duplicate} */ "
                 + "F.prototype.bar = function() { return ''; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : string\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -4000,9 +4468,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** jsdoc \n * @return {string} * \n @suppress {duplicate} */ "
                 + "F.prototype.bar = function() { return ''; };")
         .addDiagnostic(
-            "assignment to property bar of F.prototype\n"
-                + "found   : function(this:F): string\n"
-                + "required: function(this:F): number")
+            """
+            assignment to property bar of F.prototype
+            found   : function(this:F): string
+            required: function(this:F): number
+            """)
         .run();
   }
 
@@ -4227,9 +4697,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             """
             assignment to property A of a
             found   : (typeof a.A)
-            required: enum{a.A}
-            """
-                .trim()));
+            required: enum{a.A}\
+            """));
   }
 
   @Test
@@ -4252,9 +4721,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("Date in Object")
         .addDiagnostic(
-            "left side of 'in'\n"
-                + "found   : function(new:Date, ?=, ?=, ?=, ?=, ?=, ?=, ?=): string\n"
-                + "required: (string|symbol)")
+            """
+            left side of 'in'
+            found   : function(new:Date, ?=, ?=, ?=, ?=, ?=, ?=, ?=): string
+            required: (string|symbol)
+            """)
         .run();
   }
 
@@ -4262,7 +4733,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIn5() {
     newTest()
         .addSource("'x' in null")
-        .addDiagnostic("'in' requires an object\n" + "found   : null\n" + "required: Object")
+        .addDiagnostic(
+            """
+            'in' requires an object
+            found   : null
+            required: Object
+            """)
         .run();
   }
 
@@ -4271,9 +4747,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @param {number} x */" + "function g(x) {}" + "g(1 in {});")
         .addDiagnostic(
-            "actual parameter 1 of g does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: number")
+            """
+            actual parameter 1 of g does not match formal parameter
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -4344,9 +4822,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource(
             "/** @param {boolean} x */ function f(x) {}" + "for (var k in {}) {" + "  f(k);" + "}")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: boolean")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : string
+            required: boolean
+            """)
         .run();
   }
 
@@ -4362,9 +4842,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "  f(k);"
                 + "}")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : E<string>\n"
-                + "required: boolean")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : E<string>
+            required: boolean
+            """)
         .run();
   }
 
@@ -4378,9 +4860,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "  f(obj[k]);"
                 + "}")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: boolean")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : number
+            required: boolean
+            """)
         .run();
   }
 
@@ -4395,9 +4879,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "  f(obj[k]);"
                 + "}")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : (Array|null)\n"
-                + "required: boolean")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : (Array|null)
+            required: boolean
+            """)
         .run();
   }
 
@@ -4539,9 +5025,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addDiagnostic(
             DiagnosticType.error(
                 "JSC_TYPE_MISMATCH",
-                "actual parameter 1 of f does not match formal parameter\n"
-                    + "found   : (number|string)\n"
-                    + "required: null at [testcode] line 4 : 6"))
+                """
+                actual parameter 1 of f does not match formal parameter
+                found   : (number|string)
+                required: null at [testcode] line 4 : 6
+                """))
         .run();
   }
 
@@ -4555,9 +5043,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addDiagnostic(
             DiagnosticType.error(
                 "JSC_TYPE_MISMATCH",
-                "initializing variable\n"
-                    + "found   : string\n"
-                    + "required: None at [testcode] line 1 : 114"))
+                """
+                initializing variable
+                found   : string
+                required: None at [testcode] line 1 : 114
+                """))
         .run();
   }
 
@@ -4571,9 +5061,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addDiagnostic(
             DiagnosticType.error(
                 "JSC_TYPE_MISMATCH",
-                "initializing variable\n"
-                    + "found   : (string|undefined)\n"
-                    + "required: None at [testcode] line 1 : 114"))
+                """
+                initializing variable
+                found   : (string|undefined)
+                required: None at [testcode] line 1 : 114
+                """))
         .run();
   }
 
@@ -4587,9 +5079,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addDiagnostic(
             DiagnosticType.error(
                 "JSC_TYPE_MISMATCH",
-                "initializing variable\n"
-                    + "found   : (boolean|number|string)\n"
-                    + "required: None at [testcode] line 1 : 114"))
+                """
+                initializing variable
+                found   : (boolean|number|string)
+                required: None at [testcode] line 1 : 114
+                """))
         .run();
   }
 
@@ -4603,9 +5097,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addDiagnostic(
             DiagnosticType.error(
                 "JSC_TYPE_MISMATCH",
-                "initializing variable\n"
-                    + "found   : string\n"
-                    + "required: None at [testcode] line 1 : 114"))
+                """
+                initializing variable
+                found   : string
+                required: None at [testcode] line 1 : 114
+                """))
         .run();
   }
 
@@ -4619,9 +5115,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addDiagnostic(
             DiagnosticType.error(
                 "JSC_TYPE_MISMATCH",
-                "initializing variable\n"
-                    + "found   : (string|undefined)\n"
-                    + "required: None at [testcode] line 1 : 114"))
+                """
+                initializing variable
+                found   : (string|undefined)
+                required: None at [testcode] line 1 : 114
+                """))
         .run();
   }
 
@@ -4635,9 +5133,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addDiagnostic(
             DiagnosticType.error(
                 "JSC_TYPE_MISMATCH",
-                "initializing variable\n"
-                    + "found   : (boolean|number|string)\n"
-                    + "required: None at [testcode] line 1 : 114"))
+                """
+                initializing variable
+                found   : (boolean|number|string)
+                required: None at [testcode] line 1 : 114
+                """))
         .run();
   }
 
@@ -4657,7 +5157,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testComparison1() {
     newTest()
         .addSource("/**@type null */var a;" + "/**@type !Date */var b;" + "if (a==b) {}")
-        .addDiagnostic("condition always evaluates to false\n" + "left : null\n" + "right: Date")
+        .addDiagnostic(
+            """
+            condition always evaluates to false
+            left : null
+            right: Date
+            """)
         .run();
   }
 
@@ -4665,7 +5170,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testComparison2() {
     newTest()
         .addSource("/**@type {number}*/var a;" + "/**@type {!Date} */var b;" + "if (a!==b) {}")
-        .addDiagnostic("condition always evaluates to true\n" + "left : number\n" + "right: Date")
+        .addDiagnostic(
+            """
+            condition always evaluates to true
+            left : number
+            right: Date
+            """)
         .run();
   }
 
@@ -4689,7 +5199,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testComparison5() {
     newTest()
         .addSource("/** @type {null} */var a;" + "/** @type {null} */var b;" + "a == b")
-        .addDiagnostic("condition always evaluates to true\n" + "left : null\n" + "right: null")
+        .addDiagnostic(
+            """
+            condition always evaluates to true
+            left : null
+            right: null
+            """)
         .run();
   }
 
@@ -4697,7 +5212,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testComparison6() {
     newTest()
         .addSource("/** @type {null} */var a;" + "/** @type {null} */var b;" + "a != b")
-        .addDiagnostic("condition always evaluates to false\n" + "left : null\n" + "right: null")
+        .addDiagnostic(
+            """
+            condition always evaluates to false
+            left : null
+            right: null
+            """)
         .run();
   }
 
@@ -4706,7 +5226,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("var a;" + "var b;" + "a == b")
         .addDiagnostic(
-            "condition always evaluates to true\n" + "left : undefined\n" + "right: undefined")
+            """
+            condition always evaluates to true
+            left : undefined
+            right: undefined
+            """)
         .run();
   }
 
@@ -4722,7 +5246,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @type {Array<undefined>} */ var a = [];" + "a[0] == null")
         .addDiagnostic(
-            "condition always evaluates to true\n" + "left : undefined\n" + "right: null")
+            """
+            condition always evaluates to true
+            left : undefined
+            right: null
+            """)
         .run();
   }
 
@@ -4736,9 +5264,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("(function(){}) == 'x'")
         .addDiagnostic(
-            "condition always evaluates to false\n"
-                + "left : function(): undefined\n"
-                + "right: string")
+            """
+            condition always evaluates to false
+            left : function(): undefined
+            right: string
+            """)
         .run();
   }
 
@@ -4747,9 +5277,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("(function(){}) == 3")
         .addDiagnostic(
-            "condition always evaluates to false\n"
-                + "left : function(): undefined\n"
-                + "right: number")
+            """
+            condition always evaluates to false
+            left : function(): undefined
+            right: number
+            """)
         .run();
   }
 
@@ -4758,9 +5290,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("(function(){}) == false")
         .addDiagnostic(
-            "condition always evaluates to false\n"
-                + "left : function(): undefined\n"
-                + "right: boolean")
+            """
+            condition always evaluates to false
+            left : function(): undefined
+            right: boolean
+            """)
         .run();
   }
 
@@ -4770,7 +5304,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource(
             "/** @type {function((Array|string), Object): number} */"
                 + "function f(x, y) { return x === y; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : boolean\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -4801,7 +5340,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testDeleteOperator1() {
     newTest()
         .addSource("var x = {};" + "/** @return {string} */ function f() { return delete x['a']; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : boolean\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : boolean
+            required: string
+            """)
         .run();
   }
 
@@ -4817,9 +5361,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "  if (x) { delete f(x)['a']; }"
                 + "}")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: string")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -4831,9 +5377,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @param {number} x */ Foo.method = function(x) {};"
                 + "Foo.method(true);")
         .addDiagnostic(
-            "actual parameter 1 of Foo.method does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: number")
+            """
+            actual parameter 1 of Foo.method does not match formal parameter
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -4845,9 +5393,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @param {number} x */ Foo.method = function(x) {};"
                 + "function f() { Foo.method(true); }")
         .addDiagnostic(
-            "actual parameter 1 of Foo.method does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: number")
+            """
+            actual parameter 1 of Foo.method does not match formal parameter
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -4869,7 +5419,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("/**@enum*/var a={BB:'string'}")
         .addDiagnostic(
-            "assignment to property BB of enum{a}\n" + "found   : string\n" + "required: number")
+            """
+            assignment to property BB of enum{a}
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -4878,9 +5432,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("/**@enum {?String}*/var a={BB:'string'}")
         .addDiagnostic(
-            "assignment to property BB of enum{a}\n"
-                + "found   : string\n"
-                + "required: (String|null)")
+            """
+            assignment to property BB of enum{a}
+            found   : string
+            required: (String|null)
+            """)
         .run();
   }
 
@@ -4888,7 +5444,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testEnum6() {
     newTest()
         .addSource("/**@enum*/var a={BB:1,CC:2};\n/**@type {!Array}*/var d;d=a.BB;")
-        .addDiagnostic("assignment\n" + "found   : a<number>\n" + "required: Array")
+        .addDiagnostic(
+            """
+            assignment
+            found   : a<number>
+            required: Array\
+            """)
         .run();
   }
 
@@ -4906,7 +5467,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "/** @enum */var a=8;",
         ImmutableList.of(
             "enum initializer must be an object literal or an enum",
-            "initializing variable\n" + "found   : number\n" + "required: enum{a}"));
+            """
+            initializing variable
+            found   : number
+            required: enum{a}\
+            """));
   }
 
   @Test
@@ -4914,7 +5479,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     testClosureTypesMultipleWarnings(
         "/** @enum */ goog.a=8;",
         ImmutableList.of(
-            "assignment to property a of goog\n" + "found   : number\n" + "required: enum{goog.a}",
+            """
+            assignment to property a of goog
+            found   : number
+            required: enum{goog.a}\
+            """,
             "enum initializer must be an object literal or an enum"));
   }
 
@@ -4938,7 +5507,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @enum {number} */ var a = {};" + "/** @enum {string} */ var b = a;")
         .addDiagnostic(
-            "incompatible enum element types\n" + "found   : number\n" + "required: string")
+            """
+            incompatible enum element types
+            found   : number
+            required: string\
+            """)
         .run();
   }
 
@@ -4990,9 +5563,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("var goog = {};" + "/**@enum*/goog.a={BB:'string'}")
         .addDiagnostic(
-            "assignment to property BB of enum{goog.a}\n"
-                + "found   : string\n"
-                + "required: number")
+            """
+            assignment to property BB of enum{goog.a}
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -5013,7 +5588,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/**@enum*/ var E = {A: 1, B: 2};"
                 + "/** @param {number} x\n@return {!E} */\n"
                 + "var f = function(x) { return x; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: E<number>")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: E<number>
+            """)
         .run();
   }
 
@@ -5049,7 +5629,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource(
             "/**@enum*/ var E = {A: 1, B: 2};"
                 + "/** @param {E} x \n* @return {string} */ function f(x) {return x}")
-        .addDiagnostic("inconsistent return type\n" + "found   : E<number>\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : E<number>
+            required: string
+            """)
         .run();
   }
 
@@ -5060,7 +5645,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/**@enum {?Object} */ var E = {A: {}};"
                 + "/** @param {E} x \n* @return {!Object} */ function f(x) {return x}")
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : E<(Object|null)>\n" + "required: Object")
+            """
+            inconsistent return type
+            found   : E<(Object|null)>
+            required: Object
+            """)
         .run();
   }
 
@@ -5104,7 +5693,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource(
             "/** @enum */ var A = {B: 1, C: 2}; "
                 + "/** @return {number} */ function f() { return A; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : enum{A}\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : enum{A}
+            required: number
+            """)
         .run();
   }
 
@@ -5122,7 +5716,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource(
             "/** @enum */ var A = {B: 1, C: 2}; " + "/** @return {A} */ function f() { return A; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : enum{A}\n" + "required: A<number>")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : enum{A}
+            required: A<number>
+            """)
         .run();
   }
 
@@ -5160,7 +5759,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var a = a || {}; /** @enum */ a.b = {C: 1, D: 2};"
                 + "/** @return {!a.b} */ function f() { return 1; }")
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : number\n" + "required: a.b<number>")
+            """
+            inconsistent return type
+            found   : number
+            required: a.b<number>
+            """)
         .run();
   }
 
@@ -5190,7 +5793,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @enum {Number} */ var MyEnum = {FOO: new Number(1)};"
                 + "/** @param {MyEnum} x \n * @return {number} */"
                 + "function f(x) { return x == MyEnum.FOO && MyEnum.FOO == x; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : boolean\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -5201,7 +5809,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @enum {Number} */ var MyEnum = {FOO: new Number(1)};"
                 + "/** @param {number} x \n * @return {number} */"
                 + "function f(x) { return x == MyEnum.FOO && MyEnum.FOO == x; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : boolean\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -5213,7 +5826,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @return {string} */"
                 + "function f() { return MyEnum.FOO; }")
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : MyEnum<number>\n" + "required: string")
+            """
+            inconsistent return type
+            found   : MyEnum<number>
+            required: string
+            """)
         .run();
   }
 
@@ -5332,9 +5949,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @enum */ var MyEnum = YourEnum;"
                 + "/** @param {string} x */ function f(x) {} f(MyEnum.FOO);")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : YourEnum<number>\n"
-                + "required: string")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : YourEnum<number>
+            required: string
+            """)
         .run();
   }
 
@@ -5450,7 +6069,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @return {number} */ function f() { return MyEnum.FOO; }"
                 + "/** @enum {string} */ var MyEnum = {FOO: 'x'};")
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : MyEnum<string>\n" + "required: number")
+            """
+            inconsistent return type
+            found   : MyEnum<string>
+            required: number
+            """)
         .run();
   }
 
@@ -5472,7 +6095,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @enum {string} */ var YourEnum = {FOO: 'x'};"
                 + "/** @enum {string} */ var MyEnum = YourEnum;")
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : YourEnum<string>\n" + "required: number")
+            """
+            inconsistent return type
+            found   : YourEnum<string>
+            required: number
+            """)
         .run();
   }
 
@@ -5502,7 +6129,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource(
             "/** @return {MyTypedef} */ function f() { return null; }"
                 + "/** @typedef {string} */ var MyTypedef;")
-        .addDiagnostic("inconsistent return type\n" + "found   : null\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : null
+            required: string
+            """)
         .run();
   }
 
@@ -5513,7 +6145,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @return {goog.MyTypedef} */ function f() { return null; }"
                 + "var goog = {};"
                 + "/** @typedef {string} */ goog.MyTypedef;")
-        .addDiagnostic("inconsistent return type\n" + "found   : null\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : null
+            required: string
+            """)
         .run();
   }
 
@@ -5569,9 +6206,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @typedef {number} */ goog.MyTypedef;"
                 + "g(1);")
         .addDiagnostic(
-            "actual parameter 1 of g does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: goog.MyEnum<number>")
+            """
+            actual parameter 1 of g does not match formal parameter
+            found   : number
+            required: goog.MyEnum<number>
+            """)
         .run();
   }
 
@@ -5583,9 +6222,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** \n * @constructor \n * @param {number} x */"
                 + "var Foo = function(x) {};")
         .addDiagnostic(
-            "actual parameter 1 of Foo does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: number")
+            """
+            actual parameter 1 of Foo does not match formal parameter
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -5599,9 +6240,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** \n * @constructor \n * @param {number} x */"
                 + "var Foo = YourFoo;")
         .addDiagnostic(
-            "actual parameter 1 of Foo does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: number")
+            """
+            actual parameter 1 of Foo does not match formal parameter
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -5615,8 +6258,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // A minimal @extends example
     newTest()
         .addSource(
-            "/** @constructor */function base() {}\n"
-                + "/** @constructor\n * @extends {base} */function derived() {}\n")
+            """
+            /** @constructor */function base() {}
+            /** @constructor
+             * @extends {base} */function derived() {}
+            """)
         .run();
   }
 
@@ -5624,8 +6270,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testGoodExtends2() {
     newTest()
         .addSource(
-            "/** @constructor\n * @extends base */function derived() {}\n"
-                + "/** @constructor */function base() {}\n")
+            """
+            /** @constructor
+             * @extends base */function derived() {}
+            /** @constructor */function base() {}
+            """)
         .run();
   }
 
@@ -5633,8 +6282,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testGoodExtends3() {
     newTest()
         .addSource(
-            "/** @constructor\n * @extends {Object} */function base() {}\n"
-                + "/** @constructor\n * @extends {base} */function derived() {}\n")
+            """
+            /** @constructor
+             * @extends {Object} */function base() {}
+            /** @constructor
+             * @extends {base} */function derived() {}
+            """)
         .run();
   }
 
@@ -5645,10 +6298,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // definition, we need to crawl the prototype chain (eww).
     Node n =
         parseAndTypeCheck(
-            "var goog = {};\n"
-                + "/** @constructor */goog.Base = function(){};\n"
-                + "/** @constructor\n"
-                + "  * @extends {goog.Base} */goog.Derived = function(){};\n");
+            """
+            var goog = {};
+            /** @constructor */goog.Base = function(){};
+            /** @constructor
+              * @extends {goog.Base} */goog.Derived = function(){};
+            """);
     Node subTypeName = n.getLastChild().getLastChild().getFirstChild();
     assertThat(subTypeName.getQualifiedName()).isEqualTo("goog.Derived");
 
@@ -5664,8 +6319,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // we allow for the extends annotation to be placed first
     newTest()
         .addSource(
-            "/** @constructor */function base() {}\n"
-                + "/** @extends {base}\n * @constructor */function derived() {}\n")
+            """
+            /** @constructor */function base() {}
+            /** @extends {base}
+             * @constructor */function derived() {}
+            """)
         .run();
   }
 
@@ -5690,7 +6348,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @return {number} */ function f() { return (new Sub()).foo; }"
                 + "/** @constructor */ function Base() {}"
                 + "/** @type {boolean} */ Base.prototype.foo = true;")
-        .addDiagnostic("inconsistent return type\n" + "found   : boolean\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -5757,9 +6420,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "/** @constructor */ function A() {}"
                 + "/** @param {number} x */ function f(x) {} f(new E());")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : E\n"
-                + "required: number")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : E
+            required: number
+            """)
         .run();
   }
 
@@ -6028,8 +6693,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testBadExtends1() {
     newTest()
         .addSource(
-            "/** @constructor */function base() {}\n"
-                + "/** @constructor\n * @extends {not_base} */function derived() {}\n")
+            """
+            /** @constructor */function base() {}
+            /** @constructor
+             * @extends {not_base} */function derived() {}
+            """)
         .addDiagnostic("Bad type annotation. Unknown type not_base")
         .run();
   }
@@ -6038,20 +6706,24 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testBadExtends2() {
     newTest()
         .addSource(
-            "/** @constructor */function base() {\n"
-                + "/** @type {!Number}*/\n"
-                + "this.baseMember = new Number(4);\n"
-                + "}\n"
-                + "/** @constructor\n"
-                + "  * @extends {base} */function derived() {}\n"
-                + "/** @param {!String} x*/\n"
-                + "function foo(x){ }\n"
-                + "/** @type {!derived}*/var y;\n"
-                + "foo(y.baseMember);\n")
+            """
+            /** @constructor */function base() {
+            /** @type {!Number}*/
+            this.baseMember = new Number(4);
+            }
+            /** @constructor
+              * @extends {base} */function derived() {}
+            /** @param {!String} x*/
+            function foo(x){ }
+            /** @type {!derived}*/var y;
+            foo(y.baseMember);
+            """)
         .addDiagnostic(
-            "actual parameter 1 of foo does not match formal parameter\n"
-                + "found   : Number\n"
-                + "required: String")
+            """
+            actual parameter 1 of foo does not match formal parameter
+            found   : Number
+            required: String
+            """)
         .run();
   }
 
@@ -6260,7 +6932,12 @@ override: function(this:MyOtherInterface): string
                 + "/** @constructor \n * @extends {Base} */ function A() {}"
                 + "A.prototype = new Base();"
                 + "/** @return {string} */ function foo() { return (new A).foo; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -6309,12 +6986,14 @@ override: function(this:MyOtherInterface): string
   public void testGoodImplements2() {
     newTest()
         .addSource(
-            "/** @interface */function Base1() {}\n"
-                + "/** @interface */function Base2() {}\n"
-                + "/** @constructor\n"
-                + " * @implements {Base1}\n"
-                + " * @implements {Base2}\n"
-                + " */ function derived() {}")
+            """
+            /** @interface */function Base1() {}
+            /** @interface */function Base2() {}
+            /** @constructor
+             * @implements {Base1}
+             * @implements {Base2}
+             */ function derived() {}
+            """)
         .run();
   }
 
@@ -6418,12 +7097,14 @@ override: function(this:MyOtherInterface): string
   public void testBadImplements1() {
     newTest()
         .addSource(
-            "/** @interface */function Base1() {}\n"
-                + "/** @interface */function Base2() {}\n"
-                + "/** @constructor\n"
-                + " * @implements {nonExistent}\n"
-                + " * @implements {Base2}\n"
-                + " */ function derived() {}")
+            """
+            /** @interface */function Base1() {}
+            /** @interface */function Base2() {}
+            /** @constructor
+             * @implements {nonExistent}
+             * @implements {Base2}
+             */ function derived() {}
+            """)
         .addDiagnostic("Bad type annotation. Unknown type nonExistent")
         .run();
   }
@@ -6473,9 +7154,11 @@ override: function(this:MyOtherInterface): string
             "/** @interface */function Disposable() {}\n"
                 + "/** @type {number} */ Disposable.prototype.bar = function() {};")
         .addDiagnostic(
-            "assignment to property bar of Disposable.prototype\n"
-                + "found   : function(): undefined\n"
-                + "required: number")
+            """
+            assignment to property bar of Disposable.prototype
+            found   : function(): undefined
+            required: number
+            """)
         .run();
   }
 
@@ -6485,9 +7168,11 @@ override: function(this:MyOtherInterface): string
         "/** @interface */function Disposable() {}\n"
             + "/** @type {function()} */ Disposable.prototype.bar = 3;",
         ImmutableList.of(
-            "assignment to property bar of Disposable.prototype\n"
-                + "found   : number\n"
-                + "required: function(): ?",
+            """
+            assignment to property bar of Disposable.prototype
+            found   : number
+            required: function(): ?\
+            """,
             "interface members can only be empty property declarations, "
                 + "empty functions, or goog.abstractMethod"));
   }
@@ -6548,15 +7233,19 @@ override: function(this:MyOtherInterface): string
         .includeDefaultExterns()
         .addExterns("/** @type {Object} */ Object.prototype.__proto__;")
         .addSource(
-            "/** @interface */\n"
-                + "var MyInterface = function() {};\n"
-                + "/** @constructor\n @implements {MyInterface} */\n"
-                + "var MySuper = function() {};\n"
-                + "/** @constructor\n @extends {MySuper} */\n"
-                + "var MyClass = function() {};\n"
-                + "MyClass.prototype = {\n"
-                + "  __proto__: MySuper.prototype\n"
-                + "}")
+            """
+            /** @interface */
+            var MyInterface = function() {};
+            /** @constructor
+             @implements {MyInterface} */
+            var MySuper = function() {};
+            /** @constructor
+             @extends {MySuper} */
+            var MyClass = function() {};
+            MyClass.prototype = {
+              __proto__: MySuper.prototype
+            }
+            """)
         .run();
   }
 
@@ -7491,11 +8180,14 @@ override: function(this:MyOtherInterface): string
   public void testInterfaceExtends() {
     newTest()
         .addSource(
-            "/** @interface */function A() {}\n"
-                + "/** @interface \n * @extends {A} */function B() {}\n"
-                + "/** @constructor\n"
-                + " * @implements {B}\n"
-                + " */ function derived() {}")
+            """
+            /** @interface */function A() {}
+            /** @interface\s
+             * @extends {A} */function B() {}
+            /** @constructor
+             * @implements {B}
+             */ function derived() {}
+            """)
         .run();
   }
 
@@ -7532,10 +8224,12 @@ override: function(this:MyOtherInterface): string
   public void testBadInterfaceExtendsNonExistentInterfaces() {
     newTest()
         .addSource(
-            "/** @interface \n"
-                + " * @extends {nonExistent1} \n"
-                + " * @extends {nonExistent2} \n"
-                + " */function A() {}")
+            """
+            /** @interface\s
+             * @extends {nonExistent1}\s
+             * @extends {nonExistent2}\s
+             */function A() {}
+            """)
         .addDiagnostic("Bad type annotation. Unknown type nonExistent1")
         .addDiagnostic("Bad type annotation. Unknown type nonExistent2")
         .run();
@@ -7638,15 +8332,17 @@ override: function(this:MyOtherInterface): string
     // @implemented more than once.
     newTest()
         .addSource(
-            "/** @interface \n"
-                + " * @template T\n"
-                + " */\n"
-                + "function Foo() {}\n"
-                + "/** @constructor \n"
-                + " * @implements {Foo<?>}\n"
-                + " * @implements {Foo}\n"
-                + " */\n"
-                + "function A() {}\n")
+            """
+            /** @interface\s
+             * @template T
+             */
+            function Foo() {}
+            /** @constructor\s
+             * @implements {Foo<?>}
+             * @implements {Foo}
+             */
+            function A() {}
+            """)
         .addDiagnostic(
             "Cannot @implement the same interface more than once\n" + "Repeated interface: Foo")
         .run();
@@ -7658,15 +8354,17 @@ override: function(this:MyOtherInterface): string
     // @implemented more than once.
     newTest()
         .addSource(
-            "/** @interface \n"
-                + " * @template T\n"
-                + " */\n"
-                + "function Foo() {}\n"
-                + "/** @constructor \n"
-                + " * @implements {Foo<string>}\n"
-                + " * @implements {Foo<number>}\n"
-                + " */\n"
-                + "function A() {}\n")
+            """
+            /** @interface\s
+             * @template T
+             */
+            function Foo() {}
+            /** @constructor\s
+             * @implements {Foo<string>}
+             * @implements {Foo<number>}
+             */
+            function A() {}
+            """)
         .addDiagnostic(
             "Cannot @implement the same interface more than once\n" + "Repeated interface: Foo")
         .run();
@@ -7676,10 +8374,13 @@ override: function(this:MyOtherInterface): string
   public void testInterfaceAssignment1() {
     newTest()
         .addSource(
-            "/** @interface */var I = function() {};\n"
-                + "/** @constructor\n@implements {I} */var T = function() {};\n"
-                + "var t = new T();\n"
-                + "/** @type {!I} */var i = t;")
+            """
+            /** @interface */var I = function() {};
+            /** @constructor
+            @implements {I} */var T = function() {};
+            var t = new T();
+            /** @type {!I} */var i = t;
+            """)
         .run();
   }
 
@@ -7687,11 +8388,18 @@ override: function(this:MyOtherInterface): string
   public void testInterfaceAssignment2() {
     newTest()
         .addSource(
-            "/** @interface */var I = function() {};\n"
-                + "/** @constructor */var T = function() {};\n"
-                + "var t = new T();\n"
-                + "/** @type {!I} */var i = t;")
-        .addDiagnostic("initializing variable\n" + "found   : T\n" + "required: I")
+            """
+            /** @interface */var I = function() {};
+            /** @constructor */var T = function() {};
+            var t = new T();
+            /** @type {!I} */var i = t;
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : T
+            required: I
+            """)
         .run();
   }
 
@@ -7699,10 +8407,13 @@ override: function(this:MyOtherInterface): string
   public void testInterfaceAssignment3() {
     newTest()
         .addSource(
-            "/** @interface */var I = function() {};\n"
-                + "/** @constructor\n@implements {I} */var T = function() {};\n"
-                + "var t = new T();\n"
-                + "/** @type {I|number} */var i = t;")
+            """
+            /** @interface */var I = function() {};
+            /** @constructor
+            @implements {I} */var T = function() {};
+            var t = new T();
+            /** @type {I|number} */var i = t;
+            """)
         .run();
   }
 
@@ -7710,11 +8421,14 @@ override: function(this:MyOtherInterface): string
   public void testInterfaceAssignment4() {
     newTest()
         .addSource(
-            "/** @interface */var I1 = function() {};\n"
-                + "/** @interface */var I2 = function() {};\n"
-                + "/** @constructor\n@implements {I1} */var T = function() {};\n"
-                + "var t = new T();\n"
-                + "/** @type {I1|I2} */var i = t;")
+            """
+            /** @interface */var I1 = function() {};
+            /** @interface */var I2 = function() {};
+            /** @constructor
+            @implements {I1} */var T = function() {};
+            var t = new T();
+            /** @type {I1|I2} */var i = t;
+            """)
         .run();
   }
 
@@ -7736,12 +8450,20 @@ override: function(this:MyOtherInterface): string
   public void testInterfaceAssignment6() {
     newTest()
         .addSource(
-            "/** @interface */var I1 = function() {};\n"
-                + "/** @interface */var I2 = function() {};\n"
-                + "/** @constructor\n@implements {I1} */var T = function() {};\n"
-                + "/** @type {!I1} */var i1 = new T();\n"
-                + "/** @type {!I2} */var i2 = i1;\n")
-        .addDiagnostic("initializing variable\n" + "found   : I1\n" + "required: I2")
+            """
+            /** @interface */var I1 = function() {};
+            /** @interface */var I2 = function() {};
+            /** @constructor
+            @implements {I1} */var T = function() {};
+            /** @type {!I1} */var i1 = new T();
+            /** @type {!I2} */var i2 = i1;
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : I1
+            required: I2
+            """)
         .run();
   }
 
@@ -7749,13 +8471,17 @@ override: function(this:MyOtherInterface): string
   public void testInterfaceAssignment7() {
     newTest()
         .addSource(
-            "/** @interface */var I1 = function() {};\n"
-                + "/** @interface\n@extends {I1}*/var I2 = function() {};\n"
-                + "/** @constructor\n@implements {I2}*/var T = function() {};\n"
-                + "var t = new T();\n"
-                + "/** @type {I1} */var i1 = t;\n"
-                + "/** @type {I2} */var i2 = t;\n"
-                + "i1 = i2;\n")
+            """
+            /** @interface */var I1 = function() {};
+            /** @interface
+            @extends {I1}*/var I2 = function() {};
+            /** @constructor
+            @implements {I2}*/var T = function() {};
+            var t = new T();
+            /** @type {I1} */var i1 = t;
+            /** @type {I2} */var i2 = t;
+            i1 = i2;
+            """)
         .run();
   }
 
@@ -7765,10 +8491,12 @@ override: function(this:MyOtherInterface): string
 
     newTest()
         .addSource(
-            "/** @interface */var I = function() {};\n"
-                + "/** @type {I} */var i;\n"
-                + "/** @type {Object} */var o = i;\n"
-                + "new Object().prototype = i.prototype;")
+            """
+            /** @interface */var I = function() {};
+            /** @type {I} */var i;
+            /** @type {Object} */var o = i;
+            new Object().prototype = i.prototype;
+            """)
         .run();
   }
 
@@ -7776,10 +8504,17 @@ override: function(this:MyOtherInterface): string
   public void testInterfaceAssignment9() {
     newTest()
         .addSource(
-            "/** @interface */var I = function() {};\n"
-                + "/** @return {I?} */function f() { return null; }\n"
-                + "/** @type {!I} */var i = f();\n")
-        .addDiagnostic("initializing variable\n" + "found   : (I|null)\n" + "required: I")
+            """
+            /** @interface */var I = function() {};
+            /** @return {I?} */function f() { return null; }
+            /** @type {!I} */var i = f();
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : (I|null)
+            required: I
+            """)
         .run();
   }
 
@@ -7787,12 +8522,20 @@ override: function(this:MyOtherInterface): string
   public void testInterfaceAssignment10() {
     newTest()
         .addSource(
-            "/** @interface */var I1 = function() {};\n"
-                + "/** @interface */var I2 = function() {};\n"
-                + "/** @constructor\n@implements {I2} */var T = function() {};\n"
-                + "/** @return {!I1|!I2} */function f() { return new T(); }\n"
-                + "/** @type {!I1} */var i1 = f();\n")
-        .addDiagnostic("initializing variable\n" + "found   : (I1|I2)\n" + "required: I1")
+            """
+            /** @interface */var I1 = function() {};
+            /** @interface */var I2 = function() {};
+            /** @constructor
+            @implements {I2} */var T = function() {};
+            /** @return {!I1|!I2} */function f() { return new T(); }
+            /** @type {!I1} */var i1 = f();
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : (I1|I2)
+            required: I1
+            """)
         .run();
   }
 
@@ -7800,12 +8543,19 @@ override: function(this:MyOtherInterface): string
   public void testInterfaceAssignment11() {
     newTest()
         .addSource(
-            "/** @interface */var I1 = function() {};\n"
-                + "/** @interface */var I2 = function() {};\n"
-                + "/** @constructor */var T = function() {};\n"
-                + "/** @return {!I1|!I2|!T} */function f() { return new T(); }\n"
-                + "/** @type {!I1} */var i1 = f();\n")
-        .addDiagnostic("initializing variable\n" + "found   : (I1|I2|T)\n" + "required: I1")
+            """
+            /** @interface */var I1 = function() {};
+            /** @interface */var I2 = function() {};
+            /** @constructor */var T = function() {};
+            /** @return {!I1|!I2|!T} */function f() { return new T(); }
+            /** @type {!I1} */var i1 = f();
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : (I1|I2|T)
+            required: I1
+            """)
         .run();
   }
 
@@ -7813,10 +8563,14 @@ override: function(this:MyOtherInterface): string
   public void testInterfaceAssignment12() {
     newTest()
         .addSource(
-            "/** @interface */var I = function() {};\n"
-                + "/** @constructor\n@implements{I}*/var T1 = function() {};\n"
-                + "/** @constructor\n@extends {T1}*/var T2 = function() {};\n"
-                + "/** @return {I} */function f() { return new T2(); }")
+            """
+            /** @interface */var I = function() {};
+            /** @constructor
+            @implements{I}*/var T1 = function() {};
+            /** @constructor
+            @extends {T1}*/var T2 = function() {};
+            /** @return {I} */function f() { return new T2(); }
+            """)
         .run();
   }
 
@@ -7840,7 +8594,11 @@ override: function(this:MyOtherInterface): string
     newTest()
         .addSource("/** @return {void}*/function foo(){foo().bar;}")
         .addDiagnostic(
-            "No properties on this expression\n" + "found   : undefined\n" + "required: Object")
+            """
+            No properties on this expression
+            found   : undefined
+            required: Object
+            """)
         .run();
   }
 
@@ -7849,7 +8607,11 @@ override: function(this:MyOtherInterface): string
     newTest()
         .addSource("var x = null; x.alert();")
         .addDiagnostic(
-            "No properties on this expression\n" + "found   : null\n" + "required: Object")
+            """
+            No properties on this expression
+            found   : null
+            required: Object
+            """)
         .run();
   }
 
@@ -7871,7 +8633,11 @@ override: function(this:MyOtherInterface): string
     newTest()
         .addSource("var x = null; x.prop = 3;")
         .addDiagnostic(
-            "No properties on this expression\n" + "found   : null\n" + "required: Object")
+            """
+            No properties on this expression
+            found   : null
+            required: Object
+            """)
         .run();
   }
 
@@ -7932,11 +8698,13 @@ override: function(this:MyOtherInterface): string
     // Create property on struct in the constructor
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "function Foo() { this.x = 123; }")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            function Foo() { this.x = 123; }
+            """)
         .run();
   }
 
@@ -7945,12 +8713,14 @@ override: function(this:MyOtherInterface): string
     // Create property on struct outside the constructor
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "function Foo() {}\n"
-                + "(new Foo()).x = 123;")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            function Foo() {}
+            (new Foo()).x = 123;
+            """)
         .addDiagnostic(ILLEGAL_PROPERTY_CREATION_MESSAGE)
         .run();
   }
@@ -7960,12 +8730,14 @@ override: function(this:MyOtherInterface): string
     // Create property on struct outside the constructor
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "function Foo() {}\n"
-                + "(function() { (new Foo()).x = 123; })();")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            function Foo() {}
+            (function() { (new Foo()).x = 123; })();
+            """)
         .addDiagnostic(ILLEGAL_PROPERTY_CREATION_MESSAGE)
         .run();
   }
@@ -7975,12 +8747,14 @@ override: function(this:MyOtherInterface): string
     // Assign to existing property of struct outside the constructor
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "function Foo() { this.x = 123; }\n"
-                + "(new Foo()).x = \"asdf\";")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            function Foo() { this.x = 123; }
+            (new Foo()).x = "asdf";
+            """)
         .run();
   }
 
@@ -7989,12 +8763,14 @@ override: function(this:MyOtherInterface): string
     // Create a property on union that includes a struct
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "function Foo() {}\n"
-                + "(true ? new Foo() : {}).x = 123;")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            function Foo() {}
+            (true ? new Foo() : {}).x = 123;
+            """)
         .addDiagnostic(ILLEGAL_PROPERTY_CREATION_ON_UNION_TYPE)
         .run();
   }
@@ -8004,16 +8780,18 @@ override: function(this:MyOtherInterface): string
     // Create property on struct in another constructor
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "function Foo() {}\n"
-                + "/**\n"
-                + " * @constructor\n"
-                + " * @param{Foo} f\n"
-                + " */\n"
-                + "function Bar(f) { f.x = 123; }")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            function Foo() {}
+            /**
+             * @constructor
+             * @param{Foo} f
+             */
+            function Bar(f) { f.x = 123; }
+            """)
         .addDiagnostic(ILLEGAL_PROPERTY_CREATION_MESSAGE)
         .run();
   }
@@ -8023,14 +8801,16 @@ override: function(this:MyOtherInterface): string
     // Bug b/c we require THIS when creating properties on structs for simplicity
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "function Foo() {\n"
-                + "  var t = this;\n"
-                + "  t.x = 123;\n"
-                + "}")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            function Foo() {
+              var t = this;
+              t.x = 123;
+            }
+            """)
         .addDiagnostic(ILLEGAL_PROPERTY_CREATION_MESSAGE)
         .run();
   }
@@ -8040,12 +8820,14 @@ override: function(this:MyOtherInterface): string
     // Create property on struct using DEC
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "function Foo() {}\n"
-                + "(new Foo()).x--;")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            function Foo() {}
+            (new Foo()).x--;
+            """)
         .addDiagnostic(ILLEGAL_PROPERTY_CREATION_MESSAGE)
         .addDiagnostic("Property x never defined on Foo")
         .run();
@@ -8056,12 +8838,14 @@ override: function(this:MyOtherInterface): string
     // Create property on struct using ASSIGN_ADD
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "function Foo() {}\n"
-                + "(new Foo()).x += 123;")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            function Foo() {}
+            (new Foo()).x += 123;
+            """)
         .addDiagnostic(ILLEGAL_PROPERTY_CREATION_MESSAGE)
         .addDiagnostic("Property x never defined on Foo")
         .run();
@@ -8072,17 +8856,19 @@ override: function(this:MyOtherInterface): string
     // Create property on object literal that is a struct
     newTest()
         .addSource(
-            "/** \n"
-                + " * @constructor \n"
-                + " * @struct \n"
-                + " */ \n"
-                + "function Square(side) { \n"
-                + "  this.side = side; \n"
-                + "} \n"
-                + "Square.prototype = /** @struct */ {\n"
-                + "  area: function() { return this.side * this.side; }\n"
-                + "};\n"
-                + "Square.prototype.id = function(x) { return x; };")
+            """
+            /**\s
+             * @constructor\s
+             * @struct\s
+             */\s
+            function Square(side) {\s
+              this.side = side;\s
+            }\s
+            Square.prototype = /** @struct */ {
+              area: function() { return this.side * this.side; }
+            };
+            Square.prototype.id = function(x) { return x; };
+            """)
         .run();
   }
 
@@ -8090,15 +8876,17 @@ override: function(this:MyOtherInterface): string
   public void testSetprop11() {
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "function Foo() {}\n"
-                + "/** @constructor */\n"
-                + "function Bar() {}\n"
-                + "Bar.prototype = new Foo();\n"
-                + "Bar.prototype.someprop = 123;")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            function Foo() {}
+            /** @constructor */
+            function Bar() {}
+            Bar.prototype = new Foo();
+            Bar.prototype.someprop = 123;
+            """)
         .run();
   }
 
@@ -8107,12 +8895,14 @@ override: function(this:MyOtherInterface): string
     // Create property on a constructor of structs (which isn't itself a struct)
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "function Foo() {}\n"
-                + "Foo.someprop = 123;")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            function Foo() {}
+            Foo.someprop = 123;
+            """)
         .run();
   }
 
@@ -8121,18 +8911,20 @@ override: function(this:MyOtherInterface): string
     // Create static property on struct
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "function Parent() {}\n"
-                + "/**\n"
-                + " * @constructor\n"
-                + " * @extends {Parent}\n"
-                + " */\n"
-                + "function Kid() {}\n"
-                + "Kid.prototype.foo = 123;\n"
-                + "var x = (new Kid()).foo;")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            function Parent() {}
+            /**
+             * @constructor
+             * @extends {Parent}
+             */
+            function Kid() {}
+            Kid.prototype.foo = 123;
+            var x = (new Kid()).foo;
+            """)
         .run();
   }
 
@@ -8141,26 +8933,28 @@ override: function(this:MyOtherInterface): string
     // Create static property on struct
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "function Top() {}\n"
-                + "/**\n"
-                + " * @constructor\n"
-                + " * @extends {Top}\n"
-                + " */\n"
-                + "function Mid() {}\n"
-                + "/** blah blah */\n"
-                + "Mid.prototype.foo = function() { return 1; };\n"
-                + "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " * @extends {Mid}\n"
-                + " */\n"
-                + "function Bottom() {}\n"
-                + "/** @override */\n"
-                + "Bottom.prototype.foo = function() { return 3; };")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            function Top() {}
+            /**
+             * @constructor
+             * @extends {Top}
+             */
+            function Mid() {}
+            /** blah blah */
+            Mid.prototype.foo = function() { return 1; };
+            /**
+             * @constructor
+             * @struct
+             * @extends {Mid}
+             */
+            function Bottom() {}
+            /** @override */
+            Bottom.prototype.foo = function() { return 3; };
+            """)
         .run();
   }
 
@@ -8169,24 +8963,26 @@ override: function(this:MyOtherInterface): string
     // Create static property on struct
     newTest()
         .addSource(
-            "/** @interface */\n"
-                + "function Peelable() {};\n"
-                + "/** @return {undefined} */\n"
-                + "Peelable.prototype.peel;\n"
-                + "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "function Fruit() {};\n"
-                + "/**\n"
-                + " * @constructor\n"
-                + " * @extends {Fruit}\n"
-                + " * @implements {Peelable}\n"
-                + " */\n"
-                + "function Banana() { };\n"
-                + "function f() {};\n"
-                + "/** @override */\n"
-                + "Banana.prototype.peel = f;")
+            """
+            /** @interface */
+            function Peelable() {};
+            /** @return {undefined} */
+            Peelable.prototype.peel;
+            /**
+             * @constructor
+             * @struct
+             */
+            function Fruit() {};
+            /**
+             * @constructor
+             * @extends {Fruit}
+             * @implements {Peelable}
+             */
+            function Banana() { };
+            function f() {};
+            /** @override */
+            Banana.prototype.peel = f;
+            """)
         .run();
   }
 
@@ -8279,14 +9075,16 @@ override: function(this:MyOtherInterface): string
   public void testGetpropDict6() {
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @dict\n"
-                + " */\n"
-                + "function Foo() {}\n"
-                + "function Bar() {}\n"
-                + "Bar.prototype = new Foo();\n"
-                + "Bar.prototype.someprop = 123;\n")
+            """
+            /**
+             * @constructor
+             * @dict
+             */
+            function Foo() {}
+            function Bar() {}
+            Bar.prototype = new Foo();
+            Bar.prototype.someprop = 123;
+            """)
         .run();
   }
 
@@ -8477,15 +9275,17 @@ override: function(this:MyOtherInterface): string
   public void testGetelemStruct7() {
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "function Foo() {}\n"
-                + "/** @constructor */\n"
-                + "function Bar() {}\n"
-                + "Bar.prototype = new Foo();\n"
-                + "Bar.prototype['someprop'] = 123;\n")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            function Foo() {}
+            /** @constructor */
+            function Bar() {}
+            Bar.prototype = new Foo();
+            Bar.prototype['someprop'] = 123;
+            """)
         .run();
   }
 
@@ -8493,12 +9293,14 @@ override: function(this:MyOtherInterface): string
   public void testGetelemStruct_noErrorForSettingWellKnownSymbol() {
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "function Foo() {}\n"
-                + "Foo.prototype[Symbol.iterator] = 123;\n")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            function Foo() {}
+            Foo.prototype[Symbol.iterator] = 123;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -8507,13 +9309,15 @@ override: function(this:MyOtherInterface): string
   public void testGetelemStruct_noErrorForGettingWellKnownSymbol() {
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "function Foo() {}\n"
-                + "/** @param {!Foo} foo */\n"
-                + "function getIterator(foo) { return foo[Symbol.iterator](); }\n")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            function Foo() {}
+            /** @param {!Foo} foo */
+            function getIterator(foo) { return foo[Symbol.iterator](); }
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -8561,7 +9365,12 @@ override: function(this:MyOtherInterface): string
               var /** null */ y = f(x);
             }
             """)
-        .addDiagnostic("initializing variable\n" + "found   : string\n" + "required: null")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : string
+            required: null
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -8581,7 +9390,12 @@ override: function(this:MyOtherInterface): string
               var /** null */ y = f(x);
             }
             """)
-        .addDiagnostic("initializing variable\n" + "found   : string\n" + "required: null")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : string
+            required: null
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -8602,7 +9416,12 @@ override: function(this:MyOtherInterface): string
               var /** null */ y = f(x);
             }
             """)
-        .addDiagnostic("initializing variable\n" + "found   : string\n" + "required: null")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : string
+            required: null
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -8622,7 +9441,12 @@ override: function(this:MyOtherInterface): string
               var /** null */ y = f(x);
             }
             """)
-        .addDiagnostic("initializing variable\n" + "found   : string\n" + "required: null")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : string
+            required: null
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -8656,7 +9480,12 @@ override: function(this:MyOtherInterface): string
   public void testArrayAccess1() {
     newTest()
         .addSource("var a = []; var b = a['hi'];")
-        .addDiagnostic("restricted index type\n" + "found   : string\n" + "required: number")
+        .addDiagnostic(
+            """
+            restricted index type
+            found   : string
+            required: number
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -8680,7 +9509,12 @@ override: function(this:MyOtherInterface): string
     newTest()
         .addSource(
             "var bar = [];" + "/** @return {void} */function baz(){};" + "var foo = bar[baz()];")
-        .addDiagnostic("restricted index type\n" + "found   : undefined\n" + "required: number")
+        .addDiagnostic(
+            """
+            restricted index type
+            found   : undefined
+            required: number
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -8689,7 +9523,12 @@ override: function(this:MyOtherInterface): string
   public void testArrayAccess4() {
     newTest()
         .addSource("/**@return {!Array}*/function foo(){};var bar = foo()[foo()];")
-        .addDiagnostic("restricted index type\n" + "found   : Array\n" + "required: number")
+        .addDiagnostic(
+            """
+            restricted index type
+            found   : Array
+            required: number
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -8699,7 +9538,11 @@ override: function(this:MyOtherInterface): string
     newTest()
         .addSource("var bar = null[1];")
         .addDiagnostic(
-            "only arrays or objects can be accessed\n" + "found   : null\n" + "required: Object")
+            """
+            only arrays or objects can be accessed
+            found   : null
+            required: Object
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -8709,9 +9552,11 @@ override: function(this:MyOtherInterface): string
     newTest()
         .addSource("var bar = void 0; bar[0];")
         .addDiagnostic(
-            "only arrays or objects can be accessed\n"
-                + "found   : undefined\n"
-                + "required: Object")
+            """
+            only arrays or objects can be accessed
+            found   : undefined
+            required: Object
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -8723,9 +9568,11 @@ override: function(this:MyOtherInterface): string
     newTest()
         .addSource("var bar = void 0; bar[0]; bar[1];")
         .addDiagnostic(
-            "only arrays or objects can be accessed\n"
-                + "found   : undefined\n"
-                + "required: Object")
+            """
+            only arrays or objects can be accessed
+            found   : undefined
+            required: Object
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -8734,7 +9581,12 @@ override: function(this:MyOtherInterface): string
   public void testArrayAccess9() {
     newTest()
         .addSource("/** @return {?Array} */ function f() { return []; }" + "f()[{}]")
-        .addDiagnostic("restricted index type\n" + "found   : {}\n" + "required: number")
+        .addDiagnostic(
+            """
+            restricted index type
+            found   : {}
+            required: number
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -8743,11 +9595,13 @@ override: function(this:MyOtherInterface): string
   public void testPropAccess() {
     newTest()
         .addSource(
-            "/** @param {*} x */var f = function(x) {\n"
-                + "var o = String(x);\n"
-                + "if (typeof o['a'] != 'undefined') { return o['a']; }\n"
-                + "return null;\n"
-                + "};")
+            """
+            /** @param {*} x */var f = function(x) {
+            var o = String(x);
+            if (typeof o['a'] != 'undefined') { return o['a']; }
+            return null;
+            };
+            """)
         .run();
   }
 
@@ -8756,7 +9610,11 @@ override: function(this:MyOtherInterface): string
     newTest()
         .addSource("var bar = void 0; bar.baz;")
         .addDiagnostic(
-            "No properties on this expression\n" + "found   : undefined\n" + "required: Object")
+            """
+            No properties on this expression
+            found   : undefined
+            required: Object
+            """)
         .run();
   }
 
@@ -8767,7 +9625,11 @@ override: function(this:MyOtherInterface): string
     newTest()
         .addSource("var bar = void 0; bar.baz; bar.bax;")
         .addDiagnostic(
-            "No properties on this expression\n" + "found   : undefined\n" + "required: Object")
+            """
+            No properties on this expression
+            found   : undefined
+            required: Object
+            """)
         .run();
   }
 
@@ -8782,7 +9644,11 @@ override: function(this:MyOtherInterface): string
         .addSource(
             "/**@type {number}*/var a;" + "/**@type {string}*/var b;" + "switch(a){case b:;}")
         .addDiagnostic(
-            "case expression doesn't match switch\n" + "found   : string\n" + "required: number")
+            """
+            case expression doesn't match switch
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -8827,7 +9693,12 @@ override: function(this:MyOtherInterface): string
             "var goog = {};"
                 + "/** @type {string} */goog.foo = 'hello';"
                 + "/** @type {number} */var a = goog.foo;")
-        .addDiagnostic("initializing variable\n" + "found   : string\n" + "required: number")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -8841,7 +9712,12 @@ override: function(this:MyOtherInterface): string
                 + "    var a = 7;"
                 + "  };"
                 + "}")
-        .addDiagnostic("initializing variable\n" + "found   : number\n" + "required: Date")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : number
+            required: Date
+            """)
         .run();
   }
 
@@ -8870,7 +9746,12 @@ override: function(this:MyOtherInterface): string
   public void testVar10() {
     newTest()
         .addSource("/** @type {!Number} */var foo = 'abc';")
-        .addDiagnostic("initializing variable\n" + "found   : string\n" + "required: Number")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : string
+            required: Number
+            """)
         .run();
   }
 
@@ -8878,7 +9759,12 @@ override: function(this:MyOtherInterface): string
   public void testVar11() {
     newTest()
         .addSource("var /** @type {!Date} */foo = 'abc';")
-        .addDiagnostic("initializing variable\n" + "found   : string\n" + "required: Date")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : string
+            required: Date
+            """)
         .run();
   }
 
@@ -8886,8 +9772,18 @@ override: function(this:MyOtherInterface): string
   public void testVar12() {
     newTest()
         .addSource("var /** @type {!Date} */foo = 'abc', " + "/** @type {!RegExp} */bar = 5;")
-        .addDiagnostic("initializing variable\n" + "found   : string\n" + "required: Date")
-        .addDiagnostic("initializing variable\n" + "found   : number\n" + "required: RegExp")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : string
+            required: Date
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : number
+            required: RegExp
+            """)
         .run();
   }
 
@@ -8901,7 +9797,12 @@ override: function(this:MyOtherInterface): string
   public void testVar14() {
     newTest()
         .addSource("/** @return {number} */ function f() { var x; return x; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : undefined\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : undefined
+            required: number
+            """)
         .run();
   }
 
@@ -8909,7 +9810,12 @@ override: function(this:MyOtherInterface): string
   public void testVar15() {
     newTest()
         .addSource("/** @return {number} */" + "function f() { var x = x || {}; return x; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : {}\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : {}
+            required: number
+            """)
         .run();
   }
 
@@ -8935,7 +9841,11 @@ override: function(this:MyOtherInterface): string
     newTest()
         .addSource("var goog = {};" + "/** @type {number} */goog.foo = 'hello';")
         .addDiagnostic(
-            "assignment to property foo of goog\n" + "found   : string\n" + "required: number")
+            """
+            assignment to property foo of goog
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -8944,7 +9854,11 @@ override: function(this:MyOtherInterface): string
     newTest()
         .addSource("var goog = {};" + "/** @type {number}  */goog.foo = 3;" + "goog.foo = 'hello';")
         .addDiagnostic(
-            "assignment to property foo of goog\n" + "found   : string\n" + "required: number")
+            """
+            assignment to property foo of goog
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -9029,7 +9943,11 @@ override: function(this:MyOtherInterface): string
                 + "/** @type {number}  */var b;"
                 + "/** @type {number}  */var c = a + b || undefined;")
         .addDiagnostic(
-            "initializing variable\n" + "found   : (number|undefined)\n" + "required: number")
+            """
+            initializing variable
+            found   : (number|undefined)
+            required: number
+            """)
         .run();
   }
 
@@ -9069,7 +9987,12 @@ override: function(this:MyOtherInterface): string
   public void testOr4() {
     newTest()
         .addSource("/**@type {number} */var x;x=null || \"a\";")
-        .addDiagnostic("assignment\n" + "found   : string\n" + "required: number")
+        .addDiagnostic(
+            """
+            assignment
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -9080,7 +10003,12 @@ override: function(this:MyOtherInterface): string
   public void testOr5() {
     newTest()
         .addSource("/**@type {number} */var x;x=undefined || \"a\";")
-        .addDiagnostic("assignment\n" + "found   : string\n" + "required: number")
+        .addDiagnostic(
+            """
+            assignment
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -9153,7 +10081,11 @@ override: function(this:MyOtherInterface): string
                 + "/** @type {number}  */var b;"
                 + "/** @type {number}  */var c = a + b && undefined;")
         .addDiagnostic(
-            "initializing variable\n" + "found   : (number|undefined)\n" + "required: number")
+            """
+            initializing variable
+            found   : (number|undefined)
+            required: number
+            """)
         .run();
   }
 
@@ -9163,7 +10095,12 @@ override: function(this:MyOtherInterface): string
         .addSource(
             "/** @type {(!Array|undefined)} */var a;"
                 + "/** @type {number}  */var c = a && undefined;")
-        .addDiagnostic("initializing variable\n" + "found   : undefined\n" + "required: number")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : undefined
+            required: number
+            """)
         .run();
   }
 
@@ -9171,9 +10108,11 @@ override: function(this:MyOtherInterface): string
   public void testAnd4() {
     newTest()
         .addSource(
-            "/** @param {number} x */function f(x){};\n"
-                + "/** @type {null}  */var x; /** @type {number?} */var y;\n"
-                + "if (x && y) { f(y) }")
+            """
+            /** @param {number} x */function f(x){};
+            /** @type {null}  */var x; /** @type {number?} */var y;
+            if (x && y) { f(y) }
+            """)
         .run();
   }
 
@@ -9181,9 +10120,12 @@ override: function(this:MyOtherInterface): string
   public void testAnd5() {
     newTest()
         .addSource(
-            "/** @param {number} x\n@param {string} y*/function f(x,y){};\n"
-                + "/** @type {number?} */var x; /** @type {string?} */var y;\n"
-                + "if (x && y) { f(x, y) }")
+            """
+            /** @param {number} x
+            @param {string} y*/function f(x,y){};
+            /** @type {number?} */var x; /** @type {string?} */var y;
+            if (x && y) { f(x, y) }
+            """)
         .run();
   }
 
@@ -9191,9 +10133,11 @@ override: function(this:MyOtherInterface): string
   public void testAnd6() {
     newTest()
         .addSource(
-            "/** @param {number} x */function f(x){};\n"
-                + "/** @type {number|undefined} */var x;\n"
-                + "if (x && f(x)) { f(x) }")
+            """
+            /** @param {number} x */function f(x){};
+            /** @type {number|undefined} */var x;
+            if (x && f(x)) { f(x) }
+            """)
         .run();
   }
 
@@ -9210,10 +10154,12 @@ override: function(this:MyOtherInterface): string
   public void testAnd8() {
     newTest()
         .addSource(
-            "function f(/** (null | number | string) */ x) {\n"
-                + "  (x && (typeof x === 'number')) && takesNum(x);\n"
-                + "}\n"
-                + "function takesNum(/** number */ n) {}")
+            """
+            function f(/** (null | number | string) */ x) {
+              (x && (typeof x === 'number')) && takesNum(x);
+            }
+            function takesNum(/** number */ n) {}
+            """)
         .run();
   }
 
@@ -9221,12 +10167,14 @@ override: function(this:MyOtherInterface): string
   public void testAnd9() {
     newTest()
         .addSource(
-            "function f(/** (number|string|null) */ x) {\n"
-                + "  if (x && typeof x === 'number') {\n"
-                + "    takesNum(x);\n"
-                + "  }\n"
-                + "}\n"
-                + "function takesNum(/** number */ x) {}")
+            """
+            function f(/** (number|string|null) */ x) {
+              if (x && typeof x === 'number') {
+                takesNum(x);
+              }
+            }
+            function takesNum(/** number */ x) {}
+            """)
         .run();
   }
 
@@ -9234,14 +10182,18 @@ override: function(this:MyOtherInterface): string
   public void testAnd10() {
     newTest()
         .addSource(
-            "function f(/** (null | number | string) */ x) {\n"
-                + "  (x && (typeof x === 'string')) && takesNum(x);\n"
-                + "}\n"
-                + "function takesNum(/** number */ n) {}")
+            """
+            function f(/** (null | number | string) */ x) {
+              (x && (typeof x === 'string')) && takesNum(x);
+            }
+            function takesNum(/** number */ n) {}
+            """)
         .addDiagnostic(
-            "actual parameter 1 of takesNum does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: number")
+            """
+            actual parameter 1 of takesNum does not match formal parameter
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -9336,9 +10288,11 @@ override: function(this:MyOtherInterface): string
                 + "if (g(x)) { x = 1; }\n"
                 + "x = x-1;\n}\n}")
         .addDiagnostic(
-            "actual parameter 1 of g does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: null")
+            """
+            actual parameter 1 of g does not match formal parameter
+            found   : number
+            required: null
+            """)
         .run();
   }
 
@@ -9360,9 +10314,11 @@ override: function(this:MyOtherInterface): string
     newTest()
         .addSource("/** @type {function(number)} */var f;" + "f(true);")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: number")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -9370,7 +10326,12 @@ override: function(this:MyOtherInterface): string
   public void testHigherOrderFunctions2() {
     newTest()
         .addSource("/** @type {function():!Date} */var f;" + "/** @type {boolean} */var a = f();")
-        .addDiagnostic("initializing variable\n" + "found   : Date\n" + "required: boolean")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : Date
+            required: boolean
+            """)
         .run();
   }
 
@@ -9420,7 +10381,12 @@ override: function(this:MyOtherInterface): string
                 + "/** @constructor */ var FooAlias = Foo;"
                 + "/** @return {string} */ function foo() { "
                 + "  return (new FooAlias()).bar; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -9433,7 +10399,12 @@ override: function(this:MyOtherInterface): string
                 + "/** @type {number} */ FooAlias.prototype.bar = 3;"
                 + "/** @return {string} */ function foo() { "
                 + "  return (new Foo()).bar; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -9446,7 +10417,12 @@ override: function(this:MyOtherInterface): string
                 + "/** @constructor */ var FooAlias = Foo;"
                 + "/** @return {string} */ function foo() { "
                 + "  return (new FooAlias()).bar; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -9459,7 +10435,12 @@ override: function(this:MyOtherInterface): string
                 + "/** @type {number} */ FooAlias.prototype.bar = 3;"
                 + "/** @return {string} */ function foo() { "
                 + "  return (new Foo()).bar; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -9494,7 +10475,12 @@ override: function(this:MyOtherInterface): string
                 + "/** @constructor */ goog.FooAlias = goog.Foo;"
                 + "/** @return {number} */ function foo() { "
                 + "  return new goog.FooAlias(); }")
-        .addDiagnostic("inconsistent return type\n" + "found   : goog.Foo\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : goog.Foo
+            required: number
+            """)
         .run();
   }
 
@@ -9509,7 +10495,12 @@ override: function(this:MyOtherInterface): string
                 + "goog.FooAlias = goog.Foo;"
                 + "/** @return {number} */ function foo() { "
                 + "  return new goog.FooAlias(1); }")
-        .addDiagnostic("inconsistent return type\n" + "found   : goog.Foo\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : goog.Foo
+            required: number
+            """)
         .run();
   }
 
@@ -9523,7 +10514,12 @@ override: function(this:MyOtherInterface): string
                 + "/** @constructor */ goog.FooAlias = goog.Foo;"
                 + "/** @return {number} */ function foo() { "
                 + "  return new goog.FooAlias(1); }")
-        .addDiagnostic("inconsistent return type\n" + "found   : goog.Foo\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : goog.Foo
+            required: number
+            """)
         .run();
   }
 
@@ -9536,7 +10532,12 @@ override: function(this:MyOtherInterface): string
                 + "/** @constructor */ var FooAlias = Foo;"
                 + "/** @return {number} */ function foo() { "
                 + "  return new FooAlias(1); }")
-        .addDiagnostic("inconsistent return type\n" + "found   : Foo\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : Foo
+            required: number
+            """)
         .run();
   }
 
@@ -9550,7 +10551,12 @@ override: function(this:MyOtherInterface): string
                 + "/** @const */ var FooAlias2 = FooAlias;"
                 + "/** @return {FooAlias2} */ function foo() { "
                 + "  return 1; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: (Foo|null)")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: (Foo|null)
+            """)
         .run();
   }
 
@@ -9709,7 +10715,12 @@ override: function(this:MyOtherInterface): string
             /** @const */ var alias = original;
             /** @return {number} */ var f = function(/** alias */ x) { return x; }
             """)
-        .addDiagnostic("inconsistent return type\n" + "found   : string\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -9723,7 +10734,12 @@ override: function(this:MyOtherInterface): string
             /** @const */ ns.alias = original;
             /** @return {number} */ var f = function(/** ns.alias */ x) { return x; }
             """)
-        .addDiagnostic("inconsistent return type\n" + "found   : string\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -9764,7 +10780,11 @@ override: function(this:MyOtherInterface): string
         "/** @type {string|null|undefined} */ var a = foo();"
             + "/** @type {number} */"
             + "var b = goog.asserts.assert(a);",
-        "initializing variable\n" + "found   : string\n" + "required: number");
+        """
+        initializing variable
+        found   : string
+        required: number
+        """);
   }
 
   private static final String PRIMITIVE_ASSERT_DEFS =
@@ -9830,7 +10850,12 @@ override: function(this:MyOtherInterface): string
   public void testReturn1() {
     newTest()
         .addSource("/**@return {void}*/function foo(){ return 3; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: undefined")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: undefined
+            """)
         .run();
   }
 
@@ -9838,7 +10863,12 @@ override: function(this:MyOtherInterface): string
   public void testReturn2() {
     newTest()
         .addSource("/**@return {!Number}*/function foo(){ return; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : undefined\n" + "required: Number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : undefined
+            required: Number
+            """)
         .run();
   }
 
@@ -9846,7 +10876,12 @@ override: function(this:MyOtherInterface): string
   public void testReturn3() {
     newTest()
         .addSource("/**@return {!Number}*/function foo(){ return 'abc'; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : string\n" + "required: Number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : string
+            required: Number
+            """)
         .run();
   }
 
@@ -9854,7 +10889,12 @@ override: function(this:MyOtherInterface): string
   public void testReturn4() {
     newTest()
         .addSource("/**@return {!Number}\n*/\n function a(){return new Array();}")
-        .addDiagnostic("inconsistent return type\n" + "found   : Array<?>\n" + "required: Number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : Array<?>
+            required: Number
+            """)
         .run();
   }
 
@@ -9878,7 +10918,11 @@ override: function(this:MyOtherInterface): string
         .addSource(
             "/** @param {number} opt_a\n@return {string} */" + "function a(opt_a) { return opt_a }")
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : (number|undefined)\n" + "required: string")
+            """
+            inconsistent return type
+            found   : (number|undefined)
+            required: string
+            """)
         .run();
   }
 
@@ -9886,10 +10930,17 @@ override: function(this:MyOtherInterface): string
   public void testReturn7() {
     newTest()
         .addSource(
-            "/** @constructor */var A = function() {};\n"
-                + "/** @constructor */var B = function() {};\n"
-                + "/** @return {!B} */A.f = function() { return 1; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: B")
+            """
+            /** @constructor */var A = function() {};
+            /** @constructor */var B = function() {};
+            /** @return {!B} */A.f = function() { return 1; };
+            """)
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: B
+            """)
         .run();
   }
 
@@ -9897,10 +10948,17 @@ override: function(this:MyOtherInterface): string
   public void testReturn8() {
     newTest()
         .addSource(
-            "/** @constructor */var A = function() {};\n"
-                + "/** @constructor */var B = function() {};\n"
-                + "/** @return {!B} */A.prototype.f = function() { return 1; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: B")
+            """
+            /** @constructor */var A = function() {};
+            /** @constructor */var B = function() {};
+            /** @return {!B} */A.prototype.f = function() { return 1; };
+            """)
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: B
+            """)
         .run();
   }
 
@@ -9909,9 +10967,11 @@ override: function(this:MyOtherInterface): string
     newTest()
         .addSource("function f() {} /** @param {number} x */ function g(x) {}" + "g(f());")
         .addDiagnostic(
-            "actual parameter 1 of g does not match formal parameter\n"
-                + "found   : undefined\n"
-                + "required: number")
+            """
+            actual parameter 1 of g does not match formal parameter
+            found   : undefined
+            required: number
+            """)
         .run();
   }
 
@@ -9924,9 +10984,11 @@ override: function(this:MyOtherInterface): string
                 + "/** @param {number} x */ function g(x) {}"
                 + "g((new Foo()).bar());")
         .addDiagnostic(
-            "actual parameter 1 of g does not match formal parameter\n"
-                + "found   : undefined\n"
-                + "required: number")
+            """
+            actual parameter 1 of g does not match formal parameter
+            found   : undefined
+            required: number
+            """)
         .run();
   }
 
@@ -9957,7 +11019,11 @@ override: function(this:MyOtherInterface): string
             "var x = function() {};"
                 + "x = /** @type {function(): number} */ (function() { return 3; });")
         .addDiagnostic(
-            "assignment\n" + "found   : function(): number\n" + "required: function(): undefined")
+            """
+            assignment
+            found   : function(): number
+            required: function(): undefined
+            """)
         .run();
   }
 
@@ -9972,7 +11038,12 @@ override: function(this:MyOtherInterface): string
                 + "  x = /** @type {function(): number} */ (function() { return 3; });"
                 + "  return x();"
                 + "}")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -9989,7 +11060,11 @@ override: function(this:MyOtherInterface): string
                 + "  return x();"
                 + "}")
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : (number|undefined)\n" + "required: string")
+            """
+            inconsistent return type
+            found   : (number|undefined)
+            required: string
+            """)
         .run();
   }
 
@@ -10000,7 +11075,12 @@ override: function(this:MyOtherInterface): string
             "/** @constructor */ function Foo() {}"
                 + "/** @param {number} x */ Foo.prototype.bar = function(x) {};"
                 + "Foo.prototype.bar = function(x) { return 3; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: undefined")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: undefined
+            """)
         .run();
   }
 
@@ -10013,7 +11093,12 @@ override: function(this:MyOtherInterface): string
                 + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
                 + "/** @override @param {number} x */ SubFoo.prototype.bar = "
                 + "    function(x) { return 3; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: undefined")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: undefined
+            """)
         .run();
   }
 
@@ -10044,9 +11129,11 @@ override: function(this:MyOtherInterface): string
                 + "/** @param {string} x */ function f(x) {}"
                 + "Foo.prototype.bar = function(y) { f(y); };")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: string")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -10061,9 +11148,11 @@ override: function(this:MyOtherInterface): string
                 + "/** @override @return {void} */ SubFoo.prototype.bar = "
                 + "    function(x) { f(x); }")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: string")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -10078,9 +11167,11 @@ override: function(this:MyOtherInterface): string
                 + "/** @override @return {void} */ SubFoo.prototype.bar = "
                 + "    function(x) { f(x); }; (new SubFoo()).bar();")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : (number|undefined)\n"
-                + "required: string")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : (number|undefined)
+            required: string
+            """)
         .run();
   }
 
@@ -10129,9 +11220,11 @@ override: function(this:MyOtherInterface): string
                 + "SubFoo.prototype.bar = "
                 + "    function(x, y) { f(x); }; (new SubFoo()).bar();")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : (number|undefined)\n"
-                + "required: string")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : (number|undefined)
+            required: string
+            """)
         .run();
   }
 
@@ -10147,9 +11240,11 @@ override: function(this:MyOtherInterface): string
                 + "SubFoo.prototype.bar = "
                 + "    function(x, y) { f(y); };")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : (number|undefined)\n"
-                + "required: string")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : (number|undefined)
+            required: string
+            """)
         .run();
   }
 
@@ -10161,9 +11256,11 @@ override: function(this:MyOtherInterface): string
                 + "/** @type {function(number=,number=)} */"
                 + "var bar = function(x, y) { f(y); };")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : (number|undefined)\n"
-                + "required: string")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : (number|undefined)
+            required: string
+            """)
         .run();
   }
 
@@ -10438,7 +11535,12 @@ override: function(this:SubFoo, number): undefined
                 + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
                 + "/** @return {SubFoo}\n * @override */ SubFoo.prototype.bar = "
                 + "    function() { return new Foo(); }")
-        .addDiagnostic("inconsistent return type\n" + "found   : Foo\n" + "required: (SubFoo|null)")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : Foo
+            required: (SubFoo|null)
+            """)
         .run();
   }
 
@@ -10470,7 +11572,12 @@ override: function(this:SubFoo, number): undefined
                 + "/** @constructor \n * @extends {Foo<string>} */ function SubFoo() {}"
                 + "/** @override */ SubFoo.prototype.bar = "
                 + "    function() { return 3; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -10500,7 +11607,12 @@ override: function(this:SubFoo, number): undefined
                 + "/** @constructor */goog.A = function(){};"
                 + "/** @return {number} */"
                 + "goog.A.prototype.n = function() { return this };")
-        .addDiagnostic("inconsistent return type\n" + "found   : goog.A\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : goog.A
+            required: number
+            """)
         .run();
   }
 
@@ -10664,7 +11776,12 @@ override: (Object|null|string)
                 + "};"
                 + "/** @return {number} */"
                 + "goog.A.prototype.n = function() { return this.foo };")
-        .addDiagnostic("inconsistent return type\n" + "found   : null\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : null
+            required: number
+            """)
         .run();
   }
 
@@ -10691,7 +11808,11 @@ override: (Object|null|string)
                 + "/** @return {number} */goog.A.prototype.n = function() {"
                 + "  return this.foo };")
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : (null|string)\n" + "required: number")
+            """
+            inconsistent return type
+            found   : (null|string)
+            required: number
+            """)
         .run();
   }
 
@@ -10699,7 +11820,12 @@ override: (Object|null|string)
   public void testThis5() {
     newTest()
         .addSource("/** @this {Date}\n@return {number}*/function h() { return this }")
-        .addDiagnostic("inconsistent return type\n" + "found   : Date\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : Date
+            required: number
+            """)
         .run();
   }
 
@@ -10710,7 +11836,12 @@ override: (Object|null|string)
             "var goog = {};"
                 + "/** @constructor\n@return {!Date} */"
                 + "goog.A = function(){ return this };")
-        .addDiagnostic("inconsistent return type\n" + "found   : goog.A\n" + "required: Date")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : goog.A
+            required: Date
+            """)
         .run();
   }
 
@@ -10720,7 +11851,12 @@ override: (Object|null|string)
         .addSource(
             "/** @constructor */function A(){};"
                 + "/** @return {number} */A.prototype.n = function() { return this };")
-        .addDiagnostic("inconsistent return type\n" + "found   : A\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : A
+            required: number
+            """)
         .run();
   }
 
@@ -10734,7 +11870,11 @@ override: (Object|null|string)
                 + "/** @return {number} */A.prototype.n = function() {"
                 + "  return this.foo };")
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : (null|string)\n" + "required: number")
+            """
+            inconsistent return type
+            found   : (null|string)
+            required: number
+            """)
         .run();
   }
 
@@ -10759,7 +11899,12 @@ override: (Object|null|string)
                 + "A.prototype.foo = 3;"
                 + "/** @this {A}\n@return {string} */"
                 + "A.bar = function() { return this.foo; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -10775,9 +11920,11 @@ override: (Object|null|string)
                 + "  };"
                 + "}")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : Date\n"
-                + "required: number")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : Date
+            required: number
+            """)
         .run();
   }
 
@@ -10791,9 +11938,11 @@ override: (Object|null|string)
                 + "  f(this);"
                 + "}")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : Ctor\n"
-                + "required: number")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : Ctor
+            required: number
+            """)
         .run();
   }
 
@@ -10809,9 +11958,11 @@ override: (Object|null|string)
                 + "  }"
                 + "};")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : Ctor\n"
-                + "required: number")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : Ctor
+            required: number
+            """)
         .run();
   }
 
@@ -11033,9 +12184,11 @@ override: (Object|null|string)
                 + "var foo = function(msg) {};"
                 + "foo(this);")
         .addDiagnostic(
-            "actual parameter 1 of foo does not match formal parameter\n"
-                + "found   : global this\n"
-                + "required: number")
+            """
+            actual parameter 1 of foo does not match formal parameter
+            found   : global this
+            required: number
+            """)
         .run();
   }
 
@@ -11105,7 +12258,12 @@ override: (Object|null|string)
                 + "} else {"
                 + "  c = a;"
                 + "}")
-        .addDiagnostic("assignment\n" + "found   : (null|string)\n" + "required: null")
+        .addDiagnostic(
+            """
+            assignment
+            found   : (null|string)
+            required: null
+            """)
         .run();
   }
 
@@ -11151,9 +12309,11 @@ override: (Object|null|string)
                 + "/** @type {(string|undefined)} */ var a;"
                 + "a && f(a);")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: undefined")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : string
+            required: undefined
+            """)
         .run();
   }
 
@@ -11165,9 +12325,11 @@ override: (Object|null|string)
                 + "/** @type {(string|undefined)} */ var a;"
                 + "a && f(a);")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: undefined")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : string
+            required: undefined
+            """)
         .run();
   }
 
@@ -11185,10 +12347,13 @@ override: (Object|null|string)
   public void testControlFlowRestrictsType9() {
     newTest()
         .addSource(
-            "/** @param {number?} x\n * @return {number}*/\n"
-                + "var f = function(x) {\n"
-                + "if (!x || x == 1) { return 1; } else { return x; }\n"
-                + "};")
+            """
+            /** @param {number?} x
+             * @return {number}*/
+            var f = function(x) {
+            if (!x || x == 1) { return 1; } else { return x; }
+            };
+            """)
         .run();
   }
 
@@ -11211,9 +12376,11 @@ override: (Object|null|string)
                 + "  }"
                 + "};")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : (null|{})\n"
-                + "required: number")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : (null|{})
+            required: number
+            """)
         .run();
   }
 
@@ -11230,7 +12397,12 @@ override: (Object|null|string)
                 + "    }"
                 + "  }"
                 + "};")
-        .addDiagnostic("condition always evaluates to false\n" + "left : null\n" + "right: null")
+        .addDiagnostic(
+            """
+            condition always evaluates to false
+            left : null
+            right: null
+            """)
         .run();
   }
 
@@ -11315,9 +12487,11 @@ override: (Object|null|string)
                 + "  switch (3) { case g(x.foo): return 3; }"
                 + "}")
         .addDiagnostic(
-            "actual parameter 1 of g does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: number")
+            """
+            actual parameter 1 of g does not match formal parameter
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -11337,9 +12511,11 @@ override: (Object|null|string)
                 + "  switch (g(x.foo)) { case 3: return 3; }"
                 + "}")
         .addDiagnostic(
-            "actual parameter 1 of g does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: number")
+            """
+            actual parameter 1 of g does not match formal parameter
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -11394,19 +12570,23 @@ override: (Object|null|string)
   public void testImplicitCast2() {
     newTest()
         .addExterns(
-            "/** @constructor */ function Element() {};\n"
-                + "/**\n"
-                + " * @type {string}\n"
-                + " * @implicitCast\n"
-                + " */\n"
-                + "Element.prototype.innerHTML;\n")
+            """
+            /** @constructor */ function Element() {};
+            /**
+             * @type {string}
+             * @implicitCast
+             */
+            Element.prototype.innerHTML;
+            """)
         .addSource(
-            "/** @constructor */ function C(e) {\n"
-                + "  /** @type {Element} */ this.el = e;\n"
-                + "}\n"
-                + "C.prototype.method = function() {\n"
-                + "  this.el.innerHTML = new Array();\n"
-                + "};\n")
+            """
+            /** @constructor */ function C(e) {
+              /** @type {Element} */ this.el = e;
+            }
+            C.prototype.method = function() {
+              this.el.innerHTML = new Array();
+            };
+            """)
         .run();
   }
 
@@ -11518,7 +12698,12 @@ override: (Object|null|string)
   public void testNumberAutoboxing() {
     newTest()
         .addSource("/** @type {Number} */var a = 4;")
-        .addDiagnostic("initializing variable\n" + "found   : number\n" + "required: (Number|null)")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : number
+            required: (Number|null)
+            """)
         .run();
   }
 
@@ -11526,7 +12711,12 @@ override: (Object|null|string)
   public void testNumberUnboxing() {
     newTest()
         .addSource("/** @type {number} */var a = new Number(4);")
-        .addDiagnostic("initializing variable\n" + "found   : Number\n" + "required: number")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : Number
+            required: number
+            """)
         .run();
   }
 
@@ -11534,7 +12724,12 @@ override: (Object|null|string)
   public void testStringAutoboxing() {
     newTest()
         .addSource("/** @type {String} */var a = 'hello';")
-        .addDiagnostic("initializing variable\n" + "found   : string\n" + "required: (String|null)")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : string
+            required: (String|null)
+            """)
         .run();
   }
 
@@ -11542,7 +12737,12 @@ override: (Object|null|string)
   public void testStringUnboxing() {
     newTest()
         .addSource("/** @type {string} */var a = new String('hello');")
-        .addDiagnostic("initializing variable\n" + "found   : String\n" + "required: string")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : String
+            required: string
+            """)
         .run();
   }
 
@@ -11551,7 +12751,11 @@ override: (Object|null|string)
     newTest()
         .addSource("/** @type {Boolean} */var a = true;")
         .addDiagnostic(
-            "initializing variable\n" + "found   : boolean\n" + "required: (Boolean|null)")
+            """
+            initializing variable
+            found   : boolean
+            required: (Boolean|null)
+            """)
         .run();
   }
 
@@ -11559,7 +12763,12 @@ override: (Object|null|string)
   public void testBooleanUnboxing() {
     newTest()
         .addSource("/** @type {boolean} */var a = new Boolean(false);")
-        .addDiagnostic("initializing variable\n" + "found   : Boolean\n" + "required: boolean")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : Boolean
+            required: boolean
+            """)
         .run();
   }
 
@@ -11573,7 +12782,11 @@ override: (Object|null|string)
                 + "  ns.prop = true;"
                 + "})(namespace);")
         .addDiagnostic(
-            "assignment to property prop of ns\n" + "found   : boolean\n" + "required: number")
+            """
+            assignment to property prop of ns
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -11586,7 +12799,12 @@ override: (Object|null|string)
                 + "  /** @type {boolean} */ ctor.prop = true;"
                 + "})(Foo);"
                 + "/** @return {number} */ function f() { return Foo.prop; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : boolean\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -11601,9 +12819,11 @@ override: (Object|null|string)
                 + "/** @param {number} x */ function f(x) {}"
                 + "f(Foo.prop);")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: number")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -11645,7 +12865,12 @@ override: (Object|null|string)
                 + "})(namespace);"
                 + "/** @param {namespace.Ctor} x\n"
                 + "  * @return {number} */ function f(x) { return x.bar; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : boolean\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -11771,7 +12996,12 @@ override: (Object|null|string)
                 + "   */"
                 + "  function baz(b) { return b.x; }"
                 + "}")
-        .addDiagnostic("inconsistent return type\n" + "found   : string\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -11869,9 +13099,11 @@ override: (Object|null|string)
                 + "    /** @param {number} x */ ns.foo = function(x) {}; })();"
                 + "(function() { ns.foo(true); })();")
         .addDiagnostic(
-            "actual parameter 1 of ns.foo does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: number")
+            """
+            actual parameter 1 of ns.foo does not match formal parameter
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -11886,9 +13118,11 @@ override: (Object|null|string)
                 + "    ns.foo(true); "
                 + "})();")
         .addDiagnostic(
-            "actual parameter 1 of ns.foo does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: number")
+            """
+            actual parameter 1 of ns.foo does not match formal parameter
+            found   : boolean
+            required: number\
+            """)
         .run();
   }
 
@@ -11905,9 +13139,11 @@ override: (Object|null|string)
                 + "  f(new ns.Foo(true));"
                 + "})();")
         .addDiagnostic(
-            "actual parameter 1 of ns.Foo does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: number")
+            """
+            actual parameter 1 of ns.Foo does not match formal parameter
+            found   : boolean
+            required: number\
+            """)
         .run();
   }
 
@@ -11923,9 +13159,11 @@ override: (Object|null|string)
             + "/** @param {ns.Foo} x */ function f(x) {}"
             + "f(new ns.Foo(true));",
         ImmutableList.of(
-            "actual parameter 1 of ns.Foo does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: number"));
+            """
+            actual parameter 1 of ns.Foo does not match formal parameter
+            found   : boolean
+            required: number\
+            """));
   }
 
   @Test
@@ -11941,9 +13179,11 @@ override: (Object|null|string)
                 + "  f(new ns.ns2.Foo(true));"
                 + "})();")
         .addDiagnostic(
-            "actual parameter 1 of ns.ns2.Foo does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: number")
+            """
+            actual parameter 1 of ns.ns2.Foo does not match formal parameter
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -12067,17 +13307,21 @@ override: (Object|null|string)
   public void testSheqRefinedScope() {
     Node n =
         parseAndTypeCheck(
-            "/** @constructor */function A() {}\n"
-                + "/** @constructor \n @extends A */ function B() {}\n"
-                + "/** @return {number} */\n"
-                + "B.prototype.p = function() { return 1; }\n"
-                + "/** @param {A} a\n @param {B} b */\n"
-                + "function f(a, b) {\n"
-                + "  b.p();\n"
-                + "  if (a === b) {\n"
-                + "    b.p();\n"
-                + "  }\n"
-                + "}");
+            """
+            /** @constructor */function A() {}
+            /** @constructor\s
+             @extends A */ function B() {}
+            /** @return {number} */
+            B.prototype.p = function() { return 1; }
+            /** @param {A} a
+             @param {B} b */
+            function f(a, b) {
+              b.p();
+              if (a === b) {
+                b.p();
+              }
+            }
+            """);
     Node nodeC =
         n.getLastChild().getLastChild().getLastChild().getLastChild().getLastChild().getLastChild();
     JSType typeC = nodeC.getJSType();
@@ -12270,9 +13514,11 @@ override: (Object|null|string)
                 + "function Foo(x) {}"
                 + "function g() { new Foo(1); }")
         .addDiagnostic(
-            "actual parameter 1 of Foo does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: string")
+            """
+            actual parameter 1 of Foo does not match formal parameter
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -12402,9 +13648,11 @@ override: (Object|null|string)
     newTest()
         .addSource("/**@return {!Object}*/function foo(){var a = foo()&3;}")
         .addDiagnostic(
-            "bad left operand to bitwise operator\n"
-                + "found   : Object\n"
-                + "required: (boolean|null|number|string|undefined)")
+            """
+            bad left operand to bitwise operator
+            found   : Object
+            required: (boolean|null|number|string|undefined)
+            """)
         .run();
   }
 
@@ -12432,9 +13680,11 @@ override: (Object|null|string)
     newTest()
         .addSource("var x = void 0; x |= {};")
         .addDiagnostic(
-            "bad right operand to bitwise operator\n"
-                + "found   : {}\n"
-                + "required: (boolean|null|number|string|undefined)")
+            """
+            bad right operand to bitwise operator
+            found   : {}
+            required: (boolean|null|number|string|undefined)
+            """)
         .run();
   }
 
@@ -12448,9 +13698,11 @@ override: (Object|null|string)
     newTest()
         .addSource("/** @param {!Number} foo*/function bar(foo){ bar('abc'); }")
         .addDiagnostic(
-            "actual parameter 1 of bar does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: Number")
+            """
+            actual parameter 1 of bar does not match formal parameter
+            found   : string
+            required: Number
+            """)
         .run();
   }
 
@@ -12489,9 +13741,11 @@ override: (Object|null|string)
     newTest()
         .addSource("/**@param {!RegExp} a*/var foo = function bar(a){ bar('abc'); }")
         .addDiagnostic(
-            "actual parameter 1 of bar does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: RegExp")
+            """
+            actual parameter 1 of bar does not match formal parameter
+            found   : string
+            required: RegExp
+            """)
         .run();
   }
 
@@ -12500,9 +13754,11 @@ override: (Object|null|string)
     newTest()
         .addSource("/**@param {!RegExp} a*/var foo = function bar(a){ foo('abc'); }")
         .addDiagnostic(
-            "actual parameter 1 of foo does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: RegExp")
+            """
+            actual parameter 1 of foo does not match formal parameter
+            found   : string
+            required: RegExp
+            """)
         .run();
   }
 
@@ -12511,9 +13767,11 @@ override: (Object|null|string)
     newTest()
         .addSource("/** @param {!Number} foo*/function bar(foo){}" + "bar('abc');")
         .addDiagnostic(
-            "actual parameter 1 of bar does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: Number")
+            """
+            actual parameter 1 of bar does not match formal parameter
+            found   : string
+            required: Number
+            """)
         .run();
   }
 
@@ -12522,9 +13780,11 @@ override: (Object|null|string)
     newTest()
         .addSource("/** @param {!RegExp} a*/var foo = function bar(a){};" + "foo('abc');")
         .addDiagnostic(
-            "actual parameter 1 of foo does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: RegExp")
+            """
+            actual parameter 1 of foo does not match formal parameter
+            found   : string
+            required: RegExp
+            """)
         .run();
   }
 
@@ -12545,9 +13805,11 @@ override: (Object|null|string)
                 + "/** @param {!goog.Foo} a */ var bar = function(a){};"
                 + "bar('abc');")
         .addDiagnostic(
-            "actual parameter 1 of bar does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: goog.Foo")
+            """
+            actual parameter 1 of bar does not match formal parameter
+            found   : string
+            required: goog.Foo
+            """)
         .run();
   }
 
@@ -12616,9 +13878,11 @@ override: (Object|null|string)
     newTest()
         .addSource("/** @param {number} x */ var foo = function(x) {};" + "foo.call(null, 'bar');")
         .addDiagnostic(
-            "actual parameter 2 of foo.call does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: number")
+            """
+            actual parameter 2 of foo.call does not match formal parameter
+            found   : string
+            required: number
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -12698,14 +13962,20 @@ override: (Object|null|string)
   public void testFunctionCall9() {
     newTest()
         .addSource(
-            "/** @constructor\n * @template T\n **/ function Foo() {}\n"
-                + "/** @param {T} x */ Foo.prototype.bar = function(x) {}\n"
-                + "var foo = /** @type {Foo<string>} */ (new Foo());\n"
-                + "foo.bar(3);")
+            """
+            /** @constructor
+             * @template T
+             **/ function Foo() {}
+            /** @param {T} x */ Foo.prototype.bar = function(x) {}
+            var foo = /** @type {Foo<string>} */ (new Foo());
+            foo.bar(3);
+            """)
         .addDiagnostic(
-            "actual parameter 1 of Foo.prototype.bar does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: string")
+            """
+            actual parameter 1 of Foo.prototype.bar does not match formal parameter
+            found   : number
+            required: string
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -12718,9 +13988,11 @@ override: (Object|null|string)
                 + "function f(x, y) { return true; }"
                 + "f.bind(null, 3);")
         .addDiagnostic(
-            "actual parameter 2 of f.bind does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: string")
+            """
+            actual parameter 2 of f.bind does not match formal parameter
+            found   : number
+            required: string
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -12733,9 +14005,11 @@ override: (Object|null|string)
                 + "function f(x) { return true; }"
                 + "f(f.bind(null, 3)());")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: number")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : boolean
+            required: number
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -12748,9 +14022,11 @@ override: (Object|null|string)
                 + "function f(x, y) { return true; }"
                 + "f.bind(null, 3)(true);")
         .addDiagnostic(
-            "actual parameter 1 of function does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: string")
+            """
+            actual parameter 1 of function does not match formal parameter
+            found   : boolean
+            required: string
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -12886,9 +14162,11 @@ override: (Object|null|string)
             + "/** @type {function(number): boolean} */"
             + "function f(x, y) { return true; }"
             + "f(goog.bind(f, null, 'x')());",
-        "actual parameter 1 of f does not match formal parameter\n"
-            + "found   : boolean\n"
-            + "required: number");
+        """
+        actual parameter 1 of f does not match formal parameter
+        found   : boolean
+        required: number
+        """);
   }
 
   @Test
@@ -12908,9 +14186,12 @@ override: (Object|null|string)
     // can upcast to a base type.
     newTest()
         .addSource(
-            "/** @constructor */function base() {}\n"
-                + "/** @constructor\n @extends {base} */function derived() {}\n"
-                + "/** @type {base} */ var baz = new derived();\n")
+            """
+            /** @constructor */function base() {}
+            /** @constructor
+             @extends {base} */function derived() {}
+            /** @type {base} */ var baz = new derived();
+            """)
         .run();
   }
 
@@ -12919,10 +14200,17 @@ override: (Object|null|string)
     // cannot downcast
     newTest()
         .addSource(
-            "/** @constructor */function base() {}\n"
-                + "/** @constructor @extends {base} */function derived() {}\n"
-                + "/** @type {!derived} */ var baz = new base();\n")
-        .addDiagnostic("initializing variable\n" + "found   : base\n" + "required: derived")
+            """
+            /** @constructor */function base() {}
+            /** @constructor @extends {base} */function derived() {}
+            /** @type {!derived} */ var baz = new base();
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : base
+            required: derived
+            """)
         .run();
   }
 
@@ -12935,7 +14223,12 @@ override: (Object|null|string)
                 + "/** @constructor @extends {Base} */function Derived() {}\n"
                 + "var baseInstance = new Base();"
                 + "/** @type {!Derived} */ var baz = baseInstance;\n")
-        .addDiagnostic("initializing variable\n" + "found   : Base\n" + "required: Derived")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : Base
+            required: Derived
+            """)
         .run();
   }
 
@@ -12970,11 +14263,17 @@ override: (Object|null|string)
     // cannot explicitly cast to an unrelated type
     newTest()
         .addSource(
-            "/** @constructor */function foo() {}\n"
-                + "/** @constructor */function bar() {}\n"
-                + "var baz = /** @type {!foo} */(new bar);\n")
+            """
+            /** @constructor */function foo() {}
+            /** @constructor */function bar() {}
+            var baz = /** @type {!foo} */(new bar);
+            """)
         .addDiagnostic(
-            "invalid cast - must be a subtype or supertype\n" + "from: bar\n" + "to  : foo")
+            """
+            invalid cast - must be a subtype or supertype
+            from: bar
+            to  : foo
+            """)
         .run();
   }
 
@@ -12983,12 +14282,18 @@ override: (Object|null|string)
     // cannot explicitly cast to an unrelated type
     newTest()
         .addSource(
-            "/** @constructor */function foo() {}\n"
-                + "/** @constructor */function bar() {}\n"
-                + "var barInstance = new bar;\n"
-                + "var baz = /** @type {!foo} */(barInstance);\n")
+            """
+            /** @constructor */function foo() {}
+            /** @constructor */function bar() {}
+            var barInstance = new bar;
+            var baz = /** @type {!foo} */(barInstance);
+            """)
         .addDiagnostic(
-            "invalid cast - must be a subtype or supertype\n" + "from: bar\n" + "to  : foo")
+            """
+            invalid cast - must be a subtype or supertype
+            from: bar
+            to  : foo
+            """)
         .run();
   }
 
@@ -12997,16 +14302,19 @@ override: (Object|null|string)
     // can explicitly cast to a subtype or supertype
     newTest()
         .addSource(
-            "/** @constructor */function foo() {}\n"
-                + "/** @constructor \n @extends foo */function bar() {}\n"
-                + "var baz = /** @type {!bar} */(new bar);\n"
-                + "var baz = /** @type {!foo} */(new foo);\n"
-                + "var baz = /** @type {bar} */(new bar);\n"
-                + "var baz = /** @type {foo} */(new foo);\n"
-                + "var baz = /** @type {!foo} */(new bar);\n"
-                + "var baz = /** @type {!bar} */(new foo);\n"
-                + "var baz = /** @type {foo} */(new bar);\n"
-                + "var baz = /** @type {bar} */(new foo);\n")
+            """
+            /** @constructor */function foo() {}
+            /** @constructor\s
+             @extends foo */function bar() {}
+            var baz = /** @type {!bar} */(new bar);
+            var baz = /** @type {!foo} */(new foo);
+            var baz = /** @type {bar} */(new bar);
+            var baz = /** @type {foo} */(new foo);
+            var baz = /** @type {!foo} */(new bar);
+            var baz = /** @type {!bar} */(new foo);
+            var baz = /** @type {foo} */(new bar);
+            var baz = /** @type {bar} */(new foo);
+            """)
         .run();
   }
 
@@ -13160,9 +14468,11 @@ override: (Object|null|string)
                 + "  {/** @type {string} */ foo: 3});"
                 + "}")
         .addDiagnostic(
-            "assignment to property foo of {foo: string}\n"
-                + "found   : number\n"
-                + "required: string")
+            """
+            assignment to property foo of {foo: string}
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -13190,9 +14500,17 @@ override: (Object|null|string)
   public void testCast19() {
     newTest()
         .addSource(
-            "var x = 'string';\n" + "/** @type {number} */\n" + "var y = /** @type {number} */(x);")
+            """
+            var x = 'string';
+            /** @type {number} */
+            var y = /** @type {number} */(x);
+            """)
         .addDiagnostic(
-            "invalid cast - must be a subtype or supertype\n" + "from: string\n" + "to  : number")
+            """
+            invalid cast - must be a subtype or supertype
+            from: string
+            to  : number
+            """)
         .run();
   }
 
@@ -13230,7 +14548,11 @@ override: (Object|null|string)
     newTest()
         .addSource("var x = null;\n" + "var y = /** @type {number} */(x);")
         .addDiagnostic(
-            "invalid cast - must be a subtype or supertype\n" + "from: null\n" + "to  : number")
+            """
+            invalid cast - must be a subtype or supertype
+            from: null
+            to  : number
+            """)
         .run();
   }
 
@@ -13244,9 +14566,11 @@ override: (Object|null|string)
     newTest()
         .addSource("var x = undefined;\n" + "var y = /** @type {number} */(x);")
         .addDiagnostic(
-            "invalid cast - must be a subtype or supertype\n"
-                + "from: undefined\n"
-                + "to  : number")
+            """
+            invalid cast - must be a subtype or supertype
+            from: undefined
+            to  : number
+            """)
         .run();
   }
 
@@ -13261,10 +14585,12 @@ override: (Object|null|string)
   public void testCast26() {
     newTest()
         .addSource(
-            "function fn(dir) {\n"
-                + "  var node = dir ? 1 : 2;\n"
-                + "  fn(/** @type {number} */ (node));\n"
-                + "}")
+            """
+            function fn(dir) {
+              var node = dir ? 1 : 2;
+              fn(/** @type {number} */ (node));
+            }
+            """)
         .run();
   }
 
@@ -13273,10 +14599,12 @@ override: (Object|null|string)
     // C doesn't implement I but a subtype might.
     newTest()
         .addSource(
-            "/** @interface */ function I() {}\n"
-                + "/** @constructor */ function C() {}\n"
-                + "var x = new C();\n"
-                + "var y = /** @type {I} */(x);")
+            """
+            /** @interface */ function I() {}
+            /** @constructor */ function C() {}
+            var x = new C();
+            var y = /** @type {I} */(x);
+            """)
         .run();
   }
 
@@ -13285,10 +14613,12 @@ override: (Object|null|string)
     // C doesn't implement I but a subtype might.
     newTest()
         .addSource(
-            "/** @interface */ function I() {}\n"
-                + "/** @constructor */ function C() {}\n"
-                + "/** @type {C} */ var x ;\n"
-                + "var y = /** @type {I} */(x);")
+            """
+            /** @interface */ function I() {}
+            /** @constructor */ function C() {}
+            /** @type {C} */ var x ;
+            var y = /** @type {I} */(x);
+            """)
         .run();
   }
 
@@ -13297,10 +14627,12 @@ override: (Object|null|string)
     // C doesn't implement I but a subtype might.
     newTest()
         .addSource(
-            "/** @interface */ function I() {}\n"
-                + "/** @constructor */ function C() {}\n"
-                + "/** @type {!I} */ var x;\n"
-                + "var y = /** @type {C} */(x);")
+            """
+            /** @interface */ function I() {}
+            /** @constructor */ function C() {}
+            /** @type {!I} */ var x;
+            var y = /** @type {C} */(x);
+            """)
         .run();
   }
 
@@ -13309,10 +14641,12 @@ override: (Object|null|string)
     // C doesn't implement I but a subtype might.
     newTest()
         .addSource(
-            "/** @interface */ function I() {}\n"
-                + "/** @constructor */ function C() {}\n"
-                + "/** @type {I} */ var x;\n"
-                + "var y = /** @type {C} */(x);")
+            """
+            /** @interface */ function I() {}
+            /** @constructor */ function C() {}
+            /** @type {I} */ var x;
+            var y = /** @type {C} */(x);
+            """)
         .run();
   }
 
@@ -13321,9 +14655,11 @@ override: (Object|null|string)
     // C doesn't implement the record type but a subtype might.
     newTest()
         .addSource(
-            "/** @constructor */ function C() {}\n"
-                + "var x = new C();\n"
-                + "var y = /** @type {{remoteJids: Array, sessionId: string}} */(x);")
+            """
+            /** @constructor */ function C() {}
+            var x = new C();
+            var y = /** @type {{remoteJids: Array, sessionId: string}} */(x);
+            """)
         .run();
   }
 
@@ -13332,9 +14668,11 @@ override: (Object|null|string)
     // C doesn't implement the record type but a subtype might.
     newTest()
         .addSource(
-            "/** @constructor */ function C() {}\n"
-                + "/** @type {C} */ var x;\n"
-                + "var y = /** @type {{prop1: Array, prop2: string}} */(x);")
+            """
+            /** @constructor */ function C() {}
+            /** @type {C} */ var x;
+            var y = /** @type {{prop1: Array, prop2: string}} */(x);
+            """)
         .run();
   }
 
@@ -13343,9 +14681,11 @@ override: (Object|null|string)
     // C doesn't implement the record type but a subtype might.
     newTest()
         .addSource(
-            "/** @constructor */ function C() {}\n"
-                + "/** @type {{remoteJids: Array, sessionId: string}} */ var x ;\n"
-                + "var y = /** @type {C} */(x);")
+            """
+            /** @constructor */ function C() {}
+            /** @type {{remoteJids: Array, sessionId: string}} */ var x ;
+            var y = /** @type {C} */(x);
+            """)
         .run();
   }
 
@@ -13354,9 +14694,11 @@ override: (Object|null|string)
     // Should be able to cast to a looser return type
     newTest()
         .addSource(
-            "/** @constructor */ function C() {}\n"
-                + "/** @type {function():string} */ var x ;\n"
-                + "var y = /** @type {function():?} */(x);")
+            """
+            /** @constructor */ function C() {}
+            /** @type {function():string} */ var x ;
+            var y = /** @type {function():?} */(x);
+            """)
         .run();
   }
 
@@ -13365,9 +14707,11 @@ override: (Object|null|string)
     // Should be able to cast to a tighter parameter type
     newTest()
         .addSource(
-            "/** @constructor */ function C() {}\n"
-                + "/** @type {function(*)} */ var x ;\n"
-                + "var y = /** @type {function(string)} */(x);")
+            """
+            /** @constructor */ function C() {}
+            /** @type {function(*)} */ var x ;
+            var y = /** @type {function(string)} */(x);
+            """)
         .run();
   }
 
@@ -13375,9 +14719,11 @@ override: (Object|null|string)
   public void testCast32() {
     newTest()
         .addSource(
-            "/** @constructor */ function C() {}\n"
-                + "/** @type {Object} */ var x ;\n"
-                + "var y = /** @type {null|{length:number}} */(x);")
+            """
+            /** @constructor */ function C() {}
+            /** @type {Object} */ var x ;
+            var y = /** @type {null|{length:number}} */(x);
+            """)
         .run();
   }
 
@@ -13387,9 +14733,11 @@ override: (Object|null|string)
     // other or both.
     newTest()
         .addSource(
-            "/** @constructor */ function C() {}\n"
-                + "/** @type {null|undefined} */ var x ;\n"
-                + "var y = /** @type {string?|undefined} */(x);")
+            """
+            /** @constructor */ function C() {}
+            /** @type {null|undefined} */ var x ;
+            var y = /** @type {string?|undefined} */(x);
+            """)
         .run();
   }
 
@@ -13399,9 +14747,11 @@ override: (Object|null|string)
     // other or both.
     newTest()
         .addSource(
-            "/** @constructor */ function C() {}\n"
-                + "/** @type {null|undefined} */ var x ;\n"
-                + "var y = /** @type {string|undefined} */(x);")
+            """
+            /** @constructor */ function C() {}
+            /** @type {null|undefined} */ var x ;
+            var y = /** @type {string|undefined} */(x);
+            """)
         .run();
   }
 
@@ -13411,9 +14761,11 @@ override: (Object|null|string)
     // other or both.
     newTest()
         .addSource(
-            "/** @constructor */ function C() {}\n"
-                + "/** @type {null|undefined} */ var x ;\n"
-                + "var y = /** @type {string?} */(x);")
+            """
+            /** @constructor */ function C() {}
+            /** @type {null|undefined} */ var x ;
+            var y = /** @type {string?} */(x);
+            """)
         .run();
   }
 
@@ -13423,9 +14775,11 @@ override: (Object|null|string)
     // other or both.
     newTest()
         .addSource(
-            "/** @constructor */ function C() {}\n"
-                + "/** @type {null|undefined} */ var x ;\n"
-                + "var y = /** @type {null} */(x);")
+            """
+            /** @constructor */ function C() {}
+            /** @type {null|undefined} */ var x ;
+            var y = /** @type {null} */(x);
+            """)
         .run();
   }
 
@@ -13433,9 +14787,11 @@ override: (Object|null|string)
   public void testCast34a() {
     newTest()
         .addSource(
-            "/** @constructor */ function C() {}\n"
-                + "/** @type {Object} */ var x ;\n"
-                + "var y = /** @type {Function} */(x);")
+            """
+            /** @constructor */ function C() {}
+            /** @type {Object} */ var x ;
+            var y = /** @type {Function} */(x);
+            """)
         .run();
   }
 
@@ -13443,9 +14799,11 @@ override: (Object|null|string)
   public void testCast34b() {
     newTest()
         .addSource(
-            "/** @constructor */ function C() {}\n"
-                + "/** @type {Function} */ var x ;\n"
-                + "var y = /** @type {Object} */(x);")
+            """
+            /** @constructor */ function C() {}
+            /** @type {Function} */ var x ;
+            var y = /** @type {Object} */(x);
+            """)
         .run();
   }
 
@@ -13485,22 +14843,24 @@ override: (Object|null|string)
   public void testNestedCasts() {
     newTest()
         .addSource(
-            "/** @constructor */var T = function() {};\n"
-                + "/** @constructor */var V = function() {};\n"
-                + "/**\n"
-                + "* @param {boolean} b\n"
-                + "* @return {T|V}\n"
-                + "*/\n"
-                + "function f(b) { return b ? new T() : new V(); }\n"
-                + "/**\n"
-                + "* @param {boolean} b\n"
-                + "* @return {boolean|undefined}\n"
-                + "*/\n"
-                + "function g(b) { return b ? true : undefined; }\n"
-                + "/** @return {T} */\n"
-                + "function h() {\n"
-                + "return /** @type {T} */ (f(/** @type {boolean} */ (g(true))));\n"
-                + "}")
+            """
+            /** @constructor */var T = function() {};
+            /** @constructor */var V = function() {};
+            /**
+            * @param {boolean} b
+            * @return {T|V}
+            */
+            function f(b) { return b ? new T() : new V(); }
+            /**
+            * @param {boolean} b
+            * @return {boolean|undefined}
+            */
+            function g(b) { return b ? true : undefined; }
+            /** @return {T} */
+            function h() {
+            return /** @type {T} */ (f(/** @type {boolean} */ (g(true))));
+            }
+            """)
         .run();
   }
 
@@ -13509,9 +14869,11 @@ override: (Object|null|string)
     newTest()
         .addSource("/** @param {number} x */ function f(x) {}" + "f(String(true));")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: number")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -13520,9 +14882,11 @@ override: (Object|null|string)
     newTest()
         .addSource("/** @param {string} x */ function f(x) {}" + "f(Number(true));")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: string")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -13531,9 +14895,11 @@ override: (Object|null|string)
     newTest()
         .addSource("/** @param {number} x */ function f(x) {}" + "f(Boolean(''));")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: number")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -13606,7 +14972,12 @@ override: (Object|null|string)
                 + "function f(x) { "
                 + "  if (x) { /** @const */ var y = x; return y } return true; "
                 + "}")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: boolean")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: boolean
+            """)
         .run();
   }
 
@@ -13621,7 +14992,12 @@ override: (Object|null|string)
                 + "    /** @return {boolean} */ function g() { return y; } "
                 + "  }"
                 + "}")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: boolean")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: boolean
+            """)
         .run();
   }
 
@@ -13629,7 +15005,12 @@ override: (Object|null|string)
   public void testConstructorType1() {
     newTest()
         .addSource("/**@constructor*/function Foo(){}" + "/**@type{!Foo}*/var f = new Date();")
-        .addDiagnostic("initializing variable\n" + "found   : Date\n" + "required: Foo")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : Date
+            required: Foo
+            """)
         .run();
   }
 
@@ -13637,11 +15018,13 @@ override: (Object|null|string)
   public void testConstructorType2() {
     newTest()
         .addSource(
-            "/**@constructor*/function Foo(){\n"
-                + "/**@type{Number}*/this.bar = new Number(5);\n"
-                + "}\n"
-                + "/**@type{Foo}*/var f = new Foo();\n"
-                + "/**@type{Number}*/var n = f.bar;")
+            """
+            /**@constructor*/function Foo(){
+            /**@type{Number}*/this.bar = new Number(5);
+            }
+            /**@type{Foo}*/var f = new Foo();
+            /**@type{Number}*/var n = f.bar;
+            """)
         .run();
   }
 
@@ -13663,30 +15046,45 @@ override: (Object|null|string)
   public void testConstructorType4() {
     newTest()
         .addSource(
-            "/**@constructor*/function Foo(){\n"
-                + "/**@type{!Number}*/this.bar = new Number(5);\n"
-                + "}\n"
-                + "/**@type{!Foo}*/var f = new Foo();\n"
-                + "/**@type{!String}*/var n = f.bar;")
-        .addDiagnostic("initializing variable\n" + "found   : Number\n" + "required: String")
+            """
+            /**@constructor*/function Foo(){
+            /**@type{!Number}*/this.bar = new Number(5);
+            }
+            /**@type{!Foo}*/var f = new Foo();
+            /**@type{!String}*/var n = f.bar;
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : Number
+            required: String
+            """)
         .run();
   }
 
   @Test
   public void testConstructorType5() {
-    newTest().addSource("/**@constructor*/function Foo(){}\n" + "if (Foo){}\n").run();
+    newTest()
+        .addSource(
+            """
+            /**@constructor*/function Foo(){}
+            if (Foo){}
+            """)
+        .run();
   }
 
   @Test
   public void testConstructorType6() {
     newTest()
         .addSource(
-            "/** @constructor */\n"
-                + "function bar() {}\n"
-                + "function _foo() {\n"
-                + " /** @param {bar} x */\n"
-                + "  function f(x) {}\n"
-                + "}")
+            """
+            /** @constructor */
+            function bar() {}
+            function _foo() {
+             /** @param {bar} x */
+              function f(x) {}
+            }
+            """)
         .run();
   }
 
@@ -13715,7 +15113,12 @@ override: (Object|null|string)
                 + "function f(foo) {"
                 + "  return foo.x;"
                 + "}")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -13772,12 +15175,14 @@ override: (Object|null|string)
   public void testConstructorType12() {
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "function Bar() {}\n"
-                + "Bar.prototype = {};\n")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            function Bar() {}
+            Bar.prototype = {};
+            """)
         .run();
   }
 
@@ -13863,7 +15268,11 @@ override: (Object|null|string)
     newTest()
         .addSource("/** @param {Object} x\n@return {!Object} */\n" + "function f(x) { return x; }")
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : (Object|null)\n" + "required: Object")
+            """
+            inconsistent return type
+            found   : (Object|null)
+            required: Object
+            """)
         .run();
   }
 
@@ -13889,10 +15298,15 @@ override: (Object|null|string)
   public void testBang4() {
     newTest()
         .addSource(
-            "/**@param {Object} x\n@param {Object} y\n@return {boolean}*/\n"
-                + "function f(x, y) {\n"
-                + "if (typeof x != 'undefined') { return x == y; }\n"
-                + "else { return x != y; }\n}")
+            """
+            /**@param {Object} x
+            @param {Object} y
+            @return {boolean}*/
+            function f(x, y) {
+            if (typeof x != 'undefined') { return x == y; }
+            else { return x != y; }
+            }
+            """)
         .run();
   }
 
@@ -13985,10 +15399,18 @@ override: (Object|null|string)
     disableStrictMissingPropertyChecks();
     newTest()
         .addSource(
-            "/** @constructor */ var T = function() {};\n"
-                + "/** @param {T} t\n@return {boolean} */function f(t) {\n"
-                + "t.x = 1; return t.x; }")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: boolean")
+            """
+            /** @constructor */ var T = function() {};
+            /** @param {T} t
+            @return {boolean} */function f(t) {
+            t.x = 1; return t.x; }
+            """)
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: boolean
+            """)
         .run();
   }
 
@@ -14252,14 +15674,16 @@ override: (Object|null|string)
     Node js1Node =
         parseAndTypeCheck(
             DEFAULT_EXTERNS,
-            "/** @constructor */function A() {\n"
-                + "  /** @type {string} */ this.m1;\n"
-                + "  /** @type {Object?} */ this.m2 = {};\n"
-                + "  /** @type {boolean} */ this.m3;\n"
-                + "}\n"
-                + "/** @type {string} */ A.prototype.m4;\n"
-                + "/** @type {number} */ A.prototype.m5 = 0;\n"
-                + "/** @type {boolean} */ A.prototype.m6;\n");
+            """
+            /** @constructor */function A() {
+              /** @type {string} */ this.m1;
+              /** @type {Object?} */ this.m2 = {};
+              /** @type {boolean} */ this.m3;
+            }
+            /** @type {string} */ A.prototype.m4;
+            /** @type {number} */ A.prototype.m5 = 0;
+            /** @type {boolean} */ A.prototype.m6;
+            """);
 
     ObjectType instanceType = getInstanceType(js1Node);
     assertHasXMorePropertiesThanNativeObject(instanceType, 6);
@@ -14295,13 +15719,15 @@ override: (Object|null|string)
   @Test
   public void testExtendBuiltInType1() {
     String externs =
-        "/** @constructor */ var String = function(opt_str) {};\n"
-            + "/**\n"
-            + "* @param {number} start\n"
-            + "* @param {number} opt_length\n"
-            + "* @return {string}\n"
-            + "*/\n"
-            + "String.prototype.substr = function(start, opt_length) {};\n";
+        """
+        /** @constructor */ var String = function(opt_str) {};
+        /**
+        * @param {number} start
+        * @param {number} opt_length
+        * @return {string}
+        */
+        String.prototype.substr = function(start, opt_length) {};
+        """;
     Node n1 = parseAndTypeCheck(externs + "(new String(\"x\")).substr(0,1);");
     assertTypeEquals(getNativeStringType(), n1.getLastChild().getFirstChild().getJSType());
   }
@@ -14309,13 +15735,15 @@ override: (Object|null|string)
   @Test
   public void testExtendBuiltInType2() {
     String externs =
-        "/** @constructor */ var String = function(opt_str) {};\n"
-            + "/**\n"
-            + "* @param {number} start\n"
-            + "* @param {number} opt_length\n"
-            + "* @return {string}\n"
-            + "*/\n"
-            + "String.prototype.substr = function(start, opt_length) {};\n";
+        """
+        /** @constructor */ var String = function(opt_str) {};
+        /**
+        * @param {number} start
+        * @param {number} opt_length
+        * @return {string}
+        */
+        String.prototype.substr = function(start, opt_length) {};
+        """;
     Node n2 = parseAndTypeCheck(externs + "\"x\".substr(0,1);");
     assertTypeEquals(getNativeStringType(), n2.getLastChild().getFirstChild().getJSType());
   }
@@ -14809,7 +16237,12 @@ override: string
                 + "/** @constructor \n * @extends {F} \n * @implements {I} */ "
                 + "function G() {}"
                 + "/** @return {string} */ function f() { return new G().bar(); }")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -14826,7 +16259,12 @@ override: string
                 + "/** @return {number} \n * @override */ "
                 + "G.prototype.bar = G.prototype.foo;"
                 + "/** @return {string} */ function f() { return new G().bar(); }")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -14834,12 +16272,18 @@ override: string
   public void testInterfaceInheritanceCheck12() {
     newTest()
         .addSource(
-            "/** @interface */ function I() {};\n"
-                + "/** @type {string} */ I.prototype.foobar;\n"
-                + "/** \n * @constructor \n * @implements {I} */\n"
-                + "function C() {\n"
-                + "/** \n * @type {number} */ this.foobar = 2;};\n"
-                + "/** @type {I} */ \n var test = new C(); alert(test.foobar);")
+            """
+            /** @interface */ function I() {};
+            /** @type {string} */ I.prototype.foobar;
+            /**\s
+             * @constructor\s
+             * @implements {I} */
+            function C() {
+            /**\s
+             * @type {number} */ this.foobar = 2;};
+            /** @type {I} */\s
+             var test = new C(); alert(test.foobar);
+            """)
         .addDiagnostic(
             "mismatch of the foobar property on type C and the type of the property"
                 + " it overrides from interface I\n"
@@ -14852,13 +16296,16 @@ override: string
   public void testInterfaceInheritanceCheck13() {
     newTest()
         .addSource(
-            "function abstractMethod() {};\n"
-                + "/** @interface */var base = function() {};\n"
-                + "/** @extends {base} \n @interface */ var Int = function() {}\n"
-                + "/** @type {{bar : !Function}} */ var x; \n"
-                + "/** @type {!Function} */ base.prototype.bar = abstractMethod; \n"
-                + "/** @type {Int} */ var foo;\n"
-                + "foo.bar();")
+            """
+            function abstractMethod() {};
+            /** @interface */var base = function() {};
+            /** @extends {base}\s
+             @interface */ var Int = function() {}
+            /** @type {{bar : !Function}} */ var x;\s
+            /** @type {!Function} */ base.prototype.bar = abstractMethod;\s
+            /** @type {Int} */ var foo;
+            foo.bar();
+            """)
         .run();
   }
 
@@ -14906,7 +16353,12 @@ override: string
                 + "/** @constructor\n @implements {A<string>} */function B() {};"
                 + "/** @override */B.prototype.foo = function() { return 'string'};"
                 + "/** @override */B.prototype.bar = function() { return 3 };")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -15004,7 +16456,11 @@ override: function(this:Foo): number
     newTest()
         .addSource("var x = {" + "  /** @type {boolean} */ abc: true" + "};" + "x.abc = 0;")
         .addDiagnostic(
-            "assignment to property abc of x\n" + "found   : number\n" + "required: boolean")
+            """
+            assignment to property abc of x
+            found   : number
+            required: boolean
+            """)
         .run();
   }
 
@@ -15026,9 +16482,11 @@ override: function(this:Foo): number
             + " * @param {string} x\n"
             + " * @suppress {duplicate}\n"
             + " */ x.abc = function(x) {};",
-        "assignment to property abc of x\n"
-            + "found   : function(string): undefined\n"
-            + "required: function(boolean): undefined");
+        """
+        assignment to property abc of x
+        found   : function(string): undefined
+        required: function(boolean): undefined
+        """);
     // TODO(user): suppress {duplicate} currently also silence the
     // redefining type error in the TypeValidator. Maybe it needs
     // a new suppress name instead?
@@ -15130,7 +16588,11 @@ override: function(this:Foo): number
                 + "/** @param {!a.N|!a.S} x\n@return {string} */\n"
                 + "var f = function(x) { return x.p; };")
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : (number|string)\n" + "required: string")
+            """
+            inconsistent return type
+            found   : (number|string)
+            required: string
+            """)
         .run();
   }
 
@@ -15386,14 +16848,16 @@ override: function(this:Foo): number
   public void testDataPropertyOnInterface2() {
     newTest()
         .addSource(
-            "/** @interface */ function T() {};\n"
-                + "/** @type {number} */T.prototype.x;\n"
-                + "/** @constructor \n"
-                + " *  @implements {T} \n"
-                + " */\n"
-                + "function C() {}\n"
-                + "/** @override */\n"
-                + "C.prototype.x = 'foo';")
+            """
+            /** @interface */ function T() {};
+            /** @type {number} */T.prototype.x;
+            /** @constructor\s
+             *  @implements {T}\s
+             */
+            function C() {}
+            /** @override */
+            C.prototype.x = 'foo';
+            """)
         .addDiagnostic(
             "mismatch of the x property on type C and the type of the property it "
                 + "overrides from interface T\n"
@@ -15406,14 +16870,16 @@ override: function(this:Foo): number
   public void testDataPropertyOnInterface3() {
     newTest()
         .addSource(
-            "/** @interface */ function T() {};\n"
-                + "/** @type {number} */T.prototype.x;\n"
-                + "/** @constructor \n"
-                + " *  @implements {T} \n"
-                + " */\n"
-                + "function C() {}\n"
-                + "/** @override */\n"
-                + "C.prototype.x = 'foo';")
+            """
+            /** @interface */ function T() {};
+            /** @type {number} */T.prototype.x;
+            /** @constructor\s
+             *  @implements {T}\s
+             */
+            function C() {}
+            /** @override */
+            C.prototype.x = 'foo';
+            """)
         .addDiagnostic(
             "mismatch of the x property on type C and the type of the property it "
                 + "overrides from interface T\n"
@@ -15426,12 +16892,15 @@ override: function(this:Foo): number
   public void testDataPropertyOnInterface4() {
     newTest()
         .addSource(
-            "/** @interface */ function T() {};\n"
-                + "/** @type {number} */T.prototype.x;\n"
-                + "/** @constructor \n"
-                + " *  @implements {T} \n"
-                + " */\n"
-                + "function C() { /** @type {string} */ \n this.x = 'foo'; }\n")
+            """
+            /** @interface */ function T() {};
+            /** @type {number} */T.prototype.x;
+            /** @constructor\s
+             *  @implements {T}\s
+             */
+            function C() { /** @type {string} */\s
+             this.x = 'foo'; }
+            """)
         .addDiagnostic(
             "mismatch of the x property on type C and the type of the property it "
                 + "overrides from interface T\n"
@@ -15470,9 +16939,11 @@ override: function(this:Foo): number
   public void testErrorMismatchingPropertyOnInterface1() {
     newTest()
         .addSource(
-            "/** @interface */ u.T = function() {};\n"
-                + "/** @param {Number} foo */u.T.prototype.x =\n"
-                + "/** @param {String} foo */function(foo) {};")
+            """
+            /** @interface */ u.T = function() {};
+            /** @param {Number} foo */u.T.prototype.x =
+            /** @param {String} foo */function(foo) {};
+            """)
         .addDiagnostic("found   : \n" + "required: ")
         .run();
   }
@@ -15482,9 +16953,11 @@ override: function(this:Foo): number
   public void testErrorMismatchingPropertyOnInterface2() {
     newTest()
         .addSource(
-            "/** @interface */ function T() {};\n"
-                + "/** @return {number} */T.prototype.x =\n"
-                + "/** @return {string} */function() {};")
+            """
+            /** @interface */ function T() {};
+            /** @return {number} */T.prototype.x =
+            /** @return {string} */function() {};
+            """)
         .addDiagnostic("found   : \n" + "required: ")
         .run();
   }
@@ -15497,9 +16970,11 @@ override: function(this:Foo): number
   public void testErrorMismatchingPropertyOnInterface3() {
     newTest()
         .addSource(
-            "/** @interface */ u.T = function() {};\n"
-                + "/** @param {Number} foo */u.T.prototype.x =\n"
-                + "function(foo, bar) {};")
+            """
+            /** @interface */ u.T = function() {};
+            /** @param {Number} foo */u.T.prototype.x =
+            function(foo, bar) {};
+            """)
         .addDiagnostic("found   : \n" + "required: ")
         .run();
   }
@@ -15508,9 +16983,11 @@ override: function(this:Foo): number
   public void testErrorMismatchingPropertyOnInterface4() {
     newTest()
         .addSource(
-            "/** @interface */ u.T = function() {};\n"
-                + "/** @param {Number} foo */u.T.prototype.x =\n"
-                + "function() {};")
+            """
+            /** @interface */ u.T = function() {};
+            /** @param {Number} foo */u.T.prototype.x =
+            function() {};
+            """)
         .addDiagnostic("parameter foo does not appear in u.T.prototype.x's parameter list")
         .run();
   }
@@ -15522,9 +16999,11 @@ override: function(this:Foo): number
             "/** @interface */ function T() {};\n"
                 + "/** @type {number} */T.prototype.x = function() { };")
         .addDiagnostic(
-            "assignment to property x of T.prototype\n"
-                + "found   : function(): undefined\n"
-                + "required: number")
+            """
+            assignment to property x of T.prototype
+            found   : function(): undefined
+            required: number\
+            """)
         .run();
   }
 
@@ -15533,9 +17012,11 @@ override: function(this:Foo): number
     testClosureTypesMultipleWarnings(
         "/** @interface */ function T() {};\n" + "/** @return {number} */T.prototype.x = 1",
         ImmutableList.of(
-            "assignment to property x of T.prototype\n"
-                + "found   : number\n"
-                + "required: function(this:T): number",
+            """
+            assignment to property x of T.prototype
+            found   : number
+            required: function(this:T): number\
+            """,
             "interface members can only be empty property declarations, "
                 + "empty functions, or goog.abstractMethod"));
   }
@@ -15553,9 +17034,11 @@ override: function(this:Foo): number
   public void testDoubleNestedInterface() {
     newTest()
         .addSource(
-            "/** @interface */ var I1 = function() {};\n"
-                + "/** @interface */ I1.I2 = function() {};\n"
-                + "/** @interface */ I1.I2.I3 = function() {};\n")
+            """
+            /** @interface */ var I1 = function() {};
+            /** @interface */ I1.I2 = function() {};
+            /** @interface */ I1.I2.I3 = function() {};
+            """)
         .run();
   }
 
@@ -15563,9 +17046,11 @@ override: function(this:Foo): number
   public void testStaticDataPropertyOnNestedInterface() {
     newTest()
         .addSource(
-            "/** @interface */ var I1 = function() {};\n"
-                + "/** @interface */ I1.I2 = function() {};\n"
-                + "/** @type {number} */ I1.I2.x = 1;\n")
+            """
+            /** @interface */ var I1 = function() {};
+            /** @interface */ I1.I2 = function() {};
+            /** @type {number} */ I1.I2.x = 1;
+            """)
         .run();
   }
 
@@ -15809,7 +17294,11 @@ override: function(this:Foo): number
             + "var x = /** @type {!OtherType} */ (new Object());",
         ImmutableList.of(
             "Cycle detected in inheritance chain of type MyType",
-            "initializing variable\n" + "found   : OtherType\n" + "required: (MyType|null)"));
+            """
+            initializing variable
+            found   : OtherType
+            required: (MyType|null)\
+            """));
   }
 
   @Test
@@ -15830,15 +17319,21 @@ override: function(this:Foo): number
   public void testResolutionViaRegistry1() {
     newTest()
         .addSource(
-            "/** @constructor */ u.T = function() {};\n"
-                + "/** @type {(number|string)} */ u.T.prototype.a;\n"
-                + "/**\n"
-                + "* @param {u.T} t\n"
-                + "* @return {string}\n"
-                + "*/\n"
-                + "var f = function(t) { return t.a; };")
+            """
+            /** @constructor */ u.T = function() {};
+            /** @type {(number|string)} */ u.T.prototype.a;
+            /**
+            * @param {u.T} t
+            * @return {string}
+            */
+            var f = function(t) { return t.a; };
+            """)
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : (number|string)\n" + "required: string")
+            """
+            inconsistent return type
+            found   : (number|string)
+            required: string
+            """)
         .run();
   }
 
@@ -15853,7 +17348,12 @@ override: function(this:Foo): number
                 + "* @return {string}\n"
                 + "*/\n"
                 + "var f = function(t) { return t.a; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -15861,15 +17361,21 @@ override: function(this:Foo): number
   public void testResolutionViaRegistry3() {
     newTest()
         .addSource(
-            "/** @constructor */ u.T = function() {};\n"
-                + "/** @type {(number|string)} */ u.T.prototype.a = 0;\n"
-                + "/**\n"
-                + "* @param {u.T} t\n"
-                + "* @return {string}\n"
-                + "*/\n"
-                + "var f = function(t) { return t.a; };")
+            """
+            /** @constructor */ u.T = function() {};
+            /** @type {(number|string)} */ u.T.prototype.a = 0;
+            /**
+            * @param {u.T} t
+            * @return {string}
+            */
+            var f = function(t) { return t.a; };
+            """)
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : (number|string)\n" + "required: string")
+            """
+            inconsistent return type
+            found   : (number|string)
+            required: string
+            """)
         .run();
   }
 
@@ -15883,7 +17389,12 @@ override: function(this:Foo): number
                 + "var ab = new u.A.B();\n"
                 + "/** @type {!u.A} */ var a = ab;\n"
                 + "/** @type {!u.A.A} */ var aa = ab;\n")
-        .addDiagnostic("initializing variable\n" + "found   : u.A.B\n" + "required: u.A.A")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : u.A.B
+            required: u.A.A
+            """)
         .run();
   }
 
@@ -15937,9 +17448,13 @@ override: function(this:Foo): number
   public void testDfa2() {
     newTest()
         .addSource(
-            "function u() {}\n"
-                + "/** @return {number} */ function f() {\nvar x = 'todo';\n"
-                + "if (u()) { x = 1; } else { x = 2; } return x;\n}")
+            """
+            function u() {}
+            /** @return {number} */ function f() {
+            var x = 'todo';
+            if (u()) { x = 1; } else { x = 2; } return x;
+            }
+            """)
         .run();
   }
 
@@ -15947,10 +17462,13 @@ override: function(this:Foo): number
   public void testDfa3() {
     newTest()
         .addSource(
-            "function u() {}\n"
-                + "/** @return {number} */ function f() {\n"
-                + "/** @type {number|string} */ var x = 'todo';\n"
-                + "if (u()) { x = 1; } else { x = 2; } return x;\n}")
+            """
+            function u() {}
+            /** @return {number} */ function f() {
+            /** @type {number|string} */ var x = 'todo';
+            if (u()) { x = 1; } else { x = 2; } return x;
+            }
+            """)
         .run();
   }
 
@@ -15958,9 +17476,12 @@ override: function(this:Foo): number
   public void testDfa4() {
     newTest()
         .addSource(
-            "/** @param {Date?} d */ function f(d) {\n"
-                + "if (!d) { return; }\n"
-                + "/** @type {!Date} */ var e = d;\n}")
+            """
+            /** @param {Date?} d */ function f(d) {
+            if (!d) { return; }
+            /** @type {!Date} */ var e = d;
+            }
+            """)
         .run();
   }
 
@@ -15968,9 +17489,14 @@ override: function(this:Foo): number
   public void testDfa5() {
     newTest()
         .addSource(
-            "/** @return {string?} */ function u() {return 'a';}\n"
-                + "/** @param {string?} x\n@return {string} */ function f(x) {\n"
-                + "while (!x) { x = u(); }\nreturn x;\n}")
+            """
+            /** @return {string?} */ function u() {return 'a';}
+            /** @param {string?} x
+            @return {string} */ function f(x) {
+            while (!x) { x = u(); }
+            return x;
+            }
+            """)
         .run();
   }
 
@@ -15978,9 +17504,12 @@ override: function(this:Foo): number
   public void testDfa6() {
     newTest()
         .addSource(
-            "/** @return {Object?} */ function u() {return {};}\n"
-                + "/** @param {Object?} x */ function f(x) {\n"
-                + "while (x) { x = u(); if (!x) { x = u(); } }\n}")
+            """
+            /** @return {Object?} */ function u() {return {};}
+            /** @param {Object?} x */ function f(x) {
+            while (x) { x = u(); if (!x) { x = u(); } }
+            }
+            """)
         .run();
   }
 
@@ -15988,11 +17517,14 @@ override: function(this:Foo): number
   public void testDfa7() {
     newTest()
         .addSource(
-            "/** @constructor */ var T = function() {};\n"
-                + "/** @type {Date?} */ T.prototype.x = null;\n"
-                + "/** @param {!T} t */ function f(t) {\n"
-                + "if (!t.x) { return; }\n"
-                + "/** @type {!Date} */ var e = t.x;\n}")
+            """
+            /** @constructor */ var T = function() {};
+            /** @type {Date?} */ T.prototype.x = null;
+            /** @param {!T} t */ function f(t) {
+            if (!t.x) { return; }
+            /** @type {!Date} */ var e = t.x;
+            }
+            """)
         .run();
   }
 
@@ -16000,11 +17532,15 @@ override: function(this:Foo): number
   public void testDfa8() {
     newTest()
         .addSource(
-            "/** @constructor */ var T = function() {};\n"
-                + "/** @type {number|string} */ T.prototype.x = '';\n"
-                + "function u() {}\n"
-                + "/** @param {!T} t\n@return {number} */ function f(t) {\n"
-                + "if (u()) { t.x = 1; } else { t.x = 2; } return t.x;\n}")
+            """
+            /** @constructor */ var T = function() {};
+            /** @type {number|string} */ T.prototype.x = '';
+            function u() {}
+            /** @param {!T} t
+            @return {number} */ function f(t) {
+            if (u()) { t.x = 1; } else { t.x = 2; } return t.x;
+            }
+            """)
         .run();
   }
 
@@ -16014,7 +17550,12 @@ override: function(this:Foo): number
         .addSource(
             "function f() {\n/** @type {string?} */var x;\nx = null;\n"
                 + "if (x == null) { return 0; } else { return 1; } }")
-        .addDiagnostic("condition always evaluates to true\n" + "left : null\n" + "right: null")
+        .addDiagnostic(
+            """
+            condition always evaluates to true
+            left : null
+            right: null
+            """)
         .run();
   }
 
@@ -16027,9 +17568,11 @@ override: function(this:Foo): number
                 + "if (!x) { x = ''; }\n"
                 + "if (g(x)) { return 0; } else { return 1; } }")
         .addDiagnostic(
-            "actual parameter 1 of g does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: null")
+            """
+            actual parameter 1 of g does not match formal parameter
+            found   : string
+            required: null
+            """)
         .run();
   }
 
@@ -16055,9 +17598,11 @@ override: function(this:Foo): number
                 + "  if (opt_x) { new Bar(g(opt_x) && 'x'); }"
                 + "}")
         .addDiagnostic(
-            "actual parameter 1 of g does not match formal parameter\n"
-                + "found   : (number|string)\n"
-                + "required: string")
+            """
+            actual parameter 1 of g does not match formal parameter
+            found   : (number|string)
+            required: string
+            """)
         .run();
   }
 
@@ -16129,9 +17674,11 @@ override: function(this:Foo): number
                 + "  foo(y.length);"
                 + "}")
         .addDiagnostic(
-            "actual parameter 1 of foo does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: number")
+            """
+            actual parameter 1 of foo does not match formal parameter
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -16159,7 +17706,11 @@ override: function(this:Foo): number
                 + "  return x === 3;"
                 + "}")
         .addDiagnostic(
-            "condition always evaluates to false\n" + "left : (null|string)\n" + "right: number")
+            """
+            condition always evaluates to false
+            left : (null|string)
+            right: number
+            """)
         .run();
   }
 
@@ -16185,9 +17736,11 @@ override: function(this:Foo): number
                 + "  }"
                 + "};")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : (null|{baz: number})\n"
-                + "required: number")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : (null|{baz: number})
+            required: number
+            """)
         .run();
   }
 
@@ -16213,9 +17766,11 @@ override: function(this:Foo): number
             + "    g(this.bar);"
             + "  }"
             + "};",
-        "actual parameter 1 of f does not match formal parameter\n"
-            + "found   : (null|{baz: number})\n"
-            + "required: number");
+        """
+        actual parameter 1 of f does not match formal parameter
+        found   : (null|{baz: number})
+        required: number
+        """);
   }
 
   @Test
@@ -16231,7 +17786,12 @@ override: function(this:Foo): number
                 + "  /** @type {number} */"
                 + "  this.number_ = 3;"
                 + "};")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -16257,9 +17817,11 @@ override: function(this:Foo): number
     testClosureTypes(f, null);
     testClosureTypes(
         f + "f(3);",
-        "actual parameter 1 of f does not match formal parameter\n"
-            + "found   : number\n"
-            + "required: (MyType|null)");
+        """
+        actual parameter 1 of f does not match formal parameter
+        found   : number
+        required: (MyType|null)
+        """);
   }
 
   @Test
@@ -16269,9 +17831,11 @@ override: function(this:Foo): number
             + "/** @param {MyType} x */ function f(x) { return x; }"
             + "/** @constructor */ var MyType = function() {};"
             + "f(3);",
-        "actual parameter 1 of f does not match formal parameter\n"
-            + "found   : number\n"
-            + "required: (MyType|null)");
+        """
+        actual parameter 1 of f does not match formal parameter
+        found   : number
+        required: (MyType|null)
+        """);
   }
 
   @Test
@@ -16345,9 +17909,11 @@ override: function(this:Foo): number
     testClosureTypes(f + "f(3);", null);
     testClosureTypes(
         f + "f('3');",
-        "actual parameter 1 of f does not match formal parameter\n"
-            + "found   : string\n"
-            + "required: (MyType|null|number)");
+        """
+        actual parameter 1 of f does not match formal parameter
+        found   : string
+        required: (MyType|null|number)
+        """);
   }
 
   @Test
@@ -16415,9 +17981,11 @@ override: function(this:Foo): number
                 + "/** @param {goog.Bar} x */ function f(x) {}"
                 + "f('3');")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: number")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -16430,9 +17998,11 @@ override: function(this:Foo): number
                 + "/** @param {Bar} x */ function f(x) {}"
                 + "f('3');")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: number")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -16446,9 +18016,11 @@ override: function(this:Foo): number
                 + "/** @param {AB} x */ function f(x) {}"
                 + "f(new A()); f(new B()); f(1);")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: (A|B|null)")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : number
+            required: (A|B|null)
+            """)
         .run();
   }
 
@@ -16466,9 +18038,11 @@ override: function(this:Foo): number
                 + "/** @typedef {(A|B)} */ var AB;"
                 + "f(new A()); f(new B()); f(1);")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: (A|B|null)")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : number
+            required: (A|B|null)
+            """)
         .run();
   }
 
@@ -17423,9 +18997,11 @@ override: function(this:Foo): number
             + "/** @param {string} x */ function f(x) {}"
             + "/** @constructor */ function A() {}"
             + "goog.reflect.object(A, {x: f(1 + 1)});",
-        "actual parameter 1 of f does not match formal parameter\n"
-            + "found   : number\n"
-            + "required: string");
+        """
+        actual parameter 1 of f does not match formal parameter
+        found   : number
+        required: string
+        """);
   }
 
   @Test
@@ -17656,11 +19232,13 @@ override: function(this:Foo): number
                 // argument to function f has JSDoc through its prototype chain.
                 "Object.prototype.constructor = function() {};\n")
         .addSource(
-            "/**\n"
-                + "* @param {function(): boolean} fn\n"
-                + "*/\n"
-                + "function f(fn) {}\n"
-                + "f(function() { });\n")
+            """
+            /**
+            * @param {function(): boolean} fn
+            */
+            function f(fn) {}
+            f(function() { });
+            """)
         .run();
   }
 
@@ -17668,29 +19246,33 @@ override: function(this:Foo): number
   public void testTemplatedThisType1() {
     newTest()
         .addSource(
-            "/** @constructor */\n"
-                + "function Foo() {}\n"
-                + "/**\n"
-                + " * @this {T}\n"
-                + " * @return {T}\n"
-                + " * @template T\n"
-                + " */\n"
-                + "Foo.prototype.method = function() {};\n"
-                + "/**\n"
-                + " * @constructor\n"
-                + " * @extends {Foo}\n"
-                + " */\n"
-                + "function Bar() {}\n"
-                + "var g = new Bar().method();\n"
-                + "/**\n"
-                + " * @param {number} a\n"
-                + " */\n"
-                + "function compute(a) {};\n"
-                + "compute(g);\n")
+            """
+            /** @constructor */
+            function Foo() {}
+            /**
+             * @this {T}
+             * @return {T}
+             * @template T
+             */
+            Foo.prototype.method = function() {};
+            /**
+             * @constructor
+             * @extends {Foo}
+             */
+            function Bar() {}
+            var g = new Bar().method();
+            /**
+             * @param {number} a
+             */
+            function compute(a) {};
+            compute(g);
+            """)
         .addDiagnostic(
-            "actual parameter 1 of compute does not match formal parameter\n"
-                + "found   : Bar\n"
-                + "required: number")
+            """
+            actual parameter 1 of compute does not match formal parameter
+            found   : Bar
+            required: number
+            """)
         .run();
   }
 
@@ -17715,14 +19297,16 @@ override: function(this:Foo): number
   public void testTemplateType1() {
     newTest()
         .addSource(
-            "/**\n"
-                + "* @param {T} x\n"
-                + "* @param {T} y\n"
-                + "* @param {function(this:T, ...)} z\n"
-                + "* @template T\n"
-                + "*/\n"
-                + "function f(x, y, z) {}\n"
-                + "f(this, this, function() { this });")
+            """
+            /**
+            * @param {T} x
+            * @param {T} y
+            * @param {function(this:T, ...)} z
+            * @template T
+            */
+            function f(x, y, z) {}
+            f(this, this, function() { this });
+            """)
         .run();
   }
 
@@ -17732,13 +19316,15 @@ override: function(this:Foo): number
     // allow for ES5-strict methods.
     newTest()
         .addSource(
-            "/**\n"
-                + "* @param {T} x\n"
-                + "* @param {function(this:T, ...)} y\n"
-                + "* @template T\n"
-                + "*/\n"
-                + "function f(x, y) {}\n"
-                + "f(0, function() {});")
+            """
+            /**
+            * @param {T} x
+            * @param {function(this:T, ...)} y
+            * @template T
+            */
+            function f(x, y) {}
+            f(0, function() {});
+            """)
         .run();
   }
 
@@ -17757,7 +19343,12 @@ override: function(this:Foo): number
                 + " x = true;"
                 + " s = x;"
                 + "});")
-        .addDiagnostic("assignment\n" + "found   : boolean\n" + "required: string")
+        .addDiagnostic(
+            """
+            assignment
+            found   : boolean
+            required: string
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -17774,7 +19365,12 @@ override: function(this:Foo): number
                 + "function fn(p) { return p; }\n"
                 + "/** @type {!Object} */ var x;"
                 + "x = fn(3, null);")
-        .addDiagnostic("assignment\n" + "found   : (null|number)\n" + "required: Object")
+        .addDiagnostic(
+            """
+            assignment
+            found   : (null|number)
+            required: Object
+            """)
         .run();
   }
 
@@ -17821,7 +19417,12 @@ override: function(this:Foo): number
                 + "/** @param {Array<number>} arr */ function g(arr) {"
                 + "  /** @type {!Object} */ var x = fn.call(null, arr, null);"
                 + "}")
-        .addDiagnostic("initializing variable\n" + "found   : number\n" + "required: Object")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : number
+            required: Object
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -17862,7 +19463,12 @@ override: function(this:Foo): number
                 + "/** @param {Bar<number>} bar */ function g(bar) {"
                 + "  /** @type {!Object} */ var x = fn(bar);"
                 + "}")
-        .addDiagnostic("initializing variable\n" + "found   : number\n" + "required: Object")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : number
+            required: Object
+            """)
         .run();
   }
 
@@ -17884,7 +19490,12 @@ override: function(this:Foo): number
                 + "/** @param {Bar<number>} bar */ function g(bar) {"
                 + "  /** @type {!Object} */ var x = fn(bar);"
                 + "}")
-        .addDiagnostic("initializing variable\n" + "found   : number\n" + "required: Object")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : number
+            required: Object
+            """)
         .run();
   }
 
@@ -17929,7 +19540,12 @@ override: function(this:Foo): number
                 + ""
                 + "/** @type {!Foo<string>} */ var a = new A();\n"
                 + "/** @type {!Foo<string>} */ var b = new B();")
-        .addDiagnostic("initializing variable\n" + "found   : B\n" + "required: Foo<string>")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : B
+            required: Foo<string>
+            """)
         .run();
   }
 
@@ -17956,7 +19572,12 @@ override: function(this:Foo): number
                 + ""
                 + "/** @type {!Foo<string>} */ var a = new A();\n"
                 + "/** @type {!Foo<string>} */ var b = new B();")
-        .addDiagnostic("initializing variable\n" + "found   : B\n" + "required: Foo<string>")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : B
+            required: Foo<string>
+            """)
         .run();
   }
 
@@ -17984,7 +19605,11 @@ override: function(this:Foo): number
                 + "/** @type {!Foo<string>} */ var f2 = a2;\n"
                 + "/** @type {!Foo<string>} */ var f3 = a3;")
         .addDiagnostic(
-            "initializing variable\n" + "found   : A<number>\n" + "required: Foo<string>")
+            """
+            initializing variable
+            found   : A<number>
+            required: Foo<string>
+            """)
         .run();
   }
 
@@ -18012,7 +19637,11 @@ override: function(this:Foo): number
                 + "/** @type {!Foo<string>} */ var f2 = a2;\n"
                 + "/** @type {!Foo<string>} */ var f3 = a3;")
         .addDiagnostic(
-            "initializing variable\n" + "found   : A<number>\n" + "required: Foo<string>")
+            """
+            initializing variable
+            found   : A<number>
+            required: Foo<string>
+            """)
         .run();
   }
 
@@ -18028,7 +19657,12 @@ override: function(this:Foo): number
                 + "function fn(p) { return p.foo; }\n"
                 + "/** @type {!Object} */ var x;"
                 + "x = fn({foo:3});")
-        .addDiagnostic("assignment\n" + "found   : number\n" + "required: Object")
+        .addDiagnostic(
+            """
+            assignment
+            found   : number
+            required: Object
+            """)
         .run();
   }
 
@@ -18047,7 +19681,12 @@ override: function(this:Foo): number
                 + "function fn(p) { return p.foo; }\n"
                 + "/** @type {!Object} */ var x;"
                 + "x = fn(new C());")
-        .addDiagnostic("assignment\n" + "found   : number\n" + "required: Object")
+        .addDiagnostic(
+            """
+            assignment
+            found   : number
+            required: Object
+            """)
         .run();
   }
 
@@ -18065,7 +19704,12 @@ override: function(this:Foo): number
                 + "function fn(p) { return p.foo; }\n"
                 + "/** @type {!Object} */ var x;"
                 + "x = fn(new C());")
-        .addDiagnostic("assignment\n" + "found   : number\n" + "required: Object")
+        .addDiagnostic(
+            """
+            assignment
+            found   : number
+            required: Object
+            """)
         .run();
   }
 
@@ -18092,18 +19736,25 @@ override: function(this:Foo): number
   public void testTemplateType19() {
     newTest()
         .addSource(
-            "/**\n"
-                + " * @param {T} t\n"
-                + " * @param {U} u\n"
-                + " * @return {{t:T, u:U}} \n"
-                + " * @template T,U\n"
-                + " */\n"
-                + "function fn(t, u) { return {t:t, u:u}; }\n"
-                + "/** @type {null} */ var x = fn(1, 'str');")
+            """
+            /**
+             * @param {T} t
+             * @param {U} u
+             * @return {{t:T, u:U}}\s
+             * @template T,U
+             */
+            function fn(t, u) { return {t:t, u:u}; }
+            /** @type {null} */ var x = fn(1, 'str');
+            """)
         .addDiagnostic(
-            "initializing variable\n"
-                + "found   : {\n  t: number,\n  u: string\n}\n"
-                + "required: null")
+            """
+            initializing variable
+            found   : {
+              t: number,
+              u: string
+            }
+            required: null
+            """)
         .run();
   }
 
@@ -18112,18 +19763,24 @@ override: function(this:Foo): number
     // "this" types is inferred when the parameters are declared.
     newTest()
         .addSource(
-            "/** @constructor */ function C() {\n"
-                + "  /** @type {void} */ this.x;\n"
-                + "}\n"
-                + "/**\n"
-                + "* @param {T} x\n"
-                + "* @param {function(this:T, ...)} y\n"
-                + "* @template T\n"
-                + "*/\n"
-                + "function f(x, y) {}\n"
-                + "f(new C, /** @param {number} a */ function(a) {this.x = a;});")
+            """
+            /** @constructor */ function C() {
+              /** @type {void} */ this.x;
+            }
+            /**
+            * @param {T} x
+            * @param {function(this:T, ...)} y
+            * @template T
+            */
+            function f(x, y) {}
+            f(new C, /** @param {number} a */ function(a) {this.x = a;});
+            """)
         .addDiagnostic(
-            "assignment to property x of C\n" + "found   : number\n" + "required: undefined")
+            """
+            assignment to property x of C
+            found   : number
+            required: undefined
+            """)
         .run();
   }
 
@@ -18132,14 +19789,21 @@ override: function(this:Foo): number
     // "this" types is inferred when the parameters are declared.
     newTest()
         .addSource(
-            "/** @interface @template T */ function A() {}\n"
-                + "/** @constructor @implements {A<Foo>} */\n"
-                + "function Foo() {}\n"
-                + "/** @constructor @implements {A<Bar>} */\n"
-                + "function Bar() {}\n"
-                + "/** @type {!Foo} */\n"
-                + "var x = new Bar();\n")
-        .addDiagnostic("initializing variable\n" + "found   : Bar\n" + "required: Foo")
+            """
+            /** @interface @template T */ function A() {}
+            /** @constructor @implements {A<Foo>} */
+            function Foo() {}
+            /** @constructor @implements {A<Bar>} */
+            function Bar() {}
+            /** @type {!Foo} */
+            var x = new Bar();
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : Bar
+            required: Foo
+            """)
         .run();
   }
 
@@ -18148,17 +19812,24 @@ override: function(this:Foo): number
     // "this" types is inferred when the parameters are declared.
     newTest()
         .addSource(
-            "/** @interface @template T */ function A() {}\n"
-                + "/** @interface @template T */ function B() {}\n"
-                + "/** @constructor @implements {A<Foo>} */\n"
-                + "function Foo() {}\n"
-                + "/** @constructor @implements {B<Foo>} */\n"
-                + "function Bar() {}\n"
-                + "/** @constructor @implements {B<Foo>} */\n"
-                + "function Qux() {}\n"
-                + "/** @type {!Qux} */\n"
-                + "var x = new Bar();\n")
-        .addDiagnostic("initializing variable\n" + "found   : Bar\n" + "required: Qux")
+            """
+            /** @interface @template T */ function A() {}
+            /** @interface @template T */ function B() {}
+            /** @constructor @implements {A<Foo>} */
+            function Foo() {}
+            /** @constructor @implements {B<Foo>} */
+            function Bar() {}
+            /** @constructor @implements {B<Foo>} */
+            function Qux() {}
+            /** @type {!Qux} */
+            var x = new Bar();
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : Bar
+            required: Qux
+            """)
         .run();
   }
 
@@ -18167,11 +19838,13 @@ override: function(this:Foo): number
     // "this" types is inferred when the parameters are declared.
     newTest()
         .addSource(
-            "/** @interface @template T */ function A() {}\n"
-                + "/** @constructor @implements {A<Foo>} */\n"
-                + "function Foo() {}\n"
-                + "/** @type {!Foo} */\n"
-                + "var x = new Foo();\n")
+            """
+            /** @interface @template T */ function A() {}
+            /** @constructor @implements {A<Foo>} */
+            function Foo() {}
+            /** @type {!Foo} */
+            var x = new Foo();
+            """)
         .run();
   }
 
@@ -18201,7 +19874,11 @@ override: function(this:Foo): number
             var /** null */ n = new Foo(new Object).m().get();
             """)
         .addDiagnostic(
-            "initializing variable\n" + "found   : (Foo<Object>|null)\n" + "required: null")
+            """
+            initializing variable
+            found   : (Foo<Object>|null)
+            required: null
+            """)
         .run();
   }
 
@@ -18230,7 +19907,12 @@ override: function(this:Foo): number
             };
             var /** null */ n = new Foo(new Object).m().get();
             """)
-        .addDiagnostic("initializing variable\n" + "found   : Foo<Object>\n" + "required: null")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : Foo<Object>
+            required: null
+            """)
         .run();
   }
 
@@ -18266,7 +19948,12 @@ override: function(this:Foo): number
             }
             var /** null */ n = new Foo(new Object).getBar();
             """)
-        .addDiagnostic("initializing variable\n" + "found   : Array<Object>\n" + "required: null")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : Array<Object>
+            required: null
+            """)
         .run();
   }
 
@@ -18443,7 +20130,12 @@ override: function(this:Foo): number
               var /** null */ n = x;
             }
             """)
-        .addDiagnostic("initializing variable\n" + "found   : Object\n" + "required: null")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : Object
+            required: null
+            """)
         .run();
   }
 
@@ -18458,18 +20150,25 @@ override: function(this:Foo): number
               var /** null */ n = x;
             }
             """)
-        .addDiagnostic("initializing variable\n" + "found   : Object\n" + "required: null")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : Object
+            required: null
+            """)
         .run();
   }
 
   @Test
   public void testTemplateTypeWithUnresolvedType() {
     testClosureTypes(
-        "goog.forwardDeclare('Color');\n"
-            + "/** @interface @template T */ function C() {}\n"
-            + "/** @return {!Color} */ C.prototype.method;\n"
-            + "/** @constructor @implements {C} */ function D() {}\n"
-            + "/** @override */ D.prototype.method = function() {};",
+        """
+        goog.forwardDeclare('Color');
+        /** @interface @template T */ function C() {}
+        /** @return {!Color} */ C.prototype.method;
+        /** @constructor @implements {C} */ function D() {}
+        /** @override */ D.prototype.method = function() {};
+        """,
         null); // no warning expected.
   }
 
@@ -18497,7 +20196,11 @@ override: function(this:Foo): number
                 + // no warning
                 "/** @type {null} */ var z1 = y;\n")
         .addDiagnostic(
-            "initializing variable\n" + "found   : (Generic<Foo>|null)\n" + "required: null")
+            """
+            initializing variable
+            found   : (Generic<Foo>|null)
+            required: null
+            """)
         .run();
   }
 
@@ -18525,7 +20228,11 @@ override: function(this:Foo): number
                 + // no warning.
                 "/** @type {null} */ var z1 = x;\n")
         .addDiagnostic(
-            "initializing variable\n" + "found   : (Generic<Foo>|null)\n" + "required: null")
+            """
+            initializing variable
+            found   : (Generic<Foo>|null)
+            required: null
+            """)
         .run();
   }
 
@@ -18533,22 +20240,24 @@ override: function(this:Foo): number
   public void testTemplateTypeWithTypeDef2a() {
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @template T\n"
-                + " * @param {T} x\n"
-                + " */\n"
-                + "function Generic(x) {}\n"
-                + "\n"
-                + "/** @constructor */\n"
-                + "function Foo() {}\n"
-                + "\n"
-                + "/** @typedef {!Foo} */\n"
-                + "var Bar;\n"
-                + "\n"
-                + "function f(/** Generic<!Bar> */ x) {}\n"
-                + "/** @type {Generic<!Foo>} */ var x;\n"
-                + "f(x);\n")
+            """
+            /**
+             * @constructor
+             * @template T
+             * @param {T} x
+             */
+            function Generic(x) {}
+
+            /** @constructor */
+            function Foo() {}
+
+            /** @typedef {!Foo} */
+            var Bar;
+
+            function f(/** Generic<!Bar> */ x) {}
+            /** @type {Generic<!Foo>} */ var x;
+            f(x);
+            """)
         .run(); // no warning expected.
   }
 
@@ -18556,22 +20265,24 @@ override: function(this:Foo): number
   public void testTemplateTypeWithTypeDef2b() {
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @template T\n"
-                + " * @param {T} x\n"
-                + " */\n"
-                + "function Generic(x) {}\n"
-                + "\n"
-                + "/** @constructor */\n"
-                + "function Foo() {}\n"
-                + "\n"
-                + "/** @typedef {!Foo} */\n"
-                + "var Bar;\n"
-                + "\n"
-                + "function f(/** Generic<!Bar> */ x) {}\n"
-                + "/** @type {Generic<!Bar>} */ var x;\n"
-                + "f(x);\n")
+            """
+            /**
+             * @constructor
+             * @template T
+             * @param {T} x
+             */
+            function Generic(x) {}
+
+            /** @constructor */
+            function Foo() {}
+
+            /** @typedef {!Foo} */
+            var Bar;
+
+            function f(/** Generic<!Bar> */ x) {}
+            /** @type {Generic<!Bar>} */ var x;
+            f(x);
+            """)
         .run(); // no warning expected.
   }
 
@@ -18579,22 +20290,24 @@ override: function(this:Foo): number
   public void testTemplateTypeWithTypeDef2c() {
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @template T\n"
-                + " * @param {T} x\n"
-                + " */\n"
-                + "function Generic(x) {}\n"
-                + "\n"
-                + "/** @constructor */\n"
-                + "function Foo() {}\n"
-                + "\n"
-                + "/** @typedef {!Foo} */\n"
-                + "var Bar;\n"
-                + "\n"
-                + "function f(/** Generic<!Foo> */ x) {}\n"
-                + "/** @type {Generic<!Foo>} */ var x;\n"
-                + "f(x);\n")
+            """
+            /**
+             * @constructor
+             * @template T
+             * @param {T} x
+             */
+            function Generic(x) {}
+
+            /** @constructor */
+            function Foo() {}
+
+            /** @typedef {!Foo} */
+            var Bar;
+
+            function f(/** Generic<!Foo> */ x) {}
+            /** @type {Generic<!Foo>} */ var x;
+            f(x);
+            """)
         .run(); // no warning expected.
   }
 
@@ -18602,22 +20315,24 @@ override: function(this:Foo): number
   public void testTemplateTypeWithTypeDef2d() {
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @template T\n"
-                + " * @param {T} x\n"
-                + " */\n"
-                + "function Generic(x) {}\n"
-                + "\n"
-                + "/** @constructor */\n"
-                + "function Foo() {}\n"
-                + "\n"
-                + "/** @typedef {!Foo} */\n"
-                + "var Bar;\n"
-                + "\n"
-                + "function f(/** Generic<!Foo> */ x) {}\n"
-                + "/** @type {Generic<!Bar>} */ var x;\n"
-                + "f(x);\n")
+            """
+            /**
+             * @constructor
+             * @template T
+             * @param {T} x
+             */
+            function Generic(x) {}
+
+            /** @constructor */
+            function Foo() {}
+
+            /** @typedef {!Foo} */
+            var Bar;
+
+            function f(/** Generic<!Foo> */ x) {}
+            /** @type {Generic<!Bar>} */ var x;
+            f(x);
+            """)
         .run(); // no warning expected.
   }
 
@@ -18647,20 +20362,22 @@ override: function(this:Foo): number
   public void testTemplateTypeRecursion1() {
     newTest()
         .addSource(
-            "/** @typedef {{a: D2}} */\n"
-                + "var D1;\n"
-                + "\n"
-                + "/** @typedef {{b: D1}} */\n"
-                + "var D2;\n"
-                + "\n"
-                + "fn(x);\n"
-                + "\n"
-                + "\n"
-                + "/**\n"
-                + " * @param {!D1} s\n"
-                + " * @template T\n"
-                + " */\n"
-                + "var fn = function(s) {};")
+            """
+            /** @typedef {{a: D2}} */
+            var D1;
+
+            /** @typedef {{b: D1}} */
+            var D2;
+
+            fn(x);
+
+
+            /**
+             * @param {!D1} s
+             * @template T
+             */
+            var fn = function(s) {};
+            """)
         .run();
   }
 
@@ -18797,9 +20514,11 @@ override: function(this:Foo): number
                 + "function f(x, y) {}\n"
                 + "f(g(), function() { h(this); });")
         .addDiagnostic(
-            "actual parameter 1 of h does not match formal parameter\n"
-                + "found   : (Array|F|null)\n"
-                + "required: (F|null)")
+            """
+            actual parameter 1 of h does not match formal parameter
+            found   : (Array|F|null)
+            required: (F|null)
+            """)
         .run();
   }
 
@@ -18867,17 +20586,15 @@ override: function(this:Foo): number
             found   : {prop: (number|string|undefined)}
             required: {prop: (number|undefined)}
             missing : []
-            mismatch: [prop]
-            """
-                .trim(),
+            mismatch: [prop]\
+            """,
             """
             actual parameter 1 of g does not match formal parameter
             found   : {prop: (number|string|undefined)}
             required: {prop: (string|undefined)}
             missing : []
-            mismatch: [prop]
-            """
-                .trim()));
+            mismatch: [prop]\
+            """));
   }
 
   @Test
@@ -18908,9 +20625,11 @@ override: function(this:Foo): number
                 + "/** @param {number} x */"
                 + "function g(x) {}")
         .addDiagnostic(
-            "actual parameter 1 of g does not match formal parameter\n"
-                + "found   : {prop: (number|undefined)}\n"
-                + "required: number")
+            """
+            actual parameter 1 of g does not match formal parameter
+            found   : {prop: (number|undefined)}
+            required: number
+            """)
         .run();
   }
 
@@ -18923,9 +20642,11 @@ override: function(this:Foo): number
                 + "/** @param {string} x */"
                 + "function g(x) {}")
         .addDiagnostic(
-            "actual parameter 1 of g does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: string")
+            """
+            actual parameter 1 of g does not match formal parameter
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -18951,13 +20672,15 @@ override: function(this:Foo): number
   public void testMultipleExtendsInterface1() {
     newTest()
         .addSource(
-            "/** @interface */ function base1() {}\n"
-                + "/** @interface */ function base2() {}\n"
-                + "/** @interface\n"
-                + "* @extends {base1}\n"
-                + "* @extends {base2}\n"
-                + "*/\n"
-                + "function derived() {}")
+            """
+            /** @interface */ function base1() {}
+            /** @interface */ function base2() {}
+            /** @interface
+            * @extends {base1}
+            * @extends {base2}
+            */
+            function derived() {}
+            """)
         .run();
   }
 
@@ -19084,13 +20807,15 @@ override: function(this:Sub, string): undefined
   public void testBadMultipleExtendsClass() {
     newTest()
         .addSource(
-            "/** @constructor */ function base1() {}\n"
-                + "/** @constructor */ function base2() {}\n"
-                + "/** @constructor\n"
-                + "* @extends {base1}\n"
-                + "* @extends {base2}\n"
-                + "*/\n"
-                + "function derived() {}")
+            """
+            /** @constructor */ function base1() {}
+            /** @constructor */ function base2() {}
+            /** @constructor
+            * @extends {base1}
+            * @extends {base2}
+            */
+            function derived() {}
+            """)
         .addDiagnostic(
             "Bad type annotation. type annotation incompatible with other annotations."
                 + BAD_TYPE_WIKI_LINK)
@@ -19101,9 +20826,13 @@ override: function(this:Sub, string): undefined
   public void testInterfaceExtendsResolution() {
     newTest()
         .addSource(
-            "/** @interface \n @extends {A} */ function B() {};\n"
-                + "/** @constructor \n @implements {B} */ function C() {};\n"
-                + "/** @interface */ function A() {};")
+            """
+            /** @interface\s
+             @extends {A} */ function B() {};
+            /** @constructor\s
+             @implements {B} */ function C() {};
+            /** @interface */ function A() {};
+            """)
         .run();
   }
 
@@ -19373,12 +21102,14 @@ override: number
   @Test
   public void testGenerics1a() {
     String fnDecl =
-        "/** \n"
-            + " * @param {T} x \n"
-            + " * @param {function(T):T} y \n"
-            + " * @template T\n"
-            + " */ \n"
-            + "function f(x,y) { return y(x); }\n";
+        """
+        /**\s
+         * @param {T} x\s
+         * @param {function(T):T} y\s
+         * @template T
+         */\s
+        function f(x,y) { return y(x); }
+        """;
 
     newTest()
         .addSource(
@@ -19393,12 +21124,14 @@ override: number
   @Test
   public void testGenerics1b() {
     String fnDecl =
-        "/** \n"
-            + " * @param {T} x \n"
-            + " * @param {function(T):T} y \n"
-            + " * @template T\n"
-            + " */ \n"
-            + "function f(x,y) { return y(x); }\n";
+        """
+        /**\s
+         * @param {T} x\s
+         * @param {function(T):T} y\s
+         * @template T
+         */\s
+        function f(x,y) { return y(x); }
+        """;
 
     newTest()
         .addSource(
@@ -19406,7 +21139,12 @@ override: number
                 + "/** @type {string} */"
                 + "var out;"
                 + "var result = f(0, function(x){ out = x; return x; });")
-        .addDiagnostic("assignment\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            assignment
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -19459,7 +21197,11 @@ override: number
                 + "/** @type {!Array<number>} */"
                 + "var result = filter(arr);")
         .addDiagnostic(
-            "initializing variable\n" + "found   : Array<string>\n" + "required: Array<number>")
+            """
+            initializing variable
+            found   : Array<string>
+            required: Array<number>
+            """)
         .run();
   }
 
@@ -19478,9 +21220,11 @@ override: number
                 + "/** @type {Array<number>} */"
                 + "var result = filter(arr);")
         .addDiagnostic(
-            "initializing variable\n"
-                + "found   : (Array<string>|null)\n"
-                + "required: (Array<number>|null)")
+            """
+            initializing variable
+            found   : (Array<string>|null)
+            required: (Array<number>|null)
+            """)
         .run();
   }
 
@@ -19493,7 +21237,11 @@ override: number
             + "var result = goog.array.filter("
             + "   arr,"
             + "   function(item,index,src) {return false;});",
-        "initializing variable\n" + "found   : Array<string>\n" + "required: Array<number>");
+        """
+        initializing variable
+        found   : Array<string>
+        required: Array<number>
+        """);
   }
 
   @Test
@@ -19506,7 +21254,11 @@ override: number
             + "var out4 = goog.array.filter("
             + "   arr,"
             + "   function(item,index,src) {out = item; return false});",
-        "assignment\n" + "found   : string\n" + "required: number");
+        """
+        assignment
+        found   : string
+        required: number
+        """);
   }
 
   @Test
@@ -19518,7 +21270,11 @@ override: number
             + "var result = goog.array.filter("
             + "   arr,"
             + "   function(item,index,src) {out = index;});",
-        "assignment\n" + "found   : number\n" + "required: string");
+        """
+        assignment
+        found   : number
+        required: string
+        """);
   }
 
   @Test
@@ -19552,7 +21308,12 @@ override: number
                 + "    out = e;"
                 + "  }"
                 + "}\n")
-        .addDiagnostic("assignment\n" + "found   : string\n" + "required: number")
+        .addDiagnostic(
+            """
+            assignment
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -19578,25 +21339,27 @@ override: number
   public void testIssue1058() {
     newTest()
         .addSource(
-            "/**\n"
-                + "  * @constructor\n"
-                + "  * @template CLASS\n"
-                + "  */\n"
-                + "var Class = function() {};\n"
-                + "\n"
-                + "/**\n"
-                + "  * @param {function(CLASS):CLASS} a\n"
-                + "  * @template T\n"
-                + "  */\n"
-                + "Class.prototype.foo = function(a) {\n"
-                + "  return 'string';\n"
-                + "};\n"
-                + "\n"
-                + "/** @param {number} a\n"
-                + "  * @return {string} */\n"
-                + "var a = function(a) { return '' };\n"
-                + "\n"
-                + "new Class().foo(a);")
+            """
+            /**
+              * @constructor
+              * @template CLASS
+              */
+            var Class = function() {};
+
+            /**
+              * @param {function(CLASS):CLASS} a
+              * @template T
+              */
+            Class.prototype.foo = function(a) {
+              return 'string';
+            };
+
+            /** @param {number} a
+              * @return {string} */
+            var a = function(a) { return '' };
+
+            new Class().foo(a);
+            """)
         .run();
   }
 
@@ -19604,14 +21367,16 @@ override: number
   public void testDeterminacyIssue() {
     newTest()
         .addSource(
-            "(function() {\n"
-                + "    /** @constructor */\n"
-                + "    var ImageProxy = function() {};\n"
-                + "    /** @constructor */\n"
-                + "    var FeedReader = function() {};\n"
-                + "    /** @type {ImageProxy} */\n"
-                + "    FeedReader.x = new ImageProxy();\n"
-                + "})();")
+            """
+            (function() {
+                /** @constructor */
+                var ImageProxy = function() {};
+                /** @constructor */
+                var FeedReader = function() {};
+                /** @type {ImageProxy} */
+                FeedReader.x = new ImageProxy();
+            })();
+            """)
         .run();
   }
 
@@ -19645,15 +21410,17 @@ override: number
   public void testNonexistentPropertyAccessOnStruct() {
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "var A = function() {};\n"
-                + "/** @param {A} a */\n"
-                + "function foo(a) {\n"
-                + "  if (a.bar) { a.bar(); }\n"
-                + "}")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            var A = function() {};
+            /** @param {A} a */
+            function foo(a) {
+              if (a.bar) { a.bar(); }
+            }
+            """)
         .addDiagnostic("Property bar never defined on A")
         .run();
   }
@@ -19663,15 +21430,17 @@ override: number
     disableStrictMissingPropertyChecks();
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "var A = function() {};\n"
-                + "/** @param {A|Object} a */\n"
-                + "function foo(a) {\n"
-                + "  if (a.bar) { a.bar(); }\n"
-                + "}")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            var A = function() {};
+            /** @param {A|Object} a */
+            function foo(a) {
+              if (a.bar) { a.bar(); }
+            }
+            """)
         .run();
   }
 
@@ -19679,9 +21448,20 @@ override: number
   public void testNonexistentPropertyAccessOnExternStruct() {
     newTest()
         .addExterns(
-            "/**\n" + " * @constructor\n" + " * @struct\n" + " */\n" + "var A = function() {};")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            var A = function() {};
+            """)
         .addSource(
-            "/** @param {A} a */\n" + "function foo(a) {\n" + "  if (a.bar) { a.bar(); }\n" + "}")
+            """
+            /** @param {A} a */
+            function foo(a) {
+              if (a.bar) { a.bar(); }
+            }
+            """)
         .addDiagnostic("Property bar never defined on A")
         .run();
   }
@@ -19775,16 +21555,18 @@ override: number
   public void testNonexistentPropertyAccessStructSubtype2() {
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @struct\n"
-                + " */\n"
-                + "function Foo() {\n"
-                + "  this.x = 123;\n"
-                + "}\n"
-                + "var objlit = /** @struct */ { y: 234 };\n"
-                + "Foo.prototype = objlit;\n"
-                + "var n = objlit.x;\n")
+            """
+            /**
+             * @constructor
+             * @struct
+             */
+            function Foo() {
+              this.x = 123;
+            }
+            var objlit = /** @struct */ { y: 234 };
+            Foo.prototype = objlit;
+            var n = objlit.x;
+            """)
         .addDiagnostic("Property x never defined on Foo.prototype")
         .run();
   }
@@ -19888,10 +21670,12 @@ override: number
   public void testCheckObjectKeysBadKey7() {
     newTest()
         .addSource(
-            "/** @constructor */\n"
-                + "var MyClass = function() {};\n"
-                + "/** @type {!Object<MyClass, number>} */\n"
-                + "var k;")
+            """
+            /** @constructor */
+            var MyClass = function() {};
+            /** @type {!Object<MyClass, number>} */
+            var k;
+            """)
         .addDiagnostic(TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY)
         .run();
   }
@@ -19900,10 +21684,12 @@ override: number
   public void testCheckObjectKeysBadKey8() {
     newTest()
         .addSource(
-            "/** @enum{!Object} */\n"
-                + "var Enum = {};\n"
-                + "/** @type {!Object<Enum, number>} */\n"
-                + "var k;")
+            """
+            /** @enum{!Object} */
+            var Enum = {};
+            /** @type {!Object<Enum, number>} */
+            var k;
+            """)
         .addDiagnostic(TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY)
         .run();
   }
@@ -19928,14 +21714,16 @@ override: number
   public void testCheckObjectKeysBadKey11() {
     newTest()
         .addSource(
-            "/** @constructor */\n"
-                + "function X() {}\n"
-                + "/** @constructor @extends {X} */\n"
-                + "function X2() {}\n"
-                + "/** @enum {!X} */\n"
-                + "var XE = {A:new X};\n"
-                + "/** @type {Object<(!XE|!X2), string>} */\n"
-                + "var Y = {};")
+            """
+            /** @constructor */
+            function X() {}
+            /** @constructor @extends {X} */
+            function X2() {}
+            /** @enum {!X} */
+            var XE = {A:new X};
+            /** @type {Object<(!XE|!X2), string>} */
+            var Y = {};
+            """)
         .addDiagnostic(TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY)
         .run();
   }
@@ -20036,10 +21824,12 @@ override: number
   public void testCheckObjectKeysGoodKey13() {
     newTest()
         .addSource(
-            "/** @interface */\n"
-                + "var MyInterface = function() {};\n"
-                + "/** @type {!Object<!MyInterface, number>} */\n"
-                + "var k;")
+            """
+            /** @interface */
+            var MyInterface = function() {};
+            /** @type {!Object<!MyInterface, number>} */
+            var k;
+            """)
         .run();
   }
 
@@ -20056,10 +21846,12 @@ override: number
   public void testCheckObjectKeysGoodKey15() {
     newTest()
         .addSource(
-            "/** @enum{number} */\n"
-                + "var Enum = {};\n"
-                + "/** @type {!Object<Enum, number>} */\n"
-                + "var k;")
+            """
+            /** @enum{number} */
+            var Enum = {};
+            /** @type {!Object<Enum, number>} */
+            var k;
+            """)
         .run();
   }
 
@@ -20176,10 +21968,12 @@ override: number
   public void testCheckObjectKeysWithNamedType() {
     newTest()
         .addSource(
-            "/** @type {!Object<!PseudoId, number>} */\n"
-                + "var k;\n"
-                + "/** @typedef {number|string} */\n"
-                + "var PseudoId;")
+            """
+            /** @type {!Object<!PseudoId, number>} */
+            var k;
+            /** @typedef {number|string} */
+            var PseudoId;
+            """)
         .run();
   }
 
@@ -20187,9 +21981,11 @@ override: number
   public void testCheckObjectKeyRecursiveType() {
     newTest()
         .addSource(
-            "/** @typedef {!Object<string, !Predicate>} */ var Schema;\n"
-                + "/** @typedef {function(*): boolean|!Schema} */ var Predicate;\n"
-                + "/** @type {!Schema} */ var k;")
+            """
+            /** @typedef {!Object<string, !Predicate>} */ var Schema;
+            /** @typedef {function(*): boolean|!Schema} */ var Predicate;
+            /** @type {!Schema} */ var k;
+            """)
         .run();
   }
 
@@ -20197,14 +21993,24 @@ override: number
   public void testDontOverrideNativeScalarTypes() {
     newTest()
         .addSource("string = 123;\n" + "var /** string */ s = 123;")
-        .addDiagnostic("initializing variable\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : number
+            required: string
+            """)
         .run();
 
     newTest()
         .addSource("var string = goog.require('goog.string');\n" + "var /** string */ s = 123;")
         .addDiagnostic(
             "Property require never defined on goog" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION)
-        .addDiagnostic("initializing variable\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -20213,15 +22019,21 @@ override: number
     newTest()
         .addExterns(EXTERNS_WITH_IARRAYLIKE_DECLS)
         .addSource(
-            "function f() {\n"
-                + "  /** @type {Int8Array} */\n"
-                + "  var x = new Int8Array(10);\n"
-                + "  /** @type {IArrayLike<string>} */\n"
-                + "  var y;\n"
-                + "  y = x;\n"
-                + "}")
+            """
+            function f() {
+              /** @type {Int8Array} */
+              var x = new Int8Array(10);
+              /** @type {IArrayLike<string>} */
+              var y;
+              y = x;
+            }
+            """)
         .addDiagnostic(
-            "assignment\n" + "found   : (Int8Array|null)\n" + "required: (IArrayLike<string>|null)")
+            """
+            assignment
+            found   : (Int8Array|null)
+            required: (IArrayLike<string>|null)
+            """)
         .run();
   }
 
@@ -20230,18 +22042,22 @@ override: number
     newTest()
         .addExterns(EXTERNS_WITH_IARRAYLIKE_DECLS)
         .addSource(
-            "function f() {\n"
-                + "  /** @type {Int8Array} */\n"
-                + "  var x = new Int8Array(10);\n"
-                + "\n"
-                + "  /** @type {IObject<number, string>} */\n"
-                + "  var z;\n"
-                + "  z = x;\n"
-                + "}")
+            """
+            function f() {
+              /** @type {Int8Array} */
+              var x = new Int8Array(10);
+
+              /** @type {IObject<number, string>} */
+              var z;
+              z = x;
+            }
+            """)
         .addDiagnostic(
-            "assignment\n"
-                + "found   : (Int8Array|null)\n"
-                + "required: (IObject<number,string>|null)")
+            """
+            assignment
+            found   : (Int8Array|null)
+            required: (IObject<number,string>|null)
+            """)
         .run();
   }
 
@@ -20250,15 +22066,21 @@ override: number
     newTest()
         .addExterns(EXTERNS_WITH_IARRAYLIKE_DECLS)
         .addSource(
-            "function f() {\n"
-                + "  var x = new Int8Array(10);\n"
-                + "\n"
-                + "  /** @type {IArrayLike<string>} */\n"
-                + "  var y;\n"
-                + "  y = x;\n"
-                + "}")
+            """
+            function f() {
+              var x = new Int8Array(10);
+
+              /** @type {IArrayLike<string>} */
+              var y;
+              y = x;
+            }
+            """)
         .addDiagnostic(
-            "assignment\n" + "found   : Int8Array\n" + "required: (IArrayLike<string>|null)")
+            """
+            assignment
+            found   : Int8Array
+            required: (IArrayLike<string>|null)
+            """)
         .run();
   }
 
@@ -20267,15 +22089,21 @@ override: number
     newTest()
         .addExterns(EXTERNS_WITH_IARRAYLIKE_DECLS)
         .addSource(
-            "function f() {\n"
-                + "  var x = new Int8Array(10);\n"
-                + "\n"
-                + "  /** @type {IObject<number, string>} */\n"
-                + "  var z;\n"
-                + "  z = x;\n"
-                + "}")
+            """
+            function f() {
+              var x = new Int8Array(10);
+
+              /** @type {IObject<number, string>} */
+              var z;
+              z = x;
+            }
+            """)
         .addDiagnostic(
-            "assignment\n" + "found   : Int8Array\n" + "required: (IObject<number,string>|null)")
+            """
+            assignment
+            found   : Int8Array
+            required: (IObject<number,string>|null)
+            """)
         .run();
   }
 
@@ -20284,12 +22112,14 @@ override: number
     newTest()
         .addExterns(EXTERNS_WITH_IARRAYLIKE_DECLS)
         .addSource(
-            "function f() {\n"
-                + "  var x = new Int8Array(10);\n"
-                + "  /** @type {IArrayLike<number>} */\n"
-                + "  var y;\n"
-                + "  y = x;\n"
-                + "}")
+            """
+            function f() {
+              var x = new Int8Array(10);
+              /** @type {IArrayLike<number>} */
+              var y;
+              y = x;
+            }
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -20299,79 +22129,91 @@ override: number
     newTest()
         .addExterns(EXTERNS_WITH_IARRAYLIKE_DECLS)
         .addSource(
-            "function f() {\n"
-                + "  var x = new Int8Array(10);\n"
-                + "  /** @type {IObject<number, number>} */\n"
-                + "  var z;\n"
-                + "  z = x;\n"
-                + "}")
+            """
+            function f() {
+              var x = new Int8Array(10);
+              /** @type {IObject<number, number>} */
+              var z;
+              z = x;
+            }
+            """)
         .includeDefaultExterns()
         .run();
   }
 
   private static final String EXTERNS_WITH_IARRAYLIKE_DECLS =
-      "/**\n"
-          + " * @constructor @implements IArrayLike<number>\n"
-          + " */\n"
-          + "function Int8Array(length, opt_byteOffset, opt_length) {}\n"
-          + "/** @type {number} */\n"
-          + "Int8Array.prototype.length;\n"
-          + "/**\n"
-          + "* @constructor\n"
-          + "* @extends {Int8Array}\n"
-          + "*/\n"
-          + "function Int8Array2(len) {};\n"
-          + "/**\n"
-          + " * @interface\n"
-          + " * @extends {IArrayLike<number>}\n"
-          + " */\n"
-          + "function IArrayLike2(){}\n"
-          + "\n"
-          + "/**\n"
-          + " * @constructor\n"
-          + " * @implements {IArrayLike2}\n"
-          + " */\n"
-          + "function Int8Array3(len) {};\n"
-          + "/** @type {number} */\n"
-          + "Int8Array3.prototype.length;\n"
-          + "/**\n"
-          + " * @interface\n"
-          + " * @extends {IArrayLike<VALUE3>}\n"
-          + " * @template VALUE3\n"
-          + " */\n"
-          + "function IArrayLike3(){}\n"
-          + "/**\n"
-          + " * @constructor\n"
-          + " * @implements {IArrayLike3<number>}\n"
-          + " */\n"
-          + "function Int8Array4(length) {};\n"
-          + "/** @type {number} */\n"
-          + "Int8Array4.prototype.length;\n"
-          + "/**\n"
-          + " * @interface\n"
-          + " * @extends {IArrayLike<VALUE2>}\n"
-          + " * @template VALUE2\n"
-          + " */\n"
-          + "function IArrayLike4(){}\n"
-          + "/**\n"
-          + " * @interface\n"
-          + " * @extends {IArrayLike4<boolean>}\n"
-          + " */\n"
-          + "function IArrayLike5(){}\n"
-          + "/**\n"
-          + " * @constructor\n"
-          + " * @implements {IArrayLike5}\n"
-          + " */\n"
-          + "function BooleanArray5(length) {};\n"
-          + "/** @type {number} */\n"
-          + "BooleanArray5.prototype.length;";
+      """
+      /**
+       * @constructor @implements IArrayLike<number>
+       */
+      function Int8Array(length, opt_byteOffset, opt_length) {}
+      /** @type {number} */
+      Int8Array.prototype.length;
+      /**
+      * @constructor
+      * @extends {Int8Array}
+      */
+      function Int8Array2(len) {};
+      /**
+       * @interface
+       * @extends {IArrayLike<number>}
+       */
+      function IArrayLike2(){}
+
+      /**
+       * @constructor
+       * @implements {IArrayLike2}
+       */
+      function Int8Array3(len) {};
+      /** @type {number} */
+      Int8Array3.prototype.length;
+      /**
+       * @interface
+       * @extends {IArrayLike<VALUE3>}
+       * @template VALUE3
+       */
+      function IArrayLike3(){}
+      /**
+       * @constructor
+       * @implements {IArrayLike3<number>}
+       */
+      function Int8Array4(length) {};
+      /** @type {number} */
+      Int8Array4.prototype.length;
+      /**
+       * @interface
+       * @extends {IArrayLike<VALUE2>}
+       * @template VALUE2
+       */
+      function IArrayLike4(){}
+      /**
+       * @interface
+       * @extends {IArrayLike4<boolean>}
+       */
+      function IArrayLike5(){}
+      /**
+       * @constructor
+       * @implements {IArrayLike5}
+       */
+      function BooleanArray5(length) {};
+      /** @type {number} */
+      BooleanArray5.prototype.length;
+      """;
 
   @Test
   public void testArrayImplementsIArrayLike() {
     newTest()
         .addSource(
-            "/** @type {!Array<number>} */ var arr = [];\n" + "var /** null */ n = arr[0];\n")
-        .addDiagnostic("initializing variable\n" + "found   : number\n" + "required: null")
+            """
+            /** @type {!Array<number>} */ var arr = [];
+            var /** null */ n = arr[0];
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : number
+            required: null
+            """)
         .run();
   }
 
@@ -20380,7 +22222,12 @@ override: number
     newTest()
         .addExterns(EXTERNS_WITH_IARRAYLIKE_DECLS)
         .addSource(
-            "var arr = new Int8Array(7);\n" + "// no warning\n" + "arr[0] = 1;\n" + "arr[1] = 2;\n")
+            """
+            var arr = new Int8Array(7);
+            // no warning
+            arr[0] = 1;
+            arr[1] = 2;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -20389,8 +22236,18 @@ override: number
   public void testIArrayLike2() {
     newTest()
         .addExterns(EXTERNS_WITH_IARRAYLIKE_DECLS)
-        .addSource("var arr = new Int8Array(7);\n" + "// have warnings\n" + "arr[3] = false;\n")
-        .addDiagnostic("assignment\n" + "found   : boolean\n" + "required: number")
+        .addSource(
+            """
+            var arr = new Int8Array(7);
+            // have warnings
+            arr[3] = false;
+            """)
+        .addDiagnostic(
+            """
+            assignment
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -20398,8 +22255,18 @@ override: number
   public void testIArrayLike3() {
     newTest()
         .addExterns(EXTERNS_WITH_IARRAYLIKE_DECLS)
-        .addSource("var arr = new Int8Array2(10);\n" + "// have warnings\n" + "arr[3] = false;\n")
-        .addDiagnostic("assignment\n" + "found   : boolean\n" + "required: number")
+        .addSource(
+            """
+            var arr = new Int8Array2(10);
+            // have warnings
+            arr[3] = false;
+            """)
+        .addDiagnostic(
+            """
+            assignment
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -20407,8 +22274,18 @@ override: number
   public void testIArrayLike4() {
     newTest()
         .addExterns(EXTERNS_WITH_IARRAYLIKE_DECLS)
-        .addSource("var arr = new Int8Array2(10);\n" + "// have warnings\n" + "arr[3] = false;\n")
-        .addDiagnostic("assignment\n" + "found   : boolean\n" + "required: number")
+        .addSource(
+            """
+            var arr = new Int8Array2(10);
+            // have warnings
+            arr[3] = false;
+            """)
+        .addDiagnostic(
+            """
+            assignment
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -20416,8 +22293,18 @@ override: number
   public void testIArrayLike5() {
     newTest()
         .addExterns(EXTERNS_WITH_IARRAYLIKE_DECLS)
-        .addSource("var arr = new Int8Array3(10);\n" + "// have warnings\n" + "arr[3] = false;\n")
-        .addDiagnostic("assignment\n" + "found   : boolean\n" + "required: number")
+        .addSource(
+            """
+            var arr = new Int8Array3(10);
+            // have warnings
+            arr[3] = false;
+            """)
+        .addDiagnostic(
+            """
+            assignment
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -20425,8 +22312,18 @@ override: number
   public void testIArrayLike6() {
     newTest()
         .addExterns(EXTERNS_WITH_IARRAYLIKE_DECLS)
-        .addSource("var arr = new Int8Array4(10);\n" + "// have warnings\n" + "arr[3] = false;\n")
-        .addDiagnostic("assignment\n" + "found   : boolean\n" + "required: number")
+        .addSource(
+            """
+            var arr = new Int8Array4(10);
+            // have warnings
+            arr[3] = false;
+            """)
+        .addDiagnostic(
+            """
+            assignment
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -20434,8 +22331,18 @@ override: number
   public void testIArrayLike7() {
     newTest()
         .addExterns(EXTERNS_WITH_IARRAYLIKE_DECLS)
-        .addSource("var arr5 = new BooleanArray5(10);\n" + "arr5[2] = true;\n" + "arr5[3] = \"\";")
-        .addDiagnostic("assignment\n" + "found   : string\n" + "required: boolean")
+        .addSource(
+            """
+            var arr5 = new BooleanArray5(10);
+            arr5[2] = true;
+            arr5[3] = "";
+            """)
+        .addDiagnostic(
+            """
+            assignment
+            found   : string
+            required: boolean
+            """)
         .run();
   }
 
@@ -21700,7 +23607,12 @@ override: number
 
             /** @type {string} */ var s = f().method();
             """)
-        .addDiagnostic("initializing variable\n" + "found   : C\n" + "required: string")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : C
+            required: string
+            """)
         .run();
   }
 

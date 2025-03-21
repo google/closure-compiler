@@ -482,10 +482,12 @@ public final class IntegrationTest extends IntegrationTestCase {
             SourceFile.fromCode("externs", "var use; var arguments; arguments.callee;"));
 
     String code =
-        "function App() {}\n"
-            + "App.prototype.method = function(){\n"
-            + "  use(arguments.callee)\n"
-            + "};";
+        """
+        function App() {}
+        App.prototype.method = function(){
+          use(arguments.callee)
+        };
+        """;
 
     test(options, code, DiagnosticGroups.ES5_STRICT);
   }
@@ -1275,12 +1277,14 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setGatherCssNames(true);
     test(
         options,
-        "/** @define {boolean} */\n"
-            + "var COMPILED = false;\n"
-            + "goog.setCssNameMapping({'foo':'bar'});\n"
-            + "function getCss() {\n"
-            + "  return goog.getCssName('foo');\n"
-            + "}",
+        """
+        /** @define {boolean} */
+        var COMPILED = false;
+        goog.setCssNameMapping({'foo':'bar'});
+        function getCss() {
+          return goog.getCssName('foo');
+        }
+        """,
         "var COMPILED = true;\n" + "function getCss() {\n" + "  return 'bar';" + "}");
 
     assertThat(lastCompiler.getResult().cssNames).containsExactly("foo");
@@ -1308,7 +1312,12 @@ public final class IntegrationTest extends IntegrationTestCase {
             + "function f() {\n"
             + "  return xid('foo');\n"
             + "}",
-        "var xid = function() {};\n" + "function f() {\n" + "  return ':foo:';\n" + "}");
+        """
+        var xid = function() {};
+        function f() {
+          return ':foo:';
+        }
+        """);
   }
 
   @Test
@@ -2282,8 +2291,18 @@ class LowerCasePipe {}
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
-        "function f () {\n" + "    var ab = 0;\n" + "    ab += '-';\n" + "    alert(ab);\n" + "}",
-        "function f () {\n" + "    alert('0-');\n" + "}");
+        """
+        function f () {
+            var ab = 0;
+            ab += '-';
+            alert(ab);
+        }
+        """,
+        """
+        function f () {
+            alert('0-');
+        }
+        """);
   }
 
   @Test
@@ -3032,12 +3051,14 @@ class LowerCasePipe {}
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     String code =
-        "'use strict';\n"
-            + "function App() {}\n"
-            + "App.prototype = {\n"
-            + "  get appData() { return this.appData_; },\n"
-            + "  set appData(data) { this.appData_ = data; }\n"
-            + "};";
+        """
+        'use strict';
+        function App() {}
+        App.prototype = {
+          get appData() { return this.appData_; },
+          set appData(data) { this.appData_ = data; }
+        };
+        """;
 
     testSame(options, code);
   }
@@ -3060,19 +3081,24 @@ class LowerCasePipe {}
   public void testIssue701() {
     // Check ASCII art in license comments.
     String ascii =
-        "/**\n"
-            + " * @preserve\n"
-            + "   This\n"
-            + "     is\n"
-            + "       ASCII    ART\n"
-            + "*/console.log(\"hello world\");";
+        """
+        /**
+         * @preserve
+           This
+             is
+               ASCII    ART
+        */console.log("hello world");
+        """;
     String result =
-        "/*\n\n"
-            + "   This\n"
-            + "     is\n"
-            + "       ASCII    ART\n"
-            + "*/\n"
-            + "console.log(\"hello world\");\n";
+        """
+        /*
+
+           This
+             is
+               ASCII    ART
+        */
+        console.log("hello world");
+        """;
     testSame(createCompilerOptions(), ascii);
     assertThat(lastCompiler.toSource()).isEqualTo(result);
   }
@@ -3226,12 +3252,14 @@ class LowerCasePipe {}
     options.setInlineVariables(true);
     test(
         options,
-        "function f(h) {\n"
-            + "  var a = h;\n"
-            + "  a = a + 'x';\n"
-            + "  a = a + 'y';\n"
-            + "  return a;\n"
-            + "}",
+        """
+        function f(h) {
+          var a = h;
+          a = a + 'x';
+          a = a + 'y';
+          return a;
+        }
+        """,
         "function f(a) { return a += 'xy'; }");
   }
 
@@ -3243,7 +3271,12 @@ class LowerCasePipe {}
     options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
     test(
         options,
-        "while (function () {\n" + " function f(){};\n" + " L: while (void(f += 3)) {}\n" + "}) {}",
+        """
+        while (function () {
+         function f(){};
+         L: while (void(f += 3)) {}
+        }) {}
+        """,
         "for( ; ; );");
   }
 
@@ -4918,20 +4951,22 @@ C.prototype.f=async function(p){var obj=await p;
     test(
         options,
         lines(
-            "class ClazzWithStatic {\n"
-                + "constructor() {}\n"
-                + "\n"
-                + "  /** @nosideeffects */\n"
-                + "  static Create() {\n"
-                + "    if (Math.random() > .5) {\n"
-                + "      throw new Error('Bad input');\n"
-                + "    }\n"
-                + "    return new ClazzWithStatic();\n"
-                + "  }\n"
-                + "}\n"
-                + "\n"
-                + "const xUnused = ClazzWithStatic.Create();\n"
-                + "const yUnused = ClazzWithStatic.Create();"),
+            """
+            class ClazzWithStatic {
+            constructor() {}
+
+              /** @nosideeffects */
+              static Create() {
+                if (Math.random() > .5) {
+                  throw new Error('Bad input');
+                }
+                return new ClazzWithStatic();
+              }
+            }
+
+            const xUnused = ClazzWithStatic.Create();
+            const yUnused = ClazzWithStatic.Create();
+            """),
         // This should optimize to nothing, because the two variables are unused and we are trying
         // to hide side-effects.
         "");

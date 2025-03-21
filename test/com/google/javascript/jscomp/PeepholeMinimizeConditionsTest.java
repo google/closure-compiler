@@ -793,11 +793,23 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   @Test
   public void testIssue925() {
     test(
-        "if (x[--y] === 1) {\n" + "    x[y] = 0;\n" + "} else {\n" + "    x[y] = 1;\n" + "}",
+        """
+        if (x[--y] === 1) {
+            x[y] = 0;
+        } else {
+            x[y] = 1;
+        }
+        """,
         "(x[--y] === 1) ? x[y] = 0 : x[y] = 1;");
 
     test(
-        "if (x[--y]) {\n" + "    a = 0;\n" + "} else {\n" + "    a = 1;\n" + "}",
+        """
+        if (x[--y]) {
+            a = 0;
+        } else {
+            a = 1;
+        }
+        """,
         "a = (x[--y]) ? 0 : 1;");
 
     test(

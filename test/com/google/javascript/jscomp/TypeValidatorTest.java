@@ -65,10 +65,12 @@ public final class TypeValidatorTest extends CompilerTestCase {
   @Test
   public void testFunctionMismatch() {
     testWarning(
-        "/** \n"
-            + " * @param {function(string): number} x \n"
-            + " * @return {function(boolean): string} \n"
-            + " */ function f(x) { return x; }",
+        """
+        /**\s
+         * @param {function(string): number} x\s
+         * @return {function(boolean): string}\s
+         */ function f(x) { return x; }
+        """,
         TYPE_MISMATCH_WARNING);
 
     JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
@@ -89,10 +91,12 @@ public final class TypeValidatorTest extends CompilerTestCase {
   @Test
   public void testFunctionMismatch2() {
     testWarning(
-        "/** \n"
-            + " * @param {function(string): number} x \n"
-            + " * @return {function(boolean): number} \n"
-            + " */ function f(x) { return x; }",
+        """
+        /**\s
+         * @param {function(string): number} x\s
+         * @return {function(boolean): number}\s
+         */ function f(x) { return x; }
+        """,
         TYPE_MISMATCH_WARNING);
 
     JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
@@ -325,15 +329,17 @@ mismatch: [k]
   @Test
   public void testSubclass() {
     testWarning(
-        "/** @constructor */\n"
-            + "function Super() {}\n"
-            + "/**\n"
-            + " * @constructor\n"
-            + " * @extends {Super}\n"
-            + " */\n"
-            + "function Sub() {}\n"
-            + "/** @param {Sub} x */ function f(x) {}\n"
-            + "f(/** @type {Super} */ (new Sub));",
+        """
+        /** @constructor */
+        function Super() {}
+        /**
+         * @constructor
+         * @extends {Super}
+         */
+        function Sub() {}
+        /** @param {Sub} x */ function f(x) {}
+        f(/** @type {Super} */ (new Sub));
+        """,
         TYPE_MISMATCH_WARNING);
     this.assertThatRecordedMismatches().isEmpty();
   }
@@ -341,9 +347,11 @@ mismatch: [k]
   @Test
   public void testUnionsMismatch() {
     testWarning(
-        "/** @param {number|string} x */\n"
-            + "function f(x) {}\n"
-            + "f(/** @type {boolean|string} */ ('a'));",
+        """
+        /** @param {number|string} x */
+        function f(x) {}
+        f(/** @type {boolean|string} */ ('a'));
+        """,
         TYPE_MISMATCH_WARNING);
     this.assertThatRecordedMismatches().isEmpty();
   }

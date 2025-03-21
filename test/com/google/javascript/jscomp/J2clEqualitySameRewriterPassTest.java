@@ -224,24 +224,27 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
   @Test
   public void testRewriteStringEquals() {
     test(
-        LINE_JOINER.join(
-            "String.m_equals__java_lang_String__java_lang_Object__boolean('', 0);",
-            "var a = 'ABC';",
-            "String.m_equals__java_lang_String__java_lang_Object__boolean('ABC', a);"),
-        LINE_JOINER.join(
-            "'' === 0;", //
-            "var a = 'ABC';",
-            "'ABC' === a;"));
+        """
+        String.m_equals__java_lang_String__java_lang_Object__boolean('', 0);
+        var a = 'ABC';
+        String.m_equals__java_lang_String__java_lang_Object__boolean('ABC', a);
+        """,
+        """
+        '' === 0;
+        var a = 'ABC';
+        'ABC' === a;
+        """);
   }
 
   @Test
   public void testNotRewriteStringEquals() {
     testSame(
-        LINE_JOINER.join(
-            "/** @type {?string} */",
-            "var b = null;",
-            "String.m_equals__java_lang_String__java_lang_Object__boolean(b, null);",
-            "String.m_equals__java_lang_String__java_lang_Object__boolean(null, b);",
-            "String.m_equals__java_lang_String__java_lang_Object__boolean(c, d);"));
+        """
+        /** @type {?string} */
+        var b = null;
+        String.m_equals__java_lang_String__java_lang_Object__boolean(b, null);
+        String.m_equals__java_lang_String__java_lang_Object__boolean(null, b);
+        String.m_equals__java_lang_String__java_lang_Object__boolean(c, d);
+        """);
   }
 }

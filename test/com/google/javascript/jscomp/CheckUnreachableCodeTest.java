@@ -187,46 +187,68 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   public void testSuppression() {
     assertUnreachable("if(false) { }");
 
-    testSame("/** @fileoverview\n" + " * @suppress {uselessCode}\n" + " */\n" + "if(false) { }");
+    testSame(
+        """
+        /** @fileoverview
+         * @suppress {uselessCode}
+         */
+        if(false) { }
+        """);
 
     testSame(
-        "/** @fileoverview\n"
-            + " * @suppress {uselessCode}\n"
-            + " */\n"
-            + "function f() { if(false) { } }");
+        """
+        /** @fileoverview
+         * @suppress {uselessCode}
+         */
+        function f() { if(false) { } }
+        """);
 
-    testSame("/**\n" + " * @suppress {uselessCode}\n" + " */\n" + "function f() { if(false) { } }");
+    testSame(
+        """
+        /**
+         * @suppress {uselessCode}
+         */
+        function f() { if(false) { } }
+        """);
 
     assertUnreachable(
-        "/**\n"
-            + " * @suppress {uselessCode}\n"
-            + " */\n"
-            + "function f() { if(false) { } }\n"
-            + "function g() { if(false) { } }\n");
+        """
+        /**
+         * @suppress {uselessCode}
+         */
+        function f() { if(false) { } }
+        function g() { if(false) { } }
+        """);
 
     testSame(
-        "/**\n"
-            + " * @suppress {uselessCode}\n"
-            + " */\n"
-            + "function f() {\n"
-            + "  function g() { if(false) { } }\n"
-            + "  if(false) { } }\n");
+        """
+        /**
+         * @suppress {uselessCode}
+         */
+        function f() {
+          function g() { if(false) { } }
+          if(false) { } }
+        """);
 
     assertUnreachable(
-        "function f() {\n"
-            + "  /**\n"
-            + "   * @suppress {uselessCode}\n"
-            + "   */\n"
-            + "  function g() { if(false) { } }\n"
-            + "  if(false) { } }\n");
+        """
+        function f() {
+          /**
+           * @suppress {uselessCode}
+           */
+          function g() { if(false) { } }
+          if(false) { } }
+        """);
 
     testSame(
-        "function f() {\n"
-            + "  /**\n"
-            + "   * @suppress {uselessCode}\n"
-            + "   */\n"
-            + "  function g() { if(false) { } }\n"
-            + "}\n");
+        """
+        function f() {
+          /**
+           * @suppress {uselessCode}
+           */
+          function g() { if(false) { } }
+        }
+        """);
   }
 
   @Test

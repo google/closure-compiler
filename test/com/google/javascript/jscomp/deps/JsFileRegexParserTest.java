@@ -475,9 +475,12 @@ public final class JsFileRegexParserTest {
   @Test
   public void testShortcutMode2() {
     String contents =
-        "/** goog.provide('no1'); \n"
-            + " * goog.provide('no2');\n */\n"
-            + "goog.provide('yes1');\n";
+        """
+        /** goog.provide('no1');\s
+         * goog.provide('no2');
+         */
+        goog.provide('yes1');
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
@@ -491,7 +494,13 @@ public final class JsFileRegexParserTest {
 
   @Test
   public void testShortcutMode3() {
-    String contents = "/**\n" + " * goog.provide('no1');\n */\n" + "goog.provide('yes1');\n";
+    String contents =
+        """
+        /**
+         * goog.provide('no1');
+         */
+        goog.provide('yes1');
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
@@ -505,7 +514,12 @@ public final class JsFileRegexParserTest {
 
   @Test
   public void testIncludeGoog1() {
-    String contents = "/**\n" + " * @provideGoog\n" + " */\n";
+    String contents =
+        """
+        /**
+         * @provideGoog
+         */
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
@@ -591,11 +605,13 @@ public final class JsFileRegexParserTest {
   public void testIncludeGoog3() {
     // This is pretending to provide goog, but it really doesn't.
     String contents =
-        "goog.provide('x');\n"
-            + "/**\n"
-            + " * the first constant in base.js\n"
-            + " */\n"
-            + "var COMPILED = false;\n";
+        """
+        goog.provide('x');
+        /**
+         * the first constant in base.js
+         */
+        var COMPILED = false;
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
@@ -624,7 +640,12 @@ public final class JsFileRegexParserTest {
 
   @Test
   public void testExternsAnnotation_basic_multiline() {
-    String contents = "/**\n" + " * @externs\n" + " */\n";
+    String contents =
+        """
+        /**
+         * @externs
+         */
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH).setHasExternsAnnotation(true).build();
@@ -668,7 +689,12 @@ public final class JsFileRegexParserTest {
 
   @Test
   public void testNoCompileAnnotation_basic_multiline() {
-    String contents = "/**\n" + " * @nocompile\n" + " */\n";
+    String contents =
+        """
+        /**
+         * @nocompile
+         */
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)

@@ -1050,17 +1050,41 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testLineBreak() {
     // line break after function if in a statement context
     assertLineBreak(
-        "function a() {}\n" + "function b() {}", "function a(){}\n" + "function b(){}\n");
+        """
+        function a() {}
+        function b() {}
+        """,
+        """
+        function a(){}
+        function b(){}
+        """);
 
     // line break after ; after a function
     assertLineBreak(
-        "var a = {};\n" + "a.foo = function () {}\n" + "function b() {}",
-        "var a={};a.foo=function(){};\n" + "function b(){}\n");
+        """
+        var a = {};
+        a.foo = function () {}
+        function b() {}
+        """,
+        """
+        var a={};a.foo=function(){};
+        function b(){}
+        """);
 
     // break after comma after a function
     assertLineBreak(
-        "var a = {\n" + "  b: function() {},\n" + "  c: function() {}\n" + "};\n" + "alert(a);",
-        "var a={b:function(){},\n" + "c:function(){}};\n" + "alert(a)");
+        """
+        var a = {
+          b: function() {},
+          c: function() {}
+        };
+        alert(a);
+        """,
+        """
+        var a={b:function(){},
+        c:function(){}};
+        alert(a)\
+        """);
   }
 
   private void assertLineBreak(String js, String expected) {
@@ -1089,44 +1113,131 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
     // Check we correctly handle putting brackets around all if clauses so
     // we can put breakpoints inside statements.
-    assertPrettyPrint("if (1) {}", "if (1) {\n" + "}\n");
-    assertPrettyPrint("if (1) {alert(\"\");}", "if (1) {\n" + "  alert(\"\");\n" + "}\n");
-    assertPrettyPrint("if (1)alert(\"\");", "if (1) {\n" + "  alert(\"\");\n" + "}\n");
     assertPrettyPrint(
-        "if (1) {alert();alert();}", "if (1) {\n" + "  alert();\n" + "  alert();\n" + "}\n");
+        "if (1) {}",
+        """
+        if (1) {
+        }
+        """);
+    assertPrettyPrint(
+        "if (1) {alert(\"\");}",
+        """
+        if (1) {
+          alert("");
+        }
+        """);
+    assertPrettyPrint(
+        "if (1)alert(\"\");",
+        """
+        if (1) {
+          alert("");
+        }
+        """);
+    assertPrettyPrint(
+        "if (1) {alert();alert();}",
+        """
+        if (1) {
+          alert();
+          alert();
+        }
+        """);
 
     // Don't add blocks if they weren't there already.
     assertPrettyPrint("label: alert();", "label: alert();\n");
 
     // But if statements and loops get blocks automagically.
-    assertPrettyPrint("if (1) alert();", "if (1) {\n" + "  alert();\n" + "}\n");
-    assertPrettyPrint("for (;;) alert();", "for (;;) {\n" + "  alert();\n" + "}\n");
+    assertPrettyPrint(
+        "if (1) alert();",
+        """
+        if (1) {
+          alert();
+        }
+        """);
+    assertPrettyPrint(
+        "for (;;) alert();",
+        """
+        for (;;) {
+          alert();
+        }
+        """);
 
-    assertPrettyPrint("while (1) alert();", "while (1) {\n" + "  alert();\n" + "}\n");
+    assertPrettyPrint(
+        "while (1) alert();",
+        """
+        while (1) {
+          alert();
+        }
+        """);
 
     // Do we put else clauses in blocks?
-    assertPrettyPrint("if (1) {} else {alert(a);}", "if (1) {\n" + "} else {\n  alert(a);\n}\n");
+    assertPrettyPrint(
+        "if (1) {} else {alert(a);}",
+        """
+        if (1) {
+        } else {
+          alert(a);
+        }
+        """);
 
     // Do we add blocks to else clauses?
     assertPrettyPrint(
         "if (1) alert(a); else alert(b);",
-        "if (1) {\n" + "  alert(a);\n" + "} else {\n" + "  alert(b);\n" + "}\n");
+        """
+        if (1) {
+          alert(a);
+        } else {
+          alert(b);
+        }
+        """);
 
     // Do we put for bodies in blocks?
-    assertPrettyPrint("for(;;) { alert();}", "for (;;) {\n" + "  alert();\n" + "}\n");
-    assertPrettyPrint("for(;;) {}", "for (;;) {\n" + "}\n");
     assertPrettyPrint(
-        "for(;;) { alert(); alert(); }", "for (;;) {\n" + "  alert();\n" + "  alert();\n" + "}\n");
+        "for(;;) { alert();}",
+        """
+        for (;;) {
+          alert();
+        }
+        """);
+    assertPrettyPrint(
+        "for(;;) {}",
+        """
+        for (;;) {
+        }
+        """);
+    assertPrettyPrint(
+        "for(;;) { alert(); alert(); }",
+        """
+        for (;;) {
+          alert();
+          alert();
+        }
+        """);
     assertPrettyPrint(
         "for(var x=0;x<10;x++) { alert(); alert(); }",
-        "for (var x = 0; x < 10; x++) {\n" + "  alert();\n" + "  alert();\n" + "}\n");
+        """
+        for (var x = 0; x < 10; x++) {
+          alert();
+          alert();
+        }
+        """);
 
     // How about do loops?
     assertPrettyPrint(
-        "do { alert(); } while(true);", "do {\n" + "  alert();\n" + "} while (true);\n");
+        "do { alert(); } while(true);",
+        """
+        do {
+          alert();
+        } while (true);
+        """);
 
     // label?
-    assertPrettyPrint("myLabel: { alert();}", "myLabel: {\n" + "  alert();\n" + "}\n");
+    assertPrettyPrint(
+        "myLabel: { alert();}",
+        """
+        myLabel: {
+          alert();
+        }
+        """);
     assertPrettyPrint("myLabel: {}", "myLabel: {\n}\n");
     assertPrettyPrint("myLabel: ;", "myLabel: ;\n");
 
@@ -1134,7 +1245,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // continue {label} won't work.
     assertPrettyPrint(
         "myLabel: for(;;) continue myLabel;",
-        "myLabel: for (;;) {\n" + "  continue myLabel;\n" + "}\n");
+        """
+        myLabel: for (;;) {
+          continue myLabel;
+        }
+        """);
 
     assertPrettyPrint("var a;", "var a;\n");
     assertPrettyPrint("i--", "i--;\n");
@@ -1158,74 +1273,119 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testPrettyPrinter2() {
-    assertPrettyPrint("if(true) f();", "if (true) {\n" + "  f();\n" + "}\n");
+    assertPrettyPrint(
+        "if(true) f();",
+        """
+        if (true) {
+          f();
+        }
+        """);
 
     assertPrettyPrint(
         "if (true) { f() } else { g() }",
-        "if (true) {\n" + "  f();\n" + "} else {\n" + "  g();\n" + "}\n");
+        """
+        if (true) {
+          f();
+        } else {
+          g();
+        }
+        """);
 
     assertPrettyPrint(
         "if(true) f(); for(;;) g();",
-        "if (true) {\n" + "  f();\n" + "}\n" + "for (;;) {\n" + "  g();\n" + "}\n");
+        """
+        if (true) {
+          f();
+        }
+        for (;;) {
+          g();
+        }
+        """);
   }
 
   @Test
   public void testPrettyPrinter3() {
     assertPrettyPrint(
         "try {} catch(e) {}if (1) {alert();alert();}",
-        "try {\n"
-            + "} catch (e) {\n"
-            + "}\n"
-            + "if (1) {\n"
-            + "  alert();\n"
-            + "  alert();\n"
-            + "}\n");
+        """
+        try {
+        } catch (e) {
+        }
+        if (1) {
+          alert();
+          alert();
+        }
+        """);
 
     assertPrettyPrint(
         "try {} finally {}if (1) {alert();alert();}",
-        "try {\n"
-            + "} finally {\n"
-            + "}\n"
-            + "if (1) {\n"
-            + "  alert();\n"
-            + "  alert();\n"
-            + "}\n");
+        """
+        try {
+        } finally {
+        }
+        if (1) {
+          alert();
+          alert();
+        }
+        """);
 
     assertPrettyPrint(
         "try {} catch(e) {} finally {} if (1) {alert();alert();}",
-        "try {\n"
-            + "} catch (e) {\n"
-            + "} finally {\n"
-            + "}\n"
-            + "if (1) {\n"
-            + "  alert();\n"
-            + "  alert();\n"
-            + "}\n");
+        """
+        try {
+        } catch (e) {
+        } finally {
+        }
+        if (1) {
+          alert();
+          alert();
+        }
+        """);
   }
 
   @Test
   public void testPrettyPrinter4() {
     assertPrettyPrint(
         "function f() {}if (1) {alert();}",
-        "function f() {\n" + "}\n" + "if (1) {\n" + "  alert();\n" + "}\n");
+        """
+        function f() {
+        }
+        if (1) {
+          alert();
+        }
+        """);
 
     assertPrettyPrint(
         "var f = function() {};if (1) {alert();}",
-        "var f = function() {\n" + "};\n" + "if (1) {\n" + "  alert();\n" + "}\n");
+        """
+        var f = function() {
+        };
+        if (1) {
+          alert();
+        }
+        """);
 
     assertPrettyPrint(
         "(function() {})();if (1) {alert();}",
-        "(function() {\n" + "})();\n" + "if (1) {\n" + "  alert();\n" + "}\n");
+        """
+        (function() {
+        })();
+        if (1) {
+          alert();
+        }
+        """);
 
     assertPrettyPrint(
         "(function() {alert();alert();})();if (1) {alert();}",
-        "(function() {\n"
-            + "  alert();\n"
-            + "  alert();\n"
-            + "})();\n"
-            + "if (1) {\n"
-            + "  alert();\n"
-            + "}\n");
+        """
+        (function() {
+          alert();
+          alert();
+        })();
+        if (1) {
+          alert();
+        }
+        """);
   }
 
   @Test
@@ -1244,7 +1404,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testPrettyPrinter_spaceBeforeSingleQuote() {
     assertPrettyPrint(
         "var f = function() { return 'hello'; };",
-        "var f = function() {\n" + "  return 'hello';\n" + "};\n",
+        """
+        var f = function() {
+          return 'hello';
+        };
+        """,
         new CompilerOptionBuilder() {
           @Override
           void setOptions(CompilerOptions options) {
@@ -1257,19 +1421,47 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testPrettyPrinter_spaceBeforeUnaryOperators() {
     assertPrettyPrint(
-        "var f = function() { return !b; };", "var f = function() {\n" + "  return !b;\n" + "};\n");
+        "var f = function() { return !b; };",
+        """
+        var f = function() {
+          return !b;
+        };
+        """);
     assertPrettyPrint(
-        "var f = function*(){yield -b}", "var f = function*() {\n" + "  yield -b;\n" + "};\n");
+        "var f = function*(){yield -b}",
+        """
+        var f = function*() {
+          yield -b;
+        };
+        """);
     assertPrettyPrint(
-        "var f = function() { return +b; };", "var f = function() {\n" + "  return +b;\n" + "};\n");
+        "var f = function() { return +b; };",
+        """
+        var f = function() {
+          return +b;
+        };
+        """);
     assertPrettyPrint(
-        "var f = function() { throw ~b; };", "var f = function() {\n" + "  throw ~b;\n" + "};\n");
+        "var f = function() { throw ~b; };",
+        """
+        var f = function() {
+          throw ~b;
+        };
+        """);
     assertPrettyPrint(
         "var f = function() { return ++b; };",
-        "var f = function() {\n" + "  return ++b;\n" + "};\n");
+        """
+        var f = function() {
+          return ++b;
+        };
+        """);
     assertPrettyPrint(
         "var f = function() { return --b; };",
-        "var f = function() {\n" + "  return --b;\n" + "};\n");
+        """
+        var f = function() {
+          return --b;
+        };
+        """);
   }
 
   @Test
@@ -2355,7 +2547,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     testReparse("v = (5, 6, 7, 8)");
     testReparse("d = 34.0; x = 0; y = .3; z = -22");
     testReparse("d = -x; t = !x + ~y;");
-    testReparse("'hi'; /* just a test */ stuff(a,b) \n" + " foo(); // and another \n" + " bar();");
+    testReparse(
+        """
+        'hi'; /* just a test */ stuff(a,b)\s
+         foo(); // and another\s
+         bar();
+        """);
     testReparse("a = b++ + ++c; a = b++-++c; a = - --b; a = - ++b;");
     testReparse("a++; b= a++; b = ++a; b = a--; b = --a; a+=2; b-=5");
     testReparse("a = (2 + 3) * 4;");
@@ -3114,7 +3311,14 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrettyPrint("class C{}", "class C {\n}\n");
     assertPrettyPrint(
         "class C{member(){}get f(){}}",
-        "class C {\n" + "  member() {\n" + "  }\n" + "  get f() {\n" + "  }\n" + "}\n");
+        """
+        class C {
+          member() {
+          }
+          get f() {
+          }
+        }
+        """);
     assertPrettyPrint("var x=class C{}", "var x = class C {\n};\n");
   }
 
@@ -4016,9 +4220,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             `hello
             world
             foo
-            bar`
-            """
-                .trim());
+            bar`\
+            """);
   }
 
   @Test

@@ -583,12 +583,14 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     inFunction(
-        " var a, b;\n"
-            + " if (f(b = true) || f(b = false))\n"
-            + "   a = b;\n"
-            + " else\n"
-            + "   a = null;\n"
-            + " return a;");
+        """
+        var a, b;
+        if (f(b = true) || f(b = false))
+          a = b;
+        else
+          a = null;
+        return a;
+        """);
   }
 
   @Test
@@ -596,21 +598,35 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     inFunction(
-        " var a, b;\n" + " (f(b = true) || f(b = false)) ? (a = b) : (a = null);\n" + " return a;");
+        """
+        var a, b;
+        (f(b = true) || f(b = false)) ? (a = b) : (a = null);
+        return a;
+        """);
   }
 
   @Test
   public void testIssue384c() {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
-    inFunction(" var a, b;\n" + " (a ? f(b = true) : f(b = false)) && (a = b);\n" + " return a;");
+    inFunction(
+        """
+        var a, b;
+        (a ? f(b = true) : f(b = false)) && (a = b);
+        return a;
+        """);
   }
 
   @Test
   public void testIssue384d() {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
-    inFunction(" var a, b;\n" + " (f(b = true) || f(b = false)) && (a = b);\n" + " return a;");
+    inFunction(
+        """
+        var a, b;
+        (f(b = true) || f(b = false)) && (a = b);
+        return a;
+        """);
   }
 
   @Test

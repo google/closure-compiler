@@ -149,9 +149,8 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
             """
             actual parameter 1 of $jscomp$scope$98477071$0$f does not match formal parameter
             found   : null
-            required: foo.bar.Types.Klazz
-            """
-                .trim());
+            required: foo.bar.Types.Klazz\
+            """);
     assertThat(lastCompiler.getErrors()).isEmpty();
   }
 
@@ -182,9 +181,8 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
             """
             actual parameter 1 of f does not match formal parameter
             found   : null
-            required: foo.bar.Types.Klazz
-            """
-                .trim());
+            required: foo.bar.Types.Klazz\
+            """);
     assertThat(lastCompiler.getErrors()).isEmpty();
   }
 

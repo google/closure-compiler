@@ -4432,21 +4432,23 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   @Test
   public void testTemplateType9() {
     testSame(
-        "/** @constructor */\n"
-            + "function Foo() {}\n"
-            + "/**\n"
-            + " * @this {T}\n"
-            + " * @return {T}\n"
-            + " * @template T\n"
-            + " */\n"
-            + "Foo.prototype.method = function() {};\n"
-            + "/**\n"
-            + " * @constructor\n"
-            + " * @extends {Foo}\n"
-            + " */\n"
-            + "function Bar() {}\n"
-            + "\n"
-            + "var g = new Bar().method();\n");
+        """
+        /** @constructor */
+        function Foo() {}
+        /**
+         * @this {T}
+         * @return {T}
+         * @template T
+         */
+        Foo.prototype.method = function() {};
+        /**
+         * @constructor
+         * @extends {Foo}
+         */
+        function Bar() {}
+
+        var g = new Bar().method();
+        """);
     assertThat(findNameType("g", globalScope).toString()).isEqualTo("Bar");
   }
 
@@ -4456,15 +4458,17 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     // we can handle this by support template type like "T extends Foo"
     // to provide a "minimum" type for "Foo" within the function body.
     testSame(
-        "/** @constructor */\n"
-            + "function Foo() {}\n"
-            + "\n"
-            + "/**\n"
-            + " * @this {T}\n"
-            + " * @return {T} fn\n"
-            + " * @template T\n"
-            + " */\n"
-            + "Foo.prototype.method = function() {var g = this;};\n");
+        """
+        /** @constructor */
+        function Foo() {}
+
+        /**
+         * @this {T}
+         * @return {T} fn
+         * @template T
+         */
+        Foo.prototype.method = function() {var g = this;};
+        """);
     assertThat(findNameType("g", lastLocalScope).toString()).isEqualTo("T");
   }
 
@@ -4538,18 +4542,20 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   @Test
   public void testTemplateType11() {
     testSame(
-        "/**\n"
-            + " * @this {T}\n"
-            + " * @return {T} fn\n"
-            + " * @template T\n"
-            + " */\n"
-            + "var method = function() {};\n"
-            + "/**\n"
-            + " * @constructor\n"
-            + " */\n"
-            + "function Bar() {}\n"
-            + "\n"
-            + "var g = method().call(new Bar());\n");
+        """
+        /**
+         * @this {T}
+         * @return {T} fn
+         * @template T
+         */
+        var method = function() {};
+        /**
+         * @constructor
+         */
+        function Bar() {}
+
+        var g = method().call(new Bar());
+        """);
     // NOTE: we would like this to be "Bar"
     assertThat(findNameType("g", globalScope).toString()).isEqualTo("?");
   }
@@ -4557,15 +4563,17 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   @Test
   public void testTemplateType12() {
     testSame(
-        "/** @constructor */\n"
-            + "function Foo() {}\n"
-            + "\n"
-            + "/**\n"
-            + " * @this {Array<T>|{length:number}}\n"
-            + " * @return {T} fn\n"
-            + " * @template T\n"
-            + " */\n"
-            + "Foo.prototype.method = function() {var g = this;};\n");
+        """
+        /** @constructor */
+        function Foo() {}
+
+        /**
+         * @this {Array<T>|{length:number}}
+         * @return {T} fn
+         * @template T
+         */
+        Foo.prototype.method = function() {var g = this;};
+        """);
     assertThat(findNameType("g", lastLocalScope).toString())
         .isEqualTo("(Array<T>|{length: number})");
   }
@@ -4924,11 +4932,13 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   @Test
   public void testClosureParameterTypesWithoutJSDoc() {
     testSame(
-        "/**\n"
-            + " * @param {function(!Object)} bar\n"
-            + " */\n"
-            + "function foo(bar) {}\n"
-            + "foo(function(baz) { var f = baz; })\n");
+        """
+        /**
+         * @param {function(!Object)} bar
+         */
+        function foo(bar) {}
+        foo(function(baz) { var f = baz; })
+        """);
     assertThat(findNameType("f", lastLocalScope).toString()).isEqualTo("Object");
   }
 

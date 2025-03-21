@@ -212,7 +212,14 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testTypedefType4() {
     JSDocInfo info =
-        parse(LINE_JOINER.join("@typedef {{", " *  boo: ?,", " *  goo: ?", " * }}", " */"));
+        parse(
+            """
+            @typedef {{
+             *  boo: ?,
+             *  goo: ?
+             * }}
+             */
+            """);
     assertThat(info.hasTypedefType()).isTrue();
 
     JSType recordType =
@@ -2406,10 +2413,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testRegression1() {
     String comment =
-        " * @param {number} index the index of blah\n"
-            + " * @return {boolean} whatever\n"
-            + " * @private\n"
-            + " */";
+        """
+        * @param {number} index the index of blah
+        * @return {boolean} whatever
+        * @private
+        */
+        """;
 
     JSDocInfo info = parse(comment);
     assertThat(info.getParameterCount()).isEqualTo(1);
@@ -2421,16 +2430,17 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testRegression2() {
     String comment =
-        LINE_JOINER.join(
-            " * @return {boolean} whatever",
-            " * but important",
-            " *",
-            " * @param {number} index the index of blah",
-            " * some more comments here",
-            " * @param name the name of the person",
-            " *",
-            " * @protected",
-            " */");
+        """
+         * @return {boolean} whatever
+         * but important
+         *
+         * @param {number} index the index of blah
+         * some more comments here
+         * @param name the name of the person
+         *
+         * @protected
+         */
+        """;
 
     JSDocInfo info = parse(comment, MISSING_TYPE_DECL_WARNING_TEXT);
 
@@ -2444,15 +2454,17 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testRegression3() {
     String comment =
-        " * @param mediaTag this specified whether the @media tag is ....\n"
-            + " *\n"
-            + "\n"
-            + "@public\n"
-            + " *\n"
-            + "\n"
-            + " **********\n"
-            + " * @const\n"
-            + " */";
+        """
+         * @param mediaTag this specified whether the @media tag is ....
+         *
+
+        @public
+         *
+
+         **********
+         * @const
+         */
+        """;
 
     JSDocInfo info = parse(comment, MISSING_TYPE_DECL_WARNING_TEXT);
     assertThat(info.getParameterCount()).isEqualTo(1);
@@ -2463,7 +2475,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testRegression4() {
-    String comment = " * @const\n" + " * @private\n" + " * @constructor\n" + " */";
+    String comment =
+        """
+        * @const
+        * @private
+        * @constructor
+        */
+        """;
 
     JSDocInfo info = parse(comment);
     assertThat(info.isConstant()).isTrue();
@@ -2486,10 +2504,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testRegression7() {
     String comment =
-        " * @desc description here\n"
-            + " * @param {boolean} flag and some more description\n"
-            + " *     nicely formatted\n"
-            + " */";
+        """
+        * @desc description here
+        * @param {boolean} flag and some more description
+        *     nicely formatted
+        */
+        """;
 
     JSDocInfo info = parse(comment);
     assertThat(info.getParameterCount()).isEqualTo(1);
@@ -2534,10 +2554,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testRegression10() {
     JSDocInfo jsdoc =
         parse(
-            " * @param {!String} p0 blah blah blah\n"
-                + " * @param {boolean} p1 fobar\n"
-                + " * @return {!Date} jksjkash dshad\n"
-                + " */");
+            """
+            * @param {!String} p0 blah blah blah
+            * @param {boolean} p1 fobar
+            * @return {!Date} jksjkash dshad
+            */
+            """);
 
     assertThat(jsdoc.getBaseType()).isNull();
     assertThat(jsdoc.isConstant()).isFalse();
@@ -2581,7 +2603,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testRegression13() {
-    JSDocInfo jsdoc = parse(" * @type {!RegExp}\n" + " * @protected\n" + " */");
+    JSDocInfo jsdoc =
+        parse(
+            """
+            * @type {!RegExp}
+            * @protected
+            */
+            """);
 
     assertThat(jsdoc.getBaseType()).isNull();
     assertThat(jsdoc.isConstant()).isFalse();
@@ -2595,7 +2623,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testRegression14() {
-    JSDocInfo jsdoc = parse(" * @const\n" + " * @private\n" + " */");
+    JSDocInfo jsdoc =
+        parse(
+            """
+            * @const
+            * @private
+            */
+            """);
 
     assertThat(jsdoc.getBaseType()).isNull();
     assertThat(jsdoc.isConstant()).isTrue();
@@ -2609,7 +2643,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testRegression15() {
-    JSDocInfo jsdoc = parse(" * @desc Hello,\n" + " * World!\n" + " */");
+    JSDocInfo jsdoc =
+        parse(
+            """
+            * @desc Hello,
+            * World!
+            */
+            """);
 
     assertThat(jsdoc.getBaseType()).isNull();
     assertThat(jsdoc.isConstant()).isTrue();
@@ -2624,7 +2664,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testRegression16() {
-    JSDocInfo jsdoc = parse(" Email is plp@foo.bar\n" + " @type {string}\n" + " */");
+    JSDocInfo jsdoc =
+        parse(
+            """
+            Email is plp@foo.bar
+            @type {string}
+            */
+            """);
 
     assertThat(jsdoc.getBaseType()).isNull();
     assertThat(jsdoc.isConstant()).isFalse();
@@ -2702,7 +2748,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testParseInterfaceDoubled() {
     parse(
-        "* @interface\n" + "* @interface\n" + "*/",
+        """
+        * @interface
+        * @interface
+        */
+        """,
         "Bad type annotation. "
             + "type annotation incompatible with other annotations."
             + BAD_TYPE_WIKI_LINK);
@@ -2735,7 +2785,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testParseImplementsTwo() {
     List<JSTypeExpression> interfaces =
-        parse("* @implements {SomeInterface1}\n" + "* @implements {SomeInterface2}\n" + "*/")
+        parse(
+                """
+                * @implements {SomeInterface1}
+                * @implements {SomeInterface2}
+                */
+                """)
             .getImplementedInterfaces();
     assertThat(interfaces).hasSize(2);
     assertTypeEquals(createNamedType("SomeInterface1"), interfaces.get(0));
@@ -2745,7 +2800,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testParseImplementsSameTwice() {
     parse(
-        "* @implements {Smth}\n" + "* @implements {Smth}\n" + "*/",
+        """
+        * @implements {Smth}
+        * @implements {Smth}
+        */
+        """,
         "Bad type annotation. duplicate @implements tag." + BAD_TYPE_WIKI_LINK);
   }
 
@@ -2793,7 +2852,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testInterfaceMultiExtends1() {
     JSDocInfo jsdoc =
-        parse(" * @interface \n" + " * @extends {Extended1} \n" + " * @extends {Extended2} */");
+        parse(
+            """
+            * @interface\s
+            * @extends {Extended1}\s
+            * @extends {Extended2} */
+            """);
     assertThat(jsdoc.isInterface()).isTrue();
     assertThat(jsdoc.getBaseType()).isNull();
     assertThat(jsdoc.getExtendedInterfacesCount()).isEqualTo(2);
@@ -2806,10 +2870,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testInterfaceMultiExtends2() {
     JSDocInfo jsdoc =
         parse(
-            " * @extends {Extended1} \n"
-                + " * @interface \n"
-                + " * @extends {Extended2} \n"
-                + " * @extends {Extended3} */");
+            """
+            * @extends {Extended1}\s
+            * @interface\s
+            * @extends {Extended2}\s
+            * @extends {Extended3} */
+            """);
     assertThat(jsdoc.isInterface()).isTrue();
     assertThat(jsdoc.getBaseType()).isNull();
     assertThat(jsdoc.getExtendedInterfacesCount()).isEqualTo(3);
@@ -2822,7 +2888,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testBadClassMultiExtends() {
     parse(
-        " * @extends {Extended1} \n" + " * @constructor \n" + " * @extends {Extended2} */",
+        """
+        * @extends {Extended1}\s
+        * @constructor\s
+        * @extends {Extended2} */
+        """,
         "Bad type annotation. type annotation incompatible with other annotations."
             + BAD_TYPE_WIKI_LINK);
   }
@@ -3199,13 +3269,25 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testModifies5() {
-    JSDocInfo info = parse("@param {*} x\n" + " * @param {*} y\n" + " * @modifies {x} */");
+    JSDocInfo info =
+        parse(
+            """
+            @param {*} x
+             * @param {*} y
+             * @modifies {x} */
+            """);
     assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("x"));
   }
 
   @Test
   public void testModifies6() {
-    JSDocInfo info = parse("@param {*} x\n" + " * @param {*} y\n" + " * @modifies {x|y} */");
+    JSDocInfo info =
+        parse(
+            """
+            @param {*} x
+             * @param {*} y
+             * @modifies {x|y} */
+            """);
     assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("x", "y"));
   }
 
@@ -3667,7 +3749,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testTypeTagConflict15() {
     parse(
-        "/**\n" + " * @struct\n" + " * @struct\n" + " */\n" + "function StrStr() {}",
+        """
+        /**
+         * @struct
+         * @struct
+         */
+        function StrStr() {}
+        """,
         "Bad type annotation. "
             + "type annotation incompatible with other annotations."
             + BAD_TYPE_WIKI_LINK);
@@ -3675,18 +3763,38 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testTypeTagConflict16() {
-    parse("/**\n" + " * @struct\n" + " * @interface\n" + " */\n" + "function StrIntf() {}");
+    parse(
+        """
+        /**
+         * @struct
+         * @interface
+         */
+        function StrIntf() {}
+        """);
   }
 
   @Test
   public void testTypeTagConflict17() {
-    parse("/**\n" + " * @interface\n" + " * @struct\n" + " */\n" + "function StrIntf() {}");
+    parse(
+        """
+        /**
+         * @interface
+         * @struct
+         */
+        function StrIntf() {}
+        """);
   }
 
   @Test
   public void testTypeTagConflict18() {
     parse(
-        "/**\n" + " * @dict\n" + " * @dict\n" + " */\n" + "function DictDict() {}",
+        """
+        /**
+         * @dict
+         * @dict
+         */
+        function DictDict() {}
+        """,
         "Bad type annotation. "
             + "type annotation incompatible with other annotations."
             + BAD_TYPE_WIKI_LINK);
@@ -3694,22 +3802,38 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testTypeTagConflict19() {
-    parse("/**\n" + " * @dict\n" + " * @interface\n" + " */\n" + "function DictDict() {}");
+    parse(
+        """
+        /**
+         * @dict
+         * @interface
+         */
+        function DictDict() {}
+        """);
   }
 
   @Test
   public void testTypeTagConflict20() {
-    parse("/**\n" + " * @interface\n" + " * @dict\n" + " */\n" + "function DictDict() {}");
+    parse(
+        """
+        /**
+         * @interface
+         * @dict
+         */
+        function DictDict() {}
+        """);
   }
 
   @Test
   public void testTypeTagConflict21() {
     parse(
-        "/**\n"
-            + " * @private {string}\n"
-            + " * @type {number}\n"
-            + " */\n"
-            + "function DictDict() {}",
+        """
+        /**
+         * @private {string}
+         * @type {number}
+         */
+        function DictDict() {}
+        """,
         "Bad type annotation. "
             + "type annotation incompatible with other annotations."
             + BAD_TYPE_WIKI_LINK);
@@ -3718,11 +3842,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testTypeTagConflict22() {
     parse(
-        "/**\n"
-            + " * @protected {string}\n"
-            + " * @param {string} x\n"
-            + " */\n"
-            + "function DictDict(x) {}",
+        """
+        /**
+         * @protected {string}
+         * @param {string} x
+         */
+        function DictDict(x) {}
+        """,
         "Bad type annotation. "
             + "type annotation incompatible with other annotations."
             + BAD_TYPE_WIKI_LINK);
@@ -3731,11 +3857,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testTypeTagConflict23() {
     parse(
-        "/**\n"
-            + " * @public {string}\n"
-            + " * @return {string} x\n"
-            + " */\n"
-            + "function DictDict() {}",
+        """
+        /**
+         * @public {string}
+         * @return {string} x
+         */
+        function DictDict() {}
+        """,
         "Bad type annotation. "
             + "type annotation incompatible with other annotations."
             + BAD_TYPE_WIKI_LINK);
@@ -3744,11 +3872,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testTypeTagConflict24() {
     parse(
-        "/**\n"
-            + " * @const {string}\n"
-            + " * @return {string} x\n"
-            + " */\n"
-            + "function DictDict() {}",
+        """
+        /**
+         * @const {string}
+         * @return {string} x
+         */
+        function DictDict() {}
+        """,
         "Bad type annotation. "
             + "type annotation incompatible with other annotations."
             + BAD_TYPE_WIKI_LINK);
@@ -3757,11 +3887,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testTypeTagConflict25() {
     parse(
-        "/**\n"
-            + " * @package {string}\n"
-            + " * @return {string} x\n"
-            + " */\n"
-            + "function DictDict() {}",
+        """
+        /**
+         * @package {string}
+         * @return {string} x
+         */
+        function DictDict() {}
+        """,
         "Bad type annotation. "
             + "type annotation incompatible with other annotations."
             + BAD_TYPE_WIKI_LINK);
@@ -3828,48 +3960,78 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testStableIdGenerator() {
     JSDocInfo info =
-        parse("/**\n" + " * @idGenerator {stable}\n" + " */\n" + "function getId() {}");
+        parse(
+            """
+            /**
+             * @idGenerator {stable}
+             */
+            function getId() {}
+            """);
     assertThat(info.isStableIdGenerator()).isTrue();
   }
 
   @Test
   public void testStableIdGeneratorConflict() {
     parse(
-        "/**\n"
-            + " * @idGenerator {stable}\n"
-            + " * @idGenerator {stable}\n"
-            + " */\n"
-            + "function getId() {}",
+        """
+        /**
+         * @idGenerator {stable}
+         * @idGenerator {stable}
+         */
+        function getId() {}
+        """,
         "extra @idGenerator tag");
   }
 
   @Test
   public void testXidGenerator() {
-    JSDocInfo info = parse("/**\n" + " * @idGenerator {xid}\n" + " */\n" + "function getId() {}");
+    JSDocInfo info =
+        parse(
+            """
+            /**
+             * @idGenerator {xid}
+             */
+            function getId() {}
+            """);
     assertThat(info.isXidGenerator()).isTrue();
   }
 
   @Test
   public void testXidGeneratorConflict() {
     parse(
-        "/**\n"
-            + " * @idGenerator {xid}\n"
-            + " * @idGenerator {xid}\n"
-            + " */\n"
-            + "function getId() {}",
+        """
+        /**
+         * @idGenerator {xid}
+         * @idGenerator {xid}
+         */
+        function getId() {}
+        """,
         "extra @idGenerator tag");
   }
 
   @Test
   public void testIdGenerator() {
-    JSDocInfo info = parse("/**\n" + " * @idGenerator\n" + " */\n" + "function getId() {}");
+    JSDocInfo info =
+        parse(
+            """
+            /**
+             * @idGenerator
+             */
+            function getId() {}
+            """);
     assertThat(info.isIdGenerator()).isTrue();
   }
 
   @Test
   public void testIdGeneratorConflict() {
     parse(
-        "/**\n" + " * @idGenerator\n" + " * @idGenerator\n" + " */\n" + "function getId() {}",
+        """
+        /**
+         * @idGenerator
+         * @idGenerator
+         */
+        function getId() {}
+        """,
         "extra @idGenerator tag");
   }
 
@@ -4089,15 +4251,23 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testBug16129690() {
-    parse("@param {T} x\n" + "@template T\n" + "random documentation text*/");
+    parse(
+        """
+        @param {T} x
+        @template T
+        random documentation text*/
+        """);
   }
 
   @Test
   public void testTTLLineNoCharNo() {
     JSDocInfo info =
         parse(
-            LINE_JOINER.join(
-                "Some text on line 0", "More text! This is line 1", "@template T := foo =:*/"));
+            """
+            Some text on line 0
+            More text! This is line 1
+            @template T := foo =:*/
+            """);
     assertThat(info.getTypeTransformations()).hasSize(1);
     Node n = info.getTypeTransformations().get("T");
     assertNode(n).hasLineno(2); // lineno of "@" in "@template"
@@ -4108,12 +4278,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testMultilineTTLLineNoCharNo() {
     JSDocInfo info =
         parse(
-            LINE_JOINER.join(
-                "Some text on line 0",
-                "More text! This is line 1",
-                "@template T :=",
-                "  foo",
-                "=:*/"));
+            """
+            Some text on line 0
+            More text! This is line 1
+            @template T :=
+              foo
+            =:*/
+            """);
     assertThat(info.getTypeTransformations()).hasSize(1);
     Node n = info.getTypeTransformations().get("T");
     assertNode(n).hasLineno(2); // lineno of "@" in "@template"
@@ -5310,57 +5481,59 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testAllowlistedAnnotations() {
     parse(
-        "* @addon \n"
-            + "* @augments \n"
-            + "* @base \n"
-            + "* @borrows \n"
-            + "* @bug \n"
-            + "* @channel \n"
-            + "* @class \n"
-            + "* @config \n"
-            + "* @constructs \n"
-            + "* @default \n"
-            + "* @description \n"
-            + "* @enhance \n"
-            + "* @enhanceable \n"
-            + "* @event \n"
-            + "* @example \n"
-            + "* @exception \n"
-            + "* @exec \n"
-            + "* @externs \n"
-            + "* @field \n"
-            + "* @function \n"
-            + "* @delcall \n"
-            + "* @deltemplate \n"
-            + "* @hassoydelcall \n"
-            + "* @hassoydeltemplate \n"
-            + "* @id \n"
-            + "* @ignore \n"
-            + "* @jsx \n"
-            + "* @jsxFrag \n"
-            + "* @inner \n"
-            + "* @lends {string} \n"
-            + "* @link \n"
-            + "* @mayhaveextraedge \n"
-            + "* @member \n"
-            + "* @memberOf \n"
-            + "* @modName \n"
-            + "* @name \n"
-            + "* @namespace \n"
-            + "* @ngInject \n"
-            + "* @nocompile \n"
-            + "* @pintomodule \n"
-            + "* @property \n"
-            + "* @requirecss \n"
-            + "* @requires \n"
-            + "* @since \n"
-            + "* @soyTemplate \n"
-            + "* @soyModule \n"
-            + "* @static \n"
-            + "* @supported\n"
-            + "* @wizaction \n"
-            + "* @wizcallback \n"
-            + "*/");
+        """
+        * @addon\s
+        * @augments\s
+        * @base\s
+        * @borrows\s
+        * @bug\s
+        * @channel\s
+        * @class\s
+        * @config\s
+        * @constructs\s
+        * @default\s
+        * @description\s
+        * @enhance\s
+        * @enhanceable\s
+        * @event\s
+        * @example\s
+        * @exception\s
+        * @exec\s
+        * @externs\s
+        * @field\s
+        * @function\s
+        * @delcall\s
+        * @deltemplate\s
+        * @hassoydelcall\s
+        * @hassoydeltemplate\s
+        * @id\s
+        * @ignore\s
+        * @jsx\s
+        * @jsxFrag\s
+        * @inner\s
+        * @lends {string}\s
+        * @link\s
+        * @mayhaveextraedge\s
+        * @member\s
+        * @memberOf\s
+        * @modName\s
+        * @name\s
+        * @namespace\s
+        * @ngInject\s
+        * @nocompile\s
+        * @pintomodule\s
+        * @property\s
+        * @requirecss\s
+        * @requires\s
+        * @since\s
+        * @soyTemplate\s
+        * @soyModule\s
+        * @static\s
+        * @supported
+        * @wizaction\s
+        * @wizcallback\s
+        */
+        """);
   }
 
   @Test
@@ -5368,7 +5541,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     SourceFile sourceFile =
         SourceFile.fromCode(
             "comment-position-test.js",
-            "   \n" + "  /**\n" + "   * A comment\n" + "   */\n" + "  function f(x) {}");
+            """
+              \s
+              /**
+               * A comment
+               */
+              function f(x) {}
+            """);
     Node script = parseFull(sourceFile.getCode());
     checkState(script.isScript());
     Node fn = script.getFirstChild();
@@ -5538,18 +5717,23 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testPreserveWhitespace1() {
     JSDocInfo jsdoc =
         preserveWhitespaceParse(
-            "this is a nice comment\n"
-                + " * that spans multiple lines\n"
-                + " *     with custom\n"
-                + " *     formatting\n"
-                + " * @author abc@google.com */");
+            """
+            this is a nice comment
+             * that spans multiple lines
+             *     with custom
+             *     formatting
+             * @author abc@google.com */
+            """);
 
     assertThat(jsdoc.getBlockDescription())
         .isEqualTo(
-            "this is a nice comment\n that spans multiple lines\n"
-                + "     with custom\n"
-                + "     formatting\n"
-                + " ");
+            """
+            this is a nice comment
+             that spans multiple lines
+                 with custom
+                 formatting
+            """
+                + ' ');
 
     assertDocumentationInMarker(
         assertAnnotationMarker(jsdoc, "author", 4, 3), "abc@google.com", 10, 4, 24);
@@ -5559,83 +5743,110 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testPreserveWhitespace2() {
     JSDocInfo jsdoc =
         preserveWhitespaceParse(
-            "@param {string} x this is a nice comment\n"
-                + " * that spans multiple lines\n"
-                + " *     with custom\n"
-                + " *     formatting\n"
-                + " * @param {string} y */");
+            """
+            @param {string} x this is a nice comment
+             * that spans multiple lines
+             *     with custom
+             *     formatting
+             * @param {string} y */
+            """);
 
     assertThat(jsdoc.getDescriptionForParameter("x"))
         .isEqualTo(
-            " this is a nice comment\n that spans multiple lines\n"
-                + "     with custom\n"
-                + "     formatting\n"
-                + " ");
+            """
+             this is a nice comment
+             that spans multiple lines
+                 with custom
+                 formatting
+            """
+                + ' ');
   }
 
   @Test
   public void testPreserveWhitespace3() {
     JSDocInfo jsdoc =
         preserveWhitespaceParse(
-            "@return {string} this is a nice comment\n"
-                + " * that spans multiple lines\n"
-                + " *     with custom\n"
-                + " *     formatting\n"
-                + " * @param {string} y */");
+            """
+            @return {string} this is a nice comment
+             * that spans multiple lines
+             *     with custom
+             *     formatting
+             * @param {string} y */
+            """);
 
     assertThat(jsdoc.getReturnDescription())
         .isEqualTo(
-            "this is a nice comment\n that spans multiple lines\n"
-                + "     with custom\n"
-                + "     formatting\n"
-                + " ");
+            """
+            this is a nice comment
+             that spans multiple lines
+                 with custom
+                 formatting
+            """
+                + ' ');
   }
 
   @Test
   public void testPreserveWhitespace4() {
     JSDocInfo jsdoc =
         preserveWhitespaceParse(
-            "@throws {string} this is a nice comment\n"
-                + " * that spans multiple lines\n"
-                + " *     with custom\n"
-                + " *     formatting\n"
-                + " * @param {string} y */");
+            """
+            @throws {string} this is a nice comment
+             * that spans multiple lines
+             *     with custom
+             *     formatting
+             * @param {string} y */
+            """);
 
     assertThat(jsdoc.getMarkers().iterator().next().getDescription().getItem())
         .isEqualTo(
-            "{string} this is a nice comment\n that spans multiple lines\n"
-                + "     with custom\n"
-                + "     formatting\n"
-                + " ");
+            """
+            {string} this is a nice comment
+             that spans multiple lines
+                 with custom
+                 formatting
+            """
+                + ' ');
   }
 
   @Test
   public void testPreserveWhitespace5() {
     JSDocInfo jsdoc =
         preserveWhitespaceParse(
-            "@desc this is a nice comment\n"
-                + " * that spans multiple lines\n"
-                + " *     with custom\n"
-                + " *     formatting\n"
-                + " */");
+            """
+            @desc this is a nice comment
+             * that spans multiple lines
+             *     with custom
+             *     formatting
+             */
+            """);
 
     assertThat(jsdoc.getDescription())
         .isEqualTo(
-            " this is a nice comment\n"
-                + " that spans multiple lines\n"
-                + "     with custom\n"
-                + "     formatting\n");
+            """
+             this is a nice comment
+             that spans multiple lines
+                 with custom
+                 formatting
+            """);
   }
 
   @Test
   public void testPreserveWhitespace6() {
     JSDocInfo info =
         preserveWhitespaceParse(
-            "This is the typedef description\n"
-                + " *     with multiple lines\n"
-                + " * @typedef \n {string}*/");
+            """
+            This is the typedef description
+             *     with multiple lines
+             * @typedef\s
+             {string}*/
+            """);
     assertThat(info.getBlockDescription())
-        .isEqualTo("This is the typedef description\n" + "     with multiple lines\n" + " ");
+        .isEqualTo(
+            """
+            This is the typedef description
+                 with multiple lines
+            """
+                + ' ');
     assertThat(info.hasTypedefType()).isTrue();
     assertTypeEquals(STRING_TYPE, info.getTypedefType());
   }
@@ -5644,26 +5855,47 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseCommentWithStarsAfterLeadingSpace() {
     JSDocInfo jsdoc =
         preserveWhitespaceParse(
-            "@desc this comment has extra\n" + " * * stars on new lines\n" + " */");
+            """
+            @desc this comment has extra
+             * * stars on new lines
+             */
+            """);
 
     assertThat(jsdoc.getDescription())
-        .isEqualTo(" this comment has extra\n" + " * stars on new lines\n");
+        .isEqualTo(
+            """
+             this comment has extra
+             * stars on new lines
+            """);
   }
 
   @Test
   public void testParseCommentWithThickLeadingStarBlockPreserveWhitespace() {
     JSDocInfo jsdoc =
         preserveWhitespaceParse(
-            "@desc line 2 has extra stars\n" + " **** that should pad content\n" + " */");
+            """
+            @desc line 2 has extra stars
+             **** that should pad content
+             */
+            """);
 
     assertThat(jsdoc.getDescription())
-        .isEqualTo(" line 2 has extra stars\n" + "*** that should pad content\n");
+        .isEqualTo(
+            """
+             line 2 has extra stars
+            *** that should pad content
+            """);
   }
 
   @Test
   public void testParseCommentWithThickLeadingStarBlockSingeLine() {
     JSDocInfo jsdoc =
-        parse("@desc line 2 has extra stars\n" + " **** that should pad content\n" + " */");
+        parse(
+            """
+            @desc line 2 has extra stars
+             **** that should pad content
+             */
+            """);
 
     assertThat(jsdoc.getDescription())
         .isEqualTo("line 2 has extra stars *** that should pad content");
@@ -5673,11 +5905,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseCommentWithStarsOnOpenCommentLine() {
     Node script =
         parseFull(
-            "/******\n"
-                + " * This is a typedef comment with ASCII art.\n"
-                + " * @desc this is a description\n"
-                + " *****/\n"
-                + "function x() {}");
+            """
+            /******
+             * This is a typedef comment with ASCII art.
+             * @desc this is a description
+             *****/
+            function x() {}
+            """);
     checkState(script.isScript());
     Node fn = script.getFirstChild();
     checkState(fn.isFunction());

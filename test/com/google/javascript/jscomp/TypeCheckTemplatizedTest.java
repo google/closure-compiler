@@ -32,10 +32,17 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatizedArray1() {
     newTest()
         .addSource(
-            "/** @param {!Array<number>} a\n"
-                + "* @return {string}\n"
-                + "*/ var f = function(a) { return a[0]; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+            """
+            /** @param {!Array<number>} a
+            * @return {string}
+            */ var f = function(a) { return a[0]; };
+            """)
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -43,11 +50,17 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatizedArray2() {
     newTest()
         .addSource(
-            "/** @param {!Array<!Array<number>>} a\n"
-                + "* @return {number}\n"
-                + "*/ var f = function(a) { return a[0]; };")
+            """
+            /** @param {!Array<!Array<number>>} a
+            * @return {number}
+            */ var f = function(a) { return a[0]; };
+            """)
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : Array<number>\n" + "required: number")
+            """
+            inconsistent return type
+            found   : Array<number>
+            required: number
+            """)
         .run();
   }
 
@@ -55,9 +68,11 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatizedArray3() {
     newTest()
         .addSource(
-            "/** @param {!Array<number>} a\n"
-                + "* @return {number}\n"
-                + "*/ var f = function(a) { a[1] = 0; return a[0]; };")
+            """
+            /** @param {!Array<number>} a
+            * @return {number}
+            */ var f = function(a) { a[1] = 0; return a[0]; };
+            """)
         .run();
   }
 
@@ -65,7 +80,12 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatizedArray4() {
     newTest()
         .addSource("/** @param {!Array<number>} a\n" + "*/ var f = function(a) { a[0] = 'a'; };")
-        .addDiagnostic("assignment\n" + "found   : string\n" + "required: number")
+        .addDiagnostic(
+            """
+            assignment
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -80,10 +100,17 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatizedArray6() {
     newTest()
         .addSource(
-            "/** @param {!Array<*>} a\n"
-                + "* @return {string}\n"
-                + "*/ var f = function(a) { return a[0]; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : *\n" + "required: string")
+            """
+            /** @param {!Array<*>} a
+            * @return {string}
+            */ var f = function(a) { return a[0]; };
+            """)
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : *
+            required: string
+            """)
         .run();
   }
 
@@ -91,10 +118,17 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatizedArray7() {
     newTest()
         .addSource(
-            "/** @param {?Array<number>} a\n"
-                + "* @return {string}\n"
-                + "*/ var f = function(a) { return a[0]; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+            """
+            /** @param {?Array<number>} a
+            * @return {string}
+            */ var f = function(a) { return a[0]; };
+            """)
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -102,10 +136,17 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatizedObject1() {
     newTest()
         .addSource(
-            "/** @param {!Object<number>} a\n"
-                + "* @return {string}\n"
-                + "*/ var f = function(a) { return a[0]; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+            """
+            /** @param {!Object<number>} a
+            * @return {string}
+            */ var f = function(a) { return a[0]; };
+            """)
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -151,10 +192,17 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatizedObject2() {
     newTest()
         .addSource(
-            "/** @param {!Object<string,number>} a\n"
-                + "* @return {string}\n"
-                + "*/ var f = function(a) { return a['x']; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : number\n" + "required: string")
+            """
+            /** @param {!Object<string,number>} a
+            * @return {string}
+            */ var f = function(a) { return a['x']; };
+            """)
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -162,10 +210,17 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatizedObject3() {
     newTest()
         .addSource(
-            "/** @param {!Object<number,string>} a\n"
-                + "* @return {string}\n"
-                + "*/ var f = function(a) { return a['x']; };")
-        .addDiagnostic("restricted index type\n" + "found   : string\n" + "required: number")
+            """
+            /** @param {!Object<number,string>} a
+            * @return {string}
+            */ var f = function(a) { return a['x']; };
+            """)
+        .addDiagnostic(
+            """
+            restricted index type
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -173,11 +228,18 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatizedObject4() {
     newTest()
         .addSource(
-            "/** @enum {string} */ var E = {A: 'a', B: 'b'};\n"
-                + "/** @param {!Object<E,string>} a\n"
-                + "* @return {string}\n"
-                + "*/ var f = function(a) { return a['x']; };")
-        .addDiagnostic("restricted index type\n" + "found   : string\n" + "required: E<string>")
+            """
+            /** @enum {string} */ var E = {A: 'a', B: 'b'};
+            /** @param {!Object<E,string>} a
+            * @return {string}
+            */ var f = function(a) { return a['x']; };
+            """)
+        .addDiagnostic(
+            """
+            restricted index type
+            found   : string
+            required: E<string>
+            """)
         .run();
   }
 
@@ -189,7 +251,12 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
                 + "  /** @type {Object<number, string>} */ this.numbers = {};"
                 + "}"
                 + "(new F()).numbers['ten'] = '10';")
-        .addDiagnostic("restricted index type\n" + "found   : string\n" + "required: number")
+        .addDiagnostic(
+            """
+            restricted index type
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -202,7 +269,12 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
                 + "/** @type {!Array<number>} */"
                 + "var arr2 = [];\n"
                 + "arr1 = arr2;")
-        .addDiagnostic("assignment\n" + "found   : Array<number>\n" + "required: Array<string>")
+        .addDiagnostic(
+            """
+            assignment
+            found   : Array<number>
+            required: Array<string>
+            """)
         .run();
   }
 
@@ -212,7 +284,11 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
         .addSource(
             "/** @type {!Array<string>} */" + "var arr1 = /** @type {!Array<number>} */([]);\n")
         .addDiagnostic(
-            "initializing variable\n" + "found   : Array<number>\n" + "required: Array<string>")
+            """
+            initializing variable
+            found   : Array<number>
+            required: Array<string>
+            """)
         .run();
   }
 
@@ -222,9 +298,11 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
         .addSource(
             "/** @type {Array<string>} */" + "var arr1 = /** @type {!Array<number>} */([]);\n")
         .addDiagnostic(
-            "initializing variable\n"
-                + "found   : Array<number>\n"
-                + "required: (Array<string>|null)")
+            """
+            initializing variable
+            found   : Array<number>
+            required: (Array<string>|null)
+            """)
         .run();
   }
 
@@ -237,9 +315,11 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
                 + "/** @type {Array<number>} */"
                 + "var arr2 = arr1;\n")
         .addDiagnostic(
-            "initializing variable\n"
-                + "found   : (Array<string>|null)\n"
-                + "required: (Array<number>|null)")
+            """
+            initializing variable
+            found   : (Array<string>|null)
+            required: (Array<number>|null)
+            """)
         .run();
   }
 
@@ -279,7 +359,12 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
                 + "/** @override*/ C.prototype.method = function(a) {}\n"
                 + ""
                 + "/** @type {null} */ var some = new C().method('str');")
-        .addDiagnostic("initializing variable\n" + "found   : string\n" + "required: null")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : string
+            required: null
+            """)
         .run();
   }
 
@@ -300,7 +385,12 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
                 + " */ function C(){}\n"
                 + "/** @override*/ C.prototype.method = function(a) {}\n"
                 + "/** @type {null} */ var some = new C().method('str');")
-        .addDiagnostic("initializing variable\n" + "found   : (number|string)\n" + "required: null")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : (number|string)
+            required: null
+            """)
         .run();
   }
 
@@ -325,7 +415,12 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
                 + "/** @override*/ C.prototype.method = function(a) {}\n"
                 + "/** @type {C<number>} var x = new C();"
                 + "/** @type {null} */ var some = x.method('str');")
-        .addDiagnostic("initializing variable\n" + "found   : (number|string)\n" + "required: null")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : (number|string)
+            required: null
+            """)
         .run();
   }
 
@@ -348,7 +443,12 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
                 + " */ function C(a){}\n"
                 + "/** @override*/ C.prototype.method = function(a) {}\n"
                 + "/** @type {null} */ var some = new C(1).method('str');")
-        .addDiagnostic("initializing variable\n" + "found   : (number|string)\n" + "required: null")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : (number|string)
+            required: null
+            """)
         .run();
   }
 
@@ -356,27 +456,31 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatized10() {
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @template T\n"
-                + " */\n"
-                + "function Parent() {};\n"
-                + "\n"
-                + "/** @param {T} x */\n"
-                + "Parent.prototype.method = function(x) {};\n"
-                + "\n"
-                + "/**\n"
-                + " * @constructor\n"
-                + " * @extends {Parent<string>}\n"
-                + " */\n"
-                + "function Child() {};\n"
-                + "Child.prototype = new Parent();\n"
-                + "\n"
-                + "(new Child()).method(123); \n")
+            """
+            /**
+             * @constructor
+             * @template T
+             */
+            function Parent() {};
+
+            /** @param {T} x */
+            Parent.prototype.method = function(x) {};
+
+            /**
+             * @constructor
+             * @extends {Parent<string>}
+             */
+            function Child() {};
+            Child.prototype = new Parent();
+
+            (new Child()).method(123);\s
+            """)
         .addDiagnostic(
-            "actual parameter 1 of Parent.prototype.method does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: string")
+            """
+            actual parameter 1 of Parent.prototype.method does not match formal parameter
+            found   : number
+            required: string
+            """)
         .run();
   }
 

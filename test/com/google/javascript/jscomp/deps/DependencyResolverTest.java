@@ -37,19 +37,23 @@ public final class DependencyResolverTest {
       new DependencyFile(
           new VirtualFile(
               "deps1",
-              "goog.addDependency('a.js', ['a'], []);\n"
-                  + "goog.addDependency('b.js', ['b'], []);\n"
-                  + "goog.addDependency('c.js', ['c', 'c2'], ['a']);\n"
-                  + "goog.addDependency('d.js', ['d'], ['b', 'c']);\n"));
+              """
+              goog.addDependency('a.js', ['a'], []);
+              goog.addDependency('b.js', ['b'], []);
+              goog.addDependency('c.js', ['c', 'c2'], ['a']);
+              goog.addDependency('d.js', ['d'], ['b', 'c']);
+              """));
 
   DependencyFile fakeDeps2 =
       new DependencyFile(
           new VirtualFile(
               "deps2",
-              "goog.addDependency('e.js', ['e'], ['c2']);\n"
-                  + "goog.addDependency('f.js', ['f'], ['b', 'c']);\n"
-                  + "goog.addDependency('g.js', ['g'], ['a', 'b', 'c']);\n"
-                  + "goog.addDependency('h.js', ['h', 'i'], ['g', 'd', 'c']);\n"));
+              """
+              goog.addDependency('e.js', ['e'], ['c2']);
+              goog.addDependency('f.js', ['f'], ['b', 'c']);
+              goog.addDependency('g.js', ['g'], ['a', 'b', 'c']);
+              goog.addDependency('h.js', ['h', 'i'], ['g', 'd', 'c']);
+              """));
 
   DefaultDependencyResolver resolver;
 

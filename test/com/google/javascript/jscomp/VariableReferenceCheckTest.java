@@ -433,9 +433,11 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   @Test
   public void testSuppressDuplicate_fileoverview() {
     String code =
-        "/** @fileoverview @suppress {duplicate} */\n"
-            + "/** @type {?} */ var google;\n"
-            + " var google";
+        """
+        /** @fileoverview @suppress {duplicate} */
+        /** @type {?} */ var google;
+         var google
+        """;
     testSame(code);
   }
 

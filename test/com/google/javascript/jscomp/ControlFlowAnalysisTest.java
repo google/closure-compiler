@@ -1843,17 +1843,19 @@ public final class ControlFlowAnalysisTest {
   @Test
   public void testBreakInFinally2() throws IOException {
     String src =
-        "var action;\n"
-            + "a: {\n"
-            + "  var proto = null;\n"
-            + "  try {\n"
-            + "    proto = new Proto\n"
-            + "  } finally {\n"
-            + "    action = proto;\n"
-            + "    break a\n"
-            + "  }\n"
-            + "}\n"
-            + "alert(action)\n";
+        """
+        var action;
+        a: {
+          var proto = null;
+          try {
+            proto = new Proto
+          } finally {
+            action = proto;
+            break a
+          }
+        }
+        alert(action)
+        """;
 
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertCrossEdge(cfg, Token.BREAK, Token.EXPR_RESULT, Branch.UNCOND);

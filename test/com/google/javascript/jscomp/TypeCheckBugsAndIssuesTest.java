@@ -43,9 +43,11 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
                 + "  ns.a(123);"
                 + "}")
         .addDiagnostic(
-            "actual parameter 1 of ns.a does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: string")
+            """
+            actual parameter 1 of ns.a does not match formal parameter
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -62,9 +64,11 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
             ns.a(123);
             """)
         .addDiagnostic(
-            "actual parameter 1 of ns.a does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: string")
+            """
+            actual parameter 1 of ns.a does not match formal parameter
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -81,9 +85,11 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
             ns.a(123);
             """)
         .addDiagnostic(
-            "actual parameter 1 of ns.a does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: string")
+            """
+            actual parameter 1 of ns.a does not match formal parameter
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -95,7 +101,12 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
                 + "/** @return {number} */ I.prototype.get = function(){};"
                 + "/** @constructor \n * @implements {I} */ function F() {}"
                 + "/** @override */ F.prototype.get = function() { return true; };")
-        .addDiagnostic("inconsistent return type\n" + "found   : boolean\n" + "required: number")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -121,7 +132,11 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
                 + "  t = undefined;"
                 + "}")
         .addDiagnostic(
-            "condition always evaluates to false\n" + "left : (null|undefined)\n" + "right: null")
+            """
+            condition always evaluates to false
+            left : (null|undefined)
+            right: null
+            """)
         .run();
   }
 
@@ -137,9 +152,11 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
                 + "  f(new this.Date());"
                 + "};")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : this.Date\n"
-                + "required: number")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : this.Date
+            required: number
+            """)
         .run();
   }
 
@@ -176,9 +193,11 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
                 + "Bar.prototype.add = function(ignored) {};"
                 + "(new Bar()).add(1, 2);")
         .addDiagnostic(
-            "actual parameter 2 of Bar.prototype.add does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: string")
+            """
+            actual parameter 2 of Bar.prototype.add does not match formal parameter
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -405,20 +424,26 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
   public void testIssue688() {
     newTest()
         .addSource(
-            "/** @const */ var SOME_DEFAULT =\n"
-                + "    /** @type {TwoNumbers} */ ({first: 1, second: 2});\n"
-                + "/**\n"
-                + "* Class defining an interface with two numbers.\n"
-                + "* @interface\n"
-                + "*/\n"
-                + "function TwoNumbers() {}\n"
-                + "/** @type {number} */\n"
-                + "TwoNumbers.prototype.first;\n"
-                + "/** @type {number} */\n"
-                + "TwoNumbers.prototype.second;\n"
-                + "/** @return {number} */ function f() { return SOME_DEFAULT; }")
+            """
+            /** @const */ var SOME_DEFAULT =
+                /** @type {TwoNumbers} */ ({first: 1, second: 2});
+            /**
+            * Class defining an interface with two numbers.
+            * @interface
+            */
+            function TwoNumbers() {}
+            /** @type {number} */
+            TwoNumbers.prototype.first;
+            /** @type {number} */
+            TwoNumbers.prototype.second;
+            /** @return {number} */ function f() { return SOME_DEFAULT; }
+            """)
         .addDiagnostic(
-            "inconsistent return type\n" + "found   : (TwoNumbers|null)\n" + "required: number")
+            """
+            inconsistent return type
+            found   : (TwoNumbers|null)
+            required: number
+            """)
         .run();
   }
 
@@ -426,44 +451,46 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
   public void testIssue700() {
     newTest()
         .addSource(
-            "/**\n"
-                + " * @param {{text: string}} opt_data\n"
-                + " * @return {string}\n"
-                + " */\n"
-                + "function temp1(opt_data) {\n"
-                + "  return opt_data.text;\n"
-                + "}\n"
-                + "\n"
-                + "/**\n"
-                + " * @param {{activity: (boolean|number|string|null|Object)}} opt_data\n"
-                + " * @return {string}\n"
-                + " */\n"
-                + "function temp2(opt_data) {\n"
-                + "  /** @suppress {checkTypes} */\n"
-                + "  function __inner() {\n"
-                + "    return temp1(opt_data.activity);\n"
-                + "  }\n"
-                + "  return __inner();\n"
-                + "}\n"
-                + "\n"
-                + "/**\n"
-                + " * @param {{n: number, text: string, b: boolean}} opt_data\n"
-                + " * @return {string}\n"
-                + " */\n"
-                + "function temp3(opt_data) {\n"
-                + "  return 'n: ' + opt_data.n + ', t: ' + opt_data.text + '.';\n"
-                + "}\n"
-                + "\n"
-                + "function callee() {\n"
-                + "  var output = temp3({\n"
-                + "    n: 0,\n"
-                + "    text: 'a string',\n"
-                + "    b: true\n"
-                + "  })\n"
-                + "  alert(output);\n"
-                + "}\n"
-                + "\n"
-                + "callee();")
+            """
+            /**
+             * @param {{text: string}} opt_data
+             * @return {string}
+             */
+            function temp1(opt_data) {
+              return opt_data.text;
+            }
+
+            /**
+             * @param {{activity: (boolean|number|string|null|Object)}} opt_data
+             * @return {string}
+             */
+            function temp2(opt_data) {
+              /** @suppress {checkTypes} */
+              function __inner() {
+                return temp1(opt_data.activity);
+              }
+              return __inner();
+            }
+
+            /**
+             * @param {{n: number, text: string, b: boolean}} opt_data
+             * @return {string}
+             */
+            function temp3(opt_data) {
+              return 'n: ' + opt_data.n + ', t: ' + opt_data.text + '.';
+            }
+
+            function callee() {
+              var output = temp3({
+                n: 0,
+                text: 'a string',
+                b: true
+              })
+              alert(output);
+            }
+
+            callee();
+            """)
         .run();
   }
 
@@ -494,9 +521,11 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
                 + "  };"
                 + "};")
         .addDiagnostic(
-            "actual parameter 1 of Foo.prototype.bar does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: number")
+            """
+            actual parameter 1 of Foo.prototype.bar does not match formal parameter
+            found   : boolean
+            required: number
+            """)
         .run();
   }
 
@@ -603,9 +632,11 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
                 + "})();"
                 + "(new F()).bar(true)")
         .addDiagnostic(
-            "actual parameter 1 of F.prototype.bar does not match formal parameter\n"
-                + "found   : boolean\n"
-                + "required: string")
+            """
+            actual parameter 1 of F.prototype.bar does not match formal parameter
+            found   : boolean
+            required: string
+            """)
         .run();
   }
 
@@ -613,23 +644,25 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
   public void testIssue1047() {
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " */\n"
-                + "function C2() {}\n"
-                + "\n"
-                + "/**\n"
-                + " * @constructor\n"
-                + " */\n"
-                + "function C3(c2) {\n"
-                + "  /**\n"
-                + "   * @type {C2} \n"
-                + "   * @private\n"
-                + "   */\n"
-                + "  this.c2_;\n"
-                + "\n"
-                + "  var x = this.c2_.prop;\n"
-                + "}")
+            """
+            /**
+             * @constructor
+             */
+            function C2() {}
+
+            /**
+             * @constructor
+             */
+            function C3(c2) {
+              /**
+               * @type {C2}\s
+               * @private
+               */
+              this.c2_;
+
+              var x = this.c2_.prop;
+            }
+            """)
         .addDiagnostic("Property prop never defined on C2")
         .run();
   }
@@ -639,7 +672,11 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @type {Array} */ var x = null;" + "x.push('hi');")
         .addDiagnostic(
-            "No properties on this expression\n" + "found   : null\n" + "required: Object")
+            """
+            No properties on this expression
+            found   : null
+            required: Object
+            """)
         .run();
   }
 
@@ -647,30 +684,34 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
   public void testIssue1072() {
     newTest()
         .addSource(
-            "/**\n"
-                + " * @param {string} x\n"
-                + " * @return {number}\n"
-                + " */\n"
-                + "var f1 = function(x) {\n"
-                + "  return 3;\n"
-                + "};\n"
-                + "\n"
-                + "/** Function */\n"
-                + "var f2 = function(x) {\n"
-                + "  if (!x) throw new Error()\n"
-                + "  return /** @type {number} */ (f1('x'))\n"
-                + "}\n"
-                + "\n"
-                + "/**\n"
-                + " * @param {string} x\n"
-                + " */\n"
-                + "var f3 = function(x) {};\n"
-                + "\n"
-                + "f1(f3);")
+            """
+            /**
+             * @param {string} x
+             * @return {number}
+             */
+            var f1 = function(x) {
+              return 3;
+            };
+
+            /** Function */
+            var f2 = function(x) {
+              if (!x) throw new Error()
+              return /** @type {number} */ (f1('x'))
+            }
+
+            /**
+             * @param {string} x
+             */
+            var f3 = function(x) {};
+
+            f1(f3);
+            """)
         .addDiagnostic(
-            "actual parameter 1 of f1 does not match formal parameter\n"
-                + "found   : function(string): undefined\n"
-                + "required: string")
+            """
+            actual parameter 1 of f1 does not match formal parameter
+            found   : function(string): undefined
+            required: string
+            """)
         .run();
   }
 
@@ -679,9 +720,11 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @param {function(number)} g */ function f(g) {}" + "f(function(a, b) {})")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : function(?, ?): undefined\n"
-                + "required: function(number): ?")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : function(?, ?): undefined
+            required: function(number): ?
+            """)
         .run();
   }
 
@@ -694,9 +737,11 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
                 + "/** desc */ F.prototype.bar = function() {};"
                 + "g(new F().bar);")
         .addDiagnostic(
-            "actual parameter 1 of g does not match formal parameter\n"
-                + "found   : function(this:F): undefined\n"
-                + "required: function(this:undefined): ?")
+            """
+            actual parameter 1 of g does not match formal parameter
+            found   : function(this:F): undefined
+            required: function(this:undefined): ?
+            """)
         .run();
   }
 
@@ -720,7 +765,11 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
             "/** @param {function(this:void)} f */ function g(f) {}"
                 + "g(function() { this.alert() })")
         .addDiagnostic(
-            "No properties on this expression\n" + "found   : undefined\n" + "required: Object")
+            """
+            No properties on this expression
+            found   : undefined
+            required: Object
+            """)
         .run();
   }
 
@@ -737,7 +786,12 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
                 + " /** @const */ this.e = error;\n"
                 + "}"
                 + "/** @type {number} */ var x = (new C('x')).e;")
-        .addDiagnostic("initializing variable\n" + "found   : string\n" + "required: number")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : string
+            required: number
+            """)
         .run();
   }
 
@@ -753,7 +807,12 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
                 + " /** @type {!B} */ var C = new B();"
                 + "}"
                 + "/** @type {number} */ var x = (new A()).foo;")
-        .addDiagnostic("initializing variable\n" + "found   : B\n" + "required: number")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : B
+            required: number
+            """)
         .run();
   }
 
@@ -870,11 +929,18 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
   public void testBug909000() {
     newTest()
         .addSource(
-            "/** @constructor */function A(){}\n"
-                + "/** @param {!A} a\n"
-                + "@return {boolean}*/\n"
-                + "function y(a) { return a }")
-        .addDiagnostic("inconsistent return type\n" + "found   : A\n" + "required: boolean")
+            """
+            /** @constructor */function A(){}
+            /** @param {!A} a
+            @return {boolean}*/
+            function y(a) { return a }
+            """)
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : A
+            required: boolean
+            """)
         .run();
   }
 
@@ -883,9 +949,11 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @param {boolean} x */function f(x){}" + "f(null);")
         .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : null\n"
-                + "required: boolean")
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : null
+            required: boolean
+            """)
         .run();
   }
 
@@ -961,14 +1029,16 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
   public void testBug1942972() {
     newTest()
         .addSource(
-            "var google = {\n"
-                + "  gears: {\n"
-                + "    factory: {},\n"
-                + "    workerPool: {}\n"
-                + "  }\n"
-                + "};\n"
-                + "\n"
-                + "google.gears = {factory: {}};\n")
+            """
+            var google = {
+              gears: {
+                factory: {},
+                workerPool: {}
+              }
+            };
+
+            google.gears = {factory: {}};
+            """)
         .run();
   }
 
@@ -990,9 +1060,11 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
                 + " foo(duration);"
                 + "}")
         .addDiagnostic(
-            "actual parameter 1 of foo does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: string")
+            """
+            actual parameter 1 of foo does not match formal parameter
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -1022,7 +1094,12 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
                 + "var x = f();"
                 + "/** @type {string} */"
                 + "x.y = 3;")
-        .addDiagnostic("assignment\n" + "found   : number\n" + "required: string")
+        .addDiagnostic(
+            """
+            assignment
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -1086,28 +1163,32 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
   public void testBug12441160() {
     newTest()
         .addSource(
-            "/** @param {string} a */ \n"
-                + "function use(a) {};\n"
-                + "/**\n"
-                + " * @param {function(this:THIS)} fn\n"
-                + " * @param {THIS} context \n"
-                + " * @constructor\n"
-                + " * @template THIS\n"
-                + " */\n"
-                + "var P = function(fn, context) {}\n"
-                + "\n"
-                + "/** @constructor */\n"
-                + "function C() { /** @type {number} */ this.a = 1; }\n"
-                + "\n"
-                + "/** @return {P} */ \n"
-                + "C.prototype.method = function() {\n"
-                + "   return new P(function() { use(this.a); }, this);\n"
-                + "};\n"
-                + "\n")
+            """
+            /** @param {string} a */\s
+            function use(a) {};
+            /**
+             * @param {function(this:THIS)} fn
+             * @param {THIS} context\s
+             * @constructor
+             * @template THIS
+             */
+            var P = function(fn, context) {}
+
+            /** @constructor */
+            function C() { /** @type {number} */ this.a = 1; }
+
+            /** @return {P} */\s
+            C.prototype.method = function() {
+               return new P(function() { use(this.a); }, this);
+            };
+
+            """)
         .addDiagnostic(
-            "actual parameter 1 of use does not match formal parameter\n"
-                + "found   : number\n"
-                + "required: string")
+            """
+            actual parameter 1 of use does not match formal parameter
+            found   : number
+            required: string
+            """)
         .run();
   }
 
@@ -1133,18 +1214,25 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
     // stronger type is known for a slot.
     newTest()
         .addSource(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @template T\n"
-                + " */\n"
-                + "function X() {}\n"
-                + "/** @constructor */ function C() {\n"
-                + "  /** @type {!X<boolean>}*/\n"
-                + "  this.a = new X();\n"
-                + "  /** @type {null} */ var x = this.a;\n"
-                + "};\n"
-                + "\n")
-        .addDiagnostic("initializing variable\n" + "found   : X<boolean>\n" + "required: null")
+            """
+            /**
+             * @constructor
+             * @template T
+             */
+            function X() {}
+            /** @constructor */ function C() {
+              /** @type {!X<boolean>}*/
+              this.a = new X();
+              /** @type {null} */ var x = this.a;
+            };
+
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : X<boolean>
+            required: null
+            """)
         .run();
   }
 }

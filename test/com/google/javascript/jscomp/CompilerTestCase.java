@@ -320,9 +320,8 @@ public abstract class CompilerTestCase {
        * @param {...*} var_args
        * @return {!Array<?>}
        */
-      function Array(var_args) {}
-      """
-          .trim();
+      function Array(var_args) {}\
+      """;
 
   /** A default set of externs for testing. */
   protected static final String DEFAULT_EXTERNS =

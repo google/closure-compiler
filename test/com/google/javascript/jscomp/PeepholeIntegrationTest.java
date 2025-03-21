@@ -1128,13 +1128,15 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   @Test
   public void testIteratedRemoval3() {
     test(
-        "for (;;) {\n"
-            + "   switch (a) {\n"
-            + "   case 'a': continue;\n"
-            + "   case 'b': continue;\n"
-            + "   case 'c': continue;\n"
-            + "   }\n"
-            + " }",
+        """
+        for (;;) {
+           switch (a) {
+           case 'a': continue;
+           case 'b': continue;
+           case 'c': continue;
+           }
+         }
+        """,
         " for (;;) { }");
   }
 
@@ -1146,11 +1148,13 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   @Test
   public void testIteratedRemoval5() {
     test(
-        "var x; \n"
-            + " out: { \n"
-            + "   try { break out; } catch (e) { break out; } \n"
-            + "   x = undefined; \n"
-            + " }",
+        """
+        var x;\s
+         out: {\s
+           try { break out; } catch (e) { break out; }\s
+           x = undefined;\s
+         }
+        """,
         "var x;");
   }
 

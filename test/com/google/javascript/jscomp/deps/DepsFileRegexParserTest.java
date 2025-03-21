@@ -129,8 +129,10 @@ public final class DepsFileRegexParserTest {
     List<DependencyInfo> result =
         parser.parseFile(
             SRC_PATH,
-            "goog.addDependency('yes1', [], [], true);\n"
-                + "goog.addDependency('yes2', [], [], false);\n");
+            """
+            goog.addDependency('yes1', [], [], true);
+            goog.addDependency('yes2', [], [], false);
+            """);
     ImmutableList<DependencyInfo> expected =
         ImmutableList.of(
             SimpleDependencyInfo.builder("yes1", SRC_PATH).setGoogModule(true).build(),
@@ -186,9 +188,11 @@ public final class DepsFileRegexParserTest {
     List<DependencyInfo> result =
         parser.parseFile(
             SRC_PATH,
-            "goog.addDependency('yes1', [], []); \n"
-                + "foo();\n"
-                + "goog.addDependency('no1', [], []);");
+            """
+            goog.addDependency('yes1', [], []);\s
+            foo();
+            goog.addDependency('no1', [], []);
+            """);
     ImmutableList<DependencyInfo> expected =
         ImmutableList.<DependencyInfo>of(SimpleDependencyInfo.builder("yes1", SRC_PATH).build());
     assertThat(result).isEqualTo(expected);
@@ -200,9 +204,11 @@ public final class DepsFileRegexParserTest {
     List<DependencyInfo> result =
         parser.parseFile(
             SRC_PATH,
-            "goog.addDependency('yes1', [], []); \n"
-                + "foo();\n"
-                + "goog.addDependency('yes2', [], []);");
+            """
+            goog.addDependency('yes1', [], []);\s
+            foo();
+            goog.addDependency('yes2', [], []);
+            """);
     ImmutableList<DependencyInfo> expected =
         ImmutableList.of(
             SimpleDependencyInfo.builder("yes1", SRC_PATH).build(),

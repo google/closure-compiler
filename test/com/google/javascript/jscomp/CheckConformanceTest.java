@@ -108,11 +108,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testViolation1() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_NAME\n"
-            + "  value: 'eval'\n"
-            + "  error_message: 'eval is not allowed'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_NAME
+          value: 'eval'
+          error_message: 'eval is not allowed'
+        }
+        """;
 
     testWarning("eval()", CheckConformance.CONFORMANCE_VIOLATION);
 
@@ -128,12 +130,14 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testConfigFile() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_NAME\n"
-            + "  value: 'eval'\n"
-            + "  config_file: 'foo_conformance_proto.txt'\n"
-            + "  error_message: 'eval is not allowed'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_NAME
+          value: 'eval'
+          config_file: 'foo_conformance_proto.txt'
+          error_message: 'eval is not allowed'
+        }
+        """;
 
     testWarning("eval()", CheckConformance.CONFORMANCE_VIOLATION);
 
@@ -146,34 +150,38 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testNotViolation1() {
     testNoWarning(
-        "/** @constructor */ function Foo() { this.callee = 'string'; }\n"
-            + "/** @constructor */ function Bar() { this.callee = 1; }\n"
-            + "\n"
-            + "\n"
-            + "function f() {\n"
-            + "  var x;\n"
-            + "  switch(random()) {\n"
-            + "    case 1:\n"
-            + "      x = new Foo();\n"
-            + "      break;\n"
-            + "    case 2:\n"
-            + "      x = new Bar();\n"
-            + "      break;\n"
-            + "    default:\n"
-            + "      return;\n"
-            + "  }\n"
-            + "  var z = x.callee;\n"
-            + "}");
+        """
+        /** @constructor */ function Foo() { this.callee = 'string'; }
+        /** @constructor */ function Bar() { this.callee = 1; }
+
+
+        function f() {
+          var x;
+          switch(random()) {
+            case 1:
+              x = new Foo();
+              break;
+            case 2:
+              x = new Bar();
+              break;
+            default:
+              return;
+          }
+          var z = x.callee;
+        }
+        """);
   }
 
   @Test
   public void testNotViolation2() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_NAME\n"
-            + "  value: 'location'\n"
-            + "  error_message: 'location is not allowed'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_NAME
+          value: 'location'
+          error_message: 'location is not allowed'
+        }
+        """;
     testNoWarning("function f() { var location = null; }");
   }
 
@@ -198,44 +206,52 @@ public final class CheckConformanceTest extends CompilerTestCase {
   public void testBadWhitelist1() {
     allowSourcelessWarnings();
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_NAME\n"
-            + "  value: 'eval'\n"
-            + "  error_message: 'placeholder'\n"
-            + "  whitelist_regexp: '('\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_NAME
+          value: 'eval'
+          error_message: 'placeholder'
+          whitelist_regexp: '('
+        }
+        """;
 
     testError(
         "anything;",
         CheckConformance.INVALID_REQUIREMENT_SPEC,
-        "Invalid requirement. Reason: invalid regex pattern\n"
-            + "Requirement spec:\n"
-            + "error_message: \"placeholder\"\n"
-            + "whitelist_regexp: \"(\"\n"
-            + "type: BANNED_NAME\n"
-            + "value: \"eval\"\n");
+        """
+        Invalid requirement. Reason: invalid regex pattern
+        Requirement spec:
+        error_message: "placeholder"
+        whitelist_regexp: "("
+        type: BANNED_NAME
+        value: "eval"
+        """);
   }
 
   @Test
   public void testBadAllowlist1() {
     allowSourcelessWarnings();
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_NAME\n"
-            + "  value: 'eval'\n"
-            + "  error_message: 'placeholder'\n"
-            + "  allowlist_regexp: '('\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_NAME
+          value: 'eval'
+          error_message: 'placeholder'
+          allowlist_regexp: '('
+        }
+        """;
 
     testError(
         "anything;",
         CheckConformance.INVALID_REQUIREMENT_SPEC,
-        "Invalid requirement. Reason: invalid regex pattern\n"
-            + "Requirement spec:\n"
-            + "error_message: \"placeholder\"\n"
-            + "type: BANNED_NAME\n"
-            + "value: \"eval\"\n"
-            + "allowlist_regexp: \"(\"\n");
+        """
+        Invalid requirement. Reason: invalid regex pattern
+        Requirement spec:
+        error_message: "placeholder"
+        type: BANNED_NAME
+        value: "eval"
+        allowlist_regexp: "("
+        """);
   }
 
   @Test
@@ -281,14 +297,16 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testViolationWhitelistedByWhitelistEntryPrefix() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_NAME\n"
-            + "  value: 'eval'\n"
-            + "  error_message: 'eval is not allowed'\n"
-            + "  whitelist_entry {\n"
-            + "    prefix: 'testcode'\n"
-            + "  }\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_NAME
+          value: 'eval'
+          error_message: 'eval is not allowed'
+          whitelist_entry {
+            prefix: 'testcode'
+          }
+        }
+        """;
 
     testNoWarning("eval()");
   }
@@ -296,14 +314,16 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testViolationAllowlistedByAllowlistEntryPrefix() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_NAME\n"
-            + "  value: 'eval'\n"
-            + "  error_message: 'eval is not allowed'\n"
-            + "  allowlist_entry {\n"
-            + "    prefix: 'testcode'\n"
-            + "  }\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_NAME
+          value: 'eval'
+          error_message: 'eval is not allowed'
+          allowlist_entry {
+            prefix: 'testcode'
+          }
+        }
+        """;
 
     testNoWarning("eval()");
   }
@@ -311,14 +331,16 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testViolationWhitelistedByWhitelistEntryRegexp() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_NAME\n"
-            + "  value: 'eval'\n"
-            + "  error_message: 'eval is not allowed'\n"
-            + "  whitelist_entry {\n"
-            + "    regexp: 'tes..ode'\n"
-            + "  }\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_NAME
+          value: 'eval'
+          error_message: 'eval is not allowed'
+          whitelist_entry {
+            regexp: 'tes..ode'
+          }
+        }
+        """;
 
     testNoWarning("eval()");
   }
@@ -326,14 +348,16 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testViolationAllowlistedByAllowlistEntryRegexp() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_NAME\n"
-            + "  value: 'eval'\n"
-            + "  error_message: 'eval is not allowed'\n"
-            + "  allowlist_entry {\n"
-            + "    regexp: 'tes..ode'\n"
-            + "  }\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_NAME
+          value: 'eval'
+          error_message: 'eval is not allowed'
+          allowlist_entry {
+            regexp: 'tes..ode'
+          }
+        }
+        """;
 
     testNoWarning("eval()");
   }
@@ -632,12 +656,14 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedEnhance() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_ENHANCE\n"
-            + "  value: '{some.banned.namespace}'\n"
-            + "  value: '{another.banned.namespace}'\n"
-            + "  error_message: 'Enhanced namespace is not allowed.'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_ENHANCE
+          value: '{some.banned.namespace}'
+          value: '{another.banned.namespace}'
+          error_message: 'Enhanced namespace is not allowed.'
+        }
+        """;
     String violationMessage =
         "Violation: Enhanced namespace is not allowed.\n" + "The enhanced namespace ";
 
@@ -683,11 +709,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedModsRegex() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_MODS_REGEX\n"
-            + "  value: '.+_bar$'\n"
-            + "  error_message: 'Modding namespaces ending in _bar is NOT allowed.'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_MODS_REGEX
+          value: '.+_bar$'
+          error_message: 'Modding namespaces ending in _bar is NOT allowed.'
+        }
+        """;
     String violationMessage = "Violation: Modding namespaces ending in _bar is NOT allowed.";
 
     String ban =
@@ -720,11 +748,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedNameCall() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_NAME_CALL\n"
-            + "  value: 'Function'\n"
-            + "  error_message: 'Calling Function is not allowed.'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_NAME_CALL
+          value: 'Function'
+          error_message: 'Calling Function is not allowed.'
+        }
+        """;
 
     testNoWarning("f instanceof Function");
     testWarning("new Function(str);", CheckConformance.CONFORMANCE_VIOLATION);
@@ -733,12 +763,14 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedName_googProvided() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_NAME\n"
-            + "  value: 'foo.bar'\n"
-            + "  error_message: 'foo.bar is not allowed'\n"
-            + "  allowlist: 'SRC1'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_NAME
+          value: 'foo.bar'
+          error_message: 'foo.bar is not allowed'
+          allowlist: 'SRC1'
+        }
+        """;
 
     testWarning(
         srcs(
@@ -854,9 +886,11 @@ public final class CheckConformanceTest extends CompilerTestCase {
     String externs = EXTERNS + "String.prototype.blink;";
 
     testNoWarning(
-        "/** @constructor */ function Foo() { this.blink = 1; }\n"
-            + "var foo = new Foo();\n"
-            + "foo.blink();");
+        """
+        /** @constructor */ function Foo() { this.blink = 1; }
+        var foo = new Foo();
+        foo.blink();
+        """);
 
     testWarning(
         externs(externs),
@@ -888,11 +922,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedDep1() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_DEPENDENCY\n"
-            + "  value: 'testcode'\n"
-            + "  error_message: 'testcode is not allowed'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_DEPENDENCY
+          value: 'testcode'
+          error_message: 'testcode is not allowed'
+        }
+        """;
 
     testWarning(
         "anything;", CheckConformance.CONFORMANCE_VIOLATION, "Violation: testcode is not allowed");
@@ -902,28 +938,34 @@ public final class CheckConformanceTest extends CompilerTestCase {
   public void testBannedDepRegexNoValue() {
     allowSourcelessWarnings();
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_DEPENDENCY_REGEX\n"
-            + "  error_message: 'testcode is not allowed'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_DEPENDENCY_REGEX
+          error_message: 'testcode is not allowed'
+        }
+        """;
 
     testError(
         "anything;",
         CheckConformance.INVALID_REQUIREMENT_SPEC,
-        "Invalid requirement. Reason: missing value (no banned dependency regexps)\n"
-            + "Requirement spec:\n"
-            + "error_message: \"testcode is not allowed\"\n"
-            + "type: BANNED_DEPENDENCY_REGEX\n");
+        """
+        Invalid requirement. Reason: missing value (no banned dependency regexps)
+        Requirement spec:
+        error_message: "testcode is not allowed"
+        type: BANNED_DEPENDENCY_REGEX
+        """);
   }
 
   @Test
   public void testBannedDepRegex() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_DEPENDENCY_REGEX\n"
-            + "  error_message: 'testcode is not allowed'\n"
-            + "  value: '.*test.*'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_DEPENDENCY_REGEX
+          error_message: 'testcode is not allowed'
+          value: '.*test.*'
+        }
+        """;
 
     testWarning(
         "anything;", CheckConformance.CONFORMANCE_VIOLATION, "Violation: testcode is not allowed");
@@ -932,12 +974,14 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedDepRegexWithWhitelist() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_DEPENDENCY_REGEX\n"
-            + "  error_message: 'testcode is not allowed'\n"
-            + "  value: '.*test.*'\n"
-            + "  whitelist_regexp: 'testcode'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_DEPENDENCY_REGEX
+          error_message: 'testcode is not allowed'
+          value: '.*test.*'
+          whitelist_regexp: 'testcode'
+        }
+        """;
 
     testNoWarning("anything;");
   }
@@ -945,12 +989,14 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedDepRegexWithAllowlist() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_DEPENDENCY_REGEX\n"
-            + "  error_message: 'testcode is not allowed'\n"
-            + "  value: '.*test.*'\n"
-            + "  allowlist_regexp: 'testcode'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_DEPENDENCY_REGEX
+          error_message: 'testcode is not allowed'
+          value: '.*test.*'
+          allowlist_regexp: 'testcode'
+        }
+        """;
 
     testNoWarning("anything;");
   }
@@ -1787,19 +1833,23 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedPropertyWrite() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_PROPERTY_WRITE\n"
-            + "  value: 'C.prototype.p'\n"
-            + "  error_message: 'Assignment to C.p is not allowed'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_PROPERTY_WRITE
+          value: 'C.prototype.p'
+          error_message: 'Assignment to C.p is not allowed'
+        }
+        """;
 
     String declarations =
-        "/** @constructor */ function C() {}\n"
-            + "/** @type {string} */\n"
-            + "C.prototype.p;\n"
-            + "/** @constructor */ function D() {}\n"
-            + "/** @type {string} */\n"
-            + "D.prototype.p;\n";
+        """
+        /** @constructor */ function C() {}
+        /** @type {string} */
+        C.prototype.p;
+        /** @constructor */ function D() {}
+        /** @type {string} */
+        D.prototype.p;
+        """;
 
     testNoWarning(declarations + "var d = new D(); d.p = 'boo';");
 
@@ -1817,11 +1867,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedPropertyWriteExtern() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_PROPERTY_WRITE\n"
-            + "  value: 'Element.prototype.innerHTML'\n"
-            + "  error_message: 'Assignment to Element.innerHTML is not allowed'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_PROPERTY_WRITE
+          value: 'Element.prototype.innerHTML'
+          error_message: 'Assignment to Element.innerHTML is not allowed'
+        }
+        """;
 
     String externs =
         DEFAULT_EXTERNS
@@ -1848,14 +1900,20 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedPropertyNonConstantWrite() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_PROPERTY_NON_CONSTANT_WRITE\n"
-            + "  value: 'C.prototype.p'\n"
-            + "  error_message: 'Assignment of a non-constant value to C.p is not allowed'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_PROPERTY_NON_CONSTANT_WRITE
+          value: 'C.prototype.p'
+          error_message: 'Assignment of a non-constant value to C.p is not allowed'
+        }
+        """;
 
     String declarations =
-        "/** @constructor */ function C() {}\n" + "/** @type {string} */\n" + "C.prototype.p;\n";
+        """
+        /** @constructor */ function C() {}
+        /** @type {string} */
+        C.prototype.p;
+        """;
 
     testNoWarning(declarations + "var c = new C(); c.p = 'boo';");
     testNoWarning(declarations + "var c = new C(); c.p = 'foo' + 'bar';");
@@ -1868,20 +1926,24 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedPropertyRead() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_PROPERTY_READ\n"
-            + "  value: 'C.prototype.p'\n"
-            + "  error_message: 'Use of C.p is not allowed'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_PROPERTY_READ
+          value: 'C.prototype.p'
+          error_message: 'Use of C.p is not allowed'
+        }
+        """;
 
     String declarations =
-        "/** @constructor */ function C() {}\n"
-            + "/** @type {string} */\n"
-            + "C.prototype.p;\n"
-            + "/** @constructor */ function D() {}\n"
-            + "/** @type {string} */\n"
-            + "D.prototype.p;\n"
-            + "function use(a) {};";
+        """
+        /** @constructor */ function C() {}
+        /** @type {string} */
+        C.prototype.p;
+        /** @constructor */ function D() {}
+        /** @type {string} */
+        D.prototype.p;
+        function use(a) {};
+        """;
 
     testNoWarning(declarations + "var d = new D(); d.p = 'boo';");
 
@@ -1907,70 +1969,84 @@ public final class CheckConformanceTest extends CompilerTestCase {
   public void testBannedStringRegexMissingValues() {
     allowSourcelessWarnings();
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_STRING_REGEX\n"
-            + "  error_message: 'Empty string not allowed'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_STRING_REGEX
+          error_message: 'Empty string not allowed'
+        }
+        """;
 
     testError(
         "anything;",
         CheckConformance.INVALID_REQUIREMENT_SPEC,
-        "Invalid requirement. Reason: missing value\n"
-            + "Requirement spec:\n"
-            + "error_message: \"Empty string not allowed\"\n"
-            + "type: BANNED_STRING_REGEX\n");
+        """
+        Invalid requirement. Reason: missing value
+        Requirement spec:
+        error_message: "Empty string not allowed"
+        type: BANNED_STRING_REGEX
+        """);
   }
 
   @Test
   public void testBannedStringRegexEmpty() {
     allowSourcelessWarnings();
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_STRING_REGEX\n"
-            + "  value: ' '\n"
-            + "  error_message: 'Empty string not allowed'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_STRING_REGEX
+          value: ' '
+          error_message: 'Empty string not allowed'
+        }
+        """;
 
     testError(
         "anything;",
         CheckConformance.INVALID_REQUIREMENT_SPEC,
-        "Invalid requirement. Reason: empty strings or whitespace are not allowed\n"
-            + "Requirement spec:\n"
-            + "error_message: \"Empty string not allowed\"\n"
-            + "type: BANNED_STRING_REGEX\n"
-            + "value: \" \"\n");
+        """
+        Invalid requirement. Reason: empty strings or whitespace are not allowed
+        Requirement spec:
+        error_message: "Empty string not allowed"
+        type: BANNED_STRING_REGEX
+        value: " "
+        """);
   }
 
   @Test
   public void testBannedStringRegexMultipleValuesWithEmpty() {
     allowSourcelessWarnings();
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_STRING_REGEX\n"
-            + "  value: 'things'\n"
-            + "  value: ' '\n"
-            + "  error_message: 'Empty string not allowed'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_STRING_REGEX
+          value: 'things'
+          value: ' '
+          error_message: 'Empty string not allowed'
+        }
+        """;
 
     testError(
         "anything;",
         CheckConformance.INVALID_REQUIREMENT_SPEC,
-        "Invalid requirement. Reason: empty strings or whitespace are not allowed\n"
-            + "Requirement spec:\n"
-            + "error_message: \"Empty string not allowed\"\n"
-            + "type: BANNED_STRING_REGEX\n"
-            + "value: \"things\"\n"
-            + "value: \" \"\n");
+        """
+        Invalid requirement. Reason: empty strings or whitespace are not allowed
+        Requirement spec:
+        error_message: "Empty string not allowed"
+        type: BANNED_STRING_REGEX
+        value: "things"
+        value: " "
+        """);
   }
 
   @Test
   public void testBannedStringRegex1() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_STRING_REGEX\n"
-            + "  value: '.*some-attr.*'\n"
-            + "  error_message: 'Empty string not allowed'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_STRING_REGEX
+          value: '.*some-attr.*'
+          error_message: 'Empty string not allowed'
+        }
+        """;
 
     String declarations = "let dom = '<div>sample dom template content</div>';";
 
@@ -1984,18 +2060,22 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedStringRegex2() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_STRING_REGEX\n"
-            + "  value: '.*things.*'\n"
-            + "  value: 'stuff.*'\n"
-            + "  error_message: 'Empty string not allowed'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_STRING_REGEX
+          value: '.*things.*'
+          value: 'stuff.*'
+          error_message: 'Empty string not allowed'
+        }
+        """;
 
     String code =
-        "/** @constructor */\n"
-            + "function Base() {}; Base.prototype.m;\n"
-            + "/** @constructor @extends {Base} */\n"
-            + "function Sub() {}\n";
+        """
+        /** @constructor */
+        function Base() {}; Base.prototype.m;
+        /** @constructor @extends {Base} */
+        function Sub() {}
+        """;
     String stuff = "var b = 'stuff and what not';\n";
     String things = "var s = 'special things';\n";
 
@@ -2009,17 +2089,21 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedStringRegexExactMatch() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_STRING_REGEX\n"
-            + "  value: 'stuff'\n"
-            + "  error_message: 'Empty string not allowed'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_STRING_REGEX
+          value: 'stuff'
+          error_message: 'Empty string not allowed'
+        }
+        """;
 
     String code =
-        "/** @constructor */\n"
-            + "function Base() {}; Base.prototype.m;\n"
-            + "/** @constructor @extends {Base} */\n"
-            + "function Sub() {}\n";
+        """
+        /** @constructor */
+        function Base() {}; Base.prototype.m;
+        /** @constructor @extends {Base} */
+        function Sub() {}
+        """;
     String noMatch = "var b = ' stuff ';\n";
     String shouldMatch = "var s = 'stuff';\n";
 
@@ -2031,17 +2115,21 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBannedStringTemplateLiteral1() {
     configuration =
-        "requirement: {\n"
-            + "  type: BANNED_STRING_REGEX\n"
-            + "  value: '.*good'\n"
-            + "  error_message: 'Empty string not allowed'\n"
-            + "}";
+        """
+        requirement: {
+          type: BANNED_STRING_REGEX
+          value: '.*good'
+          error_message: 'Empty string not allowed'
+        }
+        """;
 
     String code =
-        "/** @constructor */\n"
-            + "function Base() {}; Base.prototype.m;\n"
-            + "/** @constructor @extends {Base} */\n"
-            + "function Sub() {}\n";
+        """
+        /** @constructor */
+        function Base() {}; Base.prototype.m;
+        /** @constructor @extends {Base} */
+        function Sub() {}
+        """;
     String noMatch = "var b = `cheesy goodness`;\n";
     String shouldMatch = "var b = `cheesy good`;\n";
 
@@ -2053,16 +2141,20 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testRestrictedCall1() {
     configuration =
-        "requirement: {\n"
-            + "  type: RESTRICTED_METHOD_CALL\n"
-            + "  value: 'C.prototype.m:function(number)'\n"
-            + "  error_message: 'm method param must be number'\n"
-            + "}";
+        """
+        requirement: {
+          type: RESTRICTED_METHOD_CALL
+          value: 'C.prototype.m:function(number)'
+          error_message: 'm method param must be number'
+        }
+        """;
 
     String code =
-        "/** @constructor */ function C() {}\n"
-            + "/** @param {*} a */\n"
-            + "C.prototype.m = function(a){}\n";
+        """
+        /** @constructor */ function C() {}
+        /** @param {*} a */
+        C.prototype.m = function(a){}
+        """;
 
     testNoWarning(code + "new C().m(1);");
 
@@ -2076,14 +2168,20 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testRestrictedCall2() {
     configuration =
-        "requirement: {\n"
-            + "  type: RESTRICTED_NAME_CALL\n"
-            + "  value: 'C.m:function(number)'\n"
-            + "  error_message: 'C.m method param must be number'\n"
-            + "}";
+        """
+        requirement: {
+          type: RESTRICTED_NAME_CALL
+          value: 'C.m:function(number)'
+          error_message: 'C.m method param must be number'
+        }
+        """;
 
     String code =
-        "/** @constructor */ function C() {}\n" + "/** @param {*} a */\n" + "C.m = function(a){}\n";
+        """
+        /** @constructor */ function C() {}
+        /** @param {*} a */
+        C.m = function(a){}
+        """;
 
     testNoWarning(code + "C.m(1);");
 
@@ -2097,11 +2195,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testRestrictedCall3() {
     configuration =
-        "requirement: {\n"
-            + "  type: RESTRICTED_NAME_CALL\n"
-            + "  value: 'C:function(number)'\n"
-            + "  error_message: 'C method must be number'\n"
-            + "}";
+        """
+        requirement: {
+          type: RESTRICTED_NAME_CALL
+          value: 'C:function(number)'
+          error_message: 'C method must be number'
+        }
+        """;
 
     String code = "/** @constructor @param {...*} a */ function C(a) {}\n";
 
@@ -2117,11 +2217,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testRestrictedCall4() {
     configuration =
-        "requirement: {\n"
-            + "  type: RESTRICTED_NAME_CALL\n"
-            + "  value: 'C:function(number)'\n"
-            + "  error_message: 'C method must be number'\n"
-            + "}";
+        """
+        requirement: {
+          type: RESTRICTED_NAME_CALL
+          value: 'C:function(number)'
+          error_message: 'C method must be number'
+        }
+        """;
 
     String code = "/** @constructor @param {...*} a */ function C(a) {}\n";
 
@@ -2139,14 +2241,16 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "}";
 
     String code =
-        "/** @constructor */\n"
-            + "function Base() {}; Base.prototype.m;\n"
-            + "/** @constructor @extends {Base} */\n"
-            + "function Sub() {}\n"
-            + "var b = new Base();\n"
-            + "var s = new Sub();\n"
-            + "var maybeB = cond ? new Base() : null;\n"
-            + "var maybeS = cond ? new Sub() : null;\n";
+        """
+        /** @constructor */
+        function Base() {}; Base.prototype.m;
+        /** @constructor @extends {Base} */
+        function Sub() {}
+        var b = new Base();
+        var s = new Sub();
+        var maybeB = cond ? new Base() : null;
+        var maybeS = cond ? new Sub() : null;
+        """;
 
     testWarning(code + "b.m(1)", CheckConformance.CONFORMANCE_VIOLATION);
     testWarning(code + "maybeB.m(1)", CheckConformance.CONFORMANCE_VIOLATION);
@@ -2165,14 +2269,16 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "}";
 
     String code =
-        "/** @constructor */\n"
-            + "function Base() {}; Base.prototype.m;\n"
-            + "/** @constructor @extends {Base} */\n"
-            + "function Sub() {}\n"
-            + "var b = new Base();\n"
-            + "var s = new Sub();\n"
-            + "var maybeB = cond ? new Base() : null;\n"
-            + "var maybeS = cond ? new Sub() : null;";
+        """
+        /** @constructor */
+        function Base() {}; Base.prototype.m;
+        /** @constructor @extends {Base} */
+        function Sub() {}
+        var b = new Base();
+        var s = new Sub();
+        var maybeB = cond ? new Base() : null;
+        var maybeS = cond ? new Sub() : null;
+        """;
 
     testWarning(code + "b.m.call(b, 1)", CheckConformance.CONFORMANCE_VIOLATION);
     testWarning(code + "b.m.call(maybeB, 1)", CheckConformance.CONFORMANCE_VIOLATION);
@@ -2211,55 +2317,70 @@ public final class CheckConformanceTest extends CompilerTestCase {
   public void testCustom1() {
     allowSourcelessWarnings();
     configuration =
-        "requirement: {\n" + "  type: CUSTOM\n" + "  error_message: 'placeholder'\n" + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          error_message: 'placeholder'
+        }
+        """;
 
     testError(
         "anything;",
         CheckConformance.INVALID_REQUIREMENT_SPEC,
-        "Invalid requirement. Reason: missing java_class\n"
-            + "Requirement spec:\n"
-            + "error_message: \"placeholder\"\n"
-            + "type: CUSTOM\n");
+        """
+        Invalid requirement. Reason: missing java_class
+        Requirement spec:
+        error_message: "placeholder"
+        type: CUSTOM
+        """);
   }
 
   @Test
   public void testCustom2() {
     allowSourcelessWarnings();
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'MissingClass'\n"
-            + "  error_message: 'placeholder'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'MissingClass'
+          error_message: 'placeholder'
+        }
+        """;
 
     testError(
         "anything;",
         CheckConformance.INVALID_REQUIREMENT_SPEC,
-        "Invalid requirement. Reason: JavaClass not found.\n"
-            + "Requirement spec:\n"
-            + "error_message: \"placeholder\"\n"
-            + "type: CUSTOM\n"
-            + "java_class: \"MissingClass\"\n");
+        """
+        Invalid requirement. Reason: JavaClass not found.
+        Requirement spec:
+        error_message: "placeholder"
+        type: CUSTOM
+        java_class: "MissingClass"
+        """);
   }
 
   @Test
   public void testCustom3() {
     allowSourcelessWarnings();
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.CheckConformanceTest'\n"
-            + "  error_message: 'placeholder'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.CheckConformanceTest'
+          error_message: 'placeholder'
+        }
+        """;
 
     testError(
         "anything;",
         CheckConformance.INVALID_REQUIREMENT_SPEC,
-        "Invalid requirement. Reason: JavaClass is not a rule.\n"
-            + "Requirement spec:\n"
-            + "error_message: \"placeholder\"\n"
-            + "type: CUSTOM\n"
-            + "java_class: \"com.google.javascript.jscomp.CheckConformanceTest\"\n");
+        """
+        Invalid requirement. Reason: JavaClass is not a rule.
+        Requirement spec:
+        error_message: "placeholder"
+        type: CUSTOM
+        java_class: "com.google.javascript.jscomp.CheckConformanceTest"
+        """);
   }
 
   // A custom rule missing a callable constructor.
@@ -2339,32 +2460,38 @@ public final class CheckConformanceTest extends CompilerTestCase {
   public void testCustom5() {
     allowSourcelessWarnings();
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.CheckConformanceTest$CustomRule'\n"
-            + "  error_message: 'placeholder'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.CheckConformanceTest$CustomRule'
+          error_message: 'placeholder'
+        }
+        """;
 
     testError(
         "anything;",
         CheckConformance.INVALID_REQUIREMENT_SPEC,
-        "Invalid requirement. Reason: missing value\n"
-            + "Requirement spec:\n"
-            + "error_message: \"placeholder\"\n"
-            + "type: CUSTOM\n"
-            + "java_class: \"com.google.javascript.jscomp.CheckConformanceTest$CustomRule\"\n");
+        """
+        Invalid requirement. Reason: missing value
+        Requirement spec:
+        error_message: "placeholder"
+        type: CUSTOM
+        java_class: "com.google.javascript.jscomp.CheckConformanceTest$CustomRule"
+        """);
   }
 
   @Test
   public void testCustom6() {
     allowSourcelessWarnings();
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.CheckConformanceTest$CustomRule'\n"
-            + "  value: 'placeholder'\n"
-            + "  error_message: 'placeholder'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.CheckConformanceTest$CustomRule'
+          value: 'placeholder'
+          error_message: 'placeholder'
+        }
+        """;
 
     testNoWarning("anything;");
   }
@@ -2387,11 +2514,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testCustomBanForOf() {
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanForOf'\n"
-            + "  error_message: 'BanForOf Message'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanForOf'
+          error_message: 'BanForOf Message'
+        }
+        """;
 
     testWarning(
         "for (var x of y) { var z = x; }",
@@ -2474,11 +2603,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testCustomBanUnknownThis1() {
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnknownThis'\n"
-            + "  error_message: 'BanUnknownThis Message'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnknownThis'
+          error_message: 'BanUnknownThis Message'
+        }
+        """;
 
     testWarning(
         "function f() {alert(this);}",
@@ -2491,11 +2622,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testCustomBanUnknownThis2() {
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnknownThis'\n"
-            + "  error_message: 'BanUnknownThis Message'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnknownThis'
+          error_message: 'BanUnknownThis Message'
+        }
+        """;
 
     testNoWarning("/** @constructor */ function C() {alert(this);}");
   }
@@ -2503,11 +2636,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testCustomBanUnknownThis3() {
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnknownThis'\n"
-            + "  error_message: 'BanUnknownThis Message'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnknownThis'
+          error_message: 'BanUnknownThis Message'
+        }
+        """;
 
     testNoWarning("function f() {alert(/** @type {Error} */(this));}");
   }
@@ -2515,11 +2650,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testCustomBanUnknownThis_allowsClosurePrimitiveAssert() {
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnknownThis'\n"
-            + "  error_message: 'BanUnknownThis Message'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnknownThis'
+          error_message: 'BanUnknownThis Message'
+        }
+        """;
 
     String assertInstanceof =
         """
@@ -2542,11 +2679,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testCustomBanUnknownThis_allowsGoogAssert() {
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnknownThis'\n"
-            + "  error_message: 'BanUnknownThis Message'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnknownThis'
+          error_message: 'BanUnknownThis Message'
+        }
+        """;
 
     testNoWarning("function f() {goog.asserts.assertInstanceof(this, Error);}");
   }
@@ -2554,11 +2693,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testCustomBanUnknownThis_allowsTs() {
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnknownThis'\n"
-            + "  error_message: 'BanUnknownThis Message'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnknownThis'
+          error_message: 'BanUnknownThis Message'
+        }
+        """;
 
     testNoWarning(srcs(SourceFile.fromCode("file.closure.js", "function f() {alert(this);}")));
   }
@@ -2966,11 +3107,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testCustomBanGlobalVars1() {
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanGlobalVars'\n"
-            + "  error_message: 'BanGlobalVars Message'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanGlobalVars'
+          error_message: 'BanGlobalVars Message'
+        }
+        """;
 
     testWarning(
         "var x;", CheckConformance.CONFORMANCE_VIOLATION, "Violation: BanGlobalVars Message");
@@ -2995,19 +3138,23 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testCustomBanGlobalVars2() {
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanGlobalVars'\n"
-            + "  error_message: 'BanGlobalVars Message'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanGlobalVars'
+          error_message: 'BanGlobalVars Message'
+        }
+        """;
 
     testNoWarning(
-        "goog.scope(function() {\n"
-            + "  var x = {y: 'y'}\n"
-            + "  var z = {\n"
-            + "     [x.y]: 2\n"
-            + "  }\n"
-            + "});");
+        """
+        goog.scope(function() {
+          var x = {y: 'y'}
+          var z = {
+             [x.y]: 2
+          }
+        });
+        """);
 
     // Test with let and const
     testNoWarning(
@@ -3034,11 +3181,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testCustomBanGlobalVarsWithDestructuring() {
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanGlobalVars'\n"
-            + "  error_message: 'BanGlobalVars Message'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanGlobalVars'
+          error_message: 'BanGlobalVars Message'
+        }
+        """;
 
     testWarning(
         "var [x] = [];",
@@ -3051,13 +3200,15 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testCustomBanGlobalVarsWithAllowlist() {
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanGlobalVars'\n"
-            + "  value: 'foo'\n"
-            + "  value: 'bar'\n"
-            + "  error_message: 'BanGlobalVars Message'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanGlobalVars'
+          value: 'foo'
+          value: 'bar'
+          error_message: 'BanGlobalVars Message'
+        }
+        """;
 
     testWarning(
         "var baz;", CheckConformance.CONFORMANCE_VIOLATION, "Violation: BanGlobalVars Message");
@@ -3086,11 +3237,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testCustomBanUnresolvedType() {
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnresolvedType'\n"
-            + "  error_message: 'BanUnresolvedType Message'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnresolvedType'
+          error_message: 'BanUnresolvedType Message'
+        }
+        """;
 
     testWarning(
         "goog.forwardDeclare('Foo'); /** @param {Foo} a */ function f(a) {a.foo()};",
@@ -3397,12 +3550,14 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void testBanCreateElement() {
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateElement'\n"
-            + "  error_message: 'BanCreateElement Message'\n"
-            + "  value: 'script'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateElement'
+          error_message: 'BanCreateElement Message'
+          value: 'script'
+        }
+        """;
 
     testWarning(
         "goog.dom.createElement('script');",
@@ -3596,13 +3751,15 @@ requirement: {
   @Test
   public void testBanCreateDom() {
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateDom'\n"
-            + "  error_message: 'BanCreateDom Message'\n"
-            + "  value: 'iframe.src'\n"
-            + "  value: 'div.class'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateDom'
+          error_message: 'BanCreateDom Message'
+          value: 'iframe.src'
+          value: 'div.class'
+        }
+        """;
 
     testWarning(
         "goog.dom.createDom('iframe', {'src': src});",
@@ -3697,13 +3854,15 @@ requirement: {
   @Test
   public void testBanCreateDomIgnoreLooseType() {
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateDom'\n"
-            + "  error_message: 'BanCreateDom Message'\n"
-            + "  report_loose_type_violations: false\n"
-            + "  value: 'iframe.src'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateDom'
+          error_message: 'BanCreateDom Message'
+          report_loose_type_violations: false
+          value: 'iframe.src'
+        }
+        """;
 
     testWarning(
         "goog.dom.createDom('iframe', {'src': src});",
@@ -3717,12 +3876,14 @@ requirement: {
   @Test
   public void testBanCreateDomTagNameType() {
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateDom'\n"
-            + "  error_message: 'BanCreateDom Message'\n"
-            + "  value: 'div.class'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateDom'
+          error_message: 'BanCreateDom Message'
+          value: 'div.class'
+        }
+        """;
 
     String externs =
         lines(
@@ -3789,12 +3950,14 @@ requirement: {
   @Test
   public void testBanCreateDomAnyTagName() {
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateDom'\n"
-            + "  error_message: 'BanCreateDom Message'\n"
-            + "  value: '*.innerHTML'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateDom'
+          error_message: 'BanCreateDom Message'
+          value: '*.innerHTML'
+        }
+        """;
 
     testWarning(
         "goog.dom.createDom('span', {'innerHTML': html});",
@@ -3818,12 +3981,14 @@ requirement: {
   @Test
   public void testBanCreateDomTextContent() {
     configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateDom'\n"
-            + "  error_message: 'BanCreateDom Message'\n"
-            + "  value: 'script.textContent'\n"
-            + "}";
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateDom'
+          error_message: 'BanCreateDom Message'
+          value: 'script.textContent'
+        }
+        """;
 
     testWarning(
         "goog.dom.createDom('script', {}, source);",

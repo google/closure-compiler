@@ -1424,7 +1424,7 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
         """
         goog.module('test.a');
         /** @interface */
-        exports.C = class {};\
+        exports.C = class {};
         """,
         """
         goog.provide('test.b');
@@ -1444,7 +1444,7 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
             """
             goog.module('test.a');
             /** @interface */
-            exports.C = class {};\
+            exports.C = class {};
             """,
             """
             goog.provide('test.b');

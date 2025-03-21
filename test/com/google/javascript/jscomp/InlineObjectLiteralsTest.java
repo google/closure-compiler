@@ -529,16 +529,18 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   @Test
   public void testObject23() {
     testLocal(
-        "function f() {\n"
-            + "  var templateData = {\n"
-            + "    linkIds: {\n"
-            + "      CHROME: 'cl',\n"
-            + "      DISMISS: 'd'\n"
-            + "    }\n"
-            + "  };\n"
-            + "  var html = templateData.linkIds.CHROME \n"
-            + "       + \":\" + templateData.linkIds.DISMISS;\n"
-            + "}",
+        """
+        function f() {
+          var templateData = {
+            linkIds: {
+              CHROME: 'cl',
+              DISMISS: 'd'
+            }
+          };
+          var html = templateData.linkIds.CHROME\s
+               + ":" + templateData.linkIds.DISMISS;
+        }
+        """,
         "function f(){"
             + "var JSCompiler_object_inline_CHROME_1='cl';"
             + "var JSCompiler_object_inline_DISMISS_2='d';"
@@ -549,12 +551,14 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   @Test
   public void testObject24() {
     testLocal(
-        "function f() {\n"
-            + "  var linkIds = {\n"
-            + "      CHROME: 1,\n"
-            + "  };\n"
-            + "  var g = function () {var o = {a: linkIds};}\n"
-            + "}",
+        """
+        function f() {
+          var linkIds = {
+              CHROME: 1,
+          };
+          var g = function () {var o = {a: linkIds};}
+        }
+        """,
         "function f(){var linkIds={CHROME:1};"
             + "var g=function(){var JSCompiler_object_inline_a_0=linkIds}}");
   }

@@ -452,14 +452,16 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     // Can't remove unused code with a "var" in it.
     fold("switch(1){case 2: var x=0;}", "var x;");
     fold(
-        "switch ('repeated') {\n"
-            + "case 'repeated':\n"
-            + "  foo();\n"
-            + "  break;\n"
-            + "case 'repeated':\n"
-            + "  var x=0;\n"
-            + "  break;\n"
-            + "}",
+        """
+        switch ('repeated') {
+        case 'repeated':
+          foo();
+          break;
+        case 'repeated':
+          var x=0;
+          break;
+        }
+        """,
         "var x; foo();");
 
     // Can't remove cases if something useful is done.
@@ -468,24 +470,28 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     foldSame("x:switch(a){case 1: break x;}");
 
     fold(
-        "switch ('foo') {\n"
-            + "case 'foo':\n"
-            + "  foo();\n"
-            + "  break;\n"
-            + "case 'bar':\n"
-            + "  bar();\n"
-            + "  break;\n"
-            + "}",
+        """
+        switch ('foo') {
+        case 'foo':
+          foo();
+          break;
+        case 'bar':
+          bar();
+          break;
+        }
+        """,
         "foo();");
     fold(
-        "switch ('noMatch') {\n"
-            + "case 'foo':\n"
-            + "  foo();\n"
-            + "  break;\n"
-            + "case 'bar':\n"
-            + "  bar();\n"
-            + "  break;\n"
-            + "}",
+        """
+        switch ('noMatch') {
+        case 'foo':
+          foo();
+          break;
+        case 'bar':
+          bar();
+          break;
+        }
+        """,
         "");
     fold(
         """
@@ -537,69 +543,87 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         """,
         "bar();");
     fold(
-        "switch ('repeated') {\n"
-            + "case 'repeated':\n"
-            + "  foo();\n"
-            + "  break;\n"
-            + "case 'repeated':\n"
-            + "  bar();\n"
-            + "  break;\n"
-            + "}",
+        """
+        switch ('repeated') {
+        case 'repeated':
+          foo();
+          break;
+        case 'repeated':
+          bar();
+          break;
+        }
+        """,
         "foo();");
     fold(
-        "switch ('foo') {\n"
-            + "case 'bar':\n"
-            + "  bar();\n"
-            + "  break;\n"
-            + "case notConstant:\n"
-            + "  foobar();\n"
-            + "  break;\n"
-            + "case 'foo':\n"
-            + "  foo();\n"
-            + "  break;\n"
-            + "}",
-        "switch ('foo') {\n"
-            + "case notConstant:\n"
-            + "  foobar();\n"
-            + "  break;\n"
-            + "case 'foo':\n"
-            + "  foo();\n"
-            + "  break;\n"
-            + "}");
+        """
+        switch ('foo') {
+        case 'bar':
+          bar();
+          break;
+        case notConstant:
+          foobar();
+          break;
+        case 'foo':
+          foo();
+          break;
+        }
+        """,
+        """
+        switch ('foo') {
+        case notConstant:
+          foobar();
+          break;
+        case 'foo':
+          foo();
+          break;
+        }
+        """);
     fold(
-        "switch (1) {\n"
-            + "case 1:\n"
-            + "  foo();\n"
-            + "  break;\n"
-            + "case 2:\n"
-            + "  bar();\n"
-            + "  break;\n"
-            + "}",
+        """
+        switch (1) {
+        case 1:
+          foo();
+          break;
+        case 2:
+          bar();
+          break;
+        }
+        """,
         "foo();");
     fold(
-        "switch (1) {\n"
-            + "case 1.1:\n"
-            + "  foo();\n"
-            + "  break;\n"
-            + "case 2:\n"
-            + "  bar();\n"
-            + "  break;\n"
-            + "}",
+        """
+        switch (1) {
+        case 1.1:
+          foo();
+          break;
+        case 2:
+          bar();
+          break;
+        }
+        """,
         "");
     fold(
-        "switch (0) {\n"
-            + "case NaN:\n"
-            + "  foobar();\n"
-            + "  break;\n"
-            + "case -0.0:\n"
-            + "  foo();\n"
-            + "  break;\n"
-            + "case 2:\n"
-            + "  bar();\n"
-            + "  break;\n"
-            + "}",
+        """
+        switch (0) {
+        case NaN:
+          foobar();
+          break;
+        case -0.0:
+          foo();
+          break;
+        case 2:
+          bar();
+          break;
+        }
+        """,
         "foo();");
-    foldSame("switch ('\\v') {\n" + "case '\\u000B':\n" + "  foo();\n" + "}");
+    foldSame(
+        """
+        switch ('\\v') {
+        case '\\u000B':
+          foo();
+        }
+        """);
     fold(
         """
         switch ('empty') {
@@ -675,7 +699,13 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   @Test
   public void testOptimizeSwitch2() {
     fold(
-        "outer: switch (2) {\n" + "  case 2:\n" + "    f();\n" + "    break outer;\n" + "}",
+        """
+        outer: switch (2) {
+          case 2:
+            f();
+            break outer;
+        }
+        """,
         "outer: {f(); break outer;}");
   }
 

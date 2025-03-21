@@ -1070,15 +1070,21 @@ public class ErrorToFixMapperTest {
   @Test
   public void attachesInlineJsDocToParam() {
     assertNoChanges(
-        " class C {\n" + "  inlineJSDocWithDefault(/** boolean= */ isSomething) {}\n" + "}\n");
+        """
+         class C {
+          inlineJSDocWithDefault(/** boolean= */ isSomething) {}
+        }
+        """);
   }
 
   @Test
   public void attachesInlineJsDocToDefaultParam() {
     assertNoChanges(
-        " class C {\n"
-            + "  inlineJSDocWithDefault(/** boolean= */ isSomething = true) {}\n"
-            + "}\n");
+        """
+         class C {
+          inlineJSDocWithDefault(/** boolean= */ isSomething = true) {}
+        }
+        """);
   }
 
   @Test

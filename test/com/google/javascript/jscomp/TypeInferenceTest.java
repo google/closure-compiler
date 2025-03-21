@@ -2057,11 +2057,13 @@ public final class TypeInferenceTest {
   public void testSwitch1() {
     assuming("x", NUMBER_TYPE);
     inFunction(
-        "var y = null; switch(x) {\n"
-            + "case 1: y = 1; break;\n"
-            + "case 2: y = {};\n"
-            + "case 3: y = {};\n"
-            + "default: y = 0;}");
+        """
+        var y = null; switch(x) {
+        case 1: y = 1; break;
+        case 2: y = {};
+        case 3: y = {};
+        default: y = 0;}
+        """);
     verify("y", NUMBER_TYPE);
   }
 
@@ -2101,14 +2103,16 @@ public final class TypeInferenceTest {
   public void testSwitch4() {
     assuming("x", ALL_TYPE);
     inFunction(
-        "var y = null; switch (typeof x) {\n"
-            + "case 'string':\n"
-            + "case 'number':\n"
-            + "  y = x;\n"
-            + "  return;\n"
-            + "default:\n"
-            + "  y = 1;\n"
-            + "}\n");
+        """
+        var y = null; switch (typeof x) {
+        case 'string':
+        case 'number':
+          y = x;
+          return;
+        default:
+          y = 1;
+        }
+        """);
     verify("y", createUnionType(NUMBER_TYPE, STRING_TYPE));
   }
 
@@ -2363,7 +2367,12 @@ public final class TypeInferenceTest {
   @Test
   public void testThrow() {
     assuming("x", createNullableType(NUMBER_TYPE));
-    inFunction("var y = 1;\n" + "if (x == null) { throw new Error('x is null') }\n" + "y = x;");
+    inFunction(
+        """
+        var y = 1;
+        if (x == null) { throw new Error('x is null') }
+        y = x;
+        """);
     verify("y", NUMBER_TYPE);
   }
 
@@ -3264,12 +3273,14 @@ public final class TypeInferenceTest {
   @Test
   public void testTypeTransformationTypePredicate() {
     inFunction(
-        "/**\n"
-            + " * @return {R}\n"
-            + " * @template R := 'number' =:\n"
-            + " */\n"
-            + "function f(a){}\n"
-            + "var result = f(10);");
+        """
+        /**
+         * @return {R}
+         * @template R := 'number' =:
+         */
+        function f(a){}
+        var result = f(10);
+        """);
     verify("result", NUMBER_TYPE);
   }
 
@@ -3293,27 +3304,31 @@ public final class TypeInferenceTest {
   @Test
   public void testTypeTransformationNoneType() {
     inFunction(
-        "/**\n"
-            + " * @return {R}\n"
-            + " * @template R := none() =:\n"
-            + " */\n"
-            + "function f(){}\n"
-            + "var result = f(10);");
+        """
+        /**
+         * @return {R}
+         * @template R := none() =:
+         */
+        function f(){}
+        var result = f(10);
+        """);
     verify("result", JSTypeNative.UNKNOWN_TYPE);
   }
 
   @Test
   public void testTypeTransformationUnionType() {
     inFunction(
-        "/**\n"
-            + " * @param {S} a\n"
-            + " * @param {N} b\n"
-            + " * @return {R}\n"
-            + " * @template S, N\n"
-            + " * @template R := union(S, N) =:\n"
-            + " */\n"
-            + "function f(a, b) {}\n"
-            + "var result = f(1, 'a');");
+        """
+        /**
+         * @param {S} a
+         * @param {N} b
+         * @return {R}
+         * @template S, N
+         * @template R := union(S, N) =:
+         */
+        function f(a, b) {}
+        var result = f(1, 'a');
+        """);
     verify("result", createUnionType(STRING_TYPE, NUMBER_TYPE));
   }
 
@@ -3337,24 +3352,26 @@ public final class TypeInferenceTest {
   @Test
   public void testTypeTransformationObjectUseCase() {
     inFunction(
-        "/** \n"
-            + " * @param {T} a\n"
-            + " * @return {R}\n"
-            + " * @template T \n"
-            + " * @template R := \n"
-            + " * mapunion(T, (x) => \n"
-            + " *      cond(eq(x, 'string'), 'String',\n"
-            + " *      cond(eq(x, 'number'), 'Number',\n"
-            + " *      cond(eq(x, 'boolean'), 'Boolean',\n"
-            + " *      cond(eq(x, 'null'), 'Object', \n"
-            + " *      cond(eq(x, 'undefined'), 'Object',\n"
-            + " *      x)))))) \n"
-            + " * =:\n"
-            + " */\n"
-            + "function Object(a) {}\n"
-            + "/** @type {(string|number|boolean)} */\n"
-            + "var o;\n"
-            + "var r = Object(o);");
+        """
+        /**\s
+         * @param {T} a
+         * @return {R}
+         * @template T\s
+         * @template R :=\s
+         * mapunion(T, (x) =>\s
+         *      cond(eq(x, 'string'), 'String',
+         *      cond(eq(x, 'number'), 'Number',
+         *      cond(eq(x, 'boolean'), 'Boolean',
+         *      cond(eq(x, 'null'), 'Object',\s
+         *      cond(eq(x, 'undefined'), 'Object',
+         *      x))))))\s
+         * =:
+         */
+        function Object(a) {}
+        /** @type {(string|number|boolean)} */
+        var o;
+        var r = Object(o);
+        """);
     verify(
         "r",
         createMultiParamUnionType(
@@ -3364,48 +3381,52 @@ public final class TypeInferenceTest {
   @Test
   public void testTypeTransformationObjectUseCase2() {
     inFunction(
-        "/** \n"
-            + " * @param {T} a\n"
-            + " * @return {R}\n"
-            + " * @template T \n"
-            + " * @template R := \n"
-            + " * mapunion(T, (x) => \n"
-            + " *      cond(eq(x, 'string'), 'String',\n"
-            + " *      cond(eq(x, 'number'), 'Number',\n"
-            + " *      cond(eq(x, 'boolean'), 'Boolean',\n"
-            + " *      cond(eq(x, 'null'), 'Object', \n"
-            + " *      cond(eq(x, 'undefined'), 'Object',\n"
-            + " *      x)))))) \n"
-            + " * =:\n"
-            + " */\n"
-            + "function fn(a) {}\n"
-            + "/** @type {(string|null|undefined)} */\n"
-            + "var o;\n"
-            + "var r = fn(o);");
+        """
+        /**\s
+         * @param {T} a
+         * @return {R}
+         * @template T\s
+         * @template R :=\s
+         * mapunion(T, (x) =>\s
+         *      cond(eq(x, 'string'), 'String',
+         *      cond(eq(x, 'number'), 'Number',
+         *      cond(eq(x, 'boolean'), 'Boolean',
+         *      cond(eq(x, 'null'), 'Object',\s
+         *      cond(eq(x, 'undefined'), 'Object',
+         *      x))))))\s
+         * =:
+         */
+        function fn(a) {}
+        /** @type {(string|null|undefined)} */
+        var o;
+        var r = fn(o);
+        """);
     verify("r", OBJECT_TYPE);
   }
 
   @Test
   public void testTypeTransformationObjectUseCase3() {
     inFunction(
-        "/** \n"
-            + " * @param {T} a\n"
-            + " * @return {R}\n"
-            + " * @template T \n"
-            + " * @template R := \n"
-            + " * mapunion(T, (x) => \n"
-            + " *      cond(eq(x, 'string'), 'String',\n"
-            + " *      cond(eq(x, 'number'), 'Number',\n"
-            + " *      cond(eq(x, 'boolean'), 'Boolean',\n"
-            + " *      cond(eq(x, 'null'), 'Object', \n"
-            + " *      cond(eq(x, 'undefined'), 'Object',\n"
-            + " *      x)))))) \n"
-            + " * =:\n"
-            + " */\n"
-            + "function fn(a) {}\n"
-            + "/** @type {(Array|undefined)} */\n"
-            + "var o;\n"
-            + "var r = fn(o);");
+        """
+        /**\s
+         * @param {T} a
+         * @return {R}
+         * @template T\s
+         * @template R :=\s
+         * mapunion(T, (x) =>\s
+         *      cond(eq(x, 'string'), 'String',
+         *      cond(eq(x, 'number'), 'Number',
+         *      cond(eq(x, 'boolean'), 'Boolean',
+         *      cond(eq(x, 'null'), 'Object',\s
+         *      cond(eq(x, 'undefined'), 'Object',
+         *      x))))))\s
+         * =:
+         */
+        function fn(a) {}
+        /** @type {(Array|undefined)} */
+        var o;
+        var r = fn(o);
+        """);
     verify("r", OBJECT_TYPE);
   }
 
@@ -3505,70 +3526,80 @@ public final class TypeInferenceTest {
   @Test
   public void testTypeTransformationWithNativeTypeExpressionFunction() {
     inFunction(
-        "/** @type {function(string, boolean)} */\n"
-            + "var x;\n"
-            + "/**\n"
-            + " * @return {R}\n"
-            + " * @template R := typeExpr('function(string, boolean)') =:\n"
-            + " */\n"
-            + "function f(){}\n"
-            + "var r = f();");
+        """
+        /** @type {function(string, boolean)} */
+        var x;
+        /**
+         * @return {R}
+         * @template R := typeExpr('function(string, boolean)') =:
+         */
+        function f(){}
+        var r = f();
+        """);
     verify("r", getType("x"));
   }
 
   @Test
   public void testTypeTransformationWithNativeTypeExpressionFunctionReturn() {
     inFunction(
-        "/** @type {function(): number} */\n"
-            + "var x;\n"
-            + "/**\n"
-            + " * @return {R}\n"
-            + " * @template R := typeExpr('function(): number') =:\n"
-            + " */\n"
-            + "function f(){}\n"
-            + "var r = f();");
+        """
+        /** @type {function(): number} */
+        var x;
+        /**
+         * @return {R}
+         * @template R := typeExpr('function(): number') =:
+         */
+        function f(){}
+        var r = f();
+        """);
     verify("r", getType("x"));
   }
 
   @Test
   public void testTypeTransformationWithNativeTypeExpressionFunctionThis() {
     inFunction(
-        "/** @type {function(this:boolean, string)} */\n"
-            + "var x;\n"
-            + "/**\n"
-            + " * @return {R}\n"
-            + " * @template R := typeExpr('function(this:boolean, string)') =:\n"
-            + " */\n"
-            + "function f(){}\n"
-            + "var r = f();");
+        """
+        /** @type {function(this:boolean, string)} */
+        var x;
+        /**
+         * @return {R}
+         * @template R := typeExpr('function(this:boolean, string)') =:
+         */
+        function f(){}
+        var r = f();
+        """);
     verify("r", getType("x"));
   }
 
   @Test
   public void testTypeTransformationWithNativeTypeExpressionFunctionVarargs() {
     inFunction(
-        "/** @type {function(string, ...number): number} */\n"
-            + "var x;\n"
-            + "/**\n"
-            + " * @return {R}\n"
-            + " * @template R := typeExpr('function(string, ...number): number') =:\n"
-            + " */\n"
-            + "function f(){}\n"
-            + "var r = f();");
+        """
+        /** @type {function(string, ...number): number} */
+        var x;
+        /**
+         * @return {R}
+         * @template R := typeExpr('function(string, ...number): number') =:
+         */
+        function f(){}
+        var r = f();
+        """);
     verify("r", getType("x"));
   }
 
   @Test
   public void testTypeTransformationWithNativeTypeExpressionFunctionOptional() {
     inFunction(
-        "/** @type {function(?string=, number=)} */\n"
-            + "var x;\n"
-            + "/**\n"
-            + " * @return {R}\n"
-            + " * @template R := typeExpr('function(?string=, number=)') =:\n"
-            + " */\n"
-            + "function f(){}\n"
-            + "var r = f();");
+        """
+        /** @type {function(?string=, number=)} */
+        var x;
+        /**
+         * @return {R}
+         * @template R := typeExpr('function(?string=, number=)') =:
+         */
+        function f(){}
+        var r = f();
+        """);
     verify("r", getType("x"));
   }
 
@@ -3631,20 +3662,19 @@ public final class TypeInferenceTest {
   @Test
   public void testTypeTransformationIsTemplatizedPartially() {
     inFunction(
-        Joiner.on('\n')
-            .join(
-                "/**",
-                " * @constructor",
-                " * @template T, U",
-                " */",
-                "function Foo() {}",
-                "/**",
-                " * @template T := cond(isTemplatized(type('Foo', 'number')), 'number', 'string')"
-                    + " =:",
-                " * @return {T}",
-                " */",
-                "function f() { return 123; }",
-                "var x = f();"));
+        """
+        /**
+         * @constructor
+         * @template T, U
+         */
+        function Foo() {}
+        /**
+         * @template T := cond(isTemplatized(type('Foo', 'number')), 'number', 'string') =:
+         * @return {T}
+         */
+        function f() { return 123; }
+        var x = f();
+        """);
     assertThat(getType("x").isNumber()).isTrue();
   }
 
@@ -4240,7 +4270,12 @@ public final class TypeInferenceTest {
 
     assertType(getType("foo"))
         .toStringIsEqualTo(
-            "Promise<{\n" + "  Bar: function(): string,\n" + "  default: number\n" + "}>");
+            """
+            Promise<{
+              Bar: function(): string,
+              default: number
+            }>\
+            """);
   }
 
   @Test
@@ -4275,9 +4310,8 @@ public final class TypeInferenceTest {
             Promise<{
               Bar: function(): string,
               default: number
-            }>
-            """
-                .trim());
+            }>\
+            """);
   }
 
   private static void testForAllBigInt(JSType type) {

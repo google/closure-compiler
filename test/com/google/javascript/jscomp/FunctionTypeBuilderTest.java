@@ -54,69 +54,85 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
   public void testBuiltInTypeDifferentReturnType() {
     test(
         externs(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @param {*} opt_str\n"
-                + " * @return {number}\n"
-                + " */\n"
-                + "function String(opt_str) {}\n"),
+            """
+            /**
+             * @constructor
+             * @param {*} opt_str
+             * @return {number}
+             */
+            function String(opt_str) {}
+            """),
         srcs(""),
         warning(FunctionTypeBuilder.TYPE_REDEFINITION)
             .withMessage(
-                "attempted re-definition of type String\n"
-                    + "found   : (typeof String)\n"
-                    + "expected: (typeof String)"));
+                """
+                attempted re-definition of type String
+                found   : (typeof String)
+                expected: (typeof String)
+                """));
   }
 
   @Test
   public void testBuiltInTypeDifferentNumParams() {
     test(
         externs(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @return {string}\n"
-                + " */\n"
-                + "function String() {}\n"),
+            """
+            /**
+             * @constructor
+             * @return {string}
+             */
+            function String() {}
+            """),
         srcs(""),
         warning(FunctionTypeBuilder.TYPE_REDEFINITION)
             .withMessage(
-                "attempted re-definition of type String\n"
-                    + "found   : (typeof String)\n"
-                    + "expected: (typeof String)"));
+                """
+                attempted re-definition of type String
+                found   : (typeof String)
+                expected: (typeof String)
+                """));
   }
 
   @Test
   public void testBuiltInTypeDifferentNumParams2() {
     test(
         externs(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @return {string}\n"
-                + " */\n"
-                + "function String(opt_str, opt_nothing) {}\n"),
+            """
+            /**
+             * @constructor
+             * @return {string}
+             */
+            function String(opt_str, opt_nothing) {}
+            """),
         srcs(""),
         warning(FunctionTypeBuilder.TYPE_REDEFINITION)
             .withMessage(
-                "attempted re-definition of type String\n"
-                    + "found   : (typeof String)\n"
-                    + "expected: (typeof String)"));
+                """
+                attempted re-definition of type String
+                found   : (typeof String)
+                expected: (typeof String)
+                """));
   }
 
   @Test
   public void testBuiltInTypeDifferentParamType() {
     test(
         externs(
-            "/**\n"
-                + " * @constructor\n"
-                + " * @return {string}\n"
-                + " */\n"
-                + "function String(opt_str) {}\n"),
+            """
+            /**
+             * @constructor
+             * @return {string}
+             */
+            function String(opt_str) {}
+            """),
         srcs(""),
         warning(FunctionTypeBuilder.TYPE_REDEFINITION)
             .withMessage(
-                "attempted re-definition of type String\n"
-                    + "found   : (typeof String)\n"
-                    + "expected: (typeof String)"));
+                """
+                attempted re-definition of type String
+                found   : (typeof String)
+                expected: (typeof String)
+                """));
   }
 
   @Test
@@ -126,9 +142,11 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
         srcs(""),
         warning(FunctionTypeBuilder.TYPE_REDEFINITION)
             .withMessage(
-                "attempted re-definition of type Function\n"
-                    + "found   : (typeof Function)\n"
-                    + "expected: (typeof Function)"));
+                """
+                attempted re-definition of type Function
+                found   : (typeof Function)
+                expected: (typeof Function)
+                """));
   }
 
   @Test
@@ -137,7 +155,12 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
         externs("/** @return {number} */ function f(/** string */ x) { return x; }"),
         srcs(""),
         warning(TypeValidator.TYPE_MISMATCH_WARNING)
-            .withMessage("inconsistent return type\n" + "found   : string\n" + "required: number"));
+            .withMessage(
+                """
+                inconsistent return type
+                found   : string
+                required: number
+                """));
   }
 
   @Test
@@ -149,6 +172,11 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
                 + "/** @type {string} */ var x = f(1);"),
         srcs(""),
         warning(TypeValidator.TYPE_MISMATCH_WARNING)
-            .withMessage("initializing variable\n" + "found   : number\n" + "required: string"));
+            .withMessage(
+                """
+                initializing variable
+                found   : number
+                required: string
+                """));
   }
 }

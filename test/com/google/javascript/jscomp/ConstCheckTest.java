@@ -231,11 +231,13 @@ public final class ConstCheckTest extends CompilerTestCase {
   @Test
   public void testConstSuppressionInFileJsDoc() {
     testSame(
-        "/**\n"
-            + " * @fileoverview\n"
-            + " * @suppress {const}\n"
-            + " */\n"
-            + "/** @const */ var xyz = 1; xyz = 3;");
+        """
+        /**
+         * @fileoverview
+         * @suppress {const}
+         */
+        /** @const */ var xyz = 1; xyz = 3;
+        """);
   }
 
   @Test

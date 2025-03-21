@@ -37,13 +37,19 @@ public class ChromePassTest extends CompilerTestCase {
   @Test
   public void testCrDefineCreatesObjectsForQualifiedName() {
     test(
-        "cr.define('my.namespace.name', function() {\n" + "  return {};\n" + "});",
-        "var my = my || {};\n"
-            + "my.namespace = my.namespace || {};\n"
-            + "my.namespace.name = my.namespace.name || {};\n"
-            + "cr.define('my.namespace.name', function() {\n"
-            + "  return {};\n"
-            + "});");
+        """
+        cr.define('my.namespace.name', function() {
+          return {};
+        });
+        """,
+        """
+        var my = my || {};
+        my.namespace = my.namespace || {};
+        my.namespace.name = my.namespace.name || {};
+        cr.define('my.namespace.name', function() {
+          return {};
+        });
+        """);
   }
 
   @Test
@@ -54,213 +60,253 @@ public class ChromePassTest extends CompilerTestCase {
   @Test
   public void testCrDefineAssignsExportedFunctionByQualifiedName() {
     test(
-        "cr.define('namespace', function() {\n"
-            + "  function internalStaticMethod() {\n"
-            + "    alert(42);\n"
-            + "  }\n"
-            + "  return {\n"
-            + "    externalStaticMethod: internalStaticMethod\n"
-            + "  };\n"
-            + "});",
-        "var namespace = namespace || {};\n"
-            + "cr.define('namespace', function() {\n"
-            + "  namespace.externalStaticMethod = function internalStaticMethod() {\n"
-            + "    alert(42);\n"
-            + "  }\n"
-            + "  return {\n"
-            + "    externalStaticMethod: namespace.externalStaticMethod\n"
-            + "  };\n"
-            + "});");
+        """
+        cr.define('namespace', function() {
+          function internalStaticMethod() {
+            alert(42);
+          }
+          return {
+            externalStaticMethod: internalStaticMethod
+          };
+        });
+        """,
+        """
+        var namespace = namespace || {};
+        cr.define('namespace', function() {
+          namespace.externalStaticMethod = function internalStaticMethod() {
+            alert(42);
+          }
+          return {
+            externalStaticMethod: namespace.externalStaticMethod
+          };
+        });
+        """);
   }
 
   @Test
   public void testCrDefineCopiesJSDocForExportedFunction() {
     test(
-        "cr.define('namespace', function() {\n"
-            + "  /** I'm function's JSDoc */\n"
-            + "  function internalStaticMethod() {\n"
-            + "    alert(42);\n"
-            + "  }\n"
-            + "  return {\n"
-            + "    externalStaticMethod: internalStaticMethod\n"
-            + "  };\n"
-            + "});",
-        "var namespace = namespace || {};\n"
-            + "cr.define('namespace', function() {\n"
-            + "  /** I'm function's JSDoc */\n"
-            + "  namespace.externalStaticMethod = function internalStaticMethod() {\n"
-            + "    alert(42);\n"
-            + "  }\n"
-            + "  return {\n"
-            + "    externalStaticMethod: namespace.externalStaticMethod\n"
-            + "  };\n"
-            + "});");
+        """
+        cr.define('namespace', function() {
+          /** I'm function's JSDoc */
+          function internalStaticMethod() {
+            alert(42);
+          }
+          return {
+            externalStaticMethod: internalStaticMethod
+          };
+        });
+        """,
+        """
+        var namespace = namespace || {};
+        cr.define('namespace', function() {
+          /** I'm function's JSDoc */
+          namespace.externalStaticMethod = function internalStaticMethod() {
+            alert(42);
+          }
+          return {
+            externalStaticMethod: namespace.externalStaticMethod
+          };
+        });
+        """);
   }
 
   @Test
   public void testCrDefineReassignsExportedVarByQualifiedName() {
     test(
-        "cr.define('namespace', function() {\n"
-            + "  var internalStaticMethod = function() {\n"
-            + "    alert(42);\n"
-            + "  }\n"
-            + "  return {\n"
-            + "    externalStaticMethod: internalStaticMethod\n"
-            + "  };\n"
-            + "});",
-        "var namespace = namespace || {};\n"
-            + "cr.define('namespace', function() {\n"
-            + "  namespace.externalStaticMethod = function() {\n"
-            + "    alert(42);\n"
-            + "  }\n"
-            + "  return {\n"
-            + "    externalStaticMethod: namespace.externalStaticMethod\n"
-            + "  };\n"
-            + "});");
+        """
+        cr.define('namespace', function() {
+          var internalStaticMethod = function() {
+            alert(42);
+          }
+          return {
+            externalStaticMethod: internalStaticMethod
+          };
+        });
+        """,
+        """
+        var namespace = namespace || {};
+        cr.define('namespace', function() {
+          namespace.externalStaticMethod = function() {
+            alert(42);
+          }
+          return {
+            externalStaticMethod: namespace.externalStaticMethod
+          };
+        });
+        """);
   }
 
   @Test
   public void testCrDefineExportsVarsWithoutAssignment() {
     test(
-        "cr.define('namespace', function() {\n"
-            + "  var a;\n"
-            + "  return {\n"
-            + "    a: a\n"
-            + "  };\n"
-            + "});\n",
-        "var namespace = namespace || {};\n"
-            + "cr.define('namespace', function() {\n"
-            + "  namespace.a;\n"
-            + "  return {\n"
-            + "    a: namespace.a\n"
-            + "  };\n"
-            + "});\n");
+        """
+        cr.define('namespace', function() {
+          var a;
+          return {
+            a: a
+          };
+        });
+        """,
+        """
+        var namespace = namespace || {};
+        cr.define('namespace', function() {
+          namespace.a;
+          return {
+            a: namespace.a
+          };
+        });
+        """);
   }
 
   @Test
   public void testCrDefineExportsVarsWithoutAssignmentWithJSDoc() {
     test(
-        "cr.define('namespace', function() {\n"
-            + "  /** @type {number} */\n"
-            + "  var a;\n"
-            + "  return {\n"
-            + "    a: a\n"
-            + "  };\n"
-            + "});\n",
-        "var namespace = namespace || {};\n"
-            + "cr.define('namespace', function() {\n"
-            + "  /** @type {number} */\n"
-            + "  namespace.a;\n"
-            + "  return {\n"
-            + "    a: namespace.a\n"
-            + "  };\n"
-            + "});\n");
+        """
+        cr.define('namespace', function() {
+          /** @type {number} */
+          var a;
+          return {
+            a: a
+          };
+        });
+        """,
+        """
+        var namespace = namespace || {};
+        cr.define('namespace', function() {
+          /** @type {number} */
+          namespace.a;
+          return {
+            a: namespace.a
+          };
+        });
+        """);
   }
 
   @Test
   public void testCrDefineCopiesJSDocForExportedVariable() {
     test(
-        "cr.define('namespace', function() {\n"
-            + "  /** I'm function's JSDoc */\n"
-            + "  var internalStaticMethod = function() {\n"
-            + "    alert(42);\n"
-            + "  }\n"
-            + "  return {\n"
-            + "    externalStaticMethod: internalStaticMethod\n"
-            + "  };\n"
-            + "});",
-        "var namespace = namespace || {};\n"
-            + "cr.define('namespace', function() {\n"
-            + "  /** I'm function's JSDoc */\n"
-            + "  namespace.externalStaticMethod = function() {\n"
-            + "    alert(42);\n"
-            + "  }\n"
-            + "  return {\n"
-            + "    externalStaticMethod: namespace.externalStaticMethod\n"
-            + "  };\n"
-            + "});");
+        """
+        cr.define('namespace', function() {
+          /** I'm function's JSDoc */
+          var internalStaticMethod = function() {
+            alert(42);
+          }
+          return {
+            externalStaticMethod: internalStaticMethod
+          };
+        });
+        """,
+        """
+        var namespace = namespace || {};
+        cr.define('namespace', function() {
+          /** I'm function's JSDoc */
+          namespace.externalStaticMethod = function() {
+            alert(42);
+          }
+          return {
+            externalStaticMethod: namespace.externalStaticMethod
+          };
+        });
+        """);
   }
 
   @Test
   public void testCrDefineDoesNothingWithNonExportedFunction() {
     test(
-        "cr.define('namespace', function() {\n"
-            + "  function internalStaticMethod() {\n"
-            + "    alert(42);\n"
-            + "  }\n"
-            + "  return {};\n"
-            + "});",
-        "var namespace = namespace || {};\n"
-            + "cr.define('namespace', function() {\n"
-            + "  function internalStaticMethod() {\n"
-            + "    alert(42);\n"
-            + "  }\n"
-            + "  return {};\n"
-            + "});");
+        """
+        cr.define('namespace', function() {
+          function internalStaticMethod() {
+            alert(42);
+          }
+          return {};
+        });
+        """,
+        """
+        var namespace = namespace || {};
+        cr.define('namespace', function() {
+          function internalStaticMethod() {
+            alert(42);
+          }
+          return {};
+        });
+        """);
   }
 
   @Test
   public void testCrDefineDoesNothingWithNonExportedVar() {
     test(
-        "cr.define('namespace', function() {\n"
-            + "  var a;\n"
-            + "  var b;\n"
-            + "  return {\n"
-            + "    a: a\n"
-            + "  };\n"
-            + "});\n",
-        "var namespace = namespace || {};\n"
-            + "cr.define('namespace', function() {\n"
-            + "  namespace.a;\n"
-            + "  var b;\n"
-            + "  return {\n"
-            + "    a: namespace.a\n"
-            + "  };\n"
-            + "});\n");
+        """
+        cr.define('namespace', function() {
+          var a;
+          var b;
+          return {
+            a: a
+          };
+        });
+        """,
+        """
+        var namespace = namespace || {};
+        cr.define('namespace', function() {
+          namespace.a;
+          var b;
+          return {
+            a: namespace.a
+          };
+        });
+        """);
   }
 
   @Test
   public void testCrDefineDoesNothingWithExportedNotAName() {
     test(
-        "cr.define('namespace', function() {\n"
-            + "  return {\n"
-            + "    a: 42\n"
-            + "  };\n"
-            + "});\n",
-        "var namespace = namespace || {};\n"
-            + "cr.define('namespace', function() {\n"
-            + "  return {\n"
-            + "    a: 42\n"
-            + "  };\n"
-            + "});\n");
+        """
+        cr.define('namespace', function() {
+          return {
+            a: 42
+          };
+        });
+        """,
+        """
+        var namespace = namespace || {};
+        cr.define('namespace', function() {
+          return {
+            a: 42
+          };
+        });
+        """);
   }
 
   @Test
   public void testCrDefineChangesReferenceToExportedFunction() {
     test(
-        "cr.define('namespace', function() {\n"
-            + "  function internalStaticMethod() {\n"
-            + "    alert(42);\n"
-            + "  }\n"
-            + "  function letsUseIt() {\n"
-            + "    internalStaticMethod();\n"
-            + "  }\n"
-            + "  return {\n"
-            + "    externalStaticMethod: internalStaticMethod\n"
-            + "  };\n"
-            + "});",
-        "var namespace = namespace || {};\n"
-            + "cr.define('namespace', function() {\n"
-            + "  namespace.externalStaticMethod = function internalStaticMethod() {\n"
-            + "    alert(42);\n"
-            + "  }\n"
-            + "  function letsUseIt() {\n"
-            + "    namespace.externalStaticMethod();\n"
-            + "  }\n"
-            + "  return {\n"
-            + "    externalStaticMethod: namespace.externalStaticMethod\n"
-            + "  };\n"
-            + "});");
+        """
+        cr.define('namespace', function() {
+          function internalStaticMethod() {
+            alert(42);
+          }
+          function letsUseIt() {
+            internalStaticMethod();
+          }
+          return {
+            externalStaticMethod: internalStaticMethod
+          };
+        });
+        """,
+        """
+        var namespace = namespace || {};
+        cr.define('namespace', function() {
+          namespace.externalStaticMethod = function internalStaticMethod() {
+            alert(42);
+          }
+          function letsUseIt() {
+            namespace.externalStaticMethod();
+          }
+          return {
+            externalStaticMethod: namespace.externalStaticMethod
+          };
+        });
+        """);
   }
 
   @Test
@@ -366,7 +412,11 @@ public class ChromePassTest extends CompilerTestCase {
   public void testObjectDefinePropertyDefinesUnquotedProperty() {
     test(
         "Object.defineProperty(a.b, 'c', {});",
-        "Object.defineProperty(a.b, 'c', {});\n" + "/** @type {?} */\n" + "a.b.c;");
+        """
+        Object.defineProperty(a.b, 'c', {});
+        /** @type {?} */
+        a.b.c;
+        """);
   }
 
   @Test
@@ -380,9 +430,11 @@ public class ChromePassTest extends CompilerTestCase {
       throws Exception {
     test(
         "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.ATTR);",
-        "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.ATTR);\n"
-            + "/** @type {string} */\n"
-            + "a.prototype.c;");
+        """
+        cr.defineProperty(a.prototype, 'c', cr.PropertyKind.ATTR);
+        /** @type {string} */
+        a.prototype.c;
+        """);
   }
 
   @Test
@@ -390,9 +442,11 @@ public class ChromePassTest extends CompilerTestCase {
       throws Exception {
     test(
         "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.BOOL_ATTR);",
-        "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.BOOL_ATTR);\n"
-            + "/** @type {boolean} */\n"
-            + "a.prototype.c;");
+        """
+        cr.defineProperty(a.prototype, 'c', cr.PropertyKind.BOOL_ATTR);
+        /** @type {boolean} */
+        a.prototype.c;
+        """);
   }
 
   @Test
@@ -400,9 +454,11 @@ public class ChromePassTest extends CompilerTestCase {
       throws Exception {
     test(
         "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.JS);",
-        "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.JS);\n"
-            + "/** @type {?} */\n"
-            + "a.prototype.c;");
+        """
+        cr.defineProperty(a.prototype, 'c', cr.PropertyKind.JS);
+        /** @type {?} */
+        a.prototype.c;
+        """);
   }
 
   @Test
@@ -458,7 +514,11 @@ public class ChromePassTest extends CompilerTestCase {
       throws Exception {
     test(
         "cr.defineProperty(a.prototype, 'c');",
-        "cr.defineProperty(a.prototype, 'c');\n" + "/** @type {?} */\n" + "a.prototype.c;");
+        """
+        cr.defineProperty(a.prototype, 'c');
+        /** @type {?} */
+        a.prototype.c;
+        """);
   }
 
   @Test
@@ -466,9 +526,11 @@ public class ChromePassTest extends CompilerTestCase {
       throws Exception {
     test(
         "cr.defineProperty(a, 'c', cr.PropertyKind.JS);",
-        "cr.defineProperty(a, 'c', cr.PropertyKind.JS);\n"
-            + "/** @type {?} */\n"
-            + "a.prototype.c;");
+        """
+        cr.defineProperty(a, 'c', cr.PropertyKind.JS);
+        /** @type {?} */
+        a.prototype.c;
+        """);
   }
 
   @Test
@@ -481,31 +543,44 @@ public class ChromePassTest extends CompilerTestCase {
   @Test
   public void testCrDefineCreatesEveryObjectOnlyOnce() {
     test(
-        "cr.define('a.b.c.d', function() {\n"
-            + "  return {};\n"
-            + "});\n"
-            + "cr.define('a.b.e.f', function() {\n"
-            + "  return {};\n"
-            + "});",
-        "var a = a || {};\n"
-            + "a.b = a.b || {};\n"
-            + "a.b.c = a.b.c || {};\n"
-            + "a.b.c.d = a.b.c.d || {};\n"
-            + "cr.define('a.b.c.d', function() {\n"
-            + "  return {};\n"
-            + "});\n"
-            + "a.b.e = a.b.e || {};\n"
-            + "a.b.e.f = a.b.e.f || {};\n"
-            + "cr.define('a.b.e.f', function() {\n"
-            + "  return {};\n"
-            + "});");
+        """
+        cr.define('a.b.c.d', function() {
+          return {};
+        });
+        cr.define('a.b.e.f', function() {
+          return {};
+        });
+        """,
+        """
+        var a = a || {};
+        a.b = a.b || {};
+        a.b.c = a.b.c || {};
+        a.b.c.d = a.b.c.d || {};
+        cr.define('a.b.c.d', function() {
+          return {};
+        });
+        a.b.e = a.b.e || {};
+        a.b.e.f = a.b.e.f || {};
+        cr.define('a.b.e.f', function() {
+          return {};
+        });
+        """);
   }
 
   @Test
   public void testCrDefineDoesntRedefineCrVar() {
     test(
-        "cr.define('cr.ui', function() {\n" + "  return {};\n" + "});",
-        "cr.ui = cr.ui || {};\n" + "cr.define('cr.ui', function() {\n" + "  return {};\n" + "});");
+        """
+        cr.define('cr.ui', function() {
+          return {};
+        });
+        """,
+        """
+        cr.ui = cr.ui || {};
+        cr.define('cr.ui', function() {
+          return {};
+        });
+        """);
   }
 
   @Test

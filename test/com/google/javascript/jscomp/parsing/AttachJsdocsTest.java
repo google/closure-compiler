@@ -223,7 +223,13 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
 
   @Test
   public void testOldJsdocDot2() {
-    Node root = parse("/** attach */\n" + "// test\n" + "a.b = {};");
+    Node root =
+        parse(
+            """
+            /** attach */
+            // test
+            a.b = {};
+            """);
     assertThat(root.getFirstFirstChild().getJSDocInfo()).isNotNull();
   }
 
@@ -896,7 +902,12 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
   @Test
   public void testOldJsdocWith4() {
     Node root =
-        parse("/** @suppress {with} */ with (context) {\n" + "  eval('[' + expr + ']');\n" + "}\n");
+        parse(
+            """
+            /** @suppress {with} */ with (context) {
+              eval('[' + expr + ']');
+            }
+            """);
     assertThat(root.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
@@ -904,9 +915,11 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
   public void testOldJsdocManyComments1() {
     Node root =
         parse(
-            "function /** number */ f(/** number */ x, /** number */ y) {\n"
-                + "  return x + y;\n"
-                + "}");
+            """
+            function /** number */ f(/** number */ x, /** number */ y) {
+              return x + y;
+            }
+            """);
     Node fun = root.getFirstChild();
     assertThat(fun.getFirstChild().getJSDocInfo()).isNotNull();
     assertThat(fun.getSecondChild().getFirstChild().getJSDocInfo()).isNotNull();

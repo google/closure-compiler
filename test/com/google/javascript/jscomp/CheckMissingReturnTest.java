@@ -218,9 +218,11 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
   @Test
   public void testClosureAsserts() {
     String closureDefs =
-        "/** @const */ var goog = {};\n"
-            + "goog.asserts = {};\n"
-            + "goog.asserts.fail = function(x) {};";
+        """
+        /** @const */ var goog = {};
+        goog.asserts = {};
+        goog.asserts.fail = function(x) {};
+        """;
 
     testNotMissing(closureDefs + "goog.asserts.fail('');");
 

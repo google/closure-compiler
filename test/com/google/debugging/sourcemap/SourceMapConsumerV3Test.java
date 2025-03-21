@@ -166,17 +166,19 @@ public final class SourceMapConsumerV3Test {
                 .setMappings(
                     ";;;;;;;;;;;;;;;;;;IAAMA,K,GACL,eAAaC,EAAb,EAAiB;AAAA;;AAAA;;AAChB,OAAKA,EAAL,GAAUA,EAAV;AACA,C;;IAEIC,S;;;;;;;AACL,qBAAYD,EAAZ,EAAgB;AAAA;;AAAA,6BACTA,EADS;AAEf;;;EAHsBD,K;;AAKxB,IAAIG,CAAC,GAAG,IAAID,SAAJ,CAAc,UAAd,CAAR")
                 .setSourcesContent(
-                    "class Shape {\n"
-                        + "\tconstructor (id) {\n"
-                        + "\t\tthis.id = id;\n"
-                        + "\t}\n"
-                        + "}\n"
-                        + "class Rectangle extends Shape {\n"
-                        + "\tconstructor(id) {\n"
-                        + "\t\tsuper(id);\n"
-                        + "\t}\n"
-                        + "}\n"
-                        + "var s = new Rectangle(\"Shape ID\");")
+                    """
+                    class Shape {
+                    \tconstructor (id) {
+                    \t\tthis.id = id;
+                    \t}
+                    }
+                    class Rectangle extends Shape {
+                    \tconstructor(id) {
+                    \t\tsuper(id);
+                    \t}
+                    }
+                    var s = new Rectangle("Shape ID");
+                    """)
                 .setSources("testcode")
                 .setNames("Shape", "id", "Rectangle", "s")
                 .build()));

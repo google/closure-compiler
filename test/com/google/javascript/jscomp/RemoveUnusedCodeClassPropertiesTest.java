@@ -313,10 +313,12 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
   public void testPrototypeProps2() {
     // don't remove properties that are exported by convention
     testSame(
-        "function A() {this._foo = 1;}\n"
-            + "A.prototype._foo = 0;\n"
-            + "A.prototype.method = function() {this._foo++};\n"
-            + "new A().method()\n");
+        """
+        function A() {this._foo = 1;}
+        A.prototype._foo = 0;
+        A.prototype.method = function() {this._foo++};
+        new A().method()
+        """);
   }
 
   @Test

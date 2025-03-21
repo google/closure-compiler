@@ -113,10 +113,12 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   @Test
   public void testSourceInfo() {
     testScoped(
-        "var d = dom;\n"
-            + "var e = event;\n"
-            + "alert(e.EventType.MOUSEUP);\n"
-            + "alert(d.TagName.DIV);\n",
+        """
+        var d = dom;
+        var e = event;
+        alert(e.EventType.MOUSEUP);
+        alert(d.TagName.DIV);
+        """,
         "alert(event.EventType.MOUSEUP); alert(dom.TagName.DIV);");
     Node root = getLastCompiler().getRoot();
     Node dom = findQualifiedNameNode("dom", root);
@@ -1506,9 +1508,15 @@ public final class ScopedAliasesTest extends CompilerTestCase {
             + GOOG_SCOPE_END_BLOCK;
 
     String expectedJsCode =
-        "goog.dom.createElement(goog.dom.TagName.DIV);\n"
-            + "\n\nvar l = abc.def;\n\n"
-            + "\n namespace.Zoo.getAnimals(l);\n";
+        """
+        goog.dom.createElement(goog.dom.TagName.DIV);
+
+
+        var l = abc.def;
+
+
+         namespace.Zoo.getAnimals(l);
+        """;
 
     TransformationHandlerSpy spy = new TransformationHandlerSpy();
     transformationHandler = spy;

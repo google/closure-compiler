@@ -48,30 +48,30 @@ abstract class CompilerTypeTestCase {
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
   static final String CLOSURE_DEFS =
-      LINE_JOINER.join(
-          "goog.inherits = function(x, y) {};",
-          "/** @type {!Function} */ goog.abstractMethod = function() {};",
-          "goog.isFunction = function(x) {};",
-          "goog.isObject = function(x) {};",
-          "/** @const */ goog.array = {};",
-          // simplified ArrayLike definition
-          "/**",
-          " * @typedef {Array|{length: number}}",
-          " */",
-          "goog.array.ArrayLike;",
-          "/**",
-          " * @param {Array<T>|{length:number}} arr",
-          " * @param {function(this:S, T, number, goog.array.ArrayLike):boolean} f",
-          " * @param {S=} obj",
-          " * @return {!Array<T>}",
-          " * @template T,S",
-          " */",
-          // return empty array to satisfy return type
-          "goog.array.filter = function(arr, f, obj){ return []; };",
-          "goog.asserts = {};",
-          "/** @return {*} */ goog.asserts.assert = function(obj, msg = undefined) { return obj;"
-              + " };",
-          "goog.loadModule = function(mod) {};");
+      """
+      goog.inherits = function(x, y) {};
+      /** @type {!Function} */ goog.abstractMethod = function() {};
+      goog.isFunction = function(x) {};
+      goog.isObject = function(x) {};
+      /** @const */ goog.array = {};
+      // simplified ArrayLike definition
+      /**
+       * @typedef {Array|{length: number}}
+       */
+      goog.array.ArrayLike;
+      /**
+       * @param {Array<T>|{length:number}} arr
+       * @param {function(this:S, T, number, goog.array.ArrayLike):boolean} f
+       * @param {S=} obj
+       * @return {!Array<T>}
+       * @template T,S
+       */
+      // return empty array to satisfy return type
+      goog.array.filter = function(arr, f, obj){ return []; };
+      goog.asserts = {};
+      /** @return {*} */ goog.asserts.assert = function(obj, msg = undefined) { return obj; };
+      goog.loadModule = function(mod) {};
+      """;
 
   /**
    * A default set of externs for testing.

@@ -94,13 +94,13 @@ public final class JsFileFullParserTest {
   @Test
   public void testProvidesRequires_syntaxError() {
     String src =
-        Joiner.on('\n')
-            .join(
-                "goog.provide('providedSymbol');",
-                "goog.require('stronglyRequiredSymbol');",
-                "goog.requireType('weaklyRequiredSymbol');",
-                "",
-                "syntax error;");
+        """
+        goog.provide('providedSymbol');
+        goog.require('stronglyRequiredSymbol');
+        goog.requireType('weaklyRequiredSymbol');
+
+        syntax error;
+        """;
 
     class ErrorCollector implements Reporter {
       private String lastErrorMessage;

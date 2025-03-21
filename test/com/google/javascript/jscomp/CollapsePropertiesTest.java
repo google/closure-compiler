@@ -4598,8 +4598,12 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     inputs.add(
         SourceFile.fromCode(
             "mod1.js",
-            LINE_JOINER.join(
-                "var foo ={};", "foo.bar = {};", "foo.bar.baz = 123;", "module.exports = foo;")));
+            """
+            var foo ={};
+            foo.bar = {};
+            foo.bar.baz = 123;
+            module.exports = foo;
+            """));
     inputs.add(
         SourceFile.fromCode("entry.js", "var mod = require('./mod1.js'); alert(mod.bar.baz);"));
 
@@ -4607,11 +4611,12 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     expected.add(
         SourceFile.fromCode(
             "mod1.js",
-            LINE_JOINER.join(
-                "/** @const */ var module$mod1={};",
-                " /** @const */ var module$mod1$default = {};",
-                "module$mod1$default.bar = {};",
-                "module$mod1$default.bar.baz = 123;")));
+            """
+            /** @const */ var module$mod1={};
+             /** @const */ var module$mod1$default = {};
+            module$mod1$default.bar = {};
+            module$mod1$default.bar.baz = 123;
+            """));
     expected.add(
         SourceFile.fromCode(
             "entry.js", "var mod = module$mod1$default; alert(module$mod1$default.bar.baz);"));
@@ -4663,18 +4668,22 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     inputs.add(
         SourceFile.fromCode(
             "mod1.js",
-            LINE_JOINER.join(
-                "var foo ={};", "module.exports = foo;", "module.exports.bar = 'bar';")));
+            """
+            var foo ={};
+            module.exports = foo;
+            module.exports.bar = 'bar';
+            """));
     inputs.add(SourceFile.fromCode("entry.js", "var mod = require('./mod1.js'); alert(mod.bar);"));
 
     ArrayList<SourceFile> expected = new ArrayList<>();
     expected.add(
         SourceFile.fromCode(
             "mod1.js",
-            LINE_JOINER.join(
-                "/** @const */ var module$mod1={};",
-                " /** @const */ var module$mod1$default = {};",
-                "module$mod1$default.bar = 'bar';")));
+            """
+            /** @const */ var module$mod1={};
+             /** @const */ var module$mod1$default = {};
+            module$mod1$default.bar = 'bar';
+            """));
     expected.add(
         SourceFile.fromCode(
             "entry.js", "var mod = module$mod1$default; alert(module$mod1$default.bar);"));

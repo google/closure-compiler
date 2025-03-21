@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.mockito.Answers.RETURNS_SMART_NULLS;
 import static org.mockito.Mockito.when;
 
-import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.bundle.TranspilationException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -140,16 +139,16 @@ public final class BaseTranspilerTest {
     // This should map back to the typescript source file.
     assertThat(result.sourceMap)
         .isEqualTo(
-            Joiner.on('\n')
-                .join(
-                    "{",
-                    "\"version\":3,",
-                    "\"file\":\"/source.js\",",
-                    "\"lineCount\":4,",
-                    "\"mappings\":\"AAAA,IAAMA,IAAIA,QAAA,EAAM;AAAA,SAAA,EAAA;AAAA,CAAhB;;\",",
-                    "\"sources\":[\"/source.ts\"],",
-                    "\"sourcesContent\":[\"const x = () => 42;\\n\"],",
-                    "\"names\":[\"x\"]",
-                    "}\n"));
+            """
+            {
+            "version":3,
+            "file":"/source.js",
+            "lineCount":4,
+            "mappings":"AAAA,IAAMA,IAAIA,QAAA,EAAM;AAAA,SAAA,EAAA;AAAA,CAAhB;;",
+            "sources":["/source.ts"],
+            "sourcesContent":["const x = () => 42;\\n"],
+            "names":["x"]
+            }
+            """);
   }
 }

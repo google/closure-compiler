@@ -32,11 +32,13 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
   // Needed for testFoldLiteralObjectConstructors(),
   // testFoldLiteralArrayConstructors() and testFoldRegExp...()
   private static final String FOLD_CONSTANTS_TEST_EXTERNS =
-      "var window = {};\n"
-          + "var Object = function f(){};\n"
-          + "var RegExp = function f(a){};\n"
-          + "var Array = function f(a){};\n"
-          + "window.foo = null;\n";
+      """
+      var window = {};
+      var Object = function f(){};
+      var RegExp = function f(a){};
+      var Array = function f(a){};
+      window.foo = null;
+      """;
 
   private boolean late;
   private boolean retraverseOnChange;

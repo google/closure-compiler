@@ -277,9 +277,8 @@ public final class CompilerTest {
           }
           return A;
       }());
-      console.log(new A(1));
-      """
-          .trim();
+      console.log(new A(1));\
+      """;
 
   // Similar to BASE64_ENCODED_SOURCE_MAP; contains encoded SOURCE_MAP but with
   // SOURCE_MAP_TEST_CONTENT as the only item of sourcesContent corresponding
@@ -619,10 +618,12 @@ public final class CompilerTest {
         ImmutableList.of(
             SourceFile.fromCode(
                 "foo",
-                ("/*! Your favorite license goes here */\n"
-                    + "/** \n"
-                    + "  * @fileoverview This is my favorite file! */\n"
-                    + "var x;")));
+                """
+                /*! Your favorite license goes here */
+                /**
+                  * @fileoverview This is my favorite file! */
+                var x;
+                """));
     assertThat(new Compiler().compile(EMPTY_EXTERNS, input, new CompilerOptions()).success)
         .isTrue();
   }
@@ -631,9 +632,11 @@ public final class CompilerTest {
   @Test
   public void testOverviewAndImportantCommentOutput() {
     test(
-        "/** @fileoverview This is my favorite file! */\n"
-            + "/*! Your favorite license goes here */\n"
-            + "console.log(0);",
+        """
+        /** @fileoverview This is my favorite file! */
+        /*! Your favorite license goes here */
+        console.log(0);
+        """,
         "/*\n Your favorite license goes here */\nconsole.log(0);",
         null);
   }
@@ -643,10 +646,12 @@ public final class CompilerTest {
   @Test
   public void testImportantCommentOverviewImportantComment() {
     test(
-        "/*! Another license */\n"
-            + "/** @fileoverview This is my favorite file! */\n"
-            + "/*! Your favorite license goes here */\n"
-            + "console.log(0);",
+        """
+        /*! Another license */
+        /** @fileoverview This is my favorite file! */
+        /*! Your favorite license goes here */
+        console.log(0);
+        """,
         "/*\n Another license  Your favorite license goes here */\nconsole.log(0);",
         null);
   }
@@ -656,9 +661,11 @@ public final class CompilerTest {
   @Test
   public void testCombinedImportantCommentOverviewDirectiveOutput() {
     test(
-        "/*! Your favorite license goes here\n"
-            + " * @fileoverview This is my favorite file! */\n"
-            + "console.log(0);",
+        """
+        /*! Your favorite license goes here
+         * @fileoverview This is my favorite file! */
+        console.log(0);
+        """,
         "/*\n Your favorite license goes here\n"
             + " @fileoverview This is my favorite file! */\nconsole.log(0);",
         null);
@@ -668,7 +675,11 @@ public final class CompilerTest {
   @Test
   public void testCombinedImportantCommentAuthorDirectiveOutput() {
     test(
-        "/*! Your favorite license goes here\n" + " * @author Robert */\n" + "console.log(0);",
+        """
+        /*! Your favorite license goes here
+         * @author Robert */
+        console.log(0);
+        """,
         "/*\n Your favorite license goes here\n @author Robert */\nconsole.log(0);",
         null);
   }
@@ -677,7 +688,11 @@ public final class CompilerTest {
   @Test
   public void testMultipleImportantCommentDirectiveOutput() {
     test(
-        "/*! Your favorite license goes here */\n" + "/*! Another license */\n" + "console.log(0);",
+        """
+        /*! Your favorite license goes here */
+        /*! Another license */
+        console.log(0);
+        """,
         "/*\n Your favorite license goes here  Another license */\nconsole.log(0);",
         null);
   }
@@ -685,9 +700,11 @@ public final class CompilerTest {
   @Test
   public void testImportantCommentLicenseDirectiveOutput() {
     test(
-        "/*! Your favorite license goes here */\n"
-            + "/** @license Another license */\n"
-            + "console.log(0);",
+        """
+        /*! Your favorite license goes here */
+        /** @license Another license */
+        console.log(0);
+        """,
         "/*\n Another license  Your favorite license goes here */\nconsole.log(0);",
         null);
   }
@@ -695,9 +712,11 @@ public final class CompilerTest {
   @Test
   public void testLicenseImportantCommentDirectiveOutput() {
     test(
-        "/** @license Your favorite license goes here */\n"
-            + "/*! Another license */\n"
-            + "console.log(0);",
+        """
+        /** @license Your favorite license goes here */
+        /*! Another license */
+        console.log(0);
+        """,
         "/*\n Your favorite license goes here  Another license */\nconsole.log(0);",
         null);
   }
@@ -776,10 +795,12 @@ public final class CompilerTest {
         ImmutableList.of(
             SourceFile.fromCode(
                 "foo",
-                ("/** @license Your favorite license goes here */\n"
-                    + "/** \n"
-                    + "  * @fileoverview This is my favorite file! */\n"
-                    + "var x;")));
+                """
+                /** @license Your favorite license goes here */
+                /**\s
+                  * @fileoverview This is my favorite file! */
+                var x;
+                """));
     assertThat(
             new Compiler()
                 .compile(
@@ -796,9 +817,11 @@ public final class CompilerTest {
   @Test
   public void testOverviewAndLicenseDirectiveOutput() {
     test(
-        "/** @fileoverview This is my favorite file! */\n"
-            + "/** @license Your favorite license goes here */\n"
-            + "console.log(0);",
+        """
+        /** @fileoverview This is my favorite file! */
+        /** @license Your favorite license goes here */
+        console.log(0);
+        """,
         "/*\n Your favorite license goes here */\nconsole.log(0);",
         null);
   }
@@ -808,10 +831,12 @@ public final class CompilerTest {
   @Test
   public void testLicenseOverviewLicense() {
     test(
-        "/** @license Another license */\n"
-            + "/** @fileoverview This is my favorite file! */\n"
-            + "/** @license Your favorite license goes here */\n"
-            + "console.log(0);",
+        """
+        /** @license Another license */
+        /** @fileoverview This is my favorite file! */
+        /** @license Your favorite license goes here */
+        console.log(0);
+        """,
         "/*\n Your favorite license goes here  Another license */\nconsole.log(0);",
         null);
   }
@@ -821,9 +846,11 @@ public final class CompilerTest {
   @Test
   public void testCombinedLicenseOverviewDirectiveOutput() {
     test(
-        "/** @license Your favorite license goes here\n"
-            + " * @fileoverview This is my favorite file! */\n"
-            + "console.log(0);",
+        """
+        /** @license Your favorite license goes here
+         * @fileoverview This is my favorite file! */
+        console.log(0);
+        """,
         "/*\n Your favorite license goes here\n"
             + " @fileoverview This is my favorite file! */\nconsole.log(0);",
         null);
@@ -833,9 +860,11 @@ public final class CompilerTest {
   @Test
   public void testCombinedLicenseAuthorDirectiveOutput() {
     test(
-        "/** @license Your favorite license goes here\n"
-            + " * @author Robert */\n"
-            + "console.log(0);",
+        """
+        /** @license Your favorite license goes here
+         * @author Robert */
+        console.log(0);
+        """,
         "/*\n Your favorite license goes here\n @author Robert */\nconsole.log(0);",
         null);
   }
@@ -914,9 +943,11 @@ public final class CompilerTest {
     String js1 = "/** @license Identical license here */\n" + "console.log(0);";
     String js2 = "/** @license Identical license here */\n" + "console.log(1);";
     String js3 =
-        "/** @license Identical license here */\n"
-            + "console.log(2);\n"
-            + "/** @license Identical license here */";
+        """
+        /** @license Identical license here */
+        console.log(2);
+        /** @license Identical license here */
+        """;
     String expected =
         "/*\n Identical license here */\nconsole.log(0);console.log(1);console.log(2);";
 

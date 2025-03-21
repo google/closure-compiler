@@ -106,10 +106,12 @@ public final class DiagnosticToSuppressionMapperTest {
 
     assertThat(myOut.toString(UTF_8))
         .isEqualTo(
-            "| Error | Suppression tag |\n"
-                + "|---|---|\n"
-                + "|JSC_OTHER_ERROR|suppressionA|\n"
-                + "|JSC_TEST_ERROR_1|suppressionB|\n"
-                + "|JSC_TEST_ERROR_2|suppressionA|\n");
+            """
+            | Error | Suppression tag |
+            |---|---|
+            |JSC_OTHER_ERROR|suppressionA|
+            |JSC_TEST_ERROR_1|suppressionB|
+            |JSC_TEST_ERROR_2|suppressionA|
+            """);
   }
 }

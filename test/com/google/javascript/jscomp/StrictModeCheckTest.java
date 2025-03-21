@@ -58,15 +58,17 @@ public final class StrictModeCheckTest extends CompilerTestCase {
   @Test
   public void testUseOfWith3() {
     testSame(
-        "function f(expr, context) {\n"
-            + "  try {\n"
-            + "    /** @suppress{with} */ with (context) {\n"
-            + "      return eval('[' + expr + '][0]');\n"
-            + "    }\n"
-            + "  } catch (e) {\n"
-            + "    return null;\n"
-            + "  }\n"
-            + "};\n");
+        """
+        function f(expr, context) {
+          try {
+            /** @suppress{with} */ with (context) {
+              return eval('[' + expr + '][0]');
+            }
+          } catch (e) {
+            return null;
+          }
+        };
+        """);
   }
 
   @Test
