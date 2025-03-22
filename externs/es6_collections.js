@@ -218,7 +218,7 @@ WeakMap.prototype.set = function(key, value) {};
  * @implements {Iterable<VALUE>}
  * @template VALUE
  * @nosideeffects
- * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set
+ * @see https://tc39.es/ecma262/multipage/keyed-collections.html#sec-set-iterable
  */
 function Set(opt_iterable) {}
 
@@ -227,17 +227,23 @@ function Set(opt_iterable) {}
  * @return {THIS}
  * @this {THIS}
  * @template THIS
+ * @modifies {this}
+ * @see https://tc39.es/ecma262/multipage/keyed-collections.html#sec-set.prototype.add
  */
 Set.prototype.add = function(value) {};
 
 /**
  * @return {void}
+ * @modifies {this}
+ * @see https://tc39.es/ecma262/multipage/keyed-collections.html#sec-set.prototype.clear
  */
 Set.prototype.clear = function() {};
 
 /**
  * @param {VALUE} value
  * @return {boolean}
+ * @modifies {this}
+ * @see https://tc39.es/ecma262/multipage/keyed-collections.html#sec-set.prototype.delete
  */
 Set.prototype.delete = function(value) {};
 
@@ -245,6 +251,7 @@ Set.prototype.delete = function(value) {};
  * @return {!IteratorIterable<!Array<VALUE>>} Where each array has two entries:
  *     [value, value]
  * @nosideeffects
+ * @see https://tc39.es/ecma262/multipage/keyed-collections.html#sec-set.prototype.values
  */
 Set.prototype.entries = function() {};
 
@@ -253,6 +260,7 @@ Set.prototype.entries = function() {};
  * @param {THIS=} opt_thisArg
  * @this {SET}
  * @template SET,THIS
+ * @see https://tc39.es/ecma262/multipage/keyed-collections.html#sec-set.prototype.foreach
  */
 Set.prototype.forEach = function(callback, opt_thisArg) {};
 
@@ -260,32 +268,91 @@ Set.prototype.forEach = function(callback, opt_thisArg) {};
  * @param {VALUE} value
  * @return {boolean}
  * @nosideeffects
+ * @see https://tc39.es/ecma262/multipage/keyed-collections.html#sec-set.prototype.has
  */
 Set.prototype.has = function(value) {};
 
 /**
- * @type {number} (readonly)
- */
-Set.prototype.size;
-
-/**
  * @return {!IteratorIterable<VALUE>}
  * @nosideeffects
+ * @see https://tc39.es/ecma262/multipage/keyed-collections.html#sec-set.prototype.keys
  */
 Set.prototype.keys = function() {};
 
 /**
  * @return {!IteratorIterable<VALUE>}
  * @nosideeffects
+ * @see https://tc39.es/ecma262/multipage/keyed-collections.html#sec-set.prototype.values
  */
 Set.prototype.values = function() {};
 
 /**
+ * @param {!Set} other
+ * @return {!Set}
+ * @nosideeffects
+ * @see https://tc39.es/proposal-set-methods/#sec-set.prototype.union
+ */
+Set.prototype.union = function(other) {};
+
+/**
+ * @param {!Set} other
+ * @return {!Set}
+ * @nosideeffects
+ * @see https://tc39.es/proposal-set-methods/#sec-set.prototype.intersection
+ */
+Set.prototype.intersection = function(other) {};
+
+/**
+ * @param {!Set} other
+ * @return {!Set}
+ * @nosideeffects
+ * @see https://tc39.es/proposal-set-methods/#sec-set.prototype.difference
+ */
+Set.prototype.difference = function(other) {};
+
+/**
+ * @param {!Set} other
+ * @return {!Set}
+ * @nosideeffects
+ * @see https://tc39.es/proposal-set-methods/#sec-set.prototype.symmetricdifference
+ */
+Set.prototype.symmetricDifference = function(other) {};
+
+/**
+ * @param {!Set} other
+ * @return {boolean}
+ * @nosideeffects
+ * @see https://tc39.es/proposal-set-methods/#sec-set.prototype.issupersetof
+ */
+Set.prototype.isSupersetOf = function(other) {};
+
+/**
+ * @param {!Set} other
+ * @return {boolean}
+ * @nosideeffects
+ * @see https://tc39.es/proposal-set-methods/#sec-set.prototype.issubsetof
+ */
+Set.prototype.isSubsetOf = function(other) {};
+
+/**
+ * @param {!Set} other
+ * @return {boolean}
+ * @nosideeffects
+ * @see https://tc39.es/proposal-set-methods/#sec-set.prototype.isdisjointfrom
+ */
+Set.prototype.isDisjointFrom = function(other) {};
+
+/**
  * @return {!Iterator<VALUE>}
+ * @see https://tc39.es/ecma262/multipage/keyed-collections.html#sec-set.prototype-%symbol.iterator%
  */
 Set.prototype[Symbol.iterator] = function() {};
 
-
+/**
+ * @type {number} (readonly)
+ * @see https://tc39.es/ecma262/multipage/keyed-collections.html#sec-get-set.prototype.size
+ */
+Set.prototype.size;
 
 /**
  * @constructor @struct
