@@ -59,18 +59,26 @@ public class IRTest {
 
   @Test
   public void testFunction() {
-    testIR(IR.function(IR.name("hi"), IR.paramList(), IR.block()),
-        "FUNCTION hi\n" +
-        "    NAME hi\n" +
-        "    PARAM_LIST\n" +
-        "    BLOCK\n");
+    testIR(
+        IR.function(IR.name("hi"), IR.paramList(), IR.block()),
+        """
+        FUNCTION hi
+            NAME hi
+            PARAM_LIST
+            BLOCK
+        """);
   }
 
   @Test
   public void testArrowFunction() {
     testIR(
         IR.arrowFunction(IR.name("hi"), IR.paramList(), IR.block()),
-        "FUNCTION hi [arrow_fn: 1]\n" + "    NAME hi\n" + "    PARAM_LIST\n" + "    BLOCK\n");
+        """
+        FUNCTION hi [arrow_fn: 1]
+            NAME hi
+            PARAM_LIST
+            BLOCK
+        """);
   }
 
   @Test
@@ -78,10 +86,13 @@ public class IRTest {
     testIR(IR.paramList(),
         "PARAM_LIST\n");
 
-    testIR(IR.paramList(IR.name("a"), IR.name("b")),
-        "PARAM_LIST\n" +
-        "    NAME a\n" +
-        "    NAME b\n");
+    testIR(
+        IR.paramList(IR.name("a"), IR.name("b")),
+        """
+        PARAM_LIST
+            NAME a
+            NAME b
+        """);
   }
 
   @Test
@@ -89,15 +100,21 @@ public class IRTest {
     testIR(IR.block(),
         "BLOCK\n");
 
-    testIR(IR.block(IR.empty(), IR.empty()),
-        "BLOCK\n" +
-        "    EMPTY\n" +
-        "    EMPTY\n");
+    testIR(
+        IR.block(IR.empty(), IR.empty()),
+        """
+        BLOCK
+            EMPTY
+            EMPTY
+        """);
 
-    testIR(IR.block(ImmutableList.of(IR.empty(), IR.empty())),
-        "BLOCK\n" +
-        "    EMPTY\n" +
-        "    EMPTY\n");
+    testIR(
+        IR.block(ImmutableList.of(IR.empty(), IR.empty())),
+        """
+        BLOCK
+            EMPTY
+            EMPTY
+        """);
   }
 
   @Test
@@ -105,15 +122,21 @@ public class IRTest {
     testIR(IR.script(),
         "SCRIPT\n");
 
-    testIR(IR.script(IR.empty(), IR.empty()),
-        "SCRIPT\n" +
-        "    EMPTY\n" +
-        "    EMPTY\n");
+    testIR(
+        IR.script(IR.empty(), IR.empty()),
+        """
+        SCRIPT
+            EMPTY
+            EMPTY
+        """);
 
-    testIR(IR.script(ImmutableList.of(IR.empty(), IR.empty())),
-        "SCRIPT\n" +
-        "    EMPTY\n" +
-        "    EMPTY\n");
+    testIR(
+        IR.script(ImmutableList.of(IR.empty(), IR.empty())),
+        """
+        SCRIPT
+            EMPTY
+            EMPTY
+        """);
   }
 
   @Test
@@ -129,14 +152,20 @@ public class IRTest {
 
   @Test
   public void testVar() {
-    testIR(IR.var(IR.name("a")),
-        "VAR\n" +
-        "    NAME a\n");
+    testIR(
+        IR.var(IR.name("a")),
+        """
+        VAR
+            NAME a
+        """);
 
-    testIR(IR.var(IR.name("a"), IR.trueNode()),
-        "VAR\n" +
-        "    NAME a\n" +
-        "        TRUE\n");
+    testIR(
+        IR.var(IR.name("a"), IR.trueNode()),
+        """
+        VAR
+            NAME a
+                TRUE
+        """);
   }
 
   @Test
@@ -144,94 +173,105 @@ public class IRTest {
     testIR(IR.returnNode(),
         "RETURN\n");
 
-    testIR(IR.returnNode(IR.name("a")),
-        "RETURN\n" +
-        "    NAME a\n");
+    testIR(
+        IR.returnNode(IR.name("a")),
+        """
+        RETURN
+            NAME a
+        """);
   }
 
   @Test
   public void testThrow() {
-    testIR(IR.throwNode(IR.name("a")),
-        "THROW\n" +
-        "    NAME a\n");
+    testIR(
+        IR.throwNode(IR.name("a")),
+        """
+        THROW
+            NAME a
+        """);
   }
 
   @Test
   public void testExprResult() {
-    testIR(IR.exprResult(IR.name("a")),
-        "EXPR_RESULT\n" +
-        "    NAME a\n");
+    testIR(
+        IR.exprResult(IR.name("a")),
+        """
+        EXPR_RESULT
+            NAME a
+        """);
   }
 
   @Test
   public void testIf() {
-    testIR(IR.ifNode(IR.name("a"), IR.block()),
-        "IF\n" +
-        "    NAME a\n" +
-        "    BLOCK\n");
+    testIR(
+        IR.ifNode(IR.name("a"), IR.block()),
+        """
+        IF
+            NAME a
+            BLOCK
+        """);
 
-    testIR(IR.ifNode(IR.name("a"), IR.block(), IR.block()),
-        "IF\n" +
-        "    NAME a\n" +
-        "    BLOCK\n" +
-        "    BLOCK\n");
+    testIR(
+        IR.ifNode(IR.name("a"), IR.block(), IR.block()),
+        """
+        IF
+            NAME a
+            BLOCK
+            BLOCK
+        """);
   }
 
   @Test
   public void testIssue727_1() {
     testIR(
-        IR.tryFinally(
-            IR.block(),
-            IR.block()),
-        "TRY\n" +
-        "    BLOCK\n" +
-        "    BLOCK\n" +
-        "    BLOCK\n");
+        IR.tryFinally(IR.block(), IR.block()),
+        """
+        TRY
+            BLOCK
+            BLOCK
+            BLOCK
+        """);
   }
 
   @Test
   public void testIssue727_2() {
     testIR(
-        IR.tryCatch(
-            IR.block(),
-            IR.catchNode(
-                IR.name("e"),
-                IR.block())),
-        "TRY\n" +
-        "    BLOCK\n" +
-        "    BLOCK\n" +
-        "        CATCH\n" +
-        "            NAME e\n" +
-        "            BLOCK\n");
+        IR.tryCatch(IR.block(), IR.catchNode(IR.name("e"), IR.block())),
+        """
+        TRY
+            BLOCK
+            BLOCK
+                CATCH
+                    NAME e
+                    BLOCK
+        """);
   }
 
   @Test
   public void testIssue727_3() {
     testIR(
-        IR.tryCatchFinally(
-            IR.block(),
-            IR.catchNode(IR.name("e"), IR.block()),
-            IR.block()),
-        "TRY\n" +
-        "    BLOCK\n" +
-        "    BLOCK\n" +
-        "        CATCH\n" +
-        "            NAME e\n" +
-        "            BLOCK\n" +
-        "    BLOCK\n");
+        IR.tryCatchFinally(IR.block(), IR.catchNode(IR.name("e"), IR.block()), IR.block()),
+        """
+        TRY
+            BLOCK
+            BLOCK
+                CATCH
+                    NAME e
+                    BLOCK
+            BLOCK
+        """);
   }
 
   @Test
   public void testAdd() {
     testIR(
-        IR.add(
-            IR.cast(IR.number(1), null),
-            IR.number(2)),
-        "ADD\n" +
-        "    CAST\n" +
-        "        NUMBER 1.0\n" +
-        "    NUMBER 2.0\n");
-
+        IR.add(IR.cast(IR.number(1), null), IR.number(2)),
+        """
+        ADD
+            CAST
+                NUMBER 1.0
+            NUMBER 2.0
+        """);
   }
 
   @Test

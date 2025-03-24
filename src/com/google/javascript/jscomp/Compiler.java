@@ -2819,10 +2819,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       boolean newlyAddedLicense = this.licensesNewInCurrentFile.add(license);
       if (!newlyAddedLicense) {
         log.log(
-            "Chunk %s already depends on license\n"
-                + "==================\n"
-                + "%s\n"
-                + "==================\n\n",
+            """
+            Chunk %s already depends on license
+            ==================
+            %s
+            ==================
+
+            """,
             currentChunk, license);
       } else {
         log.log(

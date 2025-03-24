@@ -359,9 +359,11 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     @Option(
         name = "--isolation_mode",
         usage =
-            "If set to IIFE the compiler output will follow the form:\n"
-                + "  (function(){%output%}).call(this);\n"
-                + "Options: NONE, IIFE")
+            """
+            If set to IIFE the compiler output will follow the form:
+              (function(){%output%}).call(this);
+            Options: NONE, IIFE\
+            """)
     private IsolationMode isolationMode = IsolationMode.NONE;
 
     @Option(
@@ -889,11 +891,13 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     @Option(
         name = "--instrument_for_coverage_option",
         usage =
-            "Enable code instrumentation to perform code coverage analysis. Options are:\n"
-                + " 1. NONE (default)\n"
-                + " 2. LINE - Instrument code by line.\n"
-                + " 3. BRANCH - Instrument code by branch.\n"
-                + " 4. PRODUCTION - Function Instrumentation on compiled JS code.\n")
+            """
+            Enable code instrumentation to perform code coverage analysis. Options are:
+             1. NONE (default)
+             2. LINE - Instrument code by line.
+             3. BRANCH - Instrument code by branch.
+             4. PRODUCTION - Function Instrumentation on compiled JS code.
+            """)
     private String instrumentForCoverageOption = "NONE";
 
     @Option(

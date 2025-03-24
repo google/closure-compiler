@@ -94,15 +94,30 @@ class TypeValidator implements Serializable {
   private final TypeMismatch.Accumulator mismatches = new TypeMismatch.Accumulator();
 
   // User warnings
-  private static final String FOUND_REQUIRED = "{0}\n" + "found   : {1}\n" + "required: {2}";
+  private static final String FOUND_REQUIRED =
+      """
+      {0}
+      found   : {1}
+      required: {2}\
+      """;
 
   private static final String FOUND_REQUIRED_MISSING =
-      "{0}\n" + "found   : {1}\n" + "required: {2}\n" + "missing : [{3}]\n" + "mismatch: [{4}]";
+      """
+      {0}
+      found   : {1}
+      required: {2}
+      missing : [{3}]
+      mismatch: [{4}]\
+      """;
 
   static final DiagnosticType INVALID_CAST =
       DiagnosticType.warning(
           "JSC_INVALID_CAST",
-          "invalid cast - must be a subtype or supertype\n" + "from: {0}\n" + "to  : {1}");
+          """
+          invalid cast - must be a subtype or supertype
+          from: {0}
+          to  : {1}\
+          """);
 
   static final DiagnosticType TYPE_MISMATCH_WARNING =
       DiagnosticType.warning("JSC_TYPE_MISMATCH", "{0}");

@@ -96,7 +96,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   static final DiagnosticType DETERMINISTIC_TEST =
       DiagnosticType.warning(
           "JSC_DETERMINISTIC_TEST",
-          "condition always evaluates to {2}\n" + "left : {0}\n" + "right: {1}");
+          """
+          condition always evaluates to {2}
+          left : {0}
+          right: {1}\
+          """);
 
   static final DiagnosticType INEXISTENT_ENUM_ELEMENT =
       DiagnosticType.warning(
@@ -316,9 +320,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   static final DiagnosticType CONFLICTING_GETTER_SETTER_TYPE =
       DiagnosticType.warning(
           "JSC_CONFLICTING_GETTER_SETTER_TYPE",
-          "The types of the getter and setter for property ''{0}'' do not match.\n"
-              + "getter type is: {1}\n"
-              + "setter type is: {2}");
+          """
+          The types of the getter and setter for property ''{0}'' do not match.
+          getter type is: {1}
+          setter type is: {2}\
+          """);
 
   static final DiagnosticType SAME_INTERFACE_MULTIPLE_IMPLEMENTS =
       DiagnosticType.warning(
