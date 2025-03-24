@@ -954,19 +954,15 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns the node within the given function body at which something can be inserted such that
-   * it's after all inner function declarations in that function body. We want this because
-   * normalization expects all inner function declarations to be hoisted. If there's not good
-   * insertion point (e.g. the function is empty or only contains inner function declarations),
-   * return null.
+   * Returns the node within the given block at which something can be inserted such that it's after
+   * all inner function declarations in that block. We want this because normalization expects all
+   * inner function declarations to be hoisted. If there's not good insertion point (e.g. the block
+   * is empty or only contains inner function declarations), return null.
    */
-  static Node getInsertionPointAfterAllInnerFunctionDeclarations(Node functionBody) {
-    checkState(functionBody.getParent().isFunction());
-    Node current = functionBody.getFirstChild();
+  static Node getInsertionPointAfterAllInnerFunctionDeclarations(Node block) {
+    checkState(block.isBlock());
+    Node current = block.getFirstChild();
 
-    // Do not insert the let declaration before any hoisted function declarations in this function
-    // body as those function declarations are hoisted by normalization. We must maintain
-    // normalization.
     while (current != null && NodeUtil.isFunctionDeclaration(current)) {
       current = current.getNext();
     }
@@ -2259,26 +2255,24 @@ public final class NodeUtil {
   }
 
   /**
-   * Is this node the name of a block-scoped declaration? Checks for let, const, class, or
-   * block-scoped function declarations.
+   * Is this node a block-scoped declaration? Checks for let, const, class, or block-scoped function
+   * declarations.
    *
    * @param n The node
-   * @return True if {@code n} is the NAME of a block-scoped declaration.
+   * @return True if {@code n} is a block-scoped declaration statement.
    */
   static boolean isBlockScopedDeclaration(Node n) {
-    if (n.isName()) {
-      switch (n.getParent().getToken()) {
-        case LET:
-        case CONST:
-        case CATCH:
-          return true;
-        case CLASS:
-          return n.getParent().getFirstChild() == n;
-        case FUNCTION:
-          return isBlockScopedFunctionDeclaration(n.getParent());
-        default:
-          break;
-      }
+    switch (n.getToken()) {
+      case LET:
+      case CONST:
+      case CATCH:
+        return true;
+      case CLASS:
+        return isClassDeclaration(n);
+      case FUNCTION:
+        return isBlockScopedFunctionDeclaration(n);
+      default:
+        break;
     }
     return false;
   }
@@ -4130,12 +4124,8 @@ public final class NodeUtil {
 
     @Override
     public void visit(Node n) {
-      if (n.isName()) {
-        Node parent = n.getParent();
-        if (parent != null && parent.isVar()) {
-          String name = n.getString();
-          vars.putIfAbsent(name, n);
-        }
+      if (n.isVar()) {
+        visitLhsNodesInNode(n, name -> vars.putIfAbsent(name.getString(), name));
       }
     }
   }

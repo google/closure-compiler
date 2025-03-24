@@ -320,7 +320,9 @@ class VariableReferenceCheck implements CompilerPass {
       Node warningNode = referenceNode;
       boolean shadowParam =
           v.isParam()
-              && NodeUtil.isBlockScopedDeclaration(referenceNode)
+              // TODOO - lharker: this won't handle destructuring block scoped declarations. Is this
+              // an actual bug?
+              && NodeUtil.isBlockScopedDeclaration(referenceNode.getParent())
               && v.getScope() == reference.getScope().getParent();
 
       boolean isFunctionDecl =

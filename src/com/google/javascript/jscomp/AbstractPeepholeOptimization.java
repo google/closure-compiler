@@ -18,9 +18,12 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile;
 import java.math.BigInteger;
 
 /**
@@ -34,6 +37,10 @@ abstract class AbstractPeepholeOptimization {
   private AbstractCompiler compiler;
   /** Intentionally not exposed to subclasses */
   private AstAnalyzer astAnalyzer;
+
+  /** Features added to scripts during the optimization. */
+  private final LinkedHashMultimap<StaticSourceFile, Feature> newFeatures =
+      LinkedHashMultimap.create();
 
   /**
    * Given a node to optimize and a traversal, optimize the node. Subclasses
@@ -84,6 +91,22 @@ abstract class AbstractPeepholeOptimization {
   void beginTraversal(AbstractCompiler compiler) {
     this.compiler = checkNotNull(compiler);
     astAnalyzer = compiler.getAstAnalyzer();
+  }
+
+  /**
+   * Informs the optimization that a traversal has ended.
+   *
+   * <p>This class cannot be used after this method is called, unless {@link #beginTraversal} is
+   * called again.
+   */
+  void endTraversal() {
+    for (StaticSourceFile file : newFeatures.keySet()) {
+      Node script = compiler.getScriptNode(file.getName());
+      NodeUtil.addFeaturesToScript(
+          script, FeatureSet.BARE_MINIMUM.with(newFeatures.get(file)), this.compiler);
+    }
+    this.compiler = null;
+    astAnalyzer = null;
   }
 
   /** Returns whether the node may create new mutable state, or change existing state. */
@@ -219,5 +242,9 @@ abstract class AbstractPeepholeOptimization {
   protected final void markNewScopesChanged(Node n) {
     checkNotNull(compiler);
     NodeUtil.markNewScopesChanged(n, compiler);
+  }
+
+  protected final void addFeatureToEnclosingScript(Node n, Feature feature) {
+    newFeatures.put(n.getStaticSourceFile(), feature);
   }
 }

@@ -72,6 +72,8 @@ class PeepholeOptimizationsPass implements CompilerPass {
         break;
       }
     }
+
+    endTraversal();
   }
 
   private class PeepCallback extends AbstractPostOrderCallback {
@@ -91,6 +93,13 @@ class PeepholeOptimizationsPass implements CompilerPass {
   private void beginTraversal() {
     for (AbstractPeepholeOptimization optimization : peepholeOptimizations) {
       optimization.beginTraversal(compiler);
+    }
+  }
+
+  /** End the traversal. */
+  private void endTraversal() {
+    for (AbstractPeepholeOptimization optimization : peepholeOptimizations) {
+      optimization.endTraversal();
     }
   }
 }

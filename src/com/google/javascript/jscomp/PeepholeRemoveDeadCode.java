@@ -22,10 +22,13 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.base.Tri;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -468,7 +471,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * Returns {@code true} iff {@code expr} is parented such that it is valid in a fixed-point
    * representation of an unused expression tree.
    *
-   * <p>A fixed-point representation is one in which no futher nodes should be changed or removed
+   * <p>A fixed-point representation is one in which no further nodes should be changed or removed
    * when removing unused code. This method assumes that the expression tree in question is unused,
    * so only side-effects are relevant.
    */
@@ -925,6 +928,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         }
         changed = true;
         NodeUtil.redeclareVarsInsideBranch(dead);
+        redeclareIfBlockScopedVar(dead, parent);
         dead.detach();
         markFunctionsDeleted(dead);
       }
@@ -932,6 +936,45 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         reportChangeToEnclosingScope(parent);
       }
     }
+  }
+
+  /**
+   * Redeclares the given node's names in the parent scope if they are block-scoped declarations;
+   * otherwise does nothing.
+   */
+  private void redeclareIfBlockScopedVar(Node decl, Node parent) {
+    // This isn't called on function declarations ever: this method is only used in
+    // removeFollowingNodes, which preserves function declarations as they're hoisted. This
+    // preconditions check is to make sure nothing else tries reusing this code, since in that case
+    // maybe they do want to handle function declarations.
+    checkState(!NodeUtil.isFunctionDeclaration(decl), "Unexpected function declaration %s", decl);
+    if (!NodeUtil.isBlockScopedDeclaration(decl)) {
+      return;
+    }
+    List<Node> blockScopedVars = new ArrayList<>();
+    if (decl.isClass()) {
+      blockScopedVars.add(decl.getFirstChild());
+    } else {
+      NodeUtil.visitLhsNodesInNode(
+          decl,
+          (Node n) -> {
+            if (n.isName()) {
+              blockScopedVars.add(n);
+            }
+          });
+    }
+
+    Node addBefore = NodeUtil.getInsertionPointAfterAllInnerFunctionDeclarations(parent);
+    for (Node nameNode : blockScopedVars) {
+      Node var = IR.let(IR.name(nameNode.getString()).srcref(nameNode)).srcref(nameNode);
+      NodeUtil.copyNameAnnotations(nameNode, var.getFirstChild());
+      if (addBefore != null) {
+        var.insertBefore(addBefore);
+      } else {
+        parent.addChildToBack(var);
+      }
+    }
+    this.addFeatureToEnclosingScript(parent, Feature.LET_DECLARATIONS);
   }
 
   /**

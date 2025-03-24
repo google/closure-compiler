@@ -487,6 +487,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
         """,
         """
         var f = function() {
+          let b;
           return 1;
         };
         """);
@@ -1416,15 +1417,15 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   public void testLetConstBlocks() {
     test(
         "function f() {return 1; let a; }", //
-        "function f() {return 1;        }");
+        "function f() {let a; return 1;}");
 
     test(
         "function f() { return 1; const a = 1; }", //
-        "function f() { return 1;              }");
+        "function f() { let a;  return 1;}");
 
     test(
         "function f() { x = 1; { let g; return x; } let y;}",
-        "function f() { x = 1;   let g; return x;         } ");
+        "function f() { let y; x = 1;   let g; return x;         } ");
   }
 
   @Test
@@ -1453,6 +1454,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
         """,
         """
         function f() {
+          let a;
           return 1;
         }
         export { f as f };
@@ -1468,6 +1470,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
         """,
         """
         function f() {
+          let a;
           return 1;
         }
         export { f as f };
@@ -1476,6 +1479,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     test(
         """
         function f() {
+          let z;
           x = 1;
           {
             let g;
@@ -1487,6 +1491,8 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
         """,
         """
         function f() {
+          let y;
+          let z;
           x = 1;
           let g;
           return x;

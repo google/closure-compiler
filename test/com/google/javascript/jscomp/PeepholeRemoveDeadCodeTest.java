@@ -259,6 +259,116 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("if(false) {const x = 1}", "");
     fold("if(true) {let x}", "let x;");
     fold("if(false) {let x}", "");
+    fold("if(false) {const x = 1;  function f() { return x; }}", "");
+  }
+
+  @Test
+  public void testLetConstLifting_removePartOfBlock() {
+    fold(
+        """
+        function f() {
+          return 0;
+          let x = 0;
+          x++;
+        }
+        """,
+        """
+        function f() {
+          let x;
+          return 0;
+        }
+        """);
+    fold(
+        """
+        function f() {
+          return 0;
+          const [x, y, [[z]]] = 1;
+        }
+        """,
+        """
+        function f() {
+          let x;
+          let y;
+          let z;
+          return 0;
+        }
+        """);
+    fold(
+        """
+        function f() {
+          return 0;
+          const C = class Bar {};
+        }
+        """,
+        """
+        function f() {
+          let C;
+          return 0;
+        }
+        """);
+  }
+
+  @Test
+  public void testLetConstLifting_removePartOfBlock_withHoistedFunction() {
+    fold(
+        """
+        function f() {
+          return 0;
+          // Everything after this is dead code, except for the function declaration, which is
+          // hoisted. `foo` could in theory reference x, y, or C. Add a stub 'let' declaration for
+          // each to avoid violating the invariant that all NAME nodes in the AST are declared.
+          const x = 1;
+          let y;
+          class C {}
+          function foo() {}
+        }
+        """,
+        """
+        function f() {
+          function foo() {}
+          let C;
+          let y;
+          let x;
+          return 0;
+        }
+        """);
+    fold(
+        """
+        function f(param) {
+          return 0;
+          // everything after this is dead code.
+          if (param) {
+            function foo() {}
+            const x = 1;
+            let y;
+            class C {}
+          }
+        }
+        """,
+        """
+        function f(param) {
+          return 0;
+        }
+        """);
+    fold(
+        """
+        function f(param) {
+          if (param) {
+            return 0;
+            const x = 1;
+          }
+          return 1;
+        }
+        """,
+        """
+        function f(param) {
+          if (param) {
+            let x;
+            return 0;
+          }
+          return 1;
+        }
+        """);
   }
 
   @Test
@@ -2020,6 +2130,24 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     test( //
         "while(1) { break; var x=1; var y=1 }", //
         "var y; var x; for(;;) { break }");
+    test( //
+        "while(1) { break; var [x, [[[y]]]] = [];}", //
+        "var y; var x; for(;;) { break }");
+  }
+
+  @Test
+  public void testRemovalRequiresRedeclaration_normalizeDisabled() {
+    disableNormalize();
+    disableComputeSideEffects();
+    test( //
+        "while(1) { break; var x = 1}", //
+        "var x; while (1) { break; }");
+    test( //
+        "while(1) { break; var x=1; var y=1 }", //
+        "var y; var x; while (1) { break; }");
+    test( //
+        "while(1) { break; var [x, [[[y]]]] = [];}", //
+        "var y; var x; while (1) { break; }");
   }
 
   @Test

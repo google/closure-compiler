@@ -16,9 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
@@ -243,5 +246,38 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
         ImmutableList.of(new RenameYToX(), new RemoveParentVarsForNodesNamedX());
 
     test("var y; var z;", "var z;");
+  }
+
+  @Test
+  public void testAddFeatureToEnclosingScript() {
+    currentPeepholePasses =
+        ImmutableList.of(
+            new AbstractPeepholeOptimization() {
+              @Override
+              public Node optimizeSubtree(Node node) {
+                if (node.isAdd()) {
+                  this.addFeatureToEnclosingScript(node, Feature.LET_DECLARATIONS);
+                  this.addFeatureToEnclosingScript(node, Feature.LET_DECLARATIONS);
+                  this.addFeatureToEnclosingScript(node, Feature.CLASSES);
+                }
+                return node;
+              }
+            },
+            new AbstractPeepholeOptimization() {
+              @Override
+              public Node optimizeSubtree(Node node) {
+                if (node.isAdd()) {
+                  this.addFeatureToEnclosingScript(node, Feature.CONST_DECLARATIONS);
+                }
+                return node;
+              }
+            });
+    testSame("(3 + 4);");
+    Compiler compiler = getLastCompiler();
+    Node script = checkNotNull(compiler.getScriptNode("testcode"));
+    assertThat(script.getProp(Node.FEATURE_SET))
+        .isEqualTo(
+            FeatureSet.BARE_MINIMUM.with(
+                Feature.LET_DECLARATIONS, Feature.CLASSES, Feature.CONST_DECLARATIONS));
   }
 }
