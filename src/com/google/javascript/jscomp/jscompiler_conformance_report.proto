@@ -1,0 +1,98 @@
+edition = "2023";
+
+package jscomp;
+
+import "third_party/java_src/jscomp/java/com/google/javascript/jscomp/conformance.proto";
+
+option features.utf8_validation = VERIFY;
+option java_package = "com.google.javascript.jscomp";
+option java_multiple_files = true;
+option go_api_flag = "OPEN_TO_OPAQUE_HYBRID";  // needed for http://go/go-api-flag
+
+/**
+ * A conformance report output by JSCompiler. A report of this format is
+ * generated when any of the following are built:
+ *
+ * <ul>
+ * <li> MSS binaries (via JsConformance action) - to be deprecated soon,
+ * <li> `js_binary`s (via JsConformance action) - to be deprecated soon,
+ * <li> `js_library`s (via CheckJS action),
+ * <li> `raw_js_library`s (via CheckJS action)
+ * </ul>
+ *
+ * <p>For binary builds, it replaces the existing proto definition
+ * `JsCompilerOutputReport` which contained fields related to conformance as
+ * well as go/js-signal. It is defined in
+ * security/signals/jscompiler_signals.proto. Instead of
+ * `JsCompilerOutputReport`, this proto definition will be used to populate a
+ * conformance report at the binary level via the `JSConformance` action.
+ *
+ * <p>For go/jscp, this proto definition will be used to populate a conformance
+ * report at the library level via the CheckJS action. It will contain only the
+ * `global` violations that are seen in the library but are allowlisted.
+ */
+
+message JsCompilerConformanceReportWrapper {
+  /**
+   * This message format is used for several things.
+   *
+   * <ul>
+   * <li> TSC (tsc_wrapped.js) to log the "tsetse" conformance violations.
+   * <li> go/jscp (CheckJS) to log the allowlisted "global" violations.
+   * <li> MSS binaries as .mss.conformance to log the allowlisted "custom"
+   * conformance violations -
+   * http://google3/apps/framework/modulesets/builddefs/js_compilation_rules.bzl;l=1609;rcl=738576997.
+   * This will soon be deprecated in favor of the `per_library_report`
+   * containing Boq Web conformance violations.
+   * </ul>
+   *
+   * <p>This report contains only the allowlisted violations.
+   */
+  JsCompilerConformanceReport main_report = 1;
+
+  /**
+   * The report contains all the Boq Web violations seen in the library,
+   * including the non-allowlisted ones.
+   */
+  JsCompilerConformanceReport
+      library_level_boq_web_conformance_checks_only_report = 2;
+}
+
+message JsCompilerConformanceReport {
+  // Represents two different things depending on whether the report is a
+  // JSConformance report(via JsCompilerRunner), or a tsetse conformance
+  // report (via TSC). For JsCompilerRunner, the filename field gets set to
+  // the output .js filepath or the chunk name if this is a chunk (also called
+  // a "module") that is passed to the JSCompilerRunner. It may be set to
+  // /dev/stdout to indicate output was written to stdout. For tsetse
+  // reporting, the filename field gets set to the violations report path
+  // itself (see logTsetseFindings() in
+  // google3/third_party/bazel_rules/rules_typescript/internal/tsc_wrapped/tsc_wrapped.ts).
+  // TODO(b/393659358): consider using proto oneof for this field
+  string filename = 1;
+
+  // If true, indicates that not all requested JSConformance checks were run
+  // and reported.
+  bool unanalyzed = 2 [features.field_presence = EXPLICIT];
+
+  message ConformanceViolation {
+    // Requirement that was violated. It holds a reference to the conformance
+    // config file that defined the requirement. It also holds a reference to
+    // the allowlist_entry containing all files that are allowed to violate
+    // the requirement.
+    Requirement requirement = 1;
+    Requirement.WhitelistEntry allowlist_entry = 2;
+    // The path to the file that contained the violation.
+    string path = 3;
+    int32 line_no = 4;
+    int32 col_no = 5;
+    string rule_id = 6;
+  }
+
+  // If the report comes from a raw_js_library, the name of the
+  // wrapping_raw.js file.
+  string wrapping_raw_js_file_name = 3;
+
+  // The list of conformance violations found in the library.
+  repeated ConformanceViolation violations = 4;
+}
