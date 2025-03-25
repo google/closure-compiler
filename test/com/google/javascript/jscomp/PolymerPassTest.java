@@ -507,7 +507,7 @@ public class PolymerPassTest extends CompilerTestCase {
             export {PI};
             """),
         expected(
-            """
+"""
 /** @constructor @extends {PolymerElement} @implements {PolymerXElementElementInterface$m1176578414$0} */
 var XElementElement = function() {};
 """,
@@ -1739,7 +1739,7 @@ var XElementElement = function() {};
 
     test(
         js,
-        """
+"""
 /** @const */ var a = {};
 /** @constructor @extends {PolymerElement} @implements {Polymera_BInterface$m1146332801$0} */
 a.B = function() {};
@@ -5509,7 +5509,7 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
             """),
         expected(
             TestExternsBuilder.getClosureExternsAsSource(),
-            """
+"""
 /**
  * @constructor
  * @extends {PolymerElement}
@@ -5561,11 +5561,11 @@ PtTestComponentElement.prototype._abc = function() {
     Expected expected = null;
     ArrayList<TestPart> modifiedTestParts = new ArrayList<>();
     for (TestPart testPart : testParts) {
-      if (testPart instanceof Sources) {
-        srcs = (Sources) testPart;
+      if (testPart instanceof Sources sources) {
+        srcs = sources;
         modifiedTestParts.add(srcs);
-      } else if (testPart instanceof Expected) {
-        expected = (Expected) testPart;
+      } else if (testPart instanceof Expected exp) {
+        expected = exp;
       } else {
         modifiedTestParts.add(testPart);
       }

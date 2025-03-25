@@ -607,7 +607,7 @@ public final class SimpleFormat {
   }
 
   private static StringBuilder toStringBuilder(CharSequence cs) {
-    return cs instanceof StringBuilder ? (StringBuilder) cs : new StringBuilder(cs);
+    return cs instanceof StringBuilder stringBuilder ? stringBuilder : new StringBuilder(cs);
   }
 
   private StringBuilder wrapParentheses(StringBuilder result) {
@@ -693,11 +693,10 @@ public final class SimpleFormat {
   }
 
   private @Nullable CharSequence transformFromSpecialNumber() {
-    if (!(arg instanceof Number)) {
+    if (!(arg instanceof Number number)) {
       return null;
     }
 
-    Number number = (Number) arg;
     double d = number.doubleValue();
     String source = null;
     if (Double.isNaN(d)) {
@@ -740,8 +739,8 @@ public final class SimpleFormat {
     {
       if (arg instanceof Long l) {
         date = new Date(l.longValue());
-      } else if (arg instanceof Date) {
-        date = (Date) arg;
+      } else if (arg instanceof Date d) {
+        date = d;
       } else {
         throw badArgumentType();
       }

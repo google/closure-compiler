@@ -115,8 +115,8 @@ class ReplaceIdGenerators implements CompilerPass {
       for (Entry<String, RenamingMap> gen : idGens.entrySet()) {
         String name = gen.getKey();
         RenamingMap map = gen.getValue();
-        if (map instanceof RenamingToken) {
-          switch ((RenamingToken) map) {
+        if (map instanceof RenamingToken renamingToken) {
+          switch (renamingToken) {
             case DISABLE:
               nameGenerators.put(name, null);
               continue; // don't put an entry in idGeneratorsMap

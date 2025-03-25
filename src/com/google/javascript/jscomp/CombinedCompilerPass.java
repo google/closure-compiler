@@ -96,10 +96,10 @@ final class CombinedCompilerPass implements CompilerPass, ScopedCallback {
 
     private CallbackWrapper(NodeTraversal.Callback callback) {
       this.callback = callback;
-      if (callback instanceof ScopedCallback) {
-        scopedCallback = (ScopedCallback) callback;
+      if (callback instanceof ScopedCallback scopedCallback) {
+        this.scopedCallback = scopedCallback;
       } else {
-        scopedCallback = null;
+        this.scopedCallback = null;
       }
     }
 

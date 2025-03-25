@@ -212,8 +212,8 @@ final class EqualityChecker {
     }
 
     // TODO(nickreid): Delete `ArrowType` as not a type, or add `toMaybeArrow`.
-    if (left instanceof ArrowType && right instanceof ArrowType) {
-      return this.areArrowEqual((ArrowType) left, (ArrowType) right);
+    if (left instanceof ArrowType leftArrow && right instanceof ArrowType rightArrow) {
+      return this.areArrowEqual(leftArrow, rightArrow);
     }
 
     if (!this.areTypeMapEqual(left.getTemplateTypeMap(), right.getTemplateTypeMap())) {
@@ -247,11 +247,11 @@ final class EqualityChecker {
      *
      * <p>Remember that `TemplateType` has identity semantics and shouldn't be unwrapped.
      */
-    if (left instanceof ProxyObjectType && !(left instanceof TemplateType)) {
-      return this.areEqualCaching(((ProxyObjectType) left).getReferencedTypeInternal(), right);
+    if (left instanceof ProxyObjectType proxyObjectType && !(left instanceof TemplateType)) {
+      return this.areEqualCaching(proxyObjectType.getReferencedTypeInternal(), right);
     }
-    if (right instanceof ProxyObjectType && !(right instanceof TemplateType)) {
-      return this.areEqualCaching(left, ((ProxyObjectType) right).getReferencedTypeInternal());
+    if (right instanceof ProxyObjectType proxyObjectType && !(right instanceof TemplateType)) {
+      return this.areEqualCaching(left, proxyObjectType.getReferencedTypeInternal());
     }
 
     // Relies on the fact right for the base {@link JSType}, only one
@@ -290,8 +290,8 @@ final class EqualityChecker {
   }
 
   private static @Nullable String getGoogModuleId(ObjectType type) {
-    if (type instanceof FunctionType) {
-      return ((FunctionType) type).getGoogModuleId();
+    if (type instanceof FunctionType functionType) {
+      return functionType.getGoogModuleId();
     }
     if (type.getConstructor() != null) {
       return type.getConstructor().getGoogModuleId();
