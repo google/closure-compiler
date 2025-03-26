@@ -26,37 +26,38 @@ import org.junit.runners.JUnit4;
 public class PolymerPassSuppressBehaviorsAndProtectKeysTest extends CompilerTestCase {
 
   private static final String EXTERNS =
-      lines(
-          MINIMAL_EXTERNS,
-          "/** @constructor */",
-          "var HTMLElement = function() {};",
-          "/** @constructor @extends {HTMLElement} */",
-          "var HTMLInputElement = function() {};",
-          "/** @constructor @extends {HTMLElement} */",
-          "var PolymerElement = function() {};",
-          "/** @type {!Object} */",
-          "PolymerElement.prototype.$;",
-          "PolymerElement.prototype.created = function() {};",
-          "PolymerElement.prototype.ready = function() {};",
-          "PolymerElement.prototype.attached = function() {};",
-          "PolymerElement.prototype.domReady = function() {};",
-          "PolymerElement.prototype.detached = function() {};",
-          "/**",
-          " * Call the callback after a timeout. Calling job again with the same name",
-          " * resets the timer but will not result in additional calls to callback.",
-          " *",
-          " * @param {string} name",
-          " * @param {Function} callback",
-          " * @param {number} timeoutMillis The minimum delay in milliseconds before",
-          " *     calling the callback.",
-          " */",
-          "PolymerElement.prototype.job = function(name, callback, timeoutMillis) {};",
-          "/**",
-          " * @param a {!Object}",
-          " * @return {!function()}",
-          " */",
-          "var Polymer = function(a) {};",
-          "var alert = function(msg) {};");
+      MINIMAL_EXTERNS
+          + """
+          /** @constructor */
+          var HTMLElement = function() {};
+          /** @constructor @extends {HTMLElement} */
+          var HTMLInputElement = function() {};
+          /** @constructor @extends {HTMLElement} */
+          var PolymerElement = function() {};
+          /** @type {!Object} */
+          PolymerElement.prototype.$;
+          PolymerElement.prototype.created = function() {};
+          PolymerElement.prototype.ready = function() {};
+          PolymerElement.prototype.attached = function() {};
+          PolymerElement.prototype.domReady = function() {};
+          PolymerElement.prototype.detached = function() {};
+          /**
+           * Call the callback after a timeout. Calling job again with the same name
+           * resets the timer but will not result in additional calls to callback.
+           *
+           * @param {string} name
+           * @param {Function} callback
+           * @param {number} timeoutMillis The minimum delay in milliseconds before
+           *     calling the callback.
+           */
+          PolymerElement.prototype.job = function(name, callback, timeoutMillis) {};
+          /**
+           * @param a {!Object}
+           * @return {!function()}
+           */
+          var Polymer = function(a) {};
+          var alert = function(msg) {};
+          """;
 
   public PolymerPassSuppressBehaviorsAndProtectKeysTest() {
     super(EXTERNS);
