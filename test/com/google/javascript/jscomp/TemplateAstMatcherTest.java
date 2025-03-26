@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
@@ -222,14 +221,15 @@ public final class TemplateAstMatcherTest {
     TestNodePair pair =
         compile(
             "",
-            lines(
-                "",
-                "/**",
-                " * @param {" + modifier + "Some.Missing.Type} foo",
-                " */",
-                "function template(foo) {",
-                "  foo;",
-                "}"),
+            """
+            /**
+             * @param {MODIFIERSome.Missing.Type} foo
+             */
+            function template(foo) {
+              foo;
+            }
+            """
+                .replace("MODIFIER", modifier),
             "'str'");
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot());
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
