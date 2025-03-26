@@ -140,7 +140,7 @@ public final class RewriteLogicalAssignmentOperatorsTest extends CompilerTestCas
             ) {}
             """));
     test(
-        srcs(lines("for (let x = foo; !x[b]; x[b] &&= {}) {}")),
+        srcs("for (let x = foo; !x[b]; x[b] &&= {}) {}"),
         expected(
             """
             let $jscomp$logical$assign$tmpm1146332801$0;
