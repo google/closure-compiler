@@ -215,7 +215,12 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
   @Test
   public void testWindowPropertyWithJsDoc() {
     testSame(
-        externs(lines(MINIMAL_EXTERNS, "var window;", "/** @type {string} */ var x;")),
+        externs(
+            MINIMAL_EXTERNS
+                + """
+                var window;
+                /** @type {string} */ var x;
+                """),
         srcs(
             """
             /** @param {number} n*/
@@ -228,8 +233,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
   @Test
   public void testEnum() {
     testSame(
-        externs(
-            lines(MINIMAL_EXTERNS, "/** @enum {string} */ var Enum = {FOO: 'foo', BAR: 'bar'};")),
+        externs(MINIMAL_EXTERNS + "/** @enum {string} */ var Enum = {FOO: 'foo', BAR: 'bar'};"),
         srcs(
             """
             /** @param {Enum} e*/
@@ -245,7 +249,12 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
   @Test
   public void testConstructorIsSameType() {
     testSame(
-        externs(lines(MINIMAL_EXTERNS, "var window;", "/** @constructor */ function Foo() {}")),
+        externs(
+            MINIMAL_EXTERNS
+                + """
+                var window;
+                /** @constructor */ function Foo() {}
+                """),
         srcs(
             """
             /** @param {!window.Foo} f*/
@@ -254,7 +263,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
             """));
 
     testSame(
-        externs(lines(MINIMAL_EXTERNS, "/** @constructor */ function Foo() {}")),
+        externs(MINIMAL_EXTERNS + "/** @constructor */ function Foo() {}"),
         srcs(
             """
             /** @param {!Foo} f*/
