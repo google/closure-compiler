@@ -32,19 +32,20 @@ import org.junit.runners.JUnit4;
 public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
 
   private static final String EXTERNS =
-      lines(
-          DEFAULT_EXTERNS,
-          "/** @const */ goog.reflect = {};",
-          "goog.reflect.object;",
-          "/** @constructor */",
-          "function Window() {}",
-          "Window.prototype.x;",
-          "Window.prototype.a;",
-          "Window.prototype.ext;",
-          "/** @type {!Window} */ var window;",
-          "function alert(a) {}",
-          "var EXT = {};",
-          "EXT.ext;");
+      DEFAULT_EXTERNS
+          + """
+          /** @const */ goog.reflect = {};
+          goog.reflect.object;
+          /** @constructor */
+          function Window() {}
+          Window.prototype.x;
+          Window.prototype.a;
+          Window.prototype.ext;
+          /** @type {!Window} */ var window;
+          function alert(a) {}
+          var EXT = {};
+          EXT.ext;
+          """;
 
   public CheckUnusedPrivatePropertiesTest() {
     super(EXTERNS);
@@ -323,21 +324,36 @@ public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testConstructorProperty1() {
-    unused("/** @constructor */ function C() {} /** @private */ C.prop = 1;");
+    unused(
+        """
+        /** @constructor */
+        function C() {}
+        /** @private */ C.prop = 1;
+        """);
   }
 
   @Test
   public void testConstructorProperty2() {
     used(
-        "/** @constructor */ function C() {} "
-            + "/** @private */ C.prop = 1; "
-            + "function use(a) { alert(a.prop) }; "
-            + "use(C)");
+        """
+        /** @constructor */
+        function C() {}
+        /** @private */ C.prop = 1;
+        function use(a) {
+          alert(a.prop)
+        };
+        use(C)
+        """);
   }
 
   @Test
   public void testInterfaceProperty() {
-    unused("/** @interface */ function C() {} /** @private */ C.prop = 1;");
+    unused(
+        """
+        /** @interface */
+        function C() {}
+        /** @private */ C.prop = 1;
+        """);
   }
 
   @Test
