@@ -45,16 +45,18 @@ public final class ReportDecoderTest {
     ImmutableMap<String, InstrumentationPoint> mapping =
         ImmutableMap.of("abc1", point1, "def2", point2, "ghi3", point3, "jkl4", point4);
     String fileContent =
+        """
         // point1 used
-        "ist.push('abc1');"
-            // unrelated push that looks like point2
-            + "foo.push('def2');"
-            // point3 used with different quotes
-            + "ist.push(\"ghi3\");"
-            // unknown point
-            + "ist.push('bla');"
-            // point4 but used outside of push
-            + "someCall('jkl14');";
+        ist.push('abc1');
+        // unrelated push that looks like point2
+        foo.push('def2');
+        // point3 used with different quotes
+        ist.push("ghi3");
+        // unknown point
+        ist.push('bla');
+        // point4 but used outside of push
+        someCall('jkl14');
+        """;
 
     ReportProfile profile =
         ReportDecoder.createProfileOfStaticallyUsedCode(mapping, fileContent, "ist");
