@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.deps;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
-import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.deps.JsFileFullParser.FileInfo;
 import com.google.javascript.jscomp.deps.JsFileFullParser.Reporter;
 import org.junit.Test;
@@ -60,7 +59,12 @@ public final class JsFileFullParserTest {
 
   @Test
   public void testModuleType_legacyGoogModule() {
-    FileInfo info = parse("goog.module('foo');", "goog.module.declareLegacyNamespace();");
+    FileInfo info =
+        parse(
+            """
+            goog.module('foo');
+            goog.module.declareLegacyNamespace();
+            """);
     assertThat(info.moduleType).isEqualTo(FileInfo.ModuleType.GOOG_MODULE);
   }
 
@@ -80,10 +84,12 @@ public final class JsFileFullParserTest {
   public void testProvidesRequires() {
     FileInfo info =
         parse(
-            "goog.provide('providedSymbol');",
-            "goog.require('stronglyRequiredSymbol');",
-            "goog.requireType('weaklyRequiredSymbol');",
-            "async function test() {await goog.requireDynamic('dynamicallyRequiredSymbol');}");
+            """
+            goog.provide('providedSymbol');
+            goog.require('stronglyRequiredSymbol');
+            goog.requireType('weaklyRequiredSymbol');
+            async function test() {await goog.requireDynamic('dynamicallyRequiredSymbol');}
+            """);
 
     assertThat(info.provides).containsExactly("providedSymbol");
     assertThat(info.requires).containsExactly("stronglyRequiredSymbol");
@@ -125,18 +131,21 @@ public final class JsFileFullParserTest {
   public void testGoogLoadModule() {
     FileInfo info =
         parse(
-            "goog.loadModule((exports) => {",
-            "  goog.module('inner');",
-            "  const i = goog.require('inner_require');",
-            "  exports = {inner: 1};",
-            "  return exports;",
-            "});",
-            "goog.loadModule((exports) => {",
-            "  goog.module('inner2');",
-            "  const i = goog.require('inner');", // intentional self-edge
-            "  exports = {inner2: 1};",
-            "  return exports;",
-            "});");
+            """
+            goog.loadModule((exports) => {
+              goog.module('inner');
+              const i = goog.require('inner_require');
+              exports = {inner: 1};
+              return exports;
+            });
+            goog.loadModule((exports) => {
+              goog.module('inner2');
+              // intentional self-edge
+              const i = goog.require('inner');
+              exports = {inner2: 1};
+              return exports;
+            });
+            """);
 
     assertThat(info.provides).containsExactly("inner", "inner2");
     assertThat(info.requires).containsExactly("inner", "inner_require");
@@ -146,22 +155,26 @@ public final class JsFileFullParserTest {
   public void testGoogLoadModule_inModule() {
     FileInfo info =
         parse(
-            "goog.module('outer');",
-            "const i = goog.require('outer_require');",
-            "goog.loadModule((exports) => {",
-            "  goog.module('inner');",
-            "  const i = goog.require('inner_require');",
-            "  const i2 = goog.require('outer');", // intentional self-edge
-            "  exports = {inner: 1};",
-            "  return exports;",
-            "});",
-            "goog.loadModule((exports) => {",
-            "  goog.module('inner2');",
-            "  const i = goog.require('inner');", // intentional self-edge
-            "  exports = {inner2: 1};",
-            "  return exports;",
-            "});",
-            "exports = {outer: 1};");
+            """
+            goog.module('outer');
+            const i = goog.require('outer_require');
+            goog.loadModule((exports) => {
+              goog.module('inner');
+              const i = goog.require('inner_require');
+              // intentional self-edge
+              const i2 = goog.require('outer');
+              exports = {inner: 1};
+              return exports;
+            });
+            goog.loadModule((exports) => {
+              goog.module('inner2');
+              // intentional self-edge
+              const i = goog.require('inner');
+              exports = {inner2: 1};
+              return exports;
+            });
+            exports = {outer: 1};
+            """);
 
     assertThat(info.provides).containsExactly("outer", "inner", "inner2");
     assertThat(info.requires).containsExactly("inner", "inner_require", "outer", "outer_require");
@@ -171,22 +184,26 @@ public final class JsFileFullParserTest {
   public void testGoogLoadModule_doubleNested() {
     // NB: we cannot use assertThrows: the bazel CI setup doe not have JUnit 5.
     try {
-      parse(
-          "goog.module('outer');",
-          "const i = goog.require('outer_require');",
-          "goog.loadModule((exports) => {",
-          "  goog.module('inner');",
-          "  goog.loadModule((exports) => {",
-          "    goog.module('inner.inner');",
-          "    exports = {inner2: 1};",
-          "    return exports;",
-          "  });",
-          "  const i = goog.require('inner_require');",
-          "  const i2 = goog.require('outer');", // intentional self-edge
-          "  exports = {inner: 1};",
-          "  return exports;",
-          "});",
-          "exports = {outer: 1};");
+      var ignored =
+          parse(
+              """
+              goog.module('outer');
+              const i = goog.require('outer_require');
+              goog.loadModule((exports) => {
+                goog.module('inner');
+                goog.loadModule((exports) => {
+                  goog.module('inner.inner');
+                  exports = {inner2: 1};
+                  return exports;
+                });
+                const i = goog.require('inner_require');
+                // intentional self-edge
+                const i2 = goog.require('outer');
+                exports = {inner: 1};
+                return exports;
+              });
+              exports = {outer: 1};
+              """);
       throw new RuntimeException("expected an AssertionError");
     } catch (AssertionError e) {
       assertThat(e).hasMessageThat().contains("goog.loadModule cannot be nested");
@@ -195,25 +212,51 @@ public final class JsFileFullParserTest {
 
   @Test
   public void testSoyDeltemplate() {
-    FileInfo info = parse("/**", " * @deltemplate {a}", " * @modName {m}", " */");
+    FileInfo info =
+        parse(
+            """
+            /**
+             * @deltemplate {a}
+             * @modName {m}
+             */
+            """);
     assertThat(info.deltemplates).containsExactly("a");
   }
 
   @Test
   public void testSoyDeltemplate_legacy() {
-    FileInfo info = parse("/**", " * @hassoydeltemplate {a}", " * @modName {m}", " */");
+    FileInfo info =
+        parse(
+            """
+            /**
+             * @hassoydeltemplate {a}
+             * @modName {m}
+             */
+            """);
     assertThat(info.deltemplates).containsExactly("a");
   }
 
   @Test
   public void testSoyDelcall() {
-    FileInfo info = parse("/**", " * @delcall {a}", " */");
+    FileInfo info =
+        parse(
+            """
+            /**
+             * @delcall {a}
+             */
+            """);
     assertThat(info.delcalls).containsExactly("a");
   }
 
   @Test
   public void testSoyDelcall_legacy() {
-    FileInfo info = parse("/**", " * @hassoydelcall {a}", " */");
+    FileInfo info =
+        parse(
+            """
+            /**
+             * @hassoydelcall {a}
+             */
+            """);
     assertThat(info.delcalls).containsExactly("a");
   }
 
@@ -223,9 +266,9 @@ public final class JsFileFullParserTest {
     assertThat(info.readToggles).containsExactly("foo_bar");
   }
 
-  private static FileInfo parse(String... lines) {
+  private static FileInfo parse(String content) {
     return JsFileFullParser.parse(
-        Joiner.on('\n').join(lines),
+        content,
         "file.js",
         (boolean fatal, String message, String sourceName, int line, int lineOffset) ->
             fail(String.format("%s:%d:%d: %s", sourceName, line, lineOffset, message)));
