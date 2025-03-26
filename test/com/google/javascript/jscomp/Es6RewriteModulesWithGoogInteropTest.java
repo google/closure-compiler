@@ -372,7 +372,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
         use(a, a.d, c)
         export {};
         """,
-        """
+"""
 use(module$exports$closure$destructured$module.a, module$exports$closure$destructured$module.a.d,
   module$exports$closure$destructured$module.b);
 /** @const */ var module$testcode = {};
@@ -447,7 +447,7 @@ use(module$exports$closure$destructured$module.a, module$exports$closure$destruc
         use(a, a.d, c)
         export {};
         """,
-        """
+"""
 use(closure.legacy.destructured.module.a, closure.legacy.destructured.module.a.d, closure.legacy.destructured.module.b);
 /** @const */ var module$testcode = {};
 """);
@@ -480,7 +480,7 @@ use(closure.legacy.destructured.module.a, closure.legacy.destructured.module.a.d
   @Test
   public void testGoogModuleGetForGoogModule() {
     testModules(
-        lines("function foo() { const y = goog.module.get('closure.module'); } export {};"),
+        "function foo() { const y = goog.module.get('closure.module'); } export {};",
         """
         function foo$$module$testcode() { const y = module$exports$closure$module; }
         /** @const */ var module$testcode = {};
