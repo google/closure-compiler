@@ -646,11 +646,13 @@ public final class DataFlowAnalysisTest {
   public void testEscaped() {
     assertThat(
             computeEscapedLocals(
-                "function f() {",
-                "    var x = 0; ",
-                "    setTimeout(function() { x++; }); ",
-                "    alert(x);",
-                "}"))
+                """
+                function f() {
+                    var x = 0;
+                    setTimeout(function() { x++; });
+                    alert(x);
+                }
+                """))
         .hasSize(1);
     assertThat(computeEscapedLocals("function f() {var _x}")).hasSize(1);
     assertThat(computeEscapedLocals("function f() {try{} catch(e){}}")).hasSize(1);
@@ -660,13 +662,15 @@ public final class DataFlowAnalysisTest {
   public void testEscapedFunctionLayered() {
     assertThat(
             computeEscapedLocals(
-                "function f() {",
-                "    function ff() {",
-                "        var x = 0; ",
-                "        setTimeout(function() { x++; }); ",
-                "        alert(x);",
-                "    }",
-                "}"))
+                """
+                function f() {
+                    function ff() {
+                        var x = 0;
+                        setTimeout(function() { x++; });
+                        alert(x);
+                    }
+                }
+                """))
         .isEmpty();
   }
 
@@ -691,17 +695,19 @@ public final class DataFlowAnalysisTest {
     // block containing "const value ..." is analyzed, 'x' is not considered an escaped var
     assertThat(
             computeEscapedLocals(
-                "function f() {const value = () => {",
-                "    var x = 0; ",
-                "    setTimeout(function() { x++; }); ",
-                "    alert(x);",
-                " };}"))
+                """
+                function f() {const value = () => {
+                    var x = 0;
+                    setTimeout(function() { x++; });
+                    alert(x);
+                 };}
+                """))
         .isEmpty();
   }
 
   // test computeEscaped helper method that returns the liveness analysis performed by the
   // LiveVariablesAnalysis class
-  public Set<? extends Var> computeEscapedLocals(String... lines) {
+  private Set<? extends Var> computeEscapedLocals(String src) {
     // Set up compiler
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
@@ -709,7 +715,6 @@ public final class DataFlowAnalysisTest {
     compiler.initOptions(options);
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
 
-    String src = CompilerTestCase.lines(lines);
     Node n = compiler.parseTestCode(src).removeFirstChild();
     Node script = new Node(Token.SCRIPT, n);
     script.setInputId(new InputId("test"));
