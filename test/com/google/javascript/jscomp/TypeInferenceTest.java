@@ -22,7 +22,6 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.Streams.stream;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.CompilerTypeTestCase.lines;
 import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
@@ -2977,7 +2976,7 @@ public final class TypeInferenceTest {
     assuming("after", NULL_TYPE);
 
     // When
-    inFunction(lines("let spread = {before, ...obj, after};"));
+    inFunction("let spread = {before, ...obj, after};");
 
     // Then
 
@@ -4192,7 +4191,7 @@ public final class TypeInferenceTest {
   public void constDeclarationWithReturnJSDoc_ignoresUnknownRhsType() {
     assuming("foo", UNKNOWN_TYPE);
 
-    inFunction(lines("/** @return {number} */ const fn = foo;"));
+    inFunction("/** @return {number} */ const fn = foo;");
 
     JSType fooWithInterfaceType = getType("fn");
     assertType(fooWithInterfaceType).isFunctionTypeThat().hasReturnTypeThat().isNumber();
@@ -4208,7 +4207,7 @@ public final class TypeInferenceTest {
 
     // The @constructor JSDoc should declare a new type, and FooExtended should refer to that
     // type instead of the constructor for Foo
-    inFunction(lines("/** @constructor @extends {Foo} */ const FooExtended = mixin();"));
+    inFunction("/** @constructor @extends {Foo} */ const FooExtended = mixin();");
 
     JSType fooWithInterfaceType = getType("FooExtended");
     assertType(fooWithInterfaceType).isNotEqualTo(fooType);
