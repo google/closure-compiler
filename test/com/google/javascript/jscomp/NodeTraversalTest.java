@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
@@ -126,7 +125,7 @@ public final class NodeTraversalTest {
               protected void printSummary() {}
             });
     compiler.initCompilerOptionsIfTesting();
-    String code = lines("a.b.c;");
+    String code = "a.b.c;";
     Node tree = parse(compiler, code);
 
     NodeTraversal.builder().setCompiler(compiler).setCallback(callback).traverse(tree);
