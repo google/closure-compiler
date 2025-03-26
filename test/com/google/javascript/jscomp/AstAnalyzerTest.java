@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.DiagnosticGroups.ES5_STRICT;
 import static com.google.javascript.rhino.Token.ADD;
 import static com.google.javascript.rhino.Token.ARRAYLIT;
@@ -851,7 +850,7 @@ public final class AstAnalyzerTest {
     public void testTypeBasedStringMethodCallSideEffects() {
       ParseHelper helper = new ParseHelper();
 
-      Node xDotReplaceCall = helper.parseFirst(CALL, lines("x.replace(/xyz/g, '');"));
+      Node xDotReplaceCall = helper.parseFirst(CALL, "x.replace(/xyz/g, '');");
       AstAnalyzer astAnalyzer = helper.getAstAnalyzer();
       assertThat(astAnalyzer.functionCallHasSideEffects(xDotReplaceCall)).isTrue();
 
