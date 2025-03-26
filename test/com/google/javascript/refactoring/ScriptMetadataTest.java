@@ -17,7 +17,6 @@
 package com.google.javascript.refactoring;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
@@ -40,10 +39,11 @@ public final class ScriptMetadataTest extends CompilerTestCase {
   @Test
   public void testParsesAliases() {
     testSame(
-        lines(
-            "const Foo = goog.require('a.b.Foo');",
-            "const Bar = goog.requireType('a.b.Bar');",
-            "const Qux = goog.forwardDeclare('a.b.Qux');"));
+        """
+        const Foo = goog.require('a.b.Foo');
+        const Bar = goog.requireType('a.b.Bar');
+        const Qux = goog.forwardDeclare('a.b.Qux');
+        """);
 
     assertThat(this.lastMetadata.getAlias("a.b.Foo")).isEqualTo("Foo");
     assertThat(this.lastMetadata.getAlias("a.b.Bar")).isEqualTo("Bar");
