@@ -882,8 +882,11 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
           "goog.provide('apps.foo.bar.C');"
         },
         new String[] {
-          "/** @const */ var apps={}; /** @const */ apps.foo={}; /** @const */"
-              + " apps.foo.bar={}",
+          """
+          /** @const */ var apps={};
+          /** @const */ apps.foo={};
+          /** @const */ apps.foo.bar={}
+          """,
           "",
           "/** @const */ apps.foo.bar.B = {};",
           "/** @const */ apps.foo.bar.C = {};",
@@ -895,9 +898,11 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
     test(
         srcs("goog.provide('foo.bar.baz');"),
         expected(
-            "/** @const */ var foo = {};"
-                + "/** @const */ foo.bar = {};"
-                + "/** @const */ foo.bar.baz = {};"));
+            """
+            /** @const */ var foo = {};
+            /** @const */ foo.bar = {};
+            /** @const */ foo.bar.baz = {};
+            """));
 
     Node root = getLastCompiler().getRoot();
 
