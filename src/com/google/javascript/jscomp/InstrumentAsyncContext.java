@@ -534,7 +534,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   }
 
   /**
-   * Creates an empty reenter call. The re-returned furst argument is irrelevant, so we just pass a
+   * Creates an empty reenter call. The re-returned first argument is irrelevant, so we just pass a
    * literal zero node, since it should compress well.
    */
   private Node createReenter() {
