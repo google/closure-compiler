@@ -47,7 +47,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   private static final String GOOG_SCOPE_START_BLOCK = "goog.scope(function() {";
   private static final String GOOG_SCOPE_END_BLOCK = "});";
 
-  private static final String EXTERNS = lines(MINIMAL_EXTERNS, "var window;");
+  private static final String EXTERNS = MINIMAL_EXTERNS + "var window;";
 
   private InvalidModuleGetHandling invalidModuleGetHandling;
 
@@ -504,15 +504,16 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     enableTypeCheck();
 
     String externs =
-        lines(
-            MINIMAL_EXTERNS,
-            "/** @const */ var ns = {};",
-            "/** @constructor */",
-            "ns.Foo;",
-            "",
-            "var goog;",
-            "/** @param {function()} fn */",
-            "goog.scope = function(fn) {}");
+        MINIMAL_EXTERNS
+            + """
+            /** @const */ var ns = {};
+            /** @constructor */
+            ns.Foo;
+
+            var goog;
+            /** @param {function()} fn */
+            goog.scope = function(fn) {}
+            """;
 
     String js =
         """
