@@ -625,12 +625,8 @@ public final class ProcessDefinesTest extends CompilerTestCase {
     test(jsdoc + "var name = goog.define('otherName', 1);", jsdoc + "var name = 1");
     test(jsdoc + "const name = goog.define('name', 1);", jsdoc + "const name = 1");
     test(
-        lines(
-            "const ns = {};", //
-            jsdoc + "ns.name = goog.define('ns.name', 1);"),
-        lines(
-            "const ns = {};", //
-            jsdoc + "ns.name = 1;"));
+        "const ns = {};\n" + jsdoc + "ns.name = goog.define('ns.name', 1);",
+        "const ns = {};\n" + jsdoc + "ns.name = 1;");
   }
 
   @Test
@@ -640,7 +636,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
     String jsdoc = "/** @define {number} */\n";
     testError("const name = goog.define('name', 1);", ProcessDefines.MISSING_DEFINE_ANNOTATION);
     testError(
-        lines("const name = {};", jsdoc + "name.two = goog.define('name.2', 1);"),
+        "const name = {};\n" + jsdoc + "name.two = goog.define('name.2', 1);",
         ProcessDefines.INVALID_DEFINE_NAME_ERROR);
     testError(jsdoc + "const x = goog.define();", ClosurePrimitiveErrors.NULL_ARGUMENT_ERROR);
     testError(
