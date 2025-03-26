@@ -1379,8 +1379,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   public void testRewritePropsWhenNotModuleReference() {
     test(
         srcs(
-            SourceFile.fromCode(
-                "other.js", lines("export const name = {}, a = { Type: class {} };")),
+            SourceFile.fromCode("other.js", "export const name = {}, a = { Type: class {} };"),
             SourceFile.fromCode(
                 "testcode",
                 """
