@@ -176,7 +176,7 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   @Test
   public void testNoWarning_missingRequire_sameNestedProvide() throws Exception {
     checkNoWarning(
-        lines("goog.provide('foo');"),
+        "goog.provide('foo');",
         """
         goog.provide('foo.Bar');
         let x = new foo.Bar();
@@ -234,7 +234,7 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   public void testWarning_missingRequire_withParentRequire_fromDifferentFile() throws Exception {
     checkRequireInProvidesFileWarning(
         "a.b.C",
-        lines("goog.provide('a.b');"),
+        "goog.provide('a.b');",
         """
         goog.require('a.b');
         goog.provide('a.b.C');
@@ -417,7 +417,7 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   public void testWarning_missingRequire_forNestedProvide() throws Exception {
     checkRequireWarning(
         "foo.Bar",
-        lines("goog.provide('foo');"),
+        "goog.provide('foo');",
         """
         goog.provide('foo.Bar');
         /** @constructor */
@@ -434,7 +434,7 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   public void testWarning_missingRequire_forNestedProvide_usingProperty() throws Exception {
     checkRequireWarning(
         "foo.bar",
-        lines("goog.provide('foo');"),
+        "goog.provide('foo');",
         """
         goog.provide('foo.bar');
         foo.bar = {};
@@ -564,7 +564,7 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   public void testWarning_missingRequireType_forNestedProvide() throws Exception {
     checkRequireTypeWarning(
         "foo.Bar",
-        lines("goog.provide('foo');"),
+        "goog.provide('foo');",
         """
         goog.provide('foo.Bar');
         /** @constructor */
@@ -581,7 +581,7 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   public void testWarning_missingRequireType_forNestedProvide_usingProperty() throws Exception {
     checkRequireTypeWarning(
         "foo.bar",
-        lines("goog.provide('foo');"),
+        "goog.provide('foo');",
         """
         goog.provide('foo.bar');
         foo.bar = {};
@@ -712,7 +712,7 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   @Test
   public void testNoWarning_missingRequireType_sameNestedProvide() throws Exception {
     checkNoWarning(
-        lines("goog.provide('foo');"),
+        "goog.provide('foo');",
         """
         goog.provide('foo.Bar');
         /** @type {!foo.Bar} */
