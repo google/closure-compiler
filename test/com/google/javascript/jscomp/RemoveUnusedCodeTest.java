@@ -2220,21 +2220,21 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
         var a; var b
         [a, b] = [1, 2]
         """,
-        lines("[] = [1, 2]"));
+        "[] = [1, 2]");
 
     test(
         """
         var b; var a
         [a, b] = [1, 2]
         """,
-        lines("[] = [1, 2]"));
+        "[] = [1, 2]");
 
     test(
         """
         var a; var b;
         [a] = [1]
         """,
-        lines("[] = [1]"));
+        "[] = [1]");
 
     testSame("var [a, b] = [1, 2]; alert(a); alert(b);");
   }
@@ -2411,8 +2411,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     }
 
     @CanIgnoreReturnValue
-    PolyfillRemovalTester inputSourceLines(String... srcLines) {
-      inputSource = lines(srcLines);
+    PolyfillRemovalTester inputSource(String inputSource) {
+      this.inputSource = inputSource;
       // Force updates for the expected output source and polyfills
       expectedSource = null;
       polyfillsExpectedToBeRemoved = null;
@@ -2427,8 +2427,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     }
 
     @CanIgnoreReturnValue
-    PolyfillRemovalTester expectSourceLines(String... expectedLines) {
-      expectedSource = lines(expectedLines);
+    PolyfillRemovalTester expectSource(String expectedSource) {
+      this.expectedSource = expectedSource;
       return this;
     }
 
@@ -2482,14 +2482,14 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
     void expectNoRemovalTest(String src) {
       /* no polyfills removed */
-      inputSourceLines(src) //
+      inputSource(src) //
           .expectSourceUnchanged()
           .expectNoPolyfillsRemoved()
           .test();
     }
 
     void expectPolyfillsRemovedTest(String src, String... removedPolyfills) {
-      inputSourceLines(src) //
+      inputSource(src) //
           .expectSourceUnchanged()
           .expectPolyfillsRemoved(removedPolyfills)
           .test();
@@ -2964,8 +2964,12 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
     // Removes polyfills that are only referenced in other (removed) polyfills' definitions.
     tester
-        .inputSourceLines("function unused() { new Set(); }", "console.log();")
-        .expectSourceLines("console.log();")
+        .inputSource(
+            """
+            function unused() { new Set(); }
+            console.log();
+            """)
+        .expectSource("console.log();")
         // Unused method gets removed, allowing all 3 polyfills to be removed.
         .expectPolyfillsRemoved(weakMapPolyfill, mapPolyfill, setPolyfill)
         .test();
@@ -3677,5 +3681,4 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
         console.log(arr)
         """);
   }
- 
 }
