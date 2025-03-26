@@ -38,6 +38,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
@@ -157,6 +158,8 @@ final class ClosureRewriteModule implements CompilerPass {
   private static final Node GOOG_MODULE = IR.getprop(IR.name("goog"), "module");
   private static final Node GOOG_MODULE_DECLARELEGACYNAMESPACE =
       IR.getprop(GOOG_MODULE, "declareLegacyNamespace");
+  private static final QualifiedName GOOG_MODULE_PREVENTMODULEEXPORTSEALING =
+      QualifiedName.of("goog.module.preventModuleExportSealing");
   private static final Node GOOG_MODULE_GET = IR.getprop(GOOG_MODULE.cloneTree(), "get");
   private static final Node GOOG_PROVIDE = IR.getprop(IR.name("goog"), "provide");
   private static final Node GOOG_REQUIRE = IR.getprop(IR.name("goog"), "require");
@@ -480,6 +483,8 @@ final class ClosureRewriteModule implements CompilerPass {
             updateGoogRequire(t, n);
           } else if (method.matchesQualifiedName(GOOG_FORWARDDECLARE) && !parent.isExprResult()) {
             updateGoogForwardDeclare(t, n);
+          } else if (GOOG_MODULE_PREVENTMODULEEXPORTSEALING.matches(method)) {
+            updateGoogPreventModuleExportsSealing(n);
           }
           break;
 
@@ -1055,7 +1060,6 @@ final class ClosureRewriteModule implements CompilerPass {
       currentScript.defaultExportLocalName = localName;
       recordExportToInline(defaultExport);
     }
-
   }
 
   private void updateModuleBodyEarly(Node moduleScopeRoot) {
@@ -1094,6 +1098,10 @@ final class ClosureRewriteModule implements CompilerPass {
   }
 
   private static void updateGoogDeclareLegacyNamespace(Node call) {
+    NodeUtil.getEnclosingStatement(call).detach();
+  }
+
+  private static void updateGoogPreventModuleExportsSealing(Node call) {
     NodeUtil.getEnclosingStatement(call).detach();
   }
 

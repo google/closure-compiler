@@ -995,6 +995,13 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRemovesPreventModuleExportSealing() {
+    test(
+        "goog.module('ns.a'); goog.module.preventModuleExportSealing();",
+        "/** @const */ var module$exports$ns$a = {};");
+  }
+
+  @Test
   public void testSideEffectOnlyModuleImport() {
     test(
         srcs(

@@ -43,6 +43,7 @@ public class TestExternsBuilder {
           "/** @const */ var goog = {};",
           "goog.module = function(ns) {};",
           "goog.module.declareLegacyNamespace = function() {};",
+          "goog.module.preventModuleExportSealing = function() {};",
           "/** @return {?} */",
           "goog.module.get = function(ns) {};",
           "goog.provide = function(ns) {};",
