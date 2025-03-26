@@ -54,25 +54,26 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   private ImmutableList<String> functionsToInspect;
 
   private static final String EXTERNS =
-      lines(
-          MINIMAL_EXTERNS,
-          "var goog = {};",
-          "goog.debug = {};",
-          "/** @constructor */",
-          "goog.debug.Trace = function() {};",
-          "goog.debug.Trace.startTracer = function (var_args) {};",
-          "/** @constructor */",
-          "goog.debug.Logger = function() {};",
-          "goog.debug.Logger.prototype.info = function(msg, opt_ex) {};",
-          "/**",
-          " * @param {?} name",
-          " * @return {!goog.debug.Logger}",
-          " */",
-          "goog.debug.Logger.getLogger = function(name){};",
-          "goog.log = {}",
-          "goog.log.getLogger = function(name){};",
-          "goog.log.info = function(logger, msg, opt_ex) {};",
-          "goog.log.multiString = function(logger, replace1, replace2, keep) {};");
+      MINIMAL_EXTERNS
+          + """
+          var goog = {};
+          goog.debug = {};
+          /** @constructor */
+          goog.debug.Trace = function() {};
+          goog.debug.Trace.startTracer = function (var_args) {};
+          /** @constructor */
+          goog.debug.Logger = function() {};
+          goog.debug.Logger.prototype.info = function(msg, opt_ex) {};
+          /**
+           * @param {?} name
+           * @return {!goog.debug.Logger}
+           */
+          goog.debug.Logger.getLogger = function(name){};
+          goog.log = {}
+          goog.log.getLogger = function(name){};
+          goog.log.info = function(logger, msg, opt_ex) {};
+          goog.log.multiString = function(logger, replace1, replace2, keep) {};
+          """;
 
   public ReplaceStringsTest() {
     super(EXTERNS);
