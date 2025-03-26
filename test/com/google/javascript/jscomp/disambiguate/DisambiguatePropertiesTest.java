@@ -590,33 +590,37 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     for (String annotation : annotations) {
       test(
           srcs(
-              lines(
-                  "class Foo0 {",
-                  "  k() { }",
-                  "  t() { }",
-                  "}",
-                  "class Foo1 {",
-                  "  k() { }",
-                  "  t() { }",
-                  "}",
-                  "",
-                  "function mix(/** " + annotation + " */ x) {",
-                  "  x.k();",
-                  "}")),
+              """
+              class Foo0 {
+                k() { }
+                t() { }
+              }
+              class Foo1 {
+                k() { }
+                t() { }
+              }
+
+              function mix(/** ANNOTATION */ x) {
+                x.k();
+              }
+              """
+                  .replace("ANNOTATION", annotation)),
           expected(
-              lines(
-                  "class Foo0 {",
-                  "  k() { }",
-                  "  JSC$1_t() { }",
-                  "}",
-                  "class Foo1 {",
-                  "  k() { }",
-                  "  JSC$3_t() { }",
-                  "}",
-                  "",
-                  "function mix(/** " + annotation + " */ x) {",
-                  "  x.k();",
-                  "}")));
+              """
+              class Foo0 {
+                k() { }
+                JSC$1_t() { }
+              }
+              class Foo1 {
+                k() { }
+                JSC$3_t() { }
+              }
+
+              function mix(/** ANNOTATION */ x) {
+                x.k();
+              }
+              """
+                  .replace("ANNOTATION", annotation)));
     }
   }
 
