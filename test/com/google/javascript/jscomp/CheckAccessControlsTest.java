@@ -692,7 +692,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   public void testPrivateAccessForProperties2() {
     test(
         srcs(
-            lines("class Foo {}"),
+            "class Foo {}",
             """
             Foo.prototype.bar_ = function() {};
             Foo.prototype.baz = function() { this.bar_(); };
@@ -713,7 +713,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
               bar_() {}
             }
             """,
-            lines("Foo.prototype.baz = function() { this.bar_(); };")),
+            "Foo.prototype.baz = function() { this.bar_(); };"),
         error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
@@ -1011,7 +1011,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
               bar_() {}
             }
             """,
-            lines("SubFoo.prototype.baz = function() { this.bar_(); }")),
+            "SubFoo.prototype.baz = function() { this.bar_(); }"),
         error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
@@ -1048,7 +1048,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
             /** @private */
             Foo.prototype.bar_ = 3;
             """,
-            lines("new Foo().bar_;")),
+            "new Foo().bar_;"),
         error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
@@ -1062,7 +1062,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
             /** @private */
             Foo.prototype.bar_ = function() {};
             """,
-            lines("new Foo().bar_;")),
+            "new Foo().bar_;"),
         error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
@@ -1076,7 +1076,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
               get bar_() { return 1; }
             }
             """,
-            lines("var a = new Foo().bar_;")),
+            "var a = new Foo().bar_;"),
         error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
@@ -1090,7 +1090,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
               set bar_(x) { this.barValue = x; }
             }
             """,
-            lines("new Foo().bar_ = 1;")),
+            "new Foo().bar_ = 1;"),
         error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
@@ -1122,7 +1122,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
               constructor() { }
             }
             """,
-            lines("new Foo();")),
+            "new Foo();"),
         error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
@@ -1136,7 +1136,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
               constructor() { }
             }
             """,
-            lines("class SubFoo extends Foo { }")),
+            "class SubFoo extends Foo { }"),
         error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
@@ -1148,7 +1148,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
             /** @private */
             class Foo { }
             """,
-            lines("Foo")),
+            "Foo"),
         error(BAD_PRIVATE_GLOBAL_ACCESS));
   }
 
@@ -1182,7 +1182,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
               bar
             }
             """,
-            lines("new Foo().bar")),
+            "new Foo().bar"),
         error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
@@ -1196,7 +1196,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
               bar = 2
             }
             """,
-            lines("new Foo().bar = 4")),
+            "new Foo().bar = 4"),
         error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
@@ -1247,7 +1247,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
             (new Foo).bar();
             """,
-            lines("Foo.prototype.baz = function() { this.bar(); };")));
+            "Foo.prototype.baz = function() { this.bar(); };"));
   }
 
   @Test
@@ -1779,7 +1779,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
               /** @protected */ constructor() {}
             }
             """,
-            lines("class OtherFoo extends Foo { }")));
+            "class OtherFoo extends Foo { }"));
   }
 
   @Test
@@ -1985,7 +1985,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
             /** @protected */
             Foo.prototype.bar = 3;
             """,
-            lines("new Foo().bar;")),
+            "new Foo().bar;"),
         error(BAD_PROTECTED_PROPERTY_ACCESS));
   }
 
@@ -1999,7 +1999,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
             /** @protected */
             Foo.prototype.bar = function() {};
             """,
-            lines("new Foo().bar();")),
+            "new Foo().bar();"),
         error(BAD_PROTECTED_PROPERTY_ACCESS));
   }
 
@@ -3238,7 +3238,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
             class SubFoo extends Foo { }
             """,
             // So we get no warning for using it here.
-            lines("new SubFoo();")));
+            "new SubFoo();"));
   }
 
   @Test
@@ -3262,7 +3262,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 /** @public */ // The class must be visible.
                 class SubFoo extends Foo { }
                 """),
-            SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), lines("new SubFoo();"))),
+            SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "new SubFoo();")),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
@@ -3284,7 +3284,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
             }
             """,
             // So we get no warning for using it here.
-            lines("new SubFoo();")));
+            "new SubFoo();"));
   }
 
   @Test
@@ -3314,7 +3314,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"), //
-                lines("new SubFoo();"))),
+                "new SubFoo();")),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
@@ -3454,7 +3454,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
               static create() { return new Foo(); }
             }
             """,
-            lines("Foo.create()")),
+            "Foo.create()"),
         error(BAD_PRIVATE_GLOBAL_ACCESS));
   }
 
@@ -3468,7 +3468,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
               static create() { return new goog.Foo(); }
             }
             """,
-            lines("goog.Foo.create()")),
+            "goog.Foo.create()"),
         error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
@@ -3482,7 +3482,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
               constructor() {}
             };
             """,
-            lines("goog instanceof goog.Foo")));
+            "goog instanceof goog.Foo"));
   }
 
   @Test
