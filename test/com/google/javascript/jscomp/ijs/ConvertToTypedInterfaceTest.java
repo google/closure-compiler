@@ -520,19 +520,30 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   public void testThisPropertiesInConstructors() {
     test(
         "/** @constructor */ function Foo() { /** @const {number} */ this.x; }",
-        "/** @constructor */ function Foo() {} \n /** @const {number} */ Foo.prototype.x");
+        """
+        /** @constructor */ function Foo() {}
+        /** @const {number} */ Foo.prototype.x
+        """);
 
     test(
         "/** @constructor */ function Foo() { this.x = undefined; }",
-        "/** @constructor */ function Foo() {} \n /** @const {UnusableType} */ Foo.prototype.x;");
+        """
+        /** @constructor */ function Foo() {}
+        /** @const {UnusableType} */ Foo.prototype.x;
+        """);
 
     test(
         "/** @constructor */ function Foo() { /** @type {?number} */ this.x = null; this.x = 5; }",
-        "/** @constructor */ function Foo() {} \n /** @type {?number} */ Foo.prototype.x;");
+        """
+        /** @constructor */ function Foo() {}
+        /** @type {?number} */ Foo.prototype.x;
+        """);
 
     test(
         "/** @constructor */ function Foo() { /** @const */ this.x = cond ? true : 5; }",
-        "/** @constructor */ function Foo() {}  /** @const {UnusableType} */ Foo.prototype.x;",
+        """
+        /** @constructor */ function Foo() {} /** @const {UnusableType} */ Foo.prototype.x;
+        """,
         warning(ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
   }
 
@@ -550,21 +561,30 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         /** @constructor */ function Foo() { this.x = null; }
         /** @type {?number} */ Foo.prototype.x = 5;
         """,
-        "/** @constructor */ function Foo() {} \n /** @type {?number} */ Foo.prototype.x;");
+        """
+        /** @constructor */ function Foo() {}
+        /** @type {?number} */ Foo.prototype.x;
+        """);
 
     test(
         """
         /** @constructor */ function Foo() { this.x = null; }
         /** @type {?number} */ Foo.prototype.x;
         """,
-        "/** @constructor */ function Foo() {} \n /** @type {?number} */ Foo.prototype.x;");
+        """
+        /** @constructor */ function Foo() {}
+        /** @type {?number} */ Foo.prototype.x;
+        """);
 
     test(
         """
         /** @constructor */ function Foo() { this.x = null; }
         Foo.prototype.x = 5;
         """,
-        "/** @constructor */ function Foo() {} \n /** @const {UnusableType} */ Foo.prototype.x;");
+        """
+        /** @constructor */ function Foo() {}
+        /** @const {UnusableType} */ Foo.prototype.x;
+        """);
   }
 
   @Test
@@ -1787,7 +1807,6 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     test(
         "class Foo { constructor() { /** @type {number} */ this.num = 5;} }",
         "class Foo { constructor() {} } /** @type {number} */ Foo.prototype.num;");
-
   }
 
   @Test
