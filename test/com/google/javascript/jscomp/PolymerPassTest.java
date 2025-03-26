@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.PolymerClassRewriter.POLYMER_ELEMENT_PROP_CONFIG;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_CLASS_PROPERTIES_INVALID;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_CLASS_PROPERTIES_NOT_STATIC;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_DESCRIPTOR_NOT_VALID;
@@ -44,16 +43,17 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class PolymerPassTest extends CompilerTestCase {
   private static final String EXTERNS_PREFIX =
-      lines(
-          MINIMAL_EXTERNS,
-          "/** @constructor */",
-          "var Element = function() {};",
-          "/** @constructor @extends {Element} */",
-          "var HTMLElement = function() {};",
-          "/** @constructor @extends {HTMLElement} */",
-          "var HTMLInputElement = function() {};",
-          "/** @constructor @extends {HTMLElement} */",
-          "var PolymerElement = function() {};");
+      MINIMAL_EXTERNS
+          + """
+          /** @constructor */
+          var Element = function() {};
+          /** @constructor @extends {Element} */
+          var HTMLElement = function() {};
+          /** @constructor @extends {HTMLElement} */
+          var HTMLInputElement = function() {};
+          /** @constructor @extends {HTMLElement} */
+          var PolymerElement = function() {};
+          """;
 
   private static final String EXTERNS_SUFFIX =
       """
@@ -108,28 +108,29 @@ public class PolymerPassTest extends CompilerTestCase {
       """;
 
   private static final String INPUT_EXTERNS =
-      lines(
-          EXTERNS_PREFIX,
-          "/** @constructor @extends {HTMLInputElement} */",
-          "var PolymerInputElement = function() {};",
-          "/** @type {!Object} */",
-          "PolymerInputElement.prototype.$;",
-          "PolymerInputElement.prototype.created = function() {};",
-          "PolymerInputElement.prototype.ready = function() {};",
-          "PolymerInputElement.prototype.attached = function() {};",
-          "PolymerInputElement.prototype.domReady = function() {};",
-          "PolymerInputElement.prototype.detached = function() {};",
-          "/**",
-          " * Call the callback after a timeout. Calling job again with the same name",
-          " * resets the timer but will not result in additional calls to callback.",
-          " *",
-          " * @param {string} name",
-          " * @param {Function} callback",
-          " * @param {number} timeoutMillis The minimum delay in milliseconds before",
-          " *     calling the callback.",
-          " */",
-          "PolymerInputElement.prototype.job = function(name, callback, timeoutMillis) {};",
-          EXTERNS_SUFFIX);
+      EXTERNS_PREFIX
+          + """
+          /** @constructor @extends {HTMLInputElement} */
+          var PolymerInputElement = function() {};
+          /** @type {!Object} */
+          PolymerInputElement.prototype.$;
+          PolymerInputElement.prototype.created = function() {};
+          PolymerInputElement.prototype.ready = function() {};
+          PolymerInputElement.prototype.attached = function() {};
+          PolymerInputElement.prototype.domReady = function() {};
+          PolymerInputElement.prototype.detached = function() {};
+          /**
+           * Call the callback after a timeout. Calling job again with the same name
+           * resets the timer but will not result in additional calls to callback.
+           *
+           * @param {string} name
+           * @param {Function} callback
+           * @param {number} timeoutMillis The minimum delay in milliseconds before
+           *     calling the callback.
+           */
+          PolymerInputElement.prototype.job = function(name, callback, timeoutMillis) {};
+          """
+          + EXTERNS_SUFFIX;
 
   private static final String REFLECT_OBJECT_DEF =
       """
@@ -144,7 +145,7 @@ public class PolymerPassTest extends CompilerTestCase {
       $jscomp.reflectObject = function (type, object) {};
       """;
 
-  private static final String EXTERNS = lines(EXTERNS_PREFIX, EXTERNS_SUFFIX, REFLECT_OBJECT_DEF);
+  private static final String EXTERNS = EXTERNS_PREFIX + EXTERNS_SUFFIX + REFLECT_OBJECT_DEF;
 
   public PolymerPassTest() {
     super(EXTERNS);
@@ -217,14 +218,15 @@ public class PolymerPassTest extends CompilerTestCase {
             })
             """),
         expected(
-            lines(
-                "/**",
-                " * @constructor",
-                " * @extends {PolymerElement}",
-                " * @implements {PolymerYtuIconElementInterface$m1176578414$0}",
-                " */",
-                "  var YtuIconElement = function(){}",
-                TestExternsBuilder.getClosureExternsAsSource()),
+            """
+            /**
+             * @constructor
+             * @extends {PolymerElement}
+             * @implements {PolymerYtuIconElementInterface$m1176578414$0}
+             */
+              var YtuIconElement = function(){}
+            """
+                + TestExternsBuilder.getClosureExternsAsSource(),
             """
             goog.loadModule(function(exports) {
             goog.module('ytu.app.ui.shared.YtuIcon');
@@ -364,11 +366,15 @@ public class PolymerPassTest extends CompilerTestCase {
             });
             """),
         expected(
-            lines(
-                "/** @constructor @extends {PolymerElement} @implements"
-                    + " {PolymerXElementElementInterface$m1176578414$0} */",
-                "var XElementElement = function() {};",
-                TestExternsBuilder.getClosureExternsAsSource()),
+            """
+            /**
+             * @constructor
+             * @extends {PolymerElement}
+             * @implements {PolymerXElementElementInterface$m1176578414$0}
+             */
+            var XElementElement = function() {};
+            """
+                + TestExternsBuilder.getClosureExternsAsSource(),
             """
             goog.module('mod');
             Polymer(/** @lends {XElementElement.prototype} */ {
@@ -381,13 +387,14 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testGeneratesCodeAfterGoogRequire_WithLegacyNamespace() {
     test(
         srcs(
-            lines(
-                TestExternsBuilder.getClosureExternsAsSource(),
-                "goog.provide('a.UnpluggedCancelOfferRenderer');",
-                "goog.provide('a.b');",
-                "/** @constructor */",
-                "a.UnpluggedCancelOfferRenderer = function() {",
-                "};"),
+            TestExternsBuilder.getClosureExternsAsSource()
+                + """
+                goog.provide('a.UnpluggedCancelOfferRenderer');
+                goog.provide('a.b');
+                /** @constructor */
+                a.UnpluggedCancelOfferRenderer = function() {
+                };
+                """,
             """
             goog.module('a.mod');
             exports.Property = 'a property';
@@ -403,16 +410,18 @@ public class PolymerPassTest extends CompilerTestCase {
             data:Object}});
             """),
         expected(
-            lines(
-                "/**",
-                " * @constructor @extends {PolymerElement}",
-                " * @implements {PolymerYtuCancelOfferElementInterface$m1176578413$0} ",
-                " */",
-                "var YtuCancelOfferElement = function() {};",
-                TestExternsBuilder.getClosureExternsAsSource(),
-                "goog.provide('a.UnpluggedCancelOfferRenderer');",
-                "goog.provide('a.b');",
-                "/** @constructor */ a.UnpluggedCancelOfferRenderer = function() {};"),
+            """
+            /**
+             * @constructor @extends {PolymerElement}
+             * @implements {PolymerYtuCancelOfferElementInterface$m1176578413$0}
+             */
+            var YtuCancelOfferElement = function() {};
+            CLOSURE_EXTERNS
+            goog.provide('a.UnpluggedCancelOfferRenderer');
+            goog.provide('a.b');
+            /** @constructor */ a.UnpluggedCancelOfferRenderer = function() {};
+            """
+                .replace("CLOSURE_EXTERNS", TestExternsBuilder.getClosureExternsAsSource()),
             """
             goog.module('a.mod');
             exports.Property = 'a property';
@@ -434,12 +443,13 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testGeneratesCodeAfterGoogRequire_WithSetTestOnly() {
     test(
         srcs(
-            lines(
-                TestExternsBuilder.getClosureExternsAsSource(),
-                "goog.provide('a.UnpluggedCancelOfferRenderer');",
-                "/** @constructor */",
-                "a.UnpluggedCancelOfferRenderer = function() {",
-                "};"),
+            TestExternsBuilder.getClosureExternsAsSource()
+                + """
+                goog.provide('a.UnpluggedCancelOfferRenderer');
+                /** @constructor */
+                a.UnpluggedCancelOfferRenderer = function() {
+                };
+                """,
             """
             goog.module('mod');
             goog.setTestOnly()
@@ -450,13 +460,15 @@ public class PolymerPassTest extends CompilerTestCase {
                data:Object}});
             """),
         expected(
-            lines(
-                "/** @constructor @extends {PolymerElement} @implements",
-                " {PolymerYtuCancelOfferElementInterface$m1176578414$0} */",
-                "var YtuCancelOfferElement = function() {};",
-                TestExternsBuilder.getClosureExternsAsSource(),
-                "goog.provide('a.UnpluggedCancelOfferRenderer');",
-                "/** @constructor */ a.UnpluggedCancelOfferRenderer = function() {};"),
+            """
+            /** @constructor @extends {PolymerElement} @implements
+             {PolymerYtuCancelOfferElementInterface$m1176578414$0} */
+            var YtuCancelOfferElement = function() {};
+            CLOSURE_EXTERNS
+            goog.provide('a.UnpluggedCancelOfferRenderer');
+            /** @constructor */ a.UnpluggedCancelOfferRenderer = function() {};
+            """
+                .replace("CLOSURE_EXTERNS", TestExternsBuilder.getClosureExternsAsSource()),
             """
             goog.module('mod');
             goog.setTestOnly()
@@ -476,7 +488,7 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testPolymerRewriterGeneratesDeclaration_OutsideES6Module() {
     test(
         srcs(
-            lines(""), // empty script for getNodeForCodeInsertion
+            "", // empty script for getNodeForCodeInsertion
             """
             var X = Polymer({
               is: 'x-element',
@@ -484,7 +496,7 @@ public class PolymerPassTest extends CompilerTestCase {
             export {X};
             """),
         expected(
-            lines(""),
+            "",
             """
             /** @constructor @extends {PolymerElement} @implements {PolymerXInterface$UID$0} */
             var X = function() {};
@@ -498,7 +510,7 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testPolymerRewriterGeneratesDeclaration_OutsideES6Module2() {
     test(
         srcs(
-            lines(""), // empty script for getNodeForCodeInsertion
+            "", // empty script for getNodeForCodeInsertion
             """
             var PI = 3.14
             Polymer({
@@ -507,10 +519,14 @@ public class PolymerPassTest extends CompilerTestCase {
             export {PI};
             """),
         expected(
-"""
-/** @constructor @extends {PolymerElement} @implements {PolymerXElementElementInterface$m1176578414$0} */
-var XElementElement = function() {};
-""",
+            """
+            /**
+             * @constructor
+             * @extends {PolymerElement}
+             * @implements {PolymerXElementElementInterface$m1176578414$0}
+             */
+            var XElementElement = function() {};
+            """,
             """
             var PI = 3.14
             Polymer(/** @lends {XElementElement.prototype} */ {
@@ -560,11 +576,15 @@ var XElementElement = function() {};
             })();
             """),
         expected(
-            lines(
-                "/** @constructor @extends {PolymerElement} @implements"
-                    + " {PolymerXElementElementInterface$m1176578414$0} */",
-                "var XElementElement = function() {};",
-                TestExternsBuilder.getClosureExternsAsSource()),
+            """
+            /**
+             * @constructor
+             * @extends {PolymerElement}
+             * @implements {PolymerXElementElementInterface$m1176578414$0}
+             */
+            var XElementElement = function() {};
+            """
+                + TestExternsBuilder.getClosureExternsAsSource(),
             """
             goog.module('mod');
             (function() {
@@ -619,11 +639,11 @@ var XElementElement = function() {};
             });
             """),
         expected(
-            lines(
-                "/** @constructor @extends {PolymerElement} @implements"
-                    + " {PolymerXElementElementInterface$m1176578414$0} */",
-                "var XElementElement = function() {};",
-                TestExternsBuilder.getClosureExternsAsSource()),
+"""
+/** @constructor @extends {PolymerElement} @implements {PolymerXElementElementInterface$m1176578414$0} */
+var XElementElement = function() {};
+"""
+                + TestExternsBuilder.getClosureExternsAsSource(),
             """
             goog.module('mod');
             const Component = goog.require('a');
@@ -658,14 +678,15 @@ var XElementElement = function() {};
           static get properties() { return {}; }
         };
         """,
-        lines(
-            "/** @implements {PolymerXInterface$UID$0} */",
-            "var X = class extends Polymer.Element {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() { return $jscomp.reflectObject(X, {}); }",
-            "};"));
+        """
+        /** @implements {PolymerXInterface$UID$0} */
+        var X = class extends Polymer.Element {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() { return $jscomp.reflectObject(X, {}); }
+        };
+        """);
   }
 
   @Test
@@ -708,14 +729,15 @@ var XElementElement = function() {};
           static get properties() { return { }; }
         };
         """,
-        lines(
-            "/** @implements {PolymerXInterface$UID$0} */",
-            "let X = class extends Polymer.Element {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() { return $jscomp.reflectObject(X, {}); }",
-            "};"));
+        """
+        /** @implements {PolymerXInterface$UID$0} */
+        let X = class extends Polymer.Element {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() { return $jscomp.reflectObject(X, {}); }
+        };
+        """);
   }
 
   @Test
@@ -728,15 +750,10 @@ var XElementElement = function() {};
         """,
         """
         /**
-
-        * @constructor
-
-        * @extends {PolymerElement}
-
-        * @implements {PolymerXInterface$UID$0}
-
-        */
-
+         * @constructor
+         * @extends {PolymerElement}
+         * @implements {PolymerXInterface$UID$0}
+         */
         var X=function(){};X=Polymer(/** @lends {X.prototype} */ {is:"x-element"})
         """);
 
@@ -747,14 +764,15 @@ var XElementElement = function() {};
           static get properties() { return {}; }
         };
         """,
-        lines(
-            "/** @implements {PolymerXInterface$UID$0} */",
-            "const X = class extends Polymer.Element {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() { return $jscomp.reflectObject(X, {}); }",
-            "};"));
+        """
+        /** @implements {PolymerXInterface$UID$0} */
+        const X = class extends Polymer.Element {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() { return $jscomp.reflectObject(X, {}); }
+        };
+        """);
   }
 
   @Test
@@ -803,15 +821,16 @@ var XElementElement = function() {};
           static get properties() { return {}; }
         };
         """,
-        lines(
-            "const x = {};",
-            "/** @implements {Polymerx_ZInterface$UID$0} */",
-            "x.Z = class extends Polymer.Element {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() { return $jscomp.reflectObject(x.Z, {}); }",
-            "};"));
+        """
+        const x = {};
+        /** @implements {Polymerx_ZInterface$UID$0} */
+        x.Z = class extends Polymer.Element {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() { return $jscomp.reflectObject(x.Z, {}); }
+        };
+        """);
 
     test(
         """
@@ -888,17 +907,18 @@ var XElementElement = function() {};
           };
         })();
         """,
-        lines(
-            "const x = {};",
-            "(function() {",
-            "  /** @implements {Polymerx_ZInterface$UID$0} */",
-            "  x.Z = class extends Polymer.Element {",
-            "    /** @return {string} */",
-            "    static get is() { return 'x-element'; }",
-            "    /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "    static get properties() { return $jscomp.reflectObject(x.Z, {}); }",
-            "  };",
-            "})();"));
+        """
+        const x = {};
+        (function() {
+          /** @implements {Polymerx_ZInterface$UID$0} */
+          x.Z = class extends Polymer.Element {
+            /** @return {string} */
+            static get is() { return 'x-element'; }
+            /** @return {PolymerElementProperties} */
+            static get properties() { return $jscomp.reflectObject(x.Z, {}); }
+          };
+        })();
+        """);
   }
 
   /**
@@ -942,16 +962,17 @@ var XElementElement = function() {};
           };
         })();
         """,
-        lines(
-            "(function() {",
-            "  /** @implements {PolymerXInterface$UID$0} */",
-            "  const X = class extends Polymer.Element {",
-            "    /** @return {string} */",
-            "    static get is() { return 'x-element'; }",
-            "    /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "    static get properties() { return $jscomp.reflectObject(X, {}); }",
-            "  };",
-            "})();"));
+        """
+        (function() {
+          /** @implements {PolymerXInterface$UID$0} */
+          const X = class extends Polymer.Element {
+            /** @return {string} */
+            static get is() { return 'x-element'; }
+            /** @return {PolymerElementProperties} */
+            static get properties() { return $jscomp.reflectObject(X, {}); }
+          };
+        })();
+        """);
   }
 
   @Test
@@ -1205,7 +1226,7 @@ var XElementElement = function() {};
             /** @interface */
             var PolymerXInputElementInterface$m1146332801$0 = function() {};
             """,
-            lines(INPUT_EXTERNS, REFLECT_OBJECT_DEF)));
+            INPUT_EXTERNS + REFLECT_OBJECT_DEF));
   }
 
   @Test
@@ -1242,7 +1263,7 @@ var XElementElement = function() {};
             /** @interface */
             var PolymerYInputElementInterface$m1146332801$1 = function() {};
             """,
-            lines(INPUT_EXTERNS, REFLECT_OBJECT_DEF));
+            INPUT_EXTERNS + REFLECT_OBJECT_DEF);
 
     testExternChanges(externs(EXTERNS), srcs(js), newExterns);
   }
@@ -1317,35 +1338,36 @@ var XElementElement = function() {};
           }
         };
         """,
-        lines(
-            "/** @constructor */",
-            "var User = function() {};",
-            "var a = {};",
-            "/** @implements {Polymera_BInterface$UID$0} */",
-            "a.B = class extends Polymer.Element {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() {",
-            "    return $jscomp.reflectObject(a.B, {",
-            "      user_: Object,",
-            "      pets: {",
-            "        type: Array,",
-            "        notify: true,",
-            "      },",
-            "      name: String,",
-            "      thingToDo: Function,",
-            "    });",
-            "  }",
-            "};",
-            "/** @type {!User} @private */",
-            "a.B.prototype.user_;",
-            "/** @type {!Array} */",
-            "a.B.prototype.pets;",
-            "/** @type {string} */",
-            "a.B.prototype.name;",
-            "/** @type {!Function} */",
-            "a.B.prototype.thingToDo;"));
+        """
+        /** @constructor */
+        var User = function() {};
+        var a = {};
+        /** @implements {Polymera_BInterface$UID$0} */
+        a.B = class extends Polymer.Element {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() {
+            return $jscomp.reflectObject(a.B, {
+              user_: Object,
+              pets: {
+                type: Array,
+                notify: true,
+              },
+              name: String,
+              thingToDo: Function,
+            });
+          }
+        };
+        /** @type {!User} @private */
+        a.B.prototype.user_;
+        /** @type {!Array} */
+        a.B.prototype.pets;
+        /** @type {string} */
+        a.B.prototype.name;
+        /** @type {!Function} */
+        a.B.prototype.thingToDo;
+        """);
   }
 
   @Test
@@ -1427,38 +1449,39 @@ var XElementElement = function() {};
           }
         };
         """,
-        lines(
-            "/** @constructor */",
-            "var User = function() {};",
-            "/** @const */ var a = {};",
-            "/** @implements {Polymera_BInterface$UID$0} */",
-            "a.B = class extends Polymer.Element {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() {",
-            "    return $jscomp.reflectObject(a.B, {",
-            "      user_: {",
-            "        type: Object,",
-            "        /** @this {a.B} @return {!User} */",
-            "        value: function() { return new User(); },",
-            "      },",
-            "      pets: {",
-            "        type: Array,",
-            "        notify: true,",
-            "        /** @this {a.B} @return {!Array} */",
-            "        value: function() { return [this.name]; },",
-            "      },",
-            "      name: String,",
-            "    });",
-            "  }",
-            "};",
-            "/** @type {!User} @private */",
-            "a.B.prototype.user_;",
-            "/** @type {!Array} */",
-            "a.B.prototype.pets;",
-            "/** @type {string} */",
-            "a.B.prototype.name;"));
+        """
+        /** @constructor */
+        var User = function() {};
+        /** @const */ var a = {};
+        /** @implements {Polymera_BInterface$UID$0} */
+        a.B = class extends Polymer.Element {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() {
+            return $jscomp.reflectObject(a.B, {
+              user_: {
+                type: Object,
+                /** @this {a.B} @return {!User} */
+                value: function() { return new User(); },
+              },
+              pets: {
+                type: Array,
+                notify: true,
+                /** @this {a.B} @return {!Array} */
+                value: function() { return [this.name]; },
+              },
+              name: String,
+            });
+          }
+        };
+        /** @type {!User} @private */
+        a.B.prototype.user_;
+        /** @type {!Array} */
+        a.B.prototype.pets;
+        /** @type {string} */
+        a.B.prototype.name;
+        """);
   }
 
   @Test
@@ -1525,38 +1548,39 @@ var XElementElement = function() {};
           }
         };
         """,
-        lines(
-            "/** @constructor */",
-            "var User = function() {};",
-            "var a = {};",
-            "/** @implements {Polymera_BInterface$UID$0} */",
-            "a.B = class extends Polymer.Element {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() {",
-            "    return $jscomp.reflectObject(a.B, {",
-            "      user_: {",
-            "        type: Object,",
-            "        /** @this {a.B} @return {!User} */",
-            "        value() { return new User(); },",
-            "      },",
-            "      pets: {",
-            "        type: Array,",
-            "        notify: true,",
-            "        /** @this {a.B} @return {!Array} */",
-            "        value() { return [this.name]; },",
-            "      },",
-            "      name: String,",
-            "    });",
-            "  }",
-            "};",
-            "/** @type {!User} @private */",
-            "a.B.prototype.user_;",
-            "/** @type {!Array} */",
-            "a.B.prototype.pets;",
-            "/** @type {string} */",
-            "a.B.prototype.name;"));
+        """
+        /** @constructor */
+        var User = function() {};
+        var a = {};
+        /** @implements {Polymera_BInterface$UID$0} */
+        a.B = class extends Polymer.Element {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() {
+            return $jscomp.reflectObject(a.B, {
+              user_: {
+                type: Object,
+                /** @this {a.B} @return {!User} */
+                value() { return new User(); },
+              },
+              pets: {
+                type: Array,
+                notify: true,
+                /** @this {a.B} @return {!Array} */
+                value() { return [this.name]; },
+              },
+              name: String,
+            });
+          }
+        };
+        /** @type {!User} @private */
+        a.B.prototype.user_;
+        /** @type {!Array} */
+        a.B.prototype.pets;
+        /** @type {string} */
+        a.B.prototype.name;
+        """);
   }
 
   @Test
@@ -2186,46 +2210,47 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
           }
         }
         """,
-        lines(
-            "/** @implements {PolymerFooInterface$UID$0} */",
-            "class Foo extends Polymer.Element {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() {",
-            "    return $jscomp.reflectObject(Foo, {",
-            "      propName: {",
-            "        type: Object,",
-            "        /** @this {Foo} @return {!HTMLElement} */",
-            "        value: function() {",
-            "          return /** @type {!HTMLElement} */ (this.$['id']);",
-            "        },",
-            "      }",
-            "    });",
-            "  }",
-            "  sayHi() {",
-            "    this.$['checkbox'].toggle();",
-            "  }",
-            "  connectedCallback() {",
-            "    this.sayHi();",
-            "    this.$['radioButton'].switch();",
-            "  }",
-            "  /**",
-            "   * @param {string} name",
-            "   * @private",
-            "   */",
-            "  sayHelloTo_(name) {",
-            "    this.$['otherThing'].touch();",
-            "  }",
-            "}",
-            "/** @type {!HTMLElement} */",
-            "Foo.prototype.propName;",
-            "/** @export @private */",
-            "Foo.prototype.sayHelloTo_;",
-            "/** @export */",
-            "Foo.prototype.connectedCallback;",
-            "/** @export */",
-            "Foo.prototype.sayHi;"));
+        """
+        /** @implements {PolymerFooInterface$UID$0} */
+        class Foo extends Polymer.Element {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() {
+            return $jscomp.reflectObject(Foo, {
+              propName: {
+                type: Object,
+                /** @this {Foo} @return {!HTMLElement} */
+                value: function() {
+                  return /** @type {!HTMLElement} */ (this.$['id']);
+                },
+              }
+            });
+          }
+          sayHi() {
+            this.$['checkbox'].toggle();
+          }
+          connectedCallback() {
+            this.sayHi();
+            this.$['radioButton'].switch();
+          }
+          /**
+           * @param {string} name
+           * @private
+           */
+          sayHelloTo_(name) {
+            this.$['otherThing'].touch();
+          }
+        }
+        /** @type {!HTMLElement} */
+        Foo.prototype.propName;
+        /** @export @private */
+        Foo.prototype.sayHelloTo_;
+        /** @export */
+        Foo.prototype.connectedCallback;
+        /** @export */
+        Foo.prototype.sayHi;
+        """);
   }
 
   @Test
@@ -4301,35 +4326,36 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
           }
         }
         """,
-        lines(
-            "class Bar {}",
-            "/** @constructor */",
-            "var User = function() {};",
-            "/** @polymer @implements {PolymerFooInterface$UID$0} */",
-            "class Foo extends Bar {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() {",
-            "    return $jscomp.reflectObject(Foo, {",
-            "      user_: Object,",
-            "      pets: {",
-            "        type: Array,",
-            "        notify: true,",
-            "      },",
-            "      name: String,",
-            "      thingToDo: Function",
-            "    });",
-            "  }",
-            "}",
-            "/** @type {!User} @private */",
-            "Foo.prototype.user_;",
-            "/** @type {!Array} */",
-            "Foo.prototype.pets;",
-            "/** @type {string} */",
-            "Foo.prototype.name;",
-            "/** @type {!Function} */",
-            "Foo.prototype.thingToDo;"));
+        """
+        class Bar {}
+        /** @constructor */
+        var User = function() {};
+        /** @polymer @implements {PolymerFooInterface$UID$0} */
+        class Foo extends Bar {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() {
+            return $jscomp.reflectObject(Foo, {
+              user_: Object,
+              pets: {
+                type: Array,
+                notify: true,
+              },
+              name: String,
+              thingToDo: Function
+            });
+          }
+        }
+        /** @type {!User} @private */
+        Foo.prototype.user_;
+        /** @type {!Array} */
+        Foo.prototype.pets;
+        /** @type {string} */
+        Foo.prototype.name;
+        /** @type {!Function} */
+        Foo.prototype.thingToDo;
+        """);
   }
 
   @Test
@@ -4357,36 +4383,37 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
           }
         };
         """,
-        lines(
-            "class Foo {}",
-            "/** @constructor */",
-            "var User = function() {};",
-            "var a = {};",
-            "/** @polymer @implements {Polymera_BInterface$UID$0} */",
-            "a.B = class extends Foo {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() {",
-            "    return $jscomp.reflectObject(a.B, {",
-            "      user_: Object,",
-            "      pets: {",
-            "        type: Array,",
-            "        notify: true,",
-            "      },",
-            "      name: String,",
-            "      thingToDo: Function,",
-            "    });",
-            "  }",
-            "};",
-            "/** @type {!User} @private */",
-            "a.B.prototype.user_;",
-            "/** @type {!Array} */",
-            "a.B.prototype.pets;",
-            "/** @type {string} */",
-            "a.B.prototype.name;",
-            "/** @type {!Function} */",
-            "a.B.prototype.thingToDo;"));
+        """
+        class Foo {}
+        /** @constructor */
+        var User = function() {};
+        var a = {};
+        /** @polymer @implements {Polymera_BInterface$UID$0} */
+        a.B = class extends Foo {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() {
+            return $jscomp.reflectObject(a.B, {
+              user_: Object,
+              pets: {
+                type: Array,
+                notify: true,
+              },
+              name: String,
+              thingToDo: Function,
+            });
+          }
+        };
+        /** @type {!User} @private */
+        a.B.prototype.user_;
+        /** @type {!Array} */
+        a.B.prototype.pets;
+        /** @type {string} */
+        a.B.prototype.name;
+        /** @type {!Function} */
+        a.B.prototype.thingToDo;
+        """);
   }
 
   @Test
@@ -4415,35 +4442,36 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
           }
         };
         """,
-        lines(
-            "class Foo {}",
-            "/** @interface */",
-            "function User() {};",
-            "/** @type {boolean} */ User.prototype.id;",
-            "var a = {};",
-            "/**",
-            " * @polymer",
-            " * @implements {User}",
-            " * @implements {Polymera_BInterface$UID$0}",
-            " */",
-            "a.B = class extends Foo {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() {",
-            "    return $jscomp.reflectObject(a.B, {",
-            "      id: Boolean,",
-            "      other: {",
-            "        type: String,",
-            "        reflectToAttribute: true",
-            "      }",
-            "    });",
-            "  }",
-            "};",
-            "/** @type {boolean} */",
-            "a.B.prototype.id;",
-            "/** @type {string} */",
-            "a.B.prototype.other;"));
+        """
+        class Foo {}
+        /** @interface */
+        function User() {};
+        /** @type {boolean} */ User.prototype.id;
+        var a = {};
+        /**
+         * @polymer
+         * @implements {User}
+         * @implements {Polymera_BInterface$UID$0}
+         */
+        a.B = class extends Foo {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() {
+            return $jscomp.reflectObject(a.B, {
+              id: Boolean,
+              other: {
+                type: String,
+                reflectToAttribute: true
+              }
+            });
+          }
+        };
+        /** @type {boolean} */
+        a.B.prototype.id;
+        /** @type {string} */
+        a.B.prototype.other;
+        """);
   }
 
   @Test
@@ -4516,35 +4544,36 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
           }
         };
         """,
-        lines(
-            "/** @constructor */",
-            "var User = function() {};",
-            "var a = {};",
-            "/** @implements {Polymera_BInterface$UID$0} */",
-            "a.B = class extends Polymer.Element {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() {",
-            "    return  $jscomp.reflectObject(a.B, {",
-            "      user_: Object,",
-            "      pets: {",
-            "        type: Array,",
-            "        notify: true,",
-            "      },",
-            "      name: String,",
-            "      thingToDo: Function",
-            "    });",
-            "  }",
-            "};",
-            "/** @type {!User} @private */",
-            "a.B.prototype.user_;",
-            "/** @type {!Array} */",
-            "a.B.prototype.pets;",
-            "/** @type {string} */",
-            "a.B.prototype.name;",
-            "/** @type {!Function} */",
-            "a.B.prototype.thingToDo;"));
+        """
+        /** @constructor */
+        var User = function() {};
+        var a = {};
+        /** @implements {Polymera_BInterface$UID$0} */
+        a.B = class extends Polymer.Element {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() {
+            return  $jscomp.reflectObject(a.B, {
+              user_: Object,
+              pets: {
+                type: Array,
+                notify: true,
+              },
+              name: String,
+              thingToDo: Function
+            });
+          }
+        };
+        /** @type {!User} @private */
+        a.B.prototype.user_;
+        /** @type {!Array} */
+        a.B.prototype.pets;
+        /** @type {string} */
+        a.B.prototype.name;
+        /** @type {!Function} */
+        a.B.prototype.thingToDo;
+        """);
   }
 
   @Test
@@ -4614,34 +4643,35 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
           }
         };
         """,
-        lines(
-            "/** @constructor */",
-            "var User = function() {};",
-            "/** @implements {PolymerAInterface$UID$0} */",
-            "const A = class extends Polymer.Element {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() {",
-            "    return $jscomp.reflectObject(A, {",
-            "      user_: Object,",
-            "      pets: {",
-            "        type: Array,",
-            "        notify: true,",
-            "      },",
-            "      name: String,",
-            "      thingToDo: Function,",
-            "    });",
-            "  }",
-            "};",
-            "/** @type {!User} @private */",
-            "A.prototype.user_;",
-            "/** @type {!Array} */",
-            "A.prototype.pets;",
-            "/** @type {string} */",
-            "A.prototype.name;",
-            "/** @type {!Function} */",
-            "A.prototype.thingToDo;"));
+        """
+        /** @constructor */
+        var User = function() {};
+        /** @implements {PolymerAInterface$UID$0} */
+        const A = class extends Polymer.Element {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() {
+            return $jscomp.reflectObject(A, {
+              user_: Object,
+              pets: {
+                type: Array,
+                notify: true,
+              },
+              name: String,
+              thingToDo: Function,
+            });
+          }
+        };
+        /** @type {!User} @private */
+        A.prototype.user_;
+        /** @type {!Array} */
+        A.prototype.pets;
+        /** @type {string} */
+        A.prototype.name;
+        /** @type {!Function} */
+        A.prototype.thingToDo;
+        """);
   }
 
   @Test
@@ -4714,34 +4744,35 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
           }
         }
         """,
-        lines(
-            "/** @constructor */",
-            "var User = function() {};",
-            "/** @implements {PolymerXElementInterface$UID$0} */",
-            "class XElement extends Polymer.Element {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() {",
-            "    return $jscomp.reflectObject(XElement, {",
-            "      user_: Object,",
-            "      pets: {",
-            "        type: Array,",
-            "        notify: true,",
-            "      },",
-            "      name: String,",
-            "      thingToDo: Function,",
-            "    });",
-            "  }",
-            "}",
-            "/** @type {!User} @private */",
-            "XElement.prototype.user_;",
-            "/** @type {!Array} */",
-            "XElement.prototype.pets;",
-            "/** @type {string} */",
-            "XElement.prototype.name;",
-            "/** @type {!Function} */",
-            "XElement.prototype.thingToDo;"));
+        """
+        /** @constructor */
+        var User = function() {};
+        /** @implements {PolymerXElementInterface$UID$0} */
+        class XElement extends Polymer.Element {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() {
+            return $jscomp.reflectObject(XElement, {
+              user_: Object,
+              pets: {
+                type: Array,
+                notify: true,
+              },
+              name: String,
+              thingToDo: Function,
+            });
+          }
+        }
+        /** @type {!User} @private */
+        XElement.prototype.user_;
+        /** @type {!Array} */
+        XElement.prototype.pets;
+        /** @type {string} */
+        XElement.prototype.name;
+        /** @type {!Function} */
+        XElement.prototype.thingToDo;
+        """);
   }
 
   @Test
@@ -4890,43 +4921,44 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
           _nameChanged(newValue, oldValue) {}
         }
         """,
-        lines(
-            "/** @constructor */",
-            "var User = function() {};",
-            "/** @implements {PolymerXElementInterface$UID$0} */",
-            "class XElement extends Polymer.Element {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() {",
-            "    return $jscomp.reflectObject(XElement, {",
-            "      user_: Object,",
-            "      pets: {",
-            "        type: Array,",
-            "        observer: XElement.prototype._petsChanged",
-            "      },",
-            "      name: {",
-            "        type: String,",
-            "        observer: XElement.prototype._nameChanged",
-            "      },",
-            "      thingToDo: Function,",
-            "    });",
-            "  }",
-            "  _petsChanged(newValue, oldValue) {}",
-            "  _nameChanged(newValue, oldValue) {}",
-            "}",
-            "/** @type {!User} @private */",
-            "XElement.prototype.user_;",
-            "/** @type {!Array} */",
-            "XElement.prototype.pets;",
-            "/** @type {string} */",
-            "XElement.prototype.name;",
-            "/** @type {!Function} */",
-            "XElement.prototype.thingToDo;",
-            "/** @export */",
-            "XElement.prototype._nameChanged;",
-            "/** @export */",
-            "XElement.prototype._petsChanged"));
+        """
+        /** @constructor */
+        var User = function() {};
+        /** @implements {PolymerXElementInterface$UID$0} */
+        class XElement extends Polymer.Element {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() {
+            return $jscomp.reflectObject(XElement, {
+              user_: Object,
+              pets: {
+                type: Array,
+                observer: XElement.prototype._petsChanged
+              },
+              name: {
+                type: String,
+                observer: XElement.prototype._nameChanged
+              },
+              thingToDo: Function,
+            });
+          }
+          _petsChanged(newValue, oldValue) {}
+          _nameChanged(newValue, oldValue) {}
+        }
+        /** @type {!User} @private */
+        XElement.prototype.user_;
+        /** @type {!Array} */
+        XElement.prototype.pets;
+        /** @type {string} */
+        XElement.prototype.name;
+        /** @type {!Function} */
+        XElement.prototype.thingToDo;
+        /** @export */
+        XElement.prototype._nameChanged;
+        /** @export */
+        XElement.prototype._petsChanged
+        """);
   }
 
   @Test
@@ -4957,44 +4989,45 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
           _nameChanged(newValue, oldValue) {}
         };
         """,
-        lines(
-            "/** @constructor */",
-            "var User = function() {};",
-            "var a = {};",
-            "/** @implements {Polymera_BInterface$UID$0} */",
-            "a.B = class extends Polymer.Element {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() {",
-            "    return  $jscomp.reflectObject(a.B, {",
-            "      user_: Object,",
-            "      pets: {",
-            "        type: Array,",
-            "        observer: a.B.prototype._petsChanged",
-            "      },",
-            "      name: {",
-            "        type: String,",
-            "        observer: a.B.prototype._nameChanged",
-            "      },",
-            "      thingToDo: Function",
-            "    });",
-            "  }",
-            "  _petsChanged(newValue, oldValue) {}",
-            "  _nameChanged(newValue, oldValue) {}",
-            "};",
-            "/** @type {!User} @private */",
-            "a.B.prototype.user_;",
-            "/** @type {!Array} */",
-            "a.B.prototype.pets;",
-            "/** @type {string} */",
-            "a.B.prototype.name;",
-            "/** @type {!Function} */",
-            "a.B.prototype.thingToDo;",
-            "/** @export */",
-            "a.B.prototype._nameChanged;",
-            "/** @export */",
-            "a.B.prototype._petsChanged"));
+        """
+        /** @constructor */
+        var User = function() {};
+        var a = {};
+        /** @implements {Polymera_BInterface$UID$0} */
+        a.B = class extends Polymer.Element {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() {
+            return  $jscomp.reflectObject(a.B, {
+              user_: Object,
+              pets: {
+                type: Array,
+                observer: a.B.prototype._petsChanged
+              },
+              name: {
+                type: String,
+                observer: a.B.prototype._nameChanged
+              },
+              thingToDo: Function
+            });
+          }
+          _petsChanged(newValue, oldValue) {}
+          _nameChanged(newValue, oldValue) {}
+        };
+        /** @type {!User} @private */
+        a.B.prototype.user_;
+        /** @type {!Array} */
+        a.B.prototype.pets;
+        /** @type {string} */
+        a.B.prototype.name;
+        /** @type {!Function} */
+        a.B.prototype.thingToDo;
+        /** @export */
+        a.B.prototype._nameChanged;
+        /** @export */
+        a.B.prototype._petsChanged
+        """);
   }
 
   @Test
@@ -5024,43 +5057,44 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
           _nameChanged(newValue, oldValue) {}
         };
         """,
-        lines(
-            "/** @constructor */",
-            "var User = function() {};",
-            "/** @implements {PolymerAInterface$UID$0} */",
-            "const A = class extends Polymer.Element {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() {",
-            "    return $jscomp.reflectObject(A, {",
-            "      user_: Object,",
-            "      pets: {",
-            "        type: Array,",
-            "        observer: A.prototype._petsChanged",
-            "      },",
-            "      name: {",
-            "        type: String,",
-            "        observer: A.prototype._nameChanged",
-            "      },",
-            "      thingToDo: Function,",
-            "    });",
-            "  }",
-            "  _petsChanged(newValue, oldValue) {}",
-            "  _nameChanged(newValue, oldValue) {}",
-            "};",
-            "/** @type {!User} @private */",
-            "A.prototype.user_;",
-            "/** @type {!Array} */",
-            "A.prototype.pets;",
-            "/** @type {string} */",
-            "A.prototype.name;",
-            "/** @type {!Function} */",
-            "A.prototype.thingToDo;",
-            "/** @export */",
-            "A.prototype._nameChanged;",
-            "/** @export */",
-            "A.prototype._petsChanged"));
+        """
+        /** @constructor */
+        var User = function() {};
+        /** @implements {PolymerAInterface$UID$0} */
+        const A = class extends Polymer.Element {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() {
+            return $jscomp.reflectObject(A, {
+              user_: Object,
+              pets: {
+                type: Array,
+                observer: A.prototype._petsChanged
+              },
+              name: {
+                type: String,
+                observer: A.prototype._nameChanged
+              },
+              thingToDo: Function,
+            });
+          }
+          _petsChanged(newValue, oldValue) {}
+          _nameChanged(newValue, oldValue) {}
+        };
+        /** @type {!User} @private */
+        A.prototype.user_;
+        /** @type {!Array} */
+        A.prototype.pets;
+        /** @type {string} */
+        A.prototype.name;
+        /** @type {!Function} */
+        A.prototype.thingToDo;
+        /** @export */
+        A.prototype._nameChanged;
+        /** @export */
+        A.prototype._petsChanged
+        """);
   }
 
   @Test
@@ -5090,43 +5124,44 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
           _computeName(user, thingToDo) {}
         }
         """,
-        lines(
-            "/** @constructor */",
-            "var User = function() {};",
-            "/** @implements {PolymerXElementInterface$UID$0} */",
-            "class XElement extends Polymer.Element {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() {",
-            "    return $jscomp.reflectObject(XElement, {",
-            "      user_: Object,",
-            "      pets: {",
-            "        type: Array,",
-            "        computed: '_computePets()'",
-            "      },",
-            "      name: {",
-            "        type: String,",
-            "        computed: '_computeName(user_, thingToDo)'",
-            "      },",
-            "      thingToDo: Function,",
-            "    });",
-            "  }",
-            "  _computePets() {}",
-            "  _computeName(user, thingToDo) {}",
-            "}",
-            "/** @type {!User} @private */",
-            "XElement.prototype.user_;",
-            "/** @type {!Array} */",
-            "XElement.prototype.pets;",
-            "/** @type {string} */",
-            "XElement.prototype.name;",
-            "/** @type {!Function} */",
-            "XElement.prototype.thingToDo;",
-            "/** @export */",
-            "XElement.prototype._computeName;",
-            "/** @export */",
-            "XElement.prototype._computePets;"));
+        """
+        /** @constructor */
+        var User = function() {};
+        /** @implements {PolymerXElementInterface$UID$0} */
+        class XElement extends Polymer.Element {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() {
+            return $jscomp.reflectObject(XElement, {
+              user_: Object,
+              pets: {
+                type: Array,
+                computed: '_computePets()'
+              },
+              name: {
+                type: String,
+                computed: '_computeName(user_, thingToDo)'
+              },
+              thingToDo: Function,
+            });
+          }
+          _computePets() {}
+          _computeName(user, thingToDo) {}
+        }
+        /** @type {!User} @private */
+        XElement.prototype.user_;
+        /** @type {!Array} */
+        XElement.prototype.pets;
+        /** @type {string} */
+        XElement.prototype.name;
+        /** @type {!Function} */
+        XElement.prototype.thingToDo;
+        /** @export */
+        XElement.prototype._computeName;
+        /** @export */
+        XElement.prototype._computePets;
+        """);
   }
 
   @Test
@@ -5154,41 +5189,42 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
           _computeName(user, thingToDo) {}
         }
         """,
-        lines(
-            "/** @constructor */",
-            "var User = function() {};",
-            "/** @type {string} */ User.prototype.id;",
-            "/** @implements {PolymerXElementInterface$UID$0} */",
-            "class XElement extends Polymer.Element {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() {",
-            "    return $jscomp.reflectObject(XElement, {",
-            "      user_: Object,",
-            "      pets: Array,",
-            "      name: {",
-            "        type: String,",
-            "        computed: '_computeName(\"user\", 12.0, user_.id, user_.*)'",
-            "      },",
-            "      thingToDo: Function,",
-            "    });",
-            "  }",
-            "  _computePets() {}",
-            "  _computeName(user, thingToDo) {}",
-            "}",
-            "/** @type {!User} @private */",
-            "XElement.prototype.user_;",
-            "/** @type {!Array} */",
-            "XElement.prototype.pets;",
-            "/** @type {string} */",
-            "XElement.prototype.name;",
-            "/** @type {!Function} */",
-            "XElement.prototype.thingToDo;",
-            "/** @export */",
-            "XElement.prototype._computeName;",
-            "/** @export */",
-            "XElement.prototype._computePets;"));
+        """
+        /** @constructor */
+        var User = function() {};
+        /** @type {string} */ User.prototype.id;
+        /** @implements {PolymerXElementInterface$UID$0} */
+        class XElement extends Polymer.Element {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() {
+            return $jscomp.reflectObject(XElement, {
+              user_: Object,
+              pets: Array,
+              name: {
+                type: String,
+                computed: '_computeName("user", 12.0, user_.id, user_.*)'
+              },
+              thingToDo: Function,
+            });
+          }
+          _computePets() {}
+          _computeName(user, thingToDo) {}
+        }
+        /** @type {!User} @private */
+        XElement.prototype.user_;
+        /** @type {!Array} */
+        XElement.prototype.pets;
+        /** @type {string} */
+        XElement.prototype.name;
+        /** @type {!Function} */
+        XElement.prototype.thingToDo;
+        /** @export */
+        XElement.prototype._computeName;
+        /** @export */
+        XElement.prototype._computePets;
+        """);
   }
 
   @Test
@@ -5274,44 +5310,45 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
           _userOrThingToDoChanged(user, thingToDo) {}
         }
         """,
-        lines(
-            "/** @constructor */",
-            "var User = function() {};",
-            "/** @implements {PolymerXElementInterface$UID$0} */",
-            "class XElement extends Polymer.Element {",
-            "  /** @return {string} */",
-            "  static get is() { return 'x-element'; }",
-            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() {",
-            "    return $jscomp.reflectObject(XElement, {",
-            "      user_: Object,",
-            "      pets: Array,",
-            "      name: String,",
-            "      thingToDo: Function,",
-            "    });",
-            "  }",
-            "  /** @return {!Array<string>} */",
-            "  static get observers() {",
-            "    return [",
-            "      '_userChanged(user_)',",
-            "      '_userOrThingToDoChanged(user_, thingToDo)'",
-            "    ];",
-            "  }",
-            "  _userChanged(user_) {}",
-            "  _userOrThingToDoChanged(user, thingToDo) {}",
-            "}",
-            "/** @type {!User} @private */",
-            "XElement.prototype.user_;",
-            "/** @type {!Array} */",
-            "XElement.prototype.pets;",
-            "/** @type {string} */",
-            "XElement.prototype.name;",
-            "/** @type {!Function} */",
-            "XElement.prototype.thingToDo;",
-            "/** @export */",
-            "XElement.prototype._userOrThingToDoChanged;",
-            "/** @export */",
-            "XElement.prototype._userChanged;"));
+        """
+        /** @constructor */
+        var User = function() {};
+        /** @implements {PolymerXElementInterface$UID$0} */
+        class XElement extends Polymer.Element {
+          /** @return {string} */
+          static get is() { return 'x-element'; }
+          /** @return {PolymerElementProperties} */
+          static get properties() {
+            return $jscomp.reflectObject(XElement, {
+              user_: Object,
+              pets: Array,
+              name: String,
+              thingToDo: Function,
+            });
+          }
+          /** @return {!Array<string>} */
+          static get observers() {
+            return [
+              '_userChanged(user_)',
+              '_userOrThingToDoChanged(user_, thingToDo)'
+            ];
+          }
+          _userChanged(user_) {}
+          _userOrThingToDoChanged(user, thingToDo) {}
+        }
+        /** @type {!User} @private */
+        XElement.prototype.user_;
+        /** @type {!Array} */
+        XElement.prototype.pets;
+        /** @type {string} */
+        XElement.prototype.name;
+        /** @type {!Function} */
+        XElement.prototype.thingToDo;
+        /** @export */
+        XElement.prototype._userOrThingToDoChanged;
+        /** @export */
+        XElement.prototype._userChanged;
+        """);
   }
 
   @Test
