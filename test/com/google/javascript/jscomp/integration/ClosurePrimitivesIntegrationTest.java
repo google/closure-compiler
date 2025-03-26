@@ -15,8 +15,6 @@
  */
 package com.google.javascript.jscomp.integration;
 
-import static com.google.javascript.jscomp.base.JSCompStrings.lines;
-
 import com.google.javascript.jscomp.ClosureCodingConvention;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -130,12 +128,13 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
   public void testStaticPropRename() {
     test(
         createCompilerOptions(),
-        lines(
-            RENAME_FN_DEFINITION,
-            "/** @const */ var foo = {};",
-            "foo.log = function(input) { alert(input) };",
-            "alert(goog.reflect.objectProperty('log', foo));",
-            "foo.log('foobar');"),
+        RENAME_FN_DEFINITION
+            + """
+            /** @const */ var foo = {};
+            foo.log = function(input) { alert(input) };
+            alert(goog.reflect.objectProperty('log', foo));
+            foo.log('foobar');
+            """,
         """
         goog.b = {};
         var b = {a: function(a) {alert(a)}};
@@ -149,12 +148,13 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
     useSimpleMode = true;
     test(
         createCompilerOptions(),
-        lines(
-            RENAME_FN_DEFINITION,
-            "/** @const */ var foo = {};",
-            "foo.log = function(input) { alert(input) };",
-            "alert(goog.reflect.objectProperty('log', foo));",
-            "foo.log('foobar');"),
+        RENAME_FN_DEFINITION
+            + """
+            /** @const */ var foo = {};
+            foo.log = function(input) { alert(input) };
+            alert(goog.reflect.objectProperty('log', foo));
+            foo.log('foobar');
+            """,
         """
         goog.reflect = {};
         goog.reflect.objectProperty = function(a,b) { return a; };
