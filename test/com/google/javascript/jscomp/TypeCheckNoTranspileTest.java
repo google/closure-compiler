@@ -646,8 +646,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testBadRestJSDoc() {
     newTest()
         .addSource(
-            "/** @param {number} numbers */ function f(...numbers) { var /** null */ n = numbers;"
-                + " }")
+            """
+            /** @param {number} numbers */
+            function f(...numbers) {
+              var /** null */ n = numbers;
+            }
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -3141,7 +3145,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             }
             let /** ? */ x = Foo()
             """)
-        .addDiagnostic(lines("Constructor (typeof Foo) should be called with the \"new\" keyword"))
+        .addDiagnostic("Constructor (typeof Foo) should be called with the \"new\" keyword")
         .run();
   }
 
@@ -3157,7 +3161,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             }
             let /** ? */ x = Foo()
             """)
-        .addDiagnostic(lines("Constructor (typeof Foo) should be called with the \"new\" keyword"))
+        .addDiagnostic("Constructor (typeof Foo) should be called with the \"new\" keyword")
         .run();
   }
 
@@ -4009,7 +4013,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             }
             """)
         .addDiagnostic(
-            """
+"""
 mismatch of the foo property on type Bar and the type of the property it overrides from interface Foo
 original: function(this:Foo): number
 override: function(this:Bar): (number|string)
@@ -4034,7 +4038,7 @@ override: function(this:Bar): (number|string)
             }
             """)
         .addDiagnostic(
-            """
+"""
 mismatch of the foo property on type Zoo and the type of the property it overrides from interface Foo
 original: function(this:Foo): number
 override: function(this:Zoo): (number|string)
@@ -4058,7 +4062,7 @@ override: function(this:Zoo): (number|string)
             }
             """)
         .addDiagnostic(
-            """
+"""
 mismatch of the foo property on type Bar and the type of the property it overrides from interface Foo
 original: function(this:Foo): number
 override: function(this:Bar): (number|string)
@@ -4147,7 +4151,7 @@ override: function(this:Bar): (number|string)
             }
             """)
         .addDiagnostic(
-            """
+"""
 mismatch of the bar property on type MyFoo and the type of the property it overrides from interface Foo
 original: number
 override: string
@@ -4644,7 +4648,7 @@ override: string
             }
             """)
         .addDiagnostic(
-            """
+"""
 mismatch of the method property type and the type of the property it overrides from superclass Base
 original: function(this:Base, (number|string)): undefined
 override: function(this:Sub, string): undefined
@@ -4667,7 +4671,7 @@ override: function(this:Sub, string): undefined
             }
             """)
         .addDiagnostic(
-            """
+"""
 mismatch of the method property type and the type of the property it overrides from superclass Base
 original: function(this:Base): string
 override: function(this:Sub): (number|string)
@@ -4714,9 +4718,8 @@ override: function(this:Sub): (number|string)
             }
             """)
         .addDiagnostic(
-            lines(
-                "property method already defined on supertype (typeof Base); "
-                    + "use @override to override it"))
+            "property method already defined on supertype (typeof Base); use @override to override"
+                + " it")
         .run();
   }
 
@@ -4733,7 +4736,7 @@ override: function(this:Sub): (number|string)
               static method(arg) {}
             }
             """)
-        .addDiagnostic(lines("property method not defined on any supertype of (typeof Base)"))
+        .addDiagnostic("property method not defined on any supertype of (typeof Base)")
         .run();
   }
 
@@ -4756,7 +4759,7 @@ override: function(this:Sub): (number|string)
             }
             """)
         .addDiagnostic(
-            """
+"""
 mismatch of the method property type and the type of the property it overrides from supertype (typeof Base)
 original: function(this:(typeof Base), (number|string)): undefined
 override: function(this:(typeof Sub), string): undefined
@@ -4778,7 +4781,7 @@ override: function(this:(typeof Sub), string): undefined
             }
             """)
         .addDiagnostic(
-            """
+"""
 mismatch of the method property type and the type of the property it overrides from supertype (typeof Base)
 original: function(this:(typeof Base), (number|string)): undefined
 override: function(this:(typeof Sub), string): undefined
@@ -4825,7 +4828,7 @@ override: function(this:(typeof Sub), string): undefined
             Sub.method = function(arg) {};
             """)
         .addDiagnostic(
-            """
+"""
 mismatch of the method property type and the type of the property it overrides from supertype (typeof Base)
 original: function(this:(typeof Base), (number|string)): undefined
 override: function(string): undefined
@@ -4903,9 +4906,8 @@ override: function(string): undefined
             ns.Sub.method = function(arg) {};
             """)
         .addDiagnostic(
-            lines(
-                "property method already defined on supertype (typeof ns.Base); "
-                    + "use @override to override it"))
+            "property method already defined on supertype (typeof ns.Base); use @override to"
+                + " override it")
         .run();
   }
 
@@ -4932,7 +4934,7 @@ override: function(string): undefined
             ns.Sub.method = function(arg) {};
             """)
         .addDiagnostic(
-            """
+"""
 mismatch of the method property type and the type of the property it overrides from supertype (typeof ns.Base)
 original: function(this:(typeof ns.Base), string): undefined
 override: function(number): undefined
@@ -6797,11 +6799,12 @@ override: function(number): undefined
             }
             """)
         .addDiagnostic(
-            lines(
-                "inconsistent return type",
-                "found   : {}",
-                // We're specifically checking this type.
-                "required: (IThenable<(boolean|null|undefined)>|boolean|null|undefined)"))
+            // We're specifically checking the required type.
+            """
+            inconsistent return type
+            found   : {}
+            required: (IThenable<(boolean|null|undefined)>|boolean|null|undefined)
+            """)
         .run();
   }
 
@@ -8100,7 +8103,7 @@ override: function(number): undefined
             }
             """)
         .addDiagnostic(
-            """
+"""
 mismatch of the bar property type and the type of the property it overrides from superclass Foo
 original: number
 override: function(this:Bar, number): undefined
