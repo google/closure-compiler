@@ -1412,7 +1412,7 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
                 """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"), //
-                lines("name;"))),
+                "name;")),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
