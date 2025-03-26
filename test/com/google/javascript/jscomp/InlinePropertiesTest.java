@@ -29,14 +29,15 @@ import org.junit.runners.JUnit4;
 public final class InlinePropertiesTest extends CompilerTestCase {
 
   private static final String EXTERNS =
-      lines(
-          MINIMAL_EXTERNS,
-          "Function.prototype.call=function(){};",
-          "Function.prototype.inherits=function(){};",
-          "prop.toString;",
-          "var google = { gears: { factory: {}, workerPool: {} } };",
-          "/** @type {?} */ var externUnknownVar;",
-          "/** @type {!Function} */ var externFn;");
+      MINIMAL_EXTERNS
+          + """
+          Function.prototype.call=function(){};
+          Function.prototype.inherits=function(){};
+          prop.toString;
+          var google = { gears: { factory: {}, workerPool: {} } };
+          /** @type {?} */ var externUnknownVar;
+          /** @type {!Function} */ var externFn;
+          """;
 
   private boolean runSmartNameRemoval = false;
 
