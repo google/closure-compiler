@@ -464,7 +464,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
   @Test
   public void testExportWithArguments() {
     test(
-        lines("export default function f() { return arguments[1]; }"),
+        "export default function f() { return arguments[1]; }",
         """
         $jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {
           Object.defineProperties($$exports, {
