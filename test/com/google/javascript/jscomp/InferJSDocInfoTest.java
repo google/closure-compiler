@@ -246,15 +246,17 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
     // Given
     testSame(
         srcs(
-            lines(
-                "/**",
-                " * I'm a user type.",
-                " * @constructor",
-                " */",
-                keyword.toJs() + " Foo = function() {};",
-                "",
-                "var x = new Foo();" // Just a hook to access type "Foo".
-                )));
+            """
+            /**
+             * I'm a user type.
+             * @constructor
+             */
+            KEYWORD Foo = function() {};
+
+            // `var x` is just a hook to access type "Foo".
+            var x = new Foo();
+            """
+                .replace("KEYWORD", keyword.toJs())));
 
     JSType xType = inferredTypeOfName("x");
     assertThat(xType.toString()).isEqualTo("Foo");
