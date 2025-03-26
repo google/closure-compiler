@@ -31,11 +31,12 @@ import org.junit.runners.JUnit4;
 public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends CompilerTestCase {
 
   private static final String EXTERNS =
-      lines(
-          DEFAULT_EXTERNS,
-          "var Polymer = function(descriptor) {};",
-          "/** @constructor */",
-          "var PolymerElement = function() {};");
+      DEFAULT_EXTERNS
+          + """
+          var Polymer = function(descriptor) {};
+          /** @constructor */
+          var PolymerElement = function() {};
+          """;
 
   public CheckUnusedPrivatePropertiesInPolymerElementTest() {
     super(EXTERNS);
