@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static org.junit.Assert.assertThrows;
 
@@ -438,11 +437,15 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     // both externs and code have bad references to the same lateDefinedVar
     precompileLibrary(
         extern(
-            "/** @fileoverview @suppress {externsValidation,checkVars} */", //
-            "lateDefinedVar;"),
+            """
+            /** @fileoverview @suppress {externsValidation,checkVars} */
+            lateDefinedVar;
+            """),
         code(
-            "/** @fileoverview @suppress {checkVars,uselessCode} */", //
-            "lateDefinedVar;"));
+            """
+            /** @fileoverview @suppress {checkVars,uselessCode} */
+            lateDefinedVar;
+            """));
     // and another, entirely separate library defines it.
     precompileLibrary(code("var lateDefinedVar; var normalVar;"));
 
@@ -576,8 +579,10 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     precompileLibrary(
         extern(new TestExternsBuilder().addRegExp().addConsole().build()),
         code(
-            "(/abc/gi).exec('');", //
-            "console.log(RegExp.$1);"));
+            """
+            (/abc/gi).exec('');
+            console.log(RegExp.$1);
+            """));
 
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -679,8 +684,11 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     String[] expected =
         new String[] {
           CrossChunkMethodMotion.STUB_DECLARATIONS
-              + "var Foo = function() {};"
-              + "Foo.prototype.bar=JSCompiler_stubMethod(0); var x=new Foo;",
+              + """
+              var Foo = function() {};
+              Foo.prototype.bar=JSCompiler_stubMethod(0);
+              var x=new Foo;
+              """,
           "Foo.prototype.bar=JSCompiler_unstubMethod(0,function(){}); x.bar()",
         };
     assertCompiledCodeEquals(compiler, expected);
@@ -906,11 +914,13 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
         typeSummary(polymerExterns),
         typeSummary(fooElement),
         code(
-            "function unused() { console.log(FooElement); }",
-            "/** @param {!FooElement} fooElement */",
-            "globalThis['test'] = function(fooElement) {",
-            "  console.log(fooElement.longProperty);",
-            "}"));
+            """
+            function unused() { console.log(FooElement); }
+            /** @param {!FooElement} fooElement */
+            globalThis['test'] = function(fooElement) {
+              console.log(fooElement.longProperty);
+            }
+            """));
 
     Compiler compiler = compileTypedAstShards(options);
     assertCompiledCodeEquals(
@@ -964,19 +974,17 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     return compiler;
   }
 
-  private SourceFile code(String... code) {
+  private SourceFile code(String code) {
     SourceFile sourceFile =
-        SourceFile.fromCode(
-            "input_" + (stubSourceFiles.size() + 1), lines(code), SourceKind.STRONG);
+        SourceFile.fromCode("input_" + (stubSourceFiles.size() + 1), code, SourceKind.STRONG);
     SourceFile stubFile = SourceFile.stubSourceFile(sourceFile.getName(), SourceKind.STRONG);
     this.stubSourceFiles.add(stubFile);
     return sourceFile;
   }
 
-  private SourceFile extern(String... code) {
+  private SourceFile extern(String code) {
     SourceFile sourceFile =
-        SourceFile.fromCode(
-            "extern_" + (stubExternFiles.size() + 1), lines(code), SourceKind.EXTERN);
+        SourceFile.fromCode("extern_" + (stubExternFiles.size() + 1), code, SourceKind.EXTERN);
     SourceFile stubFile = SourceFile.stubSourceFile(sourceFile.getName(), SourceKind.STRONG);
     this.stubExternFiles.add(stubFile);
     return sourceFile;
