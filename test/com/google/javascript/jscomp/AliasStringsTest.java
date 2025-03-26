@@ -73,11 +73,11 @@ public final class AliasStringsTest extends CompilerTestCase {
 
   @Test
   public void testAliasAggressively() {
-    testSame(lines("function f() { return 'aliasable string'; }"));
+    testSame("function f() { return 'aliasable string'; }");
 
     aliasStringsMode = AliasStringsMode.ALL_AGGRESSIVE;
     test(
-        lines("function f() { return 'aliasable string'; }"),
+        "function f() { return 'aliasable string'; }",
         """
         var $$S_aliasable$20string = 'aliasable string';
         function f() { return $$S_aliasable$20string; }
@@ -87,29 +87,33 @@ public final class AliasStringsTest extends CompilerTestCase {
   @Test
   public void testProtectedMessage() {
     test(
-        lines(
-            "const A = 'aliasable string';",
-            "const B = 'aliasable string';",
-            "var MSG_A =",
-            "    " + ReplaceMessagesConstants.DEFINE_MSG_CALLEE + "(",
-            "        {",
-            "          \"key\":    \"MSG_A\",",
-            "          \"msg_text\":\"aliasable string\",",
-            "        });",
-            ""),
-        lines(
-            "var $$S_aliasable$20string = 'aliasable string';",
-            "const A = $$S_aliasable$20string;",
-            "const B = $$S_aliasable$20string;",
-            "var MSG_A =",
-            "    " + ReplaceMessagesConstants.DEFINE_MSG_CALLEE + "(",
-            "        {",
-            "          \"key\":    \"MSG_A\",",
-            // This string is left unmolested instead of using an alias,
-            // because `ReplaceMessages` needs the literal string here.
-            "          \"msg_text\":\"aliasable string\",",
-            "        });",
-            ""));
+        """
+        const A = 'aliasable string';
+        const B = 'aliasable string';
+        var MSG_A =
+            DEFINE_MSG_CALLEE(
+                {
+                  "key":    "MSG_A",
+                  "msg_text":"aliasable string",
+                });
+
+        """
+            .replace("DEFINE_MSG_CALLEE", ReplaceMessagesConstants.DEFINE_MSG_CALLEE),
+        // msg_text's string is left unchanged instead of using an alias,
+        // because `ReplaceMessages` needs the literal string here.
+        """
+        var $$S_aliasable$20string = 'aliasable string';
+        const A = $$S_aliasable$20string;
+        const B = $$S_aliasable$20string;
+        var MSG_A =
+            DEFINE_MSG_CALLEE(
+                {
+                  "key":    "MSG_A",
+                  "msg_text":"aliasable string",
+                });
+
+        """
+            .replace("DEFINE_MSG_CALLEE", ReplaceMessagesConstants.DEFINE_MSG_CALLEE));
   }
 
   @Test
@@ -274,7 +278,7 @@ public final class AliasStringsTest extends CompilerTestCase {
             function g() { alert($$S_ciaociaociaociaociao); }
             """,
             // m2
-            """
+"""
 var $$S_hhhhhhhhhhhhhhhhhhh$3a = 'hhhhhhhhhhhhhhhhhhh:';
 function h(a) {  alert($$S_hhhhhhhhhhhhhhhhhhh$3a + a);  alert($$S_hhhhhhhhhhhhhhhhhhh$3a + a);}
 """,
@@ -338,13 +342,13 @@ function h(a) {  alert($$S_hhhhhhhhhhhhhhhhhhh$3a + a);  alert($$S_hhhhhhhhhhhhh
     aliasStringsMode = AliasStringsMode.LARGE;
 
     test(
-        """
+"""
 const A = 'non aliasable string with length <= 100 characters';
 const B = 'non aliasable string with length <= 100 characters';
 const C = 'aliasable large string largestringlargestringlargestringlargestringlargestringlargestringlargestring!';
 const D = 'aliasable large string largestringlargestringlargestringlargestringlargestringlargestringlargestring!';
 """,
-        """
+"""
 var $$S_aliasable$20large$20stri_6c7cf169 = 'aliasable large string largestringlargestringlargestringlargestringlargestringlargestringlargestring!';
 const A = 'non aliasable string with length <= 100 characters';
 const B = 'non aliasable string with length <= 100 characters';
