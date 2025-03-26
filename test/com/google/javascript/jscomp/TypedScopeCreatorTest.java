@@ -1391,12 +1391,14 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     // TODO(b/154044898): re-enable type info validation
     disableTypeInfoValidation();
     testSame(
-        "var Foo = function Foo() {};"
-            + "var proto = Foo.prototype = {"
-            + "   bar: function(a, b){}"
-            + "};"
-            + "proto.baz = function(c) {};"
-            + "(function() { proto.baz = function() {}; })();");
+        """
+        var Foo = function Foo() {};
+        var proto = Foo.prototype = {
+           bar: function(a, b){}
+        };
+        proto.baz = function(c) {};
+        (function() { proto.baz = function() {}; })();
+        """);
     ObjectType foo = (ObjectType) findNameType("Foo", globalScope);
     assertThat(foo.hasProperty("prototype")).isTrue();
 
@@ -7191,7 +7193,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     // fine, but you can't import a name.
     testSame(
         srcs(
-            lines("const x = 'oops, you did not export me.';"),
+            "const x = 'oops, you did not export me.';",
             """
             import {x} from './testcode0';
             X: x;
