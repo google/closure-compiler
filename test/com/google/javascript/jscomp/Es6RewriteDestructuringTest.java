@@ -728,7 +728,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   public void testRestParamDestructuring() {
     test(
         "function f(first, ...[re, st, ...{length: num_left}]) {}",
-        """
+"""
 function f(first, ...$jscomp$destructuring$var0) {
   var re; var st; var num_left;
   var $jscomp$destructuring$var1 = (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
@@ -1039,12 +1039,13 @@ function f(first, ...$jscomp$destructuring$var0) {
 
     testSame(
         externs(
-            lines(
-                EXTERNS_BASE,
-                "/** @constructor */",
-                "function Foo() {}",
-                "",
-                "Foo.prototype.bar = function({a}) {};")),
+            EXTERNS_BASE
+                + """
+                /** @constructor */
+                function Foo() {}
+
+                Foo.prototype.bar = function({a}) {};
+                """),
         srcs("(new Foo).bar({b: 0});"));
     // TODO(sdh): figure out what's going on here
   }
