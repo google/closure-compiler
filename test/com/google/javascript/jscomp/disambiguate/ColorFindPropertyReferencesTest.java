@@ -22,7 +22,6 @@ import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.collect.Multimaps.toMultimap;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.rhino.Token.GETPROP;
 import static com.google.javascript.rhino.Token.GETTER_DEF;
 import static com.google.javascript.rhino.Token.MEMBER_FIELD_DEF;
@@ -406,13 +405,7 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
   @Test
   public void propDefinerFunction_noObject_associatesWithJavaNull() {
     // When
-    this.propIndex =
-        this.collectProperties(
-            ImmutableSet.of("reflect"),
-            "",
-            lines(
-                "reflect('a');" //
-                ));
+    this.propIndex = this.collectProperties(ImmutableSet.of("reflect"), "", "reflect('a');");
 
     // Then
     this.assertThatUsesOf("a").containsExactly(null, Token.STRINGLIT);
@@ -421,13 +414,7 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
   @Test
   public void propDefinerFunction_noString_findsNoNodes() {
     // When
-    this.propIndex =
-        this.collectProperties(
-            ImmutableSet.of("reflect"),
-            "",
-            lines(
-                "reflect();" //
-                ));
+    this.propIndex = this.collectProperties(ImmutableSet.of("reflect"), "", "reflect();");
 
     // Then
     assertThat(this.propIndex.keySet()).isEmpty();
