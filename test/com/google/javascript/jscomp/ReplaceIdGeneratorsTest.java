@@ -603,16 +603,12 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
   @Test
   public void testInObjLit_mapped() {
-    testWithPseudo(
-        lines("foo.bar = {a: id('foo')}"),
-        lines("foo.bar = {a: ':foo:'}"),
-        lines("foo.bar = {a: ':foo:'}"));
+    testWithPseudo("foo.bar = {a: id('foo')}", "foo.bar = {a: ':foo:'}", "foo.bar = {a: ':foo:'}");
   }
 
   @Test
   public void testMapped() {
-    testWithPseudo(
-        lines("foo.bar = id('foo');"), lines("foo.bar = ':foo:';"), lines("foo.bar = ':foo:';"));
+    testWithPseudo("foo.bar = id('foo');", "foo.bar = ':foo:';", "foo.bar = ':foo:';");
   }
 
   @Test
