@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.integration;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.DiagnosticGroups.CHECK_TYPES;
-import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
@@ -64,7 +63,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   private static final String CLOSURE_BOILERPLATE_COMPILED =
       "/** @define {boolean} */ var COMPILED = true;";
 
-  private static final String CLOSURE_COLLAPSED = lines("var COMPILED = true;");
+  private static final String CLOSURE_COLLAPSED = "var COMPILED = true;";
 
   @Test
   public void testReferencingMangledModuleNames_rewriteModulesBeforeTypechecking() {
@@ -288,11 +287,12 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     test(
         options,
-        lines(
-            CLOSURE_BOILERPLATE_UNCOMPILED, //
-            "goog.provide('FOO.BAR');",
-            "FOO.BAR = 3;"),
-        lines(CLOSURE_COLLAPSED, "var FOO$BAR = 3;"));
+        CLOSURE_BOILERPLATE_UNCOMPILED
+            + """
+            goog.provide('FOO.BAR');
+            FOO.BAR = 3;
+            """,
+        CLOSURE_COLLAPSED + "var FOO$BAR = 3;");
   }
 
   @Test
@@ -302,12 +302,16 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     test(
         options,
-        "function F() {}"
-            + "/** @export */ function G() { G.base(this, 'constructor'); } "
-            + "goog.inherits(G, F);",
-        "function F() {}"
-            + "function G() { F.call(this); } "
-            + "goog.inherits(G, F); goog.exportSymbol('G', G);");
+        """
+        function F() {}
+        /** @export */ function G() { G.base(this, 'constructor'); }
+        goog.inherits(G, F);
+        """,
+        """
+        function F() {}
+        function G() { F.call(this); }
+        goog.inherits(G, F); goog.exportSymbol('G', G);
+        """);
   }
 
   @Test
@@ -321,17 +325,19 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
       DiagnosticGroups.CHECK_TYPES
     };
     String[] input = {
-      lines(
-          CLOSURE_BOILERPLATE_UNCOMPILED,
-          "goog.provide('foo.bar');",
-          "/** @define {foo.bar} */ foo.bar = {};"),
+      CLOSURE_BOILERPLATE_UNCOMPILED
+          + """
+          goog.provide('foo.bar');
+          /** @define {foo.bar} */ foo.bar = {};
+          """,
     };
     String[] output = {
       "",
-      lines(
-          CLOSURE_BOILERPLATE_UNCOMPILED,
-          "goog.provide('foo.bar');",
-          "/** @define {foo.bar} */ foo.bar = {};"),
+      CLOSURE_BOILERPLATE_UNCOMPILED
+          + """
+          goog.provide('foo.bar');
+          /** @define {foo.bar} */ foo.bar = {};
+          """,
     };
     test(options, input, output, warnings);
   }
@@ -623,21 +629,22 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
-        lines(
-            CLOSURE_BOILERPLATE_UNCOMPILED,
-            "goog.provide('ns');",
-            "goog.provide('ns.SomeType');",
-            "goog.provide('ns.SomeType.EnumValue');",
-            "goog.provide('ns.SomeType.defaultName');",
+        CLOSURE_BOILERPLATE_UNCOMPILED
+            + """
+            goog.provide('ns');
+            goog.provide('ns.SomeType');
+            goog.provide('ns.SomeType.EnumValue');
+            goog.provide('ns.SomeType.defaultName');
             // subnamespace assignment happens before parent.
-            "/** @enum {number} */",
-            "ns.SomeType.EnumValue = { A: 1, B: 2 };",
+            /** @enum {number} */
+            ns.SomeType.EnumValue = { A: 1, B: 2 };
             // parent namespace isn't ever actually assigned.
             // we're relying on goog.provide to provide it.
-            "/** @typedef {{name: string, value: ns.SomeType.EnumValue}} */",
-            "ns.SomeType;",
-            "/** @const {string} */",
-            "ns.SomeType.defaultName = 'foobarbaz';"),
+            /** @typedef {{name: string, value: ns.SomeType.EnumValue}} */
+            ns.SomeType;
+            /** @const {string} */
+            ns.SomeType.defaultName = 'foobarbaz';
+            """,
         // the provides should be rewritten, then collapsed, then removed by RemoveUnusedCode
         "");
   }
@@ -690,9 +697,10 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   public void testGoogDefine2() {
     String code =
         CLOSURE_BOILERPLATE_UNCOMPILED
-            + "goog.provide('ns');"
-            + "/** @define {boolean} */ ns.FLAG = goog.define('ns.FLAG_XYZ', true);";
-
+            + """
+            goog.provide('ns');
+            /** @define {boolean} */ ns.FLAG = goog.define('ns.FLAG_XYZ', true);
+            """;
     CompilerOptions options = createCompilerOptions();
 
     options.setClosurePass(true);
@@ -747,16 +755,21 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        lines(
-            CLOSURE_BOILERPLATE_UNCOMPILED,
-            "goog.provide('Foo');",
-            "/** @constructor */ Foo = function() {};",
-            "var x = new Foo();"),
-        lines(CLOSURE_BOILERPLATE_COMPILED, "var Foo = function() {};", "var x = new Foo;"));
+        CLOSURE_BOILERPLATE_UNCOMPILED
+            + """
+            goog.provide('Foo');
+            /** @constructor */ Foo = function() {};
+            var x = new Foo();
+            """,
+        CLOSURE_BOILERPLATE_COMPILED
+            + """
+            var Foo = function() {};
+            var x = new Foo;
+            """);
     test(
         options,
         CLOSURE_BOILERPLATE_UNCOMPILED + "goog.provide('Foo'); /** @enum */ Foo = {a: 3};",
-        lines(CLOSURE_BOILERPLATE_COMPILED, "var Foo={a:3}"));
+        CLOSURE_BOILERPLATE_COMPILED + "var Foo={a:3}");
   }
 
   @Test
@@ -785,10 +798,16 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     test(
         options,
-        "goog.provide('foo.bar'); goog.provide('foo.bar.baz'); "
-            + "/** @constructor */ foo.bar = function() {};"
-            + "/** @constructor */ foo.bar.baz = function() {};",
-        "var foo$bar = function(){};" + "var foo$bar$baz = function(){};");
+        """
+        goog.provide('foo.bar');
+        goog.provide('foo.bar.baz');
+        /** @constructor */ foo.bar = function() {};
+        /** @constructor */ foo.bar.baz = function() {};
+        """,
+        """
+        var foo$bar = function(){};
+        var foo$bar$baz = function(){};
+        """);
   }
 
   @Test
@@ -939,7 +958,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
           """,
         },
         new String[] {
-          """
+"""
 var foo = {};
 foo.example = {};
 function module$contents$foo$example$ClassName_ClassName() {}
@@ -1260,12 +1279,14 @@ goog.exportSymbol('foo.example.ClassName', module$contents$foo$example$ClassName
     test(
         options,
         new String[] {
-          lines(
-              "/** @externs */",
-              CLOSURE_BOILERPLATE_UNCOMPILED,
-              "goog.provide('ext.Bar');",
-              "/** @constructor */ ext.Bar = function() {};",
-              ""),
+          """
+          /** @externs */
+          CLOSURE_BOILERPLATE_UNCOMPILED
+          goog.provide('ext.Bar');
+          /** @constructor */ ext.Bar = function() {};
+
+          """
+              .replace("CLOSURE_BOILERPLATE_UNCOMPILED", CLOSURE_BOILERPLATE_UNCOMPILED),
           """
           goog.module('ns');
           const Bar = goog.require('ext.Bar');
@@ -1485,7 +1506,7 @@ goog.exportSymbol('foo.example.ClassName', module$contents$foo$example$ClassName
           """,
           "alert(goog.reflect.objectProperty('prop', {prop: 0}));"
         },
-        new String[] {lines("goog.$reflect$ = {};"), "alert('$prop$');"});
+        new String[] {"goog.$reflect$ = {};", "alert('$prop$');"});
   }
 
   @Test
@@ -1535,11 +1556,7 @@ goog.exportSymbol('foo.example.ClassName', module$contents$foo$example$ClassName
             .add(SourceFile.fromCode("abc.js", "goog.forwardDeclare('a.b.c');"))
             .build();
 
-    compile(
-        options,
-        lines(
-            "/** @type {!a.b.c} */ var x;", //
-            CLOSURE_BOILERPLATE_UNCOMPILED));
+    compile(options, "/** @type {!a.b.c} */ var x;" + CLOSURE_BOILERPLATE_UNCOMPILED);
 
     assertThat(lastCompiler.toSource()).startsWith("var a;");
   }
@@ -1703,7 +1720,7 @@ goog.exportSymbol('foo.example.ClassName', module$contents$foo$example$ClassName
 
     test(
         options,
-        """
+"""
 /** @fileoverview @suppress {checkTypes} */
 
 // Define two parent classes, Foo and Bar, and a child class FooBar that all share
