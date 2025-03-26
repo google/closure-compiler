@@ -985,7 +985,12 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         [...a] = itr;
         return a;
         """
-        /* , lines( "var a;", // "[...a] = itr;", "return a;") */
+        // ,
+        // """
+        // var a;
+        // [...a] = itr;
+        // return a;
+        // """
         );
 
     inFunction(
@@ -994,7 +999,12 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         ({...a} = obj);
         return a;
         """
-        /* , lines( "var a;", // "({...a} = obj);", "return a;") */
+        // ,
+        // """
+        // var a;
+        // ({...a} = obj);
+        // return a;
+        // """
         );
   }
 
@@ -1009,7 +1019,12 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         [a] = itr;
         return a;
         """
-        /* , lines( "var a;", // "[a] = itr;", "return a;") */
+        // ,
+        // """
+        // var a;
+        // [a] = itr;
+        // return a;
+        // """
         );
 
     inFunction(
@@ -1018,7 +1033,12 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         ({a} = obj);
         return a;
         """
-        /* , lines( "var a;", // "({a} = obj);", "return a;") */
+        // ,
+        // """
+        // var a;
+        // ({a} = obj);
+        // return a;
+        // """
         );
   }
 
