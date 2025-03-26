@@ -34,6 +34,7 @@ import org.jspecify.annotations.Nullable;
 public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callback {
 
   private static final String SWAP = "$jscomp$swapContext";
+  private static final String REENTER_SWAP = "$jscomp$swapContextReenter";
   private static final String JSCOMP = "$jscomp";
   private static final String ENTER = "asyncContextEnter";
 
@@ -44,6 +45,11 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   // instrumenting them completely (the transpiled `yield`s don't need instrumentation because we
   // can rely on `Promise.then` to take care of it).
   private final boolean shouldInstrumentAwait;
+
+  // Whether to emit a more verbose transpilation that uses separate top-level functions for "exit"
+  // and "reenter", so that we can get a better idea of what's happening.
+  // TODO: b/379881163, go/tracing-safari-crash - Remove this once we've diagnosed it.
+  private final boolean diagnoseSafari;
 
   // TODO(sdh): Investigate whether async generator instrumentation can be skipped in ES2017
   // output.  They are transpiled to ordinary generators with Promise.then, so we may be able
@@ -57,9 +63,15 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   private final Set<Node> hasSuper = new LinkedHashSet<>();
 
   public InstrumentAsyncContext(AbstractCompiler compiler, boolean shouldInstrumentAwait) {
+    this(compiler, shouldInstrumentAwait, false);
+  }
+
+  public InstrumentAsyncContext(
+      AbstractCompiler compiler, boolean shouldInstrumentAwait, boolean diagnoseSafari) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.shouldInstrumentAwait = shouldInstrumentAwait;
+    this.diagnoseSafari = diagnoseSafari;
   }
 
   @Override
@@ -266,6 +278,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     generatorBody.addChildToFront(IR.exprResult(createReenter()));
     Node newOuterBody =
         IR.block(createEnterExit(), IR.returnNode(astFactory.createCallWithUnknownType(inner)));
+    addReenterSwapAfter(newOuterBody.getFirstChild());
     f.addChildToBack(newOuterBody.srcrefTreeIfMissing(generatorBody));
 
     // NOTE: if the IIFE generator refers to `this` or `arguments` then we need to extract these
@@ -393,6 +406,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
 
     // Populate the outer (non-generator) method body with an enter() and call to the inner method.
     outerBody.addChildToBack(createEnterExit());
+    addReenterSwapAfter(outerBody.getLastChild());
     outerBody.addChildToBack(IR.returnNode(innerCall));
 
     // Various cleanups
@@ -475,6 +489,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     Node block = f.getLastChild();
     Node newBlock = addFinallyExit(block);
     newBlock.addChildToFront(createEnter().srcrefTreeIfMissing(newBlock));
+    addReenterSwapAfter(newBlock.getFirstChild());
     compiler.reportChangeToChangeScope(f);
 
     // TODO(sdh): Need to instrument async functions for unhandled rejections.
@@ -501,6 +516,20 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   /** Creates a {@code $jscomp$swapContext} identifier node. */
   private Node createSwap() {
     return astFactory.createQNameWithUnknownType(SWAP);
+  }
+
+  // Alternative version for the "diagnose safari" case.
+  private Node createReenterSwap() {
+    return astFactory.createQNameWithUnknownType(diagnoseSafari ? REENTER_SWAP : SWAP);
+  }
+
+  private void addReenterSwapAfter(Node node) {
+    if (diagnoseSafari) {
+      Node swap = astFactory.createOr(createSwap(), createSwap());
+      IR.var(astFactory.createConstantName(REENTER_SWAP, AstFactory.type(swap)), swap)
+          .srcrefTreeIfMissing(node)
+          .insertAfter(node);
+    }
   }
 
   /** Creates a statement {@code const $jscomp$swapContext = $jscomp$asyncContextEnter();}. */
@@ -530,7 +559,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   /** Wraps the given node in a reenter call: {@code $jscomp$swapContext(NODE, 1)}. */
   private Node createReenter(Node inner) {
     return astFactory.createCall(
-        createSwap(), AstFactory.type(inner), inner, astFactory.createNumber(1));
+        createReenterSwap(), AstFactory.type(inner), inner, astFactory.createNumber(1));
   }
 
   /**

@@ -322,10 +322,8 @@ public class TranspilationPasses {
               (compiler) ->
                   new InstrumentAsyncContext(
                       compiler,
-                      compiler
-                          .getOptions()
-                          .getOutputFeatureSet()
-                          .contains(Feature.ASYNC_FUNCTIONS)))
+                      compiler.getOptions().getOutputFeatureSet().contains(Feature.ASYNC_FUNCTIONS),
+                      compiler.getOptions().getDiagnoseAsyncContextSafariCrash()))
           .build();
 
   static final PassFactory es6SplitVariableDeclarations =

@@ -881,6 +881,9 @@ public class CompilerOptions {
   /** Whether to instrument reentrant functions for AsyncContext. */
   private boolean instrumentAsyncContext = false;
 
+  /** Whether to diagnose go/tracing-safari-crash in AsyncContext. */
+  private boolean diagnoseAsyncContextSafariCrash = false;
+
   /** Runtime libraries to always inject. */
   List<String> forceLibraryInjection = ImmutableList.of();
 
@@ -2658,6 +2661,15 @@ public class CompilerOptions {
 
   public boolean getInstrumentAsyncContext() {
     return this.instrumentAsyncContext;
+  }
+
+  /** Sets whether to diagnose the Safari crash in async context instrumentation. */
+  public void setDiagnoseAsyncContextSafariCrash(boolean diagnose) {
+    this.diagnoseAsyncContextSafariCrash = diagnose;
+  }
+
+  boolean getDiagnoseAsyncContextSafariCrash() {
+    return this.diagnoseAsyncContextSafariCrash;
   }
 
   /** Sets list of libraries to always inject, even if not needed. */
