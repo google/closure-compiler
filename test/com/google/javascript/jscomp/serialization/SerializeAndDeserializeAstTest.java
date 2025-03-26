@@ -803,7 +803,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
                   window['foo'] = 5;
                 })();
                 """),
-            expected(lines("SHADOW();")));
+            expected("SHADOW();"));
     assertThat(result.compiler.getErrors()).isEmpty();
 
     // Also validate that the content of the shadow is actually correct
