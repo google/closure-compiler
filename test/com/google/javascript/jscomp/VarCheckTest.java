@@ -1120,9 +1120,9 @@ public final class VarCheckTest extends CompilerTestCase {
     JSChunk strongChunk = new JSChunk(JSChunk.STRONG_CHUNK_NAME);
     weakChunk.addDependency(strongChunk);
 
-    weakChunk.add(SourceFile.fromCode("weak.js", lines("var weakVar = 0;"), SourceKind.WEAK));
+    weakChunk.add(SourceFile.fromCode("weak.js", "var weakVar = 0;", SourceKind.WEAK));
 
-    strongChunk.add(SourceFile.fromCode("strong.js", lines("weakVar();"), SourceKind.STRONG));
+    strongChunk.add(SourceFile.fromCode("strong.js", "weakVar();", SourceKind.STRONG));
 
     test(
         srcs(
@@ -1157,12 +1157,10 @@ public final class VarCheckTest extends CompilerTestCase {
     weakChunk.add(
         SourceFile.fromCode(
             "weak.js",
-            lines(
-                TestExternsBuilder.getClosureExternsAsSource(), //
-                "goog.provide('foo.bar');"),
+            TestExternsBuilder.getClosureExternsAsSource() + "goog.provide('foo.bar');",
             SourceKind.WEAK));
 
-    strongChunk.add(SourceFile.fromCode("strong.js", lines("foo();"), SourceKind.STRONG));
+    strongChunk.add(SourceFile.fromCode("strong.js", "foo();", SourceKind.STRONG));
 
     test(
         srcs(
@@ -1181,9 +1179,7 @@ public final class VarCheckTest extends CompilerTestCase {
     weakChunk.add(
         SourceFile.fromCode(
             "weak.js",
-            lines(
-                TestExternsBuilder.getClosureExternsAsSource(), //
-                "goog.provide('foo.bar');"),
+            TestExternsBuilder.getClosureExternsAsSource() + "goog.provide('foo.bar');",
             SourceKind.WEAK));
 
     strongChunk.add(
@@ -1208,12 +1204,11 @@ public final class VarCheckTest extends CompilerTestCase {
     weakChunk.add(
         SourceFile.fromCode(
             "weak.js",
-            lines(
-                TestExternsBuilder.getClosureExternsAsSource(), //
-                "goog.module('foo.bar'); goog.module.declareLegacyNamespace();"),
+            TestExternsBuilder.getClosureExternsAsSource()
+                + "goog.module('foo.bar'); goog.module.declareLegacyNamespace();",
             SourceKind.WEAK));
 
-    strongChunk.add(SourceFile.fromCode("strong.js", lines("foo();"), SourceKind.STRONG));
+    strongChunk.add(SourceFile.fromCode("strong.js", "foo();", SourceKind.STRONG));
 
     test(srcs(strongChunk, weakChunk), error(VarCheck.UNDEFINED_VAR_ERROR));
   }
@@ -1224,15 +1219,14 @@ public final class VarCheckTest extends CompilerTestCase {
     JSChunk strongChunk = new JSChunk(JSChunk.STRONG_CHUNK_NAME);
     weakChunk.addDependency(strongChunk);
 
-    weakChunk.add(
-        SourceFile.fromCode("weak.js", lines("goog.provide('foo.bar');"), SourceKind.WEAK));
+    weakChunk.add(SourceFile.fromCode("weak.js", "goog.provide('foo.bar');", SourceKind.WEAK));
 
     strongChunk.add(
         SourceFile.fromCode(
             "strong0.js",
-            lines(TestExternsBuilder.getClosureExternsAsSource(), "goog.provide('foo.qux');"),
+            TestExternsBuilder.getClosureExternsAsSource() + "goog.provide('foo.qux');",
             SourceKind.STRONG));
-    strongChunk.add(SourceFile.fromCode("strong1.js", lines("foo();"), SourceKind.STRONG));
+    strongChunk.add(SourceFile.fromCode("strong1.js", "foo();", SourceKind.STRONG));
 
     testSame(
         srcs(
