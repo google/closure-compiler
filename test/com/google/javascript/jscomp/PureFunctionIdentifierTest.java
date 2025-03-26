@@ -1574,11 +1574,13 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   public void testKnownDynamicFunctions_areSkiplistedForAliasing() {
     for (String name : ImmutableList.of("call", "apply", "constructor")) {
       assertNoPureCalls(
-          lines(
-              // Create a known pure definition so we're sure the name isn't just undefined.
-              "foo." + name + " = function() { };", //
-              "const f = foo." + name + ";",
-              "f();"));
+          // Create a known pure definition so we're sure the name isn't just undefined.
+          """
+          foo.NAME = function() { };
+          const f = foo.NAME;
+          f();
+          """
+              .replace("NAME", name));
     }
   }
 
@@ -2058,13 +2060,13 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     }
 
     assertPureCallsMarked(
-        lines(
-            "const /** ? */ obj = {};",
-            "function pure() { }", //
-            aliasDefinition,
-            "",
-            "pure();",
-            aliasExpression + "();"),
+        "const /** ? */ obj = {};\n"
+            + "function pure() { }\n"
+            + aliasDefinition
+            + "\n\n"
+            + "pure();\n"
+            + aliasExpression
+            + "();",
         expected);
   }
 
