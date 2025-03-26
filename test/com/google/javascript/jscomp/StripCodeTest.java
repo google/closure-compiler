@@ -656,7 +656,7 @@ public final class StripCodeTest extends CompilerTestCase {
 
   @Test
   public void testLoggerMethodCallByIndirection_inVarAssignment() {
-    test(lines("const x = (0, goog.log.getLogger)('a.b.c');"), "");
+    test("const x = (0, goog.log.getLogger)('a.b.c');", "");
   }
 
   @Test
