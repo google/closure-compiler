@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CheckLevel;
@@ -68,35 +67,40 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             .addClosureExterns()
             .addPolymer()
             .addExtra(
-                "/**",
-                " * @see"
-                    + " https://html.spec.whatwg.org/multipage/custom-elements.html#customelementregistry",
-                " * @constructor",
-                " */",
-                "function CustomElementRegistry() {}",
-                "",
-                "/**",
-                " * @param {string} tagName",
-                " * @param {function(new:HTMLElement)} klass",
-                " * @param {{extends: string}=} options",
-                " * @return {undefined}",
-                " */",
-                "CustomElementRegistry.prototype.define = function (tagName, klass, options) {};",
-                "",
-                "/**",
-                " * @param {string} tagName",
-                " * @return {function(new:HTMLElement)|undefined}",
-                " */",
-                "CustomElementRegistry.prototype.get = function(tagName) {};",
-                "",
-                "/**",
-                " * @param {string} tagName",
-                " * @return {!Promise<undefined>}",
-                " */",
-                "CustomElementRegistry.prototype.whenDefined = function(tagName) {};",
-                "",
-                "/** @type {!CustomElementRegistry} */",
-                "var customElements;")
+                """
+                /**
+                 * @see https://html.spec.whatwg.org/multipage/custom-elements.html#customelementregistry
+                 * @constructor
+                 */
+                function CustomElementRegistry() {}
+                """,
+                """
+                /**
+                 * @param {string} tagName
+                 * @param {function(new:HTMLElement)} klass
+                 * @param {{extends: string}=} options
+                 * @return {undefined}
+                 */
+                CustomElementRegistry.prototype.define = function (tagName, klass, options) {};
+                """,
+                """
+                /**
+                 * @param {string} tagName
+                 * @return {function(new:HTMLElement)|undefined}
+                 */
+                CustomElementRegistry.prototype.get = function(tagName) {};
+                """,
+                """
+                /**
+                 * @param {string} tagName
+                 * @return {!Promise<undefined>}
+                 */
+                CustomElementRegistry.prototype.whenDefined = function(tagName) {};
+                """,
+                """
+                /** @type {!CustomElementRegistry} */
+                var customElements;
+                """)
             .buildExternsFile("polymer_externs.js"));
     externs = externsList.build();
   }
@@ -638,7 +642,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
         compile(
             options,
             new String[] {
-              lines("export class PolymerElement {};"),
+              "export class PolymerElement {};",
               """
               import {PolymerElement} from './i0.js';
               class Foo extends PolymerElement {
@@ -667,7 +671,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
         compile(
             options,
             new String[] {
-              lines("export function Polymer(def) {};"),
+              "export function Polymer(def) {};",
               """
               import {Polymer} from './i0.js';
               Polymer({
@@ -731,18 +735,19 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     Compiler compiler =
         compile(
             options,
-            lines(
-                EXPORT_PROPERTY_DEF,
-                "class FooElement extends PolymerElement {",
-                "  static get properties() {",
-                "    return {",
-                "      longUnusedProperty: String,",
-                "    }",
-                "  }",
-                "  longUnusedMethod() {",
-                "    return this.longUnusedProperty;",
-                "  }",
-                "}"));
+            EXPORT_PROPERTY_DEF
+                + """
+                class FooElement extends PolymerElement {
+                  static get properties() {
+                    return {
+                      longUnusedProperty: String,
+                    }
+                  }
+                  longUnusedMethod() {
+                    return this.longUnusedProperty;
+                  }
+                }
+                """);
     String source = compiler.toSource();
 
     // If we see these identifiers anywhere in the output source, we know that we successfully
@@ -771,17 +776,18 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     Compiler compiler =
         compile(
             options,
-            lines(
-                EXPORT_PROPERTY_DEF,
-                "Polymer({",
-                "  is: \"foo-element\",",
-                "  properties: {",
-                "    longUnusedProperty: String,",
-                "  },",
-                "  longUnusedMethod: function() {",
-                "    return this.longUnusedProperty;",
-                "  },",
-                "});"));
+            EXPORT_PROPERTY_DEF
+                + """
+                Polymer({
+                  is: "foo-element",
+                  properties: {
+                    longUnusedProperty: String,
+                  },
+                  longUnusedMethod: function() {
+                    return this.longUnusedProperty;
+                  },
+                });
+                """);
     String source = compiler.toSource();
 
     // If we see these identifiers anywhere in the output source, we know that we successfully
@@ -804,42 +810,43 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     Compiler compiler =
         compile(
             options,
-            lines(
-                EXPORT_PROPERTY_DEF,
-                "class FooElement extends PolymerElement {",
-                "  constructor() {",
-                "    super();",
-                "    /** @type {number} */",
-                "    this.p1 = 0;",
-                "    /** @type {string|undefined} */",
-                "    this.p2;",
-                "    if (condition) {",
-                "      this.p3 = true;",
-                "    }",
-                "  }",
-                "  static get properties() {",
-                "    return {",
-                "      /** @type {boolean} */",
-                "      p1: String,",
-                "      p2: String,",
-                "      p3: Boolean,",
-                "      p4: Object,",
-                "      /** @type {number} */",
-                "      p5: String,",
-                "    };",
-                "  }",
+            EXPORT_PROPERTY_DEF
+                + """
+                class FooElement extends PolymerElement {
+                  constructor() {
+                    super();
+                    /** @type {number} */
+                    this.p1 = 0;
+                    /** @type {string|undefined} */
+                    this.p2;
+                    if (condition) {
+                      this.p3 = true;
+                    }
+                  }
+                  static get properties() {
+                    return {
+                      /** @type {boolean} */
+                      p1: String,
+                      p2: String,
+                      p3: Boolean,
+                      p4: Object,
+                      /** @type {number} */
+                      p5: String,
+                    };
+                  }
 
-                // p1 has 3 possible types that could win out: 1) string (inferred from the Polymer
-                // attribute de-serialization function), 2) boolean (from the @type annotation in
-                // the properties configuration), 3) number (from the @type annotation in the
-                // constructor). We want the constructor annotation to win (number). If it didn't,
-                // this method signature would have a type error.
-                "  /** @return {number}  */ getP1() { return this.p1; }",
-                "  /** @return {string|undefined}  */ getP2() { return this.p2; }",
-                "  /** @return {boolean} */ getP3() { return this.p3; }",
-                "  /** @return {!Object} */ getP4() { return this.p4; }",
-                "  /** @return {number}  */ getP5() { return this.p5; }",
-                "}"));
+                  // p1 has 3 possible types that could win out: 1) string (inferred from the
+                  // Polymer attribute de-serialization function), 2) boolean (from the @type
+                  // annotation in the properties configuration), 3) number (from the @type
+                  // annotation in the constructor). We want the constructor annotation to win
+                  // (number). If it didn't, this method signature would have a type error.
+                  /** @return {number}  */ getP1() { return this.p1; }
+                  /** @return {string|undefined}  */ getP2() { return this.p2; }
+                  /** @return {boolean} */ getP3() { return this.p3; }
+                  /** @return {!Object} */ getP4() { return this.p4; }
+                  /** @return {number}  */ getP5() { return this.p5; }
+                }
+                """);
 
     assertThat(compiler.getErrors()).isEmpty();
 
