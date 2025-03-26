@@ -109,7 +109,7 @@ public final class ExtraRequireRemoverTest extends CompilerTestCase {
 
         const {A1, A2} = goog.require('A');
         """,
-        lines("goog.module('x.y.z');"));
+        "goog.module('x.y.z');");
   }
 
   @Test
