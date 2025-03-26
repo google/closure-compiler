@@ -233,10 +233,7 @@ public final class ControlFlowAnalysisTest {
       DiGraphNode<Node, Branch> dest = edge.getDestination();
       if (source.getToken() == startToken) {
         assertWithMessage(
-                "Token "
-                    + startToken
-                    + " should not have an out going"
-                    + " edge to the implicit return")
+                "Token " + startToken + " should not have an out going edge to the implicit return")
             .that(cfg.isImplicitReturn(dest))
             .isFalse();
         return;
@@ -381,50 +378,43 @@ public final class ControlFlowAnalysisTest {
   public void testThrowInCatchBlock() throws IOException {
     String src = "try { throw ''; } catch (e) { throw e;} finally {}";
     String expected =
-        "digraph AST {\n"
-            + "  node [color=lightblue2, style=filled];\n"
-            + "  node0 [label=\"SCRIPT\"];\n"
-            + "  node1 [label=\"TRY\"];\n"
-            + "  node0 -> node1 [weight=1];\n"
-            + "  node2 [label=\"BLOCK\"];\n"
-            + "  node1 -> node2 [weight=1];\n"
-            + "  node3 [label=\"THROW\"];\n"
-            + "  node2 -> node3 [weight=1];\n"
-            + "  node4 [label=\"STRINGLIT\"];\n"
-            + "  node3 -> node4 [weight=1];\n"
-            + "  node5 [label=\"BLOCK\"];\n"
-            + "  node3 -> node5 [label=\"ON_EX\", fontcolor=\"red\", weight=0.01,"
-            + " color=\"red\"];\n"
-            + "  node2 -> node3 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01,"
-            + " color=\"red\"];\n"
-            + "  node1 -> node5 [weight=1];\n"
-            + "  node6 [label=\"CATCH\"];\n"
-            + "  node5 -> node6 [weight=1];\n"
-            + "  node7 [label=\"NAME(e)\"];\n"
-            + "  node6 -> node7 [weight=1];\n"
-            + "  node8 [label=\"BLOCK\"];\n"
-            + "  node6 -> node8 [weight=1];\n"
-            + "  node9 [label=\"THROW\"];\n"
-            + "  node8 -> node9 [weight=1];\n"
-            + "  node10 [label=\"NAME(e)\"];\n"
-            + "  node9 -> node10 [weight=1];\n"
-            + "  node11 [label=\"BLOCK\"];\n"
-            + "  node9 -> node11 [label=\"ON_EX\", fontcolor=\"red\", weight=0.01,"
-            + " color=\"red\"];\n"
-            + "  node8 -> node9 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01,"
-            + " color=\"red\"];\n"
-            + "  node6 -> node8 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01,"
-            + " color=\"red\"];\n"
-            + "  node5 -> node6 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01,"
-            + " color=\"red\"];\n"
-            + "  node1 -> node11 [weight=1];\n"
-            + "  node11 -> RETURN [label=\"UNCOND\", fontcolor=\"red\", weight=0.01,"
-            + " color=\"red\"];\n"
-            + "  node1 -> node2 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01,"
-            + " color=\"red\"];\n"
-            + "  node0 -> node1 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01,"
-            + " color=\"red\"];\n"
-            + "}\n";
+        """
+        digraph AST {
+          node [color=lightblue2, style=filled];
+          node0 [label="SCRIPT"];
+          node1 [label="TRY"];
+          node0 -> node1 [weight=1];
+          node2 [label="BLOCK"];
+          node1 -> node2 [weight=1];
+          node3 [label="THROW"];
+          node2 -> node3 [weight=1];
+          node4 [label="STRINGLIT"];
+          node3 -> node4 [weight=1];
+          node5 [label="BLOCK"];
+          node3 -> node5 [label="ON_EX", fontcolor="red", weight=0.01, color="red"];
+          node2 -> node3 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node1 -> node5 [weight=1];
+          node6 [label="CATCH"];
+          node5 -> node6 [weight=1];
+          node7 [label="NAME(e)"];
+          node6 -> node7 [weight=1];
+          node8 [label="BLOCK"];
+          node6 -> node8 [weight=1];
+          node9 [label="THROW"];
+          node8 -> node9 [weight=1];
+          node10 [label="NAME(e)"];
+          node9 -> node10 [weight=1];
+          node11 [label="BLOCK"];
+          node9 -> node11 [label="ON_EX", fontcolor="red", weight=0.01, color="red"];
+          node8 -> node9 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node6 -> node8 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node5 -> node6 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node1 -> node11 [weight=1];
+          node11 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node1 -> node2 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node0 -> node1 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+        }
+        """;
     testCfg(src, expected);
   }
 
@@ -467,7 +457,7 @@ public final class ControlFlowAnalysisTest {
 
   @Test
   public void testSimpleSwitch() throws IOException {
-    String src = "var x; switch(x){ case(1): x(); case('x'): x(); break" + "; default: x();}";
+    String src = "var x; switch(x){ case(1): x(); case('x'): x(); break; default: x();}";
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertCrossEdge(cfg, Token.VAR, Token.SWITCH, Branch.UNCOND);
     assertNoEdge(cfg, Token.SWITCH, Token.NAME);
@@ -502,7 +492,7 @@ public final class ControlFlowAnalysisTest {
   @Test
   public void testSwitchDefaultInMiddle() throws IOException {
     // DEFAULT appears in the middle. But it is should evaluated last.
-    String src = "var x; switch(x){ case 1: break; default: break; " + "case 2: break; }";
+    String src = "var x; switch(x){ case 1: break; default: break; case 2: break; }";
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertDownEdge(cfg, Token.SWITCH_BODY, Token.CASE, Branch.UNCOND);
     assertCrossEdge(cfg, Token.CASE, Token.CASE, Branch.ON_FALSE);
@@ -531,56 +521,50 @@ public final class ControlFlowAnalysisTest {
   public void testSimpleFor() throws IOException {
     String src = "var a; for (var x = 0; x < 100; x++) { a(); }";
     String expected =
-        "digraph AST {\n"
-            + "  node [color=lightblue2, style=filled];\n"
-            + "  node0 [label=\"SCRIPT\"];\n"
-            + "  node1 [label=\"VAR\"];\n"
-            + "  node0 -> node1 [weight=1];\n"
-            + "  node2 [label=\"NAME(a)\"];\n"
-            + "  node1 -> node2 [weight=1];\n"
-            + "  node3 [label=\"VAR\"];\n"
-            + "  node1 -> node3 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node4 [label=\"FOR\"];\n"
-            + "  node0 -> node4 [weight=1];\n"
-            + "  node4 -> node3 [weight=1];\n"
-            + "  node5 [label=\"NAME(x)\"];\n"
-            + "  node3 -> node5 [weight=1];\n"
-            + "  node6 [label=\"NUMBER\"];\n"
-            + "  node5 -> node6 [weight=1];\n"
-            + "  node3 -> node4 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node7 [label=\"LT\"];\n"
-            + "  node4 -> node7 [weight=1];\n"
-            + "  node8 [label=\"NAME(x)\"];\n"
-            + "  node7 -> node8 [weight=1];\n"
-            + "  node9 [label=\"NUMBER\"];\n"
-            + "  node7 -> node9 [weight=1];\n"
-            + "  node10 [label=\"INC\"];\n"
-            + "  node4 -> node10 [weight=1];\n"
-            + "  node11 [label=\"NAME(x)\"];\n"
-            + "  node10 -> node11 [weight=1];\n"
-            + "  node10 -> node4 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node12 [label=\"BLOCK\"];\n"
-            + "  node4 -> node12 [weight=1];\n"
-            + "  node13 [label=\"EXPR_RESULT\"];\n"
-            + "  node12 -> node13 [weight=1];\n"
-            + "  node14 [label=\"CALL\"];\n"
-            + "  node13 -> node14 [weight=1];\n"
-            + "  node15 [label=\"NAME(a)\"];\n"
-            + "  node14 -> node15 [weight=1];\n"
-            + "  node13 -> node10 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node12 -> node13 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node4 -> RETURN "
-            + "[label=\"ON_FALSE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node4 -> node12 "
-            + "[label=\"ON_TRUE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node0 -> node1 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "}\n";
+        """
+        digraph AST {
+          node [color=lightblue2, style=filled];
+          node0 [label="SCRIPT"];
+          node1 [label="VAR"];
+          node0 -> node1 [weight=1];
+          node2 [label="NAME(a)"];
+          node1 -> node2 [weight=1];
+          node3 [label="VAR"];
+          node1 -> node3 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node4 [label="FOR"];
+          node0 -> node4 [weight=1];
+          node4 -> node3 [weight=1];
+          node5 [label="NAME(x)"];
+          node3 -> node5 [weight=1];
+          node6 [label="NUMBER"];
+          node5 -> node6 [weight=1];
+          node3 -> node4 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node7 [label="LT"];
+          node4 -> node7 [weight=1];
+          node8 [label="NAME(x)"];
+          node7 -> node8 [weight=1];
+          node9 [label="NUMBER"];
+          node7 -> node9 [weight=1];
+          node10 [label="INC"];
+          node4 -> node10 [weight=1];
+          node11 [label="NAME(x)"];
+          node10 -> node11 [weight=1];
+          node10 -> node4 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node12 [label="BLOCK"];
+          node4 -> node12 [weight=1];
+          node13 [label="EXPR_RESULT"];
+          node12 -> node13 [weight=1];
+          node14 [label="CALL"];
+          node13 -> node14 [weight=1];
+          node15 [label="NAME(a)"];
+          node14 -> node15 [weight=1];
+          node13 -> node10 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node12 -> node13 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node4 -> RETURN [label="ON_FALSE", fontcolor="red", weight=0.01, color="red"];
+          node4 -> node12 [label="ON_TRUE", fontcolor="red", weight=0.01, color="red"];
+          node0 -> node1 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+        }
+        """;
     testCfg(src, expected);
   }
 
@@ -588,170 +572,149 @@ public final class ControlFlowAnalysisTest {
   public void testSimpleForWithContinue() throws IOException {
     String src = "var a; for (var x = 0; x < 100; x++) {a();continue;a()}";
     String expected =
-        "digraph AST {\n"
-            + "  node [color=lightblue2, style=filled];\n"
-            + "  node0 [label=\"SCRIPT\"];\n"
-            + "  node1 [label=\"VAR\"];\n"
-            + "  node0 -> node1 [weight=1];\n"
-            + "  node2 [label=\"NAME(a)\"];\n"
-            + "  node1 -> node2 [weight=1];\n"
-            + "  node3 [label=\"VAR\"];\n"
-            + "  node1 -> node3 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node4 [label=\"FOR\"];\n"
-            + "  node0 -> node4 [weight=1];\n"
-            + "  node4 -> node3 [weight=1];\n"
-            + "  node5 [label=\"NAME(x)\"];\n"
-            + "  node3 -> node5 [weight=1];\n"
-            + "  node6 [label=\"NUMBER\"];\n"
-            + "  node5 -> node6 [weight=1];\n"
-            + "  node3 -> node4 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node7 [label=\"LT\"];\n"
-            + "  node4 -> node7 [weight=1];\n"
-            + "  node8 [label=\"NAME(x)\"];\n"
-            + "  node7 -> node8 [weight=1];\n"
-            + "  node9 [label=\"NUMBER\"];\n"
-            + "  node7 -> node9 [weight=1];\n"
-            + "  node10 [label=\"INC\"];\n"
-            + "  node4 -> node10 [weight=1];\n"
-            + "  node11 [label=\"NAME(x)\"];\n"
-            + "  node10 -> node11 [weight=1];\n"
-            + "  node10 -> node4 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node12 [label=\"BLOCK\"];\n"
-            + "  node4 -> node12 [weight=1];\n"
-            + "  node13 [label=\"EXPR_RESULT\"];\n"
-            + "  node12 -> node13 [weight=1];\n"
-            + "  node14 [label=\"CALL\"];\n"
-            + "  node13 -> node14 [weight=1];\n"
-            + "  node15 [label=\"NAME(a)\"];\n"
-            + "  node14 -> node15 [weight=1];\n"
-            + "  node16 [label=\"CONTINUE\"];\n"
-            + "  node13 -> node16 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node12 -> node16 [weight=1];\n"
-            + "  node16 -> node10 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node17 [label=\"EXPR_RESULT\"];\n"
-            + "  node12 -> node17 [weight=1];\n"
-            + "  node18 [label=\"CALL\"];\n"
-            + "  node17 -> node18 [weight=1];\n"
-            + "  node19 [label=\"NAME(a)\"];\n"
-            + "  node18 -> node19 [weight=1];\n"
-            + "  node17 -> node10 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node12 -> node13 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node4 -> RETURN "
-            + "[label=\"ON_FALSE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node4 -> node12 "
-            + "[label=\"ON_TRUE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node0 -> node1 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "}\n";
+        """
+        digraph AST {
+          node [color=lightblue2, style=filled];
+          node0 [label="SCRIPT"];
+          node1 [label="VAR"];
+          node0 -> node1 [weight=1];
+          node2 [label="NAME(a)"];
+          node1 -> node2 [weight=1];
+          node3 [label="VAR"];
+          node1 -> node3 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node4 [label="FOR"];
+          node0 -> node4 [weight=1];
+          node4 -> node3 [weight=1];
+          node5 [label="NAME(x)"];
+          node3 -> node5 [weight=1];
+          node6 [label="NUMBER"];
+          node5 -> node6 [weight=1];
+          node3 -> node4 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node7 [label="LT"];
+          node4 -> node7 [weight=1];
+          node8 [label="NAME(x)"];
+          node7 -> node8 [weight=1];
+          node9 [label="NUMBER"];
+          node7 -> node9 [weight=1];
+          node10 [label="INC"];
+          node4 -> node10 [weight=1];
+          node11 [label="NAME(x)"];
+          node10 -> node11 [weight=1];
+          node10 -> node4 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node12 [label="BLOCK"];
+          node4 -> node12 [weight=1];
+          node13 [label="EXPR_RESULT"];
+          node12 -> node13 [weight=1];
+          node14 [label="CALL"];
+          node13 -> node14 [weight=1];
+          node15 [label="NAME(a)"];
+          node14 -> node15 [weight=1];
+          node16 [label="CONTINUE"];
+          node13 -> node16 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node12 -> node16 [weight=1];
+          node16 -> node10 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node17 [label="EXPR_RESULT"];
+          node12 -> node17 [weight=1];
+          node18 [label="CALL"];
+          node17 -> node18 [weight=1];
+          node19 [label="NAME(a)"];
+          node18 -> node19 [weight=1];
+          node17 -> node10 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node12 -> node13 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node4 -> RETURN [label="ON_FALSE", fontcolor="red", weight=0.01, color="red"];
+          node4 -> node12 [label="ON_TRUE", fontcolor="red", weight=0.01, color="red"];
+          node0 -> node1 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+        }
+        """;
     testCfg(src, expected);
   }
 
   @Test
   public void testNestedFor() throws IOException {
     // This is tricky as the inner FOR branches to "x++" ON_FALSE.
-    String src = "var a,b;a();for(var x=0;x<100;x++){for(var y=0;y<100;y++){" + "continue;b();}}";
+    String src = "var a,b;a();for(var x=0;x<100;x++){for(var y=0;y<100;y++){continue;b();}}";
     String expected =
-        "digraph AST {\n"
-            + "  node [color=lightblue2, style=filled];\n"
-            + "  node0 [label=\"SCRIPT\"];\n"
-            + "  node1 [label=\"VAR\"];\n"
-            + "  node0 -> node1 [weight=1];\n"
-            + "  node2 [label=\"NAME(a)\"];\n"
-            + "  node1 -> node2 [weight=1];\n"
-            + "  node3 [label=\"NAME(b)\"];\n"
-            + "  node1 -> node3 [weight=1];\n"
-            + "  node4 [label=\"EXPR_RESULT\"];\n"
-            + "  node1 -> node4 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node0 -> node4 [weight=1];\n"
-            + "  node5 [label=\"CALL\"];\n"
-            + "  node4 -> node5 [weight=1];\n"
-            + "  node6 [label=\"NAME(a)\"];\n"
-            + "  node5 -> node6 [weight=1];\n"
-            + "  node7 [label=\"VAR\"];\n"
-            + "  node4 -> node7 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node8 [label=\"FOR\"];\n"
-            + "  node0 -> node8 [weight=1];\n"
-            + "  node8 -> node7 [weight=1];\n"
-            + "  node9 [label=\"NAME(x)\"];\n"
-            + "  node7 -> node9 [weight=1];\n"
-            + "  node10 [label=\"NUMBER\"];\n"
-            + "  node9 -> node10 [weight=1];\n"
-            + "  node7 -> node8 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node11 [label=\"LT\"];\n"
-            + "  node8 -> node11 [weight=1];\n"
-            + "  node12 [label=\"NAME(x)\"];\n"
-            + "  node11 -> node12 [weight=1];\n"
-            + "  node13 [label=\"NUMBER\"];\n"
-            + "  node11 -> node13 [weight=1];\n"
-            + "  node14 [label=\"INC\"];\n"
-            + "  node8 -> node14 [weight=1];\n"
-            + "  node15 [label=\"NAME(x)\"];\n"
-            + "  node14 -> node15 [weight=1];\n"
-            + "  node14 -> node8 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node16 [label=\"BLOCK\"];\n"
-            + "  node8 -> node16 [weight=1];\n"
-            + "  node17 [label=\"FOR\"];\n"
-            + "  node16 -> node17 [weight=1];\n"
-            + "  node18 [label=\"VAR\"];\n"
-            + "  node17 -> node18 [weight=1];\n"
-            + "  node19 [label=\"NAME(y)\"];\n"
-            + "  node18 -> node19 [weight=1];\n"
-            + "  node20 [label=\"NUMBER\"];\n"
-            + "  node19 -> node20 [weight=1];\n"
-            + "  node18 -> node17 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node21 [label=\"LT\"];\n"
-            + "  node17 -> node21 [weight=1];\n"
-            + "  node22 [label=\"NAME(y)\"];\n"
-            + "  node21 -> node22 [weight=1];\n"
-            + "  node23 [label=\"NUMBER\"];\n"
-            + "  node21 -> node23 [weight=1];\n"
-            + "  node24 [label=\"INC\"];\n"
-            + "  node17 -> node24 [weight=1];\n"
-            + "  node25 [label=\"NAME(y)\"];\n"
-            + "  node24 -> node25 [weight=1];\n"
-            + "  node24 -> node17 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node26 [label=\"BLOCK\"];\n"
-            + "  node17 -> node26 [weight=1];\n"
-            + "  node27 [label=\"CONTINUE\"];\n"
-            + "  node26 -> node27 [weight=1];\n"
-            + "  node27 -> node24 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node28 [label=\"EXPR_RESULT\"];\n"
-            + "  node26 -> node28 [weight=1];\n"
-            + "  node29 [label=\"CALL\"];\n"
-            + "  node28 -> node29 [weight=1];\n"
-            + "  node30 [label=\"NAME(b)\"];\n"
-            + "  node29 -> node30 [weight=1];\n"
-            + "  node28 -> node24 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node26 -> node27 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node17 -> node14 "
-            + "[label=\"ON_FALSE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node17 -> node26 "
-            + "[label=\"ON_TRUE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node16 -> node18 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node8 -> RETURN "
-            + "[label=\"ON_FALSE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node8 -> node16 "
-            + "[label=\"ON_TRUE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node0 -> node1 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "}\n";
+        """
+        digraph AST {
+          node [color=lightblue2, style=filled];
+          node0 [label="SCRIPT"];
+          node1 [label="VAR"];
+          node0 -> node1 [weight=1];
+          node2 [label="NAME(a)"];
+          node1 -> node2 [weight=1];
+          node3 [label="NAME(b)"];
+          node1 -> node3 [weight=1];
+          node4 [label="EXPR_RESULT"];
+          node1 -> node4 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node0 -> node4 [weight=1];
+          node5 [label="CALL"];
+          node4 -> node5 [weight=1];
+          node6 [label="NAME(a)"];
+          node5 -> node6 [weight=1];
+          node7 [label="VAR"];
+          node4 -> node7 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node8 [label="FOR"];
+          node0 -> node8 [weight=1];
+          node8 -> node7 [weight=1];
+          node9 [label="NAME(x)"];
+          node7 -> node9 [weight=1];
+          node10 [label="NUMBER"];
+          node9 -> node10 [weight=1];
+          node7 -> node8 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node11 [label="LT"];
+          node8 -> node11 [weight=1];
+          node12 [label="NAME(x)"];
+          node11 -> node12 [weight=1];
+          node13 [label="NUMBER"];
+          node11 -> node13 [weight=1];
+          node14 [label="INC"];
+          node8 -> node14 [weight=1];
+          node15 [label="NAME(x)"];
+          node14 -> node15 [weight=1];
+          node14 -> node8 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node16 [label="BLOCK"];
+          node8 -> node16 [weight=1];
+          node17 [label="FOR"];
+          node16 -> node17 [weight=1];
+          node18 [label="VAR"];
+          node17 -> node18 [weight=1];
+          node19 [label="NAME(y)"];
+          node18 -> node19 [weight=1];
+          node20 [label="NUMBER"];
+          node19 -> node20 [weight=1];
+          node18 -> node17 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node21 [label="LT"];
+          node17 -> node21 [weight=1];
+          node22 [label="NAME(y)"];
+          node21 -> node22 [weight=1];
+          node23 [label="NUMBER"];
+          node21 -> node23 [weight=1];
+          node24 [label="INC"];
+          node17 -> node24 [weight=1];
+          node25 [label="NAME(y)"];
+          node24 -> node25 [weight=1];
+          node24 -> node17 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node26 [label="BLOCK"];
+          node17 -> node26 [weight=1];
+          node27 [label="CONTINUE"];
+          node26 -> node27 [weight=1];
+          node27 -> node24 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node28 [label="EXPR_RESULT"];
+          node26 -> node28 [weight=1];
+          node29 [label="CALL"];
+          node28 -> node29 [weight=1];
+          node30 [label="NAME(b)"];
+          node29 -> node30 [weight=1];
+          node28 -> node24 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node26 -> node27 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node17 -> node14 [label="ON_FALSE", fontcolor="red", weight=0.01, color="red"];
+          node17 -> node26 [label="ON_TRUE", fontcolor="red", weight=0.01, color="red"];
+          node16 -> node18 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node8 -> RETURN [label="ON_FALSE", fontcolor="red", weight=0.01, color="red"];
+          node8 -> node16 [label="ON_TRUE", fontcolor="red", weight=0.01, color="red"];
+          node0 -> node1 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+        }
+        """;
     testCfg(src, expected);
   }
 
@@ -760,66 +723,55 @@ public final class ControlFlowAnalysisTest {
     // The BREAK branches to a() with UNCOND.
     String src = "var a;do{do{break}while(a);do{a()}while(a)}while(a);";
     String expected =
-        "digraph AST {\n"
-            + "  node [color=lightblue2, style=filled];\n"
-            + "  node0 [label=\"SCRIPT\"];\n"
-            + "  node1 [label=\"VAR\"];\n"
-            + "  node0 -> node1 [weight=1];\n"
-            + "  node2 [label=\"NAME(a)\"];\n"
-            + "  node1 -> node2 [weight=1];\n"
-            + "  node3 [label=\"BLOCK\"];\n"
-            + "  node1 -> node3 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node4 [label=\"DO\"];\n"
-            + "  node0 -> node4 [weight=1];\n"
-            + "  node4 -> node3 [weight=1];\n"
-            + "  node5 [label=\"DO\"];\n"
-            + "  node3 -> node5 [weight=1];\n"
-            + "  node6 [label=\"BLOCK\"];\n"
-            + "  node5 -> node6 [weight=1];\n"
-            + "  node7 [label=\"BREAK\"];\n"
-            + "  node6 -> node7 [weight=1];\n"
-            + "  node8 [label=\"BLOCK\"];\n"
-            + "  node7 -> node8 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node6 -> node7 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node9 [label=\"NAME(a)\"];\n"
-            + "  node5 -> node9 [weight=1];\n"
-            + "  node5 -> node6 "
-            + "[label=\"ON_TRUE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node5 -> node8 "
-            + "[label=\"ON_FALSE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node10 [label=\"DO\"];\n"
-            + "  node3 -> node10 [weight=1];\n"
-            + "  node10 -> node8 [weight=1];\n"
-            + "  node11 [label=\"EXPR_RESULT\"];\n"
-            + "  node8 -> node11 [weight=1];\n"
-            + "  node12 [label=\"CALL\"];\n"
-            + "  node11 -> node12 [weight=1];\n"
-            + "  node13 [label=\"NAME(a)\"];\n"
-            + "  node12 -> node13 [weight=1];\n"
-            + "  node11 -> node10 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node8 -> node11 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node14 [label=\"NAME(a)\"];\n"
-            + "  node10 -> node14 [weight=1];\n"
-            + "  node10 -> node4 "
-            + "[label=\"ON_FALSE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node10 -> node8 "
-            + "[label=\"ON_TRUE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node3 -> node6 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node15 [label=\"NAME(a)\"];\n"
-            + "  node4 -> node15 [weight=1];\n"
-            + "  node4 -> RETURN "
-            + "[label=\"ON_FALSE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node4 -> node3 "
-            + "[label=\"ON_TRUE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node0 -> node1 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "}\n";
+        """
+        digraph AST {
+          node [color=lightblue2, style=filled];
+          node0 [label="SCRIPT"];
+          node1 [label="VAR"];
+          node0 -> node1 [weight=1];
+          node2 [label="NAME(a)"];
+          node1 -> node2 [weight=1];
+          node3 [label="BLOCK"];
+          node1 -> node3 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node4 [label="DO"];
+          node0 -> node4 [weight=1];
+          node4 -> node3 [weight=1];
+          node5 [label="DO"];
+          node3 -> node5 [weight=1];
+          node6 [label="BLOCK"];
+          node5 -> node6 [weight=1];
+          node7 [label="BREAK"];
+          node6 -> node7 [weight=1];
+          node8 [label="BLOCK"];
+          node7 -> node8 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node6 -> node7 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node9 [label="NAME(a)"];
+          node5 -> node9 [weight=1];
+          node5 -> node6 [label="ON_TRUE", fontcolor="red", weight=0.01, color="red"];
+          node5 -> node8 [label="ON_FALSE", fontcolor="red", weight=0.01, color="red"];
+          node10 [label="DO"];
+          node3 -> node10 [weight=1];
+          node10 -> node8 [weight=1];
+          node11 [label="EXPR_RESULT"];
+          node8 -> node11 [weight=1];
+          node12 [label="CALL"];
+          node11 -> node12 [weight=1];
+          node13 [label="NAME(a)"];
+          node12 -> node13 [weight=1];
+          node11 -> node10 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node8 -> node11 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node14 [label="NAME(a)"];
+          node10 -> node14 [weight=1];
+          node10 -> node4 [label="ON_FALSE", fontcolor="red", weight=0.01, color="red"];
+          node10 -> node8 [label="ON_TRUE", fontcolor="red", weight=0.01, color="red"];
+          node3 -> node6 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node15 [label="NAME(a)"];
+          node4 -> node15 [weight=1];
+          node4 -> RETURN [label="ON_FALSE", fontcolor="red", weight=0.01, color="red"];
+          node4 -> node3 [label="ON_TRUE", fontcolor="red", weight=0.01, color="red"];
+          node0 -> node1 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+        }
+        """;
     testCfg(src, expected);
   }
 
@@ -827,48 +779,42 @@ public final class ControlFlowAnalysisTest {
   public void testForIn() throws IOException {
     String src = "var a,b;for(a in b){a()};";
     String expected =
-        "digraph AST {\n"
-            + "  node [color=lightblue2, style=filled];\n"
-            + "  node0 [label=\"SCRIPT\"];\n"
-            + "  node1 [label=\"VAR\"];\n"
-            + "  node0 -> node1 [weight=1];\n"
-            + "  node2 [label=\"NAME(a)\"];\n"
-            + "  node1 -> node2 [weight=1];\n"
-            + "  node3 [label=\"NAME(b)\"];\n"
-            + "  node1 -> node3 [weight=1];\n"
-            + "  node4 [label=\"NAME(b)\"];\n"
-            + "  node1 -> node4 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01,"
-            + " color=\"red\"];\n"
-            + "  node5 [label=\"FOR_IN\"];\n"
-            + "  node0 -> node5 [weight=1];\n"
-            + "  node6 [label=\"NAME(a)\"];\n"
-            + "  node5 -> node6 [weight=1];\n"
-            + "  node5 -> node4 [weight=1];\n"
-            + "  node4 -> node5 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01,"
-            + " color=\"red\"];\n"
-            + "  node7 [label=\"BLOCK\"];\n"
-            + "  node5 -> node7 [weight=1];\n"
-            + "  node8 [label=\"EXPR_RESULT\"];\n"
-            + "  node7 -> node8 [weight=1];\n"
-            + "  node9 [label=\"CALL\"];\n"
-            + "  node8 -> node9 [weight=1];\n"
-            + "  node10 [label=\"NAME(a)\"];\n"
-            + "  node9 -> node10 [weight=1];\n"
-            + "  node8 -> node5 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01,"
-            + " color=\"red\"];\n"
-            + "  node7 -> node8 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01,"
-            + " color=\"red\"];\n"
-            + "  node11 [label=\"EMPTY\"];\n"
-            + "  node5 -> node11 [label=\"ON_FALSE\", fontcolor=\"red\", weight=0.01,"
-            + " color=\"red\"];\n"
-            + "  node5 -> node7 [label=\"ON_TRUE\", fontcolor=\"red\", weight=0.01,"
-            + " color=\"red\"];\n"
-            + "  node0 -> node11 [weight=1];\n"
-            + "  node11 -> RETURN [label=\"UNCOND\", fontcolor=\"red\", weight=0.01,"
-            + " color=\"red\"];\n"
-            + "  node0 -> node1 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01,"
-            + " color=\"red\"];\n"
-            + "}\n";
+        """
+        digraph AST {
+          node [color=lightblue2, style=filled];
+          node0 [label="SCRIPT"];
+          node1 [label="VAR"];
+          node0 -> node1 [weight=1];
+          node2 [label="NAME(a)"];
+          node1 -> node2 [weight=1];
+          node3 [label="NAME(b)"];
+          node1 -> node3 [weight=1];
+          node4 [label="NAME(b)"];
+          node1 -> node4 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node5 [label="FOR_IN"];
+          node0 -> node5 [weight=1];
+          node6 [label="NAME(a)"];
+          node5 -> node6 [weight=1];
+          node5 -> node4 [weight=1];
+          node4 -> node5 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node7 [label="BLOCK"];
+          node5 -> node7 [weight=1];
+          node8 [label="EXPR_RESULT"];
+          node7 -> node8 [weight=1];
+          node9 [label="CALL"];
+          node8 -> node9 [weight=1];
+          node10 [label="NAME(a)"];
+          node9 -> node10 [weight=1];
+          node8 -> node5 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node7 -> node8 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node11 [label="EMPTY"];
+          node5 -> node11 [label="ON_FALSE", fontcolor="red", weight=0.01, color="red"];
+          node5 -> node7 [label="ON_TRUE", fontcolor="red", weight=0.01, color="red"];
+          node0 -> node11 [weight=1];
+          node11 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node0 -> node1 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+        }
+        """;
     testCfg(src, expected);
   }
 
@@ -876,36 +822,34 @@ public final class ControlFlowAnalysisTest {
   public void testThrow() throws IOException {
     String src = "function f() { throw 1; f() }";
     String expected =
-        "digraph AST {\n"
-            + "  node [color=lightblue2, style=filled];\n"
-            + "  node0 [label=\"SCRIPT\"];\n"
-            + "  node1 [label=\"FUNCTION\"];\n"
-            + "  node0 -> node1 [weight=1];\n"
-            + "  node2 [label=\"NAME(f)\"];\n"
-            + "  node1 -> node2 [weight=1];\n"
-            + "  node3 [label=\"PARAM_LIST\"];\n"
-            + "  node1 -> node3 [weight=1];\n"
-            + "  node4 [label=\"BLOCK\"];\n"
-            + "  node1 -> node4 [weight=1];\n"
-            + "  node5 [label=\"THROW\"];\n"
-            + "  node4 -> node5 [weight=1];\n"
-            + "  node6 [label=\"NUMBER\"];\n"
-            + "  node5 -> node6 [weight=1];\n"
-            + "  node7 [label=\"EXPR_RESULT\"];\n"
-            + "  node4 -> node7 [weight=1];\n"
-            + "  node8 [label=\"CALL\"];\n"
-            + "  node7 -> node8 [weight=1];\n"
-            + "  node9 [label=\"NAME(f)\"];\n"
-            + "  node8 -> node9 [weight=1];\n"
-            + "  node7 -> RETURN "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node4 -> node5 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node1 -> node4 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node0 -> RETURN "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "}\n";
+        """
+        digraph AST {
+          node [color=lightblue2, style=filled];
+          node0 [label="SCRIPT"];
+          node1 [label="FUNCTION"];
+          node0 -> node1 [weight=1];
+          node2 [label="NAME(f)"];
+          node1 -> node2 [weight=1];
+          node3 [label="PARAM_LIST"];
+          node1 -> node3 [weight=1];
+          node4 [label="BLOCK"];
+          node1 -> node4 [weight=1];
+          node5 [label="THROW"];
+          node4 -> node5 [weight=1];
+          node6 [label="NUMBER"];
+          node5 -> node6 [weight=1];
+          node7 [label="EXPR_RESULT"];
+          node4 -> node7 [weight=1];
+          node8 [label="CALL"];
+          node7 -> node8 [weight=1];
+          node9 [label="NAME(f)"];
+          node8 -> node9 [weight=1];
+          node7 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node4 -> node5 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node1 -> node4 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node0 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+        }
+        """;
     testCfg(src, expected);
   }
 
@@ -914,40 +858,37 @@ public final class ControlFlowAnalysisTest {
   public void testSimpleFunction() throws IOException {
     String src = "function f() { f() } f()";
     String expected =
-        "digraph AST {\n"
-            + "  node [color=lightblue2, style=filled];\n"
-            + "  node0 [label=\"SCRIPT\"];\n"
-            + "  node1 [label=\"FUNCTION\"];\n"
-            + "  node0 -> node1 [weight=1];\n"
-            + "  node2 [label=\"NAME(f)\"];\n"
-            + "  node1 -> node2 [weight=1];\n"
-            + "  node3 [label=\"PARAM_LIST\"];\n"
-            + "  node1 -> node3 [weight=1];\n"
-            + "  node4 [label=\"BLOCK\"];\n"
-            + "  node1 -> node4 [weight=1];\n"
-            + "  node5 [label=\"EXPR_RESULT\"];\n"
-            + "  node4 -> node5 [weight=1];\n"
-            + "  node6 [label=\"CALL\"];\n"
-            + "  node5 -> node6 [weight=1];\n"
-            + "  node7 [label=\"NAME(f)\"];\n"
-            + "  node6 -> node7 [weight=1];\n"
-            + "  node5 -> RETURN "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node4 -> node5 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node1 -> node4 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node8 [label=\"EXPR_RESULT\"];\n"
-            + "  node0 -> node8 [weight=1];\n"
-            + "  node9 [label=\"CALL\"];\n"
-            + "  node8 -> node9 [weight=1];\n"
-            + "  node10 [label=\"NAME(f)\"];\n"
-            + "  node9 -> node10 [weight=1];\n"
-            + "  node8 -> RETURN "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node0 -> node8 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "}\n";
+        """
+        digraph AST {
+          node [color=lightblue2, style=filled];
+          node0 [label="SCRIPT"];
+          node1 [label="FUNCTION"];
+          node0 -> node1 [weight=1];
+          node2 [label="NAME(f)"];
+          node1 -> node2 [weight=1];
+          node3 [label="PARAM_LIST"];
+          node1 -> node3 [weight=1];
+          node4 [label="BLOCK"];
+          node1 -> node4 [weight=1];
+          node5 [label="EXPR_RESULT"];
+          node4 -> node5 [weight=1];
+          node6 [label="CALL"];
+          node5 -> node6 [weight=1];
+          node7 [label="NAME(f)"];
+          node6 -> node7 [weight=1];
+          node5 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node4 -> node5 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node1 -> node4 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node8 [label="EXPR_RESULT"];
+          node0 -> node8 [weight=1];
+          node9 [label="CALL"];
+          node8 -> node9 [weight=1];
+          node10 [label="NAME(f)"];
+          node9 -> node10 [weight=1];
+          node8 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node0 -> node8 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+        }
+        """;
     testCfg(src, expected);
   }
 
@@ -955,30 +896,29 @@ public final class ControlFlowAnalysisTest {
   public void testSimpleClass() throws IOException {
     String src = "class C{} f();";
     String expected =
-        "digraph AST {\n"
-            + "  node [color=lightblue2, style=filled];\n"
-            + "  node0 [label=\"SCRIPT\"];\n"
-            + "  node1 [label=\"CLASS\"];\n"
-            + "  node0 -> node1 [weight=1];\n"
-            + "  node2 [label=\"NAME(C)\"];\n"
-            + "  node1 -> node2 [weight=1];\n"
-            + "  node3 [label=\"EMPTY\"];\n"
-            + "  node1 -> node3 [weight=1];\n"
-            + "  node4 [label=\"CLASS_MEMBERS\"];\n"
-            + "  node1 -> node4 [weight=1];\n"
-            + "  node5 [label=\"EXPR_RESULT\"];\n"
-            + "  node1 -> node5 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node0 -> node5 [weight=1];\n"
-            + "  node6 [label=\"CALL\"];\n"
-            + "  node5 -> node6 [weight=1];\n"
-            + "  node7 [label=\"NAME(f)\"];\n"
-            + "  node6 -> node7 [weight=1];\n"
-            + "  node5 -> RETURN "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node0 -> node1 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "}\n";
+        """
+        digraph AST {
+          node [color=lightblue2, style=filled];
+          node0 [label="SCRIPT"];
+          node1 [label="CLASS"];
+          node0 -> node1 [weight=1];
+          node2 [label="NAME(C)"];
+          node1 -> node2 [weight=1];
+          node3 [label="EMPTY"];
+          node1 -> node3 [weight=1];
+          node4 [label="CLASS_MEMBERS"];
+          node1 -> node4 [weight=1];
+          node5 [label="EXPR_RESULT"];
+          node1 -> node5 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node0 -> node5 [weight=1];
+          node6 [label="CALL"];
+          node5 -> node6 [weight=1];
+          node7 [label="NAME(f)"];
+          node6 -> node7 [weight=1];
+          node5 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node0 -> node1 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+        }
+        """;
     testCfg(src, expected);
   }
 
@@ -994,87 +934,83 @@ public final class ControlFlowAnalysisTest {
   public void testClassWithMemberFunctions() throws IOException {
     String src = "class C{ f(){} g(){} }";
     String expectedWithoutShouldTraverseFunctions =
-        "digraph AST {\n"
-            + "  node [color=lightblue2, style=filled];\n"
-            + "  node0 [label=\"SCRIPT\"];\n"
-            + "  node1 [label=\"CLASS\"];\n"
-            + "  node0 -> node1 [weight=1];\n"
-            + "  node2 [label=\"NAME(C)\"];\n"
-            + "  node1 -> node2 [weight=1];\n"
-            + "  node3 [label=\"EMPTY\"];\n"
-            + "  node1 -> node3 [weight=1];\n"
-            + "  node4 [label=\"CLASS_MEMBERS\"];\n"
-            + "  node1 -> node4 [weight=1];\n"
-            + "  node5 [label=\"MEMBER_FUNCTION_DEF\"];\n"
-            + "  node4 -> node5 [weight=1];\n"
-            + "  node6 [label=\"FUNCTION\"];\n"
-            + "  node5 -> node6 [weight=1];\n"
-            + "  node7 [label=\"NAME\"];\n"
-            + "  node6 -> node7 [weight=1];\n"
-            + "  node8 [label=\"PARAM_LIST\"];\n"
-            + "  node6 -> node8 [weight=1];\n"
-            + "  node9 [label=\"BLOCK\"];\n"
-            + "  node6 -> node9 [weight=1];\n"
-            + "  node10 [label=\"MEMBER_FUNCTION_DEF\"];\n"
-            + "  node4 -> node10 [weight=1];\n"
-            + "  node11 [label=\"FUNCTION\"];\n"
-            + "  node10 -> node11 [weight=1];\n"
-            + "  node12 [label=\"NAME\"];\n"
-            + "  node11 -> node12 [weight=1];\n"
-            + "  node13 [label=\"PARAM_LIST\"];\n"
-            + "  node11 -> node13 [weight=1];\n"
-            + "  node14 [label=\"BLOCK\"];\n"
-            + "  node11 -> node14 [weight=1];\n"
-            + "  node1 -> RETURN "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node0 -> node1 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "}\n";
+        """
+        digraph AST {
+          node [color=lightblue2, style=filled];
+          node0 [label="SCRIPT"];
+          node1 [label="CLASS"];
+          node0 -> node1 [weight=1];
+          node2 [label="NAME(C)"];
+          node1 -> node2 [weight=1];
+          node3 [label="EMPTY"];
+          node1 -> node3 [weight=1];
+          node4 [label="CLASS_MEMBERS"];
+          node1 -> node4 [weight=1];
+          node5 [label="MEMBER_FUNCTION_DEF"];
+          node4 -> node5 [weight=1];
+          node6 [label="FUNCTION"];
+          node5 -> node6 [weight=1];
+          node7 [label="NAME"];
+          node6 -> node7 [weight=1];
+          node8 [label="PARAM_LIST"];
+          node6 -> node8 [weight=1];
+          node9 [label="BLOCK"];
+          node6 -> node9 [weight=1];
+          node10 [label="MEMBER_FUNCTION_DEF"];
+          node4 -> node10 [weight=1];
+          node11 [label="FUNCTION"];
+          node10 -> node11 [weight=1];
+          node12 [label="NAME"];
+          node11 -> node12 [weight=1];
+          node13 [label="PARAM_LIST"];
+          node11 -> node13 [weight=1];
+          node14 [label="BLOCK"];
+          node11 -> node14 [weight=1];
+          node1 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node0 -> node1 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+        }
+        """;
     String expectedWithShouldTraverseFunctions =
-        "digraph AST {\n"
-            + "  node [color=lightblue2, style=filled];\n"
-            + "  node0 [label=\"SCRIPT\"];\n"
-            + "  node1 [label=\"CLASS\"];\n"
-            + "  node0 -> node1 [weight=1];\n"
-            + "  node2 [label=\"NAME(C)\"];\n"
-            + "  node1 -> node2 [weight=1];\n"
-            + "  node3 [label=\"EMPTY\"];\n"
-            + "  node1 -> node3 [weight=1];\n"
-            + "  node4 [label=\"CLASS_MEMBERS\"];\n"
-            + "  node1 -> node4 [weight=1];\n"
-            + "  node5 [label=\"MEMBER_FUNCTION_DEF\"];\n"
-            + "  node4 -> node5 [weight=1];\n"
-            + "  node6 [label=\"FUNCTION\"];\n"
-            + "  node5 -> node6 [weight=1];\n"
-            + "  node7 [label=\"NAME\"];\n"
-            + "  node6 -> node7 [weight=1];\n"
-            + "  node8 [label=\"PARAM_LIST\"];\n"
-            + "  node6 -> node8 [weight=1];\n"
-            + "  node9 [label=\"BLOCK\"];\n"
-            + "  node6 -> node9 [weight=1];\n"
-            + "  node9 -> RETURN "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node6 -> node9 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node10 [label=\"MEMBER_FUNCTION_DEF\"];\n"
-            + "  node4 -> node10 [weight=1];\n"
-            + "  node11 [label=\"FUNCTION\"];\n"
-            + "  node10 -> node11 [weight=1];\n"
-            + "  node12 [label=\"NAME\"];\n"
-            + "  node11 -> node12 [weight=1];\n"
-            + "  node13 [label=\"PARAM_LIST\"];\n"
-            + "  node11 -> node13 [weight=1];\n"
-            + "  node14 [label=\"BLOCK\"];\n"
-            + "  node11 -> node14 [weight=1];\n"
-            + "  node14 -> RETURN "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node11 -> node14 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node1 -> RETURN "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node0 -> node1 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "}\n";
+        """
+        digraph AST {
+          node [color=lightblue2, style=filled];
+          node0 [label="SCRIPT"];
+          node1 [label="CLASS"];
+          node0 -> node1 [weight=1];
+          node2 [label="NAME(C)"];
+          node1 -> node2 [weight=1];
+          node3 [label="EMPTY"];
+          node1 -> node3 [weight=1];
+          node4 [label="CLASS_MEMBERS"];
+          node1 -> node4 [weight=1];
+          node5 [label="MEMBER_FUNCTION_DEF"];
+          node4 -> node5 [weight=1];
+          node6 [label="FUNCTION"];
+          node5 -> node6 [weight=1];
+          node7 [label="NAME"];
+          node6 -> node7 [weight=1];
+          node8 [label="PARAM_LIST"];
+          node6 -> node8 [weight=1];
+          node9 [label="BLOCK"];
+          node6 -> node9 [weight=1];
+          node9 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node6 -> node9 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node10 [label="MEMBER_FUNCTION_DEF"];
+          node4 -> node10 [weight=1];
+          node11 [label="FUNCTION"];
+          node10 -> node11 [weight=1];
+          node12 [label="NAME"];
+          node11 -> node12 [weight=1];
+          node13 [label="PARAM_LIST"];
+          node11 -> node13 [weight=1];
+          node14 [label="BLOCK"];
+          node11 -> node14 [weight=1];
+          node14 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node11 -> node14 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node1 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node0 -> node1 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+        }
+        """;
     testCfg(src, expectedWithShouldTraverseFunctions);
     testCfg(src, expectedWithoutShouldTraverseFunctions, /* shouldTraverseFunctions= */ false);
   }
@@ -1084,86 +1020,73 @@ public final class ControlFlowAnalysisTest {
     String src = "try{ throw x; x(); x['stuff']; x.x; x} catch (e) { e() }";
 
     String expected =
-        "digraph AST {\n"
-            + "  node [color=lightblue2, style=filled];\n"
-            + "  node0 [label=\"SCRIPT\"];\n"
-            + "  node1 [label=\"TRY\"];\n"
-            + "  node0 -> node1 [weight=1];\n"
-            + "  node2 [label=\"BLOCK\"];\n"
-            + "  node1 -> node2 [weight=1];\n"
-            + "  node3 [label=\"THROW\"];\n"
-            + "  node2 -> node3 [weight=1];\n"
-            + "  node4 [label=\"NAME(x)\"];\n"
-            + "  node3 -> node4 [weight=1];\n"
-            + "  node5 [label=\"BLOCK\"];\n"
-            + "  node3 -> node5 [label=\"ON_EX\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node6 [label=\"EXPR_RESULT\"];\n"
-            + "  node2 -> node6 [weight=1];\n"
-            + "  node7 [label=\"CALL\"];\n"
-            + "  node6 -> node7 [weight=1];\n"
-            + "  node8 [label=\"NAME(x)\"];\n"
-            + "  node7 -> node8 [weight=1];\n"
-            + "  node9 [label=\"EXPR_RESULT\"];\n"
-            + "  node6 -> node5 [label=\"ON_EX\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node6 -> node9 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node2 -> node9 [weight=1];\n"
-            + "  node10 [label=\"GETELEM\"];\n"
-            + "  node9 -> node10 [weight=1];\n"
-            + "  node11 [label=\"NAME(x)\"];\n"
-            + "  node10 -> node11 [weight=1];\n"
-            + "  node12 [label=\"STRINGLIT(stuff)\"];\n"
-            + "  node10 -> node12 [weight=1];\n"
-            + "  node13 [label=\"EXPR_RESULT\"];\n"
-            + "  node9 -> node13 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node9 -> node5 [label=\"ON_EX\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node2 -> node13 [weight=1];\n"
-            + "  node14 [label=\"GETPROP(x)\"];\n"
-            + "  node13 -> node14 [weight=1];\n"
-            + "  node15 [label=\"NAME(x)\"];\n"
-            + "  node14 -> node15 [weight=1];\n"
-            + "  node16 [label=\"EXPR_RESULT\"];\n"
-            + "  node13 -> node16 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node13 -> node5 [label=\"ON_EX\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node2 -> node16 [weight=1];\n"
-            + "  node17 [label=\"NAME(x)\"];\n"
-            + "  node16 -> node17 [weight=1];\n"
-            + "  node16 -> RETURN [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node2 -> node3 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node1 -> node5 [weight=1];\n"
-            + "  node18 [label=\"CATCH\"];\n"
-            + "  node5 -> node18 [weight=1];\n"
-            + "  node19 [label=\"NAME(e)\"];\n"
-            + "  node18 -> node19 [weight=1];\n"
-            + "  node20 [label=\"BLOCK\"];\n"
-            + "  node18 -> node20 [weight=1];\n"
-            + "  node21 [label=\"EXPR_RESULT\"];\n"
-            + "  node20 -> node21 [weight=1];\n"
-            + "  node22 [label=\"CALL\"];\n"
-            + "  node21 -> node22 [weight=1];\n"
-            + "  node23 [label=\"NAME(e)\"];\n"
-            + "  node22 -> node23 [weight=1];\n"
-            + "  node21 -> RETURN [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node20 -> node21 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node18 -> node20 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node5 -> node18 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node1 -> node2 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node0 -> node1 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "}\n";
+        """
+        digraph AST {
+          node [color=lightblue2, style=filled];
+          node0 [label="SCRIPT"];
+          node1 [label="TRY"];
+          node0 -> node1 [weight=1];
+          node2 [label="BLOCK"];
+          node1 -> node2 [weight=1];
+          node3 [label="THROW"];
+          node2 -> node3 [weight=1];
+          node4 [label="NAME(x)"];
+          node3 -> node4 [weight=1];
+          node5 [label="BLOCK"];
+          node3 -> node5 [label="ON_EX", fontcolor="red", weight=0.01, color="red"];
+          node6 [label="EXPR_RESULT"];
+          node2 -> node6 [weight=1];
+          node7 [label="CALL"];
+          node6 -> node7 [weight=1];
+          node8 [label="NAME(x)"];
+          node7 -> node8 [weight=1];
+          node9 [label="EXPR_RESULT"];
+          node6 -> node5 [label="ON_EX", fontcolor="red", weight=0.01, color="red"];
+          node6 -> node9 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node2 -> node9 [weight=1];
+          node10 [label="GETELEM"];
+          node9 -> node10 [weight=1];
+          node11 [label="NAME(x)"];
+          node10 -> node11 [weight=1];
+          node12 [label="STRINGLIT(stuff)"];
+          node10 -> node12 [weight=1];
+          node13 [label="EXPR_RESULT"];
+          node9 -> node13 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node9 -> node5 [label="ON_EX", fontcolor="red", weight=0.01, color="red"];
+          node2 -> node13 [weight=1];
+          node14 [label="GETPROP(x)"];
+          node13 -> node14 [weight=1];
+          node15 [label="NAME(x)"];
+          node14 -> node15 [weight=1];
+          node16 [label="EXPR_RESULT"];
+          node13 -> node16 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node13 -> node5 [label="ON_EX", fontcolor="red", weight=0.01, color="red"];
+          node2 -> node16 [weight=1];
+          node17 [label="NAME(x)"];
+          node16 -> node17 [weight=1];
+          node16 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node2 -> node3 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node1 -> node5 [weight=1];
+          node18 [label="CATCH"];
+          node5 -> node18 [weight=1];
+          node19 [label="NAME(e)"];
+          node18 -> node19 [weight=1];
+          node20 [label="BLOCK"];
+          node18 -> node20 [weight=1];
+          node21 [label="EXPR_RESULT"];
+          node20 -> node21 [weight=1];
+          node22 [label="CALL"];
+          node21 -> node22 [weight=1];
+          node23 [label="NAME(e)"];
+          node22 -> node23 [weight=1];
+          node21 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node20 -> node21 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node18 -> node20 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node5 -> node18 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node1 -> node2 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node0 -> node1 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+        }
+        """;
 
     testCfg(src, expected);
   }
@@ -1173,52 +1096,47 @@ public final class ControlFlowAnalysisTest {
     // Make sure we don't search for the handler outside of the function.
     String src = "try { var f = function() {throw 1;} } catch (e) { }";
     String expected =
-        "digraph AST {\n"
-            + "  node [color=lightblue2, style=filled];\n"
-            + "  node0 [label=\"SCRIPT\"];\n"
-            + "  node1 [label=\"TRY\"];\n"
-            + "  node0 -> node1 [weight=1];\n"
-            + "  node2 [label=\"BLOCK\"];\n"
-            + "  node1 -> node2 [weight=1];\n"
-            + "  node3 [label=\"VAR\"];\n"
-            + "  node2 -> node3 [weight=1];\n"
-            + "  node4 [label=\"NAME(f)\"];\n"
-            + "  node3 -> node4 [weight=1];\n"
-            + "  node5 [label=\"FUNCTION\"];\n"
-            + "  node4 -> node5 [weight=1];\n"
-            + "  node6 [label=\"NAME\"];\n"
-            + "  node5 -> node6 [weight=1];\n"
-            + "  node7 [label=\"PARAM_LIST\"];\n"
-            + "  node5 -> node7 [weight=1];\n"
-            + "  node8 [label=\"BLOCK\"];\n"
-            + "  node5 -> node8 [weight=1];\n"
-            + "  node9 [label=\"THROW\"];\n"
-            + "  node8 -> node9 [weight=1];\n"
-            + "  node10 [label=\"NUMBER\"];\n"
-            + "  node9 -> node10 [weight=1];\n"
-            + "  node3 -> RETURN [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node2 -> node3 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node11 [label=\"BLOCK\"];\n"
-            + "  node1 -> node11 [weight=1];\n"
-            + "  node12 [label=\"CATCH\"];\n"
-            + "  node11 -> node12 [weight=1];\n"
-            + "  node13 [label=\"NAME(e)\"];\n"
-            + "  node12 -> node13 [weight=1];\n"
-            + "  node14 [label=\"BLOCK\"];\n"
-            + "  node12 -> node14 [weight=1];\n"
-            + "  node14 -> RETURN [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node12 -> node14 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node11 -> node12 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node1 -> node2 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node0 -> node1 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "}\n";
+        """
+        digraph AST {
+          node [color=lightblue2, style=filled];
+          node0 [label="SCRIPT"];
+          node1 [label="TRY"];
+          node0 -> node1 [weight=1];
+          node2 [label="BLOCK"];
+          node1 -> node2 [weight=1];
+          node3 [label="VAR"];
+          node2 -> node3 [weight=1];
+          node4 [label="NAME(f)"];
+          node3 -> node4 [weight=1];
+          node5 [label="FUNCTION"];
+          node4 -> node5 [weight=1];
+          node6 [label="NAME"];
+          node5 -> node6 [weight=1];
+          node7 [label="PARAM_LIST"];
+          node5 -> node7 [weight=1];
+          node8 [label="BLOCK"];
+          node5 -> node8 [weight=1];
+          node9 [label="THROW"];
+          node8 -> node9 [weight=1];
+          node10 [label="NUMBER"];
+          node9 -> node10 [weight=1];
+          node3 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node2 -> node3 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node11 [label="BLOCK"];
+          node1 -> node11 [weight=1];
+          node12 [label="CATCH"];
+          node11 -> node12 [weight=1];
+          node13 [label="NAME(e)"];
+          node12 -> node13 [weight=1];
+          node14 [label="BLOCK"];
+          node12 -> node14 [weight=1];
+          node14 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node12 -> node14 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node11 -> node12 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node1 -> node2 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node0 -> node1 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+        }
+        """;
     testCfg(src, expected);
   }
 
@@ -1227,68 +1145,57 @@ public final class ControlFlowAnalysisTest {
     // Make sure we are going to the right handler.
     String src = "try{try{throw 1;}catch(e){throw 2}}catch(f){}";
     String expected =
-        "digraph AST {\n"
-            + "  node [color=lightblue2, style=filled];\n"
-            + "  node0 [label=\"SCRIPT\"];\n"
-            + "  node1 [label=\"TRY\"];\n"
-            + "  node0 -> node1 [weight=1];\n"
-            + "  node2 [label=\"BLOCK\"];\n"
-            + "  node1 -> node2 [weight=1];\n"
-            + "  node3 [label=\"TRY\"];\n"
-            + "  node2 -> node3 [weight=1];\n"
-            + "  node4 [label=\"BLOCK\"];\n"
-            + "  node3 -> node4 [weight=1];\n"
-            + "  node5 [label=\"THROW\"];\n"
-            + "  node4 -> node5 [weight=1];\n"
-            + "  node6 [label=\"NUMBER\"];\n"
-            + "  node5 -> node6 [weight=1];\n"
-            + "  node7 [label=\"BLOCK\"];\n"
-            + "  node5 -> node7 [label=\"ON_EX\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node4 -> node5 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node3 -> node7 [weight=1];\n"
-            + "  node8 [label=\"CATCH\"];\n"
-            + "  node7 -> node8 [weight=1];\n"
-            + "  node9 [label=\"NAME(e)\"];\n"
-            + "  node8 -> node9 [weight=1];\n"
-            + "  node10 [label=\"BLOCK\"];\n"
-            + "  node8 -> node10 [weight=1];\n"
-            + "  node11 [label=\"THROW\"];\n"
-            + "  node10 -> node11 [weight=1];\n"
-            + "  node12 [label=\"NUMBER\"];\n"
-            + "  node11 -> node12 [weight=1];\n"
-            + "  node13 [label=\"BLOCK\"];\n"
-            + "  node11 -> node13 [label=\"ON_EX\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node10 -> node11 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node8 -> node10 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node7 -> node8 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node3 -> node4 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node2 -> node3 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node1 -> node13 [weight=1];\n"
-            + "  node14 [label=\"CATCH\"];\n"
-            + "  node13 -> node14 [weight=1];\n"
-            + "  node15 [label=\"NAME(f)\"];\n"
-            + "  node14 -> node15 [weight=1];\n"
-            + "  node16 [label=\"BLOCK\"];\n"
-            + "  node14 -> node16 [weight=1];\n"
-            + "  node16 -> RETURN [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node14 -> node16 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node13 -> node14 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node1 -> node2 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node0 -> node1 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "}\n";
+        """
+        digraph AST {
+          node [color=lightblue2, style=filled];
+          node0 [label="SCRIPT"];
+          node1 [label="TRY"];
+          node0 -> node1 [weight=1];
+          node2 [label="BLOCK"];
+          node1 -> node2 [weight=1];
+          node3 [label="TRY"];
+          node2 -> node3 [weight=1];
+          node4 [label="BLOCK"];
+          node3 -> node4 [weight=1];
+          node5 [label="THROW"];
+          node4 -> node5 [weight=1];
+          node6 [label="NUMBER"];
+          node5 -> node6 [weight=1];
+          node7 [label="BLOCK"];
+          node5 -> node7 [label="ON_EX", fontcolor="red", weight=0.01, color="red"];
+          node4 -> node5 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node3 -> node7 [weight=1];
+          node8 [label="CATCH"];
+          node7 -> node8 [weight=1];
+          node9 [label="NAME(e)"];
+          node8 -> node9 [weight=1];
+          node10 [label="BLOCK"];
+          node8 -> node10 [weight=1];
+          node11 [label="THROW"];
+          node10 -> node11 [weight=1];
+          node12 [label="NUMBER"];
+          node11 -> node12 [weight=1];
+          node13 [label="BLOCK"];
+          node11 -> node13 [label="ON_EX", fontcolor="red", weight=0.01, color="red"];
+          node10 -> node11 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node8 -> node10 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node7 -> node8 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node3 -> node4 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node2 -> node3 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node1 -> node13 [weight=1];
+          node14 [label="CATCH"];
+          node13 -> node14 [weight=1];
+          node15 [label="NAME(f)"];
+          node14 -> node15 [weight=1];
+          node16 [label="BLOCK"];
+          node14 -> node16 [weight=1];
+          node16 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node14 -> node16 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node13 -> node14 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node1 -> node2 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node0 -> node1 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+        }
+        """;
     testCfg(src, expected);
   }
 
@@ -1309,78 +1216,65 @@ public final class ControlFlowAnalysisTest {
     // Make sure we are going to the right handler.
     String src = "try{ if(a){throw 1}else{a} } catch(e){a}finally{a}";
     String expected =
-        "digraph AST {\n"
-            + "  node [color=lightblue2, style=filled];\n"
-            + "  node0 [label=\"SCRIPT\"];\n"
-            + "  node1 [label=\"TRY\"];\n"
-            + "  node0 -> node1 [weight=1];\n"
-            + "  node2 [label=\"BLOCK\"];\n"
-            + "  node1 -> node2 [weight=1];\n"
-            + "  node3 [label=\"IF\"];\n"
-            + "  node2 -> node3 [weight=1];\n"
-            + "  node4 [label=\"NAME(a)\"];\n"
-            + "  node3 -> node4 [weight=1];\n"
-            + "  node5 [label=\"BLOCK\"];\n"
-            + "  node3 -> node5 [weight=1];\n"
-            + "  node6 [label=\"THROW\"];\n"
-            + "  node5 -> node6 [weight=1];\n"
-            + "  node7 [label=\"NUMBER\"];\n"
-            + "  node6 -> node7 [weight=1];\n"
-            + "  node8 [label=\"BLOCK\"];\n"
-            + "  node6 -> node8 [label=\"ON_EX\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node5 -> node6 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node9 [label=\"BLOCK\"];\n"
-            + "  node3 -> node9 [weight=1];\n"
-            + "  node10 [label=\"EXPR_RESULT\"];\n"
-            + "  node9 -> node10 [weight=1];\n"
-            + "  node11 [label=\"NAME(a)\"];\n"
-            + "  node10 -> node11 [weight=1];\n"
-            + "  node12 [label=\"BLOCK\"];\n"
-            + "  node10 -> node12 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node9 -> node10 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node3 -> node5 [label=\"ON_TRUE\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node3 -> node9 [label=\"ON_FALSE\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node2 -> node3 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node1 -> node8 [weight=1];\n"
-            + "  node13 [label=\"CATCH\"];\n"
-            + "  node8 -> node13 [weight=1];\n"
-            + "  node14 [label=\"NAME(e)\"];\n"
-            + "  node13 -> node14 [weight=1];\n"
-            + "  node15 [label=\"BLOCK\"];\n"
-            + "  node13 -> node15 [weight=1];\n"
-            + "  node16 [label=\"EXPR_RESULT\"];\n"
-            + "  node15 -> node16 [weight=1];\n"
-            + "  node17 [label=\"NAME(a)\"];\n"
-            + "  node16 -> node17 [weight=1];\n"
-            + "  node16 -> node12 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node15 -> node16 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node13 -> node15 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node8 -> node13 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node1 -> node12 [weight=1];\n"
-            + "  node18 [label=\"EXPR_RESULT\"];\n"
-            + "  node12 -> node18 [weight=1];\n"
-            + "  node19 [label=\"NAME(a)\"];\n"
-            + "  node18 -> node19 [weight=1];\n"
-            + "  node18 -> RETURN [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node12 -> node18 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node1 -> node2 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node0 -> node1 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "}\n";
+        """
+        digraph AST {
+          node [color=lightblue2, style=filled];
+          node0 [label="SCRIPT"];
+          node1 [label="TRY"];
+          node0 -> node1 [weight=1];
+          node2 [label="BLOCK"];
+          node1 -> node2 [weight=1];
+          node3 [label="IF"];
+          node2 -> node3 [weight=1];
+          node4 [label="NAME(a)"];
+          node3 -> node4 [weight=1];
+          node5 [label="BLOCK"];
+          node3 -> node5 [weight=1];
+          node6 [label="THROW"];
+          node5 -> node6 [weight=1];
+          node7 [label="NUMBER"];
+          node6 -> node7 [weight=1];
+          node8 [label="BLOCK"];
+          node6 -> node8 [label="ON_EX", fontcolor="red", weight=0.01, color="red"];
+          node5 -> node6 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node9 [label="BLOCK"];
+          node3 -> node9 [weight=1];
+          node10 [label="EXPR_RESULT"];
+          node9 -> node10 [weight=1];
+          node11 [label="NAME(a)"];
+          node10 -> node11 [weight=1];
+          node12 [label="BLOCK"];
+          node10 -> node12 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node9 -> node10 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node3 -> node5 [label="ON_TRUE", fontcolor="red", weight=0.01, color="red"];
+          node3 -> node9 [label="ON_FALSE", fontcolor="red", weight=0.01, color="red"];
+          node2 -> node3 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node1 -> node8 [weight=1];
+          node13 [label="CATCH"];
+          node8 -> node13 [weight=1];
+          node14 [label="NAME(e)"];
+          node13 -> node14 [weight=1];
+          node15 [label="BLOCK"];
+          node13 -> node15 [weight=1];
+          node16 [label="EXPR_RESULT"];
+          node15 -> node16 [weight=1];
+          node17 [label="NAME(a)"];
+          node16 -> node17 [weight=1];
+          node16 -> node12 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node15 -> node16 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node13 -> node15 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node8 -> node13 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node1 -> node12 [weight=1];
+          node18 [label="EXPR_RESULT"];
+          node12 -> node18 [weight=1];
+          node19 [label="NAME(a)"];
+          node18 -> node19 [weight=1];
+          node18 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node12 -> node18 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node1 -> node2 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node0 -> node1 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+        }
+        """;
     testCfg(src, expected);
   }
 
@@ -1401,7 +1295,7 @@ public final class ControlFlowAnalysisTest {
 
   @Test
   public void testDeepNestedBreakwithFinally() throws IOException {
-    String src = "X:while(1){try{while(2){try{var a;break X;}" + "finally{}}}finally{}}";
+    String src = "X:while(1){try{while(2){try{var a;break X;}finally{}}}finally{}}";
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertDownEdge(cfg, Token.WHILE, Token.BLOCK, Branch.ON_TRUE);
     assertDownEdge(cfg, Token.BLOCK, Token.TRY, Branch.UNCOND);
@@ -1416,7 +1310,7 @@ public final class ControlFlowAnalysisTest {
 
   @Test
   public void testDeepNestedFinally() throws IOException {
-    String src = "try{try{try{throw 1}" + "finally{1;var a}}finally{2;if(a);}}finally{3;a()}";
+    String src = "try{try{try{throw 1}finally{1;var a}}finally{2;if(a);}}finally{3;a()}";
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertCrossEdge(cfg, Token.THROW, Token.BLOCK, Branch.ON_EX);
     assertCrossEdge(cfg, Token.VAR, Token.BLOCK, Branch.UNCOND);
@@ -1439,7 +1333,7 @@ public final class ControlFlowAnalysisTest {
 
   @Test
   public void testReturnInFinally2() throws IOException {
-    String src = "function f(x){" + " try{ try{}finally{var dummy; return x;} } finally {} }";
+    String src = "function f(x){ try{ try{}finally{var dummy; return x;} } finally {} }";
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertCrossEdge(cfg, Token.VAR, Token.RETURN, Branch.UNCOND);
     assertCrossEdge(cfg, Token.RETURN, Token.BLOCK, Branch.UNCOND);
@@ -1463,73 +1357,70 @@ public final class ControlFlowAnalysisTest {
   public void testOptionNotToTraverseFunctions() throws IOException {
     String src = "var x = 1; function f() { x = null; }";
     String expectedWhenNotTraversingFunctions =
-        "digraph AST {\n"
-            + "  node [color=lightblue2, style=filled];\n"
-            + "  node0 [label=\"SCRIPT\"];\n"
-            + "  node1 [label=\"VAR\"];\n"
-            + "  node0 -> node1 [weight=1];\n"
-            + "  node2 [label=\"NAME(x)\"];\n"
-            + "  node1 -> node2 [weight=1];\n"
-            + "  node3 [label=\"NUMBER\"];\n"
-            + "  node2 -> node3 [weight=1];\n"
-            + "  node1 -> RETURN "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node4 [label=\"FUNCTION\"];\n"
-            + "  node0 -> node4 [weight=1];\n"
-            + "  node5 [label=\"NAME(f)\"];\n"
-            + "  node4 -> node5 [weight=1];\n"
-            + "  node6 [label=\"PARAM_LIST\"];\n"
-            + "  node4 -> node6 [weight=1];\n"
-            + "  node7 [label=\"BLOCK\"];\n"
-            + "  node4 -> node7 [weight=1];\n"
-            + "  node8 [label=\"EXPR_RESULT\"];\n"
-            + "  node7 -> node8 [weight=1];\n"
-            + "  node9 [label=\"ASSIGN\"];\n"
-            + "  node8 -> node9 [weight=1];\n"
-            + "  node10 [label=\"NAME(x)\"];\n"
-            + "  node9 -> node10 [weight=1];\n"
-            + "  node11 [label=\"NULL\"];\n"
-            + "  node9 -> node11 [weight=1];\n"
-            + "  node0 -> node1 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "}\n";
+        """
+        digraph AST {
+          node [color=lightblue2, style=filled];
+          node0 [label="SCRIPT"];
+          node1 [label="VAR"];
+          node0 -> node1 [weight=1];
+          node2 [label="NAME(x)"];
+          node1 -> node2 [weight=1];
+          node3 [label="NUMBER"];
+          node2 -> node3 [weight=1];
+          node1 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node4 [label="FUNCTION"];
+          node0 -> node4 [weight=1];
+          node5 [label="NAME(f)"];
+          node4 -> node5 [weight=1];
+          node6 [label="PARAM_LIST"];
+          node4 -> node6 [weight=1];
+          node7 [label="BLOCK"];
+          node4 -> node7 [weight=1];
+          node8 [label="EXPR_RESULT"];
+          node7 -> node8 [weight=1];
+          node9 [label="ASSIGN"];
+          node8 -> node9 [weight=1];
+          node10 [label="NAME(x)"];
+          node9 -> node10 [weight=1];
+          node11 [label="NULL"];
+          node9 -> node11 [weight=1];
+          node0 -> node1 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+        }
+        """;
     String expected =
-        "digraph AST {\n"
-            + "  node [color=lightblue2, style=filled];\n"
-            + "  node0 [label=\"SCRIPT\"];\n"
-            + "  node1 [label=\"VAR\"];\n"
-            + "  node0 -> node1 [weight=1];\n"
-            + "  node2 [label=\"NAME(x)\"];\n"
-            + "  node1 -> node2 [weight=1];\n"
-            + "  node3 [label=\"NUMBER\"];\n"
-            + "  node2 -> node3 [weight=1];\n"
-            + "  node1 -> RETURN "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node4 [label=\"FUNCTION\"];\n"
-            + "  node0 -> node4 [weight=1];\n"
-            + "  node5 [label=\"NAME(f)\"];\n"
-            + "  node4 -> node5 [weight=1];\n"
-            + "  node6 [label=\"PARAM_LIST\"];\n"
-            + "  node4 -> node6 [weight=1];\n"
-            + "  node7 [label=\"BLOCK\"];\n"
-            + "  node4 -> node7 [weight=1];\n"
-            + "  node8 [label=\"EXPR_RESULT\"];\n"
-            + "  node7 -> node8 [weight=1];\n"
-            + "  node9 [label=\"ASSIGN\"];\n"
-            + "  node8 -> node9 [weight=1];\n"
-            + "  node10 [label=\"NAME(x)\"];\n"
-            + "  node9 -> node10 [weight=1];\n"
-            + "  node11 [label=\"NULL\"];\n"
-            + "  node9 -> node11 [weight=1];\n"
-            + "  node8 -> RETURN "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node7 -> node8 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node4 -> node7 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node0 -> node1 "
-            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "}\n";
+        """
+        digraph AST {
+          node [color=lightblue2, style=filled];
+          node0 [label="SCRIPT"];
+          node1 [label="VAR"];
+          node0 -> node1 [weight=1];
+          node2 [label="NAME(x)"];
+          node1 -> node2 [weight=1];
+          node3 [label="NUMBER"];
+          node2 -> node3 [weight=1];
+          node1 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node4 [label="FUNCTION"];
+          node0 -> node4 [weight=1];
+          node5 [label="NAME(f)"];
+          node4 -> node5 [weight=1];
+          node6 [label="PARAM_LIST"];
+          node4 -> node6 [weight=1];
+          node7 [label="BLOCK"];
+          node4 -> node7 [weight=1];
+          node8 [label="EXPR_RESULT"];
+          node7 -> node8 [weight=1];
+          node9 [label="ASSIGN"];
+          node8 -> node9 [weight=1];
+          node10 [label="NAME(x)"];
+          node9 -> node10 [weight=1];
+          node11 [label="NULL"];
+          node9 -> node11 [weight=1];
+          node8 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node7 -> node8 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node4 -> node7 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node0 -> node1 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+        }
+        """;
     testCfg(src, expected);
     testCfg(src, expectedWhenNotTraversingFunctions, false);
   }
@@ -1588,9 +1479,11 @@ public final class ControlFlowAnalysisTest {
   public void testLabelledForInLoopOrder() throws IOException {
     assertNodeOrder(
         createCfg(
-            "var i = 0; var y = {}; "
-                + "label: for (var x in y) { "
-                + "    if (x) { break label; } else { i++ } x(); }"),
+            """
+            var i = 0; var y = {}; \
+            label: for (var x in y) { \
+                if (x) { break label; } else { i++ } x(); }\
+            """),
         ImmutableList.of(
             Token.SCRIPT,
             Token.VAR,
@@ -1745,98 +1638,98 @@ public final class ControlFlowAnalysisTest {
   @Test
   public void testBreakInFinally1() throws IOException {
     String src =
-        "f = function() {\n"
-            + "  var action;\n"
-            + "  a: {\n"
-            + "    var proto = null;\n"
-            + "    try {\n"
-            + "      proto = new Proto\n"
-            + "    } finally {\n"
-            + "      action = proto;\n"
-            + "      break a\n"
-            + // Remove this...
-            "    }\n"
-            + "  }\n"
-            + "  alert(action)\n"
-            + // but not this.
-            "};";
+        """
+        f = function() {
+          var action;
+          a: {
+            var proto = null;
+            try {
+              proto = new Proto
+            } finally {
+              action = proto;
+              break a // Remove this...
+            }
+          }
+          alert(action) // but not this.
+        };
+        """;
     String expected =
-        "digraph AST {\n"
-            + "  node [color=lightblue2, style=filled];\n"
-            + "  node0 [label=\"SCRIPT\"];\n"
-            + "  node1 [label=\"EXPR_RESULT\"];\n"
-            + "  node0 -> node1 [weight=1];\n"
-            + "  node2 [label=\"ASSIGN\"];\n"
-            + "  node1 -> node2 [weight=1];\n"
-            + "  node3 [label=\"NAME(f)\"];\n"
-            + "  node2 -> node3 [weight=1];\n"
-            + "  node4 [label=\"FUNCTION\"];\n"
-            + "  node2 -> node4 [weight=1];\n"
-            + "  node5 [label=\"NAME\"];\n"
-            + "  node4 -> node5 [weight=1];\n"
-            + "  node6 [label=\"PARAM_LIST\"];\n"
-            + "  node4 -> node6 [weight=1];\n"
-            + "  node7 [label=\"BLOCK\"];\n"
-            + "  node4 -> node7 [weight=1];\n"
-            + "  node8 [label=\"VAR\"];\n"
-            + "  node7 -> node8 [weight=1];\n"
-            + "  node9 [label=\"NAME(action)\"];\n"
-            + "  node8 -> node9 [weight=1];\n"
-            + "  node10 [label=\"LABEL\"];\n"
-            + "  node7 -> node10 [weight=1];\n"
-            + "  node11 [label=\"LABEL_NAME\"];\n"
-            + "  node10 -> node11 [weight=1];\n"
-            + "  node12 [label=\"BLOCK\"];\n"
-            + "  node10 -> node12 [weight=1];\n"
-            + "  node13 [label=\"VAR\"];\n"
-            + "  node12 -> node13 [weight=1];\n"
-            + "  node14 [label=\"NAME(proto)\"];\n"
-            + "  node13 -> node14 [weight=1];\n"
-            + "  node15 [label=\"NULL\"];\n"
-            + "  node14 -> node15 [weight=1];\n"
-            + "  node16 [label=\"TRY\"];\n"
-            + "  node12 -> node16 [weight=1];\n"
-            + "  node17 [label=\"BLOCK\"];\n"
-            + "  node16 -> node17 [weight=1];\n"
-            + "  node18 [label=\"EXPR_RESULT\"];\n"
-            + "  node17 -> node18 [weight=1];\n"
-            + "  node19 [label=\"ASSIGN\"];\n"
-            + "  node18 -> node19 [weight=1];\n"
-            + "  node20 [label=\"NAME(proto)\"];\n"
-            + "  node19 -> node20 [weight=1];\n"
-            + "  node21 [label=\"NEW\"];\n"
-            + "  node19 -> node21 [weight=1];\n"
-            + "  node22 [label=\"NAME(Proto)\"];\n"
-            + "  node21 -> node22 [weight=1];\n"
-            + "  node23 [label=\"BLOCK\"];\n"
-            + "  node16 -> node23 [weight=1];\n"
-            + "  node24 [label=\"BLOCK\"];\n"
-            + "  node16 -> node24 [weight=1];\n"
-            + "  node25 [label=\"EXPR_RESULT\"];\n"
-            + "  node24 -> node25 [weight=1];\n"
-            + "  node26 [label=\"ASSIGN\"];\n"
-            + "  node25 -> node26 [weight=1];\n"
-            + "  node27 [label=\"NAME(action)\"];\n"
-            + "  node26 -> node27 [weight=1];\n"
-            + "  node28 [label=\"NAME(proto)\"];\n"
-            + "  node26 -> node28 [weight=1];\n"
-            + "  node29 [label=\"BREAK\"];\n"
-            + "  node24 -> node29 [weight=1];\n"
-            + "  node30 [label=\"LABEL_NAME\"];\n"
-            + "  node29 -> node30 [weight=1];\n"
-            + "  node31 [label=\"EXPR_RESULT\"];\n"
-            + "  node7 -> node31 [weight=1];\n"
-            + "  node32 [label=\"CALL\"];\n"
-            + "  node31 -> node32 [weight=1];\n"
-            + "  node33 [label=\"NAME(alert)\"];\n"
-            + "  node32 -> node33 [weight=1];\n"
-            + "  node34 [label=\"NAME(action)\"];\n"
-            + "  node32 -> node34 [weight=1];\n"
-            + "  node1 -> RETURN [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node0 -> node1 [label=\"UNCOND\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "}\n";
+        """
+        digraph AST {
+          node [color=lightblue2, style=filled];
+          node0 [label="SCRIPT"];
+          node1 [label="EXPR_RESULT"];
+          node0 -> node1 [weight=1];
+          node2 [label="ASSIGN"];
+          node1 -> node2 [weight=1];
+          node3 [label="NAME(f)"];
+          node2 -> node3 [weight=1];
+          node4 [label="FUNCTION"];
+          node2 -> node4 [weight=1];
+          node5 [label="NAME"];
+          node4 -> node5 [weight=1];
+          node6 [label="PARAM_LIST"];
+          node4 -> node6 [weight=1];
+          node7 [label="BLOCK"];
+          node4 -> node7 [weight=1];
+          node8 [label="VAR"];
+          node7 -> node8 [weight=1];
+          node9 [label="NAME(action)"];
+          node8 -> node9 [weight=1];
+          node10 [label="LABEL"];
+          node7 -> node10 [weight=1];
+          node11 [label="LABEL_NAME"];
+          node10 -> node11 [weight=1];
+          node12 [label="BLOCK"];
+          node10 -> node12 [weight=1];
+          node13 [label="VAR"];
+          node12 -> node13 [weight=1];
+          node14 [label="NAME(proto)"];
+          node13 -> node14 [weight=1];
+          node15 [label="NULL"];
+          node14 -> node15 [weight=1];
+          node16 [label="TRY"];
+          node12 -> node16 [weight=1];
+          node17 [label="BLOCK"];
+          node16 -> node17 [weight=1];
+          node18 [label="EXPR_RESULT"];
+          node17 -> node18 [weight=1];
+          node19 [label="ASSIGN"];
+          node18 -> node19 [weight=1];
+          node20 [label="NAME(proto)"];
+          node19 -> node20 [weight=1];
+          node21 [label="NEW"];
+          node19 -> node21 [weight=1];
+          node22 [label="NAME(Proto)"];
+          node21 -> node22 [weight=1];
+          node23 [label="BLOCK"];
+          node16 -> node23 [weight=1];
+          node24 [label="BLOCK"];
+          node16 -> node24 [weight=1];
+          node25 [label="EXPR_RESULT"];
+          node24 -> node25 [weight=1];
+          node26 [label="ASSIGN"];
+          node25 -> node26 [weight=1];
+          node27 [label="NAME(action)"];
+          node26 -> node27 [weight=1];
+          node28 [label="NAME(proto)"];
+          node26 -> node28 [weight=1];
+          node29 [label="BREAK"];
+          node24 -> node29 [weight=1];
+          node30 [label="LABEL_NAME"];
+          node29 -> node30 [weight=1];
+          node31 [label="EXPR_RESULT"];
+          node7 -> node31 [weight=1];
+          node32 [label="CALL"];
+          node31 -> node32 [weight=1];
+          node33 [label="NAME(alert)"];
+          node32 -> node33 [weight=1];
+          node34 [label="NAME(action)"];
+          node32 -> node34 [weight=1];
+          node1 -> RETURN [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+          node0 -> node1 [label="UNCOND", fontcolor="red", weight=0.01, color="red"];
+        }
+        """;
     testCfg(src, expected);
   }
 
