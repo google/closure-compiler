@@ -120,7 +120,7 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
     addLibrary("Array.prototype.includes", "es6", "es5", "es6/array/includes");
     test(
         "if (a.b()?.includes()) {}",
-        """
+"""
 var $jscomp$polyfillTmp;
 if (($jscomp$polyfillTmp = a.b(),
     $jscomp$lookupPolyfilledValue($jscomp$polyfillTmp, 'includes', true))?.call($jscomp$polyfillTmp)) {}
@@ -133,7 +133,7 @@ if (($jscomp$polyfillTmp = a.b(),
     addLibrary("Array.prototype.includes", "es6", "es5", "es6/array/includes");
     test(
         "if (a.b?.includes()) {}",
-        lines("if ($jscomp$lookupPolyfilledValue(a.b, 'includes', true)?.call(a.b)) {}"));
+        "if ($jscomp$lookupPolyfilledValue(a.b, 'includes', true)?.call(a.b)) {}");
   }
 
   @Test
