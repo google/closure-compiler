@@ -58,15 +58,15 @@ public final class DepsFileRegexParserTest {
   @Test
   public void testGoodParse() {
     final String contents =
-        "/*"
-            + "goog.addDependency('no1', [], []);*//*\n"
-            + "goog.addDependency('no2', [ ], [ ]);\n"
-            + "*/goog.addDependency('yes1', [], []);\n"
-            + "/* blah */goog.addDependency(\"yes2\", [], [])/* blah*/\n"
-            + "goog.addDependency('yes3', ['a','b'], ['c']); "
-            + "// goog.addDependency('no3', [], []);\n"
-            + "// goog.addDependency('no4', [], []);\n"
-            + "goog.addDependency(\"yes4\", [], [ \"a\",'b' , 'c' ]); //no new line at EOF";
+        """
+        /*goog.addDependency('no1', [], []);*//*
+        goog.addDependency('no2', [ ], [ ]);
+        */goog.addDependency('yes1', [], []);
+        /* blah */goog.addDependency("yes2", [], [])/* blah*/
+        goog.addDependency('yes3', ['a','b'], ['c']); // goog.addDependency('no3', [], []);
+        // goog.addDependency('no4', [], []);
+        goog.addDependency("yes4", [], [ "a",'b' , 'c' ]); //no new line at EOF
+        """;
 
     List<DependencyInfo> result = parser.parseFile(SRC_PATH, contents);
     ImmutableList<DependencyInfo> expected =
@@ -145,9 +145,10 @@ public final class DepsFileRegexParserTest {
     List<DependencyInfo> result =
         parser.parseFile(
             SRC_PATH,
-            "goog.addDependency('path/from/closure.js', [], ['nexttoclosure.js'], "
-                + "{'module':'es6'});\n"
-                + "goog.addDependency('nexttoclosure.js', [], [], {'module':'es6'});\n");
+            """
+            goog.addDependency('path/from/closure.js', [], ['nexttoclosure.js'], {'module':'es6'});
+            goog.addDependency('nexttoclosure.js', [], [], {'module':'es6'});
+            """);
     ImmutableList<DependencyInfo> expected =
         ImmutableList.of(
             SimpleDependencyInfo.builder("path/from/closure.js", SRC_PATH)
@@ -167,10 +168,11 @@ public final class DepsFileRegexParserTest {
     List<DependencyInfo> result =
         parser.parseFile(
             SRC_PATH,
-            ""
-                + "goog.addDependency('yes1', [], [], {'module': 'goog'});\n"
-                + "goog.addDependency('yes2', [], [], {\"lang\": \"es6\"});\n"
-                + "goog.addDependency('yes3', [], [], {});\n");
+            """
+            goog.addDependency('yes1', [], [], {'module': 'goog'});
+            goog.addDependency('yes2', [], [], {"lang": "es6"});
+            goog.addDependency('yes3', [], [], {});
+            """);
     ImmutableList<DependencyInfo> expected =
         ImmutableList.of(
             SimpleDependencyInfo.builder("yes1", SRC_PATH)
