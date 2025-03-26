@@ -35,48 +35,47 @@ public final class RewriteOptionalChainingOperatorTest {
    * convenient.
    */
   private static final String TEST_BASE_EXTERNS =
-      CompilerTestCase.lines(
-          "", //
-          "class TestObject {",
-          "  constructor() {",
-          "    /** @const {!TestObject} */",
-          "    this.obj = this;",
-          "    /** @const {!Array<!TestObject>} */",
-          "    this.ary = [this];",
-          "    /** @const {function(number): !TestObject} */",
-          "    this.fun = (num) => this.ary[num];",
-          "    /** @const */",
-          "    this.num = 0;",
-          "  }",
-          "  /** @return {!TestObject} */",
-          "  getObj() { return this; }",
-          "  /** @return {!Array<!TestObject>} */",
-          "  getArr() { return this.ary; }",
-          "  /** @return {function(number): !TestObject} */",
-          "  getFun() { return this.fun; }",
-          "  /** @return {number} */",
-          "  getNum() { return 0; }",
-          "}",
-          "",
-          "const obj = new TestObject();",
-          "const ary = obj.ary;",
-          "const fun = obj.fun;",
-          "",
-          "/** @return {!TestObject} */",
-          "function getObj() {",
-          "  return obj;",
-          "}",
-          "",
-          "/** @return {!Array<!TestObject>} */",
-          "function getAry() {",
-          "  return ary;",
-          "}",
-          "",
-          "/** @return {function(number): !TestObject} */",
-          "function getFun() {",
-          "  return fun;",
-          "}",
-          "");
+      """
+      class TestObject {
+        constructor() {
+          /** @const {!TestObject} */
+          this.obj = this;
+          /** @const {!Array<!TestObject>} */
+          this.ary = [this];
+          /** @const {function(number): !TestObject} */
+          this.fun = (num) => this.ary[num];
+          /** @const */
+          this.num = 0;
+        }
+        /** @return {!TestObject} */
+        getObj() { return this; }
+        /** @return {!Array<!TestObject>} */
+        getArr() { return this.ary; }
+        /** @return {function(number): !TestObject} */
+        getFun() { return this.fun; }
+        /** @return {number} */
+        getNum() { return 0; }
+      }
+
+      const obj = new TestObject();
+      const ary = obj.ary;
+      const fun = obj.fun;
+
+      /** @return {!TestObject} */
+      function getObj() {
+        return obj;
+      }
+
+      /** @return {!Array<!TestObject>} */
+      function getAry() {
+        return ary;
+      }
+
+      /** @return {function(number): !TestObject} */
+      function getFun() {
+        return fun;
+      }
+      """;
 
   @RunWith(Parameterized.class)
   public static class BaseTestClass extends CompilerTestCase {
@@ -294,15 +293,15 @@ public final class RewriteOptionalChainingOperatorTest {
             },
             {
               "() => {return foo(a?.b)}",
-              lines("() => {let tmp0; return foo((tmp0 = a) == null ? void 0 : tmp0.b);}")
+              "() => {let tmp0; return foo((tmp0 = a) == null ? void 0 : tmp0.b);}"
             },
             {
               "() => foo(a?.b)", //
-              lines("() => { let tmp0; return foo((tmp0 = a) == null ? void 0 : tmp0.b);}")
+              "() => { let tmp0; return foo((tmp0 = a) == null ? void 0 : tmp0.b);}"
             },
             {
               "(p = a?.b) => p", //
-              lines("let tmp0; (p = (tmp0 = a) == null ? void 0 : tmp0.b) => { return p;}")
+              "let tmp0; (p = (tmp0 = a) == null ? void 0 : tmp0.b) => { return p;}"
             },
             {
               "(p = a?.b?.c) => p", //
@@ -411,7 +410,7 @@ public final class RewriteOptionalChainingOperatorTest {
     public void testDeleteOptChainGetProp() {
       test(
           externs(TEST_BASE_EXTERNS),
-          srcs(lines("delete obj?.num;")),
+          srcs("delete obj?.num;"),
           expected(
               """
               let tmp0;
@@ -423,7 +422,7 @@ public final class RewriteOptionalChainingOperatorTest {
     public void testDeleteOptChainGetProp2() {
       test(
           externs(TEST_BASE_EXTERNS),
-          srcs(lines("delete this?.obj?.num;")),
+          srcs("delete this?.obj?.num;"),
           expected(
               """
               let tmp0;
@@ -437,11 +436,8 @@ public final class RewriteOptionalChainingOperatorTest {
       test(
           externs(TEST_BASE_EXTERNS),
           srcs(
-              lines(
-                  "delete getFun()?.(num).num" // get the num-th !TestObject inside `ary`, and
-                  // delete
-                  // its `num` prop
-                  )),
+              // get the num-th !TestObject inside `ary`, and delete its `num` prop
+              "delete getFun()?.(num).num"),
           expected(
               """
               let tmp0;
