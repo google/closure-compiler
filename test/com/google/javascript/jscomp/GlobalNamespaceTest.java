@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerTypeTestCase.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import static org.junit.Assert.assertThrows;
@@ -1242,7 +1241,7 @@ public final class GlobalNamespaceTest {
 
   @Test
   public void testCanCollapseAliasedClassProperty_ignoringStaticInheritance() {
-    GlobalNamespace namespace = parse(lines("class Foo {} Foo.prop = prop; use(Foo);"));
+    GlobalNamespace namespace = parse("class Foo {} Foo.prop = prop; use(Foo);");
 
     Name fooProp = namespace.getSlot("Foo.prop");
 
@@ -1254,7 +1253,7 @@ public final class GlobalNamespaceTest {
   @Test
   public void testCanCollapseAliasedClassProperty_consideringStaticInheritance() {
     this.assumeStaticInheritanceIsNotUsed = false;
-    GlobalNamespace namespace = parse(lines("class Foo {} Foo.prop = prop; use(Foo);"));
+    GlobalNamespace namespace = parse("class Foo {} Foo.prop = prop; use(Foo);");
 
     Name fooProp = namespace.getSlot("Foo.prop");
     assertThat(fooProp.canCollapse()).isFalse();
