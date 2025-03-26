@@ -60,15 +60,15 @@ public final class JsFileRegexParserTest {
   @Test
   public void testParseFile() {
     String contents =
-        "/*"
-            + "goog.provide('no1');*//*\n"
-            + "goog.provide('no2');\n"
-            + "*/goog.provide('yes1');\n"
-            + "/* blah */goog.provide(\"yes2\")/* blah*/\n"
-            + "goog.require('yes3'); // goog.provide('no3');\n"
-            + "// goog.provide('no4');\n"
-            + "goog.require(\"bar.data.SuperstarAddStarThreadActionRequestDelegate\"); "
-            + "//no new line at EOF";
+        """
+        /*goog.provide('no1');*//*
+        goog.provide('no2');
+        */goog.provide('yes1');
+        /* blah */goog.provide("yes2")/* blah*/
+        goog.require('yes3'); // goog.provide('no3');
+        // goog.provide('no4');
+        goog.require("bar.data.SuperstarAddStarThreadActionRequestDelegate"); //no new line at EOF
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
@@ -87,11 +87,12 @@ public final class JsFileRegexParserTest {
   @Test
   public void testParseFile2() {
     String contents =
-        ""
-            + "goog.module('yes1');\n"
-            + "var yes2 = goog.require('yes2');\n"
-            + "var C = goog.require(\"a.b.C\");\n"
-            + "let {D, E} = goog.require('a.b.d');";
+        """
+        goog.module('yes1');
+        var yes2 = goog.require('yes2');
+        var C = goog.require("a.b.C");
+        let {D, E} = goog.require('a.b.d');
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
@@ -113,11 +114,15 @@ public final class JsFileRegexParserTest {
   @Test
   public void testParseFile3() {
     String contents =
-        ""
-            + "goog.module('yes1');\n"
-            + "var yes2=goog.require('yes2');\n"
-            + "var C=goog.require(\"a.b.C\");\n"
-            + "const {\n  D,\n  E\n}=goog.require(\"a.b.d\");";
+        """
+        goog.module('yes1');
+        var yes2=goog.require('yes2');
+        var C=goog.require("a.b.C");
+        const {
+          D,
+          E
+        }=goog.require("a.b.d");
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
@@ -141,12 +146,19 @@ public final class JsFileRegexParserTest {
     parser.setShortcutMode(false);
 
     String contents =
-        ""
-            + "goog.module('yes1');\n"
-            + "var fakerequire = 5;\n"
-            + "var yes2=goog.require(\n'yes2');\n"
-            + "var C=\ngoog.require(\"a.b.C\");\n"
-            + "const {\n  D,\n  E\n}=goog.require(\n\"a.b.d\");";
+        """
+        goog.module('yes1');
+        var fakerequire = 5;
+        var yes2=goog.require(
+        'yes2');
+        var C=
+        goog.require("a.b.C");
+        const {
+          D,
+          E
+        }=goog.require(
+        "a.b.d");
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
@@ -167,11 +179,15 @@ public final class JsFileRegexParserTest {
   @Test
   public void testParseGoogModuleWithRequireType() {
     String contents =
-        ""
-            + "goog.module('yes1');\n"
-            + "var yes2=goog.requireType('yes2');\n"
-            + "var C=goog.requireType(\"a.b.C\");\n"
-            + "const {\n  D,\n  E\n}=goog.requireType(\"a.b.d\");";
+        """
+        goog.module('yes1');
+        var yes2=goog.requireType('yes2');
+        var C=goog.requireType("a.b.C");
+        const {
+          D,
+          E
+        }=goog.requireType("a.b.d");
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
@@ -187,7 +203,11 @@ public final class JsFileRegexParserTest {
 
   @Test
   public void testParseScriptWithRequireType() {
-    String contents = "" + "goog.provide('yes1');\n" + "goog.requireType('a.b.C');";
+    String contents =
+        """
+        goog.provide('yes1');
+        goog.requireType('a.b.C');
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
@@ -204,11 +224,15 @@ public final class JsFileRegexParserTest {
   @Test
   public void testParseWrappedGoogModule() {
     String contents =
-        ""
-            + "goog.loadModule(function(){\"use strict\";goog.module('yes1');\n"
-            + "var yes2=goog.require('yes2');\n"
-            + "var C=goog.require(\"a.b.C\");\n"
-            + "const {\n  D,\n  E\n}=goog.require(\"a.b.d\");});";
+        """
+        goog.loadModule(function(){"use strict";goog.module('yes1');
+        var yes2=goog.require('yes2');
+        var C=goog.require("a.b.C");
+        const {
+          D,
+          E
+        }=goog.require("a.b.d");});
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
@@ -232,12 +256,13 @@ public final class JsFileRegexParserTest {
   @Test
   public void testParseEs6Module() {
     String contents =
-        ""
-            + "import def, {yes2} from './yes2';\n"
-            + "import C from './a/b/C';\n"
-            + "import * as d from './a/b/d';\n"
-            + "import \"./dquote\";\n"
-            + "export * from './exported';\n";
+        """
+        import def, {yes2} from './yes2';
+        import C from './a/b/C';
+        import * as d from './a/b/d';
+        import "./dquote";
+        export * from './exported';
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder("a.js", "b.js")
@@ -307,13 +332,13 @@ public final class JsFileRegexParserTest {
             .build();
 
     String contents =
-        ""
-            + "import './a';\n"
-            + "import './qux/b';\n"
-            + "import '../closure/c';\n"
-            + "import '../closure/d/e';\n"
-            + "import '../../corge/f';\n";
-
+        """
+        import './a';
+        import './qux/b';
+        import '../closure/c';
+        import '../closure/d/e';
+        import '../../corge/f';
+        """;
     DependencyInfo expected =
         SimpleDependencyInfo.builder("../bar/baz.js", "/foo/js/bar/baz.js")
             .setProvides(ImmutableList.of("module$js$bar$baz"))
@@ -414,13 +439,17 @@ public final class JsFileRegexParserTest {
   @Test
   public void testNoShortcutForCommonModuleModifiers() {
     String contents =
-        ""
-            + "goog.module('yes1');\n"
-            + "goog.module.declareLegacyNamespace();\n"
-            + "goog.setTestOnly();\n"
-            + "var yes2=goog.require('yes2');\n"
-            + "var C=goog.require(\"a.b.C\");\n"
-            + "const {\n  D,\n  E\n}=goog.require(\"a.b.d\");";
+        """
+        goog.module('yes1');
+        goog.module.declareLegacyNamespace();
+        goog.setTestOnly();
+        var yes2=goog.require('yes2');
+        var C=goog.require("a.b.C");
+        const {
+          D,
+          E
+        }=goog.require("a.b.d");
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
@@ -438,8 +467,9 @@ public final class JsFileRegexParserTest {
   @Test
   public void testMultiplePerLine() {
     String contents =
-        "goog.provide('yes1');goog.provide('yes2');/*"
-            + "goog.provide('no1');*/goog.provide('yes3');//goog.provide('no2');";
+        """
+        goog.provide('yes1');goog.provide('yes2');/*goog.provide('no1');*/goog.provide('yes3');//goog.provide('no2');
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
@@ -456,11 +486,15 @@ public final class JsFileRegexParserTest {
   public void testShortcutMode1() {
     // For efficiency reasons, we stop reading after the ctor.
     String contents =
-        " // hi ! \n /* this is a comment */ "
-            + "goog.provide('yes1');\n /* and another comment */ \n"
-            + "goog.provide('yes2'); // include this\n"
-            + "foo = function() {};\n"
-            + "goog.provide('no1');";
+        """
+        // hi !
+        /* this is a comment */
+        goog.provide('yes1');
+        /* and another comment */
+        goog.provide('yes2'); // include this
+        foo = function() {};
+        goog.provide('no1');
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
@@ -734,12 +768,16 @@ public final class JsFileRegexParserTest {
   @Test
   public void testParseProvidesAndWrappedGoogModule() {
     String contents =
-        ""
-            + "goog.loadModule(function(){\"use strict\";goog.module('yes1');\n"
-            + "goog.provide('my.provide');\n"
-            + "var yes2=goog.require('yes2');\n"
-            + "var C=goog.require(\"a.b.C\");\n"
-            + "const {\n  D,\n  E\n}=goog.require(\"a.b.d\");});";
+        """
+        goog.loadModule(function(){"use strict";goog.module('yes1');
+        goog.provide('my.provide');
+        var yes2=goog.require('yes2');
+        var C=goog.require("a.b.C");
+        const {
+          D,
+          E
+        }=goog.require("a.b.d");});
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
