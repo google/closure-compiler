@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.integration;
 
-import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilationLevel;
@@ -375,7 +374,7 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
         };
         """,
         // TODO(b/189993301): this should be logging '1' instead
-        lines("window.a = function() { console.log(0); };"));
+        "window.a = function() { console.log(0); };");
   }
 
   @Test
@@ -419,7 +418,7 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
 
     String code =
-        """
+"""
 /** @unrestricted */
 class __PRIVATE_WebChannelConnection extends class __PRIVATE_RestConnection {
   constructor(e) {
@@ -433,7 +432,7 @@ class __PRIVATE_WebChannelConnection extends class __PRIVATE_RestConnection {
 }
 """;
     String expectedCodeNonTraspiled =
-        """
+"""
 class __PRIVATE_WebChannelConnection extends class __PRIVATE_RestConnection {
   constructor(e) {
     this.databaseInfo = e, this.databaseId = e.databaseId;
@@ -449,7 +448,7 @@ class __PRIVATE_WebChannelConnection extends class __PRIVATE_RestConnection {
 """;
 
     String expectedCodeTranspiled =
-        """
+"""
 const i0$classdecl$var0 = class {
   constructor(e) {
     this.databaseInfo = e, this.databaseId = e.databaseId;
