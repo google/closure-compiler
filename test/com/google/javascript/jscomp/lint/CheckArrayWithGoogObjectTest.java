@@ -66,40 +66,47 @@ public final class CheckArrayWithGoogObjectTest extends CompilerTestCase {
   @Test
   public void testGoogObjectForEach1() {
     testGoogObjectWarning(
-        lines(GOOG_OBJECT, "var arr = [1, 2, 3];", "goog.object.forEach(arr, alert);"));
+        GOOG_OBJECT
+            + """
+            var arr = [1, 2, 3];
+            goog.object.forEach(arr, alert);
+            """);
   }
 
   @Test
   public void testGoogObjectForEach2() {
     testGoogObjectWarning(
-        lines(
-            GOOG_OBJECT,
-            "function f(/** Array<number>|number */ n) {",
-            "  if (typeof n == 'number')",
-            "    alert(n);",
-            "  else",
-            "    goog.object.forEach(n, alert);",
-            "}"));
+        GOOG_OBJECT
+            + """
+            function f(/** Array<number>|number */ n) {
+              if (typeof n == 'number')
+                alert(n);
+              else
+                goog.object.forEach(n, alert);
+            }
+            """);
   }
 
   @Test
   public void testGoogObjectForEach3() {
     testGoogObjectWarning(
-        lines(
-            GOOG_OBJECT,
-            "function f(/** !Array<number> */ arr) {",
-            "  goog.object.forEach(arr, alert);",
-            "}"));
+        GOOG_OBJECT
+            + """
+            function f(/** !Array<number> */ arr) {
+              goog.object.forEach(arr, alert);
+            }
+            """);
   }
 
   @Test
   public void testGoogObjectForEach4() {
     testNoGoogObjectWarning(
-        lines(
-            GOOG_OBJECT,
-            "function f(/** Object<string, number> */ obj) {",
-            "  goog.object.forEach(obj, alert);",
-            "}"));
+        GOOG_OBJECT
+            + """
+            function f(/** Object<string, number> */ obj) {
+              goog.object.forEach(obj, alert);
+            }
+            """);
   }
 
   private void testGoogObjectWarning(String js) {
