@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
@@ -114,13 +113,14 @@ public final class JSDocInfoPrinterTest {
     JSDocInfo info = builder.buildAndReset();
     assertThat(jsDocInfoPrinter.print(info))
         .isEqualTo(
-            lines(
-                "/**", //
-                // @suppress printed in order in which it is recorded(parsed)
-                " * @suppress {const}",
-                // warnings inside a suppress printed in natural order for consistency
-                " * @suppress {globalThis,uselessCode} Common description.",
-                " */\n"));
+            // @suppress printed in order in which it is recorded(parsed)
+            // warnings inside a suppress printed in natural order for consistency
+            """
+            /**
+             * @suppress {const}
+             * @suppress {globalThis,uselessCode} Common description.
+             */
+            """);
   }
 
   @Test
