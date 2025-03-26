@@ -128,12 +128,14 @@ public final class BaseTranspilerTest {
     BaseTranspiler.CompileResult result =
         compiler.compile(
             SOURCE_JS,
-            "const x = () => 42;\n"
-                + "//# sourceMappingURL=data:application/json;base64,"
-                + "eyJ2ZXJzaW9uIjozLCJmaWxlIjoic291cmNlLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsi"
-                + "c291cmNlLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBLE1BQU0sQ0FBQyxHQUFHLEdBQUcs"
-                + "RUFBRSxDQUFDLEVBQUUsQ0FBQyIsInNvdXJjZXNDb250ZW50IjpbImNvbnN0IHggPSAoKSA9PiA0Mjtc"
-                + "biJdfQ==");
+            """
+            const x = () => 42;
+            //# sourceMappingURL=data:application/json;base64,\
+            eyJ2ZXJzaW9uIjozLCJmaWxlIjoic291cmNlLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsi\
+            c291cmNlLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBLE1BQU0sQ0FBQyxHQUFHLEdBQUcs\
+            RUFBRSxDQUFDLEVBQUUsQ0FBQyIsInNvdXJjZXNDb250ZW50IjpbImNvbnN0IHggPSAoKSA9PiA0Mjtc\
+            biJdfQ==\
+            """);
     assertThat(result.source).isEqualTo("var x = function() {\n  return 42;\n};\n");
     assertThat(result.transpiled).isTrue();
     // This should map back to the typescript source file.
