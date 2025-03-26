@@ -879,9 +879,11 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
   @Test
   @Ignore(
-      "TODO(b/301641291): this was originally supported by UnreachableCodeElimination, which was"
-          + " removed in favor of peephole optimizations. Support this test case if found useful in"
-          + " the real code.")
+      """
+      TODO(b/301641291): this was originally supported by UnreachableCodeElimination, which was\
+       removed in favor of peephole optimizations. Support this test case if found useful in\
+       the real code.\
+      """)
   public void testSwitchCase() {
     test("function f() { switch(x) { default: return 5; foo()}}", "function f() { return 5; }");
     testSame("function f() { switch(x) { default: return; case 1: foo(); bar()}}");
@@ -1004,18 +1006,22 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
   @Test
   @Ignore(
-      "TODO(b/301641291): this was originally supported by UnreachableCodeElimination, which was"
-          + " removed in favor of peephole optimizations. Support this test case if found useful in"
-          + " the real code.")
+      """
+      TODO(b/301641291): this was originally supported by UnreachableCodeElimination, which was\
+       removed in favor of peephole optimizations. Support this test case if found useful in\
+       the real code.\
+      """)
   public void testUselessUnconditionalReturn7() {
     testSame("function f() {switch (a) { default: return; case 'a': alert(1)}}");
   }
 
   @Test
   @Ignore(
-      "TODO(b/301641291): this was originally supported by UnreachableCodeElimination, which was"
-          + " removed in favor of peephole optimizations. Support this test case if found useful in"
-          + " the real code.")
+      """
+      TODO(b/301641291): this was originally supported by UnreachableCodeElimination, which was\
+       removed in favor of peephole optimizations. Support this test case if found useful in\
+       the real code.\
+      """)
   public void testUselessUnconditionalReturn8() {
     testSame("function f() {switch (a) { case 'a': return; default: alert(1)}}");
   }
@@ -1040,9 +1046,11 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
   @Test
   @Ignore(
-      "TODO(b/301641291): this was originally supported by UnreachableCodeElimination, which was"
-          + " removed in favor of peephole optimizations. Support this test case if found useful in"
-          + " the real code.")
+      """
+      TODO(b/301641291): this was originally supported by UnreachableCodeElimination, which was\
+       removed in favor of peephole optimizations. Support this test case if found useful in\
+       the real code.\
+      """)
   public void testUselessUnconditionalContinue3() {
     test(
         "for(;1;) { X: for(;1;) { if (x()) {continue X} }}",
@@ -1051,9 +1059,11 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
   @Test
   @Ignore(
-      "TODO(b/301641291): this was originally supported by UnreachableCodeElimination, which was"
-          + " removed in favor of peephole optimizations. Support this test case if found useful in"
-          + " the real code.")
+      """
+      TODO(b/301641291): this was originally supported by UnreachableCodeElimination, which was\
+       removed in favor of peephole optimizations. Support this test case if found useful in\
+       the real code.\
+      """)
   public void testUselessUnconditionalContinue4() {
     test("do { continue } while(1);", "do {  } while(1);");
   }
