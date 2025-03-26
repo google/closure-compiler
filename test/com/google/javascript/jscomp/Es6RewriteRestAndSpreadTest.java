@@ -205,19 +205,20 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
   public void testSpreadVariableIntoMethodParameterList() {
     test(
         externs(
-            lines(
-                EXTERNS_BASE,
-                "/**",
-                " * @constructor",
-                // Skipping @struct here to allow for string access.
-                " */",
-                "function TestClass() { }",
-                "",
-                "/** @param {...string} args */",
-                "TestClass.prototype.testMethod = function(args) { }",
-                "",
-                "/** @return {!TestClass} */",
-                "function testClassFactory() { }")),
+            EXTERNS_BASE
+                + """
+                /**
+                 * @constructor
+                 * Skipping at-struct here to allow for string access.
+                 */
+                function TestClass() { }
+
+                /** @param {...string} args */
+                TestClass.prototype.testMethod = function(args) { }
+
+                /** @return {!TestClass} */
+                function testClassFactory() { }
+                """),
         srcs(
             """
             var obj = new TestClass();
@@ -237,19 +238,20 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
   public void testSpreadVariableIntoMethodParameterListInCast() {
     test(
         externs(
-            lines(
-                EXTERNS_BASE,
-                "/**",
-                " * @constructor",
-                // Skipping @struct here to allow for string access.
-                " */",
-                "function TestClass() { }",
-                "",
-                "/** @param {...string} args */",
-                "TestClass.prototype.testMethod = function(args) { }",
-                "",
-                "/** @return {!TestClass} */",
-                "function testClassFactory() { }")),
+            EXTERNS_BASE
+                + """
+                /**
+                 * @constructor
+                 * Skipping at-struct here to allow for string access.
+                 */
+                function TestClass() { }
+
+                /** @param {...string} args */
+                TestClass.prototype.testMethod = function(args) { }
+
+                /** @return {!TestClass} */
+                function testClassFactory() { }
+                """),
         srcs(
             """
             var obj = new TestClass();
@@ -294,20 +296,22 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
   public void testSpreadVariableIntoMethodParameterList_freeCall() {
     test(
         externs(
-            lines(
-                EXTERNS_BASE,
-                "/**",
-                " * @constructor",
-                // Skipping @struct here to allow for string access.
-                " */",
-                "function TestClass() { }",
-                "",
-                // Add @this {?} to allow calling testMethod without passing a TestClass as `this`
-                "/** @param {...string} args @this {?} */",
-                "TestClass.prototype.testMethod = function(args) { }",
-                "",
-                "/** @return {!TestClass} */",
-                "function testClassFactory() { }")),
+            EXTERNS_BASE
+                + """
+                /**
+                 * @constructor
+                 * Skipping at-struct here to allow for string access.
+                 */
+                function TestClass() { }
+
+                // Adding @this {?} to allow calling testMethod without passing a TestClass as
+                // `this`
+                /** @param {...string} args @this {?} */
+                TestClass.prototype.testMethod = function(args) { }
+
+                /** @return {!TestClass} */
+                function testClassFactory() { }
+                """),
         srcs(
             """
             var obj = new TestClass();
@@ -388,22 +392,24 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
   public void testSpreadVariableIntoMethodParameterListOnReceiverWithSideEffects_freeCall() {
     test(
         externs(
-            lines(
-                EXTERNS_BASE,
-                "/**",
-                " * @constructor",
+            EXTERNS_BASE
+                + """
+                /**
+                 * @constructor
                 // Skip @struct to allow for bracket access
-                " */",
-                "function TestClass() { }",
-                "",
-                // Add @this {?} to allow calling testMethod without passing a TestClass as `this`
-                "/** @param {...string} args @this {null} */",
-                "TestClass.prototype.testMethod = function(args) { }",
-                "",
-                "/** @return {!TestClass} */",
-                "function testClassFactory() { }",
-                "",
-                "/** @type {!Iterable<string>} */ var stringIterable;")),
+                 */
+                function TestClass() { }
+
+                // Add @this {?} to allow calling testMethod without passing a TestClass as
+                // `this`
+                /** @param {...string} args @this {null} */
+                TestClass.prototype.testMethod = function(args) { }
+
+                /** @return {!TestClass} */
+                function testClassFactory() { }
+
+                /** @type {!Iterable<string>} */ var stringIterable;
+                """),
         srcs(
             """
             (0, testClassFactory().testMethod)(...stringIterable);
