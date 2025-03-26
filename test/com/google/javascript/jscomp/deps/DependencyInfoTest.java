@@ -42,8 +42,10 @@ public final class DependencyInfoTest {
             .build());
     assertThat(sb.toString())
         .isEqualTo(
-            "goog.addDependency('../some/relative/path.js', ['provided.symbol', 'other.provide'], "
-                + "['required.symbol', 'other.require'], {'module': 'goog', 'lang': 'es6'});\n");
+            """
+            goog.addDependency('../some/relative/path.js', ['provided.symbol', 'other.provide'], \
+            ['required.symbol', 'other.require'], {'module': 'goog', 'lang': 'es6'});
+            """);
   }
 
   @Test
