@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
@@ -132,8 +131,7 @@ public final class SymbolTableTest {
 
   @Test
   public void testSourceInfoForProvidedSymbol() {
-    SymbolTable table =
-        createSymbolTable(lines("goog.provide('foo.bar.Baz'); foo.bar.Baz = class {};"));
+    SymbolTable table = createSymbolTable("goog.provide('foo.bar.Baz'); foo.bar.Baz = class {};");
 
     Symbol foo = getGlobalVar(table, "foo");
     assertThat(foo).isNotNull();
@@ -232,7 +230,7 @@ public final class SymbolTableTest {
 
   @Test
   public void testObjectLiteralWithMemberFunction() {
-    String input = lines("var obj = { fn() {} }; obj.fn();");
+    String input = "var obj = { fn() {} }; obj.fn();";
     SymbolTable table = createSymbolTable(input);
 
     Symbol objFn = getGlobalVar(table, "obj.fn");
@@ -343,7 +341,7 @@ public final class SymbolTableTest {
     SymbolTable table =
         createSymbolTableWithDefaultExterns(
             // goog.scope is defined in the default externs, among other Closure methods
-            lines("goog.scope(function() {});"));
+            "goog.scope(function() {});");
 
     Symbol googScope = getGlobalVar(table, "goog.scope");
     assertThat(googScope).isNotNull();
@@ -1161,7 +1159,7 @@ public final class SymbolTableTest {
 
   @Test
   public void testPrototypeReferences_es6Class() {
-    SymbolTable table = createSymbolTable(lines("class DomHelper { method() {} }"));
+    SymbolTable table = createSymbolTable("class DomHelper { method() {} }");
     Symbol prototype = getGlobalVar(table, "DomHelper.prototype");
     assertThat(prototype).isNotNull();
     ImmutableList<Reference> refs = table.getReferenceList(prototype);
