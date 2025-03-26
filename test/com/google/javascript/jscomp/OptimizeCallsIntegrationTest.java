@@ -29,15 +29,16 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
 
   public OptimizeCallsIntegrationTest() {
     super(
-        lines(
-            DEFAULT_EXTERNS,
-            "var window;",
-            "var goog = {};",
-            "goog.reflect = {};",
-            "goog.reflect.object = function(a, b) {};",
-            "function goog$inherits(a, b) {}",
-            "var alert;",
-            "function use(x) {}"));
+        DEFAULT_EXTERNS
+            + """
+            var window;
+            var goog = {};
+            goog.reflect = {};
+            goog.reflect.object = function(a, b) {};
+            function goog$inherits(a, b) {}
+            var alert;
+            function use(x) {}
+            """);
   }
 
   @Override
@@ -679,7 +680,7 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
         register(function(transformer) {});
         register(function(transformer) {});
         """,
-        lines("var register=function(){};register();register()"));
+        "var register=function(){};register();register()");
   }
 
   @Test
