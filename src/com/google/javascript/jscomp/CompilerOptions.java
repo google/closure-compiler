@@ -2650,7 +2650,7 @@ public class CompilerOptions {
     return this.injectPolyfillsNewerThan;
   }
 
-  /** Sets whether to isolate polyfills from the global scope. */
+  /** Sets whether to transpile async functions and generators for AsyncContext. */
   public void setInstrumentAsyncContext(boolean instrumentAsyncContext) {
     this.instrumentAsyncContext = instrumentAsyncContext;
     this.setDefineToBooleanLiteral("$jscomp.INSTRUMENT_ASYNC_CONTEXT", instrumentAsyncContext);
