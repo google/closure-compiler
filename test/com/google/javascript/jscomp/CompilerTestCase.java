@@ -1423,7 +1423,7 @@ public abstract class CompilerTestCase {
       List<Diagnostic> diagnostics,
       List<Postcondition> postconditions) {
     List<SourceFile> inputs =
-        (inputsObj instanceof FlatSources) ? ((FlatSources) inputsObj).sources : null;
+        (inputsObj instanceof FlatSources flatSources) ? flatSources.sources : null;
     List<SourceFile> expected = expectedObj != null ? expectedObj.expected : null;
     ImmutableList<Diagnostic> expectedErrors =
         diagnostics.stream().filter(d -> d.level == CheckLevel.ERROR).collect(toImmutableList());
@@ -2263,19 +2263,19 @@ public abstract class CompilerTestCase {
     List<Diagnostic> diagnostics = new ArrayList<>();
     List<Postcondition> postconditions = new ArrayList<>();
     for (TestPart part : parts) {
-      if (part instanceof Externs) {
+      if (part instanceof Externs ext) {
         checkState(externs == null);
-        externs = (Externs) part;
-      } else if (part instanceof Sources) {
+        externs = ext;
+      } else if (part instanceof Sources sources) {
         checkState(srcs == null);
-        srcs = (Sources) part;
-      } else if (part instanceof Expected) {
+        srcs = sources;
+      } else if (part instanceof Expected exp) {
         checkState(expected == null);
-        expected = (Expected) part;
-      } else if (part instanceof Diagnostic) {
-        diagnostics.add((Diagnostic) part);
-      } else if (part instanceof Postcondition) {
-        postconditions.add((Postcondition) part);
+        expected = exp;
+      } else if (part instanceof Diagnostic diagnostic) {
+        diagnostics.add(diagnostic);
+      } else if (part instanceof Postcondition postcondition) {
+        postconditions.add(postcondition);
       } else {
         throw new IllegalStateException("unexepected " + part.getClass().getName());
       }
