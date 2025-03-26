@@ -47,9 +47,9 @@ public final class ClosureBundlerTest {
     new ClosureBundler().appendTo(sb, MODULE, "\"a string\"");
     assertThat(sb.toString())
         .isEqualTo(
-            "goog.loadModule(function(exports) {'use strict';"
-                + "\"a string\"\n"
-                + ";return exports;});\n");
+            """
+            goog.loadModule(function(exports) {'use strict';"a string"\n;return exports;});
+            """);
   }
 
   @Test
@@ -111,9 +111,9 @@ public final class ClosureBundlerTest {
         .appendTo(sb, TRADITIONAL, "\"a string\"");
     assertThat(sb.toString())
         .isEqualTo(
-            "eval(this.CLOSURE_EVAL_PREFILTER(\"\\x22a string\\x22\\n"
-                + "//# sourceURL\\x3dURL\\n"
-                + "\"));\n");
+            """
+            eval(this.CLOSURE_EVAL_PREFILTER("\\x22a string\\x22\\n//# sourceURL\\x3dURL\\n"));
+            """);
   }
 
   @Test
@@ -153,10 +153,12 @@ public final class ClosureBundlerTest {
   @Test
   public void testEs6Module() throws IOException {
     String input =
-        "import {x} from './other.js';\n"
-            + "export {x as y};"
-            + "let local;\n"
-            + "export function foo() { return local; }\n";
+        """
+        import {x} from './other.js';
+        export {x as y};
+        let local;
+        export function foo() { return local; }
+        """;
     ClosureBundler bundler =
         new ClosureBundler(BaseTranspiler.LATEST_TRANSPILER).withPath("nested/path/foo.js");
     StringBuilder sb = new StringBuilder();
