@@ -105,30 +105,31 @@ public final class ExternExportsPassTest extends CompilerTestCase {
         goog.exportProperty(a.b.c.prototype, 'exportedMethod', a.b.c.prototype.method)
         goog.exportProperty(a.b.c, 'exportedStaticMethod', a.b.c.staticMethod)
         """,
-        lines(
-            "/**",
-            " * @param {?} d",
-            " * @param {?} e",
-            " * @param {?} f",
-            " * @constructor",
-            " */",
-            "var foobar = function(d, e, f) {", //
-            "};",
-            "/**",
-            " * @return {undefined}",
-            " * @this {(typeof a.b.c)}",
-            " */",
-            "foobar.exportedStaticMethod = function() {",
-            "};",
-            "/**",
-            " * @param {string} a",
-            " * @return {number}",
-            " * @this {!a.b.c}", // TODO(b/123352214): a.b.c should be renamed to foobar here
-            " */",
-            "foobar.prototype.exportedMethod = function(a) {",
-            "};",
-            "foobar.prototype.thisProp;",
-            ""));
+        // TODO(b/123352214): `@this {!a.b.c}` should be renamed to `foobar`
+        """
+        /**
+         * @param {?} d
+         * @param {?} e
+         * @param {?} f
+         * @constructor
+         */
+        var foobar = function(d, e, f) {
+        };
+        /**
+         * @return {undefined}
+         * @this {(typeof a.b.c)}
+         */
+        foobar.exportedStaticMethod = function() {
+        };
+        /**
+         * @param {string} a
+         * @return {number}
+         * @this {!a.b.c}
+         */
+        foobar.prototype.exportedMethod = function(a) {
+        };
+        foobar.prototype.thisProp;
+        """);
   }
 
   @Test
@@ -176,26 +177,27 @@ public final class ExternExportsPassTest extends CompilerTestCase {
         };
         goog.exportSymbol('bazboff', a.b.d)
         """,
-        lines(
-            "/**",
-            " * @param {?} d",
-            " * @param {?} e",
-            " * @param {?} f",
-            " * @extends {a.b.c}", // TODO(b/123352214): @extends should be updated here
-            " * @constructor",
-            " */",
-            "var bazboff = function(d, e, f) {",
-            "};",
-            // NOTE: these end up sorted in ASCII order. This is expected.
-            "/**",
-            " * @param {?} d",
-            " * @param {?} e",
-            " * @param {?} f",
-            " * @constructor",
-            " */",
-            "var foobar = function(d, e, f) {",
-            "};",
-            ""));
+        // NOTE: foobar and bazboff end up sorted in ASCII order. This is expected.
+        // TODO(b/123352214): @extends {a.b.c} should be updated
+        """
+        /**
+         * @param {?} d
+         * @param {?} e
+         * @param {?} f
+         * @extends {a.b.c}
+         * @constructor
+         */
+        var bazboff = function(d, e, f) {
+        };
+        /**
+         * @param {?} d
+         * @param {?} e
+         * @param {?} f
+         * @constructor
+         */
+        var foobar = function(d, e, f) {
+        };
+        """);
   }
 
   @Test
@@ -707,21 +709,22 @@ public final class ExternExportsPassTest extends CompilerTestCase {
         }
         goog.exportSymbol('SubClass', SubClass);
         """,
-        lines(
-            "/**",
-            " * @param {number} a", // automatically generated parameter name
-            " * @extends {SuperClass}",
-            " * @constructor",
-            " */",
-            "var SubClass = function(a) {", // missing parameter here
-            "};",
-            "/**",
-            " * @param {number} num",
-            " * @constructor",
-            " */",
-            "var SuperClass = function(num) {",
-            "};",
-            ""));
+        // The "a" parameter name is automatically generated
+        """
+        /**
+         * @param {number} a
+         * @extends {SuperClass}
+         * @constructor
+         */
+        var SubClass = function(a) {
+        };
+        /**
+         * @param {number} num
+         * @constructor
+         */
+        var SuperClass = function(num) {
+        };
+        """);
   }
 
   @Test
@@ -1791,11 +1794,12 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   private void compileAndExportExterns(
       String js, String externs, final @Nullable Consumer<String> consumer) {
     js =
-        lines(
-            "/** @const */ var goog = {};",
-            "goog.exportSymbol = function(a, b) {};",
-            "goog.exportProperty = function(a, b, c) {};",
-            js);
+        """
+        /** @const */ var goog = {};
+        goog.exportSymbol = function(a, b) {};
+        goog.exportProperty = function(a, b, c) {};
+        """
+            + js;
 
     test(
         externs(externs),
