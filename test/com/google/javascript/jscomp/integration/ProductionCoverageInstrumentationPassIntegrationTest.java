@@ -18,10 +18,8 @@ package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static org.junit.Assert.assertThrows;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilationLevel;
@@ -39,11 +37,7 @@ import org.junit.runners.JUnit4;
 public final class ProductionCoverageInstrumentationPassIntegrationTest
     extends IntegrationTestCase {
 
-  private final String instrumentCodeExpected = lines("var ist_arr = [];\n");
-
-  private static String getInstrumentCodeLine(String encodedParam) {
-    return Strings.lenientFormat("%s.push(\"%s\")", "ist_arr", encodedParam);
-  }
+  private static final String EXPECTED_LEADING_INSTRUMENT_CODE = "var ist_arr = [];\n";
 
   @Test
   public void testFunctionInstrumentation() {
@@ -53,19 +47,20 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     String source =
         """
         function foo() {
-           console.log('Hello');
+          console.log('Hello');
         }
         """;
 
     String expected =
-        lines(
-            "function foo() { ", //
-            getInstrumentCodeLine("C"),
-            ";",
-            "  console.log('Hello'); ",
-            "}");
+        EXPECTED_LEADING_INSTRUMENT_CODE
+            + """
+            function foo() {
+              ist_arr.push("C");
+              console.log('Hello');
+            }
+            """;
 
-    test(options, source, instrumentCodeExpected.concat(expected));
+    test(options, source, expected);
   }
 
   @Test
@@ -80,12 +75,13 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
         """;
 
     String expected =
-        """
-        var global = 23;
-        console.log(global);
-        """;
+        EXPECTED_LEADING_INSTRUMENT_CODE
+            + """
+            var global = 23;
+            console.log(global);
+            """;
 
-    test(options, source, instrumentCodeExpected.concat(expected));
+    test(options, source, expected);
   }
 
   @Test
@@ -98,19 +94,20 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     String source =
         """
         function foo() {
-           console.log('Hello');
+          console.log('Hello');
         }
         """;
 
     String expected =
-        lines(
-            "function foo() { ", //
-            getInstrumentCodeLine("C"),
-            ";",
-            "   console.log('Hello'); ",
-            "}");
+        EXPECTED_LEADING_INSTRUMENT_CODE
+            + """
+            function foo() {
+              ist_arr.push("C");
+              console.log('Hello');
+            }
+            """;
 
-    test(options, source, instrumentCodeExpected.concat(expected));
+    test(options, source, expected);
   }
 
   @Test
@@ -121,22 +118,22 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     String source =
         """
         if (tempBool) {
-           console.log('Hello');
+          console.log('Hello');
         }
         """;
 
     String expected =
-        lines(
-            "if (tempBool) { ",
-            getInstrumentCodeLine("C"),
-            ";",
-            "  console.log('Hello'); ",
-            "} else {",
-            getInstrumentCodeLine("E"),
-            ";",
-            "}");
+        EXPECTED_LEADING_INSTRUMENT_CODE
+            + """
+            if (tempBool) {
+              ist_arr.push("C");
+              console.log('Hello');
+            } else {
+              ist_arr.push("E");
+            }
+            """;
 
-    test(options, source, instrumentCodeExpected.concat(expected));
+    test(options, source, expected);
   }
 
   @Test
@@ -147,28 +144,27 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     String source =
         """
         if (tempBool) {
-           console.log('Hello');
+          console.log('Hello');
         } else if(anotherTempBool) {
-           console.log('hi');
+          console.log('hi');
         }
         """;
 
     String expected =
-        lines(
-            "if (tempBool) {",
-            getInstrumentCodeLine("G"),
-            ";",
-            "   console.log('Hello');",
-            "} else if(anotherTempBool) {",
-            getInstrumentCodeLine("C"),
-            ";",
-            "   console.log('hi');",
-            "} else {",
-            getInstrumentCodeLine("E"),
-            ";",
-            "}");
+        EXPECTED_LEADING_INSTRUMENT_CODE
+            + """
+            if (tempBool) {
+              ist_arr.push("G");
+              console.log('Hello');
+            } else if(anotherTempBool) {
+              ist_arr.push("C");
+              console.log('hi');
+            } else {
+              ist_arr.push("E");
+            }
+            """;
 
-    test(options, source, instrumentCodeExpected.concat(expected));
+    test(options, source, expected);
   }
 
   @Test
@@ -176,11 +172,15 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     CompilerOptions options = createCompilerOptions();
     declareIstArrExtern();
 
-    String source = lines("tempObj.a || tempObj.b;");
+    String source = "tempObj.a || tempObj.b;";
 
-    String expected = lines("tempObj.a || (", getInstrumentCodeLine("C"), ", tempObj.b)");
+    String expected =
+        EXPECTED_LEADING_INSTRUMENT_CODE
+            + """
+            tempObj.a || (ist_arr.push("C"), tempObj.b)
+            """;
 
-    test(options, source, instrumentCodeExpected.concat(expected));
+    test(options, source, expected);
   }
 
   @Test
@@ -188,11 +188,15 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     CompilerOptions options = createCompilerOptions();
     declareIstArrExtern();
 
-    String source = lines("tempObj.a && tempObj.b;");
+    String source = "tempObj.a && tempObj.b;";
 
-    String expected = lines("tempObj.a && (", getInstrumentCodeLine("C"), ", tempObj.b)");
+    String expected =
+        EXPECTED_LEADING_INSTRUMENT_CODE
+            + """
+            tempObj.a && (ist_arr.push("C"), tempObj.b)
+            """;
 
-    test(options, source, instrumentCodeExpected.concat(expected));
+    test(options, source, expected);
   }
 
   @Test
@@ -202,11 +206,15 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
 
     options.setLanguageOut(LanguageMode.NO_TRANSPILE);
 
-    String source = lines("someObj ?? 24");
+    String source = "someObj ?? 24";
 
-    String expected = lines("someObj ?? (", getInstrumentCodeLine("C"), ", 24)");
+    String expected =
+        EXPECTED_LEADING_INSTRUMENT_CODE
+            + """
+            someObj ?? (ist_arr.push("C"), 24)
+            """;
 
-    test(options, source, instrumentCodeExpected.concat(expected));
+    test(options, source, expected);
   }
 
   @Test
@@ -214,18 +222,15 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     CompilerOptions options = createCompilerOptions();
     declareIstArrExtern();
 
-    String source = lines("flag ? foo() : fooBar()");
+    String source = "flag ? foo() : fooBar()";
 
     String expected =
-        lines(
-            "flag ? (",
-            getInstrumentCodeLine("C"),
-            ", foo()) :",
-            "(",
-            getInstrumentCodeLine("E"),
-            ", fooBar())");
+        EXPECTED_LEADING_INSTRUMENT_CODE
+            + """
+            flag ? (ist_arr.push("C"), foo()) : (ist_arr.push("E"), fooBar())
+            """;
 
-    test(options, source, instrumentCodeExpected.concat(expected));
+    test(options, source, expected);
   }
 
   @Test
@@ -236,19 +241,20 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     String source =
         """
         for(var i = 0 ; i < 10 ; ++i) {
-           console.log('*');
+          console.log('*');
         }
         """;
 
     String expected =
-        lines(
-            "for(var i = 0 ; i < 10 ; ++i) {",
-            getInstrumentCodeLine("C"),
-            ";",
-            "   console.log('*');",
-            "}");
+        EXPECTED_LEADING_INSTRUMENT_CODE
+            + """
+            for(var i = 0 ; i < 10 ; ++i) {
+              ist_arr.push("C");
+              console.log('*');
+            }
+            """;
 
-    test(options, source, instrumentCodeExpected.concat(expected));
+    test(options, source, expected);
   }
 
   @Test
@@ -259,24 +265,24 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     String source =
         """
         switch (x) {
-           case 1:
-              x = 5;
+          case 1:
+            x = 5;
         };
         """;
 
     String expected =
-        lines(
-            "switch (x) {",
-            "   case 1: ",
-            getInstrumentCodeLine("C"),
-            ";",
-            "      x = 5;",
-            "   default: ",
-            getInstrumentCodeLine("E"),
-            ";",
-            "};");
+        EXPECTED_LEADING_INSTRUMENT_CODE
+            + """
+            switch (x) {
+              case 1:
+                ist_arr.push("C");
+                x = 5;
+              default:
+                ist_arr.push("E");
+            };
+            """;
 
-    test(options, source, instrumentCodeExpected.concat(expected));
+    test(options, source, expected);
   }
 
   @Test
@@ -284,16 +290,27 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     CompilerOptions options = createCompilerOptions();
     declareIstArrExtern();
 
-    String source = lines("window.setInterval((x) => { console.log(x); }, 500);");
+    String source =
+        """
+        window.setInterval(
+          (x) => {
+            console.log(x);
+          },
+          500);
+        """;
 
     String expected =
-        lines(
-            "window.setInterval(function(x) { "
-                + "ist_arr.push('C');"
-                + "console.log(x);"
-                + "}, 500);");
+        EXPECTED_LEADING_INSTRUMENT_CODE
+            + """
+            window.setInterval(
+              function(x) {
+                ist_arr.push('C');
+                console.log(x);
+              },
+              500);
+            """;
 
-    test(options, source, instrumentCodeExpected.concat(expected));
+    test(options, source, expected);
   }
 
   @Test
@@ -301,7 +318,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     CompilerOptions options = createCompilerOptions();
     declareIstArrExtern();
 
-    String source = lines("tempObj.a || tempObj.b;");
+    String source = "tempObj.a || tempObj.b;";
 
     Compiler compiledSourceCode = compile(options, source);
 
@@ -338,27 +355,25 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     CompilerOptions options = createCompilerOptions();
     declareIstArrExtern();
 
-    String source = lines("if (tempBool) if(someBool) console.log('*');");
+    String source = "if (tempBool) if(someBool) console.log('*');";
 
     String expected =
-        lines(
-            "if (tempBool) {",
-            getInstrumentCodeLine("G"),
-            ";",
-            "  if (someBool) {",
-            getInstrumentCodeLine("C"),
-            ";",
-            "    console.log('*');",
-            "   } else {",
-            getInstrumentCodeLine("E"),
-            ";",
-            "   }",
-            "} else {",
-            getInstrumentCodeLine("I"),
-            ";",
-            "}");
+        EXPECTED_LEADING_INSTRUMENT_CODE
+            + """
+            if (tempBool) {
+              ist_arr.push("G");
+              if (someBool) {
+                ist_arr.push("C");
+                console.log('*');
+              } else {
+                ist_arr.push("E");
+              }
+            } else {
+              ist_arr.push("I");
+            }
+            """;
 
-    test(options, source, instrumentCodeExpected.concat(expected));
+    test(options, source, expected);
   }
 
   @Test
@@ -369,7 +384,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     String source =
         """
         function foo() {
-           console.log('Hello');
+         console.log('Hello');
         }
         """;
 
@@ -402,30 +417,35 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     String source =
         """
         function foo (x) {
-           console.log(x+5);
+          console.log(x+5);
         };
         """;
     String useGlobalArray =
         """
         function ist(){
-           console.log(ist_array)
+          console.log(ist_array)
         }
         """;
 
     String expected =
-        lines(
-            "function foo (x) {", //
-            getInstrumentCodeLine("C"),
-            ";",
-            "   console.log( x + 5);",
-            "};");
+        EXPECTED_LEADING_INSTRUMENT_CODE
+            + """
+            function foo (x) {
+              ist_arr.push("C");
+              console.log( x + 5);
+            };
+            """;
 
     String expectedUseGlobalArray =
-        lines("function ist(){", getInstrumentCodeLine("E"), ";", "console.log(ist_array);", "}");
+        """
+        function ist(){
+          ist_arr.push("E");
+          console.log(ist_array);
+        }
+        """;
 
     String[] sourceArr = new String[] {source, useGlobalArray};
-    String[] expectedArr =
-        new String[] {instrumentCodeExpected.concat(expected), expectedUseGlobalArray};
+    String[] expectedArr = new String[] {expected, expectedUseGlobalArray};
 
     test(options, sourceArr, expectedArr);
   }
@@ -437,42 +457,40 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
 
     String source =
         """
-        function foo (x) {
+        function foo(x) {
            if(x) {
               alert(x+5);
            }
         }
-        foo(true); foo(false);
+        foo(true);
+        foo(false);
         """;
 
     String expected =
-        lines(
-            "function a(b) {",
-            getInstrumentCodeLine("G"),
-            ";",
-            "b ? (",
-            getInstrumentCodeLine("C"),
-            ", alert(b+5)) : ",
-            getInstrumentCodeLine("E"),
-            ";",
-            "}",
-            "a(!0);",
-            "a(!1);");
+        EXPECTED_LEADING_INSTRUMENT_CODE
+            + """
+            function a(b) {
+              ist_arr.push("G");
+              b ? (ist_arr.push("C"), alert(b+5)) : ist_arr.push("E");
+            }
+            a(!0);
+            a(!1);
+            """;
 
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
-    test(options, source, instrumentCodeExpected.concat(expected));
+    test(options, source, expected);
   }
 
   private void declareIstArrExtern() {
     String externDefinition =
         """
         /**
-        * @externs
-        */
+         * @externs
+         */
         /**
-        *@type {!Array<string>}
-        */
+         * @type {!Array<string>}
+         */
         let ist_arr;
         """;
     externs =
