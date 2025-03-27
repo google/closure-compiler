@@ -6084,8 +6084,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT_2020;
     expectFeatures(Feature.PUBLIC_CLASS_FIELDS);
     parseWarning(
-        "/** @closureUnaware */ (function() { class C{ a = 2;} }).call(globalThis); class C{ a"
-            + " = 2;}",
+        "/** @closureUnaware */ (\n"
+            + "  function() { class C{ a = 2;} }).call(globalThis); class C{ a = 2;\n"
+            + "}",
         // This warning is expected - it is used to halt compilation during parsing when
         // closure-unaware code is present when it should not be.
         "@closureUnaware annotation is not allowed in this compilation",
@@ -7805,7 +7806,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testParseInlineSourceMap() {
     String code =
-        """
+"""
 var X = (function () {
     function X(input) {
         this.y = input;
@@ -7818,11 +7819,13 @@ console.log(new X(1));
     ParseResult result = doParse(code);
     assertThat(result.sourceMapURL)
         .isEqualTo(
-            "data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpz"
-                + "Iiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZm9vLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQU"
-                + "FBO0lBR0UsV0FBWSxLQUFhO1FBQ3ZCLElBQUksQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDO0lBQ2pCLENBQUM7"
-                + "SUFDSCxRQUFDO0FBQUQsQ0FBQyxBQU5ELElBTUM7QUFFRCxPQUFPLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQy"
-                + "xDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMifQ==");
+            """
+            data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpz\
+            Iiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZm9vLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQU\
+            FBO0lBR0UsV0FBWSxLQUFhO1FBQ3ZCLElBQUksQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDO0lBQ2pCLENBQUM7\
+            SUFDSCxRQUFDO0FBQUQsQ0FBQyxBQU5ELElBTUM7QUFFRCxPQUFPLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQy\
+            xDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMifQ==\
+            """);
   }
 
   @Test
