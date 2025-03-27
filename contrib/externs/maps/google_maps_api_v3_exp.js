@@ -8200,6 +8200,11 @@ google.maps.PlacesLibrary.prototype.PlusCode;
 google.maps.PlacesLibrary.prototype.PriceLevel;
 
 /**
+ * @type {typeof google.maps.places.PriceRange}
+ */
+google.maps.PlacesLibrary.prototype.PriceRange;
+
+/**
  * @type {typeof google.maps.places.RankBy}
  */
 google.maps.PlacesLibrary.prototype.RankBy;
@@ -17161,6 +17166,20 @@ google.maps.places.AuthorAttribution.prototype.uri;
  * @param {?google.maps.places.AutocompleteOptions=} opts Options.
  * @extends {google.maps.MVCObject}
  * @constructor
+ * @deprecated As of March 1st, 2025, google.maps.places.Autocomplete is not
+ *     available to new customers. Please use {@link
+ *     google.maps.places.PlaceAutocompleteElement} instead. At this time,
+ *     google.maps.places.Autocomplete is not scheduled to be discontinued,
+ *     but {@link google.maps.places.PlaceAutocompleteElement} is recommended
+ *     over google.maps.places.Autocomplete. While
+ *     google.maps.places.Autocomplete will continue to receive bug fixes for
+ *     any major regressions, existing bugs in google.maps.places.Autocomplete
+ *     will not be addressed. At least 12 months notice will be given before
+ *     support is discontinued. Please see <a
+ *     href="https://developers.google.com/maps/legacy">https://developers.google.com/maps/legacy</a>
+ *     for additional details and <a
+ *     href="https://developers.google.com/maps/documentation/javascript/places-migration-overview">https://developers.google.com/maps/documentation/javascript/places-migration-overview</a>
+ *     for the migration guide.
  */
 google.maps.places.Autocomplete = function(inputField, opts) {};
 
@@ -17492,6 +17511,20 @@ google.maps.places.AutocompleteResponse.prototype.predictions;
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
+ * @deprecated As of March 1st, 2025, google.maps.places.AutocompleteService is
+ *     not available to new customers. Please use {@link
+ *     google.maps.places.AutocompleteSuggestion} instead. At this time,
+ *     google.maps.places.AutocompleteService is not scheduled to be
+ *     discontinued, but {@link google.maps.places.AutocompleteSuggestion} is
+ *     recommended over google.maps.places.AutocompleteService. While
+ *     google.maps.places.AutocompleteService will continue to receive bug fixes
+ *     for any major regressions, existing bugs in
+ *     google.maps.places.AutocompleteService will not be addressed. At least 12
+ *     months notice will be given before support is discontinued. Please see <a
+ *     href="https://developers.google.com/maps/legacy">https://developers.google.com/maps/legacy</a>
+ *     for additional details and <a
+ *     href="https://developers.google.com/maps/documentation/javascript/places-migration-overview">https://developers.google.com/maps/documentation/javascript/places-migration-overview</a>
+ *     for the migration guide.
  */
 google.maps.places.AutocompleteService = function() {};
 
@@ -18690,6 +18723,13 @@ google.maps.places.Place.prototype.plusCode;
  * @type {!google.maps.places.PriceLevel|null|undefined}
  */
 google.maps.places.Place.prototype.priceLevel;
+
+/**
+ * The price range for this Place. <code>endPrice</code> could be unset, which
+ * indicates a range without upper bound (e.g. &quot;More than $100&quot;).
+ * @type {!google.maps.places.PriceRange|null|undefined}
+ */
+google.maps.places.Place.prototype.priceRange;
 
 /**
  * The location&#39;s primary type. <code>null</code> if there is no type.
@@ -20436,6 +20476,32 @@ google.maps.places.PriceLevel = {
 };
 
 /**
+ * The price range associated with a Place. <code>endPrice</code> could be
+ * unset, which indicates a range without upper bound (e.g. &quot;More than
+ * $100&quot;).
+ *
+ * Access by calling `const {PriceRange} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.PriceRange = function() {};
+
+/**
+ * The upper end of the price range (inclusive). Price should be lower than this
+ * amount.
+ * @type {!google.maps.places.Money|null}
+ */
+google.maps.places.PriceRange.prototype.endPrice;
+
+/**
+ * The low end of the price range (inclusive). Price should be at or above this
+ * amount.
+ * @type {!google.maps.places.Money}
+ */
+google.maps.places.PriceRange.prototype.startPrice;
+
+/**
  * Represents a single Query Autocomplete prediction.
  * @record
  */
@@ -20602,6 +20668,13 @@ google.maps.places.Review.prototype.textLanguageCode;
  * @param {(!google.maps.places.SearchBoxOptions|null)=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
+ * @deprecated As of March 1st, 2025, google.maps.places.SearchBox is not
+ *     available to new customers. At this time, google.maps.places.SearchBox is
+ *     not scheduled to be discontinued and will continue to receive bug fixes
+ *     for any major regressions. At least 12 months notice will be given before
+ *     support is discontinued. Please see <a
+ *     href="https://developers.google.com/maps/legacy">https://developers.google.com/maps/legacy</a>
+ *     for additional details.
  */
 google.maps.places.SearchBox = function(inputField, opts) {};
 
