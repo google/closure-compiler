@@ -35,7 +35,7 @@ import org.junit.runners.JUnit4;
 public final class OptimizeParametersTest extends CompilerTestCase {
 
   public OptimizeParametersTest() {
-    super(lines(DEFAULT_EXTERNS, "var alert;"));
+    super(DEFAULT_EXTERNS + "var alert;");
   }
 
   @Override

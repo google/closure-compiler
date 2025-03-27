@@ -499,8 +499,10 @@ public final class TypeCheckBigIntTest extends TypeCheckTestCase {
     newTest()
         .addSource("new BigInt(1)")
         .addDiagnostic(
-            "cannot instantiate non-constructor, found type: function(new:BigInt,"
-                + " (bigint|number|string)): bigint")
+            """
+            cannot instantiate non-constructor, found type: function(new:BigInt,\
+             (bigint|number|string)): bigint\
+            """)
         .run();
   }
 

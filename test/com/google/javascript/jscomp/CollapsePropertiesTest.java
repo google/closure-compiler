@@ -2088,17 +2088,16 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testObjLitWithNonIdentifierKeys() {
     testSame("a = {' ': 0, ',': 1}; var c = a[' '];");
     testSame(
-        lines(
-            "var FOO = {",
-            "  'bar': {",
-            "    'baz,qux': {",
-            "      'beep': 'xxxxx',",
-            "    },",
-            "  }",
-            """
-            };
-            alert(FOO);
-            """));
+        """
+        var FOO = {
+          'bar': {
+            'baz,qux': {
+              'beep': 'xxxxx',
+            },
+          }
+        };
+        alert(FOO);
+        """);
   }
 
   @Test
@@ -2338,7 +2337,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         protect(O).m3 = function() {};
         """;
 
-    testSame(lines(prelude + "alert(O.m1); alert(O.m2()); alert(!O.m3);"));
+    testSame(prelude + "alert(O.m1); alert(O.m2()); alert(!O.m3);");
   }
 
   @Test
@@ -3021,29 +3020,27 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   @Test
   public void testDelete11WithOptionalChain() {
     testWarning(
-        lines(
-            """
-            var x = {};
-            x.foo = {};
-            /** @constructor */ x.foo.Bar = function() {};
-            // It's weird, but it is allowed to delete an optional chain.
-            delete x?.foo;
-            """),
+        """
+        var x = {};
+        x.foo = {};
+        /** @constructor */ x.foo.Bar = function() {};
+        // It's weird, but it is allowed to delete an optional chain.
+        delete x?.foo;
+        """,
         // The optional chain effectively creates an alias for `x`,
         // so we get a partial namespace warning instead of a namespase
         // redefined warning.
         PARTIAL_NAMESPACE_WARNING);
     testWarning(
-        lines(
-            """
-            var x = {};
-            x.foo = {};
-            /** @constructor */ x.foo.Bar = function() {};
-            delete x.foo;
-            // The optional chain starts late enough that it doesn't generate
-            // a partial namespace warning.
-            x.foo.Bar?.baz
-            """),
+        """
+        var x = {};
+        x.foo = {};
+        /** @constructor */ x.foo.Bar = function() {};
+        delete x.foo;
+        // The optional chain starts late enough that it doesn't generate
+        // a partial namespace warning.
+        x.foo.Bar?.baz
+        """,
         NAMESPACE_REDEFINED_WARNING);
   }
 
@@ -3138,19 +3135,18 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             }
             """),
         expected(
-            lines(
-                """
-                /** @constructor */
-                var a$b = function() {};
-                """,
-                "var a$b$staticProp = 5;",
-                "function f(y, z) {",
-                "  var x = a$b;",
-                "  if (y) {",
-                "    x = z;",
-                "  }",
-                "  return new x();",
-                "}")));
+            """
+            /** @constructor */
+            var a$b = function() {};
+            var a$b$staticProp = 5;
+            function f(y, z) {
+              var x = a$b;
+              if (y) {
+                x = z;
+              }
+              return new x();
+            }
+            """));
   }
 
   @Test
@@ -3176,23 +3172,21 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testNoCollapseWithInvalidEnums() {
     test(
         srcs(
-            lines(
-                """
-                /** @enum { { a: { b: number}} } */
-                var e = { KEY1: { a: { /** @nocollapse */ b: 123}},
-                """,
-                "  KEY2: { a: { b: 456}}",
-                "}")),
+            """
+            /** @enum { { a: { b: number}} } */
+            var e = { KEY1: { a: { /** @nocollapse */ b: 123}},
+              KEY2: { a: { b: 456}}
+            }
+            """),
         expected("var e$KEY1$a={/** @nocollapse */ b:123}; var e$KEY2$a$b=456;"));
 
     test(
         srcs(
-            lines(
-                "/** @enum */ var e = { A: 1, B: 2 };",
-                """
-                /** @type {{ c: { d: number } }} */ e.name1 = {
-                  c: { /** @nocollapse */ d: 123 } };
-                """)),
+            """
+            /** @enum */ var e = { A: 1, B: 2 };
+            /** @type {{ c: { d: number } }} */ e.name1 = {
+              c: { /** @nocollapse */ d: 123 } };
+            """),
         expected(
             "var e$A=1; var e$B=2; var e$name1$c={/** @nocollapse */ /** @nocollapse */ d:123};"));
 

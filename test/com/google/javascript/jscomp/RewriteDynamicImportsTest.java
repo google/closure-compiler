@@ -462,10 +462,12 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
                     """),
                 SourceFile.fromCode(
                     "i1.js",
-                    lines(
-                        "const nsPromise =", //
-                        "    import('./chunk0.js')",
-                        "        .then(" + DYNAMIC_IMPORT_CALLBACK_FN + "(() => module$i0));"))));
+                    """
+                    const nsPromise =
+                        import('./chunk0.js')
+                            .then(DYNAMIC_IMPORT_CALLBACK_FN(() => module$i0));
+                    """
+                        .replace("DYNAMIC_IMPORT_CALLBACK_FN", DYNAMIC_IMPORT_CALLBACK_FN))));
 
     test(srcs(new JSChunk[] {actualChunk0, actualChunk1}), expectedSrcs);
   }

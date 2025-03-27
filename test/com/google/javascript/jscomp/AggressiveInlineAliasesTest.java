@@ -1463,24 +1463,22 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   @Test
   public void testGlobalAliasWithPropertiesAsNestedObjectLits() {
     test(
-        lines(
-            """
-            var ns = {}
-            ns.Foo = function() {};
-            ns.Bar = ns.Foo;
-            /** @enum { number } */ ns.Bar.Other = { X: {Y: 1}};
-            var x = function() { use(ns.Bar.Other.X.Y) };
-            use(x)
-            """),
-        lines(
-            """
-            var ns = {}
-            ns.Foo = function() {};
-            ns.Bar = null;
-            /** @enum {JSDocSerializer_placeholder_type} */ ns.Foo.Other = { X: {Y: 1}};
-            var x = function() { use(ns.Foo.Other.X.Y) };
-            use(x)
-            """));
+        """
+        var ns = {}
+        ns.Foo = function() {};
+        ns.Bar = ns.Foo;
+        /** @enum { number } */ ns.Bar.Other = { X: {Y: 1}};
+        var x = function() { use(ns.Bar.Other.X.Y) };
+        use(x)
+        """,
+        """
+        var ns = {}
+        ns.Foo = function() {};
+        ns.Bar = null;
+        /** @enum {JSDocSerializer_placeholder_type} */ ns.Foo.Other = { X: {Y: 1}};
+        var x = function() { use(ns.Foo.Other.X.Y) };
+        use(x)
+        """);
   }
 
   @Test

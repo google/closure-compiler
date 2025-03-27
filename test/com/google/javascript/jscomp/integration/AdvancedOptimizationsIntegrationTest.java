@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
@@ -93,7 +92,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
           goog.string.Const = function() {};
           goog.string.Const.from = function() { console.log('foo')};
           """,
-          lines("goog.string.Const.from();")
+          "goog.string.Const.from();"
         });
 
     test(
@@ -116,7 +115,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
           goog.string.Const = function() {};
           goog.string.Const.from = function() { console.log('foo')};
           """,
-          lines("(0,goog.string.Const.from)();")
+          "(0,goog.string.Const.from)();"
         });
   }
 
@@ -338,10 +337,9 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             new TestExternsBuilder().addObject().addConsole().buildExternsFile("externs.js"));
     test(
         options,
-        lines("function foo(x) {console.log(x);} foo(...(false ? [0] : [1]))"),
-        lines(
-            // tests that we do not generate (function(a) { console.log(a); })(...[1]);
-            "console.log(1)"));
+        "function foo(x) {console.log(x);} foo(...(false ? [0] : [1]))",
+        // tests that we do not generate (function(a) { console.log(a); })(...[1]);
+        "console.log(1)");
   }
 
   @Test
@@ -475,7 +473,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         }
         foo();
         """,
-        """
+"""
 (async function() {
   var $$jscomp$forAwait$retFn0$$;
   try {
@@ -832,9 +830,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         }
         console.log(i18n_7);
         """,
-        lines(
-            // Tagged template literal was correctly removed.
-            "console.log(goog.getMsg('test'));"));
+        // Tagged template literal was correctly removed.
+        "console.log(goog.getMsg('test'));");
   }
 
   @Test
@@ -881,11 +878,11 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         class C {
           constructor(elements) {
             this.elements = elements;
-        // This call will be preserved, but inlined, because it has side effects.
+            // This call will be preserved, but inlined, because it has side effects.
             this.m1();
           }
-        // m1() must be considered to have side effects because it taints a non-local object
-        // through basically this.elements[i].sompProp.
+          // m1() must be considered to have side effects because it taints a non-local object
+          // through basically this.elements[i].sompProp.
           m1() {
             for (const element of this.elements) {
               element.someProp = 1;
@@ -948,18 +945,18 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     test(
         options,
         """
-        var namespace = {}; // preserve newlines
+        var namespace = {};
         /** @noinline */ namespace.foo = function() { alert('foo'); };
         namespace.foo();
         """,
         """
-        function a() { alert('foo'); } // preserve newlines
+        function a() { alert('foo'); }
         a();
         """);
     test(
         options,
         """
-        var namespace = {}; // preserve newlines
+        var namespace = {};
         namespace.foo = function() { alert('foo'); };
         namespace.foo();
         """,
@@ -1007,7 +1004,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     test(
         options,
         new String[] {
-          lines("var x = 1;"),
+          "var x = 1;",
           """
           import * as y from './i0.js';
           const z = y.x
@@ -1324,9 +1321,16 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     test(
         options,
         code,
-        "function a(){this.b=0;Object.seal(this)}"
-            + "(new function(){this.a=new a}).a.b++;"
-            + "alert('hi')");
+        """
+        function a() {
+          this.b = 0;
+          Object.seal(this);
+        }
+        (new function () {
+          this.a = new a;
+        }).a.b++;
+        alert('hi');
+        """);
 
     options.setRemoveUnusedClassProperties(true);
 
@@ -1334,20 +1338,29 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     test(
         options,
         code,
-        "function a(){this.b=0;Object.seal(this)}"
-            + "(new function(){this.a=new a}).a.b++;"
-            + "alert('hi')");
+        """
+        function a() {
+          this.b = 0;
+          Object.seal(this);
+        }
+        (new function () {
+          this.a = new a;
+        }).a.b++;
+        alert('hi');
+        """);
   }
 
   @Test
   public void testAddFunctionProperties1() {
     String source =
-        "var Foo = {};"
-            + "var addFuncProp = function(o) {"
-            + "  o.f = function() {}"
-            + "};"
-            + "addFuncProp(Foo);"
-            + "alert(Foo.f());";
+        """
+        var Foo = {};
+        var addFuncProp = function(o) {
+          o.f = function() {}
+        };
+        addFuncProp(Foo);
+        alert(Foo.f());
+        """;
     String expected = "alert(void 0);";
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -1358,19 +1371,21 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testAddFunctionProperties2a() {
     String source =
-        ""
-            + "/** @constructor */ function F() {}"
-            + "var x = new F();"
-            + "/** @this {F} */"
-            + "function g() { this.bar = function() { alert(3); }; }"
-            + "g.call(x);"
-            + "x.bar();";
+        """
+        /** @constructor */ function F() {}
+        var x = new F();
+        /** @this {F} */
+        function g() { this.bar = function() { alert(3); }; }
+        g.call(x);
+        x.bar();
+        """;
     String expected =
-        ""
-            + "var x = new function() {};"
-            + "/** @this {F} */"
-            + "(function () { this.bar = function() { alert(3); }; }).call(x);"
-            + "x.bar();";
+        """
+        var x = new function() {};
+        /** @this {F} */
+        (function () { this.bar = function() { alert(3); }; }).call(x);
+        x.bar();
+        """;
 
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -1383,13 +1398,14 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testAddFunctionProperties2b() {
     String source =
-        ""
-            + "/** @constructor */ function F() {}"
-            + "var x = new F();"
-            + "/** @this {F} */"
-            + "function g() { this.bar = function() { alert(3); }; }"
-            + "g.call(x);"
-            + "x.bar();";
+        """
+        /** @constructor */ function F() {}
+        var x = new F();
+        /** @this {F} */
+        function g() { this.bar = function() { alert(3); }; }
+        g.call(x);
+        x.bar();
+        """;
     String expected = "" + "var x = new function() {};" + "x.bar=function(){alert(3)};x.bar()";
 
     CompilerOptions options = createCompilerOptions();
@@ -1401,17 +1417,21 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testAddFunctionProperties3() {
     String source =
-        "/** @constructor */ function F() {}"
-            + "var x = new F();"
-            + "/** @this {F} */"
-            + "function g(y) { y.bar = function() { alert(3); }; }"
-            + "g(x);"
-            + "x.bar();";
+        """
+        /** @constructor */ function F() {}
+        var x = new F();
+        /** @this {F} */
+        function g(y) { y.bar = function() { alert(3); }; }
+        g(x);
+        x.bar();
+        """;
     String expected =
-        "var x = new function() {};"
-            + "/** @this {F} */"
-            + "(function (y) { y.bar = function() { alert(3); }; })(x);"
-            + "x.bar();";
+        """
+        var x = new function() {};
+        /** @this {F} */
+        (function (y) { y.bar = function() { alert(3); }; })(x);
+        x.bar();
+        """;
 
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -1428,17 +1448,18 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
                 .addAlert()
                 .buildExternsFile("externs.js")); // add Closure base.js as srcs
     String source =
-        lines(
-            TestExternsBuilder.getClosureExternsAsSource(),
-            "/** @constructor */",
-            "var Foo = function() {};",
-            "goog.addSingletonGetter = function(o) {",
-            "  o.f = function() {",
-            "    return o.i || (o.i = new o);",
-            "  };",
-            "};",
-            "goog.addSingletonGetter(Foo);",
-            "alert(Foo.f());");
+        TestExternsBuilder.getClosureExternsAsSource()
+            + """
+            /** @constructor */
+            var Foo = function() {};
+            goog.addSingletonGetter = function(o) {
+              o.f = function() {
+                return o.i || (o.i = new o);
+              };
+            };
+            goog.addSingletonGetter(Foo);
+            alert(Foo.f());
+            """;
     String expected =
         """
         function Foo(){}
@@ -1585,14 +1606,16 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.OFF);
     String code =
-        "var impl_0;"
-            + "$load($init());"
-            + "function $load(){"
-            + "  window['f'] = impl_0;"
-            + "}"
-            + "function $init() {"
-            + "  impl_0 = {};"
-            + "}";
+        """
+        var impl_0;
+        $load($init());
+        function $load(){
+          window['f'] = impl_0;
+        }
+        function $init() {
+          impl_0 = {};
+        }
+        """;
     String result = "window.f = {};";
     test(options, code, result);
   }
@@ -1631,17 +1654,19 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     test(
         options,
         TestExternsBuilder.getClosureExternsAsSource()
-            + "goog.addSingletonGetter = function(ctor) {\n"
-            + "  ctor.getInstance = function() {\n"
-            + "    return ctor.instance_ || (ctor.instance_ = new ctor());\n"
-            + "  };\n"
-            + "};"
-            + "function Foo() {}\n"
-            + "goog.addSingletonGetter(Foo);"
-            + "Foo.prototype.bar = 1;"
-            + "function Bar() {}\n"
-            + "goog.addSingletonGetter(Bar);"
-            + "Bar.prototype.bar = 1;",
+            + """
+            goog.addSingletonGetter = function(ctor) {
+              ctor.getInstance = function() {
+                return ctor.instance_ || (ctor.instance_ = new ctor());
+              };
+            };
+            function Foo() {}
+            goog.addSingletonGetter(Foo);
+            Foo.prototype.bar = 1;
+            function Bar() {}
+            goog.addSingletonGetter(Bar);
+            Bar.prototype.bar = 1;
+            """,
         "");
   }
 
@@ -1653,11 +1678,12 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     level.setTypeBasedOptimizationOptions(options);
 
     String code =
-        ""
-            + "var ns = {};\n"
-            + "/** @constructor */\n"
-            + "ns.C = function () {this.someProperty = 1}\n"
-            + "alert(new ns.C().someProperty + new ns.C().someProperty);\n";
+        """
+        var ns = {};
+        /** @constructor */
+        ns.C = function () {this.someProperty = 1}
+        alert(new ns.C().someProperty + new ns.C().someProperty);
+        """;
     assertThat(options.shouldInlineProperties()).isTrue();
     assertThat(options.shouldCollapseProperties()).isTrue();
     // CollapseProperties used to prevent inlining this property.
@@ -1774,18 +1800,23 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     warnings.setOptionsForWarningLevel(options);
 
     String code =
-        ""
-            + "/** @constructor */ var X = function() {"
-            + "/** @export */ this.abc = 1;};\n"
-            + "/** @constructor */ var Y = function() {"
-            + "/** @export */ this.abc = 1;};\n"
-            + "alert(new X().abc + new Y().abc);";
+        """
+        /** @constructor */ var X = function() {
+        /** @export */ this.abc = 1;};
+        /** @constructor */ var Y = function() {
+        /** @export */ this.abc = 1;};
+        alert(new X().abc + new Y().abc);
+        """;
 
     options.setExportLocalPropertyDefinitions(false);
 
     // exports enabled, but not local exports
     compile(
-        options, "/** @constructor */ var X = function() {" + "/** @export */ this.abc = 1;};\n");
+        options,
+        """
+        /** @constructor */ var X = function() {
+        /** @export */ this.abc = 1;};
+        """);
     assertThat(lastCompiler.getErrors()).hasSize(1);
 
     options.setExportLocalPropertyDefinitions(true);
@@ -1825,12 +1856,13 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     // unreferenced property not removed due to export.
     test(
         options,
-        ""
-            + "/** @constructor */ var X = function() {"
-            + "/** @export */ this.abc = 1;};\n"
-            + "/** @constructor */ var Y = function() {"
-            + "/** @export */ this.abc = 1;};\n"
-            + "alert(new X() + new Y());",
+        """
+        /** @constructor */ var X = function() {
+        /** @export */ this.abc = 1;};
+        /** @constructor */ var Y = function() {
+        /** @export */ this.abc = 1;};
+        alert(new X() + new Y());
+        """,
         "alert((new function(){this.abc = 1}) + (new function(){this.abc = 1}));");
 
     options.setPropertiesThatMustDisambiguate(ImmutableSet.of("abc"));
@@ -1903,28 +1935,29 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
                 .buildExternsFile("externs.js"));
     test(
         options,
-        lines(
-            TestExternsBuilder.getClosureExternsAsSource(),
-            "/** @constructor */",
-            "var Foo = function() {}",
-            "/**",
-            " * @param {number=} width",
-            " * @param {number=} height",
-            " */",
-            "Foo.prototype.resize = function(width, height) {",
-            "  window.size = width * height;",
-            "}",
-            "/**",
-            " * @constructor",
-            " * @extends {Foo}",
-            " */",
-            "var Bar = function() {}",
-            "goog.inherits(Bar, Foo);",
-            "/** @override */",
-            "Bar.prototype.resize = function(width, height) {",
-            "  Bar.base(this, 'resize', width);",
-            "};",
-            "(new Bar).resize(100, 200);"),
+        TestExternsBuilder.getClosureExternsAsSource()
+            + """
+            /** @constructor */
+            var Foo = function() {}
+            /**
+             * @param {number=} width
+             * @param {number=} height
+             */
+            Foo.prototype.resize = function(width, height) {
+              window.size = width * height;
+            }
+            /**
+             * @constructor
+             * @extends {Foo}
+             */
+            var Bar = function() {}
+            goog.inherits(Bar, Foo);
+            /** @override */
+            Bar.prototype.resize = function(width, height) {
+              Bar.base(this, 'resize', width);
+            };
+            (new Bar).resize(100, 200);
+            """,
         """
         function a(){}a.prototype.a=function(b,e){window.c=b*e};
         function d(){}d.b=a.prototype;d.prototype.a=function(b){d.b.a.call(this,b)};
@@ -1967,7 +2000,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     test(
         options,
         """
-         // preserve newlines
         class A {
           constructor(a, b) {
             this.a = a;
@@ -2427,7 +2459,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
         }
         """,
-        lines("window.Foo = function() {};"));
+        "window.Foo = function() {};");
   }
 
   @Test
@@ -2921,9 +2953,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         }
         new Other().speak();
         """,
-        lines(
-            // Compiler calls SpeakerImpl.prototype.speak even though it's called off SpeakerChild.
-            "alert('Speaker'); alert('other');"));
+        // Compiler calls SpeakerImpl.prototype.speak even though it's called off SpeakerChild.
+        "alert('Speaker'); alert('other');");
   }
 
   @Test

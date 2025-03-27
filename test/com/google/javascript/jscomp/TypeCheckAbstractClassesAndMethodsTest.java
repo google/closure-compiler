@@ -57,8 +57,9 @@ public final class TypeCheckAbstractClassesAndMethodsTest extends TypeCheckTestC
             /** @abstract */ C.prototype.foo = function() {};
             """)
         .addDiagnostic(
-            "Abstract methods can only appear in abstract classes. Please declare the class as "
-                + "@abstract")
+            """
+            Abstract methods can only appear in abstract classes. Please declare the class as @abstract
+            """)
         .run();
   }
 
@@ -72,8 +73,9 @@ public final class TypeCheckAbstractClassesAndMethodsTest extends TypeCheckTestC
             }
             """)
         .addDiagnostic(
-            "Abstract methods can only appear in abstract classes. Please declare the class as "
-                + "@abstract")
+            """
+            Abstract methods can only appear in abstract classes. Please declare the class as @abstract
+            """)
         .run();
   }
 
@@ -87,8 +89,9 @@ public final class TypeCheckAbstractClassesAndMethodsTest extends TypeCheckTestC
             /** @abstract */ B.prototype.foo = function() {};
             """)
         .addDiagnostic(
-            "Abstract methods can only appear in abstract classes. Please declare the class as "
-                + "@abstract")
+            """
+            Abstract methods can only appear in abstract classes. Please declare the class as @abstract
+            """)
         .run();
   }
 
@@ -458,11 +461,15 @@ public final class TypeCheckAbstractClassesAndMethodsTest extends TypeCheckTestC
   @Test
   public void testAbstractMethodHandling2() {
     newTest()
-        .addSource("var abstractFn = function() {};" + "abstractFn(1);")
+        .addSource(
+            """
+            var abstractFn = function() {};
+            abstractFn(1);
+            """)
         .addDiagnostic(
-            "Function abstractFn: called with 1 argument(s). "
-                + "Function requires at least 0 argument(s) "
-                + "and no more than 0 argument(s).")
+            """
+            Function abstractFn: called with 1 argument(s). Function requires at least 0 argument(s) and no more than 0 argument(s).
+            """)
         .run();
   }
 
@@ -470,20 +477,28 @@ public final class TypeCheckAbstractClassesAndMethodsTest extends TypeCheckTestC
   public void testAbstractMethodHandling3() {
     newTest()
         .addSource(
-            "var goog = {};"
-                + "/** @type {Function} */ goog.abstractFn = function() {};"
-                + "goog.abstractFn(1);")
+            """
+            var goog = {};
+            /** @type {Function} */ goog.abstractFn = function() {};
+            goog.abstractFn(1);
+            """)
         .run();
   }
 
   @Test
   public void testAbstractMethodHandling4() {
     newTest()
-        .addSource("var goog = {};" + "goog.abstractFn = function() {};" + "goog.abstractFn(1);")
+        .addSource(
+            """
+            var goog = {};
+            goog.abstractFn = function() {};
+            goog.abstractFn(1);
+            """)
         .addDiagnostic(
-            "Function goog.abstractFn: called with 1 argument(s). "
-                + "Function requires at least 0 argument(s) "
-                + "and no more than 0 argument(s).")
+            """
+            Function goog.abstractFn: called with 1 argument(s). \
+            Function requires at least 0 argument(s) and no more than 0 argument(s).\
+            """)
         .run();
   }
 
@@ -491,10 +506,12 @@ public final class TypeCheckAbstractClassesAndMethodsTest extends TypeCheckTestC
   public void testAbstractFunctionHandling() {
     newTest()
         .addSource(
-            "/** @type {!Function} */ var abstractFn = function() {};"
-                // the type of 'f' will become 'Function'
-                + "/** @param {number} x */ var f = abstractFn;"
-                + "f('x');")
+            """
+            /** @type {!Function} */ var abstractFn = function() {};
+            // the type of 'f' will become 'Function'
+            /** @param {number} x */ var f = abstractFn;
+            f('x');
+            """)
         .run();
   }
 
@@ -502,10 +519,12 @@ public final class TypeCheckAbstractClassesAndMethodsTest extends TypeCheckTestC
   public void testAbstractMethodHandling6() {
     newTest()
         .addSource(
-            "var goog = {};"
-                + "/** @type {Function} */ goog.abstractFn = function() {};"
-                + "/** @param {number} x */ goog.f = abstractFn;"
-                + "goog.f('x');")
+            """
+            var goog = {};
+            /** @type {Function} */ goog.abstractFn = function() {};
+            /** @param {number} x */ goog.f = abstractFn;
+            goog.f('x');
+            """)
         .addDiagnostic(
             """
             actual parameter 1 of goog.f does not match formal parameter
@@ -576,7 +595,7 @@ public final class TypeCheckAbstractClassesAndMethodsTest extends TypeCheckTestC
             function test() { return (/** @type {Baz} */ (null)).foo(); }
             """)
         .addDiagnostic(
-            """
+"""
 mismatch of the foo property on type Baz and the type of the property it overrides from interface IFoo
 original: function(this:IFoo): number
 override: function(this:Foo): string

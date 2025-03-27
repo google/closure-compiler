@@ -121,22 +121,28 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
       String beforeBody, String varDecls, String afterBody, String returnType) {
     Sources srcs =
         srcs(
-            lines(
-                "/** @return {" + returnType + "} */",
-                "function *genTestFunction() {",
-                beforeBody,
-                "}"));
+            """
+            /** @return {RETURN_TYPE} */
+            function *genTestFunction() {
+            BEFORE_BODY
+            }
+            """
+                .replace("RETURN_TYPE", returnType)
+                .replace("BEFORE_BODY", beforeBody));
     Expected originalExpected =
         expected(
-            lines(
-                "function genTestFunction() {",
-                varDecls,
-                "  return $jscomp.generator.createGenerator(",
-                "      genTestFunction,",
-                "      function (GEN_CONTEXT$0) {",
-                afterBody,
-                "      });",
-                "}"));
+            """
+            function genTestFunction() {
+            VAR_DECLS
+              return $jscomp.generator.createGenerator(
+                  genTestFunction,
+                  function (GEN_CONTEXT$0) {
+            AFTER_BODY
+                  });
+            }
+            """
+                .replace("VAR_DECLS", varDecls)
+                .replace("AFTER_BODY", afterBody));
     rewriteGeneratorsTest(srcs, originalExpected);
   }
 
@@ -163,7 +169,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         beforeBody,
         varDecls,
-        lines("switch (GEN_CONTEXT$0.nextAddress) {", "  case 1:", afterBody, "}"));
+        """
+        switch (GEN_CONTEXT$0.nextAddress) {
+          case 1:
+        AFTER_BODY
+        }
+        """
+            .replace("AFTER_BODY", afterBody));
   }
 
   @Test
@@ -237,7 +249,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   @Test
   public void testUnnamed() {
     rewriteGeneratorsTest(
-        srcs(lines("f = function *() {};")),
+        srcs("f = function *() {};"),
         expected(
             """
             f = function GEN_FUNC$0() {
@@ -417,9 +429,9 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testSimpleGenerator() {
     rewriteGeneratorBody("", "  GEN_CONTEXT$0.jumpToEnd();");
 
-    rewriteGeneratorBody("yield;", lines("  return GEN_CONTEXT$0.yield(void 0, 0);"));
+    rewriteGeneratorBody("yield;", "  return GEN_CONTEXT$0.yield(void 0, 0);");
 
-    rewriteGeneratorBody("yield 1;", lines("  return GEN_CONTEXT$0.yield(1, 0);"));
+    rewriteGeneratorBody("yield 1;", "  return GEN_CONTEXT$0.yield(1, 0);");
 
     Sources srcs = srcs("/** @param {*} x */ function *f(x, y) {}");
     Expected originalExpected =
@@ -583,7 +595,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         GEN_CONTEXT$0.jumpToEnd();
         """);
 
-    rewriteGeneratorBody("for (;;) { yield 1; }", lines("  return GEN_CONTEXT$0.yield(1, 1);"));
+    rewriteGeneratorBody("for (;;) { yield 1; }", "  return GEN_CONTEXT$0.yield(1, 1);");
 
     rewriteGeneratorBodyWithVars(
         "for (var yieldResult; yieldResult === undefined; yieldResult = yield 1) {}",
@@ -750,7 +762,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testDecomposableExpression() {
     rewriteGeneratorBodyWithVars(
         "return a + (a = b) + (b = yield) + a;",
-        lines("var JSCompiler_temp_const$jscomp$0;"),
+        "var JSCompiler_temp_const$jscomp$0;",
         """
           if (GEN_CONTEXT$0.nextAddress == 1) {
             JSCompiler_temp_const$jscomp$0 = a + (a = b);
@@ -762,7 +774,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
     rewriteGeneratorSwitchBodyWithVars(
         "return (yield ((yield 1) + (yield 2)));",
-        lines("var JSCompiler_temp_const$jscomp$0;"),
+        "var JSCompiler_temp_const$jscomp$0;",
         """
           return GEN_CONTEXT$0.yield(1, 3);
         case 3:
@@ -1090,9 +1102,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBody("return 1;", "return GEN_CONTEXT$0.return(1);");
 
     rewriteGeneratorBodyWithVars(
-        "return this;",
-        "var GEN_THIS$0 = this;",
-        lines("return GEN_CONTEXT$0.return(GEN_THIS$0);"));
+        "return this;", "var GEN_THIS$0 = this;", "return GEN_CONTEXT$0.return(GEN_THIS$0);");
 
     rewriteGeneratorBodyWithVars(
         "return this.test({value: this});",
@@ -1361,7 +1371,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         """);
 
     rewriteGeneratorBodyWithVars(
-        lines("var /** @const */ va = 10, vb, vc = yield 10, vd = yield 20, vf, vg='test';"),
+        "var /** @const */ va = 10, vb, vc = yield 10, vd = yield 20, vf, vg='test';",
         """
         var /** @const */ va;
         var vb;

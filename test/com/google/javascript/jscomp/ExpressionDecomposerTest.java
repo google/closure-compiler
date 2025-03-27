@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static org.junit.Assert.assertThrows;
 
@@ -96,9 +95,7 @@ public final class ExpressionDecomposerTest {
   public void testObjectDestructuring_withComputedKey_doesNotCrash() {
     // computed prop is found to be decomposable
     helperCanExposeExpression(
-        DecompositionType.DECOMPOSABLE,
-        lines("var a; ({ [foo()]: a} = obj);"),
-        exprMatchesStr("foo()"));
+        DecompositionType.DECOMPOSABLE, "var a; ({ [foo()]: a} = obj);", exprMatchesStr("foo()"));
 
     // TODO(b/339040894): Fix this crash.
     IllegalStateException ex =
@@ -106,7 +103,7 @@ public final class ExpressionDecomposerTest {
             IllegalStateException.class,
             () ->
                 helperExposeExpression(
-                    lines("var a; ({ [foo()]: a} = obj);"), //
+                    "var a; ({ [foo()]: a} = obj);", //
                     exprMatchesStr("foo()"),
                     """
                     var a;
@@ -648,7 +645,7 @@ public final class ExpressionDecomposerTest {
   @Test
   public void testObjectDestructuring_withDefaultValue_generatesValidAST() {
     helperExposeExpression(
-        lines("var d; ({c: d = 4} = condition ? y() :  {c: 1});"),
+        "var d; ({c: d = 4} = condition ? y() :  {c: 1});",
         exprMatchesStr("y()"),
         """
         var d;
@@ -667,24 +664,24 @@ public final class ExpressionDecomposerTest {
     // default value expressions are conditional, which would make the expressions complex
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE,
-        lines("var a; ({ [foo()]: a = bar()} = baz());"),
+        "var a; ({ [foo()]: a = bar()} = baz());",
         exprMatchesStr("bar()"));
 
     helperCanExposeExpression(
         DecompositionType.MOVABLE,
-        lines("var a; ({ [foo()]: a = bar()} = baz());"),
+        "var a; ({ [foo()]: a = bar()} = baz());",
         exprMatchesStr("baz()"));
 
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE,
-        lines("var a; ({ [foo()]: a = bar()} = baz());"),
+        "var a; ({ [foo()]: a = bar()} = baz());",
         exprMatchesStr("foo()"));
   }
 
   @Test
   public void testArrayDestructuring_withDefaultValue_generatesValidAST() {
     helperExposeExpression(
-        lines("var [c = 4] = condition ? y() :  [c = 2];"),
+        "var [c = 4] = condition ? y() :  [c = 2];",
         exprMatchesStr("y()"),
         """
         var c;
@@ -878,8 +875,11 @@ public final class ExpressionDecomposerTest {
     helperExposeExpression(
         "var x = 1 ? foo() : 0",
         exprMatchesStr("foo()"),
-        "var temp$jscomp$0;"
-            + " if (1) temp$jscomp$0 = foo(); else temp$jscomp$0 = 0;var x = temp$jscomp$0;");
+        """
+        var temp$jscomp$0;
+        if (1) temp$jscomp$0 = foo(); else temp$jscomp$0 = 0;
+        var x = temp$jscomp$0;
+        """);
   }
 
   @Test
@@ -887,8 +887,11 @@ public final class ExpressionDecomposerTest {
     helperExposeExpression(
         "const x = 1 ? foo() : 0",
         exprMatchesStr("foo()"),
-        "var temp$jscomp$0;"
-            + " if (1) temp$jscomp$0 = foo(); else temp$jscomp$0 = 0;const x = temp$jscomp$0;");
+        """
+        var temp$jscomp$0;
+        if (1) temp$jscomp$0 = foo(); else temp$jscomp$0 = 0;
+        const x = temp$jscomp$0;
+        """);
   }
 
   @Test
@@ -896,8 +899,11 @@ public final class ExpressionDecomposerTest {
     helperExposeExpression(
         "let x = 1 ? foo() : 0",
         exprMatchesStr("foo()"),
-        "var temp$jscomp$0;"
-            + " if (1) temp$jscomp$0 = foo(); else temp$jscomp$0 = 0;let x = temp$jscomp$0;");
+        """
+        var temp$jscomp$0;
+        if (1) temp$jscomp$0 = foo(); else temp$jscomp$0 = 0;
+        let x = temp$jscomp$0;
+        """);
   }
 
   @Test
@@ -1157,7 +1163,7 @@ public final class ExpressionDecomposerTest {
     helperExposeExpression(
         "a = x?.y[foo()]?.z.q",
         exprMatchesStr("foo()"),
-        """
+"""
 let temp_const$jscomp$0;
 let temp_const$jscomp$1;
 var temp$jscomp$2;
@@ -1318,9 +1324,7 @@ a = temp$jscomp$2;
   @Test
   public void testBug117935266_expose_call_parameters() {
     helperExposeExpression(
-        lines(
-            // alert must be preserved before the first side-effect
-            "alert(fn(first(), second(), third()));"),
+        "alert(fn(first(), second(), third()));",
         exprMatchesStr("first()"),
         """
         var temp_const$jscomp$1 = alert;
@@ -1329,9 +1333,7 @@ a = temp$jscomp$2;
         """);
 
     helperExposeExpression(
-        lines(
-            // alert must be preserved before the first side-effect
-            "alert(fn(first(), second(), third()));"),
+        "alert(fn(first(), second(), third()));",
         exprMatchesStr("second()"),
         """
         var temp_const$jscomp$2 = alert;
@@ -1447,8 +1449,11 @@ a = temp$jscomp$2;
     helperExposeExpression(
         "var x = 1 + (goo() && foo())",
         exprMatchesStr("foo()"),
-        "var temp$jscomp$0; if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo();"
-            + "var x = 1 + temp$jscomp$0;");
+        """
+        var temp$jscomp$0;
+        if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo();
+        var x = 1 + temp$jscomp$0;
+        """);
   }
 
   @Test
@@ -1456,8 +1461,11 @@ a = temp$jscomp$2;
     helperExposeExpression(
         "const x = 1 + (goo() && foo())",
         exprMatchesStr("foo()"),
-        "var temp$jscomp$0; if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo();"
-            + "const x = 1 + temp$jscomp$0;");
+        """
+        var temp$jscomp$0;
+        if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo();
+        const x = 1 + temp$jscomp$0;
+        """);
   }
 
   @Test
@@ -1465,8 +1473,11 @@ a = temp$jscomp$2;
     helperExposeExpression(
         "let x = 1 + (goo() && foo())",
         exprMatchesStr("foo()"),
-        "var temp$jscomp$0; if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo();"
-            + "let x = 1 + temp$jscomp$0;");
+        """
+        var temp$jscomp$0;
+        if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo();
+        let x = 1 + temp$jscomp$0;
+        """);
   }
 
   @Test
@@ -1537,25 +1548,29 @@ a = temp$jscomp$2;
 
   @Test
   public void testExposeExpression_inVanillaForInitializer_singleDeclaration_withLetOrConst() {
-    for (String dec : ImmutableList.of("let", "const")) {
+    for (String declarationKeyword : ImmutableList.of("let", "const")) {
       helperExposeExpression(
-          "for (" + dec + " x = goo() + foo();;) {}",
+          "for (" + declarationKeyword + " x = goo() + foo();;) {}",
           exprMatchesStr("foo()"),
-          lines(
-              "var temp_const$jscomp$0 = goo();", //
-              "for (" + dec + " x = temp_const$jscomp$0 + foo();;) {}"));
+          """
+          var temp_const$jscomp$0 = goo();
+          for (DECLATION_KEYWORD x = temp_const$jscomp$0 + foo();;) {}
+          """
+              .replace("DECLATION_KEYWORD", declarationKeyword));
     }
   }
 
   @Test
   public void testExposeExpression_inVanillaForInitializer_firstDeclaration_withLetOrConst() {
-    for (String dec : ImmutableList.of("let", "const")) {
+    for (String declarationKeyword : ImmutableList.of("let", "const")) {
       helperExposeExpression(
-          "for (" + dec + " x = goo() + foo(), y = 5;;) {}",
+          "for (" + declarationKeyword + " x = goo() + foo(), y = 5;;) {}",
           exprMatchesStr("foo()"),
-          lines(
-              "var temp_const$jscomp$0 = goo();", //
-              "for (" + dec + " x = temp_const$jscomp$0 + foo(), y = 5;;) {}"));
+          """
+          var temp_const$jscomp$0 = goo();
+          for (DECLATION_KEYWORD x = temp_const$jscomp$0 + foo(), y = 5;;) {}
+          """
+              .replace("DECLATION_KEYWORD", declarationKeyword));
     }
   }
 
@@ -1838,14 +1853,20 @@ a = temp$jscomp$2;
     helperExposeExpression(
         "/** @const */ var XX = {}; XX.a += foo() + 1",
         exprMatchesStr("foo()"),
-        "var XX = {}; var temp_const$jscomp$0 = XX.a;"
-            + "XX.a = temp_const$jscomp$0 + (foo() + 1);");
+        """
+        var XX = {};
+        var temp_const$jscomp$0 = XX.a;
+        XX.a = temp_const$jscomp$0 + (foo() + 1);
+        """);
 
     helperExposeExpression(
         "var XX = {}; y = (XX.a += foo()) + XX.a",
         exprMatchesStr("foo()"),
-        "var XX = {}; var temp_const$jscomp$0 = XX.a;"
-            + "y = (XX.a = temp_const$jscomp$0 + foo()) + XX.a");
+        """
+        var XX = {};
+        var temp_const$jscomp$0 = XX.a;
+        y = (XX.a = temp_const$jscomp$0 + foo()) + XX.a
+        """);
   }
 
   // Function all on LHS of assignment-op.

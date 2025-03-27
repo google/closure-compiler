@@ -124,14 +124,6 @@ abstract class CompilerTypeTestCase {
     errorReporter.verifyHasEncounteredAllWarningsAndErrors();
   }
 
-  protected static String lines(String line) {
-    return line;
-  }
-
-  protected static String lines(String... lines) {
-    return LINE_JOINER.join(lines);
-  }
-
   protected void initializeNewCompiler(CompilerOptions options) {
     compiler = new Compiler();
     compiler.initOptions(options);

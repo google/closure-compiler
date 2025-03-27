@@ -76,8 +76,10 @@ public final class RhinoErrorReporterTest {
     assertError(
         "2 ** 3",
         RhinoErrorReporter.LANGUAGE_FEATURE,
-        "This language feature is only supported for ECMASCRIPT_2016 mode or better: "
-            + "exponent operator (**).");
+        """
+        This language feature is only supported for ECMASCRIPT_2016 mode or better: \
+        exponent operator (**).\
+        """);
   }
 
   /** Verifies that the compiler emits an error for the given code. */

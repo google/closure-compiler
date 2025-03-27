@@ -65,9 +65,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         "0o774114521526730576223631215443757451360052750070365011677201040647213506301316055447n",
         "0xfe132a356ec5f9279946c8fdf29780abd0387a8277e811069d174660b385b27n");
     assertPrint(
-        "0b111111100001001100101010001101010110111011000101111110010010011110011001010001101100100"
-            + "0111111011111001010010111100000001010101111010000001110000111101010000010011101111110"
-            + "10000001000100000110100111010001011101000110011000001011001110000101101100100111n",
+        """
+        0b111111100001001100101010001101010110111011000101111110010010011110011001010001101100100\
+        0111111011111001010010111100000001010101111010000001110000111101010000010011101111110\
+        10000001000100000110100111010001011101000110011000001011001110000101101100100111n\
+        """,
         "0xfe132a356ec5f9279946c8fdf29780abd0387a8277e811069d174660b385b27n");
   }
 
@@ -1934,14 +1936,16 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         /** @param {{a: number, b: number}} ignoredName */
         function f({a, b}) {}
         """,
-        lines(
-            "/**",
-            " * @param {{a: number, b: number}} p0", // old JSDoc name is ignored
-            " * @return {undefined}",
-            " */",
-            "function f({a, b}) {", // whitespace in output must match
-            "}",
-            ""));
+        // The `ignoredName` JSDoc name is ignored
+        // The whitespace in the `{a, b}` output must match the input
+        """
+        /**
+         * @param {{a: number, b: number}} p0
+         * @return {undefined}
+         */
+        function f({a, b}) {
+        }
+        """);
   }
 
   @Test
@@ -1951,14 +1955,16 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         /** @param {{a: number, b: number}=} ignoredName */
         function f({a, b} = {a: 1, b: 2}) {}
         """,
-        lines(
-            "/**",
-            " * @param {{a: number, b: number}=} p0", // old JSDoc name is ignored
-            " * @return {undefined}",
-            " */",
-            "function f({a, b} = {a:1, b:2}) {", // whitespace in output must match
-            "}",
-            ""));
+        // The `ignoredName` JSDoc name is ignored
+        // The whitespace in the `{a, b}` output must match the input
+        """
+        /**
+         * @param {{a: number, b: number}=} p0
+         * @return {undefined}
+         */
+        function f({a, b} = {a:1, b:2}) {
+        }
+        """);
   }
 
   @Test
@@ -1968,14 +1974,16 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         /** @param {!Iterable<number>} ignoredName */
         function f([a, b]) {}
         """,
-        lines(
-            "/**",
-            " * @param {!Iterable<number,?,?>} p0", // old JSDoc name is ignored
-            " * @return {undefined}",
-            " */",
-            "function f([a, b]) {", // whitespace in output must match
-            "}",
-            ""));
+        // The `ignoredName` JSDoc name is ignored
+        // The whitespace in the `[a, b]` output must match the input
+        """
+        /**
+         * @param {!Iterable<number,?,?>} p0
+         * @return {undefined}
+         */
+        function f([a, b]) {
+        }
+        """);
   }
 
   @Test
@@ -1985,14 +1993,16 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         /** @param {!Iterable<number>=} ignoredName */
         function f([a, b] = [1, 2]) {}
         """,
-        lines(
-            "/**",
-            " * @param {!Iterable<number,?,?>=} p0", // old JSDoc name is ignored
-            " * @return {undefined}",
-            " */",
-            "function f([a, b] = [1, 2]) {", // whitespace in output must match
-            "}",
-            ""));
+        // The `ignoredName` JSDoc name is ignored
+        // The whitespace in the `[a, b]` output must match the input
+        """
+        /**
+         * @param {!Iterable<number,?,?>=} p0
+         * @return {undefined}
+         */
+        function f([a, b] = [1, 2]) {
+        }
+        """);
   }
 
   @Test
@@ -2362,8 +2372,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   // Args on new line are condensed onto the same line by prettyPrint
   @Test
   public void testArgs_noComments_newLines() {
-    assertPrettyPrint(
-        lines(" var rpcid = new RpcId(a,\n b, \nc);"), lines("var rpcid = new RpcId(a, b, c);\n"));
+    assertPrettyPrint(" var rpcid = new RpcId(a,\n b, \nc);", "var rpcid = new RpcId(a, b, c);\n");
   }
 
   // Comments are printed when args on new line are condensed onto the same line by prettyPrint
@@ -2371,8 +2380,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testNonJSDocCommentsPrinted_nonTrailing_inlineComments_newLines() {
     preserveNonJSDocComments = true;
     assertPrettyPrint(
-        lines(" var rpcid = new RpcId(a,\n /* comment1 */ b, \n/* comment1 */ c);"),
-        lines("var rpcid = new RpcId(a, /* comment1 */ b, /* comment1 */ c);\n"));
+        " var rpcid = new RpcId(a,\n /* comment1 */ b, \n/* comment1 */ c);",
+        "var rpcid = new RpcId(a, /* comment1 */ b, /* comment1 */ c);\n");
   }
 
   @Test
@@ -4144,7 +4153,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         z
         }`
         """,
-        lines("var y=`Hello ${x+z}`"));
+        "var y=`Hello ${x+z}`");
 
     assertPrettyPrint(
         """
@@ -4165,18 +4174,21 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // We intentionally put all the delimiter characters on the start of their own line to check
     // their indentation.
     assertPrettyPrint(
-        lines(
-            "function indentScope() {", //
-            "  var y =",
-            "`hello", // Open backtick.
-            "world",
-            "foo",
-            "${", // Open substituion.
-            "bing",
-            "}", // Close substitution.
-            "bar",
-            "`;", // Close backtick.
-            "}"),
+        """
+        function indentScope() {
+          var y =
+        // Open backtick.
+        `hello
+        world
+        foo
+        ${ // Open substituion.
+        bing
+        // Close substitution.
+        }
+        bar
+        `; // Close backtick.
+        }
+        """,
         """
         function indentScope() {
           var y = `hello

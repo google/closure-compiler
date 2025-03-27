@@ -78,10 +78,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).bar()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "function Foo() {}",
-                "Foo.prototype.bar = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                function Foo() {}
+                Foo.prototype.bar = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             """
             Foo.prototype.bar = JSCompiler_unstubMethod(0, function() {});
@@ -102,10 +103,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).method()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "function Foo() {}",
-                "Foo.prototype = { method: JSCompiler_stubMethod(0) };"),
+            STUB_DECLARATIONS
+                + """
+                function Foo() {}
+                Foo.prototype = { method: JSCompiler_stubMethod(0) };
+                """,
             // Chunk 2
             """
             Foo.prototype.method =
@@ -152,10 +154,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).method()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "function Foo() {}",
-                "Foo.prototype = { method: JSCompiler_stubMethod(0) };"),
+            STUB_DECLARATIONS
+                + """
+                function Foo() {}
+                Foo.prototype = { method: JSCompiler_stubMethod(0) };
+                """,
             // Chunk 2
             """
             Foo.prototype.method =
@@ -226,10 +229,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).method()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "class Foo {}",
-                "Foo.prototype.method = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                class Foo {}
+                Foo.prototype.method = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             """
             Foo.prototype.method = JSCompiler_unstubMethod(0, function() {});
@@ -244,10 +248,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo)?.method()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "class Foo {}",
-                "Foo.prototype.method = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                class Foo {}
+                Foo.prototype.method = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             """
             Foo.prototype.method = JSCompiler_unstubMethod(0, function() {});
@@ -268,12 +273,13 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).method2()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "class Bar {}",
-                "Bar.prototype.method = JSCompiler_stubMethod(0);",
-                "class Foo extends Bar { method2() { super.method(); } }",
-                ""),
+            STUB_DECLARATIONS
+                + """
+                class Bar {}
+                Bar.prototype.method = JSCompiler_stubMethod(0);
+                class Foo extends Bar { method2() { super.method(); } }
+
+                """,
             """
             Bar.prototype.method = JSCompiler_unstubMethod(0, function() {});
             (new Foo).method2();
@@ -295,12 +301,13 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).method2()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "class Bar {}",
-                "Bar.prototype.method = JSCompiler_stubMethod(0);",
-                "class Foo extends Bar { method2() { return () => super.method(); } }",
-                ""),
+            STUB_DECLARATIONS
+                + """
+                class Bar {}
+                Bar.prototype.method = JSCompiler_stubMethod(0);
+                class Foo extends Bar { method2() { return () => super.method(); } }
+
+                """,
             """
             Bar.prototype.method = JSCompiler_unstubMethod(0, function() {});
             (new Foo).method2();
@@ -332,13 +339,12 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).method();")
                 .build()),
         expected(
-            lines(
-                "", //
-                STUB_DECLARATIONS,
-                "class Foo {",
-                "}",
-                "Foo.prototype.method = JSCompiler_stubMethod(0);",
-                ""),
+            STUB_DECLARATIONS
+                + """
+                class Foo {
+                }
+                Foo.prototype.method = JSCompiler_stubMethod(0);
+                """,
             """
             Foo.prototype.method = JSCompiler_unstubMethod(0, function() {
               return {
@@ -398,10 +404,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).method()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "const Foo = class FooInternal {}",
-                "Foo.prototype.method = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                const Foo = class FooInternal {}
+                Foo.prototype.method = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             """
             Foo.prototype.method = JSCompiler_unstubMethod(0, function() {});
@@ -633,7 +640,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).ifooMethod()")
                 .build()),
         expected(
-            lines("class Foo {}"),
+            "class Foo {}",
             // Chunk 2
             """
             Foo.prototype.ifooMethod = function() {};
@@ -683,11 +690,12 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).m()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "function Foo() {}",
-                "Foo.prototype.m = JSCompiler_stubMethod(0);",
-                "Foo.prototype.m2 = Foo.prototype.m;"),
+            STUB_DECLARATIONS
+                + """
+                function Foo() {}
+                Foo.prototype.m = JSCompiler_stubMethod(0);
+                Foo.prototype.m2 = Foo.prototype.m;
+                """,
             // Chunk 2
             """
             Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});
@@ -706,11 +714,12 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).m(), (new Foo).m2()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "function Foo() {}",
-                "Foo.prototype.m = JSCompiler_stubMethod(0);",
-                "Foo.prototype.m2 = Foo.prototype.m;"),
+            STUB_DECLARATIONS
+                + """
+                function Foo() {}
+                Foo.prototype.m = JSCompiler_stubMethod(0);
+                Foo.prototype.m2 = Foo.prototype.m;
+                """,
             // Chunk 2
             """
             Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});
@@ -757,11 +766,12 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).m()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "class Foo {}",
-                "Foo.prototype.m = JSCompiler_stubMethod(0);",
-                "Foo.prototype.m2 = Foo.prototype.m;"),
+            STUB_DECLARATIONS
+                + """
+                class Foo {}
+                Foo.prototype.m = JSCompiler_stubMethod(0);
+                Foo.prototype.m2 = Foo.prototype.m;
+                """,
             // Chunk 2
             """
             Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});
@@ -779,11 +789,12 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).m(), (new Foo).m2()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "class Foo {}",
-                "Foo.prototype.m = JSCompiler_stubMethod(0);",
-                "Foo.prototype.m2 = Foo.prototype.m;"),
+            STUB_DECLARATIONS
+                + """
+                class Foo {}
+                Foo.prototype.m = JSCompiler_stubMethod(0);
+                Foo.prototype.m2 = Foo.prototype.m;
+                """,
             // Chunk 2
             """
             Foo.prototype.m = JSCompiler_unstubMethod(0, function() {});
@@ -890,10 +901,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).baz()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "function Foo() {}",
-                "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                function Foo() {}
+                Foo.prototype.baz = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             """
             Foo.prototype.baz = JSCompiler_unstubMethod(0, function() { this.baz(); });
@@ -910,10 +922,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).baz()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS, //
-                "class Foo {}",
-                "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                class Foo {}
+                Foo.prototype.baz = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             """
             Foo.prototype.baz = JSCompiler_unstubMethod(0, function() { this.baz(); });
@@ -960,11 +973,12 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).baz()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "function Foo() {}",
-                "Foo.prototype.baz = JSCompiler_stubMethod(1);",
-                "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                function Foo() {}
+                Foo.prototype.baz = JSCompiler_stubMethod(1);
+                Foo.prototype.baz = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             """
             Foo.prototype.baz = JSCompiler_unstubMethod(1, function() { return 1; });
@@ -986,11 +1000,12 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).baz()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "class Foo {}",
-                "Foo.prototype.baz = JSCompiler_stubMethod(1);",
-                "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                class Foo {}
+                Foo.prototype.baz = JSCompiler_stubMethod(1);
+                Foo.prototype.baz = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             """
             Foo.prototype.baz =
@@ -1031,12 +1046,13 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
     test(
         srcs(m),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "function Foo() {}",
-                "Foo.prototype.baz = JSCompiler_stubMethod(1);",
-                "function Goo() {}",
-                "Goo.prototype.baz = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                function Foo() {}
+                Foo.prototype.baz = JSCompiler_stubMethod(1);
+                function Goo() {}
+                Goo.prototype.baz = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             "",
             // Chunk 3
@@ -1078,12 +1094,13 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
     test(
         srcs(m),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "class Foo {}",
-                "Foo.prototype.baz = JSCompiler_stubMethod(1);",
-                "class Goo {}",
-                "Goo.prototype.baz = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                class Foo {}
+                Foo.prototype.baz = JSCompiler_stubMethod(1);
+                class Goo {}
+                Goo.prototype.baz = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             "",
             // Chunk 3
@@ -1148,10 +1165,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
     test(
         srcs(chunks),
         expected(
-            lines(
-                STUB_DECLARATIONS, //
-                "function Foo() {}",
-                "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                function Foo() {}
+                Foo.prototype.baz = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});",
             // Chunk 3
@@ -1181,10 +1199,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
     test(
         srcs(chunks),
         expected(
-            lines(
-                STUB_DECLARATIONS, //
-                "class Foo {}",
-                "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                class Foo {}
+                Foo.prototype.baz = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});",
             // Chunk 3
@@ -1209,10 +1228,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).callBaz()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "function Foo() {}",
-                "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                function Foo() {}
+                Foo.prototype.baz = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             "Foo.prototype.callBaz = JSCompiler_stubMethod(1);",
             // Chunk 3
@@ -1236,10 +1256,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).callBaz()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS, //
-                "class Foo {}",
-                "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                class Foo {}
+                Foo.prototype.baz = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             "Foo.prototype.callBaz = JSCompiler_stubMethod(1);",
             // Chunk 3
@@ -1270,10 +1291,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("Foo.prototype.callBaz = function() { this.baz(); }")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "function Foo() {}",
-                "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                function Foo() {}
+                Foo.prototype.baz = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             "(new Foo).callBaz()",
             // Chunk 3
@@ -1302,11 +1324,12 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("x();")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "function Foo() {}",
-                "Foo.prototype.baz = JSCompiler_stubMethod(0);",
-                "function x() { return (new Foo).baz(); }"),
+            STUB_DECLARATIONS
+                + """
+                function Foo() {}
+                Foo.prototype.baz = JSCompiler_stubMethod(0);
+                function x() { return (new Foo).baz(); }
+                """,
             // Chunk 2
             """
             Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});
@@ -1334,11 +1357,12 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("x();")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "class Foo {}",
-                "Foo.prototype.baz = JSCompiler_stubMethod(0);",
-                "function x() { return (new Foo).baz(); }"),
+            STUB_DECLARATIONS
+                + """
+                class Foo {}
+                Foo.prototype.baz = JSCompiler_stubMethod(0);
+                function x() { return (new Foo).baz(); }
+                """,
             // Chunk 2
             """
             Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});
@@ -1407,10 +1431,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("y = new Foo(); z.b3();")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "function Foo() {}",
-                "Foo.prototype.b1 = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                function Foo() {}
+                Foo.prototype.b1 = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             """
             Foo.prototype.b1 = JSCompiler_unstubMethod(0, function() {
@@ -1454,10 +1479,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("y = new Foo(); z.b3();")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS, //
-                "class Foo {}",
-                "Foo.prototype.b1 = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                class Foo {}
+                Foo.prototype.b1 = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             """
             Foo.prototype.b1 = JSCompiler_unstubMethod(0, function() {
@@ -1506,10 +1532,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("y = new Foo(); z.b3();")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS, //
-                "function Foo() {}",
-                "Foo.prototype.b1 = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                function Foo() {}
+                Foo.prototype.b1 = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             """
             Foo.prototype.b1 = JSCompiler_unstubMethod(0, function() {
@@ -1565,10 +1592,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("y = new Foo(); z.b3();")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS, //
-                "class Foo {}",
-                "Foo.prototype.b1 = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                class Foo {}
+                Foo.prototype.b1 = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             """
             Foo.prototype.b1 =
@@ -1610,11 +1638,12 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("var y = new Foo(); y.baz();")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "function Foo() {}",
-                "var x = 'x';",
-                "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                function Foo() {}
+                var x = 'x';
+                Foo.prototype.baz = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             """
             Foo.prototype.baz = JSCompiler_unstubMethod(0, function(){x});
@@ -1638,12 +1667,13 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("var y = new Foo(); y.baz();")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "class Foo {}",
-                "Foo.prototype.baz = JSCompiler_stubMethod(0);",
-                "var x = 'x';",
-                ""),
+            STUB_DECLARATIONS
+                + """
+                class Foo {}
+                Foo.prototype.baz = JSCompiler_stubMethod(0);
+                var x = 'x';
+
+                """,
             // Chunk 2
             """
             Foo.prototype.baz = JSCompiler_unstubMethod(0, function(){x});
@@ -1665,10 +1695,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("var y = new Foo(); y.baz();")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "function Foo() {}",
-                "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                function Foo() {}
+                Foo.prototype.baz = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             """
             Foo.prototype.baz = JSCompiler_unstubMethod(
@@ -1687,10 +1718,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("var y = new Foo(); y.baz();")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS, //
-                "class Foo {}",
-                "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                class Foo {}
+                Foo.prototype.baz = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             """
             Foo.prototype.baz = JSCompiler_unstubMethod(
@@ -1716,10 +1748,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("var y = new Foo(); y.baz();")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "function Foo() {}",
-                "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                function Foo() {}
+                Foo.prototype.baz = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             """
             Foo.prototype.baz = JSCompiler_unstubMethod(
@@ -1745,10 +1778,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("var y = new Foo(); y.baz();")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS, //
-                "class Foo {}",
-                "Foo.prototype.baz = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                class Foo {}
+                Foo.prototype.baz = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             """
             Foo.prototype.baz = JSCompiler_unstubMethod(
@@ -1781,18 +1815,19 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).method2()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS, //
-                "class Bar {",
-                "  static {",
-                "  }",
-                "}",
-                "Bar.prototype.method = JSCompiler_stubMethod(0);",
-                "class Foo extends Bar {",
-                "  method2() {",
-                "    return () => super.method();",
-                "  }",
-                "}"),
+            STUB_DECLARATIONS
+                + """
+                class Bar {
+                  static {
+                  }
+                }
+                Bar.prototype.method = JSCompiler_stubMethod(0);
+                class Foo extends Bar {
+                  method2() {
+                    return () => super.method();
+                  }
+                }
+                """,
             // Chunk 2
             """
             Bar.prototype.method = JSCompiler_unstubMethod(0, function() {});
@@ -1876,11 +1911,12 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).method2()")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS, //
-                "class Bar {",
-                "}",
-                "Bar.prototype.method = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                class Bar {
+                }
+                Bar.prototype.method = JSCompiler_stubMethod(0);
+                """,
             // Chunk 2
             """
             Bar.prototype.method = JSCompiler_unstubMethod(0, function() {});
@@ -1894,7 +1930,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
             }
             """,
             // Chunk 3
-            lines("(new Foo()).method2();")));
+            "(new Foo()).method2();"));
   }
 
   @Test
@@ -1975,12 +2011,13 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                     """)
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "var jQuery2 = function() {};",
-                "jQuery2.prototype = {",
-                "  size: JSCompiler_stubMethod(0)",
-                "};"),
+            STUB_DECLARATIONS
+                + """
+                var jQuery2 = function() {};
+                jQuery2.prototype = {
+                  size: JSCompiler_stubMethod(0)
+                };
+                """,
             // Chunk 2
             """
             jQuery2.prototype.size=
@@ -2017,14 +2054,15 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                     """)
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "var jQuery2 = function() {};",
-                "(function() {",
-                "  jQuery2.prototype = {",
-                "    size: JSCompiler_stubMethod(0)",
-                "  };",
-                "})();"),
+            STUB_DECLARATIONS
+                + """
+                var jQuery2 = function() {};
+                (function() {
+                  jQuery2.prototype = {
+                    size: JSCompiler_stubMethod(0)
+                  };
+                })();
+                """,
             """
             jQuery2.prototype.size=
                 JSCompiler_unstubMethod(0,function(){return 1});
@@ -2091,11 +2129,12 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("const {foo} = new F();")
                 .build()),
         expected(
-            lines(
-                STUB_DECLARATIONS,
-                "/** @constructor */",
-                "function F() {}",
-                "F.prototype.foo = JSCompiler_stubMethod(0);"),
+            STUB_DECLARATIONS
+                + """
+                /** @constructor */
+                function F() {}
+                F.prototype.foo = JSCompiler_stubMethod(0);
+                """,
             """
             F.prototype.foo = JSCompiler_unstubMethod(0, function(){});
             const {foo} = new F();

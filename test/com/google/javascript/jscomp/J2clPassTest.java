@@ -66,25 +66,25 @@ public class J2clPassTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Arrays.impl.java.js",
-                lines(
-                    declarations,
-                    "",
-                    "alert(Arrays.$create());",
-                    "alert(Arrays.$init());",
-                    "alert(Arrays.$instanceIsOfType());",
-                    "alert(Arrays.$castTo());",
-                    "alert(Arrays.$stampType());"))),
+                declarations
+                    + """
+                    alert(Arrays.$create());
+                    alert(Arrays.$init());
+                    alert(Arrays.$instanceIsOfType());
+                    alert(Arrays.$castTo());
+                    alert(Arrays.$stampType());
+                    """)),
         expected(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Arrays.impl.java.js",
-                lines(
-                    declarations,
-                    "",
-                    "alert(1);",
-                    "alert(2);",
-                    "alert(3);",
-                    "alert(4);",
-                    "alert(5);"))));
+                declarations
+                    + """
+                    alert(1);
+                    alert(2);
+                    alert(3);
+                    alert(4);
+                    alert(5);
+                    """)));
   }
 
   @Test
@@ -101,17 +101,17 @@ public class J2clPassTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
-                lines(
-                    declarations, //
-                    "",
-                    "alert(Casts.$to());"))),
+                declarations
+                    + """
+                    alert(Casts.$to());
+                    """)),
         expected(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
-                lines(
-                    declarations, //
-                    "",
-                    "alert(1);"))));
+                declarations
+                    + """
+                    alert(1);
+                    """)));
   }
 
   @Test
@@ -130,19 +130,21 @@ public class J2clPassTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 "name/doesnt/matter/Foo.impl.java.js",
-                lines(
-                    declarations,
-                    "/** @constructor */",
-                    "var Foo = function() {};",
-                    "FooInterface.$markImplementor(Foo);"))),
+                declarations
+                    + """
+                    /** @constructor */
+                    var Foo = function() {};
+                    FooInterface.$markImplementor(Foo);
+                    """)),
         expected(
             SourceFile.fromCode(
                 "name/doesnt/matter/Foo.impl.java.js",
-                lines(
-                    declarations,
-                    "/** @constructor */",
-                    "var Foo = function() {};",
-                    "{Foo.$implements__FooInterface = true;}"))));
+                declarations
+                    + """
+                    /** @constructor */
+                    var Foo = function() {};
+                    {Foo.$implements__FooInterface = true;}
+                    """)));
     final Node scriptNode = getLastCompiler().getJsRoot().getLastChild();
     assertNode(scriptNode).isScript();
     final Node inlinedBlock = scriptNode.getLastChild();
@@ -187,23 +189,23 @@ public class J2clPassTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Arrays.impl.java.js",
-                lines(
-                    declarations,
-                    "",
-                    "alert($jscomp.scope.Arrays.$create());",
-                    "alert($jscomp.scope.Arrays.$init());",
-                    "alert($jscomp.scope.Arrays.$instanceIsOfType());",
-                    "alert($jscomp.scope.Arrays.$castTo());"))),
+                declarations
+                    + """
+                    alert($jscomp.scope.Arrays.$create());
+                    alert($jscomp.scope.Arrays.$init());
+                    alert($jscomp.scope.Arrays.$instanceIsOfType());
+                    alert($jscomp.scope.Arrays.$castTo());
+                    """)),
         expected(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Arrays.impl.java.js",
-                lines(
-                    declarations, //
-                    "",
-                    "alert(1);",
-                    "alert(2);",
-                    "alert(3);",
-                    "alert(4);"))));
+                declarations
+                    + """
+                    alert(1);
+                    alert(2);
+                    alert(3);
+                    alert(4);
+                    """)));
   }
 
   @Test
@@ -222,17 +224,17 @@ public class J2clPassTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
-                lines(
-                    declarations, //
-                    "",
-                    "alert($jscomp.scope.Casts.$to());"))),
+                declarations
+                    + """
+                    alert($jscomp.scope.Casts.$to());
+                    """)),
         expected(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
-                lines(
-                    declarations, //
-                    "",
-                    "alert(1);"))));
+                declarations
+                    + """
+                    alert(1);
+                    """)));
   }
 
   @Test
@@ -253,19 +255,19 @@ public class J2clPassTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 "name/doesnt/matter/Foo.impl.java.js",
-                lines(
-                    declarations,
-                    "",
-                    "$jscomp.scope.Foo = function() {};",
-                    "$jscomp.scope.FooInterface.$markImplementor($jscomp.scope.Foo);"))),
+                declarations
+                    + """
+                    $jscomp.scope.Foo = function() {};
+                    $jscomp.scope.FooInterface.$markImplementor($jscomp.scope.Foo);
+                    """)),
         expected(
             SourceFile.fromCode(
                 "name/doesnt/matter/Foo.impl.java.js",
-                lines(
-                    declarations,
-                    "",
-                    "$jscomp.scope.Foo = function() {};",
-                    "{$jscomp.scope.Foo.$implements__FooInterface = true;}"))));
+                declarations
+                    + """
+                    $jscomp.scope.Foo = function() {};
+                    {$jscomp.scope.Foo.$implements__FooInterface = true;}
+                    """)));
   }
 
   @Test

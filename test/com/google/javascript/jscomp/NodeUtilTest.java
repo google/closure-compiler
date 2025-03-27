@@ -5211,5 +5211,4 @@ public final class NodeUtilTest {
   private static boolean isValidQualifiedName(String s) {
     return NodeUtil.isValidQualifiedName(FeatureSet.ES3, s);
   }
-
 }

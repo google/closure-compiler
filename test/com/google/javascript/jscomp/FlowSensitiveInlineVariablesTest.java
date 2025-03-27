@@ -1241,16 +1241,18 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
     test(
         externs(EXTERN_FUNCTIONS),
         srcs(
-            lines(
-                "", //
-                "function _func() {",
-                input,
-                "}")),
+            """
+            function _func() {
+            INPUT
+            }
+            """
+                .replace("INPUT", input)),
         expected(
-            lines(
-                "", //
-                "function _func() {",
-                expected,
-                "}")));
+            """
+            function _func() {
+            EXPECTED
+            }
+            """
+                .replace("EXPECTED", expected)));
   }
 }

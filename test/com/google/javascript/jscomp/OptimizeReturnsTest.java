@@ -36,7 +36,7 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
       """;
 
   public OptimizeReturnsTest() {
-    super(lines(DEFAULT_EXTERNS, EXTERNAL_SYMBOLS));
+    super(DEFAULT_EXTERNS + EXTERNAL_SYMBOLS);
   }
 
   @Override

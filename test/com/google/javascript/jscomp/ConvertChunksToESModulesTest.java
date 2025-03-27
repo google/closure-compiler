@@ -283,12 +283,12 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forStar() //
                 .addChunk(
-                    lines(
-                        "import('./m1.js')",
-                        "    .then("
-                            + DYNAMIC_IMPORT_CALLBACK_FN
-                            + "(function () { return module$i1; }))",
-                        "    .then(function (ns) { console.log(ns.default); });"))
+                    """
+                    import('./m1.js')
+                        .then(DYNAMIC_IMPORT_CALLBACK_FN(function () { return module$i1; }))
+                        .then(function (ns) { console.log(ns.default); });
+                    """
+                        .replace("DYNAMIC_IMPORT_CALLBACK_FN", DYNAMIC_IMPORT_CALLBACK_FN))
                 .addChunk(
                     """
                     const a$$module$i1 = 1;
@@ -332,10 +332,12 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
                     /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
                     """)
                 .addChunk(
-                    lines(
-                        "import('./m0.js')",
-                        "    .then(" + DYNAMIC_IMPORT_CALLBACK_FN + "(() => module$i0))",
-                        "    .then((ns) => console.log(ns.default));"))
+                    """
+                    import('./m0.js')
+                        .then(DYNAMIC_IMPORT_CALLBACK_FN(() => module$i0))
+                        .then((ns) => console.log(ns.default));
+                    """
+                        .replace("DYNAMIC_IMPORT_CALLBACK_FN", DYNAMIC_IMPORT_CALLBACK_FN))
                 .build()),
         expected(
             JSChunkGraphBuilder.forStar()
@@ -409,10 +411,12 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
                     /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
                     """)
                 .addChunk(
-                    lines(
-                        "import('./m0.js')",
-                        "    .then(" + DYNAMIC_IMPORT_CALLBACK_FN + "(() => {}))",
-                        "    .then((ns) => console.log(ns.default));"))
+                    """
+                    import('./m0.js')
+                        .then(DYNAMIC_IMPORT_CALLBACK_FN(() => {}))
+                        .then((ns) => console.log(ns.default));
+                    """
+                        .replace("DYNAMIC_IMPORT_CALLBACK_FN", DYNAMIC_IMPORT_CALLBACK_FN))
                 .build()),
         error(UNRECOGNIZED_DYNAMIC_IMPORT_CALLBACK)
             .withMessage(
@@ -434,10 +438,12 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
                     /** @const */ module$i0.default = $jscompDefaultExport$$module$i0;
                     """)
                 .addChunk(
-                    lines(
-                        "import('./m0.js')",
-                        "    .then(" + DYNAMIC_IMPORT_CALLBACK_FN + "(true))",
-                        "    .then((ns) => console.log(ns.default));"))
+                    """
+                    import('./m0.js')
+                        .then(DYNAMIC_IMPORT_CALLBACK_FN(true))
+                        .then((ns) => console.log(ns.default));
+                    """
+                        .replace("DYNAMIC_IMPORT_CALLBACK_FN", DYNAMIC_IMPORT_CALLBACK_FN))
                 .build()),
         error(UNRECOGNIZED_DYNAMIC_IMPORT_CALLBACK)
             .withMessage(

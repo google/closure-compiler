@@ -24,7 +24,6 @@ import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DESCRIP
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -49,12 +48,6 @@ import org.junit.runners.JUnit4;
 /** Test for {@link JsMessageVisitor}. */
 @RunWith(JUnit4.class)
 public final class JsMessageVisitorTest {
-  private static final Joiner LINE_JOINER = Joiner.on('\n');
-
-  private static String lines(String... lines) {
-    return LINE_JOINER.join(lines);
-  }
-
   private static class RenameMessagesVisitor extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -90,16 +83,17 @@ public final class JsMessageVisitorTest {
   public void testIcuTemplateParsing() {
     final IcuMessageTemplateString icuMessageTemplateString =
         new IcuMessageTemplateString(
-            lines(
-                "{NUM_PEOPLE, plural, offset:1 ",
-                // Some placeholders are ignored, because there's no additional information
-                // for them (original code or example text). There's no need to generate
-                // placeholder parts for those.
-                "=0 {I see {START_BOLD}no one at all{END_BOLD} in {INTERPOLATION_2}.}",
-                "=1 {I see {INTERPOLATION_1} in {INTERPOLATION_2}.}",
-                "=2 {I see {INTERPOLATION_1} and one other person in {INTERPOLATION_2}.}",
-                "other {I see {INTERPOLATION_1} and # other people in {INTERPOLATION_2}.}",
-                "}"));
+            // Some placeholders are ignored, because there's no additional information for them
+            // (original code or example text). There's no need to generate placeholder parts for
+            // those.
+            """
+            {NUM_PEOPLE, plural, offset:1
+            =0 {I see {START_BOLD}no one at all{END_BOLD} in {INTERPOLATION_2}.}
+            =1 {I see {INTERPOLATION_1} in {INTERPOLATION_2}.}
+            =2 {I see {INTERPOLATION_1} and one other person in {INTERPOLATION_2}.}
+            other {I see {INTERPOLATION_1} and # other people in {INTERPOLATION_2}.}
+            }
+            """);
     final ExtractedIcuTemplateParts extractedParts =
         icuMessageTemplateString.extractParts(
             ImmutableSet.of("INTERPOLATION_1", "INTERPOLATION_2", "MISSING"));
@@ -113,7 +107,7 @@ public final class JsMessageVisitorTest {
 
     assertThat(parts.get(0).getString())
         .isEqualTo(
-            "{NUM_PEOPLE, plural, offset:1 \n=0 {I see {START_BOLD}no one at all{END_BOLD} in ");
+            "{NUM_PEOPLE, plural, offset:1\n=0 {I see {START_BOLD}no one at all{END_BOLD} in ");
     assertThat(parts.get(1).getCanonicalPlaceholderName()).isEqualTo("INTERPOLATION_2");
     assertThat(parts.get(2).getString()).isEqualTo(".}\n=1 {I see ");
     assertThat(parts.get(3).getCanonicalPlaceholderName()).isEqualTo("INTERPOLATION_1");
@@ -127,7 +121,7 @@ public final class JsMessageVisitorTest {
     assertThat(parts.get(11).getCanonicalPlaceholderName()).isEqualTo("INTERPOLATION_1");
     assertThat(parts.get(12).getString()).isEqualTo(" and # other people in ");
     assertThat(parts.get(13).getCanonicalPlaceholderName()).isEqualTo("INTERPOLATION_2");
-    assertThat(parts.get(14).getString()).isEqualTo(".}\n}");
+    assertThat(parts.get(14).getString()).isEqualTo(".}\n}\n");
   }
 
   @Test
@@ -1047,7 +1041,7 @@ public final class JsMessageVisitorTest {
   @Test
   public void testCamelcasePlaceholderNamesAreOk() {
     extractMessagesSafely(
-        """
+"""
 /** @desc Hello */
 var MSG_WITH_CAMELCASE = goog.getMsg('Slide {$slideNumber}:', {'slideNumber': opt_index + 1});
 """);

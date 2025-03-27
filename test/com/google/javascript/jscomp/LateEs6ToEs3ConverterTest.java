@@ -386,37 +386,55 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
   public void testTaggedTemplateLiteral_insertPosition_singleScript() {
     taggedTemplateLiteralTestRunner(
         externs(""), // clear the default externs which contain the runtime stubs
-        srcs(lines(RUNTIME_STUBS, "var a = {};", "tag``; var b;")),
+        srcs(
+            RUNTIME_STUBS
+                + """
+                var a = {};
+                tag``; var b;
+                """),
         expected(
-            lines(
-                RUNTIME_STUBS,
-                "/** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =",
-                "    $jscomp.createTemplateTagFirstArg(['']);",
-                "var a = {};",
-                "tag(TAGGED_TEMPLATE_TMP_VAR$0);",
-                "var b;")));
+            RUNTIME_STUBS
+                + """
+                /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
+                    $jscomp.createTemplateTagFirstArg(['']);
+                var a = {};
+                tag(TAGGED_TEMPLATE_TMP_VAR$0);
+                var b;
+                """));
 
     taggedTemplateLiteralTestRunner(
         externs(""), // clear the default externs which contain the runtime stubs
-        srcs(lines(RUNTIME_STUBS, "var a = {};", "function foo() {tag``;}")),
+        srcs(
+            RUNTIME_STUBS
+                + """
+                var a = {};
+                function foo() {tag``;}
+                """),
         expected(
-            lines(
-                RUNTIME_STUBS,
-                "/** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =",
-                "    $jscomp.createTemplateTagFirstArg(['']);",
-                "var a = {};",
-                "function foo() {tag(TAGGED_TEMPLATE_TMP_VAR$0);}")));
+            RUNTIME_STUBS
+                + """
+                /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
+                    $jscomp.createTemplateTagFirstArg(['']);
+                var a = {};
+                function foo() {tag(TAGGED_TEMPLATE_TMP_VAR$0);}
+                """));
 
     taggedTemplateLiteralTestRunner(
         externs(""), // clear the default externs which contain the runtime stubs
-        srcs(lines(RUNTIME_STUBS, "var a = {};", "function foo() {function bar() {tag``;}}")),
+        srcs(
+            RUNTIME_STUBS
+                + """
+                var a = {};
+                function foo() {function bar() {tag``;}}
+                """),
         expected(
-            lines(
-                RUNTIME_STUBS,
-                "/** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =",
-                "    $jscomp.createTemplateTagFirstArg(['']);",
-                "var a = {};",
-                "function foo() {function bar() {tag(TAGGED_TEMPLATE_TMP_VAR$0);}}")));
+            RUNTIME_STUBS
+                + """
+                /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
+                    $jscomp.createTemplateTagFirstArg(['']);
+                var a = {};
+                function foo() {function bar() {tag(TAGGED_TEMPLATE_TMP_VAR$0);}}
+                """));
   }
 
   /**
@@ -428,13 +446,13 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     taggedTemplateLiteralTestRunner(
         externs(""), // clear the default externs which contain the runtime stubs
         srcs(
-            lines(RUNTIME_STUBS, SCRIPT1),
+            RUNTIME_STUBS + SCRIPT1,
             """
             var a = {};
             tag``; var b;
             """),
         expected(
-            lines(RUNTIME_STUBS, SCRIPT1),
+            RUNTIME_STUBS + SCRIPT1,
             """
             /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
                 $jscomp.createTemplateTagFirstArg(['']);
@@ -445,13 +463,13 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     taggedTemplateLiteralTestRunner(
         externs(""), // clear the default externs which contain the runtime stubs
         srcs(
-            lines(RUNTIME_STUBS, SCRIPT1),
+            RUNTIME_STUBS + SCRIPT1,
             """
             var a = {};
             function foo() {tag``;}
             """),
         expected(
-            lines(RUNTIME_STUBS, SCRIPT1),
+            RUNTIME_STUBS + SCRIPT1,
             """
             /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
                 $jscomp.createTemplateTagFirstArg(['']);
@@ -462,13 +480,13 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     taggedTemplateLiteralTestRunner(
         externs(""), // clear the default externs which contain the runtime stubs
         srcs(
-            lines(SCRIPT1, RUNTIME_STUBS),
+            SCRIPT1 + RUNTIME_STUBS,
             """
             var a = {};
             function foo() {function bar() {tag``;}}
             """),
         expected(
-            lines(SCRIPT1, RUNTIME_STUBS),
+            SCRIPT1 + RUNTIME_STUBS,
             """
             /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
                 $jscomp.createTemplateTagFirstArg(['']);

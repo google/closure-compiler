@@ -36,10 +36,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Unit tests for JsFlume {@link SuggestedFix}.
- *
- */
+/** Unit tests for JsFlume {@link SuggestedFix}. */
 @RunWith(JUnit4.class)
 public class SuggestedFixTest {
   @Test
@@ -50,9 +47,10 @@ public class SuggestedFixTest {
     Node root = compileToScriptRoot(compiler);
     Node newNode =
         IR.exprResult(IR.call(IR.getprop(IR.name("goog2"), "get"), IR.string("service")));
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .insertBefore(root.getLastChild().getFirstChild(), newNode, compiler)
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder()
+            .insertBefore(root.getLastChild().getFirstChild(), newNode, compiler)
+            .build();
     CodeReplacement replacement =
         CodeReplacement.create(before.length(), 0, "goog2.get('service');\n");
     assertReplacement(fix, replacement);
@@ -93,8 +91,8 @@ public class SuggestedFixTest {
     String input = "var foo = new Bar();";
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .replaceText(root.getFirstFirstChild(), 3, "quux").build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder().replaceText(root.getFirstFirstChild(), 3, "quux").build();
     CodeReplacement replacement = CodeReplacement.create(4, 3, "quux");
     assertReplacement(fix, replacement);
   }
@@ -104,9 +102,7 @@ public class SuggestedFixTest {
     String input = "var foo = new Bar();";
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .delete(root.getFirstChild())
-        .build();
+    SuggestedFix fix = new SuggestedFix.Builder().delete(root.getFirstChild()).build();
     CodeReplacement replacement = CodeReplacement.create(0, input.length(), "");
     assertReplacement(fix, replacement);
   }
@@ -118,9 +114,7 @@ public class SuggestedFixTest {
     String input = before + after;
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .delete(root.getLastChild())
-        .build();
+    SuggestedFix fix = new SuggestedFix.Builder().delete(root.getLastChild()).build();
     CodeReplacement replacement = CodeReplacement.create(before.length(), after.length(), "");
     assertReplacement(fix, replacement);
   }
@@ -156,9 +150,10 @@ public class SuggestedFixTest {
     String input = before + after;
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .deleteWithoutRemovingWhitespaceBefore(root.getLastChild())
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder()
+            .deleteWithoutRemovingWhitespaceBefore(root.getLastChild())
+            .build();
     CodeReplacement replacement = CodeReplacement.create(before.length(), after.length(), "");
     assertReplacement(fix, replacement);
   }
@@ -171,23 +166,17 @@ public class SuggestedFixTest {
 
     // Delete the 1st variable on the line. Make sure the deletion includes the assignment and the
     // trailing comma.
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .delete(root.getFirstFirstChild())
-        .build();
+    SuggestedFix fix = new SuggestedFix.Builder().delete(root.getFirstFirstChild()).build();
     CodeReplacement replacement = CodeReplacement.create(4, "foo = 3, ".length(), "");
     assertReplacement(fix, replacement);
 
     // Delete the 2nd variable.
-    fix = new SuggestedFix.Builder()
-        .delete(root.getFirstChild().getSecondChild())
-        .build();
+    fix = new SuggestedFix.Builder().delete(root.getFirstChild().getSecondChild()).build();
     replacement = CodeReplacement.create(13, "bar, ".length(), "");
     assertReplacement(fix, replacement);
 
     // Delete the last variable. Make sure it removes the leading comma.
-    fix = new SuggestedFix.Builder()
-        .delete(root.getFirstChild().getLastChild())
-        .build();
+    fix = new SuggestedFix.Builder().delete(root.getFirstChild().getLastChild()).build();
     replacement = CodeReplacement.create(16, ", baz".length(), "");
     assertReplacement(fix, replacement);
   }
@@ -249,23 +238,17 @@ public class SuggestedFixTest {
 
     // Delete the 1st variable on the line. Make sure the deletion includes the assignment and the
     // trailing comma.
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .delete(root.getFirstFirstChild())
-        .build();
+    SuggestedFix fix = new SuggestedFix.Builder().delete(root.getFirstFirstChild()).build();
     CodeReplacement replacement = CodeReplacement.create(4, "foo = 3, ".length(), "");
     assertReplacement(fix, replacement);
 
     // Delete the 2nd variable.
-    fix = new SuggestedFix.Builder()
-        .delete(root.getFirstChild().getSecondChild())
-        .build();
+    fix = new SuggestedFix.Builder().delete(root.getFirstChild().getSecondChild()).build();
     replacement = CodeReplacement.create(13, "bar, ".length(), "");
     assertReplacement(fix, replacement);
 
     // Delete the last variable. Make sure it removes the leading comma.
-    fix = new SuggestedFix.Builder()
-        .delete(root.getFirstChild().getLastChild())
-        .build();
+    fix = new SuggestedFix.Builder().delete(root.getFirstChild().getLastChild()).build();
     replacement = CodeReplacement.create(16, ", baz".length(), "");
     assertReplacement(fix, replacement);
   }
@@ -301,23 +284,17 @@ public class SuggestedFixTest {
 
     // Delete the 1st variable on the line. Make sure the deletion includes the assignment and the
     // trailing comma.
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .delete(root.getFirstFirstChild())
-        .build();
+    SuggestedFix fix = new SuggestedFix.Builder().delete(root.getFirstFirstChild()).build();
     CodeReplacement replacement = CodeReplacement.create(6, "foo = 3, ".length(), "");
     assertReplacement(fix, replacement);
 
     // Delete the 2nd variable.
-    fix = new SuggestedFix.Builder()
-        .delete(root.getFirstChild().getSecondChild())
-        .build();
+    fix = new SuggestedFix.Builder().delete(root.getFirstChild().getSecondChild()).build();
     replacement = CodeReplacement.create(input.indexOf("bar = 4, "), "bar = 4, ".length(), "");
     assertReplacement(fix, replacement);
 
     // Delete the last variable. Make sure it removes the leading comma.
-    fix = new SuggestedFix.Builder()
-        .delete(root.getFirstChild().getLastChild())
-        .build();
+    fix = new SuggestedFix.Builder().delete(root.getFirstChild().getLastChild()).build();
     replacement = CodeReplacement.create(input.indexOf(", baz = 5"), ", baz = 5".length(), "");
     assertReplacement(fix, replacement);
   }
@@ -328,9 +305,7 @@ public class SuggestedFixTest {
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Node node = root.getFirstFirstChild().getFirstFirstChild();
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .rename(node, "fooBar")
-        .build();
+    SuggestedFix fix = new SuggestedFix.Builder().rename(node, "fooBar").build();
     CodeReplacement replacement = CodeReplacement.create(11, "foo".length(), "fooBar");
     assertReplacement(fix, replacement);
   }
@@ -340,9 +315,8 @@ public class SuggestedFixTest {
     String input = "obj.test.property";
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .rename(root.getFirstFirstChild(), "renamedProperty")
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder().rename(root.getFirstFirstChild(), "renamedProperty").build();
     CodeReplacement replacement = CodeReplacement.create(9, "property".length(), "renamedProperty");
     assertReplacement(fix, replacement);
   }
@@ -352,9 +326,10 @@ public class SuggestedFixTest {
     String input = "obj.test.property";
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .rename(root.getFirstFirstChild(), "renamedProperty", true)
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder()
+            .rename(root.getFirstFirstChild(), "renamedProperty", true)
+            .build();
     CodeReplacement replacement = CodeReplacement.create(0, input.length(), "renamedProperty");
     assertReplacement(fix, replacement);
   }
@@ -364,9 +339,8 @@ public class SuggestedFixTest {
     String input = "obj.fnCall();";
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .rename(root.getFirstFirstChild(), "renamedFnCall")
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder().rename(root.getFirstFirstChild(), "renamedFnCall").build();
     CodeReplacement replacement = CodeReplacement.create(4, "fnCall".length(), "renamedFnCall");
     assertReplacement(fix, replacement);
   }
@@ -378,9 +352,8 @@ public class SuggestedFixTest {
     String input = fnName + "(foo, bar);";
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .rename(root.getFirstFirstChild(), newFnName, true)
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder().rename(root.getFirstFirstChild(), newFnName, true).build();
     CodeReplacement replacement = CodeReplacement.create(0, fnName.length(), newFnName);
     assertReplacement(fix, replacement);
   }
@@ -393,9 +366,8 @@ public class SuggestedFixTest {
     String input = prefix + fnName + "`${Foo}Bar`;";
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .rename(root.getFirstFirstChild(), newFnName)
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder().rename(root.getFirstFirstChild(), newFnName).build();
     CodeReplacement replacement =
         CodeReplacement.create(prefix.length(), fnName.length(), newFnName);
     assertReplacement(fix, replacement);
@@ -408,9 +380,8 @@ public class SuggestedFixTest {
     String input = fnName + "`${Foo}Bar`;";
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .rename(root.getFirstFirstChild(), newFnName, true)
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder().rename(root.getFirstFirstChild(), newFnName, true).build();
     CodeReplacement replacement = CodeReplacement.create(0, fnName.length(), newFnName);
     assertReplacement(fix, replacement);
   }
@@ -423,9 +394,10 @@ public class SuggestedFixTest {
     Node root = compileToScriptRoot(compiler);
     Node newNode =
         IR.exprResult(IR.call(IR.getprop(IR.name("goog2"), "get"), IR.string("service")));
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .replace(root.getLastChild().getFirstChild(), newNode, compiler)
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder()
+            .replace(root.getLastChild().getFirstChild(), newNode, compiler)
+            .build();
     CodeReplacement replacement =
         CodeReplacement.create(before.length(), after.length(), "goog2.get('service');");
     assertReplacement(fix, replacement);
@@ -433,11 +405,13 @@ public class SuggestedFixTest {
 
   @Test
   public void testReplace_functionArgument() {
-    String before = ""
-        + "var MyClass = function() {};\n"
-        + "MyClass.prototype.foo = function() {};\n"
-        + "MyClass.prototype.bar = function() {};\n"
-        + "var clazz = new MyClass();\n";
+    String before =
+        """
+        var MyClass = function() {};
+        MyClass.prototype.foo = function() {};
+        MyClass.prototype.bar = function() {};
+        var clazz = new MyClass();
+        """;
     String after = "alert(clazz.foo());";
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
@@ -477,9 +451,7 @@ public class SuggestedFixTest {
     Node root = compileToScriptRoot(compiler);
     Node newNode = IR.exprResult(IR.sub(IR.number(4), IR.number(1)));
     Node toReplace = root.getOnlyChild().getOnlyChild().getLastChild();
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .replace(toReplace, newNode, compiler)
-        .build();
+    SuggestedFix fix = new SuggestedFix.Builder().replace(toReplace, newNode, compiler).build();
     CodeReplacement replacement =
         CodeReplacement.create(before.length(), after.length(), "(4 - 1)");
     assertReplacement(fix, replacement);
@@ -493,9 +465,7 @@ public class SuggestedFixTest {
     Node root = compileToScriptRoot(compiler);
     Node newNode = IR.exprResult(IR.sub(IR.number(3), IR.number(2)));
     Node toReplace = root.getOnlyChild().getOnlyChild().getLastChild();
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .replace(toReplace, newNode, compiler)
-        .build();
+    SuggestedFix fix = new SuggestedFix.Builder().replace(toReplace, newNode, compiler).build();
     CodeReplacement replacement =
         CodeReplacement.create(before.length(), after.length(), "(3 - 2)");
     assertReplacement(fix, replacement);
@@ -509,9 +479,7 @@ public class SuggestedFixTest {
     Node root = compileToScriptRoot(compiler);
     Node newNode = IR.exprResult(IR.add(IR.number(1), IR.number(1)));
     Node toReplace = root.getOnlyChild().getOnlyChild().getLastChild();
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .replace(toReplace, newNode, compiler)
-        .build();
+    SuggestedFix fix = new SuggestedFix.Builder().replace(toReplace, newNode, compiler).build();
     CodeReplacement replacement = CodeReplacement.create(before.length(), after.length(), "1 + 1");
     assertReplacement(fix, replacement);
   }
@@ -522,9 +490,7 @@ public class SuggestedFixTest {
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Node objNode = root.getFirstFirstChild().getFirstFirstChild();
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .addCast(objNode, compiler, "FooBar")
-        .build();
+    SuggestedFix fix = new SuggestedFix.Builder().addCast(objNode, compiler, "FooBar").build();
     CodeReplacement replacement =
         CodeReplacement.create(0, "obj".length(), "/** @type {FooBar} */ (obj)");
     assertReplacement(fix, replacement);
@@ -539,58 +505,56 @@ public class SuggestedFixTest {
     Node castNode = root.getFirstFirstChild().getFirstChild();
     assertTrue(castNode.isCast());
 
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .removeCast(castNode, compiler)
-        .build();
+    SuggestedFix fix = new SuggestedFix.Builder().removeCast(castNode, compiler).build();
     assertChanges(fix, "", input, expectedCode);
   }
 
   @Test
   public void testRemoveCast_complexStatement() {
     String input =
-        lines(
-            "var x = /** @type {string} */ (function() {",
-            "  // Inline comment that should be preserved.",
-            "  var blah = bleh;",
-            "});");
+        """
+        var x = /** @type {string} */ (function() {
+          // Inline comment that should be preserved.
+          var blah = bleh;
+        });
+        """;
     String expectedCode =
-        lines(
-            "var x = function() {",
-            "  // Inline comment that should be preserved.",
-            "  var blah = bleh;",
-            "};");
+        """
+        var x = function() {
+          // Inline comment that should be preserved.
+          var blah = bleh;
+        };
+        """;
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Node castNode = root.getFirstFirstChild().getFirstChild();
     assertTrue(castNode.isCast());
 
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .removeCast(castNode, compiler)
-        .build();
+    SuggestedFix fix = new SuggestedFix.Builder().removeCast(castNode, compiler).build();
     assertChanges(fix, "", input, expectedCode);
   }
 
   @Test
   public void testRemoveCast_return() {
     String input =
-        lines(
-            "function f() {",
-            "  return /** @type {string} */ (",
-            "      'I am obviously a string. Why are you casting me?');",
-            "}");
+        """
+        function f() {
+          return /** @type {string} */ (
+              'I am obviously a string. Why are you casting me?');
+        }
+        """;
     String expectedCode =
-        lines(
-            "function f() {", //
-            "  return 'I am obviously a string. Why are you casting me?';",
-            "}");
+        """
+        function f() {
+          return 'I am obviously a string. Why are you casting me?';
+        }
+        """;
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Node castNode = root.getFirstChild().getLastChild().getFirstChild().getLastChild();
     assertTrue(castNode.isCast());
 
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .removeCast(castNode, compiler)
-        .build();
+    SuggestedFix fix = new SuggestedFix.Builder().removeCast(castNode, compiler).build();
     assertChanges(fix, "", input, expectedCode);
   }
 
@@ -600,9 +564,10 @@ public class SuggestedFixTest {
     String after = "@type {Foo} */\nvar foo = new Foo()";
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .changeJsDocType(root.getFirstChild(), compiler, "Object")
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder()
+            .changeJsDocType(root.getFirstChild(), compiler, "Object")
+            .build();
     CodeReplacement replacement =
         CodeReplacement.create(before.length(), "@type {Foo}".length(), "@type {Object}");
     assertReplacement(fix, replacement);
@@ -614,11 +579,8 @@ public class SuggestedFixTest {
     Compiler compiler = getCompiler(code);
     Node root = compileToScriptRoot(compiler);
     Node varNode = root.getFirstChild();
-    Node jsdocRoot =
-        Iterables.getOnlyElement(varNode.getJSDocInfo().getTypeNodes());
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .insertBefore(jsdocRoot, "!")
-        .build();
+    Node jsdocRoot = Iterables.getOnlyElement(varNode.getJSDocInfo().getTypeNodes());
+    SuggestedFix fix = new SuggestedFix.Builder().insertBefore(jsdocRoot, "!").build();
     CodeReplacement replacement = CodeReplacement.create("/** @type {".length(), 0, "!");
     assertReplacement(fix, replacement);
   }
@@ -629,9 +591,10 @@ public class SuggestedFixTest {
     String after = "@package {Foo} */\nvar foo = new Foo()";
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .changeJsDocType(root.getFirstChild(), compiler, "Object")
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder()
+            .changeJsDocType(root.getFirstChild(), compiler, "Object")
+            .build();
     CodeReplacement replacement =
         CodeReplacement.create(before.length(), "@package {Foo}".length(), "@package {Object}");
     assertReplacement(fix, replacement);
@@ -643,9 +606,10 @@ public class SuggestedFixTest {
     String after = "@private {Foo} */\nvar foo = new Foo()";
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .changeJsDocType(root.getFirstChild(), compiler, "Object")
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder()
+            .changeJsDocType(root.getFirstChild(), compiler, "Object")
+            .build();
     CodeReplacement replacement =
         CodeReplacement.create(before.length(), "@private {Foo}".length(), "@private {Object}");
     assertReplacement(fix, replacement);
@@ -657,9 +621,10 @@ public class SuggestedFixTest {
     String after = "@const {Foo} */\nvar foo = new Foo()";
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .changeJsDocType(root.getFirstChild(), compiler, "Object")
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder()
+            .changeJsDocType(root.getFirstChild(), compiler, "Object")
+            .build();
     CodeReplacement replacement =
         CodeReplacement.create(before.length(), "@const {Foo}".length(), "@const {Object}");
     assertReplacement(fix, replacement);
@@ -671,9 +636,10 @@ public class SuggestedFixTest {
     String after = "@const {Foo} */\nvar foo = new Foo()";
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .changeJsDocType(root.getFirstChild(), compiler, "Object")
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder()
+            .changeJsDocType(root.getFirstChild(), compiler, "Object")
+            .build();
     CodeReplacement replacement =
         CodeReplacement.create(before.length(), "@const {Foo}".length(), "@const {Object}");
     assertReplacement(fix, replacement);
@@ -685,9 +651,10 @@ public class SuggestedFixTest {
     String after = "@const {Foo} */\nvar foo = new Foo()";
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .changeJsDocType(root.getFirstChild(), compiler, "Object")
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder()
+            .changeJsDocType(root.getFirstChild(), compiler, "Object")
+            .build();
     CodeReplacement replacement =
         CodeReplacement.create(before.length(), "@const {Foo}".length(), "@const {Object}");
     assertReplacement(fix, replacement);
@@ -699,9 +666,8 @@ public class SuggestedFixTest {
     String after = "foo, bar);";
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .insertArguments(root.getFirstFirstChild(), 0, "baz")
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder().insertArguments(root.getFirstFirstChild(), 0, "baz").build();
     CodeReplacement replacement = CodeReplacement.create(before.length(), 0, "baz, ");
     assertReplacement(fix, replacement);
   }
@@ -712,9 +678,8 @@ public class SuggestedFixTest {
     String after = ");";
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .insertArguments(root.getFirstFirstChild(), 0, "baz")
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder().insertArguments(root.getFirstFirstChild(), 0, "baz").build();
     CodeReplacement replacement = CodeReplacement.create(before.length(), 0, "baz");
     assertReplacement(fix, replacement);
   }
@@ -725,9 +690,8 @@ public class SuggestedFixTest {
     String after = "bar);";
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .insertArguments(root.getFirstFirstChild(), 1, "baz")
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder().insertArguments(root.getFirstFirstChild(), 1, "baz").build();
     CodeReplacement replacement = CodeReplacement.create(before.length(), 0, "baz, ");
     assertReplacement(fix, replacement);
   }
@@ -738,9 +702,8 @@ public class SuggestedFixTest {
     String after = ");";
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .insertArguments(root.getFirstFirstChild(), 2, "baz")
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder().insertArguments(root.getFirstFirstChild(), 2, "baz").build();
     CodeReplacement replacement = CodeReplacement.create(before.length(), 0, ", baz");
     assertReplacement(fix, replacement);
   }
@@ -751,9 +714,8 @@ public class SuggestedFixTest {
     String expectedCode = "goog.dom.classes.add(foo, baz, /** @type {String} */ (bar));";
     Compiler compiler = getCompiler(originalCode);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .insertArguments(root.getFirstFirstChild(), 1, "baz")
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder().insertArguments(root.getFirstFirstChild(), 1, "baz").build();
     assertChanges(fix, "", originalCode, expectedCode);
   }
 
@@ -763,9 +725,8 @@ public class SuggestedFixTest {
     String expectedCode = "goog.dom.classes.add(foo, /** @type {String} */ (bar), baz);";
     Compiler compiler = getCompiler(originalCode);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .insertArguments(root.getFirstFirstChild(), 2, "baz")
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder().insertArguments(root.getFirstFirstChild(), 2, "baz").build();
     assertChanges(fix, "", originalCode, expectedCode);
   }
 
@@ -776,9 +737,8 @@ public class SuggestedFixTest {
 
     Compiler compiler = getCompiler(originalCode);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .deleteArgument(root.getFirstFirstChild(), 0)
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder().deleteArgument(root.getFirstFirstChild(), 0).build();
 
     assertChanges(fix, "", originalCode, expectedCode);
   }
@@ -816,9 +776,8 @@ public class SuggestedFixTest {
 
     Compiler compiler = getCompiler(originalCode);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .deleteArgument(root.getFirstFirstChild(), 1)
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder().deleteArgument(root.getFirstFirstChild(), 1).build();
 
     assertChanges(fix, "", originalCode, expectedCode);
   }
@@ -856,9 +815,8 @@ public class SuggestedFixTest {
 
     Compiler compiler = getCompiler(originalCode);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .deleteArgument(root.getFirstFirstChild(), 2)
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder().deleteArgument(root.getFirstFirstChild(), 2).build();
 
     assertChanges(fix, "", originalCode, expectedCode);
   }
@@ -896,9 +854,8 @@ public class SuggestedFixTest {
 
     Compiler compiler = getCompiler(originalCode);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .deleteArgument(root.getFirstFirstChild(), 0)
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder().deleteArgument(root.getFirstFirstChild(), 0).build();
 
     assertChanges(fix, "", originalCode, expectedCode);
   }
@@ -910,9 +867,8 @@ public class SuggestedFixTest {
 
     Compiler compiler = getCompiler(originalCode);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .deleteArgument(root.getFirstFirstChild(), 0)
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder().deleteArgument(root.getFirstFirstChild(), 0).build();
 
     assertChanges(fix, "", originalCode, expectedCode);
   }
@@ -924,9 +880,8 @@ public class SuggestedFixTest {
 
     Compiler compiler = getCompiler(originalCode);
     Node root = compileToScriptRoot(compiler);
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .deleteArgument(root.getFirstFirstChild(), 1)
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder().deleteArgument(root.getFirstFirstChild(), 1).build();
 
     assertChanges(fix, "", originalCode, expectedCode);
   }
@@ -1030,12 +985,13 @@ public class SuggestedFixTest {
   @Test
   public void testAddGoogRequire_alreadyExists() {
     String input =
-        lines(
-            "goog.provide('js.Foo');",
-            "goog.require('abc.def');",
-            "",
-            "/** @private */",
-            "function foo_() {};");
+        """
+        goog.provide('js.Foo');
+        goog.require('abc.def');
+
+        /** @private */
+        function foo_() {};
+        """;
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
@@ -1050,12 +1006,13 @@ public class SuggestedFixTest {
   @Test
   public void testAddGoogRequire_requireTypeAlreadyExists() {
     String input =
-        lines(
-            "goog.provide('js.Foo');",
-            "goog.requireType('abc.def');",
-            "",
-            "/** @private */",
-            "function foo_() {};");
+        """
+        goog.provide('js.Foo');
+        goog.requireType('abc.def');
+
+        /** @private */
+        function foo_() {};
+        """;
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
@@ -1070,20 +1027,22 @@ public class SuggestedFixTest {
   @Test
   public void testAddRequireModule() {
     String input =
-        lines(
-            "goog.module('js.Foo');", //
-            "",
-            "/** @private */",
-            "function foo_() {",
-            "}");
+        """
+        goog.module('js.Foo');
+
+        /** @private */
+        function foo_() {
+        }
+        """;
     String expected =
-        lines(
-            "goog.module('js.Foo');",
-            "const safe = goog.require('goog.safe');",
-            "",
-            "/** @private */",
-            "function foo_() {",
-            "}");
+        """
+        goog.module('js.Foo');
+        const safe = goog.require('goog.safe');
+
+        /** @private */
+        function foo_() {
+        }
+        """;
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
@@ -1097,20 +1056,22 @@ public class SuggestedFixTest {
   @Test
   public void testAddRequireTypeModule() {
     String input =
-        lines(
-            "goog.module('js.Foo');", //
-            "",
-            "/** @private */",
-            "function foo_() {",
-            "}");
+        """
+        goog.module('js.Foo');
+
+        /** @private */
+        function foo_() {
+        }
+        """;
     String expected =
-        lines(
-            "goog.module('js.Foo');",
-            "const Bar = goog.requireType('b.Bar');",
-            "",
-            "/** @private */",
-            "function foo_() {",
-            "}");
+        """
+        goog.module('js.Foo');
+        const Bar = goog.requireType('b.Bar');
+
+        /** @private */
+        function foo_() {
+        }
+        """;
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
@@ -1124,21 +1085,23 @@ public class SuggestedFixTest {
   @Test
   public void testAddRequireModule_requireTypeAlreadyExists() {
     String input =
-        lines(
-            "goog.module('js.Foo');", //
-            "goog.requireType('goog.safe');",
-            "",
-            "/** @private */",
-            "function foo_() {",
-            "}");
+        """
+        goog.module('js.Foo');
+        goog.requireType('goog.safe');
+
+        /** @private */
+        function foo_() {
+        }
+        """;
     String expected =
-        lines(
-            "goog.module('js.Foo');",
-            "const safe = goog.requireType('goog.safe');",
-            "",
-            "/** @private */",
-            "function foo_() {",
-            "}");
+        """
+        goog.module('js.Foo');
+        const safe = goog.requireType('goog.safe');
+
+        /** @private */
+        function foo_() {
+        }
+        """;
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
@@ -1152,18 +1115,20 @@ public class SuggestedFixTest {
   @Test
   public void testAddRequireConst() {
     String input =
-        lines(
-            "const bar = goog.require('goog.bar');", //
-            "",
-            "/** @private */",
-            "function foo_() {};");
+        """
+        const bar = goog.require('goog.bar');
+
+        /** @private */
+        function foo_() {};
+        """;
     String expected =
-        lines(
-            "const bar = goog.require('goog.bar');",
-            "const safe = goog.require('goog.safe');",
-            "",
-            "/** @private */",
-            "function foo_() {};");
+        """
+        const bar = goog.require('goog.bar');
+        const safe = goog.require('goog.safe');
+
+        /** @private */
+        function foo_() {};
+        """;
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
@@ -1177,20 +1142,22 @@ public class SuggestedFixTest {
   @Test
   public void testAddRequireVar() {
     String input =
-        lines(
-            "var bar = goog.require('goog.bar');", //
-            "",
-            "/** @private */",
-            "function foo_() {};");
+        """
+        var bar = goog.require('goog.bar');
+
+        /** @private */
+        function foo_() {};
+        """;
     String expected =
-        lines(
-            "var bar = goog.require('goog.bar');",
-            // We add new imports as const per the Google Style Guide;
-            // TODO(bangert): we could add complexity to add new imports as var if we want to.
-            "const safe = goog.require('goog.safe');",
-            "",
-            "/** @private */",
-            "function foo_() {};");
+        // We add new imports as const per the Google Style Guide;
+        // TODO(bangert): we could add complexity to add new imports as var if we want to.
+        """
+        var bar = goog.require('goog.bar');
+        const safe = goog.require('goog.safe');
+
+        /** @private */
+        function foo_() {};
+        """;
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
@@ -1204,12 +1171,13 @@ public class SuggestedFixTest {
   @Test
   public void testAddRequireModuleUnchanged() {
     String input =
-        lines(
-            "goog.module('js.Foo');",
-            "const safe = goog.require('goog.safe');",
-            "",
-            "/** @private */",
-            "function foo_() {};");
+        """
+        goog.module('js.Foo');
+        const safe = goog.require('goog.safe');
+
+        /** @private */
+        function foo_() {};
+        """;
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
@@ -1223,12 +1191,13 @@ public class SuggestedFixTest {
   @Test
   public void testAddRequireModuleDifferentNameUnchanged() {
     String input =
-        lines(
-            "goog.module('js.Foo');",
-            "const googSafe = goog.require('goog.safe');",
-            "",
-            "/** @private */",
-            "function foo_() {};");
+        """
+        goog.module('js.Foo');
+        const googSafe = goog.require('goog.safe');
+
+        /** @private */
+        function foo_() {};
+        """;
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
@@ -1263,18 +1232,11 @@ public class SuggestedFixTest {
 
         """;
     String googRequire = "goog.require('abc.def');";
-    String input =
-        before
-        + googRequire
-        + "\n"
-        + "/** @private */\n"
-        + "function foo_() {};\n";
+    String input = before + googRequire + "\n" + "/** @private */\n" + "function foo_() {};\n";
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .removeGoogRequire(match, "abc.def")
-        .build();
+    SuggestedFix fix = new SuggestedFix.Builder().removeGoogRequire(match, "abc.def").build();
     CodeReplacement replacement = CodeReplacement.create(before.length(), googRequire.length(), "");
     assertReplacement(fix, replacement);
   }
@@ -1293,16 +1255,16 @@ public class SuggestedFixTest {
     String input =
         before
             + googRequire
-            + "goog.require('def');\n"
-            + "\n"
-            + "/** @private */\n"
-            + "function foo_() {};\n";
+            + """
+            goog.require('def');
+
+            /** @private */
+            function foo_() {};
+            """;
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .removeGoogRequire(match, "abc.def")
-        .build();
+    SuggestedFix fix = new SuggestedFix.Builder().removeGoogRequire(match, "abc.def").build();
     CodeReplacement replacement = CodeReplacement.create(before.length(), googRequire.length(), "");
     assertReplacement(fix, replacement);
   }
@@ -1319,9 +1281,7 @@ public class SuggestedFixTest {
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .removeGoogRequire(match, "fakefake")
-        .build();
+    SuggestedFix fix = new SuggestedFix.Builder().removeGoogRequire(match, "fakefake").build();
     SetMultimap<String, CodeReplacement> replacementMap = fix.getReplacements();
     assertThat(replacementMap).isEmpty();
   }
@@ -1363,20 +1323,16 @@ public class SuggestedFixTest {
 
         """;
     String googRequire = "goog.require('abc.def');";
-    String input =
-        before
-        + googRequire
-        + "\n"
-        + "/** @private */\n"
-        + "function foo_() {};\n";
+    String input = before + googRequire + "\n" + "/** @private */\n" + "function foo_() {};\n";
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
-    SuggestedFix fix = new SuggestedFix.Builder()
-        // Corresponds to the goog.require node.
-        .attachMatchedNodeInfo(root.getFirstChild().getNext().getFirstChild(), compiler)
-        .removeGoogRequire(match, "abc.def")
-        .build();
+    SuggestedFix fix =
+        new SuggestedFix.Builder()
+            // Corresponds to the goog.require node.
+            .attachMatchedNodeInfo(root.getFirstChild().getNext().getFirstChild(), compiler)
+            .removeGoogRequire(match, "abc.def")
+            .build();
     MatchedNodeInfo info = fix.getMatchedNodeInfo();
     assertEquals("test", info.getSourceFilename());
     assertEquals(5, info.getLineno());
@@ -1401,9 +1357,5 @@ public class SuggestedFixTest {
         options);
     compiler.parse();
     return compiler;
-  }
-
-  private String lines(String... lines) {
-    return String.join("\n", lines);
   }
 }

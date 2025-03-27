@@ -242,8 +242,14 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
   }
 
   private static String createShorthandFunctionInObjLit(String returnType, String body) {
-    return lines(
-        "var obj = {", "  /** @return {" + returnType + "} */", "  foo() {", body, "}", "}");
+    return """
+    var obj = {
+      /** @return {RETURN_TYPE} */
+      foo() {BODY}
+    }
+    """
+        .replace("RETURN_TYPE", returnType)
+        .replace("BODY", body);
   }
 
   private void testMissingInTraditionalFunction(String returnType, String body) {

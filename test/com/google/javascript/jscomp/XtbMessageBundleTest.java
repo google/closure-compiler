@@ -37,20 +37,23 @@ public final class XtbMessageBundleTest {
   @Test
   public void testXtbBundle() {
     String xtb =
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-            + "<!DOCTYPE translationbundle SYSTEM"
-            + " \"translationbundle.dtd\">\n"
-            + "<translationbundle lang=\"zh-HK\">\n"
-            + "<translation id=\"7639678437384034548\">descargar</translation>\n"
-            + "<translation id=\"2398375912250604550\">Se han\nignorado"
-            + " <ph name=\"NUM\"/> conversaciones.</translation>\n"
-            + "<translation id=\"6323937743550839320\"><ph name=\"P_START\"/>Si,"
-            + " puede <ph name=\"LINK_START_1_3\"/>hacer"
-            + " clic<ph name=\"LINK_END_1_3\"/>"
-            + " para utilizar.<ph name=\"P_END\"/><ph name=\"P_START\"/>Esperamos"
-            + " poder ampliar.<ph name=\"P_END\"/></translation>\n"
-            + "<translation id=\"3945720239421293834\"></translation>\n"
-            + "</translationbundle>";
+        """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE translationbundle SYSTEM\
+         "translationbundle.dtd">
+        <translationbundle lang="zh-HK">
+        <translation id="7639678437384034548">descargar</translation>
+        <translation id="2398375912250604550">Se han
+        ignorado\
+         <ph name="NUM"/> conversaciones.</translation>
+        <translation id="6323937743550839320"><ph name="P_START"/>Si,\
+         puede <ph name="LINK_START_1_3"/>hacer\
+         clic<ph name="LINK_END_1_3"/>\
+         para utilizar.<ph name="P_END"/><ph name="P_START"/>Esperamos\
+         poder ampliar.<ph name="P_END"/></translation>
+        <translation id="3945720239421293834"></translation>
+        </translationbundle>\
+        """;
     InputStream stream = new ByteArrayInputStream(xtb.getBytes(UTF_8));
     XtbMessageBundle bundle = new XtbMessageBundle(stream, PROJECT_ID);
 
@@ -63,9 +66,11 @@ public final class XtbMessageBundleTest {
     message = bundle.getMessage("6323937743550839320");
     assertThat(message.asJsMessageString())
         .isEqualTo(
-            "{$pStart}Si, puede {$linkStart_1_3}hacer "
-                + "clic{$linkEnd_1_3} para utilizar.{$pEnd}{$pStart}Esperamos "
-                + "poder ampliar.{$pEnd}");
+            """
+            {$pStart}Si, puede {$linkStart_1_3}hacer \
+            clic{$linkEnd_1_3} para utilizar.{$pEnd}{$pStart}Esperamos \
+            poder ampliar.{$pEnd}\
+            """);
 
     message = bundle.getMessage("3945720239421293834");
     assertThat(message.asJsMessageString()).isEmpty();
@@ -81,21 +86,23 @@ public final class XtbMessageBundleTest {
   @Test
   public void testXtbBundle_mixedPlaceholders() throws IOException {
     String xtbWithMixedPlaceholders =
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-            + "<!DOCTYPE translationbundle SYSTEM"
-            + " \"translationbundle.dtd\">\n"
-            + "<translationbundle lang=\"ru_RU\">\n"
-            + "<translation id=\"123456\">"
-            + "{USER_GENDER,select,"
-            + "female{Hello <ph name=\"USER_IDENTIFIER\"/>.}"
-            + "male{Hello <ph name=\"USER_IDENTIFIER\"/>.}"
-            + "other{Hello <ph name=\"USER_IDENTIFIER\"/>.}}"
-            + "</translation>\n"
-            + "<translation id=\"123457\">"
-            + "<ph name=\"START_PARAGRAPH\"/>p1<ph name=\"END_PARAGRAPH\"/>"
-            + "<ph name=\"START_PARAGRAPH\"/>p1<ph name=\"END_PARAGRAPH\"/>"
-            + "</translation>"
-            + "</translationbundle>";
+        """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE translationbundle SYSTEM\
+         "translationbundle.dtd">
+        <translationbundle lang="ru_RU">
+        <translation id="123456">\
+        {USER_GENDER,select,\
+        female{Hello <ph name="USER_IDENTIFIER"/>.}\
+        male{Hello <ph name="USER_IDENTIFIER"/>.}\
+        other{Hello <ph name="USER_IDENTIFIER"/>.}}\
+        </translation>
+        <translation id="123457">\
+        <ph name="START_PARAGRAPH"/>p1<ph name="END_PARAGRAPH"/>\
+        <ph name="START_PARAGRAPH"/>p1<ph name="END_PARAGRAPH"/>\
+        </translation>\
+        </translationbundle>\
+        """;
     InputStream stream = new ByteArrayInputStream(xtbWithMixedPlaceholders.getBytes(UTF_8));
     XtbMessageBundle bundle = new XtbMessageBundle(stream, PROJECT_ID);
 
@@ -103,10 +110,12 @@ public final class XtbMessageBundleTest {
     final JsMessage icuMsg = bundle.getMessage("123456");
     assertThat(icuMsg.asIcuMessageString())
         .isEqualTo(
-            "{USER_GENDER,select,"
-                + "female{Hello {USER_IDENTIFIER}.}"
-                + "male{Hello {USER_IDENTIFIER}.}"
-                + "other{Hello {USER_IDENTIFIER}.}}");
+            """
+            {USER_GENDER,select,\
+            female{Hello {USER_IDENTIFIER}.}\
+            male{Hello {USER_IDENTIFIER}.}\
+            other{Hello {USER_IDENTIFIER}.}}\
+            """);
     // For an ICU selector formatted message, XtbMessageBundle automatically converts all the
     // placeholders into normal strings.
     final ImmutableList<Part> icuMsgParts = icuMsg.getParts();
@@ -141,40 +150,48 @@ public final class XtbMessageBundleTest {
   @Test
   public void testXtbBundle_icuPluralWithAndWithoutPhex() throws IOException {
     String xtb =
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-            + "<!DOCTYPE translationbundle SYSTEM"
-            + " \"translationbundle.dtd\">\n"
-            + "<translationbundle lang=\"de_CH\">\n"
+        """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE translationbundle SYSTEM\
+         "translationbundle.dtd">
+        <translationbundle lang="de_CH">
+        """
             // With phex
-            + "<translation id=\"123456\">"
-            + "{NUM,plural, "
-            + "=1{Setting: {START_STRONG}<ph name=\"UDC_SETTING\"/>{END_STRONG}"
-            + " Products: {START_STRONG}<ph name=\"PRODUCT_LIST\"/>{END_STRONG}.}"
-            + "other{Settings: {START_STRONG}<ph name=\"UDC_SETTING_LIST\"/>{END_STRONG}"
-            + " Products: {START_STRONG}<ph name=\"PRODUCT_LIST\"/>{END_STRONG}.}"
-            + "}"
-            + "</translation>\n"
+            + """
+            <translation id="123456">\
+            {NUM,plural, \
+            =1{Setting: {START_STRONG}<ph name="UDC_SETTING"/>{END_STRONG}\
+             Products: {START_STRONG}<ph name="PRODUCT_LIST"/>{END_STRONG}.}\
+            other{Settings: {START_STRONG}<ph name="UDC_SETTING_LIST"/>{END_STRONG}\
+             Products: {START_STRONG}<ph name="PRODUCT_LIST"/>{END_STRONG}.}\
+            }\
+            </translation>
+            """
             // Without phex
-            + "<translation id=\"987654\">"
-            + "{NUM,plural, "
-            + "=1{Setting: {START_STRONG}{UDC_SETTING}{END_STRONG}"
-            + " Products: {START_STRONG}{PRODUCT_LIST}{END_STRONG}.}"
-            + "other{Settings: {START_STRONG}{UDC_SETTING_LIST}{END_STRONG}"
-            + " Products: {START_STRONG}{PRODUCT_LIST}{END_STRONG}.}"
-            + "}"
-            + "</translation>\n"
-            + "</translationbundle>";
+            + """
+            <translation id="987654">\
+            {NUM,plural, \
+            =1{Setting: {START_STRONG}{UDC_SETTING}{END_STRONG}\
+             Products: {START_STRONG}{PRODUCT_LIST}{END_STRONG}.}\
+            other{Settings: {START_STRONG}{UDC_SETTING_LIST}{END_STRONG}\
+             Products: {START_STRONG}{PRODUCT_LIST}{END_STRONG}.}\
+            }\
+            </translation>
+            </translationbundle>\
+            """;
     InputStream stream = new ByteArrayInputStream(xtb.getBytes(UTF_8));
     XtbMessageBundle bundle = new XtbMessageBundle(stream, PROJECT_ID);
 
     assertThat(bundle.getAllMessages()).hasSize(2);
     assertThat(bundle.getMessage("123456").asIcuMessageString())
         .isEqualTo(
-            "{NUM,plural, "
-                + "=1{Setting: {START_STRONG}{UDC_SETTING}{END_STRONG}"
-                + " Products: {START_STRONG}{PRODUCT_LIST}{END_STRONG}.}"
-                + "other{Settings: {START_STRONG}{UDC_SETTING_LIST}{END_STRONG}"
-                + " Products: {START_STRONG}{PRODUCT_LIST}{END_STRONG}.}}");
+            """
+            {NUM,plural, \
+            =1{Setting: {START_STRONG}{UDC_SETTING}{END_STRONG}\
+             Products: {START_STRONG}{PRODUCT_LIST}{END_STRONG}.}\
+            other{Settings: {START_STRONG}{UDC_SETTING_LIST}{END_STRONG}\
+             Products: {START_STRONG}{PRODUCT_LIST}{END_STRONG}.}}\
+            """);
     // Both translation entries should result into the same message in JavaScript.
     assertThat(bundle.getMessage("987654").asIcuMessageString())
         .isEqualTo(bundle.getMessage("123456").asIcuMessageString());

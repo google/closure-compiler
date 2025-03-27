@@ -25,7 +25,7 @@ import org.junit.runners.JUnit4;
 public final class OptimizeConstructorsTest extends CompilerTestCase {
 
   public OptimizeConstructorsTest() {
-    super(lines(DEFAULT_EXTERNS, "var alert;var use;"));
+    super(DEFAULT_EXTERNS + "var alert;var use;");
   }
 
   @Override

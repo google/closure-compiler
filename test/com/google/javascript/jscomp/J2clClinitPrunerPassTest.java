@@ -267,7 +267,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
                     someClass.$clinit = function() {}
                     someClass.$clinit();
                     """),
-                SourceFile.fromCode("file2", lines("someClass.$clinit();")))));
+                SourceFile.fromCode("file2", "someClass.$clinit();"))));
   }
 
   @Test

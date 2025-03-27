@@ -97,7 +97,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             }
         }
         """,
-        """
+"""
 async function test() {
   var $jscomp$forAwait$errResult0;
   var $jscomp$forAwait$tempResult0;
@@ -148,7 +148,7 @@ async function test() {
             }
             """),
         expected(
-            """
+"""
 let key;
 let value;
 window.onload = async function() {
@@ -193,7 +193,7 @@ var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(window["unkn
             }
             """),
         expected(
-            """
+"""
 window.onload = async function() {
   var $jscomp$forAwait$errResult0;
   var $jscomp$forAwait$tempResult0;
@@ -397,7 +397,7 @@ var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(window["unkn
   public void testThisInAsyncGenerator() {
     test(
         "async function* baz() { yield this; }",
-        """
+"""
 function baz() {
   const $jscomp$asyncIter$this$m1146332801$0 = this;
   return new $jscomp.AsyncGeneratorWrapper((function*() {
@@ -465,7 +465,7 @@ function baz() {
   @Test
   public void testThisInFunctionNestedInAsyncGenerator() {
     test(
-        lines("async function* baz() {  return function() { return this; }; }"),
+        "async function* baz() {  return function() { return this; }; }",
         """
         function baz() {
           return new $jscomp.AsyncGeneratorWrapper(
@@ -478,7 +478,7 @@ function baz() {
         """);
 
     test(
-        lines("async function* baz() {  return () => this; }"),
+        "async function* baz() {  return () => this; }",
         """
         function baz() {
           const $jscomp$asyncIter$this$m1146332801$0 = this;
@@ -635,7 +635,7 @@ function baz() {
         /** @return {!AsyncGenerator<number>} */
         function foo() {}
         """,
-        """
+"""
 let a;
 async function abc() {
   var $jscomp$forAwait$errResult0;
@@ -715,8 +715,8 @@ function foo() {
     assertNode(value).hasColorThat().isEqualTo(StandardColors.NUMBER);
 
     test(
-        lines("async function abc() { for await (var a of foo()) { bar(); } }"),
-        """
+        "async function abc() { for await (var a of foo()) { bar(); } }",
+"""
 async function abc() {
  var a$jscomp$3;
  var $jscomp$forAwait$errResult0;
@@ -751,8 +751,8 @@ async function abc() {
 """);
 
     test(
-        lines("async function abc() { for await (let a of foo()) { bar(); } }"),
-        """
+        "async function abc() { for await (let a of foo()) { bar(); } }",
+"""
 async function abc() {
  var $jscomp$forAwait$errResult0;
  var $jscomp$forAwait$tempResult0;
@@ -786,8 +786,8 @@ async function abc() {
 """);
 
     test(
-        lines("async function abc() { for await (const a of foo()) { bar(); } }"),
-        """
+        "async function abc() { for await (const a of foo()) { bar(); } }",
+"""
 async function abc() {
  var $jscomp$forAwait$errResult0;
  var $jscomp$forAwait$tempResult0;
@@ -824,8 +824,8 @@ async function abc() {
   @Test
   public void testForAwaitOfInAsyncArrow() {
     test(
-        lines("async () => { for await (let a of foo()) { bar(); } }"),
-        """
+        "async () => { for await (let a of foo()) { bar(); } }",
+"""
 async() => {
   var $jscomp$forAwait$errResult0;
   var $jscomp$forAwait$tempResult0;
@@ -870,7 +870,7 @@ var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());
           }
         }
         """,
-        """
+"""
 async() => {
   var $jscomp$forAwait$errResult0;
   var $jscomp$forAwait$tempResult0;
@@ -915,7 +915,7 @@ async() => {
           }
         }
         """,
-        """
+"""
 function foo() {
   return new $jscomp.AsyncGeneratorWrapper(function*() {
     var $jscomp$forAwait$errResult0;

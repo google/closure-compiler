@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
 
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
@@ -73,18 +72,32 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
   @Test
   public void testClassDefinedInBlock() {
     test(
-        lines("{", generatePrototypeDeclarations("x", 7), "}"),
-        lines(
-            "var " + TMP + ";",
-            "{",
-            TMP + " = x.prototype;",
-            generateExtractedDeclarations(7),
-            "}"));
+        """
+        {
+        PROTYPE_DECLARATIONS
+        }
+        """
+            .replace("PROTYPE_DECLARATIONS", generatePrototypeDeclarations("x", 7)),
+        """
+        var TMP;
+        {
+        TMP = x.prototype;
+        EXTRACTED_DECLARATIONS
+        }
+        """
+            .replace("TMP", TMP)
+            .replace("EXTRACTED_DECLARATIONS", generateExtractedDeclarations(7)));
   }
 
   @Test
   public void testClassDefinedInFunction() {
-    testSame(lines("function f() {", generatePrototypeDeclarations("x", 7), "}"));
+    testSame(
+        """
+        function f() {
+        PROTYPE_DECLARATIONS
+        }
+        """
+            .replace("PROTYPE_DECLARATIONS", generatePrototypeDeclarations("x", 7)));
   }
 
   /** Currently, this does not run on classes defined in ES6 modules. */

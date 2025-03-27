@@ -72,11 +72,12 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
 
   public ReplaceCssNamesTest() {
     super(
-        lines(
-            DEFAULT_EXTERNS,
-            "Object.prototype.getClass;",
-            "goog.getCssName;",
-            "goog.setCssNameMapping;"));
+        DEFAULT_EXTERNS
+            + """
+            Object.prototype.getClass;
+            goog.getCssName;
+            goog.setCssNameMapping;
+            """);
   }
 
   @Override

@@ -29,21 +29,22 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestCase {
   private static final String EXTERNS =
-      lines(
-          MINIMAL_EXTERNS,
-          "var window;",
-          "var Math = {};",
-          "Math.random = function() {};",
-          "function alert(x) {}",
-          "function externFunction() {}",
-          "externFunction.prototype.externPropName;",
-          "var mExtern;",
-          "mExtern.bExtern;",
-          "mExtern['cExtern'];",
-          "",
-          "/** @const */",
-          "var goog = {};",
-          "goog.reflect.objectProperty = function(name) { };");
+      MINIMAL_EXTERNS
+          + """
+          var window;
+          var Math = {};
+          Math.random = function() {};
+          function alert(x) {}
+          function externFunction() {}
+          externFunction.prototype.externPropName;
+          var mExtern;
+          mExtern.bExtern;
+          mExtern['cExtern'];
+
+          /** @const */
+          var goog = {};
+          goog.reflect.objectProperty = function(name) { };
+          """;
 
   private boolean keepLocals = true;
   private boolean keepGlobals = false;

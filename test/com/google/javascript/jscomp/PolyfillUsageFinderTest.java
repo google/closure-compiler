@@ -56,16 +56,20 @@ public final class PolyfillUsageFinderTest {
     final TestPolyfillUsageFinder testPolyfillUsageFinder =
         TestPolyfillUsageFinder.builder()
             .withPolyfillTableLines(
-                "Array.prototype.fill es6 es3 es6/array/fill",
-                "Array.from es6 es3 es6/array/from",
-                "Map es6 es3 es6/map")
+                """
+                Array.prototype.fill es6 es3 es6/array/fill
+                Array.from es6 es3 es6/array/from
+                Map es6 es3 es6/map
+                """)
             .forSourceLines(
-                "use(new Map());", // 1
-                "globalThis.Array.from", // 2
-                "  ? globalThis.Array.from([])", // 3
-                "  : [];",
-                "[1, 2, 3].fill(0);", // 5
-                "notAPolyfill();")
+                """
+                use(new Map()); // 1
+                globalThis.Array.from // 2
+                  ? globalThis.Array.from([]) // 3
+                  : []; // 4
+                [1, 2, 3].fill(0); // 5
+                notAPolyfill(); // 6
+                """)
             .build();
 
     final ImmutableList<PolyfillUsage> unguardedPolyfillUsages =
@@ -87,7 +91,7 @@ public final class PolyfillUsageFinderTest {
         .hasLibrary("es6/map")
         .hasKind(Kind.STATIC);
 
-    // Source line 3: `[1, 2, 3].fill(0);`
+    // Source line 5: `[1, 2, 3].fill(0);`
     final PolyfillUsageSubject arrayFillUsageSubject =
         PolyfillUsageSubject.assertPolyfillUsage(unguardedPolyfillUsages.get(1));
     arrayFillUsageSubject.hasNodeThat().isGetProp().hasLineno(5);
@@ -100,7 +104,7 @@ public final class PolyfillUsageFinderTest {
         .hasLibrary("es6/array/fill")
         .hasKind(Kind.METHOD);
 
-    // The 2 references to `Array.from` on line 2.
+    // The 2 references to `Array.from` on line 2 and 3
     // Note that the guard expression itself counts as a guarded use.
     // Source line 2: `globalThis.Array.from ? globalThis.Array.from([]) : [];`
     final ImmutableList<PolyfillUsage> guardedPolyfillUsages =
@@ -136,17 +140,21 @@ public final class PolyfillUsageFinderTest {
     final TestPolyfillUsageFinder testPolyfillUsageFinder =
         TestPolyfillUsageFinder.builder()
             .withPolyfillTableLines(
-                "Promise es6 es3 es6/promise/promise",
-                "Promise.allSettled es_2020 es3 es6/promise/allsettled")
+                """
+                Promise es6 es3 es6/promise/promise
+                Promise.allSettled es_2020 es3 es6/promise/allsettled
+                """)
             .forSourceLines(
+                """
                 // usage of Promise and of Promise.allSettled
-                "Promise.allSettled([])(result => console.log(x));",
-                "function foo() {",
-                // These aren't references to Promise or Promise.allSettled because of the
-                // shadowing variable
-                "  let Promise = { allSettled: 'I solemnly swear that I am up to no good.' };",
-                "  console.log(Promise.allSettled);",
-                "}")
+                Promise.allSettled([])(result => console.log(x));
+                function foo() {
+                  // These aren't references to Promise or Promise.allSettled because of the
+                  // shadowing variable
+                  let Promise = { allSettled: 'I solemnly swear that I am up to no good.' };
+                  console.log(Promise.allSettled);
+                }
+                """)
             .build();
 
     final ImmutableList<PolyfillUsage> allUsages = testPolyfillUsageFinder.getAllUsages();
@@ -157,7 +165,7 @@ public final class PolyfillUsageFinderTest {
     promiseUsageSubject //
         .hasNodeThat()
         .isName("Promise")
-        .hasLineno(1);
+        .hasLineno(2);
     promiseUsageSubject
         .hasPolyfillThat()
         .hasNativeSymbol("Promise")
@@ -172,7 +180,7 @@ public final class PolyfillUsageFinderTest {
     allSettledUsageSubject //
         .hasNodeThat()
         .matchesQualifiedName("Promise.allSettled")
-        .hasLineno(1);
+        .hasLineno(2);
     allSettledUsageSubject
         .hasPolyfillThat()
         .hasNativeSymbol("Promise.allSettled")
@@ -188,10 +196,12 @@ public final class PolyfillUsageFinderTest {
         TestPolyfillUsageFinder.builder()
             .withPolyfillTableLines("Array.from es6 es3 es6/array/from")
             .forSourceLines(
+                """
                 // Checks for the existence of `Array`, but not `.from`, so not guarded
-                "Array?.from([]) ?? [];",
+                Array?.from([]) ?? [];
                 // Correctly guarded on existence of `Array.from`
-                "Array.from?.([]) ?? [];")
+                Array.from?.([]) ?? [];
+                """)
             .build();
 
     // First usage is unguarded
@@ -200,7 +210,7 @@ public final class PolyfillUsageFinderTest {
     assertThat(unguardedPolyfillUsages).hasSize(1);
     final PolyfillUsageSubject unguardedUsageSubject =
         PolyfillUsageSubject.assertPolyfillUsage(unguardedPolyfillUsages.get(0));
-    unguardedUsageSubject.hasNodeThat().hasToken(Token.OPTCHAIN_GETPROP).hasLineno(1);
+    unguardedUsageSubject.hasNodeThat().hasToken(Token.OPTCHAIN_GETPROP).hasLineno(2);
 
     // Second usage is guarded
     final ImmutableList<PolyfillUsage> guardedPolyfillUsages =
@@ -208,7 +218,7 @@ public final class PolyfillUsageFinderTest {
     assertThat(guardedPolyfillUsages).hasSize(1);
     final PolyfillUsageSubject guardedUsageSubject =
         PolyfillUsageSubject.assertPolyfillUsage(guardedPolyfillUsages.get(0));
-    guardedUsageSubject.hasNodeThat().hasToken(Token.GETPROP).hasLineno(2);
+    guardedUsageSubject.hasNodeThat().hasToken(Token.GETPROP).hasLineno(4);
 
     // Other than the node they reference, both usage objects are the same
     for (PolyfillUsageSubject arrayDotFromUsageSubject :
@@ -241,14 +251,13 @@ public final class PolyfillUsageFinderTest {
       private @Nullable PolyfillUsageFinder polyfillUsageFinder = null;
       private @Nullable Node rootNode = null;
 
-      Builder withPolyfillTableLines(String... polyfillTableLines) {
-        polyfillsTable = Polyfills.fromTable(lines(polyfillTableLines));
+      Builder withPolyfillTableLines(String polyfillTable) {
+        polyfillsTable = Polyfills.fromTable(polyfillTable);
         return this;
       }
 
-      private Builder forSourceLines(String... srcLines) {
-        final SourceFile srcFile =
-            SourceFile.builder().withPath("src.js").withContent(lines(srcLines)).build();
+      private Builder forSourceLines(String src) {
+        final SourceFile srcFile = SourceFile.builder().withPath("src.js").withContent(src).build();
         final CompilerOptions options = new CompilerOptions();
         // Don't include `"use strict";` when printing the AST as source text
         options.setEmitUseStrict(false);
@@ -291,10 +300,6 @@ public final class PolyfillUsageFinderTest {
       polyfillUsageFinder.traverseIncludingGuarded(rootNode, consumer);
       return consumer.getUsages();
     }
-  }
-
-  private static String lines(String... lines) {
-    return String.join("\n", lines);
   }
 
   /** Consumes {@link PolyfillUsage} objects by storing them into a retrievable list. */

@@ -70,8 +70,10 @@ import org.junit.Before;
  * don't have to get the syntax exactly correct to the spacing.
  */
 public abstract class CompilerTestCase {
-
-  protected static final Joiner LINE_JOINER = Joiner.on('\n');
+  /**
+   * @deprecated Use Java text blocks instead (i.e. """...""").
+   */
+  @Deprecated protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
   // The file name is included in the AST display string attached to each node.
   // Consistently using the same name for src or externs generated files avoids spurious differences
@@ -2148,14 +2150,6 @@ public abstract class CompilerTestCase {
       }
     }
     return null;
-  }
-
-  public static String lines(String line) {
-    return line;
-  }
-
-  public static String lines(String... lines) {
-    return LINE_JOINER.join(lines);
   }
 
   protected static Sources srcs(String srcText) {

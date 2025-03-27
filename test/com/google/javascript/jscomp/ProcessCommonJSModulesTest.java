@@ -487,7 +487,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
           return angular;
         }));
         """,
-        """
+"""
 /** @const */ var module$test = {};
 var global$$module$test = this;
 var factory$$module$test = function(angular) {
@@ -514,7 +514,7 @@ module$test.default = factory$$module$test(typeof angular === "undefined" ? modu
           return angular;
         }));
         """,
-        """
+"""
 /** @const */ var module$test = {};
 var global$$module$test = this;
 var factory$$module$test = function(angular) {
@@ -1097,7 +1097,7 @@ module$test.default = factory$$module$test(typeof angular === "undefined" ? modu
   public void testIssue2510() {
     testModules(
         "test.js",
-        lines("module.exports = {a: 1, get b() { return 2; }};"),
+        "module.exports = {a: 1, get b() { return 2; }};",
         """
         /** @const */ var module$test = {};
         /** @const */ module$test.default = {
@@ -1154,7 +1154,7 @@ module$test.default = factory$$module$test(typeof angular === "undefined" ? modu
 
     testModules(
         "test.js",
-        """
+"""
 /** @suppress {duplicate} */var __WEBPACK_AMD_DEFINE_RESULT__;(function() {
   var dialogPolyfill = {prop: 'DIALOG_POLYFILL'};
 
@@ -1171,7 +1171,7 @@ module$test.default = factory$$module$test(typeof angular === "undefined" ? modu
   }
 })();
 """,
-        """
+"""
 /** @const */ var module$test = {default: {}};
 /** @suppress {duplicate} */
 var __WEBPACK_AMD_DEFINE_RESULT__$$module$test;
@@ -1195,7 +1195,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__$$module$test;
 
     testModules(
         "test.js",
-        """
+"""
 /** @suppress {duplicate} */var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (root, factory) {
   if (true) {
     !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(1),__webpack_require__('yet_another.js')], __WEBPACK_AMD_DEFINE_RESULT__ = function (a0,b1) {
@@ -1661,7 +1661,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__$$module$test;
   public void testUMDRequiresIfTest() {
     testModules(
         "test.js",
-        lines("var foobar = {foo: 'bar'}; if (foobar) { module.exports = foobar; }"),
+        "var foobar = {foo: 'bar'}; if (foobar) { module.exports = foobar; }",
         """
         /** @const */ var module$test = {};
         var foobar$$module$test={foo:"bar"};

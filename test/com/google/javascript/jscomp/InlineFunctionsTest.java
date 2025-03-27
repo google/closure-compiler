@@ -87,8 +87,10 @@ public class InlineFunctionsTest extends CompilerTestCase {
   @Test
   public void testRequireInlining() {
     test(
-        "/** @requireInlining */ function foo() {console.log('hi');console.log('bye');} "
-            + "foo();foo();foo();",
+        """
+        /** @requireInlining */ function foo() {console.log('hi');console.log('bye');}
+        foo();foo();foo();
+        """,
         "{console.log('hi');console.log('bye');}".repeat(3));
   }
 
@@ -96,23 +98,28 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testEncourageInliningCascades() {
     disableCompareAsTree();
     test(
-        "const a = class {constructor() {} setA(value) {this.a = value;} setB(value) {this.b ="
-            + " value;}}; /** @requireInlining */ function fromRecord(rec) { return new"
-            + " a().setA(rec.a).setB(rec.b); }; console.log(fromRecord({a: 1, b: fromRecord({a: 2,"
-            + " b: fromRecord({a: 4, b: 5}) }) }) );",
-        "const"
-            + " a=class{constructor(){}setA(value){this.a=value}setB(value$jscomp$1){this.b=value$jscomp$1}};var"
-            + " JSCompiler_temp_const$jscomp$1=console;var"
-            + " JSCompiler_temp_const$jscomp$0=JSCompiler_temp_const$jscomp$1.log;var"
-            + " JSCompiler_inline_result$jscomp$2;{var"
-            + " rec$jscomp$inline_5={a:4,b:5};JSCompiler_inline_result$jscomp$2=(new"
-            + " a).setA(rec$jscomp$inline_5.a).setB(rec$jscomp$inline_5.b)}var"
-            + " JSCompiler_inline_result$jscomp$3;\n"
-            + "{var rec$jscomp$inline_7={a:2,b:JSCompiler_inline_result$jscomp$2};JSCompiler_inline_result$jscomp$3=(new"
-            + " a).setA(rec$jscomp$inline_7.a).setB(rec$jscomp$inline_7.b)}var"
-            + " JSCompiler_inline_result$jscomp$4;{var"
-            + " rec$jscomp$inline_9={a:1,b:JSCompiler_inline_result$jscomp$3};JSCompiler_inline_result$jscomp$4=(new"
-            + " a).setA(rec$jscomp$inline_9.a).setB(rec$jscomp$inline_9.b)}JSCompiler_temp_const$jscomp$0.call(JSCompiler_temp_const$jscomp$1,JSCompiler_inline_result$jscomp$4)");
+        """
+        const a = class {constructor() {} setA(value) {this.a = value;} setB(value) {this.b =\
+         value;}}; /** @requireInlining */ function fromRecord(rec) { return new\
+         a().setA(rec.a).setB(rec.b); }; console.log(fromRecord({a: 1, b: fromRecord({a: 2,\
+         b: fromRecord({a: 4, b: 5}) }) }) );\
+        """,
+        """
+        const\
+         a=class{constructor(){}setA(value){this.a=value}setB(value$jscomp$1){this.b=value$jscomp$1}};var\
+         JSCompiler_temp_const$jscomp$1=console;var\
+         JSCompiler_temp_const$jscomp$0=JSCompiler_temp_const$jscomp$1.log;var\
+         JSCompiler_inline_result$jscomp$2;{var\
+         rec$jscomp$inline_5={a:4,b:5};JSCompiler_inline_result$jscomp$2=(new\
+         a).setA(rec$jscomp$inline_5.a).setB(rec$jscomp$inline_5.b)}var\
+         JSCompiler_inline_result$jscomp$3;
+        {var rec$jscomp$inline_7={a:2,b:JSCompiler_inline_result$jscomp$2};JSCompiler_inline_result$jscomp$3=(new\
+         a).setA(rec$jscomp$inline_7.a).setB(rec$jscomp$inline_7.b)}var\
+         JSCompiler_inline_result$jscomp$4;{var\
+         rec$jscomp$inline_9={a:1,b:JSCompiler_inline_result$jscomp$3};JSCompiler_inline_result$jscomp$4=(new\
+         a).setA(rec$jscomp$inline_9.a).setB(rec$jscomp$inline_9.b)}JSCompiler_temp_const$jscomp$0.call(\
+        JSCompiler_temp_const$jscomp$1,JSCompiler_inline_result$jscomp$4)\
+        """);
   }
 
   @Test
@@ -245,9 +252,11 @@ public class InlineFunctionsTest extends CompilerTestCase {
     // inline simple constants
     // NOTE: CD is not inlined.
     test(
-        "var t;var AB=function(){return 4};"
-            + "function BC(){return 6;}"
-            + "CD=function(x){return x + 5};x=CD(3);y=AB();z=BC();",
+        """
+        var t;var AB=function(){return 4};
+        function BC(){return 6;}
+        CD=function(x){return x + 5};x=CD(3);y=AB();z=BC();
+        """,
         "var t;CD=function(x){return x+5};x=CD(3);y=4;z=6");
   }
 
@@ -268,9 +277,11 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testInlineFunctions3() {
     // inline simple constants
     test(
-        "var t;var AB=function(){return 4};"
-            + "function BC(){return 6;}"
-            + "var CD=function(x){return x + 5};x=CD(3);y=AB();z=BC();",
+        """
+        var t;var AB=function(){return 4};
+        function BC(){return 6;}
+        var CD=function(x){return x + 5};x=CD(3);y=AB();z=BC();
+        """,
         "var t;x=3+5;y=4;z=6");
   }
 
@@ -290,10 +301,12 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testInlineFunctions4() {
     // don't inline if there are multiple definitions (need DFA for that).
     test(
-        "var t; var AB = function() { return 4 }; "
-            + "function BC() { return 6; }"
-            + "CD = 0;"
-            + "CD = function(x) { return x + 5 }; x = CD(3); y = AB(); z = BC();",
+        """
+        var t; var AB = function() { return 4 };
+        function BC() { return 6; }
+        CD = 0;
+        CD = function(x) { return x + 5 }; x = CD(3); y = AB(); z = BC();
+        """,
         "var t;CD=0;CD=function(x){return x+5};x=CD(3);y=4;z=6");
   }
 
@@ -314,8 +327,10 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testInlineFunctions5() {
     // inline additions
     test(
-        "var FOO_FN=function(x,y) { return \"de\" + x + \"nu\" + y };"
-            + "var a = FOO_FN(\"ez\", \"ts\")",
+        """
+        var FOO_FN=function(x,y) { return "de" + x + "nu" + y };
+        var a = FOO_FN("ez", "ts")
+        """,
         "var a=\"de\"+\"ez\"+\"nu\"+\"ts\"");
   }
 
@@ -334,7 +349,10 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testInlineFunctions6() {
     // more complex inlines
     test(
-        "function BAR_FN(x, y, z) { return z(nochg(x + y)) }" + "alert(BAR_FN(1, 2, baz))",
+        """
+        function BAR_FN(x, y, z) { return z(nochg(x + y)) }
+        alert(BAR_FN(1, 2, baz))
+        """,
         "alert(baz(nochg(1+2)))");
   }
 
@@ -352,7 +370,12 @@ public class InlineFunctionsTest extends CompilerTestCase {
   @Test
   public void testInlineFunctions7() {
     // inlines appearing multiple times
-    test("function FN(x,y,z){return x+x+y}" + "var b=FN(1,2,3)", "var b=1+1+2");
+    test(
+        """
+        function FN(x,y,z){return x+x+y}
+        var b=FN(1,2,3)
+        """,
+        "var b=1+1+2");
   }
 
   @Test
@@ -370,8 +393,10 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testInlineFunctions8() {
     // check correct parenthesization
     test(
-        "function MUL(x,y){return x*y}function ADD(x,y){return x+y}"
-            + "var a=1+MUL(2,3);var b=2*ADD(3,4)",
+        """
+        function MUL(x,y){return x*y}function ADD(x,y){return x+y}
+        var a=1+MUL(2,3);var b=2*ADD(3,4)
+        """,
         "var a=1+2*3;var b=2*(3+4)");
   }
 
@@ -435,18 +460,27 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testInlineFunctions14() {
     // don't remove functions that are referenced on other ways
     test(
-        "function FOO(x){return x}var BAR=function(y){return y}"
-            + ";b=FOO;a(BAR);x=FOO(1);y=BAR(2)",
-        "function FOO(x){return x}var BAR=function(y){return y}" + ";b=FOO;a(BAR);x=1;y=2");
+        """
+        function FOO(x){return x}
+        var BAR=function(y){return y};
+        b=FOO;a(BAR);x=FOO(1);y=BAR(2)
+        """,
+        """
+        function FOO(x){return x}
+        var BAR=function(y){return y};
+        b=FOO;a(BAR);x=1;y=2
+        """);
   }
 
   @Test
   public void testInlineFunctions15a() {
     // closure factories: do inline into global scope.
     test(
-        "function foo(){return function(a){return a+1}}"
-            + "var b=function(){return c};"
-            + "var d=b()+foo()",
+        """
+        function foo(){return function(a){return a+1}}
+        var b=function(){return c};
+        var d=b()+foo()
+        """,
         "var d=c+function(a){return a+1}");
   }
 
@@ -489,18 +523,25 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
     // closure factories: don't inline into non-global scope.
     test(
-        "function foo(){return function(a){return a+1}}"
-            + "var b=function(){return c};"
-            + "function _x(){ var d=b()+foo() }",
-        "function foo(){return function(a){return a+1}}" + "function _x(){ var d=c+foo() }");
+        """
+        function foo(){return function(a){return a+1}}
+        var b=function(){return c};
+        function _x(){ var d=b()+foo() }
+        """,
+        """
+        function foo(){return function(a){return a+1}}
+        function _x(){ var d=c+foo() }
+        """);
 
     assumeMinimumCapture = true;
 
     // closure factories: don't inline into non-global scope.
     test(
-        "function foo(){return function(a){return a+1}}"
-            + "var b=function(){return c};"
-            + "function _x(){ var d=b()+foo() }",
+        """
+        function foo(){return function(a){return a+1}}
+        var b=function(){return c};
+        function _x(){ var d=b()+foo() }
+        """,
         "function _x(){var d=c+function(a){return a+1}}");
   }
 
@@ -671,50 +712,63 @@ public class InlineFunctionsTest extends CompilerTestCase {
   @Test
   public void testInlineFunctions27() {
     test(
-        "var window = {}; function foo(){window.bar++; return 3;}" + "var x = {y: 1, z: foo(2)};",
-        "var window={};"
-            + "var JSCompiler_inline_result$jscomp$0;"
-            + "{"
-            + "  window.bar++;"
-            + "  JSCompiler_inline_result$jscomp$0 = 3;"
-            + "}"
-            + "var x = {y: 1, z: JSCompiler_inline_result$jscomp$0};");
+        """
+        var window = {}; function foo(){window.bar++; return 3;}
+        var x = {y: 1, z: foo(2)};
+        """,
+        """
+        var window={};
+        var JSCompiler_inline_result$jscomp$0;
+        {
+          window.bar++;
+          JSCompiler_inline_result$jscomp$0 = 3;
+        }
+        var x = {y: 1, z: JSCompiler_inline_result$jscomp$0};
+        """);
   }
 
   @Test
   public void testInlineFunctions28() {
     test(
-        "var window = {}; function foo(){window.bar++; return 3;}"
-            + "var x = {y: alert(), z: foo(2)};",
-        "var window = {};"
-            + "var JSCompiler_temp_const$jscomp$0 = alert();"
-            + "var JSCompiler_inline_result$jscomp$1;"
-            + "{"
-            + " window.bar++;"
-            + " JSCompiler_inline_result$jscomp$1 = 3;}"
-            + "var x = {"
-            + "  y: JSCompiler_temp_const$jscomp$0,"
-            + "  z: JSCompiler_inline_result$jscomp$1"
-            + "};");
+        """
+        var window = {}; function foo(){window.bar++; return 3;}
+        var x = {y: alert(), z: foo(2)};
+        """,
+        """
+        var window = {};
+        var JSCompiler_temp_const$jscomp$0 = alert();
+        var JSCompiler_inline_result$jscomp$1;
+        {
+         window.bar++;
+         JSCompiler_inline_result$jscomp$1 = 3;}
+        var x = {
+          y: JSCompiler_temp_const$jscomp$0,
+          z: JSCompiler_inline_result$jscomp$1
+        };
+        """);
   }
 
   @Test
   public void testInlineFunctions29() {
     test(
-        "var window = {}; function foo(){window.bar++; return 3;}"
-            + "var x = {a: alert(), b: alert2(), c: foo(2)};",
-        "var window = {};"
-            + "var JSCompiler_temp_const$jscomp$1 = alert();"
-            + "var JSCompiler_temp_const$jscomp$0 = alert2();"
-            + "var JSCompiler_inline_result$jscomp$2;"
-            + "{"
-            + " window.bar++;"
-            + " JSCompiler_inline_result$jscomp$2 = 3;}"
-            + "var x = {"
-            + "  a: JSCompiler_temp_const$jscomp$1,"
-            + "  b: JSCompiler_temp_const$jscomp$0,"
-            + "  c: JSCompiler_inline_result$jscomp$2"
-            + "};");
+        """
+        var window = {}; function foo(){window.bar++; return 3;}
+        var x = {a: alert(), b: alert2(), c: foo(2)};
+        """,
+        """
+        var window = {};
+        var JSCompiler_temp_const$jscomp$1 = alert();
+        var JSCompiler_temp_const$jscomp$0 = alert2();
+        var JSCompiler_inline_result$jscomp$2;
+        {
+         window.bar++;
+         JSCompiler_inline_result$jscomp$2 = 3;}
+        var x = {
+          a: JSCompiler_temp_const$jscomp$1,
+          b: JSCompiler_temp_const$jscomp$0,
+          c: JSCompiler_inline_result$jscomp$2
+        };
+        """);
   }
 
   @Test
@@ -993,7 +1047,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
         foo(1,2);
         foo(2,3,x());
         """,
-        """
+"""
 1+2+1+2+4+5+6+7+8+9+1+2+3+10; // inlining of the foo(1,2); call
 {
 var a$jscomp$inline_0 = 2; // temp for arg 2
@@ -1093,16 +1147,20 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // Assignment in if, multiple params
     test(
         "function f(x,y){return x?(y=2):0}f(2,undefined)",
-        "{var x$jscomp$inline_0 = 2; var y$jscomp$inline_1=undefined;"
-            + "x$jscomp$inline_0 ? y$jscomp$inline_1 = 2 : 0;}");
+        """
+        {var x$jscomp$inline_0 = 2; var y$jscomp$inline_1=undefined;
+        x$jscomp$inline_0 ? y$jscomp$inline_1 = 2 : 0;}
+        """);
   }
 
   @Test
   public void testNoInlineIfParametersModified6() {
     test(
         "function f(x,y){return x?(y=2):0}f(2)",
-        "{var x$jscomp$inline_0 = 2; var y$jscomp$inline_1=void 0;"
-            + "x$jscomp$inline_0 ? y$jscomp$inline_1 = 2 : 0;}");
+        """
+        {var x$jscomp$inline_0 = 2; var y$jscomp$inline_1=void 0;
+        x$jscomp$inline_0 ? y$jscomp$inline_1 = 2 : 0;}
+        """);
   }
 
   @Test
@@ -1110,7 +1168,11 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // Increment
     test(
         "function f(a){return++a<++a}f(1)",
-        "{var a$jscomp$inline_0=1;" + "++a$jscomp$inline_0<" + "++a$jscomp$inline_0}");
+        """
+        {var a$jscomp$inline_0=1;
+        ++a$jscomp$inline_0<
+        ++a$jscomp$inline_0}
+        """);
   }
 
   @Test
@@ -1139,14 +1201,20 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   public void testInlineNeverMutateConstants() {
     test(
         "function f(x){return x=1}f(undefined)",
-        "{var x$jscomp$inline_0=undefined;" + "x$jscomp$inline_0=1}");
+        """
+        {var x$jscomp$inline_0=undefined;
+        x$jscomp$inline_0=1}
+        """);
   }
 
   @Test
   public void testInlineNeverOverrideNewValues() {
     test(
         "function f(a){return++a<++a}f(1)",
-        "{var a$jscomp$inline_0=1;" + "++a$jscomp$inline_0<++a$jscomp$inline_0}");
+        """
+        {var a$jscomp$inline_0=1;
+        ++a$jscomp$inline_0<++a$jscomp$inline_0}
+        """);
   }
 
   @Test
@@ -1160,12 +1228,14 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // Don't inline a mutable value that will be reused.
     test(
         "function foo(x){return function(){ return x; }} repeat(foo([]))",
-        "var JSCompiler_inline_result$jscomp$0;"
-            + "{ "
-            + "var x$jscomp$inline_1=[];"
-            + "JSCompiler_inline_result$jscomp$0=function(){return x$jscomp$inline_1}; "
-            + "}"
-            + "repeat(JSCompiler_inline_result$jscomp$0)");
+        """
+        var JSCompiler_inline_result$jscomp$0;
+        {
+        var x$jscomp$inline_1=[];
+        JSCompiler_inline_result$jscomp$0=function(){return x$jscomp$inline_1};
+        }
+        repeat(JSCompiler_inline_result$jscomp$0)
+        """);
   }
 
   @Test
@@ -1343,41 +1413,63 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   public void testShadowVariables12() {
     // 2 globals colliding
     test(
-        "var a=0;var b=1;"
-            + "function foo(){return a+b}"
-            + "function _bar(){var a=foo(),b;alert(a)}",
-        "var a=0;var b=1;"
-            + "function _bar(){var a$jscomp$1=a+b,"
-            + "b$jscomp$1;"
-            + "alert(a$jscomp$1)}");
+        """
+        var a=0;var b=1;
+        function foo(){return a+b}
+        function _bar(){var a=foo(),b;alert(a)}
+        """,
+        """
+        var a=0;var b=1;
+        function _bar(){var a$jscomp$1=a+b,
+        b$jscomp$1;
+        alert(a$jscomp$1)}
+        """);
   }
 
   @Test
   public void testShadowVariables13() {
     // The only change is to remove the collision
     test(
-        "var a=0;var b=1;" + "function foo(){return a+a}" + "function _bar(){var c=foo();alert(c)}",
-        "var a=0;var b=1;" + "function _bar(){var c=a+a;alert(c)}");
+        """
+        var a=0;var b=1;
+        function foo(){return a+a}
+        function _bar(){var c=foo();alert(c)}
+        """,
+        """
+        var a=0;var b=1;
+        function _bar(){var c=a+a;alert(c)}
+        """);
   }
 
   @Test
   public void testShadowVariables14() {
     // There is a collision even though it is not read.
     test(
-        "var a=0;var b=1;"
-            + "function foo(){return a+b}"
-            + "function _bar(){var c=foo(),b;alert(c)}",
-        "var a=0;var b=1;" + "function _bar(){var c=a+b," + "b$jscomp$1;alert(c)}");
+        """
+        var a=0;var b=1;
+        function foo(){return a+b}
+        function _bar(){var c=foo(),b;alert(c)}
+        """,
+        """
+        var a=0;var b=1;
+        function _bar(){var c=a+b,
+        b$jscomp$1;alert(c)}
+        """);
   }
 
   @Test
   public void testShadowVariables15() {
     // Both parent and child reference a global
     test(
-        "var a=0;var b=1;"
-            + "function foo(){return a+a}"
-            + "function _bar(){var c=foo();alert(c+a)}",
-        "var a=0;var b=1;" + "function _bar(){var c=a+a;alert(c+a)}");
+        """
+        var a=0;var b=1;
+        function foo(){return a+a}
+        function _bar(){var c=foo();alert(c+a)}
+        """,
+        """
+        var a=0;var b=1;
+        function _bar(){var c=a+a;alert(c+a)}
+        """);
   }
 
   @Test
@@ -1385,24 +1477,43 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     assumeMinimumCapture = false;
     // Inline functions defined as a child of the CALL node.
     test(
-        "var a=3;" + "function foo(){return a}" + "(function(){var a=5;(function(){foo()})()})()",
-        "var a=3;" + "{var a$jscomp$inline_0=5;{a}}");
+        """
+        var a=3;
+        function foo(){return a}
+        (function(){var a=5;(function(){foo()})()})()
+        """,
+        """
+        var a=3;
+        {var a$jscomp$inline_0=5;{a}}
+        """);
 
     assumeMinimumCapture = true;
     // Inline functions defined as a child of the CALL node.
     test(
-        "var a=3;" + "function foo(){return a}" + "(function(){var a=5;(function(){foo()})()})()",
-        "var a=3;" + "{var a$jscomp$inline_1=5;{a}}");
+        """
+        var a=3;
+        function foo(){return a}
+        (function(){var a=5;(function(){foo()})()})()
+        """,
+        """
+        var a=3;
+        {var a$jscomp$inline_1=5;{a}}
+        """);
   }
 
   @Test
   public void testShadowVariables17() {
     test(
-        "var a=0;"
-            + "function bar(){return a+a}"
-            + "function foo(){return bar()}"
-            + "function _goo(){var a=2;var x=foo();}",
-        "var a=0;" + "function _goo(){var a$jscomp$1=2;var x=a+a}");
+        """
+        var a=0;
+        function bar(){return a+a}
+        function foo(){return bar()}
+        function _goo(){var a=2;var x=foo();}
+        """,
+        """
+        var a=0;
+        function _goo(){var a$jscomp$1=2;var x=a+a}
+        """);
   }
 
   @Test
@@ -1491,14 +1602,18 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   public void testCostBasedInlining3() {
     // Two calls, function not removed.
     test(
-        "function foo(a,b){return a+b}"
-            + "var b=foo;"
-            + "function _t1(){return foo(1,2)}"
-            + "function _t2(){return foo(2,3)}",
-        "function foo(a,b){return a+b}"
-            + "var b=foo;"
-            + "function _t1(){return 1+2}"
-            + "function _t2(){return 2+3}");
+        """
+        function foo(a,b){return a+b}
+        var b=foo;
+        function _t1(){return foo(1,2)}
+        function _t2(){return foo(2,3)}
+        """,
+        """
+        function foo(a,b){return a+b}
+        var b=foo;
+        function _t1(){return 1+2}
+        function _t2(){return 2+3}
+        """);
   }
 
   @Test
@@ -1506,20 +1621,27 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // Two calls, function not removed.
     // Here there isn't enough savings to justify inlining.
     testSame(
-        "function foo(a,b){return a+b+a+b}"
-            + "var b=foo;"
-            + "function _t1(){return foo(1,2)}"
-            + "function _t2(){return foo(2,3)}");
+        """
+        function foo(a,b){return a+b+a+b}
+        var b=foo;
+        function _t1(){return foo(1,2)}
+        function _t2(){return foo(2,3)}
+        """);
   }
 
   @Test
   public void testCostBasedInlining5() {
     // Here there is enough savings to justify inlining.
     test(
-        "function foo(a,b){return a+b+a+b}"
-            + "function _t1(){return foo(1,2)}"
-            + "function _t2(){return foo(2,3)}",
-        "function _t1(){return 1+2+1+2}" + "function _t2(){return 2+3+2+3}");
+        """
+        function foo(a,b){return a+b+a+b}
+        function _t1(){return foo(1,2)}
+        function _t2(){return foo(2,3)}
+        """,
+        """
+        function _t1(){return 1+2+1+2}
+        function _t2(){return 2+3+2+3}
+        """);
   }
 
   @Test
@@ -1527,21 +1649,27 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // Here we have a threshold test.
     // Do inline here:
     test(
-        "function foo(a,b){return a+b+a+b+a+b+a+b+4+5+6+7+8+9+1+2+3+4+5}"
-            + "function _t1(){return foo(1,2)}"
-            + "function _t2(){return foo(2,3)}",
-        "function _t1(){return 1+2+1+2+1+2+1+2+4+5+6+7+8+9+1+2+3+4+5}"
-            + "function _t2(){return 2+3+2+3+2+3+2+3+4+5+6+7+8+9+1+2+3+4+5}");
+        """
+        function foo(a,b){return a+b+a+b+a+b+a+b+4+5+6+7+8+9+1+2+3+4+5}
+        function _t1(){return foo(1,2)}
+        function _t2(){return foo(2,3)}
+        """,
+        """
+        function _t1(){return 1+2+1+2+1+2+1+2+4+5+6+7+8+9+1+2+3+4+5}
+        function _t2(){return 2+3+2+3+2+3+2+3+4+5+6+7+8+9+1+2+3+4+5}
+        """);
   }
 
   @Test
   public void testCostBasedInlining7() {
     // Don't inline here (not enough savings):
     testSame(
-        "function foo(a,b){"
-            + "    return a+b+a+b+a+b+a+b+4+5+6+7+8+9+1+2+3+4+5+6}"
-            + "function _t1(){return foo(1,2)}"
-            + "function _t2(){return foo(2,3)}");
+        """
+        function foo(a,b){
+            return a+b+a+b+a+b+a+b+4+5+6+7+8+9+1+2+3+4+5+6}
+        function _t1(){return foo(1,2)}
+        function _t2(){return foo(2,3)}
+        """);
   }
 
   @Test
@@ -1550,20 +1678,30 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // parameter is inlined directly, which the call to f with f as a parameter
     // is inlined using block inlining.
     test(
-        "function f(a){return chg() + a + a;}" + "var a = f(f(1));",
-        "var a;"
-            + "{var a$jscomp$inline_0=chg()+1+1;"
-            + "a=chg()+a$jscomp$inline_0+a$jscomp$inline_0}");
+        """
+        function f(a){return chg() + a + a;}
+        var a = f(f(1));
+        """,
+        """
+        var a;
+        {var a$jscomp$inline_0=chg()+1+1;
+        a=chg()+a$jscomp$inline_0+a$jscomp$inline_0}
+        """);
   }
 
   @Test
   public void testCostBasedInlining11() {
     // With block inlining
     test(
-        "function f(a){return chg() + a + a;}" + "var a = f(f(1))",
-        "var a;"
-            + "{var a$jscomp$inline_0=chg()+1+1;"
-            + "a=chg()+a$jscomp$inline_0+a$jscomp$inline_0}");
+        """
+        function f(a){return chg() + a + a;}
+        var a = f(f(1))
+        """,
+        """
+        var a;
+        {var a$jscomp$inline_0=chg()+1+1;
+        a=chg()+a$jscomp$inline_0+a$jscomp$inline_0}
+        """);
   }
 
   @Test
@@ -1603,14 +1741,18 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   public void testCostBasedInliningComplex3() {
     // Two calls, function not removed.
     test(
-        "function foo(a,b){a+b}"
-            + "var b=foo;"
-            + "function _t1(){foo(1,2)}"
-            + "function _t2(){foo(2,3)}",
-        "function foo(a,b){a+b}"
-            + "var b=foo;"
-            + "function _t1(){{1+2}}"
-            + "function _t2(){{2+3}}");
+        """
+        function foo(a,b){a+b}
+        var b=foo;
+        function _t1(){foo(1,2)}
+        function _t2(){foo(2,3)}
+        """,
+        """
+        function foo(a,b){a+b}
+        var b=foo;
+        function _t1(){{1+2}}
+        function _t2(){{2+3}}
+        """);
   }
 
   @Test
@@ -1618,18 +1760,27 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // Two calls, function not removed.
     // Here there isn't enough savings to justify inlining.
     testSame(
-        "function foo(a,b){a+b+a+b}"
-            + "var b=foo;"
-            + "function _t1(){foo(1,2)}"
-            + "function _t2(){foo(2,3)}");
+        """
+        function foo(a,b){a+b+a+b}
+        var b=foo;
+        function _t1(){foo(1,2)}
+        function _t2(){foo(2,3)}
+        """);
   }
 
   @Test
   public void testCostBasedInliningComplex5() {
     // Here there is enough savings to justify inlining.
     test(
-        "function foo(a,b){a+b+a+b}" + "function _t1(){foo(1,2)}" + "function _t2(){foo(2,3)}",
-        "function _t1(){{1+2+1+2}}" + "function _t2(){{2+3+2+3}}");
+        """
+        function foo(a,b){a+b+a+b}
+        function _t1(){foo(1,2)}
+        function _t2(){foo(2,3)}
+        """,
+        """
+        function _t1(){{1+2+1+2}}
+        function _t2(){{2+3+2+3}}
+        """);
   }
 
   @Test
@@ -1637,39 +1788,59 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // Here we have a threshold test.
     // Do inline here:
     test(
-        "function foo(a,b){a+b+a+b+a+b+a+b+4+5+6+7+8+9+1}"
-            + "function _t1(){foo(1,2)}"
-            + "function _t2(){foo(2,3)}",
-        "function _t1(){{1+2+1+2+1+2+1+2+4+5+6+7+8+9+1}}"
-            + "function _t2(){{2+3+2+3+2+3+2+3+4+5+6+7+8+9+1}}");
+        """
+        function foo(a,b){a+b+a+b+a+b+a+b+4+5+6+7+8+9+1}
+        function _t1(){foo(1,2)}
+        function _t2(){foo(2,3)}
+        """,
+        """
+        function _t1(){{1+2+1+2+1+2+1+2+4+5+6+7+8+9+1}}
+        function _t2(){{2+3+2+3+2+3+2+3+4+5+6+7+8+9+1}}
+        """);
   }
 
   @Test
   public void testCostBasedInliningComplex7() {
     // Don't inline here (not enough savings):
     testSame(
-        "function foo(a,b){a+b+a+b+a+b+a+b+4+5+6+7+8+9+1+2}"
-            + "function _t1(){foo(1,2)}"
-            + "function _t2(){foo(2,3)}");
+        """
+        function foo(a,b){a+b+a+b+a+b+a+b+4+5+6+7+8+9+1+2}
+        function _t1(){foo(1,2)}
+        function _t2(){foo(2,3)}
+        """);
   }
 
   @Test
   public void testCostBasedInliningComplex8() {
     // Verify multiple references in the same statement.
-    testSame("function _f(a){1+a+a}" + "a=_f(1)+_f(1)");
+    testSame(
+        """
+        function _f(a){1+a+a}
+        a=_f(1)+_f(1)
+        """);
   }
 
   @Test
   public void testCostBasedInliningComplex9() {
-    test("function f(a){1 + a + a;}" + "f(1);f(2);", "{1+1+1}{1+2+2}");
+    test(
+        """
+        function f(a){1 + a + a;}
+        f(1);f(2);
+        """,
+        """
+        {1+1+1}
+        {1+2+2}
+        """);
   }
 
   @Test
   public void testDoubleInlining2() {
     test(
-        "var foo = function(a) { return getWindow(a); };"
-            + "var bar = function(b) { return b; };"
-            + "foo(bar(x));",
+        """
+        var foo = function(a) { return getWindow(a); };
+        var bar = function(b) { return b; };
+        foo(bar(x));
+        """,
         "getWindow(x)");
   }
 
@@ -2061,37 +2232,45 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   public void testComplexInlineInExpressionss2() {
     test(
         "function f(){a()}c=z=f()",
-        "var JSCompiler_inline_result$jscomp$0;"
-            + "{a();JSCompiler_inline_result$jscomp$0=void 0;}"
-            + "c=z=JSCompiler_inline_result$jscomp$0");
+        """
+        var JSCompiler_inline_result$jscomp$0;
+        {a();JSCompiler_inline_result$jscomp$0=void 0;}
+        c=z=JSCompiler_inline_result$jscomp$0
+        """);
   }
 
   @Test
   public void testComplexInlineInExpressionss3() {
     test(
         "function f(){a()}c=z=f()",
-        "var JSCompiler_inline_result$jscomp$0;"
-            + "{a();JSCompiler_inline_result$jscomp$0=void 0;}"
-            + "c=z=JSCompiler_inline_result$jscomp$0");
+        """
+        var JSCompiler_inline_result$jscomp$0;
+        {a();JSCompiler_inline_result$jscomp$0=void 0;}
+        c=z=JSCompiler_inline_result$jscomp$0
+        """);
   }
 
   @Test
   public void testComplexInlineInExpressionss4() {
     test(
         "function f(){a()}if(z=f());",
-        "var JSCompiler_inline_result$jscomp$0;"
-            + "{a();JSCompiler_inline_result$jscomp$0=void 0;}"
-            + "if(z=JSCompiler_inline_result$jscomp$0);");
+        """
+        var JSCompiler_inline_result$jscomp$0;
+        {a();JSCompiler_inline_result$jscomp$0=void 0;}
+        if(z=JSCompiler_inline_result$jscomp$0);
+        """);
   }
 
   @Test
   public void testComplexInlineInExpressionss5() {
     test(
         "function f(){a()}if(z.y=f());",
-        "var JSCompiler_temp_const$jscomp$0=z;"
-            + "var JSCompiler_inline_result$jscomp$1;"
-            + "{a();JSCompiler_inline_result$jscomp$1=void 0;}"
-            + "if(JSCompiler_temp_const$jscomp$0.y=JSCompiler_inline_result$jscomp$1);");
+        """
+        var JSCompiler_temp_const$jscomp$0=z;
+        var JSCompiler_inline_result$jscomp$1;
+        {a();JSCompiler_inline_result$jscomp$1=void 0;}
+        if(JSCompiler_temp_const$jscomp$0.y=JSCompiler_inline_result$jscomp$1);
+        """);
   }
 
   @Test
@@ -2273,12 +2452,14 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   public void testDecomposePlusEquals() {
     test(
         "function f(){a=1;return 1} var x = 1; x += f()",
-        "var x = 1;"
-            + "var JSCompiler_temp_const$jscomp$0 = x;"
-            + "var JSCompiler_inline_result$jscomp$1;"
-            + "{a=1;"
-            + " JSCompiler_inline_result$jscomp$1=1}"
-            + "x = JSCompiler_temp_const$jscomp$0 + JSCompiler_inline_result$jscomp$1;");
+        """
+        var x = 1;
+        var JSCompiler_temp_const$jscomp$0 = x;
+        var JSCompiler_inline_result$jscomp$1;
+        {a=1;
+         JSCompiler_inline_result$jscomp$1=1}
+        x = JSCompiler_temp_const$jscomp$0 + JSCompiler_inline_result$jscomp$1;
+        """);
   }
 
   @Test
@@ -2294,16 +2475,18 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         }()
         );
         """,
-        "var JSCompiler_inline_result$jscomp$0;"
-            + "{"
-            + "var ret$jscomp$inline_1={};\n"
-            + "ret$jscomp$inline_1[ONE]='a';\n"
-            + "ret$jscomp$inline_1[TWO]='b';\n"
-            + "JSCompiler_inline_result$jscomp$0 = ret$jscomp$inline_1;\n"
-            + "}"
-            + "{"
-            + "descriptions_=JSCompiler_inline_result$jscomp$0;"
-            + "}");
+        """
+        var JSCompiler_inline_result$jscomp$0;
+        {
+        var ret$jscomp$inline_1={};
+        ret$jscomp$inline_1[ONE]='a';
+        ret$jscomp$inline_1[TWO]='b';
+        JSCompiler_inline_result$jscomp$0 = ret$jscomp$inline_1;
+        }
+        {
+        descriptions_=JSCompiler_inline_result$jscomp$0;
+        }
+        """);
   }
 
   @Test
@@ -2329,8 +2512,10 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   public void testInlineConstructor4() {
     test(
         "function f() {x.call(this)} f.prototype.a = 0;" + "function _g() {var t = f.call(this)}",
-        "function f() {x.call(this)} f.prototype.a = 0;"
-            + "function _g() {var t; {x.call(this); t = void 0}}");
+        """
+        function f() {x.call(this)} f.prototype.a = 0;
+            function _g() {var t; {x.call(this); t = void 0}}
+        """);
   }
 
   @Test
@@ -2420,10 +2605,12 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     assumeMinimumCapture = true;
     test(
         "((function(){var a; return function(){foo()}})())();",
-        "var JSCompiler_inline_result$jscomp$0;"
-            + "{var a$jscomp$inline_1;"
-            + "JSCompiler_inline_result$jscomp$0=function(){foo()};}"
-            + "JSCompiler_inline_result$jscomp$0()");
+        """
+        var JSCompiler_inline_result$jscomp$0;
+        {var a$jscomp$inline_1;
+        JSCompiler_inline_result$jscomp$0=function(){foo()};}
+        JSCompiler_inline_result$jscomp$0()
+        """);
   }
 
   @Test
@@ -2643,8 +2830,10 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         "{var a$jscomp$inline_0=void 0; a$jscomp$inline_0=1; void 0;}");
     test(
         "function f(a){a=1;this} f.call(x, x);",
-        "{var JSCompiler_inline_this_1 = x; var a$jscomp$inline_0=x; a$jscomp$inline_0=1;"
-            + " JSCompiler_inline_this_1;}");
+        """
+        {var JSCompiler_inline_this_1 = x; var a$jscomp$inline_0=x; a$jscomp$inline_0=1;
+            JSCompiler_inline_this_1;}
+        """);
   }
 
   // http://en.wikipedia.org/wiki/Fixed_point_combinator#Y_combinator
@@ -2703,25 +2892,27 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
 
         factorial(5)
         """,
-        "var factorial;\n"
-            + "{\n"
-            + "var M$jscomp$inline_4 = function(f$jscomp$2) {\n"
-            + "  return function(n){if(n===0)return 1;else return n*f$jscomp$2(n-1)}\n"
-            + "};\n"
-            + "{\n"
-            + "var f$jscomp$inline_0=function(f$jscomp$inline_7){\n"
-            + "  return M$jscomp$inline_4(\n"
-            + "    function(arg$jscomp$inline_8){\n"
-            + "      return f$jscomp$inline_7(f$jscomp$inline_7)(arg$jscomp$inline_8)\n"
-            + "     })\n"
-            + "};\n"
-            + "factorial=M$jscomp$inline_4(\n"
-            + "  function(arg$jscomp$inline_1){\n"
-            + "    return f$jscomp$inline_0(f$jscomp$inline_0)(arg$jscomp$inline_1)\n"
-            + "});\n"
-            + "}\n"
-            + "}"
-            + "factorial(5)");
+        """
+        var factorial;
+        {
+        var M$jscomp$inline_4 = function(f$jscomp$2) {
+          return function(n){if(n===0)return 1;else return n*f$jscomp$2(n-1)}
+        };
+        {
+        var f$jscomp$inline_0=function(f$jscomp$inline_7){
+          return M$jscomp$inline_4(
+            function(arg$jscomp$inline_8){
+              return f$jscomp$inline_7(f$jscomp$inline_7)(arg$jscomp$inline_8)
+             })
+        };
+        factorial=M$jscomp$inline_4(
+          function(arg$jscomp$inline_1){
+            return f$jscomp$inline_0(f$jscomp$inline_0)(arg$jscomp$inline_1)
+        });
+        }
+        }
+        factorial(5)
+        """);
   }
 
   @Test
@@ -2813,7 +3004,7 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // InlineFunctions is inlining reading a property before the side-effectful calls that
     // initializes it occurs.
     test(
-        """
+"""
   var module$exports$foo$Foo$$0clinit = function() {
     module$exports$foo$Foo$$0clinit = function() {
     };
@@ -2839,7 +3030,7 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     return module$exports$foo$Foo$create(o$jscomp$2);
   }("abc")));
 """,
-        """
+"""
 var module$exports$foo$Foo$$0clinit = function() {
   module$exports$foo$Foo$$0clinit = function() {
   };
@@ -2873,39 +3064,43 @@ JSCompiler_temp_const$jscomp$2.call(JSCompiler_temp_const$jscomp$3, JSCompiler_t
   @Test
   public void testBug4944818() {
     test(
-        "var getDomServices_ = function(self) {\n"
-            + "  if (!self.domServices_) {\n"
-            + "    self.domServices_ = goog$component$DomServices.get("
-            + "        self.appContext_);\n"
-            + "  }\n"
-            + "\n"
-            + "  return self.domServices_;\n"
-            + "};\n"
-            + "\n"
-            + "var getOwnerWin_ = function(self) {\n"
-            + "  return getDomServices_(self).getDomHelper().getWindow();\n"
-            + "};\n"
-            + "\n"
-            + "HangoutStarter.prototype.launchHangout = function() {\n"
-            + "  var self = a.b;\n"
-            + "  var myUrl = new goog.Uri(getOwnerWin_(self).location.href);\n"
-            + "};",
-        "HangoutStarter.prototype.launchHangout = function() { "
-            + "  var self$jscomp$2 = a.b;"
-            + "  var JSCompiler_temp_const$jscomp$0 = goog.Uri;"
-            + "  var JSCompiler_inline_result$jscomp$1;"
-            + "  {"
-            + "  var self$jscomp$inline_2 = self$jscomp$2;"
-            + "  if (!self$jscomp$inline_2.domServices_) {"
-            + "    self$jscomp$inline_2.domServices_ = goog$component$DomServices.get("
-            + "        self$jscomp$inline_2.appContext_);"
-            + "  }"
-            + "  JSCompiler_inline_result$jscomp$1=self$jscomp$inline_2.domServices_;"
-            + "  }"
-            + "  var myUrl = new JSCompiler_temp_const$jscomp$0("
-            + "      JSCompiler_inline_result$jscomp$1.getDomHelper()."
-            + "          getWindow().location.href)"
-            + "}");
+        """
+        var getDomServices_ = function(self) {
+          if (!self.domServices_) {
+            self.domServices_ = goog$component$DomServices.get(
+                self.appContext_);
+          }
+
+          return self.domServices_;
+        };
+
+        var getOwnerWin_ = function(self) {
+          return getDomServices_(self).getDomHelper().getWindow();
+        };
+
+        HangoutStarter.prototype.launchHangout = function() {
+          var self = a.b;
+          var myUrl = new goog.Uri(getOwnerWin_(self).location.href);
+        };
+        """,
+        """
+        HangoutStarter.prototype.launchHangout = function() {
+          var self$jscomp$2 = a.b;
+          var JSCompiler_temp_const$jscomp$0 = goog.Uri;
+          var JSCompiler_inline_result$jscomp$1;
+          {
+          var self$jscomp$inline_2 = self$jscomp$2;
+          if (!self$jscomp$inline_2.domServices_) {
+            self$jscomp$inline_2.domServices_ = goog$component$DomServices.get(
+                self$jscomp$inline_2.appContext_);
+          }
+          JSCompiler_inline_result$jscomp$1=self$jscomp$inline_2.domServices_;
+          }
+          var myUrl = new JSCompiler_temp_const$jscomp$0(
+              JSCompiler_inline_result$jscomp$1.getDomHelper().
+                  getWindow().location.href)
+        }
+        """);
   }
 
   // http://blickly.github.io/closure-compiler-issues/#423
@@ -2999,16 +3194,20 @@ JSCompiler_temp_const$jscomp$2.call(JSCompiler_temp_const$jscomp$3, JSCompiler_t
     assumeMinimumCapture = false;
     test(
         "(function(){var a=10;(function(){var b=a;a++;alert(b)})()})();",
-        "{var a$jscomp$inline_0=10;"
-            + "{var b$jscomp$inline_1=a$jscomp$inline_0;"
-            + "a$jscomp$inline_0++;alert(b$jscomp$inline_1)}}");
+        """
+        {var a$jscomp$inline_0=10;
+        {var b$jscomp$inline_1=a$jscomp$inline_0;
+        a$jscomp$inline_0++;alert(b$jscomp$inline_1)}}
+        """);
 
     assumeMinimumCapture = true;
     test(
         "(function(){var a=10;(function(){var b=a;a++;alert(b)})()})();",
-        "{var a$jscomp$inline_2=10;"
-            + "{var b$jscomp$inline_0=a$jscomp$inline_2;"
-            + "a$jscomp$inline_2++;alert(b$jscomp$inline_0)}}");
+        """
+        {var a$jscomp$inline_2=10;
+        {var b$jscomp$inline_0=a$jscomp$inline_2;
+        a$jscomp$inline_2++;alert(b$jscomp$inline_0)}}
+        """);
   }
 
   @Test
@@ -3193,49 +3392,57 @@ JSCompiler_temp_const$jscomp$2.call(JSCompiler_temp_const$jscomp$3, JSCompiler_t
 
     tester.setUp();
     tester.test(
-        "function f() {return g()}"
-            + "function Y(a){a.loader_()}"
-            + "function _Z(){}"
-            + "function _X() { new _Z(a,b, Y(singleton), f()) }",
-        "function _Z(){}"
-            + "function _X(){"
-            + "  var JSCompiler_temp_const$jscomp$2=_Z;"
-            + "  var JSCompiler_temp_const$jscomp$1=a;"
-            + "  var JSCompiler_temp_const$jscomp$0=b;"
-            + "  var JSCompiler_inline_result$jscomp$3;"
-            + "  {"
-            + "    singleton.loader_();"
-            + "    JSCompiler_inline_result$jscomp$3=void 0;"
-            + "  }"
-            + "  new JSCompiler_temp_const$jscomp$2("
-            + "    JSCompiler_temp_const$jscomp$1,"
-            + "    JSCompiler_temp_const$jscomp$0,"
-            + "    JSCompiler_inline_result$jscomp$3,"
-            + "    g())}");
+        """
+        function f() {return g()}
+        function Y(a){a.loader_()}
+        function _Z(){}
+        function _X() { new _Z(a,b, Y(singleton), f()) }
+        """,
+        """
+        function _Z(){}
+        function _X(){
+          var JSCompiler_temp_const$jscomp$2=_Z;
+          var JSCompiler_temp_const$jscomp$1=a;
+          var JSCompiler_temp_const$jscomp$0=b;
+          var JSCompiler_inline_result$jscomp$3;
+          {
+            singleton.loader_();
+            JSCompiler_inline_result$jscomp$3=void 0;
+          }
+          new JSCompiler_temp_const$jscomp$2(
+            JSCompiler_temp_const$jscomp$1,
+            JSCompiler_temp_const$jscomp$0,
+            JSCompiler_inline_result$jscomp$3,
+            g())}
+        """);
     tester.tearDown();
   }
 
   @Test
   public void test6671158b() {
     test(
-        "function f() {return g()}"
-            + "function Y(a){a.loader_()}"
-            + "function _Z(){}"
-            + "function _X() { new _Z(a,b, Y(singleton), f()) }",
-        "function _Z(){}"
-            + "function _X(){"
-            + "  var JSCompiler_temp_const$jscomp$1=a;"
-            + "  var JSCompiler_temp_const$jscomp$0=b;"
-            + "  var JSCompiler_inline_result$jscomp$2;"
-            + "  {"
-            + "    singleton.loader_();"
-            + "    JSCompiler_inline_result$jscomp$2=void 0;"
-            + "  }"
-            + "  new _Z("
-            + "    JSCompiler_temp_const$jscomp$1,"
-            + "    JSCompiler_temp_const$jscomp$0,"
-            + "    JSCompiler_inline_result$jscomp$2,"
-            + "    g())}");
+        """
+        function f() {return g()}
+        function Y(a){a.loader_()}
+        function _Z(){}
+        function _X() { new _Z(a,b, Y(singleton), f()) }
+        """,
+        """
+        function _Z(){}
+        function _X(){
+          var JSCompiler_temp_const$jscomp$1=a;
+          var JSCompiler_temp_const$jscomp$0=b;
+          var JSCompiler_inline_result$jscomp$2;
+          {
+            singleton.loader_();
+            JSCompiler_inline_result$jscomp$2=void 0;
+          }
+          new _Z(
+            JSCompiler_temp_const$jscomp$1,
+            JSCompiler_temp_const$jscomp$0,
+            JSCompiler_inline_result$jscomp$2,
+            g())}
+        """);
   }
 
   @Test
@@ -3256,14 +3463,18 @@ JSCompiler_temp_const$jscomp$2.call(JSCompiler_temp_const$jscomp$3, JSCompiler_t
   @Test
   public void testIssue1101() {
     test(
-        "var x = (function (saved) {"
-            + "    return modifyObjProp(obj) + saved;"
-            + "  })(obj[\"prop\"]);",
-        "var x;"
-            + "{"
-            + "  var saved$jscomp$inline_0=obj[\"prop\"];x=modifyObjProp(obj)+\n"
-            + "     saved$jscomp$inline_0"
-            + "}");
+        """
+        var x = (function (saved) {
+            return modifyObjProp(obj) + saved;
+          })(obj["prop"]);
+        """,
+        """
+        var x;
+        {
+          var saved$jscomp$inline_0=obj["prop"];x=modifyObjProp(obj)+
+             saved$jscomp$inline_0
+        }
+        """);
   }
 
   @Test
@@ -4023,7 +4234,7 @@ JSCompiler_temp_const$jscomp$2.call(JSCompiler_temp_const$jscomp$3, JSCompiler_t
 
         foo(bar(...arg));
         """,
-        lines("bar(...arg);"));
+        "bar(...arg);");
   }
 
   @Test
@@ -4036,7 +4247,7 @@ JSCompiler_temp_const$jscomp$2.call(JSCompiler_temp_const$jscomp$3, JSCompiler_t
 
         foo([...arg]);
         """,
-        lines("[...arg];"));
+        "[...arg];");
   }
 
   @Test
@@ -4468,7 +4679,7 @@ JSCompiler_temp_const$jscomp$2.call(JSCompiler_temp_const$jscomp$3, JSCompiler_t
 
         window.bug = slice(index - 1, getEndIndex());
         """,
-        """
+"""
 let text = 'abc';
 let index = 1;
 function getEndIndex() {
@@ -4500,7 +4711,7 @@ JSCompiler_temp_const$jscomp$0.bug = JSCompiler_inline_result$jscomp$1;
           return f(a, b.x + 1, b.x = c);
         };
         """,
-        """
+"""
 window.g = function(a, b, c) {
     var JSCompiler_inline_result$jscomp$0;
 {
@@ -4526,7 +4737,7 @@ return JSCompiler_inline_result$jscomp$0;
           return f(a, b.x + 1, b.y = c);
         };
         """,
-        """
+"""
 window.g = function(a, b, c) {
   var JSCompiler_inline_result$jscomp$0;
   {
@@ -4551,7 +4762,7 @@ window.g = function(a, b, c) {
           return f(a, b = c, b + 1);
         };
         """,
-        """
+"""
 window.g = function(a, b, c) {
   var JSCompiler_inline_result$jscomp$0;
   {
@@ -4595,7 +4806,7 @@ window.g = function(a, b, c) {
           return f(a, ++b, b++);
         };
         """,
-        """
+"""
 window.g = function(a, b, c) {
   var JSCompiler_inline_result$jscomp$0;
   {
@@ -4668,7 +4879,7 @@ window.g = function(a, b, c) {
           return add(value, ++value, ++value);
         };
         """,
-        """
+"""
 window.g = function(value$jscomp$1) {
   var JSCompiler_inline_result$jscomp$0;
   {
@@ -4694,7 +4905,7 @@ window.g = function(value$jscomp$1) {
           return add(++value, ++value);
         };
         """,
-        """
+"""
 value = 10;
 window.g = function() {
   var JSCompiler_inline_result$jscomp$0;

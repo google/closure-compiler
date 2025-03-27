@@ -71,13 +71,14 @@ public final class TranspileOnlyIntegrationTest extends IntegrationTestCase {
         """;
 
     String expected =
-        "var $jscomp$templatelit$98447280$0=$jscomp.createTemplateTagFirstArg([\"\"]);"
-            + //
-            "goog.module(\"x\");"
-            + "function tag(x){"
-            + "console.log(x)"
-            + "}"
-            + "tag($jscomp$templatelit$98447280$0)";
+        """
+        var $jscomp$templatelit$98447280$0=$jscomp.createTemplateTagFirstArg([""]);\
+        goog.module("x");\
+        function tag(x){\
+        console.log(x)\
+        }\
+        tag($jscomp$templatelit$98447280$0)\
+        """;
 
     Compiler compiler = compile(options, source);
 

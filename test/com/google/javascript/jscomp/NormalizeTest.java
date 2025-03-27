@@ -222,7 +222,7 @@ public final class NormalizeTest extends CompilerTestCase {
 
   @Test
   public void testConstRHSPropagation() {
-    testSame(lines("const obj = function inner() {inner();};"));
+    testSame("const obj = function inner() {inner();};");
     Node root = getLastCompiler().getRoot();
     Node scriptNode =
         root.getLastChild() // ROOT of input sources
@@ -240,7 +240,7 @@ public final class NormalizeTest extends CompilerTestCase {
 
   @Test
   public void testConstRHSPropagation2() {
-    testSame(lines("/** @const */ var obj = function inner() {inner();};"));
+    testSame("/** @const */ var obj = function inner() {inner();};");
     Node root = getLastCompiler().getRoot();
     Node scriptNode =
         root.getLastChild() // ROOT of input sources

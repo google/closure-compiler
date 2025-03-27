@@ -1354,7 +1354,7 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
     //
     test(
         srcs(
-            SourceFile.fromCode("other.js", lines("export let name = {}, a = { Type: class {} };")),
+            SourceFile.fromCode("other.js", "export let name = {}, a = { Type: class {} };"),
             SourceFile.fromCode(
                 "testcode",
                 """

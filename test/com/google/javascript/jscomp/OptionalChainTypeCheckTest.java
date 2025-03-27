@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerTypeTestCase.lines;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
@@ -82,10 +81,15 @@ public class OptionalChainTypeCheckTest {
     String objType = testCase.forObjType().get();
     String expr = testCase.withExpr();
     String expectType = testCase.assignedTo().get();
-    return lines(
-        "/** @type {(" + objType + ")} */ var a;",
-        "/** @type {(" + expectType + ")} */ var x;",
-        "x = " + expr + ";");
+    return String.format(
+        """
+        /** @type {(%s)} */
+        var a;
+        /** @type {(%s)} */
+        var x;
+        x = %s;
+        """,
+        objType, expectType, expr);
   }
 
   @RunWith(Parameterized.class)

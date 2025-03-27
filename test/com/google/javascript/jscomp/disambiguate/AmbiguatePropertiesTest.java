@@ -37,16 +37,17 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   private AmbiguateProperties lastPass;
 
   private static final String EXTERNS =
-      lines(
-          MINIMAL_EXTERNS,
-          "Function.prototype.call=function(){};",
-          "Function.prototype.inherits=function(){};",
-          "Object.defineProperties = function(typeRef, definitions) {};",
-          "Object.prototype.toString = function() {};",
-          "var google = { gears: { factory: {}, workerPool: {} } };",
-          "/** @return {?} */ function any() {};",
-          "/** @constructor */ function Window() {}",
-          "/** @const */ var window = {};");
+      MINIMAL_EXTERNS
+          + """
+          Function.prototype.call=function(){};
+          Function.prototype.inherits=function(){};
+          Object.defineProperties = function(typeRef, definitions) {};
+          Object.prototype.toString = function() {};
+          var google = { gears: { factory: {}, workerPool: {} } };
+          /** @return {?} */ function any() {};
+          /** @constructor */ function Window() {}
+          /** @const */ var window = {};
+          """;
 
   public AmbiguatePropertiesTest() {
     super(EXTERNS);
@@ -399,26 +400,34 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   @Test
   public void testPrototypePropertiesAsObjLitKeys1() {
     test(
-        "/** @constructor */ function Bar() {};"
-            + "Bar.prototype = {2: function(){}, getA: function(){}};",
-        "/** @constructor */ function Bar() {};"
-            + "Bar.prototype = {2: function(){}, a: function(){}};");
+        """
+        /** @constructor */ function Bar() {};
+        Bar.prototype = {2: function(){}, getA: function(){}};
+        """,
+        """
+        /** @constructor */ function Bar() {};
+        Bar.prototype = {2: function(){}, a: function(){}};
+        """);
   }
 
   @Test
   public void testPrototypePropertiesAsObjLitKeys2() {
     testSame(
-        "/** @constructor */ function Bar() {};"
-            + "Bar.prototype = {2: function(){}, 'getA': function(){}};");
+        """
+        /** @constructor */ function Bar() {};
+        Bar.prototype = {2: function(){}, 'getA': function(){}};
+        """);
   }
 
   @Test
   public void testQuotedPrototypeProperty() {
     testSame(
-        "/** @constructor */ function Bar() {};"
-            + "Bar.prototype['getA'] = function(){};"
-            + "var bar = new Bar();"
-            + "bar['getA']();");
+        """
+        /** @constructor */ function Bar() {};
+        Bar.prototype['getA'] = function(){};
+        var bar = new Bar();
+        bar['getA']();
+        """);
   }
 
   @Test
@@ -695,22 +704,30 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   @Test
   public void testStaticAndInstanceMethodWithSameName() {
     test(
-        "/** @constructor */function Bar(){}; Bar.getA = function(){}; "
-            + "Bar.prototype.getA = function(){}; Bar.getA();"
-            + "var bar = new Bar(); bar.getA();",
-        "/** @constructor */function Bar(){}; Bar.a = function(){};"
-            + "Bar.prototype.a = function(){}; Bar.a();"
-            + "var bar = new Bar(); bar.a();");
+        """
+        /** @constructor */function Bar(){}; Bar.getA = function(){};
+        Bar.prototype.getA = function(){}; Bar.getA();
+        var bar = new Bar(); bar.getA();
+        """,
+        """
+        /** @constructor */function Bar(){}; Bar.a = function(){};
+        Bar.prototype.a = function(){}; Bar.a();
+        var bar = new Bar(); bar.a();
+        """);
   }
 
   @Test
   public void testStaticAndInstanceProperties() {
     test(
-        "/** @constructor */function Bar(){};"
-            + "Bar.getA = function(){}; "
-            + "Bar.prototype.getB = function(){};",
-        "/** @constructor */function Bar(){}; Bar.a = function(){};"
-            + "Bar.prototype.a = function(){};");
+        """
+        /** @constructor */function Bar(){};
+        Bar.getA = function(){};
+        Bar.prototype.getB = function(){};
+        """,
+        """
+        /** @constructor */function Bar(){}; Bar.a = function(){};
+        Bar.prototype.a = function(){};
+        """);
   }
 
   @Test

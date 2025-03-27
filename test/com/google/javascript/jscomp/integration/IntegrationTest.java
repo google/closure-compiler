@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static org.junit.Assert.assertThrows;
 
@@ -725,15 +724,19 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setVariableRenaming(VariableRenamingPolicy.ALL);
     test(
         options,
-        "/** @define {boolean} */ var COMPILED = false;"
-            + "const ns = {};"
-            + "goog.exportSymbol('b', ns);",
+        """
+        /** @define {boolean} */ var COMPILED = false;
+        const ns = {};
+        goog.exportSymbol('b', ns);
+        """,
         "var a = true; var c = {}; goog.exportSymbol('b', c);");
     test(
         options,
-        "/** @define {boolean} */ var COMPILED = false;"
-            + "const ns = {};"
-            + "goog.exportSymbol('a', ns);",
+        """
+        /** @define {boolean} */ var COMPILED = false;
+        const ns = {};
+        goog.exportSymbol('a', ns);
+        """,
         "var b = true; var c = {}; goog.exportSymbol('a', c);");
   }
 
@@ -836,9 +839,11 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testAngularPassOff() {
     testSame(
         createCompilerOptions(),
-        "/** @ngInject */ function f() {} "
-            + "/** @ngInject */ function g(a){} "
-            + "/** @ngInject */ var b = function f(a) {} ");
+        """
+        /** @ngInject */ function f() {}
+        /** @ngInject */ function g(a){}
+        /** @ngInject */ var b = function f(a) {}
+        """);
   }
 
   @Test
@@ -847,12 +852,16 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setAngularPass(true);
     test(
         options,
-        "/** @ngInject */ function f() {} "
-            + "/** @ngInject */ function g(a){} "
-            + "/** @ngInject */ var b = function f(a, b, c) {} ",
-        "function f() {} "
-            + "function g(a) {} g['$inject']=['a'];"
-            + "var b = function f(a, b, c) {}; b['$inject']=['a', 'b', 'c']");
+        """
+        /** @ngInject */ function f() {}
+        /** @ngInject */ function g(a){}
+        /** @ngInject */ var b = function f(a, b, c) {}
+        """,
+        """
+        function f() {}
+        function g(a) {} g['$inject']=['a'];
+        var b = function f(a, b, c) {}; b['$inject']=['a', 'b', 'c']
+        """);
   }
 
   @Test
@@ -943,8 +952,12 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        "/** @define {boolean} */ var COMPILED = false; goog.provide('Foo'); /** @enum */ Foo ="
-            + " {a: 3};",
+        """
+        /** @define {boolean} */
+        var COMPILED = false;
+        goog.provide('Foo');
+        /** @enum */ Foo = {a: 3};
+        """,
         "var COMPILED=true;var Foo={a:3}");
     assertThat(lastCompiler.getErrorManager().getTypedPercent()).isEqualTo(0.0);
 
@@ -1307,11 +1320,13 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        "/** @idGenerator {mapped} */"
-            + "var xid = function() {};\n"
-            + "function f() {\n"
-            + "  return xid('foo');\n"
-            + "}",
+        """
+        /** @idGenerator {mapped} */
+        var xid = function() {};
+        function f() {
+          return xid('foo');
+        }
+        """,
         """
         var xid = function() {};
         function f() {
@@ -1498,8 +1513,15 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   public void testDisambiguateProperties() {
     String code =
-        "/** @constructor */ function Foo(){} Foo.prototype.bar = 3;"
-            + "/** @constructor */ function Baz(){} Baz.prototype.bar = 3;";
+        """
+        /** @constructor */
+        function Foo() {}
+        Foo.prototype.bar = 3;
+
+        /** @constructor */
+        function Baz() {}
+        Baz.prototype.bar = 3;
+        """;
 
     CompilerOptions options = createCompilerOptions();
     testSame(options, code);
@@ -1509,8 +1531,13 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         code,
-        "function Foo(){} Foo.prototype.JSC$44_bar = 3;"
-            + "function Baz(){} Baz.prototype.JSC$46_bar = 3;");
+        """
+        function Foo() {}
+        Foo.prototype.JSC$44_bar = 3;
+
+        function Baz() {}
+        Baz.prototype.JSC$46_bar = 3;
+        """);
   }
 
   // When closure-code-removal runs before disambiguate-properties, make sure
@@ -1602,13 +1629,17 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setDevirtualizeMethods(true);
     test(
         options,
-        "/** @constructor */ var Foo = function() {}; "
-            + "Foo.prototype.bar = function() {};"
-            + "(new Foo()).bar();",
-        "var Foo = function() {};"
-            + "var JSCompiler_StaticMethods_bar = "
-            + "    function(JSCompiler_StaticMethods_bar$self) {};"
-            + "JSCompiler_StaticMethods_bar(new Foo());");
+        """
+        /** @constructor */
+        var Foo = function() {};
+        Foo.prototype.bar = function() {};
+        (new Foo()).bar();
+        """,
+        """
+        var Foo = function() {};
+        var JSCompiler_StaticMethods_bar = function(JSCompiler_StaticMethods_bar$self) {};
+        JSCompiler_StaticMethods_bar(new Foo());
+        """);
   }
 
   @Test
@@ -1677,15 +1708,25 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setVariableRenaming(VariableRenamingPolicy.LOCAL);
     String originalText =
-        "var G_GEO_UNKNOWN_ADDRESS=1;\n"
-            + "function foo() {"
-            + "  var localVar = 2;\n"
-            + "  if (G_GEO_UNKNOWN_ADDRESS == localVar) {\n"
-            + "    alert('A'); }}";
+        """
+        var G_GEO_UNKNOWN_ADDRESS=1;
+        function foo() {
+          var localVar = 2;
+          if (G_GEO_UNKNOWN_ADDRESS == localVar) {
+            alert('A');
+          }
+        }
+        """;
     String expectedText =
-        "var G_GEO_UNKNOWN_ADDRESS=1;"
-            + "function foo(){var a=2;if(G_GEO_UNKNOWN_ADDRESS==a){alert('A')}}";
-
+        """
+        var G_GEO_UNKNOWN_ADDRESS = 1;
+        function foo(){
+          var a = 2;
+          if (G_GEO_UNKNOWN_ADDRESS == a) {
+            alert('A')
+          }
+        }
+        """;
     test(options, originalText, expectedText);
   }
 
@@ -1700,8 +1741,10 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testInlineSimpleMethods() {
     CompilerOptions options = createCompilerOptions();
     String code =
-        "function Foo() {} Foo.prototype.bar = function() { return 3; };"
-            + "var x = new Foo(); x.bar();";
+        """
+        function Foo() {} Foo.prototype.bar = function() { return 3; };
+        var x = new Foo(); x.bar();
+        """;
 
     testSame(options, code);
     options.setRemoveUnusedPrototypeProperties(true);
@@ -1714,16 +1757,18 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
 
     String code =
-        "/** @constructor */"
-            + "function Foo() {}"
-            + "/** @type {number} */ Foo.prototype.field;"
-            + "Foo.prototype.getField = function() { return this.field; };"
-            + "/** @constructor */"
-            + "function Bar() {}"
-            + "/** @type {string} */ Bar.prototype.field;"
-            + "Bar.prototype.getField = function() { return this.field; };"
-            + "new Foo().getField();"
-            + "new Bar().getField();";
+        """
+        /** @constructor */
+        function Foo() {}
+        /** @type {number} */ Foo.prototype.field;
+        Foo.prototype.getField = function() { return this.field; };
+        /** @constructor */
+        function Bar() {}
+        /** @type {string} */ Bar.prototype.field;
+        Bar.prototype.getField = function() { return this.field; };
+        new Foo().getField();
+        new Bar().getField();
+        """;
 
     testSame(options, code);
 
@@ -1815,9 +1860,15 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testRemoveUnusedPrototypeProperties2() {
     CompilerOptions options = createCompilerOptions();
     String code =
-        "function Foo() {} "
-            + "Foo.prototype.bar = function() { return new Foo(); };"
-            + "function f(x) { x.bar(); }";
+        """
+        function Foo() {}
+        Foo.prototype.bar = function() {
+          return new Foo();
+        };
+        function f(x) {
+          x.bar();
+        }
+        """;
     testSame(options, code);
 
     options.setRemoveUnusedPrototypeProperties(true);
@@ -1839,35 +1890,39 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
 
     String code =
-        "/** @constructor */ function A() {} "
-            + "A.prototype.foo = function() { "
-            + "  window.console.log('A'); "
-            + "}; "
-            + "/** @constructor */ function B() {} "
-            + "B.prototype.foo = function() { "
-            + "  window.console.log('B'); "
-            + "};"
-            + "window['main'] = function() { "
-            + "  var a = window['a'] = new A; "
-            + "  a.foo(); "
-            + "  window['b'] = new B; "
-            + "}; "
-            + "function notCalled() { "
-            + "  var something = {}; "
-            + "  something.foo(); "
-            + "}";
+        """
+        /** @constructor */ function A() {}
+        A.prototype.foo = function() {
+          window.console.log('A');
+        };
+        /** @constructor */ function B() {}
+        B.prototype.foo = function() {
+          window.console.log('B');
+        };
+        window['main'] = function() {
+          var a = window['a'] = new A;
+          a.foo();
+          window['b'] = new B;
+        };
+        function notCalled() {
+          var something = {};
+          something.foo();
+        }
+        """;
 
     String expected =
-        "function A() {} "
-            + "A.prototype.JSC$44_foo = function() { "
-            + "  window.console.log('A'); "
-            + "}; "
-            + "function B() {} "
-            + "window['main'] = function() { "
-            + "  var a = window['a'] = new A; "
-            + "  a.JSC$44_foo(); "
-            + "  window['b'] = new B; "
-            + "}";
+        """
+        function A() {}
+        A.prototype.JSC$44_foo = function() {
+          window.console.log('A');
+        };
+        function B() {}
+        window['main'] = function() {
+          var a = window['a'] = new A;
+          a.JSC$44_foo();
+          window['b'] = new B;
+        }
+        """;
 
     test(options, code, expected);
   }
@@ -1875,7 +1930,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   public void testDeadCodeHasNoDisambiguationSideEffects() {
     // This test case asserts that unreachable code does not
-    // confuse the disambigation process and type inferencing.
+    // confuse the disambiguation process and type inferencing.
     CompilerOptions options = createCompilerOptions();
 
     options.setCheckTypes(true);
@@ -1888,58 +1943,62 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
 
     String code =
-        "/** @constructor */ function A() {} "
-            + "A.prototype.always = function() { "
-            + "  window.console.log('AA'); "
-            + "}; "
-            + "A.prototype.sometimes = function() { "
-            + "  window.console.log('SA'); "
-            + "}; "
-            + "/** @constructor */ function B() {} "
-            + "B.prototype.always = function() { "
-            + "  window.console.log('AB'); "
-            + "};"
-            + "B.prototype.sometimes = function() { "
-            + "  window.console.log('SB'); "
-            + "};"
-            + "/** @constructor @struct @template T */ function C() {} "
-            + "/** @param {!T} x */ C.prototype.touch = function(x) { "
-            + "  return x.sometimes(); "
-            + "}; "
-            + "window['main'] = function() { "
-            + "  var a = window['a'] = new A; "
-            + "  a.always(); "
-            + "  a.sometimes(); "
-            + "  var b = window['b'] = new B; "
-            + "  b.always(); "
-            + "};"
-            + "function notCalled() { "
-            + "  var something = {}; "
-            + "  something.always(); "
-            + "  var c = new C; "
-            + "  c.touch(something);"
-            + "}";
+        """
+        /** @constructor */ function A() {}
+        A.prototype.always = function() {
+          window.console.log('AA');
+        };
+        A.prototype.sometimes = function() {
+          window.console.log('SA');
+        };
+        /** @constructor */ function B() {}
+        B.prototype.always = function() {
+          window.console.log('AB');
+        };
+        B.prototype.sometimes = function() {
+          window.console.log('SB');
+        };
+        /** @constructor @struct @template T */ function C() {}
+        /** @param {!T} x */ C.prototype.touch = function(x) {
+          return x.sometimes();
+        };
+        window['main'] = function() {
+          var a = window['a'] = new A;
+          a.always();
+          a.sometimes();
+          var b = window['b'] = new B;
+          b.always();
+        };
+        function notCalled() {
+          var something = {};
+          something.always();
+          var c = new C;
+          c.touch(something);
+        }
+        """;
 
     // B.prototype.sometimes should be stripped out, as it is not used, and the
     // type ambiguity in function notCalled is unreachable.
     String expected =
-        "function A() {} "
-            + "A.prototype.JSC$44_always = function() { "
-            + "  window.console.log('AA'); "
-            + "}; "
-            + "A.prototype.JSC$44_sometimes = function(){ "
-            + "  window.console.log('SA'); "
-            + "}; "
-            + "function B() {} "
-            + "B.prototype.JSC$46_always=function(){ "
-            + "  window.console.log('AB'); "
-            + "};"
-            + "window['main'] = function() { "
-            + "  var a = window['a'] = new A; "
-            + "  a.JSC$44_always(); "
-            + "  a.JSC$44_sometimes(); "
-            + "  (window['b'] = new B).JSC$46_always(); "
-            + "}";
+        """
+        function A() {}
+        A.prototype.JSC$44_always = function() {
+          window.console.log('AA');
+        };
+        A.prototype.JSC$44_sometimes = function(){
+          window.console.log('SA');
+        };
+        function B() {}
+        B.prototype.JSC$46_always=function(){
+          window.console.log('AB');
+        };
+        window['main'] = function() {
+          var a = window['a'] = new A;
+          a.JSC$44_always();
+          a.JSC$44_sometimes();
+          (window['b'] = new B).JSC$46_always();
+        }
+        """;
 
     test(options, code, expected);
   }
@@ -2198,9 +2257,14 @@ public final class IntegrationTest extends IntegrationTestCase {
     String[] code =
         new String[] {
           """
-class LowerCasePipe {}
-/** @nocollapse */ LowerCasePipe.\u0275pipe = /** @pureOrBreakMyCode*/ i0.\u0275\u0275definePipe({ name: "lowercase", type: LowerCasePipe, pure: true });
-""",
+          class LowerCasePipe {}
+          /** @nocollapse */
+          LowerCasePipe.\u0275pipe = /** @pureOrBreakMyCode*/ i0.\u0275\u0275definePipe({
+            name: "lowercase",
+            type: LowerCasePipe,
+            pure: true
+          });
+          """,
           "new LowerCasePipe();",
         };
 
@@ -2208,7 +2272,14 @@ class LowerCasePipe {}
         options,
         code,
         new String[] {
-          "var LowerCasePipe=function(){};LowerCasePipe.\\u0275pipe=i0.\\u0275\\u0275definePipe({name:\"lowercase\",type:LowerCasePipe,pure:true});",
+          """
+          var LowerCasePipe=function(){};
+          LowerCasePipe.\\u0275pipe=i0.\\u0275\\u0275definePipe({
+            name:"lowercase",
+            type:LowerCasePipe,
+            pure:true
+          });
+          """,
           "new LowerCasePipe"
         });
 
@@ -2219,8 +2290,14 @@ class LowerCasePipe {}
         code,
         new String[] {
           "",
-          "var LowerCasePipe=function(){};LowerCasePipe.\\u0275pipe=i0.\\u0275\\u0275definePipe({name:\"lowercase\",type:LowerCasePipe,pure:true});new"
-              + " LowerCasePipe"
+          """
+          var LowerCasePipe = function(){};
+          LowerCasePipe.\\u0275pipe=i0.\\u0275\\u0275definePipe({
+            name:"lowercase",
+            type:LowerCasePipe,
+            pure:true});
+          new LowerCasePipe
+          """
         });
   }
 
@@ -2229,7 +2306,11 @@ class LowerCasePipe {}
     CompilerOptions options = createCompilerOptions();
     String[] code =
         new String[] {
-          "var Foo = function() {}; Foo.prototype.bar = function() {};" + "var x = new Foo();",
+          """
+          var Foo = function() {};
+          Foo.prototype.bar = function() {};
+          var x = new Foo();
+          """,
           "x.bar();",
         };
     testSame(options, code);
@@ -2240,9 +2321,12 @@ class LowerCasePipe {}
         code,
         new String[] {
           CrossChunkMethodMotion.STUB_DECLARATIONS
-              + "var Foo = function() {};"
-              + "Foo.prototype.bar=JSCompiler_stubMethod(0); var x=new Foo;",
-          "Foo.prototype.bar=JSCompiler_unstubMethod(0,function(){}); x.bar()",
+              + """
+              var Foo = function() {};
+              Foo.prototype.bar = JSCompiler_stubMethod(0);
+              var x=new Foo;
+              """,
+          "Foo.prototype.bar = JSCompiler_unstubMethod(0,function(){});\nx.bar()",
         });
   }
 
@@ -2251,7 +2335,14 @@ class LowerCasePipe {}
     CompilerOptions options = createCompilerOptions();
     String[] code =
         new String[] {
-          "var o = {}; new o.Foo();", "/** @constructor */ o.Foo = function() {};",
+          """
+          var o = {};
+          new o.Foo();
+          """,
+          """
+          /** @constructor */
+          o.Foo = function() {};
+          """,
         };
 
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
@@ -2399,11 +2490,21 @@ class LowerCasePipe {}
   public void testPropertyRenaming() {
     CompilerOptions options = createCompilerOptions();
     String code =
-        "function f() { return this.foo + this['bar'] + this.Baz; }"
-            + "f.prototype.bar = 3; f.prototype.Baz = 3;";
+        """
+        function f() {
+          return this.foo + this['bar'] + this.Baz;
+        }
+        f.prototype.bar = 3;
+        f.prototype.Baz = 3;
+        """;
     String all =
-        "function f() { return this.c + this['bar'] + this.a; }"
-            + "f.prototype.b = 3; f.prototype.a = 3;";
+        """
+        function f() {
+          return this.c + this['bar'] + this.a;
+        }
+        f.prototype.b = 3;
+        f.prototype.a = 3;
+        """;
     testSame(options, code);
     options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
     test(options, code, all);
@@ -2441,12 +2542,18 @@ class LowerCasePipe {}
   public void testAliasAllStrings() {
     CompilerOptions options = createCompilerOptions();
     String code =
-        "function f() {" + "  return 'aaaaaaaaaaaaaaaaaaaa' + 'aaaaaaaaaaaaaaaaaaaa';" + "}";
+        """
+        function f() {
+          return 'aaaaaaaaaaaaaaaaaaaa' + 'aaaaaaaaaaaaaaaaaaaa';
+        }
+        """;
     String expected =
-        "var $$S_aaaaaaaaaaaaaaaaaaaa = 'aaaaaaaaaaaaaaaaaaaa';"
-            + "function f() {"
-            + "  return $$S_aaaaaaaaaaaaaaaaaaaa + $$S_aaaaaaaaaaaaaaaaaaaa;"
-            + "}";
+        """
+        var $$S_aaaaaaaaaaaaaaaaaaaa = 'aaaaaaaaaaaaaaaaaaaa';
+        function f() {
+          return $$S_aaaaaaaaaaaaaaaaaaaa + $$S_aaaaaaaaaaaaaaaaaaaa;
+        }
+        """;
     testSame(options, code);
 
     options.setAliasStringsMode(AliasStringsMode.ALL);
@@ -2673,19 +2780,22 @@ class LowerCasePipe {}
     options.setFoldConstants(true);
 
     String code =
-        "/** @constructor */\n"
-            + "function InternalWidget(){this.x = 1;}"
-            + "InternalWidget.prototype.internalGo = function (){this.x = 2};"
-            + "new InternalWidget().internalGo();";
+        """
+        /** @constructor */
+        function InternalWidget(){this.x = 1;}
+        InternalWidget.prototype.internalGo = function (){this.x = 2};
+        new InternalWidget().internalGo();
+        """;
 
     testSame(options, code);
 
     options.setComputeFunctionSideEffects(true);
 
     String optimized =
-        ""
-            + "function InternalWidget(){this.x = 1;}"
-            + "InternalWidget.prototype.internalGo = function (){this.x = 2};";
+        """
+        function InternalWidget(){this.x = 1;}
+        InternalWidget.prototype.internalGo = function (){this.x = 2};
+        """;
 
     test(options, code, optimized);
   }
@@ -2731,10 +2841,11 @@ class LowerCasePipe {}
     options.setFoldConstants(true);
 
     String code =
-        ""
-            + "function InternalWidget(){return [];}"
-            + "Array.prototype.internalGo = function (){this.x = 2};"
-            + "InternalWidget().internalGo();";
+        """
+        function InternalWidget(){return [];}
+        Array.prototype.internalGo = function (){this.x = 2};
+        InternalWidget().internalGo();
+        """;
 
     testSame(options, code);
 
@@ -3121,25 +3232,29 @@ class LowerCasePipe {}
     options.setCoalesceVariableNames(true);
 
     String code =
-        "function f(a) {"
-            + "  if (a) {"
-            + "    return a;"
-            + "  } else {"
-            + "    var b = a;"
-            + "    return b;"
-            + "  }"
-            + "  return a;"
-            + "}";
+        """
+        function f(a) {
+          if (a) {
+            return a;
+          } else {
+            var b = a;
+            return b;
+          }
+          return a;
+        }
+        """;
     String expected =
-        "function f(a) {"
-            + "  if (a) {"
-            + "    return a;"
-            + "  } else {"
-            + "    a = a;"
-            + "    return a;"
-            + "  }"
-            + "  return a;"
-            + "}";
+        """
+        function f(a) {
+          if (a) {
+            return a;
+          } else {
+            a = a;
+            return a;
+          }
+          return a;
+        }
+        """;
 
     test(options, code, expected);
 
@@ -3147,23 +3262,27 @@ class LowerCasePipe {}
     options.setCoalesceVariableNames(false);
 
     code =
-        "function f(a) {"
-            + "  if (a) {"
-            + "    return a;"
-            + "  } else {"
-            + "    var b = a;"
-            + "    return b;"
-            + "  }"
-            + "  return a;"
-            + "}";
+        """
+        function f(a) {
+          if (a) {
+            return a;
+          } else {
+            var b = a;
+            return b;
+          }
+          return a;
+        }
+        """;
     expected =
-        "function f(a) {"
-            + "  if (!a) {"
-            + "    var b = a;"
-            + "    return b;"
-            + "  }"
-            + "  return a;"
-            + "}";
+        """
+        function f(a) {
+          if (!a) {
+            var b = a;
+            return b;
+          }
+          return a;
+        }
+        """;
 
     test(options, code, expected);
 
@@ -3239,8 +3358,10 @@ class LowerCasePipe {}
     options.setInlineVariables(true);
     testSame(
         options,
-        "function f(c) {var f = c; arguments[0] = this;"
-            + "    f.apply(this, arguments); return this;}");
+        """
+        function f(c) {var f = c; arguments[0] = this;
+            f.apply(this, arguments); return this;}
+        """);
   }
 
   // http://blickly.github.io/closure-compiler-issues/#550
@@ -3301,22 +3422,26 @@ class LowerCasePipe {}
     options.setCheckTypes(true);
     test(
         options,
-        "/** @const */ var a = {};"
-            + "/** @const */ a.b = {};"
-            + "/** @const */ a.b.c = {};"
-            + "goog.scope(function() {"
-            + "  var b = a.b;"
-            + "  var c = b.c;"
-            + "  /** @typedef {string} */"
-            + "  c.MyType;"
-            + "  /** @param {c.MyType} x The variable. */"
-            + "  c.myFunc = function(x) {};"
-            + "});",
-        "/** @const */ var a = {};"
-            + "/** @const */ a.b = {};"
-            + "/** @const */ a.b.c = {};"
-            + "a.b.c.MyType;"
-            + "a.b.c.myFunc = function(x) {};");
+        """
+        /** @const */ var a = {};
+        /** @const */ a.b = {};
+        /** @const */ a.b.c = {};
+        goog.scope(function() {
+          var b = a.b;
+          var c = b.c;
+          /** @typedef {string} */
+          c.MyType;
+          /** @param {c.MyType} x The variable. */
+          c.myFunc = function(x) {};
+        });
+        """,
+        """
+        /** @const */ var a = {};
+        /** @const */ a.b = {};
+        /** @const */ a.b.c = {};
+        a.b.c.MyType;
+        a.b.c.myFunc = function(x) {};
+        """);
   }
 
   @Test
@@ -3505,13 +3630,16 @@ class LowerCasePipe {}
   @Test
   public void testRenameCollision() {
     String code =
-        ""
-            + "/**\n"
-            + " * @fileoverview\n"
-            + " * @suppress {uselessCode}\n"
-            + " */"
-            + "var x = {};\ntry {\n(0,use)(x.FOO);\n} catch (e) {}";
-
+        """
+        /**
+         * @fileoverview
+         * @suppress {uselessCode}
+         */
+        var x = {};
+        try {
+        (0,use)(x.FOO);
+        } catch (e) {}
+        """;
     CompilerOptions options = createCompilerOptions();
     testSame(options, code);
 
@@ -4039,8 +4167,8 @@ class LowerCasePipe {}
 
     test(
         options,
-        lines("async function abc() { for await (a of foo()) { bar(); } }"),
-        """
+        "async function abc() { for await (a of foo()) { bar(); } }",
+"""
 'use strict';
 async function abc() {
   var $jscomp$forAwait$retFn0;
@@ -4485,42 +4613,57 @@ async function abc() {
         /** @define {number} */
         goog.FEATURESET_YEAR = 2012;
         """;
-    String googDefineOutput = "goog.FEATURESET_YEAR=2020;";
+    String googDefineOutput =
+        """
+        goog.FEATURESET_YEAR=2020;
+        """;
 
     // async generators and for await ... of are emitted untranspiled.
     test(
         options,
-        lines(
-            googDefine,
-            "async function* foo() {yield 1; await 0; yield 2;}",
-            "async function bar() {",
-            "  for await (const val of foo()) {",
-            "    console.log(val);",
-            "  }",
-            "}",
-            "bar();"),
+        googDefine
+            + """
+            async function* foo() {yield 1; await 0; yield 2;}
+            async function bar() {
+              for await (const val of foo()) {
+                console.log(val);
+              }
+            }
+            bar();
+            """,
         googDefineOutput
-            + "async function*foo(){yield 1;await 0;yield 2}async function bar(){for await(const"
-            + " val of foo())console.log(val)}bar()");
+            + """
+            async function* foo() {yield 1; await 0; yield 2}
+            async function bar() {
+              for await (const val of foo())
+                console.log(val)
+            }
+            bar()
+            """);
 
     // So is object rest and spread.
     test(
         options,
-        lines(
-            googDefine,
-            "const {foo, ...bar} = {foo: 10, bar: 20, ...{baz: 30}};",
-            "console.log(foo);",
-            "console.log(bar);"),
+        googDefine
+            + """
+            const {foo, ...bar} = {foo: 10, bar: 20, ...{baz: 30}};
+            console.log(foo);
+            console.log(bar);
+            """,
         googDefineOutput
-            + "const {foo,...bar}={foo:10,bar:20,...{baz:30}};console.log(foo);console.log(bar)");
+            + """
+            const {foo, ...bar} = {foo: 10, bar: 20, ...{baz: 30}};
+            console.log(foo);
+            console.log(bar)
+            """);
 
     // But we won't emit ES 2018 regexp features.
     DiagnosticGroup untranspilable = DiagnosticGroups.UNSTRANSPILABLE_FEATURES;
-    test(options, lines(googDefine, "/foo/s"), untranspilable);
-    test(options, lines(googDefine, "/(?<foo>.)/"), untranspilable);
-    test(options, lines(googDefine, "/(?<=foo)/"), untranspilable);
-    test(options, lines(googDefine, "/(?<!foo)/"), untranspilable);
-    test(options, lines(googDefine, "/\\p{Number}/u"), untranspilable);
+    test(options, googDefine + "/foo/s", untranspilable);
+    test(options, googDefine + "/(?<foo>.)/", untranspilable);
+    test(options, googDefine + "/(?<=foo)/", untranspilable);
+    test(options, googDefine + "/(?<!foo)/", untranspilable);
+    test(options, googDefine + "/\\p{Number}/u", untranspilable);
   }
 
   @Test
@@ -4536,23 +4679,23 @@ async function abc() {
     String googDefineOutput = "goog.FEATURESET_YEAR=2021;";
 
     // bigints are emitted untranspiled.
-    test(options, lines(googDefine, "const big = 42n;"), googDefineOutput + "const big = 42n;");
+    test(options, googDefine + "const big = 42n;", googDefineOutput + "const big = 42n;");
 
     // So is optional chaining
     test(
         options,
-        lines(googDefine, "document.querySelector('input')?.children?.[0];"),
+        googDefine + "document.querySelector('input')?.children?.[0];",
         googDefineOutput + "document.querySelector('input')?.children?.[0];");
 
     // We won't emit regexp lookbehind.
     DiagnosticGroup untranspilable = DiagnosticGroups.UNSTRANSPILABLE_FEATURES;
-    test(options, lines(googDefine, "/(?<=foo)/"), untranspilable);
-    test(options, lines(googDefine, "/(?<!foo)/"), untranspilable);
+    test(options, googDefine + "/(?<=oo)/", untranspilable);
+    test(options, googDefine + "/(?<!foo)/", untranspilable);
 
     // But we will emit other ES2018 regexp features
-    test(options, lines(googDefine, "/foo/s"), googDefineOutput + "/foo/s");
-    test(options, lines(googDefine, "/(?<foo>.)/"), googDefineOutput + "/(?<foo>.)/");
-    test(options, lines(googDefine, "/\\p{Number}/u"), googDefineOutput + "/\\p{Number}/u");
+    test(options, googDefine + "/foo/s", googDefineOutput + "/foo/s");
+    test(options, googDefine + "/(?<foo>.)/", googDefineOutput + "/(?<foo>.)/");
+    test(options, googDefine + "/\\p{Number}/u", googDefineOutput + "/\\p{Number}/u");
   }
 
   @Test
@@ -4886,11 +5029,11 @@ async function abc() {
         options,
         "class C { async f(p) { let obj = await p; return obj?.prop; } }",
         """
-var C=function(){};
-C.prototype.f=async function(p){var obj=await p;
-  var $jscomp$optchain$tmp98447280$0;
-  return($jscomp$optchain$tmp98447280$0=obj)==null?void 0:$jscomp$optchain$tmp98447280$0.prop}
-""");
+        var C=function(){};
+        C.prototype.f=async function(p){var obj=await p;
+          var $jscomp$optchain$tmp98447280$0;
+          return($jscomp$optchain$tmp98447280$0=obj)==null?void 0:$jscomp$optchain$tmp98447280$0.prop}
+        """);
   }
 
   @Test
@@ -4933,12 +5076,22 @@ C.prototype.f=async function(p){var obj=await p;
     // parameter
     test(
         options,
-        "window['C'] = /** @dict */ class C { f({num}) { return num ** 3; } }",
-        lines(
-            "var i0$classdecl$var0=function(){};i0$classdecl$var0.prototype.f=function($jscomp$destructuring$var0){var"
-                + " $jscomp$destructuring$var1=$jscomp$destructuring$var0;var"
-                + " num=$jscomp$destructuring$var1.num;return"
-                + " Math.pow(num,3)};window[\"C\"]=i0$classdecl$var0"));
+        """
+        window['C'] = /** @dict */ class C {
+          f({num}) {
+            return num ** 3;
+          }
+        }
+        """,
+        """
+        var i0$classdecl$var0 = function() {};
+        i0$classdecl$var0.prototype.f = function($jscomp$destructuring$var0) {
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          var num = $jscomp$destructuring$var1.num;
+          return Math.pow(num,3)
+        };
+        window["C"] = i0$classdecl$var0
+        """);
   }
 
   @Test
@@ -4950,23 +5103,22 @@ C.prototype.f=async function(p){var obj=await p;
 
     test(
         options,
-        lines(
-            """
-            class ClazzWithStatic {
-            constructor() {}
+        """
+        class ClazzWithStatic {
+        constructor() {}
 
-              /** @nosideeffects */
-              static Create() {
-                if (Math.random() > .5) {
-                  throw new Error('Bad input');
-                }
-                return new ClazzWithStatic();
-              }
+          /** @nosideeffects */
+          static Create() {
+            if (Math.random() > .5) {
+              throw new Error('Bad input');
             }
+            return new ClazzWithStatic();
+          }
+        }
 
-            const xUnused = ClazzWithStatic.Create();
-            const yUnused = ClazzWithStatic.Create();
-            """),
+        const xUnused = ClazzWithStatic.Create();
+        const yUnused = ClazzWithStatic.Create();
+        """,
         // This should optimize to nothing, because the two variables are unused and we are trying
         // to hide side-effects.
         "");
@@ -5008,7 +5160,7 @@ C.prototype.f=async function(p){var obj=await p;
           """
         },
         new String[] {
-          lines(""), lines("alert(\"4\");"),
+          "", "alert(\"4\");",
         });
   }
 }

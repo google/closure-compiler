@@ -585,7 +585,13 @@ public final class AngularPassTest extends CompilerTestCase {
 
         class Bar extends Foo { /** @ngInject */ constructor(x, y) {} }
         """;
-    test(js, lines(js, "/** @public */", "Bar['$inject'] = ['x', 'y'];"));
+    test(
+        js,
+        js
+            + """
+            /** @public */
+            Bar['$inject'] = ['x', 'y'];
+            """);
   }
 
   @Test
@@ -596,7 +602,13 @@ public final class AngularPassTest extends CompilerTestCase {
 
         export class Bar extends Foo { /** @ngInject */ constructor(x, y) {} }
         """;
-    test(js, lines(js, "/** @public */", "Bar['$inject'] = ['x', 'y'];"));
+    test(
+        js,
+        js
+            + """
+            /** @public */
+            Bar['$inject'] = ['x', 'y'];
+            """);
   }
 
   @Test

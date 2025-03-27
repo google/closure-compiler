@@ -373,8 +373,10 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
         expected("JSCOMPILER_PRESERVE(noSideEffectsExtern());"),
         warning(e)
             .withMessage(
-                "Suspicious code. The result of the extern function call "
-                    + "'noSideEffectsExtern' is not being used."));
+                """
+                Suspicious code. The result of the extern function call \
+                'noSideEffectsExtern' is not being used.\
+                """));
 
     test(
         externs(externs),
@@ -382,8 +384,10 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
         expected("JSCOMPILER_PRESERVE(noSideEffectsExtern2());"),
         warning(e)
             .withMessage(
-                "Suspicious code. The result of the extern function call "
-                    + "'noSideEffectsExtern2' is not being used."));
+                """
+                Suspicious code. The result of the extern function call \
+                'noSideEffectsExtern2' is not being used.\
+                """));
 
     testSame(externs(externs), srcs("hasSideEffectsExtern()"));
 
@@ -413,9 +417,10 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
         expected("JSCOMPILER_PRESERVE(foo.noSideEffectsExtern());"),
         warning(e)
             .withMessage(
-                "Suspicious code. The result of the extern function call "
-                    + "'foo.noSideEffectsExtern' is not being used."));
-
+                """
+                Suspicious code. The result of the extern function call \
+                'foo.noSideEffectsExtern' is not being used.\
+                """));
     // Methods redefined in inner scopes should not trigger a warning
     testSame(
         externs(externs),

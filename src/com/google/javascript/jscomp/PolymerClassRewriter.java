@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.NodeUtil.isBundledGoogModuleCall;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.PolymerBehaviorExtractor.BehaviorDefinition;
@@ -46,7 +45,7 @@ import org.jspecify.annotations.Nullable;
 final class PolymerClassRewriter {
   private static final String VIRTUAL_FILE = "<PolymerClassRewriter.java>";
   private final AbstractCompiler compiler;
-  @VisibleForTesting static final String POLYMER_ELEMENT_PROP_CONFIG = "PolymerElementProperties";
+  private static final String POLYMER_ELEMENT_PROP_CONFIG = "PolymerElementProperties";
 
   static final DiagnosticType IMPLICIT_GLOBAL_CONFLICT =
       DiagnosticType.error(
