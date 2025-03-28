@@ -26680,7 +26680,6 @@ override: number
     newTest()
         .addSource(
             """
-
             /** @enum {symbol} */
             var ES = {A: Symbol('a'), B: Symbol('b')};
 
@@ -26697,7 +26696,6 @@ override: number
     newTest()
         .addSource(
             """
-
             /** @enum {symbol} */
             var ES = {A: Symbol('a'), B: Symbol('b')};
 
@@ -26720,7 +26718,6 @@ override: number
     newTest()
         .addSource(
             """
-
             /** @enum {symbol} */
             var ES = {A: Symbol('a'), B: Symbol('b')};
 

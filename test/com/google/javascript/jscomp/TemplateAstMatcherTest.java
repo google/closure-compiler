@@ -34,7 +34,6 @@ public final class TemplateAstMatcherTest {
   public void testMatches_primitives() {
     String template =
         """
-
         function template() {
           3;
         }
@@ -55,7 +54,6 @@ public final class TemplateAstMatcherTest {
 
     template =
         """
-
         function template() {
           'str';
         }
@@ -75,7 +73,6 @@ public final class TemplateAstMatcherTest {
 
     template =
         """
-
         function template() {
           true;
         }
@@ -100,7 +97,6 @@ public final class TemplateAstMatcherTest {
   public void testMatches_varDeclarations() {
     String template =
         """
-
         function template() {
           var a = 3;
         }
@@ -119,7 +115,6 @@ public final class TemplateAstMatcherTest {
 
     template =
         """
-
         function template() {
           var a = {};
         }
@@ -131,7 +126,6 @@ public final class TemplateAstMatcherTest {
 
     template =
         """
-
         function template() {
           var a = {
             'a': 'b'
@@ -280,13 +274,11 @@ public final class TemplateAstMatcherTest {
   public void testMatches_functionCall() {
     String externs =
         """
-
         function foo() {};
         function bar(arg) {};
         """;
     String template =
         """
-
         function template() {
           foo();
         }
@@ -318,7 +310,6 @@ public final class TemplateAstMatcherTest {
         """;
     String template =
         """
-
         function template() {
           bar('str');
         }
@@ -374,7 +365,6 @@ public final class TemplateAstMatcherTest {
   public void testMatches_methodCall() {
     String externs =
         """
-
         /** @return {string} */
         function foo() {};
         """;
@@ -464,13 +454,11 @@ public final class TemplateAstMatcherTest {
   public void testMatches_instantiation() {
     String externs =
         """
-
         /** @constructor */
         function AppContext() {}
         """;
     String template =
         """
-
         function template() {
           new AppContext();
         }
@@ -551,13 +539,11 @@ public final class TemplateAstMatcherTest {
     // fn(a);
     externs =
         """
-
         /** @param {string} arg */
         function bar(arg) {};
         """;
     template =
         """
-
         function template() {
           var a = 'string';
           bar(a);

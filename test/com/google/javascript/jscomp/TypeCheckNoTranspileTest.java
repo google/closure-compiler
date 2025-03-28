@@ -2719,7 +2719,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addSource(
             """
-
             var a, b
             var /** string */ s = `template ${a} string ${b}`;
             """)

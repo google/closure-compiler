@@ -2719,7 +2719,6 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testConstantPropertyOnConstNamespaceByAssignment_reassignmentWarns() {
     testError(
         """
-
         /** @const */ var o = {};
         /** @const */ o.x = 1;
         o.x = 2;
@@ -3048,7 +3047,6 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testConstantProperty_convention_not_enforced3() {
     testSame(
         """
-
         /** @constructor */ function Bar() {this.CONST = 100;};
         /** @constructor\s
          @extends {Bar} */ function Foo() {};

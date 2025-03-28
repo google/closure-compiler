@@ -374,7 +374,6 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
     // No goog.inherits, so this is probably a different 'base' function.
     testSame(
         """
-
         var a = function() {
           a.base(this, 'constructor');
         };

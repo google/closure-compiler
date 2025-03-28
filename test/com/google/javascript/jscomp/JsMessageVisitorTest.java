@@ -517,7 +517,6 @@ public final class JsMessageVisitorTest {
   public void testInvalidJsMessageOnObjLit() {
     extractMessages(
         """
-
         pint.sub = {
           /** @desc a */ MSG_MENU_MARK_AS_UNREAD: undefined
         }
@@ -530,7 +529,6 @@ public final class JsMessageVisitorTest {
   public void testJsMessageAliasOnObjLit() {
     extractMessagesSafely(
         """
-
         pint.sub = {
           MSG_MENU_MARK_AS_UNREAD: another.namespace.MSG_MENU_MARK_AS_UNREAD
         }
@@ -580,7 +578,6 @@ public final class JsMessageVisitorTest {
   public void testMessageDefinedInExportsIsNotOrphaned() {
     extractMessagesSafely(
         """
-
         exports = {
           /** @desc Description. */
           MSG_FOO: goog.getMsg('Foo'),
@@ -964,7 +961,6 @@ public final class JsMessageVisitorTest {
   public void testExtractPropertyMessageInFunction() {
     extractMessagesSafely(
         """
-
         function f() {
           /**
            * @desc A message that demonstrates placeholders

@@ -2838,7 +2838,6 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     String code =
         """
-
         function fn(){var a={};a.x={};return a}
         fn().x.y = 1;
         """;
@@ -2847,7 +2846,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     // but we don't currently.
     String result =
         """
-
         function fn(){var a={x:{}};return a}
         fn().x.y = 1;
         """;
@@ -2867,7 +2865,6 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     String code =
         """
-
         function fn(){return {}}
         fn().x.y = 1;
         """;
@@ -3773,7 +3770,6 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     String code =
         """
-
         var foo; foo();
         /** @const */
         var x = 1; foo(); x = 2;
@@ -3791,7 +3787,6 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     String code =
         """
-
         var foo;
         /** @const */
         var x = 1; foo(); x = 2;
@@ -3810,13 +3805,11 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     String code =
         """
-
         console.log(
         /** @type {function():!string} */ ((new x())['abc'])());
         """;
     String result =
         """
-
         console.log((new x()).abc());
         """;
     test(options, code, result);

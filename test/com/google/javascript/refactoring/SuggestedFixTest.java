@@ -952,7 +952,6 @@ public class SuggestedFixTest {
         """;
     String after =
         """
-
         /** @private */
         function foo_() {};
         """;
@@ -964,7 +963,6 @@ public class SuggestedFixTest {
     String before = "goog.provide('js.Foo');\n";
     String after =
         """
-
         /** @private */
         function foo_() {};
         """;
@@ -1229,14 +1227,12 @@ public class SuggestedFixTest {
         /** @fileoverview blah */
 
         goog.provide('js.Foo');
-
         """;
     String googRequire = "goog.require('abc.def');";
     String input =
         before
             + googRequire
             + """
-
             /** @private */
             function foo_() {};
             """;
@@ -1327,14 +1323,12 @@ public class SuggestedFixTest {
         /** @fileoverview blah */
 
         goog.provide('js.Foo');
-
         """;
     String googRequire = "goog.require('abc.def');";
     String input =
         before
             + googRequire
             + """
-
             /** @private */
             function foo_() {};
             """;
@@ -1348,10 +1342,10 @@ public class SuggestedFixTest {
             .removeGoogRequire(match, "abc.def")
             .build();
     MatchedNodeInfo info = fix.getMatchedNodeInfo();
-    assertEquals("test", info.getSourceFilename());
-    assertEquals(5, info.getLineno());
-    assertEquals(0, info.getCharno());
-    assertTrue(info.isInClosurizedFile());
+    assertThat(info.getSourceFilename()).isEqualTo("test");
+    assertThat(info.getLineno()).isEqualTo(4);
+    assertThat(info.getCharno()).isEqualTo(0);
+    assertThat(info.isInClosurizedFile()).isTrue();
   }
 
   /** Returns the root script node produced from the compiled JS input. */

@@ -820,7 +820,6 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     testTypes(
         "var x = goog.Timer;",
         """
-
         /** @type {goog.Timer|Object} */ types.actual;
         /** @type {goog.Timer|Object} */ types.expected;
         """);
@@ -831,14 +830,12 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     testTypes(
         "var x = goog.Timer;",
         """
-
         /** @type {function(goog.Timer) : void} */ types.actual;
         /** @type {function(goog.Timer) : void} */ types.expected;
         """);
     testTypes(
         "var x = goog.Timer;",
         """
-
         /** @type {function() : goog.Timer} */ types.actual;
         /** @type {function() : goog.Timer} */ types.expected;
         """);
@@ -875,7 +872,6 @@ public final class ScopedAliasesTest extends CompilerTestCase {
       testTypes(
           "var x = goog.Timer;",
           """
-
           /** @type {function() : x} */ types.actual;
           /** @type {function() : wrong.wrong} */ types.expected;
           """);

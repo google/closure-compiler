@@ -3550,7 +3550,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSDocInfo jsdoc =
         parse(
             """
-
+            \s
             * hello world\s
             * @author abc@google.com */
             """,

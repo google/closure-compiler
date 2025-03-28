@@ -2698,11 +2698,9 @@ const {anotherVeryLongSymbolThatMapsTo: veryLongLocalNameForItAlso, veryLongSymb
      * @fileoverview
      */
     goog.module('x');
-
     """
         + imports
         + """
-
         module.exports = function() {};
         """;
   }

@@ -416,7 +416,6 @@ public final class SyntacticScopeCreatorTest {
   public void testArrayDestructuringLet() {
     String js =
         """
-
         function foo() {
           var [a, b] = getVars();
           if (true) {
@@ -457,7 +456,6 @@ public final class SyntacticScopeCreatorTest {
   public void testArrayDestructuringVarInBlock() {
     String js =
         """
-
         function foo() {
           var [a, b] = getVars();
           if (true) {
