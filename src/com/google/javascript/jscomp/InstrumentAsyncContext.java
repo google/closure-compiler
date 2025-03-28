@@ -37,6 +37,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   private static final String REENTER_SWAP = "$jscomp$swapContextReenter";
   private static final String JSCOMP = "$jscomp";
   private static final String ENTER = "asyncContextEnter";
+  private static final String CREATE_REENTER_SWAP = "asyncContextCreateReenterSwap";
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
@@ -525,7 +526,11 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
 
   private void addReenterSwapAfter(Node node) {
     if (diagnoseSafari) {
-      Node swap = astFactory.createOr(createSwap(), createSwap());
+      // var $jscomp$swapContextReenter = $jscomp.asyncContextCreateReenterSwap($jscomp$swapContext)
+      Node swap =
+          astFactory.createCallWithUnknownType(
+              astFactory.createQNameWithUnknownType(JSCOMP, ImmutableList.of(CREATE_REENTER_SWAP)),
+              createSwap());
       IR.var(astFactory.createConstantName(REENTER_SWAP, AstFactory.type(swap)), swap)
           .srcrefTreeIfMissing(node)
           .insertAfter(node);
@@ -545,7 +550,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     return createEnter(astFactory.createNumber(1));
   }
 
-  /** Wraps the giuven node in an exit call: {@code $jscomp$swapContext(NODE)}. */
+  /** Wraps the given node in an exit call: {@code $jscomp$swapContext(NODE)}. */
   private Node createExit(Node inner) {
     return astFactory.createCall(createSwap(), AstFactory.type(inner), inner);
   }
