@@ -454,7 +454,11 @@ public final class TypeCheckAbstractClassesAndMethodsTest extends TypeCheckTestC
   @Test
   public void testAbstractMethodHandling1() {
     newTest()
-        .addSource("/** @type {Function} */ var abstractFn = function() {};" + "abstractFn(1);")
+        .addSource(
+            """
+            /** @type {Function} */ var abstractFn = function() {};
+            abstractFn(1);
+            """)
         .run();
   }
 

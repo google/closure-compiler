@@ -1232,7 +1232,14 @@ public class SuggestedFixTest {
 
         """;
     String googRequire = "goog.require('abc.def');";
-    String input = before + googRequire + "\n" + "/** @private */\n" + "function foo_() {};\n";
+    String input =
+        before
+            + googRequire
+            + """
+
+            /** @private */
+            function foo_() {};
+            """;
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
@@ -1323,7 +1330,14 @@ public class SuggestedFixTest {
 
         """;
     String googRequire = "goog.require('abc.def');";
-    String input = before + googRequire + "\n" + "/** @private */\n" + "function foo_() {};\n";
+    String input =
+        before
+            + googRequire
+            + """
+
+            /** @private */
+            function foo_() {};
+            """;
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));

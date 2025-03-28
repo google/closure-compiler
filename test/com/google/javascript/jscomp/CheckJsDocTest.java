@@ -542,7 +542,10 @@ public final class CheckJsDocTest extends CompilerTestCase {
   @Test
   public void testJSDocFunctionNodeAttachment() {
     testWarning(
-        "var a = /** @param {number} index */5;" + "/** @return boolean */function f(index){}",
+        """
+        var a = /** @param {number} index */5;
+        /** @return boolean */function f(index){}
+        """,
         MISPLACED_ANNOTATION);
   }
 
@@ -845,7 +848,13 @@ public final class CheckJsDocTest extends CompilerTestCase {
   public void testGoodTemplate1() {
     testSame("/** @template T */ class C {}");
     testSame(
-        "class C { /** @template T \n @param {T} a\n @param {T} b \n */ " + "constructor(a,b){} }");
+        """
+        class C { /** @template T\s
+         @param {T} a
+         @param {T} b\s
+         */
+        constructor(a,b){} }
+        """);
     testSame("class C {/** @template T \n @param {T} a\n @param {T} b \n */ method(a,b){} }");
     testSame("/** @template T \n @param {T} a\n @param {T} b\n */ var x = function(a, b){};");
     testSame("/** @constructor @template T */ var x = function(){};");
@@ -967,12 +976,20 @@ public final class CheckJsDocTest extends CompilerTestCase {
 
   @Test
   public void testNoSideEffectsAnnotation4() {
-    testSame("var f = function() {};" + "/** @nosideeffects */ f.x = function() {}");
+    testSame(
+        """
+        var f = function() {};
+        /** @nosideeffects */ f.x = function() {}
+        """);
   }
 
   @Test
   public void testNoSideEffectsAnnotation5() {
-    testSame("var f = function() {};" + "f.x = /** @nosideeffects */ function() {}");
+    testSame(
+        """
+        var f = function() {};
+        f.x = /** @nosideeffects */ function() {}
+        """);
   }
 
   @Test

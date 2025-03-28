@@ -235,7 +235,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
             """),
         warning(TYPE_MISMATCH_WARNING)
             .withMessage(
-                """
+"""
 actual parameter 1 of f does not match formal parameter
 found   : {a: string, b: string, c: string, d: string, e: string, f: string, g: string, h: string, i: string, j: string, k: (number|string)}
 required: {a: string, b: string, c: string, d: string, e: string, f: string, g: string, h: string, i: string, j: string, k: string}
@@ -265,7 +265,7 @@ mismatch: [k]
             """),
         warning(TYPE_MISMATCH_WARNING)
             .withMessage(
-                """
+"""
 actual parameter 1 of f does not match formal parameter
 found   : {a: string, b: string, c: string, d: string, e: string, f: string, g: string, h: string, i: string, j: string, k: (number|string)}
 required: {a: string, b: string, c: string, d: string, e: string, f: string, g: string, h: string, i: string, j: string, k: string}
@@ -320,8 +320,10 @@ mismatch: [k]
   @Test
   public void testNullUndefined() {
     testWarning(
-        "/** @param {string} x */ function f(x) {}\n"
-            + "f(/** @type {string|null|undefined} */ ('a'));",
+        """
+        /** @param {string} x */ function f(x) {}
+        f(/** @type {string|null|undefined} */ ('a'));
+        """,
         TYPE_MISMATCH_WARNING);
     this.assertThatRecordedMismatches().isEmpty();
   }

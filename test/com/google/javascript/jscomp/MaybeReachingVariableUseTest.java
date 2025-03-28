@@ -224,13 +224,25 @@ public final class MaybeReachingVariableUseTest {
   @Test
   public void testTryCatch() {
     assertMatch(
-        "" + "D: var x = 1; " + "try { U: var y = foo() + x; } catch (e) {} " + "U: var z = x;");
+        """
+        D: var x = 1;
+        try { U: var y = foo() + x; } catch (e) {}
+        U: var z = x;
+        """);
 
-    assertMatch("" + "D: var x = 1; " + "try { x=2; U: var y = foo() + x; } catch (e) {} ");
+    assertMatch(
+        """
+        D: var x = 1;
+        try { x=2; U: var y = foo() + x; } catch (e) {}\s
+        """);
 
     // TODO(rishipal): Fix this test. The U should not be reachable to D as D is obscured by redef.
     assertMatch(
-        "" + "D: var x = 1; " + "try { x=2; U: var y = foo() + x; } catch (e) {} " + "U:x;");
+        """
+        D: var x = 1;
+        try { x=2; U: var y = foo() + x; } catch (e) {}
+        U:x;
+        """);
   }
 
   @Test

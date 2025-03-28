@@ -53,8 +53,14 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
     test(
         createCompilerOptions(),
         new String[] {
-          "/** @constructor */ function Hello() {} " + "module.exports = Hello;",
-          "var Hello = require('./i0');" + "var hello = new Hello(1);"
+          """
+          /** @constructor */ function Hello() {}
+          module.exports = Hello;
+          """,
+          """
+          var Hello = require('./i0');
+          var hello = new Hello(1);
+          """
         },
         DiagnosticGroups.CHECK_TYPES);
   }

@@ -236,11 +236,14 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   @Test
   public void testInvalidBase2() {
     testError(
-        "function Foo() {}"
-            + FOO_INHERITS
-            + "Foo.method = function() {"
-            + "  Foo.base(this, 'method');"
-            + "};",
+        """
+        function Foo() {}
+        FOO_INHERITS
+        Foo.method = function() {
+          Foo.base(this, 'method');
+        };
+        """
+            .replace("FOO_INHERITS", FOO_INHERITS),
         BASE_CLASS_ERROR);
   }
 
@@ -297,9 +300,11 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   @Test
   public void testInvalidBase13() {
     testError(
-        "function Bar(){ Bar.base(this, 'constructor'); }"
-            + "goog.inherits(Bar, Goo);"
-            + "function Foo(){ Bar.base(this, 'constructor'); }"
+        """
+        function Bar(){ Bar.base(this, 'constructor'); }
+        goog.inherits(Bar, Goo);
+        function Foo(){ Bar.base(this, 'constructor'); }
+        """
             + FOO_INHERITS,
         BASE_CLASS_ERROR);
   }
@@ -353,17 +358,27 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   @Test
   public void testValidBase6() {
     test(
-        "var goog = {}; goog.Foo = function() {"
-            + "goog.Foo.base(this, 'constructor'); }; "
-            + "goog.inherits(goog.Foo, goog.BaseFoo);",
-        "var goog = {}; goog.Foo = function() { goog.BaseFoo.call(this); }; "
-            + "goog.inherits(goog.Foo, goog.BaseFoo);");
+        """
+        var goog = {}; goog.Foo = function() {
+        goog.Foo.base(this, 'constructor'); };
+        goog.inherits(goog.Foo, goog.BaseFoo);
+        """,
+        """
+        var goog = {}; goog.Foo = function() { goog.BaseFoo.call(this); };
+        goog.inherits(goog.Foo, goog.BaseFoo);
+        """);
   }
 
   @Test
   public void testValidBase7() {
     // No goog.inherits, so this is probably a different 'base' function.
-    testSame("" + "var a = function() {" + "  a.base(this, 'constructor');" + "};");
+    testSame(
+        """
+
+        var a = function() {
+          a.base(this, 'constructor');
+        };
+        """);
   }
 
   @Test

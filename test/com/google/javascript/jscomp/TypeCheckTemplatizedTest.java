@@ -79,7 +79,11 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   @Test
   public void testTemplatizedArray4() {
     newTest()
-        .addSource("/** @param {!Array<number>} a\n" + "*/ var f = function(a) { a[0] = 'a'; };")
+        .addSource(
+            """
+            /** @param {!Array<number>} a
+            */ var f = function(a) { a[0] = 'a'; };
+            """)
         .addDiagnostic(
             """
             assignment
@@ -92,7 +96,11 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   @Test
   public void testTemplatizedArray5() {
     newTest()
-        .addSource("/** @param {!Array<*>} a\n" + "*/ var f = function(a) { a[0] = 'a'; };")
+        .addSource(
+            """
+            /** @param {!Array<*>} a
+            */ var f = function(a) { a[0] = 'a'; };
+            """)
         .run();
   }
 
@@ -247,10 +255,12 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatizedObject5() {
     newTest()
         .addSource(
-            "/** @constructor */ function F() {"
-                + "  /** @type {Object<number, string>} */ this.numbers = {};"
-                + "}"
-                + "(new F()).numbers['ten'] = '10';")
+            """
+            /** @constructor */ function F() {
+              /** @type {Object<number, string>} */ this.numbers = {};
+            }
+            (new F()).numbers['ten'] = '10';
+            """)
         .addDiagnostic(
             """
             restricted index type
@@ -264,11 +274,13 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatized1() {
     newTest()
         .addSource(
-            "/** @type {!Array<string>} */"
-                + "var arr1 = [];\n"
-                + "/** @type {!Array<number>} */"
-                + "var arr2 = [];\n"
-                + "arr1 = arr2;")
+            """
+            /** @type {!Array<string>} */
+            var arr1 = [];
+            /** @type {!Array<number>} */
+            var arr2 = [];
+            arr1 = arr2;
+            """)
         .addDiagnostic(
             """
             assignment
@@ -282,7 +294,10 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatized2() {
     newTest()
         .addSource(
-            "/** @type {!Array<string>} */" + "var arr1 = /** @type {!Array<number>} */([]);\n")
+            """
+            /** @type {!Array<string>} */
+            var arr1 = /** @type {!Array<number>} */([]);
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -296,7 +311,10 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatized3() {
     newTest()
         .addSource(
-            "/** @type {Array<string>} */" + "var arr1 = /** @type {!Array<number>} */([]);\n")
+            """
+            /** @type {Array<string>} */
+            var arr1 = /** @type {!Array<number>} */([]);
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -310,10 +328,12 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatized4() {
     newTest()
         .addSource(
-            "/** @type {Array<string>} */"
-                + "var arr1 = [];\n"
-                + "/** @type {Array<number>} */"
-                + "var arr2 = arr1;\n")
+            """
+            /** @type {Array<string>} */
+            var arr1 = [];
+            /** @type {Array<number>} */
+            var arr2 = arr1;
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -327,18 +347,20 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatized5() {
     newTest()
         .addSource(
-            "/**\n"
-                + " * @param {Object<T>} obj\n"
-                + " * @return {boolean|undefined}\n"
-                + " * @template T\n"
-                + " */\n"
-                + "var some = function(obj) {"
-                + "  for (var key in obj) if (obj[key]) return true;"
-                + "};"
-                + "/** @return {!Array} */ function f() { return []; }"
-                + "/** @return {!Array<string>} */ function g() { return []; }"
-                + "some(f());\n"
-                + "some(g());\n")
+            """
+            /**
+             * @param {Object<T>} obj
+             * @return {boolean|undefined}
+             * @template T
+             */
+            var some = function(obj) {
+              for (var key in obj) if (obj[key]) return true;
+            };
+            /** @return {!Array} */ function f() { return []; }
+            /** @return {!Array<string>} */ function g() { return []; }
+            some(f());
+            some(g());
+            """)
         .run();
   }
 
@@ -346,19 +368,21 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatized6() {
     newTest()
         .addSource(
-            "/** @interface */ function I(){}\n"
-                + "/** @param {T} a\n"
-                + " * @return {T}\n"
-                + " * @template T\n"
-                + "*/\n"
-                + "I.prototype.method;\n"
-                + ""
-                + "/** @constructor \n"
-                + " * @implements {I}\n"
-                + " */ function C(){}\n"
-                + "/** @override*/ C.prototype.method = function(a) {}\n"
-                + ""
-                + "/** @type {null} */ var some = new C().method('str');")
+            """
+            /** @interface */ function I(){}
+            /** @param {T} a
+             * @return {T}
+             * @template T
+            */
+            I.prototype.method;
+
+            /** @constructor\s
+             * @implements {I}
+             */ function C(){}
+            /** @override*/ C.prototype.method = function(a) {}
+
+            /** @type {null} */ var some = new C().method('str');
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -372,19 +396,21 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatized7() {
     newTest()
         .addSource(
-            "/** @interface\n"
-                + " *  @template Q\n "
-                + " */ function I(){}\n"
-                + "/** @param {T} a\n"
-                + " * @return {T|Q}\n"
-                + " * @template T\n"
-                + "*/\n"
-                + "I.prototype.method;\n"
-                + "/** @constructor \n"
-                + " * @implements {I<number>}\n"
-                + " */ function C(){}\n"
-                + "/** @override*/ C.prototype.method = function(a) {}\n"
-                + "/** @type {null} */ var some = new C().method('str');")
+            """
+            /** @interface
+             *  @template Q
+             */ function I(){}
+            /** @param {T} a
+             * @return {T|Q}
+             * @template T
+            */
+            I.prototype.method;
+            /** @constructor\s
+             * @implements {I<number>}
+             */ function C(){}
+            /** @override*/ C.prototype.method = function(a) {}
+            /** @type {null} */ var some = new C().method('str');
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -400,21 +426,23 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
     // TODO(johnlenz): this should generate a warning but does not.
     newTest()
         .addSource(
-            "/** @interface\n"
-                + " *  @template Q\n "
-                + " */ function I(){}\n"
-                + "/** @param {T} a\n"
-                + " * @return {T|Q}\n"
-                + " * @template T\n"
-                + "*/\n"
-                + "I.prototype.method;\n"
-                + "/** @constructor \n"
-                + " *  @implements {I<R>}\n"
-                + " *  @template R\n "
-                + " */ function C(){}\n"
-                + "/** @override*/ C.prototype.method = function(a) {}\n"
-                + "/** @type {C<number>} var x = new C();"
-                + "/** @type {null} */ var some = x.method('str');")
+            """
+            /** @interface
+             *  @template Q
+             */ function I(){}
+            /** @param {T} a
+             * @return {T|Q}
+             * @template T
+            */
+            I.prototype.method;
+            /** @constructor\s
+             *  @implements {I<R>}
+             *  @template R
+             */ function C(){}
+            /** @override*/ C.prototype.method = function(a) {}
+            /** @type {C<number>} var x = new C();
+            /** @type {null} */ var some = x.method('str');
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -428,21 +456,23 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatized9() {
     newTest()
         .addSource(
-            "/** @interface\n"
-                + " *  @template Q\n "
-                + " */ function I(){}\n"
-                + "/** @param {T} a\n"
-                + " * @return {T|Q}\n"
-                + " * @template T\n"
-                + "*/\n"
-                + "I.prototype.method;\n"
-                + "/** @constructor \n"
-                + " *  @param {R} a\n"
-                + " *  @implements {I<R>}\n"
-                + " *  @template R\n "
-                + " */ function C(a){}\n"
-                + "/** @override*/ C.prototype.method = function(a) {}\n"
-                + "/** @type {null} */ var some = new C(1).method('str');")
+            """
+            /** @interface
+             *  @template Q
+             */ function I(){}
+            /** @param {T} a
+             * @return {T|Q}
+             * @template T
+            */
+            I.prototype.method;
+            /** @constructor\s
+             *  @param {R} a
+             *  @implements {I<R>}
+             *  @template R
+             */ function C(a){}
+            /** @override*/ C.prototype.method = function(a) {}
+            /** @type {null} */ var some = new C(1).method('str');
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -473,7 +503,7 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
             function Child() {};
             Child.prototype = new Parent();
 
-            (new Child()).method(123);\s
+            (new Child()).method(123);
             """)
         .addDiagnostic(
             """
@@ -488,22 +518,23 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatized11() {
     newTest()
         .addSource(
-            "/** \n"
-                + " * @template T\n"
-                + " * @constructor\n"
-                + " */\n"
-                + "function C() {}\n"
-                + "\n"
-                + "/**\n"
-                + " * @param {T|K} a\n"
-                + " * @return {T}\n"
-                + " * @template K\n"
-                + " */\n"
-                + "C.prototype.method = function(a) {};\n"
-                + "\n"
-                +
-                // method returns "?"
-                "/** @type {void} */ var x = new C().method(1);")
+            """
+            /**
+             * @template T
+             * @constructor
+             */
+            function C() {}
+
+            /**
+             * @param {T|K} a
+             * @return {T}
+             * @template K
+             */
+            C.prototype.method = function(a) {};
+
+            // method returns "?"
+            /** @type {void} */ var x = new C().method(1);
+            """)
         .run();
   }
 

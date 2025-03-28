@@ -371,8 +371,18 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   public void testMultipleDeclarationError1() {
     String rest = "if (true) { foo.bar = 0 } else { foo.bar = 1 }";
     test(
-        srcs("goog.provide('foo.bar');" + "var foo = {};" + rest),
-        expected("var foo = {};" + "var foo = {};" + rest));
+        srcs(
+            """
+            goog.provide('foo.bar');
+            var foo = {};
+            """
+                + rest),
+        expected(
+            """
+            var foo = {};
+            var foo = {};
+            """
+                + rest));
   }
 
   @Test
@@ -504,8 +514,10 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
     test(
         srcs("goog.provide('foo'); goog.requireType('foo'); var a = {};"),
         expected(
-            "/** @const */ var foo = {}; goog.provide('foo'); goog.requireType('foo'); var a ="
-                + " {};"));
+            """
+            /** @const */ var foo = {}; goog.provide('foo'); goog.requireType('foo'); var a =
+             {};
+            """));
   }
 
   @Test
@@ -537,8 +549,10 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
     test(
         externs(
             DEFAULT_EXTERNS,
-            "/** @externs */ goog.provide('animals.Dog');"
-                + "/** @constructor */ animals.Dog = function() {}"),
+            """
+            /** @externs */ goog.provide('animals.Dog');
+            /** @constructor */ animals.Dog = function() {}
+            """),
         srcs("goog.require('animals.Dog'); new animals.Dog()"),
         expected("new animals.Dog();"));
   }
@@ -860,7 +874,10 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
           "",
           "goog.provide('apps');",
           "goog.provide('apps.foo.B');",
-          "goog.provide('apps.foo'); apps.foo = function() {}; " + "goog.require('apps.foo');"
+          """
+          goog.provide('apps.foo'); apps.foo = function() {};
+          goog.require('apps.foo');
+          """
         },
         new String[] {
           "/** @const */ var apps = {};",

@@ -488,13 +488,15 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
 
     assertThat(compiler.toSource())
         .isEqualTo(
-            "var a={};"
-                + "class module$contents$a$B_B{}"
-                + "a.B=module$contents$a$B_B;"
-                + ""
-                + "var module$exports$a$C={};"
-                + "alert(new module$contents$a$B_B);"
-                + "alert(new a.A);");
+            """
+            var a={};\
+            class module$contents$a$B_B{}\
+            a.B=module$contents$a$B_B;\
+            \
+            var module$exports$a$C={};\
+            alert(new module$contents$a$B_B);\
+            alert(new a.A);\
+            """);
   }
 
   @Test
@@ -544,7 +546,12 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(false);
     testSame(options, "goog.require('foo');");
-    testSame(options, "goog.getCssName = function(x) {};" + "goog.getCssName('foo');");
+    testSame(
+        options,
+        """
+        goog.getCssName = function(x) {};
+        goog.getCssName('foo');
+        """);
   }
 
   @Test
@@ -554,8 +561,14 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     test(options, "goog.require('foo');", DiagnosticGroups.MISSING_SOURCES_WARNINGS);
     test(
         options,
-        "goog.getCssName = function(x) {};" + "goog.getCssName('foo');",
-        "goog.getCssName = function(x) {};" + "'foo';");
+        """
+        goog.getCssName = function(x) {};
+        goog.getCssName('foo');
+        """,
+        """
+        goog.getCssName = function(x) {};
+        'foo';
+        """);
   }
 
   @Test
@@ -818,7 +831,10 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     test(
         options,
-        "goog.provide('foo.Bar'); " + "var foo = {}; foo.Bar = {};",
+        """
+        goog.provide('foo.Bar');
+        var foo = {}; foo.Bar = {};
+        """,
         "var foo = {}; foo = {}; foo.Bar = {};");
   }
 
@@ -830,7 +846,10 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     test(
         options,
-        "goog.provide('foo.Bar'); " + "foo = {}; foo.Bar = {};",
+        """
+        goog.provide('foo.Bar');
+        foo = {}; foo.Bar = {};
+        """,
         "var foo = {}; foo = {}; foo.Bar = {};");
   }
 

@@ -143,18 +143,22 @@ public final class RenameLocalVarsTest extends CompilerTestCase {
   public void testRenameWithPrefix3() {
     prefix = "a";
     test(
-        "function Foo() {return 1;}"
-            + "function Bar() {"
-            + "  var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,"
-            + "      A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,aa,ab;"
-            + "  Foo();"
-            + "} Bar();",
-        "function Foo() {return 1;}"
-            + "function Bar() {"
-            + "  var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,B,C,"
-            + "      D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,$,aa;"
-            + "  Foo();"
-            + "} Bar();");
+        """
+        function Foo() {return 1;}
+        function Bar() {
+          var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,
+              A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,aa,ab;
+          Foo();
+        } Bar();
+        """,
+        """
+        function Foo() {return 1;}
+        function Bar() {
+          var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,B,C,
+              D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,$,aa;
+          Foo();
+        } Bar();
+        """);
     prefix = DEFAULT_PREFIX;
   }
 

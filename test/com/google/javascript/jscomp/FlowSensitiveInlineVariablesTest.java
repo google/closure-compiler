@@ -1159,26 +1159,30 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
     // `node.right = y?.left`), because the `y?.left` value needs to be stored here
     // in t2, before it is rewritten by `y.left = node`.
     testSame(
-        "function swap(node) {"
-            + "const y = node.right;"
-            + "const t2 = y?.left;"
-            + "y.left = node;"
-            + "node.right = t2;"
-            + "return node;"
-            + "}");
+        """
+        function swap(node) {
+        const y = node.right;
+        const t2 = y?.left;
+        y.left = node;
+        node.right = t2;
+        return node;
+        }
+        """);
   }
 
   @Test
   public void testNoInlineOnOptionalGetElem() {
     // b/360959953 - github issue 4187
     testSame(
-        "function swap(node) {"
-            + "const y = node.right;"
-            + "const t2 = y?.['foo'];"
-            + "y['foo'] = node;"
-            + "node.right = t2;"
-            + "return node;"
-            + "}");
+        """
+        function swap(node) {
+        const y = node.right;
+        const t2 = y?.['foo'];
+        y['foo'] = node;
+        node.right = t2;
+        return node;
+        }
+        """);
   }
 
   @Test
@@ -1196,20 +1200,24 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
   @Test
   public void testNoInlineOnClass() {
     testSame(
-        "function f() {" //
-            + "const x = class {};"
-            + "const y = x;"
-            + "}");
+        """
+        function f() {
+        const x = class {};
+        const y = x;
+        }
+        """);
   }
 
   @Test
   public void testNoInlineOnTaggedTemplate() {
     testSame(
-        "function f() {" //
-            + "var f = (a)=>{};"
-            + "const x = f`tagged`;"
-            + "const y = x;"
-            + "}");
+        """
+        function f() {
+        var f = (a)=>{};
+        const x = f`tagged`;
+        const y = x;
+        }
+        """);
   }
 
   @Test

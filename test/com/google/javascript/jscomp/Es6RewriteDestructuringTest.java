@@ -502,7 +502,10 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         """);
 
     test(
-        "var x,y;\n" + "[x,y] = z();",
+        """
+        var x,y;
+        [x,y] = z();
+        """,
         """
         var x;
         var y;
@@ -512,7 +515,10 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         """);
 
     test(
-        "var [a,b] = c();" + "var [x,y] = z();",
+        """
+        var [a,b] = c();
+        var [x,y] = z();
+        """,
         """
         var a;
         var b;

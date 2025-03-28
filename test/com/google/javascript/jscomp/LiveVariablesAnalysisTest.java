@@ -374,7 +374,12 @@ public final class LiveVariablesAnalysisTest {
     assertLiveAfterX("var a; try {a()} catch(e) {X:a=1} finally {a}", "a");
     // Because the outer catch doesn't catch any exceptions at all, the read of
     // "a" within the catch block should not make "a" live.
-    assertNotLiveAfterX("var a = 1; try {" + "try {a()} catch(e) {X:1} } catch(E) {a}", "a");
+    assertNotLiveAfterX(
+        """
+        var a = 1; try {
+        try {a()} catch(e) {X:1} } catch(E) {a}
+        """,
+        "a");
     assertLiveAfterX("var a; while(1) { try {X:a=1;break} finally {a}}", "a");
   }
 

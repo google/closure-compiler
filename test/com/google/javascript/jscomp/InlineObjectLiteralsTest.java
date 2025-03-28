@@ -60,30 +60,36 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   public void testObject1() {
     testLocal(
         "var a = {x:x(), y:y()}; f(a.x, a.y);",
-        "var JSCompiler_object_inline_x_0=x();"
-            + "var JSCompiler_object_inline_y_1=y();"
-            + "f(JSCompiler_object_inline_x_0, JSCompiler_object_inline_y_1);");
+        """
+        var JSCompiler_object_inline_x_0=x();
+        var JSCompiler_object_inline_y_1=y();
+        f(JSCompiler_object_inline_x_0, JSCompiler_object_inline_y_1);
+        """);
   }
 
   @Test
   public void testObject1a() {
     testLocal(
         "var a; a = {x:x, y:y}; f(a.x, a.y);",
-        "var JSCompiler_object_inline_x_0;"
-            + "var JSCompiler_object_inline_y_1;"
-            + "(JSCompiler_object_inline_x_0=x,"
-            + "JSCompiler_object_inline_y_1=y, true);"
-            + "f(JSCompiler_object_inline_x_0, JSCompiler_object_inline_y_1);");
+        """
+        var JSCompiler_object_inline_x_0;
+        var JSCompiler_object_inline_y_1;
+        (JSCompiler_object_inline_x_0=x,
+        JSCompiler_object_inline_y_1=y, true);
+        f(JSCompiler_object_inline_x_0, JSCompiler_object_inline_y_1);
+        """);
   }
 
   @Test
   public void testObject2() {
     testLocal(
         "var a = {y:y}; a.x = z; f(a.x, a.y);",
-        "var JSCompiler_object_inline_y_0 = y;"
-            + "var JSCompiler_object_inline_x_1;"
-            + "JSCompiler_object_inline_x_1=z;"
-            + "f(JSCompiler_object_inline_x_1, JSCompiler_object_inline_y_0);");
+        """
+        var JSCompiler_object_inline_y_0 = y;
+        var JSCompiler_object_inline_x_1;
+        JSCompiler_object_inline_x_1=z;
+        f(JSCompiler_object_inline_x_1, JSCompiler_object_inline_y_0);
+        """);
   }
 
   @Test
@@ -105,9 +111,11 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   public void testObject5() {
     testLocal(
         "var a = {x:x, y:y}; var b = {a:a}; f(b.a.x, b.a.y);",
-        "var a = {x:x, y:y};"
-            + "var JSCompiler_object_inline_a_0=a;"
-            + "f(JSCompiler_object_inline_a_0.x, JSCompiler_object_inline_a_0.y);");
+        """
+        var a = {x:x, y:y};
+        var JSCompiler_object_inline_a_0=a;
+        f(JSCompiler_object_inline_a_0.x, JSCompiler_object_inline_a_0.y);
+        """);
   }
 
   // https://github.com/google/closure-compiler/issues/3658
@@ -200,143 +208,169 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   public void testObject6() {
     testLocal(
         "for (var i = 0; i < 5; i++) { var a = {i:i,x:x}; f(a.i, a.x); }",
-        "for (var i = 0; i < 5; i++) {"
-            + "  var JSCompiler_object_inline_i_0=i;"
-            + "  var JSCompiler_object_inline_x_1=x;"
-            + "  f(JSCompiler_object_inline_i_0,JSCompiler_object_inline_x_1)"
-            + "}");
+        """
+        for (var i = 0; i < 5; i++) {
+          var JSCompiler_object_inline_i_0=i;
+          var JSCompiler_object_inline_x_1=x;
+          f(JSCompiler_object_inline_i_0,JSCompiler_object_inline_x_1)
+        }
+        """);
     testLocal(
         "if (c) { var a = {i:i,x:x}; f(a.i, a.x); }",
-        "if (c) {"
-            + "  var JSCompiler_object_inline_i_0=i;"
-            + "  var JSCompiler_object_inline_x_1=x;"
-            + "  f(JSCompiler_object_inline_i_0,JSCompiler_object_inline_x_1)"
-            + "}");
+        """
+        if (c) {
+          var JSCompiler_object_inline_i_0=i;
+          var JSCompiler_object_inline_x_1=x;
+          f(JSCompiler_object_inline_i_0,JSCompiler_object_inline_x_1)
+        }
+        """);
   }
 
   @Test
   public void testObject6_let() {
     testLocal(
         "for (let i = 0; i < 5; i++) { let a = {i:i,x:x}; f(a.i, a.x); }",
-        "for (let i = 0; i < 5; i++) {"
-            + "  var JSCompiler_object_inline_i_0=i;"
-            + "  var JSCompiler_object_inline_x_1=x;"
-            + "  f(JSCompiler_object_inline_i_0,JSCompiler_object_inline_x_1)"
-            + "}");
+        """
+        for (let i = 0; i < 5; i++) {
+          var JSCompiler_object_inline_i_0=i;
+          var JSCompiler_object_inline_x_1=x;
+          f(JSCompiler_object_inline_i_0,JSCompiler_object_inline_x_1)
+        }
+        """);
     testLocal(
         "if (c) { var a = {i:i,x:x}; f(a.i, a.x); }",
-        "if (c) {"
-            + "  var JSCompiler_object_inline_i_0=i;"
-            + "  var JSCompiler_object_inline_x_1=x;"
-            + "  f(JSCompiler_object_inline_i_0,JSCompiler_object_inline_x_1)"
-            + "}");
+        """
+        if (c) {
+          var JSCompiler_object_inline_i_0=i;
+          var JSCompiler_object_inline_x_1=x;
+          f(JSCompiler_object_inline_i_0,JSCompiler_object_inline_x_1)
+        }
+        """);
   }
 
   @Test
   public void testObjectSwitch() {
     testLocal(
-        "let x;"
-            + "switch (x) {"
-            + "  case 'h':"
-            + "    let a;"
-            + "    if (Math.random() > 0.5) {"
-            + "      a = {i:i,x:x};"
-            + "      f(a.i, a.x);"
-            + "      break;"
-            + "    }"
-            + "}",
-        "let x;"
-            + "var JSCompiler_object_inline_i_0;"
-            + "var JSCompiler_object_inline_x_1;"
-            + " switch (x) {"
-            + "   case 'h': "
-            + "    if (Math.random() > .5) {"
-            + "      JSCompiler_object_inline_i_0 = i, JSCompiler_object_inline_x_1 = x, true;"
-            + "      f(JSCompiler_object_inline_i_0,JSCompiler_object_inline_x_1);"
-            + "      break;"
-            + "    }"
-            + "}");
+        """
+        let x;
+        switch (x) {
+          case 'h':
+            let a;
+            if (Math.random() > 0.5) {
+              a = {i:i,x:x};
+              f(a.i, a.x);
+              break;
+            }
+        }
+        """,
+        """
+        let x;
+        var JSCompiler_object_inline_i_0;
+        var JSCompiler_object_inline_x_1;
+         switch (x) {
+           case 'h':
+            if (Math.random() > .5) {
+              JSCompiler_object_inline_i_0 = i, JSCompiler_object_inline_x_1 = x, true;
+              f(JSCompiler_object_inline_i_0,JSCompiler_object_inline_x_1);
+              break;
+            }
+        }
+        """);
     testLocal(
-        "let x;"
-            + " switch (x) {"
-            + "   case 'h':"
-            + "   case 'i':"
-            + "     let a;"
-            + "     if (true) {"
-            + "       a = {i:i,x:x};"
-            + "       f(a.i, a.x);"
-            + "     }"
-            + "     break;"
-            + "}",
-        "let x;"
-            + "var JSCompiler_object_inline_i_0;"
-            + "var JSCompiler_object_inline_x_1;"
-            + " switch (x) {"
-            + " case 'h':"
-            + " case 'i': "
-            + "  if (true) {"
-            + "    JSCompiler_object_inline_i_0 = i, JSCompiler_object_inline_x_1 = x, true;"
-            + "    f(JSCompiler_object_inline_i_0,JSCompiler_object_inline_x_1);"
-            + "  }"
-            + "break;"
-            + "}");
+        """
+        let x;
+         switch (x) {
+           case 'h':
+           case 'i':
+             let a;
+             if (true) {
+               a = {i:i,x:x};
+               f(a.i, a.x);
+             }
+             break;
+        }
+        """,
+        """
+        let x;
+        var JSCompiler_object_inline_i_0;
+        var JSCompiler_object_inline_x_1;
+         switch (x) {
+         case 'h':
+         case 'i':
+          if (true) {
+            JSCompiler_object_inline_i_0 = i, JSCompiler_object_inline_x_1 = x, true;
+            f(JSCompiler_object_inline_i_0,JSCompiler_object_inline_x_1);
+          }
+        break;
+        }
+        """);
     testLocal(
-        "let x;"
-            + "switch (x) {"
-            + "  case 'h':"
-            + "    let a;"
-            + "    if (Math.random() > 0.5) {"
-            + "      a = {i:i,x:x};"
-            + "      f(a.i, a.x);"
-            + "      break;"
-            + "    }"
-            + "}",
-        "let x;"
-            + "var JSCompiler_object_inline_i_0;"
-            + "var JSCompiler_object_inline_x_1;"
-            + " switch (x) {"
-            + " case 'h': "
-            + "  if (Math.random() > .5) {"
-            + "    JSCompiler_object_inline_i_0 = i, JSCompiler_object_inline_x_1 = x, true;"
-            + "    f(JSCompiler_object_inline_i_0,JSCompiler_object_inline_x_1);"
-            + "    break;"
-            + "  }"
-            + "}");
+        """
+        let x;
+        switch (x) {
+          case 'h':
+            let a;
+            if (Math.random() > 0.5) {
+              a = {i:i,x:x};
+              f(a.i, a.x);
+              break;
+            }
+        }
+        """,
+        """
+        let x;
+        var JSCompiler_object_inline_i_0;
+        var JSCompiler_object_inline_x_1;
+         switch (x) {
+         case 'h':
+          if (Math.random() > .5) {
+            JSCompiler_object_inline_i_0 = i, JSCompiler_object_inline_x_1 = x, true;
+            f(JSCompiler_object_inline_i_0,JSCompiler_object_inline_x_1);
+            break;
+          }
+        }
+        """);
     testLocal(
-        "let x;"
-            + "let z;"
-            + "switch (x) {"
-            + "  case 'h':"
-            + "    if (Math.random() > 0.5) {"
-            + "      z = {i:i,x:x};"
-            + "      f(z.i, z.x);"
-            + "    }"
-            + "  case 'i':"
-            + "    ({x:x} = f(z.i, z.x));"
-            + "    break;"
-            + "}",
-        "var JSCompiler_object_inline_i_0;"
-            + "var JSCompiler_object_inline_x_1;"
-            + "let x;"
-            + " switch (x) {"
-            + " case 'h': "
-            + "  if (Math.random() > .5) {"
-            + "    JSCompiler_object_inline_i_0 = i, JSCompiler_object_inline_x_1 = x, true;"
-            + "    f(JSCompiler_object_inline_i_0,JSCompiler_object_inline_x_1);"
-            + "  }"
-            + "  case 'i':"
-            + "    ({x:x} = f(JSCompiler_object_inline_i_0, JSCompiler_object_inline_x_1));"
-            + "    break;"
-            + "}");
+        """
+        let x;
+        let z;
+        switch (x) {
+          case 'h':
+            if (Math.random() > 0.5) {
+              z = {i:i,x:x};
+              f(z.i, z.x);
+            }
+          case 'i':
+            ({x:x} = f(z.i, z.x));
+            break;
+        }
+        """,
+        """
+        var JSCompiler_object_inline_i_0;
+        var JSCompiler_object_inline_x_1;
+        let x;
+         switch (x) {
+         case 'h':
+          if (Math.random() > .5) {
+            JSCompiler_object_inline_i_0 = i, JSCompiler_object_inline_x_1 = x, true;
+            f(JSCompiler_object_inline_i_0,JSCompiler_object_inline_x_1);
+          }
+          case 'i':
+            ({x:x} = f(JSCompiler_object_inline_i_0, JSCompiler_object_inline_x_1));
+            break;
+        }
+        """);
   }
 
   @Test
   public void testObject7() {
     testLocal(
         "var a = {x:x, y:f()}; g(a.x);",
-        "var JSCompiler_object_inline_x_0=x;"
-            + "var JSCompiler_object_inline_y_1=f();"
-            + "g(JSCompiler_object_inline_x_0)");
+        """
+        var JSCompiler_object_inline_x_0=x;
+        var JSCompiler_object_inline_y_1=f();
+        g(JSCompiler_object_inline_x_0)
+        """);
   }
 
   @Test
@@ -345,96 +379,125 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
 
     testLocal(
         "var a; if(c) { a={x:x, y:y}; } else { a={x:y}; } f(a.x);",
-        "var JSCompiler_object_inline_x_0;"
-            + "var JSCompiler_object_inline_y_1;"
-            + "if(c) JSCompiler_object_inline_x_0=x,"
-            + "      JSCompiler_object_inline_y_1=y,"
-            + "      true;"
-            + "else JSCompiler_object_inline_x_0=y,"
-            + "     JSCompiler_object_inline_y_1=void 0,"
-            + "     true;"
-            + "f(JSCompiler_object_inline_x_0)");
+        """
+        var JSCompiler_object_inline_x_0;
+        var JSCompiler_object_inline_y_1;
+        if(c) JSCompiler_object_inline_x_0=x,
+              JSCompiler_object_inline_y_1=y,
+              true;
+        else JSCompiler_object_inline_x_0=y,
+             JSCompiler_object_inline_y_1=void 0,
+             true;
+        f(JSCompiler_object_inline_x_0)
+        """);
     testLocal(
         "var a = {x:x,y:y}; var b = {x:y}; c ? f(a.x) : f(b.x);",
-        "var JSCompiler_object_inline_x_0 = x; "
-            + "var JSCompiler_object_inline_y_1 = y; "
-            + "var JSCompiler_object_inline_x_2 = y; "
-            + "c ? f(JSCompiler_object_inline_x_0):f(JSCompiler_object_inline_x_2)");
+        """
+        var JSCompiler_object_inline_x_0 = x;
+        var JSCompiler_object_inline_y_1 = y;
+        var JSCompiler_object_inline_x_2 = y;
+        c ? f(JSCompiler_object_inline_x_0):f(JSCompiler_object_inline_x_2)
+        """);
   }
 
   @Test
   public void testObject9() {
     // There is a call, so no inlining
-    testSameLocal("function f(a,b) {" + "  var x = {a:a,b:b}; x.a(); return x.b;" + "}");
+    testSameLocal(
+        """
+        function f(a,b) {
+          var x = {a:a,b:b}; x.a(); return x.b;
+        }
+        """);
 
     testLocal(
-        "function f(a,b) {" + "  var x = {a:a,b:b}; g(x.a); x = {a:a,b:2}; return x.b;" + "}",
-        "function f(a,b) {"
-            + "  var JSCompiler_object_inline_a_0 = a;"
-            + "  var JSCompiler_object_inline_b_1 = b;"
-            + "  g(JSCompiler_object_inline_a_0);"
-            + "  JSCompiler_object_inline_a_0 = a,"
-            + "  JSCompiler_object_inline_b_1=2,"
-            + "  true;"
-            + "  return JSCompiler_object_inline_b_1"
-            + "}");
+        """
+        function f(a,b) {
+          var x = {a:a,b:b}; g(x.a); x = {a:a,b:2}; return x.b;
+        }
+        """,
+        """
+        function f(a,b) {
+          var JSCompiler_object_inline_a_0 = a;
+          var JSCompiler_object_inline_b_1 = b;
+          g(JSCompiler_object_inline_a_0);
+          JSCompiler_object_inline_a_0 = a,
+          JSCompiler_object_inline_b_1=2,
+          true;
+          return JSCompiler_object_inline_b_1
+        }
+        """);
 
     testLocal(
-        "function f(a,b) { " + "  var x = {a:a,b:b}; g(x.a); x.b = x.c = 2; return x.b; " + "}",
-        "function f(a,b) { "
-            + "  var JSCompiler_object_inline_a_0=a;"
-            + "  var JSCompiler_object_inline_b_1=b; "
-            + "  var JSCompiler_object_inline_c_2;"
-            + "  g(JSCompiler_object_inline_a_0);"
-            + "  JSCompiler_object_inline_b_1=JSCompiler_object_inline_c_2=2;"
-            + "  return JSCompiler_object_inline_b_1"
-            + "}");
+        """
+        function f(a,b) {
+          var x = {a:a,b:b}; g(x.a); x.b = x.c = 2; return x.b;
+        }
+        """,
+        """
+        function f(a,b) {
+          var JSCompiler_object_inline_a_0=a;
+          var JSCompiler_object_inline_b_1=b;
+          var JSCompiler_object_inline_c_2;
+          g(JSCompiler_object_inline_a_0);
+          JSCompiler_object_inline_b_1=JSCompiler_object_inline_c_2=2;
+          return JSCompiler_object_inline_b_1
+        }
+        """);
   }
 
   @Test
   public void testObject10() {
     testLocal(
         "var x; var b = f(); x = {a:a, b:b}; if(x.a) g(x.b);",
-        "var JSCompiler_object_inline_a_0;"
-            + "var JSCompiler_object_inline_b_1;"
-            + "var b = f();"
-            + "JSCompiler_object_inline_a_0=a,JSCompiler_object_inline_b_1=b,true;"
-            + "if(JSCompiler_object_inline_a_0) g(JSCompiler_object_inline_b_1)");
+        """
+        var JSCompiler_object_inline_a_0;
+        var JSCompiler_object_inline_b_1;
+        var b = f();
+        JSCompiler_object_inline_a_0=a,JSCompiler_object_inline_b_1=b,true;
+        if(JSCompiler_object_inline_a_0) g(JSCompiler_object_inline_b_1)
+        """);
     testSameLocal("var x = {}; var b = f(); x = {a:a, b:b}; if(x.a) g(x.b) + x.c");
     testLocal(
         "var x; var b = f(); x = {a:a, b:b}; x.c = c; if(x.a) g(x.b) + x.c",
-        "var JSCompiler_object_inline_a_0;"
-            + "var JSCompiler_object_inline_b_1;"
-            + "var JSCompiler_object_inline_c_2;"
-            + "var b = f();"
-            + "JSCompiler_object_inline_a_0 = a,JSCompiler_object_inline_b_1 = b, "
-            + "  JSCompiler_object_inline_c_2=void 0,true;"
-            + "JSCompiler_object_inline_c_2 = c;"
-            + "if (JSCompiler_object_inline_a_0)"
-            + "  g(JSCompiler_object_inline_b_1) + JSCompiler_object_inline_c_2;");
+        """
+        var JSCompiler_object_inline_a_0;
+        var JSCompiler_object_inline_b_1;
+        var JSCompiler_object_inline_c_2;
+        var b = f();
+        JSCompiler_object_inline_a_0 = a,JSCompiler_object_inline_b_1 = b,
+          JSCompiler_object_inline_c_2=void 0,true;
+        JSCompiler_object_inline_c_2 = c;
+        if (JSCompiler_object_inline_a_0)
+          g(JSCompiler_object_inline_b_1) + JSCompiler_object_inline_c_2;
+        """);
     testLocal(
         "var x = {a:a}; if (b) x={b:b}; f(x.a||x.b);",
-        "var JSCompiler_object_inline_a_0 = a;"
-            + "var JSCompiler_object_inline_b_1;"
-            + "if(b) JSCompiler_object_inline_b_1 = b,"
-            + "      JSCompiler_object_inline_a_0 = void 0,"
-            + "      true;"
-            + "f(JSCompiler_object_inline_a_0 || JSCompiler_object_inline_b_1)");
+        """
+        var JSCompiler_object_inline_a_0 = a;
+        var JSCompiler_object_inline_b_1;
+        if(b) JSCompiler_object_inline_b_1 = b,
+              JSCompiler_object_inline_a_0 = void 0,
+              true;
+        f(JSCompiler_object_inline_a_0 || JSCompiler_object_inline_b_1)
+        """);
     testLocal(
         "var x; var y = 5; x = {a:a, b:b, c:c}; if (b) x={b:b}; f(x.a||x.b);",
-        "var JSCompiler_object_inline_a_0;"
-            + "var JSCompiler_object_inline_b_1;"
-            + "var JSCompiler_object_inline_c_2;"
-            + "var y=5;"
-            + "JSCompiler_object_inline_a_0=a,"
-            + "JSCompiler_object_inline_b_1=b,"
-            + "JSCompiler_object_inline_c_2=c,"
-            + "true;"
-            + "if (b) JSCompiler_object_inline_b_1=b,"
-            + "       JSCompiler_object_inline_a_0=void 0,"
-            + "       JSCompiler_object_inline_c_2=void 0,"
-            + "       true;"
-            + "f(JSCompiler_object_inline_a_0||JSCompiler_object_inline_b_1)");
+        """
+        var JSCompiler_object_inline_a_0;
+        var JSCompiler_object_inline_b_1;
+        var JSCompiler_object_inline_c_2;
+        var y=5;
+        JSCompiler_object_inline_a_0=a,
+        JSCompiler_object_inline_b_1=b,
+        JSCompiler_object_inline_c_2=c,
+        true;
+        if (b) JSCompiler_object_inline_b_1=b,
+               JSCompiler_object_inline_a_0=void 0,
+               JSCompiler_object_inline_c_2=void 0,
+               true;
+        f(JSCompiler_object_inline_a_0||JSCompiler_object_inline_b_1)
+        """);
   }
 
   @Test
@@ -468,19 +531,27 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   public void testObject16() {
     testLocal(
         "function f(e) { bar(); x = {a: foo()}; var x; print(x.a); }",
-        "function f(e) { "
-            + "  var JSCompiler_object_inline_a_0;"
-            + "  bar();"
-            + "  JSCompiler_object_inline_a_0 = foo(), true;"
-            + "  print(JSCompiler_object_inline_a_0);"
-            + "}");
+        """
+        function f(e) {
+          var JSCompiler_object_inline_a_0;
+          bar();
+          JSCompiler_object_inline_a_0 = foo(), true;
+          print(JSCompiler_object_inline_a_0);
+        }
+        """);
   }
 
   @Test
   public void testObject17() {
     // Note: Some day, with careful analysis, these two uses could be
     // disambiguated, and the second assignment could be inlined.
-    testSameLocal("var a = {a: function(){}};" + "a.a();" + "a = {a1: 100};" + "print(a.a1);");
+    testSameLocal(
+        """
+        var a = {a: function(){}};
+        a.a();
+        a = {a1: 100};
+        print(a.a1);
+        """);
   }
 
   @Test
@@ -501,8 +572,16 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   @Test
   public void testObject21() {
     testSameLocal("var a,b; b=a={x:x, y:y};");
-    testSameLocal("var a,b; if(c) { b=a={x:x, y:y}; }" + "else { b=a={x:y}; } f(a.x); f(b.x)");
-    testSameLocal("var a, b; if(c) { if (a={x:x, y:y}) f(); } " + "else { b=a={x:y}; } f(a.x);");
+    testSameLocal(
+        """
+        var a,b; if(c) { b=a={x:x, y:y}; }
+        else { b=a={x:y}; } f(a.x); f(b.x)
+        """);
+    testSameLocal(
+        """
+        var a, b; if(c) { if (a={x:x, y:y}) f(); }
+        else { b=a={x:y}; } f(a.x);
+        """);
     testSameLocal("var a,b; b = (a = {x:x, y:x});");
     testSameLocal("var a,b; a = {x:x, y:x}; b = a");
     testSameLocal("var a,b; a = {x:x, y:x}; b = x || a");
@@ -516,12 +595,14 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   public void testObject22() {
     testLocal(
         "while(1) { var a = {y:1}; if (b) a.x = 2; f(a.y, a.x);}",
-        "for(;1;){"
-            + " var JSCompiler_object_inline_y_0=1;"
-            + " var JSCompiler_object_inline_x_1;"
-            + " if(b) JSCompiler_object_inline_x_1=2;"
-            + " f(JSCompiler_object_inline_y_0,JSCompiler_object_inline_x_1)"
-            + "}");
+        """
+        for(;1;){
+         var JSCompiler_object_inline_y_0=1;
+         var JSCompiler_object_inline_x_1;
+         if(b) JSCompiler_object_inline_x_1=2;
+         f(JSCompiler_object_inline_y_0,JSCompiler_object_inline_x_1)
+        }
+        """);
 
     testSameLocal("var a; while (1) { f(a.x, a.y); a = {x:1, y:1};}");
   }
@@ -541,11 +622,13 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
                + ":" + templateData.linkIds.DISMISS;
         }
         """,
-        "function f(){"
-            + "var JSCompiler_object_inline_CHROME_1='cl';"
-            + "var JSCompiler_object_inline_DISMISS_2='d';"
-            + "var html=JSCompiler_object_inline_CHROME_1 +"
-            + " ':' +JSCompiler_object_inline_DISMISS_2}");
+        """
+        function f(){
+        var JSCompiler_object_inline_CHROME_1='cl';
+        var JSCompiler_object_inline_DISMISS_2='d';
+        var html=JSCompiler_object_inline_CHROME_1 +
+         ':' +JSCompiler_object_inline_DISMISS_2}
+        """);
   }
 
   @Test
@@ -559,29 +642,35 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
           var g = function () {var o = {a: linkIds};}
         }
         """,
-        "function f(){var linkIds={CHROME:1};"
-            + "var g=function(){var JSCompiler_object_inline_a_0=linkIds}}");
+        """
+        function f(){var linkIds={CHROME:1};
+        var g=function(){var JSCompiler_object_inline_a_0=linkIds}}
+        """);
   }
 
   @Test
   public void testObject25() {
     testLocal(
         "var a = {x:f(), y:g()}; a = {y:g(), x:f()}; f(a.x, a.y);",
-        "var JSCompiler_object_inline_x_0=f();"
-            + "var JSCompiler_object_inline_y_1=g();"
-            + "JSCompiler_object_inline_y_1=g(),"
-            + "  JSCompiler_object_inline_x_0=f(),"
-            + "  true;"
-            + "f(JSCompiler_object_inline_x_0,JSCompiler_object_inline_y_1)");
+        """
+        var JSCompiler_object_inline_x_0=f();
+        var JSCompiler_object_inline_y_1=g();
+        JSCompiler_object_inline_y_1=g(),
+          JSCompiler_object_inline_x_0=f(),
+          true;
+        f(JSCompiler_object_inline_x_0,JSCompiler_object_inline_y_1)
+        """);
   }
 
   @Test
   public void testObject26() {
     testLocal(
         "var a = {}; a.b = function() {}; new a.b.c",
-        "var JSCompiler_object_inline_b_0;"
-            + "JSCompiler_object_inline_b_0=function(){};"
-            + "new JSCompiler_object_inline_b_0.c");
+        """
+        var JSCompiler_object_inline_b_0;
+        JSCompiler_object_inline_b_0=function(){};
+        new JSCompiler_object_inline_b_0.c
+        """);
   }
 
   @Test
@@ -599,9 +688,11 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   public void testInlineObjectWithConst() {
     testLocal(
         "const a = {x:x(), y:y()}; f(a.x, a.y);",
-        "var JSCompiler_object_inline_x_0=x();"
-            + "var JSCompiler_object_inline_y_1=y();"
-            + "f(JSCompiler_object_inline_x_0, JSCompiler_object_inline_y_1);");
+        """
+        var JSCompiler_object_inline_x_0=x();
+        var JSCompiler_object_inline_y_1=y();
+        f(JSCompiler_object_inline_x_0, JSCompiler_object_inline_y_1);
+        """);
   }
 
   @Test
@@ -621,12 +712,14 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
     // before this pass runs, which is why this works.
     testLocal(
         "var i; for(var a = {x:x(), y:y()}; i < 0; i++) { f(a.x, a.y); }",
-        "var i;"
-            + "var JSCompiler_object_inline_x_0=x();"
-            + "var JSCompiler_object_inline_y_1=y();"
-            + "for(; i < 0; i++) {"
-            + "f(JSCompiler_object_inline_x_0, JSCompiler_object_inline_y_1);"
-            + "}");
+        """
+        var i;
+        var JSCompiler_object_inline_x_0=x();
+        var JSCompiler_object_inline_y_1=y();
+        for(; i < 0; i++) {
+        f(JSCompiler_object_inline_x_0, JSCompiler_object_inline_y_1);
+        }
+        """);
   }
 
   @Test
@@ -642,15 +735,22 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   @Test
   public void testIssue724() {
     testSameLocal(
-        "var getType; getType = {};"
-            + "return functionToCheck && "
-            + "   getType.toString.apply(functionToCheck) === "
-            + "   '[object Function]';");
+        """
+        var getType; getType = {};
+        return functionToCheck &&
+           getType.toString.apply(functionToCheck) ===
+           '[object Function]';
+        """);
   }
 
   @Test
   public void testNoInlineDeletedProperties() {
-    testSameLocal("var foo = {bar:1};" + "delete foo.bar;" + "return foo.bar;");
+    testSameLocal(
+        """
+        var foo = {bar:1};
+        delete foo.bar;
+        return foo.bar;
+        """);
   }
 
   @Test

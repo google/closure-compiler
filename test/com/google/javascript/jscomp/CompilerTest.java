@@ -666,8 +666,12 @@ public final class CompilerTest {
          * @fileoverview This is my favorite file! */
         console.log(0);
         """,
-        "/*\n Your favorite license goes here\n"
-            + " @fileoverview This is my favorite file! */\nconsole.log(0);",
+        """
+        /*
+         Your favorite license goes here
+         @fileoverview This is my favorite file! */
+        console.log(0);
+        """,
         null);
   }
 
@@ -726,20 +730,38 @@ public final class CompilerTest {
   @Test
   public void testImportantCommentInTree() {
     test(
-        "var a = function() {\n +"
-            + "/*! Your favorite license goes here */\n"
-            + " 1;};\nconsole.log(0);",
+        """
+        var a = function() {
+         +
+        /*! Your favorite license goes here */
+         1;};
+        console.log(0);
+        """,
         "/*\n Your favorite license goes here */\nconsole.log(0);",
         null);
   }
 
   @Test
   public void testMultipleUniqueImportantComments() {
-    String js1 = "/*! One license here */\n" + "console.log(0);";
-    String js2 = "/*! Another license here */\n" + "console.log(1);";
+    String js1 =
+        """
+        /*! One license here */
+        console.log(0);
+        """;
+    String js2 =
+        """
+        /*! Another license here */
+        console.log(1);
+        """;
     String expected =
-        "/*\n One license here */\nconsole.log(0);"
-            + "/*\n Another license here */\nconsole.log(1);";
+        """
+        /*
+         One license here */
+        console.log(0);\
+        /*
+         Another license here */
+        console.log(1);\
+        """;
 
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
@@ -759,8 +781,16 @@ public final class CompilerTest {
 
   @Test
   public void testMultipleIdenticalImportantComments() {
-    String js1 = "/*! Identical license here */\n" + "console.log(0);";
-    String js2 = "/*! Identical license here */\n" + "console.log(1);";
+    String js1 =
+        """
+        /*! Identical license here */
+        console.log(0);
+        """;
+    String js2 =
+        """
+        /*! Identical license here */
+        console.log(1);
+        """;
     String expected = "/*\n Identical license here */\nconsole.log(0);console.log(1);";
 
     Compiler compiler = new Compiler();
@@ -851,8 +881,12 @@ public final class CompilerTest {
          * @fileoverview This is my favorite file! */
         console.log(0);
         """,
-        "/*\n Your favorite license goes here\n"
-            + " @fileoverview This is my favorite file! */\nconsole.log(0);",
+        """
+        /*
+         Your favorite license goes here
+         @fileoverview This is my favorite file! */
+        console.log(0);
+        """,
         null);
   }
 
@@ -916,11 +950,24 @@ public final class CompilerTest {
 
   @Test
   public void testMultipleUniqueLicenses() {
-    String js1 = "/** @license One license here */\n" + "console.log(0);";
-    String js2 = "/** @license Another license here */\n" + "console.log(1);";
+    String js1 =
+        """
+        /** @license One license here */
+        console.log(0);
+        """;
+    String js2 =
+        """
+        /** @license Another license here */
+        console.log(1);
+        """;
     String expected =
-        "/*\n One license here */\nconsole.log(0);"
-            + "/*\n Another license here */\nconsole.log(1);";
+        """
+        /*
+         One license here */
+        console.log(0);/*
+         Another license here */
+        console.log(1);\
+        """;
 
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
@@ -940,8 +987,16 @@ public final class CompilerTest {
 
   @Test
   public void testMultipleIdenticalLicenses() {
-    String js1 = "/** @license Identical license here */\n" + "console.log(0);";
-    String js2 = "/** @license Identical license here */\n" + "console.log(1);";
+    String js1 =
+        """
+        /** @license Identical license here */
+        console.log(0);
+        """;
+    String js2 =
+        """
+        /** @license Identical license here */
+        console.log(1);
+        """;
     String js3 =
         """
         /** @license Identical license here */
@@ -971,8 +1026,16 @@ public final class CompilerTest {
 
   @Test
   public void testIdenticalLicenseAndImportantComment() {
-    String js1 = "/** @license Identical license here */\n" + "console.log(0);";
-    String js2 = "/*! Identical license here */\n" + "console.log(1);";
+    String js1 =
+        """
+        /** @license Identical license here */
+        console.log(0);
+        """;
+    String js2 =
+        """
+        /*! Identical license here */
+        console.log(1);
+        """;
     String expected = "/*\n Identical license here */\nconsole.log(0);console.log(1);";
 
     Compiler compiler = new Compiler();
@@ -1422,7 +1485,7 @@ public final class CompilerTest {
   }
 
   private static final String RESULT_SOURCE_MAP_WITH_CONTENT =
-      """
+"""
 {
 "version":3,
 "file":"output.js",
@@ -2769,8 +2832,10 @@ public final class CompilerTest {
     assertThat(e)
         .hasMessageThat()
         .contains(
-            "Found these weak sources in other chunks:\n"
-                + "  strong_but_actually_weak.js (in chunk m)");
+            """
+            Found these weak sources in other chunks:
+              strong_but_actually_weak.js (in chunk m)\
+            """);
   }
 
   @Test

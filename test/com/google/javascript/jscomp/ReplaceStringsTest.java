@@ -344,8 +344,10 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   @Test
   public void testStartTracer3() {
     testDebugStrings(
-        "goog$debug$Trace.startTracer('ThreadlistView',\n"
-            + "                             'Updating ' + array.length + ' rows');",
+        """
+        goog$debug$Trace.startTracer('ThreadlistView',
+                                     'Updating ' + array.length + ' rows');
+        """,
         "goog$debug$Trace.startTracer('a', 'b' + '`' + array.length);",
         new String[] {"a", "ThreadlistView", "b", "Updating ` rows"});
   }
@@ -369,8 +371,14 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   @Test
   public void testLoggerOnVar() {
     testDebugStrings(
-        "var logger = goog.debug.Logger.getLogger('foo');" + "logger.info('Some message');",
-        "var logger = goog.debug.Logger.getLogger('a');" + "logger.info('Some message');",
+        """
+        var logger = goog.debug.Logger.getLogger('foo');
+        logger.info('Some message');
+        """,
+        """
+        var logger = goog.debug.Logger.getLogger('a');
+        logger.info('Some message');
+        """,
         new String[] {"a", "foo"});
   }
 
@@ -409,45 +417,58 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   @Test
   public void testRepeatedLoggerString() {
     testDebugStrings(
-        "goog$debug$Logger$getLogger('goog.net.XhrTransport');"
-            + "goog$debug$Logger$getLogger('my.app.Application');"
-            + "goog$debug$Logger$getLogger('my.app.Application');",
-        "goog$debug$Logger$getLogger('a');"
-            + "goog$debug$Logger$getLogger('b');"
-            + "goog$debug$Logger$getLogger('b');",
+        """
+        goog$debug$Logger$getLogger('goog.net.XhrTransport');
+        goog$debug$Logger$getLogger('my.app.Application');
+        goog$debug$Logger$getLogger('my.app.Application');
+        """,
+        """
+        goog$debug$Logger$getLogger('a');
+        goog$debug$Logger$getLogger('b');
+        goog$debug$Logger$getLogger('b');
+        """,
         new String[] {"a", "goog.net.XhrTransport", "b", "my.app.Application"});
   }
 
   @Test
   public void testRepeatedStringsWithDifferentMethods() {
     test(
-        "throw Error('A');"
-            + "goog$debug$Trace.startTracer('B', 'A');"
-            + "goog$debug$Logger$getLogger('C');"
-            + "goog$debug$Logger$getLogger('B');"
-            + "goog$debug$Logger$getLogger('A');"
-            + "throw Error('D');"
-            + "throw Error('C');"
-            + "throw Error('B');"
-            + "throw Error('A');",
-        "throw Error('a');"
-            + "goog$debug$Trace.startTracer('b', 'a');"
-            + "goog$debug$Logger$getLogger('c');"
-            + "goog$debug$Logger$getLogger('b');"
-            + "goog$debug$Logger$getLogger('a');"
-            + "throw Error('d');"
-            + "throw Error('c');"
-            + "throw Error('b');"
-            + "throw Error('a');");
+        """
+        throw Error('A');
+        goog$debug$Trace.startTracer('B', 'A');
+        goog$debug$Logger$getLogger('C');
+        goog$debug$Logger$getLogger('B');
+        goog$debug$Logger$getLogger('A');
+        throw Error('D');
+        throw Error('C');
+        throw Error('B');
+        throw Error('A');
+        """,
+        """
+        throw Error('a');
+        goog$debug$Trace.startTracer('b', 'a');
+        goog$debug$Logger$getLogger('c');
+        goog$debug$Logger$getLogger('b');
+        goog$debug$Logger$getLogger('a');
+        throw Error('d');
+        throw Error('c');
+        throw Error('b');
+        throw Error('a');
+        """);
   }
 
   @Test
   public void testLoggerWithNoReplacedParam() {
     testDebugStrings(
-        "var x = {};"
-            + "x.logger_ = goog.log.getLogger('foo');"
-            + "goog.log.info(x.logger_, 'Some message');",
-        "var x$logger_ = goog.log.getLogger('a');" + "goog.log.info(x$logger_, 'b');",
+        """
+        var x = {};
+        x.logger_ = goog.log.getLogger('foo');
+        goog.log.info(x.logger_, 'Some message');
+        """,
+        """
+        var x$logger_ = goog.log.getLogger('a');
+        goog.log.info(x$logger_, 'b');
+        """,
         new String[] {
           "a", "foo",
           "b", "Some message"
@@ -457,12 +478,16 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   @Test
   public void testLoggerWithSomeParametersNotReplaced() {
     testDebugStrings(
-        "var x = {};"
-            + "x.logger_ = goog.log.getLogger('foo');"
-            + "goog.log.multiString(x.logger_, 'Some message', 'Some message2', "
-            + "'Do not replace');",
-        "var x$logger_ = goog.log.getLogger('a');"
-            + "goog.log.multiString(x$logger_, 'b', 'c', 'Do not replace');",
+        """
+        var x = {};
+        x.logger_ = goog.log.getLogger('foo');
+        goog.log.multiString(x.logger_, 'Some message', 'Some message2',
+        'Do not replace');
+        """,
+        """
+        var x$logger_ = goog.log.getLogger('a');
+        goog.log.multiString(x$logger_, 'b', 'c', 'Do not replace');
+        """,
         new String[] {
           "a", "foo",
           "b", "Some message",

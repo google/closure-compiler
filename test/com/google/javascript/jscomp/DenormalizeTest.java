@@ -248,14 +248,28 @@ public final class DenormalizeTest extends CompilerTestCase {
     // a for loop, even if it's protected by parentheses.
 
     // Make sure the in operator doesn't get moved into the for loop.
-    testSame("function f(){ var a; var i=\"length\" in a;" + "for(; a < 2 ; a++) foo() }");
+    testSame(
+        """
+        function f(){ var a; var i="length" in a;
+        for(; a < 2 ; a++) foo() }
+        """);
     // Same, but with parens around the operator.
-    testSame("function f(){ var a; var i=(\"length\" in a);" + "for(; a < 2 ; a++) foo() }");
+    testSame(
+        """
+        function f(){ var a; var i=("length" in a);
+        for(; a < 2 ; a++) foo() }
+        """);
     // Make sure Normalize yanks the variable initializer out, and
     // Denormalize doesn't put it back.
     test(
-        "function f(){" + "var b,a=0; for (var i=(\"length\" in b);a<2; a++) foo()}",
-        "function f(){var b; var a=0;var i=(\"length\" in b);" + "for (;a<2;a++) foo()}");
+        """
+        function f(){
+        var b,a=0; for (var i=("length" in b);a<2; a++) foo()}
+        """,
+        """
+        function f(){var b; var a=0;var i=("length" in b);
+        for (;a<2;a++) foo()}
+        """);
   }
 
   @Test

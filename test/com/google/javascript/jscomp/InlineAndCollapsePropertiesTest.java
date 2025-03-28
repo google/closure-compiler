@@ -1107,8 +1107,10 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         "var c=null; var a$b$c = function(){}; var a$b$c$x = 0; a$b$c$x");
 
     test(
-        "var a = {}; a.b = {}; var c = a.b; a.b.c = function (){}; a.b.c.x = 0; a.b.c.x;"
-            + " use(c);", //
+        """
+        var a = {}; a.b = {}; var c = a.b; a.b.c = function (){}; a.b.c.x = 0; a.b.c.x;
+         use(c);
+        """, //
         "var a$b = {}; var c=null; a$b.c = function(){}; a$b.c.x=0; a$b.c.x; use(a$b);");
   }
 
@@ -3330,7 +3332,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             use(baz.A);
             """),
         expected(
-            """
+"""
 /** @constructor */
 function Foo() {}
 /** @constructor */

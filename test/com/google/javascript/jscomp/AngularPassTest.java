@@ -97,8 +97,10 @@ public final class AngularPassTest extends CompilerTestCase {
   public void testNgInjectAddsInjectToProps() {
     test(
         "var ns = {}; /** @ngInject */ ns.fn = function (a, b) {}",
-        "var ns = {}; /** @ngInject */ ns.fn = function (a, b) {};"
-            + "/** @public */ ns.fn['$inject']=['a', 'b']");
+        """
+        var ns = {}; /** @ngInject */ ns.fn = function (a, b) {};
+        /** @public */ ns.fn['$inject']=['a', 'b']
+        """);
 
     testSame("var ns = {}; ns.fn = function (a, b) {}");
   }
@@ -215,9 +217,11 @@ public final class AngularPassTest extends CompilerTestCase {
   @Test
   public void testNgInjectInNonBlock() {
     testError(
-        "function fake(){};"
-            + "var ns = {};"
-            + "fake( /** @ngInject */ ns.func = function (a, b) {} )",
+        """
+        function fake(){};
+        var ns = {};
+        fake( /** @ngInject */ ns.func = function (a, b) {} )
+        """,
         AngularPass.INJECT_IN_NON_GLOBAL_OR_BLOCK_ERROR);
 
     testError(
@@ -227,9 +231,11 @@ public final class AngularPassTest extends CompilerTestCase {
   @Test
   public void testNgInjectNonFunction() {
     testError(
-        "var ns = {}; ns.subns = {};"
-            + "ns.subns.fake = function(x, y){};"
-            + "/** @ngInject */ ns.subns.fake(1);",
+        """
+        var ns = {}; ns.subns = {};
+        ns.subns.fake = function(x, y){};
+        /** @ngInject */ ns.subns.fake(1);
+        """,
         AngularPass.INJECT_NON_FUNCTION_ERROR);
 
     testError("/** @ngInject */ var a = 10", AngularPass.INJECT_NON_FUNCTION_ERROR);
@@ -263,8 +269,10 @@ public final class AngularPassTest extends CompilerTestCase {
   public void testNgInjectAddsInjectToClassConstructor() {
     test(
         "class FnClass {/** @ngInject */ constructor(a, b) {}}",
-        "class FnClass{ /** @ngInject */ constructor(a, b){}}"
-            + "/** @public */ FnClass['$inject'] = ['a', 'b'];");
+        """
+        class FnClass{ /** @ngInject */ constructor(a, b){}}
+        /** @public */ FnClass['$inject'] = ['a', 'b'];
+        """);
   }
 
   @Test

@@ -23,9 +23,11 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
   private static final String EXTERN =
-      "Equality.$same = function(opt_a, opt_b) {};\n"
-          + "String.m_equals__java_lang_String__java_lang_Object__boolean = function(opt_a,"
-          + " opt_b) {};";
+      """
+      Equality.$same = function(opt_a, opt_b) {};
+      String.m_equals__java_lang_String__java_lang_Object__boolean =
+        function(opt_a, opt_b) {};
+      """;
   ;
 
   private static boolean useTypes;

@@ -773,7 +773,13 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
   public void testOldJsdocSwitch7() {
     Node root =
         parse(
-            "switch (x) {" + "  case 1: " + "    /** attach */ y;" + "    /** attach */ z;" + "}");
+            """
+            switch (x) {
+              case 1:
+                /** attach */ y;
+                /** attach */ z;
+            }
+            """);
     Node sw = root.getFirstChild();
     Node caseBody = sw.getSecondChild().getLastChild().getLastChild();
     checkState(caseBody.isBlock(), caseBody);

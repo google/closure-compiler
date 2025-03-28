@@ -398,8 +398,10 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
 
     setLanguage(ES6, ES5);
     testInjects(
-        "var string = {}; string.endsWith = function() {}; "
-            + "string.foo = function(string) { return string.endsWith('x'); };",
+        """
+        var string = {}; string.endsWith = function() {};
+        string.foo = function(string) { return string.endsWith('x'); };
+        """,
         "es6/string/endswith");
   }
 
@@ -419,8 +421,10 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testInjects(
         "var string = {endsWith: function() {}}; string.endsWith('x');", "es6/string/endswith");
     testInjects(
-        "var string = {}; string.endsWith = function() {}; "
-            + "string.foo = function() { return string.endsWith('x'); };",
+        """
+        var string = {}; string.endsWith = function() {};
+        string.foo = function() { return string.endsWith('x'); };
+        """,
         "es6/string/endswith");
   }
 

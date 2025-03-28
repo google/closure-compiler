@@ -222,7 +222,11 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
     testReportInstanceOf("Infinity", "Number");
     testReportInstanceOf("NaN", "Number");
     testReportInstanceOf(
-        "/** @constructor */ function Foo() {}; var foo = new Foo();" + "!foo", "Foo");
+        """
+        /** @constructor */ function Foo() {}; var foo = new Foo();
+        !foo
+        """,
+        "Foo");
 
     testReportInstanceOf("(4 + 5)", "Number");
     testReportInstanceOf("('a' + 'b')", "String");
@@ -243,7 +247,15 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
     testReportInstanceOf("!Function", "Object");
     testReportInstanceOf("!func()", "String");
     testReportInstanceOf("!({})", "Object");
-    testReportInstanceOf("/** @constructor */ function Foo() {" + "!this", "Foo;" + "}");
+    testReportInstanceOf(
+        """
+        /** @constructor */ function Foo() {
+        !this
+        """,
+        """
+        Foo;
+        }
+        """);
 
     testSame("new String('') instanceof String");
     testSame("new Number(4) instanceof Number");
@@ -254,7 +266,11 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
     testSame("Function instanceof Object");
     testSame("func() instanceof String");
     testSame("({}) instanceof Object");
-    testSame("/** @constructor */ function Foo() {" + " var a = this instanceof Foo; }");
+    testSame(
+        """
+        /** @constructor */ function Foo() {
+         var a = this instanceof Foo; }
+        """);
 
     testSame("(()=>42) instanceof Function");
     testSame("class Person{} Person instanceof Function");

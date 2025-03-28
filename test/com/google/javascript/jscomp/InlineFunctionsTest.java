@@ -166,7 +166,12 @@ public class InlineFunctionsTest extends CompilerTestCase {
   @Test
   public void testInlineEmptyFunction1() {
     // Empty function, no params.
-    test("function foo(){}" + "foo();", "void 0;");
+    test(
+        """
+        function foo(){}
+        foo();
+        """,
+        "void 0;");
   }
 
   @Test
@@ -233,7 +238,12 @@ public class InlineFunctionsTest extends CompilerTestCase {
   @Test
   public void testInlineFunctions1() {
     // As simple a test as we can get.
-    test("function foo(){ return 4 }" + "foo();", "4");
+    test(
+        """
+        function foo(){ return 4 }
+        foo();
+        """,
+        "4");
   }
 
   @Test
@@ -404,8 +414,14 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testInlineFunctions9() {
     // don't inline if the input parameter is modified.
     test(
-        "function INC(x){return x++}" + "var y=INC(i)",
-        "var y;{var x$jscomp$inline_0=i;" + "y=x$jscomp$inline_0++}");
+        """
+        function INC(x){return x++}
+        var y=INC(i)
+        """,
+        """
+        var y;{var x$jscomp$inline_0=i;
+        y=x$jscomp$inline_0++}
+        """);
   }
 
   @Test
@@ -439,20 +455,33 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testInlineFunctions11() {
-    test("function f(x){return x}" + "var y=f(i)", "var y=i");
+    test(
+        """
+        function f(x){return x}
+        var y=f(i)
+        """,
+        "var y=i");
   }
 
   @Test
   public void testInlineFunctions13() {
     // inline as block if the input parameter has side-effects.
-    test("function f(x){return x}" + "var y=f(i++)", "var y=i++");
+    test(
+        """
+        function f(x){return x}
+        var y=f(i++)
+        """,
+        "var y=i++");
   }
 
   @Test
   public void testInlineFunctions13a() {
     // inline as block if the input parameter has side-effects.
     test(
-        "function f(x){return random() || x}" + "var y=f(i++)",
+        """
+        function f(x){return random() || x}
+        var y=f(i++)
+        """,
         "var y;{var x$jscomp$inline_0=i++;y=random() || x$jscomp$inline_0}");
   }
 
@@ -596,14 +625,23 @@ public class InlineFunctionsTest extends CompilerTestCase {
     assumeMinimumCapture = true;
 
     test(
-        "function foo(b){return window.bar(function(){c(b)})}" + "var d=foo(e)",
-        "var d;{var b$jscomp$inline_0=e;" + "d=window.bar(function(){c(b$jscomp$inline_0)})}");
+        """
+        function foo(b){return window.bar(function(){c(b)})}
+        var d=foo(e)
+        """,
+        """
+        var d;{var b$jscomp$inline_0=e;
+        d=window.bar(function(){c(b$jscomp$inline_0)})}
+        """);
   }
 
   @Test
   public void testInlineFunctions16b() {
     test(
-        "function foo(){return window.bar(function(){c()})}" + "var d=foo(e)",
+        """
+        function foo(){return window.bar(function(){c()})}
+        var d=foo(e)
+        """,
         "var d=window.bar(function(){c()})");
   }
 
@@ -618,7 +656,11 @@ public class InlineFunctionsTest extends CompilerTestCase {
     // TRICKY ... test nested inlines
     // with block inlining possible
     test(
-        "function foo(a, b){return a+b}" + "function bar(d){return c}" + "var d=foo(bar(1),e)",
+        """
+        function foo(a, b){return a+b}
+        function bar(d){return c}
+        var d=foo(bar(1),e)
+        """,
         "var d=c+e;");
   }
 
@@ -639,7 +681,11 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testInlineFunctions21() {
     // with block inlining possible
     test(
-        "function foo(a, b){return a+b}" + "function bar(d){return c}" + "var d=bar(foo(1,e))",
+        """
+        function foo(a, b){return a+b}
+        function bar(d){return c}
+        var d=bar(foo(1,e))
+        """,
         "var d=c");
   }
 
@@ -959,7 +1005,12 @@ public class InlineFunctionsTest extends CompilerTestCase {
   @Test
   public void testMixedModeInlining1() {
     // Base line tests, direct inlining
-    test("function foo(){return 1}" + "foo();", "1;");
+    test(
+        """
+        function foo(){return 1}
+        foo();
+        """,
+        "1;");
   }
 
   @Test
@@ -1026,8 +1077,15 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
     // Base line.
     test(
-        "function foo(a,b){return a+b+a+b+4+5+6+7+8+9+1+2+3+4+5}" + "foo(1,2);" + "foo(2,3)",
-        "1+2+1+2+4+5+6+7+8+9+1+2+3+4+5;" + "2+3+2+3+4+5+6+7+8+9+1+2+3+4+5");
+        """
+        function foo(a,b){return a+b+a+b+4+5+6+7+8+9+1+2+3+4+5}
+        foo(1,2);
+        foo(2,3)
+        """,
+        """
+        1+2+1+2+4+5+6+7+8+9+1+2+3+4+5;
+        2+3+2+3+4+5+6+7+8+9+1+2+3+4+5
+        """);
   }
 
   @Test
@@ -1035,7 +1093,11 @@ public class InlineFunctionsTest extends CompilerTestCase {
     // Don't inline here because the function definition can not be eliminated.
     // TODO(johnlenz): Should we add constant removing to the unit test?
     testSame(
-        "function foo(a,b){return a+b+a+b+4+5+6+7+8+9+1+2+3+4+5}" + "foo(1,2);" + "foo(2,3,x())");
+        """
+        function foo(a,b){return a+b+a+b+4+5+6+7+8+9+1+2+3+4+5}
+        foo(1,2);
+        foo(2,3,x())
+        """);
   }
 
   @Test
@@ -1062,7 +1124,11 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   public void testMixedModeInliningCosting4() {
     // Threshold test.
     testSame(
-        "function foo(a,b){return a+b+a+b+4+5+6+7+8+9+1+2+3+4+101}" + "foo(1,2);" + "foo(2,3,x())");
+        """
+        function foo(a,b){return a+b+a+b+4+5+6+7+8+9+1+2+3+4+101}
+        foo(1,2);
+        foo(2,3,x())
+        """);
   }
 
   /** See b/72513540 */
@@ -1120,18 +1186,31 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // Assignment
     test(
         "function f(x){return x=1}f(undefined)",
-        "{var x$jscomp$inline_0=undefined;" + "x$jscomp$inline_0=1}");
+        """
+        {var x$jscomp$inline_0=undefined;
+        x$jscomp$inline_0=1}
+        """);
   }
 
   @Test
   public void testNoInlineIfParametersModified2() {
-    test("function f(x){return (x)=1;}f(2)", "{var x$jscomp$inline_0=2;" + "x$jscomp$inline_0=1}");
+    test(
+        "function f(x){return (x)=1;}f(2)",
+        """
+        {var x$jscomp$inline_0=2;
+        x$jscomp$inline_0=1}
+        """);
   }
 
   @Test
   public void testNoInlineIfParametersModified3() {
     // Assignment variant.
-    test("function f(x){return x*=2}f(2)", "{var x$jscomp$inline_0=2;" + "x$jscomp$inline_0*=2}");
+    test(
+        "function f(x){return x*=2}f(2)",
+        """
+        {var x$jscomp$inline_0=2;
+        x$jscomp$inline_0*=2}
+        """);
   }
 
   @Test
@@ -1139,7 +1218,11 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // Assignment in if.
     test(
         "function f(x){return x?(x=2):0}f(2)",
-        "{var x$jscomp$inline_0=2;" + "x$jscomp$inline_0?(" + "x$jscomp$inline_0=2):0}");
+        """
+        {var x$jscomp$inline_0=2;
+        x$jscomp$inline_0?(
+        x$jscomp$inline_0=2):0}
+        """);
   }
 
   @Test
@@ -1266,28 +1349,40 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   public void testInlineBlockMutableArgs1() {
     test(
         "function foo(x){x+x}foo([])",
-        "{var x$jscomp$inline_0=[];" + "x$jscomp$inline_0+x$jscomp$inline_0}");
+        """
+        {var x$jscomp$inline_0=[];
+        x$jscomp$inline_0+x$jscomp$inline_0}
+        """);
   }
 
   @Test
   public void testInlineBlockMutableArgs2() {
     test(
         "function foo(x){x+x}foo(new Date)",
-        "{var x$jscomp$inline_0=new Date;" + "x$jscomp$inline_0+x$jscomp$inline_0}");
+        """
+        {var x$jscomp$inline_0=new Date;
+        x$jscomp$inline_0+x$jscomp$inline_0}
+        """);
   }
 
   @Test
   public void testInlineBlockMutableArgs3() {
     test(
         "function foo(x){x+x}foo(true&&new Date)",
-        "{var x$jscomp$inline_0=true&&new Date;" + "x$jscomp$inline_0+x$jscomp$inline_0}");
+        """
+        {var x$jscomp$inline_0=true&&new Date;
+        x$jscomp$inline_0+x$jscomp$inline_0}
+        """);
   }
 
   @Test
   public void testInlineBlockMutableArgs4() {
     test(
         "function foo(x){x+x}foo({})",
-        "{var x$jscomp$inline_0={};" + "x$jscomp$inline_0+x$jscomp$inline_0}");
+        """
+        {var x$jscomp$inline_0={};
+        x$jscomp$inline_0+x$jscomp$inline_0}
+        """);
   }
 
   @Test
@@ -1313,8 +1408,16 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // "bar" is inlined as its uses global "a", and does introduce any new
     // globals.
     test(
-        "var a=0;" + "function foo(a){return 3+a}" + "function bar(){a=foo(4)}" + "bar()",
-        "var a=0;" + "{a=3+4}");
+        """
+        var a=0;
+        function foo(a){return 3+a}
+        function bar(){a=foo(4)}
+        bar()
+        """,
+        """
+        var a=0;
+        {a=3+4}
+        """);
   }
 
   @Test
@@ -1342,8 +1445,16 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // "foo" is inlined.
     // block access to global "a".
     test(
-        "var a=0;" + "function foo(){return 3+a}" + "function _bar(a){a=foo(4)+a}",
-        "var a=0;function _bar(a$jscomp$1){" + "a$jscomp$1=" + "3+a+a$jscomp$1}");
+        """
+        var a=0;
+        function foo(){return 3+a}
+        function _bar(a){a=foo(4)+a}
+        """,
+        """
+        var a=0;function _bar(a$jscomp$1){
+        a$jscomp$1=
+        3+a+a$jscomp$1}
+        """);
   }
 
   @Test
@@ -1369,34 +1480,63 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   public void testShadowVariables7() {
     assumeMinimumCapture = false;
     test(
-        "var a=3;" + "function foo(){return a}" + "(function(){var a=5;(function(){foo()})()})()",
-        "var a=3;" + "{var a$jscomp$inline_0=5;{a}}");
+        """
+        var a=3;
+        function foo(){return a}
+        (function(){var a=5;(function(){foo()})()})()
+        """,
+        """
+        var a=3;
+        {var a$jscomp$inline_0=5;{a}}
+        """);
 
     assumeMinimumCapture = true;
     test(
-        "var a=3;" + "function foo(){return a}" + "(function(){var a=5;(function(){foo()})()})()",
-        "var a=3;" + "{var a$jscomp$inline_1=5;{a}}");
+        """
+        var a=3;
+        function foo(){return a}
+        (function(){var a=5;(function(){foo()})()})()
+        """,
+        """
+        var a=3;
+        {var a$jscomp$inline_1=5;{a}}
+        """);
   }
 
   @Test
   public void testShadowVariables8() {
     // this should be inlined
     test(
-        "var a=0;" + "function foo(){return 3}" + "function _bar(){var a=foo()}",
-        "var a=0;" + "function _bar(){var a=3}");
+        """
+        var a=0;
+        function foo(){return 3}
+        function _bar(){var a=foo()}
+        """,
+        """
+        var a=0;
+        function _bar(){var a=3}
+        """);
   }
 
   @Test
   public void testShadowVariables9() {
     // this should be inlined too [even if the global is not declared]
-    test("function foo(){return 3}" + "function _bar(){var a=foo()}", "function _bar(){var a=3}");
+    test(
+        """
+        function foo(){return 3}
+        function _bar(){var a=foo()}
+        """,
+        "function _bar(){var a=3}");
   }
 
   @Test
   public void testShadowVariables10() {
     // callee var must be renamed.
     test(
-        "var a;function foo(){return a}" + "function _bar(){var a=foo()}",
+        """
+        var a;function foo(){return a}
+        function _bar(){var a=foo()}
+        """,
         "var a;function _bar(){var a$jscomp$1=a}");
   }
 
@@ -1405,8 +1545,16 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // The call has a local variable
     // which collides with the function being inlined
     test(
-        "var a=0;var b=1;" + "function foo(){return a+a}" + "function _bar(){var a=foo();alert(a)}",
-        "var a=0;var b=1;" + "function _bar(){var a$jscomp$1=a+a;" + "alert(a$jscomp$1)}");
+        """
+        var a=0;var b=1;
+        function foo(){return a+a}
+        function _bar(){var a=foo();alert(a)}
+        """,
+        """
+        var a=0;var b=1;
+        function _bar(){var a$jscomp$1=a+a;
+        alert(a$jscomp$1)}
+        """);
   }
 
   @Test
@@ -1586,7 +1734,12 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
 
   @Test
   public void testCostBasedInlining1() {
-    testSame("function foo(a){return a}" + "foo=new Function(\"return 1\");" + "foo(1)");
+    testSame(
+        """
+        function foo(a){return a}
+        foo=new Function("return 1");
+        foo(1)
+        """);
   }
 
   @Test
@@ -1594,8 +1747,16 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // Baseline complexity tests.
     // Single call, function not removed.
     test(
-        "function foo(a){return a}" + "var b=foo;" + "function _t1(){return foo(1)}",
-        "function foo(a){return a}" + "var b=foo;" + "function _t1(){return 1}");
+        """
+        function foo(a){return a}
+        var b=foo;
+        function _t1(){return foo(1)}
+        """,
+        """
+        function foo(a){return a}
+        var b=foo;
+        function _t1(){return 1}
+        """);
   }
 
   @Test
@@ -1706,7 +1867,12 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
 
   @Test
   public void testCostBasedInlining12() {
-    test("function f(a){return 1 + a + a;}" + "var a = f(1) + f(2);", "var a=1+1+1+(1+2+2)");
+    test(
+        """
+        function f(a){return 1 + a + a;}
+        var a = f(1) + f(2);
+        """,
+        "var a=1+1+1+(1+2+2)");
   }
 
   @Test
@@ -1725,7 +1891,12 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
 
   @Test
   public void testCostBasedInliningComplex1() {
-    testSame("function foo(a){a()}" + "foo=new Function(\"return 1\");" + "foo(1)");
+    testSame(
+        """
+        function foo(a){a()}
+        foo=new Function("return 1");
+        foo(1)
+        """);
   }
 
   @Test
@@ -1733,8 +1904,16 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // Baseline complexity tests.
     // Single call, function not removed.
     test(
-        "function foo(a){a()}" + "var b=foo;" + "function _t1(){foo(x)}",
-        "function foo(a){a()}" + "var b=foo;" + "function _t1(){{x()}}");
+        """
+        function foo(a){a()}
+        var b=foo;
+        function _t1(){foo(x)}
+        """,
+        """
+        function foo(a){a()}
+        var b=foo;
+        function _t1(){{x()}}
+        """);
   }
 
   @Test
@@ -1847,8 +2026,14 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   @Test
   public void testNoInlineOfNonGlobalFunction1() {
     test(
-        "var g;function _f(){function g(){return 0}}" + "function _h(){return g()}",
-        "var g;function _f(){}" + "function _h(){return g()}");
+        """
+        var g;function _f(){function g(){return 0}}
+        function _h(){return g()}
+        """,
+        """
+        var g;function _f(){}
+        function _h(){return g()}
+        """);
   }
 
   @Test
@@ -1869,15 +2054,27 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   @Test
   public void testNoInlineOfNonGlobalFunction3() {
     test(
-        "var g;function _f(){var g=function(){return 0}}" + "function _h(){return g()}",
-        "var g;function _f(){}" + "function _h(){return g()}");
+        """
+        var g;function _f(){var g=function(){return 0}}
+        function _h(){return g()}
+        """,
+        """
+        var g;function _f(){}
+        function _h(){return g()}
+        """);
   }
 
   @Test
   public void testNoInlineOfNonGlobalFunction4() {
     test(
-        "var g;function _f(){function g(){return 0}}" + "function _h(){return g()}",
-        "var g;function _f(){}" + "function _h(){return g()}");
+        """
+        var g;function _f(){function g(){return 0}}
+        function _h(){return g()}
+        """,
+        """
+        var g;function _f(){}
+        function _h(){return g()}
+        """);
   }
 
   @Test
@@ -1885,7 +2082,10 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // Normalization makes this test of marginal value.
     // The unreferenced function is removed.
     test(
-        "var g=function(){return 0};" + "function _f(g){return g()}",
+        """
+        var g=function(){return 0};
+        function _f(g){return g()}
+        """,
         "function _f(g$jscomp$1){return g$jscomp$1()}");
   }
 
@@ -1916,7 +2116,12 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
 
   @Test
   public void testInlineFunctionWithArgsMismatch4() {
-    test("function f(one, two, three) { return one + two + three; }" + "f(1,2,3,4,5);", "1+2+3");
+    test(
+        """
+        function f(one, two, three) { return one + two + three; }
+        f(1,2,3,4,5);
+        """,
+        "1+2+3");
   }
 
   @Test
@@ -2362,7 +2567,15 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   // Test redefinition of parameter name.
   @Test
   public void testComplexNoVarSub() {
-    test("function foo(x){" + "var x;" + "y=x" + "}" + "foo(1)", "{y=1}");
+    test(
+        """
+        function foo(x){
+        var x;
+        y=x
+        }
+        foo(1)
+        """,
+        "{y=1}");
   }
 
   @Test
@@ -2504,14 +2717,23 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   @Test
   public void testInlineConstructor3() {
     test(
-        "function f() {x.call(this)} f.prototype.a = 0;" + "function _g() {f.call(this)}",
-        "function f() {x.call(this)} f.prototype.a = 0;" + "function _g() {{x.call(this)}}");
+        """
+        function f() {x.call(this)} f.prototype.a = 0;
+        function _g() {f.call(this)}
+        """,
+        """
+        function f() {x.call(this)} f.prototype.a = 0;
+        function _g() {{x.call(this)}}
+        """);
   }
 
   @Test
   public void testInlineConstructor4() {
     test(
-        "function f() {x.call(this)} f.prototype.a = 0;" + "function _g() {var t = f.call(this)}",
+        """
+        function f() {x.call(this)} f.prototype.a = 0;
+        function _g() {var t = f.call(this)}
+        """,
         """
         function f() {x.call(this)} f.prototype.a = 0;
             function _g() {var t; {x.call(this); t = void 0}}
@@ -2617,12 +2839,25 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   public void testFunctionExpressionCallInlining11c() {
     // TODO(johnlenz): Can inline, not temps needed.
     assumeMinimumCapture = false;
-    testSame("function _x() {" + "  ((function(){return function(){foo()}})())();" + "}");
+    testSame(
+        """
+        function _x() {
+          ((function(){return function(){foo()}})())();
+        }
+        """);
 
     assumeMinimumCapture = true;
     test(
-        "function _x() {" + "  ((function(){return function(){foo()}})())();" + "}",
-        "function _x() {" + "  {foo()}" + "}");
+        """
+        function _x() {
+          ((function(){return function(){foo()}})())();
+        }
+        """,
+        """
+        function _x() {
+          {foo()}
+        }
+        """);
   }
 
   @Test
@@ -2631,12 +2866,27 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // no names are introduced.
     assumeMinimumCapture = false;
     testSame(
-        "function _x() {" + "  eval();" + "  ((function(){return function(){foo()}})())();" + "}");
+        """
+        function _x() {
+          eval();
+          ((function(){return function(){foo()}})())();
+        }
+        """);
 
     assumeMinimumCapture = true;
     test(
-        "function _x() {" + "  eval();" + "  ((function(){return function(){foo()}})())();" + "}",
-        "function _x() {" + "  eval();" + "  {foo()}" + "}");
+        """
+        function _x() {
+          eval();
+          ((function(){return function(){foo()}})())();
+        }
+        """,
+        """
+        function _x() {
+          eval();
+          {foo()}
+        }
+        """);
   }
 
   @Test
@@ -2645,12 +2895,27 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // if temps are introduced.
     assumeMinimumCapture = false;
     testSame(
-        "function _x() {" + "  eval();" + "  ((function(a){return function(){foo()}})())();" + "}");
+        """
+        function _x() {
+          eval();
+          ((function(a){return function(){foo()}})())();
+        }
+        """);
 
     assumeMinimumCapture = true;
     test(
-        "function _x() {" + "  eval();" + "  ((function(a){return function(){foo()}})())();" + "}",
-        "function _x() {" + "  eval();" + "  {foo();}" + "}");
+        """
+        function _x() {
+          eval();
+          ((function(a){return function(){foo()}})())();
+        }
+        """,
+        """
+        function _x() {
+          eval();
+          {foo();}
+        }
+        """);
   }
 
   @Test
@@ -2918,7 +3183,10 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   @Test
   public void testRenamePropertyFunction() {
     testSame(
-        "function JSCompiler_renameProperty(x) {return x} " + "JSCompiler_renameProperty('foo')");
+        """
+        function JSCompiler_renameProperty(x) {return x}
+        JSCompiler_renameProperty('foo')
+        """);
   }
 
   @Test
@@ -2926,8 +3194,14 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // baseline: an alias doesn't prevents declaration removal, but not
     // inlining.
     test(
-        "function f(x) {return x} " + "foo(window, f); f(1)",
-        "function f(x) {return x} " + "foo(window, f); 1");
+        """
+        function f(x) {return x}
+        foo(window, f); f(1)
+        """,
+        """
+        function f(x) {return x}
+        foo(window, f); 1
+        """);
   }
 
   @Test
@@ -3481,15 +3755,26 @@ JSCompiler_temp_const$jscomp$2.call(JSCompiler_temp_const$jscomp$3, JSCompiler_t
   public void testMaxFunSizeAfterInlining() {
     this.maxSizeAfterInlining = 1;
     test( // Always inline single-statement functions
-        "function g() { return 123; }\n" + "function f() { g(); }", "function f() { 123; }");
+        """
+        function g() { return 123; }
+        function f() { g(); }
+        """,
+        "function f() { 123; }");
 
     this.maxSizeAfterInlining = 10;
     test( // Always inline at the top level
-        "function g() { 123; return 123; }\n" + "g();", "{ 123; 123; }");
+        """
+        function g() { 123; return 123; }
+        g();
+        """,
+        "{ 123; 123; }");
 
     this.maxSizeAfterInlining = 1;
     testSame( // g is too big to be inlined
-        "function g() { 123; return 123; }\n" + "g();");
+        """
+        function g() { 123; return 123; }
+        g();
+        """);
 
     this.maxSizeAfterInlining = 20;
     test(

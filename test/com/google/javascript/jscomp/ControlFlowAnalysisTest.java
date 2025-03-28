@@ -1282,9 +1282,11 @@ public final class ControlFlowAnalysisTest {
   public void testComplicatedFinally2() throws IOException {
     // Now the most nasty case.....
     String src =
-        "while(1){try{"
-            + "if(a){a;continue;}else if(b){b;break;} else if(c) throw 1; else a}"
-            + "catch(e){}finally{c()}bar}foo";
+        """
+        while(1){try{\
+        if(a){a;continue;}else if(b){b;break;} else if(c) throw 1; else a}\
+        catch(e){}finally{c()}bar}foo\
+        """;
 
     ControlFlowGraph<Node> cfg = createCfg(src);
     // Focus only on the ON_EX edges.

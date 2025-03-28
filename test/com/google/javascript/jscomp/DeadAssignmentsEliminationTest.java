@@ -344,7 +344,10 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   @Test
   public void testMutipleDeadAssignmentsButAlivePartiallyWithinTheExpression() {
     inFunction(
-        "var x; x = 1, x = 2, x = 3, x = 4, x = 5," + "  print(x), x = 0, print(x), x = 101;",
+        """
+        var x; x = 1, x = 2, x = 3, x = 4, x = 5,
+          print(x), x = 0, print(x), x = 101;
+        """,
         "var x; 1, 2, 3, 4, x = 5, print(x), x = 0, print(x), 101;");
   }
 
@@ -466,16 +469,18 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     inFunction(
-        "  try {"
-            + "     var sortIndices = {};"
-            + "     sortIndices = bar();"
-            + "     for (var i = 0; i < 100; i++) {"
-            + "       var sortIndex = sortIndices[i];"
-            + "       bar(sortIndex);"
-            + "     }"
-            + "   } finally {"
-            + "     bar();"
-            + "   }");
+        """
+        try {
+           var sortIndices = {};
+           sortIndices = bar();
+           for (var i = 0; i < 100; i++) {
+             var sortIndex = sortIndices[i];
+             bar(sortIndex);
+           }
+         } finally {
+           bar();
+         }
+        """);
   }
 
   @Test
@@ -486,61 +491,127 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   @Test
   public void testIssue297a() {
     testSame(
-        "function f(p) {"
-            + " var x;"
-            + " return ((x=p.id) && (x=parseInt(x.substr(1))) && x>0);"
-            + "}; f('');");
+        """
+        function f(p) {
+         var x;
+         return ((x=p.id) && (x=parseInt(x.substr(1))) && x>0);
+        }; f('');
+        """);
   }
 
   @Test
   public void testIssue297b() {
     test(
-        "function f() {" + " var x;" + " return (x='') && (x = x.substr(1));" + "};",
-        "function f() {" + " var x;" + " return (x='') && (x.substr(1));" + "};");
+        """
+        function f() {
+         var x;
+         return (x='') && (x = x.substr(1));
+        };
+        """,
+        """
+        function f() {
+         var x;
+         return (x='') && (x.substr(1));
+        };
+        """);
   }
 
   @Test
   public void testIssue297c() {
     test(
-        "function f() {" + " var x;" + " return (x=1) && (x = f(x));" + "};",
-        "function f() {" + " var x;" + " return (x=1) && f(x);" + "};");
+        """
+        function f() {
+         var x;
+         return (x=1) && (x = f(x));
+        };
+        """,
+        """
+        function f() {
+         var x;
+         return (x=1) && f(x);
+        };
+        """);
   }
 
   @Test
   public void testIssue297d() {
     test(
-        "function f(a) {" + " return (a=1) && (a = f(a));" + "};",
-        "function f(a) {" + " return (a=1) && (f(a));" + "};");
+        """
+        function f(a) {
+         return (a=1) && (a = f(a));
+        };
+        """,
+        """
+        function f(a) {
+         return (a=1) && (f(a));
+        };
+        """);
   }
 
   @Test
   public void testIssue297e() {
     test(
-        "function f(a) {" + " return (a=1) - (a = g(a));" + "};",
-        "function f(a) {" + " return (a=1) - (g(a));" + "};");
+        """
+        function f(a) {
+         return (a=1) - (a = g(a));
+        };
+        """,
+        """
+        function f(a) {
+         return (a=1) - (g(a));
+        };
+        """);
   }
 
   @Test
   public void testIssue297f() {
     test(
-        "function f(a) {" + " h((a=1) - (a = g(a)));" + "};",
-        "function f(a) {" + " h((a=1) - (g(a)));" + "};");
+        """
+        function f(a) {
+         h((a=1) - (a = g(a)));
+        };
+        """,
+        """
+        function f(a) {
+         h((a=1) - (g(a)));
+        };
+        """);
   }
 
   @Test
   public void testIssue297g() {
     test(
-        "function f(a) {" + " var b = h((b=1) - (b = g(b)));" + " return b;" + "};",
+        """
+        function f(a) {
+         var b = h((b=1) - (b = g(b)));
+         return b;
+        };
+        """,
         // The last assignment in the initializer should be eliminated
-        "function f(a) {" + " var b = h((b=1) - (b = g(b)));" + " return b;" + "};");
+        """
+        function f(a) {
+         var b = h((b=1) - (b = g(b)));
+         return b;
+        };
+        """);
   }
 
   @Test
   public void testIssue297h() {
     test(
-        "function f(a) {" + " var b = b=1;" + " return b;" + "};",
+        """
+        function f(a) {
+         var b = b=1;
+         return b;
+        };
+        """,
         // The assignment in the initializer should be eliminated
-        "function f(a) {" + " var b = b = 1;" + " return b;" + "};");
+        """
+        function f(a) {
+         var b = b = 1;
+         return b;
+        };
+        """);
   }
 
   @Test

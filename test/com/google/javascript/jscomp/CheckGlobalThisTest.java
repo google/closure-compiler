@@ -139,8 +139,10 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
   @Test
   public void testOverride1() {
     testSame(
-        "/** @constructor */function A() { } var a = new A();"
-            + "/** @override */ a.foo = function() { this.bar = 5; };");
+        """
+        /** @constructor */function A() { } var a = new A();
+        /** @override */ a.foo = function() { this.bar = 5; };
+        """);
   }
 
   @Test
@@ -190,7 +192,11 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
 
   @Test
   public void testPropertyOfMethod() {
-    testFailure("a.protoype.b = {}; " + "a.prototype.b.c = function() { this.foo = 3; };");
+    testFailure(
+        """
+        a.protoype.b = {};
+        a.prototype.b.c = function() { this.foo = 3; };
+        """);
   }
 
   @Test
@@ -221,10 +227,12 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
   @Test
   public void testStaticFunctionInMethod2() {
     testSame(
-        "A.prototype.m1 = function() {"
-            + "  function me() {"
-            + "    function myself() {"
-            + "      function andI() { this.m2 = 5; } } } }");
+        """
+        A.prototype.m1 = function() {
+          function me() {
+            function myself() {
+              function andI() { this.m2 = 5; } } } }
+        """);
   }
 
   @Test
@@ -264,30 +272,40 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
 
   @Test
   public void testIssue182d() {
-    testSame("function Foo() {} " + "Foo.prototype = {write: function() { this.foo = 3; }};");
+    testSame(
+        """
+        function Foo() {}
+        Foo.prototype = {write: function() { this.foo = 3; }};
+        """);
   }
 
   @Test
   public void testLendsAnnotation1() {
     testFailure(
-        "/** @constructor */ function F() {}"
-            + "dojo.declare(F, {foo: function() { return this.foo; }});");
+        """
+        /** @constructor */ function F() {}
+        dojo.declare(F, {foo: function() { return this.foo; }});
+        """);
   }
 
   @Test
   public void testLendsAnnotation2() {
     testFailure(
-        "/** @constructor */ function F() {}"
-            + "dojo.declare(F, /** @lends {F.bar} */ ("
-            + "    {foo: function() { return this.foo; }}));");
+        """
+        /** @constructor */ function F() {}
+        dojo.declare(F, /** @lends {F.bar} */ (
+            {foo: function() { return this.foo; }}));
+        """);
   }
 
   @Test
   public void testLendsAnnotation3() {
     testSame(
-        "/** @constructor */ function F() {}"
-            + "dojo.declare(F, /** @lends {F.prototype} */ ("
-            + "    {foo: function() { return this.foo; }}));");
+        """
+        /** @constructor */ function F() {}
+        dojo.declare(F, /** @lends {F.prototype} */ (
+            {foo: function() { return this.foo; }}));
+        """);
   }
 
   @Test
@@ -307,12 +325,20 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
 
   @Test
   public void testArrowFunction3() {
-    testFailure("function Foo() {} " + "Foo.prototype.getFoo = () => this.foo;");
+    testFailure(
+        """
+        function Foo() {}
+        Foo.prototype.getFoo = () => this.foo;
+        """);
   }
 
   @Test
   public void testArrowFunction4() {
-    testFailure("function Foo() {} " + "Foo.prototype.setFoo = (f) => { this.foo = f; };");
+    testFailure(
+        """
+        function Foo() {}
+        Foo.prototype.setFoo = (f) => { this.foo = f; };
+        """);
   }
 
   @Test

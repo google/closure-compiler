@@ -566,8 +566,10 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
     test(
         srcs("new F(...args);"),
         expected(
-            "new (Function.prototype.bind.apply(F,"
-                + " [null].concat((0, $jscomp.arrayFromIterable)(args))));"));
+            """
+            new (Function.prototype.bind.apply(F,\
+             [null].concat((0, $jscomp.arrayFromIterable)(args))));\
+            """));
 
     assertThat(getLastCompiler().getInjected()).containsExactly("es6/util/arrayfromiterable");
   }

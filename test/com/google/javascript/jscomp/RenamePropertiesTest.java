@@ -33,7 +33,11 @@ import org.junit.runners.JUnit4;
 public final class RenamePropertiesTest extends CompilerTestCase {
 
   private static final String EXTERNS =
-      "var window;" + "prop.toString;" + "var google = { gears: { factory: {}, workerPool: {} } };";
+      """
+      var window;
+      prop.toString;
+      var google = { gears: { factory: {}, workerPool: {} } };
+      """;
 
   private RenameProperties renameProperties;
   private boolean generatePseudoNames;
@@ -65,12 +69,16 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   @Test
   public void testPrototypeProperties() {
     test(
-        "Bar.prototype.getA = function(){}; bar.getA();"
-            + "Bar.prototype.getB = function(){};"
-            + "Bar.prototype.getC = function(){};",
-        "Bar.prototype.a = function(){}; bar.a();"
-            + "Bar.prototype.b = function(){};"
-            + "Bar.prototype.c = function(){}");
+        """
+        Bar.prototype.getA = function(){}; bar.getA();
+        Bar.prototype.getB = function(){};
+        Bar.prototype.getC = function(){};
+        """,
+        """
+        Bar.prototype.a = function(){}; bar.a();
+        Bar.prototype.b = function(){};
+        Bar.prototype.c = function(){}
+        """);
   }
 
   @Test
@@ -233,10 +241,14 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   @Test
   public void testStaticAndInstanceMethodWithSameName() {
     test(
-        "Bar = function(){}; Bar.getA = function(){}; "
-            + "Bar.prototype.getA = function(){}; Bar.getA(); bar.getA();",
-        "Bar = function(){}; Bar.a = function(){}; "
-            + "Bar.prototype.a = function(){}; Bar.a(); bar.a();");
+        """
+        Bar = function(){}; Bar.getA = function(){};
+        Bar.prototype.getA = function(){}; Bar.getA(); bar.getA();
+        """,
+        """
+        Bar = function(){}; Bar.a = function(){};
+        Bar.prototype.a = function(){}; Bar.a(); bar.a();
+        """);
   }
 
   @Test
@@ -254,10 +266,15 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   @Test
   public void testRenamePropertiesFunctionCall2() {
     test(
-        "var foo = {myProp: 0}; "
-            + "f(JSCompiler_renameProperty('otherProp.myProp.someProp')); "
-            + "foo.myProp = 1; foo.theirProp = 2; foo.yourProp = 3;",
-        "var foo = {a: 0}; f('b.a.c'); " + "foo.a = 1; foo.d = 2; foo.e = 3;");
+        """
+        var foo = {myProp: 0};
+        f(JSCompiler_renameProperty('otherProp.myProp.someProp'));
+        foo.myProp = 1; foo.theirProp = 2; foo.yourProp = 3;
+        """,
+        """
+        var foo = {a: 0}; f('b.a.c');
+        foo.a = 1; foo.d = 2; foo.e = 3;
+        """);
   }
 
   @Test
@@ -268,8 +285,10 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   @Test
   public void testRemoveRenameFunctionStubs2() {
     test(
-        "function JSCompiler_renameProperty(x) { return x; }"
-            + "var foo = {myProp: 0}; f(foo[JSCompiler_renameProperty('myProp')]);",
+        """
+        function JSCompiler_renameProperty(x) { return x; }
+        var foo = {myProp: 0}; f(foo[JSCompiler_renameProperty('myProp')]);
+        """,
         "var foo = {a: 0}; f(foo['a']);");
   }
 
@@ -282,16 +301,22 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   @Test
   public void testChunks() {
     String chunk1Js =
-        "function Bar(){} Bar.prototype.getA=function(x){};"
-            + "var foo;foo.getA(foo);foo.doo=foo;foo.bloo=foo;";
+        """
+        function Bar(){} Bar.prototype.getA=function(x){};
+        var foo;foo.getA(foo);foo.doo=foo;foo.bloo=foo;
+        """;
 
     String chunk2Js =
-        "function Far(){} Far.prototype.getB=function(y){};"
-            + "var too;too.getB(too);too.woo=too;too.bloo=too;";
+        """
+        function Far(){} Far.prototype.getB=function(y){};
+        var too;too.getB(too);too.woo=too;too.bloo=too;
+        """;
 
     String chunk3Js =
-        "function Car(){} Car.prototype.getC=function(z){};"
-            + "var noo;noo.getC(noo);noo.zoo=noo;noo.cloo=noo;";
+        """
+        function Car(){} Car.prototype.getC=function(z){};
+        var noo;noo.getC(noo);noo.zoo=noo;noo.cloo=noo;
+        """;
 
     JSChunk chunk1 = new JSChunk("m1");
     chunk1.add(SourceFile.fromCode("input1", chunk1Js));
@@ -310,13 +335,17 @@ public final class RenamePropertiesTest extends CompilerTestCase {
 
     assertThat(compiler.toSource(chunk1))
         .isEqualTo(
-            "function Bar(){}Bar.prototype.b=function(x){};"
-                + "var foo;foo.b(foo);foo.f=foo;foo.a=foo;");
+            """
+            function Bar(){}Bar.prototype.b=function(x){};\
+            var foo;foo.b(foo);foo.f=foo;foo.a=foo;\
+            """);
 
     assertThat(compiler.toSource(chunk2))
         .isEqualTo(
-            "function Far(){}Far.prototype.c=function(y){};"
-                + "var too;too.c(too);too.g=too;too.a=too;");
+            """
+            function Far(){}Far.prototype.c=function(y){};\
+            var too;too.c(too);too.g=too;too.a=too;\
+            """);
 
     // Note that properties that occur most often globally get the earliest
     // names. The "getC" property, which doesn't occur until module 3, is
@@ -326,40 +355,60 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     // how the pass currently works.
     assertThat(compiler.toSource(chunk3))
         .isEqualTo(
-            "function Car(){}Car.prototype.d=function(z){};"
-                + "var noo;noo.d(noo);noo.h=noo;noo.e=noo;");
+            """
+            function Car(){}Car.prototype.d=function(z){};\
+            var noo;noo.d(noo);noo.h=noo;noo.e=noo;\
+            """);
   }
 
   @Test
   public void testPropertyAffinityOff() {
     test(
-        "var foo={};foo.x=1;foo.y=2;foo.z=3;"
-            + "function f1() { foo.z; foo.z; foo.z; foo.y}"
-            + "function f2() {                      foo.x}",
-        "var foo={};foo.b=1;foo.c=2;foo.a=3;"
-            + "function f1() { foo.a; foo.a; foo.a; foo.c}"
-            + "function f2() {                      foo.b}");
+        """
+        var foo={};foo.x=1;foo.y=2;foo.z=3;
+        function f1() { foo.z; foo.z; foo.z; foo.y}
+        function f2() {                      foo.x}
+        """,
+        """
+        var foo={};foo.b=1;foo.c=2;foo.a=3;
+        function f1() { foo.a; foo.a; foo.a; foo.c}
+        function f2() {                      foo.b}
+        """);
 
     test(
-        "var foo={};foo.x=1;foo.y=2;foo.z=3;"
-            + "function f1() { foo.z; foo.z; foo.z; foo.y}"
-            + "function f2() { foo.z; foo.z; foo.z; foo.x}",
-        "var foo={};foo.b=1;foo.c=2;foo.a=3;"
-            + "function f1() { foo.a; foo.a; foo.a; foo.c}"
-            + "function f2() { foo.a; foo.a; foo.a; foo.b}");
+        """
+        var foo={};foo.x=1;foo.y=2;foo.z=3;
+        function f1() { foo.z; foo.z; foo.z; foo.y}
+        function f2() { foo.z; foo.z; foo.z; foo.x}
+        """,
+        """
+        var foo={};foo.b=1;foo.c=2;foo.a=3;
+        function f1() { foo.a; foo.a; foo.a; foo.c}
+        function f2() { foo.a; foo.a; foo.a; foo.b}
+        """);
   }
 
   @Test
   public void testPrototypePropertiesStable() {
     testStableRenaming(
-        "Bar.prototype.getA = function(){}; bar.getA();" + "Bar.prototype.getB = function(){};",
-        "Bar.prototype.a = function(){}; bar.a();" + "Bar.prototype.b = function(){}",
-        "Bar.prototype.get = function(){}; bar.get();"
-            + "Bar.prototype.getA = function(){}; bar.getA();"
-            + "Bar.prototype.getB = function(){};",
-        "Bar.prototype.c = function(){}; bar.c();"
-            + "Bar.prototype.a = function(){}; bar.a();"
-            + "Bar.prototype.b = function(){}");
+        """
+        Bar.prototype.getA = function(){}; bar.getA();
+        Bar.prototype.getB = function(){};
+        """,
+        """
+        Bar.prototype.a = function(){}; bar.a();
+        Bar.prototype.b = function(){}
+        """,
+        """
+        Bar.prototype.get = function(){}; bar.get();
+        Bar.prototype.getA = function(){}; bar.getA();
+        Bar.prototype.getB = function(){};
+        """,
+        """
+        Bar.prototype.c = function(){}; bar.c();
+        Bar.prototype.a = function(){}; bar.a();
+        Bar.prototype.b = function(){}
+        """);
   }
 
   @Test
@@ -376,9 +425,14 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     testStableRenaming(
         "Bar = {getA: function(){}, 'getB': function(){}}; bar.getA();",
         "Bar = {a: function(){}, 'getB': function(){}}; bar.a();",
-        "Bar = {get: function(){}, getA: function(){}, 'getB': function(){}};"
-            + "bar.getA();bar.get();",
-        "Bar = {b: function(){}, a: function(){}, 'getB': function(){}};" + "bar.a();bar.b();");
+        """
+        Bar = {get: function(){}, getA: function(){}, 'getB': function(){}};
+        bar.getA();bar.get();
+        """,
+        """
+        Bar = {b: function(){}, a: function(){}, 'getB': function(){}};
+        bar.a();bar.b();
+        """);
   }
 
   @Test
@@ -386,8 +440,14 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     testStableRenaming(
         "Bar.prototype = {b: function(){}, a: function(){}}; bar.b();",
         "Bar.prototype = {a: function(){}, b: function(){}}; bar.a();",
-        "Bar.prototype = {c: function(){}, b: function(){}, a: function(){}};" + "bar.b();",
-        "Bar.prototype = {c: function(){}, a: function(){}, b: function(){}};" + "bar.a();");
+        """
+        Bar.prototype = {c: function(){}, b: function(){}, a: function(){}};
+        bar.b();
+        """,
+        """
+        Bar.prototype = {c: function(){}, a: function(){}, b: function(){}};
+        bar.a();
+        """);
   }
 
   @Test
@@ -400,9 +460,15 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     test(
         externs(externs),
         srcs(
-            "Bar.prototype = {new_f: function(){}, b: function(){}, "
-                + "a: function(){}};bar.b();"),
-        expected("Bar.prototype = {c:function(){}, b:function(){}, a:function(){}};" + "bar.b();"));
+            """
+            Bar.prototype = {new_f: function(){}, b: function(){},
+            a: function(){}};bar.b();
+            """),
+        expected(
+            """
+            Bar.prototype = {c:function(){}, b:function(){}, a:function(){}};
+            bar.b();
+            """));
   }
 
   @Test
@@ -435,14 +501,24 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   @Test
   public void testRenamePropertiesFunctionCallStable() {
     testStableRenaming(
-        "var foo = {myProp: 0}; "
-            + "f(JSCompiler_renameProperty('otherProp.myProp.someProp')); "
-            + "foo.myProp = 1; foo.theirProp = 2; foo.yourProp = 3;",
-        "var foo = {a: 0}; f('b.a.c'); " + "foo.a = 1; foo.d = 2; foo.e = 3;",
-        "var bar = {newProp: 0}; var foo = {myProp: 0}; "
-            + "f(JSCompiler_renameProperty('otherProp.myProp.someProp')); "
-            + "foo.myProp = 1; foo.theirProp = 2; foo.yourProp = 3;",
-        "var bar = {f: 0}; var foo = {a: 0}; f('b.a.c'); " + "foo.a = 1; foo.d = 2; foo.e = 3;");
+        """
+        var foo = {myProp: 0};
+        f(JSCompiler_renameProperty('otherProp.myProp.someProp'));
+        foo.myProp = 1; foo.theirProp = 2; foo.yourProp = 3;
+        """,
+        """
+        var foo = {a: 0}; f('b.a.c');
+        foo.a = 1; foo.d = 2; foo.e = 3;
+        """,
+        """
+        var bar = {newProp: 0}; var foo = {myProp: 0};
+        f(JSCompiler_renameProperty('otherProp.myProp.someProp'));
+        foo.myProp = 1; foo.theirProp = 2; foo.yourProp = 3;
+        """,
+        """
+        var bar = {f: 0}; var foo = {a: 0}; f('b.a.c');
+        foo.a = 1; foo.d = 2; foo.e = 3;
+        """);
   }
 
   private void testStableRenaming(
@@ -870,12 +946,16 @@ public final class RenamePropertiesTest extends CompilerTestCase {
         };
 
     test(
-        "Bar.prototype.getA = function(){}; bar.getA();"
-            + "Bar.prototype.getB = function(){};"
-            + "Bar.prototype.setC = function(){};",
-        "Bar.prototype.a = function(){}; bar.a();"
-            + "Bar.prototype.b = function(){};"
-            + "Bar.prototype.setC = function(){}");
+        """
+        Bar.prototype.getA = function(){}; bar.getA();
+        Bar.prototype.getB = function(){};
+        Bar.prototype.setC = function(){};
+        """,
+        """
+        Bar.prototype.a = function(){}; bar.a();
+        Bar.prototype.b = function(){};
+        Bar.prototype.setC = function(){}
+        """);
   }
 
   @Test

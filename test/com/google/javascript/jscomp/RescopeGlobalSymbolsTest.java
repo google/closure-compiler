@@ -814,20 +814,34 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         (function() { var _$ = 0;})() }
         """);
     test(
-        "function foo() { var _ = {}; _.foo = foo; _.bar = 1; " + "var _$ = 1; }",
-        "_.foo = function () { var _$ = {}; _$.foo = _.foo; _$.bar = 1; " + "var _$$ = 1; }");
+        """
+        function foo() { var _ = {}; _.foo = foo; _.bar = 1;
+        var _$ = 1; }
+        """,
+        """
+        _.foo = function () { var _$ = {}; _$.foo = _.foo; _$.bar = 1;
+        var _$$ = 1; }
+        """);
     test(
-        "function foo() { var _ = {}; _.foo = foo; _.bar = 1; "
-            + "var _$ = 1; (function() { _ = _$ })() }",
-        "_.foo = function () { var _$ = {}; _$.foo = _.foo; _$.bar = 1; "
-            + "var _$$ = 1; (function() { _$ = _$$ })() }");
+        """
+        function foo() { var _ = {}; _.foo = foo; _.bar = 1;
+        var _$ = 1; (function() { _ = _$ })() }
+        """,
+        """
+        _.foo = function () { var _$ = {}; _$.foo = _.foo; _$.bar = 1;
+        var _$$ = 1; (function() { _$ = _$$ })() }
+        """);
     test(
-        "function foo() { var _ = {}; _.foo = foo; _.bar = 1; "
-            + "var _$ = 1, _$$ = 2 (function() { _ = _$ = _$$; "
-            + "var _$, _$$$ })() }",
-        "_.foo = function () { var _$ = {}; _$.foo = _.foo; _$.bar = 1; "
-            + "var _$$ = 1, _$$$ = 2 (function() { _$ = _$$ = _$$$; "
-            + "var _$$, _$$$$ })() }");
+        """
+        function foo() { var _ = {}; _.foo = foo; _.bar = 1;
+        var _$ = 1, _$$ = 2 (function() { _ = _$ = _$$;
+        var _$, _$$$ })() }
+        """,
+        """
+        _.foo = function () { var _$ = {}; _$.foo = _.foo; _$.bar = 1;
+        var _$$ = 1, _$$$ = 2 (function() { _$ = _$$ = _$$$;
+        var _$$, _$$$$ })() }
+        """);
     test(
         "var a = 5; function foo(_) { return _; }", "_.a = 5; _.foo = function(_$) { return _$; }");
     test(
@@ -891,9 +905,11 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(externs(""), srcs("document"), expected("document"));
     // Javascript builtin objects
     testSame(
-        "Object;Function;Array;String;Boolean;Number;Math;"
-            + "Date;RegExp;JSON;Error;EvalError;ReferenceError;"
-            + "SyntaxError;TypeError;URIError;");
+        """
+        Object;Function;Array;String;Boolean;Number;Math;
+        Date;RegExp;JSON;Error;EvalError;ReferenceError;
+        SyntaxError;TypeError;URIError;
+        """);
   }
 
   @Test

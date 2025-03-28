@@ -95,8 +95,10 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
         MISSING_CONST_PROPERTY);
     testSame("/** @constructor */ function C() { /** @private */ this.foo = 1; this.foo = 2; } ");
     testSame(
-        "/** @constructor */ function C() { /** @private */ this.foo = 1; } "
-            + "C.prototype.bar = function() { this.foo = 2; }");
+        """
+        /** @constructor */ function C() { /** @private */ this.foo = 1; }
+        C.prototype.bar = function() { this.foo = 2; }
+        """);
   }
 
   @Test
@@ -107,8 +109,10 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
     testSame(
         "/** @constructor */ function C() { /** @private */ this.foo = 1; delete this.foo; } ");
     testSame(
-        "/** @constructor */ function C() { /** @private */ this.foo = 1; } "
-            + "C.prototype.bar = function() { delete this.foo; }");
+        """
+        /** @constructor */ function C() { /** @private */ this.foo = 1; }
+        C.prototype.bar = function() { delete this.foo; }
+        """);
   }
 
   @Test
@@ -122,8 +126,10 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
         "/** @constructor */ function C() { /** @private */ this.foo = [1]; this.foo[0] = 2; } ",
         MISSING_CONST_PROPERTY);
     testWarning(
-        "/** @constructor */ function C() { /** @private */ this.foo = [1]; } "
-            + "C.prototype.bar = function() { this.foo[0] = 2; }",
+        """
+        /** @constructor */ function C() { /** @private */ this.foo = [1]; }
+        C.prototype.bar = function() { this.foo[0] = 2; }
+        """,
         MISSING_CONST_PROPERTY);
   }
 
@@ -135,8 +141,10 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
     testSame(
         "/** @constructor */ function C() { /** @private */ this['foo'] = 1; this['foo'] = 2; } ");
     testSame(
-        "/** @constructor */ function C() { /** @private */ this['foo'] = 1; } "
-            + "C.prototype.bar = function() { this['foo'] = 2; }");
+        """
+        /** @constructor */ function C() { /** @private */ this['foo'] = 1; }
+        C.prototype.bar = function() { this['foo'] = 2; }
+        """);
   }
 
   @Test
@@ -150,8 +158,10 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
         "/** @constructor */ function C() { /** @private */ this['f'] = [1]; this['f'][0] = 2; } ",
         MISSING_CONST_PROPERTY);
     testWarning(
-        "/** @constructor */ function C() { /** @private */ this['foo'] = [1]; } "
-            + "C.prototype.bar = function() { this['foo'][0] = 2; }",
+        """
+        /** @constructor */ function C() { /** @private */ this['foo'] = [1]; }
+        C.prototype.bar = function() { this['foo'][0] = 2; }
+        """,
         MISSING_CONST_PROPERTY);
   }
 
@@ -160,8 +170,10 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
     testSame(
         "/** @constructor */ function C() { /** @private */ this.foo = 1; this['foo'] = 2; } ");
     testSame(
-        "/** @constructor */ function C() { /** @private */ this['foo'] = 1; } "
-            + "C.prototype.bar = function() { this.foo = 2; }");
+        """
+        /** @constructor */ function C() { /** @private */ this['foo'] = 1; }
+        C.prototype.bar = function() { this.foo = 2; }
+        """);
   }
 
   @Test
@@ -265,8 +277,10 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
   public void testPrototype_Property() {
     testSame("/** @constructor */ function C() {} /** @private */ C.prototype.prop = 1;");
     testSame(
-        "/** @constructor */ function C() {} /** @private */ C.prototype.prop = 1; "
-            + "C.prototype.prop = 2;");
+        """
+        /** @constructor */ function C() {} /** @private */ C.prototype.prop = 1;
+        C.prototype.prop = 2;
+        """);
   }
 
   @Test

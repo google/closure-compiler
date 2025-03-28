@@ -5262,7 +5262,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource(functionDef + "/** @type {number} */var a=" + functionName + ";")
         .addDiagnostic(
-            "initializing variable\n" + "found   : " + functionType + "\n" + "required: number")
+            "initializing variable\n" //
+                + ("found   : " + functionType + "\n")
+                + "required: number")
         .run();
   }
 
@@ -5276,7 +5278,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addExterns(functionDef)
         .addSource("/** @type {number} */var a=" + functionName + ";")
         .addDiagnostic(
-            "initializing variable\n" + "found   : " + functionType + "\n" + "required: number")
+            "initializing variable\n" //
+                + ("found   : " + functionType + "\n")
+                + "required: number")
         .run();
   }
 
@@ -9338,7 +9342,10 @@ override: function(): string
             function A() {}
             """)
         .addDiagnostic(
-            "Cannot @implement the same interface more than once\n" + "Repeated interface: Foo")
+            """
+            Cannot @implement the same interface more than once
+            Repeated interface: Foo
+            """)
         .run();
   }
 
@@ -9360,7 +9367,10 @@ override: function(): string
             function A() {}
             """)
         .addDiagnostic(
-            "Cannot @implement the same interface more than once\n" + "Repeated interface: Foo")
+            """
+            Cannot @implement the same interface more than once
+            Repeated interface: Foo
+            """)
         .run();
   }
 
@@ -15254,7 +15264,7 @@ override: (Object|null|string)
             /** @type {Function|number} */var f;
             f();
             """)
-        .addDiagnostic("(Function|number) expressions are " + "not callable")
+        .addDiagnostic("(Function|number) expressions are not callable")
         .run();
   }
 
@@ -16094,7 +16104,13 @@ override: (Object|null|string)
 
   @Test
   public void testCast23() {
-    newTest().addSource("var x = null;\n" + "var y = /** @type {Number} */(x);").run();
+    newTest()
+        .addSource(
+            """
+            var x = null;
+            var y = /** @type {Number} */(x);
+            """)
+        .run();
   }
 
   @Test
@@ -17455,7 +17471,7 @@ override: (Object|null|string)
             Sub.prototype.foo = function() {};
             """)
         .addDiagnostic(
-            "property foo already defined on superclass Super; " + "use @override to override it")
+            "property foo already defined on superclass Super; use @override to override it")
         .run();
   }
 
@@ -17487,7 +17503,7 @@ override: (Object|null|string)
             Sub.prototype.foo = function() {};
             """)
         .addDiagnostic(
-            "property foo already defined on superclass Root; " + "use @override to override it")
+            "property foo already defined on superclass Root; use @override to override it")
         .run();
   }
 
@@ -17846,7 +17862,7 @@ override: string
             Sub.prototype.foo = function() {};
             """)
         .addDiagnostic(
-            "property foo already defined on interface Super; use @override to " + "override it")
+            "property foo already defined on interface Super; use @override to override it")
         .run();
   }
 
@@ -17878,7 +17894,7 @@ override: string
             /** @return {number} */Sub.prototype.foo = function() { return 1;};
             """)
         .addDiagnostic(
-            "property foo already defined on interface Root; use @override to " + "override it")
+            "property foo already defined on interface Root; use @override to override it")
         .run();
   }
 
@@ -18795,7 +18811,11 @@ override: function(this:Foo): number
             /** @param {Number} foo */u.T.prototype.x =
             /** @param {String} foo */function(foo) {};
             """)
-        .addDiagnostic("found   : \n" + "required: ")
+        .addDiagnostic(
+            """
+            found   :\s
+            required:\s
+            """)
         .run();
   }
 
@@ -18809,7 +18829,11 @@ override: function(this:Foo): number
             /** @return {number} */T.prototype.x =
             /** @return {string} */function() {};
             """)
-        .addDiagnostic("found   : \n" + "required: ")
+        .addDiagnostic(
+            """
+            found   :\s
+            required:\s
+            """)
         .run();
   }
 
@@ -18826,7 +18850,11 @@ override: function(this:Foo): number
             /** @param {Number} foo */u.T.prototype.x =
             function(foo, bar) {};
             """)
-        .addDiagnostic("found   : \n" + "required: ")
+        .addDiagnostic(
+            """
+            found   :\s
+            required:\s
+            """)
         .run();
   }
 
@@ -18984,8 +19012,8 @@ override: function(this:Foo): number
         """
             .replace("SUPPRESSION", suppressMissingPropertyFor("H", "foo")),
         ImmutableList.of(
-            "extends loop involving F, " + "loop: F -> G -> F",
-            "extends loop involving G, " + "loop: G -> F -> G"));
+            "extends loop involving F, loop: F -> G -> F",
+            "extends loop involving G, loop: G -> F -> G"));
   }
 
   @Test
@@ -24311,7 +24339,11 @@ override: number
   @Test
   public void testDontOverrideNativeScalarTypes() {
     newTest()
-        .addSource("string = 123;\n" + "var /** string */ s = 123;")
+        .addSource(
+            """
+            string = 123;
+            var /** string */ s = 123;
+            """)
         .addDiagnostic(
             """
             initializing variable
@@ -24321,7 +24353,11 @@ override: number
         .run();
 
     newTest()
-        .addSource("var string = goog.require('goog.string');\n" + "var /** string */ s = 123;")
+        .addSource(
+            """
+            var string = goog.require('goog.string');
+            var /** string */ s = 123;
+            """)
         .addDiagnostic(
             "Property require never defined on goog" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION)
         .addDiagnostic(

@@ -32,7 +32,13 @@ public final class TemplateAstMatcherTest {
 
   @Test
   public void testMatches_primitives() {
-    String template = "" + "function template() {\n" + "  3;\n" + "}\n";
+    String template =
+        """
+
+        function template() {
+          3;
+        }
+        """;
 
     TestNodePair pair = compile("", template, "3");
     assertMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
@@ -47,7 +53,13 @@ public final class TemplateAstMatcherTest {
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot());
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
 
-    template = "" + "function template() {\n" + "  'str';\n" + "}\n";
+    template =
+        """
+
+        function template() {
+          'str';
+        }
+        """;
     pair = compile("", template, "'str'");
     assertMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
     pair = compile("", template, "'not_str'");
@@ -61,7 +73,13 @@ public final class TemplateAstMatcherTest {
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot());
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
 
-    template = "" + "function template() {\n" + "  true;\n" + "}\n";
+    template =
+        """
+
+        function template() {
+          true;
+        }
+        """;
     pair = compile("", template, "true");
     assertMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
     pair = compile("", template, "!true");
@@ -80,7 +98,13 @@ public final class TemplateAstMatcherTest {
 
   @Test
   public void testMatches_varDeclarations() {
-    String template = "" + "function template() {\n" + "  var a = 3;\n" + "}\n";
+    String template =
+        """
+
+        function template() {
+          var a = 3;
+        }
+        """;
     TestNodePair pair;
 
     pair = compile("", template, "var a = 3;");
@@ -93,14 +117,27 @@ public final class TemplateAstMatcherTest {
     pair = compile("", template, "5;");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
 
-    template = "" + "function template() {\n" + "  var a = {};\n" + "}\n";
+    template =
+        """
+
+        function template() {
+          var a = {};
+        }
+        """;
     pair = compile("", template, "var a = {};");
     assertMatch(pair.templateNode, pair.testNode.getFirstChild());
     pair = compile("", template, "var a = {'a': 'b'};");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
 
     template =
-        "" + "function template() {\n" + "  var a = {\n" + "    'a': 'b'\n" + "  };\n" + "}\n";
+        """
+
+        function template() {
+          var a = {
+            'a': 'b'
+          };
+        }
+        """;
     pair = compile("", template, "var a = {'a': 'b'};");
     assertMatch(pair.templateNode, pair.testNode.getFirstChild());
     pair = compile("", template, "var a = {};");
@@ -111,13 +148,14 @@ public final class TemplateAstMatcherTest {
   public void testMatches_templateParameterType() {
     String externs = "";
     String template =
-        ""
-            + "/**\n"
-            + " * @param {string} foo\n"
-            + " */\n"
-            + "function template(foo) {\n"
-            + "  foo;\n"
-            + "}\n";
+        """
+        /**
+         * @param {string} foo
+         */
+        function template(foo) {
+          foo;
+        }
+        """;
 
     TestNodePair pair = compile(externs, template, "'str'");
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot());
@@ -131,13 +169,14 @@ public final class TemplateAstMatcherTest {
     assertMatch(pair.templateNode, pair.testNode.getFirstFirstChild().getFirstChild());
 
     template =
-        ""
-            + "/**\n"
-            + " * @param {*} foo\n"
-            + " */\n"
-            + "function template(foo) {\n"
-            + "  foo;\n"
-            + "}\n";
+        """
+        /**
+         * @param {*} foo
+         */
+        function template(foo) {
+          foo;
+        }
+        """;
     pair = compile(externs, template, "'str'");
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot());
     assertMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
@@ -149,14 +188,15 @@ public final class TemplateAstMatcherTest {
     assertMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
 
     template =
-        ""
-            + "/**\n"
-            + " * @param {string} foo\n"
-            + " * @param {number} bar\n"
-            + " */\n"
-            + "function template(foo, bar) {\n"
-            + "  bar + foo;\n"
-            + "}\n";
+        """
+        /**
+         * @param {string} foo
+         * @param {number} bar
+         */
+        function template(foo, bar) {
+          bar + foo;
+        }
+        """;
     pair = compile(externs, template, "'str'");
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot());
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
@@ -174,13 +214,14 @@ public final class TemplateAstMatcherTest {
     assertMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
 
     template =
-        ""
-            + "/**\n"
-            + " * @param {string} string_literal_foo\n"
-            + " */\n"
-            + "function template(string_literal_foo) {\n"
-            + "  string_literal_foo;\n"
-            + "}\n";
+        """
+        /**
+         * @param {string} string_literal_foo
+         */
+        function template(string_literal_foo) {
+          string_literal_foo;
+        }
+        """;
     pair = compile("", template, "\"foo\"");
     assertMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
     pair = compile("", template, "\"foo\" + \"bar\"");
@@ -237,8 +278,19 @@ public final class TemplateAstMatcherTest {
 
   @Test
   public void testMatches_functionCall() {
-    String externs = "" + "function foo() {};\n" + "function bar(arg) {};\n";
-    String template = "" + "function template() {\n" + "  foo();\n" + "}\n";
+    String externs =
+        """
+
+        function foo() {};
+        function bar(arg) {};
+        """;
+    String template =
+        """
+
+        function template() {
+          foo();
+        }
+        """;
     TestNodePair pair = compile(externs, template, "foo();");
     assertMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
     pair = compile(externs, template, "bar();");
@@ -253,17 +305,24 @@ public final class TemplateAstMatcherTest {
   @Test
   public void testMatches_functionCallWithArguments() {
     String externs =
-        ""
-            + "/** @return {string} */\n"
-            + "function foo() {};\n"
-            + "/** @param {string} arg */\n"
-            + "function bar(arg) {};\n"
-            + "/**\n"
-            + " * @param {string} arg\n"
-            + " * @param {number arg2\n"
-            + " */\n"
-            + "function baz(arg, arg2) {};\n";
-    String template = "" + "function template() {\n" + "  bar('str');\n" + "}\n";
+        """
+        /** @return {string} */
+        function foo() {};
+        /** @param {string} arg */
+        function bar(arg) {};
+        /**
+         * @param {string} arg
+         * @param {number arg2
+         */
+        function baz(arg, arg2) {};
+        """;
+    String template =
+        """
+
+        function template() {
+          bar('str');
+        }
+        """;
     TestNodePair pair = compile(externs, template, "foo();");
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
     pair = compile(externs, template, "bar();");
@@ -278,11 +337,12 @@ public final class TemplateAstMatcherTest {
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild().getLastChild());
 
     template =
-        ""
-            + "/** @param {string} str */\n"
-            + "function template(str) {\n"
-            + "  bar(str);\n"
-            + "}\n";
+        """
+        /** @param {string} str */
+        function template(str) {
+          bar(str);
+        }
+        """;
     pair = compile(externs, template, "foo();");
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
     pair = compile(externs, template, "bar('str');");
@@ -293,14 +353,15 @@ public final class TemplateAstMatcherTest {
     assertMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
 
     template =
-        ""
-            + "/**\n"
-            + " * @param {string} str\n"
-            + " * @param {number} num\n"
-            + " */\n"
-            + "function template(str, num) {\n"
-            + "  baz(str, num);\n"
-            + "}\n";
+        """
+        /**
+         * @param {string} str
+         * @param {number} num
+         */
+        function template(str, num) {
+          baz(str, num);
+        }
+        """;
     pair = compile(externs, template, "foo();");
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
     pair = compile(externs, template, "baz('str', 3);");
@@ -311,15 +372,21 @@ public final class TemplateAstMatcherTest {
 
   @Test
   public void testMatches_methodCall() {
-    String externs = "" + "/** @return {string} */\n" + "function foo() {};\n";
+    String externs =
+        """
+
+        /** @return {string} */
+        function foo() {};
+        """;
     String template =
-        ""
-            + "/**\n"
-            + " * @param {string} str\n"
-            + " */\n"
-            + "function template(str) {\n"
-            + "  str.toString();\n"
-            + "}\n";
+        """
+        /**
+         * @param {string} str
+         */
+        function template(str) {
+          str.toString();
+        }
+        """;
 
     TestNodePair pair = compile(externs, template, "'str'");
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot());
@@ -335,26 +402,28 @@ public final class TemplateAstMatcherTest {
   @Test
   public void testMatches_methodCallWithArguments() {
     String externs =
-        ""
-            + "/** @constructor */\n"
-            + "function AppContext() {}\n"
-            + "AppContext.prototype.init = function() {};\n"
-            + "/**\n"
-            + " * @param {string} arg\n"
-            + " */\n"
-            + "AppContext.prototype.get = function(arg) {};\n"
-            + "/**\n"
-            + " * @param {string} arg\n"
-            + " */\n"
-            + "AppContext.prototype.getOrNull = function(arg) {};";
+        """
+        /** @constructor */
+        function AppContext() {}
+        AppContext.prototype.init = function() {};
+        /**
+         * @param {string} arg
+         */
+        AppContext.prototype.get = function(arg) {};
+        /**
+         * @param {string} arg
+         */
+        AppContext.prototype.getOrNull = function(arg) {};
+        """;
     String template =
-        ""
-            + "/**\n"
-            + " * @param {AppContext} context\n"
-            + " */\n"
-            + "function template(context) {\n"
-            + "  context.init();\n"
-            + "}\n";
+        """
+        /**
+         * @param {AppContext} context
+         */
+        function template(context) {
+          context.init();
+        }
+        """;
 
     TestNodePair pair = compile(externs, template, "'str'");
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot());
@@ -369,14 +438,15 @@ public final class TemplateAstMatcherTest {
     assertNotMatch(pair.templateNode, pair.testNode.getLastChild().getFirstChild());
 
     template =
-        ""
-            + "/**\n"
-            + " * @param {AppContext} context\n"
-            + " * @param {string} service\n"
-            + " */\n"
-            + "function template(context, service) {\n"
-            + "  context.get(service);\n"
-            + "}\n";
+        """
+        /**
+         * @param {AppContext} context
+         * @param {string} service
+         */
+        function template(context, service) {
+          context.get(service);
+        }
+        """;
 
     pair = compile(externs, template, "var context = new AppContext(); context.init();");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
@@ -392,8 +462,19 @@ public final class TemplateAstMatcherTest {
 
   @Test
   public void testMatches_instantiation() {
-    String externs = "" + "/** @constructor */\n" + "function AppContext() {}\n";
-    String template = "" + "function template() {\n" + "  new AppContext();" + "}\n";
+    String externs =
+        """
+
+        /** @constructor */
+        function AppContext() {}
+        """;
+    String template =
+        """
+
+        function template() {
+          new AppContext();
+        }
+        """;
 
     TestNodePair pair = compile(externs, template, "var foo = new AppContext()");
     assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
@@ -406,19 +487,21 @@ public final class TemplateAstMatcherTest {
   @Test
   public void testMatches_propertyAccess() {
     String externs =
-        ""
-            + "/** @constructor */\n"
-            + "function AppContext() {}\n"
-            + "/** @type {string} */\n"
-            + "AppContext.prototype.location;\n";
+        """
+        /** @constructor */
+        function AppContext() {}
+        /** @type {string} */
+        AppContext.prototype.location;
+        """;
     String template =
-        ""
-            + "/**\n"
-            + " * @param {AppContext} context\n"
-            + " */\n"
-            + "function template(context) {\n"
-            + "  context.location;"
-            + "}\n";
+        """
+        /**
+         * @param {AppContext} context
+         */
+        function template(context) {
+          context.location;
+        }
+        """;
 
     TestNodePair pair =
         compile(externs, template, "var context = new AppContext(); context.location = '3';");
@@ -430,21 +513,23 @@ public final class TemplateAstMatcherTest {
   @Test
   public void testMatches_multiLineTemplates() {
     String externs =
-        ""
-            + "/** @constructor */\n"
-            + "function AppContext() {}\n"
-            + "/** @type {string} */\n"
-            + "AppContext.prototype.location;\n";
+        """
+        /** @constructor */
+        function AppContext() {}
+        /** @type {string} */
+        AppContext.prototype.location;
+        """;
     String template =
-        ""
-            + "/**\n"
-            + " * @param {AppContext} context\n"
-            + " * @param {string} str\n"
-            + " */\n"
-            + "function template(context, str) {\n"
-            + "  context.location = str;\n"
-            + "  delete context.location;\n"
-            + "}\n";
+        """
+        /**
+         * @param {AppContext} context
+         * @param {string} str
+         */
+        function template(context, str) {
+          context.location = str;
+          delete context.location;
+        }
+        """;
 
     TestNodePair pair =
         compile(externs, template, "var context = new AppContext(); context.location = '3';");
@@ -464,8 +549,20 @@ public final class TemplateAstMatcherTest {
     // pattern. For example:
     // var a = b();
     // fn(a);
-    externs = "" + "/** @param {string} arg */\n" + "function bar(arg) {};\n";
-    template = "" + "function template() {\n" + "  var a = 'string';\n" + "  bar(a);\n" + "}\n";
+    externs =
+        """
+
+        /** @param {string} arg */
+        function bar(arg) {};
+        """;
+    template =
+        """
+
+        function template() {
+          var a = 'string';
+          bar(a);
+        }
+        """;
 
     pair = compile(externs, template, "var loc = 'string'; bar(loc);");
     assertMatch(pair.templateNode, pair.testNode.getFirstChild());
@@ -478,25 +575,27 @@ public final class TemplateAstMatcherTest {
   @Test
   public void testMatches_subclasses() {
     String externs =
-        ""
-            + "/** @constructor */\n"
-            + "function AppContext() {}\n"
-            + "/** @type {string} */\n"
-            + "AppContext.prototype.location;\n"
-            + "/**\n"
-            + " * @constructor\n"
-            + " * @extends {AppContext}\n"
-            + " */\n"
-            + "function SubAppContext() {}\n";
+        """
+        /** @constructor */
+        function AppContext() {}
+        /** @type {string} */
+        AppContext.prototype.location;
+        /**
+         * @constructor
+         * @extends {AppContext}
+         */
+        function SubAppContext() {}
+        """;
     String template =
-        ""
-            + "/**\n"
-            + " * @param {AppContext} context\n"
-            + " * @param {string} str\n"
-            + " */\n"
-            + "function template(context, str) {\n"
-            + "  context.location = str;\n"
-            + "}\n";
+        """
+        /**
+         * @param {AppContext} context
+         * @param {string} str
+         */
+        function template(context, str) {
+          context.location = str;
+        }
+        """;
 
     TestNodePair pair =
         compile(externs, template, "var context = new SubAppContext(); context.location = '3';");
@@ -508,27 +607,29 @@ public final class TemplateAstMatcherTest {
   @Test
   public void testMatches_nonDefaultStrategy() {
     String externs =
-        ""
-            + "/** @constructor */\n"
-            + "function AppContext() {}\n"
-            + "/** @type {string} */\n"
-            + "AppContext.prototype.location;\n"
-            + "/**\n"
-            + " * @constructor\n"
-            + " * @extends {AppContext}\n"
-            + " */\n"
-            + "function SubAppContext() {}\n"
-            + "var context = new AppContext();\n"
-            + "var subContext = new SubAppContext();\n";
+        """
+        /** @constructor */
+        function AppContext() {}
+        /** @type {string} */
+        AppContext.prototype.location;
+        /**
+         * @constructor
+         * @extends {AppContext}
+         */
+        function SubAppContext() {}
+        var context = new AppContext();
+        var subContext = new SubAppContext();
+        """;
     String template =
-        ""
-            + "/**\n"
-            + " * @param {!AppContext} context\n"
-            + " * @param {string} str\n"
-            + " */\n"
-            + "function template(context, str) {\n"
-            + "  context.location = str;\n"
-            + "}\n";
+        """
+        /**
+         * @param {!AppContext} context
+         * @param {string} str
+         */
+        function template(context, str) {
+          context.location = str;
+        }
+        """;
 
     TestNodePair pair = compile(externs, template, "subContext.location = '3';");
     assertMatch(pair.templateNode, pair.testNode.getLastChild().getFirstChild());

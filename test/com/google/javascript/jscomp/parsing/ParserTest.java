@@ -82,11 +82,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
   private static final String UNDEFINED_LABEL = "undefined label";
 
   private static final String HTML_COMMENT_WARNING =
-      "In some cases, '<!--' "
-          + "and '-->' are treated as a '//' "
-          + "for legacy reasons. Removing this from your code is "
-          + "safe for all browsers currently in use.";
-
+      """
+      In some cases, '<!--' and '-->' are treated as a '//' for legacy reasons. \
+      Removing this from your code is safe for all browsers currently in use.\
+      """;
   private static final String INVALID_ASSIGNMENT_TARGET = "invalid assignment target";
 
   private static final String SEMICOLON_EXPECTED = "Semi-colon expected";
@@ -1045,8 +1044,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testJSDocAttachment6() {
     Node functionNode =
         parse(
-                "var a = /** @param {number} index */5;"
-                    + "/** @return {boolean} */function f(index){}")
+                """
+                var a = /** @param {number} index */5;
+                /** @return {boolean} */function f(index){}
+                """)
             .getSecondChild();
 
     assertNode(functionNode).hasType(Token.FUNCTION);
@@ -1166,7 +1167,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testJSDocAttachmentForCastFnCall() {
     Node fn =
-        parse("function f() { " + "  return /** @type {string} */ (g(1 /** @desc x */));" + "};")
+        parse(
+                """
+                function f() {
+                  return /** @type {string} */ (g(1 /** @desc x */));
+                };
+                """)
             .getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
     Node cast = fn.getLastChild().getFirstFirstChild();
@@ -1176,7 +1182,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testJSDocAttachmentForCastName() {
     Node fn =
-        parse("function f() { " + "  var x = /** @type {string} */ (y);" + "};").getFirstChild();
+        parse(
+                """
+                function f() {
+                  var x = /** @type {string} */ (y);
+                };
+                """)
+            .getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
     Node cast = fn.getLastChild().getFirstFirstChild().getFirstChild();
     assertNode(cast).hasType(Token.CAST);
@@ -2641,8 +2653,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
         parseWarning(
-            "/** @param {Array.<number} nums */"
-                + "C.prototype.say=function(nums) {alert(nums.join(','));};",
+            """
+            /** @param {Array.<number} nums */
+            C.prototype.say=function(nums) {alert(nums.join(','));};
+            """,
             MISSING_GT_MESSAGE));
   }
 
@@ -2651,8 +2665,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
         parse(
-            "/** @return {boolean} */"
-                + "C.prototype.say=function(nums) {alert(nums.join(','));};"));
+            """
+            /** @return {boolean} */
+            C.prototype.say=function(nums) {alert(nums.join(','));};
+            """));
   }
 
   @Test
@@ -2660,8 +2676,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
         parse(
-            "/** @param {boolean} this is some string*/"
-                + "C.prototype.say=function(nums) {alert(nums.join(','));};"));
+            """
+            /** @param {boolean} this is some string*/
+            C.prototype.say=function(nums) {alert(nums.join(','));};
+            """));
   }
 
   @Test
@@ -2669,8 +2687,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
         parseWarning(
-            "/** @param {bool!*%E$} */"
-                + "C.prototype.say=function(nums) {alert(nums.join(','));};",
+            """
+            /** @param {bool!*%E$} */
+            C.prototype.say=function(nums) {alert(nums.join(','));};
+            """,
             "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK,
             "Bad type annotation. expecting a variable name in a @param tag."
                 + BAD_TYPE_WIKI_LINK));
@@ -2683,7 +2703,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
         parseWarning(
-            "/** @see */" + "C.prototype.say=function(nums) {alert(nums.join(','));};",
+            """
+            /** @see */
+            C.prototype.say=function(nums) {alert(nums.join(','));};
+            """,
             "@see tag missing description"));
   }
 
@@ -2694,7 +2717,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
         parseWarning(
-            "/** @author */" + "C.prototype.say=function(nums) {alert(nums.join(','));};",
+            """
+            /** @author */
+            C.prototype.say=function(nums) {alert(nums.join(','));};
+            """,
             "@author tag missing author"));
   }
 
@@ -2703,7 +2729,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
         parseWarning(
-            "/** @someillegaltag */" + "C.prototype.say=function(nums) {alert(nums.join(','));};",
+            """
+            /** @someillegaltag */
+            C.prototype.say=function(nums) {alert(nums.join(','));};
+            """,
             "illegal use of unknown JSDoc tag \"someillegaltag\"; ignoring it. Place another"
                 + " character before the @ to stop JSCompiler from parsing it as an annotation."));
   }
@@ -3858,7 +3887,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testFileOverviewJSDoc2() {
     isIdeMode = true;
 
-    Node n = parse("/** @fileoverview Hi mom! */" + " /** @constructor */ function Foo() {}");
+    Node n =
+        parse(
+            """
+            /** @fileoverview Hi mom! */
+             /** @constructor */ function Foo() {}
+            """);
     assertThat(n.getJSDocInfo()).isNotNull();
     assertThat(n.getJSDocInfo().getFileOverview()).isEqualTo("Hi mom!");
     assertThat(n.getFirstChild().getJSDocInfo()).isNotNull();
@@ -4157,8 +4191,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   private static final String STRING_CONTINUATIONS_WARNING =
-      "String continuations are not recommended. See https://google.github.io/"
-          + "styleguide/jsguide.html#features-strings-no-line-continuations";
+      """
+      String continuations are not recommended. \
+      See https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations
+      """
+          .stripTrailing();
 
   @Test
   public void testStringLineContinuationWarningsByMode() {
@@ -4306,11 +4343,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testTemplateLiteralWithLineContinuation() {
     strictMode = SLOPPY;
     expectFeatures(Feature.TEMPLATE_LITERALS);
-    Node n =
-        parseWarning(
-            "`string \\\ncontinuation`",
-            "String continuations are not recommended. See"
-                + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations");
+    Node n = parseWarning("`string \\\ncontinuation`", STRING_CONTINUATIONS_WARNING);
     Node templateLiteral = n.getFirstFirstChild();
     Node stringNode = templateLiteral.getFirstChild();
     assertNode(stringNode).hasType(Token.TEMPLATELIT_STRING);
@@ -6084,9 +6117,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT_2020;
     expectFeatures(Feature.PUBLIC_CLASS_FIELDS);
     parseWarning(
-        "/** @closureUnaware */ (\n"
-            + "  function() { class C{ a = 2;} }).call(globalThis); class C{ a = 2;\n"
-            + "}",
+        """
+        /** @closureUnaware */ (
+          function() { class C{ a = 2;} }).call(globalThis); class C{ a = 2;
+        }
+        """,
         // This warning is expected - it is used to halt compilation during parsing when
         // closure-unaware code is present when it should not be.
         "@closureUnaware annotation is not allowed in this compilation",
@@ -6165,14 +6200,18 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("class C { static get #sg() {} static get #sh() {} }");
     parse("class C { static set #ss(x) {} static set #st(x) {} }");
     parse(
-        "class C { static get #ss() {} static set #ss(x) {} "
-            + "static get #st() {} static set #st(x) {} }");
+        """
+        class C { static get #ss() {} static set #ss(x) {}
+        static get #st() {} static set #st(x) {} }
+        """);
 
     parse("class C { #a; #b; c() {} d() {} get #e() {} set #e(x) {} set #f(x) {} }");
     parse("class C { static #a; #b; static c() {} d() {} static get #e() {} set #f(x) {} }");
     parse(
-        "class C { static #a; static #b; static c() {} static d() {} "
-            + "static get #e() {} static set #f(x) {} }");
+        """
+        class C { static #a; static #b; static c() {} static d() {}
+        static get #e() {} static set #f(x) {} }
+        """);
   }
 
   @Test

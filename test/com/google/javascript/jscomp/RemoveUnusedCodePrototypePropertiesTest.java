@@ -208,11 +208,17 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
   public void testAnalyzePrototypeProperties() {
     // Basic removal for prototype properties
     test(
-        "function e(){}"
-            + "e.prototype.a = function(){};"
-            + "e.prototype.b = function(){};"
-            + "var x = new e; x.a()",
-        "function e(){}" + "e.prototype.a = function(){};" + "var x = new e; x.a()");
+        """
+        function e(){}
+        e.prototype.a = function(){};
+        e.prototype.b = function(){};
+        var x = new e; x.a()
+        """,
+        """
+        function e(){}
+        e.prototype.a = function(){};
+        var x = new e; x.a()
+        """);
   }
 
   @Test
@@ -232,18 +238,24 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
   @Test
   public void testPropertiesDefinedInExterns() {
     test(
-        "function e(){}"
-            + "e.prototype.a = function(){};"
-            + "e.prototype.bExtern = function(){};"
-            + "var x = new e;x.a()",
-        "function e(){}"
-            + "e.prototype.a = function(){};"
-            + "e.prototype.bExtern = function(){};"
-            + "var x = new e; x.a()");
+        """
+        function e(){}
+        e.prototype.a = function(){};
+        e.prototype.bExtern = function(){};
+        var x = new e;x.a()
+        """,
+        """
+        function e(){}
+        e.prototype.a = function(){};
+        e.prototype.bExtern = function(){};
+        var x = new e; x.a()
+        """);
     testSame(
-        "function e(){}"
-            + "e.prototype = {a: function(){}, bExtern: function(){}};"
-            + "var x = new e; x.a()");
+        """
+        function e(){}
+        e.prototype = {a: function(){}, bExtern: function(){}};
+        var x = new e; x.a()
+        """);
 
     testSame(
         """
@@ -259,51 +271,66 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
   public void testAliasing1() {
     // Aliasing a property is not enough for it to count as used
     test(
-        "function e(){}"
-            + "e.prototype.method1 = function(){};"
-            + "e.prototype.method2 = function(){};"
-            +
-            // aliases
-            "e.prototype.alias1 = e.prototype.method1;"
-            + "e.prototype.alias2 = e.prototype.method2;"
-            + "var x = new e; x.method1()",
-        "function e(){}" + "e.prototype.method1 = function(){};" + "var x = new e; x.method1()");
+        """
+        function e(){}
+        e.prototype.method1 = function(){};
+        e.prototype.method2 = function(){};
+        // aliases
+        e.prototype.alias1 = e.prototype.method1;
+        e.prototype.alias2 = e.prototype.method2;
+        var x = new e; x.method1()
+        """,
+        """
+        function e(){}
+        e.prototype.method1 = function(){};
+        var x = new e; x.method1()
+        """);
 
     // Using an alias should keep it
     test(
-        "function e(){}"
-            + "e.prototype.method1 = function(){};"
-            + "e.prototype.method2 = function(){};"
-            +
-            // aliases
-            "e.prototype.alias1 = e.prototype.method1;"
-            + "e.prototype.alias2 = e.prototype.method2;"
-            + "var x=new e; x.alias1()",
-        "function e(){}"
-            + "e.prototype.method1 = function(){};"
-            + "e.prototype.alias1 = e.prototype.method1;"
-            + "var x = new e; x.alias1()");
+        """
+        function e(){}
+        e.prototype.method1 = function(){};
+        e.prototype.method2 = function(){};
+        // aliases
+        e.prototype.alias1 = e.prototype.method1;
+        e.prototype.alias2 = e.prototype.method2;
+        var x=new e; x.alias1()
+        """,
+        """
+        function e(){}
+        e.prototype.method1 = function(){};
+        e.prototype.alias1 = e.prototype.method1;
+        var x = new e; x.alias1()
+        """);
   }
 
   @Test
   public void testAliasing2() {
     // Aliasing a property is not enough for it to count as used
     test(
-        "function e(){}"
-            + "e.prototype.method1 = function(){};"
-            +
-            // aliases
-            "e.prototype.alias1 = e.prototype.method1;"
-            + "(new e).method1()",
-        "function e(){}" + "e.prototype.method1 = function(){};" + "(new e).method1()");
+        """
+        function e(){}
+        e.prototype.method1 = function(){};
+        // aliases
+        e.prototype.alias1 = e.prototype.method1;
+        (new e).method1()
+        """,
+        """
+        function e(){}
+        e.prototype.method1 = function(){};
+        (new e).method1()
+        """);
 
     // Using an alias should keep it
     testSame(
-        "function e(){}"
-            + "e.prototype.method1 = function(){};"
-            // aliases
-            + "e.prototype.alias1 = e.prototype.method1;"
-            + "(new e).alias1()");
+        """
+        function e(){}
+        e.prototype.method1 = function(){};
+        // aliases
+        e.prototype.alias1 = e.prototype.method1;
+        (new e).alias1()
+        """);
   }
 
   @Test
@@ -359,16 +386,19 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     // An exported alias must preserved any referenced values in the
     // referenced function.
     test(
-        "function e(){}"
-            + "e.prototype.method1 = function(){this.method2()};"
-            + "e.prototype.method2 = function(){};"
-            +
-            // aliases
-            "window['alias1'] = e.prototype.method1;",
-        "function e(){}"
-            + "e.prototype.method1=function(){this.method2()};"
-            + "e.prototype.method2=function(){};"
-            + "window['alias1']=e.prototype.method1;");
+        """
+        function e(){}
+        e.prototype.method1 = function(){this.method2()};
+        e.prototype.method2 = function(){};
+        // aliases
+        window['alias1'] = e.prototype.method1;
+        """,
+        """
+        function e(){}
+        e.prototype.method1=function(){this.method2()};
+        e.prototype.method2=function(){};
+        window['alias1']=e.prototype.method1;
+        """);
   }
 
   @Test
@@ -393,19 +423,23 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
   @Test
   public void testExportedMethodsByNamingConvention() {
     String classAndItsMethodAliasedAsExtern =
-        "function Foo() {}"
-            + "Foo.prototype.method = function() {};"
-            + // not removed
-            "Foo.prototype.unused = function() {};"
-            + // removed
-            "var _externInstance = new Foo();"
-            + "Foo.prototype._externMethod = Foo.prototype.method"; // aliased here
+        """
+        function Foo() {}
+        Foo.prototype.method = function() {};
+        // not removed
+        Foo.prototype.unused = function() {};
+        // removed
+        var _externInstance = new Foo();
+        Foo.prototype._externMethod = Foo.prototype.method // aliased here
+        """;
 
     String compiled =
-        "function Foo(){}"
-            + "Foo.prototype.method = function(){};"
-            + "var _externInstance = new Foo;"
-            + "Foo.prototype._externMethod = Foo.prototype.method";
+        """
+        function Foo(){}
+        Foo.prototype.method = function(){};
+        var _externInstance = new Foo;
+        Foo.prototype._externMethod = Foo.prototype.method
+        """;
 
     test(classAndItsMethodAliasedAsExtern, compiled);
   }
@@ -413,19 +447,23 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
   @Test
   public void testExportedMethodsByNamingConventionAlwaysExported() {
     String classAndItsMethodAliasedAsExtern =
-        "function Foo() {}"
-            + "Foo.prototype.method = function() {};"
-            + // not removed
-            "Foo.prototype.unused = function() {};"
-            + // removed
-            "var _externInstance = new Foo();"
-            + "Foo.prototype._externMethod = Foo.prototype.method"; // aliased here
+        """
+        function Foo() {}
+        Foo.prototype.method = function() {};
+        // not removed
+        Foo.prototype.unused = function() {};
+        // removed
+        var _externInstance = new Foo();
+        Foo.prototype._externMethod = Foo.prototype.method // aliased here
+        """;
 
     String compiled =
-        "function Foo(){}"
-            + "Foo.prototype.method = function(){};"
-            + "var _externInstance = new Foo;"
-            + "Foo.prototype._externMethod = Foo.prototype.method";
+        """
+        function Foo(){}
+        Foo.prototype.method = function(){};
+        var _externInstance = new Foo;
+        Foo.prototype._externMethod = Foo.prototype.method
+        """;
 
     test(classAndItsMethodAliasedAsExtern, compiled);
   }
@@ -433,13 +471,15 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
   @Test
   public void testExternMethodsFromExternsFile() {
     String classAndItsMethodAliasedAsExtern =
-        "function Foo() {}"
-            + "Foo.prototype.bar_ = function() {};"
-            + // not removed
-            "Foo.prototype.unused = function() {};"
-            + // removed
-            "var instance = new Foo;"
-            + "Foo.prototype.externPropName = Foo.prototype.bar_"; // aliased here
+        """
+        function Foo() {}
+        Foo.prototype.bar_ = function() {};
+        // not removed
+        Foo.prototype.unused = function() {};
+        // removed
+        var instance = new Foo;
+        Foo.prototype.externPropName = Foo.prototype.bar_ // aliased here
+        """;
 
     String compiled =
         """
@@ -460,7 +500,10 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     String defA = "Foo.prototype.a = function() { Foo.superClass_.a.call(this); };";
     String defB = "Foo.prototype.b = function() { this.a(); };";
     String defC =
-        "Foo.prototype.c = function() { " + "Foo.superClass_.c.call(this); this.b(); this.a(); };";
+        """
+        Foo.prototype.c = function() {
+        Foo.superClass_.c.call(this); this.b(); this.a(); };
+        """;
     String defD = "Foo.prototype.d = function() { this.c(); };";
     String defE = "Foo.prototype.e = function() { this.a(); this.f(); };";
     String defF = "Foo.prototype.f = function() { };";
@@ -535,10 +578,12 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
   @Test
   public void testGlobalFunctionsInGraph() {
     test(
-        "var x = function() { (new Foo).baz(); };"
-            + "var y = function() { x(); };"
-            + "function Foo() {}"
-            + "Foo.prototype.baz = function() { y(); };",
+        """
+        var x = function() { (new Foo).baz(); };
+        var y = function() { x(); };
+        function Foo() {}
+        Foo.prototype.baz = function() { y(); };
+        """,
         "");
   }
 
@@ -569,40 +614,50 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
   @Test
   public void testGlobalFunctionsInGraph4() {
     test(
-        "var x = function() { (new Foo).baz(); };"
-            + "var y = function() { x(); };"
-            + "function Foo() { Foo.prototype.baz = function() { y(); }; }",
+        """
+        var x = function() { (new Foo).baz(); };
+        var y = function() { x(); };
+        function Foo() { Foo.prototype.baz = function() { y(); }; }
+        """,
         "");
   }
 
   @Test
   public void testGlobalFunctionsInGraph5() {
     test(
-        "function Foo() {}"
-            + "Foo.prototype.methodA = function() {};"
-            + "function x() { (new Foo).methodA(); }"
-            + "Foo.prototype.methodB = function() { x(); };",
+        """
+        function Foo() {}
+        Foo.prototype.methodA = function() {};
+        function x() { (new Foo).methodA(); }
+        Foo.prototype.methodB = function() { x(); };
+        """,
         "");
 
     keepGlobals = true;
     test(
-        "function Foo() {}"
-            + "Foo.prototype.methodA = function() {};"
-            + "function x() { (new Foo).methodA(); }"
-            + "Foo.prototype.methodB = function() { x(); };",
-        "function Foo() {}"
-            + "Foo.prototype.methodA = function() {};"
-            + "function x() { (new Foo).methodA(); }");
+        """
+        function Foo() {}
+        Foo.prototype.methodA = function() {};
+        function x() { (new Foo).methodA(); }
+        Foo.prototype.methodB = function() { x(); };
+        """,
+        """
+        function Foo() {}
+        Foo.prototype.methodA = function() {};
+        function x() { (new Foo).methodA(); }
+        """);
   }
 
   @Test
   public void testGlobalFunctionsInGraph6() {
     testSame(
-        "function Foo() {}"
-            + "Foo.prototype.methodA = function() {};"
-            + "function x() { (new Foo).methodA(); }"
-            + "Foo.prototype.methodB = function() { x(); };"
-            + "(new Foo).methodB();");
+        """
+        function Foo() {}
+        Foo.prototype.methodA = function() {};
+        function x() { (new Foo).methodA(); }
+        Foo.prototype.methodB = function() { x(); };
+        (new Foo).methodB();
+        """);
   }
 
   @Test
@@ -626,17 +681,21 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
   public void testGetterBaseline() {
     keepGlobals = true;
     test(
-        "function Foo() {}"
-            + "Foo.prototype = { "
-            + "  methodA: function() {},"
-            + "  methodB: function() { x(); }"
-            + "};"
-            + "function x() { (new Foo).methodA(); }",
-        "function Foo() {}"
-            + "Foo.prototype = { "
-            + "  methodA: function() {}"
-            + "};"
-            + "function x() { (new Foo).methodA(); }");
+        """
+        function Foo() {}
+        Foo.prototype = {
+          methodA: function() {},
+          methodB: function() { x(); }
+        };
+        function x() { (new Foo).methodA(); }
+        """,
+        """
+        function Foo() {}
+        Foo.prototype = {
+          methodA: function() {}
+        };
+        function x() { (new Foo).methodA(); }
+        """);
   }
 
   @Test
@@ -682,20 +741,24 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
   public void testGetter2() {
     keepGlobals = true;
     test(
-        "function Foo() {}"
-            + "Foo.prototype = { "
-            + "  get methodA() {},"
-            + "  set methodA(a) {},"
-            + "  get methodB() { x(); },"
-            + "  set methodB(a) { x(); }"
-            + "};"
-            + "function x() { (new Foo).methodA; }",
-        "function Foo() {}"
-            + "Foo.prototype = { "
-            + "  get methodA() {},"
-            + "  set methodA(a) {}"
-            + "};"
-            + "function x() { (new Foo).methodA; }");
+        """
+        function Foo() {}
+        Foo.prototype = {
+          get methodA() {},
+          set methodA(a) {},
+          get methodB() { x(); },
+          set methodB(a) { x(); }
+        };
+        function x() { (new Foo).methodA; }
+        """,
+        """
+        function Foo() {}
+        Foo.prototype = {
+          get methodA() {},
+          set methodA(a) {}
+        };
+        function x() { (new Foo).methodA; }
+        """);
   }
 
   @Test

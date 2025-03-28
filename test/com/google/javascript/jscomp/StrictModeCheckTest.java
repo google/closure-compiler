@@ -52,7 +52,12 @@ public final class StrictModeCheckTest extends CompilerTestCase {
 
   @Test
   public void testUseOfWith2() {
-    testSame("var a;\n" + "/** @suppress {with} */" + "with(a){}");
+    testSame(
+        """
+        var a;
+        /** @suppress {with} */
+        with(a){}
+        """);
   }
 
   @Test

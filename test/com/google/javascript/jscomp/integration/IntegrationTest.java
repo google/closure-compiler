@@ -372,7 +372,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setInlineVariables(true);
     test(
         options,
-        "var CONST = {}; CONST.bar = null;" + "function f(url) { CONST.bar = url; }",
+        """
+        var CONST = {}; CONST.bar = null;
+        function f(url) { CONST.bar = url; }
+        """,
         "var CONST$bar = null; function f(url) { CONST$bar = url; }");
   }
 
@@ -384,7 +387,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setGenerateExports(true);
     test(
         options,
-        "const o = {}; /** @export */ o.CONSTANT = 1;" + "var x = o.CONSTANT;",
+        """
+        const o = {}; /** @export */ o.CONSTANT = 1;
+        var x = o.CONSTANT;
+        """,
         "goog.exportSymbol('o.CONSTANT', 1);");
   }
 
@@ -1298,7 +1304,12 @@ public final class IntegrationTest extends IntegrationTestCase {
           return goog.getCssName('foo');
         }
         """,
-        "var COMPILED = true;\n" + "function getCss() {\n" + "  return 'bar';" + "}");
+        """
+        var COMPILED = true;
+        function getCss() {
+          return 'bar';
+        }
+        """);
 
     assertThat(lastCompiler.getResult().cssNames).containsExactly("foo");
   }
@@ -1817,11 +1828,23 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   public void testMinimizeExits() {
     CompilerOptions options = createCompilerOptions();
-    String code = "function f() {" + "  if (window.foo) return; window.h(); " + "}";
+    String code =
+        """
+        function f() {
+          if (window.foo) return; window.h();
+        }
+        """;
     testSame(options, code);
 
     options.setFoldConstants(true);
-    test(options, code, "function f() {" + "  window.foo || window.h(); " + "}");
+    test(
+        options,
+        code,
+        """
+        function f() {
+          window.foo || window.h();
+        }
+        """);
   }
 
   @Test
@@ -1849,7 +1872,11 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   public void testRemoveUnusedPrototypeProperties1() {
     CompilerOptions options = createCompilerOptions();
-    String code = "function Foo() {} " + "Foo.prototype.bar = function() { return new Foo(); };";
+    String code =
+        """
+        function Foo() {}
+        Foo.prototype.bar = function() { return new Foo(); };
+        """;
     testSame(options, code);
 
     options.setRemoveUnusedPrototypeProperties(true);
@@ -2527,7 +2554,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     String code = "var a = function() {};";
     String expected =
-        "function JSCompiler_emptyFn(){return function(){}} " + "var a = JSCompiler_emptyFn();";
+        """
+        function JSCompiler_emptyFn(){return function(){}}
+        var a = JSCompiler_emptyFn();
+        """;
     for (int i = 0; i < 10; i++) {
       code += "a = function() {};";
       expected += "a = JSCompiler_emptyFn();";
@@ -2806,11 +2836,21 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setFoldConstants(true);
 
-    String code = "" + "function fn(){var a={};a.x={};return a}" + "fn().x.y = 1;";
+    String code =
+        """
+
+        function fn(){var a={};a.x={};return a}
+        fn().x.y = 1;
+        """;
 
     // "fn" returns a unescaped local object, we should be able to fold it,
     // but we don't currently.
-    String result = "" + "function fn(){var a={x:{}};return a}" + "fn().x.y = 1;";
+    String result =
+        """
+
+        function fn(){var a={x:{}};return a}
+        fn().x.y = 1;
+        """;
 
     test(options, code, result);
 
@@ -2825,7 +2865,12 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setFoldConstants(true);
 
-    String code = "" + "function fn(){return {}}" + "fn().x.y = 1;";
+    String code =
+        """
+
+        function fn(){return {}}
+        fn().x.y = 1;
+        """;
 
     testSame(options, code);
 
@@ -2904,10 +2949,16 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         new String[] {
-          "var extern; " + "function f() { return extern + extern + extern + extern; }"
+          """
+          var extern;
+          function f() { return extern + extern + extern + extern; }
+          """
         },
         new String[] {
-          "var extern; " + "function f() { return extern + extern + extern + extern; }"
+          """
+          var extern;
+          function f() { return extern + extern + extern + extern; }
+          """
         },
         DiagnosticGroups.EXTERNS_VALIDATION);
   }
@@ -3289,7 +3340,12 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setFoldConstants(true);
     options.setCoalesceVariableNames(true);
 
-    expected = "function f(a) {" + "  return a;" + "}";
+    expected =
+        """
+        function f(a) {
+          return a;
+        }
+        """;
 
     test(options, code, expected);
   }
@@ -3523,8 +3579,14 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     test(
         options,
-        "/** @const */ var g = {};" + "/** @type {number} */ g.foo = 3;",
-        "/** @const */ var g = {};" + "g.foo = 3;");
+        """
+        /** @const */ var g = {};
+        /** @type {number} */ g.foo = 3;
+        """,
+        """
+        /** @const */ var g = {};
+        g.foo = 3;
+        """);
   }
 
   @Test
@@ -3598,10 +3660,14 @@ public final class IntegrationTest extends IntegrationTestCase {
     assertThat(lastCompiler.getErrors())
         .comparingElementsUsing(JSCompCorrespondences.DESCRIPTION_EQUALITY)
         .containsExactly(
-            "This language feature is only supported for ECMASCRIPT_2015 mode or better:"
-                + " block-scoped function declaration.",
-            "This language feature is only supported for ECMASCRIPT_2015 mode or better:"
-                + " block-scoped function declaration.");
+            """
+            This language feature is only supported for ECMASCRIPT_2015 mode or better:\
+             block-scoped function declaration.\
+            """,
+            """
+            This language feature is only supported for ECMASCRIPT_2015 mode or better:\
+             block-scoped function declaration.\
+            """);
   }
 
   @Test
@@ -3705,7 +3771,13 @@ public final class IntegrationTest extends IntegrationTestCase {
     WarningLevel warnings = WarningLevel.QUIET;
     warnings.setOptionsForWarningLevel(options);
 
-    String code = "" + "var foo; foo();\n" + "/** @const */\n" + "var x = 1; foo(); x = 2;\n";
+    String code =
+        """
+
+        var foo; foo();
+        /** @const */
+        var x = 1; foo(); x = 2;
+        """;
     test(options, code, code);
   }
 
@@ -3717,7 +3789,13 @@ public final class IntegrationTest extends IntegrationTestCase {
     WarningLevel warnings = WarningLevel.DEFAULT;
     warnings.setOptionsForWarningLevel(options);
 
-    String code = "" + "var foo;\n" + "/** @const */\n" + "var x = 1; foo(); x = 2;\n";
+    String code =
+        """
+
+        var foo;
+        /** @const */
+        var x = 1; foo(); x = 2;
+        """;
     test(options, code, DiagnosticGroups.CONST);
   }
 
@@ -3730,8 +3808,17 @@ public final class IntegrationTest extends IntegrationTestCase {
     WarningLevel warnings = WarningLevel.DEFAULT;
     warnings.setOptionsForWarningLevel(options);
 
-    String code = "" + "console.log(" + "/** @type {function():!string} */ ((new x())['abc'])());";
-    String result = "" + "console.log((new x()).abc());";
+    String code =
+        """
+
+        console.log(
+        /** @type {function():!string} */ ((new x())['abc'])());
+        """;
+    String result =
+        """
+
+        console.log((new x()).abc());
+        """;
     test(options, code, result);
   }
 

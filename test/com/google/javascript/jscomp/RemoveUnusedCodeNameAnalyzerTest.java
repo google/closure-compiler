@@ -539,7 +539,11 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
 
   @Test
   public void testNoSideEffectAnnotation14() {
-    String externs = "function c(){};" + "c.prototype.f = /**@nosideeffects*/function(){};";
+    String externs =
+        """
+        function c(){};
+        c.prototype.f = /**@nosideeffects*/function(){};
+        """;
     test(externs(externs), srcs("var o = new c; var a = o.f()"), expected("new c"));
   }
 
@@ -600,7 +604,10 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Test
   public void testTopLevelClass6() {
     testSame(
-        "function f(){} function A(){}" + "A.prototype = {x: function() { f(); }}; new A().x();");
+        """
+        function f(){} function A(){}
+        A.prototype = {x: function() { f(); }}; new A().x();
+        """);
   }
 
   @Test
@@ -646,8 +653,10 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Test
   public void testNamespacedClass5() {
     testSame(
-        "function f(){} var a = {}; a.b = function() {};"
-            + "a.b.prototype = {x: function() { f(); }}; new a.b().x();");
+        """
+        function f(){} var a = {}; a.b = function() {};
+        a.b.prototype = {x: function() { f(); }}; new a.b().x();
+        """);
   }
 
   @Test
@@ -774,7 +783,11 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Test
   public void testAssignmentToUnknownPrototype() {
     disableCompareJsDoc(); // multistage compilation simplifies suppressions
-    testSame("/** @suppress {duplicate} */ var window;" + "window['a'].prototype = {};");
+    testSame(
+        """
+        /** @suppress {duplicate} */ var window;
+        window['a'].prototype = {};
+        """);
   }
 
   @Test
@@ -837,7 +850,10 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Test
   public void testConstants2() {
     test(
-        "var bar = function(){}; var EXP_FOO = true; var EXP_BAR = true;" + "if (EXP_FOO) bar();",
+        """
+        var bar = function(){}; var EXP_FOO = true; var EXP_BAR = true;
+        if (EXP_FOO) bar();
+        """,
         "var bar = function(){}; var EXP_FOO = true; if (EXP_FOO) bar();");
   }
 
@@ -886,30 +902,49 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Test
   public void testAnonymous5() {
     testSame(
-        "var foo;" + "(function(){ foo=function(){ bar() }; function bar(){} })();" + "foo();");
+        """
+        var foo;
+        (function(){ foo=function(){ bar() }; function bar(){} })();
+        foo();
+        """);
   }
 
   @Test
   public void testAnonymous6() {
-    testSame("function foo(){}" + "function bar(){}" + "foo(function(){externfoo = bar});");
+    testSame(
+        """
+        function foo(){}
+        function bar(){}
+        foo(function(){externfoo = bar});
+        """);
   }
 
   @Test
   public void testAnonymous7() {
-    testSame("var foo;" + "(function (){ function bar(){ externfoo = foo; } bar(); })();");
+    testSame(
+        """
+        var foo;
+        (function (){ function bar(){ externfoo = foo; } bar(); })();
+        """);
   }
 
   @Test
   public void testAnonymous8() {
-    testSame("var foo;" + "(function (){ var g=function(){ externfoo = foo; }; g(); })();");
+    testSame(
+        """
+        var foo;
+        (function (){ var g=function(){ externfoo = foo; }; g(); })();
+        """);
   }
 
   @Test
   public void testAnonymous9() {
     testSame(
-        "function foo(){}"
-            + "function bar(){}"
-            + "foo(function(){ function baz(){ externfoo = bar; } baz(); });");
+        """
+        function foo(){}
+        function bar(){}
+        foo(function(){ function baz(){ externfoo = bar; } baz(); });
+        """);
   }
 
   @Test
@@ -929,15 +964,19 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Test
   public void testGetElem1() {
     testSame(
-        "var foo = {}; foo.bar = {}; foo.bar.baz = {a: 5, b: 10};"
-            + "var fn = function() {window[foo.bar.baz.a] = 5;}; fn()");
+        """
+        var foo = {}; foo.bar = {}; foo.bar.baz = {a: 5, b: 10};
+        var fn = function() {window[foo.bar.baz.a] = 5;}; fn()
+        """);
   }
 
   @Test
   public void testGetElem2() {
     testSame(
-        "var foo = {}; foo.bar = {}; foo.bar.baz = {a: 5, b: 10};"
-            + "var fn = function() {this[foo.bar.baz.a] = 5;}; fn()");
+        """
+        var foo = {}; foo.bar = {}; foo.bar.baz = {a: 5, b: 10};
+        var fn = function() {this[foo.bar.baz.a] = 5;}; fn()
+        """);
   }
 
   @Test
@@ -1030,7 +1069,10 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Test
   public void testSetterInForStruct2() {
     test(
-        "var Class = function() {}; " + "for (var i = 1; Class.prototype.property_ = 0; i++);",
+        """
+        var Class = function() {};
+        for (var i = 1; Class.prototype.property_ = 0; i++);
+        """,
         "for (var i = 1; 0; i++);");
   }
 
@@ -1047,11 +1089,15 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
     test(
         externs("function f(){} function g() {} function h() {}"),
         srcs(
-            "var i = 0; var j = 0;                      for (i = 1 + f() + g() + h(); i = 0;"
-                + " j++);"),
+            """
+            var i = 0; var j = 0;                      for (i = 1 + f() + g() + h(); i = 0;
+             j++);
+            """),
         expected(
-            "           var j = 0; 1 + f() + g() + h(); for (                       ;     0;"
-                + " j++);"));
+            """
+                      var j = 0; 1 + f() + g() + h(); for (                       ;     0;
+            j++);
+            """));
   }
 
   @Test
@@ -1089,7 +1135,10 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Test
   public void testSetterInForStruct9() {
     test(
-        "var Class = function() {}; " + "for (var i = 1; Class.property_ = 0; i++);",
+        """
+        var Class = function() {};
+        for (var i = 1; Class.property_ = 0; i++);
+        """,
         "for (var i = 1; 0; i++);");
   }
 
@@ -1102,20 +1151,31 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
 
   @Test
   public void testSetterInForStruct11() {
-    test("var Class = function() {}; " + "for (;Class.property_ = 0;);", "for (;0;);");
+    test(
+        """
+        var Class = function() {};
+        for (;Class.property_ = 0;);
+        """,
+        "for (;0;);");
   }
 
   @Test
   public void testSetterInForStruct12() {
     test(
-        "var a = 1; var Class = function() {}; " + "for (;Class.property_ = a;);",
+        """
+        var a = 1; var Class = function() {};
+        for (;Class.property_ = a;);
+        """,
         "var a = 1; for (; a;);");
   }
 
   @Test
   public void testSetterInForStruct13() {
     test(
-        "var a = 1; var Class = function() {}; " + "for (Class.property_ = a; 0 ;);",
+        """
+        var a = 1; var Class = function() {};
+        for (Class.property_ = a; 0 ;);
+        """,
         "for (; 0;);");
   }
 
@@ -1129,14 +1189,20 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Test
   public void testSetterInForStruct15() {
     test(
-        "var Class = function() {}; " + "for (var i = 1; 0; Class.prototype.property_ = 0);",
+        """
+        var Class = function() {};
+        for (var i = 1; 0; Class.prototype.property_ = 0);
+        """,
         "for (; 0; 0);");
   }
 
   @Test
   public void testSetterInForStruct16() {
     test(
-        "var Class = function() {}; " + "for (var i = 1; i = 0; Class.prototype.property_ = 0);",
+        """
+        var Class = function() {};
+        for (var i = 1; i = 0; Class.prototype.property_ = 0);
+        """,
         "for (; 0; 0);");
   }
 
@@ -1214,7 +1280,11 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Test
   public void testSetterInWhilePredicate() {
     test(
-        "var a = 1;" + "var Class = function() {}; " + "while (Class.property_ = a);",
+        """
+        var a = 1;
+        var Class = function() {};
+        while (Class.property_ = a);
+        """,
         "var a = 1; for (;a;) {}");
   }
 
@@ -1342,19 +1412,24 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Test
   public void testUnhandledTopNode() {
     testSame(
-        "function Foo() {}; Foo.prototype.isBar = function() {};"
-            + "function Bar() {}; Bar.prototype.isFoo = function() {};"
-            + "var foo = new Foo(); var bar = new Bar();"
-            +
-            // The boolean AND here is currently unhandled by this pass, but
-            // it should not cause it to blow up.
-            "var cond = foo.isBar() && bar.isFoo();"
-            + "if (cond) {window.alert('hello');}");
+        """
+        function Foo() {}; Foo.prototype.isBar = function() {};
+        function Bar() {}; Bar.prototype.isFoo = function() {};
+        var foo = new Foo(); var bar = new Bar();
+        // The boolean AND here is currently unhandled by this pass, but it
+        // it should not cause it to blow up.
+        var cond = foo.isBar() && bar.isFoo();
+        if (cond) {window.alert('hello');}\
+        """);
   }
 
   @Test
   public void testPropertyDefinedInGlobalScope() {
-    testSame("function Foo() {}; var x = new Foo(); x.cssClass = 'bar';" + "window.alert(x);");
+    testSame(
+        """
+        function Foo() {}; var x = new Foo(); x.cssClass = 'bar';
+        window.alert(x);
+        """);
   }
 
   @Test
@@ -1494,13 +1569,15 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Test
   public void testDoNotChangeInstanceOfGetElem() {
     testSame(
-        "var goog = {};"
-            + "function f(obj, name) {"
-            + "  if (obj instanceof goog[name]) {"
-            + "    return name;"
-            + "  }"
-            + "}"
-            + "window['f'] = f;");
+        """
+        var goog = {};
+        function f(obj, name) {
+          if (obj instanceof goog[name]) {
+            return name;
+          }
+        }
+        window['f'] = f;
+        """);
   }
 
   @Test
@@ -1526,10 +1603,12 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Test
   public void testDoNotChangeInstanceOfGetprop() {
     testSame(
-        "function f(obj) {"
-            + "  if (obj instanceof window.MouseEvent) obj.preventDefault();"
-            + "}"
-            + "window['f'] = f;");
+        """
+        function f(obj) {
+          if (obj instanceof window.MouseEvent) obj.preventDefault();
+        }
+        window['f'] = f;
+        """);
   }
 
   // TODO(b/66971163): Enable or remove this test.
@@ -1629,15 +1708,20 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Test
   public void testRhsAssign6() {
     test(
-        "function Foo(){} var foo = null;"
-            + "var f = function () {foo || (foo = new Foo()); return foo}",
+        """
+        function Foo(){} var foo = null;
+        var f = function () {foo || (foo = new Foo()); return foo}
+        """,
         "");
   }
 
   @Test
   public void testRhsAssign7() {
     testSame(
-        "function Foo(){} var foo = null;" + "var f = function () {foo || (foo = new Foo())}; f()");
+        """
+        function Foo(){} var foo = null;
+        var f = function () {foo || (foo = new Foo())}; f()
+        """);
   }
 
   @Test
@@ -1664,14 +1748,20 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Test
   public void testRhsAssign9() {
     test(
-        "function Foo(){} var foo = null;"
-            + "var f = function () {1 + (foo = new Foo()); return foo}",
+        """
+        function Foo(){} var foo = null;
+        var f = function () {1 + (foo = new Foo()); return foo}
+        """,
         "");
   }
 
   @Test
   public void testAssignWithOr1() {
-    testSame("var foo = null;" + "var f = window.a || function () {return foo}; f()");
+    testSame(
+        """
+        var foo = null;
+        var f = window.a || function () {return foo}; f()
+        """);
   }
 
   @Test
@@ -1681,7 +1771,11 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
 
   @Test
   public void testAssignWithAnd1() {
-    testSame("var foo = null;" + "var f = window.a && function () {return foo}; f()");
+    testSame(
+        """
+        var foo = null;
+        var f = window.a && function () {return foo}; f()
+        """);
   }
 
   @Test
@@ -1692,68 +1786,87 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Test
   public void testAssignWithHook1() {
     testSame(
-        "function Foo(){} var foo = null;"
-            + "var f = window.a ? "
-            + "    function () {return new Foo()} : function () {return foo}; f()");
+        """
+        function Foo(){} var foo = null;
+        var f = window.a ?
+            function () {return new Foo()} : function () {return foo}; f()
+        """);
   }
 
   @Test
   public void testAssignWithHook2() {
     test(
-        "function Foo(){} var foo = null;"
-            + "var f = window.a ? "
-            + "    function () {return new Foo()} : function () {return foo};",
+        """
+        function Foo(){} var foo = null;
+        var f = window.a ?
+            function () {return new Foo()} : function () {return foo};
+        """,
         "");
   }
 
   @Test
   public void testAssignWithHook2a() {
     test(
-        "function Foo(){} var foo = null;"
-            + "var f; f = window.a ? "
-            + "    function () {return new Foo()} : function () {return foo};",
+        """
+        function Foo(){} var foo = null;
+        var f; f = window.a ?
+            function () {return new Foo()} : function () {return foo};
+        """,
         "");
   }
 
   @Test
   public void testAssignWithHook3() {
     testSame(
-        "function Foo(){} var foo = null; var f = {};"
-            + "f.b = window.a ? "
-            + "    function () {return new Foo()} : function () {return foo}; f.b()");
+        """
+        function Foo(){} var foo = null; var f = {};
+        f.b = window.a ?
+            function () {return new Foo()} : function () {return foo}; f.b()
+        """);
   }
 
   @Test
   public void testAssignWithHook4() {
     test(
-        "function Foo(){} var foo = null; var f = {};"
-            + "f.b = window.a ? "
-            + "    function () {return new Foo()} : function () {return foo};",
+        """
+        function Foo(){} var foo = null; var f = {};
+        f.b = window.a ?
+            function () {return new Foo()} : function () {return foo};
+        """,
         "");
   }
 
   @Test
   public void testAssignWithHook5() {
     testSame(
-        "function Foo(){} var foo = null; var f = {};"
-            + "f.b = window.a ? function () {return new Foo()} :"
-            + "    window.b ? function () {return foo} :"
-            + "    function() { return Foo }; f.b()");
+        """
+        function Foo(){} var foo = null; var f = {};
+        f.b = window.a ? function () {return new Foo()} :
+            window.b ? function () {return foo} :
+            function() { return Foo }; f.b()
+        """);
   }
 
   @Test
   public void testAssignWithHook6() {
     test(
-        "function Foo(){} var foo = null; var f = {};"
-            + "f.b = window.a ? function () {return new Foo()} :"
-            + "    window.b ? function () {return foo} :"
-            + "    function() { return Foo };",
+        """
+        function Foo(){} var foo = null; var f = {};
+        f.b = window.a ? function () {return new Foo()} :
+            window.b ? function () {return foo} :
+            function() { return Foo };
+        """,
         "");
   }
 
   @Test
   public void testAssignWithHook7() {
-    testSame("function Foo(){} var foo = null;" + "var f = window.a ? new Foo() : foo;" + "f()");
+    testSame(
+        """
+        function Foo(){} var foo = null;
+        var f = window.a ? new Foo() : foo;
+        f()
+        """);
   }
 
   // TODO(b/66971163): enable or remove this test
@@ -1772,29 +1885,52 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
 
   @Test
   public void testAssign1() {
-    test("function Foo(){} var foo = null; var f = {};" + "f.b = window.a;", "");
+    test(
+        """
+        function Foo(){} var foo = null; var f = {};
+        f.b = window.a;
+        """,
+        "");
   }
 
   @Test
   public void testAssign2() {
-    test("function Foo(){} var foo = null; var f = {};" + "f.b = window;", "");
+    test(
+        """
+        function Foo(){} var foo = null; var f = {};
+        f.b = window;
+        """,
+        "");
   }
 
   @Test
   public void testAssign3() {
-    test("var f = {};" + "f.b = window;", "");
+    test(
+        """
+        var f = {};
+        f.b = window;
+        """,
+        "");
   }
 
   @Test
   public void testAssign4() {
     test(
-        "function Foo(){sideEffect()} var foo = null; var f = {};" + "f.b = new Foo();",
+        """
+        function Foo(){sideEffect()} var foo = null; var f = {};
+        f.b = new Foo();
+        """,
         "function Foo(){sideEffect()} new Foo()");
   }
 
   @Test
   public void testAssign5() {
-    test("function Foo(){} var foo = null; var f = {};" + "f.b = foo;", "");
+    test(
+        """
+        function Foo(){} var foo = null; var f = {};
+        f.b = foo;
+        """,
+        "");
   }
 
   @Test
@@ -2023,17 +2159,24 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
    */
   @Test
   public void testAssignmentWithComplexLhs() {
-    testSame("function f() { return this; }" + "var o = {'key': 'val'};" + "f().x_ = o['key'];");
+    testSame(
+        """
+        function f() { return this; }
+        var o = {'key': 'val'};
+        f().x_ = o['key'];
+        """);
   }
 
   @Test
   public void testAssignmentWithComplexLhs2() {
     testSame(
-        "function f() { return this; }"
-            + "var o = {'key': 'val'};"
-            + "f().foo = function() {"
-            + "  o"
-            + "};");
+        """
+        function f() { return this; }
+        var o = {'key': 'val'};
+        f().foo = function() {
+          o
+        };
+        """);
   }
 
   @Test
@@ -2334,16 +2477,20 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Test
   public void testObjectDefinePropertiesOnNamespace3() {
     testSame(
-        "var b = 5;"
-            + "var a = {};"
-            + "Object.defineProperties(a, {prop: {value: b}});"
-            + "use(a.prop);");
+        """
+        var b = 5;
+        var a = {};
+        Object.defineProperties(a, {prop: {value: b}});
+        use(a.prop);
+        """);
 
     test(
-        "var b = 5;"
-            + "var a = {};"
-            + "Object.defineProperties(a, {prop: {value: b}});"
-            + "use(b);",
+        """
+        var b = 5;
+        var a = {};
+        Object.defineProperties(a, {prop: {value: b}});
+        use(b);
+        """,
         "var b = 5; use(b);");
   }
 
@@ -2384,9 +2531,11 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Test
   public void testObjectDefinePropertiesOnPrototype1() {
     testSame(
-        "function Foo() {}"
-            + "Object.defineProperties(Foo.prototype, {prop: {value: 5}});"
-            + "use((new Foo).prop);");
+        """
+        function Foo() {}
+        Object.defineProperties(Foo.prototype, {prop: {value: 5}});
+        use((new Foo).prop);
+        """);
 
     test("function Foo() {} Object.defineProperties(Foo.prototype, {prop: {value: 5}});", "");
   }

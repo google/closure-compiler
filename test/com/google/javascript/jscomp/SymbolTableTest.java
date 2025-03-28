@@ -1099,7 +1099,11 @@ public final class SymbolTableTest {
   public void testPrototypeReferences2() {
     SymbolTable table =
         createSymbolTable(
-            "/** @constructor */" + "function Snork() {}" + "Snork.prototype.baz = 3;");
+            """
+            /** @constructor */
+            function Snork() {}
+            Snork.prototype.baz = 3;
+            """);
     Symbol prototype = getGlobalVar(table, "Snork.prototype");
     assertThat(prototype).isNotNull();
 
@@ -1455,22 +1459,24 @@ public final class SymbolTableTest {
   public void testSuperClassReference() {
     SymbolTable table =
         createSymbolTable(
-            "  var a = {b: {}};"
-                + "/** @constructor */"
-                + "a.b.BaseClass = function() {};"
-                + "a.b.BaseClass.prototype.doSomething = function() {"
-                + "  alert('hi');"
-                + "};"
-                + "/**"
-                + " * @constructor"
-                + " * @extends {a.b.BaseClass}"
-                + " */"
-                + "a.b.DerivedClass = function() {};"
-                + "goog.inherits(a.b.DerivedClass, a.b.BaseClass);"
-                + "/** @override */"
-                + "a.b.DerivedClass.prototype.doSomething = function() {"
-                + "  a.b.DerivedClass.superClass_.doSomething();"
-                + "};");
+            """
+              var a = {b: {}};
+            /** @constructor */
+            a.b.BaseClass = function() {};
+            a.b.BaseClass.prototype.doSomething = function() {
+              alert('hi');
+            };
+            /**
+             * @constructor
+             * @extends {a.b.BaseClass}
+             */
+            a.b.DerivedClass = function() {};
+            goog.inherits(a.b.DerivedClass, a.b.BaseClass);
+            /** @override */
+            a.b.DerivedClass.prototype.doSomething = function() {
+              a.b.DerivedClass.superClass_.doSomething();
+            };
+            """);
 
     Symbol bad = getGlobalVar(table, "a.b.DerivedClass.superClass_.doSomething");
     assertThat(bad).isNull();
@@ -1488,11 +1494,13 @@ public final class SymbolTableTest {
   public void testInnerEnum() {
     SymbolTable table =
         createSymbolTable(
-            "var goog = {}; goog.ui = {};"
-                + "  /** @constructor */"
-                + "goog.ui.Zippy = function() {};"
-                + "/** @enum {string} */"
-                + "goog.ui.Zippy.EventType = { TOGGLE: 'toggle' };");
+            """
+            var goog = {}; goog.ui = {};
+              /** @constructor */
+            goog.ui.Zippy = function() {};
+            /** @enum {string} */
+            goog.ui.Zippy.EventType = { TOGGLE: 'toggle' };
+            """);
 
     Symbol eventType = getGlobalVar(table, "goog.ui.Zippy.EventType");
     assertThat(eventType).isNotNull();

@@ -252,10 +252,19 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   @Test
   public void testLoopInductionVar() {
     inFunction(
-        "for(var x = 0; x < 10; x++){}"
-            + "for(var y = 0; y < 10; y++){}"
-            + "for(var z = 0; z < 10; z++){}",
-        "var x=0;" + "for(;x<10;x++);" + "x=0;" + "for(;x<10;x++);" + "x=0;" + "for(;x<10;x++) {}");
+        """
+        for(var x = 0; x < 10; x++){}
+        for(var y = 0; y < 10; y++){}
+        for(var z = 0; z < 10; z++){}
+        """,
+        """
+        var x=0;
+        for(;x<10;x++);
+        x=0;
+        for(;x<10;x++);
+        x=0;
+        for(;x<10;x++) {}
+        """);
 
     inFunction(
         "for(var x = 0; x < 10; x++){z} for(var y = 0, z = 0; y < 10; y++){z}",
@@ -1133,24 +1142,28 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     //  b = { b, d }
     //  e = { e }
     inFunction(
-        "  var a;"
-            + "  var b;"
-            + "  var c;"
-            + "  var d;"
-            + "  var e;"
-            + "  a=1; b=1; a; b;"
-            + "  b=1; c=1; b; c;"
-            + "  c=1; d=1; c; d;"
-            + "  d=1; e=1; d; e;"
-            + "  e=1; a=1; e; a;",
-        "  var a;"
-            + "  var b;"
-            + "  var e;"
-            + "  a=1; b=1; a; b;"
-            + "  b=1; a=1; b; a;"
-            + "  a=1; b=1; a; b;"
-            + "  b=1; e=1; b; e;"
-            + "  e=1; a=1; e; a;");
+        """
+        var a;
+        var b;
+        var c;
+        var d;
+        var e;
+        a=1; b=1; a; b;
+        b=1; c=1; b; c;
+        c=1; d=1; c; d;
+        d=1; e=1; d; e;
+        e=1; a=1; e; a;
+        """,
+        """
+        var a;
+        var b;
+        var e;
+        a=1; b=1; a; b;
+        b=1; a=1; b; a;
+        a=1; b=1; a; b;
+        b=1; e=1; b; e;
+        e=1; a=1; e; a;
+        """);
 
     // If we favor "d" first by declaring "d" earlier,
     // the coloring partitioning would be:
@@ -1158,18 +1171,22 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     //  d = { d, a }
     //  c = { c }
     inFunction(
-        "var d,a,b,c,e;"
-            + "  a=1; b=1; a; b;"
-            + "  b=1; c=1; b; c;"
-            + "  c=1; d=1; c; d;"
-            + "  d=1; e=1; d; e;"
-            + "  e=1; a=1; e; a;",
-        "  var d;var b;var c;"
-            + "  d=1;b=1;d;b;"
-            + "  b=1;c=1;b;c;"
-            + "  c=1;d=1;c;d;"
-            + "  d=1;b=1;d;b;"
-            + "  b=1;d=1;b;d");
+        """
+        var d,a,b,c,e;
+          a=1; b=1; a; b;
+          b=1; c=1; b; c;
+          c=1; d=1; c; d;
+          d=1; e=1; d; e;
+          e=1; a=1; e; a;
+        """,
+        """
+        var d;var b;var c;
+        d=1;b=1;d;b;
+        b=1;c=1;b;c;
+        c=1;d=1;c;d;
+        d=1;b=1;d;b;
+        b=1;d=1;b;d
+        """);
   }
 
   // Sometimes live range can be cross even within a VAR declaration.
@@ -1300,20 +1317,24 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   @Test
   public void testForInWithAssignment() {
     inFunction(
-        "function f(commands) {"
-            + "  var k, v, ref;"
-            + "  for (k in ref = commands) {"
-            + "    v = ref[k];"
-            + "    alert(k + ':' + v);"
-            + "  }"
-            + "}",
-        "function f(commands){"
-            + "var k;"
-            + "var ref;"
-            + "for(k in ref = commands) {"
-            + "  commands=ref[k];"
-            + "  alert(k+':'+commands)"
-            + "}}");
+        """
+        function f(commands) {
+          var k, v, ref;
+          for (k in ref = commands) {
+            v = ref[k];
+            alert(k + ':' + v);
+          }
+        }
+        """,
+        """
+        function f(commands){
+        var k;
+        var ref;
+        for(k in ref = commands) {
+          commands=ref[k];
+          alert(k+':'+commands)
+        }}
+        """);
   }
 
   @Test

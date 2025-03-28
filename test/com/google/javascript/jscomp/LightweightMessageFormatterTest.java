@@ -54,7 +54,11 @@ public final class LightweightMessageFormatterTest {
   @Test
   public void testTwoLineRegion() {
     assertThat(format(region(5, 6, "hello world\nfoo bar")))
-        .isEqualTo("  5| hello world\n" + "  6| foo bar");
+        .isEqualTo(
+            """
+              5| hello world
+              6| foo bar\
+            """);
   }
 
   @Test
@@ -65,9 +69,8 @@ public final class LightweightMessageFormatterTest {
             """
                9| hello world
               10| foo bar
-              11| another one
-            """
-                .stripTrailing());
+              11| another one\
+            """);
   }
 
   @Test
@@ -78,9 +81,8 @@ public final class LightweightMessageFormatterTest {
             """
               7| hello world
               8|\s
-              9| another one
-            """
-                .stripTrailing());
+              9| another one\
+            """);
   }
 
   @Test
@@ -96,7 +98,12 @@ public final class LightweightMessageFormatterTest {
   @Test
   public void testThreeLineRemoveLastEmptyLine() {
     String region = format(region(7, 9, "hello world\nfoobar\n"));
-    assertThat(region).isEqualTo("  7| hello world\n" + "  8| foobar");
+    assertThat(region)
+        .isEqualTo(
+            """
+              7| hello world
+              8| foobar\
+            """);
   }
 
   @Test

@@ -1284,7 +1284,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testParseThrows2() {
     JSDocInfo info =
-        parse("@throws {not a type}\n *     Bla\n " + "*@throws {String} A string */", true);
+        parse(
+            """
+            @throws {not a type}
+             *     Bla
+            *@throws {String} A string */
+            """,
+            true);
     assertThat(info.getThrowsAnnotations())
         .containsExactly("{not a type} Bla", "{String} A string")
         .inOrder();
@@ -2539,7 +2545,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testRegression9() {
-    JSDocInfo jsdoc = parse(" * @param {string} p0 blah blah blah\n" + " */");
+    JSDocInfo jsdoc =
+        parse(
+            """
+            * @param {string} p0 blah blah blah
+            */
+            """);
 
     assertThat(jsdoc.getBaseType()).isNull();
     assertThat(jsdoc.isConstant()).isFalse();
@@ -2577,7 +2588,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testRegression11() {
-    JSDocInfo jsdoc = parse(" * @constructor\n" + " */");
+    JSDocInfo jsdoc =
+        parse(
+            """
+            * @constructor
+            */
+            """);
 
     assertThat(jsdoc.getBaseType()).isNull();
     assertThat(jsdoc.isConstant()).isFalse();
@@ -2591,7 +2607,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testRegression12() {
-    JSDocInfo jsdoc = parse(" * @extends FooBar\n" + " */");
+    JSDocInfo jsdoc =
+        parse(
+            """
+            * @extends FooBar
+            */
+            """);
 
     assertTypeEquals(createNamedType("FooBar"), jsdoc.getBaseType());
     assertThat(jsdoc.isConstant()).isFalse();
@@ -2843,7 +2864,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testInterfaceExtends() {
-    JSDocInfo jsdoc = parse(" * @interface \n" + " * @extends {Extended} */");
+    JSDocInfo jsdoc =
+        parse(
+            """
+            * @interface\s
+            * @extends {Extended} */
+            """);
     assertThat(jsdoc.isInterface()).isTrue();
     assertThat(jsdoc.getExtendedInterfacesCount()).isEqualTo(1);
     List<JSTypeExpression> types = jsdoc.getExtendedInterfaces();
@@ -3344,7 +3370,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testBadModifies8() {
-    parse("@modifies {this}\n" + "@nosideeffects */", "conflicting @nosideeffects tag");
+    parse(
+        """
+        @modifies {this}
+        @nosideeffects */
+        """,
+        "conflicting @nosideeffects tag");
   }
 
   @Test
@@ -3516,7 +3547,14 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParseBlockComment3() {
-    JSDocInfo jsdoc = parse("\n " + "* hello world \n" + "* @author abc@google.com */", true);
+    JSDocInfo jsdoc =
+        parse(
+            """
+
+            * hello world\s
+            * @author abc@google.com */
+            """,
+            true);
 
     assertThat(jsdoc.getBlockDescription()).isEqualTo("hello world");
 
@@ -4249,7 +4287,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParserWithTypeTransformation2() {
-    parse("@template T := 'string' =:\n" + "Random text*/");
+    parse(
+        """
+        @template T := 'string' =:
+        Random text*/
+        """);
   }
 
   @Test
@@ -4486,7 +4528,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParserWithTTLConditionalNestedBoolOperation() {
-    parse("@template T := " + "cond(((isCtor(R) || isCtor(S)) && !isCtor(R)), R, S) =: */");
+    parse("@template T := cond(((isCtor(R) || isCtor(S)) && !isCtor(R)), R, S) =: */");
   }
 
   @Test
@@ -4786,7 +4828,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParserWithTTLValidMapunion2() {
-    parse("@template T := " + "mapunion(union('string', 'number'), (S) => S) " + "=: */");
+    parse("@template T := mapunion(union('string', 'number'), (S) => S) =: */");
   }
 
   @Test
@@ -5061,8 +5103,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParserWithTTLNestedTemplateTypeOfOperation() {
-    parse(
-        "@template T := templateTypeOf(" + "templateTypeOf(type(T, type(R, S)), 0)," + "0) =: */");
+    parse("@template T := templateTypeOf(templateTypeOf(type(T, type(R, S)), 0),0) =: */");
   }
 
   @Test
@@ -5224,8 +5265,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParserWithTTLValidMaprecord2() {
-    parse(
-        "@template T := " + "maprecord(record({x:'string', y:'number'}), " + "(K, V) => V) =: */");
+    parse("@template T := maprecord(record({x:'string', y:'number'}), (K, V) => V) =: */");
   }
 
   @Test
@@ -5501,8 +5541,10 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testUnsupportedJsDocSyntax2() {
     JSDocInfo info =
         parse(
-            "@param {?} userInfo The user info. \n"
-                + " * @param {?} userInfo.name The name of the user */",
+            """
+            @param {?} userInfo The user info.
+             * @param {?} userInfo.name The name of the user */
+            """,
             true,
             "invalid param name \"userInfo.name\"");
     assertThat(info.getParameterCount()).isEqualTo(1);

@@ -130,8 +130,10 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
   @Test
   public void testReplacePlaceholderMissingValue() {
     testError(
-        "/** @desc A message with two placeholders, but one is missing. */\n"
-            + "var MSG_F = goog.getMsg('{$greeting}, {$name}!', {name: 'Tyler'});",
+        """
+        /** @desc A message with two placeholders, but one is missing. */
+        var MSG_F = goog.getMsg('{$greeting}, {$name}!', {name: 'Tyler'});
+        """,
         JsMessageVisitor.MESSAGE_TREE_MALFORMED);
   }
 
@@ -257,7 +259,7 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
 
         var MSG_C = goog.getMsg('Hello, {$name}', {name: 'Tyler'}, {html: true});
         """,
-        """
+"""
 /** @desc A message with one placeholder. */
 
 var MSG_C=chrome.i18n.getMessage.apply(null, ['4985325380591528435', ['Tyler']].concat((/Chrome\\/(\\d+)/.exec(navigator.userAgent) || [])[1] >= 79 ? [{escapeLt: true}] : []));
@@ -269,7 +271,7 @@ var MSG_C=chrome.i18n.getMessage.apply(null, ['4985325380591528435', ['Tyler']].
 
         var MSG_A = goog.getMsg('Hello world', {}, {html: true});
         """,
-        """
+"""
 /** @desc A simple message. */
 
 var MSG_A=chrome.i18n.getMessage.apply(null, ['8660696502365331902', []].concat((/Chrome\\/(\\d+)/.exec(navigator.userAgent) || [])[1] >= 79 ? [{escapeLt: true}] : []));

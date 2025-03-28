@@ -123,7 +123,12 @@ public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
 
   @Test
   public void testFunctionsWithJsDoc3() {
-    testSame("/** @param {*=} c \n * @param {*=} b */ " + "function foo(a,b,c) {} foo(1);");
+    testSame(
+        """
+        /** @param {*=} c\s
+         * @param {*=} b */
+        function foo(a,b,c) {} foo(1);
+        """);
   }
 
   @Test
@@ -160,17 +165,20 @@ public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
   @Test
   public void testMethodCalls() {
     final String METHOD_DEFS =
-        "/** @constructor */\n"
-            + "function Foo() {}"
-            +
-            // Methods defined in a separate functions and then added via assignment
-            "function twoArg(arg1, arg2) {};"
-            + "Foo.prototype.prototypeMethod = twoArg;"
-            + "Foo.staticMethod = twoArg;"
-            +
-            // Constructor that specifies a return type
-            "/**\n * @constructor\n * @return {Bar}\n */\n"
-            + "function Bar() {}";
+        """
+        /** @constructor */
+        function Foo() {}
+        // Methods defined in a separate functions and then added via assignment
+        function twoArg(arg1, arg2) {};
+        Foo.prototype.prototypeMethod = twoArg;
+        Foo.staticMethod = twoArg;
+        // Constructor that specifies a return type
+        /**
+         * @constructor
+         * @return {Bar}
+         */
+        function Bar() {}
+        """;
 
     // Prototype method with too many arguments.
     testWarning(

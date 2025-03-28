@@ -1062,8 +1062,10 @@ public final class NormalizeTest extends CompilerTestCase {
             "function bar() {let a; let a$jscomp$1; a + a$jscomp$1;}"),
         expected(
             "function foo() {var a; a;}",
-            "function bar() {let a$jscomp$1; let a$jscomp$1$jscomp$1; a$jscomp$1 +"
-                + " a$jscomp$1$jscomp$1;}"));
+            """
+            function bar() {let a$jscomp$1; let a$jscomp$1$jscomp$1; a$jscomp$1 +
+             a$jscomp$1$jscomp$1;}
+            """));
 
     test(
         srcs("var a;", "import {a as a} from './foo.js'; let b = a;"),

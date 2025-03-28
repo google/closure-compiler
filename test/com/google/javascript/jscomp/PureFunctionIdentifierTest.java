@@ -2060,13 +2060,16 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     }
 
     assertPureCallsMarked(
-        "const /** ? */ obj = {};\n"
-            + "function pure() { }\n"
-            + aliasDefinition
-            + "\n\n"
-            + "pure();\n"
-            + aliasExpression
-            + "();",
+        """
+        const /** ? */ obj = {};
+        function pure() { }
+        ALIAS_DEFINITION
+
+        pure();
+        ALIAS_EXPRESSION();
+        """
+            .replace("ALIAS_DEFINITION", aliasDefinition)
+            .replace("ALIAS_EXPRESSION", aliasExpression),
         expected);
   }
 

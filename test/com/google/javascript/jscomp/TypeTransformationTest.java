@@ -236,14 +236,14 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
   public void testTransformationWithNestedExpressionInBooleanFirstParam() {
     testTTL(
         getNativeStringType(),
-        "cond( eq( cond(eq(N, N), 'string', 'number'), 'string')," + "'string', " + "'number')");
+        "cond( eq( cond(eq(N, N), 'string', 'number'), 'string'),'string', 'number')");
   }
 
   @Test
   public void testTransformationWithNestedExpressionInBooleanSecondParam() {
     testTTL(
         getNativeStringType(),
-        "cond( eq( 'string', cond(eq(N, N), 'string', 'number'))," + "'string', " + "'number')");
+        "cond( eq( 'string', cond(eq(N, N), 'string', 'number')),'string', 'number')");
   }
 
   @Test
@@ -296,24 +296,28 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
   public void testTransformationWithNestedMapunionInMapFunctionBody() {
     testTTL(
         getNativeStringType(),
-        "mapunion(union(S, B),"
-            + "(x) => mapunion(union(S, N), "
-            + "(y) => cond(eq(x, y), x, BOT)))");
+        """
+        mapunion(union(S, B),
+        (x) => mapunion(union(S, N),
+        (y) => cond(eq(x, y), x, BOT)))
+        """);
   }
 
   @Test
   public void testTransformationWithObjectUseCase() {
     testTTL(
         getNativeObjectType(),
-        "mapunion("
-            + "union(S, N, B, NULL, UNDEF, ARR),"
-            + "(x) => "
-            + "cond(eq(x, S), SO,"
-            + "cond(eq(x, N), NO,"
-            + "cond(eq(x, B), BO,"
-            + "cond(eq(x, NULL), OBJ,"
-            + "cond(eq(x, UNDEF), OBJ,"
-            + "x ))))))");
+        """
+        mapunion(
+        union(S, N, B, NULL, UNDEF, ARR),
+        (x) =>
+        cond(eq(x, S), SO,
+        cond(eq(x, N), NO,
+        cond(eq(x, B), BO,
+        cond(eq(x, NULL), OBJ,
+        cond(eq(x, UNDEF), OBJ,
+        x ))))))
+        """);
   }
 
   // none() is evaluated to bottom in TTL expressions, but if the overall expression evaluates
@@ -530,9 +534,11 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
   public void testTransformationWithInvalidNestedMapunion() {
     testTTL(
         getNativeUnknownType(),
-        "mapunion(union(S, B),"
-            + "(x) => mapunion(union(S, N), "
-            + "(x) => cond(eq(x, x), x, BOT)))",
+        """
+        mapunion(union(S, B),
+        (x) => mapunion(union(S, N),
+        (x) => cond(eq(x, x), x, BOT)))
+        """,
         "The variable x is already defined");
   }
 
@@ -586,8 +592,9 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
     testTTL(
         getNativeUnknownType(),
         "maprecord(REC, (k, v) => 'number')",
-        "The body of a maprecord function must evaluate to a record type "
-            + "or a no type, found number");
+        """
+        The body of a maprecord function must evaluate to a record type or a no type, found number\
+        """);
   }
 
   @Test
@@ -618,8 +625,7 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
     testTTL(
         getNativeUnknownType(),
         "maprecord(union(record({n:N}), S), (k, v) => record({[k]:v}))",
-        "The first parameter of a maprecord must be a record type, "
-            + "found (string|{n: number})");
+        "The first parameter of a maprecord must be a record type, found (string|{n: number})");
   }
 
   @Test
@@ -627,8 +633,9 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
     testTTL(
         getNativeUnknownType(),
         "maprecord(union(record({n:N}), record({s:S})),  (k, v) => record({[k]:v}))",
-        "The first parameter of a maprecord must be a record type, "
-            + "found ({n: number}|{s: string})");
+        """
+        The first parameter of a maprecord must be a record type, found ({n: number}|{s: string})\
+        """);
   }
 
   @Test
@@ -900,8 +907,10 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
   public void testTransformationWithMaprecordAndStringEquivalence() {
     testTTL(
         record("bool", getNativeNumberType(), "str", getNativeStringType()),
-        "maprecord(record({bool:B, str:S}),"
-            + "(k, v) => record({[k]:cond(streq(k, 'bool'), N, v)}))");
+        """
+        maprecord(record({bool:B, str:S}),
+        (k, v) => record({[k]:cond(streq(k, 'bool'), N, v)}))
+        """);
   }
 
   @Test

@@ -191,8 +191,14 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
         "var a;function foo(){var b;a}function boo(){var b;a}",
         "var a;function foo(){var b;a}function boo(){var b$jscomp$1;a}");
     testWithInversion(
-        "function foo(a){var b}" + "function boo(a){var b}",
-        "function foo(a){var b}" + "function boo(a$jscomp$1){var b$jscomp$1}");
+        """
+        function foo(a){var b}
+        function boo(a){var b}
+        """,
+        """
+        function foo(a){var b}
+        function boo(a$jscomp$1){var b$jscomp$1}
+        """);
     // variable b is left untouched because it is only declared once
     testWithInversion(
         "let a;function foo(a){let b;a}", "let a;function foo(a$jscomp$1){let b;a$jscomp$1}");
@@ -200,8 +206,14 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
         "let a;function foo(){let b;a}function boo(){let b;a}",
         "let a;function foo(){let b;a}function boo(){let b$jscomp$1;a}");
     testWithInversion(
-        "function foo(a){let b}" + "function boo(a){let b}",
-        "function foo(a){let b}" + "function boo(a$jscomp$1){let b$jscomp$1}");
+        """
+        function foo(a){let b}
+        function boo(a){let b}
+        """,
+        """
+        function foo(a){let b}
+        function boo(a$jscomp$1){let b$jscomp$1}
+        """);
 
     // Verify functions expressions are renamed.
     testWithInversion(
@@ -506,13 +518,23 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     // Verify catch exceptions names are made unique
     test("try { } catch(e) {e;}", "try { } catch(e$jscomp$unique_0) {e$jscomp$unique_0;}");
     test(
-        "try { } catch(e) {e;};" + "try { } catch(e) {e;}",
-        "try { } catch(e$jscomp$unique_0) {e$jscomp$unique_0;};"
-            + "try { } catch(e$jscomp$unique_1) {e$jscomp$unique_1;}");
+        """
+        try { } catch(e) {e;};
+        try { } catch(e) {e;}
+        """,
+        """
+        try { } catch(e$jscomp$unique_0) {e$jscomp$unique_0;};
+        try { } catch(e$jscomp$unique_1) {e$jscomp$unique_1;}
+        """);
     test(
-        "try { } catch(e) {e; " + "try { } catch(e) {e;}};",
-        "try { } catch(e$jscomp$unique_0) {e$jscomp$unique_0; "
-            + "try { } catch(e$jscomp$unique_1) {e$jscomp$unique_1;} }; ");
+        """
+        try { } catch(e) {e;
+        try { } catch(e) {e;}};
+        """,
+        """
+        try { } catch(e$jscomp$unique_0) {e$jscomp$unique_0;
+        try { } catch(e$jscomp$unique_1) {e$jscomp$unique_1;} };\s
+        """);
   }
 
   @Test
@@ -523,14 +545,18 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     test("var _a;", "var JSCompiler__a$jscomp$unique_0");
     test(
         "var _a = function _b(_c) { var _d; };",
-        "var JSCompiler__a$jscomp$unique_0 = function JSCompiler__b$jscomp$unique_2("
-            + "JSCompiler__c$jscomp$unique_1) { var JSCompiler__d$jscomp$unique_3; };");
+        """
+        var JSCompiler__a$jscomp$unique_0 = function JSCompiler__b$jscomp$unique_2(
+        JSCompiler__c$jscomp$unique_1) { var JSCompiler__d$jscomp$unique_3; };
+        """);
 
     test("let _a;", "let JSCompiler__a$jscomp$unique_0");
     test(
         "const _a = function _b(_c) { let _d; };",
-        "const JSCompiler__a$jscomp$unique_0 = function JSCompiler__b$jscomp$unique_2("
-            + "JSCompiler__c$jscomp$unique_1) { let JSCompiler__d$jscomp$unique_3; };");
+        """
+        const JSCompiler__a$jscomp$unique_0 = function JSCompiler__b$jscomp$unique_2(
+        JSCompiler__c$jscomp$unique_1) { let JSCompiler__d$jscomp$unique_3; };
+        """);
   }
 
   @Test
@@ -1166,7 +1192,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testTwoMethodsInTheSameFileWithSameLocalNames() {
     this.useDefaultRenamer = true;
     // Verify same local names in 2 different files get different new names.
-    // The ContextualRenamer renames an "oldName" by adding "$jscomp$" + "id" as a suffix string.
+    // The ContextualRenamer renames an "oldName" by adding "$jscomp$\n" + "id" as a suffix string.
     // So, when another declaration containing "$jscomp$id" exists at any other source location in
     // the entire JS program (due to a prior renaming), the ContextualRenamer should not generate
     // that same name when renaming this declaration.
@@ -1277,8 +1303,10 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "function bar() {let a; let a$jscomp$1; a + a$jscomp$1;}"),
         expected(
             "function foo() {var a; a;}",
-            "function bar() {let a$jscomp$1; let a$jscomp$1$jscomp$1; a$jscomp$1 +"
-                + " a$jscomp$1$jscomp$1;}"));
+            """
+            function bar() {let a$jscomp$1; let a$jscomp$1$jscomp$1; a$jscomp$1 +
+             a$jscomp$1$jscomp$1;}
+            """));
   }
 
   @Test

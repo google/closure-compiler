@@ -189,9 +189,11 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
   public void testRewriteDeclIsExpressionStatement() {
     test(
         semicolonJoin(NoRewriteDeclarationUsedAsRValue.DECL, NoRewriteDeclarationUsedAsRValue.CALL),
-        "var JSCompiler_StaticMethods_foo ="
-            + "function(JSCompiler_StaticMethods_foo$self) {};"
-            + "JSCompiler_StaticMethods_foo(o)");
+        """
+        var JSCompiler_StaticMethods_foo =
+        function(JSCompiler_StaticMethods_foo$self) {};
+        JSCompiler_StaticMethods_foo(o)
+        """);
   }
 
   @Test
@@ -856,7 +858,10 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
     static final String SUFFIX = "o.foo()";
     static final String INNER = "a.prototype.bar = function() {}; o.bar()";
     static final String EXPECTED_PREFIX =
-        "var JSCompiler_StaticMethods_foo=" + "function(JSCompiler_StaticMethods_foo$self){";
+        """
+        var JSCompiler_StaticMethods_foo=
+        function(JSCompiler_StaticMethods_foo$self){
+        """;
     static final String EXPECTED_SUFFIX = "JSCompiler_StaticMethods_foo(o)";
 
     private NoRewriteNestedFunctionTestInput() {}
@@ -872,7 +877,10 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
         semicolonJoin(
             NoRewriteNestedFunctionTestInput.EXPECTED_PREFIX + "}",
             NoRewriteNestedFunctionTestInput.EXPECTED_SUFFIX,
-            "var JSCompiler_StaticMethods_bar=" + "function(JSCompiler_StaticMethods_bar$self){}",
+            """
+            var JSCompiler_StaticMethods_bar=
+            function(JSCompiler_StaticMethods_bar$self){}
+            """,
             "JSCompiler_StaticMethods_bar(o)"));
   }
 
@@ -1512,7 +1520,10 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
     static final String USE = "x.foo()";
 
     static final String REWRITTEN_DEFINITION =
-        "var JSCompiler_StaticMethods_foo=" + "function(JSCompiler_StaticMethods_foo$self){}";
+        """
+        var JSCompiler_StaticMethods_foo=
+        function(JSCompiler_StaticMethods_foo$self){}
+        """;
     static final String REWRITTEN_USE = "JSCompiler_StaticMethods_foo(x)";
 
     private ModuleTestInput() {}

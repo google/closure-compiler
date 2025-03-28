@@ -199,26 +199,39 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     enableNormalizeExpectedOutput();
     fold("if (a) { x = 1; x++ } else { x = 2; x++ }", "x=(a) ? 1 : 2; x++");
     fold(
-        "if (a) { x = 1; x++; y += 1; z = pi; }" + " else  { x = 2; x++; y += 1; z = pi; }",
+        """
+        if (a) { x = 1; x++; y += 1; z = pi; }
+         else  { x = 2; x++; y += 1; z = pi; }
+        """,
         "x=(a) ? 1 : 2; x++; y += 1; z = pi;");
     fold(
-        "function z() {" + "if (a) { foo(); return !0 } else { goo(); return !0 }" + "}",
+        """
+        function z() {
+        if (a) { foo(); return !0 } else { goo(); return !0 }
+        }
+        """,
         "function z() {(a) ? foo() : goo(); return !0}");
     fold(
-        "function z() {if (a) { foo(); x = true; return true "
-            + "} else { goo(); x = true; return true }}",
+        """
+        function z() {if (a) { foo(); x = true; return true
+        } else { goo(); x = true; return true }}
+        """,
         "function z() {(a) ? foo() : goo(); x = true; return true}");
 
     fold(
-        "function z() {"
-            + "  if (a) { bar(); foo(); return true }"
-            + "    else { bar(); goo(); return true }"
-            + "}",
-        "function z() {"
-            + "  if (a) { bar(); foo(); }"
-            + "    else { bar(); goo(); }"
-            + "  return true;"
-            + "}");
+        """
+        function z() {
+          if (a) { bar(); foo(); return true }
+            else { bar(); goo(); return true }
+        }
+        """,
+        """
+        function z() {
+          if (a) { bar(); foo(); }
+            else { bar(); goo(); }
+          return true;
+        }
+        """);
   }
 
   @Test
@@ -550,25 +563,47 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
     foldSame("function f() { while(1) { return 7}  return 5}");
 
-    foldSame("function f() {" + "  try { while(x) {return f()}} catch (e) { } return f()}");
+    foldSame(
+        """
+        function f() {
+          try { while(x) {return f()}} catch (e) { } return f()}
+        """);
 
-    foldSame("function f() {" + "  try { while(x) {return f()}} finally {alert(1)} return f()}");
+    foldSame(
+        """
+        function f() {
+          try { while(x) {return f()}} finally {alert(1)} return f()}
+        """);
 
     // Both returns has the same handler
     fold(
-        "function f() {" + "  try { while(x) { return f() } return f() } catch (e) { } }",
-        "function f() {" + "  try { while(x) { break } return f() } catch (e) { } }");
+        """
+        function f() {
+          try { while(x) { return f() } return f() } catch (e) { } }
+        """,
+        """
+        function f() {
+          try { while(x) { break } return f() } catch (e) { } }
+        """);
 
     // We can't fold this because it'll change the order of when foo is called.
     foldSame(
-        "function f() {"
-            + "  try { while(x) { return foo() } } finally { alert(1) } "
-            + "  return foo()}");
+        """
+        function f() {
+          try { while(x) { return foo() } } finally { alert(1) }
+          return foo()}
+        """);
 
     // This is fine, we have no side effect in the return value.
     fold(
-        "function f() {" + "  try { while(x) { return 1 } } finally { alert(1) } return 1}",
-        "function f() {" + "  try { while(x) { break    } } finally { alert(1) } return 1}");
+        """
+        function f() {
+          try { while(x) { return 1 } } finally { alert(1) } return 1}
+        """,
+        """
+        function f() {
+          try { while(x) { break    } } finally { alert(1) } return 1}
+        """);
 
     foldSame("function f() { try{ return a } finally { a = 2 } return a; }");
 
@@ -629,25 +664,47 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
     foldSame("function f() { while(1) { throw 7}  throw 5}");
 
-    foldSame("function f() {" + "  try { while(x) {throw f()}} catch (e) { } throw f()}");
+    foldSame(
+        """
+        function f() {
+          try { while(x) {throw f()}} catch (e) { } throw f()}
+        """);
 
-    foldSame("function f() {" + "  try { while(x) {throw f()}} finally {alert(1)} throw f()}");
+    foldSame(
+        """
+        function f() {
+          try { while(x) {throw f()}} finally {alert(1)} throw f()}
+        """);
 
     // Both throws has the same handler
     fold(
-        "function f() {" + "  try { while(x) { throw f() } throw f() } catch (e) { } }",
-        "function f() {" + "  try { while(x) { break } throw f() } catch (e) { } }");
+        """
+        function f() {
+          try { while(x) { throw f() } throw f() } catch (e) { } }
+        """,
+        """
+        function f() {
+          try { while(x) { break } throw f() } catch (e) { } }
+        """);
 
     // We can't fold this because it'll change the order of when foo is called.
     foldSame(
-        "function f() {"
-            + "  try { while(x) { throw foo() } } finally { alert(1) } "
-            + "  throw foo()}");
+        """
+        function f() {
+          try { while(x) { throw foo() } } finally { alert(1) }
+          throw foo()}
+        """);
 
     // This is fine, we have no side effect in the throw value.
     fold(
-        "function f() {" + "  try { while(x) { throw 1 } } finally { alert(1) } throw 1}",
-        "function f() {" + "  try { while(x) { break    } } finally { alert(1) } throw 1}");
+        """
+        function f() {
+          try { while(x) { throw 1 } } finally { alert(1) } throw 1}
+        """,
+        """
+        function f() {
+          try { while(x) { break    } } finally { alert(1) } throw 1}
+        """);
 
     foldSame("function f() { try{ throw a } finally { a = 2 } throw a; }");
 
@@ -680,8 +737,14 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
         "function f() { switch(a){ case 1: } return a; }");
 
     fold(
-        "function f() { switch(a){ " + "  case 1: return a; case 2: return a; } return a; }",
-        "function f() { switch(a){ " + "  case 1: break; case 2: } return a; }");
+        """
+        function f() { switch(a){
+          case 1: return a; case 2: return a; } return a; }
+        """,
+        """
+        function f() { switch(a){
+          case 1: break; case 2: } return a; }
+        """);
   }
 
   @Test
@@ -712,7 +775,10 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
         "function f() { switch(a){ case 1: } throw a; }");
 
     fold(
-        "function f() { switch(a){ " + "case 1: throw a; case 2: throw a; } throw a; }",
+        """
+        function f() { switch(a){
+        case 1: throw a; case 2: throw a; } throw a; }
+        """,
         "function f() { switch(a){ case 1: break; case 2: } throw a; }");
   }
 
@@ -761,8 +827,18 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   @Test
   public void testRemoveElseCause() {
     test(
-        "function f() {" + " if(x) return 1;" + " else if(x) return 2;" + " else if(x) return 3 }",
-        "function f() {" + " if(x) return 1;" + "{ if(x) return 2;" + "{ if(x) return 3 } } }");
+        """
+        function f() {
+         if(x) return 1;
+         else if(x) return 2;
+         else if(x) return 3 }
+        """,
+        """
+        function f() {
+         if(x) return 1;
+        { if(x) return 2;
+        { if(x) return 3 } } }
+        """);
   }
 
   @Test

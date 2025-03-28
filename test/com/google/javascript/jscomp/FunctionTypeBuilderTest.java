@@ -167,9 +167,12 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
   public void testInlineJsDoc2() {
     test(
         externs(
-            "/** @return {T} \n @template T */ "
-                + "function f(/** T */ x) { return x; }"
-                + "/** @type {string} */ var x = f(1);"),
+            """
+            /** @return {T}\s
+             @template T */
+            function f(/** T */ x) { return x; }
+            /** @type {string} */ var x = f(1);
+            """),
         srcs(""),
         warning(TypeValidator.TYPE_MISMATCH_WARNING)
             .withMessage(

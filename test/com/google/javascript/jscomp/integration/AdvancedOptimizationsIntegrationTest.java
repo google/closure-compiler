@@ -1406,7 +1406,11 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         g.call(x);
         x.bar();
         """;
-    String expected = "" + "var x = new function() {};" + "x.bar=function(){alert(3)};x.bar()";
+    String expected =
+        """
+        var x = new function() {};
+        x.bar=function(){alert(3)};x.bar()
+        """;
 
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

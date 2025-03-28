@@ -285,7 +285,12 @@ public final class JsFileRegexParserTest {
   @Test
   public void testParseEs6Module2() {
     String contents =
-        "" + "import './x';\n" + "import '../y';\n" + "import '../a/z';\n" + "import '../c/w';\n";
+        """
+        import './x';
+        import '../y';
+        import '../a/z';
+        import '../c/w';
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder("../../a/b.js", "/foo/bar/a/b.js")
@@ -306,7 +311,11 @@ public final class JsFileRegexParserTest {
   /** Tests handles goog.require and import 'goog:...'. */
   @Test
   public void testParseEs6Module3() {
-    String contents = "" + "import 'goog:foo.bar.baz';\n" + "goog.require('baz.qux');\n";
+    String contents =
+        """
+        import 'goog:foo.bar.baz';
+        goog.require('baz.qux');
+        """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder("b.js", "a.js")
@@ -467,9 +476,9 @@ public final class JsFileRegexParserTest {
   @Test
   public void testMultiplePerLine() {
     String contents =
-        """
-        goog.provide('yes1');goog.provide('yes2');/*goog.provide('no1');*/goog.provide('yes3');//goog.provide('no2');
-        """;
+"""
+goog.provide('yes1');goog.provide('yes2');/*goog.provide('no1');*/goog.provide('yes3');//goog.provide('no2');
+""";
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
@@ -798,7 +807,10 @@ public final class JsFileRegexParserTest {
   @Test
   public void testEs6AndWrappedGoogModuleIsError() {
     String contents =
-        "goog.loadModule(function(){\"use strict\";goog.module('yes1');});\n" + "export {};";
+        """
+        goog.loadModule(function(){"use strict";goog.module('yes1');});
+        export {};
+        """;
 
     parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
 

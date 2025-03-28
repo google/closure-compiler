@@ -292,7 +292,10 @@ public final class WarningsGuardTest {
 
     Node code =
         compiler.parseTestCode(
-            "/** @suppress {deprecated} */ function f() { a; } " + "function g() { b; }");
+            """
+            /** @suppress {deprecated} */ function f() { a; }
+            function g() { b; }
+            """);
     assertThat(guard.level(JSError.make(code, BAR_WARNING))).isNull();
     assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
     assertThat(guard.level(JSError.make(findNameNode(code, "b"), BAR_WARNING))).isNull();
@@ -307,8 +310,11 @@ public final class WarningsGuardTest {
 
     Node code =
         compiler.parseTestCode(
-            "/** @fileoverview \n * @suppress {deprecated} */ function f() { a; } "
-                + "function g() { b; }");
+            """
+            /** @fileoverview\s
+             * @suppress {deprecated} */ function f() { a; }
+            function g() { b; }
+            """);
     assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
     assertThat(guard.level(JSError.make(findNameNode(code, "b"), BAR_WARNING))).isEqualTo(OFF);
   }
@@ -356,7 +362,10 @@ public final class WarningsGuardTest {
 
     Node code =
         compiler.parseTestCode(
-            "var goog = {}; " + "/** @suppress {deprecated} */ goog.f = function() { a; }");
+            """
+            var goog = {};
+            /** @suppress {deprecated} */ goog.f = function() { a; }
+            """);
     assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
   }
 
@@ -369,7 +378,10 @@ public final class WarningsGuardTest {
 
     Node code =
         compiler.parseTestCode(
-            "var goog = {}; " + "goog.f = function() { /** @suppress {deprecated} */ (a); }");
+            """
+            var goog = {};
+            goog.f = function() { /** @suppress {deprecated} */ (a); }
+            """);
 
     assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
   }
@@ -428,7 +440,11 @@ public final class WarningsGuardTest {
             compiler, ImmutableMap.of("deprecated", new DiagnosticGroup(BAR_WARNING)));
 
     Node code =
-        compiler.parseTestCode("var goog = {}; " + "/** @suppress {deprecated} */ goog.f += a");
+        compiler.parseTestCode(
+            """
+            var goog = {};
+            /** @suppress {deprecated} */ goog.f += a
+            """);
     assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
   }
 

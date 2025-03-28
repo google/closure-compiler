@@ -806,8 +806,10 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forUnordered()
                 .addChunk(
-                    "var unreferenced=1; function x() { foo(); }"
-                        + "function uncalled() { var x; return 2; }")
+                    """
+                    var unreferenced=1; function x() { foo(); }
+                    function uncalled() { var x; return 2; }
+                    """)
                 .addChunk("var a,b; function foo() { this.foo(a); } x()")
                 .build()),
         expected("function x(){foo()}", "var a;function foo(){this.foo(a)}x()"));

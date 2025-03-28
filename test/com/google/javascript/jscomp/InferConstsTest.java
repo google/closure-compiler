@@ -179,8 +179,20 @@ public final class InferConstsTest extends CompilerTestCase {
     assertConsts("var [a, b, c] = [1, 2, 3];", inferred("a", "b", "c"));
     assertConsts("const [a, b, c] = [1, 2, 3];", inferred("a", "b", "c"));
     assertNotConsts("var [a, b, c] = obj;", "obj");
-    assertNotConsts("" + "var [a, b, c] = [1, 2, 3];" + "[a, b, c] = [1, 2, 3];", "a", "b", "c");
-    assertConsts("" + "var [a, b, c] = [1, 2, 3];" + "[a, b]= [1, 2];", inferred("c"));
+    assertNotConsts(
+        """
+        var [a, b, c] = [1, 2, 3];
+        [a, b, c] = [1, 2, 3];
+        """,
+        "a",
+        "b",
+        "c");
+    assertConsts(
+        """
+        var [a, b, c] = [1, 2, 3];
+        [a, b]= [1, 2];
+        """,
+        inferred("c"));
 
     assertNotConsts("var [a, b, c] = [1, 2, 3]; [a, b] = [1, 2];", "a", "b");
     assertConsts("var [a, b, c] = [1, 2, 3]; [a, b] = [1, 2];", inferred("c"));
@@ -191,8 +203,18 @@ public final class InferConstsTest extends CompilerTestCase {
     assertConsts("var obj = {a: 1}; var {a} = obj", inferred("a"));
 
     assertNotConsts(
-        "" + "var [{a: x} = {a: 'y'}] = [{a: 'x'}];" + "[{a: x} = {a: 'x'}] = {};", "x");
-    assertNotConsts("" + "let fg = '', bg = '';" + "({fg, bg} = pal[val - 1]);", "fg", "bg");
+        """
+        var [{a: x} = {a: 'y'}] = [{a: 'x'}];
+        [{a: x} = {a: 'x'}] = {};
+        """,
+        "x");
+    assertNotConsts(
+        """
+        let fg = '', bg = '';
+        ({fg, bg} = pal[val - 1]);
+        """,
+        "fg",
+        "bg");
 
     assertConsts("var [a, , b] = [1, 2, 3];", inferred("a", "b"));
     assertConsts("const [a, , b] = [1, 2, 3];", inferred("a", "b"));

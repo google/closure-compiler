@@ -50,9 +50,11 @@ public final class ClosureCodeRemovalTest extends CompilerTestCase {
   @Test
   public void testRemoveMultiplySetAbstract() {
     test(
-        "function Foo() {}; Foo.prototype.doSomething = "
-            + "Foo.prototype.doSomethingElse = Foo.prototype.oneMore = "
-            + "goog.abstractMethod;",
+        """
+        function Foo() {}; Foo.prototype.doSomething =
+        Foo.prototype.doSomethingElse = Foo.prototype.oneMore =
+        goog.abstractMethod;
+        """,
         "function Foo() {};");
   }
 
@@ -64,11 +66,15 @@ public final class ClosureCodeRemovalTest extends CompilerTestCase {
   @Test
   public void testDoNotRemoveOverride() {
     test(
-        "function Foo() {}; Foo.prototype.doSomething = goog.abstractMethod;"
-            + "function Bar() {}; goog.inherits(Bar, Foo);"
-            + "Bar.prototype.doSomething = function() {}",
-        "function Foo() {}; function Bar() {}; goog.inherits(Bar, Foo);"
-            + "Bar.prototype.doSomething = function() {}");
+        """
+        function Foo() {}; Foo.prototype.doSomething = goog.abstractMethod;
+        function Bar() {}; goog.inherits(Bar, Foo);
+        Bar.prototype.doSomething = function() {}
+        """,
+        """
+        function Foo() {}; function Bar() {}; goog.inherits(Bar, Foo);
+        Bar.prototype.doSomething = function() {}
+        """);
   }
 
   @Test
@@ -79,12 +85,16 @@ public final class ClosureCodeRemovalTest extends CompilerTestCase {
   @Test
   public void testStopRemovalAtNonQualifiedName() {
     test(
-        "function Foo() {}; function Bar() {};"
-            + "Foo.prototype.x = document.getElementById('x').y = Bar.prototype.x"
-            + " = goog.abstractMethod;",
-        "function Foo() {}; function Bar() {};"
-            + "Foo.prototype.x = document.getElementById('x').y = "
-            + "goog.abstractMethod;");
+        """
+        function Foo() {}; function Bar() {};
+        Foo.prototype.x = document.getElementById('x').y = Bar.prototype.x
+         = goog.abstractMethod;
+        """,
+        """
+        function Foo() {}; function Bar() {};
+        Foo.prototype.x = document.getElementById('x').y =
+        goog.abstractMethod;
+        """);
   }
 
   @Test

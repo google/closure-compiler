@@ -80,9 +80,11 @@ public final class MultiPassTest extends CompilerTestCase {
     addInlineFunctions();
     addPeephole();
     test(
-        "function f() { return 1; }"
-            + "function g() { return f(); }"
-            + "function h() { return g(); } var n = h();",
+        """
+        function f() { return 1; }
+        function g() { return f(); }
+        function h() { return g(); } var n = h();
+        """,
         "var n = 1");
   }
 
@@ -99,13 +101,20 @@ public final class MultiPassTest extends CompilerTestCase {
     passes = new ArrayList<>();
     addCollapseObjectLiterals();
     test(
-        "function f() {" + "  var obj = { x: 1 };" + "  var z = function() { return obj.x; }" + "}",
-        "function f(){"
-            + "  var JSCompiler_object_inline_x_0 = 1;"
-            + "  var z = function(){"
-            + "    return JSCompiler_object_inline_x_0;"
-            + "  }"
-            + "}");
+        """
+        function f() {
+          var obj = { x: 1 };
+          var z = function() { return obj.x; }
+        }
+        """,
+        """
+        function f(){
+          var JSCompiler_object_inline_x_0 = 1;
+          var z = function(){
+            return JSCompiler_object_inline_x_0;
+          }
+        }
+        """);
   }
 
   @Test
@@ -370,10 +379,21 @@ public final class MultiPassTest extends CompilerTestCase {
     ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
 
     test(
-        "var a; var b; function foo(){ return {a:1,b:2};} var x; var y = (() => {return {a,b} ="
-            + " foo();})();",
         """
-        var a; var b; function foo(){return {a:1,b:2};}
+        var a;
+        var b;
+        function foo() { return {a: 1, b: 2}; }
+        var x;
+        var y = (
+          () => {
+            return {a, b} = foo();
+          }
+        )();
+        """,
+        """
+        var a;
+        var b;
+        function foo() { return {a: 1,b: 2}; }
         var x;
         var y = function () {
            return function () {

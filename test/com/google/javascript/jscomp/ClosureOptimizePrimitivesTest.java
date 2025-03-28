@@ -48,8 +48,10 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
   @Test
   public void testObjectCreate2() {
     test(
-        "var a ="
-            + " module$contents$goog$object_create('b',module$contents$goog$object_create('c','d'))",
+        """
+        var a = module$contents$goog$object_create(
+        'b',module$contents$goog$object_create('c','d'))
+        """,
         "var a = {'b':{'c':'d'}};");
   }
 
@@ -107,8 +109,10 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
   @Test
   public void testObjectCreateNonConstKey3() {
     test(
-        "var a = module$contents$goog$object_create(i++,module$contents$goog$object_create(foo(),"
-            + " 'd'))",
+        """
+        var a = module$contents$goog$object_create(
+        i++,module$contents$goog$object_create(foo(), 'd'))
+        """,
         "var a = {[i++]: {[foo()]: 'd'}};");
   }
 

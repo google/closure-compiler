@@ -716,7 +716,10 @@ public final class CheckConformanceTest extends CompilerTestCase {
         }
         """;
     String violationMessage =
-        "Violation: Enhanced namespace is not allowed.\n" + "The enhanced namespace ";
+        """
+        Violation: Enhanced namespace is not allowed.
+        The enhanced namespace \
+        """;
 
     String ban1 =
         """
@@ -2773,11 +2776,22 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   private static String config(String rule, String message, String... fields) {
-    String result = "requirement: {\n" + "  type: CUSTOM\n" + "  java_class: '" + rule + "'\n";
+    String result =
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'RULE'
+        """
+            .replace("RULE", rule);
     for (String field : fields) {
       result += field;
     }
-    result += "  error_message: '" + message + "'\n" + "}";
+    result +=
+        """
+          error_message: 'MESSAGE'
+        }
+        """
+            .replace("MESSAGE", message);
     return result;
   }
 
@@ -3523,7 +3537,11 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
     testWarning(
         externs(externs),
-        srcs("/** @param {string|null} n */" + "function f(n) { alert('prop' in n); }"),
+        srcs(
+            """
+            /** @param {string|null} n */
+            function f(n) { alert('prop' in n); }
+            """),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message");
 

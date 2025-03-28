@@ -318,13 +318,17 @@ public final class UnusedLocalsCheckTest extends CompilerTestCase {
   @Test
   public void testGoogModule_bundled() {
     assertNoWarning(
-        "goog.loadModule(function(exports) { 'use strict';"
-            + "goog.module('example'); var X = 3; use(X);"
-            + "return exports; });");
+        """
+        goog.loadModule(function(exports) { 'use strict';
+        goog.module('example'); var X = 3; use(X);
+        return exports; });
+        """);
     assertUnused(
-        "goog.loadModule(function(exports) { 'use strict';"
-            + "goog.module('example'); var X = 3;"
-            + "return exports; });");
+        """
+        goog.loadModule(function(exports) { 'use strict';
+        goog.module('example'); var X = 3;
+        return exports; });
+        """);
   }
 
   @Test

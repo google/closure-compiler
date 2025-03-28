@@ -1597,9 +1597,11 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             JSChunkGraphBuilder.forStar()
                 // m1
                 .addChunk(
-                    "var abstractMethod = function () {};"
-                        + "function F(){} F.prototype.bar=abstractMethod;"
-                        + "function G(){} G.prototype.bar=abstractMethod;")
+                    """
+                    var abstractMethod = function () {};
+                    function F(){} F.prototype.bar=abstractMethod;
+                    function G(){} G.prototype.bar=abstractMethod;
+                    """)
                 // m2 -> m1
                 .addChunk("var f = new F();")
                 // m3 -> m1
@@ -2128,7 +2130,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
         srcs(
             JSChunkGraphBuilder.forChain()
                 .addChunk(
-                    """
+"""
 class LowerCasePipe {}
 /** @nocollapse */ LowerCasePipe.\u0275pipe = /** @pureOrBreakMyCode*/ i0.\u0275\u0275definePipe({ name: "lowercase", type: LowerCasePipe, pure: true });
 """)
@@ -2136,7 +2138,7 @@ class LowerCasePipe {}
                 .build()),
         expected(
             "",
-            """
+"""
 class LowerCasePipe {}
 /** @nocollapse */ LowerCasePipe.\u0275pipe = /** @pureOrBreakMyCode*/ i0.\u0275\u0275definePipe({ name: "lowercase", type: LowerCasePipe, pure: true });
 new LowerCasePipe();

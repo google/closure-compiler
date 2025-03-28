@@ -4151,12 +4151,14 @@ public final class NodeUtilTest {
     @Test
     public void testGetAllVars2() {
       String fnString =
-          "function g(x, y) "
-              + "{var z; "
-              + "{let a = (no1, no2) => { let no6, no7; }; "
-              + "const b = 1} "
-              + "let c} "
-              + "function u(h) {let e}";
+          """
+          function g(x, y)
+          {var z;
+          {let a = (no1, no2) => { let no6, no7; };
+          const b = 1}
+          let c}
+          function u(h) {let e}
+          """;
 
       Compiler compiler = new Compiler();
       compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
@@ -4729,7 +4731,10 @@ public final class NodeUtilTest {
               GoogRequire.fromNamespaceAndProperty("d.Foo", "Bar", true)
             },
             {
-              "goog.module('a.b.c'); const {Bar: BarLocal} =" + " goog.require('d.Foo');",
+              """
+              goog.module('a.b.c'); const {Bar: BarLocal} =
+               goog.require('d.Foo');
+              """,
               "Bar",
               null
             },

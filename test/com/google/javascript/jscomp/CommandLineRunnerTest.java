@@ -353,7 +353,7 @@ public final class CommandLineRunnerTest {
 
   private ImmutableList<String> createStringList(
       Iterable<String> someStrings, String[] additionalStrings) {
-    return (ImmutableList.<String>builder().addAll(someStrings).add(additionalStrings)).build();
+    return ImmutableList.<String>builder().addAll(someStrings).add(additionalStrings).build();
   }
 
   private void writeFile(File file, String content) throws IOException {
@@ -1077,7 +1077,11 @@ public final class CommandLineRunnerTest {
     args.add("--warning_level=QUIET");
     args.add("--debug=false");
     test(
-        "function Foo() {}" + "Foo.x = 1;" + "function f() {throw new Foo().x;} f();",
+        """
+        function Foo() {}
+        Foo.x = 1;
+        function f() {throw new Foo().x;} f();
+        """,
         "throw (new function() {}).a;");
   }
 
@@ -1087,7 +1091,11 @@ public final class CommandLineRunnerTest {
     args.add("--warning_level=QUIET");
     args.add("--debug=true");
     test(
-        "function Foo() {}" + "Foo.x = 1;" + "function f() {throw new Foo().x;} f();",
+        """
+        function Foo() {}
+        Foo.x = 1;
+        function f() {throw new Foo().x;} f();
+        """,
         "throw (new function() {}).$x$;");
   }
 
@@ -2594,12 +2602,14 @@ public final class CommandLineRunnerTest {
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
         .isEqualTo(
-            "[{\"src\":\"alert(\\\"foo\\\");\\n\","
-                + "\"path\":\"compiled.js\",\"source_map\":\"{\\n\\\"version\\\":3,"
-                + "\\n\\\"file\\\":\\\"compiled.js\\\",\\n\\\"lineCount\\\":1,"
-                + "\\n\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\","
-                + "\\n\\\"sources\\\":[\\\"stdin\\\"],"
-                + "\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"}]");
+            """
+            [{"src":"alert(\\"foo\\");\\n",\
+            "path":"compiled.js",\"source_map":"{\\n\\"version\\":3,\
+            \\n\\"file\\":\\"compiled.js\\",\\n\\"lineCount\\":1,\
+            \\n\\"mappings\\":\\"AAAAA,KAAA,CAAM,KAAN;\\",\
+            \\n\\"sources\\":[\\"stdin\\"],\
+            \\n\\"names\\":[\\"alert\\"]\\n}\\n"}]\
+            """);
   }
 
   @Test
@@ -2625,34 +2635,39 @@ public final class CommandLineRunnerTest {
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
         .isEqualTo(
-            "[{\"src\":\"alert(\\\"foo\\\");\\n\","
-                + "\"path\":\"bar.js\",\"source_map\":\"{\\n\\\"version\\\":3,"
-                + "\\n\\\"file\\\":\\\"bar.js\\\",\\n\\\"lineCount\\\":1,"
-                + "\\n\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\","
-                + "\\n\\\"sources\\\":[\\\"foo.js\\\"],"
-                + "\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"}]");
+            """
+            [{"src":"alert(\\"foo\\");\\n",\
+            "path":"bar.js","source_map":"{\\n\\"version\\":3,\
+            \\n\\"file\\":\\"bar.js\\",\\n\\"lineCount\\":1,\
+            \\n\\"mappings\\":\\"AAAAA,KAAA,CAAM,KAAN;\\",\
+            \\n\\"sources\\":[\\"foo.js\\"],\
+            \\n\\"names\\":[\\"alert\\"]\\n}\\n"}]\
+            """);
   }
 
   @Test
   public void testJsonStreamSourceMap() {
     String inputSourceMap =
-        "{\n"
-            + "\"version\":3,\n"
-            + "\"file\":\"one.out.js\",\n"
-            + "\"lineCount\":1,\n"
-            + "\"mappings\":\"AAAAA,QAASA,IAAG,CAACC,CAAD,CAAI,CACdC,"
-            + "OAAAF,IAAA,CAAYC,CAAZ,CADc,CAGhBD,GAAA,CAAI,QAAJ;\",\n"
-            + "\"sources\":[\"one.js\"],\n"
-            + "\"names\":[\"log\",\"a\",\"console\"]\n"
-            + "}";
+        """
+        {\n\
+        "version":3,\n\
+        "file":"one.out.js",\n\
+        "lineCount":1,\n\
+        "mappings":"AAAAA,QAASA,IAAG,CAACC,CAAD,CAAI,CACdC,\
+        OAAAF,IAAA,CAAYC,CAAZ,CADc,CAGhBD,GAAA,CAAI,QAAJ;",\n\
+        "sources":["one.js"],\n\
+        "names":["log","a","console"]\n\
+        }\
+        """;
     inputSourceMap = inputSourceMap.replace("\"", "\\\"");
     String inputString =
-        "[{"
-            + "\"src\": \"function log(a){console.log(a)}log(\\\"one.js\\\");\", "
-            + "\"path\":\"one.out.js\", "
-            + "\"sourceMap\": \""
-            + inputSourceMap
-            + "\" }]";
+        """
+        [{\
+        "src": "function log(a){console.log(a)}log(\\"one.js\\");", \
+        "path":"one.out.js", \
+        "sourceMap": "INPUT_SOURCE_MAP" }]\
+        """
+            .replace("INPUT_SOURCE_MAP", inputSourceMap);
     args.add("--json_streams=BOTH");
     args.add("--js_output_file=bar.js");
     args.add("--apply_input_source_maps");
@@ -2674,40 +2689,45 @@ public final class CommandLineRunnerTest {
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
         .isEqualTo(
-            "[{\"src\":\"function log(a){console.log(a)}log(\\\"one.js\\\");\\n"
-                + "\",\"path\":\"bar.js\",\"source_map\":\"{\\n"
-                + "\\\"version\\\":3,\\n"
-                + "\\\"file\\\":\\\"bar.js\\\",\\n"
-                + "\\\"lineCount\\\":1,\\n"
-                + "\\\"mappings\\\":\\\"AAAAA,QAASA,IAAG,CAACC,CAAD,CAAI,CACdC,"
-                + "OAAAF,CAAAA,GAAAE,CAAYD,CAAZC,CADc,CAGhBF,GAAAA,CAAI,QAAJA;\\\",\\n"
-                + "\\\"sources\\\":[\\\"one.js\\\"],\\n"
-                + "\\\"names\\\":[\\\"log\\\",\\\"a\\\",\\\"console\\\"]\\n"
-                + "}\\n"
-                + "\"}]");
+            """
+            [{"src":"function log(a){console.log(a)}log(\\"one.js\\");\\n\
+            ","path":"bar.js","source_map":"{\\n\
+            \\"version\\":3,\\n\
+            \\"file\\":\\"bar.js\\",\\n\
+            \\"lineCount\\":1,\\n\
+            \\"mappings\\":\\"AAAAA,QAASA,IAAG,CAACC,CAAD,CAAI,CACdC,\
+            OAAAF,CAAAA,GAAAE,CAAYD,CAAZC,CADc,CAGhBF,GAAAA,CAAI,QAAJA;\\",\\n\
+            \\"sources\\":[\\"one.js\\"],\\n\
+            \\"names\\":[\\"log\\",\\"a\\",\\"console\\"]\\n\
+            }\\n\
+            "}]\
+            """);
   }
 
   @Test
   public void testJsonStreamSourceMapUnderscore() {
     String inputSourceMap =
-        "{\n"
-            + "\"version\":3,\n"
-            + "\"file\":\"one.out.js\",\n"
-            + "\"lineCount\":1,\n"
-            + "\"mappings\":\"AAAAA,QAASA,IAAG,CAACC,CAAD,CAAI,CACdC,"
-            + "OAAAF,IAAA,CAAYC,CAAZ,CADc,CAGhBD,GAAA,CAAI,QAAJ;\",\n"
-            + "\"sources\":[\"one.js\"],\n"
-            + "\"names\":[\"log\",\"a\",\"console\"]\n"
-            + "}";
+        """
+        {\n\
+        "version":3,\n\
+        "file":"one.out.js",\n\
+        "lineCount":1,\n\
+        "mappings":"AAAAA,QAASA,IAAG,CAACC,CAAD,CAAI,CACdC,\
+        OAAAF,IAAA,CAAYC,CAAZ,CADc,CAGhBD,GAAA,CAAI,QAAJ;",\n\
+        "sources":["one.js"],\n\
+        "names":["log","a","console"]\n\
+        }\
+        """;
     inputSourceMap = inputSourceMap.replace("\"", "\\\"");
     String inputString =
-        "[{"
-            + "\"src\": \"function log(a){console.log(a)}log(\\\"one.js\\\");\", "
-            + "\"path\":\"one.out.js\", "
-            // input JSON with `source_map` field instead of `sourceMap`
-            + "\"source_map\": \""
-            + inputSourceMap
-            + "\" }]";
+        // input JSON with `source_map` field instead of `sourceMap`
+        """
+        [{\
+        "src": "function log(a){console.log(a)}log(\\"one.js\\");", \
+        "path":"one.out.js", \
+        "source_map": "INPUT_SOURCE_MAP" }]\
+        """
+            .replace("INPUT_SOURCE_MAP", inputSourceMap);
     args.add("--json_streams=BOTH");
     args.add("--js_output_file=bar.js");
     args.add("--apply_input_source_maps");
@@ -2729,17 +2749,19 @@ public final class CommandLineRunnerTest {
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
         .isEqualTo(
-            "[{\"src\":\"function log(a){console.log(a)}log(\\\"one.js\\\");\\n"
-                + "\",\"path\":\"bar.js\",\"source_map\":\"{\\n"
-                + "\\\"version\\\":3,\\n"
-                + "\\\"file\\\":\\\"bar.js\\\",\\n"
-                + "\\\"lineCount\\\":1,\\n"
-                + "\\\"mappings\\\":\\\"AAAAA,QAASA,IAAG,CAACC,CAAD,CAAI,CACdC,"
-                + "OAAAF,CAAAA,GAAAE,CAAYD,CAAZC,CADc,CAGhBF,GAAAA,CAAI,QAAJA;\\\",\\n"
-                + "\\\"sources\\\":[\\\"one.js\\\"],\\n"
-                + "\\\"names\\\":[\\\"log\\\",\\\"a\\\",\\\"console\\\"]\\n"
-                + "}\\n"
-                + "\"}]");
+            """
+            [{"src":"function log(a){console.log(a)}log(\\"one.js\\");\\n\
+            ","path":"bar.js","source_map":"{\\n\
+            \\"version\\":3,\\n\
+            \\"file\\":\\"bar.js\\",\\n\
+            \\"lineCount\\":1,\\n\
+            \\"mappings\\":\\"AAAAA,QAASA,IAAG,CAACC,CAAD,CAAI,CACdC,\
+            OAAAF,CAAAA,GAAAE,CAAYD,CAAZC,CADc,CAGhBF,GAAAA,CAAI,QAAJA;\\",\\n\
+            \\"sources\\":[\\"one.js\\"],\\n\
+            \\"names\\":[\\"log\\",\\"a\\",\\"console\\"]\\n\
+            }\\n\
+            "}]\
+            """);
   }
 
   @Test
@@ -2765,16 +2787,18 @@ public final class CommandLineRunnerTest {
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
         .isEqualTo(
-            "[{\"src\":\"alert(\\\"foo\\\");\\n"
-                + "\",\"path\":\"./foo/bar/baz.js\",\"source_map\":\"{\\n"
-                + "\\\"version\\\":3,\\n"
-                + "\\\"file\\\":\\\"./foo/bar/baz.js\\\",\\n"
-                + "\\\"lineCount\\\":1,\\n"
-                + "\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\",\\n"
-                + "\\\"sources\\\":[\\\"foo.js\\\"],\\n"
-                + "\\\"names\\\":[\\\"alert\\\"]\\n"
-                + "}\\n"
-                + "\"}]");
+            """
+            [{"src":"alert(\\"foo\\");\\n\
+            ","path":"./foo/bar/baz.js","source_map":"{\\n\
+            \\"version\\":3,\\n\
+            \\"file\\":\\"./foo/bar/baz.js\\",\\n\
+            \\"lineCount\\":1,\\n\
+            \\"mappings\\":\\"AAAAA,KAAA,CAAM,KAAN;\\",\\n\
+            \\"sources\\":[\\"foo.js\\"],\\n\
+            \\"names\\":[\\"alert\\"]\\n\
+            }\\n\
+            "}]\
+            """);
   }
 
   @Test
@@ -2800,16 +2824,18 @@ public final class CommandLineRunnerTest {
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
         .isEqualTo(
-            "[{\"src\":\"alert(\\\"foo\\\");\\n"
-                + "\",\"path\":\"./foo--bar.baz.js\",\"source_map\":\"{\\n"
-                + "\\\"version\\\":3,\\n"
-                + "\\\"file\\\":\\\"./foo--bar.baz.js\\\",\\n"
-                + "\\\"lineCount\\\":1,\\n"
-                + "\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\",\\n"
-                + "\\\"sources\\\":[\\\"foo.js\\\"],\\n"
-                + "\\\"names\\\":[\\\"alert\\\"]\\n"
-                + "}\\n"
-                + "\"}]");
+            """
+            [{"src":"alert(\\"foo\\");\\n\
+            ","path":"./foo--bar.baz.js","source_map":"{\\n\
+            \\"version\\":3,\\n\
+            \\"file\\":\\"./foo--bar.baz.js\\",\\n\
+            \\"lineCount\\":1,\\n\
+            \\"mappings\\":\\"AAAAA,KAAA,CAAM,KAAN;\\",\\n\
+            \\"sources\\":[\\"foo.js\\"],\\n\
+            \\"names\\":[\\"alert\\"]\\n\
+            }\\n\
+            "}]\
+            """);
   }
 
   @Test
@@ -2854,18 +2880,20 @@ public final class CommandLineRunnerTest {
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
         .isEqualTo(
-            "[{\"src\":\"var module$bar={default:{}};console.log(\\\"bar\\\");var"
-                + " module$foo={default:{}};\\n"
-                + "\",\"path\":\"out.js\",\"source_map\":\"{\\n"
-                + "\\\"version\\\":3,\\n"
-                + "\\\"file\\\":\\\"out.js\\\",\\n"
-                + "\\\"lineCount\\\":1,\\n"
-                + "\\\"mappings\\\":\\\"AAAA,IAAA,WAAA,CAAA,QAAA,EAAA,CAAAA,QAAQC,CAAAA,GAAR,"
-                + "CAAY,KAAZ,C,CCAA,IAAA,WAAA,CAAA,QAAA,EAAA;\\\",\\n"
-                + "\\\"sources\\\":[\\\"bar.js\\\",\\\"foo.js\\\"],\\n"
-                + "\\\"names\\\":[\\\"console\\\",\\\"log\\\"]\\n"
-                + "}\\n"
-                + "\"}]");
+            """
+            [{"src":"var module$bar={default:{}};console.log(\\"bar\\");var \
+            module$foo={default:{}};\\n\
+            ","path":"out.js","source_map":"{\\n\
+            \\"version\\":3,\\n\
+            \\"file\\":\\"out.js\\",\\n\
+            \\"lineCount\\":1,\\n\
+            \\"mappings\\":\\"AAAA,IAAA,WAAA,CAAA,QAAA,EAAA,CAAAA,QAAQC,CAAAA,GAAR,\
+            CAAY,KAAZ,C,CCAA,IAAA,WAAA,CAAA,QAAA,EAAA;\\",\\n\
+            \\"sources\\":[\\"bar.js\\",\\"foo.js\\"],\\n\
+            \\"names\\":[\\"console\\",\\"log\\"]\\n\
+            }\\n\
+            "}]\
+            """);
   }
 
   @Test
@@ -2874,15 +2902,16 @@ public final class CommandLineRunnerTest {
 
     test(
         "function foo(){ const answerToAll = 42; }",
-"""
-(function(a){a.window||(a.window=a,a.window.top=a)})(typeof self!=="undefined"?self:globalThis);var __jscov=window.top.__jscov||
-(window.top.__jscov={fileNames:[],instrumentedLines:[],executedLines:[]}),
-JSCompiler_lcov_data_input0=[];
-__jscov.executedLines.push(JSCompiler_lcov_data_input0);
-__jscov.instrumentedLines.push("01");
-__jscov.fileNames.push("input0");
-function foo(){JSCompiler_lcov_data_input0[0]=!0}
-""");
+        """
+        (function(a){a.window||(a.window=a,a.window.top=a)})(\
+        typeof self!=="undefined"?self:globalThis);var __jscov=window.top.__jscov||
+        (window.top.__jscov={fileNames:[],instrumentedLines:[],executedLines:[]}),
+        JSCompiler_lcov_data_input0=[];
+        __jscov.executedLines.push(JSCompiler_lcov_data_input0);
+        __jscov.instrumentedLines.push("01");
+        __jscov.fileNames.push("input0");
+        function foo(){JSCompiler_lcov_data_input0[0]=!0}
+        """);
   }
 
   @Test
@@ -2891,12 +2920,13 @@ function foo(){JSCompiler_lcov_data_input0[0]=!0}
 
     test(
         "function foo(){ const answerToAll = 42; }",
-"""
-(function(a){a.window||(a.window=a,a.window.top=a)})(typeof self!=="undefined"?self:globalThis);
-var __jscov=window.top.__jscov||(window.top.__jscov=
-{fileNames:[],branchPresent:[],branchesInLine:[],branchesTaken:[]});
-function foo(){}
-""");
+        """
+        (function(a){a.window||(a.window=a,a.window.top=a)})(\
+        typeof self!=="undefined"?self:globalThis);
+        var __jscov=window.top.__jscov||(window.top.__jscov=
+        {fileNames:[],branchPresent:[],branchesInLine:[],branchesTaken:[]});
+        function foo(){}
+        """);
   }
 
   @Test
@@ -3161,26 +3191,28 @@ function foo(){}
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
         .isEqualTo(
-            "[{\"src\":\"\\n"
-                + "\",\"path\":\"./m1.js\",\"source_map\":\"{\\n"
-                + "\\\"version\\\":3,\\n"
-                + "\\\"file\\\":\\\"./m1.js\\\",\\n"
-                + "\\\"lineCount\\\":1,\\n"
-                + "\\\"mappings\\\":\\\";\\\",\\n"
-                + "\\\"sources\\\":[],\\n"
-                + "\\\"names\\\":[]\\n"
-                + "}\\n"
-                + "\"},{\"src\":\"alert(\\\"foo\\\");\\n"
-                + "\",\"path\":\"./m2.js\",\"source_map\":\"{\\n"
-                + "\\\"version\\\":3,\\n"
-                + "\\\"file\\\":\\\"./m2.js\\\",\\n"
-                + "\\\"lineCount\\\":1,\\n"
-                + "\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\",\\n"
-                + "\\\"sources\\\":[\\\"foo.js\\\"],\\n"
-                + "\\\"sourcesContent\\\":[\\\"alert('foo');\\\"],\\n"
-                + "\\\"names\\\":[\\\"alert\\\"]\\n"
-                + "}\\n"
-                + "\"}]");
+            """
+            [{"src":"\\n\
+            ","path":"./m1.js","source_map":"{\\n\
+            \\"version\\":3,\\n\
+            \\"file\\":\\"./m1.js\\",\\n\
+            \\"lineCount\\":1,\\n\
+            \\"mappings\\":\\";\\",\\n\
+            \\"sources\\":[],\\n\
+            \\"names\\":[]\\n\
+            }\\n\
+            "},{"src":"alert(\\"foo\\");\\n\
+            ","path":"./m2.js","source_map":"{\\n\
+            \\"version\\":3,\\n\
+            \\"file\\":\\"./m2.js\\",\\n\
+            \\"lineCount\\":1,\\n\
+            \\"mappings\\":\\"AAAAA,KAAA,CAAM,KAAN;\\",\\n\
+            \\"sources\\":[\\"foo.js\\"],\\n\
+            \\"sourcesContent\\":[\\"alert('foo');\\"],\\n\
+            \\"names\\":[\\"alert\\"]\\n\
+            }\\n\
+            "}]\
+            """);
   }
 
   @Test
@@ -3307,8 +3339,11 @@ function foo(){}
           return substr(s, i, (s='',i=5));
         }
         """,
-        "function substr(a,b,c){return a.slice(b,c)} window.bug=function(a,b){return"
-            + " substr(a,b,5)}");
+        """
+        function substr(a,b,c){
+        return a.slice(b,c)}
+        window.bug=function(a,b){return substr(a,b,5)}
+        """);
   }
 
   @Test
@@ -3431,13 +3466,13 @@ function foo(){}
     if (!compiler.getErrors().isEmpty()) {
       assertThat(compiler.getErrors()).hasSize(1);
       assertThat(compiler.getErrors().get(0).getType()).isEqualTo(warning);
-      assertWithMessage("Expected exit code of 1.  " + "Contents of err printstream:\n" + errReader)
+      assertWithMessage("Expected exit code of 1.  Contents of err printstream:\n" + errReader)
           .that(lastExitCode)
           .isEqualTo(1);
     } else {
       assertThat(compiler.getWarnings()).hasSize(1);
       assertThat(compiler.getWarnings().get(0).getType()).isEqualTo(warning);
-      assertWithMessage("Expected exit code of 0.  " + "Contents of err printstream:\n" + errReader)
+      assertWithMessage("Expected exit code of 0.  Contents of err printstream:\n" + errReader)
           .that(lastExitCode)
           .isEqualTo(0);
     }

@@ -96,7 +96,11 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     enableNormalize();
 
     // Cannot fold, the constructor being used is actually a local function
-    testSame("x = " + "(function f(){function Object(){this.x=4};return new Object();})();");
+    testSame(
+        """
+        x =
+        (function f(){function Object(){this.x=4};return new Object();})();
+        """);
   }
 
   @Test
@@ -187,8 +191,16 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     testSame("x = Array('a', 1, 2, 'bc', 3, {}, 'abc')");
     testSame("x = new Array(Array(1, '2', 3, '4'))");
     testSame("x = Array(Array(1, '2', 3, '4'))");
-    testSame("x = new Array(" + "Object(), Array(\"abc\", Object(), Array(Array())))");
-    testSame("x = new Array(" + "Object(), Array(\"abc\", Object(), Array(Array())))");
+    testSame(
+        """
+        x = new Array(
+        Object(), Array("abc", Object(), Array(Array())))
+        """);
+    testSame(
+        """
+        x = new Array(
+        Object(), Array("abc", Object(), Array(Array())))
+        """);
   }
 
   @Test
@@ -218,8 +230,10 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
 
     enableNormalize();
     testSame(
-        "var x = "
-            + "(function f(){var window = {Object: function() {}};return new window.Object;})();");
+        """
+        var x =
+        (function f(){var window = {Object: function() {}};return new window.Object;})();
+        """);
   }
 
   /**
@@ -324,7 +338,11 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     test("var x = undefined", "var x=void 0");
-    testSame("var undefined = 1;" + "function f() {var undefined=2;var x = undefined;}");
+    testSame(
+        """
+        var undefined = 1;
+        function f() {var undefined=2;var x = undefined;}
+        """);
     testSame("function f(undefined) {}");
     testSame("try {} catch(undefined) {}");
     testSame("for (undefined in {}) {}");

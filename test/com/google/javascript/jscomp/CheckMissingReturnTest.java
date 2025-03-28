@@ -132,31 +132,37 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
     // return statements in the three possible configurations: both scopes
     // return; enclosed doesn't return; enclosing doesn't return.
     testNotMissing(
-        "try {"
-            + "   /** @return {number} */ function f() {"
-            + "       try { return 1; }"
-            + "       finally { }"
-            + "   };"
-            + "   return 1;"
-            + "}"
-            + "finally { }");
+        """
+        try {
+           /** @return {number} */ function f() {
+               try { return 1; }
+               finally { }
+           };
+           return 1;
+        }
+        finally { }
+        """);
     testMissing(
-        "try {"
-            + "   /** @return {number} */ function f() {"
-            + "       try { }"
-            + "       finally { }"
-            + "   };"
-            + "   return 1;"
-            + "}"
-            + "finally { }");
+        """
+        try {
+           /** @return {number} */ function f() {
+               try { }
+               finally { }
+           };
+           return 1;
+        }
+        finally { }
+        """);
     testMissing(
-        "try {"
-            + "   /** @return {number} */ function f() {"
-            + "       try { return 1; }"
-            + "       finally { }"
-            + "   };"
-            + "}"
-            + "finally { }");
+        """
+        try {
+           /** @return {number} */ function f() {
+               try { return 1; }
+               finally { }
+           };
+        }
+        finally { }
+        """);
   }
 
   @Test
@@ -201,7 +207,10 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
   @Test
   public void testIssue779() {
     testNotMissing(
-        "var a = f(); try { alert(); if (a > 0) return 1; }" + "finally { a = 5; } return 2;");
+        """
+        var a = f(); try { alert(); if (a > 0) return 1; }
+        finally { a = 5; } return 2;
+        """);
   }
 
   @Test
@@ -209,9 +218,11 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
     testSame("/** @constructor */ function foo() {} ");
 
     final String constructorWithReturn =
-        "/** @constructor \n"
-            + " * @return {!foo} */ function foo() {"
-            + " if (!(this instanceof foo)) { return new foo; } }";
+        """
+        /** @constructor\s
+         * @return {!foo} */ function foo() {
+         if (!(this instanceof foo)) { return new foo; } }
+        """;
     testSame(constructorWithReturn);
   }
 

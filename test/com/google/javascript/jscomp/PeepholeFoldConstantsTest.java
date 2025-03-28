@@ -1016,7 +1016,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Test
   public void testIssue821() {
     testSame("var a =(Math.random()>0.5? '1' : 2 ) + 3 + 4;");
-    testSame("var a = ((Math.random() ? 0 : 1) ||" + "(Math.random()>0.5? '1' : 2 )) + 3 + 4;");
+    testSame("var a = ((Math.random() ? 0 : 1) || (Math.random()>0.5? '1' : 2 )) + 3 + 4;");
   }
 
   @Test

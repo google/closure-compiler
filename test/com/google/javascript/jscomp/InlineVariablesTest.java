@@ -2385,7 +2385,9 @@ public final class InlineVariablesTest extends CompilerTestCase {
     // In this case, the function is recursive, so there's more than one reference, we should keep
     // the name.
     testSame(
-        "function factorial(x) { if (x == 1) return 1; return x + factorial(x - 1); };"
-            + "exports.x = factorial;");
+        """
+        function factorial(x) { if (x == 1) return 1; return x + factorial(x - 1); };
+        exports.x = factorial;
+        """);
   }
 }

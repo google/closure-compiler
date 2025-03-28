@@ -50,7 +50,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
     testSame("function f() { if (x) { return } }");
     testSame("function f() { if (x) { return } return }");
     testSame("function f() { if (x) { if (y) { return } } else { return }}");
-    testSame("function f()" + "{ if (x) { if (y) { return } return } else { return }}");
+    testSame("function f() { if (x) { if (y) { return } return } else { return }}");
   }
 
   @Test
@@ -61,19 +61,18 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   @Test
   public void testCorrectSwitchReturn() {
     testSame("function f() { switch(x) { default: return; case 1: x++; }}");
-    testSame("function f() {" + "switch(x) { default: return; case 1: x++; } return }");
-    testSame("function f() {" + "switch(x) { default: return; case 1: return; }}");
-    testSame("function f() {" + "switch(x) { case 1: return; } return }");
-    testSame("function f() {" + "switch(x) { case 1: case 2: return; } return }");
-    testSame("function f() {" + "switch(x) { case 1: return; case 2: return; } return }");
-    testSame("function f() {" + "switch(x) { case 1 : return; case 2: return; } return }");
+    testSame("function f() { switch(x) { default: return; case 1: x++; } return }");
+    testSame("function f() { switch(x) { default: return; case 1: return; }}");
+    testSame("function f() { switch(x) { case 1: return; } return }");
+    testSame("function f() { switch(x) { case 1: case 2: return; } return }");
+    testSame("function f() { switch(x) { case 1: return; case 2: return; } return }");
+    testSame("function f() { switch(x) { case 1 : return; case 2: return; } return }");
   }
 
   @Test
   public void testInCorrectSwitchReturn() {
-    assertUnreachable("function f() {" + "switch(x) { default: return; case 1: return; } return }");
-    assertUnreachable(
-        "function f() {" + "switch(x) { default: return; return; case 1: return; } }");
+    assertUnreachable("function f() { switch(x) { default: return; case 1: return; } return }");
+    assertUnreachable("function f() { switch(x) { default: return; return; case 1: return; } }");
   }
 
   @Test

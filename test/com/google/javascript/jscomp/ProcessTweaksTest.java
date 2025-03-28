@@ -75,17 +75,29 @@ public final class ProcessTweaksTest extends CompilerTestCase {
 
   @Test
   public void testBasicTweak1() {
-    testSame("goog.tweak.registerBoolean('Foo', 'Description');" + "goog.tweak.getBoolean('Foo')");
+    testSame(
+        """
+        goog.tweak.registerBoolean('Foo', 'Description');
+        goog.tweak.getBoolean('Foo')
+        """);
   }
 
   @Test
   public void testBasicTweak2() {
-    testSame("goog.tweak.registerString('Foo', 'Description');" + "goog.tweak.getString('Foo')");
+    testSame(
+        """
+        goog.tweak.registerString('Foo', 'Description');
+        goog.tweak.getString('Foo')
+        """);
   }
 
   @Test
   public void testBasicTweak3() {
-    testSame("goog.tweak.registerNumber('Foo', 'Description');" + "goog.tweak.getNumber('Foo')");
+    testSame(
+        """
+        goog.tweak.registerNumber('Foo', 'Description');
+        goog.tweak.getNumber('Foo')
+        """);
   }
 
   @Test
@@ -96,14 +108,19 @@ public final class ProcessTweaksTest extends CompilerTestCase {
   @Test
   public void testBasicTweak5() {
     testSame(
-        "goog.tweak.registerBoolean('A.b_7', 'Description', true, " + "{ requiresRestart:false })");
+        """
+        goog.tweak.registerBoolean('A.b_7', 'Description', true,
+        { requiresRestart:false })
+        """);
   }
 
   @Test
   public void testBasicTweak6() {
     testSame(
-        "var opts = { requiresRestart:false };"
-            + "goog.tweak.registerBoolean('Foo', 'Description', true, opts)");
+        """
+        var opts = { requiresRestart:false };
+        goog.tweak.registerBoolean('Foo', 'Description', true, opts)
+        """);
   }
 
   @Test
@@ -132,8 +149,10 @@ public final class ProcessTweaksTest extends CompilerTestCase {
   @Test
   public void testDuplicateTweak() {
     testError(
-        "goog.tweak.registerBoolean('TweakA', 'desc');"
-            + "goog.tweak.registerBoolean('TweakA', 'desc')",
+        """
+        goog.tweak.registerBoolean('TweakA', 'desc');
+        goog.tweak.registerBoolean('TweakA', 'desc')
+        """,
         ProcessTweaks.TWEAK_MULTIPLY_REGISTERED_ERROR);
   }
 
@@ -152,21 +171,30 @@ public final class ProcessTweaksTest extends CompilerTestCase {
   @Test
   public void testWrongGetter1() {
     testSame(
-        "goog.tweak.registerBoolean('TweakA', 'desc');" + "goog.tweak.getString('TweakA')",
+        """
+        goog.tweak.registerBoolean('TweakA', 'desc');
+        goog.tweak.getString('TweakA')
+        """,
         ProcessTweaks.TWEAK_WRONG_GETTER_TYPE_WARNING);
   }
 
   @Test
   public void testWrongGetter2() {
     testSame(
-        "goog.tweak.registerString('TweakA', 'desc');" + "goog.tweak.getNumber('TweakA')",
+        """
+        goog.tweak.registerString('TweakA', 'desc');
+        goog.tweak.getNumber('TweakA')
+        """,
         ProcessTweaks.TWEAK_WRONG_GETTER_TYPE_WARNING);
   }
 
   @Test
   public void testWrongGetter3() {
     testSame(
-        "goog.tweak.registerNumber('TweakA', 'desc');" + "goog.tweak.getBoolean('TweakA')",
+        """
+        goog.tweak.registerNumber('TweakA', 'desc');
+        goog.tweak.getBoolean('TweakA')
+        """,
         ProcessTweaks.TWEAK_WRONG_GETTER_TYPE_WARNING);
   }
 
@@ -179,12 +207,14 @@ public final class ProcessTweaksTest extends CompilerTestCase {
   public void testStrippingWithImplicitDefaultValues() {
     stripTweaks = true;
     test(
-        "goog.tweak.registerNumber('TweakA', 'desc');"
-            + "goog.tweak.registerBoolean('TweakB', 'desc');"
-            + "goog.tweak.registerString('TweakC', 'desc');"
-            + "alert(goog.tweak.getNumber('TweakA'));"
-            + "alert(goog.tweak.getBoolean('TweakB'));"
-            + "alert(goog.tweak.getString('TweakC'));",
+        """
+        goog.tweak.registerNumber('TweakA', 'desc');
+        goog.tweak.registerBoolean('TweakB', 'desc');
+        goog.tweak.registerString('TweakC', 'desc');
+        alert(goog.tweak.getNumber('TweakA'));
+        alert(goog.tweak.getBoolean('TweakB'));
+        alert(goog.tweak.getString('TweakC'));
+        """,
         "void 0; void 0; void 0; alert(0); alert(false); alert('')");
   }
 
@@ -225,11 +255,13 @@ public final class ProcessTweaksTest extends CompilerTestCase {
   public void testStrippingOfManuallyRegistered1() {
     stripTweaks = true;
     test(
-        "var reg = goog.tweak.getRegistry();"
-            + "if (reg) {"
-            + "  reg.register(new goog.tweak.BooleanSetting('foo', 'desc'));"
-            + "  reg.getEntry('foo').setDefaultValue(1);"
-            + "}",
+        """
+        var reg = goog.tweak.getRegistry();
+        if (reg) {
+          reg.register(new goog.tweak.BooleanSetting('foo', 'desc'));
+          reg.getEntry('foo').setDefaultValue(1);
+        }
+        """,
         "if (null);");
   }
 }

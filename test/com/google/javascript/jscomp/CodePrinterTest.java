@@ -912,8 +912,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         "var a={}; for (var i = -(\"length\" in a); i;) {}",
         "var a={};for(var i=-(\"length\"in a);i;);");
     assertPrint(
-        "var a={};function b_(p){ return p;};" + "for(var i=1,j=b_(\"length\" in a);;) {}",
-        "var a={};function b_(p){return p}" + "for(var i=1,j=b_(\"length\"in a);;);");
+        "var a={};function b_(p){ return p;};for(var i=1,j=b_(\"length\" in a);;) {}",
+        "var a={};function b_(p){return p}for(var i=1,j=b_(\"length\"in a);;);");
 
     // Test we correctly handle an in operator in the test clause.
     assertPrint("var a={}; for (;(\"length\" in a);) {}", "var a={};for(;\"length\"in a;);");
@@ -2485,43 +2485,77 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testFunctionWithCall() {
     assertPrint(
-        "var user = new function() {" + "alert(\"foo\")}",
-        "var user=new function(){" + "alert(\"foo\")}");
+        """
+        var user = new function() {
+        alert("foo")}
+        """,
+        "var user=new function(){alert(\"foo\")}");
     assertPrint(
-        "var user = new function() {"
-            + "this.name = \"foo\";"
-            + "this.local = function(){alert(this.name)};}",
-        "var user=new function(){"
-            + "this.name=\"foo\";"
-            + "this.local=function(){alert(this.name)}}");
+        """
+        var user = new function() {
+        this.name = "foo";
+        this.local = function(){alert(this.name)};}
+        """,
+        """
+        var user=new function(){\
+        this.name="foo";\
+        this.local=function(){alert(this.name)}}\
+        """);
   }
 
   @Test
   public void testLineLength() {
     // list
-    assertLineLength("var aba,bcb,cdc", "var aba,bcb," + "\ncdc");
+    assertLineLength("var aba,bcb,cdc", "var aba,bcb,\ncdc");
 
     // operators, and two breaks
     assertLineLength(
         "\"foo\"+\"bar,baz,bomb\"+\"whee\"+\";long-string\"\n+\"aaa\"",
-        "\"foo\"+\"bar,baz,bomb\"+" + "\n\"whee\"+\";long-string\"+" + "\n\"aaa\"");
+        """
+        "foo"+"bar,baz,bomb"+
+        "whee"+";long-string"+
+        "aaa"\
+        """);
 
     // assignment
-    assertLineLength("var abazaba=1234", "var abazaba=" + "\n1234");
+    assertLineLength(
+        "var abazaba=1234",
+        """
+        var abazaba=
+        1234\
+        """);
 
     // statements
-    assertLineLength("var abab=1;var bab=2", "var abab=1;" + "\nvar bab=2");
+    assertLineLength(
+        "var abab=1;var bab=2",
+        """
+        var abab=1;
+        var bab=2\
+        """);
 
     // don't break regexes
     assertLineLength(
         "var a=/some[reg](ex),with.*we?rd|chars/i;var b=a",
-        "var a=/some[reg](ex),with.*we?rd|chars/i;" + "\nvar b=a");
+        """
+        var a=/some[reg](ex),with.*we?rd|chars/i;
+        var b=a\
+        """);
 
     // don't break strings
-    assertLineLength("var a=\"foo,{bar};baz\";var b=a", "var a=\"foo,{bar};baz\";" + "\nvar b=a");
+    assertLineLength(
+        "var a=\"foo,{bar};baz\";var b=a",
+        """
+        var a="foo,{bar};baz";
+        var b=a\
+        """);
 
     // don't break before post inc/dec
-    assertLineLength("var a=\"a\";a++;var b=\"bbb\";", "var a=\"a\";a++;\n" + "var b=\"bbb\"");
+    assertLineLength(
+        "var a=\"a\";a++;var b=\"bbb\";",
+        """
+        var a="a";a++;
+        var b="bbb"\
+        """);
   }
 
   private void assertLineLength(String js, String expected) {
@@ -2567,12 +2601,24 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     testReparse("a = (2 + 3) * 4;");
     testReparse("a = 1 + (2 + 3) + 4;");
     testReparse("x = a ? b : c; x = a ? (b,3,5) : (foo(),bar());");
-    testReparse("a = b | c || d ^ e " + "&& f & !g != h << i <= j < k >>> l > m * n % !o");
-    testReparse("a == b; a != b; a === b; a == b == a;" + " (a == b) == a; a == (b == a);");
+    testReparse(
+        """
+        a = b | c || d ^ e
+        && f & !g != h << i <= j < k >>> l > m * n % !o
+        """);
+    testReparse(
+        """
+        a == b; a != b; a === b; a == b == a;
+         (a == b) == a; a == (b == a);
+        """);
     testReparse("if (a > b) a = b; if (b < 3) a = 3; else c = 4;");
     testReparse("if (a == b) { a++; } if (a == 0) { a++; } else { a --; }");
     testReparse("for (var i in a) b += i;");
-    testReparse("for (var i = 0; i < 10; i++){ b /= 2;" + " if (b == 2)break;else continue;}");
+    testReparse(
+        """
+        for (var i = 0; i < 10; i++){ b /= 2;
+         if (b == 2)break;else continue;}
+        """);
     testReparse("for (x = 0; x < 10; x++) a /= 2;");
     testReparse("for (;;) a++;");
     testReparse("while(true) { blah(); }while(true) blah();");
@@ -2584,8 +2630,10 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     testReparse("delete foo['bar']; delete foo;");
     testReparse("var x = { 'a':'paul', 1:'3', 2:(3,4) };");
     testReparse(
-        "switch(a) { case 2: case 3: stuff(); break;"
-            + "case 4: morestuff(); break; default: done();}");
+        """
+        switch(a) { case 2: case 3: stuff(); break;
+        case 4: morestuff(); break; default: done();}
+        """);
     testReparse("x = foo['bar'] + foo['my stuff'] + foo[bar] + f.stuff;");
     testReparse("a.v = b.v; x['foo'] = y['zoo'];");
     testReparse("'test' in x; 3 in x; a in x;");
@@ -4270,12 +4318,15 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testEs6ArrowFunctionSetsOriginalNameForThis() {
     String code = "(x)=>{this.foo[0](3);}";
+    // TODO(tomnguyen): Avoid printing the `$jscomp$this$3556498$0 = this` line.
+    // TODO(tomnguyen): `function(x) {` should print as an `=>` function.
     String expectedCode =
-        ""
-            + "var $jscomp$this$3556498$0 = this;\n" // TODO(tomnguyen): Avoid printing this line.
-            + "(function(x) {\n" // TODO(tomnguyen): This should print as an => function.
-            + "  this.foo[0](3);\n"
-            + "});\n";
+        """
+        var $jscomp$this$3556498$0 = this;
+        (function(x) {
+          this.foo[0](3);
+        });
+        """;
     CompilerOptions compilerOptions = new CompilerOptions();
     compilerOptions.skipAllCompilerPasses();
     compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -4288,11 +4339,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // not rewritten.
     String code = "(x)=>{arguments[0]();}";
     String expectedCode =
-        ""
-            + "var $jscomp$arguments$3556498$0 = arguments;\n"
-            + "(function(x) {\n"
-            + "  arguments[0]();\n"
-            + "});\n";
+        """
+        var $jscomp$arguments$3556498$0 = arguments;
+        (function(x) {
+          arguments[0]();
+        });
+        """;
     CompilerOptions compilerOptions = new CompilerOptions();
     compilerOptions.skipAllCompilerPasses();
     compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -4326,38 +4378,40 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // TODO(mknichel): Function declarations need to be rewritten to match the original source
     // instead of being assigned to a local variable with duplicate JS Doc.
     String code =
-        ""
-            + "goog.provide('foo.bar');\n"
-            + "goog.require('baz.qux.Quux');\n"
-            + "goog.require('foo.ScopedType');\n"
-            + "\n"
-            + "goog.scope(function() {\n"
-            + "var Quux = baz.qux.Quux;\n"
-            + "var ScopedType = foo.ScopedType;\n"
-            + "\n"
-            + "var STR = '3';\n"
-            + "/** @param {ScopedType} obj */\n"
-            + "function fn(obj) {\n"
-            + "  alert(STR);\n"
-            + "  alert(Quux.someProperty);\n"
-            + "}\n"
-            + "}); // goog.scope\n";
+        """
+        goog.provide('foo.bar');
+        goog.require('baz.qux.Quux');
+        goog.require('foo.ScopedType');
+
+        goog.scope(function() {
+        var Quux = baz.qux.Quux;
+        var ScopedType = foo.ScopedType;
+
+        var STR = '3';
+        /** @param {ScopedType} obj */
+        function fn(obj) {
+          alert(STR);
+          alert(Quux.someProperty);
+        }
+        }); // goog.scope
+        """;
     String expectedCode =
-        ""
-            + "goog.provide('foo.bar');\n"
-            + "goog.require('baz.qux.Quux');\n"
-            + "goog.require('foo.ScopedType');\n"
-            + "/**\n"
-            + " * @param {ScopedType} obj\n"
-            + " */\n"
-            + "var $jscomp$scope$3556498$1$fn = /**\n"
-            + " * @param {ScopedType} obj\n"
-            + " */\n"
-            + "function(obj) {\n"
-            + "  alert(STR);\n"
-            + "  alert(Quux.someProperty);\n"
-            + "};\n"
-            + "var $jscomp$scope$3556498$0$STR = '3';\n";
+        """
+        goog.provide('foo.bar');
+        goog.require('baz.qux.Quux');
+        goog.require('foo.ScopedType');
+        /**
+         * @param {ScopedType} obj
+         */
+        var $jscomp$scope$3556498$1$fn = /**
+         * @param {ScopedType} obj
+         */
+        function(obj) {
+          alert(STR);
+          alert(Quux.someProperty);
+        };
+        var $jscomp$scope$3556498$0$STR = '3';
+        """;
 
     CompilerOptions compilerOptions = new CompilerOptions();
     compilerOptions.setChecksOnly(true);

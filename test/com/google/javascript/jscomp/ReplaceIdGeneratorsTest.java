@@ -149,7 +149,6 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
         previous1:testcode:1:32
         previous2:testcode:2:32
-
         """);
   }
 
@@ -163,14 +162,13 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         b:testcode:2:32
 
         [goog.place.getUniqueId]
-
-
         """;
     testMap(
-        "var x = goog.events.getUniqueId('xxx');\n"
-            + "\n"
-            + // new line to change location
-            "var y = goog.events.getUniqueId('yyy');\n",
+        """
+        var x = goog.events.getUniqueId('xxx');
+        // new line to change location
+        var y = goog.events.getUniqueId('yyy');
+        """,
         """
         var x = 'a';
         var y = 'c';
@@ -180,7 +178,6 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
         a:testcode:1:32
         c:testcode:3:32
-
         """);
   }
 
@@ -191,7 +188,6 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         [cid]
 
         a:f1
-
         """;
     testMap(
         """
@@ -208,7 +204,6 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         [cid]
 
         a:f1
-
         """);
   }
 
@@ -444,12 +439,26 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
   @Test
   public void testSimpleStable() {
     testNonPseudoSupportingGenerator(
-        "/** @idGenerator {stable} */ sid = function() {};" + "foo.bar = sid('foo_bar')",
-        "/** @idGenerator {stable} */ sid = function() {};" + "foo.bar = '125lGg'");
+        """
+        /** @idGenerator {stable} */ sid = function() {};
+        foo.bar = sid('foo_bar')
+        """,
+        """
+        /** @idGenerator {stable} */ sid = function() {};
+        foo.bar = '125lGg'
+        """);
 
     testNonPseudoSupportingGenerator(
-        "/** @idGenerator {stable} */ sid = function() {};" + "f1 = sid('f1');" + "f1 = sid('f1')",
-        "/** @idGenerator {stable} */ sid = function() {};" + "f1 = 'AAAMiw';" + "f1 = 'AAAMiw'");
+        """
+        /** @idGenerator {stable} */ sid = function() {};
+        f1 = sid('f1');
+        f1 = sid('f1')
+        """,
+        """
+        /** @idGenerator {stable} */ sid = function() {};
+        f1 = 'AAAMiw';
+        f1 = 'AAAMiw'
+        """);
   }
 
   @Test
@@ -533,8 +542,14 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         """);
 
     testNonPseudoSupportingGenerator(
-        "/** @idGenerator {stable} */ let sid = function() {};" + "foo.bar = sid('foo_bar')",
-        "/** @idGenerator {stable} */ let sid = function() {};" + "foo.bar = '125lGg'");
+        """
+        /** @idGenerator {stable} */ let sid = function() {};
+        foo.bar = sid('foo_bar')
+        """,
+        """
+        /** @idGenerator {stable} */ let sid = function() {};
+        foo.bar = '125lGg'
+        """);
   }
 
   @Test
@@ -716,21 +731,31 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
   @Test
   public void testNonLiteralParam1() {
     testSame(
-        "/** @idGenerator */ var id = function() {}; " + "var x = 'foo';" + "id(x);",
+        """
+        /** @idGenerator */ var id = function() {};
+        var x = 'foo';
+        id(x);
+        """,
         ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER);
   }
 
   @Test
   public void testNonLiteralParam2() {
     testSame(
-        "/** @idGenerator */ var id = function() {}; " + "id('foo' + 'bar');",
+        """
+        /** @idGenerator */ var id = function() {};
+        id('foo' + 'bar');
+        """,
         ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER);
   }
 
   @Test
   public void testLocalCall() {
     testError(
-        "/** @idGenerator */ var iid = function() {}; " + "function Foo() { iid('foo'); }",
+        """
+        /** @idGenerator */ var iid = function() {};
+        function Foo() { iid('foo'); }
+        """,
         ReplaceIdGenerators.NON_GLOBAL_ID_GENERATOR_CALL);
   }
 
@@ -753,7 +778,10 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
 
     testError(
-        "/** @idGenerator */ var xid = function() {}; " + "if(x) xid('foo');",
+        """
+        /** @idGenerator */ var xid = function() {};
+        if(x) xid('foo');
+        """,
         ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
 
     testWithPseudo(
@@ -836,21 +864,30 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
   @Test
   public void testBadGenerator1() {
     testSame(
-        "/** @idGenerator */ id = function() {};" + "foo.bar = id()", INVALID_GENERATOR_PARAMETER);
+        """
+        /** @idGenerator */ id = function() {};
+        foo.bar = id()
+        """,
+        INVALID_GENERATOR_PARAMETER);
   }
 
   @Test
   public void testBadGenerator2() {
     testSame(
-        "/** @idGenerator {consistent} */ id = function() {};" + "foo.bar = id()",
+        """
+        /** @idGenerator {consistent} */ id = function() {};
+        foo.bar = id()
+        """,
         INVALID_GENERATOR_PARAMETER);
   }
 
   @Test
   public void testBadGenerator3() {
     testSame(
-        "/** @idGenerator {consistent} */ id = function() {};"
-            + "foo.bar = id(`hello${ ' '}world`)",
+        """
+        /** @idGenerator {consistent} */ id = function() {};
+        foo.bar = id(`hello${ ' '}world`)
+        """,
         INVALID_GENERATOR_PARAMETER);
   }
 

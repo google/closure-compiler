@@ -78,7 +78,7 @@ public final class DepsGeneratorTest {
 
     // Write the expected output.
     String expected =
-        """
+"""
 goog.addDependency('../foo/foo.js', ['my.namespace'], ['goog/es6.js'], {'lang': 'es6', 'module': 'es6'});
 goog.addDependency('goog/es6.js', [], [], {'lang': 'es6', 'module': 'es6'});
 """;
@@ -158,7 +158,7 @@ goog.addDependency('goog/es6.js', [], [], {'lang': 'es6', 'module': 'es6'});
 
     // Write the expected output.
     String expected =
-        """
+"""
 goog.addDependency('../foo/foo.js', ['my.namespace'], [], {'lang': 'es6', 'module': 'es6'});
 goog.addDependency('goog/googmodule.js', ['my.goog.module'], ['my.namespace'], {'lang': 'es6', 'module': 'goog'});
 """;
@@ -198,7 +198,7 @@ goog.addDependency('goog/googmodule.js', ['my.goog.module'], ['my.namespace'], {
     assertNoWarnings();
 
     String expected =
-        """
+"""
 goog.addDependency('../../../src/css-parse.js', [], [], {'lang': 'es6', 'module': 'es6'});
 goog.addDependency('../../../src/apply-shim-utils.js', [], ['../../../src/css-parse.js'], {'lang': 'es6', 'module': 'es6'});
 """;
@@ -224,7 +224,7 @@ goog.addDependency('../../../src/apply-shim-utils.js', [], ['../../../src/css-pa
     final SourceFile depsFile2 =
         SourceFile.fromCode(
             "/base/my-project/deps2.js",
-            """
+"""
 goog.addDependency('../prescanned2/file1.js', ['dep.bool', 'dep.number'], ['dep.string']);
 goog.addDependency('../prescanned2/file2.js', [], []);
 goog.addDependency('../this/is/defined/thrice.js', [], []);
@@ -251,7 +251,7 @@ goog.addDependency('../this/is/defined/thrice.js', [], []);
         SourceFile.fromCode("/base/my-project/src2.js", "goog.provide('makejsdeps.file2');");
 
     String expected =
-        """
+"""
 goog.addDependency('../../my-project/src1.js', ['makejsdeps.file1', 'makejsdeps.file1.Test'], ['makejsdeps.file2', 'dep.string', 'dep.number']);
 goog.addDependency('../../my-project/src2.js', ['makejsdeps.file2'], []);
 
@@ -336,7 +336,7 @@ goog.addDependency('../prescanned2/file2.js', [], []);
     final SourceFile depsFile2 =
         SourceFile.fromCode(
             "/base/deps2.js",
-            """
+"""
 // Test deps file 2.
 
 goog.addDependency('../prescanned2/file1.js', ['dep.bool', 'dep.number'], ['dep.string']);
@@ -353,7 +353,7 @@ goog.addDependency('../this/is/defined/thrice.js', [], []);
             errorManager,
             ModuleLoader.builder()
                 .setErrorHandler(null)
-                .setModuleRoots(ImmutableList.of("/base/" + "/"))
+                .setModuleRoots(ImmutableList.of("/base//"))
                 .setInputs(ImmutableList.of())
                 .setFactory(BrowserModuleResolver.FACTORY)
                 .setPathResolver(ModuleLoader.PathResolver.ABSOLUTE)
@@ -435,7 +435,7 @@ goog.addDependency('../this/is/defined/thrice.js', [], []);
             goog.addDependency('../../src1.js', ['b'], []);
             goog.addDependency('../../d.js', ['d'], []);
             """);
-    SourceFile src1 = SourceFile.fromCode("/base/" + "/src1.js", "goog.provide('b');\n");
+    SourceFile src1 = SourceFile.fromCode("/base//src1.js", "goog.provide('b');\n");
     SourceFile src2 =
         SourceFile.fromCode(
             "/base//src2.js",
@@ -616,8 +616,10 @@ goog.addDependency('../this/is/defined/thrice.js', [], []);
         ImmutableList.of(dep1),
         ImmutableList.of(src1),
         /* fatal= */ true,
-        "Namespace \"b\" is required but never provided.\n"
-            + "You need to pass a library that has it in srcs or exports to your target's deps.");
+        """
+        Namespace "b" is required but never provided.
+        You need to pass a library that has it in srcs or exports to your target's deps.\
+        """);
   }
 
   @Test

@@ -84,20 +84,28 @@ public class InlineAliasesTest extends CompilerTestCase {
         """);
 
     test(
-        "var ns={}; /** @constructor */ function Foo(){}; "
-            + "Foo.Subfoo = class {};"
-            + "/** @const */ ns.alias = Foo; var x = new ns.alias;",
-        "var ns={}; /** @constructor */ function Foo(){}; "
-            + "Foo.Subfoo = class {};"
-            + "/** @const */ ns.alias = Foo; var x = new Foo;");
+        """
+        var ns={}; /** @constructor */ function Foo(){};
+        Foo.Subfoo = class {};
+        /** @const */ ns.alias = Foo; var x = new ns.alias;
+        """,
+        """
+        var ns={}; /** @constructor */ function Foo(){};
+        Foo.Subfoo = class {};
+        /** @const */ ns.alias = Foo; var x = new Foo;
+        """);
 
     test(
-        "var ns={}; /** @constructor */ function Foo(){}; "
-            + "Foo.Subfoo = class {};"
-            + "/** @const */ ns.alias = Foo; var x = new ns.alias.Subfoo;",
-        "var ns={}; /** @constructor */ function Foo(){}; "
-            + "Foo.Subfoo = class {};"
-            + "/** @const */ ns.alias = Foo; var x = new Foo.Subfoo;");
+        """
+        var ns={}; /** @constructor */ function Foo(){};
+        Foo.Subfoo = class {};
+        /** @const */ ns.alias = Foo; var x = new ns.alias.Subfoo;
+        """,
+        """
+        var ns={}; /** @constructor */ function Foo(){};
+        Foo.Subfoo = class {};
+        /** @const */ ns.alias = Foo; var x = new Foo.Subfoo;
+        """);
   }
 
   @Test

@@ -252,10 +252,14 @@ public final class ProcessDefinesTest extends CompilerTestCase {
     overrides.put("DEF_OVERRIDE_TO_TRUE", new Node(Token.TRUE));
     overrides.put("DEF_OVERRIDE_TO_FALSE", new Node(Token.FALSE));
     test(
-        "/** @define {boolean} */ var DEF_OVERRIDE_TO_TRUE = false;"
-            + "/** @define {boolean} */ var DEF_OVERRIDE_TO_FALSE = true",
-        "/** @define {boolean} */ var DEF_OVERRIDE_TO_TRUE = true;"
-            + "/** @define {boolean} */var DEF_OVERRIDE_TO_FALSE=false");
+        """
+        /** @define {boolean} */ var DEF_OVERRIDE_TO_TRUE = false;
+        /** @define {boolean} */ var DEF_OVERRIDE_TO_FALSE = true
+        """,
+        """
+        /** @define {boolean} */ var DEF_OVERRIDE_TO_TRUE = true;
+        /** @define {boolean} */var DEF_OVERRIDE_TO_FALSE=false
+        """);
   }
 
   @Test

@@ -25,27 +25,39 @@ import org.junit.runners.JUnit4;
 public final class FunctionRewriterTest extends CompilerTestCase {
 
   private static final String RETURNARG_HELPER =
-      "function JSCompiler_returnArg(JSCompiler_returnArg_value){"
-          + "  return function() { return JSCompiler_returnArg_value }"
-          + "}";
+      """
+      function JSCompiler_returnArg(JSCompiler_returnArg_value){
+        return function() { return JSCompiler_returnArg_value }
+      }
+      """;
   private static final String GET_HELPER =
-      "function JSCompiler_get(JSCompiler_get_name){"
-          + "  return function() { return this[JSCompiler_get_name] }"
-          + "}";
+      """
+      function JSCompiler_get(JSCompiler_get_name){
+        return function() { return this[JSCompiler_get_name] }
+      }
+      """;
   private static final String SET_HELPER =
-      "function JSCompiler_set(JSCompiler_set_name) {"
-          + "  return function(JSCompiler_set_value){"
-          + "    this[JSCompiler_set_name]=JSCompiler_set_value"
-          + "  }"
-          + "}";
+      """
+      function JSCompiler_set(JSCompiler_set_name) {
+        return function(JSCompiler_set_value){
+          this[JSCompiler_set_name]=JSCompiler_set_value
+        }
+      }
+      """;
   private static final String EMPTY_HELPER =
-      "function JSCompiler_emptyFn() {" + "  return function(){}" + "}";
+      """
+      function JSCompiler_emptyFn() {
+        return function(){}
+      }
+      """;
   private static final String IDENTITY_HELPER =
-      "function JSCompiler_identityFn() {"
-          + "  return function(JSCompiler_identityFn_value) {"
-          + "      return JSCompiler_identityFn_value"
-          + "  }"
-          + "}";
+      """
+      function JSCompiler_identityFn() {
+        return function(JSCompiler_identityFn_value) {
+            return JSCompiler_identityFn_value
+        }
+      }
+      """;
 
   @Override
   public void setUp() throws Exception {

@@ -787,13 +787,15 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   @Test
   public void testOptimizeSwitchBug11536863() {
     fold(
-        "outer: {"
-            + "  switch (2) {\n"
-            + "    case 2:\n"
-            + "      f();\n"
-            + "      break outer;\n"
-            + "  }"
-            + "}",
+        """
+        outer: {
+          switch (2) {
+            case 2:
+              f();
+              break outer;
+          }
+        }
+        """,
         "outer: {f(); break outer;}");
   }
 
