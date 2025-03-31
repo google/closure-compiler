@@ -357,7 +357,7 @@ public final class CommandLineRunnerTest {
   }
 
   private void writeFile(File file, String content) throws IOException {
-    java.nio.file.Files.write(file.toPath(), content.getBytes(UTF_8));
+    java.nio.file.Files.writeString(file.toPath(), content);
   }
 
   @Test
@@ -2937,9 +2937,9 @@ public final class CommandLineRunnerTest {
     assertThat(e)
         .hasMessageThat()
         .isEqualTo(
-            """
-            Expected --instrument_mapping_report to be set when --instrument_for_coverage_option is set to Production\
-            """);
+"""
+Expected --instrument_mapping_report to be set when --instrument_for_coverage_option is set to Production\
+""");
   }
 
   @Test
@@ -2950,9 +2950,9 @@ public final class CommandLineRunnerTest {
     assertThat(e)
         .hasMessageThat()
         .isEqualTo(
-            """
-            Expected --instrument_for_coverage_option to be passed with PRODUCTION when --instrument_mapping_report is set\
-            """);
+"""
+Expected --instrument_for_coverage_option to be passed with PRODUCTION when --instrument_mapping_report is set\
+""");
   }
 
   @Test
@@ -2964,9 +2964,9 @@ public final class CommandLineRunnerTest {
     assertThat(e)
         .hasMessageThat()
         .isEqualTo(
-            """
-            Expected --production_instrumentation_array_name to be set when --instrument_for_coverage_option is set to Production\
-            """);
+"""
+Expected --production_instrumentation_array_name to be set when --instrument_for_coverage_option is set to Production\
+""");
   }
 
   @Test
