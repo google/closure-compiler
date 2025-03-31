@@ -137,17 +137,27 @@ class ExpressionDecomposer {
     // If the expression needs to exposed.
     int i = 0;
     while (DecompositionType.DECOMPOSABLE == canExposeExpression(expression)) {
-      exposeExpression(expression);
+      if (!exposeExpression(expression)) {
+        // If `canExposeExpression` returned `DECOMPOSABLE` but `exposeExpression` returned false`
+        // nothing was exposed so there's no point in trying again. Indicates a bug in either
+        // `canExposeExpression` or `exposeExpression`.
+        throw new IllegalStateException(
+            "exposeExpression exposed nothing for:\n" + expression.toStringTree());
+      }
       i++;
       if (i > MAX_ITERATIONS) {
         throw new IllegalStateException(
-            "DecomposeExpression depth exceeded on:\n" + expression.toStringTree());
+            "exposeExpression depth exceeded on:\n" + expression.toStringTree());
       }
     }
   }
 
-  /** Perform partial decomposition to get the given expression closer to being {@code MOVEABLE}. */
-  private void exposeExpression(Node expression) {
+  /**
+   * Perform partial decomposition to get the given expression closer to being {@code MOVEABLE}.
+   *
+   * @return Whether any modifications furthering exposure were made to the expression.
+   */
+  private boolean exposeExpression(Node expression) {
     // First rewrite all optional chains containing the expression.
     // This must be done first, because the expression root may be an optional chain, and rewriting
     // it creates a new node to be the expression root.
@@ -155,7 +165,7 @@ class ExpressionDecomposer {
     Node expressionRoot = findExpressionRoot(expression);
     checkNotNull(expressionRoot);
     checkState(NodeUtil.isStatement(expressionRoot), expressionRoot);
-    exposeExpression(expressionRoot, expression);
+    return exposeExpression(expressionRoot, expression);
   }
 
   /**
@@ -184,8 +194,11 @@ class ExpressionDecomposer {
    *
    * @param expressionRoot The root of the subtree within which to expose {@code subExpression}.
    * @param subExpression A descendant of {@code expressionRoot} to be exposed.
+   * @return Whether any modifications furthering exposure were made to the expression.
    */
-  private void exposeExpression(Node expressionRoot, Node subExpression) {
+  private boolean exposeExpression(Node expressionRoot, Node subExpression) {
+    boolean exposedSomething = false;
+
     Node nodeWithNonconditionalParent = findNonconditionalParent(subExpression, expressionRoot);
     // Before extraction, record whether there are side-effect
     boolean hasFollowingSideEffects = astAnalyzer.mayHaveSideEffects(nodeWithNonconditionalParent);
@@ -231,7 +244,8 @@ class ExpressionDecomposer {
               break;
             case GETELEM:
             case GETPROP:
-              decomposeSubExpressions(left.getFirstChild(), null, state);
+              exposedSomething =
+                  decomposeSubExpressions(left.getFirstChild(), null, state) || exposedSomething;
               break;
             default:
               throw new IllegalStateException(
@@ -242,7 +256,9 @@ class ExpressionDecomposer {
           && NodeUtil.isNormalGet(expressionParent.getFirstChild())) {
         Node callee = expressionParent.getFirstChild();
         if (callee != expressionToExpose) {
-          decomposeSubExpressions(callee.getNext(), expressionToExpose, state);
+          exposedSomething =
+              decomposeSubExpressions(callee.getNext(), expressionToExpose, state)
+                  || exposedSomething;
         }
 
         // Now handle the call expression. We only have to do this if we arrived at decomposing this
@@ -254,9 +270,12 @@ class ExpressionDecomposer {
           state.sideEffects = true;
           // Rewrite the call so "this" is preserved and continue walking up from there.
           rewriteCallExpression(expressionParent, state);
+          exposedSomething = true;
         }
       } else {
-        decomposeSubExpressions(expressionParent.getFirstChild(), expressionToExpose, state);
+        exposedSomething =
+            decomposeSubExpressions(expressionParent.getFirstChild(), expressionToExpose, state)
+                || exposedSomething;
       }
 
       lastExposedSubexpression = expressionToExpose;
@@ -278,7 +297,10 @@ class ExpressionDecomposer {
       Node parent = nodeWithNonconditionalParent.getParent();
       boolean needResult = !parent.isExprResult();
       extractConditional(nodeWithNonconditionalParent, exprInjectionPoint, needResult);
+      exposedSomething = true;
     }
+
+    return exposedSomething;
   }
 
   /** Rewrite all of the optional chains containing the given subExpression. */
@@ -428,17 +450,22 @@ class ExpressionDecomposer {
   /**
    * @param n The node with which to start iterating.
    * @param stopNode A node after which to stop iterating.
+   * @return Whether any modifications furthering decomposition were made to n.
    */
-  private void decomposeSubExpressions(Node n, @Nullable Node stopNode, DecompositionState state) {
+  private boolean decomposeSubExpressions(
+      Node n, @Nullable Node stopNode, DecompositionState state) {
     if (n == null || n == stopNode) {
-      return;
+      return false;
     }
+
+    boolean decomposedSomething = false;
 
     // Decompose the children in reverse evaluation order. This simplifies determining if any of
     // the children following have side-effects. If they do we need to be more aggressive about
     // removing values from the expression. Reverse order also maintains evaluation order as each
     // extracted statemented is inserted on top of the others.
-    decomposeSubExpressions(n.getNext(), stopNode, state);
+    decomposedSomething =
+        decomposeSubExpressions(n.getNext(), stopNode, state) || decomposedSomething;
 
     // Now this node.
 
@@ -452,7 +479,8 @@ class ExpressionDecomposer {
         //
         // We decompose the value of the prop first because decomposition is in reverse order of
         // evaluation.
-        decomposeSubExpressions(n.getSecondChild(), stopNode, state);
+        decomposedSomething =
+            decomposeSubExpressions(n.getSecondChild(), stopNode, state) || decomposedSomething;
       }
 
       // Decompose the children of the prop rather than the prop itself. In the computed case this
@@ -478,7 +506,7 @@ class ExpressionDecomposer {
       // pattern on the left side of a VAR statement:
       //   var {pattern} = rhs();
       // See test case: testExposeExpression18
-      return;
+      return decomposedSomething;
     }
 
     // TODO(johnlenz): Move "safety" code to a shared class.
@@ -486,7 +514,9 @@ class ExpressionDecomposer {
       // Either there were preexisting side-effects, or this node has side-effects.
       state.sideEffects = true;
       state.extractBeforeStatement = extractExpression(n, state.extractBeforeStatement);
+      decomposedSomething = true;
     }
+    return decomposedSomething;
   }
 
   /**

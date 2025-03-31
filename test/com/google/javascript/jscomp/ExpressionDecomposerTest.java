@@ -111,7 +111,7 @@ public final class ExpressionDecomposerTest {
                     var temp_const$jscomp$1 = foo();
                     ({ [temp_const$jscomp$1]: a} = temp_const$jscomp$0);
                     """));
-    assertThat(ex).hasMessageThat().contains("DecomposeExpression depth exceeded on");
+    assertThat(ex).hasMessageThat().contains("exposeExpression exposed nothing");
   }
 
   @Test
