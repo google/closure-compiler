@@ -56,7 +56,11 @@ import org.jspecify.annotations.Nullable;
  */
 class ExpressionDecomposer {
 
-  /** @see {@link #canExposeExpression} */
+  /**
+   * The type of decomposition that can be performed on an expression.
+   *
+   * @see #canExposeExpression
+   */
   enum DecompositionType {
     UNDECOMPOSABLE,
     MOVABLE,
@@ -127,7 +131,7 @@ class ExpressionDecomposer {
    * moved. An expression is exposed within a larger statement if no preceding expression would
    * interact with it.
    *
-   * @see {@link #canExposeExpression}
+   * @see #canExposeExpression
    */
   void maybeExposeExpression(Node expression) {
     // If the expression needs to exposed.
@@ -142,9 +146,7 @@ class ExpressionDecomposer {
     }
   }
 
-  /**
-   * Perform partial decomposition to get the given expression closer to being {@code MOVEABLE}.
-   */
+  /** Perform partial decomposition to get the given expression closer to being {@code MOVEABLE}. */
   private void exposeExpression(Node expression) {
     // First rewrite all optional chains containing the expression.
     // This must be done first, because the expression root may be an optional chain, and rewriting
@@ -221,8 +223,8 @@ class ExpressionDecomposer {
           Node left = expressionParent.getFirstChild();
           switch (left.getToken()) {
             case ARRAY_PATTERN:
-              // e.g. backoff from exposing expression `getObj()` in `[getObj().propName] = ...` as
-              // the RHS must execute first
+            // e.g. backoff from exposing expression `getObj()` in `[getObj().propName] = ...` as
+            // the RHS must execute first
             case OBJECT_PATTERN:
               // e.g. backoff from exposing expression`getObj()` in `{a: getObj().propName} = ...`
               // as the RHS must execute first
@@ -741,7 +743,7 @@ class ExpressionDecomposer {
     // Find the type of (fn expression).call
     JSType fnCallType = null;
     if (astFactory.isAddingTypes()) {
-    JSType fnType = first.getJSType();
+      JSType fnType = first.getJSType();
       fnCallType =
           fnType.isFunctionType()
               ? fnType.toMaybeFunctionType().getPropertyType("call")
@@ -859,7 +861,9 @@ class ExpressionDecomposer {
     return injectionPoint;
   }
 
-  /** @return Whether the node is a conditional op. */
+  /**
+   * @return Whether the node is a conditional op.
+   */
   private static boolean isConditionalOp(Node n) {
     switch (n.getToken()) {
       case HOOK:
@@ -886,10 +890,10 @@ class ExpressionDecomposer {
     for (Node current : child.getAncestors()) {
       Node parent = current.getParent();
       switch (current.getToken()) {
-          // Supported expression roots:
-          // SWITCH and IF can have multiple children, but the CASE, DEFAULT,
-          // or BLOCK will be encountered first for any of the children other
-          // than the condition.
+        // Supported expression roots:
+        // SWITCH and IF can have multiple children, but the CASE, DEFAULT,
+        // or BLOCK will be encountered first for any of the children other
+        // than the condition.
         case EXPR_RESULT:
         case IF:
         case SWITCH:
@@ -899,7 +903,7 @@ class ExpressionDecomposer {
           return current;
 
         case VAR:
-          // Normalization will remove LABELs from VARs.
+        // Normalization will remove LABELs from VARs.
         case LET:
         case CONST:
           if (NodeUtil.isAnyFor(parent)) {
@@ -907,14 +911,14 @@ class ExpressionDecomposer {
           }
           return current;
 
-          // Any of these indicate an unsupported expression:
+        // Any of these indicate an unsupported expression:
         case FOR:
           if (child.isFirstChildOf(current)) {
             // Only the initializer of a for-loop could possibly be decomposed since the other
             // statements need to execute each iteration.
             return current;
           }
-          // fall through
+        // fall through
         case FOR_IN:
         case FOR_OF:
         case FOR_AWAIT_OF:
@@ -993,7 +997,9 @@ class ExpressionDecomposer {
     return DecompositionType.UNDECOMPOSABLE;
   }
 
-  /** @see {@link #canExposeExpression(Node subExpression)} */
+  /**
+   * @see #canExposeExpression
+   */
   private DecompositionType isSubexpressionMovable(Node expressionRoot, Node subExpression) {
     boolean requiresDecomposition = false;
     boolean seenSideEffects = astAnalyzer.mayHaveSideEffects(subExpression);
@@ -1107,7 +1113,7 @@ class ExpressionDecomposer {
           // evaluated first.
           return EvaluationDirection.REVERSE;
         }
-        // fall through
+      // fall through
       default:
         return EvaluationDirection.FORWARD;
     }
@@ -1145,7 +1151,7 @@ class ExpressionDecomposer {
    * in these cases the checks below are necessary.
    *
    * @param seenSideEffects If true, check to see if node-tree maybe affected by side-effects,
-   *     otherwise if the tree has side-effects. @see isExpressionTreeUnsafe
+   *     otherwise if the tree has side-effects. @see #isExpressionTreeUnsafe
    * @return Whether the assignment is safe from side-effects.
    */
   private boolean isSafeAssign(Node n, boolean seenSideEffects) {
