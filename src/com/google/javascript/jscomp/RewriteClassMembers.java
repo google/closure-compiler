@@ -198,7 +198,11 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
   private void visitSuper(NodeTraversal t, Node n) {
     Node rootNode = t.getClosestScopeRootNodeBindingThisOrSuper(); // returns BLOCK if static block
     if ((rootNode.isMemberFieldDef() && rootNode.isStaticMember()) || rootNode.isBlock()) {
-      Node superclassName = rootNode.getGrandparent().getChildAtIndex(1).cloneNode();
+      Node classNode = rootNode.getGrandparent();
+      checkState(classNode.isClass(), classNode);
+      Node extendsClause = classNode.getSecondChild();
+      checkState(extendsClause.isQualifiedName(), extendsClause);
+      Node superclassName = extendsClause.cloneTree();
       n.replaceWith(superclassName);
       t.reportCodeChange(superclassName);
     }
@@ -378,12 +382,12 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
    */
   private Node addTemporaryInsertionPoint(Node ctorBlock) {
     Node tempNode = IR.empty();
-      for (Node stmt = ctorBlock.getFirstChild(); stmt != null; stmt = stmt.getNext()) {
-        if (NodeUtil.isExprCall(stmt) && stmt.getFirstFirstChild().isSuper()) {
+    for (Node stmt = ctorBlock.getFirstChild(); stmt != null; stmt = stmt.getNext()) {
+      if (NodeUtil.isExprCall(stmt) && stmt.getFirstFirstChild().isSuper()) {
         tempNode.insertAfter(stmt);
         return tempNode;
-        }
       }
+    }
     Node insertionPoint = NodeUtil.getInsertionPointAfterAllInnerFunctionDeclarations(ctorBlock);
     if (insertionPoint != null) {
       tempNode.insertBefore(insertionPoint);

@@ -111,6 +111,28 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
     test(
         """
+        const ns = {};
+        ns.B = class {
+          static y = 3;
+        };
+        class C extends ns.B {
+          static {
+            let x = super.y;
+          }
+        }
+        """,
+        """
+        const ns = {};
+        ns.B = class {};
+        ns.B.y = 3;
+        class C extends ns.B {}
+        {
+          let x = ns.B.y;
+        }
+        """); // uses `super`
+
+    test(
+        """
         class C {
           static {
             C.x = 2
@@ -387,6 +409,31 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
     test(
         """
+        const ns = {};
+        ns.Foo = class {
+          static x() {
+            return 5;
+          }
+        }
+        class Bar extends ns.Foo {
+          static z = () => super.x();
+        }
+        """,
+        """
+        const ns = {};
+        ns.Foo = class {
+          static x() {
+            return 5;
+          }
+        };
+        class Bar extends ns.Foo {}
+        Bar.z = () => {
+          return ns.Foo.x();
+        };
+        """);
+
+    test(
+        """
         class Bar {
           static a = { method1() {} };
           static b = { method2() { super.method1(); } };
@@ -396,6 +443,49 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         class Bar {}
         Bar.a = { method1() {} };
         Bar.b = { method2() { super.method1(); } };
+        """);
+  }
+
+  @Test
+  public void testSuperInStaticFieldObjectSpread() {
+    test(
+        """
+        class Base {
+          static X = {a: 1};
+        }
+
+        class Child extends Base {
+          /** @type {!Object} */
+          static Y = {...super.X, b: 2};
+        }
+        """,
+        """
+        class Base {}
+        Base.X = {a: 1};
+
+        class Child extends Base {}
+        Child.Y = {...Base.X, b: 2};
+        """);
+
+    test(
+        """
+        const ns = {};
+        ns.Base = class {
+          static X = {a: 1};
+        };
+
+        class Child extends ns.Base {
+          /** @type {!Object} */
+          static Y = {...super.X, b: 2};
+        }
+        """,
+        """
+        const ns = {};
+        ns.Base = class {};
+        ns.Base.X = {a: 1};
+
+        class Child extends ns.Base {}
+        Child.Y = {...ns.Base.X, b: 2};
         """);
   }
 
