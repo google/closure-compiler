@@ -877,6 +877,18 @@ Element.prototype.componentFromPoint = function(iCoordX, iCoordY) {};
 Element.prototype.contentEditable;
 
 /**
+ * @type {string}
+ * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/enterKeyHint
+ */
+Element.prototype.enterKeyHint;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/inputMode
+ */
+Element.prototype.inputMode;
+
+/**
  * @return {TextRange}
  * @see http://msdn.microsoft.com/en-us/library/ms536401(VS.85).aspx
  */

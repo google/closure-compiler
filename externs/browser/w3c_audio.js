@@ -1533,6 +1533,9 @@ ConstantSourceNode.prototype.offset;
  */
 function MediaStreamAudioSourceNode() {}
 
+/** @type {!MediaStream} */
+MediaStreamAudioSourceNode.prototype.mediaStream;
+
 /**
  * @constructor
  * @extends {AudioNode}

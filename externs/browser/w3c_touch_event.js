@@ -33,7 +33,10 @@
  *   radiusX: (number|undefined),
  *   radiusY: (number|undefined),
  *   rotationAngle: (number|undefined),
- *   force: (number|undefined)
+ *   force: (number|undefined),
+ *   altitudeAngle: (number|undefined),
+ *   azimuthAngle: (number|undefined),
+ *   touchType: (string|undefined)
  * }}
  */
 var TouchInitDict;

@@ -93,6 +93,25 @@ PointerEventInit.prototype.pointerType;
 /** @type {undefined|boolean} */
 PointerEventInit.prototype.isPrimary;
 
+/** @type {undefined|number} */
+PointerEventInit.prototype.altitudeAngle;
+
+/** @type {undefined|number} */
+PointerEventInit.prototype.azimuthAngle;
+
+/** @type {undefined|number} */
+PointerEventInit.prototype.tangentialPressure;
+
+/** @type {undefined|number} */
+PointerEventInit.prototype.twist;
+
+/** @type {undefined|!Array<!PointerEvent>} */
+PointerEventInit.prototype.coalescedEvents;
+
+/** @type {undefined|!Array<!PointerEvent>} */
+PointerEventInit.prototype.predictedEvents;
+
+
 /**
  * @constructor
  * @extends {MouseEvent}

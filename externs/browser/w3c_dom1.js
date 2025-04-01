@@ -711,6 +711,13 @@ var GetHTMLOptions;
 function Element() {}
 
 /**
+ * @type {!DOMTokenList}
+ * @implicitCast
+ * @see https://developer.mozilla.org/docs/Web/API/Element/part
+ */
+Element.prototype.part;
+
+/**
  * @type {string}
  * @implicitCast
  * @see https://dom.spec.whatwg.org/index.html#dom-element-id
@@ -1004,3 +1011,6 @@ Window.prototype.onerror;
 /** @type {?function (!Event)} */ Window.prototype.onlanguagechange;
 /** @type {?function (!Event)} */ Window.prototype.onafterprint;
 /** @type {?function (!Event)} */ Window.prototype.onbeforeprint;
+/** @type {?function (!GamepadEvent)} */ Window.prototype.ongamepadconnected;
+/** @type {?function (!GamepadEvent)} */ Window.prototype.ongamepaddisconnected;
+/** @type {?function (!PromiseRejectionEvent)} */ Window.prototype.onrejectionhandled;

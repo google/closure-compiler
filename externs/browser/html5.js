@@ -565,6 +565,16 @@ BaseRenderingContext2D.prototype.createLinearGradient = function(
     x0, y0, x1, y1) {};
 
 /**
+ * @param {number} startAngle
+ * @param {number} x
+ * @param {number} y
+ * @return {!CanvasGradient}
+ * @throws {Error}
+ */
+BaseRenderingContext2D.prototype.createConicGradient = function(
+  startAngle, x, y) {};
+
+/**
  * @param {number} x0
  * @param {number} y0
  * @param {number} r0
@@ -2176,6 +2186,12 @@ HTMLInputElement.prototype.valueAsDate;
 
 /** @type {number} */
 HTMLInputElement.prototype.valueAsNumber;
+
+/** @type {!Array<!FileSystemEntry>} */
+HTMLInputElement.prototype.webkitEntries;
+
+/** @type {boolean} */
+HTMLInputElement.prototype.webkitdirectory;
 
 /**
  * Changes the form control's value by the value given in the step attribute
