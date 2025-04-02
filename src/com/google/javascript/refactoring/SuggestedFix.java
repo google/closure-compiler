@@ -20,13 +20,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Streams.stream;
 import static java.lang.Math.min;
+import static java.util.Objects.requireNonNull;
 
-import com.google.auto.value.AutoValue;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.SetMultimap;
+import com.google.errorprone.annotations.InlineMe;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CodePrinter;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -883,23 +884,36 @@ public final class SuggestedFix {
    * blobs of code, it's important that it does not contain any memory intensive objects in order to
    * keep memory to a reasonable amount.
    */
-  @AutoValue
-  public abstract static class MatchedNodeInfo {
-    static MatchedNodeInfo create(Node node, boolean closurized) {
-      return new AutoValue_SuggestedFix_MatchedNodeInfo(
-          NodeUtil.getSourceName(node),
-          node.getLineno(),
-          node.getCharno(),
-          closurized);
+  public record MatchedNodeInfo(
+      String sourceFilename, int lineno, int charno, boolean inClosurizedFile) {
+    public MatchedNodeInfo {
+      requireNonNull(sourceFilename, "sourceFilename");
     }
 
-    public abstract String getSourceFilename();
+    @InlineMe(replacement = "this.sourceFilename()")
+    public String getSourceFilename() {
+      return sourceFilename();
+    }
 
-    public abstract int getLineno();
+    @InlineMe(replacement = "this.lineno()")
+    public int getLineno() {
+      return lineno();
+    }
 
-    public abstract int getCharno();
+    @InlineMe(replacement = "this.charno()")
+    public int getCharno() {
+      return charno();
+    }
 
-    public abstract boolean isInClosurizedFile();
+    @InlineMe(replacement = "this.inClosurizedFile()")
+    public boolean isInClosurizedFile() {
+      return inClosurizedFile();
+    }
+
+    static MatchedNodeInfo create(Node node, boolean closurized) {
+      return new MatchedNodeInfo(
+          NodeUtil.getSourceName(node), node.getLineno(), node.getCharno(), closurized);
+    }
   }
 
   /**
