@@ -21,6 +21,40 @@ option java_multiple_files = true;
 // A container to describe code requirements
 message ConformanceConfig {
   repeated Requirement requirement = 1;
+
+  /**
+   * Represents the behavior of all the non-allowlisted conformance violations
+   * when this conformance config gets passed in to JSCompiler during a CheckJS
+   * action. The allowlisted violations are always recorded.
+   */
+  enum LibraryLevelNonAllowlistedConformanceViolationsBehavior {
+    /**
+     * The default behavior. Most of conformance configs (i.e. all non-BoqWeb
+     * and non-global configs) will not have the
+     * `library_level_conformance_behavior` field set, and will not get fed-in
+     * into the CheckJS action.
+     */
+    UNSPECIFIED = 0;
+
+    /**
+     * The behavior used by global conformance configs (go/jscp) where any
+     * non-allowlisted violation will break the library level build.
+     */
+    REPORT_AS_BUILD_ERROR = 1;
+
+    /**
+     * The behavior used by non-global conformance configs (initially only
+     * BoqWeb) where any non-allowlisted violation will not break the library
+     * level build but only get recorded in its conformance report (i.e.
+     * JsCompilerPerLibraryConformanceReport). This will be used by the "curated
+     * set" of non-breaking conformance configs (initially only Boq web) as per
+     * go/supporting-library-level-js-conformance-dd.
+     */
+    RECORD_ONLY = 2;
+  }
+
+  optional LibraryLevelNonAllowlistedConformanceViolationsBehavior
+      library_level_non_allowlisted_conformance_violations_behavior = 2;
 }
 
 // A specification of code requirements
