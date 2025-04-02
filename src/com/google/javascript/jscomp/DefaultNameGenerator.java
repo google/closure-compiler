@@ -167,7 +167,7 @@ public final class DefaultNameGenerator implements NameGenerator {
   }
 
   /** Returns if name is a badName (let, yield, eval, etc) that must not be generated */
-  private static boolean isBadName(String name) {
+  static boolean isBadName(String name) {
     return BAD_NAMES.contains(name);
   }
 

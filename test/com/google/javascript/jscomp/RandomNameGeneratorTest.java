@@ -241,4 +241,18 @@ public final class RandomNameGeneratorTest {
     // is a Set.
     assertThat(result).hasSize(count);
   }
+
+  @Test
+  public void testES6KeywordsNotGenerated() throws Exception {
+    Random random = new Random(0);
+    ImmutableSet<String> reservedNames = ImmutableSet.of();
+
+    RandomNameGenerator ng = new RandomNameGenerator(reservedNames, "le", new char[] {'$'}, random);
+    String[] result = generate(ng, 106);
+    assertThat(result).asList().doesNotContain("let");
+
+    ng = new RandomNameGenerator(reservedNames, "awai", new char[] {'$'}, random);
+    result = generate(ng, 106);
+    assertThat(result).asList().doesNotContain("await");
+  }
 }
