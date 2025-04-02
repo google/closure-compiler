@@ -18,8 +18,8 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
+import static java.util.Objects.requireNonNull;
 
-import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.modules.Binding;
@@ -163,12 +163,14 @@ final class ModuleRenaming {
    * <p>Used because in some cases, the root of the qualified name will not be present in any scopes
    * until a subsequent run of {@link ClosureRewriteModule}. It's useful to store the type of
    * Closure module exports `module$exports$my$goog$module` separately.
+   *
+   * @param rootNameType the type of the root of `aliasName`, as it may not always exist in the
+   *     scope yet.
    */
-  @AutoValue
-  abstract static class GlobalizedModuleName {
-    abstract QualifiedName aliasName();
-    // The type of the root of `aliasName`, as it may not always exist in the scope yet.
-    abstract @Nullable JSType rootNameType();
+  record GlobalizedModuleName(QualifiedName aliasName, @Nullable JSType rootNameType) {
+    GlobalizedModuleName {
+      requireNonNull(aliasName, "aliasName");
+    }
 
     /** Creates a GETPROP chain with type information representing this name */
     Node toQname(AstFactory astFactory) {
@@ -190,7 +192,7 @@ final class ModuleRenaming {
     }
 
     static GlobalizedModuleName create(QualifiedName aliasName, JSType rootNameType) {
-      return new AutoValue_ModuleRenaming_GlobalizedModuleName(aliasName, rootNameType);
+      return new GlobalizedModuleName(aliasName, rootNameType);
     }
 
     /**
@@ -211,16 +213,16 @@ final class ModuleRenaming {
         case GOOG_MODULE:
           // The exported type is stored on the MODULE_BODY node.
           Node moduleBody = moduleMetadata.rootNode().getFirstChild();
-          return new AutoValue_ModuleRenaming_GlobalizedModuleName(
+          return new GlobalizedModuleName(
               QualifiedName.of(ClosureRewriteModule.getBinaryModuleNamespace(googNamespace)),
               moduleBody.getJSType());
         case GOOG_PROVIDE:
         case LEGACY_GOOG_MODULE:
-          return new AutoValue_ModuleRenaming_GlobalizedModuleName(
+          return new GlobalizedModuleName(
               QualifiedName.of(googNamespace), getNameRootType(googNamespace, globalTypedScope));
         case ES6_MODULE:
         case COMMON_JS:
-          return new AutoValue_ModuleRenaming_GlobalizedModuleName(
+          return new GlobalizedModuleName(
               QualifiedName.of(moduleMetadata.path().toModuleName()),
               getNameRootType(moduleMetadata.path().toModuleName(), globalTypedScope));
         case SCRIPT:

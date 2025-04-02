@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import static java.lang.Integer.parseInt;
 import static java.util.Comparator.comparingInt;
 
-import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -256,18 +255,10 @@ class IRFactory {
   private Node resultNode;
 
   /** Represents a line and column number in a file. */
-  @AutoValue
-  public abstract static class LineAndColumn implements Comparable<LineAndColumn> {
-    public abstract int lineNo();
-
-    public abstract int column();
-
-    static LineAndColumn of(int lineNo, int column) {
-      return new AutoValue_IRFactory_LineAndColumn(lineNo, column);
-    }
+  private record LineAndColumn(int lineNo, int column) implements Comparable<LineAndColumn> {
 
     static LineAndColumn fromSourcePosition(SourcePosition pos) {
-      return new AutoValue_IRFactory_LineAndColumn(pos.line, pos.column);
+      return new LineAndColumn(pos.line, pos.column);
     }
 
     @Override
@@ -1000,7 +991,7 @@ class IRFactory {
       return false;
     }
 
-    return this.closureUnawareCodeRanges.contains(LineAndColumn.of(line, lineColumnNo));
+    return this.closureUnawareCodeRanges.contains(new LineAndColumn(line, lineColumnNo));
   }
 
   private Node maybeInjectCastNode(ParseTree node, JSDocInfo info, Node irNode) {

@@ -17,9 +17,9 @@
 package com.google.javascript.jscomp.deps;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
-import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -67,15 +67,14 @@ public class BrowserWithTransformedPrefixesModuleResolver extends ModuleResolver
    * Struct of prefix and replacement. Has a natural ordering from longest prefix to shortest
    * prefix.
    */
-  @AutoValue
-  abstract static class PrefixReplacement {
-    abstract String prefix();
-
-    abstract String replacement();
+  record PrefixReplacement(String prefix, String replacement) {
+    PrefixReplacement {
+      requireNonNull(prefix, "prefix");
+      requireNonNull(replacement, "replacement");
+    }
 
     public static PrefixReplacement of(String prefix, String replacement) {
-      return new AutoValue_BrowserWithTransformedPrefixesModuleResolver_PrefixReplacement(
-          prefix, replacement);
+      return new PrefixReplacement(prefix, replacement);
     }
   }
 

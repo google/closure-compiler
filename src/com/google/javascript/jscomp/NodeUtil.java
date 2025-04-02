@@ -25,8 +25,8 @@ import static com.google.javascript.jscomp.base.JSCompDoubles.isAtLeastIntegerPr
 import static com.google.javascript.jscomp.base.JSCompDoubles.isEitherZero;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isExactInt64;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isNegative;
+import static java.util.Objects.requireNonNull;
 
-import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -6277,22 +6277,26 @@ public final class NodeUtil {
     ParsingUtil.getParamOrPatternNames(n, cb);
   }
 
-  /** Represents a goog.require'd namespace and property inside a module. */
-  @AutoValue
-  public abstract static class GoogRequire {
-    public abstract String namespace(); // The Closure namespace inside the require call
-
-    public abstract @Nullable String property(); // Non-null for destructuring requires.
-
-    public abstract boolean isStrongRequire(); // True for goog.require, false for goog.requireType
+  /**
+   * Represents a goog.require'd namespace and property inside a module.
+   *
+   * @param namespace The Closure namespace inside the require call
+   * @param property The property off the required namespace. Needed only for destructuring
+   *     requires.
+   * @param isStrongRequire true if the require is a goog.require, false if it is a goog.requireType
+   */
+  public record GoogRequire(String namespace, @Nullable String property, boolean isStrongRequire) {
+    public GoogRequire {
+      requireNonNull(namespace, "namespace");
+    }
 
     static GoogRequire fromNamespace(String namespace, boolean isStrongRequire) {
-      return new AutoValue_NodeUtil_GoogRequire(namespace, /* property= */ null, isStrongRequire);
+      return new GoogRequire(namespace, /* property= */ null, isStrongRequire);
     }
 
     static GoogRequire fromNamespaceAndProperty(
         String namespace, String property, boolean isStrongRequire) {
-      return new AutoValue_NodeUtil_GoogRequire(namespace, property, isStrongRequire);
+      return new GoogRequire(namespace, property, isStrongRequire);
     }
   }
 

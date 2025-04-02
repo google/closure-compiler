@@ -17,8 +17,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.requireNonNull;
 
-import com.google.auto.value.AutoValue;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -195,24 +195,19 @@ final class PolyfillUsageFinder {
     return polyfillSupportFeatureSet;
   }
 
-  @AutoValue
-  abstract static class PolyfillUsage {
-    abstract Polyfill polyfill();
-
-    abstract Node node();
-
-    abstract String name();
-
-    abstract boolean isExplicitGlobal();
+  record PolyfillUsage(Polyfill polyfill, Node node, String name, boolean isExplicitGlobal) {
+    PolyfillUsage {
+      requireNonNull(polyfill, "polyfill");
+      requireNonNull(node, "node");
+      requireNonNull(name, "name");
+    }
 
     private static PolyfillUsage createExplicit(Polyfill polyfill, Node node, String name) {
-      return new AutoValue_PolyfillUsageFinder_PolyfillUsage(
-          polyfill, node, name, /* isExplicitGlobal= */ true);
+      return new PolyfillUsage(polyfill, node, name, /* isExplicitGlobal= */ true);
     }
 
     private static PolyfillUsage createNonExplicit(Polyfill polyfill, Node node, String name) {
-      return new AutoValue_PolyfillUsageFinder_PolyfillUsage(
-          polyfill, node, name, /* isExplicitGlobal= */ false);
+      return new PolyfillUsage(polyfill, node, name, /* isExplicitGlobal= */ false);
     }
   }
 

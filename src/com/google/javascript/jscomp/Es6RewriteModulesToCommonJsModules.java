@@ -17,10 +17,9 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
 
-import com.google.auto.value.AutoValue;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -108,15 +107,14 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
     return path;
   }
 
-  // package public only for @AutoValue
-  @AutoValue
-  abstract static class ModuleRequest {
-    abstract String specifier();
-
-    abstract String varName();
+  private record ModuleRequest(String specifier, String varName) {
+    ModuleRequest {
+      requireNonNull(specifier, "specifier");
+      requireNonNull(varName, "varName");
+    }
 
     private static ModuleRequest create(String specifier, String varName) {
-      return new AutoValue_Es6RewriteModulesToCommonJsModules_ModuleRequest(specifier, varName);
+      return new ModuleRequest(specifier, varName);
     }
   }
 
