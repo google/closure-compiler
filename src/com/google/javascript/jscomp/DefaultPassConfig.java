@@ -452,10 +452,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.maybeAdd(j2clChecksPass);
     }
 
-    if (options.shouldRunTypeSummaryChecksLate()) {
-      checks.maybeAdd(generateIjs);
-    }
-
     if (options.generateExports) {
       checks.maybeAdd(generateExports);
     }
