@@ -26,11 +26,8 @@ import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -196,43 +193,6 @@ public final class CodingConventions {
     public void applySingletonGetter(
         NominalTypeBuilder classType, FunctionType getterType) {
       nextConvention.applySingletonGetter(classType, getterType);
-    }
-
-    @Override
-    public DelegateRelationship getDelegateRelationship(Node callNode) {
-      return nextConvention.getDelegateRelationship(callNode);
-    }
-
-    @Override
-    public void applyDelegateRelationship(
-        NominalTypeBuilder delegateSuperclass,
-        NominalTypeBuilder delegateBase,
-        NominalTypeBuilder delegator,
-        ObjectType delegateProxy,
-        FunctionType findDelegate) {
-      nextConvention.applyDelegateRelationship(
-          delegateSuperclass, delegateBase, delegator, delegateProxy, findDelegate);
-    }
-
-    @Override
-    public String getDelegateSuperclassName() {
-      return nextConvention.getDelegateSuperclassName();
-    }
-
-    @Override
-    public void checkForCallingConventionDefinitions(
-        Node n, Map<String, String> delegateCallingConventions) {
-      nextConvention.checkForCallingConventionDefinitions(
-          n, delegateCallingConventions);
-    }
-
-    @Override
-    public void defineDelegateProxyPrototypeProperties(
-        JSTypeRegistry registry,
-        List<NominalTypeBuilder> delegateProxies,
-        Map<String, String> delegateCallingConventions) {
-      nextConvention.defineDelegateProxyPrototypeProperties(
-          registry, delegateProxies, delegateCallingConventions);
     }
 
     @Override
@@ -425,40 +385,6 @@ public final class CodingConventions {
     @Override
     public void applySingletonGetter(
         NominalTypeBuilder classType, FunctionType getterType) {
-      // do nothing.
-    }
-
-    @Override
-    public DelegateRelationship getDelegateRelationship(Node callNode) {
-      return null;
-    }
-
-    @Override
-    public void applyDelegateRelationship(
-        NominalTypeBuilder delegateSuperclass,
-        NominalTypeBuilder delegateBase,
-        NominalTypeBuilder delegator,
-        ObjectType delegateProxy,
-        FunctionType findDelegate) {
-      // do nothing.
-    }
-
-    @Override
-    public String getDelegateSuperclassName() {
-      return null;
-    }
-
-    @Override
-    public void checkForCallingConventionDefinitions(Node n,
-        Map<String, String> delegateCallingConventions) {
-      // do nothing.
-    }
-
-    @Override
-    public void defineDelegateProxyPrototypeProperties(
-        JSTypeRegistry registry,
-        List<NominalTypeBuilder> delegateProxies,
-        Map<String, String> delegateCallingConventions) {
       // do nothing.
     }
 

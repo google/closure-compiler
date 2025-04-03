@@ -28,12 +28,9 @@ import com.google.javascript.rhino.NominalTypeBuilder;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.ObjectType;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
 
@@ -240,44 +237,6 @@ public interface CodingConvention extends Serializable {
       NominalTypeBuilder classType, FunctionType getterType);
 
   /**
-   * @return the delegate relationship created by the call or null.
-   */
-  public DelegateRelationship getDelegateRelationship(Node callNode);
-
-  /**
-   * In many JS libraries, the function that creates a delegate relationship
-   * also adds properties to the delegator and delegate base.
-   */
-  public void applyDelegateRelationship(
-      NominalTypeBuilder delegateSuperclass,
-      NominalTypeBuilder delegateBase,
-      NominalTypeBuilder delegator,
-      ObjectType delegateProxy,
-      FunctionType findDelegate);
-
-  /**
-   * @return the name of the delegate superclass.
-   */
-  public String getDelegateSuperclassName();
-
-  /**
-   * Checks for getprops that set the calling conventions on delegate methods.
-   */
-  public void checkForCallingConventionDefinitions(
-      Node getPropNode, Map<String, String> delegateCallingConventions);
-
-  /**
-   * Defines the delegate proxy prototype properties. Their types depend on
-   * properties of the delegate base methods.
-   *
-   * @param delegateProxies List of delegate proxy types.
-   */
-  public void defineDelegateProxyPrototypeProperties(
-      JSTypeRegistry registry,
-      List<NominalTypeBuilder> delegateProxies,
-      Map<String, String> delegateCallingConventions);
-
-  /**
    * A Bind instance or null.
    */
   public Bind describeFunctionBind(Node n);
@@ -409,27 +368,6 @@ public interface CodingConvention extends Serializable {
       this.type = type;
       this.subclassName = subclassNode.getQualifiedName();
       this.superclassName = superclassNode.getQualifiedName();
-    }
-  }
-
-  /**
-   * Delegates provides a mechanism and structure for identifying where classes
-   * can call out to optional code to augment their functionality. The optional
-   * code is isolated from the base code through the use of a subclass in the
-   * optional code derived from the delegate class in the base code.
-   */
-  static class DelegateRelationship {
-    /** The subclass in the base code. Must be a qualified name. */
-    final Node delegateBase;
-
-    /** The class in the base code. Must be a qualified name. */
-    final Node delegator;
-
-    DelegateRelationship(Node delegateBase, Node delegator) {
-      checkArgument(delegateBase.isQualifiedName(), delegateBase);
-      checkArgument(delegator.isQualifiedName(), delegator);
-      this.delegateBase = delegateBase;
-      this.delegator = delegator;
     }
   }
 

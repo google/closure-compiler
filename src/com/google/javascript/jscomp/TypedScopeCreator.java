@@ -28,7 +28,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_FUN
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.DATE_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GENERATOR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_FUNCTION_TYPE;
@@ -61,7 +60,6 @@ import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.SetMultimap;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import com.google.javascript.jscomp.CodingConvention.DelegateRelationship;
 import com.google.javascript.jscomp.CodingConvention.ObjectLiteralCast;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.FunctionTypeBuilder.AstFunctionContents;
@@ -84,7 +82,6 @@ import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.StaticSymbolTable;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
-import com.google.javascript.rhino.jstype.FunctionParamBuilder;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import com.google.javascript.rhino.jstype.JSType;
@@ -118,8 +115,6 @@ import org.jspecify.annotations.Nullable;
  * registry.
  */
 final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVar, TypedVar> {
-  /** A suffix for naming delegate proxies differently from their base. */
-  static final String DELEGATE_PROXY_SUFFIX = ObjectType.createDelegateSuffix("Proxy");
 
   static final DiagnosticType MALFORMED_TYPEDEF =
       DiagnosticType.warning(
@@ -173,8 +168,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   private final ModuleMetadataMap metadataMap;
   private final ModuleImportResolver moduleImportResolver;
   private final boolean processClosurePrimitives;
-  private List<FunctionType> delegateProxyCtors;
-  private Map<String, String> delegateCallingConventions;
   private final Map<Node, TypedScope> memoized = new LinkedHashMap<>();
 
   // Maps from scope root to declared variable names. Populated by FirstOrderFunctionAnalyzer to
@@ -440,16 +433,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
     }
     scopeBuilder.build();
-
-    if (typedParent == null) {
-      List<NominalTypeBuilder> delegateProxies = new ArrayList<>();
-      for (FunctionType delegateProxyCtor : delegateProxyCtors) {
-        delegateProxies.add(
-            new NominalTypeBuilder(delegateProxyCtor, delegateProxyCtor.getInstanceType()));
-      }
-      codingConvention.defineDelegateProxyPrototypeProperties(
-          typeRegistry, delegateProxies, delegateCallingConventions);
-    }
     if (module != null && module.metadata().isEs6Module()) {
       // Declare an implicit variable representing the namespace of this module, then add a property
       // for each exported name to that variable's type.
@@ -575,7 +558,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
     NodeTraversal.builder()
         .setCompiler(compiler)
-        .setCallback(new IdentifyEnumsAndTypedefsAsNonNullable(typeRegistry, codingConvention))
+        .setCallback(new IdentifyEnumsAndTypedefsAsNonNullable(typeRegistry))
         .setScopeCreator(scopeCreator)
         .traverse(root);
 
@@ -669,8 +652,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   }
 
   private void clearCommonState() {
-    this.delegateProxyCtors = new ArrayList<>();
-    this.delegateCallingConventions = new LinkedHashMap<>();
     this.reservedNamesForScope = MultimapBuilder.hashKeys().arrayListValues().build();
     this.functionsWithNonEmptyReturns = new LinkedHashSet<>();
     this.escapedVarNames = new LinkedHashSet<>();
@@ -685,8 +666,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   private static class IdentifyEnumsAndTypedefsAsNonNullable extends AbstractPostOrderCallback {
     private final JSTypeRegistry registry;
 
-    IdentifyEnumsAndTypedefsAsNonNullable(
-        JSTypeRegistry registry, CodingConvention codingConvention) {
+    IdentifyEnumsAndTypedefsAsNonNullable(JSTypeRegistry registry) {
       this.registry = registry;
     }
 
@@ -2669,11 +2649,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       }
 
-      DelegateRelationship delegateRelationship = codingConvention.getDelegateRelationship(n);
-      if (delegateRelationship != null) {
-        applyDelegateRelationship(delegateRelationship);
-      }
-
       ObjectLiteralCast objectLiteralCast = codingConvention.getObjectLiteralCast(n);
       if (objectLiteralCast != null) {
         if (objectLiteralCast.diagnosticType == null) {
@@ -2687,53 +2662,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           }
         } else {
           report(JSError.make(n, objectLiteralCast.diagnosticType));
-        }
-      }
-    }
-
-    /** Apply special properties that only apply to delegates. */
-    private void applyDelegateRelationship(DelegateRelationship delegateRelationship) {
-      ObjectType delegatorObject =
-          ObjectType.cast(
-              typeRegistry.getType(
-                  currentScope, delegateRelationship.delegator.getQualifiedName()));
-      ObjectType delegateBaseObject =
-          ObjectType.cast(
-              typeRegistry.getType(
-                  currentScope, delegateRelationship.delegateBase.getQualifiedName()));
-      ObjectType delegateSuperObject =
-          ObjectType.cast(
-              typeRegistry.getType(currentScope, codingConvention.getDelegateSuperclassName()));
-      if (delegatorObject != null && delegateBaseObject != null && delegateSuperObject != null) {
-        FunctionType delegatorCtor = delegatorObject.getConstructor();
-        FunctionType delegateBaseCtor = delegateBaseObject.getConstructor();
-        FunctionType delegateSuperCtor = delegateSuperObject.getConstructor();
-
-        if (delegatorCtor != null && delegateBaseCtor != null && delegateSuperCtor != null) {
-          FunctionParamBuilder functionParamBuilder = new FunctionParamBuilder(typeRegistry);
-          functionParamBuilder.addRequiredParams(getNativeType(FUNCTION_TYPE));
-          FunctionType findDelegate =
-              typeRegistry.createFunctionType(
-                  typeRegistry.createNullableType(delegateBaseObject),
-                  functionParamBuilder.build());
-
-          FunctionType delegateProxy =
-              typeRegistry.createConstructorType(
-                  /* name= */ delegateBaseObject.getReferenceName() + DELEGATE_PROXY_SUFFIX,
-                  /* source= */ delegateBaseCtor.getSource(),
-                  /* parameters= */ null,
-                  /* returnType= */ null,
-                  /* templateKeys= */ null,
-                  /* isAbstract= */ false);
-          delegateProxy.setPrototypeBasedOn(delegateBaseObject);
-
-          codingConvention.applyDelegateRelationship(
-              new NominalTypeBuilder(delegateSuperCtor, delegateSuperObject),
-              new NominalTypeBuilder(delegateBaseCtor, delegateBaseObject),
-              new NominalTypeBuilder(delegatorCtor, delegatorObject),
-              (ObjectType) delegateProxy.getTypeOfThis(),
-              findDelegate);
-          delegateProxyCtors.add(delegateProxy);
         }
       }
     }
@@ -3183,7 +3111,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           break;
 
         case GETPROP:
-          codingConvention.checkForCallingConventionDefinitions(n, delegateCallingConventions);
           // Handle stubbed properties.
           if (parent.isExprResult() && n.isQualifiedName()) {
             maybeDeclareQualifiedName(t, n.getJSDocInfo(), n, parent, null);
