@@ -1986,7 +1986,7 @@ google.maps.DirectionsLeg.prototype.via_waypoints;
 
 /**
  * Information about traffic speed along the leg.
- * @type {!Array<?>}
+ * @type {!Array<*>}
  * @deprecated This array will always be empty.
  */
 google.maps.DirectionsLeg.prototype.traffic_speed_entry;
@@ -18982,8 +18982,6 @@ google.maps.places.PlaceAspectRating.prototype.rating;
 google.maps.places.PlaceAspectRating.prototype.type;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * PlaceAutocompleteElement is an <code>HTMLElement</code> subclass which
  * provides a UI component for the Places Autocomplete API. <br/><br/>
  * PlaceAutocompleteElement automatically uses {@link
@@ -19008,7 +19006,6 @@ google.maps.places.PlaceAspectRating.prototype.type;
 google.maps.places.PlaceAutocompleteElement = function(options) {};
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  * Included primary <a
  * href="https://developers.google.com/maps/documentation/places/javascript/place-types">Place
  * type</a> (for example, &quot;restaurant&quot; or &quot;gas_station&quot;).
@@ -19020,7 +19017,6 @@ google.maps.places.PlaceAutocompleteElement = function(options) {};
 google.maps.places.PlaceAutocompleteElement.prototype.includedPrimaryTypes;
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  * Only include results in the specified regions, specified as up to 15 CLDR
  * two-character region codes. An empty set will not restrict the results. If
  * both <code>locationRestriction</code> and <code>includedRegionCodes</code>
@@ -19053,7 +19049,6 @@ google.maps.places.PlaceAutocompleteElement.prototype.locationRestriction;
 google.maps.places.PlaceAutocompleteElement.prototype.name;
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  * The origin from which to calculate distance. If not specified, distance is
  * not calculated. The altitude, if given, is not used in the calculation.
  * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
@@ -19085,64 +19080,21 @@ google.maps.places.PlaceAutocompleteElement.prototype.requestedLanguage;
 google.maps.places.PlaceAutocompleteElement.prototype.requestedRegion;
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  * The unit system used to display distances. If not specified, the unit system
  * is determined by requestedRegion.
  * @type {!google.maps.UnitSystem|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElement.prototype.unitSystem;
 
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- * The component restrictions. Component restrictions are used to restrict
- * predictions to only those within the parent component. For example, the
- * country.
- * @type {!google.maps.places.ComponentRestrictions|null}
- * @deprecated This property will continue to function in the beta channel, but
- *     will not be made available in alpha or at release. For migration
- *     purposes, specify both this property and <code>includeRegionCodes</code>.
- */
-google.maps.places.PlaceAutocompleteElement.prototype.componentRestrictions;
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- * The types of predictions to be returned. For supported types, see the <a
- * href="https://developers.google.com/maps/documentation/javascript/places-autocomplete#constrain-place-types">
- * developer&#39;s guide</a>. If no types are specified, all types will be
- * returned.
- * @type {!Array<string>|null}
- * @deprecated This property will continue to function in the beta channel, but
- *     will not be made available in alpha or at release. For migration
- *     purposes, specify both this property and
- *     <code>includedPrimaryTypes</code>.
- */
-google.maps.places.PlaceAutocompleteElement.prototype.types;
-
 
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
  * Options for constructing a PlaceAutocompleteElement. For the description of
  * each property, refer to the property of the same name in the
  * PlaceAutocompleteElement class.
  * @record
  */
 google.maps.places.PlaceAutocompleteElementOptions = function() {};
-
-/**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- * @type {!Array<string>|null|undefined}
- */
-google.maps.places.PlaceAutocompleteElementOptions.prototype
-    .includedPrimaryTypes;
-
-/**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- * @type {!Array<string>|null|undefined}
- */
-google.maps.places.PlaceAutocompleteElementOptions.prototype
-    .includedRegionCodes;
 
 /**
  * @type {!google.maps.places.LocationBias|null|undefined}
@@ -19161,68 +19113,9 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype
 google.maps.places.PlaceAutocompleteElementOptions.prototype.name;
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
- */
-google.maps.places.PlaceAutocompleteElementOptions.prototype.origin;
-
-/**
  * @type {string|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedLanguage;
-
-/**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- * @type {!google.maps.UnitSystem|null|undefined}
- */
-google.maps.places.PlaceAutocompleteElementOptions.prototype.unitSystem;
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- * @type {!google.maps.places.ComponentRestrictions|null|undefined}
- * @deprecated This property will continue to function in the beta channel, but
- *     will not be made available in alpha or at release. For migration
- *     purposes, specify both this property and
- *     <code>includedRegionCodes</code>.
- */
-google.maps.places.PlaceAutocompleteElementOptions.prototype
-    .componentRestrictions;
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- * @type {!Array<string>|null|undefined}
- * @deprecated This property will continue to function in the beta channel, but
- *     will not be made available in alpha or at release. For migration
- *     purposes, specify both this property and
- *     <code>includedPrimaryTypes</code>.
- */
-google.maps.places.PlaceAutocompleteElementOptions.prototype.types;
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * This event is created after the user selects a place with the Place
- * Autocomplete Element. Access the selection with <code>event.place</code>.
- *
- * Access by calling `const {PlaceAutocompletePlaceSelectEvent} = await
- * google.maps.importLibrary("places")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @extends {Event}
- * @constructor
- * @deprecated The <code>gmp-placeselect</code> event will continue to trigger
- *     in the beta channel, but will not trigger in alpha or at release. For
- *     migration purposes, continue to listen to the
- *     <code>gmp-placeselect</code> event, but also add an event listener for
- *     the <code>gmp-select</code> event, which returns a
- *     <code>PlacePredictionSelectEvent</code> object.
- */
-google.maps.places.PlaceAutocompletePlaceSelectEvent = function() {};
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- * @type {!google.maps.places.Place}
- */
-google.maps.places.PlaceAutocompletePlaceSelectEvent.prototype.place;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
@@ -19811,8 +19704,6 @@ google.maps.places.PlacePrediction.prototype.types;
 google.maps.places.PlacePrediction.prototype.toPlace = function() {};
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
  * This event is created after the user selects a prediction item with the
  * PlaceAutocompleteElement. Access the selection with
  * <code>event.placePrediction</code>. <br/><br/> Convert placePrediction to
