@@ -16,45 +16,90 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Strings.emptyToNull;
+import static java.util.Objects.requireNonNull;
 
-import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.errorprone.annotations.InlineMe;
 import com.google.javascript.rhino.Node;
 import java.io.Serializable;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
-/** Compile error description. */
-@AutoValue
-public abstract class JSError implements Serializable {
+/**
+ * Compile error description.
+ *
+ * @param type A type of the error.
+ * @param description Description of the error.
+ * @param sourceName Name of the source
+ * @param lineno One-indexed line number of the error location.
+ * @param charno Zero-indexed character number of the error location.
+ * @param length Length of the error region.
+ * @param node Node where the warning occurred.
+ * @param defaultLevel The default level, before any of the {@code WarningsGuard}s are applied.
+ * @param requirement Requirement that fails in the case of conformance violations.
+ */
+public record JSError(
+    DiagnosticType type,
+    String description,
+    @Nullable String sourceName,
+    int lineno,
+    int charno,
+    int length,
+    @Nullable Node node,
+    CheckLevel defaultLevel,
+    @Nullable Requirement requirement)
+    implements Serializable {
+  public JSError {
+    requireNonNull(type, "type");
+    requireNonNull(description, "description");
+    requireNonNull(defaultLevel, "defaultLevel");
+  }
 
-  /** A type of the error. */
-  public abstract DiagnosticType getType();
+  @InlineMe(replacement = "this.type()")
+  public DiagnosticType getType() {
+    return type();
+  }
 
-  /** Description of the error. */
-  public abstract String getDescription();
+  @InlineMe(replacement = "this.description()")
+  public String getDescription() {
+    return description();
+  }
 
-  /** Name of the source */
-  public abstract @Nullable String getSourceName();
+  @InlineMe(replacement = "this.sourceName()")
+  public @Nullable String getSourceName() {
+    return sourceName();
+  }
 
-  /** One-indexed line number of the error location. */
-  public abstract int getLineno();
+  @InlineMe(replacement = "this.lineno()")
+  public int getLineno() {
+    return lineno();
+  }
 
-  /** Zero-indexed character number of the error location. */
-  public abstract int getCharno();
+  @InlineMe(replacement = "this.charno()")
+  public int getCharno() {
+    return charno();
+  }
 
-  /** Length of the error region. */
-  public abstract int getLength();
+  @InlineMe(replacement = "this.length()")
+  public int getLength() {
+    return length();
+  }
 
-  /** Node where the warning occurred. */
-  public abstract @Nullable Node getNode();
+  @InlineMe(replacement = "this.node()")
+  public @Nullable Node getNode() {
+    return node();
+  }
 
-  /** The default level, before any of the {@code WarningsGuard}s are applied. */
-  public abstract CheckLevel getDefaultLevel();
+  @InlineMe(replacement = "this.defaultLevel()")
+  public CheckLevel getDefaultLevel() {
+    return defaultLevel();
+  }
 
-  /** Requirement that fails in the case of conformance violations. */
-  public abstract @Nullable Requirement getRequirement();
+  @InlineMe(replacement = "this.requirement()")
+  public @Nullable Requirement getRequirement() {
+    return requirement();
+  }
 
   private static final int DEFAULT_LINENO = -1;
   private static final int DEFAULT_CHARNO = -1;
@@ -215,7 +260,7 @@ public abstract class JSError implements Serializable {
     }
 
     JSError build() {
-      return new AutoValue_JSError(
+      return new JSError(
           type, type.format(args), sourceName, lineno, charno, length, n, level, requirement);
     }
   }
@@ -279,7 +324,4 @@ public abstract class JSError implements Serializable {
     return this.getLineno();
   }
 
-  JSError() {
-    // Package private.
-  }
 }

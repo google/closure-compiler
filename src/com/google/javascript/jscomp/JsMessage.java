@@ -20,13 +20,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Objects.requireNonNull;
 
-import com.google.auto.value.AutoValue;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.errorprone.annotations.InlineMe;
 import com.google.javascript.jscomp.base.format.SimpleFormat;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -49,9 +50,49 @@ import org.jspecify.annotations.Nullable;
  *     .setDesc("A welcome message")
  *     .build();
  * </pre>
+ *
+ * @param getSourceName Gets the message's sourceName.
+ * @param getKey Gets the message's key, or name (e.g. {@code "MSG_HELLO"}).
+ * @param getId Gets the message's id, or name (e.g. {@code "92430284230902938293"}).
+ * @param getParts Gets a read-only list of the parts of this message. Each part is either a {@link
+ *     String} or a {@link PlaceholderReference}.
+ * @param getAlternateId Gets the message's alternate ID (e.g. {@code "92430284230902938293"}), if
+ *     available. This will be used if a translation for `id` is not available.
+ * @param getDesc Gets the description associated with this message, intended to help translators,
+ *     or null if this message has no description.
+ * @param getMeaning Gets the meaning annotated to the message, intended to force different
+ *     translations.
+ * @param jsPlaceholderNames Gets a set of the registered placeholders in this message in
+ *     lowerCamelCase format.
+ *     <p>This is the format used in `goog.getMsg()` declarations.
+ * @param canonicalPlaceholderNames Gets a set of the registered placeholders in this message in
+ *     UPPER_SNAKE_CASE format.
+ *     <p>This is the format stored into XMB / XTB files and used in `declareIcuTemplate()
+ *     declarations.
  */
-@AutoValue
-public abstract class JsMessage {
+public record JsMessage(
+    @Nullable String getSourceName,
+    String getKey,
+    boolean isAnonymous,
+    boolean isExternal,
+    String getId,
+    ImmutableList<Part> getParts,
+    @Nullable String getAlternateId,
+    @Nullable String getDesc,
+    @Nullable String getMeaning,
+    ImmutableMap<String, String> getPlaceholderNameToExampleMap,
+    ImmutableMap<String, String> getPlaceholderNameToOriginalCodeMap,
+    ImmutableSet<String> jsPlaceholderNames,
+    ImmutableSet<String> canonicalPlaceholderNames) {
+  public JsMessage {
+    requireNonNull(getKey, "getKey");
+    requireNonNull(getId, "getId");
+    requireNonNull(getParts, "getParts");
+    requireNonNull(getPlaceholderNameToExampleMap, "getPlaceholderNameToExampleMap");
+    requireNonNull(getPlaceholderNameToOriginalCodeMap, "getPlaceholderNameToOriginalCodeMap");
+    requireNonNull(jsPlaceholderNames, "jsPlaceholderNames");
+    requireNonNull(canonicalPlaceholderNames, "canonicalPlaceholderNames");
+  }
 
   public static final String PH_JS_PREFIX = "{$";
   public static final String PH_JS_SUFFIX = "}";
@@ -65,59 +106,6 @@ public abstract class JsMessage {
       super(msg);
     }
   }
-
-  /** Gets the message's sourceName. */
-  public abstract @Nullable String getSourceName();
-
-  /** Gets the message's key, or name (e.g. {@code "MSG_HELLO"}). */
-  public abstract String getKey();
-
-  public abstract boolean isAnonymous();
-
-  public abstract boolean isExternal();
-
-  /** Gets the message's id, or name (e.g. {@code "92430284230902938293"}). */
-  public abstract String getId();
-
-  /**
-   * Gets a read-only list of the parts of this message. Each part is either a {@link String} or a
-   * {@link PlaceholderReference}.
-   */
-  public abstract ImmutableList<Part> getParts();
-
-  /**
-   * Gets the message's alternate ID (e.g. {@code "92430284230902938293"}), if available. This will
-   * be used if a translation for `id` is not available.
-   */
-  public abstract @Nullable String getAlternateId();
-
-  /**
-   * Gets the description associated with this message, intended to help translators, or null if
-   * this message has no description.
-   */
-  public abstract @Nullable String getDesc();
-
-  /** Gets the meaning annotated to the message, intended to force different translations. */
-  public abstract @Nullable String getMeaning();
-
-  public abstract ImmutableMap<String, String> getPlaceholderNameToExampleMap();
-
-  public abstract ImmutableMap<String, String> getPlaceholderNameToOriginalCodeMap();
-
-  /**
-   * Gets a set of the registered placeholders in this message in lowerCamelCase format.
-   *
-   * <p>This is the format used in `goog.getMsg()` declarations.
-   */
-  public abstract ImmutableSet<String> jsPlaceholderNames();
-
-  /**
-   * Gets a set of the registered placeholders in this message in UPPER_SNAKE_CASE format.
-   *
-   * <p>This is the format stored into XMB / XTB files and used in `declareIcuTemplate()
-   * declarations.
-   */
-  public abstract ImmutableSet<String> canonicalPlaceholderNames();
 
   public String getPlaceholderOriginalCode(PlaceholderReference placeholderReference) {
     return getPlaceholderNameToOriginalCodeMap()
@@ -217,13 +205,19 @@ public abstract class JsMessage {
   }
 
   /** Represents a literal string part of a message. */
-  @AutoValue
-  public abstract static class StringPart implements Part {
+  public record StringPart(String string) implements Part {
+    public StringPart {
+      requireNonNull(string, "string");
+    }
+
+    @InlineMe(replacement = "this.string()")
     @Override
-    public abstract String getString();
+    public String getString() {
+      return string();
+    }
 
     public static StringPart create(String str) {
-      return new AutoValue_JsMessage_StringPart(str);
+      return new StringPart(str);
     }
 
     @Override
@@ -310,15 +304,28 @@ public abstract class JsMessage {
   }
 
   /** A reference to a placeholder in a translatable message. */
-  @AutoValue
-  public abstract static class PlaceholderReference implements Part {
+  public record PlaceholderReference(String storedPlaceholderName, boolean canonicalFormat)
+      implements Part {
+    public PlaceholderReference {
+      requireNonNull(storedPlaceholderName, "storedPlaceholderName");
+    }
+
+    @InlineMe(replacement = "this.storedPlaceholderName()")
+    public String getStoredPlaceholderName() {
+      return storedPlaceholderName();
+    }
+
+    @InlineMe(replacement = "this.canonicalFormat()")
+    public boolean isCanonicalFormat() {
+      return canonicalFormat();
+    }
 
     static PlaceholderReference createForJsName(String name) {
       checkArgument(
           isLowerCamelCaseWithNumericSuffixes(name),
           "invalid JS placeholder name format: '%s'",
           name);
-      return new AutoValue_JsMessage_PlaceholderReference(name, /* canonicalFormat= */ false);
+      return new PlaceholderReference(name, /* canonicalFormat= */ false);
     }
 
     public static PlaceholderReference createForCanonicalName(String name) {
@@ -326,12 +333,8 @@ public abstract class JsMessage {
           isCanonicalPlaceholderNameFormat(name),
           "not a canonical placeholder name format: '%s'",
           name);
-      return new AutoValue_JsMessage_PlaceholderReference(name, /* canonicalFormat= */ true);
+      return new PlaceholderReference(name, /* canonicalFormat= */ true);
     }
-
-    public abstract String getStoredPlaceholderName();
-
-    public abstract boolean isCanonicalFormat();
 
     @Override
     public boolean isPlaceholder() {
@@ -545,7 +548,7 @@ public abstract class JsMessage {
         alternateId = null;
       }
 
-      return new AutoValue_JsMessage(
+      return new JsMessage(
           sourceName,
           key,
           isAnonymous,

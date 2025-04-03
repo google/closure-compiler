@@ -1236,7 +1236,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
    * <p>This class should only be used within {@link CheckAccessControls}. Having package-private
    * visibility is a quirk of {@link AutoValue}.
    */
-  @AutoValue
+  @AutoValue // TODO: b/408030907 - migrate to a record
   abstract static class PropertyReference {
 
     public static Builder builder() {

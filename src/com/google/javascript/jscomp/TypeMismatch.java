@@ -15,11 +15,12 @@
  */
 package com.google.javascript.jscomp;
 
+import static java.util.Objects.requireNonNull;
 
-import com.google.auto.value.AutoValue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.InlineMe;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -34,20 +35,35 @@ import java.util.Iterator;
  *
  * <p>Type-based optimizations should take this into account so that they don't wreck code with type
  * warnings.
+ *
+ * @param found The RHS type; the type of the assignment target.
+ * @param required The LHS type; the type being assigned.
+ * @param location The location of the assignment.
  */
-@AutoValue
-public abstract class TypeMismatch implements Serializable {
-  /** The RHS type; the type of the assignment target. */
-  public abstract JSType getFound();
+public record TypeMismatch(JSType found, JSType required, Node location) implements Serializable {
+  public TypeMismatch {
+    requireNonNull(found, "found");
+    requireNonNull(required, "required");
+    requireNonNull(location, "location");
+  }
 
-  /** The LHS type; the type being assigned. */
-  public abstract JSType getRequired();
+  @InlineMe(replacement = "this.found()")
+  public JSType getFound() {
+    return found();
+  }
 
-  /** The location of the assignment. */
-  public abstract Node getLocation();
+  @InlineMe(replacement = "this.required()")
+  public JSType getRequired() {
+    return required();
+  }
+
+  @InlineMe(replacement = "this.location()")
+  public Node getLocation() {
+    return location();
+  }
 
   private static TypeMismatch create(JSType found, JSType required, Node location) {
-    return new AutoValue_TypeMismatch(found, required, location);
+    return new TypeMismatch(found, required, location);
   }
 
   @VisibleForTesting

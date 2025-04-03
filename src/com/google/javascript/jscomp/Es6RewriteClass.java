@@ -432,7 +432,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
         astFactory.createStringKey("enumerable", astFactory.createBoolean(true)));
   }
 
-  @AutoValue
+  @AutoValue // TODO: b/408030907 - migrate to a record
   abstract static class ClassProperty {
     enum PropertyKind {
       /**
@@ -550,7 +550,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
    * <p>Note that this class is NOT deeply immutable! Don't use it in a Map. The AutoValue(.Builder)
    * is just used to simplify creating instances.
    */
-  @AutoValue
+  @AutoValue // TODO: b/408030907 - migrate to a record
   abstract static class ClassDeclarationMetadata {
     /** A statement node. Transpiled methods etc of the class are inserted after this node. */
     abstract InsertionPoint getInsertionPoint();

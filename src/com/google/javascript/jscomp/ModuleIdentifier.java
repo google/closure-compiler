@@ -16,9 +16,10 @@
 package com.google.javascript.jscomp;
 
 import static java.lang.Math.min;
+import static java.util.Objects.requireNonNull;
 
-import com.google.auto.value.AutoValue;
 import com.google.errorprone.annotations.Immutable;
+import com.google.errorprone.annotations.InlineMe;
 import com.google.javascript.jscomp.deps.ModuleNames;
 import java.io.Serializable;
 
@@ -30,18 +31,34 @@ import java.io.Serializable;
  *
  * <p>This class allows error messages to be based on the user-provided name rather than the
  * normalized name.
+ *
+ * @param name Returns the user-provided name.
+ * @param closureNamespace Returns the Closure namespace name.
+ * @param moduleName Returns the module name.
  */
-@AutoValue
 @Immutable
-public abstract class ModuleIdentifier implements Serializable {
-  /** Returns the user-provided name. */
-  public abstract String getName();
+public record ModuleIdentifier(String name, String closureNamespace, String moduleName)
+    implements Serializable {
+  public ModuleIdentifier {
+    requireNonNull(name, "name");
+    requireNonNull(closureNamespace, "closureNamespace");
+    requireNonNull(moduleName, "moduleName");
+  }
 
-  /** Returns the Closure namespace name. */
-  public abstract String getClosureNamespace();
+  @InlineMe(replacement = "this.name()")
+  public String getName() {
+    return name();
+  }
 
-  /** Returns the module name. */
-  public abstract String getModuleName();
+  @InlineMe(replacement = "this.closureNamespace()")
+  public String getClosureNamespace() {
+    return closureNamespace();
+  }
+
+  @InlineMe(replacement = "this.moduleName()")
+  public String getModuleName() {
+    return moduleName();
+  }
 
   @Override
   public final String toString() {
@@ -72,7 +89,7 @@ public abstract class ModuleIdentifier implements Serializable {
       namespace = normalizedName.substring(min(splitPoint + 1, normalizedName.length() - 1));
     }
 
-    return new AutoValue_ModuleIdentifier(normalizedName, namespace, moduleName);
+    return new ModuleIdentifier(normalizedName, namespace, moduleName);
   }
 
   /**
@@ -82,7 +99,7 @@ public abstract class ModuleIdentifier implements Serializable {
    */
   public static ModuleIdentifier forFile(String filepath) {
     String normalizedName = ModuleNames.fileToModuleName(filepath);
-    return new AutoValue_ModuleIdentifier(filepath, normalizedName, normalizedName);
+    return new ModuleIdentifier(filepath, normalizedName, normalizedName);
   }
 
   /**
