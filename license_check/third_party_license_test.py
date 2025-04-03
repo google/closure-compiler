@@ -100,6 +100,14 @@ def get_license_from_pom(url):
   return license_content
 
 
+def get_license_from_absolute_url(url):
+  license_content = get_file_from_github(url)
+  if license_content is None:
+    print('Cannot get license information for GitHub url: ', url)
+    sys.exit(1)
+  return license_content
+
+
 def main():
   parser = argparse.ArgumentParser(
       prog='ThirdPartyLicenseTest',
@@ -126,10 +134,15 @@ def main():
   ldict = {}
   exec(bzl_file_contents, globals(), ldict)  # pylint: disable=exec-used
   maven_artifacts = ldict['MAVEN_ARTIFACTS']
-  pom_gradle_filelist = ldict['ORDERED_POM_OR_GRADLE_FILE_LIST']
+  pom_gradle_filelist = ldict[
+      'ORDERED_POM_OR_GRADLE_FILE_LIST_FOR_LICENSE_CHECK'
+  ]
+  additional_licenses = ldict['ADDITIONAL_LICENSES']
 
   # Compare list lengths
-  if len(maven_artifacts) != len(pom_gradle_filelist):
+  if len(maven_artifacts) != len(pom_gradle_filelist) + len(
+      additional_licenses
+  ):
     print(
         'artifact list length and pom/gradle file list length is not equal. ',
         'Please check the file :',
@@ -161,20 +174,26 @@ def main():
         '%s:%s' % (split_artifact_name[0], split_artifact_name[1])
     )
 
-  if artifact_list_from_github != artifact_list_from_maven:
+  gh_artifact_set = set(
+      artifact_list_from_github + list(additional_licenses.keys())
+  )
+  mvn_artifact_set = set(artifact_list_from_maven)
+  if gh_artifact_set != mvn_artifact_set:
     print('Artifact names from github and maven are different.')
-    print('Github artifact list: ', artifact_list_from_github)
-    print('Maven artifact list: ', artifact_list_from_maven)
+    print('----------')
+    print('Github artifact list only: ', gh_artifact_set - mvn_artifact_set)
+    print('Maven artifact list only: ', mvn_artifact_set - gh_artifact_set)
     sys.exit(1)
 
   license_content_to_package = {}
   # Create a dictionary of license names to maven jar files
-  for package in artifact_list_from_github:
-    license_content = get_license_from_pom(package_name_to_pom[package])
-    if license_content in license_content_to_package:
-      license_content_to_package[license_content].append(package)
-    else:
-      license_content_to_package[license_content] = [package]
+  for package, pom_url in package_name_to_pom.items():
+    license_content = get_license_from_pom(pom_url)
+    license_content_to_package.setdefault(license_content, []).append(package)
+
+  for package, url in additional_licenses.items():
+    license_content = get_license_from_absolute_url(url)
+    license_content_to_package.setdefault(license_content, []).append(package)
 
   # Create THIRD_PARTY_NOTICES
   third_party_notices_content = ''
