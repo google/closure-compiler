@@ -37,6 +37,9 @@ import org.junit.runners.JUnit4;
 public final class CheckConformanceTest extends CompilerTestCase {
   private String configuration;
 
+  private String baseConfiguration;
+  private String extendingConfiguration;
+
   private static final String EXTERNS =
       DEFAULT_EXTERNS
           + """
@@ -91,12 +94,22 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();
+    ConformanceConfig.Builder baseBuilder = ConformanceConfig.newBuilder();
+    ConformanceConfig.Builder extendingBuilder = ConformanceConfig.newBuilder();
     try {
       TextFormat.merge(configuration, builder);
+      if (baseConfiguration != null) {
+        TextFormat.merge(baseConfiguration, baseBuilder);
+      }
+      if (extendingConfiguration != null) {
+        TextFormat.merge(extendingConfiguration, extendingBuilder);
+      }
     } catch (ParseException e) {
       throw new RuntimeException(e);
     }
-    return new CheckConformance(compiler, ImmutableList.of(builder.build()));
+
+    return new CheckConformance(
+        compiler, ImmutableList.of(builder.build(), baseBuilder.build(), extendingBuilder.build()));
   }
 
   @Override
@@ -3127,6 +3140,89 @@ public final class CheckConformanceTest extends CompilerTestCase {
         function f() {
           return new Foo().prop;
         }
+        """);
+  }
+
+  @Test
+  public void testSimpleExtends() {
+    baseConfiguration =
+        """
+        requirement: {
+          rule_id: "gws:goog.Promise.X"
+          type: BANNED_NAME
+          error_message: "Prefer using native Promise equivalents. See go/gws-js-conformance#goog-promise"
+
+          value: "goog.Promise.all"
+        }
+        """;
+    ;
+    extendingConfiguration =
+        """
+        requirement: {
+          extends: 'gws:goog.Promise.X'
+        }
+        """;
+
+    testWarning(
+        """
+        goog.Promise.all();
+        """,
+        CheckConformance.CONFORMANCE_VIOLATION);
+  }
+
+  @Test
+  public void testSimpleExtends_withAllowlist() {
+    baseConfiguration =
+        """
+        requirement: {
+          rule_id: "gws:goog.Promise.X"
+          type: BANNED_NAME
+          error_message: "Prefer using native Promise equivalents. See go/gws-js-conformance#goog-promise"
+
+          value: "goog.Promise.all"
+        }
+        """;
+    ;
+    extendingConfiguration =
+        """
+        requirement: {
+          extends: 'gws:goog.Promise.X'
+          allowlist: "testcode"
+        }
+        """;
+
+    // respects the allowlist in the extending config and does not warn
+    testNoWarning(
+        """
+        goog.Promise.all();
+        """);
+  }
+
+  @Test
+  public void testSimpleExtends_withAllowlistRegexp() {
+    baseConfiguration =
+        """
+        requirement: {
+          rule_id: "gws:goog.Promise.X"
+          type: BANNED_NAME
+          error_message: "Prefer using native Promise equivalents. See go/gws-js-conformance#goog-promise"
+
+          value: "goog.Promise.all"
+        }
+        """;
+    ;
+    extendingConfiguration =
+        """
+        requirement: {
+          extends: 'gws:goog.Promise.X'
+          allowlist_regexp: "code$"
+        }
+        """;
+
+    // respects the allowlist_regexp in the extending config and does not warn
+    testNoWarning(
+        """
+        goog.Promise.all();
         """);
   }
 
