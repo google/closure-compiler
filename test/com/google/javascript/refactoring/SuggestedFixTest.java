@@ -1342,10 +1342,10 @@ public class SuggestedFixTest {
             .removeGoogRequire(match, "abc.def")
             .build();
     MatchedNodeInfo info = fix.getMatchedNodeInfo();
-    assertThat(info.getSourceFilename()).isEqualTo("test");
-    assertThat(info.getLineno()).isEqualTo(4);
-    assertThat(info.getCharno()).isEqualTo(0);
-    assertThat(info.isInClosurizedFile()).isTrue();
+    assertThat(info.sourceFilename()).isEqualTo("test");
+    assertThat(info.lineno()).isEqualTo(4);
+    assertThat(info.charno()).isEqualTo(0);
+    assertThat(info.inClosurizedFile()).isTrue();
   }
 
   /** Returns the root script node produced from the compiled JS input. */
