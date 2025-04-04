@@ -27,6 +27,7 @@
  * @param {string=} message
  * @param {string=} name
  * @see https://heycam.github.io/webidl/#idl-DOMException
+ * @extends {Error}
  */
 function DOMException(message, name) {}
 
