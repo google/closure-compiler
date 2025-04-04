@@ -320,12 +320,15 @@ class FunctionArgumentInjector {
       } else if (isTrivialBody
           && hasMinimalParameters
           && references == 1
-          && !(NodeUtil.canBeSideEffected(cArg) && namesAfterSideEffects.contains(parameterName))) {
+          && !(NodeUtil.canBeSideEffected(cArg) && namesAfterSideEffects.contains(parameterName))
+          && !argSideEffects) {
         // For functions with a trivial body, and where the parameter evaluation order
         // can't change, and there aren't any side-effect before the parameter, we can
         // avoid creating a temporary.
         //
         // This is done to help inline common trivial functions
+        // TODO: b/407603216 - return `true` when return expressions don't have
+        // references that can be side-effected
         requiresTemporary = false;
       } else if (compiler.getAstAnalyzer().mayEffectMutableState(cArg) && references > 0) {
         // Note: Mutable arguments should be assigned to temps, as the

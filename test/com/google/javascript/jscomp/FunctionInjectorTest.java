@@ -246,7 +246,7 @@ public final class FunctionInjectorTest {
   public void testCanInlineReferenceToFunction18() {
     // Parameter has side-effects.
     helperCanInlineReferenceToFunction(
-        CanInlineResult.YES, "function foo(a){return a;} foo(x++);", "foo", INLINE_DIRECT);
+        CanInlineResult.NO, "function foo(a){return a;} foo(x++);", "foo", INLINE_DIRECT);
   }
 
   @Test
@@ -1222,7 +1222,7 @@ public final class FunctionInjectorTest {
         """,
         """
         function foo(a){return a;};
-        function x() {{x++;}}
+        function x(){{var a$jscomp$inline_0=x++;a$jscomp$inline_0}}
         """,
         "foo",
         INLINE_BLOCK);
@@ -2010,14 +2010,11 @@ public final class FunctionInjectorTest {
 
   @Test
   public void testCanInlineReference_direct_ifArgExpression_containsSpread() {
-    helperInlineReferenceToFunction(
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO, //
         """
         function foo(a) { return a; };
         foo([...b]);
-        """,
-        """
-        function foo(a) { return a; };
-        [...b]
         """,
         "foo",
         INLINE_DIRECT);

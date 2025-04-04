@@ -471,7 +471,15 @@ public class InlineFunctionsTest extends CompilerTestCase {
         function f(x){return x}
         var y=f(i++)
         """,
-        "var y=i++");
+        // TODO: b/407603216 - Inline using DIRECT mode when return expressions don't have
+        // references that can be side-effected. The output code can be `var y=i++`
+        """
+        var y;
+        {
+          var x$jscomp$inline_0 = i++;
+          y = x$jscomp$inline_0;
+        }
+        """);
   }
 
   @Test
@@ -1878,15 +1886,11 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   @Test
   public void testCostBasedInlineForSimpleFunction() {
     int calls = 100;
-    String src = "function f(a){return a;}\n";
+    String code = "function f(a){return a;}\n";
     for (int i = 0; i < calls; i++) {
-      src += "f(chg());\n";
+      code += "f(chg());\n";
     }
-    String expected = "";
-    for (int i = 0; i < calls; i++) {
-      expected += "chg();\n";
-    }
-    test(src, expected);
+    test(code, code);
   }
 
   @Test
@@ -3278,61 +3282,57 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // InlineFunctions is inlining reading a property before the side-effectful calls that
     // initializes it occurs.
     test(
-"""
-  var module$exports$foo$Foo$$0clinit = function() {
-    module$exports$foo$Foo$$0clinit = function() {
-    };
-    module$exports$foo$Foo$options_ = ["a", "b", "c", "d"];
-  };
+        """
+          var module$exports$foo$Foo$$0clinit = function() {
+            module$exports$foo$Foo$$0clinit = function() {
+            };
+            module$exports$foo$Foo$options_ = ["a", "b", "c", "d"];
+          };
 
-  var module$exports$foo$Foo$create = function(o$jscomp$1) {
-    module$exports$foo$Foo$$0clinit();
-    return new module$exports$foo$Foo(o$jscomp$1);
-  };
+                  var module$exports$foo$Foo$create = function(o$jscomp$1) {
+                    module$exports$foo$Foo$$0clinit();
+                    return new module$exports$foo$Foo(o$jscomp$1);
+                  };
 
-  var module$exports$foo$Foo = class {
-    constructor(o) {
-      this.o_ = o;
-    }
-  };
+                  var module$exports$foo$Foo = class {
+                    constructor(o) {
+                      this.o_ = o;
+                    }
+                  };
 
-  var module$exports$foo$Foo$options_;
+                  var module$exports$foo$Foo$options_;
 
-  console.log(function(JSCompiler_StaticMethods_isKnown$self) {
-    return module$exports$foo$Foo$options_.includes(JSCompiler_StaticMethods_isKnown$self.o_);
-  }(function(o$jscomp$2) {
-    return module$exports$foo$Foo$create(o$jscomp$2);
-  }("abc")));
-""",
-"""
-var module$exports$foo$Foo$$0clinit = function() {
-  module$exports$foo$Foo$$0clinit = function() {
-  };
-  module$exports$foo$Foo$options_ = ["a", "b", "c", "d"];
-};
-
-var module$exports$foo$Foo = class {
-  constructor(o) {
-    this.o_ = o;
-  }
-};
-
-var module$exports$foo$Foo$options_;
-var JSCompiler_temp_const$jscomp$3 = console;
-var JSCompiler_temp_const$jscomp$2 = JSCompiler_temp_const$jscomp$3.log;
-// The below line grabs a reference to `module$exports$foo$Foo$options_` before it is overwritten
-// by the call to clinit.
-var JSCompiler_temp_const$jscomp$1 = module$exports$foo$Foo$options_;
-// The below line is the problem. `JSCompiler_temp_const$jscomp$1` is undefined, leading to a
-// runtime error `TypeError: Cannot read properties of undefined (reading 'includes')`.
-var JSCompiler_temp_const$jscomp$0 = JSCompiler_temp_const$jscomp$1.includes;
-var JSCompiler_inline_result$jscomp$4;
-{
-  module$exports$foo$Foo$$0clinit();
-  JSCompiler_inline_result$jscomp$4 = new module$exports$foo$Foo("abc");
-}
-JSCompiler_temp_const$jscomp$2.call(JSCompiler_temp_const$jscomp$3, JSCompiler_temp_const$jscomp$0.call(JSCompiler_temp_const$jscomp$1, JSCompiler_inline_result$jscomp$4.o_));
-""");
+          console.log(function(JSCompiler_StaticMethods_isKnown$self) {
+            return module$exports$foo$Foo$options_.includes(JSCompiler_StaticMethods_isKnown$self.o_);
+          }(function(o$jscomp$2) {
+            return module$exports$foo$Foo$create(o$jscomp$2);
+          }("abc")));
+        """,
+        """
+        var module$exports$foo$Foo$$0clinit = function() {
+          module$exports$foo$Foo$$0clinit = function() {
+          };
+          module$exports$foo$Foo$options_ = ["a", "b", "c", "d"];
+        };
+        var module$exports$foo$Foo = class {
+          constructor(o) {
+            this.o_ = o;
+          }
+        };
+        var module$exports$foo$Foo$options_;
+        var JSCompiler_temp_const$jscomp$1 = console;
+        var JSCompiler_temp_const$jscomp$0 = JSCompiler_temp_const$jscomp$1.log;
+        var JSCompiler_inline_result$jscomp$2;
+        {
+          var JSCompiler_StaticMethods_isKnown$self$jscomp$inline_3;
+          {
+            module$exports$foo$Foo$$0clinit();
+            JSCompiler_StaticMethods_isKnown$self$jscomp$inline_3 = new module$exports$foo$Foo("abc");
+          }
+          JSCompiler_inline_result$jscomp$2 = module$exports$foo$Foo$options_.includes(JSCompiler_StaticMethods_isKnown$self$jscomp$inline_3.o_);
+        }
+        JSCompiler_temp_const$jscomp$0.call(JSCompiler_temp_const$jscomp$1, JSCompiler_inline_result$jscomp$2);
+        """);
   }
 
   @Test
@@ -3362,9 +3362,14 @@ JSCompiler_temp_const$jscomp$2.call(JSCompiler_temp_const$jscomp$3, JSCompiler_t
           return "a";
         };
 
-        // options_ is not initialized until initAndReturnA is called, so the
-        // call to includes will fail.
-        console.log(options_.includes(initAndReturnA()));
+        var JSCompiler_temp_const$jscomp$1 = console;
+        var JSCompiler_temp_const$jscomp$0 = JSCompiler_temp_const$jscomp$1.log;
+        var JSCompiler_inline_result$jscomp$2;
+        {
+          var x$jscomp$inline_3 = initAndReturnA();
+          JSCompiler_inline_result$jscomp$2 = options_.includes(x$jscomp$inline_3);
+        }
+        JSCompiler_temp_const$jscomp$0.call(JSCompiler_temp_const$jscomp$1, JSCompiler_inline_result$jscomp$2);
         """);
   }
 
@@ -4552,7 +4557,12 @@ JSCompiler_temp_const$jscomp$2.call(JSCompiler_temp_const$jscomp$3, JSCompiler_t
 
         foo(bar(...arg));
         """,
-        "bar(...arg);");
+        """
+        {
+          var x$jscomp$inline_0 = bar(...arg);
+          x$jscomp$inline_0;
+        }
+        """);
   }
 
   @Test
@@ -4565,7 +4575,12 @@ JSCompiler_temp_const$jscomp$2.call(JSCompiler_temp_const$jscomp$3, JSCompiler_t
 
         foo([...arg]);
         """,
-        "[...arg];");
+        """
+        {
+          var x$jscomp$inline_0 = [...arg];
+          x$jscomp$inline_0;
+        }
+        """);
   }
 
   @Test
