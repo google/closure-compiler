@@ -3336,6 +3336,39 @@ JSCompiler_temp_const$jscomp$2.call(JSCompiler_temp_const$jscomp$3, JSCompiler_t
   }
 
   @Test
+  public void testReproduceBug401582520_simplified() {
+    // InlineFunctions is inlining reading a property before the side-effectful calls that
+    // initializes it occurs.
+    test(
+        """
+        var options_;
+
+        /** @noinline */
+        var initAndReturnA = function() {
+          options_ = ["a", "b", "c", "d"];
+          return "a";
+        };
+
+        console.log(function(x) {
+          return options_.includes(x);
+        }(initAndReturnA()));
+        """,
+        """
+        var options_;
+
+        /** @noinline */
+        var initAndReturnA = function() {
+          options_ = ["a", "b", "c", "d"];
+          return "a";
+        };
+
+        // options_ is not initialized until initAndReturnA is called, so the
+        // call to includes will fail.
+        console.log(options_.includes(initAndReturnA()));
+        """);
+  }
+
+  @Test
   public void testBug4944818() {
     test(
         """
