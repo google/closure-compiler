@@ -3227,6 +3227,36 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRequirementHasBothRuleIdAndExtends_reportsInvalidRequirementSpec() {
+    allowSourcelessWarnings();
+    baseConfiguration =
+        """
+        requirement: {
+          rule_id: "gws:goog.Promise.X"
+          type: BANNED_NAME
+          error_message: "Prefer using native Promise equivalents. See go/gws-js-conformance#goog-promise"
+
+          value: "goog.Promise.all"
+        }
+        """;
+    ;
+    // has both rule_id and extends fields set
+    extendingConfiguration =
+        """
+        requirement: {
+          rule_id: "extends:gws:goog.Promise.X"
+          extends: 'gws:goog.Promise.X'
+        }
+        """;
+
+    testError(
+        """
+        goog.Promise.all();
+        """,
+        CheckConformance.INVALID_REQUIREMENT_SPEC);
+  }
+
+  @Test
   public void testCustomBanUnknownProp_mergeConfigWithValue() {
     configuration =
         config(
