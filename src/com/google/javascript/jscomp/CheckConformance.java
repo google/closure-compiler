@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.collect.HashMultimap;
@@ -181,78 +182,253 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
           "value");
 
   /**
-   * Gets requirements from all configs. Merges allowlists/whitelists of requirements with 'extends'
-   * equal to 'rule_id' of other rule.
+   * Gets requirements from all configs, validates them, and merges any extending requirements into
+   * their respective requirements from which they're extending. This means merging the
+   * allowlists/whitelists of requirements with 'extends' equal to 'rule_id' of other rule.
+   *
+   * <p>The requirements inheritance can not have a chain of more than 1 level. This means that a
+   * requirement that extends another requirement can not itself be extended. This is enforced by
+   * this pass and reported as an error if a requirement has both 'extends' and 'rule_id' fields
+   * set. Given that, we can safely define the following types of requirements:
+   *
+   * <p>Root requirements are simply the requirements that do not extend any other requirement. They
+   * do not have an `extends` field. They may or may not have a 'rule_id' field. For example,
+   * without a 'rule_id' field:
+   *
+   * <pre>
+   *   requirement: {
+   *     type: BANNED_NAME
+   *     value: 'eval'
+   *     error_message: 'eval is not allowed'
+   *   }
+   * </pre>
+   *
+   * <p>Root requirements may have a 'rule_id' field. For example:
+   *
+   * <pre>
+   *   requirement: {
+   *     rule_id: 'eval'
+   *     type: BANNED_NAME
+   *     value: 'eval'
+   *     error_message: 'eval is not allowed'
+   *   }
+   * </pre>
+   *
+   * <p>Extendable root requirements are those root requirements that have a 'rule_id' field, and
+   * therefore _can_ be extended. They may or may not getting extended by another requirement. For
+   * example:
+   *
+   * <pre>
+   *   requirement: {
+   *     rule_id: 'extendable'
+   *     type: BANNED_NAME
+   *     value: 'eval'
+   *     error_message: 'eval is not allowed'
+   *   }
+   * </pre>
+   *
+   * <p>Extended root requirements are extendable root requirements that are extended by at least
+   * one other requirement. For example:
+   *
+   * <pre>
+   *   requirement: {
+   *     rule_id: 'extended'
+   *     type: BANNED_NAME
+   *     value: 'eval'
+   *     error_message: 'eval is not allowed'
+   *   }
+   *
+   *   requirement: {
+   *     extends: 'extended'
+   *   }
+   * </pre>
+   *
+   * <p>Extending requirements are leaf-requirements that have an 'extends' field. For example:
+   *
+   * <pre>
+   *   requirement: {
+   *     extends: 'eval'
+   * </pre>
+   *
+   * <p>The following diagram illustrates the relationship between the different types of
+   * requirements that can be defined.
+   *
+   * <p>
+   *
+   * <pre>
+   *     {@literal
+   *
+   *             +---------------------------+    +------------------------------+
+   *             |    Root Requirements      |    |  Extending Requirements      |
+   *             |                           |    | (leaf, with 'extends' field) |
+   *             +---------------------------+    +------------------------------+
+   *                /                        \
+   *               /                          \
+   *   +-------------------------------+      +-----------------------------------+
+   *   |Extendable Root Requirements   |      | Non-Extendable Root Requirements  |
+   *   |     (with rule_id)            |      |        (without rule_id)          |
+   *   +-------------------------------+      +-----------------------------------+
+   *             |                      \
+   *             |                       \
+   *   +----------------------------+    +--------------------------------+
+   *   | Extended Root Requirements |    | Non-Extended Root Requirements |
+   *   +----------------------------+    +--------------------------------+
+   *
+   *
+   *     }
+   * </pre>
+   *
+   * <p>Here's the algorithm:
+   *
+   * <ol>
+   *   <li>Process the root requirements and add them to the rootRequirements list, and process the
+   *       extendable requirements and add them to the extendable map.
+   *   <li>Process extending-leaf requirements and merge them into their respective extended root
+   *       requirements.
+   *   <li>Remove duplicates from the allowlists/whitelists of the merged extended root
+   *       requirements.
+   * </ol>
+   *
+   * @return a list of root requirements of all configs after merging.
    */
   static List<Requirement> mergeRequirements(
       AbstractCompiler compiler, List<ConformanceConfig> configs) {
-    List<Requirement.Builder> builders = new ArrayList<>();
+    // Root requirements (i.e. requirements that have no 'extends' field).
+    List<Requirement.Builder> rootRequirements = new ArrayList<>();
+    // Requirements that are extendable (i.e. have a 'rule_id' field).
     Map<String, Requirement.Builder> extendable = new LinkedHashMap<>();
+
+    // 1. Process the root requirements and add them to the rootRequirements list, and process the
+    // extendable requirements and add them to the extendable map.
     for (ConformanceConfig config : configs) {
       for (Requirement requirement : config.getRequirementList()) {
         Requirement.Builder builder = requirement.toBuilder();
         if (requirement.hasRuleId()) {
-          if (requirement.getRuleId().isEmpty()) {
-            reportInvalidRequirement(compiler, requirement, "empty rule_id");
+          if (!validateExtendableRequirement(compiler, requirement, extendable)) {
             continue;
           }
-          if (extendable.containsKey(requirement.getRuleId())) {
-            reportInvalidRequirement(
-                compiler,
-                requirement,
-                "two requirements with the same rule_id: " + requirement.getRuleId());
-            continue;
-          }
+          // has a rule_id, so it's extendable
           extendable.put(requirement.getRuleId(), builder);
         }
         if (!requirement.hasExtends()) {
-          builders.add(builder);
+          // does not extend anything, so it's a root requirement
+          rootRequirements.add(builder);
         }
       }
     }
 
+    // 2. Process extending requirements and merge them into their respective extended requirements.
     for (ConformanceConfig config : configs) {
       for (Requirement requirement : config.getRequirementList()) {
         if (requirement.hasExtends()) {
-          Requirement.Builder existing = extendable.get(requirement.getExtends());
-          if (existing == null) {
-            reportInvalidRequirement(
-                compiler, requirement, "no requirement with rule_id: " + requirement.getExtends());
+          Requirement.Builder extendableRequirement = extendable.get(requirement.getExtends());
+          if (!validateExtendingRequirement(compiler, requirement, extendableRequirement)) {
             continue;
           }
-          for (Descriptors.FieldDescriptor field : requirement.getAllFields().keySet()) {
-            if (!EXTENDABLE_FIELDS.contains(field.getName())) {
-              reportInvalidRequirement(
-                  compiler, requirement, "extending rules allow only " + EXTENDABLE_FIELDS);
-            }
-          }
-          if (requirement.getValueCount() > 0 && !existing.getAllowExtendingValue()) {
-            reportInvalidRequirement(
-                compiler,
-                requirement,
-                "extending rule may not specify 'value' if base rule does not allow it");
-          }
-          existing
-              .addAllWhitelist(requirement.getWhitelistList())
-              .addAllWhitelistRegexp(requirement.getWhitelistRegexpList())
-              .addAllAllowlist(requirement.getAllowlistList())
-              .addAllAllowlistRegexp(requirement.getAllowlistRegexpList())
-              .addAllOnlyApplyTo(requirement.getOnlyApplyToList())
-              .addAllOnlyApplyToRegexp(requirement.getOnlyApplyToRegexpList())
-              .addAllWhitelistEntry(requirement.getWhitelistEntryList())
-              .addAllAllowlistEntry(requirement.getAllowlistEntryList())
-              .addAllValue(requirement.getValueList())
-              .addAllConfigFile(requirement.getConfigFileList());
+          mergeExtendingRequirementIntoExtended(extendableRequirement, requirement);
         }
       }
     }
 
-    List<Requirement> requirements = new ArrayList<>(builders.size());
-    for (Requirement.Builder builder : builders) {
+    // 3. Remove duplicates from the allowlists/whitelists of the merged root requirements.
+    List<Requirement> cleanedUpRootRequirements = new ArrayList<>(rootRequirements.size());
+    for (Requirement.Builder builder : rootRequirements) {
       removeDuplicates(builder);
-      requirements.add(builder.build());
+      cleanedUpRootRequirements.add(builder.build());
     }
-    return requirements;
+    return cleanedUpRootRequirements;
+  }
+
+  /**
+   * Merges the allowlists/whitelists of the extending requirement into the extended requirement.
+   *
+   * @param extendedRequirement the extended requirement to merge the extending requirement into.
+   * @param extendingRequirement the extending requirement to merge into the extended requirement.
+   */
+  private static void mergeExtendingRequirementIntoExtended(
+      Requirement.Builder extendedRequirement, Requirement extendingRequirement) {
+    checkState(
+        extendingRequirement.getExtends().equals(extendedRequirement.getRuleId()),
+        "Attempting to merge an requirement with the wrong extended requirement");
+    extendedRequirement
+        .addAllWhitelist(extendingRequirement.getWhitelistList())
+        .addAllWhitelistRegexp(extendingRequirement.getWhitelistRegexpList())
+        .addAllAllowlist(extendingRequirement.getAllowlistList())
+        .addAllAllowlistRegexp(extendingRequirement.getAllowlistRegexpList())
+        .addAllOnlyApplyTo(extendingRequirement.getOnlyApplyToList())
+        .addAllOnlyApplyToRegexp(extendingRequirement.getOnlyApplyToRegexpList())
+        .addAllWhitelistEntry(extendingRequirement.getWhitelistEntryList())
+        .addAllAllowlistEntry(extendingRequirement.getAllowlistEntryList())
+        .addAllValue(extendingRequirement.getValueList())
+        .addAllConfigFile(extendingRequirement.getConfigFileList());
+  }
+
+  /**
+   * Validates a extendable requirement.
+   *
+   * <p>A valid extendable requirement is a requirement that has a unique, non-empty rule_id.
+   *
+   * @return true if the requirement is valid, false otherwise.
+   */
+  private static boolean validateExtendableRequirement(
+      AbstractCompiler compiler,
+      Requirement requirement,
+      Map<String, Requirement.Builder> extendable) {
+    checkState(requirement.hasRuleId(), "Extendable requirement must have a rule_id");
+
+    if (requirement.getRuleId().isEmpty()) {
+      reportInvalidRequirement(compiler, requirement, "empty rule_id");
+      return false;
+    }
+    if (extendable.containsKey(requirement.getRuleId())) {
+      reportInvalidRequirement(
+          compiler,
+          requirement,
+          "two requirements with the same rule_id: " + requirement.getRuleId());
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Validates an extending requirement is correctly extending an extendable requirement.
+   *
+   * <p>A valid extending requirement is a requirement that:
+   *
+   * <ol>
+   *   <li>has a non-empty extends field, and
+   *   <li>only extends an existing extendable requirement
+   *   <li>does not specify any fields that are not in {@link #EXTENDABLE_FIELDS}.
+   *   <li>does not specify a value if the extendable requirement does not allow extending values.
+   *
+   * @return true if the requirement is valid, false otherwise.
+   */
+  private static boolean validateExtendingRequirement(
+      AbstractCompiler compiler,
+      Requirement extendingRequirement,
+      Requirement.Builder extendableRequirement) {
+    checkState(extendingRequirement.hasExtends(), "Extending requirement must have an extends");
+    if (extendableRequirement == null) {
+      reportInvalidRequirement(
+          compiler,
+          extendingRequirement,
+          "no extendable requirement with rule_id: " + extendingRequirement.getExtends());
+      return false;
+    }
+    for (Descriptors.FieldDescriptor field : extendingRequirement.getAllFields().keySet()) {
+      if (!EXTENDABLE_FIELDS.contains(field.getName())) {
+        reportInvalidRequirement(
+            compiler, extendingRequirement, "extending rules allow only " + EXTENDABLE_FIELDS);
+      }
+    }
+    if (extendingRequirement.getValueCount() > 0
+        && !extendableRequirement.getAllowExtendingValue()) {
+      reportInvalidRequirement(
+          compiler,
+          extendingRequirement,
+          "extending rule may not specify 'value' if extendable rule does not allow it");
+    }
+    return true;
   }
 
   private static void removeDuplicates(Requirement.Builder requirement) {
