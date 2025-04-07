@@ -535,6 +535,11 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
 
   private static void checkShortName(NodeTraversal t, Node shortNameNode, String namespace) {
     String nextQnamePart = shortNameNode.getString();
+    if (namespace.startsWith("google3.")) {
+      // `google3` namespaces don't provide capitalization context for the import name
+      return;
+    }
+
     String lastSegment = namespace.substring(namespace.lastIndexOf('.') + 1);
     if (nextQnamePart.equals(lastSegment) || lastSegment.isEmpty()) {
       return;

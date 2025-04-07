@@ -1094,6 +1094,13 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
         """,
         INCORRECT_SHORTNAME_CAPITALIZATION,
         "The capitalization of short name event is incorrect; it should be Event.");
+
+    testSame(
+        """
+        goog.module('xyz');
+
+        const Event = goog.require('google3.closure.events.event');
+        """);
   }
 
   @Test
