@@ -32,7 +32,7 @@ import org.jspecify.annotations.Nullable;
  * ExportEntry in the ECMAScript spec.</a>
  */
 // TODO(johnplaisted): Add validation tests. Current ModulePath makes this difficult as it is non
-@AutoValue
+@AutoValue // TODO: b/408030907 - Migrate to a Java record
 public abstract class Export {
   /**
    * The {@link Export#localName()} of anonymous ES module default exports, e.g. {@code export

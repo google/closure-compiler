@@ -18,8 +18,8 @@ package com.google.javascript.jscomp.modules;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
 
-import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.Node;
@@ -30,11 +30,32 @@ import org.jspecify.annotations.Nullable;
  * a single variable or a entire module namespace created by an import * statement.
  *
  * <p>See {@link Module#namespace()} and {@link Module#boundNames()} for how Bindings are used.
+ *
+ * @param metadata Metadata of the module this is bound to.
+ *     <p>If this was made from an {@code import *} then it is the module that this imported.
+ *     Otherwise it is the module this binding was created in (e.g. the module of the originating
+ *     export).
+ * @param sourceNode The AST node to use for source location when rewriting.
+ *     <p>This is generally a NAME or IMPORT_STAR node inside an import or export statement that
+ *     represents where the name was bound. However as {@code export * from} has no NAME nodes the
+ *     source node in that instance should be the entire export node.
+ *     <p>Null for missing ES modules and non-ES modules as they are currently not scanned.
+ * @param originatingExport Returns the original export if this binding was created by an export.
+ *     <p>For transitive exports this will still be the *original* export, not the transitive link.
+ * @param isModuleNamespace True if this represents a module namespace, e.g. created by {@code
+ *     import *}
  */
-@AutoValue
-public abstract class Binding {
-  // Prevent unwanted subclasses.
-  Binding() {}
+public record Binding(
+    ModuleMetadata metadata,
+    @Nullable Node sourceNode,
+    @Nullable Export originatingExport,
+    boolean isModuleNamespace,
+    @Nullable String closureNamespace,
+    CreatedBy createdBy) {
+  public Binding {
+    requireNonNull(metadata, "metadata");
+    requireNonNull(createdBy, "createdBy");
+  }
 
   /** Different ways that Bindings can be created. */
   enum CreatedBy {
@@ -97,7 +118,7 @@ public abstract class Binding {
 
   /** Binding for an exported value that is not a module namespace object. */
   static Binding from(Export boundExport, Node sourceNode) {
-    return new AutoValue_Binding(
+    return new Binding(
         boundExport.moduleMetadata(),
         sourceNode,
         boundExport,
@@ -113,7 +134,7 @@ public abstract class Binding {
         createdBy.isClosureImport(),
         "Expected goog.require(Type) or goog.forwardDeclare, got %s",
         createdBy);
-    return new AutoValue_Binding(
+    return new Binding(
         metadata,
         sourceNode,
         /* originatingExport= */ null,
@@ -125,7 +146,7 @@ public abstract class Binding {
   /** Binding for an entire module namespace created by an <code>import *</code>. */
   static Binding from(
       ModuleMetadata metadataOfBoundModule, @Nullable String closureNamespace, Node sourceNode) {
-    return new AutoValue_Binding(
+    return new Binding(
         metadataOfBoundModule,
         sourceNode,
         /* originatingExport= */ null,
@@ -138,7 +159,7 @@ public abstract class Binding {
   Binding copy(Node sourceNode, CreatedBy createdBy) {
     checkNotNull(sourceNode);
 
-    return new AutoValue_Binding(
+    return new Binding(
         metadata(),
         sourceNode,
         originatingExport(),
@@ -146,40 +167,6 @@ public abstract class Binding {
         closureNamespace(),
         createdBy);
   }
-
-  /**
-   * Metadata of the module this is bound to.
-   *
-   * <p>If this was made from an {@code import *} then it is the module that this imported.
-   * Otherwise it is the module this binding was created in (e.g. the module of the originating
-   * export).
-   */
-  public abstract ModuleMetadata metadata();
-
-  /**
-   * The AST node to use for source location when rewriting.
-   *
-   * <p>This is generally a NAME or IMPORT_STAR node inside an import or export statement that
-   * represents where the name was bound. However as {@code export * from} has no NAME nodes the
-   * source node in that instance should be the entire export node.
-   *
-   * <p>Null for missing ES modules and non-ES modules as they are currently not scanned.
-   */
-  public abstract @Nullable Node sourceNode();
-
-  /**
-   * Returns the original export if this binding was created by an export.
-   *
-   * <p>For transitive exports this will still be the *original* export, not the transitive link.
-   */
-  public abstract @Nullable Export originatingExport();
-
-  /** True if this represents a module namespace, e.g. created by {@code import *} */
-  public abstract boolean isModuleNamespace();
-
-  public abstract @Nullable String closureNamespace();
-
-  public abstract CreatedBy createdBy();
 
   /**
    * The name of the variable this export is bound to, assuming it is not a binding of a module

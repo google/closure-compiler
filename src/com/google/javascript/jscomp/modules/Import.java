@@ -27,7 +27,7 @@ import org.jspecify.annotations.Nullable;
  * <p>See <a href="https://www.ecma-international.org/ecma-262/9.0/index.html#table-39">the
  * ImportEntry in the ECMAScript spec.</a>
  */
-@AutoValue
+@AutoValue // TODO: b/408030907 - Migrate to a Java record
 public abstract class Import {
   // Prevent unwanted subclasses.
   Import() {}

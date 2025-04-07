@@ -15,7 +15,7 @@
  */
 package com.google.javascript.jscomp.modules;
 
-import com.google.auto.value.AutoValue;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Simple class to keep track of which modules and exports have been visited when resolving exports.
@@ -25,13 +25,13 @@ import com.google.auto.value.AutoValue;
  * <p>This is an AutoValue used for its hashCode / equals implementation and used in a Set for
  * equality checks. So fields may appear to be "unused".
  */
-@AutoValue
-abstract class ExportTrace {
-  static ExportTrace create(UnresolvedModule module, String exportName) {
-    return new AutoValue_ExportTrace(module, exportName);
+record ExportTrace(UnresolvedModule module, String exportName) {
+  ExportTrace {
+    requireNonNull(module, "module");
+    requireNonNull(exportName, "exportName");
   }
 
-  abstract UnresolvedModule module();
-
-  abstract String exportName();
+  static ExportTrace create(UnresolvedModule module, String exportName) {
+    return new ExportTrace(module, exportName);
+  }
 }

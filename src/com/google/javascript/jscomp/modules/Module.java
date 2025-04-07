@@ -27,7 +27,7 @@ import org.jspecify.annotations.Nullable;
  * pieces of information are what variables are exported (transitive or local), and what names are
  * imported.
  */
-@AutoValue
+@AutoValue // TODO: b/408030907 - Migrate to a Java record
 public abstract class Module {
   // Prevent unwanted subclasses.
   Module() {}
