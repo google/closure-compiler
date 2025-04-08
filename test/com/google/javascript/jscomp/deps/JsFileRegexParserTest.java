@@ -392,7 +392,7 @@ public final class JsFileRegexParserTest {
     assertThat(result).isEqualTo(expected);
     assertThat(errorManager.getErrorCount()).isEqualTo(0);
     assertThat(errorManager.getWarningCount()).isEqualTo(1);
-    assertThat(errorManager.getWarnings().get(0).getType()).isEqualTo(ModuleLoader.MODULE_CONFLICT);
+    assertThat(errorManager.getWarnings().get(0).type()).isEqualTo(ModuleLoader.MODULE_CONFLICT);
   }
 
   @Test

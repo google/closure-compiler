@@ -592,7 +592,7 @@ public final class ModuleLoaderTest {
 
     resolveJsModule(loader.resolve("fake.js"), "invalid/file.js");
     assertThat(errors).hasSize(1);
-    assertThat(errors.get(0).getType())
+    assertThat(errors.get(0).type())
         .isSameInstanceAs(BrowserWithTransformedPrefixesModuleResolver.INVALID_AMBIGUOUS_PATH);
   }
 
