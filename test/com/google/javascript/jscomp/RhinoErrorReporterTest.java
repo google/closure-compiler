@@ -55,7 +55,7 @@ public final class RhinoErrorReporterTest {
             message);
 
     assertThat(error.getLineNumber()).isEqualTo(1);
-    assertThat(error.getCharno()).isEqualTo(4);
+    assertThat(error.charno()).isEqualTo(4);
   }
 
   @Test
@@ -95,8 +95,8 @@ public final class RhinoErrorReporterTest {
     assertWithMessage("Expected error").that(compiler.getErrorCount()).isEqualTo(1);
 
     JSError error = Iterables.getOnlyElement(compiler.getErrors());
-    assertThat(error.getType()).isEqualTo(type);
-    assertThat(error.getDescription()).isEqualTo(description);
+    assertThat(error.type()).isEqualTo(type);
+    assertThat(error.description()).isEqualTo(description);
     return error;
   }
 
@@ -106,8 +106,8 @@ public final class RhinoErrorReporterTest {
     assertWithMessage("Expected warning").that(compiler.getWarningCount()).isEqualTo(1);
 
     JSError error = Iterables.getOnlyElement(compiler.getWarnings());
-    assertThat(error.getType()).isEqualTo(type);
-    assertThat(error.getDescription()).isEqualTo(description);
+    assertThat(error.type()).isEqualTo(type);
+    assertThat(error.description()).isEqualTo(description);
     return error;
   }
 

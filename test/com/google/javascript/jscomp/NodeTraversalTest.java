@@ -81,7 +81,7 @@ public final class NodeTraversalTest {
         .traverse(new Node(Token.EMPTY));
 
     assertThat(errors).hasSize(1);
-    assertThat(errors.get(0).getDescription()).isEqualTo("Foo, Bar - Hello");
+    assertThat(errors.get(0).description()).isEqualTo("Foo, Bar - Hello");
   }
 
   @Test
@@ -132,9 +132,9 @@ public final class NodeTraversalTest {
 
     assertThat(errors).hasSize(1);
     JSError error = errors.get(0);
-    assertThat(error.getDescription()).isEqualTo("Foo, Bar - Hello");
+    assertThat(error.description()).isEqualTo("Foo, Bar - Hello");
     assertThat(error.getNodeSourceOffset()).isEqualTo(0);
-    assertThat(error.getLength()).isEqualTo(5);
+    assertThat(error.length()).isEqualTo(5);
   }
 
   private static final String TEST_EXCEPTION = "test me";

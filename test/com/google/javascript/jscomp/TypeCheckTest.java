@@ -21354,7 +21354,7 @@ override: function(this:Foo): number
         .process(externs, secondScript.getParent());
 
     assertThat(compiler.getWarningCount()).isEqualTo(1);
-    assertThat(compiler.getWarnings().get(0).getDescription())
+    assertThat(compiler.getWarnings().get(0).description())
         .isEqualTo("cannot instantiate non-constructor, found type: function(): undefined");
   }
 
@@ -29165,7 +29165,7 @@ It's possible that a local variable called 'service' is shadowing the intended g
           .isEqualTo(descriptions.size());
       Set<String> actualWarningDescriptions = new HashSet<>();
       for (int i = 0; i < descriptions.size(); i++) {
-        actualWarningDescriptions.add(compiler.getWarnings().get(i).getDescription());
+        actualWarningDescriptions.add(compiler.getWarnings().get(i).description());
       }
       assertThat(actualWarningDescriptions).isEqualTo(new HashSet<>(descriptions));
     }

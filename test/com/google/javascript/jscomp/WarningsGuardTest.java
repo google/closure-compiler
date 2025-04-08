@@ -117,7 +117,7 @@ public final class WarningsGuardTest {
 
           @Override
           public CheckLevel level(JSError error) {
-            return error.getSourceName().equals("123456") ? ERROR : null;
+            return error.sourceName().equals("123456") ? ERROR : null;
           }
         };
 

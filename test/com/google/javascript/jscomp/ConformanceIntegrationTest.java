@@ -43,7 +43,7 @@ public class ConformanceIntegrationTest {
 
     assertThat(compiler.getErrors()).isEmpty();
     assertThat(compiler.getWarnings()).hasSize(1);
-    assertThat(compiler.getWarnings().get(0).getType())
+    assertThat(compiler.getWarnings().get(0).type())
         .isEqualTo(CheckConformance.CONFORMANCE_VIOLATION);
   }
 
@@ -56,7 +56,7 @@ public class ConformanceIntegrationTest {
 
     assertThat(compiler.getErrors()).isEmpty();
     assertThat(compiler.getWarnings()).hasSize(1);
-    assertThat(compiler.getWarnings().get(0).getType())
+    assertThat(compiler.getWarnings().get(0).type())
         .isEqualTo(CheckConformance.CONFORMANCE_VIOLATION);
   }
 

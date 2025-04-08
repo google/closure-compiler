@@ -1833,7 +1833,7 @@ public abstract class CompilerTestCase {
       for (JSError error : compiler.getErrors()) {
         validateSourceLocation(error);
         assertWithMessage("Some placeholders in the error message were not replaced")
-            .that(error.getDescription())
+            .that(error.description())
             .doesNotContainMatch("\\{\\d\\}");
       }
     }
@@ -1900,7 +1900,7 @@ public abstract class CompilerTestCase {
   private void validateSourceLocation(JSError jserror) {
     // Make sure that source information is always provided.
     if (!allowSourcelessWarnings) {
-      final String sourceName = jserror.getSourceName();
+      final String sourceName = jserror.sourceName();
       assertWithMessage("Missing source file name in warning: " + jserror)
           .that(sourceName != null && !sourceName.isEmpty())
           .isTrue();
@@ -1912,7 +1912,7 @@ public abstract class CompilerTestCase {
           .that(-1 != jserror.getLineNumber())
           .isTrue();
       assertWithMessage("Missing char number in warning: " + jserror)
-          .that(-1 != jserror.getCharno())
+          .that(-1 != jserror.charno())
           .isTrue();
     }
   }
@@ -2070,7 +2070,7 @@ public abstract class CompilerTestCase {
     if (warnings != null) {
       StringBuilder warningBuilder = new StringBuilder();
       for (JSError actualWarning : compiler.getWarnings()) {
-        warningBuilder.append(actualWarning.getDescription()).append("\n");
+        warningBuilder.append(actualWarning.description()).append("\n");
       }
       String warningMessage = warningBuilder.toString();
       assertWithMessage("There should be " + warnings.length + " warnings. " + warningMessage)
@@ -2079,7 +2079,7 @@ public abstract class CompilerTestCase {
       for (int i = 0; i < warnings.length; i++) {
         DiagnosticType warning = warnings[i].diagnostic;
         assertWithMessage(warningMessage)
-            .that(compiler.getWarnings().get(i).getType())
+            .that(compiler.getWarnings().get(i).type())
             .isEqualTo(warning);
       }
     }
@@ -2367,15 +2367,15 @@ public abstract class CompilerTestCase {
     }
 
     private boolean matches(JSError error) {
-      return Objects.equals(diagnostic, error.getType())
-          && (messagePredicate == null || messagePredicate.apply(error.getDescription()));
+      return Objects.equals(diagnostic, error.type())
+          && (messagePredicate == null || messagePredicate.apply(error.description()));
     }
 
     private String formatDiff(JSError error) {
-      if (!Objects.equals(diagnostic, error.getType())) {
-        return "diagnostic type " + error.getType().key + " did not match";
+      if (!Objects.equals(diagnostic, error.type())) {
+        return "diagnostic type " + error.type().key + " did not match";
       }
-      return "message \"" + error.getDescription() + "\" was not " + messagePredicate;
+      return "message \"" + error.description() + "\" was not " + messagePredicate;
     }
 
     public Diagnostic withMessage(final String expectedRaw) {

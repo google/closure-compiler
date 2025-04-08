@@ -1153,7 +1153,7 @@ public final class CompilerTest {
       assertThat(outputSource).isEqualTo(expected.trim());
     } else {
       assertThat(result.errors).hasSize(1);
-      assertThat(result.errors.get(0).getType()).isEqualTo(error);
+      assertThat(result.errors.get(0).type()).isEqualTo(error);
     }
     return result;
   }
@@ -2001,7 +2001,7 @@ public final class CompilerTest {
 
     Result result = compiler.getResult();
     assertThat(result.errors).hasSize(1);
-    assertThat(result.errors.get(0).getType()).isEqualTo(VarCheck.UNDEFINED_VAR_ERROR);
+    assertThat(result.errors.get(0).type()).isEqualTo(VarCheck.UNDEFINED_VAR_ERROR);
   }
 
   @Test

@@ -849,7 +849,7 @@ mismatch: [k]
 
   private static final Correspondence<TypeMismatch, TypeMismatch> HAVE_SAME_TYPES =
       Correspondence.transforming(
-          (x) -> ImmutableList.of(x.getFound(), x.getRequired()),
-          (x) -> ImmutableList.of(x.getFound(), x.getRequired()),
+          (x) -> ImmutableList.of(x.found(), x.required()),
+          (x) -> ImmutableList.of(x.found(), x.required()),
           "has same types as");
 }
