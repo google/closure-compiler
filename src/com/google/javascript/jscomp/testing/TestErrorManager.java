@@ -50,13 +50,13 @@ public final class TestErrorManager extends BasicErrorManager {
         if (errorIndex >= errors.length) {
           throw new AssertionError("Unexpected error: " + error);
         }
-        assertEquals(errors[errorIndex++], error.getDescription());
+        assertEquals(errors[errorIndex++], error.description());
         break;
       case WARNING:
         if (errorIndex >= warnings.length) {
           throw new AssertionError("Unexpected warning: " + error);
         }
-        assertEquals(warnings[warningIndex++], error.getDescription());
+        assertEquals(warnings[warningIndex++], error.description());
         break;
       case OFF:
         // no-op

@@ -31,14 +31,14 @@ import com.google.javascript.rhino.Node;
 public final class JSCompCorrespondences {
 
   public static final Correspondence<JSError, DiagnosticType> DIAGNOSTIC_EQUALITY =
-      Correspondence.transforming(JSError::getType, "has diagnostic type equal to");
+      Correspondence.transforming(JSError::type, "has diagnostic type equal to");
 
   public static final Correspondence<JSError, DiagnosticGroup> OWNING_DIAGNOSTIC_GROUP =
       Correspondence.from(
           (actual, expected) -> expected.matches(actual), "is part of diagnostic group");
 
   public static final Correspondence<JSError, String> DESCRIPTION_EQUALITY =
-      Correspondence.transforming(JSError::getDescription, "has description equal to");
+      Correspondence.transforming(JSError::description, "has description equal to");
 
   public static final Correspondence<CompilerInput, String> INPUT_NAME_EQUALITY =
       Correspondence.transforming(CompilerInput::getName, "has name equal to");

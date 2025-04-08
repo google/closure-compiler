@@ -48,10 +48,10 @@ public final class JSErrorSubject extends Subject {
   }
 
   public void hasType(DiagnosticType type) {
-    check("getType()").that(actual.getType()).isEqualTo(type);
+    check("getType()").that(actual.type()).isEqualTo(type);
   }
 
   public void hasMessage(String msg) {
-    check("description").that(actual.getDescription()).isEqualTo(msg);
+    check("description").that(actual.description()).isEqualTo(msg);
   }
 }
