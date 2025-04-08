@@ -99,8 +99,8 @@ final class SerializeTypesToPointers {
     // these types are only used when debug logging is enabled, but we always serialize them as not
     // to have a different TypePool with and without debug logging.
     for (TypeMismatch mismatch : compiler.getTypeMismatches()) {
-      jstypeReconserializer.serializeType(mismatch.getFound());
-      jstypeReconserializer.serializeType(mismatch.getRequired());
+      jstypeReconserializer.serializeType(mismatch.found());
+      jstypeReconserializer.serializeType(mismatch.required());
     }
 
     this.typePool = jstypeReconserializer.generateTypePool();
@@ -250,15 +250,15 @@ final class SerializeTypesToPointers {
     final String requiredColorId;
 
     TypeMismatchJson(TypeMismatch x, ColorId found, ColorId required) {
-      this.location = x.getLocation().getLocation();
+      this.location = x.location().getLocation();
       this.foundColorId = found.toString();
       this.requiredColorId = required.toString();
     }
 
     static TypeMismatchJson create(
         TypeMismatch x, JSTypeReconserializer serializer, TypePool typePool) {
-      int foundPointer = serializer.serializeType(x.getFound());
-      int requiredPointer = serializer.serializeType(x.getRequired());
+      int foundPointer = serializer.serializeType(x.found());
+      int requiredPointer = serializer.serializeType(x.required());
 
       return new TypeMismatchJson(
           x, typePointerToId(foundPointer, typePool), typePointerToId(requiredPointer, typePool));
