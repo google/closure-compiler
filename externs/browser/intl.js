@@ -484,3 +484,119 @@ Intl.ListFormat.prototype.formatToParts = function(items) {};
  * @return {{locale: string, style: string, type: string}}
  */
 Intl.ListFormat.prototype.resolvedOptions = function() {};
+
+/**
+ * A string that is a valid [Unicode BCP 47 Locale
+ * Identifier](https://unicode.org/reports/tr35/#Unicode_locale_identifier).
+ *
+ * For example: "fa", "es-MX", "zh-Hant-TW".
+ *
+ * @typedef {string}
+ * @see https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Intl#locales_argument.
+ */
+Intl.UnicodeBCP47LocaleIdentifier;
+
+/**
+ * Set of possible values: "h12", "h23", "h11", "h24".
+ * @typedef {string}
+ */
+Intl.LocaleHourCycleKey;
+
+/**
+ * Set of possible values: "upper", "lower", "false".
+ * @typedef {string}
+ */
+Intl.LocaleCollationCaseFirst;
+
+/**
+ * @record
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/Locale#parameters
+ */
+Intl.LocaleOptions = function() {};
+
+/** @type {string|undefined} */
+Intl.LocaleOptions.prototype.baseName;
+
+/** @type {string|undefined} */
+Intl.LocaleOptions.prototype.calendar;
+
+/** @type {!Intl.LocaleCollationCaseFirst|undefined} */
+Intl.LocaleOptions.prototype.caseFirst;
+
+/** @type {string|undefined} */
+Intl.LocaleOptions.prototype.collation;
+
+/** @type {!Intl.LocaleHourCycleKey|undefined} */
+Intl.LocaleOptions.prototype.hourCycle;
+
+/** @type {string|undefined} */
+Intl.LocaleOptions.prototype.language;
+
+/** @type {string|undefined} */
+Intl.LocaleOptions.prototype.numberingSystem;
+
+/** @type {boolean|undefined} */
+Intl.LocaleOptions.prototype.numeric;
+
+/** @type {string|undefined} */
+Intl.LocaleOptions.prototype.region;
+
+/** @type {string|undefined} */
+Intl.LocaleOptions.prototype.script;
+
+/**
+ * @constructor
+ * @implements {Intl.LocaleOptions}
+ * @param {!Intl.UnicodeBCP47LocaleIdentifier} tag
+ * @param {!Intl.LocaleOptions|undefined} options
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/Locale
+ */
+Intl.Locale = function(tag, options) {};
+
+/** @type {string} */
+Intl.Locale.prototype.baseName;
+
+/** @type {string|undefined} */
+Intl.Locale.prototype.calendar;
+
+/** @type {!Intl.LocaleCollationCaseFirst|undefined} */
+Intl.Locale.prototype.caseFirst;
+
+/** @type {string|undefined} */
+Intl.Locale.prototype.collation;
+
+/** @type {!Intl.LocaleHourCycleKey|undefined} */
+Intl.Locale.prototype.hourCycle;
+
+/** @type {string} */
+Intl.Locale.prototype.language;
+
+/** @type {string|undefined} */
+Intl.Locale.prototype.numberingSystem;
+
+/** @type {boolean|undefined} */
+Intl.Locale.prototype.numeric;
+
+/** @type {string|undefined} */
+Intl.Locale.prototype.region;
+
+/** @type {string|undefined} */
+Intl.Locale.prototype.script;
+
+/**
+ * @return {!Intl.Locale}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/maximize
+ */
+Intl.Locale.prototype.maximize = function() {};
+
+/**
+ * @return {!Intl.Locale}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/minimize
+ */
+Intl.Locale.prototype.minimize = function() {};
+
+/**
+ * @override
+ * @return {!Intl.UnicodeBCP47LocaleIdentifier}
+ */
+Intl.Locale.prototype.toString = function() {};
