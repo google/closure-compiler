@@ -155,6 +155,14 @@ public record DependencyOptions(DependencyMode mode, ImmutableList<ModuleIdentif
    *
    * @deprecated Prefer {@link #pruneForEntryPoints(Iterable)} with a complete list of entry points.
    */
+  @InlineMe(
+      replacement =
+          "new DependencyOptions(DependencyMode.PRUNE_LEGACY, ImmutableList.copyOf(entryPoints))",
+      imports = {
+        "com.google.common.collect.ImmutableList",
+        "com.google.javascript.jscomp.DependencyOptions",
+        "com.google.javascript.jscomp.DependencyOptions.DependencyMode"
+      })
   @Deprecated
   public static DependencyOptions pruneLegacyForEntryPoints(
       Iterable<ModuleIdentifier> entryPoints) {
