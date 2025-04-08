@@ -62,7 +62,7 @@ public class FixingErrorManager extends BasicErrorManager {
   @Override
   public void report(CheckLevel level, JSError error) {
     super.report(level, error);
-    if (!unfixableErrors.contains(error.getType())) {
+    if (!unfixableErrors.contains(error.type())) {
       ImmutableList<SuggestedFix> fixes = this.fixer.getFixesForJsError(error);
       if (fixes.size() == 1) {
         sureFixes.put(error, fixes.get(0));
@@ -74,12 +74,12 @@ public class FixingErrorManager extends BasicErrorManager {
 
   private boolean containsFixableShorthandModuleWarning() {
     for (JSError error : sureFixes.keySet()) {
-      if (error.getType().equals(REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME)) {
+      if (error.type().equals(REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME)) {
         return true;
       }
     }
     for (JSError error : multiFixes.keySet()) {
-      if (error.getType().equals(REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME)) {
+      if (error.type().equals(REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME)) {
         return true;
       }
     }
@@ -101,7 +101,7 @@ public class FixingErrorManager extends BasicErrorManager {
       // Sometimes code will produce a spurious extra-require error,
       // as well as a warning about using a full namespace instead of a shorthand type. In this case
       // don't apply the extra require fix.
-      if (containsFixableShorthandModuleWarning && error.getType().equals(EXTRA_REQUIRE_WARNING)) {
+      if (containsFixableShorthandModuleWarning && error.type().equals(EXTRA_REQUIRE_WARNING)) {
         // Don't apply this fix.
       } else {
         if (fixTypes == FixTypes.ONE_FIX && sureFixes.containsKey(error)) {
@@ -112,8 +112,7 @@ public class FixingErrorManager extends BasicErrorManager {
       }
     }
     for (JSError warning : getWarnings()) {
-      if (warning.getType().equals(EXTRA_REQUIRE_WARNING)
-          && containsFixableShorthandModuleWarning) {
+      if (warning.type().equals(EXTRA_REQUIRE_WARNING) && containsFixableShorthandModuleWarning) {
         // As above, don't apply the extra-require fix.
       } else {
         if (fixTypes == FixTypes.ONE_FIX && sureFixes.containsKey(warning)) {
