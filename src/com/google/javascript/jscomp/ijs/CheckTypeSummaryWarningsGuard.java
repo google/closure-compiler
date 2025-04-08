@@ -55,13 +55,13 @@ public class CheckTypeSummaryWarningsGuard extends WarningsGuard {
 
   /** Return whether the given error was produced inside a type summary file */
   private boolean inTypeSummary(JSError error) {
-    return error.getSourceName() != null && error.getSourceName().endsWith(".i.js");
+    return error.sourceName() != null && error.sourceName().endsWith(".i.js");
   }
 
   /** Return whether the given error should be demoted even if in a type summary file */
   private boolean shouldDemoteIfTypeSummary(JSError error) {
     // TODO(b/215776774): also skip demoting DUPLICATE_MODULE and DUPLICATE_NAMESPACE errors.
     // DUPLICATE_NAMESPACE_AND_MODULE is only special-cased because it was easier to land.
-    return !error.getType().equals(ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE);
+    return !error.type().equals(ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE);
   }
 }
