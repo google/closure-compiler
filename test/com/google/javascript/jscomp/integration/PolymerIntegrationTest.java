@@ -856,7 +856,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     ImmutableList<JSError> warnings = compiler.getWarnings();
     assertThat(warnings).hasSize(1);
     JSError warning = warnings.get(0);
-    assertThat(warning.getNode().getString()).isEqualTo("p1");
+    assertThat(warning.node().getString()).isEqualTo("p1");
   }
 
   @Test

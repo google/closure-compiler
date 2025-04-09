@@ -633,7 +633,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
         """);
 
     assertThat(lastCompiler.getErrors()).hasSize(1);
-    assertThat(lastCompiler.getErrors().get(0).getDescription()).contains("provide foo.Bar.Type");
+    assertThat(lastCompiler.getErrors().get(0).description()).contains("provide foo.Bar.Type");
   }
 
   @Test
@@ -703,7 +703,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
 
     Compiler lastCompiler = compile(options, code);
     assertThat(lastCompiler.getErrors()).hasSize(1);
-    assertThat(lastCompiler.getErrors().get(0).getDescription()).contains("@define");
+    assertThat(lastCompiler.getErrors().get(0).description()).contains("@define");
   }
 
   @Test
@@ -1838,7 +1838,7 @@ window['prevent_dce'] = [Foo, Bar, FooBar, Qux, Baz, callMethods];
 
     assertThat(lastCompiler.getWarnings()).isEmpty();
     assertThat(lastCompiler.getErrors()).hasSize(1);
-    assertThat(lastCompiler.getErrors().get(0).getDescription())
+    assertThat(lastCompiler.getErrors().get(0).description())
         .contains("Access to package-private property protectedMethod");
   }
 }

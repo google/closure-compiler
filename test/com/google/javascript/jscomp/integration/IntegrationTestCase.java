@@ -258,9 +258,9 @@ abstract class IntegrationTestCase {
 
     DiagnosticType diagnostic;
     if (compiler.getErrorCount() == 1) {
-      diagnostic = compiler.getErrors().get(0).getType();
+      diagnostic = compiler.getErrors().get(0).type();
     } else {
-      diagnostic = compiler.getWarnings().get(0).getType();
+      diagnostic = compiler.getWarnings().get(0).type();
     }
     assertWithMessage(
             "Error not in expected diagnostic group. Error: "
@@ -282,7 +282,7 @@ abstract class IntegrationTestCase {
     Compiler compiler = compile(options, original);
     for (JSError error : compiler.getErrors()) {
       if (!DiagnosticGroups.PARSING.matches(error)) {
-        assertWithMessage("Found unexpected error type " + error.getType() + ":\n" + error).fail();
+        assertWithMessage("Found unexpected error type " + error.type() + ":\n" + error).fail();
       }
     }
     assertWithMessage("Unexpected warnings: " + Joiner.on("\n").join(compiler.getWarnings()))

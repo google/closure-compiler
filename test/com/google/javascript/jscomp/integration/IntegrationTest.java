@@ -608,7 +608,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     // found   : (typeof cycle.a.Widget.Item)
     // required: None
     test(options, new String[] {base, code}, DiagnosticGroups.CHECK_TYPES);
-    assertThat(lastCompiler.getErrors().get(0).getDescription())
+    assertThat(lastCompiler.getErrors().get(0).description())
         .contains("found   : (typeof cycle.a.Widget.Item)");
   }
 
@@ -664,7 +664,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     // required: None
 
     test(options, new String[] {base, code1, code2, code3}, DiagnosticGroups.CHECK_TYPES);
-    assertThat(lastCompiler.getErrors().get(0).getDescription())
+    assertThat(lastCompiler.getErrors().get(0).description())
         .contains("found   : (typeof cycle.a.Widget.Item)");
   }
 
@@ -719,7 +719,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     // found   : null
     // required: cycle.a.Widget.Item
     test(options, new String[] {base, code1, code2, code3}, DiagnosticGroups.CHECK_TYPES);
-    assertThat(lastCompiler.getErrors().get(0).getDescription())
+    assertThat(lastCompiler.getErrors().get(0).description())
         .contains("required: cycle.a.Widget.Item");
   }
 
@@ -4048,7 +4048,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     compile(options, "const str = '\\q';");
     assertThat(lastCompiler.getWarnings()).hasSize(1);
-    assertThat(lastCompiler.getWarnings().get(0).getDescription()).contains("Unnecessary escape");
+    assertThat(lastCompiler.getWarnings().get(0).description()).contains("Unnecessary escape");
   }
 
   // NOTE(dimvar): the jsdocs are ignored in the comparison of the before/after ASTs. It'd be nice
