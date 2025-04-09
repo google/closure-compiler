@@ -87,7 +87,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   }
 
   // BEFORE: async function f() { BODY }
-  //  AFTER: async function f() { var swap = enter(); try { BODY } finally { swap() } }
+  //  AFTER: async function f() { const swap = enter(); try { BODY } finally { swap() } }
   //
   // BEFORE: await EXPR
   //  AFTER: swap(await swap(EXPR), 1)
@@ -116,7 +116,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          const $jscomp$swapContext = $jscomp.asyncContextEnter();
           try {
             $jscomp$swapContext(await $jscomp$swapContext(1), 1);
           } finally {
@@ -155,7 +155,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          const $jscomp$swapContext = $jscomp.asyncContextEnter();
           try {
             for await (const x of $jscomp$swapContext(gen())) {
               $jscomp$swapContext(0, 1);
@@ -193,7 +193,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          const $jscomp$swapContext = $jscomp.asyncContextEnter();
           try {
             if (1) {
               for await (const x of $jscomp$swapContext(gen())) {
@@ -230,7 +230,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          const $jscomp$swapContext = $jscomp.asyncContextEnter();
           try {
             for await (const x of
                            $jscomp$swapContext(
@@ -268,7 +268,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         """
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
-        var $jscomp$swapContext = $jscomp.asyncContextEnter();
+        const $jscomp$swapContext = $jscomp.asyncContextEnter();
         $jscomp$swapContext(await $jscomp$swapContext(1), 1);
         $jscomp$swapContext(await $jscomp$swapContext(2), 1);
         """);
@@ -291,7 +291,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          const $jscomp$swapContext = $jscomp.asyncContextEnter();
           try {
             $jscomp$swapContext(await $jscomp$swapContext(1), 1);
             $jscomp$swapContext(await $jscomp$swapContext(2), 1);
@@ -328,7 +328,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          const $jscomp$swapContext = $jscomp.asyncContextEnter();
           try {
             try {
               $jscomp$swapContext(await $jscomp$swapContext(1), 1);
@@ -370,7 +370,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          const $jscomp$swapContext = $jscomp.asyncContextEnter();
           try {
             try {
               $jscomp$swapContext(await $jscomp$swapContext(1), 1);
@@ -407,7 +407,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          const $jscomp$swapContext = $jscomp.asyncContextEnter();
           try {
             try {
               $jscomp$swapContext(await $jscomp$swapContext(1), 1);
@@ -456,7 +456,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          const $jscomp$swapContext = $jscomp.asyncContextEnter();
           try {
             try {
               return $jscomp$swapContext(await $jscomp$swapContext(1), 1);
@@ -491,7 +491,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          const $jscomp$swapContext = $jscomp.asyncContextEnter();
           try {
             try {
               return $jscomp$swapContext(await $jscomp$swapContext(1), 1);
@@ -534,7 +534,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         (async () => {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          const $jscomp$swapContext = $jscomp.asyncContextEnter();
           try {
             return use($jscomp$swapContext(await $jscomp$swapContext(1), 1));
           } finally {
@@ -560,7 +560,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
 
   // BEFORE: function* f() { BODY }
   //  AFTER: function f() {
-  //           var swap = enter(1);
+  //           const swap = enter(1);
   //           return function*() { swap(0, 1); try { BODY } finally { swap() } }()
   //         }
   //
@@ -589,7 +589,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
           return function*() {
             $jscomp$swapContext(0, 1);
             try {
@@ -623,7 +623,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
           return function*() {
             $jscomp$swapContext(0, 1);
             try {
@@ -662,7 +662,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
           return function*() {
             $jscomp$swapContext(0, 1);
             try {
@@ -704,7 +704,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
           return function*() {
             $jscomp$swapContext(0, 1);
             try {
@@ -743,7 +743,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
           return function*() {
             $jscomp$swapContext(0, 1);
             try {
@@ -772,7 +772,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
           return function*() {
             $jscomp$swapContext(0, 1);
             try {
@@ -813,7 +813,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         function f(a) {
           const $jscomp$arguments$m1146332801$0 = arguments;
-          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
           return function*() {
             $jscomp$swapContext(0, 1);
             try {
@@ -846,7 +846,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f() {
-            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
             return (function*() {
               $jscomp$swapContext(0, 1);
               try {
@@ -879,7 +879,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f() {
-            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
             return (function*() {
               $jscomp$swapContext(0, 1);
               try {
@@ -917,7 +917,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         class Foo {
           g() {
             const $jscomp$this$m1146332801$0 = this;
-            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
             return (function*() {
               $jscomp$swapContext(0, 1);
               try {
@@ -952,7 +952,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         class Foo {
           g() {
             const $jscomp$arguments$m1146332801$0 = arguments;
-            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
             return (function*() {
               $jscomp$swapContext(0, 1);
               try {
@@ -990,7 +990,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         class Foo {
           /** @nocollapse */
           static f() {
-            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
             return this.f$jscomp$m1146332801$0($jscomp$swapContext);
           }
           /** @nocollapse */
@@ -1027,7 +1027,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f() {
-            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
             return this.f$jscomp$m1146332801$0($jscomp$swapContext);
           }
           *f$jscomp$m1146332801$0($jscomp$swapContext) {
@@ -1060,7 +1060,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f() {
-            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
             return this.f$jscomp$m1146332801$0($jscomp$swapContext);
           }
           *f$jscomp$m1146332801$0($jscomp$swapContext) {
@@ -1093,7 +1093,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f(a, b, c) {
-            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
             return this.f$jscomp$m1146332801$0($jscomp$swapContext, a, b, c);
           }
           *f$jscomp$m1146332801$0($jscomp$swapContext, a, b, c) {
@@ -1128,7 +1128,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f(a) {
-            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
             return this.f$jscomp$m1146332801$0($jscomp$swapContext, arguments, a);
           }
           *f$jscomp$m1146332801$0($jscomp$swapContext, $jscomp$arguments$m1146332801$1, a) {
@@ -1167,7 +1167,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f(a) {
-            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
             return this.f$jscomp$m1146332801$0($jscomp$swapContext, a);
           }
           *f$jscomp$m1146332801$0($jscomp$swapContext, a = 1) {
@@ -1200,7 +1200,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f($jscomp$m1146332801$1, $jscomp$m1146332801$2) {
-            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
             return this.f$jscomp$m1146332801$0(
                 $jscomp$swapContext,
                 $jscomp$m1146332801$1,
@@ -1237,7 +1237,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f(...a) {
-            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
             return this.f$jscomp$m1146332801$0($jscomp$swapContext, ...a);
           }
           *f$jscomp$m1146332801$0($jscomp$swapContext, ...a) {
@@ -1270,7 +1270,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f(a, $jscomp$m1146332801$1, c, ...$jscomp$m1146332801$2) {
-            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
             return this.f$jscomp$m1146332801$0(
                 $jscomp$swapContext, a, $jscomp$m1146332801$1, c, ...$jscomp$m1146332801$2);
           }
@@ -1305,7 +1305,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           [Symbol.iterator]() {
-            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
             return this.$jscomp$m1146332801$0($jscomp$swapContext);
           }
           *$jscomp$m1146332801$0($jscomp$swapContext) {
@@ -1335,7 +1335,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
           return async function*() {
             $jscomp$swapContext(0, 1);
             try {
@@ -1366,7 +1366,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
           return async function*() {
             $jscomp$swapContext(0, 1);
             try {
@@ -1397,7 +1397,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f() {
-            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
             return (async function*() {
               $jscomp$swapContext(0, 1);
               try {
@@ -1432,7 +1432,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f() {
-            var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
             return this.f$jscomp$m1146332801$0($jscomp$swapContext);
           }
           async *f$jscomp$m1146332801$0($jscomp$swapContext) {
@@ -1503,7 +1503,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
           return function*() {
             $jscomp$swapContext(0, 1);
             try {
@@ -1532,7 +1532,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
           return async function*() {
             $jscomp$swapContext(0, 1);
             try {
@@ -1553,7 +1553,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          const $jscomp$swapContext = $jscomp.asyncContextEnter();
           $jscomp$swapContext(await $jscomp$swapContext(42), 1);
         }
         """);
@@ -1568,7 +1568,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          const $jscomp$swapContext = $jscomp.asyncContextEnter();
           $jscomp$swapContext(await $jscomp$swapContext(2), 1);
           async function g() {
             await 3;
@@ -1582,10 +1582,10 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          const $jscomp$swapContext = $jscomp.asyncContextEnter();
           $jscomp$swapContext(await $jscomp$swapContext(2), 1);
           async function g() {
-            var $jscomp$swapContext = $jscomp.asyncContextEnter();
+            const $jscomp$swapContext = $jscomp.asyncContextEnter();
             try {
               $jscomp$swapContext(await $jscomp$swapContext(3), 1);
             } finally {
@@ -1594,7 +1594,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
           }
         }
         async function h() {
-          var $jscomp$swapContext = $jscomp.asyncContextEnter();
+          const $jscomp$swapContext = $jscomp.asyncContextEnter();
           try {
             $jscomp$swapContext(await $jscomp$swapContext(4), 1);
           } finally {

@@ -542,7 +542,14 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     Node call =
         astFactory.createCallWithUnknownType(
             astFactory.createQNameWithUnknownType(JSCOMP, ImmutableList.of(ENTER)), arg);
-    return IR.var(astFactory.createConstantName(SWAP, AstFactory.type(call)), call);
+    return createConst(astFactory.createConstantName(SWAP, AstFactory.type(call)), call);
+  }
+
+  private Node createConst(Node name, Node value) {
+    if (compiler.getOptions().getOutputFeatureSet().contains(Feature.CONST_DECLARATIONS)) {
+      return IR.constNode(name, value);
+    }
+    return IR.var(name, value);
   }
 
   /** Creates a statement {@code const $jscomp$swapContext = $jscomp$asyncContextEnter(1);}. */
