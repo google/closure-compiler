@@ -8195,6 +8195,11 @@ google.maps.PlacesLibrary.prototype.PlacesServiceStatus;
 google.maps.PlacesLibrary.prototype.PlusCode;
 
 /**
+ * @type {typeof google.maps.places.PostalAddress}
+ */
+google.maps.PlacesLibrary.prototype.PostalAddress;
+
+/**
  * @type {typeof google.maps.places.PriceLevel}
  */
 google.maps.PlacesLibrary.prototype.PriceLevel;
@@ -15198,442 +15203,6 @@ google.maps.journeySharing.WaypointType = {
 /**
  * @const
  */
-google.maps.localContext = {};
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Shows a Local Context experience with a {@link google.maps.Map}.
- *
- * Access by calling `const {LocalContextMapView} = await
- * google.maps.importLibrary("localContext")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {!google.maps.localContext.LocalContextMapViewOptions} options
- * @implements {google.maps.localContext.LocalContextMapViewOptions}
- * @constructor
- * @deprecated Local Context is deprecated, and no longer recommended for new
- *     websites. The feature will continue to work, and 12 months notice will be
- *     given before support is discontinued. If you are interested in building a
- *     Local Context-like experience yourself, we suggest that you check out the
- *     &quot;Neighborhood Discovery&quot; solution in <a
- *     href="https://mapsplatform.google.com/resources/quick-builder/">Quick
- *     Builder</a> or use the <a
- *     href="https://developers.google.com/maps/documentation/javascript/places">Places
- *     Library</a>, Maps JavaScript API. <a
- *     href="https://developers.google.com/maps/documentation/javascript/examples#places">Code
- *     samples</a> and <a
- *     href="https://codelabs.developers.google.com/?product=googlemapsplatform&text=places">codelabs</a>
- *     for the Places Library can help you.
- */
-google.maps.localContext.LocalContextMapView = function(options) {};
-
-/**
- * See {@link
- * google.maps.localContext.LocalContextMapViewOptions.directionsOptions}.
- * @type {google.maps.localContext.MapDirectionsOptions|!google.maps.localContext.MapDirectionsOptionsLiteral|null|undefined}
- */
-google.maps.localContext.LocalContextMapView.prototype.directionsOptions;
-
-/**
- * This Field is read-only. The DOM Element backing the view.
- * @type {!HTMLElement|!SVGElement|null|undefined}
- */
-google.maps.localContext.LocalContextMapView.prototype.element;
-
-/**
- * Is set to <code>true</code> before {@link
- * google.maps.localContext.LocalContextMapView} begins changing the bounds of
- * the inner {@link google.maps.Map}, and set to <code>false</code> after {@link
- * google.maps.localContext.LocalContextMapView} finishes changing the bounds of
- * the inner {@link google.maps.Map}. (Not set when layout mode changes happen
- * due to responsive resizing.)
- * @type {boolean}
- */
-google.maps.localContext.LocalContextMapView.prototype.isTransitioningMapBounds;
-
-/**
- * See {@link google.maps.localContext.LocalContextMapViewOptions.locationBias}.
- * Changing this property on the <code>LocalContextMapView</code> may trigger a
- * new search.
- * @type {google.maps.places.LocationBias|null|undefined}
- */
-google.maps.localContext.LocalContextMapView.prototype.locationBias;
-
-/**
- * See {@link
- * google.maps.localContext.LocalContextMapViewOptions.locationRestriction}.
- * Changing this property on the <code>LocalContextMapView</code> may trigger a
- * new search.
- * @type {google.maps.places.LocationRestriction|null|undefined}
- */
-google.maps.localContext.LocalContextMapView.prototype.locationRestriction;
-
-/**
- * See {@link
- * google.maps.localContext.LocalContextMapViewOptions.maxPlaceCount}. Changing
- * this property on the <code>LocalContextMapView</code> may trigger a new
- * search.
- * @type {number}
- */
-google.maps.localContext.LocalContextMapView.prototype.maxPlaceCount;
-
-/**
- * See {@link
- * google.maps.localContext.LocalContextMapViewOptions.placeTypePreferences}.
- * Changing this property on the <code>LocalContextMapView</code> may trigger a
- * new search. <code>Iterable&lt;string|PlaceTypePreference&gt;</code> is also
- * accepted.
- * @type {!Array<!google.maps.localContext.PlaceTypePreference>}
- */
-google.maps.localContext.LocalContextMapView.prototype.placeTypePreferences;
-
-/**
- * Adds the given listener function to the given event name.
- * @param {string} eventName
- * @param {!Function} handler
- * @return {!google.maps.MapsEventListener}
- */
-google.maps.localContext.LocalContextMapView.prototype.addListener = function(
-    eventName, handler) {};
-
-/**
- * Hides the place details.
- * @return {undefined}
- */
-google.maps.localContext.LocalContextMapView.prototype.hidePlaceDetailsView =
-    function() {};
-
-/**
- * Searches for places to show the user based on the current
- * <code>maxPlaceCount</code>, <code>placeTypePreferences</code>,
- * <code>locationRestriction</code>, and <code>locationBias</code>.
- * @return {undefined}
- */
-google.maps.localContext.LocalContextMapView.prototype.search = function() {};
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Options for constructing a {@link
- * google.maps.localContext.LocalContextMapView}, or accessing an
- * existing {@link google.maps.localContext.LocalContextMapView}.
- * @record
- */
-google.maps.localContext.LocalContextMapViewOptions = function() {};
-
-/**
- * Options for customizing directions. If not set, directions and distance will
- * be disabled.
- * @type {google.maps.localContext.MapDirectionsOptions|!google.maps.localContext.MapDirectionsOptionsLiteral|null|undefined}
- */
-google.maps.localContext.LocalContextMapViewOptions.prototype.directionsOptions;
-
-/**
- * This Field is read-only. The DOM Element backing the view.
- * @type {!HTMLElement|!SVGElement|null|undefined}
- */
-google.maps.localContext.LocalContextMapViewOptions.prototype.element;
-
-/**
- * A soft boundary or hint to use when searching for places.
- * @default <code>null</code>
- * @type {google.maps.places.LocationBias|null|undefined}
- */
-google.maps.localContext.LocalContextMapViewOptions.prototype.locationBias;
-
-/**
- * Bounds to constrain search results. If not specified, results will be
- * constrained to the map viewport.
- * @type {google.maps.places.LocationRestriction|null|undefined}
- */
-google.maps.localContext.LocalContextMapViewOptions.prototype
-    .locationRestriction;
-
-/**
- * An already instantiated {@link google.maps.Map} instance. If passed in, the
- * map will be moved into the LocalContextMapView&#39;s DOM, and will
- * <strong>not</strong> be re-styled. The element associated with the Map may
- * also have styles and classes applied to it by the
- * <code>LocalContextMapView</code>.
- * @type {google.maps.Map|null|undefined}
- */
-google.maps.localContext.LocalContextMapViewOptions.prototype.map;
-
-/**
- * The maximum number of places to show. When this parameter is 0, the Local
- * Context Library does not load places. [0,24]
- * @type {number}
- */
-google.maps.localContext.LocalContextMapViewOptions.prototype.maxPlaceCount;
-
-/**
- * Configure the place marker icon based on the icon state. Invoked whenever the
- * input to the callback changes. Pass a function to dynamically override the
- * default setup when the LocalContextMapView draws the place marker. Errors and
- * invalid configurations may be determined asynchronously, and will be ignored
- * (defaults will be used, and errors will be logged to the console).
- * @type {(function({isSelected:boolean, isHighlighted:boolean}):
- *     (google.maps.localContext.PinOptions|null|undefined))|google.maps.localContext.PinOptions|null|undefined}
- */
-google.maps.localContext.LocalContextMapViewOptions.prototype.pinOptionsSetup;
-
-/**
- * Overrides the setup of the place chooser view. Pass a function to dynamically
- * override the default setup when the LocalContextMapView might change its
- * layout due to resizing. Errors and invalid configurations may be determined
- * asynchronously, and will be ignored (defaults will be used instead, and
- * errors will be logged to the console). Errors detected at construction will
- * cause errors to be thrown synchronously.
- * @type {(function({defaultLayoutMode:!google.maps.localContext.PlaceChooserLayoutMode,
- *     defaultPosition:?google.maps.localContext.PlaceChooserPosition}):
- *     (google.maps.localContext.PlaceChooserViewSetupOptions|null|undefined))|google.maps.localContext.PlaceChooserViewSetupOptions|null|undefined}
- */
-google.maps.localContext.LocalContextMapViewOptions.prototype
-    .placeChooserViewSetup;
-
-/**
- * Overrides the setup of the place details view. Pass a function to dynamically
- * override the default setup when the LocalContextMapView might change its
- * layout due to resizing. Errors and invalid configurations may be determined
- * asynchronously, and will be ignored (defaults will be used, and errors will
- * be logged to the console). Errors detected at construction will cause errors
- * to be thrown synchronously.
- * @type {(function({defaultLayoutMode:!google.maps.localContext.PlaceDetailsLayoutMode,
- *     defaultPosition:?google.maps.localContext.PlaceDetailsPosition}):
- *     (google.maps.localContext.PlaceDetailsViewSetupOptions|null|undefined))|google.maps.localContext.PlaceDetailsViewSetupOptions|null|undefined}
- */
-google.maps.localContext.LocalContextMapViewOptions.prototype
-    .placeDetailsViewSetup;
-
-/**
- * The types of places to search for (up to 10). The type
- * <code>Iterable&lt;string|PlaceTypePreference&gt;</code> is also accepted, but
- * is only supported in browsers which natively support JavaScript Symbols.
- * @type {!Array<!google.maps.localContext.PlaceTypePreference>}
- */
-google.maps.localContext.LocalContextMapViewOptions.prototype
-    .placeTypePreferences;
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Provides settings for directions with a {@link
- * google.maps.localContext.LocalContextMapView}.
- *
- * Access by calling `const {MapDirectionsOptions} = await
- * google.maps.importLibrary("localContext")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @implements {google.maps.localContext.MapDirectionsOptionsLiteral}
- * @constructor
- */
-google.maps.localContext.MapDirectionsOptions = function() {};
-
-/**
- * Adds the given listener function to the given event name.
- * @param {string} eventName
- * @param {!Function} handler
- * @return {!google.maps.MapsEventListener}
- */
-google.maps.localContext.MapDirectionsOptions.prototype.addListener = function(
-    eventName, handler) {};
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Object literals are accepted in place of {@link
- * google.maps.localContext.MapDirectionsOptions} objects, as a convenience, in
- * many places. These are converted to {@link
- * google.maps.localContext.MapDirectionsOptions} objects when the Maps API
- * encounters them.
- * @record
- */
-google.maps.localContext.MapDirectionsOptionsLiteral = function() {};
-
-/**
- * Origin for directions and distance.
- * @type {!google.maps.LatLng|!google.maps.LatLngLiteral}
- */
-google.maps.localContext.MapDirectionsOptionsLiteral.prototype.origin;
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Options for customizing a pin marker.
- * @record
- */
-google.maps.localContext.PinOptions = function() {};
-
-/**
- * The color of the icon&#39;s shape, can be any valid CSS color.
- * @type {string|null|undefined}
- */
-google.maps.localContext.PinOptions.prototype.background;
-
-/**
- * The color of the icon&#39;s glyph, can be any valid CSS color.
- * @type {string|null|undefined}
- */
-google.maps.localContext.PinOptions.prototype.glyphColor;
-
-/**
- * The scale of the icon. The value is absolute, not relative to the default
- * sizes in each state.
- * @type {number|null|undefined}
- */
-google.maps.localContext.PinOptions.prototype.scale;
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Layout modes for the place chooser.
- *
- * Access by calling `const {PlaceChooserLayoutMode} = await
- * google.maps.importLibrary("localContext")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @enum {string}
- */
-google.maps.localContext.PlaceChooserLayoutMode = {
-  /**
-   * Place chooser is hidden.
-   */
-  HIDDEN: 'HIDDEN',
-  /**
-   * Place chooser is shown as a sheet.
-   */
-  SHEET: 'SHEET',
-};
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Display positions for the place chooser.
- *
- * Access by calling `const {PlaceChooserPosition} = await
- * google.maps.importLibrary("localContext")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @enum {string}
- */
-google.maps.localContext.PlaceChooserPosition = {
-  /**
-   * Place chooser is displayed on a line below the map extending to the end of
-   * the container.
-   */
-  BLOCK_END: 'BLOCK_END',
-  /**
-   * Place chooser is displayed inline with the map at the end of the line. (In
-   * a left-to-right language this means that the place chooser is to the right
-   * of the map.)
-   */
-  INLINE_END: 'INLINE_END',
-  /**
-   * Place chooser is displayed inline with the map at the start of the line.
-   * (In a left-to-right language this means that the place chooser is to the
-   * left of the map.)
-   */
-  INLINE_START: 'INLINE_START',
-};
-
-/**
- * Setup options for the place chooser. Read more about <a
- * href="https://developers.google.com/maps/documentation/javascript/local-context/set-options#setting_layout_and_visibility">setting
- * layout and visibility</a>.
- * @record
- */
-google.maps.localContext.PlaceChooserViewSetupOptions = function() {};
-
-/**
- * @type {google.maps.localContext.PlaceChooserLayoutMode|null|undefined}
- */
-google.maps.localContext.PlaceChooserViewSetupOptions.prototype.layoutMode;
-
-/**
- * Ignored when <code>layoutMode:HIDDEN</code>. If not passed, a position will
- * be determined automatically based on the <code>layoutMode</code>.
- * @type {google.maps.localContext.PlaceChooserPosition|null|undefined}
- */
-google.maps.localContext.PlaceChooserViewSetupOptions.prototype.position;
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Layout modes for the place details.
- *
- * Access by calling `const {PlaceDetailsLayoutMode} = await
- * google.maps.importLibrary("localContext")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @enum {string}
- */
-google.maps.localContext.PlaceDetailsLayoutMode = {
-  /**
-   * Place details is displayed in an {@link google.maps.InfoWindow}.
-   */
-  INFO_WINDOW: 'INFO_WINDOW',
-  /**
-   * Place details is displayed in a sheet.
-   */
-  SHEET: 'SHEET',
-};
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Display positions for the place details.
- *
- * Access by calling `const {PlaceDetailsPosition} = await
- * google.maps.importLibrary("localContext")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @enum {string}
- */
-google.maps.localContext.PlaceDetailsPosition = {
-  /**
-   * Place details is displayed inline with the map at the end of the line. (In
-   * a left-to-right language this means that the place details is to the right
-   * of the map.)
-   */
-  INLINE_END: 'INLINE_END',
-  /**
-   * Place details is displayed inline with the map at the start of the line.
-   * (In a left-to-right language this means that the place details is to the
-   * left of the map.)
-   */
-  INLINE_START: 'INLINE_START',
-};
-
-/**
- * Setup options for the place details. Read more about <a
- * href="https://developers.google.com/maps/documentation/javascript/local-context/set-options#setting_layout_and_visibility">setting
- * layout and visibility</a>.
- * @record
- */
-google.maps.localContext.PlaceDetailsViewSetupOptions = function() {};
-
-/**
- * @type {boolean|undefined}
- */
-google.maps.localContext.PlaceDetailsViewSetupOptions.prototype.hidesOnMapClick;
-
-/**
- * @type {google.maps.localContext.PlaceDetailsLayoutMode|null|undefined}
- */
-google.maps.localContext.PlaceDetailsViewSetupOptions.prototype.layoutMode;
-
-/**
- * Ignored when <code>layoutMode:INFO_WINDOW</code>. If not passed, a position
- * will be determined automatically based on the <code>layoutMode</code>.
- * @type {google.maps.localContext.PlaceDetailsPosition|null|undefined}
- */
-google.maps.localContext.PlaceDetailsViewSetupOptions.prototype.position;
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * @typedef {{type:string, weight:(number|undefined)}}
- */
-google.maps.localContext.PlaceTypePreference;
-
-/**
- * @const
- */
 google.maps.maps3d = {};
 
 /**
@@ -18716,6 +18285,11 @@ google.maps.places.Place.prototype.photos;
 google.maps.places.Place.prototype.plusCode;
 
 /**
+ * @type {!google.maps.places.PostalAddress|null|undefined}
+ */
+google.maps.places.Place.prototype.postalAddress;
+
+/**
  * The price level of the Place. This property can return any of the following
  * values <ul style="list-style-type: none;"> <li><code>Free</code></li>
  * <li><code>Inexpensive</code></li> <li><code>Moderate</code></li>
@@ -20310,6 +19884,151 @@ google.maps.places.PlusCode.prototype.compoundCode;
  * @type {string|null}
  */
 google.maps.places.PlusCode.prototype.globalCode;
+
+/**
+ * Represents a postal address (e.g. for a postal service to deliver items to).
+ * Note: PostalAddress is used by the JavaScript API to instantiate objects that
+ * represent data returned by the Web Service.
+ *
+ * Access by calling `const {PostalAddress} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PostalAddressLiteral}
+ * @constructor
+ */
+google.maps.places.PostalAddress = function() {};
+
+/**
+ * Unstructured address lines describing the lower levels of an address.
+ * @type {!Array<string>}
+ */
+google.maps.places.PostalAddress.prototype.addressLines;
+
+/**
+ * The highest administrative subdivision which is used for postal addresses of
+ * a country or region.
+ * @type {string|null}
+ */
+google.maps.places.PostalAddress.prototype.administrativeArea;
+
+/**
+ * BCP-47 language code of the contents of this address. Examples:
+ * &quot;zh-Hant&quot;, &quot;ja&quot;, &quot;ja-Latn&quot;, &quot;en&quot;.
+ * @type {string|null}
+ */
+google.maps.places.PostalAddress.prototype.languageCode;
+
+/**
+ * Generally refers to the city/town portion of the address.
+ * @type {string|null}
+ */
+google.maps.places.PostalAddress.prototype.locality;
+
+/**
+ * The name of the organization at the address.
+ * @type {string|null}
+ */
+google.maps.places.PostalAddress.prototype.organization;
+
+/**
+ * Postal code of the address.
+ * @type {string|null}
+ */
+google.maps.places.PostalAddress.prototype.postalCode;
+
+/**
+ * The recipient at the address.
+ * @type {!Array<string>}
+ */
+google.maps.places.PostalAddress.prototype.recipients;
+
+/**
+ * CLDR region code of the country/region of the address. Example:
+ * &quot;CH&quot; for Switzerland. See <a
+ * href="https://cldr.unicode.org/">https://cldr.unicode.org/</a> and <a
+ * href="https://www.unicode.org/cldr/charts/30/supplemental/territory_information.html">https://www.unicode.org/cldr/charts/30/supplemental/territory_information.html</a>
+ * for details.
+ * @type {string}
+ */
+google.maps.places.PostalAddress.prototype.regionCode;
+
+/**
+ * Sorting code of the address.
+ * @type {string|null}
+ */
+google.maps.places.PostalAddress.prototype.sortingCode;
+
+/**
+ * Sublocality of the address such as neighborhoods, boroughs, or districts.
+ * @type {string|null}
+ */
+google.maps.places.PostalAddress.prototype.sublocality;
+
+/**
+ * Data for hydrating a PostalAddress.
+ * @record
+ */
+google.maps.places.PostalAddressLiteral = function() {};
+
+/**
+ * See {@link google.maps.places.PostalAddress.addressLines}.
+ * @type {!Iterable<string>|undefined}
+ */
+google.maps.places.PostalAddressLiteral.prototype.addressLines;
+
+/**
+ * See {@link google.maps.places.PostalAddress.administrativeArea}.
+ * @type {string|null|undefined}
+ */
+google.maps.places.PostalAddressLiteral.prototype.administrativeArea;
+
+/**
+ * See {@link google.maps.places.PostalAddress.languageCode}.
+ * @type {string|null|undefined}
+ */
+google.maps.places.PostalAddressLiteral.prototype.languageCode;
+
+/**
+ * See {@link google.maps.places.PostalAddress.locality}.
+ * @type {string|null|undefined}
+ */
+google.maps.places.PostalAddressLiteral.prototype.locality;
+
+/**
+ * See {@link google.maps.places.PostalAddress.organization}.
+ * @type {string|null|undefined}
+ */
+google.maps.places.PostalAddressLiteral.prototype.organization;
+
+/**
+ * See {@link google.maps.places.PostalAddress.postalCode}.
+ * @type {string|null|undefined}
+ */
+google.maps.places.PostalAddressLiteral.prototype.postalCode;
+
+/**
+ * See {@link google.maps.places.PostalAddress.recipients}.
+ * @type {!Iterable<string>|undefined}
+ */
+google.maps.places.PostalAddressLiteral.prototype.recipients;
+
+/**
+ * See {@link google.maps.places.PostalAddress.regionCode}.
+ * @type {string}
+ */
+google.maps.places.PostalAddressLiteral.prototype.regionCode;
+
+/**
+ * See {@link google.maps.places.PostalAddress.sortingCode}.
+ * @type {string|null|undefined}
+ */
+google.maps.places.PostalAddressLiteral.prototype.sortingCode;
+
+/**
+ * See {@link google.maps.places.PostalAddress.sublocality}.
+ * @type {string|null|undefined}
+ */
+google.maps.places.PostalAddressLiteral.prototype.sublocality;
 
 /**
  * Represents a prediction substring.
