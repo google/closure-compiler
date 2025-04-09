@@ -1310,9 +1310,9 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
 
     @Override
     public CheckLevel level(JSError error) {
-      if (error.getDescription().contains("Parse")) {
+      if (error.description().contains("Parse")) {
         return null;
-      } else if (RELEVANT_DIAGNOSTICS.contains(error.getType())) {
+      } else if (RELEVANT_DIAGNOSTICS.contains(error.type())) {
         return null;
       } else {
         return CheckLevel.OFF;

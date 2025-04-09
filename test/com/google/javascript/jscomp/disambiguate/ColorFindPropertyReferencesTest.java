@@ -661,7 +661,7 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
 
         @Override
         public CheckLevel level(JSError error) {
-          return error.getDescription().contains("Parse") ? null : CheckLevel.OFF;
+          return error.description().contains("Parse") ? null : CheckLevel.OFF;
         }
       };
 
