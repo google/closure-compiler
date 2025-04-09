@@ -4778,19 +4778,19 @@ google.maps.KmlMouseEvent = function() {};
 /**
  * A <code>KmlFeatureData</code> object, containing information about the
  * clicked feature.
- * @type {google.maps.KmlFeatureData}
+ * @type {!google.maps.KmlFeatureData}
  */
 google.maps.KmlMouseEvent.prototype.featureData;
 
 /**
  * The position at which to anchor an infowindow on the clicked feature.
- * @type {google.maps.LatLng}
+ * @type {!google.maps.LatLng}
  */
 google.maps.KmlMouseEvent.prototype.latLng;
 
 /**
  * The offset to apply to an infowindow anchored on the clicked feature.
- * @type {google.maps.Size}
+ * @type {!google.maps.Size}
  */
 google.maps.KmlMouseEvent.prototype.pixelOffset;
 
@@ -8173,6 +8173,21 @@ google.maps.PlacesLibrary.prototype.Photo;
  * @type {typeof google.maps.places.Place}
  */
 google.maps.PlacesLibrary.prototype.Place;
+
+/**
+ * @type {typeof google.maps.places.PlaceContextualElement}
+ */
+google.maps.PlacesLibrary.prototype.PlaceContextualElement;
+
+/**
+ * @type {typeof google.maps.places.PlaceContextualListConfigElement}
+ */
+google.maps.PlacesLibrary.prototype.PlaceContextualListConfigElement;
+
+/**
+ * @type {typeof google.maps.places.PlaceContextualListLayout}
+ */
+google.maps.PlacesLibrary.prototype.PlaceContextualListLayout;
 
 /**
  * @type {typeof google.maps.places.PlacePrediction}
@@ -18710,6 +18725,116 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedLanguage;
  *     object.
  */
 google.maps.places.PlaceAutocompleteRequestErrorEvent = function() {};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * A widget that uses the context token to display a contextual view of the
+ * Grounding with Google Maps response.
+ *
+ * Access by calling `const {PlaceContextualElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PlaceContextualElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceContextualElement = function() {};
+
+/**
+ * The context token.
+ * @type {string|null|undefined}
+ */
+google.maps.places.PlaceContextualElement.prototype.contextToken;
+
+
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Options for <code>PlaceContextualElement</code>.
+ * @record
+ */
+google.maps.places.PlaceContextualElementOptions = function() {};
+
+/**
+ * The context token provided by the Grounding with Google Maps response.
+ * @type {string|null|undefined}
+ */
+google.maps.places.PlaceContextualElementOptions.prototype.contextToken;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * An HTML element that configures options for the Place Contextual
+ * Element&#39;s list view.
+ *
+ * Access by calling `const {PlaceContextualListConfigElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PlaceContextualListConfigElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceContextualListConfigElement = function() {};
+
+/**
+ * The layout.
+ * @type {!google.maps.places.PlaceContextualListLayout|null|undefined}
+ */
+google.maps.places.PlaceContextualListConfigElement.prototype.layout;
+
+/**
+ * Whether the map is hidden.
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.PlaceContextualListConfigElement.prototype.mapHidden;
+
+
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Options for PlaceContextualListConfigElement.
+ * @record
+ */
+google.maps.places.PlaceContextualListConfigElementOptions = function() {};
+
+/**
+ * The layout. Default is {@link
+ * google.maps.places.PlaceContextualListLayout.VERTICAL}.
+ * @type {!google.maps.places.PlaceContextualListLayout|null|undefined}
+ */
+google.maps.places.PlaceContextualListConfigElementOptions.prototype.layout;
+
+/**
+ * Whether the map is hidden. Default is to show the map (value false).
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.PlaceContextualListConfigElementOptions.prototype.mapHidden;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * The list of layouts that the Place Contextual Element supports for the list
+ * view.
+ *
+ * Access by calling `const {PlaceContextualListLayout} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.PlaceContextualListLayout = {
+  /**
+   * Compact list layout: list items are rendered as links across a single line,
+   * with overflows in a dropdown list.
+   */
+  COMPACT: 'COMPACT',
+  /**
+   * Vertical list layout: list items are rendered as cards in a vertical list.
+   */
+  VERTICAL: 'VERTICAL',
+};
 
 /**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
