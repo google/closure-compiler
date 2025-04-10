@@ -3207,6 +3207,17 @@ public class CompilerOptions {
     IIFE; // The output should be wrapped in an IIFE to isolate global variables.
   }
 
+  /** What segment of the compilation to run. */
+  public static enum SegmentOfCompilationToRun {
+    ENTIRE_COMPILATION, // all JSC compilation in a single action.
+    CHECKS, // all checks
+    OPTIMIZATIONS_FIRST_HALF, // first half of optimizations
+    OPTIMIZATIONS_SECOND_HALF, // second half of optimizations
+    OPTIMIZATIONS, // all optimizations
+    OPTIMIZATIONS_AND_FINALIZATIONS, // all optimizations and finalizations in one action
+    FINALIZATIONS, // all finalizations
+  }
+
   /** A mode enum used to indicate the alias strings policy for the AliasStrings pass */
   public static enum AliasStringsMode {
     NONE, // Do not alias string literals.
