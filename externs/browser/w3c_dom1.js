@@ -328,6 +328,13 @@ function DocumentFragment() {}
 function Document() {}
 
 /**
+ * @param {string} html
+ * @return {!Document}
+ * @see https://developer.mozilla.org/docs/Web/API/Document/parseHTMLUnsafe_static
+ */
+Document.parseHTMLUnsafe = function(html) {};
+
+/**
  * @type {!HTMLCollection}
  * @see https://dom.spec.whatwg.org/#parentnode
  */
@@ -522,6 +529,14 @@ NamedNodeMap.prototype.length;
 NamedNodeMap.prototype.getNamedItem = function(name) {};
 
 /**
+ * @param {string} namespace
+ * @param {string} localName
+ * @return {?Node}
+ * @see https://developer.mozilla.org/docs/Web/API/NamedNodeMap/getNamedItemNS
+ */
+NamedNodeMap.prototype.getNamedItemNS = function(namespace, localName) {};
+
+/**
  * @param {number} index
  * @return {Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-349467F9
@@ -537,11 +552,26 @@ NamedNodeMap.prototype.item = function(index) {};
 NamedNodeMap.prototype.removeNamedItem = function(name) {};
 
 /**
+ * @param {string} namespace
+ * @param {string} localName
+ * @return {Node}
+ * @see https://developer.mozilla.org/docs/Web/API/NamedNodeMap/removeNamedItemNS
+ */
+NamedNodeMap.prototype.removeNamedItemNS = function(namespace, localName) {};
+
+/**
  * @param {Node} arg
  * @return {Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1025163788
  */
 NamedNodeMap.prototype.setNamedItem = function(arg) {};
+
+/**
+ * @param {Node} arg
+ * @return {?Node}
+ * @see https://developer.mozilla.org/docs/Web/API/NamedNodeMap/setNamedItemNS
+ */
+NamedNodeMap.prototype.setNamedItemNS = function(arg) {};
 
 /**
  * @constructor
@@ -655,6 +685,119 @@ CSSStyleValue.parseAll = function(property, cssText) {}
  * @return {string}
  */
 CSSStyleValue.prototype.toString = function() {};
+
+
+/**
+ * @constructor
+ * @extends {CSSStyleValue}
+ * @see https://www.w3.org/TR/css-typed-om-1/#cssnumericvalue
+ */
+function CSSNumericValue() {}
+
+/**
+ * @param {string} cssText
+ * @return {!CSSNumericValue}
+ */
+CSSNumericValue.parse = function(cssText) {}
+
+/**
+ * @param {...number|!CSSNumericValue} values
+ * @return {!CSSNumericValue}
+ */
+CSSNumericValue.prototype.add = function(values) {}
+
+/**
+ * @param {...number|!CSSNumericValue} values
+ * @return {!CSSNumericValue}
+ */
+CSSNumericValue.prototype.div = function(values) {}
+
+/**
+ * @param {...number|!CSSNumericValue} values
+ * @return {boolean}
+ * TODO(b/409606341): Adding equals to externs caused a minor size increase in
+ * some targets. Investigate why this is the case and uncomment this extern
+ * once the issue is understood.
+ */
+/* CSSNumericValue.prototype.equals = function(values) {}; */
+
+/**
+ * @param {...number|!CSSNumericValue} values
+ * @return {!CSSNumericValue}
+ */
+CSSNumericValue.prototype.max = function(values) {};
+
+/**
+ * @param {...number|!CSSNumericValue} values
+ * @return {!CSSNumericValue}
+ */
+CSSNumericValue.prototype.min = function(values) {};
+
+/**
+ * @param {...number|!CSSNumericValue} values
+ * @return {!CSSNumericValue}
+ */
+CSSNumericValue.prototype.mul = function(values) {};
+
+/**
+ * @param {...number|!CSSNumericValue} values
+ * @return {!CSSNumericValue}
+ */
+CSSNumericValue.prototype.sub = function(values) {};
+
+/**
+ * @param {string} unit
+ * @return {!CSSUnitValue}
+ */
+CSSNumericValue.prototype.to = function(unit) {};
+
+/**
+ * @param {...string} units
+ * @return {!CSSNumericValue}
+ * TODO(b/408277839): This should really return a CSSMathSum.
+ * Change the return type when it is added.
+ */
+CSSNumericValue.prototype.toSum = function(units) {};
+
+/**
+ * @return {!CSSNumericType}
+ */
+CSSNumericValue.prototype.type = function() {};
+
+/**
+ * @constructor
+ * @extends {CSSNumericValue}
+ * @param {number} value
+ * @param {string} unit
+ * @see https://developer.mozilla.org/docs/Web/API/CSSUnitValue
+ */
+function CSSUnitValue(value, unit) {}
+
+/**
+ * @type {number}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSUnitValue/value
+ */
+CSSUnitValue.prototype.value;
+
+/**
+ * @const {string}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSUnitValue/unit
+ */
+CSSUnitValue.prototype.unit;
+
+/**
+ * @typedef {{
+ *   angle: (number|undefined),
+ *   flex: (number|undefined),
+ *   frequency: (number|undefined),
+ *   length: (number|undefined),
+ *   percent: (number|undefined),
+ *   percentHint: (string|undefined),
+ *   resolution: (number|undefined),
+ *   time: (number|undefined)
+ * }}
+ */
+var CSSNumericType;
 
 /**
  * @constructor

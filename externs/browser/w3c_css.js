@@ -726,7 +726,7 @@ CSSStyleDeclaration.prototype.setExpression = function(
 /** @type {string} */ CSSStyleDeclaration.prototype.dominantBaseline;
 /** @type {string} */ CSSStyleDeclaration.prototype.float;
 /** @type {string} */ CSSStyleDeclaration.prototype.floodColor;
-/** @type {string} */ CSSStyleDeclaration.prototype.floatOpacity;
+/** @type {string} */ CSSStyleDeclaration.prototype.floodOpacity;
 /** @type {string} */ CSSStyleDeclaration.prototype.fontFeatureSettings;
 /** @type {string} */ CSSStyleDeclaration.prototype.fontKerning;
 /** @type {string} */ CSSStyleDeclaration.prototype.fontOpticalSizing;
@@ -772,8 +772,8 @@ CSSStyleDeclaration.prototype.setExpression = function(
 /** @type {string} */ CSSStyleDeclaration.prototype.maskRepeat;
 /** @type {string} */ CSSStyleDeclaration.prototype.maskSize;
 /** @type {string} */ CSSStyleDeclaration.prototype.maskType;
-/** @type {string} */ CSSStyleDeclaration.prototype.maskDepth;
-/** @type {string} */ CSSStyleDeclaration.prototype.maskStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.mathDepth;
+/** @type {string} */ CSSStyleDeclaration.prototype.mathStyle;
 /** @type {string} */ CSSStyleDeclaration.prototype.maxBlockSize;
 /** @type {string} */ CSSStyleDeclaration.prototype.maxInlineSize;
 /** @type {string} */ CSSStyleDeclaration.prototype.minBlockSize;
@@ -808,6 +808,7 @@ CSSStyleDeclaration.prototype.setExpression = function(
 /** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginBlock;
 /** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginBlockEnd;
 /** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginBlockStart;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginBottom;
 /** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginInline;
 /** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginInlineEnd;
 /** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginInlineStart;
@@ -3053,6 +3054,10 @@ CaretPosition.prototype.offsetNode;
  */
 CaretPosition.prototype.offset;
 
+/**
+ * @type {!StylePropertyMap}
+ */
+Element.prototype.attributeStyleMap;
 
 // http://www.w3.org/TR/cssom-view/#extensions-to-the-element-interface
 

@@ -2137,6 +2137,12 @@ HTMLIFrameElement.prototype.sandbox;
 HTMLIFrameElement.prototype.allow;
 
 /**
+ * @type {boolean}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLIFrameElement/allowFullscreen
+ */
+HTMLIFrameElement.prototype.allowFullscreen;
+
+/**
  * @type {Window}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLIFrameElement/contentWindow
  */
@@ -6088,6 +6094,12 @@ CustomElementRegistry.prototype.define = function(tagName, klass, options) {};
  * @return {function(new:HTMLElement)|undefined}
  */
 CustomElementRegistry.prototype.get = function(tagName) {};
+
+/**
+ * @param {function(new:HTMLElement)} constructor
+ * @return {string|null}
+ */
+CustomElementRegistry.prototype.getName = function(constructor) {};
 
 /**
  * @param {string} tagName

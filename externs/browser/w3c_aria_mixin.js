@@ -51,6 +51,16 @@ ARIAMixin.prototype.ariaAutoComplete;
 
 /**
  * @type {string|undefined}
+ */
+ARIAMixin.prototype.ariaBrailleLabel;
+
+/**
+ * @type {string|undefined}
+ */
+ARIAMixin.prototype.ariaBrailleRoleDescription;
+
+/**
+ * @type {string|undefined}
  * @see https://www.w3.org/TR/wai-aria-1.2/#aria-busy
  */
 ARIAMixin.prototype.ariaBusy;
@@ -75,6 +85,11 @@ ARIAMixin.prototype.ariaColIndex;
 
 /**
  * @type {string|undefined}
+ */
+ARIAMixin.prototype.ariaColIndexText;
+
+/**
+ * @type {string|undefined}
  * @see https://www.w3.org/TR/wai-aria-1.2/#aria-colspan
  */
 ARIAMixin.prototype.ariaColSpan;
@@ -84,6 +99,11 @@ ARIAMixin.prototype.ariaColSpan;
  * @see https://www.w3.org/TR/wai-aria-1.2/#aria-current
  */
 ARIAMixin.prototype.ariaCurrent;
+
+/**
+ * @type {string|undefined}
+ */
+ARIAMixin.prototype.ariaDescription;
 
 /**
  * @type {string|undefined}
@@ -211,6 +231,11 @@ ARIAMixin.prototype.ariaRowCount;
  * @see https://www.w3.org/TR/wai-aria-1.2/#aria-rowindex
  */
 ARIAMixin.prototype.ariaRowIndex;
+
+/**
+ * @type {string|undefined}
+ */
+ARIAMixin.prototype.ariaRowIndexText;
 
 /**
  * @type {string|undefined}

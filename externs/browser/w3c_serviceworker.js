@@ -100,6 +100,9 @@ function PushSubscription() {}
 /** @type {string} */
 PushSubscription.prototype.endpoint;
 
+/** @type {number|null} */
+PushSubscription.prototype.expirationTime;
+
 /**
  * Please note there is an intent to deprecate this field in Chrome 43 or 44.
  * See https://www.chromestatus.com/feature/5283829761703936.
@@ -113,20 +116,23 @@ PushSubscription.prototype.options;
 /** @return {!Promise<boolean>} */
 PushSubscription.prototype.unsubscribe = function() {};
 
-/** @enum {string} */
-// This is commented out since it has not been implemented yet in Chrome beta.
-// Uncomment once it is available.
-// var PushPermissionStatus  = {
-//  GRANTED: 'granted',
-//  DENIED: 'denied',
-//  DEFAULT: 'default'
-//};
+/**
+ * @param {string} name
+ * @return {!ArrayBuffer|null}
+ */
+PushSubscription.prototype.getKey = function(name) {};
+
 
 /**
  * @see https://w3c.github.io/push-api/#idl-def-PushManager
  * @constructor
  */
 function PushManager() {}
+
+/**
+ * @const {!Array<string>}
+ */
+PushManager.supportedContentEncodings;
 
 /**
  * @param {PushSubscriptionOptionsInit=} opt_options
@@ -137,10 +143,11 @@ PushManager.prototype.subscribe = function(opt_options) {};
 /** @return {!Promise<PushSubscription>} */
 PushManager.prototype.getSubscription = function() {};
 
-/** @return {!Promise<PushPermissionStatus>} */
-// This is commented out since it has not been implemented yet in Chrome beta.
-// Uncomment once it is available.
-// PushManager.prototype.hasPermission = function() {};
+/**
+ * @param {PushSubscriptionOptionsInit=} options
+ * @return {!Promise<string>}
+ */
+PushManager.prototype.permissionState = function(options) {};
 
 /**
  * @see https://wicg.github.io/BackgroundSync/spec/#sync-manager-interface
@@ -305,6 +312,9 @@ ServiceWorkerContainer.prototype.onmessageerror;
 
 /** @type {?function(!ErrorEvent): void} */
 ServiceWorkerContainer.prototype.onerror;
+
+/** @return {undefined} */
+ServiceWorkerContainer.prototype.startMessages = function() {};
 
 /**
  * @typedef {{scope: (string|undefined), useCache: (boolean|undefined), updateViaCache: (string|undefined)}}

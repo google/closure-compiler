@@ -326,6 +326,21 @@ NodeIterator.prototype.nextNode = function() {};
  */
 NodeIterator.prototype.previousNode = function() {};
 
+/** @type {NodeFilter} */
+NodeIterator.prototype.filter;
+
+/** @type {boolean} */
+NodeIterator.prototype.pointerBeforeReferenceNode;
+
+/** @type {Node} */
+NodeIterator.prototype.referenceNode;
+
+/** @type {Node} */
+NodeIterator.prototype.root;
+
+/** @type {number} */
+NodeIterator.prototype.whatToShow;
+
 /**
  * @interface
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/traversal.html#Traversal-TreeWalker

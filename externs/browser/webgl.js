@@ -2991,6 +2991,12 @@ WebGLShaderPrecisionFormat.prototype.rangeMax;
  */
 WebGLShaderPrecisionFormat.prototype.precision;
 
+/**
+ * @typedef {{
+ *   COMPLETION_STATUS_KHR: number
+ * }}
+ */
+var KHR_parallel_shader_compile;
 
 /**
  * @constructor
