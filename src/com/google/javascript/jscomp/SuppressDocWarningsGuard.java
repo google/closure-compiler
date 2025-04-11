@@ -71,7 +71,7 @@ class SuppressDocWarningsGuard extends WarningsGuard {
 
   @Override
   public @Nullable CheckLevel level(JSError error) {
-    Node node = error.getNode();
+    Node node = error.node();
     if (node == null) {
       node = getScriptNodeBySourceName(error);
     }
@@ -147,11 +147,11 @@ class SuppressDocWarningsGuard extends WarningsGuard {
   }
 
   private final @Nullable Node getScriptNodeBySourceName(JSError error) {
-    if (error.getSourceName() == null) {
+    if (error.sourceName() == null) {
       return null;
     }
 
-    Node scriptNode = this.compiler.getScriptNode(error.getSourceName());
+    Node scriptNode = this.compiler.getScriptNode(error.sourceName());
     if (scriptNode == null) {
       return null;
     }

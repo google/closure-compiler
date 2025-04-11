@@ -27,10 +27,10 @@ public final class StrictWarningsGuard extends WarningsGuard {
 
   @Override
   public @Nullable CheckLevel level(JSError error) {
-    if (error.getType() == UNRAISABLE_WARNING) {
+    if (error.type() == UNRAISABLE_WARNING) {
       return null;
     }
-    return error.getDefaultLevel().isOn() ? CheckLevel.ERROR : null;
+    return error.defaultLevel().isOn() ? CheckLevel.ERROR : null;
   }
 
   @Override

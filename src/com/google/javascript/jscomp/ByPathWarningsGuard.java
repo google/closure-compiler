@@ -90,8 +90,8 @@ public final class ByPathWarningsGuard extends WarningsGuard {
 
   @Override
   public @Nullable CheckLevel level(JSError error) {
-    final String errorPath = error.getSourceName();
-    CheckLevel defaultLevel = error.getDefaultLevel();
+    final String errorPath = error.sourceName();
+    CheckLevel defaultLevel = error.defaultLevel();
     if (defaultLevel != CheckLevel.ERROR && errorPath != null) {
       boolean inPath = false;
       for (String path : paths) {

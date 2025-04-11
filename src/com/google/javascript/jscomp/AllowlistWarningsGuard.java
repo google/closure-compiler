@@ -96,7 +96,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
 
   @Override
   public @Nullable CheckLevel level(JSError error) {
-    if (error.getDefaultLevel().equals(CheckLevel.ERROR)) {
+    if (error.defaultLevel().equals(CheckLevel.ERROR)) {
       return null;
     }
     if (!allowlist.isEmpty() && containWarning(formatWarning(error))) {
@@ -179,11 +179,11 @@ public class AllowlistWarningsGuard extends WarningsGuard {
    */
   protected String formatWarning(JSError error, boolean withMetaData) {
     StringBuilder sb = new StringBuilder();
-    sb.append(normalizeSourceName(error.getSourceName())).append(":");
+    sb.append(normalizeSourceName(error.sourceName())).append(":");
     if (withMetaData) {
       sb.append(error.getLineNumber());
     }
-    List<String> lines = LINE_SPLITTER.splitToList(error.getDescription());
+    List<String> lines = LINE_SPLITTER.splitToList(error.description());
     sb.append("  ").append(lines.get(0));
 
     // Add the rest of the message as a comment.
@@ -244,7 +244,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
 
     @Override
     public void report(CheckLevel level, JSError error) {
-      if (error.getDefaultLevel().equals(CheckLevel.ERROR)) {
+      if (error.defaultLevel().equals(CheckLevel.ERROR)) {
         // ERROR-level diagnostics are ignored by AllowlistWarningsGuard (c.f. above getLevel).
         return;
       }
@@ -286,7 +286,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
 
       Multimap<DiagnosticType, String> warningsByType = TreeMultimap.create();
       for (JSError warning : warnings) {
-        warningsByType.put(warning.getType(), formatWarning(warning, true /* withLineNumber */));
+        warningsByType.put(warning.type(), formatWarning(warning, true /* withLineNumber */));
       }
 
       for (DiagnosticType type : warningsByType.keySet()) {

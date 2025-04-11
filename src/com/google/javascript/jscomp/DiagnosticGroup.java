@@ -90,7 +90,7 @@ public final class DiagnosticGroup implements Serializable {
    * in this group.
    */
   public boolean matches(JSError error) {
-    return matches(error.getType());
+    return matches(error.type());
   }
 
   /**

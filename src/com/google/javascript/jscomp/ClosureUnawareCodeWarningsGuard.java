@@ -42,7 +42,7 @@ public final class ClosureUnawareCodeWarningsGuard extends WarningsGuard {
     if (!DEFAULT_CLOSURE_UNAWARE_CODE_SUPPRESSIONS.matches(error)) {
       return null;
     }
-    @Nullable Node node = error.getNode();
+    @Nullable Node node = error.node();
     if (node == null) {
       return null;
     }

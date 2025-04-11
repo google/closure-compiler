@@ -2151,7 +2151,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         inputsByProvide.put(provide, input);
       }
     }
-    for (ModuleIdentifier moduleIdentifier : options.getDependencyOptions().getEntryPoints()) {
+    for (ModuleIdentifier moduleIdentifier : options.getDependencyOptions().entryPoints()) {
       CompilerInput input = inputsByProvide.get(moduleIdentifier.toString());
       if (input == null) {
         input = inputsByIdentifier.get(moduleIdentifier.toString());
@@ -3353,7 +3353,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   public void report(JSError error) {
-    CheckLevel level = error.getDefaultLevel();
+    CheckLevel level = error.defaultLevel();
     if (warningsGuard != null) {
       CheckLevel newLevel = warningsGuard.level(error);
       if (newLevel != null) {

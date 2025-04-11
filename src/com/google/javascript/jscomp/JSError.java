@@ -279,15 +279,15 @@ public record JSError(
   @Override
   public final String toString() {
     String sourceName =
-        emptyToNull(this.getSourceName()) != null ? this.getSourceName() : "(unknown source)";
+        emptyToNull(this.sourceName()) != null ? this.sourceName() : "(unknown source)";
     String lineno =
-        this.getLineno() != DEFAULT_LINENO ? String.valueOf(this.getLineno()) : "(unknown line)";
+        this.lineno() != DEFAULT_LINENO ? String.valueOf(this.lineno()) : "(unknown line)";
     String charno =
-        this.getCharno() != DEFAULT_CHARNO ? String.valueOf(this.getCharno()) : "(unknown column)";
+        this.charno() != DEFAULT_CHARNO ? String.valueOf(this.charno()) : "(unknown column)";
 
-    return this.getType().key
+    return this.type().key
         + ". "
-        + this.getDescription()
+        + this.description()
         + " at "
         + sourceName
         + " line "
@@ -316,12 +316,12 @@ public record JSError(
 
   /** @return the offset of the region the Error applies to, or -1 if the offset is unknown. */
   public final int getNodeSourceOffset() {
-    return this.getNode() != null ? this.getNode().getSourceOffset() : -1;
+    return this.node() != null ? this.node().getSourceOffset() : -1;
   }
 
   /** Alias for {@link #getLineno()}. */
   public final int getLineNumber() {
-    return this.getLineno();
+    return this.lineno();
   }
 
 }

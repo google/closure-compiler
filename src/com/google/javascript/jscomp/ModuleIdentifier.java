@@ -62,10 +62,10 @@ public record ModuleIdentifier(String name, String closureNamespace, String modu
 
   @Override
   public final String toString() {
-    if (getClosureNamespace().equals(getModuleName())) {
-      return getClosureNamespace();
+    if (closureNamespace().equals(moduleName())) {
+      return closureNamespace();
     }
-    return getModuleName() + ":" + getClosureNamespace();
+    return moduleName() + ":" + closureNamespace();
   }
 
   /**

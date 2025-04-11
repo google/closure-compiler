@@ -237,7 +237,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             .resolveJsModule(importPath, n.getSourceFileName(), n.getLineno(), n.getCharno());
 
     if (modulePath == null) {
-      return ModuleIdentifier.forFile(importPath).getModuleName();
+      return ModuleIdentifier.forFile(importPath).moduleName();
     }
     return modulePath.toModuleName();
   }

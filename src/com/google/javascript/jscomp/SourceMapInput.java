@@ -55,11 +55,11 @@ public final class SourceMapInput {
       } catch (IOException e) {
         JSError error =
             JSError.make(SourceMapInput.SOURCEMAP_RESOLVE_FAILED, sourceMapPath, e.getMessage());
-        errorManager.report(error.getDefaultLevel(), error);
+        errorManager.report(error.defaultLevel(), error);
       } catch (SourceMapParseException e) {
         JSError error =
             JSError.make(SourceMapInput.SOURCEMAP_PARSE_FAILED, sourceMapPath, e.getMessage());
-        errorManager.report(error.getDefaultLevel(), error);
+        errorManager.report(error.defaultLevel(), error);
       }
     }
     return parsedSourceMap;

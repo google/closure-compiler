@@ -101,7 +101,7 @@ public record DependencyOptions(DependencyMode mode, ImmutableList<ModuleIdentif
 
   /** Returns whether dependency management is enabled. */
   public boolean needsManagement() {
-    return getMode() != DependencyMode.NONE;
+    return mode() != DependencyMode.NONE;
   }
 
   /**
@@ -111,7 +111,7 @@ public record DependencyOptions(DependencyMode mode, ImmutableList<ModuleIdentif
    * not be reordered.
    */
   public boolean shouldSort() {
-    return getMode() != DependencyMode.NONE;
+    return mode() != DependencyMode.NONE;
   }
 
   /**
@@ -121,9 +121,9 @@ public record DependencyOptions(DependencyMode mode, ImmutableList<ModuleIdentif
    * dependency of an entry point. Otherwise, all input files should be included.
    */
   public boolean shouldPrune() {
-    return getMode() == DependencyMode.PRUNE_LEGACY
-        || getMode() == DependencyMode.PRUNE
-        || getMode() == DependencyMode.PRUNE_ALLOW_NO_ENTRY_POINTS;
+    return mode() == DependencyMode.PRUNE_LEGACY
+        || mode() == DependencyMode.PRUNE
+        || mode() == DependencyMode.PRUNE_ALLOW_NO_ENTRY_POINTS;
   }
 
   /**
@@ -135,8 +135,7 @@ public record DependencyOptions(DependencyMode mode, ImmutableList<ModuleIdentif
    * <p>If true, moochers should not be considered implicit entry points.
    */
   public boolean shouldDropMoochers() {
-    return getMode() == DependencyMode.PRUNE
-        || getMode() == DependencyMode.PRUNE_ALLOW_NO_ENTRY_POINTS;
+    return mode() == DependencyMode.PRUNE || mode() == DependencyMode.PRUNE_ALLOW_NO_ENTRY_POINTS;
   }
 
   /** Returns a {@link DependencyOptions} using the {@link DependencyMode#NONE} mode. */

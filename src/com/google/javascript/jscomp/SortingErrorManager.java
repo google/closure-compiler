@@ -49,7 +49,7 @@ public class SortingErrorManager implements ErrorManager {
     ErrorWithLevel e = new ErrorWithLevel(error, level);
     if (messages.add(e)) {
       if (level == CheckLevel.ERROR) {
-        if (error.getType().level == CheckLevel.ERROR) {
+        if (error.type().level == CheckLevel.ERROR) {
           originalErrorCount++;
         } else {
           promotedErrorCount++;
@@ -151,8 +151,8 @@ public class SortingErrorManager implements ErrorManager {
       }
 
       // sourceName comparison
-      String source1 = p1.error.getSourceName();
-      String source2 = p2.error.getSourceName();
+      String source1 = p1.error.sourceName();
+      String source2 = p2.error.sourceName();
       if (source1 != null && source2 != null) {
         int sourceCompare = source1.compareTo(source2);
         if (sourceCompare != 0) {
@@ -174,8 +174,8 @@ public class SortingErrorManager implements ErrorManager {
         return P1_GT_P2;
       }
       // charno comparison
-      int charno1 = p1.error.getCharno();
-      int charno2 = p2.error.getCharno();
+      int charno1 = p1.error.charno();
+      int charno2 = p2.error.charno();
       if (charno1 != charno2) {
         return charno1 - charno2;
       } else if (charno1 < 0 && 0 <= charno2) {
@@ -184,7 +184,7 @@ public class SortingErrorManager implements ErrorManager {
         return P1_GT_P2;
       }
       // description
-      return p1.error.getDescription().compareTo(p2.error.getDescription());
+      return p1.error.description().compareTo(p2.error.description());
     }
   }
 
@@ -200,11 +200,7 @@ public class SortingErrorManager implements ErrorManager {
     @Override
     public int hashCode() {
       return Objects.hash(
-          level,
-          error.getDescription(),
-          error.getSourceName(),
-          error.getLineNumber(),
-          error.getCharno());
+          level, error.description(), error.sourceName(), error.getLineNumber(), error.charno());
     }
 
     @Override
@@ -213,10 +209,10 @@ public class SortingErrorManager implements ErrorManager {
         return false;
       }
       return Objects.equals(level, e.level)
-          && Objects.equals(error.getDescription(), e.error.getDescription())
-          && Objects.equals(error.getSourceName(), e.error.getSourceName())
+          && Objects.equals(error.description(), e.error.description())
+          && Objects.equals(error.sourceName(), e.error.sourceName())
           && error.getLineNumber() == e.error.getLineNumber()
-          && error.getCharno() == e.error.getCharno();
+          && error.charno() == e.error.charno();
     }
   }
 }

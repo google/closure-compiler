@@ -76,7 +76,7 @@ public interface ErrorManager extends ErrorHandler {
       return false;
     }
     for (JSError error : getErrors()) {
-       if (error.getType().level == CheckLevel.ERROR) {
+      if (error.type().level == CheckLevel.ERROR) {
          return true;
        }
     }

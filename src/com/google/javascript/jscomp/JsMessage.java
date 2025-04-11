@@ -109,12 +109,12 @@ public record JsMessage(
 
   public String getPlaceholderOriginalCode(PlaceholderReference placeholderReference) {
     return getPlaceholderNameToOriginalCodeMap()
-        .getOrDefault(placeholderReference.getStoredPlaceholderName(), "-");
+        .getOrDefault(placeholderReference.storedPlaceholderName(), "-");
   }
 
   public String getPlaceholderExample(PlaceholderReference placeholderReference) {
     return getPlaceholderNameToExampleMap()
-        .getOrDefault(placeholderReference.getStoredPlaceholderName(), "-");
+        .getOrDefault(placeholderReference.storedPlaceholderName(), "-");
   }
 
   /**
@@ -228,13 +228,13 @@ public record JsMessage(
     @Override
     public String getJsPlaceholderName() {
       throw new UnsupportedOperationException(
-          SimpleFormat.format("not a placeholder: '%s'", getString()));
+          SimpleFormat.format("not a placeholder: '%s'", string()));
     }
 
     @Override
     public String getCanonicalPlaceholderName() {
       throw new UnsupportedOperationException(
-          SimpleFormat.format("not a placeholder: '%s'", getString()));
+          SimpleFormat.format("not a placeholder: '%s'", string()));
     }
   }
 
@@ -343,16 +343,16 @@ public record JsMessage(
 
     @Override
     public String getJsPlaceholderName() {
-      final String storedPlaceholderName = getStoredPlaceholderName();
-      return isCanonicalFormat()
+      final String storedPlaceholderName = storedPlaceholderName();
+      return canonicalFormat()
           ? toLowerCamelCaseWithNumericSuffixes(storedPlaceholderName)
           : storedPlaceholderName;
     }
 
     @Override
     public String getCanonicalPlaceholderName() {
-      final String storedPlaceholderName = getStoredPlaceholderName();
-      return isCanonicalFormat()
+      final String storedPlaceholderName = storedPlaceholderName();
+      return canonicalFormat()
           ? storedPlaceholderName
           : CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, storedPlaceholderName);
     }

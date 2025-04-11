@@ -1139,7 +1139,7 @@ class TypeValidator implements Serializable {
   /** Registers a type mismatch into the universe of mismatches owned by this pass. */
   private void registerMismatchAndReport(JSType found, JSType required, JSError error) {
     this.compiler.report(error);
-    this.mismatches.registerMismatch(error.getNode(), found, required);
+    this.mismatches.registerMismatch(error.node(), found, required);
   }
 
   /** Formats a found/required error message. */

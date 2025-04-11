@@ -90,9 +90,9 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
 
   private String format(JSError error, boolean warning) {
     SourceExcerptProvider source = getSource();
-    String sourceName = error.getSourceName();
+    String sourceName = error.sourceName();
     int lineNumber = error.getLineNumber();
-    int charno = error.getCharno();
+    int charno = error.charno();
 
     // Format the non-reverse-mapped position.
     StringBuilder b = new StringBuilder();
@@ -101,8 +101,7 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
     OriginalMapping mapping =
         source == null
             ? null
-            : source.getSourceMapping(
-                error.getSourceName(), error.getLineNumber(), error.getCharno());
+            : source.getSourceMapping(error.sourceName(), error.getLineNumber(), error.charno());
 
     // Check if we can reverse-map the source.
     if (includeLocation) {
@@ -122,11 +121,11 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
     if (includeLevel) {
       boldLine.append(getLevelName(warning ? CheckLevel.WARNING : CheckLevel.ERROR));
       boldLine.append(" - [");
-      boldLine.append(error.getType().key);
+      boldLine.append(error.type().key);
       boldLine.append("] ");
     }
 
-    boldLine.append(error.getDescription());
+    boldLine.append(error.description());
 
     b.append(maybeEmbolden(boldLine.toString()));
     b.append('\n');
@@ -147,16 +146,16 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
   String getExcerptWithPosition(JSError error) {
     return getExcerptWithPosition(
         error,
-        error.getSourceName(),
+        error.sourceName(),
         error.getLineNumber(),
-        error.getCharno(),
-        error.getLength(),
+        error.charno(),
+        error.length(),
         defaultFormat);
   }
 
   private String getExcerptWithPosition(
       JSError error, String sourceName, int lineNumber, int charno, SourceExcerpt format) {
-    int nodeLength = error.getLength();
+    int nodeLength = error.length();
     return getExcerptWithPosition(error, sourceName, lineNumber, charno, nodeLength, format);
   }
 
@@ -180,7 +179,7 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
     if (sourceExcerpt != null) {
       if (format.equals(FULL)) {
         if (0 <= charno) {
-          padMultipleLines(error, charno, sourceExcerpt, b, error.getNode());
+          padMultipleLines(error, charno, sourceExcerpt, b, error.node());
         } else {
           b.append(sourceExcerpt);
           b.append('\n');
@@ -192,7 +191,7 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
         // charno == sourceExcerpt.length() means something is missing
         // at the end of the line
         if (format.equals(LINE) && 0 <= charno && charno <= sourceExcerpt.length()) {
-          padLine(charno, sourceExcerpt, b, length, error.getNode());
+          padLine(charno, sourceExcerpt, b, length, error.node());
         }
       }
     }

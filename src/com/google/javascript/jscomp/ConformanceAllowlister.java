@@ -30,14 +30,14 @@ public class ConformanceAllowlister {
   public static ImmutableSet<String> getViolatingPaths(
       Compiler compiler, Node externs, Node ast, Requirement requirement) {
     return getConformanceErrors(compiler, externs, ast, requirement).stream()
-        .map(JSError::getSourceName)
+        .map(JSError::sourceName)
         .collect(toImmutableSet());
   }
 
   public static ImmutableSet<Node> getViolatingNodes(
       Compiler compiler, Node externs, Node ast, Requirement requirement) {
     return getConformanceErrors(compiler, externs, ast, requirement).stream()
-        .map(JSError::getNode)
+        .map(JSError::node)
         .collect(toImmutableSet());
   }
 

@@ -716,27 +716,27 @@ public final class JSChunkGraph implements Serializable {
         }
       }
 
-      for (ModuleIdentifier entryPoint : dependencyOptions.getEntryPoints()) {
+      for (ModuleIdentifier entryPoint : dependencyOptions.entryPoints()) {
         CompilerInput entryPointInput = null;
         try {
-          if (entryPoint.getClosureNamespace().equals(entryPoint.getModuleName())) {
-            entryPointInput = sorter.maybeGetInputProviding(entryPoint.getClosureNamespace());
+          if (entryPoint.closureNamespace().equals(entryPoint.moduleName())) {
+            entryPointInput = sorter.maybeGetInputProviding(entryPoint.closureNamespace());
             // Check to see if we can find the entry point as an ES6 and CommonJS module
             // ES6 and CommonJS entry points may not provide any symbols
             if (entryPointInput == null) {
-              entryPointInput = sorter.getInputProviding(entryPoint.getName());
+              entryPointInput = sorter.getInputProviding(entryPoint.name());
             }
           } else {
-            JSChunk chunk = chunksByName.get(entryPoint.getModuleName());
+            JSChunk chunk = chunksByName.get(entryPoint.moduleName());
             if (chunk == null) {
-              throw new MissingChunkException(entryPoint.getModuleName());
+              throw new MissingChunkException(entryPoint.moduleName());
             } else {
-              entryPointInput = sorter.getInputProviding(entryPoint.getClosureNamespace());
+              entryPointInput = sorter.getInputProviding(entryPoint.closureNamespace());
               entryPointInput.overrideModule(chunk);
             }
           }
         } catch (MissingProvideException e) {
-          throw new MissingProvideException(entryPoint.getName(), e);
+          throw new MissingProvideException(entryPoint.name(), e);
         }
 
         if (entryPointInput.getSourceFile().isWeak()) {

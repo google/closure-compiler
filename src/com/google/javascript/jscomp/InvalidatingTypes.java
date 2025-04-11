@@ -131,8 +131,8 @@ public final class InvalidatingTypes {
     @CanIgnoreReturnValue
     public Builder addAllTypeMismatches(Iterable<TypeMismatch> mismatches) {
       for (TypeMismatch mismatch : mismatches) {
-        this.addTypeWithReason(mismatch.getFound(), mismatch.getLocation());
-        this.addTypeWithReason(mismatch.getRequired(), mismatch.getLocation());
+        this.addTypeWithReason(mismatch.found(), mismatch.location());
+        this.addTypeWithReason(mismatch.required(), mismatch.location());
       }
 
       return this;
