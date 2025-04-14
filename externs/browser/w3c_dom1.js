@@ -455,6 +455,33 @@ Document.prototype.write = function(text) {};
  */
 Document.prototype.writeln = function(text) {};
 
+/** @type {?function (!Event)} */
+Document.prototype.onvisibilitychange;
+
+/** @type {?function (!Event)} */
+Document.prototype.onfullscreenchange;
+
+/** @type {?function (!Event)} */
+Document.prototype.onfullscreenerror;
+
+/** @type {?function (!Event)} */
+Document.prototype.onpointerlockchange;
+
+/** @type {?function (!Event)} */
+Document.prototype.onpointerlockerror;
+
+/**
+ * @type {!FragmentDirective|undefined}
+ * @see https://developer.mozilla.org/docs/Web/API/Document/fragmentDirective
+ */
+Document.prototype.fragmentDirective;
+
+/**
+ * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/FragmentDirective
+ */
+function FragmentDirective() {}
+
 /**
  * @constructor
  * @implements {IArrayLike<T>}

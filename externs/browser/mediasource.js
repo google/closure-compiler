@@ -87,6 +87,20 @@ MediaSource.prototype.endOfStream = function(opt_error) {};
  */
 MediaSource.isTypeSupported = function(type) {};
 
+/**
+ * @const {boolean}
+ * @see https://developer.mozilla.org/docs/Web/API/MediaSource/canConstructInDedicatedWorker_static
+ */
+MediaSource.canConstructInDedicatedWorker;
+
+/** @type {?function(!Event)} */
+MediaSource.prototype.onsourceclose;
+
+/** @type {?function(!Event)} */
+MediaSource.prototype.onsourceended;
+
+/** @type {?function(!Event)} */
+MediaSource.prototype.onsourceopen;
 
 /**
  * @constructor
@@ -153,3 +167,18 @@ SourceBuffer.prototype.remove = function(start, end) {};
  * @return {undefined}
  */
 SourceBuffer.prototype.changeType = function(type) {};
+
+/** @type {?function(!Event)} */
+SourceBuffer.prototype.onabort;
+
+/** @type {?function(!Event)} */
+SourceBuffer.prototype.onerror;
+
+/** @type {?function(!Event)} */
+SourceBuffer.prototype.onupdate;
+
+/** @type {?function(!Event)} */
+SourceBuffer.prototype.onupdateend;
+
+/** @type {?function(!Event)} */
+SourceBuffer.prototype.onupdatestart;

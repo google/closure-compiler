@@ -21,20 +21,21 @@
  */
 
 /**
- * @return {!Array.<!Gamepad>}
+ * @return {!Array<!Gamepad>}
  */
 navigator.getGamepads = function() {};
 
 /**
- * @return {!Array.<!Gamepad>}
+ * @return {!Array<!Gamepad>}
  */
 navigator.webkitGetGamepads = function() {};
 
 
 /**
- * @interface
+ * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/Gamepad
  */
-var Gamepad = function() {};
+function Gamepad() {};
 
 /**
  * @type {string}
@@ -62,7 +63,7 @@ Gamepad.prototype.timestamp;  // read-only
 Gamepad.prototype.mapping;  // read-only
 
 /**
- * @type {!Array.<number>}
+ * @type {!Array<number>}
  */
 Gamepad.prototype.axes;  // read-only
 
@@ -70,10 +71,14 @@ Gamepad.prototype.axes;  // read-only
  * Note: The W3C spec changed, this property now returns an array of
  * GamepadButton objects.
  *
- * @type {(!Array.<!GamepadButton>|!Array.<number>)}
+ * @type {(!Array<!GamepadButton>|!Array<number>)}
  */
 Gamepad.prototype.buttons;
 
+/**
+ * @type {!GamepadHapticActuator}
+ */
+Gamepad.prototype.vibrationActuator;
 
 /**
  * @interface
@@ -89,6 +94,44 @@ GamepadButton.prototype.pressed;  // read-only
  * @type {number}
  */
 GamepadButton.prototype.value;  // read-only
+
+/**
+ * @type {boolean}
+ */
+GamepadButton.prototype.touched;  // read-only
+
+
+/**
+ * @typedef {{
+ *   duration: (number|undefined),
+ *   leftTrigger: (number|undefined),
+ *   rightTrigger: (number|undefined),
+ *   startDelay: (number|undefined),
+ *   strongMagnitude: (number|undefined),
+ *   weakMagnitude: (number|undefined)
+ * }}
+ */
+var GamepadEffectParameters;
+
+/**
+ * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/GamepadHapticActuator
+ */
+function GamepadHapticActuator() {}
+
+/**
+ * @param {string} type
+ * @param {!GamepadEffectParameters=} opt_params
+ * @return {Promise<string>}
+ * @see https://developer.mozilla.org/docs/Web/API/GamepadHapticActuator/playEffect
+ */
+GamepadHapticActuator.prototype.playEffect = function(type, opt_params) {};
+
+/**
+ * @return {Promise<string>}
+ * @see https://developer.mozilla.org/docs/Web/API/GamepadHapticActuator/reset
+ */
+GamepadHapticActuator.prototype.reset = function() {};
 
 /**
  * @record

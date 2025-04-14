@@ -83,6 +83,18 @@ ScriptProfile.prototype.head;
  */
 Window.prototype.devicePixelRatio;
 
+/** @type {?function (!Event)} */
+Window.prototype.onwebkitanimationend;
+
+/** @type {?function (!Event)} */
+Window.prototype.onwebkitanimationiteration;
+
+/** @type {?function (!Event)} */
+Window.prototype.onwebkitanimationstart;
+
+/** @type {?function (!Event)} */
+Window.prototype.onwebkittransitionend;
+
 /**
  * @param {string} contextId
  * @param {string} name

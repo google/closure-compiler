@@ -4766,6 +4766,12 @@ Document.prototype.designMode;
 Document.prototype.fullscreenEnabled;
 
 /**
+ * @type {boolean}
+ * @see https://developer.mozilla.org/docs/Web/API/Document/fullscreen
+ */
+Document.prototype.fullscreen;
+
+/**
  * @type {Element}
  * @see http://www.w3.org/TR/2012/WD-fullscreen-20120703/#dom-document-fullscreenelement
  */
