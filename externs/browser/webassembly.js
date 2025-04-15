@@ -221,3 +221,45 @@ WebAssembly.Table.prototype.get = function(index) {};
  * @return {undefined}
  */
 WebAssembly.Table.prototype.set = function(index, value) {};
+
+/**
+ * @typedef {{
+ *   anyfunc: !Function,
+ *   externref: ?,
+ *   f32: number,
+ *   f64: number,
+ *   i32: number,
+ *   i64: bigint,
+ *   v128: *
+ * }}
+ * Note: This declaration is only here to document the acceptable type strings
+ * ("anyfunc"|"externref"|"f32"|"f64"|"i32"|"i64"|"v128") and to prevent
+ * the properties to be marked as missing externs in d.ts files.
+ */
+WebAssembly.ValueTypeMap;
+
+/**
+ * @typedef {string}
+ * Really: keyof ValueTypeMap, i.e. ("anyfunc"|"externref"|"f32"|"f64"|"i32"|"i64"|"v128")
+ */
+WebAssembly.ValueType;
+
+/**
+ * @typedef {{
+ *   mutable: (boolean|undefined),
+ *   value: WebAssembly.ValueType
+ * }}
+ */
+WebAssembly.GlobalDescriptor;
+
+/**
+ * @constructor
+ * @param {WebAssembly.GlobalDescriptor} descriptor
+ * @param {?=} v
+ */
+WebAssembly.Global = function(descriptor, v) {};
+
+/**
+ * @type {?}
+ */
+WebAssembly.Global.prototype.value;
