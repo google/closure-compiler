@@ -337,10 +337,7 @@ public final class JSChunkGraphTest {
     makeDeps();
     makeGraph();
     setUpManageDependenciesTest();
-    DependencyOptions depOptions =
-        new DependencyOptions(
-            DependencyOptions.DependencyMode.PRUNE_LEGACY,
-            ImmutableList.copyOf(ImmutableList.of()));
+    DependencyOptions depOptions = DependencyOptions.pruneLegacyForEntryPoints(ImmutableList.of());
     ImmutableList<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
 
     assertInputs(chunkA, "a1", "a3");
@@ -358,9 +355,8 @@ public final class JSChunkGraphTest {
     makeGraph();
     setUpManageDependenciesTest();
     DependencyOptions depOptions =
-        new DependencyOptions(
-            DependencyOptions.DependencyMode.PRUNE_LEGACY,
-            ImmutableList.copyOf(ImmutableList.of(ModuleIdentifier.forClosure("c2"))));
+        DependencyOptions.pruneLegacyForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forClosure("c2")));
     ImmutableList<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
 
     assertInputs(chunkA, "a1", "a3");
@@ -795,9 +791,8 @@ public final class JSChunkGraphTest {
     makeGraph();
     graph.manageDependencies(
         compiler,
-        new DependencyOptions(
-            DependencyOptions.DependencyMode.PRUNE_LEGACY,
-            ImmutableList.copyOf(ImmutableList.of(ModuleIdentifier.forFile("strong")))));
+        DependencyOptions.pruneLegacyForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forFile("strong"))));
 
     assertThat(getWeakModule().getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(weak);
