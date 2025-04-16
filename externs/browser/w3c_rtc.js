@@ -2171,6 +2171,11 @@ var RTCVoidCallback;
 /**
  * @typedef {string}
  */
+var RTCDtlsRole;
+
+/**
+ * @typedef {string}
+ */
 var RTCSignalingState;
 
 /**
@@ -2184,10 +2189,25 @@ var RTCIceConnectionState;
 var RTCIceGatheringState;
 
 /**
+ * @typedef {string}
+ */
+var RTCIceRole;
+
+/**
+ * @typedef {string}
+ */
+var RTCIceTransportState;
+
+/**
  * @see https://www.w3.org/TR/webrtc/#rtcpeerconnectionstate-enum
  * @typedef {string}
  */
 var RTCPeerConnectionState;
+
+/**
+ * @typedef {string}
+ */
+var RTCQualityLimitationReason;
 
 /**
  * @see https://www.w3.org/TR/webrtc/#dom-rtcpeerconnectioniceevent
@@ -2688,6 +2708,9 @@ RTCSentRtpStreamStats.prototype.bytesSent;
  */
 function RTCOutboundRtpStreamStats() {}
 
+/** @const {boolean|undefined} */
+RTCOutboundRtpStreamStats.prototype.active;
+
 /** @const {string} */
 RTCOutboundRtpStreamStats.prototype.trackId;
 
@@ -2761,6 +2784,9 @@ RTCOutboundRtpStreamStats.prototype.totalEncodeTime;
 RTCOutboundRtpStreamStats.prototype.totalPacketSendDelay;
 
 /** @const {string|undefined} */
+RTCOutboundRtpStreamStats.prototype.scalabilityMode;
+
+/** @const {RTCQualityLimitationReason|undefined} */
 RTCOutboundRtpStreamStats.prototype.qualityLimitationReason;
 
 /** @const {Object|undefined} */
@@ -2848,13 +2874,14 @@ RTCTransportStats.prototype.bytesReceived;
 RTCTransportStats.prototype.rtcpTransportStatsId;
 
 /**
- * @type {string}
+ * @type {!RTCIceRole|undefined}
  * Set of possible string values: 'unknown', 'controlling', 'controlled'.
  */
 RTCTransportStats.prototype.iceRole;
 
 /** @type {string|undefined} */
 RTCTransportStats.prototype.iceLocalUsernameFragment;
+
 /**
  * @type {string}
  * Set of possible string values: 'new', 'connecting', 'connected',
@@ -2862,7 +2889,7 @@ RTCTransportStats.prototype.iceLocalUsernameFragment;
  */
 RTCTransportStats.prototype.dtlsState;
 
-/** @type {string|undefined} */
+/** @type {!RTCIceTransportState|undefined} */
 RTCTransportStats.prototype.iceState;
 
 /** @type {string} */
@@ -2880,8 +2907,14 @@ RTCTransportStats.prototype.tlsVersion;
 /** @type {string} */
 RTCTransportStats.prototype.dtlsCipher;
 
-/** @type {string|undefined} */
+/** @type {!RTCDtlsRole|undefined} */
 RTCTransportStats.prototype.dtlsRole;
+
+/** @type {number|undefined} */
+RTCTransportStats.prototype.packetsReceived;
+
+/** @type {number|undefined} */
+RTCTransportStats.prototype.packetsSent;
 
 /** @type {string} */
 RTCTransportStats.prototype.srtpCipher;
