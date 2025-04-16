@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.instrumentation;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.primitives.UnsignedBytes;
 import com.google.javascript.rhino.Node;
 import java.util.BitSet;
 import java.util.LinkedHashMap;
@@ -154,7 +153,7 @@ class FileInstrumentationData {
     // Build the hex string.
     for (byte byteEntry : bitSet.toByteArray()) {
       // Java bytes are signed, but we want the value as if it were unsigned.
-      int value = UnsignedBytes.toInt(byteEntry);
+      int value = Byte.toUnsignedInt(byteEntry);
       String hexString = Integer.toHexString(value);
 
       // Pad string to be two characters (if it isn't already).
