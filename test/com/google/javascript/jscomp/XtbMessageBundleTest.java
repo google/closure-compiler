@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.JsMessage.Part;
@@ -75,6 +76,138 @@ public final class XtbMessageBundleTest {
     message = bundle.getMessage("3945720239421293834");
     assertThat(message.asJsMessageString()).isEmpty();
     assertThat(message.getParts()).isNotEmpty();
+  }
+
+  @Test
+  public void testXtbBundle_genderedMessageVariantsWithoutPlaceholders() {
+    String xtb =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            + "<!DOCTYPE translationbundle SYSTEM \"translationbundle.dtd\">\n"
+            + "<translationbundle lang=\"es_ES\">\n"
+            + "<translation id=\"7639678437384034548\">\n"
+            + "<branch variants=\"variants { grammatical_gender_variant { grammatical_gender_case:"
+            + " MASCULINE } }\">Bienvenido!</branch>"
+            + "<branch variants=\"variants { grammatical_gender_variant { grammatical_gender_case:"
+            + " FEMININE } }\">Bienvenida!</branch>"
+            + "<branch variants=\"variants { grammatical_gender_variant { grammatical_gender_case:"
+            + " NEUTER } }\">Te damos la bienvenida!</branch>"
+            + "<branch variants=\"variants { grammatical_gender_variant { grammatical_gender_case:"
+            + " OTHER } }\">Te damos la bienvenida!</branch>"
+            + "</translation>\n"
+            + "</translationbundle>";
+    InputStream stream = new ByteArrayInputStream(xtb.getBytes(UTF_8));
+    XtbMessageBundle bundle = new XtbMessageBundle(stream, PROJECT_ID);
+
+    JsMessage message = bundle.getMessage("7639678437384034548");
+    assertThat(message.asJsMessageString())
+        .isEqualTo(
+            "variants { grammatical_gender_variant { grammatical_gender_case: MASCULINE }"
+                + " }Bienvenido!"
+                + "variants { grammatical_gender_variant { grammatical_gender_case: FEMININE }"
+                + " }Bienvenida!"
+                + "variants { grammatical_gender_variant { grammatical_gender_case: NEUTER }"
+                + " }Te damos la bienvenida!"
+                + "variants { grammatical_gender_variant { grammatical_gender_case: OTHER }"
+                + " }Te damos la bienvenida!");
+
+    final ImmutableList<Part> msgParts = message.getParts();
+
+    assertThat(msgParts).hasSize(8);
+    assertThat(msgParts.get(0).getString())
+        .isEqualTo(
+            "variants { grammatical_gender_variant { grammatical_gender_case: MASCULINE } }");
+    assertThat(msgParts.get(1).getString()).isEqualTo("Bienvenido!");
+    assertThat(msgParts.get(2).getString())
+        .isEqualTo("variants { grammatical_gender_variant { grammatical_gender_case: FEMININE } }");
+    assertThat(msgParts.get(3).getString()).isEqualTo("Bienvenida!");
+    assertThat(msgParts.get(4).getString())
+        .isEqualTo("variants { grammatical_gender_variant { grammatical_gender_case: NEUTER } }");
+    assertThat(msgParts.get(5).getString()).isEqualTo("Te damos la bienvenida!");
+    assertThat(msgParts.get(6).getString())
+        .isEqualTo("variants { grammatical_gender_variant { grammatical_gender_case: OTHER } }");
+    assertThat(msgParts.get(7).getString()).isEqualTo("Te damos la bienvenida!");
+  }
+
+  @Test
+  public void testXtbBundle_genderedMessageVariantsWithPlaceholders() {
+    String xtb =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            + "<!DOCTYPE translationbundle SYSTEM \"translationbundle.dtd\">\n"
+            + "<translationbundle lang=\"es_ES\">\n"
+            + "<translation id=\"7639678437384034548\">\n"
+            + "<branch variants=\"variants { grammatical_gender_variant { grammatical_gender_case:"
+            + " MASCULINE } }\">Bienvenido, <ph name=\"NAME\"/></branch>"
+            + "<branch variants=\"variants { grammatical_gender_variant { grammatical_gender_case:"
+            + " FEMININE } }\">Bienvenida, <ph name=\"NAME\"/></branch>"
+            + "<branch variants=\"variants { grammatical_gender_variant { grammatical_gender_case:"
+            + " NEUTER } }\">Te damos la bienvenida, <ph name=\"NAME\"/></branch>"
+            + "<branch variants=\"variants { grammatical_gender_variant { grammatical_gender_case:"
+            + " OTHER } }\">Te damos la bienvenida, <ph name=\"NAME\"/></branch>"
+            + "</translation>\n"
+            + "</translationbundle>";
+    InputStream stream = new ByteArrayInputStream(xtb.getBytes(UTF_8));
+    XtbMessageBundle bundle = new XtbMessageBundle(stream, PROJECT_ID);
+
+    JsMessage message = bundle.getMessage("7639678437384034548");
+    assertThat(message.asJsMessageString())
+        .isEqualTo(
+            "variants { grammatical_gender_variant { grammatical_gender_case: MASCULINE }"
+                + " }Bienvenido, {$name}"
+                + "variants { grammatical_gender_variant { grammatical_gender_case: FEMININE }"
+                + " }Bienvenida, {$name}"
+                + "variants { grammatical_gender_variant { grammatical_gender_case: NEUTER }"
+                + " }Te damos la bienvenida, {$name}"
+                + "variants { grammatical_gender_variant { grammatical_gender_case: OTHER }"
+                + " }Te damos la bienvenida, {$name}");
+
+    final ImmutableList<Part> msgParts = message.getParts();
+
+    assertThat(msgParts.get(0).getString())
+        .isEqualTo(
+            "variants { grammatical_gender_variant { grammatical_gender_case: MASCULINE } }");
+    assertThat(msgParts.get(1).getString()).isEqualTo("Bienvenido, ");
+    assertThat(msgParts.get(2).getCanonicalPlaceholderName()).isEqualTo("NAME");
+    assertThat(msgParts.get(3).getString())
+        .isEqualTo("variants { grammatical_gender_variant { grammatical_gender_case: FEMININE } }");
+    assertThat(msgParts.get(4).getString()).isEqualTo("Bienvenida, ");
+    assertThat(msgParts.get(5).getCanonicalPlaceholderName()).isEqualTo("NAME");
+
+    assertThat(msgParts.get(6).getString())
+        .isEqualTo("variants { grammatical_gender_variant { grammatical_gender_case: NEUTER } }");
+    assertThat(msgParts.get(7).getString()).isEqualTo("Te damos la bienvenida, ");
+    assertThat(msgParts.get(8).getCanonicalPlaceholderName()).isEqualTo("NAME");
+
+    assertThat(msgParts.get(9).getString())
+        .isEqualTo("variants { grammatical_gender_variant { grammatical_gender_case: OTHER } }");
+    assertThat(msgParts.get(10).getString()).isEqualTo("Te damos la bienvenida, ");
+    assertThat(msgParts.get(11).getCanonicalPlaceholderName()).isEqualTo("NAME");
+  }
+
+  @Test
+  public void testXtbBundle_genderedMessageVariantsWithInvalidGenderCase_throwsException() {
+    String xtb =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            + "<!DOCTYPE translationbundle SYSTEM \"translationbundle.dtd\">\n"
+            + "<translationbundle lang=\"es_ES\">\n"
+            + "<translation id=\"7639678437384034548\">\n"
+            + "<branch variants=\"variants { grammatical_gender_variant { grammatical_gender_case:"
+            + " MASCULINE } }\">Bienvenido!</branch>"
+            + "<branch variants=\"variants { grammatical_gender_variant { grammatical_gender_case:"
+            + " FEMININE } }\">Bienvenida!</branch>"
+            + "<branch variants=\"variants { grammatical_gender_variant { grammatical_gender_case:"
+            + " FOO } }\">Foo bar!</branch>"
+            + "<branch variants=\"variants { grammatical_gender_variant { grammatical_gender_case:"
+            + " OTHER } }\">Te damos la bienvenida!</branch>"
+            + "</translation>\n"
+            + "</translationbundle>";
+    InputStream stream = new ByteArrayInputStream(xtb.getBytes(UTF_8));
+
+    Exception e =
+        assertThrows(IllegalStateException.class, () -> new XtbMessageBundle(stream, PROJECT_ID));
+    assertThat(e)
+        .hasMessageThat()
+        .contains(
+            "Gender case must be one of the following: MASCULINE, FEMININE, NEUTER, or OTHER.");
   }
 
   /**
