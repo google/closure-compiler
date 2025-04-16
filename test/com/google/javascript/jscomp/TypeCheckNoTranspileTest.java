@@ -2264,19 +2264,68 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testGenerator_return1() {
-    newTest().addSource("/** @return {!Generator<number>} */ function *gen() { return 1; }").run();
+    newTest()
+        .addSource("/** @return {!Generator<number, number>} */ function *gen() { return 1; }")
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
-  public void testGenerator_return2() {
+  public void testGenerator_return_noExplicitReturnStatement() {
     newTest()
-        .addSource("/** @return {!Generator<string>} */ function *gen() {  return 1; }")
+        .addSource("/** @return {!Generator<number, string>} */ function *gen() {}")
+        // no warning because the CheckMissingReturn pass will catch this
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
+  public void testGenerator_return_mismatch() {
+    newTest()
+        .addSource("/** @return {!Generator<number, string>} */ function *gen() { return 1; }")
         .addDiagnostic(
             """
             inconsistent return type
             found   : number
             required: string
             """)
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
+  public void testGenerator_returnIterator_mismatch() {
+    newTest()
+        .addSource("/** @return {!Iterator<number, string>} */ function *gen() { return 1; }")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
+  public void testGenerator_returnIterable_mismatch() {
+    newTest()
+        .addSource("/** @return {!Iterable<number, string>} */ function *gen() { return 1; }")
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : number
+            required: string
+            """)
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
+  public void testGenerator_return_noSpecifiedReturnType() {
+    newTest()
+        // The return type is !Generator<string, ?, ?> because a return type wasn't specified.
+        .addSource("/** @return {!Generator<string>} */ function *gen() {  return 1; }")
         .includeDefaultExterns()
         .run();
   }
@@ -2340,19 +2389,41 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addSource(
             """
-            /** @return {!Generator<string>} */
-            function *gen1() {
-              yield 'a';
-            }
-
-            /** @return {!Generator<number>} */
-            function *gen2() {
-              yield* gen1();
+            /**
+             * @param {!Generator<string>} gen1
+             * @return {!Generator<number>}
+             */
+            function *gen2(gen1) {
+              yield* gen1;
             }
             """)
         .addDiagnostic(
             """
             Yielded type does not match declared return type.
+            found   : string
+            required: number
+            """)
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
+  public void testGenerator_yieldAll4_returnMismatch() {
+    newTest()
+        .addSource(
+            """
+            /**
+             * @param {!Generator<number, string>} gen1
+             * @return {!Generator<number>}
+             */
+            function *gen2(gen1) {
+              /** @type {number} */
+              const str = yield* gen1;
+            }
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
             found   : string
             required: number
             """)
@@ -8750,12 +8821,60 @@ override: function(this:Bar, number): undefined
   }
 
   @Test
-  public void testAsyncGeneratorWithMismatchReturn() {
+  public void testAsyncGeneratorWithUnspecifiedReturn() {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
             """
             /** @return {!AsyncGenerator<number>} */
+            async function* asyncGen() { return 'str'; }
+            """)
+        .run();
+  }
+
+  @Test
+  public void testAsyncGeneratorWithMismatchReturn() {
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            """
+            /** @return {!AsyncGenerator<string, number>} */
+            async function* asyncGen() { return 'str'; }
+            """)
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : string
+            required: (IThenable<number>|number)
+            """)
+        .run();
+  }
+
+  @Test
+  public void testAsyncGeneratorWithMismatchReturn_returnAsyncIterator() {
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            """
+            /** @return {!AsyncIterator<string, number>} */
+            async function* asyncGen() { return 'str'; }
+            """)
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : string
+            required: (IThenable<number>|number)
+            """)
+        .run();
+  }
+
+  @Test
+  public void testAsyncGeneratorWithMismatchReturn_returnAsyncIterable() {
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            """
+            /** @return {!AsyncIterable<string, number>} */
             async function* asyncGen() { return 'str'; }
             """)
         .addDiagnostic(
@@ -9001,7 +9120,7 @@ override: function(this:Bar, number): undefined
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
             """
-            /** @return {!AsyncGenerator<number>} */
+            /** @return {!AsyncGenerator<number, number>} */
             async function* asyncGen() { return 'str'; }
             """)
         .addDiagnostic(
@@ -9020,7 +9139,7 @@ override: function(this:Bar, number): undefined
         .addSource(
             """
             let /** !Promise<void> */ voidPromise;
-            /** @return {!AsyncGenerator<number>} */
+            /** @return {!AsyncGenerator<number, number>} */
             async function* asyncGen() { return voidPromise; }
             """)
         .addDiagnostic(
@@ -9039,7 +9158,7 @@ override: function(this:Bar, number): undefined
         .addSource(
             """
             let /** !Promise<undefined> */ undefPromise;
-            /** @return {!AsyncGenerator<number>} */
+            /** @return {!AsyncGenerator<number, number>} */
             async function* asyncGen() { return undefPromise; }
             """)
         .addDiagnostic(
@@ -9058,7 +9177,7 @@ override: function(this:Bar, number): undefined
         .addSource(
             """
             let /** !Promise<number> */ promise;
-            /** @return {!AsyncGenerator<number>} */
+            /** @return {!AsyncGenerator<number, number>} */
             async function* asyncGen() { return promise; }
             """)
         .run();
@@ -9071,7 +9190,7 @@ override: function(this:Bar, number): undefined
         .addSource(
             """
             let /** !Promise<string> */ promise;
-            /** @return {!AsyncGenerator<number>} */
+            /** @return {!AsyncGenerator<number, number>} */
             async function* asyncGen() { return promise; }
             """)
         .addDiagnostic(

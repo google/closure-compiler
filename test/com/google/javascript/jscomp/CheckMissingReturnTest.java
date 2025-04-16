@@ -353,13 +353,19 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
   }
 
   @Test
-  public void testGeneratorFunctionDoesntWarn() {
+  public void testGeneratorFunctionWithoutSpecifiedReturnType() {
     testNoWarning("function *gen() {}");
 
     testNoWarning(
         """
         /** @return {!Generator<number>} */ // no yields is OK
         function *gen() {}
+        """);
+
+    testNoWarning(
+        """
+        /** @return {!Generator<number>} */ // no yields is OK
+        function *gen() { return; }
         """);
 
     testNoWarning(
@@ -375,6 +381,18 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
         /** @return {!Object} */ // Return type more vague than Generator is also OK
         function *gen() {}
         """);
+  }
+
+  @Test
+  public void testGeneratorFunctionWithSpecifiedReturnType() {
+    testWarning(
+        """
+        /** @return {!Iterable<number, number>} */
+        function *gen() {
+         yield 1;
+        }
+        """,
+        CheckMissingReturn.MISSING_RETURN_STATEMENT);
   }
 
   @Test

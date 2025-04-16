@@ -81,12 +81,6 @@ class CheckMissingReturn extends NodeTraversal.AbstractCfgCallback {
       return;
     }
 
-    if (n.isGeneratorFunction()) {
-      // Generator functions always return a Generator. No need to check return statements.
-      // TODO(b/73387406): Investigate adding a warning for generators with no yields.
-      return;
-    }
-
     if (n.isArrowFunction()) {
       Node functionBody = NodeUtil.getFunctionBody(n);
       if (!functionBody.isBlock()) {
@@ -181,6 +175,9 @@ class CheckMissingReturn extends NodeTraversal.AbstractCfgCallback {
     if (scopeRoot.isAsyncFunction()) {
       // Unwrap the declared return type (e.g. "!Promise<number>" becomes "number")
       returnType = Promises.getTemplateTypeOfThenable(compiler.getTypeRegistry(), returnType);
+    } else if (scopeRoot.isGeneratorFunction()) {
+      // Unwrap the declared return type (e.g. "!Generator<string, number>" becomes "number")
+      returnType = JsIterables.getReturnElementType(returnType, compiler.getTypeRegistry());
     }
 
     if (!isVoidOrUnknown(returnType)) {

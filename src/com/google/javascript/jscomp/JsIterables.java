@@ -65,6 +65,37 @@ final class JsIterables {
   }
 
   /**
+   * Returns the given `Iterable`s return type.
+   *
+   * <p>This corresponds to the `TReturn` template variable in {@code Iterable<T, TReturn, TNext>}.
+   *
+   * <p>If the given type is not an `Iterator`, `Iterable`, `AsyncIterator`, or `AsyncIterable`,
+   * returns the unknown type.
+   */
+  static final JSType getReturnElementType(JSType iterableOrIterator, JSTypeRegistry typeRegistry) {
+    TemplateTypeMap templateTypeMap =
+        iterableOrIterator
+            // Remember that `string` will box to a `Iterable`.
+            .autobox()
+            .getTemplateTypeMap();
+
+    if (templateTypeMap.hasTemplateKey(typeRegistry.getIterableReturnTemplate())) {
+      // `Iterable<?, SomeElementType>` or `Generator<?, SomeElementType>`
+      return templateTypeMap.getResolvedTemplateType(typeRegistry.getIterableReturnTemplate());
+    } else if (templateTypeMap.hasTemplateKey(typeRegistry.getIteratorReturnTemplate())) {
+      // `Iterator<?, SomeElementType>`
+      return templateTypeMap.getResolvedTemplateType(typeRegistry.getIteratorReturnTemplate());
+    } else if (templateTypeMap.hasTemplateKey(typeRegistry.getAsyncIterableReturnTemplate())) {
+      // `AsyncIterable<?, SomeElementType>` or `AsyncGenerator<?, SomeElementType>`
+      return templateTypeMap.getResolvedTemplateType(typeRegistry.getAsyncIterableReturnTemplate());
+    } else if (templateTypeMap.hasTemplateKey(typeRegistry.getAsyncIteratorReturnTemplate())) {
+      // `AsyncIterator<?, SomeElementType>`
+      return templateTypeMap.getResolvedTemplateType(typeRegistry.getAsyncIteratorReturnTemplate());
+    }
+    return typeRegistry.getNativeType(UNKNOWN_TYPE);
+  }
+
+  /**
    * Returns an `Iterable` type templated on {@code elementType}.
    *
    * <p>Example: `number' => `Iterable<number>`.

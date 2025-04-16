@@ -2890,12 +2890,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    */
   private void visitReturn(NodeTraversal t, Node n) {
     Node enclosingFunction = t.getEnclosingFunction();
-    if (enclosingFunction.isGeneratorFunction() && !n.hasChildren()) {
-      // Allow "return;" in a generator function, even if it's not the declared return type.
-      // e.g. Don't warn for a generator function with JSDoc "@return {!Generator<number>}" and
-      // a "return;" in the fn body, even though "undefined" does not match "number".
-      return;
-    }
 
     JSType jsType = getJSType(enclosingFunction);
 
@@ -2909,8 +2903,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         returnType = getNativeType(VOID_TYPE);
       } else if (enclosingFunction.isGeneratorFunction()) {
         // Unwrap the template variable from a generator function's declared return type.
-        // e.g. if returnType is "Generator<string>", make it just "string".
-        returnType = JsIterables.getElementType(returnType, typeRegistry);
+        // e.g. if returnType is "Generator<string, number, void>", the generator should return
+        // "number".
+        returnType = JsIterables.getReturnElementType(returnType, typeRegistry);
 
         if (enclosingFunction.isAsyncGeneratorFunction()) {
           // Can return x|IThenable<x> in an AsyncGenerator<x>, no await needed. Note that we must

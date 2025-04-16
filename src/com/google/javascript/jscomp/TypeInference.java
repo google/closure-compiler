@@ -747,8 +747,12 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
         break;
 
       case YIELD:
-        scope = traverseChildren(n, scope);
-        n.setJSType(getNativeType(UNKNOWN_TYPE));
+        if (n.isYieldAll()) {
+          scope = traverseYieldAll(n, scope);
+        } else {
+          scope = traverseChildren(n, scope);
+          n.setJSType(getNativeType(UNKNOWN_TYPE));
+        }
         break;
 
       case VAR:
@@ -1071,6 +1075,18 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
         }
       }
     }
+    return scope;
+  }
+
+  private FlowScope traverseYieldAll(Node n, FlowScope scope) {
+    // A yield* expression will first yield all the elements of the given iterable, and then
+    // evaluate to whatever the iterable returns when done.
+    // The yielded type and done return type are not necessarily the same. Here, we look for the
+    // done type - TReturn in Iterable<T, TReturn, TNext>.
+    scope = traverseChildren(n, scope);
+    JSType innerType = getJSType(n.getFirstChild());
+    JSType yieldAllResult = JsIterables.getReturnElementType(innerType, registry);
+    n.setJSType(yieldAllResult);
     return scope;
   }
 
