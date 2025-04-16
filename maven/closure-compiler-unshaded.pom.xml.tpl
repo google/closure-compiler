@@ -56,4 +56,37 @@
   <dependencies>
 {dependencies}
   </dependencies>
+
+  <build>
+      <plugins>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>1.9.1</version>
+          <executions>
+            <execution>
+              <id>attach-artifacts</id>
+              <phase>package</phase>
+              <goals>
+                <goal>attach-artifact</goal>
+              </goals>
+              <configuration>
+                <artifacts>
+                  <artifact>
+                    <file>closure-compiler-unshaded-javadoc.jar</file>
+                    <type>jar</type>
+                    <classifier>javadoc</classifier>
+                  </artifact>
+                  <artifact>
+                    <file>closure-compiler-unshaded-sources.jar</file>
+                    <type>jar</type>
+                    <classifier>sources</classifier>
+                  </artifact>
+                </artifacts>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </build>
 </project>

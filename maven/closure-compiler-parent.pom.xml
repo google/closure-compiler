@@ -57,6 +57,13 @@
     <url>http://github.com/google/closure-compiler/issues</url>
   </issueManagement>
 
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>${nexusUrl}/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
+
   <organization>
     <name>Google</name>
     <url>http://www.google.com</url>
@@ -78,28 +85,61 @@
     </license>
   </licenses>
 
-  <!--
-    TODO: test deployment without this parent.
-    http://central.sonatype.org/pages/apache-maven.html#deprecated-oss-parent says
-
-    > In the past all the plugin configuration and other setup was
-    > managed by a Maven parent POM with the latest coordinates of
-    > org.sonatype.oss:oss-parent:9. This project leaked SCM, URL and
-    > other details and its usage is discouraged. Maintenance of the
-    > project has stopped and it no longer works with latest tooling
-    > such as Maven versions or Java versions.
-
-    It may be sufficient to include a <distributionManagement> per
-    http://central.sonatype.org/pages/apache-maven.html#distribution-management-and-authentication
-  -->
-  <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>9</version>
-  </parent>
-
   <modules>
     <module>closure-compiler-externs.pom.xml</module>
     <module>closure-compiler-main.pom.xml</module>
   </modules>
+
+  <properties>
+    <classesDirectory>${project.artifactId}-classes</classesDirectory>
+    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+  </properties>
+
+  <build>
+      <plugins>
+        <plugin>
+          <groupId>org.sonatype.plugins</groupId>
+          <artifactId>nexus-staging-maven-plugin</artifactId>
+          <version>1.7.0</version>
+          <extensions>true</extensions>
+          <configuration>
+            <serverId>ossrh</serverId>
+            <nexusUrl>${nexusUrl}</nexusUrl>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-gpg-plugin</artifactId>
+          <version>3.2.7</version>
+          <executions>
+            <execution>
+              <id>sign-artifacts</id>
+              <phase>verify</phase>
+              <goals>
+                <goal>sign</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.4.2</version>
+          <configuration>
+            <classesDirectory>${classesDirectory}</classesDirectory>
+            <archive>
+              <manifestFile>${classesDirectory}/META-INF/MANIFEST.MF</manifestFile>
+            </archive>
+          </configuration>
+          <dependencies>
+              <dependency>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-io</artifactId>
+                <!-- We need at least 3.5.1 to avoid https://github.com/codehaus-plexus/plexus-io/issues/109. Once we upgrade maven-jar-plugin itself to a version new enough to depend on 3.5.1 or higher, we can remove this override. -->
+                <version>3.5.1</version>
+              </dependency>
+            </dependencies>
+        </plugin>
+      </plugins>
+  </build>
 </project>

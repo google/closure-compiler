@@ -14,10 +14,6 @@
 
 """Creates an "Artifact Bundle" (JAR file) for deploying to Maven/Sonatype OSSRH.
 
-This rule requires that gpg be installed locally. The signing
-key will be read implicitly from the system. The key passphrase
-will be read from --define=CLEARTEXT_GPG_PASSPHRASE, so
-DO NOT USE A TRULY SECRET PASSWORD.
 
 Artifact Bundle Docs:
     https://help.sonatype.com/repomanager2/staging-releases/artifact-bundles
@@ -42,21 +38,14 @@ _SNAPSHOT = "1.0-SNAPSHOT"
 def _sonatype_artifact_bundle(ctx):
     version = ctx.var.get("COMPILER_VERSION", _SNAPSHOT)
     password = None
-    generate_signatures = True
 
-    if version == _SNAPSHOT:
-        # A SNAPSHOT version can't be uploaded as a release
-        # and thus doesn't need to be signed
-        generate_signatures = False
-    elif not version.startswith("v") or not version[1:].isdigit():
+    if version != _SNAPSHOT and (not version.startswith("v") or not version[1:].isdigit()):
         fail("--define=COMPILER_VERSION was malformed; got '{0}'".format(version))
-    else:
-        password = _fail_missing_define(ctx, "CLEARTEXT_GPG_PASSPHRASE")
 
     # 1. Rename the POM to have the mandatory base name "pom.xml"
     # 2. Confirm the POM is for the right artifact
     # 3. Swap in the correct version number
-    updated_pom = _declare_file(ctx, "pom.xml")
+    updated_pom = _declare_file(ctx, "%s.pom.xml" % ctx.attr.artifact_id)
     ctx.actions.run_shell(
         outputs = [updated_pom],
         inputs = [ctx.file.pom],
@@ -85,14 +74,11 @@ def _sonatype_artifact_bundle(ctx):
         "-sources": ctx.file.sources,
     }
     srcs = [updated_pom] + [
-        _copy_file(ctx, file, "{0}-{1}{2}.jar".format(ctx.attr.artifact_id, version, suffix))
+        _copy_file(ctx, file, "{0}{1}.jar".format(ctx.attr.artifact_id, suffix))
         for suffix, file in jar_map.items()
         if file
     ]
     files_to_bundle = srcs
-    if generate_signatures:
-        signatures = [_gpg_signature(ctx, password, f) for f in srcs]
-        files_to_bundle += signatures
 
     # Set all bundle files to be at the top level of the JAR.
     bundle_file_args = []
@@ -131,29 +117,6 @@ sonatype_artifact_bundle = rule(
     },
 )
 
-def _gpg_signature(ctx, password, src):
-    signature = _declare_file(ctx, src.basename + ".asc")
-    ctx.actions.run_shell(
-        outputs = [signature],
-        inputs = [src],
-        command = """
-          gpg \
-            --detach-sign --output='{0}' \
-            --batch --pinentry-mode=loopback --passphrase='{1}' \
-            --sign '{2}'
-        """.format(
-            signature.path,
-            password,
-            src.path,
-        ),
-        execution_requirements = {
-            "local": "Ensure signing happens on the local machine.",
-        },
-        mnemonic = "LocalSignGPG",
-    )
-
-    return signature
-
 def _copy_file(ctx, file, name):
     copy = _declare_file(ctx, name)
     ctx.actions.run_shell(
@@ -170,9 +133,3 @@ def _copy_file(ctx, file, name):
 
 def _declare_file(ctx, name):
     return ctx.actions.declare_file("{0}/{1}".format(ctx.attr.name, name))
-
-def _fail_missing_define(ctx, name):
-    value = ctx.var.get(name, None)
-    if value == None:
-        fail(ctx.label, "--define={0} was not set".format(name))
-    return value
