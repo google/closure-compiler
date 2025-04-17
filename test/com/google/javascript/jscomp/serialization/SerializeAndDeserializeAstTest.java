@@ -717,7 +717,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
     assertThat(scriptA.getStaticSourceFile()).isInstanceOf(SourceFile.class);
     assertThat(((SourceFile) scriptA.getStaticSourceFile()).getCode()).isEqualTo("const a = 0;");
-    assertThat(((SourceFile) scriptA.getStaticSourceFile()).getName()).isEqualTo(a.getName());
+    assertThat(scriptA.getStaticSourceFile().getName()).isEqualTo(a.getName());
   }
 
   @Test
