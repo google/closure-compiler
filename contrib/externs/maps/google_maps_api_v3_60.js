@@ -20480,8 +20480,9 @@ google.maps.places.SearchByTextRequest = function() {};
 google.maps.places.SearchByTextRequest.prototype.evSearchOptions;
 
 /**
- * Required for {@link google.maps.places.Place.searchByText}. Fields to be
- * included in the response, <a
+ * Required when you use this request with {@link
+ * google.maps.places.Place.searchByText}. Fields to be included in the
+ * response, <a
  * href="https://developers.google.com/maps/billing/understanding-cost-of-use#places-product">which
  * will be billed for</a>. If <code>[&#39;*&#39;]</code> is passed in, all
  * available fields will be returned and billed for (this is not recommended for
@@ -20576,7 +20577,9 @@ google.maps.places.SearchByTextRequest.prototype.rankPreference;
 google.maps.places.SearchByTextRequest.prototype.region;
 
 /**
- * Required. The text query for textual search.
+ * Required when you do not use {@link
+ * google.maps.places.SearchByTextRequest.query}. The text query for textual
+ * search.
  * @type {string|undefined}
  */
 google.maps.places.SearchByTextRequest.prototype.textQuery;
@@ -20654,8 +20657,9 @@ google.maps.places.SearchNearbyRequest.prototype.excludedPrimaryTypes;
 google.maps.places.SearchNearbyRequest.prototype.excludedTypes;
 
 /**
- * Required for {@link google.maps.places.Place.searchNearby}. Fields to be
- * included in the response, <a
+ * Required when you use this request with {@link
+ * google.maps.places.Place.searchNearby}. Fields to be included in the
+ * response, <a
  * href="https://developers.google.com/maps/billing/understanding-cost-of-use#places-product">which
  * will be billed for</a>. If <code>[&#39;*&#39;]</code> is passed in, all
  * available fields will be returned and billed for (this is not recommended for
