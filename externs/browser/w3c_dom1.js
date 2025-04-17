@@ -742,11 +742,8 @@ CSSNumericValue.prototype.div = function(values) {}
 /**
  * @param {...number|!CSSNumericValue} values
  * @return {boolean}
- * TODO(b/409606341): Adding equals to externs caused a minor size increase in
- * some targets. Investigate why this is the case and uncomment this extern
- * once the issue is understood.
  */
-/* CSSNumericValue.prototype.equals = function(values) {}; */
+CSSNumericValue.prototype.equals = function(values) {};
 
 /**
  * @param {...number|!CSSNumericValue} values
