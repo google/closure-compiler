@@ -4645,7 +4645,9 @@ async function abc() {
 
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(entryPoints));
+    options.setDependencyOptions(
+        new DependencyOptions(
+            DependencyOptions.DependencyMode.PRUNE_LEGACY, ImmutableList.copyOf(entryPoints)));
 
     List<SourceFile> externs =
         AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
@@ -4670,7 +4672,9 @@ async function abc() {
 
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(entryPoints));
+    options.setDependencyOptions(
+        new DependencyOptions(
+            DependencyOptions.DependencyMode.PRUNE_LEGACY, ImmutableList.copyOf(entryPoints)));
 
     List<SourceFile> externs =
         AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
