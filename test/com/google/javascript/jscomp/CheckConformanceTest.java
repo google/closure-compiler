@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
+import com.google.javascript.jscomp.CompilerOptions.ConformanceReportingMode;
 import com.google.javascript.jscomp.ConformanceRules.AbstractRule;
 import com.google.javascript.jscomp.ConformanceRules.ConformanceResult;
 import com.google.javascript.jscomp.Requirement.WhitelistEntry;
@@ -39,6 +40,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
   private String baseConfiguration;
   private String extendingConfiguration;
+  private ConformanceReportingMode reportingMode =
+      ConformanceReportingMode.IGNORE_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG;
 
   private static final String EXTERNS =
       DEFAULT_EXTERNS
@@ -109,7 +112,9 @@ public final class CheckConformanceTest extends CompilerTestCase {
     }
 
     return new CheckConformance(
-        compiler, ImmutableList.of(builder.build(), baseBuilder.build(), extendingBuilder.build()));
+        compiler,
+        ImmutableList.of(builder.build(), baseBuilder.build(), extendingBuilder.build()),
+        reportingMode);
   }
 
   @Override
@@ -3254,6 +3259,104 @@ public final class CheckConformanceTest extends CompilerTestCase {
         goog.Promise.all();
         """,
         CheckConformance.INVALID_REQUIREMENT_SPEC);
+  }
+
+  @Test
+  public void
+      testSimpleExtends_disallowsOverridingLibraryLevelBehaviorToADifferentValue_inLibraryLevelConformanceMode() {
+    reportingMode = ConformanceReportingMode.RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG;
+    allowSourcelessWarnings();
+    baseConfiguration =
+        """
+        library_level_non_allowlisted_conformance_violations_behavior: REPORT_AS_BUILD_ERROR
+        requirement: {
+          rule_id: "gws:goog.Promise.X"
+          type: BANNED_NAME
+          error_message: "Prefer using native Promise equivalents. See go/gws-js-conformance#goog-promise"
+
+          value: "goog.Promise.all"
+        }
+        """;
+    ;
+    extendingConfiguration =
+        """
+        # tries to override the library-level behavior, not allowed
+        library_level_non_allowlisted_conformance_violations_behavior: RECORD_ONLY
+        requirement: {
+          extends: 'gws:goog.Promise.X'
+        }
+        """;
+
+    testError(
+        """
+        goog.Promise.all();
+        """,
+        CheckConformance.INVALID_REQUIREMENT_SPEC,
+        """
+        Invalid requirement. Reason: extending rule's config may not specify a different value of 'library_level_non_allowlisted_conformance_violations_behavior' than the base rule's config\nRequirement spec:\nextends: "gws:goog.Promise.X"
+        """);
+  }
+
+  @Test
+  public void testSimpleExtends_allowsOverridingLibraryLevelBehaviorWhenBaseRuleHasNoBehavior() {
+    reportingMode = ConformanceReportingMode.RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG;
+    allowSourcelessWarnings();
+    baseConfiguration =
+        """
+        requirement: {
+          rule_id: "gws:goog.Promise.X"
+          type: BANNED_NAME
+          error_message: "Prefer using native Promise equivalents. See go/gws-js-conformance#goog-promise"
+
+          value: "goog.Promise.all"
+        }
+        """;
+    ;
+    extendingConfiguration =
+        """
+        library_level_non_allowlisted_conformance_violations_behavior: REPORT_AS_BUILD_ERROR
+        requirement: {
+          extends: 'gws:goog.Promise.X'
+        }
+        """;
+
+    testWarning(
+        """
+        goog.Promise.all();
+        """,
+        CheckConformance.CONFORMANCE_VIOLATION);
+  }
+
+  @Test
+  public void testSimpleExtends_appliesLibraryLevelBehaviorThatIsSpecified() {
+    reportingMode = ConformanceReportingMode.RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG;
+    allowSourcelessWarnings();
+    baseConfiguration =
+        """
+        requirement: {
+          rule_id: "gws:goog.Promise.X"
+          type: BANNED_NAME
+          error_message: "Prefer using native Promise equivalents. See go/gws-js-conformance#goog-promise"
+
+          value: "goog.Promise.all"
+        }
+        """;
+    ;
+    extendingConfiguration =
+        """
+        library_level_non_allowlisted_conformance_violations_behavior: RECORD_ONLY
+        requirement: {
+          extends: 'gws:goog.Promise.X'
+        }
+        """;
+
+    // TODO(b/332922526): This should not be an error once we support recording conformance
+    // violations.
+    testWarning(
+        """
+        goog.Promise.all();
+        """,
+        CheckConformance.CONFORMANCE_VIOLATION);
   }
 
   @Test

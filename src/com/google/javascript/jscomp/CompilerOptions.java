@@ -1174,6 +1174,31 @@ public class CompilerOptions {
   private ImmutableList<ConformanceConfig> conformanceConfigs = ImmutableList.of();
 
   /**
+   * Whether to respect the library-level non-allowlisted conformance behavior specified in the
+   * conformance config.
+   */
+  public static enum ConformanceReportingMode {
+    /**
+     * Used when running conformance checks at the binary level. It ignores the library-level
+     * conformance behavior specified in the conformance config and always report the conformance
+     * violations. For example, setting this allows the compiler to ignore the "RECORD_ONLY"
+     * library-level behavior specified in the config and unconditionally report the non-allowlisted
+     * violations when it is running at the binary level.
+     */
+    IGNORE_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG, // default
+    /**
+     * Used when running conformance checks at the library level. It respects the library-level
+     * conformance behavior specified in the conformance config and only reports the conformance
+     * violations according to the behavior. For example, setting this respects the "RECORD_ONLY"
+     * library-level behavior specified in the Boq Web configs and only records the violations when
+     * it is running at the library level, and also respects the "REPORT_AS_BUILD_ERROR" behavior
+     * specified in the global conformance configs to report errors for go/jscp at the library
+     * level.
+     */
+    RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG
+  }
+
+  /**
    * Remove the first match of this regex from any paths when checking conformance allowlists.
    *
    * <p>You can use this to make absolute paths relative to the root of your source tree. This is

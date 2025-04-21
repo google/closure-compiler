@@ -71,7 +71,9 @@ public class ConformanceAllowlister {
               return false;
             }
           });
-      CheckConformance check = new CheckConformance(compiler, ImmutableList.of(cleanedConfig));
+      CheckConformance check =
+          new CheckConformance(
+              compiler, ImmutableList.of(cleanedConfig), /* reportingMode= */ null);
       check.process(externs, ast);
     } finally {
       compiler.setErrorManager(oldErrorManager);

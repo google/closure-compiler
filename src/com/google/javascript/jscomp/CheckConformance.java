@@ -22,6 +22,8 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.CompilerOptions.ConformanceReportingMode;
+import com.google.javascript.jscomp.ConformanceConfig.LibraryLevelNonAllowlistedConformanceViolationsBehavior;
 import com.google.javascript.rhino.Node;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.TextFormat;
@@ -108,10 +110,13 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
   /**
    * @param configs The rules to check.
    */
-  CheckConformance(AbstractCompiler compiler, ImmutableList<ConformanceConfig> configs) {
+  CheckConformance(
+      AbstractCompiler compiler,
+      ImmutableList<ConformanceConfig> configs,
+      ConformanceReportingMode reportingMode) {
     this.compiler = compiler;
     // Initialize the map of functions to inspect for renaming candidates.
-    this.categories = initRules(compiler, configs);
+    this.categories = initRules(compiler, configs, reportingMode);
   }
 
   @Override
@@ -155,10 +160,18 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
 
   /** Build the data structures need by this pass from the provided configurations. */
   private static ImmutableList<Category> initRules(
-      AbstractCompiler compiler, ImmutableList<ConformanceConfig> configs) {
+      AbstractCompiler compiler,
+      ImmutableList<ConformanceConfig> configs,
+      ConformanceReportingMode reportingMode) {
     HashMultimap<Precondition, Rule> builder = HashMultimap.create();
-    List<Requirement> requirements = mergeRequirements(compiler, configs);
-    for (Requirement requirement : requirements) {
+    if (reportingMode != null
+        && reportingMode.equals(
+            ConformanceReportingMode.RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG)) {
+      validateBehaviorSettingOfConfigs(compiler, configs, reportingMode);
+    }
+
+    List<Requirement> mergedRequirements = mergeRequirements(compiler, configs);
+    for (Requirement requirement : mergedRequirements) {
       Rule rule = initRule(compiler, requirement);
       if (rule != null) {
         builder.put(rule.getPrecondition(), rule);
@@ -167,6 +180,56 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
     return builder.asMap().entrySet().stream()
         .map((e) -> new Category(e.getKey(), ImmutableList.copyOf(e.getValue())))
         .collect(toImmutableList());
+  }
+
+  private static void validateBehaviorSettingOfConfigs(
+      AbstractCompiler compiler,
+      ImmutableList<ConformanceConfig> configs,
+      ConformanceReportingMode reportingMode) {
+    // only validate if the behavior matters (i.e. if the compiler is running in library-level
+    // conformance mode)
+    checkState(
+        reportingMode.equals(
+            ConformanceReportingMode.RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG));
+    Map<String, LibraryLevelNonAllowlistedConformanceViolationsBehavior> baseRequirementBehaviors =
+        new LinkedHashMap<>();
+    for (ConformanceConfig config : configs) {
+      if (!config.hasLibraryLevelNonAllowlistedConformanceViolationsBehavior()) {
+        // nothing to validate
+        continue;
+      }
+      var behavior = config.getLibraryLevelNonAllowlistedConformanceViolationsBehavior();
+      for (Requirement requirement : config.getRequirementList()) {
+        if (requirement.hasRuleId()) {
+          baseRequirementBehaviors.put(requirement.getRuleId(), behavior);
+        }
+      }
+    }
+
+    for (ConformanceConfig config : configs) {
+      if (!config.hasLibraryLevelNonAllowlistedConformanceViolationsBehavior()) {
+        // nothing to validate
+        continue;
+      }
+      for (Requirement requirement : config.getRequirementList()) {
+        if (requirement.hasExtends()) {
+          var extendingBehavior =
+              config.getLibraryLevelNonAllowlistedConformanceViolationsBehavior();
+          String baseRuleId = requirement.getExtends();
+          if (baseRequirementBehaviors.containsKey(baseRuleId)) {
+            var baseBehavior = baseRequirementBehaviors.get(baseRuleId);
+            if (!baseBehavior.equals(extendingBehavior)) {
+              reportInvalidRequirement(
+                  compiler,
+                  requirement,
+                  "extending rule's config may not specify a different value of"
+                      + " 'library_level_non_allowlisted_conformance_violations_behavior' than the"
+                      + " base rule's config");
+            }
+          }
+        }
+      }
+    }
   }
 
   private static final ImmutableSet<String> EXTENDABLE_FIELDS =
