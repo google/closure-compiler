@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.ConformanceConfig.LibraryLevelNonAllowlistedConformanceViolationsBehavior;
 
 /**
  * A simple delegating {@link ErrorManager} that provides a thread-safe wrapper
@@ -79,7 +80,9 @@ public class ThreadSafeDelegatingErrorManager implements ErrorManager {
   public synchronized boolean shouldReportConformanceViolation(
       Requirement requirement,
       Optional<Requirement.WhitelistEntry> whitelistEntry,
-      JSError diagnostic) {
-    return delegated.shouldReportConformanceViolation(requirement, whitelistEntry, diagnostic);
+      JSError diagnostic,
+      LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior) {
+    return delegated.shouldReportConformanceViolation(
+        requirement, whitelistEntry, diagnostic, behavior);
   }
 }

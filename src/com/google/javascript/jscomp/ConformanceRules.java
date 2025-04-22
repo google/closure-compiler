@@ -36,6 +36,7 @@ import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
 import com.google.javascript.jscomp.CheckConformance.Precondition;
 import com.google.javascript.jscomp.CheckConformance.Rule;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
+import com.google.javascript.jscomp.ConformanceConfig.LibraryLevelNonAllowlistedConformanceViolationsBehavior;
 import com.google.javascript.jscomp.Requirement.Severity;
 import com.google.javascript.jscomp.Requirement.WhitelistEntry;
 import com.google.javascript.jscomp.base.LinkedIdentityHashSet;
@@ -307,10 +308,11 @@ public final class ConformanceRules {
     }
 
     @Override
-    public final void check(NodeTraversal t, Node n) {
+    public final void check(
+        NodeTraversal t, Node n, LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior) {
       ConformanceResult result = checkConformance(t, n);
       if (result.level != ConformanceLevel.CONFORMANCE) {
-        report(n, result);
+        report(n, result, behavior);
       }
     }
 
@@ -320,7 +322,10 @@ public final class ConformanceRules {
      * @param n The node representing the violating code.
      * @param result The result representing the confidence of the violation.
      */
-    protected void report(Node n, ConformanceResult result) {
+    protected void report(
+        Node n,
+        ConformanceResult result,
+        LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior) {
       DiagnosticType msg;
       if (severity == Severity.ERROR) {
         // Always report findings that are errors, even if the types are too loose to be certain.
@@ -347,7 +352,8 @@ public final class ConformanceRules {
                   allowlist != null
                       ? Optional.fromNullable(allowlist.allowlistEntry)
                       : Optional.absent(),
-                  err);
+                  err,
+                  behavior);
 
       if (shouldReport && allowlist == null && (onlyApplyTo == null || onlyApplyTo.matches(path))) {
         compiler.report(err);
@@ -1455,8 +1461,9 @@ public final class ConformanceRules {
     }
 
     @Override
-    public void check(NodeTraversal t, Node n) {
-      customRule.check(t, n);
+    public void check(
+        NodeTraversal t, Node n, LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior) {
+      customRule.check(t, n, behavior);
     }
 
     private Rule createRule(AbstractCompiler compiler, Requirement requirement)

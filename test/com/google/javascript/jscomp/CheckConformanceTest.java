@@ -3264,6 +3264,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Test
   public void
       testSimpleExtends_disallowsOverridingLibraryLevelBehaviorToADifferentValue_inLibraryLevelConformanceMode() {
+    // the conformance reporting mode is RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG, i.e.
+    // as if the CheckJS action is being run.
     reportingMode = ConformanceReportingMode.RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG;
     allowSourcelessWarnings();
     baseConfiguration =
@@ -3293,12 +3295,14 @@ public final class CheckConformanceTest extends CompilerTestCase {
         """,
         CheckConformance.INVALID_REQUIREMENT_SPEC,
         """
-        Invalid requirement. Reason: extending rule's config may not specify a different value of 'library_level_non_allowlisted_conformance_violations_behavior' than the base rule's config\nRequirement spec:\nextends: "gws:goog.Promise.X"
+        Invalid requirement. Reason: extending rule's config may not specify a different value of 'library_level_non_allowlisted_conformance_violations_behavior' than the base rule's config. Skipping all conformance checks.\nRequirement spec:\nextends: "gws:goog.Promise.X"
         """);
   }
 
   @Test
   public void testSimpleExtends_allowsOverridingLibraryLevelBehaviorWhenBaseRuleHasNoBehavior() {
+    // the conformance reporting mode is RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG, i.e.
+    // as if the CheckJS action is being run.
     reportingMode = ConformanceReportingMode.RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG;
     allowSourcelessWarnings();
     baseConfiguration =
@@ -3345,6 +3349,39 @@ public final class CheckConformanceTest extends CompilerTestCase {
     extendingConfiguration =
         """
         library_level_non_allowlisted_conformance_violations_behavior: RECORD_ONLY
+        requirement: {
+          extends: 'gws:goog.Promise.X'
+        }
+        """;
+
+    // TODO(b/332922526): This should not be an error once we support recording conformance
+    // violations.
+    testWarning(
+        """
+        goog.Promise.all();
+        """,
+        CheckConformance.CONFORMANCE_VIOLATION);
+  }
+
+  @Test
+  public void
+      testSimpleExtends_appliesLibraryLevelBehaviorThatIsSpecified_recordOnlyInBaseConfig() {
+    reportingMode = ConformanceReportingMode.RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG;
+    allowSourcelessWarnings();
+    baseConfiguration =
+        """
+        library_level_non_allowlisted_conformance_violations_behavior: RECORD_ONLY
+        requirement: {
+          rule_id: "gws:goog.Promise.X"
+          type: BANNED_NAME
+          error_message: "Prefer using native Promise equivalents. See go/gws-js-conformance#goog-promise"
+
+          value: "goog.Promise.all"
+        }
+        """;
+    ;
+    extendingConfiguration =
+        """
         requirement: {
           extends: 'gws:goog.Promise.X'
         }
@@ -3686,8 +3723,12 @@ public final class CheckConformanceTest extends CompilerTestCase {
         .addWhitelist("y")
         .addWhitelistRegexp("n")
         .addWhitelistEntry(WhitelistEntry.newBuilder().addPrefix("a2").addRegexp("y2").build());
+    CheckConformance checkConformance = new CheckConformance(compiler);
     List<Requirement> requirements =
-        CheckConformance.mergeRequirements(compiler, ImmutableList.of(builder.build()));
+        checkConformance.mergeRequirements(
+            compiler,
+            ImmutableList.of(builder.build()),
+            /* isLibraryLevelConformanceReportingMode= */ false);
     assertThat(requirements).hasSize(1);
     Requirement requirement = requirements.get(0);
     assertThat(requirement.getWhitelistCount()).isEqualTo(2);
@@ -3711,8 +3752,12 @@ public final class CheckConformanceTest extends CompilerTestCase {
         .addAllowlist("y")
         .addAllowlistRegexp("n")
         .addAllowlistEntry(WhitelistEntry.newBuilder().addPrefix("a2").addRegexp("y2").build());
+    CheckConformance checkConformance = new CheckConformance(compiler);
     List<Requirement> requirements =
-        CheckConformance.mergeRequirements(compiler, ImmutableList.of(builder.build()));
+        checkConformance.mergeRequirements(
+            compiler,
+            ImmutableList.of(builder.build()),
+            /* isLibraryLevelConformanceReportingMode= */ false);
     assertThat(requirements).hasSize(1);
     Requirement requirement = requirements.get(0);
     assertThat(requirement.getAllowlistCount()).isEqualTo(2);
@@ -3727,8 +3772,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
     compiler.setErrorManager(errorManager);
     ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();
     builder.addRequirementBuilder().addWhitelist("x").addWhitelist("x");
+    ConformanceConfig config = builder.build();
+    CheckConformance checkConformance = new CheckConformance(compiler);
     List<Requirement> requirements =
-        CheckConformance.mergeRequirements(compiler, ImmutableList.of(builder.build()));
+        checkConformance.mergeRequirements(
+            compiler,
+            ImmutableList.of(config),
+            /* isLibraryLevelConformanceReportingMode= */ false);
     assertThat(requirements.get(0).getWhitelistCount()).isEqualTo(1);
     assertThat(errorManager.getErrorCount()).isEqualTo(0);
   }
@@ -3740,8 +3790,14 @@ public final class CheckConformanceTest extends CompilerTestCase {
     compiler.setErrorManager(errorManager);
     ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();
     builder.addRequirementBuilder().addAllowlist("x").addAllowlist("x");
+    ConformanceConfig config = builder.build();
+
+    CheckConformance checkConformance = new CheckConformance(compiler);
     List<Requirement> requirements =
-        CheckConformance.mergeRequirements(compiler, ImmutableList.of(builder.build()));
+        checkConformance.mergeRequirements(
+            compiler,
+            ImmutableList.of(config),
+            /* isLibraryLevelConformanceReportingMode= */ false);
     assertThat(requirements.get(0).getAllowlistCount()).isEqualTo(1);
     assertThat(errorManager.getErrorCount()).isEqualTo(0);
   }

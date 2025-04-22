@@ -20,6 +20,7 @@ import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.ConformanceConfig.LibraryLevelNonAllowlistedConformanceViolationsBehavior;
 import com.google.javascript.jscomp.Requirement.Severity;
 import com.google.javascript.rhino.Node;
 
@@ -66,7 +67,10 @@ public class ConformanceAllowlister {
             public synchronized boolean shouldReportConformanceViolation(
                 Requirement requirement,
                 Optional<Requirement.WhitelistEntry> whitelistEntry,
-                JSError diagnostic) {
+                JSError diagnostic,
+                LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior) {
+              // TODO(rishipal): Add logic to determine whether to report the violation as an error
+              // based on the behavior.
               errors.add(diagnostic);
               return false;
             }

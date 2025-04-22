@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.ConformanceConfig.LibraryLevelNonAllowlistedConformanceViolationsBehavior;
 import com.google.javascript.jscomp.Requirement.WhitelistEntry;
 
 /**
@@ -88,7 +89,10 @@ public interface ErrorManager extends ErrorHandler {
    * violation is whitelisted.
    */
   default boolean shouldReportConformanceViolation(
-      Requirement requirement, Optional<WhitelistEntry> whitelistEntry, JSError diagnostic) {
+      Requirement requirement,
+      Optional<WhitelistEntry> whitelistEntry,
+      JSError diagnostic,
+      LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior) {
     return true;
   }
 }

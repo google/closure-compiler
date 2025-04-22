@@ -18,7 +18,10 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.javascript.jscomp.ConformanceConfig.LibraryLevelNonAllowlistedConformanceViolationsBehavior.UNSPECIFIED;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting.Visibility;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -31,6 +34,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -59,7 +63,19 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
 
   private final AbstractCompiler compiler;
   private final ImmutableList<Category> categories;
+  // Map of root requirements to their behavior specified in their configs, or of their extending
+  // requirement's config. Only populated if the conformance reporting mode is
+  // RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG, i.e. the
+  // conformance checks are being run during the CheckJS action.
+  private final Map<Requirement, LibraryLevelNonAllowlistedConformanceViolationsBehavior>
+      mergedBehaviors = new LinkedHashMap<>();
+  // Map of rules to their behavior. Populated from the mergedBehaviors map. The behavior of each
+  // rule is passed into the check() method of the rule to determine whether to record or report the
+  // conformance violations.
+  private final Map<Rule, LibraryLevelNonAllowlistedConformanceViolationsBehavior> ruleToBehavior =
+      new LinkedHashMap<>();
 
+  /** A rule that can be checked for conformance. */
   public static interface Rule {
 
     /**
@@ -76,7 +92,8 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
     }
 
     /** Perform conformance check */
-    void check(NodeTraversal t, Node n);
+    void check(
+        NodeTraversal t, Node n, LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior);
   }
 
   /**
@@ -105,6 +122,14 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
       this.precondition = precondition;
       this.rules = rules;
     }
+  }
+
+  /**
+   * @param compiler The compiler.
+   */
+  @VisibleForTesting(productionVisibility = Visibility.PRIVATE)
+  CheckConformance(AbstractCompiler compiler) {
+    this(compiler, ImmutableList.of(), null);
   }
 
   /**
@@ -152,29 +177,40 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
       Category category = this.categories.get(c);
       if (category.precondition.shouldCheck(n)) {
         for (int r = category.rules.size() - 1; r >= 0; r--) {
-          category.rules.get(r).check(t, n);
+          Rule rule = category.rules.get(r);
+          var behavior = ruleToBehavior.get(rule);
+          rule.check(t, n, behavior);
         }
       }
     }
   }
 
   /** Build the data structures need by this pass from the provided configurations. */
-  private static ImmutableList<Category> initRules(
+  private ImmutableList<Category> initRules(
       AbstractCompiler compiler,
       ImmutableList<ConformanceConfig> configs,
       ConformanceReportingMode reportingMode) {
     HashMultimap<Precondition, Rule> builder = HashMultimap.create();
-    if (reportingMode != null
-        && reportingMode.equals(
-            ConformanceReportingMode.RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG)) {
-      validateBehaviorSettingOfConfigs(compiler, configs, reportingMode);
+
+    boolean isLibraryLevelReportingMode =
+        reportingMode != null
+            && reportingMode.equals(
+                ConformanceReportingMode.RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG);
+    if (isLibraryLevelReportingMode) {
+      if (!validateBehaviorSettingOfConfigs(compiler, configs, reportingMode)) {
+        return ImmutableList.of();
+      }
     }
 
-    List<Requirement> mergedRequirements = mergeRequirements(compiler, configs);
+    List<Requirement> mergedRequirements =
+        mergeRequirements(compiler, configs, isLibraryLevelReportingMode);
     for (Requirement requirement : mergedRequirements) {
+      LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior =
+          isLibraryLevelReportingMode ? mergedBehaviors.get(requirement) : UNSPECIFIED;
       Rule rule = initRule(compiler, requirement);
       if (rule != null) {
         builder.put(rule.getPrecondition(), rule);
+        ruleToBehavior.put(rule, behavior);
       }
     }
     return builder.asMap().entrySet().stream()
@@ -182,7 +218,7 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
         .collect(toImmutableList());
   }
 
-  private static void validateBehaviorSettingOfConfigs(
+  private static boolean validateBehaviorSettingOfConfigs(
       AbstractCompiler compiler,
       ImmutableList<ConformanceConfig> configs,
       ConformanceReportingMode reportingMode) {
@@ -224,12 +260,14 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
                   requirement,
                   "extending rule's config may not specify a different value of"
                       + " 'library_level_non_allowlisted_conformance_violations_behavior' than the"
-                      + " base rule's config");
+                      + " base rule's config. Skipping all conformance checks.");
+              return false;
             }
           }
         }
       }
     }
+    return true;
   }
 
   private static final ImmutableSet<String> EXTENDABLE_FIELDS =
@@ -354,10 +392,13 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
    *
    * @return a list of root requirements of all configs after merging.
    */
-  static List<Requirement> mergeRequirements(
-      AbstractCompiler compiler, List<ConformanceConfig> configs) {
+  List<Requirement> mergeRequirements(
+      AbstractCompiler compiler,
+      List<ConformanceConfig> configs,
+      boolean isLibraryLevelConformanceReportingMode) {
     // Root requirements (i.e. requirements that have no 'extends' field).
-    List<Requirement.Builder> rootRequirements = new ArrayList<>();
+    Map<Requirement.Builder, LibraryLevelNonAllowlistedConformanceViolationsBehavior>
+        rootRequirements = new LinkedHashMap<>();
     // Requirements that are extendable (i.e. have a 'rule_id' field).
     Map<String, Requirement.Builder> extendable = new LinkedHashMap<>();
 
@@ -374,8 +415,13 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
           extendable.put(requirement.getRuleId(), builder);
         }
         if (!requirement.hasExtends()) {
-          // does not extend anything, so it's a root requirement
-          rootRequirements.add(builder);
+          // does not extend anything, so it's a root requirement. May or may not have a rule_id.
+          if (!isLibraryLevelConformanceReportingMode) {
+            rootRequirements.put(builder, UNSPECIFIED);
+          } else {
+            rootRequirements.put(
+                builder, config.getLibraryLevelNonAllowlistedConformanceViolationsBehavior());
+          }
         }
       }
     }
@@ -388,6 +434,13 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
           if (!validateExtendingRequirement(compiler, requirement, extendableRequirement)) {
             continue;
           }
+          if (config.hasLibraryLevelNonAllowlistedConformanceViolationsBehavior()) {
+            // overwrite the behavior of the extendable requirement with the behavior of the
+            // extending requirement.
+            rootRequirements.put(
+                extendableRequirement,
+                config.getLibraryLevelNonAllowlistedConformanceViolationsBehavior());
+          }
           mergeExtendingRequirementIntoExtended(extendableRequirement, requirement);
         }
       }
@@ -395,10 +448,18 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
 
     // 3. Remove duplicates from the allowlists/whitelists of the merged root requirements.
     List<Requirement> cleanedUpRootRequirements = new ArrayList<>(rootRequirements.size());
-    for (Requirement.Builder builder : rootRequirements) {
+    for (Entry<Requirement.Builder, LibraryLevelNonAllowlistedConformanceViolationsBehavior> entry :
+        rootRequirements.entrySet()) {
+      Requirement.Builder builder = entry.getKey();
+      var behavior = entry.getValue();
       removeDuplicates(builder);
-      cleanedUpRootRequirements.add(builder.build());
+      Requirement requirement = builder.build();
+      if (isLibraryLevelConformanceReportingMode && behavior != UNSPECIFIED) {
+        mergedBehaviors.put(requirement, behavior);
+      }
+      cleanedUpRootRequirements.add(requirement);
     }
+
     return cleanedUpRootRequirements;
   }
 
