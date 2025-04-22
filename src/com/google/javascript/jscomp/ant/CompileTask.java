@@ -438,9 +438,7 @@ public final class CompileTask
     this.warningLevel.setOptionsForWarningLevel(options);
     options.setDependencyOptions(
         manageDependencies
-            ? new DependencyOptions(
-                DependencyOptions.DependencyMode.PRUNE_LEGACY,
-                ImmutableList.copyOf(ImmutableList.of()))
+            ? DependencyOptions.pruneLegacyForEntryPoints(ImmutableList.of())
             : DependencyOptions.sortOnly());
     convertEntryPointParameters(options);
     options.setTrustedStrings(true);
@@ -532,9 +530,7 @@ public final class CompileTask
     }
     if (this.manageDependencies) {
       options.setDependencyOptions(
-          new DependencyOptions(
-              DependencyOptions.DependencyMode.PRUNE_LEGACY,
-              ImmutableList.copyOf(entryPointsBuilder.build())));
+          DependencyOptions.pruneLegacyForEntryPoints(entryPointsBuilder.build()));
     }
   }
 
