@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.Comparator.comparing;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
@@ -468,9 +469,8 @@ public class ConvertToTypedInterface implements CompilerPass {
       removeDuplicateDeclarations();
 
       // Simplify all names in the top-level scope.
-      @SuppressWarnings("StreamToIterable")
-      Iterable<String> seenNames =
-          currentFile.getDeclarations().keySet().stream().sorted(SHORT_TO_LONG)::iterator;
+      ImmutableList<String> seenNames =
+          ImmutableList.sortedCopyOf(SHORT_TO_LONG, currentFile.getDeclarations().keySet());
 
       for (String name : seenNames) {
         for (PotentialDeclaration decl : currentFile.getDeclarations().get(name)) {
