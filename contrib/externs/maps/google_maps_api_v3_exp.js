@@ -9086,9 +9086,8 @@ google.maps.Settings = function() {};
 google.maps.Settings.prototype.experienceIds;
 
 /**
- * Returns a promise that resolves to a Firebase App Check token result. The
- * token is attached to gRPC requests as a &quot;X-Firebase-AppCheck&quot; HTTP
- * header. If the token is empty, the header is not attached.
+ * Set this property to a function that returns a promise which resolves to a
+ * Firebase App Check token result.
  * @type {function(): !Promise<!google.maps.MapsAppCheckTokenResult>}
  */
 google.maps.Settings.prototype.fetchAppCheckToken;
