@@ -2809,7 +2809,9 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new CheckConformance(
-                      compiler, options.getConformanceConfigs(), /* reportingMode= */ null))
+                      compiler,
+                      options.getConformanceConfigs(),
+                      options.getConformanceReportingMode()))
           .build();
 
   private final PassFactory removeCastNodes =
