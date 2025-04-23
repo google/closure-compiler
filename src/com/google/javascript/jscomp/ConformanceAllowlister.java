@@ -69,8 +69,9 @@ public class ConformanceAllowlister {
                 Optional<Requirement.WhitelistEntry> whitelistEntry,
                 JSError diagnostic,
                 LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior) {
-              // TODO(rishipal): Add logic to determine whether to report the violation as an error
-              // based on the behavior.
+              if (behavior == LibraryLevelNonAllowlistedConformanceViolationsBehavior.RECORD_ONLY) {
+                return false;
+              }
               errors.add(diagnostic);
               return false;
             }

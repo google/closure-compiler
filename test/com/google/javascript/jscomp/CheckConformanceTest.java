@@ -3354,13 +3354,11 @@ public final class CheckConformanceTest extends CompilerTestCase {
         }
         """;
 
-    // TODO(b/332922526): This should not be an error once we support recording conformance
-    // violations.
-    testWarning(
+    // respects the library-level behavior in the extending config and does not warn
+    testNoWarning(
         """
         goog.Promise.all();
-        """,
-        CheckConformance.CONFORMANCE_VIOLATION);
+        """);
   }
 
   @Test
@@ -3387,13 +3385,11 @@ public final class CheckConformanceTest extends CompilerTestCase {
         }
         """;
 
-    // TODO(b/332922526): This should not be an error once we support recording conformance
-    // violations.
-    testWarning(
+    // respects the library-level behavior in the base config and does not warn
+    testNoWarning(
         """
         goog.Promise.all();
-        """,
-        CheckConformance.CONFORMANCE_VIOLATION);
+        """);
   }
 
   @Test
