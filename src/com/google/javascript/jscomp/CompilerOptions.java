@@ -1173,6 +1173,17 @@ public class CompilerOptions {
   /** List of conformance configs to use in CheckConformance. */
   private ImmutableList<ConformanceConfig> conformanceConfigs = ImmutableList.of();
 
+  private ConformanceReportingMode conformanceReportingMode =
+      ConformanceReportingMode.IGNORE_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG;
+
+  public ConformanceReportingMode getConformanceReportingMode() {
+    return conformanceReportingMode;
+  }
+
+  public void setConformanceReportingMode(ConformanceReportingMode mode) {
+    this.conformanceReportingMode = mode;
+  }
+
   /**
    * Whether to respect the library-level non-allowlisted conformance behavior specified in the
    * conformance config.
@@ -2850,6 +2861,7 @@ public class CompilerOptions {
         .add("computeFunctionSideEffects", computeFunctionSideEffects)
         .add("conformanceConfigs", getConformanceConfigs())
         .add("conformanceRemoveRegexFromPath", conformanceRemoveRegexFromPath)
+        .add("conformanceReportingMode", conformanceReportingMode)
         .add("continueAfterErrors", canContinueAfterErrors())
         .add("convertToDottedProperties", convertToDottedProperties)
         .add("crossChunkCodeMotion", crossChunkCodeMotion)
