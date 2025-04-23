@@ -21,7 +21,6 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.javascript.jscomp.ConformanceConfig.LibraryLevelNonAllowlistedConformanceViolationsBehavior.UNSPECIFIED;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.annotations.VisibleForTesting.Visibility;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -127,7 +126,7 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
   /**
    * @param compiler The compiler.
    */
-  @VisibleForTesting(productionVisibility = Visibility.PRIVATE)
+  @VisibleForTesting
   CheckConformance(AbstractCompiler compiler) {
     this(compiler, ImmutableList.of(), null);
   }
