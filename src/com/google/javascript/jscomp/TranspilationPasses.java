@@ -320,12 +320,6 @@ public class TranspilationPasses {
                       compiler.getOptions().getDiagnoseAsyncContextSafariCrash()))
           .build();
 
-  static final PassFactory es6SplitVariableDeclarations =
-      PassFactory.builder()
-          .setName("Es6SplitVariableDeclarations")
-          .setInternalFactory(Es6SplitVariableDeclarations::new)
-          .build();
-
   static final PassFactory es6ConvertSuper =
       PassFactory.builder()
           .setName("es6ConvertSuper")

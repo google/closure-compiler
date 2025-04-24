@@ -415,7 +415,6 @@ public final class MultiPassTest extends CompilerTestCase {
     replaceTypesWithColors();
 
     passes = new ArrayList<>();
-    addSplitVariableDeclarationsPass();
     addNormalization(); // adding normalization triggers {@code ValidityCheck.checkVars}
     addDestructuringPass();
     addArrowFunctionPass();
@@ -530,14 +529,6 @@ public final class MultiPassTest extends CompilerTestCase {
         PassFactory.builder()
             .setName("arrowFunctionPass")
             .setInternalFactory(Es6RewriteArrowFunction::new)
-            .build());
-  }
-
-  private void addSplitVariableDeclarationsPass() {
-    passes.add(
-        PassFactory.builder()
-            .setName("splitVariableDeclarationsPass")
-            .setInternalFactory(Es6SplitVariableDeclarations::new)
             .build());
   }
 
