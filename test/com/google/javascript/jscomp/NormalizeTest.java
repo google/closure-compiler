@@ -1098,6 +1098,29 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNormalize_createsUniqueNamesInFunctionBody_avoidsShadowingWithDefaultParams() {
+    test(
+        """
+        function x() {}
+        var y = 1;
+        function f(z=x, w=y) {
+          let x = y;
+          var y = 3;
+          return w;
+        }
+        """,
+        """
+        function x() {}
+        var y = 1;
+        function f(z=x, w=y) {
+          let x$jscomp$1 = y$jscomp$1;
+          var y$jscomp$1 = 3;
+          return w;
+        }
+        """);
+  }
+
+  @Test
   public void testNoRenameParamNames() {
     ignoreWarnings(DiagnosticGroups.GLOBALLY_MISSING_PROPERTIES);
     testSame("function f(x) { x; }");
