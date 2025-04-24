@@ -415,7 +415,6 @@ public final class MultiPassTest extends CompilerTestCase {
     replaceTypesWithColors();
 
     passes = new ArrayList<>();
-    addRenameVariablesInParamListsPass();
     addSplitVariableDeclarationsPass();
     addNormalization(); // adding normalization triggers {@code ValidityCheck.checkVars}
     addDestructuringPass();
@@ -539,14 +538,6 @@ public final class MultiPassTest extends CompilerTestCase {
         PassFactory.builder()
             .setName("splitVariableDeclarationsPass")
             .setInternalFactory(Es6SplitVariableDeclarations::new)
-            .build());
-  }
-
-  private void addRenameVariablesInParamListsPass() {
-    passes.add(
-        PassFactory.builder()
-            .setName("renameVariablesInParamListsPass")
-            .setInternalFactory(Es6RenameVariablesInParamLists::new)
             .build());
   }
 

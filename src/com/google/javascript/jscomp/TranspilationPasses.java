@@ -291,12 +291,6 @@ public class TranspilationPasses {
         .build();
   }
 
-  static final PassFactory es6RenameVariablesInParamLists =
-      PassFactory.builder()
-          .setName("Es6RenameVariablesInParamLists")
-          .setInternalFactory(Es6RenameVariablesInParamLists::new)
-          .build();
-
   static final PassFactory es6RewriteArrowFunction =
       PassFactory.builder()
           .setName("Es6RewriteArrowFunction")
