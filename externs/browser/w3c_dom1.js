@@ -1030,6 +1030,13 @@ Element.prototype.setAttributeNode = function(newAttr) {};
 /** @type {?function (Event=)} */ Element.prototype.onsubmit;
 /** @type {?function (Event)} */ Element.prototype.ontextinput;
 /** @type {?function (Event)} */ Element.prototype.onwheel;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondrag;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondragend;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondragenter;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondragleave;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondragover;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondragstart;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondrop;
 
 /**
  * @constructor
@@ -1117,7 +1124,13 @@ Window.prototype.dispatchEvent = function(evt) {};
 /** @type {?function (Event)} */ Window.prototype.onclose;
 /** @type {?function (Event)} */ Window.prototype.oncontextmenu;
 /** @type {?function (Event)} */ Window.prototype.ondblclick;
-/** @type {?function (Event)} */ Window.prototype.ondragdrop;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondrag;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondragend;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondragenter;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondragleave;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondragover;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondragstart;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondrop;
 // onerror has a special signature.
 // See
 //  https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onerror
