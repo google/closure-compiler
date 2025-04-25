@@ -43,6 +43,7 @@ import com.google.javascript.jscomp.CompilerInput.ModuleType;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.ExperimentalForceTranspile;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
+import com.google.javascript.jscomp.CompilerOptions.SegmentOfCompilationToRun;
 import com.google.javascript.jscomp.JSChunkGraph.ChunkDependenceException;
 import com.google.javascript.jscomp.JSChunkGraph.MissingChunkException;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
@@ -1030,6 +1031,29 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           }
           return null;
         });
+  }
+
+  // TODO: b/395966861 - Delete the above method that takes an OptimizationPasses valueand fold into
+  // this method. We can do this once all usages of the above method are migrated to call this
+  // overload.
+  public void stage2Passes(SegmentOfCompilationToRun segmentOfCompilationToRun) {
+    switch (segmentOfCompilationToRun) {
+      case OPTIMIZATIONS:
+        stage2Passes(OptimizationPasses.ALL);
+        break;
+      case OPTIMIZATIONS_FIRST_HALF:
+        stage2Passes(OptimizationPasses.FIRST_HALF);
+        break;
+      case OPTIMIZATIONS_SECOND_HALF:
+        stage2Passes(OptimizationPasses.SECOND_HALF);
+        break;
+      case ENTIRE_COMPILATION:
+      case CHECKS:
+      case FINALIZATIONS:
+      case OPTIMIZATIONS_AND_FINALIZATIONS:
+        throw new IllegalArgumentException(
+            "Unsupported segment of compilation to run in stage 2: " + segmentOfCompilationToRun);
+    }
   }
 
   /**
