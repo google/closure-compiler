@@ -53,8 +53,15 @@ jobs:
         # https://github.com/marketplace/actions/checkout
         uses: actions/checkout@v4
 
-      # https://github.com/bazelbuild/setup-bazelisk
-      - uses: bazelbuild/setup-bazelisk@v2
+      # https://github.com/bazel-contrib/setup-bazel
+      - uses: bazel-contrib/setup-bazel@0.14.0
+        with:
+          # Avoid downloading Bazel every time.
+          bazelisk-cache: true
+          # Store build cache per workflow.
+          disk-cache: ${{ github.workflow }}
+          # Share repository cache between workflows
+          repository-cache: true
 
       - name: Build and Test
         run: unset ANDROID_HOME && bazelisk test //:all
