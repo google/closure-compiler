@@ -3002,7 +3002,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(options.shouldOptimize());
     // getOptimizations() also includes transpilation passes
     ImmutableList<PassFactory> allOptimizationPassesToRun =
-        getPassConfig().getOptimizations(optimizationPasses).build();
+        getPassConfig().getOptimizations().build();
     if (allOptimizationPassesToRun.isEmpty()) {
       return;
     }

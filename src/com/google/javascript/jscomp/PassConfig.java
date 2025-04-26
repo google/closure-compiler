@@ -61,7 +61,7 @@ public abstract class PassConfig {
    * <p>Optimization passes revolve around producing smaller and faster code. They should always run
    * after checking passes.
    */
-  protected abstract PassListBuilder getOptimizations(OptimizationPasses optimizationPasses);
+  protected abstract PassListBuilder getOptimizations();
 
   /**
    * Different ways to split optimization passes. Passing one of these enum options to
@@ -85,7 +85,7 @@ public abstract class PassConfig {
   GraphvizGraph getPassGraph() {
     LinkedDirectedGraph<String, String> graph = LinkedDirectedGraph.createWithoutAnnotations();
     Iterable<PassFactory> allPasses =
-        Iterables.concat(getChecks().build(), getOptimizations(OptimizationPasses.ALL).build());
+        Iterables.concat(getChecks().build(), getOptimizations().build());
     String lastPass = null;
     String loopStart = null;
     for (PassFactory pass : allPasses) {
@@ -141,8 +141,8 @@ public abstract class PassConfig {
     }
 
     @Override
-    protected PassListBuilder getOptimizations(OptimizationPasses optimizationPasses) {
-      return delegate.getOptimizations(optimizationPasses);
+    protected PassListBuilder getOptimizations() {
+      return delegate.getOptimizations();
     }
 
     @Override

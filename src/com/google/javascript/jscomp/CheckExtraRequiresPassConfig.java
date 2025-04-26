@@ -46,7 +46,7 @@ public final class CheckExtraRequiresPassConfig extends PassConfig.PassConfigDel
   }
 
   @Override
-  protected PassListBuilder getOptimizations(OptimizationPasses optimizationPasses) {
+  protected PassListBuilder getOptimizations() {
     return new PassListBuilder(options);
   }
 }

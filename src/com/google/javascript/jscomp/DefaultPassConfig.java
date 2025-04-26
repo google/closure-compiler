@@ -487,14 +487,10 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   @Override
-  protected PassListBuilder getOptimizations(OptimizationPasses optimizationPasses) {
+  protected PassListBuilder getOptimizations() {
     PassListBuilder passes = new PassListBuilder(options);
 
     if (options.isPropertyRenamingOnlyCompilationMode()) {
-      checkState(
-          optimizationPasses != OptimizationPasses.SECOND_HALF,
-          "Property renaming only compilation cannot be run with the second half of optimization"
-              + " passes");
       passes.maybeAdd(removeUnnecessarySyntheticExterns);
       TranspilationPasses.addTranspilationRuntimeLibraries(passes);
       passes.maybeAdd(closureProvidesRequires);
@@ -511,10 +507,6 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.skipNonTranspilationPasses) {
-      checkState(
-          optimizationPasses != OptimizationPasses.SECOND_HALF,
-          "Skipping non-transpilation passes cannot be run with the second half of optimization"
-              + " passes");
       // Reaching this if-condition means the 'getChecks()' phase has been skipped in favor of
       // 'getTranspileOnlyPasses'.
       return passes;

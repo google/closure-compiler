@@ -43,7 +43,7 @@ public class ConformancePassConfig extends PassConfig.PassConfigDelegate {
   }
 
   @Override
-  protected PassListBuilder getOptimizations(OptimizationPasses optimizationPasses) {
+  protected PassListBuilder getOptimizations() {
     return new PassListBuilder(options);
   }
 }
