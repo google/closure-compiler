@@ -93,9 +93,6 @@ public interface ErrorManager extends ErrorHandler {
       Optional<WhitelistEntry> whitelistEntry,
       JSError diagnostic,
       LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior) {
-    if (behavior == LibraryLevelNonAllowlistedConformanceViolationsBehavior.RECORD_ONLY) {
-      return false;
-    }
-    return true;
+    return behavior != LibraryLevelNonAllowlistedConformanceViolationsBehavior.RECORD_ONLY;
   }
 }
