@@ -33,7 +33,8 @@
  */
 function WebGL2RenderingContext() {}
 
-
+/** @const {number} */
+WebGL2RenderingContext.READ_BUFFER;
 
 /** @const {number} */
 WebGL2RenderingContext.UNPACK_ROW_LENGTH;
@@ -827,6 +828,9 @@ WebGL2RenderingContext.TIMEOUT_IGNORED;
 /** @const {number} */
 WebGL2RenderingContext.MAX_CLIENT_WAIT_TIMEOUT_WEBGL;
 
+
+/** @const {number} */
+WebGL2RenderingContext.prototype.READ_BUFFER;
 
 /** @const {number} */
 WebGL2RenderingContext.prototype.UNPACK_ROW_LENGTH;
