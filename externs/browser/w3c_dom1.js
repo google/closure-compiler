@@ -1124,13 +1124,13 @@ Window.prototype.dispatchEvent = function(evt) {};
 /** @type {?function (Event)} */ Window.prototype.onclose;
 /** @type {?function (Event)} */ Window.prototype.oncontextmenu;
 /** @type {?function (Event)} */ Window.prototype.ondblclick;
-/** @type {?function (!DragEvent)} */ Element.prototype.ondrag;
-/** @type {?function (!DragEvent)} */ Element.prototype.ondragend;
-/** @type {?function (!DragEvent)} */ Element.prototype.ondragenter;
-/** @type {?function (!DragEvent)} */ Element.prototype.ondragleave;
-/** @type {?function (!DragEvent)} */ Element.prototype.ondragover;
-/** @type {?function (!DragEvent)} */ Element.prototype.ondragstart;
-/** @type {?function (!DragEvent)} */ Element.prototype.ondrop;
+/** @type {?function (!DragEvent)} */ Window.prototype.ondrag;
+/** @type {?function (!DragEvent)} */ Window.prototype.ondragend;
+/** @type {?function (!DragEvent)} */ Window.prototype.ondragenter;
+/** @type {?function (!DragEvent)} */ Window.prototype.ondragleave;
+/** @type {?function (!DragEvent)} */ Window.prototype.ondragover;
+/** @type {?function (!DragEvent)} */ Window.prototype.ondragstart;
+/** @type {?function (!DragEvent)} */ Window.prototype.ondrop;
 // onerror has a special signature.
 // See
 //  https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onerror
