@@ -937,8 +937,14 @@ public final class ConformanceRules {
           return ConformanceResult.VIOLATION;
         }
       } else if (node.isTemplateLitString()) {
-        if (this.stringPattern.matcher(node.getCookedString()).matches()) {
-          return ConformanceResult.VIOLATION;
+        if (node.getCookedString() != null) {
+          if (this.stringPattern.matcher(node.getCookedString()).matches()) {
+            return ConformanceResult.VIOLATION;
+          }
+        } else {
+          throw new IllegalStateException(
+              "Unable to check banned string regex conformance in template literal as it contains"
+                  + " invalid (uncookable) escape sequences");
         }
       }
       return ConformanceResult.CONFORMANCE;
