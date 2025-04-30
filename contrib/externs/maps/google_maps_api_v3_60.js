@@ -16944,6 +16944,32 @@ google.maps.places.Attribution.prototype.providerURI;
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
+ * Color options for Google Maps attribution text. Attribution may be customized
+ * to use any of these colors.
+ *
+ * Access by calling `const {AttributionColor} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.AttributionColor = {
+  /**
+   * Black attribution text.
+   */
+  BLACK: 'BLACK',
+  /**
+   * Gray attribution text.
+   */
+  GRAY: 'GRAY',
+  /**
+   * White attribution text.
+   */
+  WHITE: 'WHITE',
+};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
  *
  * Access by calling `const {AuthorAttribution} = await
  * google.maps.importLibrary("places")`. See
@@ -18784,6 +18810,88 @@ google.maps.places.Place.prototype.isOpen = function(date) {};
 google.maps.places.Place.prototype.toJSON = function() {};
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Configures a Place Details Compact element to show a wheelchair icon if the
+ * place has an accessible entrance. Append this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it.
+ *
+ * Access by calling `const {PlaceAccessibleEntranceIconElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceAccessibleEntranceIconElementOptions=}
+ *     options
+ * @implements {google.maps.places.PlaceAccessibleEntranceIconElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceAccessibleEntranceIconElement = function(options) {};
+
+
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>PlaceAccessibleEntranceIconElement</code>.
+ * @record
+ */
+google.maps.places.PlaceAccessibleEntranceIconElementOptions = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Configures a Place Details Compact element to show a place&#39;s address.
+ * Append this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it.
+ *
+ * Access by calling `const {PlaceAddressElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceAddressElementOptions=} options
+ * @implements {google.maps.places.PlaceAddressElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceAddressElement = function(options) {};
+
+
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>PlaceAddressElement</code>.
+ * @record
+ */
+google.maps.places.PlaceAddressElementOptions = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Configures a Place Details Compact element to show all available content.
+ * Append this element as a child of a {@link
+ * google.maps.places.PlaceDetailsCompactElement} to use it.
+ *
+ * Access by calling `const {PlaceAllContentElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceAllContentElementOptions=} options
+ * @implements {google.maps.places.PlaceAllContentElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceAllContentElement = function(options) {};
+
+
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>PlaceAllContentElement</code>.
+ * @record
+ */
+google.maps.places.PlaceAllContentElementOptions = function() {};
+
+/**
  * Defines information about an aspect of the place that users have reviewed.
  * @record
  * @deprecated This interface is no longer used.
@@ -18803,6 +18911,60 @@ google.maps.places.PlaceAspectRating.prototype.rating;
  * @type {string}
  */
 google.maps.places.PlaceAspectRating.prototype.type;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Allows customization of the Google Maps attribution text in a Place Details
+ * Compact element. Append this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it. If this element is
+ * omitted, attribution will still be shown with default colors.
+ *
+ * Access by calling `const {PlaceAttributionElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceAttributionElementOptions=} options
+ * @implements {google.maps.places.PlaceAttributionElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceAttributionElement = function(options) {};
+
+/**
+ * The color of the Google Maps attribution in dark mode.
+ * @default <code>AttributionColor.WHITE</code>
+ * @type {!google.maps.places.AttributionColor|null|undefined}
+ */
+google.maps.places.PlaceAttributionElement.prototype.darkSchemeColor;
+
+/**
+ * The color of the Google Maps attribution in light mode.
+ * @default <code>AttributionColor.GRAY</code>
+ * @type {!google.maps.places.AttributionColor|null|undefined}
+ */
+google.maps.places.PlaceAttributionElement.prototype.lightSchemeColor;
+
+
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>PlaceAttributionElement</code>.
+ * @record
+ */
+google.maps.places.PlaceAttributionElementOptions = function() {};
+
+/**
+ * See {@link google.maps.places.PlaceAttributionElement.darkSchemeColor}.
+ * @type {!google.maps.places.AttributionColor|null|undefined}
+ */
+google.maps.places.PlaceAttributionElementOptions.prototype.darkSchemeColor;
+
+/**
+ * See {@link google.maps.places.PlaceAttributionElement.lightSchemeColor}.
+ * @type {!google.maps.places.AttributionColor|null|undefined}
+ */
+google.maps.places.PlaceAttributionElementOptions.prototype.lightSchemeColor;
 
 /**
  * PlaceAutocompleteElement is an <code>HTMLElement</code> subclass which
@@ -18961,6 +19123,45 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedLanguage;
 google.maps.places.PlaceAutocompleteRequestErrorEvent = function() {};
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Configures the content to be shown by a Place Details Compact element. Append
+ * this element as a child of a {@link
+ * google.maps.places.PlaceDetailsCompactElement} to use it. Append any of the
+ * following elements to the <code>PlaceContentConfigElement</code> to show the
+ * corresponding content: <br> {@link
+ * google.maps.places.PlaceMediaElement}, {@link
+ * google.maps.places.PlaceAddressElement}, {@link
+ * google.maps.places.PlaceRatingElement}, {@link
+ * google.maps.places.PlaceTypeElement}, {@link
+ * google.maps.places.PlacePriceElement}, {@link
+ * google.maps.places.PlaceAccessibleEntranceIconElement}, {@link
+ * google.maps.places.PlaceOpenNowStatusElement}, {@link
+ * google.maps.places.PlaceAttributionElement} <br> The order of the children
+ * does not matter; the element renders content in a standard order which is not
+ * customizable.
+ *
+ * Access by calling `const {PlaceContentConfigElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceContentConfigElementOptions=} options
+ * @implements {google.maps.places.PlaceContentConfigElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceContentConfigElement = function(options) {};
+
+
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>PlaceContentConfigElement</code>.
+ * @record
+ */
+google.maps.places.PlaceContentConfigElementOptions = function() {};
+
+/**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
  * A widget that uses the context token to display a contextual view of the
@@ -19071,6 +19272,75 @@ google.maps.places.PlaceContextualListLayout = {
 };
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Displays details for a place in a compact layout. Append a {@link
+ * google.maps.places.PlaceDetailsPlaceRequestElement} to specify the place to
+ * be rendered. Append a {@link
+ * google.maps.places.PlaceContentConfigElement}, {@link
+ * google.maps.places.PlaceStandardContentElement}, or {@link
+ * google.maps.places.PlaceAllContentElement} to specify which content to
+ * render. <br><br> To use this element, enable the <a
+ * href="https://console.cloud.google.com/marketplace/product/google/placewidgets.googleapis.com"
+ * >Places UI Kit API</a> for your project in the Google Cloud console.
+ *
+ * Access by calling `const {PlaceDetailsCompactElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceDetailsCompactElementOptions=} options
+ * @implements {google.maps.places.PlaceDetailsCompactElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceDetailsCompactElement = function(options) {};
+
+/**
+ * The orientation variant (vertical or horizontal) of the element.
+ * @default <code>PlaceDetailsOrientation.VERTICAL</code>
+ * @type {!google.maps.places.PlaceDetailsOrientation|null|undefined}
+ */
+google.maps.places.PlaceDetailsCompactElement.prototype.orientation;
+
+/**
+ * Read only. Place object containing the ID, location, and viewport of the
+ * currently rendered place.
+ * @type {!google.maps.places.Place|undefined}
+ */
+google.maps.places.PlaceDetailsCompactElement.prototype.place;
+
+/**
+ * If true, truncates the place name and address to fit on one line instead of
+ * wrapping.
+ * @default <code>false</code>
+ * @type {boolean}
+ */
+google.maps.places.PlaceDetailsCompactElement.prototype.truncationPreferred;
+
+
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>PlaceDetailsCompactElement</code>.
+ * @record
+ */
+google.maps.places.PlaceDetailsCompactElementOptions = function() {};
+
+/**
+ * See {@link google.maps.places.PlaceDetailsCompactElement.orientation}.
+ * @type {!google.maps.places.PlaceDetailsOrientation|null|undefined}
+ */
+google.maps.places.PlaceDetailsCompactElementOptions.prototype.orientation;
+
+/**
+ * See {@link
+ * google.maps.places.PlaceDetailsCompactElement.truncationPreferred}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.PlaceDetailsCompactElementOptions.prototype
+    .truncationPreferred;
+
+/**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
  * An HTML element that displays details for a place. Use the
@@ -19141,6 +19411,70 @@ google.maps.places.PlaceDetailsElementOptions = function() {};
  * @type {!google.maps.places.PlaceDetailsSize|null|undefined}
  */
 google.maps.places.PlaceDetailsElementOptions.prototype.size;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Orientation variants for {@link
+ * google.maps.places.PlaceDetailsCompactElement}.
+ *
+ * Access by calling `const {PlaceDetailsOrientation} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.PlaceDetailsOrientation = {
+  /**
+   * Horizontal orientation.
+   */
+  HORIZONTAL: 'HORIZONTAL',
+  /**
+   * Vertical orientation.
+   */
+  VERTICAL: 'VERTICAL',
+};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Configures a Place Details Compact element to load data based on a place
+ * object, ID, or resource name. Append this element as a child of a {@link
+ * google.maps.places.PlaceDetailsCompactElement} to load data for the specified
+ * place.
+ *
+ * Access by calling `const {PlaceDetailsPlaceRequestElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceDetailsPlaceRequestElementOptions=} options
+ * @implements {google.maps.places.PlaceDetailsPlaceRequestElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceDetailsPlaceRequestElement = function(options) {};
+
+/**
+ * The place object, ID, or resource name to render details for in the Place
+ * Details Compact element. This property reflects to the attribute as a
+ * resource name.
+ * @type {!google.maps.places.Place|null}
+ */
+google.maps.places.PlaceDetailsPlaceRequestElement.prototype.place;
+
+
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>PlaceDetailsPlaceRequestElement</code>.
+ * @record
+ */
+google.maps.places.PlaceDetailsPlaceRequestElementOptions = function() {};
+
+/**
+ * See {@link google.maps.places.PlaceDetailsPlaceRequestElement.place}
+ * @type {!google.maps.places.Place|string|null|undefined}
+ */
+google.maps.places.PlaceDetailsPlaceRequestElementOptions.prototype.place;
 
 /**
  * A Place details query to be sent to the <code>PlacesService</code>.
@@ -19350,6 +19684,74 @@ google.maps.places.PlaceListPlaceSelectEvent.prototype.index;
  * @type {!google.maps.places.Place}
  */
 google.maps.places.PlaceListPlaceSelectEvent.prototype.place;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Configures a Place Details Compact element to show a place&#39;s media, such
+ * as photos. Append this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it.
+ *
+ * Access by calling `const {PlaceMediaElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceMediaElementOptions=} options
+ * @implements {google.maps.places.PlaceMediaElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceMediaElement = function(options) {};
+
+/**
+ * Whether to enable or disable the media lightbox, in cases where both options
+ * are supported.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.PlaceMediaElement.prototype.lightboxPreferred;
+
+
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>PlaceMediaElement</code>.
+ * @record
+ */
+google.maps.places.PlaceMediaElementOptions = function() {};
+
+/**
+ * See {@link google.maps.places.PlaceMediaElement.lightboxPreferred}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.PlaceMediaElementOptions.prototype.lightboxPreferred;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Configures a Place Details Compact element to show the current open or closed
+ * status of a place. Append this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it.
+ *
+ * Access by calling `const {PlaceOpenNowStatusElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceOpenNowStatusElementOptions=} options
+ * @implements {google.maps.places.PlaceOpenNowStatusElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceOpenNowStatusElement = function(options) {};
+
+
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>PlaceOpenNowStatusElement</code>.
+ * @record
+ */
+google.maps.places.PlaceOpenNowStatusElementOptions = function() {};
 
 /**
  * Defines information about the opening hours of a Place.
@@ -19657,6 +20059,60 @@ google.maps.places.PlacePredictionSelectEvent = function() {};
  * @type {!google.maps.places.PlacePrediction}
  */
 google.maps.places.PlacePredictionSelectEvent.prototype.placePrediction;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Configures a Place Details Compact element to show a place&#39;s price level
+ * or price range. Append this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it.
+ *
+ * Access by calling `const {PlacePriceElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlacePriceElementOptions=} options
+ * @implements {google.maps.places.PlacePriceElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlacePriceElement = function(options) {};
+
+
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>PlacePriceElement</code>.
+ * @record
+ */
+google.maps.places.PlacePriceElementOptions = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Configures a Place Details Compact element to show a place&#39;s rating.
+ * Append this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it.
+ *
+ * Access by calling `const {PlaceRatingElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceRatingElementOptions=} options
+ * @implements {google.maps.places.PlaceRatingElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceRatingElement = function(options) {};
+
+
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>PlaceRatingElement</code>.
+ * @record
+ */
+google.maps.places.PlaceRatingElementOptions = function() {};
 
 /**
  * Defines information about a Place.
@@ -20075,6 +20531,61 @@ google.maps.places.PlaceSearchRequest.prototype.type;
  * @deprecated Use <code>keyword</code> instead.
  */
 google.maps.places.PlaceSearchRequest.prototype.name;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Configures a Place Details Compact element to show a standard set of content
+ * (media, rating, type, price, accessible entrance icon, and open now status).
+ * Append this element as a child of a {@link
+ * google.maps.places.PlaceDetailsCompactElement} to use it.
+ *
+ * Access by calling `const {PlaceStandardContentElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceStandardContentElementOptions=} options
+ * @implements {google.maps.places.PlaceStandardContentElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceStandardContentElement = function(options) {};
+
+
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>PlaceStandardContentElement</code>.
+ * @record
+ */
+google.maps.places.PlaceStandardContentElementOptions = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Configures a Place Details Compact element to show a place&#39;s type. Append
+ * this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it.
+ *
+ * Access by calling `const {PlaceTypeElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceTypeElementOptions=} options
+ * @implements {google.maps.places.PlaceTypeElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceTypeElement = function(options) {};
+
+
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>PlaceTypeElement</code>.
+ * @record
+ */
+google.maps.places.PlaceTypeElementOptions = function() {};
 
 /**
  * Contains methods related to searching for places and retrieving details about
