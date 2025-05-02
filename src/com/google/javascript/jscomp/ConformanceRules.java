@@ -937,18 +937,30 @@ public final class ConformanceRules {
           return ConformanceResult.VIOLATION;
         }
       } else if (node.isTemplateLitString()) {
-        if (node.getCookedString() != null) {
-          if (this.stringPattern.matcher(node.getCookedString()).matches()) {
+        String cookedString = node.getCookedString();
+        if (cookedString != null) {
+          if (this.stringPattern.matcher(cookedString).matches()) {
             return ConformanceResult.VIOLATION;
           }
         } else {
-          throw new IllegalStateException(
-              "Unable to check banned string regex conformance in template literal as it contains"
-                  + " invalid (uncookable) escape sequences");
+          checkState(
+              isTaggedTemplateLitString(node),
+              "Found untagged template literal with invalid (uncookable) escape sequence: %s",
+              node.getRawString());
+          String rawString = node.getRawString();
+          if (this.stringPattern.matcher(rawString).matches()) {
+            return ConformanceResult.VIOLATION;
+          }
         }
       }
       return ConformanceResult.CONFORMANCE;
     }
+  }
+
+  /** Is this template literal string a tagged template literal string? */
+  private static boolean isTaggedTemplateLitString(Node node) {
+    checkState(node.isTemplateLitString());
+    return node.getGrandparent() != null && node.getGrandparent().isTaggedTemplateLit();
   }
 
   private static class ConformanceUtil {

@@ -142,6 +142,26 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testViolation_templateLiteralInvalidWithEscapeSequence() {
+    configuration =
+        """
+        requirement: {
+          type: BANNED_STRING_REGEX
+          value: '.*blah.*'
+          error_message: 'Example error message'
+        }
+        """;
+
+    // invalid escape sequence is not allowed for template literals
+    testError("`\\000`", RhinoErrorReporter.PARSE_ERROR);
+    // invalid escape sequence is allowed for tagged template literals
+    testNoWarning("function f(x) {  } f`\\000`;");
+
+    testWarning("`blah`", CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning("function f(x) {  } f`\\000blah\\000`;", CheckConformance.CONFORMANCE_VIOLATION);
+  }
+
+  @Test
   public void testViolation2() {
     testWarning("function f() { arguments.callee }", CheckConformance.CONFORMANCE_VIOLATION);
   }
