@@ -731,4 +731,118 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
             """)
         .run();
   }
+
+  @Test
+  public void testRecursiveTemplatizedType_siblingGenericReferences() {
+    newTest()
+        .addSource(
+            """
+            /** @template T, U */
+            class Foo {
+              /** @return {!Foo<T|U, symbol>} */
+              x() {
+                return new Foo();
+              }
+            }
+            /** @type {!Foo<number, string>} */
+            const a = new Foo();
+            /** @type {null} expected to error */
+            const b = a.x;
+            """)
+        // TODO: b/415764403 - the expected diagnostic type is wrong. It should be
+        // Foo<(number|string),symbol>
+        // but the template type replacer is instead using the specialization of U => symbol
+        // from Foo<T|U, symbol>
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : function(this:Foo): Foo<(number|symbol),symbol>
+            required: null
+            """)
+        .run();
+  }
+
+  @Test
+  public void testb326131100_recursiveStackOverflow() {
+    // Regression test for pattern that once caused a stack overflow.
+    newTest()
+        .addSource(
+            """
+            /** @template T */
+            class Foo {
+              /** @return {!Foo<!Foo<?T>>} */
+              asNullable() {
+                return new Foo();
+              }
+            }
+
+            /** @type {!Foo<number>} */
+            const a = new Foo();
+            /** @type {null} expected to error */
+            const b = a.asNullable();
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : Foo<Foo<(null|number)>>
+            required: null
+            """)
+        .run();
+  }
+
+  @Test
+  public void testRecursiveTemplatizedType_unionWithMultipleTypes() {
+    newTest()
+        .addSource(
+            """
+            /** @template T, U */
+            class Foo {
+              /** @return {!Foo<!Foo<T|U, symbol>, *>} */
+              x() {
+                return new Foo();
+              }
+            }
+            /** @type {!Foo<number, string>} */
+            const a = new Foo();
+            /** @type {null} expected to error */
+            const b = a.x;
+            """)
+        // TODO: b/415764403 - the expected diagnostic type is wrong. It should be
+        // Foo<Foo<(number|string),symbol>, *>
+        // but the template type replacer is instead using the specialization of U => symbol
+        // from Foo<T|U, symbol>
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : function(this:Foo): Foo<Foo<(number|symbol),symbol>,*>
+            required: null
+            """)
+        .run();
+  }
+
+  @Test
+  public void testRecursiveTemplatizedType_deeplyNestedTemplatizedTypes() {
+    newTest()
+        .addSource(
+            """
+            /** @template T */
+            class Foo {
+              /** @return {!Foo<!Foo<!Array<(!Foo<T> | !Array<?Foo<T>> | undefined )>>>} */
+              asNestedArray() {
+                return new Foo();
+              }
+            }
+            /** @type {!Foo<number>} */
+            const a = new Foo();
+            /** @type {null} expected to error */
+            const b = a.asNestedArray();
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : Foo<Foo<Array<(Array<(Foo<number>|null)>|Foo<number>|undefined)>>>
+            required: null
+            """)
+        .run();
+  }
 }

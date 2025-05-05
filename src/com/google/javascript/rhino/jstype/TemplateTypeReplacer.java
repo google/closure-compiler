@@ -377,23 +377,29 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
       // If there is no JSType substitution for the TemplateType, return either the
       // UNKNOWN_TYPE or the TemplateType type itself, depending on configuration.
       return useUnknownForMissingValues ? getNativeType(JSTypeNative.UNKNOWN_TYPE) : type;
-    } else {
-      JSType replacement = bindings.getUnresolvedOriginalTemplateType(type);
-      if (replacement == keyType || isRecursive(type, replacement)) {
-        // Recursive templated type definition (e.g. T resolved to Foo<T>).
-        return type;
-      }
-
-      seenTypes.add(type);
-      JSType visitedReplacement = replacement.visit(this);
-      seenTypes.remove(type);
-
-      Preconditions.checkState(
-          !identical(visitedReplacement, keyType),
-          "Trying to replace key %s with the same value",
-          keyType);
-      return visitedReplacement;
     }
+
+    JSType replacement = bindings.getUnresolvedOriginalTemplateType(type);
+    // Recursive templatized types, such as T => Foo<T>. Don't do any replacement - we should
+    // preserve Foo<T> as it was before.
+    // Note: this isn't perfect - if we had T => Foo<T, U>, this will skip replacing U - but
+    // it's better than a stack overflow.
+    // Return the 'type' instead of 'replacement' to notify callers that no changes were made.
+    // If we didn't check this here, we'd still skip doing any work in replacement.visit(this)
+    // because guardAgainstCycles would have already seen 'replacement'. But we'd return
+    // 'visitedReplacement' instead of 'type'.
+    if (identical(replacement, keyType) || seenTypes.contains(replacement)) {
+      return type;
+    }
+    seenTypes.add(type);
+    JSType visitedReplacement = replacement.visit(this);
+    seenTypes.remove(type);
+
+    Preconditions.checkState(
+        !identical(visitedReplacement, keyType),
+        "Trying to replace key %s with the same value",
+        keyType);
+    return visitedReplacement;
   }
 
   private JSType getNativeType(JSTypeNative nativeType) {
@@ -427,64 +433,6 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
 
   void setKeyType(TemplateType keyType) {
     this.keyType = keyType;
-  }
-
-  /**
-   * Returns whether the replacement type is a templatized type which contains the current type.
-   * e.g. current type T is being replaced with Foo<T>
-   */
-  private boolean isRecursive(TemplateType currentType, JSType replacementType) {
-    // Avoid calling "restrictBy..." here as this method ends up being very hot and
-    // rebuilding unions is expensive.
-
-    TemplatizedType replacementTemplatizedType = null;
-    if (replacementType.isUnionType()) {
-      UnionType union = replacementType.toMaybeUnionType();
-      ImmutableList<JSType> alternates = union.getAlternates();
-      int alternatesCount = alternates.size();
-
-      for (int i = 0; i < alternatesCount; i++) {
-        JSType t = alternates.get(i);
-        if (t.isNullType() || t.isVoidType()) {
-          continue;
-        }
-        if (t.isTemplatizedType()) {
-          if (replacementTemplatizedType != null) {
-            // TODO(johnlenz): seems like we should check a union of templatized types for
-            // recursion but this is the existing behavior.
-            return false;
-          } else {
-            replacementTemplatizedType = t.toMaybeTemplatizedType();
-          }
-        } else {
-          // The union contains a untemplatized type.
-          return false;
-        }
-      }
-    } else {
-      replacementTemplatizedType = replacementType.toMaybeTemplatizedType();
-    }
-
-    if (replacementTemplatizedType == null) {
-      return false;
-    }
-
-    ImmutableList<JSType> replacementTemplateTypes = replacementTemplatizedType.getTemplateTypes();
-    int replacementCount = replacementTemplateTypes.size();
-    for (int i = 0; i < replacementCount; i++) {
-      JSType replacementTemplateType = replacementTemplateTypes.get(i);
-      if (replacementTemplateType.isTemplateType()
-          && isSameType(currentType, replacementTemplateType.toMaybeTemplateType())) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  private boolean isSameType(TemplateType currentType, TemplateType replacementType) {
-    return identical(currentType, replacementType)
-        || identical(currentType, bindings.getUnresolvedOriginalTemplateType(replacementType));
   }
 
   private <T extends JSType> JSType guardAgainstCycles(T type, Function<T, JSType> mapper) {
