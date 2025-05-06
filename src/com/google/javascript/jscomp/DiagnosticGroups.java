@@ -296,7 +296,12 @@ public class DiagnosticGroups {
           TypeValidator.ALL_DIAGNOSTICS,
           TypeCheck.ALL_DIAGNOSTICS,
           FunctionTypeBuilder.ALL_DIAGNOSTICS,
-          DiagnosticGroups.GLOBAL_THIS);
+          DiagnosticGroups.GLOBAL_THIS,
+          //  The subset of CheckJsDoc diagnostics that don't make sense to be enabled when
+          // type-checking is disabled.
+          new DiagnosticGroup(
+              CheckJSDoc.DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL,
+              CheckJSDoc.BAD_REST_PARAMETER_ANNOTATION));
 
   public static final DiagnosticGroup ES5_INHERITANCE_DIAGNOSTIC_GROUP =
       DiagnosticGroups.registerGroup(
