@@ -76,6 +76,73 @@ google.maps.AddressDescriptor.prototype.areas;
 google.maps.AddressDescriptor.prototype.landmarks;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * @record
+ */
+google.maps.AddressValidationLibrary = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.addressValidation.Address}
+ */
+google.maps.AddressValidationLibrary.prototype.Address;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.addressValidation.AddressComponent}
+ */
+google.maps.AddressValidationLibrary.prototype.AddressComponent;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.addressValidation.AddressMetadata}
+ */
+google.maps.AddressValidationLibrary.prototype.AddressMetadata;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.addressValidation.AddressValidation}
+ */
+google.maps.AddressValidationLibrary.prototype.AddressValidation;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.addressValidation.ConfirmationLevel}
+ */
+google.maps.AddressValidationLibrary.prototype.ConfirmationLevel;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.addressValidation.Geocode}
+ */
+google.maps.AddressValidationLibrary.prototype.Geocode;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.addressValidation.Granularity}
+ */
+google.maps.AddressValidationLibrary.prototype.Granularity;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.addressValidation.USPSAddress}
+ */
+google.maps.AddressValidationLibrary.prototype.USPSAddress;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.addressValidation.USPSData}
+ */
+google.maps.AddressValidationLibrary.prototype.USPSData;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.addressValidation.Verdict}
+ */
+google.maps.AddressValidationLibrary.prototype.Verdict;
+
+/**
  * @record
  */
 google.maps.AirQualityLibrary = function() {};
@@ -11245,6 +11312,917 @@ google.maps.event.addDomListenerOnce = function(
 /**
  * @const
  */
+google.maps.addressValidation = {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Details of the post-processed address. Post-processing includes correcting
+ * misspelled parts of the address, replacing incorrect parts, and inferring
+ * missing parts.
+ *
+ * Access by calling `const {Address} = await
+ * google.maps.importLibrary("addressValidation")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.addressValidation.Address = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The individual address components of the formatted and corrected address,
+ * along with validation information. This provides information on the
+ * validation status of the individual components.
+ * @type {!Array<!google.maps.addressValidation.AddressComponent>}
+ */
+google.maps.addressValidation.Address.prototype.components;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The post-processed address, formatted as a single-line address following the
+ * address-formatting rules of the region where the address is located.
+ * @type {string|null}
+ */
+google.maps.addressValidation.Address.prototype.formattedAddress;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The types of components that were expected to be present in a correctly
+ * formatted mailing address but were not found in the input AND could not be
+ * inferred. Components of this type are not present in
+ * <code>formatted_address</code>, <code>postal_address</code>, or
+ * <code>address_components</code>. An example might be
+ * <code>[&#39;street_number&#39;, &#39;route&#39;]</code> for an input like
+ * &quot;Boulder, Colorado, 80301, USA&quot;. The list of possible types can be
+ * found <a
+ * href="https://developers.google.com/maps/documentation/geocoding/requests-geocoding#Types">here</a>.
+ * @type {!Array<string>}
+ */
+google.maps.addressValidation.Address.prototype.missingComponentTypes;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The post-processed address represented as a postal address.
+ * @type {!google.maps.places.PostalAddress|null}
+ */
+google.maps.addressValidation.Address.prototype.postalAddress;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The types of the components that are present in the
+ * <code>address_components</code> but could not be confirmed to be correct.
+ * This field is provided for the sake of convenience: its contents are
+ * equivalent to iterating through the <code>address_components</code> to find
+ * the types of all the components where the {@link
+ * google.maps.addressValidation.AddressComponent.confirmationLevel} is
+ * not {@link google.maps.addressValidation.ConfirmationLevel.CONFIRMED} or
+ * the {@link google.maps.addressValidation.AddressComponent.inferred} flag is
+ * not set to <code>true</code>. The list of possible types can be found <a
+ * href="https://developers.google.com/maps/documentation/geocoding/requests-geocoding#Types">here</a>.
+ * @type {!Array<string>}
+ */
+google.maps.addressValidation.Address.prototype.unconfirmedComponentTypes;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Any tokens in the input that could not be resolved. This might be an input
+ * that was not recognized as a valid part of an address (for example in an
+ * input like &quot;123235253253 Main St, San Francisco, CA, 94105&quot;, the
+ * unresolved tokens may look like <code>[&quot;123235253253&quot;]</code> since
+ * that does not look like a valid street number.
+ * @type {!Array<string>}
+ */
+google.maps.addressValidation.Address.prototype.unresolvedTokens;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Represents a single component of an address (ex. street name, city).
+ *
+ * Access by calling `const {AddressComponent} = await
+ * google.maps.importLibrary("addressValidation")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.addressValidation.AddressComponent = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The component name text. For example, &quot;5th Avenue&quot; for a street
+ * name or &quot;1253&quot; for a street number,
+ * @type {string|null}
+ */
+google.maps.addressValidation.AddressComponent.prototype.componentName;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The BCP-47 language code. This will not be present if the component name is
+ * not associated with a language, such as a street number.
+ * @type {string|null}
+ */
+google.maps.addressValidation.AddressComponent.prototype
+    .componentNameLanguageCode;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The type of the address component. See <a
+ * href="https://developers.google.com/places/web-service/supported_types#table2">Table
+ * 2: Additional types returned by the Places service</a> for a list of possible
+ * types.
+ * @type {string|null}
+ */
+google.maps.addressValidation.AddressComponent.prototype.componentType;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Indicates the level of certainty that the component is correct.
+ * @type {!google.maps.addressValidation.ConfirmationLevel|null}
+ */
+google.maps.addressValidation.AddressComponent.prototype.confirmationLevel;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * If true, this component was not part of the input, but was inferred for the
+ * address location. Including this component is recommended for a complete
+ * address.
+ * @type {boolean}
+ */
+google.maps.addressValidation.AddressComponent.prototype.inferred;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Indicates the name of the component was replaced with a completely different
+ * one. For example, replacing a wrong postal code being with one that is
+ * correct for the address. This is not a cosmetic change; the input component
+ * has been changed to a different one.
+ * @type {boolean}
+ */
+google.maps.addressValidation.AddressComponent.prototype.replaced;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Indicates a correction to a misspelling in the component name. The API does
+ * not always flag changes from one spelling variant to another, such as
+ * &quot;centre&quot; to &quot;center&quot;.
+ * @type {boolean}
+ */
+google.maps.addressValidation.AddressComponent.prototype.spellCorrected;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * If true, this component is not expected to be present in a postal address for
+ * the given region. It has been retained only because it was part of the input.
+ * @type {boolean}
+ */
+google.maps.addressValidation.AddressComponent.prototype.unexpected;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * The metadata for the address. AddressMetadata is not guaranteed to be fully
+ * populated for every address sent to the Address Validation API.
+ *
+ * Access by calling `const {AddressMetadata} = await
+ * google.maps.importLibrary("addressValidation")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.addressValidation.AddressMetadata = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {boolean}
+ */
+google.maps.addressValidation.AddressMetadata.prototype.business;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {boolean}
+ */
+google.maps.addressValidation.AddressMetadata.prototype.poBox;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {boolean}
+ */
+google.maps.addressValidation.AddressMetadata.prototype.residential;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Static class for accessing the AddressValidation APIs.
+ *
+ * Access by calling `const {AddressValidation} = await
+ * google.maps.importLibrary("addressValidation")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.addressValidation.AddressValidation = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Information about the address itself as opposed to the geocode.
+ * @type {!google.maps.addressValidation.Address|null}
+ */
+google.maps.addressValidation.AddressValidation.prototype.address;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Information about the location and place that the address geocoded to.
+ * @type {!google.maps.addressValidation.Geocode|null}
+ */
+google.maps.addressValidation.AddressValidation.prototype.geocode;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Other information relevant to deliverability. <code>metadata</code> is not
+ * guaranteed to be fully populated for every address sent to the Address
+ * Validation API.
+ * @type {!google.maps.addressValidation.AddressMetadata|null}
+ */
+google.maps.addressValidation.AddressValidation.prototype.metadata;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The UUID that identifies this response. If the address needs to be
+ * re-validated, this UUID <em>must</em> accompany the new request.
+ * @type {string|null}
+ */
+google.maps.addressValidation.AddressValidation.prototype.responseId;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Extra deliverability flags provided by USPS. Only provided in region
+ * <code>US</code> and <code>PR</code>.
+ * @type {!google.maps.addressValidation.USPSData|null}
+ */
+google.maps.addressValidation.AddressValidation.prototype.uspsData;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Overall verdict flags
+ * @type {!google.maps.addressValidation.Verdict|null}
+ */
+google.maps.addressValidation.AddressValidation.prototype.verdict;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Validates an address. See <a
+ * href="https://developers.google.com/maps/documentation/address-validation/requests-validate-address">https://developers.google.com/maps/documentation/address-validation/requests-validate-address</a>
+ * @param {!google.maps.addressValidation.AddressValidationRequest} request
+ * @return {!Promise<!google.maps.addressValidation.AddressValidation>}
+ */
+google.maps.addressValidation.AddressValidation.fetchAddressValidation =
+    function(request) {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Converts the AddressValidation class to a JSON object with the same
+ * properties.
+ * @return {Object}
+ */
+google.maps.addressValidation.AddressValidation.prototype.toJSON =
+    function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Request interface for {@link
+ * google.maps.addressValidation.AddressValidation.fetchAddressValidation}.
+ * @record
+ */
+google.maps.addressValidation.AddressValidationRequest = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The address being validated. Unformatted addresses should be submitted
+ * via {@link google.maps.places.PostalAddress.addressLines}.
+ * @type {!google.maps.places.PostalAddressLiteral}
+ */
+google.maps.addressValidation.AddressValidationRequest.prototype.address;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * This field must not be set for the first address validation request. If more
+ * requests are necessary to fully validate a single address (for example if the
+ * changes the user makes after the initial validation need to be re-validated),
+ * then each followup request must populate this field with the {@link
+ * google.maps.addressValidation.AddressValidation.responseId} from the very
+ * first response in the validation sequence.
+ * @type {string|undefined}
+ */
+google.maps.addressValidation.AddressValidationRequest.prototype
+    .previousResponseId;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Enables USPS CASS compatible mode. This affects <em>only</em> the {@link
+ * google.maps.addressValidation.AddressValidation.uspsData} field of {@link
+ * google.maps.addressValidation.AddressValidation}. Note: for USPS CASS enabled
+ * requests for addresses in Puerto Rico, a {@link
+ * google.maps.places.PostalAddress.regionCode} of the <code>address</code> must
+ * be provided as &quot;PR&quot;, or an {@link
+ * google.maps.places.PostalAddress.administrativeArea} of the
+ * <code>address</code> must be provided as &quot;Puerto Rico&quot;
+ * (case-insensitive) or &quot;PR&quot;.
+ * @type {boolean|undefined}
+ */
+google.maps.addressValidation.AddressValidationRequest.prototype
+    .uspsCASSEnabled;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * The different possible values indicating the level of certainty that the
+ * component is correct.
+ *
+ * Access by calling `const {ConfirmationLevel} = await
+ * google.maps.importLibrary("addressValidation")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.addressValidation.ConfirmationLevel = {
+  CONFIRMED: 'CONFIRMED',
+  UNCONFIRMED_AND_SUSPICIOUS: 'UNCONFIRMED_AND_SUSPICIOUS',
+  UNCONFIRMED_BUT_PLAUSIBLE: 'UNCONFIRMED_BUT_PLAUSIBLE',
+};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Contains information about the place the input was geocoded to.
+ *
+ * Access by calling `const {Geocode} = await
+ * google.maps.importLibrary("addressValidation")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.addressValidation.Geocode = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The bounds of the geocoded place.
+ * @type {!google.maps.LatLngBounds|null}
+ */
+google.maps.addressValidation.Geocode.prototype.bounds;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The size of the geocoded place, in meters. This is another measure of the
+ * coarseness of the geocoded location, but in physical size rather than in
+ * semantic meaning.
+ * @type {number|null}
+ */
+google.maps.addressValidation.Geocode.prototype.featureSizeMeters;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The geocoded location of the input.
+ * @type {!google.maps.LatLngAltitude|null}
+ */
+google.maps.addressValidation.Geocode.prototype.location;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The Place ID of the geocoded place. Using Place is preferred over using
+ * addresses, latitude/longitude coordinates, or plus codes. Using coordinates
+ * for routing or calculating driving directions will always result in the point
+ * being snapped to the road nearest to those coordinates. This may not be a
+ * road that will quickly or safely lead to the destination and may not be near
+ * an access point to the property. Additionally, when a location is reverse
+ * geocoded, there is no guarantee that the returned address will match the
+ * original.
+ * @type {string|null}
+ */
+google.maps.addressValidation.Geocode.prototype.placeId;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The type(s) of place that the input geocoded to. For example,
+ * <code>[&#39;locality&#39;, &#39;political&#39;]</code>. The full list of
+ * types can be found in the <a
+ * href="https://developers.google.com/maps/documentation/geocoding/requests-geocoding#Types">Geocoding
+ * API documentation</a>.
+ * @type {!Array<string>}
+ */
+google.maps.addressValidation.Geocode.prototype.placeTypes;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The plus code corresponding to the <code>location</code>.
+ * @type {!google.maps.places.PlusCode|null}
+ */
+google.maps.addressValidation.Geocode.prototype.plusCode;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Returns a Place representation of this Geocode. To get full place details, a
+ * call to place.fetchFields() should be made.
+ * @return {undefined}
+ */
+google.maps.addressValidation.Geocode.prototype.fetchPlace = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * The various granularities that an address or a geocode can have. When used to
+ * indicate granularity for an <em>address</em>, these values indicate with how
+ * fine a granularity the address identifies a mailing destination. For example,
+ * an address such as &quot;123 Main Street, Redwood City, CA, 94061&quot;
+ * identifies a <code>PREMISE</code> while something like &quot;Redwood City,
+ * CA, 94061&quot; identifies a <code>LOCALITY</code>. However, if we are unable
+ * to find a geocode for &quot;123 Main Street&quot; in Redwood City, the
+ * geocode returned might be of <code>LOCALITY</code> granularity even though
+ * the address is more granular.
+ *
+ * Access by calling `const {Granularity} = await
+ * google.maps.importLibrary("addressValidation")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.addressValidation.Granularity = {
+  /**
+   * The address or geocode indicates a block. Only used in regions which have
+   * block-level addressing, such as Japan.
+   */
+  BLOCK: 'BLOCK',
+  /**
+   * All other granularities, which are bucketed together since they are not
+   * deliverable.
+   */
+  OTHER: 'OTHER',
+  /**
+   * Building-level result.
+   */
+  PREMISE: 'PREMISE',
+  /**
+   * A geocode that approximates the building-level location of the address.
+   */
+  PREMISE_PROXIMITY: 'PREMISE_PROXIMITY',
+  /**
+   * The geocode or address is granular to route, such as a street, road, or
+   * highway.
+   */
+  ROUTE: 'ROUTE',
+  /**
+   * Below-building level result, such as an apartment.
+   */
+  SUB_PREMISE: 'SUB_PREMISE',
+};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * USPS representation of a US address.
+ *
+ * Access by calling `const {USPSAddress} = await
+ * google.maps.importLibrary("addressValidation")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.addressValidation.USPSAddress = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The city name.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSAddress.prototype.city;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The address line containing the city, state, and zip code.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSAddress.prototype.cityStateZipAddressLine;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The name of the firm.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSAddress.prototype.firm;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The first line of the address.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSAddress.prototype.firstAddressLine;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The second line of the address.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSAddress.prototype.secondAddressLine;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The 2-letter state code.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSAddress.prototype.state;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The Puerto Rican urbanization name.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSAddress.prototype.urbanization;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The Postal code, e.g. &quot;10009&quot;.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSAddress.prototype.zipCode;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The 4-digit postal code extension, e.g. &quot;5023&quot;.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSAddress.prototype.zipCodeExtension;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * The USPS data for the address. USPSData is not guaranteed to be fully
+ * populated for every US or PR address sent to the Address Validation API.
+ * It&#39;s recommended to integrate the backup address fields in the response
+ * if you utilize uspsData as the primary part of the response.
+ *
+ * Access by calling `const {USPSData} = await
+ * google.maps.importLibrary("addressValidation")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.addressValidation.USPSData = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Abbreviated city.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.abbreviatedCity;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Type of the address record that matches the input address.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.addressRecordType;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The carrier route code. A four character code consisting of a one letter
+ * prefix and a three digit route designator.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.carrierRoute;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Carrier route rate sort indicator.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.carrierRouteIndicator;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Indicator that the request has been CASS processed.
+ * @type {boolean}
+ */
+google.maps.addressValidation.USPSData.prototype.cassProcessed;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * County name.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.county;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The delivery point check digit. This number is added to the end of the
+ * delivery_point_barcode for mechanically scanned mail. Adding all the digits
+ * of the delivery_point_barcode, delivery_point_check_digit, postal code, and
+ * ZIP+4 together should yield a number divisible by 10.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.deliveryPointCheckDigit;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The 2-digit delivery point code.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.deliveryPointCode;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Indicates if the address is a CMRA (Commercial Mail Receiving Agency)--a
+ * private business receiving mail for clients. Returns a single character.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.dpvCMRA;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The possible values for DPV confirmation. Returns a single character or
+ * returns no value.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.dpvConfirmation;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Flag indicates addresses where USPS cannot knock on a door to deliver mail.
+ * Returns a single character.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.dpvDoorNotAccessible;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Flag indicates mail is delivered to a single receptable at a site. Returns a
+ * single character.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.dpvDrop;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Indicates that more than one DPV return code is valid for the address.
+ * Returns a single character.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.dpvEnhancedDeliveryCode;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The footnotes from delivery point validation. Multiple footnotes may be
+ * strung together in the same string.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.dpvFootnote;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Flag indicates mail delivery is not performed every day of the week. Returns
+ * a single character.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.dpvNonDeliveryDays;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Integer identifying non-delivery days. It can be interrogated using bit
+ * flags: 0x40 – Sunday is a non-delivery day 0x20 – Monday is a non-delivery
+ * day 0x10 – Tuesday is a non-delivery day 0x08 – Wednesday is a non-delivery
+ * day 0x04 – Thursday is a non-delivery day 0x02 – Friday is a non-delivery day
+ * 0x01 – Saturday is a non-delivery day
+ * @type {number|null}
+ */
+google.maps.addressValidation.USPSData.prototype.dpvNonDeliveryDaysValues;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Flag indicates door is accessible, but package will not be left due to
+ * security concerns. Returns a single character.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.dpvNoSecureLocation;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Is this a no stat address or an active address? No stat addresses are ones
+ * which are not continuously occupied or addresses that the USPS does not
+ * service. Returns a single character.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.dpvNoStat;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Indicates the NoStat type. Returns a reason code as int.
+ * @type {number|null}
+ */
+google.maps.addressValidation.USPSData.prototype.dpvNoStatReasonCode;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Indicates the address was matched to PBSA record. Returns a single character.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.dpvPBSA;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Indicates that mail is not delivered to the street address. Returns a single
+ * character.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.dpvThrowback;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Is this place vacant? Returns a single character.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.dpvVacant;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * eLOT Ascending/Descending Flag (A/D).
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.elotFlag;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Enhanced Line of Travel (eLOT) number.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.elotNumber;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Error message for USPS data retrieval. This is populated when USPS processing
+ * is suspended because of the detection of artificially created addresses.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.errorMessage;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * FIPS county code.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.fipsCountyCode;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Indicator that a default address was found, but more specific addresses
+ * exist.
+ * @type {boolean}
+ */
+google.maps.addressValidation.USPSData.prototype.hasDefaultAddress;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The delivery address is matchable, but the EWS file indicates that an exact
+ * match will be available soon.
+ * @type {boolean}
+ */
+google.maps.addressValidation.USPSData.prototype.hasNoEWSMatch;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * LACSLink indicator.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.lacsLinkIndicator;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * LACSLink return code.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.lacsLinkReturnCode;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * PMB (Private Mail Box) unit designator.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.pmbDesignator;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * PMB (Private Mail Box) number.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.pmbNumber;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * PO Box only postal code.
+ * @type {boolean}
+ */
+google.maps.addressValidation.USPSData.prototype.poBoxOnlyPostalCode;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Main post office city.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.postOfficeCity;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Main post office state.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.postOfficeState;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * USPS standardized address.
+ * @type {!google.maps.addressValidation.USPSAddress|null}
+ */
+google.maps.addressValidation.USPSData.prototype.standardizedAddress;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Footnotes from matching a street or highrise record to suite information. If
+ * business name match is found, the secondary number is returned.
+ * @type {string|null}
+ */
+google.maps.addressValidation.USPSData.prototype.suiteLinkFootnote;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Represents the post-processed address for the supplied address.
+ *
+ * Access by calling `const {Verdict} = await
+ * google.maps.importLibrary("addressValidation")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.addressValidation.Verdict = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The address is considered complete if there are no unresolved tokens, no
+ * unexpected or missing address components. If unset, indicates that the value
+ * is <code>false</code>. See {@link
+ * google.maps.addressValidation.Address.missingComponentTypes}, {@link
+ * google.maps.addressValidation.Address.unresolvedTokens} or {@link
+ * google.maps.addressValidation.AddressComponent.unexpected} fields for more
+ * details.
+ * @type {boolean}
+ */
+google.maps.addressValidation.Verdict.prototype.addressComplete;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Information about the granularity of the {@link
+ * google.maps.addressValidation.Geocode}. This can be understood as the
+ * semantic meaning of how coarse or fine the geocoded location is.
+ * @type {!google.maps.addressValidation.Granularity|null}
+ */
+google.maps.addressValidation.Verdict.prototype.geocodeGranularity;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * At least one address component was inferred (i.e. added) that wasn&#39;t in
+ * the input, see {@link google.maps.addressValidation.AddressComponent} for
+ * details.
+ * @type {boolean}
+ */
+google.maps.addressValidation.Verdict.prototype.hasInferredComponents;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * At least one address component was replaced - see {@link
+ * google.maps.addressValidation.AddressComponent} for details.
+ * @type {boolean|null}
+ */
+google.maps.addressValidation.Verdict.prototype.hasReplacedComponents;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * At least one address component cannot be categorized or validated, see {@link
+ * google.maps.addressValidation.AddressComponent} for details.
+ * @type {boolean}
+ */
+google.maps.addressValidation.Verdict.prototype.hasUnconfirmedComponents;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The granularity of the <strong>input</strong> address. This is the result of
+ * parsing the input address and does not give any validation signals. For
+ * validation signals, refer to <code>validationGranularity</code>.
+ * @type {!google.maps.addressValidation.Granularity|null}
+ */
+google.maps.addressValidation.Verdict.prototype.inputGranularity;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The granularity level that the API can fully <strong>validate</strong> the
+ * address to. For example, a <code>validationGranularity</code> of
+ * <code>PREMISE</code> indicates all address components at the level of
+ * <code>PREMISE</code> and broader can be validated.
+ * @type {!google.maps.addressValidation.Granularity|null}
+ */
+google.maps.addressValidation.Verdict.prototype.validationGranularity;
+
+/**
+ * @const
+ */
 google.maps.airQuality = {};
 
 /**
@@ -20021,6 +20999,18 @@ google.maps.places.PlacePrediction.prototype.text;
  * @type {!Array<string>}
  */
 google.maps.places.PlacePrediction.prototype.types;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Sends an Address Validation request associated with this autocomplete session
+ * (internally populating the request with the autocomplete session token). No
+ * place information from the PlacePrediction is included automatically - this
+ * is a convenience method to help with autocomplete session management.
+ * @param {!google.maps.addressValidation.AddressValidationRequest} request
+ * @return {undefined}
+ */
+google.maps.places.PlacePrediction.prototype.fetchAddressValidation = function(
+    request) {};
 
 /**
  * Returns a {@link google.maps.places.Place} representation of this
