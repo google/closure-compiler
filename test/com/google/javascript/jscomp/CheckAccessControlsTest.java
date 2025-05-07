@@ -1095,6 +1095,39 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoPrivateAccessForProperties13() {
+    // Visibility of getter and setter differ.
+    var fooFileSrc =
+        """
+        class Foo {
+          constructor() {
+            /** @private */
+            this.barValue_ = 1;
+          }
+
+          /**
+           * @param {number} x
+           * @private
+           */
+          set bar(x) {
+            this.barValue_ = x;
+          }
+
+          /** @return {number} */
+          get bar() {
+            return this.barValue_;
+          }
+        }
+        """;
+
+    // TODO: b/416023147 - This should not be an error.
+    test(srcs(fooFileSrc, "const barCopy = new Foo().bar;"), error(BAD_PRIVATE_PROPERTY_ACCESS));
+
+    // This is fine.
+    test(srcs(fooFileSrc, "new Foo().bar = 2;"), error(BAD_PRIVATE_PROPERTY_ACCESS));
+  }
+
+  @Test
   public void testNoPrivatePropAccess_inDifferentFile_throughDestructuring() {
     test(
         srcs(
