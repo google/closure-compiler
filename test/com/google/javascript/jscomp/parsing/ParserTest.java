@@ -6866,6 +6866,28 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testClassStaticSuper() {
+    parse(
+        """
+        class Bar {
+          static double(n) {
+            return n * 2
+          }
+        }
+        class Baz extends Bar {
+          // Used from a static field initializer.
+          static val1 = super.double(6);
+
+          static val2;
+          static {
+            // Used from within a static block.
+            Baz.val2 = super.double(5);
+          }
+        }
+        """);
+  }
+
+  @Test
   public void testSuper1() {
     expectFeatures(Feature.SUPER);
     strictMode = SLOPPY;

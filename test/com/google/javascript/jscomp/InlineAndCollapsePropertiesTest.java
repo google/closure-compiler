@@ -3424,14 +3424,30 @@ use(Foo$Bar$baz$A);
         class Baz extends Bar {
           static quadruple(n) {
             return 2 * super.double(n);
-         }
+          }
+
+          // TODO: b/416070022 - Add back once this does not throw an error.
+          // static val1;
+          // static {
+          //   Baz.val1 = super.double(5);
+          // }
+          //
+          // static val2 = super.double(6);
         }
         """,
         """
-        var Bar$double = function(n) { return n * 2; }
-        class Bar {}
-        var Baz$quadruple = function(n) { return 2 * Bar$double(n); }
-        class Baz extends Bar {}
+        var Bar$double = function(n) {
+          return n * 2;
+        };
+        class Bar {
+        }
+        // Note: These tests call `enableNormalizeExpectedOutput()`. So while using "n" as the param
+        // name here would work. We want to avoid relying on normalization when possible.
+        var Baz$quadruple = function(n$jscomp$1) {
+          return 2 * Bar$double(n$jscomp$1);
+        };
+        class Baz extends Bar {
+        }
         """);
   }
 
@@ -3498,6 +3514,52 @@ use(Foo$Bar$baz$A);
             return `${Bar.classname} - is a subclass`;
           }
         }
+        """);
+  }
+
+  @Test
+  public void testClassStaticMemberAccessedWithThis() {
+    test(
+        """
+        class Baz extends Bar {
+          static double(n) {
+            return 2 * n;
+          }
+
+          static val1;
+          static {
+            this.val1 = this.double(1);
+          }
+
+          static val2;
+          static {
+            Baz.val2 = Baz.double(2);
+          }
+
+          static val3 = this.double(3);
+
+          static val4 = Baz.double(4);
+        }
+        """,
+        """
+        var Baz$double = function(n) {
+          return 2 * n;
+        };
+        class Baz extends Bar {
+          static val1;
+          static {
+                        // TODO: b/416093361 - Should be renamed
+            this.val1 = this.double(1);
+          }
+          static val2;
+          static {
+            Baz$val2 = Baz$double(2);
+          }
+                      // TODO: b/416093361 - Should be renamed
+          static val3=this.double(3);
+          static val4=Baz$double(4);
+        }
+        var Baz$val2;
         """);
   }
 
