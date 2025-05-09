@@ -49,6 +49,9 @@ KeyboardEvent.prototype.code;
 /** @type {string} */
 KeyboardEvent.prototype.key;
 
+/** @type {boolean} */
+KeyboardEvent.prototype.isComposing;
+
 /** @type {number} */
 KeyboardEvent.prototype.location;
 
