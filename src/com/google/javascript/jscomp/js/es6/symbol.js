@@ -134,6 +134,13 @@ $jscomp.polyfill('Symbol.asyncIterator', function(orig) {
   return Symbol('Symbol.asyncIterator');
 }, 'es9', 'es3');
 
+$jscomp.polyfill('Symbol.toStringTag', function(orig) {
+  if (orig) {
+    return orig;
+  }
+  return Symbol('Symbol.toStringTag');
+}, 'es6', 'es3');
+
 /**
  * Returns an iterator with the given `next` method.  Passing
  * all iterators through this function allows easily extending
