@@ -163,8 +163,7 @@ public final class CompilerTest {
     compiler.parseInputs();
     assertThat(compiler.toSource()).isEqualTo("/** @closureUnaware */ function alert(x){};");
     assertThat(compiler.getJsRoot().getChildCount()).isEqualTo(1);
-    StaticSourceFile staticSourceFile =
-        compiler.getJsRoot().getChildAtIndex(0).getStaticSourceFile();
+    StaticSourceFile staticSourceFile = compiler.getJsRoot().getFirstChild().getStaticSourceFile();
     assertThat(staticSourceFile.getName()).isEqualTo("closure_unaware_code.js");
     assertThat(staticSourceFile.isClosureUnawareCode()).isTrue();
   }
