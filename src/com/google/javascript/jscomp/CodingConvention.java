@@ -238,24 +238,17 @@ public interface CodingConvention extends Serializable {
 
   /**
    * A Bind instance or null.
-   */
-  public Bind describeFunctionBind(Node n);
-
-  /**
-   * A Bind instance or null.
    *
    * <p>When seeing an expression exp1.bind(recv, arg1, ...); we only know that it's a function bind
    * if exp1 has type function. W/out type info, exp1 has certainly a function type only if it's a
    * function literal.
    *
    * <p>If type checking has already happened, exp1's type is attached to the AST node. When
-   * iCheckTypes is true, describeFunctionBind looks for that type.
+   * checkTypes is true, describeFunctionBind looks for that type.
    *
-   * @param callerChecksTypes Trust that the caller of this method has verified that the bound node
-   *     has a function type.
-   * @param iCheckTypes Check that the bound node has a function type.
+   * @param checkTypes Check that the bound node has a function type.
    */
-  public Bind describeFunctionBind(Node n, boolean callerChecksTypes, boolean iCheckTypes);
+  public Bind describeFunctionBind(Node n, boolean checkTypes);
 
   /** Bind class */
   public static class Bind {

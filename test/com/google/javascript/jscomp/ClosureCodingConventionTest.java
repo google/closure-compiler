@@ -269,12 +269,12 @@ public final class ClosureCodingConventionTest {
 
   private void assertFunctionBind(String code) {
     Node n = parseTestCode(code);
-    assertThat(conv.describeFunctionBind(n.getFirstChild())).isNotNull();
+    assertThat(conv.describeFunctionBind(n.getFirstChild(), false)).isNotNull();
   }
 
   private void assertNotFunctionBind(String code) {
     Node n = parseTestCode(code);
-    assertThat(conv.describeFunctionBind(n.getFirstChild())).isNull();
+    assertThat(conv.describeFunctionBind(n.getFirstChild(), false)).isNull();
   }
 
   private void assertRequire(String code) {

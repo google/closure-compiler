@@ -201,15 +201,8 @@ public final class CodingConventions {
     }
 
     @Override
-    public Bind describeFunctionBind(Node n) {
-      return describeFunctionBind(n, false, false);
-    }
-
-    @Override
-    public Bind describeFunctionBind(
-        Node n, boolean callerChecksTypes, boolean iCheckTypes) {
-      return nextConvention
-          .describeFunctionBind(n, callerChecksTypes, iCheckTypes);
+    public Bind describeFunctionBind(Node n, boolean checkTypes) {
+      return nextConvention.describeFunctionBind(n, checkTypes);
     }
 
     @Override
@@ -429,17 +422,11 @@ public final class CodingConventions {
               .build());
     }
 
-    @Override
-    public Bind describeFunctionBind(Node n) {
-      return describeFunctionBind(n, false, false);
-    }
-
     private static final QualifiedName FUNCTION_PROTOTYPE_BIND_CALL =
         QualifiedName.of("Function.prototype.bind.call");
 
     @Override
-    public @Nullable Bind describeFunctionBind(
-        Node n, boolean callerChecksTypes, boolean iCheckTypes) {
+    public @Nullable Bind describeFunctionBind(Node n, boolean checkTypes) {
       if (!n.isCall()) {
         return null;
       }
@@ -462,12 +449,12 @@ public final class CodingConventions {
         Node maybeFn = callTarget.getFirstChild();
         JSType maybeFnType = maybeFn.getJSType();
         FunctionType fnType = null;
-        if (iCheckTypes && maybeFnType != null) {
+        if (checkTypes && maybeFnType != null) {
           fnType = maybeFnType.restrictByNotNullOrUndefined()
               .toMaybeFunctionType();
         }
 
-        if (fnType != null || callerChecksTypes || maybeFn.isFunction()) {
+        if (fnType != null || maybeFn.isFunction()) {
           // (function(){}).bind(self, args...);
           Node thisValue = callTarget.getNext();
           Node parameters = safeNext(thisValue);

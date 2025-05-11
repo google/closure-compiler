@@ -2141,8 +2141,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
    * target, if it's a function expression.
    */
   private void updateBind(Node n) {
-    CodingConvention.Bind bind =
-        compiler.getCodingConvention().describeFunctionBind(n, false, true);
+    CodingConvention.Bind bind = compiler.getCodingConvention().describeFunctionBind(n, true);
     if (bind == null) {
       return;
     }

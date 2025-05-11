@@ -265,8 +265,7 @@ class PeepholeSubstituteAlternateSyntax
     // Rewriting "(fn.bind(a,b))()" to "fn.call(a,b)" makes it inlinable
     checkState(n.isCall());
     Node callTarget = n.getFirstChild();
-    Bind bind = getCodingConvention()
-        .describeFunctionBind(callTarget, false, false);
+    Bind bind = getCodingConvention().describeFunctionBind(callTarget, false);
     if (bind != null) {
       // replace the call target
       bind.target.detach();
