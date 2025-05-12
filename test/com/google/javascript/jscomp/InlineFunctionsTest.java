@@ -474,11 +474,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
         // TODO: b/407603216 - Inline using DIRECT mode when return expressions don't have
         // references that can be side-effected. The output code can be `var y=i++`
         """
-        var y;
-        {
-          var x$jscomp$inline_0 = i++;
-          y = x$jscomp$inline_0;
-        }
+        var y = i++;
         """);
   }
 
@@ -1886,11 +1882,15 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   @Test
   public void testCostBasedInlineForSimpleFunction() {
     int calls = 100;
-    String code = "function f(a){return a;}\n";
+    String src = "function f(a){return a;}\n";
     for (int i = 0; i < calls; i++) {
-      code += "f(chg());\n";
+      src += "f(chg());\n";
     }
-    test(code, code);
+    String expected = "";
+    for (int i = 0; i < calls; i++) {
+      expected += "chg();\n";
+    }
+    test(src, expected);
   }
 
   @Test
@@ -3373,6 +3373,8 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         """);
   }
 
+
+
   @Test
   public void testBug4944818() {
     test(
@@ -4558,10 +4560,7 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         foo(bar(...arg));
         """,
         """
-        {
-          var x$jscomp$inline_0 = bar(...arg);
-          x$jscomp$inline_0;
-        }
+        bar(...arg);
         """);
   }
 
@@ -4576,10 +4575,7 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         foo([...arg]);
         """,
         """
-        {
-          var x$jscomp$inline_0 = [...arg];
-          x$jscomp$inline_0;
-        }
+        [...arg];
         """);
   }
 

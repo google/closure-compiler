@@ -112,8 +112,8 @@ public final class FunctionToBlockMutatorTest {
   public void testMutateWithParameters3() {
     // Parameter has side-effects.
     helperMutate(
-        "function foo(a){return a;}; function x() { foo(x++); }",
-        "{ var a$jscomp$inline_0=x++; a$jscomp$inline_0 }",
+        "function foo(a){return a;}; function x() { foo(x++); }", //
+        "{ x++ }",
         "foo",
         null);
   }

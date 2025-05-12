@@ -628,7 +628,7 @@ public final class FunctionArgumentInjectorTest {
   @Test
   public void testMaybeAddTempsForCallArguments33() {
     // doesn't need a temp
-    testNeededTemps("function foo(a){return a;}; foo(new X);", "foo", ImmutableSet.of("a"));
+    testNeededTemps("function foo(a){return a;}; foo(new X);", "foo", EMPTY_STRING_SET);
   }
 
   @Test
