@@ -33,11 +33,17 @@ import org.jspecify.annotations.Nullable;
 /** Instruments {@code await} and {@code yield} for the {@code AsyncContext} polyfill. */
 public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callback {
 
-  private static final String SWAP = "$jscomp$swapContext";
-  private static final String REENTER_SWAP = "$jscomp$swapContextReenter";
   private static final String JSCOMP = "$jscomp";
   private static final String ENTER = "asyncContextEnter";
-  private static final String CREATE_REENTER_SWAP = "asyncContextCreateReenterSwap";
+
+  // NOTE: we prefix all internal symbols with a characteristic "ᵃᶜ" (U+1D43, U+1D9C) to
+  // significantly reduce the chance of conflicts with existing names in the code.  This isn't
+  // perfect, but it results in much more readable transpiled code compared to always generating a
+  // longer name, keeps tests simple and deterministic compared to using an ID generator, and is
+  // more performant than scanning for conflicting symbols to only disambiguate when necessary.
+  private static final String FACTORY = "ᵃᶜfactory";
+  private static final String EXIT = "ᵃᶜexit";
+  private static final String REENTER = "ᵃᶜreenter";
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
@@ -46,11 +52,6 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   // instrumenting them completely (the transpiled `yield`s don't need instrumentation because we
   // can rely on `Promise.then` to take care of it).
   private final boolean shouldInstrumentAwait;
-
-  // Whether to emit a more verbose transpilation that uses separate top-level functions for "exit"
-  // and "reenter", so that we can get a better idea of what's happening.
-  // TODO: b/379881163, go/tracing-safari-crash - Remove this once we've diagnosed it.
-  private final boolean diagnoseSafari;
 
   // TODO(sdh): Investigate whether async generator instrumentation can be skipped in ES2017
   // output.  They are transpiled to ordinary generators with Promise.then, so we may be able
@@ -68,11 +69,10 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   }
 
   public InstrumentAsyncContext(
-      AbstractCompiler compiler, boolean shouldInstrumentAwait, boolean diagnoseSafari) {
+      AbstractCompiler compiler, boolean shouldInstrumentAwait, boolean unusedDiagnoseSafari) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.shouldInstrumentAwait = shouldInstrumentAwait;
-    this.diagnoseSafari = diagnoseSafari;
   }
 
   @Override
@@ -106,7 +106,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
 
   @Override
   public void visit(NodeTraversal t, Node n, @Nullable Node parent) {
-    if (n.isName() && n.getString().equals(SWAP)) {
+    if (n.isName() && n.getString().equals(FACTORY)) {
       alreadyInstrumented.add(t.getEnclosingFunction());
     } else if (n.isSuper()) {
       hasSuper.add(t.getEnclosingFunction());
@@ -189,15 +189,15 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     //   use(x);
     // }
     //     becomes
-    // for await (const x of swap(expr())) { // exit
-    //   swap(0, 1); // reenter
+    // for await (const x of exit(expr())) {
+    //   reenter();
     //   try {
     //     use(x);
     //   } finally {
-    //     swap(); // exit
+    //     exit();
     //   }
     // }
-    // swap(0, 1); // reenter
+    // reenter();
 
     // First wrap the iterator argument
     Node placeholder = IR.empty();
@@ -278,8 +278,9 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     generatorBody = addFinallyExit(generatorBody);
     generatorBody.addChildToFront(IR.exprResult(createReenter()));
     Node newOuterBody =
-        IR.block(createEnterExit(), IR.returnNode(astFactory.createCallWithUnknownType(inner)));
-    addReenterSwapAfter(newOuterBody.getFirstChild());
+        IR.block(
+            createFactoryExitCall(), IR.returnNode(astFactory.createCallWithUnknownType(inner)));
+    addExitReenterVarsAfter(newOuterBody.getFirstChild());
     f.addChildToBack(newOuterBody.srcrefTreeIfMissing(generatorBody));
 
     // NOTE: if the IIFE generator refers to `this` or `arguments` then we need to extract these
@@ -324,10 +325,10 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     Node outerParams = f.getSecondChild();
     Node innerParams = outerParams.cloneTree();
 
-    // Add the $jscomp$swapContext parameter to the front of the inner parameter list
-    Node contextParam = astFactory.createNameWithUnknownType(SWAP);
-    innerParams.addChildToFront(contextParam);
-    AstFactory.Type unknownType = AstFactory.type(contextParam);
+    // Add the $jscomp$swapFactory parameter to the front of the inner parameter list
+    Node swapFactoryParam = createFactoryName();
+    innerParams.addChildToFront(swapFactoryParam);
+    AstFactory.Type unknownType = AstFactory.type(swapFactoryParam);
 
     // Add a finally-exit wrapper and an initial reenter call around the original generator body
     // (which has already had its yields/awaits instrumented).
@@ -345,7 +346,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
       argumentsReference = astFactory.createArgumentsReference();
       argumentsParam =
           astFactory.createName(renamer.argumentsName, AstFactory.type(argumentsReference));
-      argumentsParam.insertAfter(contextParam);
+      argumentsParam.insertAfter(swapFactoryParam);
     }
 
     // Detach the generator body and replace it with a new empty block.  We'll fill the empty block
@@ -406,8 +407,8 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     }
 
     // Populate the outer (non-generator) method body with an enter() and call to the inner method.
-    outerBody.addChildToBack(createEnterExit());
-    addReenterSwapAfter(outerBody.getLastChild());
+    outerBody.addChildToBack(createFactoryExitCall());
+    addExitReenterVarsAtStartOf(generatorBody);
     outerBody.addChildToBack(IR.returnNode(innerCall));
 
     // Various cleanups
@@ -489,8 +490,8 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     // Add a variable to the front of the body
     Node block = f.getLastChild();
     Node newBlock = addFinallyExit(block);
-    newBlock.addChildToFront(createEnter().srcrefTreeIfMissing(newBlock));
-    addReenterSwapAfter(newBlock.getFirstChild());
+    newBlock.addChildToFront(createFactoryCall().srcrefTreeIfMissing(newBlock));
+    addExitReenterVarsAfter(newBlock.getFirstChild());
     compiler.reportChangeToChangeScope(f);
 
     // TODO(sdh): Need to instrument async functions for unhandled rejections.
@@ -514,64 +515,80 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     return newBlock;
   }
 
-  /** Creates a {@code $jscomp$swapContext} identifier node. */
-  private Node createSwap() {
-    return astFactory.createQNameWithUnknownType(SWAP);
+  /** Creates an {@code ᕦᕤexit} identifier node. */
+  private Node createExitName() {
+    return astFactory.createQNameWithUnknownType(EXIT);
   }
 
-  // Alternative version for the "diagnose safari" case.
-  private Node createReenterSwap() {
-    return astFactory.createQNameWithUnknownType(diagnoseSafari ? REENTER_SWAP : SWAP);
+  /** Creates a {@code ᕦᕤreenter} identifier node. */
+  private Node createReenterName() {
+    return astFactory.createQNameWithUnknownType(REENTER);
   }
 
-  private void addReenterSwapAfter(Node node) {
-    if (diagnoseSafari) {
-      // var $jscomp$swapContextReenter = $jscomp.asyncContextCreateReenterSwap($jscomp$swapContext)
-      Node swap =
-          astFactory.createCallWithUnknownType(
-              astFactory.createQNameWithUnknownType(JSCOMP, ImmutableList.of(CREATE_REENTER_SWAP)),
-              createSwap());
-      IR.var(astFactory.createConstantName(REENTER_SWAP, AstFactory.type(swap)), swap)
-          .srcrefTreeIfMissing(node)
-          .insertAfter(node);
-    }
+  /** Creates a {@code ᕦᕤfactory} identifier node. */
+  private Node createFactoryName() {
+    return astFactory.createQNameWithUnknownType(FACTORY);
   }
 
-  /** Creates a statement {@code const $jscomp$swapContext = $jscomp$asyncContextEnter();}. */
-  private Node createEnter(Node... arg) {
+  private void addExitReenterVarsAfter(Node node) {
+    // var ᕦᕤexit = ᕦᕤfactory();
+    // var ᕦᕤreenter = ᕦᕤfactory(1);
+    Node reenterCall =
+        astFactory.createCallWithUnknownType(createFactoryName(), astFactory.createNumber(1));
+    IR.var(astFactory.createConstantName(REENTER, AstFactory.type(reenterCall)), reenterCall)
+        .srcrefTreeIfMissing(node)
+        .insertAfter(node);
+    Node exitCall = astFactory.createCallWithUnknownType(createFactoryName());
+    IR.var(astFactory.createConstantName(EXIT, AstFactory.type(exitCall)), exitCall)
+        .srcrefTreeIfMissing(node)
+        .insertAfter(node);
+  }
+
+  private void addExitReenterVarsAtStartOf(Node node) {
+    // var ᕦᕤexit = ᕦᕤfactory();
+    // var ᕦᕤreenter = ᕦᕤfactory(1);
+    Node reenterCall =
+        astFactory.createCallWithUnknownType(createFactoryName(), astFactory.createNumber(1));
+    node.addChildToFront(
+        IR.var(astFactory.createConstantName(REENTER, AstFactory.type(reenterCall)), reenterCall)
+            .srcrefTreeIfMissing(node));
+    Node exitCall = astFactory.createCallWithUnknownType(createFactoryName());
+    node.addChildToFront(
+        IR.var(astFactory.createConstantName(EXIT, AstFactory.type(exitCall)), exitCall)
+            .srcrefTreeIfMissing(node));
+  }
+
+  /** Creates a statement {@code const ᕦᕤfactory = $jscomp$asyncContextEnter();}. */
+  private Node createFactoryCall(Node... arg) {
     Node call =
         astFactory.createCallWithUnknownType(
             astFactory.createQNameWithUnknownType(JSCOMP, ImmutableList.of(ENTER)), arg);
-    return createConst(astFactory.createConstantName(SWAP, AstFactory.type(call)), call);
+    return createVar(astFactory.createConstantName(FACTORY, AstFactory.type(call)), call);
   }
 
-  private Node createConst(Node name, Node value) {
-    if (compiler.getOptions().getOutputFeatureSet().contains(Feature.CONST_DECLARATIONS)) {
-      return IR.constNode(name, value);
-    }
+  private Node createVar(Node name, Node value) {
     return IR.var(name, value);
   }
 
-  /** Creates a statement {@code const $jscomp$swapContext = $jscomp$asyncContextEnter(1);}. */
-  private Node createEnterExit() {
-    return createEnter(astFactory.createNumber(1));
+  /** Creates a statement {@code const ᕦᕤfactory = $jscomp$asyncContextEnter(1);}. */
+  private Node createFactoryExitCall() {
+    return createFactoryCall(astFactory.createNumber(1));
   }
 
-  /** Wraps the given node in an exit call: {@code $jscomp$swapContext(NODE)}. */
+  /** Wraps the given node in an exit call: {@code ᕦᕤexit(NODE)}. */
   private Node createExit(Node inner) {
-    return astFactory.createCall(createSwap(), AstFactory.type(inner), inner);
+    return astFactory.createCall(createExitName(), AstFactory.type(inner), inner);
   }
 
   /** Creates an empty exit call: {@code $jscomp$swapContext()}. */
   private Node createExit() {
-    Node swap = createSwap();
-    return astFactory.createCall(swap, AstFactory.type(swap));
+    Node exit = createExitName();
+    return astFactory.createCall(exit, AstFactory.type(exit));
   }
 
   /** Wraps the given node in a reenter call: {@code $jscomp$swapContext(NODE, 1)}. */
   private Node createReenter(Node inner) {
-    return astFactory.createCall(
-        createReenterSwap(), AstFactory.type(inner), inner, astFactory.createNumber(1));
+    return astFactory.createCall(createReenterName(), AstFactory.type(inner), inner);
   }
 
   /**
@@ -579,6 +596,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
    * literal zero node, since it should compress well.
    */
   private Node createReenter() {
-    return createReenter(astFactory.createNumber(0));
+    Node reenter = createReenterName();
+    return astFactory.createCall(reenter, AstFactory.type(reenter));
   }
 }
