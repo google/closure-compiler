@@ -18,8 +18,9 @@ package com.google.javascript.jscomp.modules;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
 
-import com.google.auto.value.AutoValue;
+import com.google.auto.value.AutoBuilder;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.Node;
@@ -30,10 +31,39 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>See <a href="https://www.ecma-international.org/ecma-262/9.0/index.html#table-41">the
  * ExportEntry in the ECMAScript spec.</a>
+ *
+ * @param exportName Returns the name of this export or null if this is an {@code export * from}.
+ * @param moduleRequest Returns the module identifier of an export from or null if this is not an
+ *     {@code export {} from} or {@code export * from}.
+ * @param importName Returns the name imported from another module. * if import all or null if not
+ *     an {@code export {} from}.
+ * @param localName Returns the local name of this export or null if none. *default* if default.
+ * @param modulePath Returns the path of the containing module
+ * @param exportNode Node that this export originates from. Used for its source location.
+ *     <p>Null only if from non-ES module or from a missing ES module.
+ * @param nameNode Node that this export originates from. Used for its source location.
+ *     <p>Null only if from non-ES6 module or an export syntax that has no associated name, e.g.
+ *     {@code export * from}.
+ * @param moduleMetadata The module that contains this export.
+ * @param mutated Whether or not this export is potentially mutated after module execution (i.e. in
+ *     a function scope).
  */
 // TODO(johnplaisted): Add validation tests. Current ModulePath makes this difficult as it is non
-@AutoValue // TODO: b/408030907 - Migrate to a Java record
-public abstract class Export {
+public record Export(
+    @Nullable String exportName,
+    @Nullable String moduleRequest,
+    @Nullable String importName,
+    @Nullable String localName,
+    @Nullable ModulePath modulePath,
+    @Nullable Node exportNode,
+    @Nullable Node nameNode,
+    ModuleMetadata moduleMetadata,
+    @Nullable String closureNamespace,
+    boolean mutated) {
+  public Export {
+    requireNonNull(moduleMetadata, "moduleMetadata");
+  }
+
   /**
    * The {@link Export#localName()} of anonymous ES module default exports, e.g. {@code export
    * default 0}.
@@ -52,10 +82,7 @@ public abstract class Export {
    */
   public static final String NAMESPACE = "*exports*";
 
-  // Prevent unwanted subclasses.
-  Export() {}
-
-  @AutoValue.Builder
+  @AutoBuilder
   abstract static class Builder {
     abstract Builder exportName(@Nullable String value);
 
@@ -138,60 +165,16 @@ public abstract class Export {
   }
 
   static Builder builder() {
-    return new AutoValue_Export.Builder().mutated(false);
+    return new AutoBuilder_Export_Builder().mutated(false);
   }
 
-  abstract Builder toBuilder();
+  Builder toBuilder() {
+    return new AutoBuilder_Export_Builder(this);
+  }
 
   /** Returns a copy of this export that has the {@link #mutated()} bit set. */
   final Export mutatedCopy() {
     return toBuilder().mutated(true).autoBuild();
   }
 
-  /** Returns the name of this export or null if this is an {@code export * from}. */
-  public abstract @Nullable String exportName();
-
-  /**
-   * Returns the module identifier of an export from or null if this is not an {@code export {}
-   * from} or {@code export * from}.
-   */
-  public abstract @Nullable String moduleRequest();
-
-  /**
-   * Returns the name imported from another module. * if import all or null if not an {@code export
-   * {} from}.
-   */
-  public abstract @Nullable String importName();
-
-  /** Returns the local name of this export or null if none. *default* if default. */
-  public abstract @Nullable String localName();
-
-  /** Returns the path of the containing module */
-  public abstract @Nullable ModulePath modulePath();
-
-  /**
-   * Node that this export originates from. Used for its source location.
-   *
-   * <p>Null only if from non-ES module or from a missing ES module.
-   */
-  public abstract @Nullable Node exportNode();
-
-  /**
-   * Node that this export originates from. Used for its source location.
-   *
-   * <p>Null only if from non-ES6 module or an export syntax that has no associated name, e.g.
-   * {@code export * from}.
-   */
-  public abstract @Nullable Node nameNode();
-
-  /** The module that contains this export. */
-  public abstract ModuleMetadata moduleMetadata();
-
-  public abstract @Nullable String closureNamespace();
-
-  /**
-   * Whether or not this export is potentially mutated after module execution (i.e. in a function
-   * scope).
-   */
-  public abstract boolean mutated();
 }
