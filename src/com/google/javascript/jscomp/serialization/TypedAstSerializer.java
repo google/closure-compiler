@@ -102,7 +102,7 @@ final class TypedAstSerializer {
     }
 
     return builder
-        .addAllRuntimeLibraryToInject(serializationMode.getRuntimeLibraries())
+        .addAllRuntimeLibraryToInject(serializationMode.runtimeLibraries())
         .setTypePool(typeSerializer.generateTypePool())
         .setStringPool(this.stringPool.build().toProto())
         .setSourceFilePool(sourceFiles)

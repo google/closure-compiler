@@ -145,7 +145,7 @@ class ColorSerializer {
       }
     }
 
-    if (serializationMode.getIncludeDebugInfo()) {
+    if (serializationMode.includeDebugInfo()) {
       checkNotNull(getMismatchSourceRefsFn);
       final TypePool.DebugInfo.Builder debugInfoBuilder = typePoolBuilder.getDebugInfoBuilder();
 

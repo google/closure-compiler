@@ -16,22 +16,27 @@
 
 package com.google.javascript.jscomp.serialization;
 
-import com.google.auto.value.AutoValue;
+import static java.util.Objects.requireNonNull;
+
+import com.google.auto.value.AutoBuilder;
 import com.google.common.collect.ImmutableList;
 
 /** Configuration options for serialization time. */
-@AutoValue
-public abstract class SerializationOptions {
+public record SerializationOptions(
+    boolean includeDebugInfo, boolean runValidation, ImmutableList<String> runtimeLibraries) {
+  public SerializationOptions {
+    requireNonNull(runtimeLibraries, "runtimeLibraries");
+  }
 
   public static Builder builder() {
-    return new AutoValue_SerializationOptions.Builder()
+    return new AutoBuilder_SerializationOptions_Builder()
         .setRunValidation(false)
         .setIncludeDebugInfo(false)
         .setRuntimeLibraries(ImmutableList.of());
   }
 
   /** Builder for {@link SerializationOptions}. */
-  @AutoValue.Builder
+  @AutoBuilder
   public abstract static class Builder {
     public abstract Builder setIncludeDebugInfo(boolean includeDebugInfo);
 
@@ -42,9 +47,4 @@ public abstract class SerializationOptions {
     public abstract SerializationOptions build();
   }
 
-  public abstract boolean getIncludeDebugInfo();
-
-  public abstract boolean getRunValidation();
-
-  public abstract ImmutableList<String> getRuntimeLibraries();
 }

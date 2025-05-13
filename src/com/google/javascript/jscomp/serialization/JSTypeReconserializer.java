@@ -233,7 +233,7 @@ final class JSTypeReconserializer {
 
     if (record.unionMembers == null) {
       record.unionMembers = ImmutableSet.copyOf(altRecords);
-    } else if (this.serializationMode.getRunValidation()) {
+    } else if (this.serializationMode.runValidation()) {
       checkState(
           altRecords.equals(record.unionMembers),
           "Unions with same ID must have same members: %s => %s == %s",
@@ -410,7 +410,7 @@ final class JSTypeReconserializer {
 
   /** Checks that this instance is in a valid state. */
   private void checkValidLinearTime() {
-    if (!this.serializationMode.getRunValidation()) {
+    if (!this.serializationMode.runValidation()) {
       return;
     }
 
@@ -440,7 +440,7 @@ final class JSTypeReconserializer {
 
     TypePool.Builder builder = TypePool.newBuilder();
 
-    if (this.serializationMode.getIncludeDebugInfo()) {
+    if (this.serializationMode.includeDebugInfo()) {
       TypePool.DebugInfo.Builder debugInfo = builder.getDebugInfoBuilder();
       this.invalidatingTypes
           .getMismatchLocations()
