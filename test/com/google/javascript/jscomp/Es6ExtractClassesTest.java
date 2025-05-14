@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -120,20 +121,23 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   @Test
   public void testSelfReference_googModule() {
     test(
-        """
-        goog.module('example');
-        exports = class Inner { constructor() { alert(Inner); } };
-        """,
-        """
-        /** @const */ const testcode$classdecl$var0=class {
-          constructor(){ alert(testcode$classdecl$var0); }
-        };
-        /**
-         * @constructor
-         * @const
-         */
-        var module$exports$example=testcode$classdecl$var0
-        """);
+        externs(new TestExternsBuilder().addClosureExterns().build()),
+        srcs(
+            """
+            goog.module('example');
+            exports = class Inner { constructor() { alert(Inner); } };
+            """),
+        expected(
+            """
+            /** @const */ const testcode$classdecl$var0=class {
+              constructor(){ alert(testcode$classdecl$var0); }
+            };
+            /**
+             * @constructor
+             * @const
+             */
+            var module$exports$example=testcode$classdecl$var0
+            """));
   }
 
   @Test
@@ -315,28 +319,31 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   @Test
   public void classExtractedInNormalizedArrowNested() {
     test(
-        """
-        goog.module('some');
-        exports.some = ((outer) => {
-          ((c) => { return class extends c{}}
-        )});
-        """,
-        """
-        /** @const */ var module$exports$some = {};
-        /** @const */ module$exports$some.some = outer => {
-        c => {
-          const testcode$classdecl$var0 = class extends c {};
-          return testcode$classdecl$var0;
-          };
-        };
-        """);
+        externs(new TestExternsBuilder().addClosureExterns().build()),
+        srcs(
+            """
+            goog.module('some');
+            exports.some = ((outer) => {
+              ((c) => { return class extends c{}}
+            )});
+            """),
+        expected(
+            """
+            /** @const */ var module$exports$some = {};
+            /** @const */ module$exports$some.some = outer => {
+            c => {
+              const testcode$classdecl$var0 = class extends c {};
+              return testcode$classdecl$var0;
+              };
+            };
+            """));
   }
 
   @Test
   public void testCannotExtract() {
     test(
         "let x; while(x = class A{}) {use(x);}",
-        """
+"""
 let x;
 while(x = (() => { const testcode$classdecl$var0 = class {}; return testcode$classdecl$var0;})())
 {use(x);}

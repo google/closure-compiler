@@ -73,6 +73,7 @@ public final class JSTypeColorIdHasherTest extends CompilerTestCase {
 
     if (this.rewriteClosureModules) {
       this.enableRewriteClosureCode();
+      this.disableRewriteModulesAfterTypechecking();
     }
   }
 

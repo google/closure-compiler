@@ -3093,8 +3093,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         f.prototype.method = function() { alert(this.prop); }
         """,
         CheckConformance.CONFORMANCE_VIOLATION,
-        // TODO(tbreisacher): Can we display a more user-friendly name here?
-        "Violation: My rule message\nThe property \"prop\" on type \"module$contents$example_f\"");
+        "Violation: My rule message\nThe property \"prop\" on type \"f\"");
   }
 
   @Test

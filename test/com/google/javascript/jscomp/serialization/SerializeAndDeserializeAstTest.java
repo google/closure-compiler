@@ -37,6 +37,7 @@ import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.serialization.TypedAstDeserializer.DeserializedAst;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -633,6 +634,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
     Node newRoot =
         testAndReturnResult(
+                externs(new TestExternsBuilder().addClosureExterns().build()),
                 srcs("goog.module('a.b.c'); const x = 0;"),
                 expected(
                     """

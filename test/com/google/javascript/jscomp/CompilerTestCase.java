@@ -118,7 +118,7 @@ public abstract class CompilerTestCase {
   /** Whether to rewrite Closure code before the test is run. */
   private boolean rewriteClosureCode;
 
-  private boolean rewriteModulesAfterTypechecking;
+  private boolean rewriteModulesAfterTypechecking = true;
 
   /** Whether to rewrite Closure code before the test is run. */
   private boolean rewriteClosureProvides;
@@ -707,7 +707,9 @@ public abstract class CompilerTestCase {
     this.polymerPass = false;
     this.processCommonJsModules = false;
     this.rewriteClosureCode = false;
-    this.rewriteModulesAfterTypechecking = false;
+    // default to true: this doesn't have any effect unless rewriteClosureCode is enabled. The
+    // default matches options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf.
+    this.rewriteModulesAfterTypechecking = true;
     this.runTypeCheckAfterProcessing = false;
     this.rewriteEsModulesEnabled = false;
     this.transpileEnabled = false;
@@ -987,6 +989,11 @@ public abstract class CompilerTestCase {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     enableRewriteClosureCode();
     this.rewriteModulesAfterTypechecking = true;
+  }
+
+  protected final void disableRewriteModulesAfterTypechecking() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    this.rewriteModulesAfterTypechecking = false;
   }
 
   /** Rewrite goog.provides */
