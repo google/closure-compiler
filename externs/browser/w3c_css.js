@@ -3409,9 +3409,415 @@ var PropertyDefinition;
 CSSInterface.prototype.registerProperty = function(propertyDefinition) {};
 
 /**
- * TODO(nicksantos): This suppress tag probably isn't needed, and
- * should be removed.
- * @suppress {duplicate}
+ * @constructor
+ * @param {...!Range} initialRanges
+ */
+function Highlight(initialRanges) {}
+
+/** @type {number} */
+Highlight.prototype.priority;
+
+/** @type {string} */
+Highlight.prototype.type;
+
+/**
+ * @param {function(!Range, !Range, !Highlight): void} callbackfn
+ * @param {?=} thisArg
+ * @return {undefined}
+ */
+Highlight.prototype.forEach = function(callbackfn, thisArg) {};
+
+/**
+ * @interface
+ */
+function HighlightRegistry () {}
+
+/**
+ * @param {function(!Highlight, string, !HighlightRegistry): void} callbackfn
+ * @param {?=} thisArg
+ * @return {undefined}
+ */
+HighlightRegistry.prototype.forEach = function(callbackfn, thisArg) {};
+
+
+/** @type {!HighlightRegistry} */
+CSSInterface.prototype.highlights;
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.Hz = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.Q = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.cap = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.ch = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.cm = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.cqb = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.cqh = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.cqi = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.cqmax = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.cqmin = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.cqw = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.deg = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.dpcm = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.dpi = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.dppx = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.dvb = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.dvh = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.dvi = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.dvmax = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.dvmin = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.dvw = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.em = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.ex = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.fr = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.grad = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.ic = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.kHz = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.lh = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.lvb = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.lvh = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.lvi = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.lvmax = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.lvmin = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.lvw = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.mm = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.ms = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.number = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.pc = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.percent = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.pt = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.px = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.rad = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.rcap = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.rch = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.rem = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.rex = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.ric = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.rlh = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ * TODO(b/417987392): Adding this extern causes a test to fail.
+ * Enable this extern once the root cause for the failure is fixed.
+ */
+// CSSInterface.prototype.s = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.svb = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.svh = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.svi = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.svmax = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.svmin = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.svw = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.turn = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.vb = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.vh = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.vi = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.vmax = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.vmin = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.vw = function(value) {};
+
+/**
  * @type {CSSInterface}
  */
 var CSS;
