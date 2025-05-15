@@ -19,6 +19,7 @@ import static com.google.common.base.Predicates.not;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -202,5 +203,33 @@ public class PartialCompilationTest {
         "function missingInside() {",
         "  useMissing(new some.thing.Missing());",
         "}");
+  }
+
+  @Test
+  public void nonMonotonicDataFlowBug() throws Exception {
+    // Reproduces b/156014526
+    // TODO: b/156014526 - this should not throw an error.
+    Exception e =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                assertPartialCompilationSucceeds(
+                    """
+                    class AggregatedColumn {
+                      /**  @param {ForwardDeclaredType} col */
+                      constructor(col) {
+                        this.child = col;
+                      }
+                    }
+
+                    /** @param {!AggregatedColumn} col */
+                    function getColumnChain(col) {
+                        var currentColumn = col;
+                        while (currentColumn instanceof AggregatedColumn) {
+                          currentColumn = currentColumn.child;
+                        }
+                    }
+                    """));
+    assertThat(e).hasMessageThat().contains("Dataflow analysis appears to diverge");
   }
 }
