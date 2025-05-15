@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CrossChunkReferenceCollector.TopLevelStatement;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -575,7 +574,7 @@ class CrossChunkCodeMotion implements CompilerPass {
           for (String globalSymbolName : getGlobalSymbolNames()) {
             cccmLog.log(
                 () ->
-                    SimpleFormat.format(
+                    String.format(
                         "Moving DSG for %s from chunk %s to chunk %s",
                         globalSymbolName, currentChunk, preferredChunk));
           }

@@ -57,7 +57,6 @@ import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeUtil.AllVarsDeclaredInFunction;
 import com.google.javascript.jscomp.NodeUtil.GoogRequire;
 import com.google.javascript.jscomp.base.Tri;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -4847,8 +4846,7 @@ public final class NodeUtilTest {
                       exprToUsesReceiver.forEach(
                           (expr, usesReceiver) -> {
                             String caseSrc =
-                                SimpleFormat.format(
-                                    outerTemplate, SimpleFormat.format(innerTemplate, expr));
+                                String.format(outerTemplate, String.format(innerTemplate, expr));
                             cases.add(
                                 new Object[] {
                                   caseSrc,

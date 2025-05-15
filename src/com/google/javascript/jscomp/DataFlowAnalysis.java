@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.graph.Annotation;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
@@ -399,7 +398,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
     @Override
     public final String toString() {
-      return SimpleFormat.format("IN: %s OUT: %s", in, out);
+      return String.format("IN: %s OUT: %s", in, out);
     }
   }
 

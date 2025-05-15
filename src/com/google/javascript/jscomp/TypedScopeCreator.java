@@ -66,7 +66,6 @@ import com.google.javascript.jscomp.FunctionTypeBuilder.AstFunctionContents;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.ProcessClosureProvidesAndRequires.ProvidedName;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.modules.Export;
 import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.modules.ModuleMap;
@@ -795,7 +794,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           // This should have been a build-breaking DUPLICATE_NAMESPACE_AND_MODULE error in
           // GatherModuleMetadata
           throw new IllegalStateException(
-              SimpleFormat.format(
+              String.format(
                   "Unexpected module type %s in module %s", moduleType, this.getModule()));
       }
     }

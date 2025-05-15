@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
 
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import org.jspecify.annotations.Nullable;
 import org.junit.Before;
@@ -370,10 +369,10 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
     String xTmp = TMP + "0";
     String yTmp = TMP + "1";
     builderX
-        .append(SimpleFormat.format("var %s; %s = x.prototype;", xTmp, xTmp))
+        .append(String.format("var %s; %s = x.prototype;", xTmp, xTmp))
         .append(generateExtractedDeclarations(7, 0));
     builderY
-        .append(SimpleFormat.format("var %s; %s = y.prototype;", yTmp, yTmp))
+        .append(String.format("var %s; %s = y.prototype;", yTmp, yTmp))
         .append(generateExtractedDeclarations(7, 1));
 
     JSChunk[] expectedModules =

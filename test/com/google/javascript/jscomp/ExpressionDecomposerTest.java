@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -2282,11 +2281,11 @@ a = temp$jscomp$2;
     public String toString() {
       if (node.isTemplateLitString()) {
         // A string part of a template literal cannot be printed as code on its own.
-        return SimpleFormat.format("[Template literal string: '%s']", node.getRawString());
+        return String.format("[Template literal string: '%s']", node.getRawString());
       } else if (node.isTemplateLitSub()) {
         // The template literal substitution node cannot itself be turned into source code,
         // but we can do that for the expression inside of it.
-        return SimpleFormat.format(
+        return String.format(
             "[Template literal substitution: '%s']", compiler.toSource(node.getOnlyChild()));
       } else {
         return compiler.toSource(node);

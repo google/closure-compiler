@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.LightweightMessageFormatter.LineNumberingFor
 import com.google.javascript.jscomp.SortingErrorManager.ErrorReportGenerator;
 import com.google.javascript.jscomp.SortingErrorManager.ErrorWithLevel;
 import com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenUtil;
 import java.io.ByteArrayOutputStream;
@@ -138,12 +137,12 @@ public class JsonErrorReportGenerator implements ErrorReportGenerator {
       StringBuilder summaryBuilder = new StringBuilder();
       if (manager.getTypedPercent() > 0.0) {
         summaryBuilder.append(
-            SimpleFormat.format(
+            String.format(
                 "%d error(s), %d warning(s), %.1f%% typed",
                 manager.getErrorCount(), manager.getWarningCount(), manager.getTypedPercent()));
       } else {
         summaryBuilder.append(
-            SimpleFormat.format(
+            String.format(
                 "%d error(s), %d warning(s)", manager.getErrorCount(), manager.getWarningCount()));
       }
       jsonWriter.beginObject();

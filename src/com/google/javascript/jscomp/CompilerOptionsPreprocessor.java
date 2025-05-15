@@ -15,8 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.base.format.SimpleFormat;
-
 /**
  * Checks for combinations of options that are incompatible, i.e. will produce incorrect code.
  *
@@ -40,7 +38,7 @@ public final class CompilerOptionsPreprocessor {
   /** Exception to indicate incompatible options in the CompilerOptions. */
   public static class InvalidOptionsException extends RuntimeException {
     private InvalidOptionsException(String message, Object... args) {
-      super(SimpleFormat.format(message, args));
+      super(String.format(message, args));
     }
   }
 

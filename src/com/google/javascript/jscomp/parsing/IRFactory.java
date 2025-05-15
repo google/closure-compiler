@@ -31,7 +31,6 @@ import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
 import com.google.common.collect.TreeRangeSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -523,7 +522,7 @@ class IRFactory {
           if (parent.isFunction() || parent.isScript() || parent.isClassMembers()) {
             // report missing label
             errorReporter.error(
-                SimpleFormat.format(UNDEFINED_LABEL, labelName.getString()),
+                String.format(UNDEFINED_LABEL, labelName.getString()),
                 sourceName,
                 n.getLineno(),
                 n.getCharno());
@@ -605,7 +604,7 @@ class IRFactory {
           parent = parent.getParent()) {
         if (parent.isLabel() && labelsMatch(parent, labelName)) {
           errorReporter.error(
-              SimpleFormat.format(DUPLICATE_LABEL, labelName.getString()),
+              String.format(DUPLICATE_LABEL, labelName.getString()),
               sourceName,
               n.getLineno(),
               n.getCharno());
@@ -625,7 +624,7 @@ class IRFactory {
               String paramName = param.getString();
               if (!seenNames.add(paramName)) {
                 errorReporter.warning(
-                    SimpleFormat.format(DUPLICATE_PARAMETER, paramName),
+                    String.format(DUPLICATE_PARAMETER, paramName),
                     sourceName,
                     param.getLineno(),
                     param.getCharno());
@@ -2844,7 +2843,7 @@ class IRFactory {
       Node assignTarget = operand.isCast() ? operand.getFirstChild() : operand;
       if (!assignTarget.isValidAssignmentTarget()) {
         errorReporter.error(
-            SimpleFormat.format(
+            String.format(
                 "Invalid %s %s operand.",
                 (postfix ? "postfix" : "prefix"), (type == Token.INC ? "increment" : "decrement")),
             sourceName,

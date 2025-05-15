@@ -28,7 +28,6 @@ import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.PolyfillUsageFinder.PolyfillUsage;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
@@ -534,7 +533,7 @@ class RemoveUnusedCode implements CompilerPass {
           checkState(!((parent.isFunction() || parent.isClass()) && parent.getFirstChild() == n));
           traverseNameNode(n, scope)
               .setIsExplicitlyNotRemovable(
-                  () -> SimpleFormat.format("reference found: %s", n.getLocation()));
+                  () -> String.format("reference found: %s", n.getLocation()));
         }
         break;
 
@@ -1694,10 +1693,10 @@ class RemoveUnusedCode implements CompilerPass {
     checkNotNull(var);
     boolean isGlobal = var.isGlobal();
     if (var.isExtern()) {
-      unremovableLog.log(() -> SimpleFormat.format("%s: extern", var.getName()));
+      unremovableLog.log(() -> String.format("%s: extern", var.getName()));
       return canonicalUnremovableVarInfo;
     } else if (codingConvention.isExported(var.getName(), /* local= */ !isGlobal)) {
-      unremovableLog.log(() -> SimpleFormat.format("%s: exported by convention", var.getName()));
+      unremovableLog.log(() -> String.format("%s: exported by convention", var.getName()));
       return canonicalUnremovableVarInfo;
     } else if (var.isArguments()) {
       // No point in logging that we cannot remove "arguments"
@@ -3072,7 +3071,7 @@ class RemoveUnusedCode implements CompilerPass {
     public void setIsExplicitlyNotRemovable(Supplier<String> reasonSupplier) {
       if (isEntirelyRemovable) {
         isEntirelyRemovable = false;
-        unremovableLog.log(SimpleFormat.format("%s: %s", varName, reasonSupplier.get()));
+        unremovableLog.log(String.format("%s: %s", varName, reasonSupplier.get()));
         for (Removable r : removables) {
           considerForIndependentRemoval(r);
         }

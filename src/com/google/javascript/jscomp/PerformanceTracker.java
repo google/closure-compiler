@@ -27,7 +27,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultiset;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.io.PrintStream;
@@ -409,7 +408,7 @@ public final class PerformanceTracker {
             (entry) -> {
               String key = entry.getKey();
               Stats stats = entry.getValue();
-              return SimpleFormat.format(
+              return String.format(
                   "%s,%d,%d,%d,%d,%d,%d,%d",
                   key,
                   stats.runtime,
@@ -429,7 +428,7 @@ public final class PerformanceTracker {
             "pass,runtime,allocMem,codeChanged,astReduction,reduction,gzReduction,astSize,size,gzSize"));
     for (Stats stats : this.log) {
       output.print(
-          SimpleFormat.format(
+          String.format(
               "%s,%d,%d,%b,%d,%d,%d,%d,%d,%d\n",
               stats.pass,
               stats.runtime,
@@ -450,7 +449,7 @@ public final class PerformanceTracker {
               "Input AST Manifest:",
               "token,count"));
       this.astManifest.entrySet().stream()
-          .map((e) -> SimpleFormat.format("%s,%d", e.getElement(), e.getCount()))
+          .map((e) -> String.format("%s,%d", e.getElement(), e.getCount()))
           .sorted()
           .forEach(output::println);
     }

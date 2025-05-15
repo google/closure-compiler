@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import java.io.PrintStream;
 
 /**
@@ -62,12 +61,12 @@ public class PrintStreamErrorReportGenerator implements SortingErrorManager.Erro
         || (summaryDetailLevel >= 2 && manager.getTypedPercent() > 0.0)) {
       if (manager.getTypedPercent() > 0.0) {
         stream.print(
-            SimpleFormat.format(
+            String.format(
                 "%d error(s), %d warning(s), %.1f%% typed%n",
                 manager.getErrorCount(), manager.getWarningCount(), manager.getTypedPercent()));
       } else {
         stream.print(
-            SimpleFormat.format(
+            String.format(
                 "%d error(s), %d warning(s)%n",
                 manager.getErrorCount(), manager.getWarningCount()));
       }

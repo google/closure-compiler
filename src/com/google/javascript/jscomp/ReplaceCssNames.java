@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -381,7 +380,7 @@ class ReplaceCssNames implements CompilerPass {
           break;
         default:
           throw new IllegalStateException(
-              SimpleFormat.format("invalid number of children: %s for: %s", childCount, callNode));
+              String.format("invalid number of children: %s for: %s", childCount, callNode));
       }
     }
 
@@ -440,7 +439,7 @@ class ReplaceCssNames implements CompilerPass {
           return secondArg.getString();
         default:
           throw new IllegalStateException(
-              SimpleFormat.format("invalid number of children: %s for: %s", childCount, callNode));
+              String.format("invalid number of children: %s for: %s", childCount, callNode));
       }
     }
   }

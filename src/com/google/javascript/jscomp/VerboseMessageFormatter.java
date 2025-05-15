@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Strings;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 
 /**
  * Verbose message formatter. This formatter generates very loud and long
@@ -46,7 +45,9 @@ class VerboseMessageFormatter extends AbstractMessageFormatter {
     if (sourceRegion != null) {
       lineSource = sourceRegion.getSourceExcerpt();
     }
-    return SimpleFormat.format("%s at %s line %s %s", description,
+    return String.format(
+        "%s at %s line %s %s",
+        description,
         (Strings.isNullOrEmpty(sourceName) ? "(unknown source)" : sourceName),
         ((lineNumber < 0) ? String.valueOf(lineNumber) : "(unknown line)"),
         ((lineSource != null) ? ":\n\n" + lineSource : "."));

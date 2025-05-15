@@ -49,7 +49,6 @@ import com.google.javascript.jscomp.JSChunkGraph.MissingChunkException;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.PassConfig.OptimizationPasses;
 import com.google.javascript.jscomp.SortingErrorManager.ErrorReportGenerator;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.deps.BrowserModuleResolver;
 import com.google.javascript.jscomp.deps.BrowserWithTransformedPrefixesModuleResolver;
@@ -1503,16 +1502,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       builder.append("// that contain references to these qualified names.\n");
       builder.append("//\n");
       for (String qname : qnameSet) {
-        builder.append(SimpleFormat.format("// '%s'\n", qname));
+        builder.append(String.format("// '%s'\n", qname));
         for (String newName : originalToNewQNameMap.get(qname)) {
-          builder.append(SimpleFormat.format("// '%s' (originally '%s')\n", newName, qname));
+          builder.append(String.format("// '%s' (originally '%s')\n", newName, qname));
         }
       }
       builder.append("//\n");
       statementStream.forEach(
           (Node statement) ->
               builder
-                  .append(SimpleFormat.format("// %s\n", statement.getLocation()))
+                  .append(String.format("// %s\n", statement.getLocation()))
                   .append(toSource(statement))
                   .append("\n"));
     }

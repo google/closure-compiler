@@ -31,7 +31,6 @@ import com.google.javascript.jscomp.JsMessage.PlaceholderFormatException;
 import com.google.javascript.jscomp.JsMessage.PlaceholderReference;
 import com.google.javascript.jscomp.JsMessage.StringPart;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -119,7 +118,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   public static final DiagnosticType BAD_FALLBACK_SYNTAX =
       DiagnosticType.error(
           "JSC_MSG_BAD_FALLBACK_SYNTAX",
-          SimpleFormat.format(
+          String.format(
               "Bad syntax. " + "Expected syntax: %s(MSG_1, MSG_2)", MSG_FALLBACK_FUNCTION_NAME));
 
   public static final DiagnosticType FALLBACK_ARG_ERROR =
@@ -1218,8 +1217,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     for (String placeholderName : placeholderNames) {
       if (!JsMessage.isCanonicalPlaceholderNameFormat(placeholderName)) {
         throw new MalformedException(
-            SimpleFormat.format("Placeholder not in UPPER_SNAKE_CASE: %s", placeholderName),
-            optionsBag);
+            String.format("Placeholder not in UPPER_SNAKE_CASE: %s", placeholderName), optionsBag);
       }
     }
 

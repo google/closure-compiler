@@ -40,7 +40,6 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.GatherGetterAndSetterProperties;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.diagnostic.LogFile;
@@ -187,7 +186,7 @@ public final class DisambiguateProperties implements CompilerPass {
     }
 
     private String buildSummaryString() {
-      return SimpleFormat.format(
+      return String.format(
           "%d property names, %d disambiguated, %d invalidated, %d had a single cluster",
           total, numDisambiguated, numInvalidated, numOnlyOneCluster);
     }

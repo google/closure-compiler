@@ -26,7 +26,6 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
@@ -1954,8 +1953,7 @@ class GlobalNamespace
       } else if (this.getBooleanProperty(NameProp.NOT_A_TYPE)) {
         return Inlinability.DO_NOT_INLINE;
       }
-      throw new IllegalStateException(
-          SimpleFormat.format("name missing declaredType value: %s", this));
+      throw new IllegalStateException(String.format("name missing declaredType value: %s", this));
     }
 
     /**
@@ -2050,18 +2048,16 @@ class GlobalNamespace
         return Inlinability.DO_NOT_INLINE;
       } else if (globalSets != 1) {
         logChildNamesDecision(
-            Inlinability.DO_NOT_INLINE,
-            () -> SimpleFormat.format("set %d times globally", globalSets));
+            Inlinability.DO_NOT_INLINE, () -> String.format("set %d times globally", globalSets));
         return Inlinability.DO_NOT_INLINE;
       } else if (localSets != 0) {
         logChildNamesDecision(
-            Inlinability.DO_NOT_INLINE,
-            () -> SimpleFormat.format("set %d times locally", localSets));
+            Inlinability.DO_NOT_INLINE, () -> String.format("set %d times locally", localSets));
         return Inlinability.DO_NOT_INLINE;
       } else if (deleteProps != 0) {
         logChildNamesDecision(
             Inlinability.DO_NOT_INLINE,
-            () -> SimpleFormat.format("properties are deleted %d times", deleteProps));
+            () -> String.format("properties are deleted %d times", deleteProps));
         return Inlinability.DO_NOT_INLINE;
       }
 
@@ -2113,7 +2109,7 @@ class GlobalNamespace
       if (aliasingGets > 0) {
         final Inlinability unsafeInlinability = getUnsafeInlinabilityBasedOnDeclaredType();
         logChildNamesDecision(
-            unsafeInlinability, () -> SimpleFormat.format("%d aliasing gets exist", aliasingGets));
+            unsafeInlinability, () -> String.format("%d aliasing gets exist", aliasingGets));
         return unsafeInlinability;
       }
 
@@ -2150,7 +2146,7 @@ class GlobalNamespace
       if (decisionsLog != null && decisionsLog.isLogging()) {
         decisionsLog.log(
             () ->
-                SimpleFormat.format(
+                String.format(
                     "%s: children: %s: %s", getFullName(), inlinability, reasonSupplier.get()));
       }
     }

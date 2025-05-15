@@ -30,7 +30,6 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.base.LinkedIdentityHashMap;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import com.google.javascript.rhino.JSDocInfo;
@@ -505,7 +504,7 @@ public final class SymbolTable {
       builder
           .append(prefix)
           .append(
-              SimpleFormat.format(
+              String.format(
                   "  Ref %d: %s line: %d col: %d len: %d %s\n",
                   refCount,
                   node.getSourceFileName(),

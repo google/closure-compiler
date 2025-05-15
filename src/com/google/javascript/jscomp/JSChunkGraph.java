@@ -33,7 +33,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.javascript.jscomp.base.LinkedIdentityHashMap;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
@@ -148,7 +147,7 @@ public final class JSChunkGraph implements Serializable {
         int depDepth = dep.getDepth();
         if (depDepth < 0) {
           throw new ChunkDependenceException(
-              SimpleFormat.format(
+              String.format(
                   "Chunks not in dependency order: %s preceded %s", chunk.getName(), dep.getName()),
               chunk,
               dep);

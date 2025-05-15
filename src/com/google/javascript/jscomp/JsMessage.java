@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.InlineMe;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -227,14 +226,12 @@ public record JsMessage(
 
     @Override
     public String getJsPlaceholderName() {
-      throw new UnsupportedOperationException(
-          SimpleFormat.format("not a placeholder: '%s'", string()));
+      throw new UnsupportedOperationException(String.format("not a placeholder: '%s'", string()));
     }
 
     @Override
     public String getCanonicalPlaceholderName() {
-      throw new UnsupportedOperationException(
-          SimpleFormat.format("not a placeholder: '%s'", string()));
+      throw new UnsupportedOperationException(String.format("not a placeholder: '%s'", string()));
     }
   }
 
@@ -360,7 +357,7 @@ public record JsMessage(
     @Override
     public String getString() {
       throw new UnsupportedOperationException(
-          SimpleFormat.format("not a string part: '%s'", getJsPlaceholderName()));
+          String.format("not a string part: '%s'", getJsPlaceholderName()));
     }
   }
 

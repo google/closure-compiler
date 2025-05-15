@@ -36,7 +36,6 @@ import com.google.javascript.jscomp.GlobalNamespace.RefBasedAstChange;
 import com.google.javascript.jscomp.GlobalNamespace.SimpleAstChange;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ExternsSkippingCallback;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.rhino.IR;
@@ -1553,17 +1552,15 @@ class InlineAndCollapseProperties implements CompilerPass {
     }
 
     private void logDecisionForName(Name name, Inlinability inlinability, String message) {
-      logDecisionForName(
-          name, () -> SimpleFormat.format("inlinability %s: %s", inlinability, message));
+      logDecisionForName(name, () -> String.format("inlinability %s: %s", inlinability, message));
     }
 
     private void logDecisionForName(Name name, String message) {
-      decisionsLog.log(() -> SimpleFormat.format("%s: %s", name.getFullName(), message));
+      decisionsLog.log(() -> String.format("%s: %s", name.getFullName(), message));
     }
 
     private void logDecisionForName(Name name, Supplier<String> messageSupplier) {
-      decisionsLog.log(
-          () -> SimpleFormat.format("%s: %s", name.getFullName(), messageSupplier.get()));
+      decisionsLog.log(() -> String.format("%s: %s", name.getFullName(), messageSupplier.get()));
     }
 
     /** Flattens a stub declaration. This is mostly a hack to support legacy users. */
@@ -1747,7 +1744,7 @@ class InlineAndCollapseProperties implements CompilerPass {
         logDecisionForName(
             n,
             () ->
-                SimpleFormat.format(
+                String.format(
                     "child name inlinability: %s: will not collapse child names",
                     childNameInlinability));
         canCollapseChildNames = false;
@@ -1881,7 +1878,7 @@ class InlineAndCollapseProperties implements CompilerPass {
     }
 
     private void logDeclarationAction(Name name, Node declarationNode, String message) {
-      logDecisionForName(name, () -> SimpleFormat.format("%s: %s", declarationNode, message));
+      logDecisionForName(name, () -> String.format("%s: %s", declarationNode, message));
     }
 
     /**
