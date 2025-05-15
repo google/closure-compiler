@@ -87,21 +87,22 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   }
 
   // BEFORE: async function f() { BODY }
-  //  AFTER: async function f() { const swap = enter(); try { BODY } finally { swap() } }
+  //  AFTER: async function f() {
+  //           var factory = start(); var suspend = factory(); var resume = factory(1);
+  //           try { BODY } finally { suspend() }
+  //         }
   //
   // BEFORE: await EXPR
-  //  AFTER: swap(await swap(EXPR), 1)
+  //  AFTER: resume(await suspend(EXPR))
   //
   // Explanation:
-  //   * swap(x) is "exit the function context and return x"
-  //   * swap(x, 1) is "reenter the function context and return x"
-  //   * This way, we compute the expression under the function context, then exit only for the
-  //     await, and reenter again immediately after the await.
-  //   * We also wrap the entire async body in a try-finally with an "exit" (empty swap()) so that
-  //     the function context is purged at the end.
-  //   * Note that "exit" is only required after a "reenter", but it's not harmful to do it if the
+  //   * We compute the expression under the function context, then suspend only for the await, and
+  //     resume again immediately after the await.
+  //   * We also wrap the entire async body in a try-finally with an suspend() so that the function
+  //     context is purged at the end.
+  //   * Note that suspend() is only required after a resume(), but it's not harmful to do it if the
   //     try block were to throw before any awaits, since the initial "restored outer context" is
-  //     the same as the function context - i.e. exit before reenter is a no-op.
+  //     the same as the function context - i.e. suspend before resume is a no-op.
   @Test
   public void testAwait() {
     test(
@@ -116,29 +117,29 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter();
+          var ᵃᶜfactory = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           try {
-            $jscomp$swapContext(await $jscomp$swapContext(1), 1);
+            ᵃᶜresume(await ᵃᶜsuspend(1));
           } finally {
-            $jscomp$swapContext();
+            ᵃᶜsuspend();
           }
         }
         """);
   }
 
   // BEFORE: for await (const x of EXPR) { BODY }
-  //  AFTER: for await (const x of swap(EXPR)) {
-  //           swap(0, 1); try { BODY } finally { swap() }
-  //         } swap(0, 1)
+  //  AFTER: for await (const x of suspend(EXPR)) {
+  //           resume(); try { BODY } finally { suspend() }
+  //         }
+  //         resume()
   //
   // Explanation:
   //   * each iteration of the for-await loop is effectively an await; the top of the loop body is
-  //     always the entrypoint, but there is an exit immediately after evaluating the async iterator
-  //     subject, as well as at the end of the loop body.
-  //   * after the loop, we reenter because it requires an await to determine the iterator is "done"
-  //   * the 0 in swap(0, 1) is just a spacer - since the return value is ignored, the first
-  //     parameter is irrelevant.  '0' is the smallest thing we can put in that position in order to
-  //     pass a '1' as the second parameter to make this a "reenter"
+  //     always the entrypoint, but there is an suspend immediately after evaluating the async
+  //     iterator subject, as well as at the end of the loop body.
+  //   * after the loop, we resume because it requires an await to determine the iterator is "done"
   @Test
   public void testForAwait() {
     test(
@@ -155,19 +156,21 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter();
+          var ᵃᶜfactory = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           try {
-            for await (const x of $jscomp$swapContext(gen())) {
-              $jscomp$swapContext(0, 1);
+            for await (const x of ᵃᶜsuspend(gen())) {
+              ᵃᶜresume();
               try {
                 use(x);
               } finally {
-                $jscomp$swapContext();
+                ᵃᶜsuspend();
               }
             }
-            $jscomp$swapContext(0, 1);
+            ᵃᶜresume();
           } finally {
-            $jscomp$swapContext();
+            ᵃᶜsuspend();
           }
         }
         """);
@@ -175,7 +178,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
 
   // TODO: b/371578480 - test break and continue inside for-await
 
-  // A block is added if necessary so that the post-loop reenter call is appropriately sequenced.
+  // A block is added if necessary so that the post-loop resume call is appropriately sequenced.
   @Test
   public void testForAwaitNotInBlock() {
     test(
@@ -193,21 +196,23 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter();
+          var ᵃᶜfactory = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           try {
             if (1) {
-              for await (const x of $jscomp$swapContext(gen())) {
-                $jscomp$swapContext(0, 1);
+              for await (const x of ᵃᶜsuspend(gen())) {
+                ᵃᶜresume();
                 try {
                   use(x);
                 } finally {
-                  $jscomp$swapContext();
+                  ᵃᶜsuspend();
                 }
               }
-              $jscomp$swapContext(0, 1);
+              ᵃᶜresume();
             }
           } finally {
-            $jscomp$swapContext();
+            ᵃᶜsuspend();
           }
         }
         """);
@@ -230,22 +235,21 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter();
+          var ᵃᶜfactory = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           try {
-            for await (const x of
-                           $jscomp$swapContext(
-                               $jscomp$swapContext(await $jscomp$swapContext(gen()), 1))) {
-              $jscomp$swapContext(0, 1);
+            for await (const x of ᵃᶜsuspend(ᵃᶜresume(await ᵃᶜsuspend(gen())))) {
+              ᵃᶜresume();
               try {
-                $jscomp$swapContext(
-                    await $jscomp$swapContext(use(x)), 1);
+                ᵃᶜresume(await ᵃᶜsuspend(use(x)));
               } finally {
-                $jscomp$swapContext();
+                ᵃᶜsuspend();
               }
             }
-            $jscomp$swapContext(0, 1);
+            ᵃᶜresume();
           } finally {
-            $jscomp$swapContext();
+            ᵃᶜsuspend();
           }
         }
         """);
@@ -268,9 +272,11 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         """
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
-        const $jscomp$swapContext = $jscomp.asyncContextEnter();
-        $jscomp$swapContext(await $jscomp$swapContext(1), 1);
-        $jscomp$swapContext(await $jscomp$swapContext(2), 1);
+        var ᵃᶜfactory = $jscomp.asyncContextStart();
+        var ᵃᶜsuspend = ᵃᶜfactory();
+        var ᵃᶜresume = ᵃᶜfactory(1);
+        ᵃᶜresume(await ᵃᶜsuspend(1));
+        ᵃᶜresume(await ᵃᶜsuspend(2));
         """);
   }
 
@@ -291,24 +297,26 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter();
+          var ᵃᶜfactory = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           try {
-            $jscomp$swapContext(await $jscomp$swapContext(1), 1);
-            $jscomp$swapContext(await $jscomp$swapContext(2), 1);
+            ᵃᶜresume(await ᵃᶜsuspend(1));
+            ᵃᶜresume(await ᵃᶜsuspend(2));
           } finally {
-            $jscomp$swapContext();
+            ᵃᶜsuspend();
           }
         }
         """);
   }
 
   // BEFORE: try { ... } catch { BODY }
-  //  AFTER: try { ... } catch { swap(0, 1); BODY }
+  //  AFTER: try { ... } catch { resume(); BODY }
   //
   // Explanation:
   //   * If the immediate body of a "try" node has an await in it, and the await throws, then the
-  //     reenter call around the await will not run.  Instead, control flow returns to the function
-  //     body via the "catch" or "finally" block, so we need to additionally insert the reenter call
+  //     resume call around the await will not run.  Instead, control flow returns to the function
+  //     body via the "catch" or "finally" block, so we need to additionally insert the resume call
   //     at the top of either catch or finally, whichever comes first.
   @Test
   public void testAwaitInsideTryCatch() {
@@ -328,28 +336,30 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter();
+          var ᵃᶜfactory = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           try {
             try {
-              $jscomp$swapContext(await $jscomp$swapContext(1), 1);
+              ᵃᶜresume(await ᵃᶜsuspend(1));
             } catch (e) {
-              $jscomp$swapContext(0, 1);
+              ᵃᶜresume();
               console.log(e);
             }
           } finally {
-            $jscomp$swapContext();
+            ᵃᶜsuspend();
           }
         }
         """);
   }
 
   // BEFORE: try { ... } catch { BODY1 } finally { BODY2 }
-  //  AFTER: try { ... } catch { swap(0, 1); BODY1 } finally { BODY2 }
+  //  AFTER: try { ... } catch { resume(); BODY1 } finally { BODY2 }
   //
   // Explanation:
-  //   * If there is both a "catch" and a "finally", then only the former needs a reenter call.
+  //   * If there is both a "catch" and a "finally", then only the former needs a resume call.
   //   * The "finally" block will _only_ run if the "catch" block terminates normally, so we can
-  //     guarantee that the context will have reentered before we reach it.
+  //     guarantee that the context will have resumeed before we reach it.
   @Test
   public void testAwaitInsideTryCatchFinally() {
     test(
@@ -370,25 +380,27 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter();
+          var ᵃᶜfactory = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           try {
             try {
-              $jscomp$swapContext(await $jscomp$swapContext(1), 1);
+              ᵃᶜresume(await ᵃᶜsuspend(1));
             } catch (e) {
-              $jscomp$swapContext(0, 1);
+              ᵃᶜresume();
               console.log(e);
             } finally {
               console.log('finally');
             }
           } finally {
-            $jscomp$swapContext();
+            ᵃᶜsuspend();
           }
         }
         """);
   }
 
   // BEFORE: try { ... } finally { BODY }
-  //  AFTER: try { ... } finally { swap(0, 1); BODY }
+  //  AFTER: try { ... } finally { resume(); BODY }
   @Test
   public void testAwaitInsideTryFinally() {
     test(
@@ -407,16 +419,18 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter();
+          var ᵃᶜfactory = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           try {
             try {
-              $jscomp$swapContext(await $jscomp$swapContext(1), 1);
+              ᵃᶜresume(await ᵃᶜsuspend(1));
             } finally {
-              $jscomp$swapContext(0, 1);
+              ᵃᶜresume();
               console.log('finally');
             }
           } finally {
-            $jscomp$swapContext();
+            ᵃᶜsuspend();
           }
         }
         """);
@@ -436,7 +450,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   }
 
   // `return await` does not require any instrumentation if it's not inside a try block.
-  // But if there's a catch block, then the function context may still get reentered after the
+  // But if there's a catch block, then the function context may still get resumeed after the
   // await, if the awaited promise is rejected.  So this should be instrumented normally.
   @Test
   public void testReturnAwaitInsideTryCatch() {
@@ -456,23 +470,25 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter();
+          var ᵃᶜfactory = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           try {
             try {
-              return $jscomp$swapContext(await $jscomp$swapContext(1), 1);
+              return ᵃᶜresume(await ᵃᶜsuspend(1));
             } catch (e) {
-              $jscomp$swapContext(0, 1);
+              ᵃᶜresume();
               console.log(e);
             }
           } finally {
-            $jscomp$swapContext();
+            ᵃᶜsuspend();
           }
         }
         """);
   }
 
   // `return await` does not require any instrumentation if it's not inside a try block.
-  // But if there's a finally, then the function context will still get reentered after the await.
+  // But if there's a finally, then the function context will still get resumeed after the await.
   @Test
   public void testReturnAwaitInsideTryFinally() {
     test(
@@ -491,23 +507,25 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter();
+          var ᵃᶜfactory = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           try {
             try {
-              return $jscomp$swapContext(await $jscomp$swapContext(1), 1);
+              return ᵃᶜresume(await ᵃᶜsuspend(1));
             } finally {
-              $jscomp$swapContext(0, 1);
+              ᵃᶜresume();
               console.log('finally');
             }
           } finally {
-            $jscomp$swapContext();
+            ᵃᶜsuspend();
           }
         }
         """);
   }
 
   // `return await` does not require any instrumentation if it's the entire arrow function
-  // expression.  There is no "enter" call, either, since we will never need to restore the
+  // expression.  There is no "start" call, either, since we will never need to restore the
   // context after the await (there's no code there that would need it).
   @Test
   public void testAwaitImmediatelyReturnedFromBodylessArrow() {
@@ -534,11 +552,13 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         (async () => {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter();
+          var ᵃᶜfactory = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           try {
-            return use($jscomp$swapContext(await $jscomp$swapContext(1), 1));
+            return use(ᵃᶜresume(await ᵃᶜsuspend(1)));
           } finally {
-            $jscomp$swapContext();
+            ᵃᶜsuspend();
           }
         })();
         """);
@@ -560,21 +580,23 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
 
   // BEFORE: function* f() { BODY }
   //  AFTER: function f() {
-  //           const swap = enter(1);
-  //           return function*() { swap(0, 1); try { BODY } finally { swap() } }()
+  //           const factory = start(1);
+  //           const suspend = factory();
+  //           const resume = factory(1);
+  //           return function*() { resume(); try { BODY } finally { suspend() } }()
   //         }
   //
   // BEFORE: yield EXPR
-  //  AFTER: swap(yield swap(EXPR), 1)
+  //  AFTER: resume(yield suspend(EXPR), 1)
   //
   // Explanation:
   //   * in order to snapshot the context from the initial call, we need to wrap the generator into
-  //     an ordinary function to call enter() outside the generator, and then we use an immediately
-  //     invoked generator to run the body, which now needs an explit swap(0, 1) to reenter at the
-  //     front, since it may happen at some later time in a different context.
+  //     an ordinary function to call start() outside the generator, and then we use an immediately
+  //     invoked generator to run the body, which now needs an explit resume() at the front, since
+  //     it may happen at some later time in a different context.
   //   * a generator's "function context" is snapshotted when the generator is first called, but no
   //     ECMAScript code runs at that time - the generator body doesn't begin until the first call
-  //     to iter.next(): enter(1) indicates that the context should start as "exited".
+  //     to iter.next(): start(1) indicates that the context should start as "suspended".
   @Test
   public void testGenerator() {
     test(
@@ -589,13 +611,15 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           return function*() {
-            $jscomp$swapContext(0, 1);
+            ᵃᶜresume();
             try {
-              $jscomp$swapContext(yield $jscomp$swapContext(1), 1);
+              ᵃᶜresume(yield ᵃᶜsuspend(1));
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }();
         }
@@ -623,20 +647,22 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           return function*() {
-            $jscomp$swapContext(0, 1);
+            ᵃᶜresume();
             try {
               try {
-                $jscomp$swapContext(yield $jscomp$swapContext(1), 1);
+                ᵃᶜresume(yield ᵃᶜsuspend(1));
               } catch (e) {
-                $jscomp$swapContext(0, 1);
-                $jscomp$swapContext(yield $jscomp$swapContext(2), 1);
+                ᵃᶜresume();
+                ᵃᶜresume(yield ᵃᶜsuspend(2));
               } finally {
-                $jscomp$swapContext(yield $jscomp$swapContext(3), 1);
+                ᵃᶜresume(yield ᵃᶜsuspend(3));
               }
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }();
         }
@@ -662,18 +688,20 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           return function*() {
-            $jscomp$swapContext(0, 1);
+            ᵃᶜresume();
             try {
               try {
-                $jscomp$swapContext(yield $jscomp$swapContext(1), 1);
+                ᵃᶜresume(yield ᵃᶜsuspend(1));
               } finally {
-                $jscomp$swapContext(0, 1);
-                $jscomp$swapContext(yield $jscomp$swapContext(3), 1);
+                ᵃᶜresume();
+                ᵃᶜresume(yield ᵃᶜsuspend(3));
               }
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }();
         }
@@ -681,7 +709,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   }
 
   // yield has the same behavior as await w.r.t. try blocks: only the inner try-catch gets
-  // instrumented with a re-enter.
+  // instrumented with a re-start.
   @Test
   public void testGeneratorWithNestedTry() {
     test(
@@ -704,22 +732,24 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           return function*() {
-            $jscomp$swapContext(0, 1);
+            ᵃᶜresume();
             try {
               try {
                 try {
-                  $jscomp$swapContext(yield $jscomp$swapContext(1), 1);
+                  ᵃᶜresume(yield ᵃᶜsuspend(1));
                 } catch (e) {
-                  $jscomp$swapContext(0, 1);
+                  ᵃᶜresume();
                   console.log(e);
                 }
               } catch (e) {
                 console.log(e);
               }
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }();
         }
@@ -727,8 +757,8 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   }
 
   // Empty yield is a special case that wasn't present with await (you can't have an empty await).
-  // In this case, the exit call (`swap()`) has an implicit "undefined" for the first argument,
-  // which evaluates to `yield undefined`, which is equivalent to just `yield`.
+  // In this case, the suspend() call has an implicit "undefined" for the first argument, which
+  // evaluates to `yield undefined`, which is equivalent to just `yield`.
   @Test
   public void testGeneratorWithEmptyYield() {
     test(
@@ -743,13 +773,15 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           return function*() {
-            $jscomp$swapContext(0, 1);
+            ᵃᶜresume();
             try {
-              $jscomp$swapContext(yield $jscomp$swapContext(), 1);
+              ᵃᶜresume(yield ᵃᶜsuspend());
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }();
         }
@@ -772,13 +804,15 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           return function*() {
-            $jscomp$swapContext(0, 1);
+            ᵃᶜresume();
             try {
               console.log(1);
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }();
         }
@@ -813,14 +847,15 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         function f(a) {
           const $jscomp$arguments$m1146332801$0 = arguments;
-          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           return function*() {
-            $jscomp$swapContext(0, 1);
+            ᵃᶜresume();
             try {
-              $jscomp$swapContext(
-                  yield $jscomp$swapContext(a + $jscomp$arguments$m1146332801$0[1]), 1);
+              ᵃᶜresume(yield ᵃᶜsuspend(a + $jscomp$arguments$m1146332801$0[1]));
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }();
         }
@@ -846,13 +881,15 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f() {
-            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+            var ᵃᶜsuspend = ᵃᶜfactory();
+            var ᵃᶜresume = ᵃᶜfactory(1);
             return (function*() {
-              $jscomp$swapContext(0, 1);
+              ᵃᶜresume();
               try {
-                $jscomp$swapContext(yield $jscomp$swapContext(1), 1);
+                ᵃᶜresume(yield ᵃᶜsuspend(1));
               } finally {
-                $jscomp$swapContext();
+                ᵃᶜsuspend();
               }
             })();
           }
@@ -879,13 +916,15 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f() {
-            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+            var ᵃᶜsuspend = ᵃᶜfactory();
+            var ᵃᶜresume = ᵃᶜfactory(1);
             return (function*() {
-              $jscomp$swapContext(0, 1);
+              ᵃᶜresume();
               try {
                 console.log(42);
               } finally {
-                $jscomp$swapContext();
+                ᵃᶜsuspend();
               }
             })();
           }
@@ -917,14 +956,15 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         class Foo {
           g() {
             const $jscomp$this$m1146332801$0 = this;
-            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+            var ᵃᶜsuspend = ᵃᶜfactory();
+            var ᵃᶜresume = ᵃᶜfactory(1);
             return (function*() {
-              $jscomp$swapContext(0, 1);
+              ᵃᶜresume();
               try {
-                $jscomp$swapContext(
-                    yield $jscomp$swapContext($jscomp$this$m1146332801$0), 1);
+                ᵃᶜresume(yield ᵃᶜsuspend($jscomp$this$m1146332801$0));
               } finally {
-                $jscomp$swapContext();
+                ᵃᶜsuspend();
               }
             })();
           }
@@ -952,14 +992,15 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         class Foo {
           g() {
             const $jscomp$arguments$m1146332801$0 = arguments;
-            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+            var ᵃᶜsuspend = ᵃᶜfactory();
+            var ᵃᶜresume = ᵃᶜfactory(1);
             return (function*() {
-              $jscomp$swapContext(0, 1);
+              ᵃᶜresume();
               try {
-                $jscomp$swapContext(
-                    yield $jscomp$swapContext($jscomp$arguments$m1146332801$0.length), 1);
+                ᵃᶜresume(yield ᵃᶜsuspend($jscomp$arguments$m1146332801$0.length));
               } finally {
-                $jscomp$swapContext();
+                ᵃᶜsuspend();
               }
             })();
           }
@@ -990,16 +1031,18 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         class Foo {
           /** @nocollapse */
           static f() {
-            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
-            return this.f$jscomp$m1146332801$0($jscomp$swapContext);
+            var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+            return this.f$jscomp$m1146332801$0(ᵃᶜfactory);
           }
           /** @nocollapse */
-          static *f$jscomp$m1146332801$0($jscomp$swapContext) {
-            $jscomp$swapContext(0, 1);
+          static *f$jscomp$m1146332801$0(ᵃᶜfactory) {
+            var ᵃᶜsuspend = ᵃᶜfactory();
+            var ᵃᶜresume = ᵃᶜfactory(1);
+            ᵃᶜresume();
             try {
-              $jscomp$swapContext(yield* $jscomp$swapContext(super.f()), 1);
+              ᵃᶜresume(yield* ᵃᶜsuspend(super.f()));
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }
         }
@@ -1027,15 +1070,17 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f() {
-            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
-            return this.f$jscomp$m1146332801$0($jscomp$swapContext);
+            var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+            return this.f$jscomp$m1146332801$0(ᵃᶜfactory);
           }
-          *f$jscomp$m1146332801$0($jscomp$swapContext) {
-            $jscomp$swapContext(0, 1);
+          *f$jscomp$m1146332801$0(ᵃᶜfactory) {
+            var ᵃᶜsuspend = ᵃᶜfactory();
+            var ᵃᶜresume = ᵃᶜfactory(1);
+            ᵃᶜresume();
             try {
-              $jscomp$swapContext(yield $jscomp$swapContext(super.f()), 1);
+              ᵃᶜresume(yield ᵃᶜsuspend(super.f()));
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }
         }
@@ -1060,15 +1105,17 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f() {
-            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
-            return this.f$jscomp$m1146332801$0($jscomp$swapContext);
+            var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+            return this.f$jscomp$m1146332801$0(ᵃᶜfactory);
           }
-          *f$jscomp$m1146332801$0($jscomp$swapContext) {
-            $jscomp$swapContext(0, 1);
+          *f$jscomp$m1146332801$0(ᵃᶜfactory) {
+            var ᵃᶜsuspend = ᵃᶜfactory();
+            var ᵃᶜresume = ᵃᶜfactory(1);
+            ᵃᶜresume();
             try {
               return super.f();
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }
         }
@@ -1093,15 +1140,17 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f(a, b, c) {
-            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
-            return this.f$jscomp$m1146332801$0($jscomp$swapContext, a, b, c);
+            var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+            return this.f$jscomp$m1146332801$0(ᵃᶜfactory, a, b, c);
           }
-          *f$jscomp$m1146332801$0($jscomp$swapContext, a, b, c) {
-            $jscomp$swapContext(0, 1);
+          *f$jscomp$m1146332801$0(ᵃᶜfactory, a, b, c) {
+            var ᵃᶜsuspend = ᵃᶜfactory();
+            var ᵃᶜresume = ᵃᶜfactory(1);
+            ᵃᶜresume();
             try {
-              $jscomp$swapContext(yield $jscomp$swapContext(super.x), 1);
+              ᵃᶜresume(yield ᵃᶜsuspend(super.x));
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }
         }
@@ -1128,18 +1177,17 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f(a) {
-            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
-            return this.f$jscomp$m1146332801$0($jscomp$swapContext, arguments, a);
+            var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+            return this.f$jscomp$m1146332801$0(ᵃᶜfactory, arguments, a);
           }
-          *f$jscomp$m1146332801$0($jscomp$swapContext, $jscomp$arguments$m1146332801$1, a) {
-            $jscomp$swapContext(0, 1);
+          *f$jscomp$m1146332801$0(ᵃᶜfactory, $jscomp$arguments$m1146332801$1, a) {
+            var ᵃᶜsuspend = ᵃᶜfactory();
+            var ᵃᶜresume = ᵃᶜfactory(1);
+            ᵃᶜresume();
             try {
-              $jscomp$swapContext(
-                  yield $jscomp$swapContext(
-                      super.x + $jscomp$arguments$m1146332801$1.length),
-                  1);
+              ᵃᶜresume(yield ᵃᶜsuspend(super.x + $jscomp$arguments$m1146332801$1.length));
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }
         }
@@ -1167,15 +1215,17 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f(a) {
-            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
-            return this.f$jscomp$m1146332801$0($jscomp$swapContext, a);
+            var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+            return this.f$jscomp$m1146332801$0(ᵃᶜfactory, a);
           }
-          *f$jscomp$m1146332801$0($jscomp$swapContext, a = 1) {
-            $jscomp$swapContext(0, 1);
+          *f$jscomp$m1146332801$0(ᵃᶜfactory, a = 1) {
+            var ᵃᶜsuspend = ᵃᶜfactory();
+            var ᵃᶜresume = ᵃᶜfactory(1);
+            ᵃᶜresume();
             try {
-              $jscomp$swapContext(yield $jscomp$swapContext(super.y), 1);
+              ᵃᶜresume(yield ᵃᶜsuspend(super.y));
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }
         }
@@ -1200,18 +1250,20 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f($jscomp$m1146332801$1, $jscomp$m1146332801$2) {
-            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            var ᵃᶜfactory = $jscomp.asyncContextStart(1);
             return this.f$jscomp$m1146332801$0(
-                $jscomp$swapContext,
+                ᵃᶜfactory,
                 $jscomp$m1146332801$1,
                 $jscomp$m1146332801$2);
           }
-          *f$jscomp$m1146332801$0($jscomp$swapContext, {a}, [b = 1]) {
-            $jscomp$swapContext(0, 1);
+          *f$jscomp$m1146332801$0(ᵃᶜfactory, {a}, [b = 1]) {
+            var ᵃᶜsuspend = ᵃᶜfactory();
+            var ᵃᶜresume = ᵃᶜfactory(1);
+            ᵃᶜresume();
             try {
-              $jscomp$swapContext(yield $jscomp$swapContext(super.x), 1);
+              ᵃᶜresume(yield ᵃᶜsuspend(super.x));
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }
         }
@@ -1237,15 +1289,17 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f(...a) {
-            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
-            return this.f$jscomp$m1146332801$0($jscomp$swapContext, ...a);
+            var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+            return this.f$jscomp$m1146332801$0(ᵃᶜfactory, ...a);
           }
-          *f$jscomp$m1146332801$0($jscomp$swapContext, ...a) {
-            $jscomp$swapContext(0, 1);
+          *f$jscomp$m1146332801$0(ᵃᶜfactory, ...a) {
+            var ᵃᶜsuspend = ᵃᶜfactory();
+            var ᵃᶜresume = ᵃᶜfactory(1);
+            ᵃᶜresume();
             try {
-              $jscomp$swapContext(yield $jscomp$swapContext(super.foo), 1);
+              ᵃᶜresume(yield ᵃᶜsuspend(super.foo));
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }
         }
@@ -1270,16 +1324,18 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f(a, $jscomp$m1146332801$1, c, ...$jscomp$m1146332801$2) {
-            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            var ᵃᶜfactory = $jscomp.asyncContextStart(1);
             return this.f$jscomp$m1146332801$0(
-                $jscomp$swapContext, a, $jscomp$m1146332801$1, c, ...$jscomp$m1146332801$2);
+                ᵃᶜfactory, a, $jscomp$m1146332801$1, c, ...$jscomp$m1146332801$2);
           }
-          *f$jscomp$m1146332801$0($jscomp$swapContext, a, {b}, c = 1, ...[d]) {
-            $jscomp$swapContext(0, 1);
+          *f$jscomp$m1146332801$0(ᵃᶜfactory, a, {b}, c = 1, ...[d]) {
+            var ᵃᶜsuspend = ᵃᶜfactory();
+            var ᵃᶜresume = ᵃᶜfactory(1);
+            ᵃᶜresume();
             try {
-              $jscomp$swapContext(yield $jscomp$swapContext(super.foo), 1);
+              ᵃᶜresume(yield ᵃᶜsuspend(super.foo));
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }
         }
@@ -1305,15 +1361,17 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           [Symbol.iterator]() {
-            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
-            return this.$jscomp$m1146332801$0($jscomp$swapContext);
+            var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+            return this.$jscomp$m1146332801$0(ᵃᶜfactory);
           }
-          *$jscomp$m1146332801$0($jscomp$swapContext) {
-            $jscomp$swapContext(0, 1);
+          *$jscomp$m1146332801$0(ᵃᶜfactory) {
+            var ᵃᶜsuspend = ᵃᶜfactory();
+            var ᵃᶜresume = ᵃᶜfactory(1);
+            ᵃᶜresume();
             try {
-              $jscomp$swapContext(yield $jscomp$swapContext(super.foo()), 1);
+              ᵃᶜresume(yield ᵃᶜsuspend(super.foo()));
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }
         }
@@ -1335,16 +1393,15 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           return async function*() {
-            $jscomp$swapContext(0, 1);
+            ᵃᶜresume();
             try {
-              $jscomp$swapContext(
-                  yield $jscomp$swapContext(
-                      $jscomp$swapContext(await $jscomp$swapContext(1), 1)),
-                  1);
+              ᵃᶜresume(yield ᵃᶜsuspend(ᵃᶜresume(await ᵃᶜsuspend(1))));
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }();
         }
@@ -1366,13 +1423,15 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           return async function*() {
-            $jscomp$swapContext(0, 1);
+            ᵃᶜresume();
             try {
               return 1;
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }();
         }
@@ -1397,16 +1456,15 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f() {
-            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+            var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+            var ᵃᶜsuspend = ᵃᶜfactory();
+            var ᵃᶜresume = ᵃᶜfactory(1);
             return (async function*() {
-              $jscomp$swapContext(0, 1);
+              ᵃᶜresume();
               try {
-                $jscomp$swapContext(
-                    yield $jscomp$swapContext(
-                        $jscomp$swapContext(await $jscomp$swapContext(1), 1)),
-                    1);
+                ᵃᶜresume(yield ᵃᶜsuspend(ᵃᶜresume(await ᵃᶜsuspend(1))));
               } finally {
-                $jscomp$swapContext();
+                ᵃᶜsuspend();
               }
             })();
           }
@@ -1432,19 +1490,17 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         v.run(100, () => {});
         class Foo {
           f() {
-            const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
-            return this.f$jscomp$m1146332801$0($jscomp$swapContext);
+            var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+            return this.f$jscomp$m1146332801$0(ᵃᶜfactory);
           }
-          async *f$jscomp$m1146332801$0($jscomp$swapContext) {
-            $jscomp$swapContext(0, 1);
+          async *f$jscomp$m1146332801$0(ᵃᶜfactory) {
+            var ᵃᶜsuspend = ᵃᶜfactory();
+            var ᵃᶜresume = ᵃᶜfactory(1);
+            ᵃᶜresume();
             try {
-              $jscomp$swapContext(
-                  yield $jscomp$swapContext(
-                      $jscomp$swapContext(
-                          await $jscomp$swapContext(super.f()), 1)),
-                  1);
+              ᵃᶜresume(yield ᵃᶜsuspend(ᵃᶜresume(await ᵃᶜsuspend(super.f()))));
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }
         }
@@ -1503,13 +1559,15 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           return function*() {
-            $jscomp$swapContext(0, 1);
+            ᵃᶜresume();
             try {
-              $jscomp$swapContext(yield $jscomp$swapContext(1), 1);
+              ᵃᶜresume(yield ᵃᶜsuspend(1));
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }();
         }
@@ -1532,13 +1590,15 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter(1);
+          var ᵃᶜfactory = $jscomp.asyncContextStart(1);
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           return async function*() {
-            $jscomp$swapContext(0, 1);
+            ᵃᶜresume();
             try {
-              $jscomp$swapContext(yield $jscomp$swapContext(await 1), 1);
+              ᵃᶜresume(yield ᵃᶜsuspend(await 1));
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }();
         }
@@ -1553,8 +1613,10 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter();
-          $jscomp$swapContext(await $jscomp$swapContext(42), 1);
+          var ᵃᶜfactory = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
+          ᵃᶜresume(await ᵃᶜsuspend(42));
         }
         """);
   }
@@ -1568,8 +1630,10 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter();
-          $jscomp$swapContext(await $jscomp$swapContext(2), 1);
+          var ᵃᶜfactory = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
+          ᵃᶜresume(await ᵃᶜsuspend(2));
           async function g() {
             await 3;
           }
@@ -1582,23 +1646,29 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         async function f() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter();
-          $jscomp$swapContext(await $jscomp$swapContext(2), 1);
+          var ᵃᶜfactory = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
+          ᵃᶜresume(await ᵃᶜsuspend(2));
           async function g() {
-            const $jscomp$swapContext = $jscomp.asyncContextEnter();
+            var ᵃᶜfactory = $jscomp.asyncContextStart();
+            var ᵃᶜsuspend = ᵃᶜfactory();
+            var ᵃᶜresume = ᵃᶜfactory(1);
             try {
-              $jscomp$swapContext(await $jscomp$swapContext(3), 1);
+              ᵃᶜresume(await ᵃᶜsuspend(3));
             } finally {
-              $jscomp$swapContext();
+              ᵃᶜsuspend();
             }
           }
         }
         async function h() {
-          const $jscomp$swapContext = $jscomp.asyncContextEnter();
+          var ᵃᶜfactory = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend = ᵃᶜfactory();
+          var ᵃᶜresume = ᵃᶜfactory(1);
           try {
-            $jscomp$swapContext(await $jscomp$swapContext(4), 1);
+            ᵃᶜresume(await ᵃᶜsuspend(4));
           } finally {
-            $jscomp$swapContext();
+            ᵃᶜsuspend();
           }
         }
         """);
