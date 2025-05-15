@@ -72,6 +72,9 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
 
   private boolean hasMadeReplacement = false;
   private TemplateType keyType;
+  // The index in the corresponding bindings pointing to where the submap for the specified key
+  // type ends, exclusive; or if keyType is null, defaults to -1.
+  private int ownSubMapBoundary = -1;
 
   // Initialize data structures to `null` because these are unused in ~40% of TemplateTypeReplacers.
   private @Nullable Set<JSType> seenTypes = null;
@@ -364,7 +367,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   public JSType caseTemplateType(TemplateType type) {
     this.hasMadeReplacement = true;
 
-    if (!bindings.hasTemplateKey(type)) {
+    if (!identical(type, this.keyType) && !bindings.hasTemplateKey(type, ownSubMapBoundary)) {
       return useUnknownForMissingKeys ? getNativeType(JSTypeNative.UNKNOWN_TYPE) : type;
     }
 
@@ -431,8 +434,9 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
     return type;
   }
 
-  void setKeyType(TemplateType keyType) {
+  void setKeyType(TemplateType keyType, int ownSubMapBoundary) {
     this.keyType = keyType;
+    this.ownSubMapBoundary = ownSubMapBoundary;
   }
 
   private <T extends JSType> JSType guardAgainstCycles(T type, Function<T, JSType> mapper) {

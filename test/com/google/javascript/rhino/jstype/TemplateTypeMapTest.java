@@ -66,6 +66,12 @@ public final class TemplateTypeMapTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testEmptyMap_hasNoKeysValuesOrSubmaps() {
+    assertThat(emptyMap).hasKeysAndValues(ImmutableList.of(), ImmutableList.of());
+    assertThat(emptyMap).hasSubmapsAt();
+  }
+
+  @Test
   public void testCopyExtend_createsNewMap() {
     // When
     TemplateTypeMap result =
@@ -73,6 +79,7 @@ public final class TemplateTypeMapTest extends BaseJSTypeTestCase {
 
     // Then
     assertThat(result).isNotSameInstanceAs(emptyMap);
+    assertThat(result).hasSubmapsAt(0);
   }
 
   @Test
@@ -95,6 +102,7 @@ public final class TemplateTypeMapTest extends BaseJSTypeTestCase {
     // Then
     assertThat(result)
         .hasKeysAndValues(ImmutableList.of(keyT, keyU), ImmutableList.of(NUMBER_TYPE));
+    assertThat(result).hasSubmapsAt(0);
   }
 
   @Test
@@ -120,6 +128,7 @@ public final class TemplateTypeMapTest extends BaseJSTypeTestCase {
         .hasKeysAndValues(
             ImmutableList.of(keyA, keyB, keyC, keyX, keyY, keyZ),
             ImmutableList.of(NUMBER_TYPE, UNKNOWN_TYPE, UNKNOWN_TYPE, STRING_TYPE));
+    assertThat(result).hasSubmapsAt(0, 3);
   }
 
   @Test
@@ -138,6 +147,7 @@ public final class TemplateTypeMapTest extends BaseJSTypeTestCase {
         .hasKeysAndValues(
             ImmutableList.of(keyA, keyB, keyC),
             ImmutableList.of(NUMBER_TYPE, UNKNOWN_TYPE, UNKNOWN_TYPE));
+    assertThat(result).hasSubmapsAt(0);
   }
 
   @Test
@@ -190,6 +200,7 @@ public final class TemplateTypeMapTest extends BaseJSTypeTestCase {
         .hasKeysAndValues(
             ImmutableList.of(keyA, keyB, keyC),
             ImmutableList.of(NUMBER_TYPE, STRING_TYPE, UNKNOWN_TYPE));
+    assertThat(result).hasSubmapsAt(0);
   }
 
   @Test
@@ -207,6 +218,30 @@ public final class TemplateTypeMapTest extends BaseJSTypeTestCase {
     // Then
     assertThat(result)
         .hasKeysAndValues(ImmutableList.of(keyA, keyC), ImmutableList.of(NUMBER_TYPE));
+    assertThat(result).hasSubmapsAt(0);
+  }
+
+  @Test
+  public void testCopyWithout_preservesSubmapBoundary() {
+    // Given
+    TemplateType keyA = key("A");
+    TemplateType keyB = key("B");
+    TemplateType keyC = key("C");
+    TemplateType keyD = key("D");
+    TemplateType keyE = key("E");
+    TemplateTypeMap existing =
+        createMap(ImmutableList.of(keyA, keyB), ImmutableList.of(NUMBER_TYPE, STRING_TYPE));
+    TemplateTypeMap extension =
+        existing.copyWithExtension(ImmutableList.of(keyC, keyD, keyE), ImmutableList.of());
+
+    // When
+    TemplateTypeMap result = extension.copyWithoutKeys(ImmutableSet.of(keyC, keyE));
+
+    // Then
+    assertThat(result)
+        .hasKeysAndValues(
+            ImmutableList.of(keyA, keyB, keyD), ImmutableList.of(NUMBER_TYPE, STRING_TYPE));
+    assertThat(result).hasSubmapsAt(0, 2);
   }
 
   @Test
@@ -224,6 +259,7 @@ public final class TemplateTypeMapTest extends BaseJSTypeTestCase {
     // Then
     assertThat(result)
         .hasKeysAndValues(ImmutableList.of(keyA, keyB, keyC), ImmutableList.of(NUMBER_TYPE));
+    assertThat(result).hasSubmapsAt(0);
   }
 
   @Test

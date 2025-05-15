@@ -749,14 +749,46 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
             /** @type {null} expected to error */
             const b = a.x;
             """)
-        // TODO: b/415764403 - the expected diagnostic type is wrong. It should be
-        // Foo<(number|string),symbol>
-        // but the template type replacer is instead using the specialization of U => symbol
-        // from Foo<T|U, symbol>
         .addDiagnostic(
             """
             initializing variable
-            found   : function(this:Foo): Foo<(number|symbol),symbol>
+            found   : function(this:Foo): Foo<(number|string),symbol>
+            required: null
+            """)
+        .run();
+  }
+
+  @Test
+  public void testRecursiveTemplatizedType_siblingGenericReferences_complex() {
+    newTest()
+        .addSource(
+            """
+            /** @template T, U, V */
+            class Foo {
+              /** @return {!Foo<!Foo<U|V|symbol, null, !Array<!Foo<T|U>>>, T, V>} */
+              x() {
+                return new Foo();
+              }
+            }
+            /** @type {!Foo<number, string, undefined>} */
+            const a = new Foo();
+            /** @type {null} expected to error */
+            const b = a.x;
+            """)
+        .addDiagnostic(
+            // To break this down - the expected type comes from::
+            //   Foo<
+            //     Foo<
+            //       U = string | V = undefined | symbol,
+            //       null,
+            //       Array<Foo<T = number | U = string,?, ?>>
+            //     >,
+            //     number,
+            //     undefined
+            //   >
+            """
+            initializing variable
+            found   : function(this:Foo): Foo<Foo<(string|symbol|undefined),null,Array<Foo<(number|string),?,?>>>,number,undefined>
             required: null
             """)
         .run();
@@ -807,14 +839,10 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
             /** @type {null} expected to error */
             const b = a.x;
             """)
-        // TODO: b/415764403 - the expected diagnostic type is wrong. It should be
-        // Foo<Foo<(number|string),symbol>, *>
-        // but the template type replacer is instead using the specialization of U => symbol
-        // from Foo<T|U, symbol>
         .addDiagnostic(
             """
             initializing variable
-            found   : function(this:Foo): Foo<Foo<(number|symbol),symbol>,*>
+            found   : function(this:Foo): Foo<Foo<(number|string),symbol>,*>
             required: null
             """)
         .run();
@@ -841,6 +869,86 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
             """
             initializing variable
             found   : Foo<Foo<Array<(Array<(Foo<number>|null)>|Foo<number>|undefined)>>>
+            required: null
+            """)
+        .run();
+  }
+
+  @Test
+  public void testSiblingAndInheritedGenerics() {
+    newTest()
+        .addSource(
+            """
+            /** @template T, U */
+            class Parent {
+              /** @return {!Parent<U, T>} */
+              x() {}
+            }
+            /**
+             * @template V, X
+             * @extends {Parent<X, V>}
+             */
+            class Child extends Parent {
+              /** @return {!Child<X, V>} */
+              y() {}
+            }
+            /** @type {!Child<number, null>} */
+            const a = new Child();
+            /** @type {null} expected to error */
+            const b = a.x();
+            /** @type {null} expected to error */
+            const c = a.y();
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : Parent<number,null>
+            required: null
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : Child<null,number>
+            required: null
+            """)
+        .run();
+  }
+
+  @Test
+  public void testSiblingAndInheritedGenerics_withUnions() {
+    newTest()
+        .addSource(
+            """
+            /** @template T, U */
+            class Parent {
+              /** @return {!Parent<T|U, string>} */
+              x() {}
+            }
+            /**
+             * @template V, X
+             * @extends {Parent<V|X, X|symbol>}
+             */
+            class Child extends Parent {
+              /** @return {!Child<!Array<X>, !Parent<V, V>>} */
+              y() {}
+            }
+            /** @type {!Child<number, null>} */
+            const a = new Child();
+            /** @type {null} expected to error */
+            const b = a.x();
+            /** @type {null} expected to error */
+            const c = a.y();
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : Parent<(null|number|symbol),string>
+            required: null
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : Child<Array<null>,Parent<number,number>>
             required: null
             """)
         .run();
