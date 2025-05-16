@@ -30,7 +30,7 @@ permissions:
   contents: read
 
 env:
-  VERSION_NODEJS: '16.16.0'
+  VERSION_NODEJS: '22'
   UNSYMLINK_DIR: bazel-bin-unsymlink
 
 # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobs
