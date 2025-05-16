@@ -446,9 +446,6 @@ public class DiagnosticGroups {
           // caused by a define depending on another define that's missing
           DiagnosticGroup.forType(ProcessDefines.INVALID_DEFINE_VALUE));
 
-  public static final DiagnosticGroup STRICT_REQUIRES =
-      DiagnosticGroups.registerDeprecatedGroup("legacyGoogScopeRequire");
-
   public static final DiagnosticGroup EXTRA_REQUIRE =
       DiagnosticGroups.registerGroup("extraRequire", CheckExtraRequires.EXTRA_REQUIRE_WARNING);
 
