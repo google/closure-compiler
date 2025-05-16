@@ -262,7 +262,7 @@ public final class FeatureSet implements Serializable {
     // fully supported
 
     // ES_UNSTABLE: Features fully supported in checks, but not fully supported everywhere else
-    PUBLIC_CLASS_FIELDS("Public class fields", LangVersion.ES_NEXT), // Part of ES2022
+    PUBLIC_CLASS_FIELDS("Public class fields", LangVersion.ES_UNSTABLE), // Part of ES2022
 
     // ES 2022 adds https://github.com/tc39/proposal-class-static-block
     CLASS_STATIC_BLOCK("Class static block", LangVersion.ES_UNSTABLE),
