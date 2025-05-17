@@ -566,7 +566,7 @@ function InputEvent(type, opt_eventInitDict) {}
 InputEvent.prototype.data;
 
 /** @type {boolean} */
-InputEvent.prototype.isComposed;
+InputEvent.prototype.isComposing;
 
 /** @type {string} */
 InputEvent.prototype.inputType;
