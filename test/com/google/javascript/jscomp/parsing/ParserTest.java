@@ -4379,7 +4379,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testIncorrectEscapeSequenceInTemplateLiteral() {
     parseError("`hello\\x`", "Hex digit expected");
-    parseError("`hello\\x`", "Hex digit expected");
 
     parseError("`hello\\1`", "Invalid escape sequence");
     parseError("`hello\\2`", "Invalid escape sequence");
@@ -4388,9 +4387,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("`hello\\5`", "Invalid escape sequence");
     parseError("`hello\\6`", "Invalid escape sequence");
     parseError("`hello\\7`", "Invalid escape sequence");
-    // TODO(b/223649306): \8 and \9 should cause "Invalid escape sequence" parse errors
-    parseWarning("`hello\\8`", "Unnecessary escape: '\\8' is equivalent to just '8'");
-    parseWarning("`hello\\9`", "Unnecessary escape: '\\9' is equivalent to just '9'");
+    parseError("`hello\\8`", "Invalid escape sequence");
+    parseError("`hello\\9`", "Invalid escape sequence");
+    parseError("`hello\\00`", "Invalid escape sequence");
     parseError("`hello\\01`", "Invalid escape sequence");
     parseError("`hello\\02`", "Invalid escape sequence");
     parseError("`hello\\03`", "Invalid escape sequence");
@@ -4398,6 +4397,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("`hello\\05`", "Invalid escape sequence");
     parseError("`hello\\06`", "Invalid escape sequence");
     parseError("`hello\\07`", "Invalid escape sequence");
+    parseError("`hello\\08`", "Invalid escape sequence");
+    parseError("`hello\\09`", "Invalid escape sequence");
 
     // newline before invalid escape sequence
     parseError("`\n\\1`", "Invalid escape sequence");

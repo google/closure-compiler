@@ -1025,7 +1025,7 @@ public class Scanner {
     char next = nextChar();
     switch (next) {
       case '0':
-        if (peekOctalDigit()) {
+        if (isDecimalDigit(peekChar())) {
           return createSkipTemplateCharactersResult("Invalid escape sequence", ErrorLevel.ERROR);
         }
         return null;
@@ -1036,6 +1036,8 @@ public class Scanner {
       case '5':
       case '6':
       case '7':
+      case '8':
+      case '9':
         return createSkipTemplateCharactersResult("Invalid escape sequence", ErrorLevel.ERROR);
       case 'x':
         boolean doubleHexDigit = skipHexDigit() && skipHexDigit();
@@ -1259,10 +1261,6 @@ public class Scanner {
       }
       ch = peekChar();
     }
-  }
-
-  private boolean peekOctalDigit() {
-    return isOctalDigit(peekChar());
   }
 
   private void skipOctalDigits() {
