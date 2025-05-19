@@ -427,19 +427,18 @@ public final class PerformanceTracker {
             "Log:",
             "pass,runtime,allocMem,codeChanged,astReduction,reduction,gzReduction,astSize,size,gzSize"));
     for (Stats stats : this.log) {
-      output.print(
-          String.format(
-              "%s,%d,%d,%b,%d,%d,%d,%d,%d,%d\n",
-              stats.pass,
-              stats.runtime,
-              stats.allocMem,
-              stats.changes == 1,
-              stats.astDiff,
-              stats.diff,
-              stats.gzDiff,
-              stats.astSize,
-              stats.size,
-              stats.gzSize));
+      output.printf(
+          "%s,%d,%d,%b,%d,%d,%d,%d,%d,%d\n",
+          stats.pass,
+          stats.runtime,
+          stats.allocMem,
+          stats.changes == 1,
+          stats.astDiff,
+          stats.diff,
+          stats.gzDiff,
+          stats.astSize,
+          stats.size,
+          stats.gzSize);
     }
 
     if (this.astManifest != null) {
