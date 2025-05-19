@@ -2054,6 +2054,7 @@ public final class DefaultPassConfig extends PassConfig {
                     .setRecognizeClosureDefines(compiler.getOptions().closurePass)
                     .setEnableZonesDefineName(options.getEnableZonesDefineName())
                     .setZoneInputPattern(options.getZoneInputPattern())
+                    .setUnknownDefinesToIgnore(options.getUnknownDefinesToIgnore())
                     .build())
         .build();
   }

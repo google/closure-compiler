@@ -1525,6 +1525,24 @@ public class CompilerOptions {
     return this.warningsGuard.mustRunChecks(group) == Tri.FALSE;
   }
 
+  private ImmutableList<String> unknownDefinesToIgnore = ImmutableList.of();
+
+  public void setUnknownDefinesToIgnore(ImmutableList<String> unknownDefinesToIgnore) {
+    this.unknownDefinesToIgnore = unknownDefinesToIgnore;
+  }
+
+  public void addUnknownDefinesToIgnore(ImmutableList<String> unknownDefinesToIgnore) {
+    this.unknownDefinesToIgnore =
+        ImmutableList.<String>builder()
+            .addAll(this.unknownDefinesToIgnore)
+            .addAll(unknownDefinesToIgnore)
+            .build();
+  }
+
+  ImmutableList<String> getUnknownDefinesToIgnore() {
+    return this.unknownDefinesToIgnore;
+  }
+
   /** Configure the given type of warning to the given level. */
   public void setWarningLevel(DiagnosticGroup type, CheckLevel level) {
     addWarningsGuard(new DiagnosticGroupWarningsGuard(type, level));

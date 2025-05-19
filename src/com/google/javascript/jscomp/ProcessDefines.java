@@ -22,6 +22,7 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSUR
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING_BOOLEAN;
 import static java.util.stream.Collectors.toCollection;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -76,6 +77,7 @@ class ProcessDefines implements CompilerPass {
   private final boolean recognizeClosureDefines;
   private final @Nullable String enableZonesDefineName;
   private final @Nullable Pattern zoneInputPattern;
+  private final ImmutableSet<String> unknownDefinesToIgnore;
 
   private final LinkedHashSet<JSDocInfo> knownDefineJsdocs = new LinkedHashSet<>();
   private final LinkedHashSet<Node> knownGoogDefineCalls = new LinkedHashSet<>();
@@ -151,6 +153,7 @@ class ProcessDefines implements CompilerPass {
     this.recognizeClosureDefines = builder.recognizeClosureDefines;
     this.enableZonesDefineName = builder.enableZonesDefineName;
     this.zoneInputPattern = builder.zoneInputPattern;
+    this.unknownDefinesToIgnore = ImmutableSet.copyOf(builder.unknownDefinesToIgnore);
   }
 
   enum Mode {
@@ -176,6 +179,7 @@ class ProcessDefines implements CompilerPass {
     private boolean recognizeClosureDefines = true;
     private @Nullable String enableZonesDefineName = null;
     private @Nullable Pattern zoneInputPattern = null;
+    private ImmutableList<String> unknownDefinesToIgnore = ImmutableList.of();
 
     Builder(AbstractCompiler compiler) {
       this.compiler = compiler;
@@ -201,6 +205,12 @@ class ProcessDefines implements CompilerPass {
     @CanIgnoreReturnValue
     Builder injectNamespace(Supplier<GlobalNamespace> namespaceSupplier) {
       this.namespaceSupplier = namespaceSupplier;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    Builder setUnknownDefinesToIgnore(ImmutableList<String> unknownDefinesToIgnore) {
+      this.unknownDefinesToIgnore = unknownDefinesToIgnore;
       return this;
     }
 
@@ -306,7 +316,9 @@ class ProcessDefines implements CompilerPass {
               Sets.union(
                   this.replacementValuesFromFlags.keySet(),
                   this.replacementValuesFromClosureDefines.keySet()),
-              Sets.union(KNOWN_DEFINES, this.defineByDefineName.keySet()));
+              Sets.union(
+                  Sets.union(KNOWN_DEFINES, this.defineByDefineName.keySet()),
+                  this.unknownDefinesToIgnore));
 
       for (String unknownDefine : unusedReplacements) {
         compiler.report(JSError.make(UNKNOWN_DEFINE_WARNING, unknownDefine));
