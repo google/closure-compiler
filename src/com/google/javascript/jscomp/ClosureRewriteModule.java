@@ -140,7 +140,8 @@ final class ClosureRewriteModule implements CompilerPass {
   static final DiagnosticType ILLEGAL_MODULE_RENAMING_CONFLICT =
       DiagnosticType.error(
           "JSC_ILLEGAL_MODULE_RENAMING_CONFLICT",
-          "Internal compiler error: rewritten module global name {0} is already in use.");
+          "Internal compiler error: rewritten module global name {0} is already in use.\n"
+              + "Original definition: {1}");
 
   static final DiagnosticType ILLEGAL_STMT_OF_GOOG_REQUIRE_DYNAMIC_IN_AWAIT =
       DiagnosticType.error(
@@ -2095,7 +2096,12 @@ final class ClosureRewriteModule implements CompilerPass {
 
     String name = n.getString();
     if (this.globalTypedScope.hasOwnSlot(name)) {
-      t.report(t.getCurrentScript(), ILLEGAL_MODULE_RENAMING_CONFLICT, name);
+      Node original = globalTypedScope.getOwnSlot(name).getNode();
+      t.report(
+          t.getCurrentScript(),
+          ILLEGAL_MODULE_RENAMING_CONFLICT,
+          name,
+          original != null ? original.toString() : "<unknown>");
     } else {
       JSType type = checkNotNull(n.getJSType());
       this.globalTypedScope.declare(name, n, type, t.getInput(), false);
