@@ -47,7 +47,6 @@ import com.google.javascript.jscomp.CompilerOptions.SegmentOfCompilationToRun;
 import com.google.javascript.jscomp.JSChunkGraph.ChunkDependenceException;
 import com.google.javascript.jscomp.JSChunkGraph.MissingChunkException;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
-import com.google.javascript.jscomp.PassConfig.OptimizationPasses;
 import com.google.javascript.jscomp.SortingErrorManager.ErrorReportGenerator;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.deps.BrowserModuleResolver;
@@ -909,7 +908,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         } else {
           stage1Passes();
           if (!hasErrors()) {
-            stage2Passes(OptimizationPasses.ALL);
+            stage2Passes(SegmentOfCompilationToRun.OPTIMIZATIONS);
             if (!hasErrors()) {
               stage3Passes();
             }
@@ -965,7 +964,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         } else {
           stage1Passes();
           if (!hasErrors()) {
-            stage2Passes(OptimizationPasses.ALL);
+            stage2Passes(SegmentOfCompilationToRun.OPTIMIZATIONS);
             if (!hasErrors()) {
               stage3Passes();
             }
@@ -1010,7 +1009,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p>The caller is responsible for also calling {@code generateReport()} to generate a report of
    * warnings and errors to stderr. See the invocation in {@link #compile} for a good example.
    */
-  public void stage2Passes(OptimizationPasses optimizationPasses) {
+  public void stage2Passes(SegmentOfCompilationToRun segmentOfCompilationToRun) {
+    checkState(
+        segmentOfCompilationToRun == SegmentOfCompilationToRun.OPTIMIZATIONS
+            || segmentOfCompilationToRun == SegmentOfCompilationToRun.OPTIMIZATIONS_FIRST_HALF
+            || segmentOfCompilationToRun == SegmentOfCompilationToRun.OPTIMIZATIONS_SECOND_HALF,
+        "Unsupported segment of compilation to run in stage 2: %s",
+        segmentOfCompilationToRun);
     checkState(chunkGraph != null, "No inputs. Did you call init() or initChunks()?");
     checkState(!hasErrors());
     checkState(!options.getInstrumentForCoverageOnly());
@@ -1026,33 +1031,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     runInCompilerThread(
         () -> {
           if (options.shouldOptimize()) {
-            performTranspilationAndOptimizations(optimizationPasses);
+            performTranspilationAndOptimizations(segmentOfCompilationToRun);
           }
           return null;
         });
-  }
-
-  // TODO: b/395966861 - Delete the above method that takes an OptimizationPasses valueand fold into
-  // this method. We can do this once all usages of the above method are migrated to call this
-  // overload.
-  public void stage2Passes(SegmentOfCompilationToRun segmentOfCompilationToRun) {
-    switch (segmentOfCompilationToRun) {
-      case OPTIMIZATIONS:
-        stage2Passes(OptimizationPasses.ALL);
-        break;
-      case OPTIMIZATIONS_FIRST_HALF:
-        stage2Passes(OptimizationPasses.FIRST_HALF);
-        break;
-      case OPTIMIZATIONS_SECOND_HALF:
-        stage2Passes(OptimizationPasses.SECOND_HALF);
-        break;
-      case ENTIRE_COMPILATION:
-      case CHECKS:
-      case FINALIZATIONS:
-      case OPTIMIZATIONS_AND_FINALIZATIONS:
-        throw new IllegalArgumentException(
-            "Unsupported segment of compilation to run in stage 2: " + segmentOfCompilationToRun);
-    }
   }
 
   /**
@@ -2997,7 +2979,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // Optimizations
   // ------------------------------------------------------------------------
 
-  void performTranspilationAndOptimizations(OptimizationPasses optimizationPasses) {
+  void performTranspilationAndOptimizations(SegmentOfCompilationToRun segmentOfCompilationToRun) {
     checkState(options.shouldOptimize());
     // getOptimizations() also includes transpilation passes
     ImmutableList<PassFactory> allOptimizationPassesToRun =
@@ -3008,7 +2990,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     // Get the subset of optimization passes to run in the current segment of optimizations.
     List<PassFactory> optimizationPassesToRunInCurrentSegment =
-        getOptimizationPassesToRunInCurrentSegment(optimizationPasses, allOptimizationPassesToRun);
+        getOptimizationPassesToRunInCurrentSegment(
+            segmentOfCompilationToRun, allOptimizationPassesToRun);
 
     // note whether any script gets transpiled
     markTranspiledFiles();
@@ -3052,32 +3035,36 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p>The 3 cases are:
    *
    * <ol>
-   *   <li>If we are running `OptimizationPasses.ALL`, this will return the entire list of
-   *       optimization passes.
-   *   <li>If we are running `OptimizationPasses.FIRST_HALF`, this will return all passes up to the
-   *       half-way point marker pass `OPTIMIZATIONS_HALFWAY_POINT`.
-   *   <li>If we are running `OptimizationPasses.SECOND_HALF`, this will return all passes after the
-   *       half-way point marker pass `OPTIMIZATIONS_HALFWAY_POINT`.
+   *   <li>If we are running `SegmentOfCompilationToRun.OPTIMIZATIONS`, this will return the entire
+   *       list of optimization passes.
+   *   <li>If we are running `SegmentOfCompilationToRun.OPTIMIZATIONS_FIRST_HALF`, this will return
+   *       all passes up to the half-way point marker pass `OPTIMIZATIONS_HALFWAY_POINT`.
+   *   <li>If we are running `SegmentOfCompilationToRun.OPTIMIZATIONS_SECOND_HALF`, this will return
+   *       all passes after the half-way point marker pass `OPTIMIZATIONS_HALFWAY_POINT`.
    * </ol>
    */
   private List<PassFactory> getOptimizationPassesToRunInCurrentSegment(
-      OptimizationPasses optimizationPasses, List<PassFactory> allOptimizationPassesToRun) {
+      SegmentOfCompilationToRun segmentOfCompilationToRun,
+      List<PassFactory> allOptimizationPassesToRun) {
 
     // Create a list of passes based on which segment of optimizations we are running.
     List<PassFactory> optimizationPassList = new ArrayList<>();
 
-    switch (optimizationPasses) {
-      case ALL:
+    switch (segmentOfCompilationToRun) {
+      case OPTIMIZATIONS:
         optimizationPassList = allOptimizationPassesToRun;
         break;
-      case FIRST_HALF:
+      case OPTIMIZATIONS_FIRST_HALF:
         optimizationPassList =
             passListUntil(allOptimizationPassesToRun, PassNames.OPTIMIZATIONS_HALFWAY_POINT);
         break;
-      case SECOND_HALF:
+      case OPTIMIZATIONS_SECOND_HALF:
         optimizationPassList =
             passListAfter(allOptimizationPassesToRun, PassNames.OPTIMIZATIONS_HALFWAY_POINT);
         break;
+      default:
+        throw new IllegalArgumentException(
+            "Unsupported segment of optimizations to run: " + segmentOfCompilationToRun);
     }
 
     return optimizationPassList;

@@ -47,8 +47,8 @@ import com.google.javascript.jscomp.Compiler.ScriptNodeLicensesOnlyTracker;
 import com.google.javascript.jscomp.Compiler.SingleBinaryLicenseTracker;
 import com.google.javascript.jscomp.CompilerOptions.JsonStreamMode;
 import com.google.javascript.jscomp.CompilerOptions.OutputJs;
+import com.google.javascript.jscomp.CompilerOptions.SegmentOfCompilationToRun;
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
-import com.google.javascript.jscomp.PassConfig.OptimizationPasses;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
 import com.google.javascript.jscomp.ijs.IjsErrors;
@@ -1377,7 +1377,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       }
     }
     if (runStage2) {
-      compiler.stage2Passes(OptimizationPasses.ALL);
+      compiler.stage2Passes(SegmentOfCompilationToRun.OPTIMIZATIONS);
       if (compiler.hasErrors()) {
         return;
       }

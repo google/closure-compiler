@@ -39,7 +39,7 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Precision;
 import com.google.javascript.jscomp.Compiler.ScriptNodeLicensesOnlyTracker;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.PassConfig.OptimizationPasses;
+import com.google.javascript.jscomp.CompilerOptions.SegmentOfCompilationToRun;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.serialization.AstNode;
 import com.google.javascript.jscomp.serialization.LazyAst;
@@ -1396,7 +1396,7 @@ public final class CompilerTest {
     compiler.init(externs, code, options);
     restoreCompilerState(compiler, stateAfterChecks);
 
-    compiler.performTranspilationAndOptimizations(OptimizationPasses.ALL);
+    compiler.performTranspilationAndOptimizations(SegmentOfCompilationToRun.OPTIMIZATIONS);
     String source = compiler.toSource();
     assertThat(source).isEqualTo("console.log(2);");
   }
@@ -1455,7 +1455,7 @@ public final class CompilerTest {
     compiler.init(externs, srcs, options);
     restoreCompilerState(compiler, stateAfterChecks);
 
-    compiler.performTranspilationAndOptimizations(OptimizationPasses.ALL);
+    compiler.performTranspilationAndOptimizations(SegmentOfCompilationToRun.OPTIMIZATIONS);
     String source = compiler.toSource();
     assertThat(source)
         .isEqualTo(
@@ -1547,7 +1547,7 @@ public final class CompilerTest {
     compiler = new Compiler(new TestErrorManager());
     compiler.init(externs, srcs, options);
     restoreCompilerState(compiler, stateAfterChecks);
-    compiler.performTranspilationAndOptimizations(OptimizationPasses.ALL);
+    compiler.performTranspilationAndOptimizations(SegmentOfCompilationToRun.OPTIMIZATIONS);
 
     String source = compiler.toSource();
     assertThat(source).isEqualTo("console.log(new function(){}(1));");
@@ -1627,7 +1627,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.performTranspilationAndOptimizations(OptimizationPasses.ALL);
+    compiler.performTranspilationAndOptimizations(SegmentOfCompilationToRun.OPTIMIZATIONS);
     compiler.performFinalizations();
 
     final Result result = compiler.getResult();
@@ -1799,7 +1799,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.performTranspilationAndOptimizations(OptimizationPasses.ALL);
+    compiler.performTranspilationAndOptimizations(SegmentOfCompilationToRun.OPTIMIZATIONS);
 
     String source = compiler.toSource();
     assertThat(source).isEqualTo("console.log(0);");
@@ -1821,7 +1821,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.performTranspilationAndOptimizations(OptimizationPasses.ALL);
+    compiler.performTranspilationAndOptimizations(SegmentOfCompilationToRun.OPTIMIZATIONS);
 
     String source = compiler.toSource();
     assertThat(source).isEqualTo("'use strict';console.log(0);");
@@ -2648,7 +2648,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.performTranspilationAndOptimizations(OptimizationPasses.ALL);
+    compiler.performTranspilationAndOptimizations(SegmentOfCompilationToRun.OPTIMIZATIONS);
 
     assertThat(compiler.getChunkGraph().getChunkCount()).isEqualTo(2);
     assertThat(Iterables.get(compiler.getChunkGraph().getAllChunks(), 0).getName())
@@ -2694,7 +2694,7 @@ public final class CompilerTest {
       m2 = compiler.getChunkGraph().getChunkByName("m2");
     }
 
-    compiler.performTranspilationAndOptimizations(OptimizationPasses.ALL);
+    compiler.performTranspilationAndOptimizations(SegmentOfCompilationToRun.OPTIMIZATIONS);
 
     assertThat(compiler.getChunkGraph().getChunkCount()).isEqualTo(3);
 
@@ -2753,7 +2753,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.performTranspilationAndOptimizations(OptimizationPasses.ALL);
+    compiler.performTranspilationAndOptimizations(SegmentOfCompilationToRun.OPTIMIZATIONS);
     compiler.performFinalizations();
 
     assertThat(compiler.toSource())
@@ -2778,7 +2778,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.performTranspilationAndOptimizations(OptimizationPasses.ALL);
+    compiler.performTranspilationAndOptimizations(SegmentOfCompilationToRun.OPTIMIZATIONS);
 
     assertThat(compiler.getChunkGraph().getChunkCount()).isEqualTo(2);
     assertThat(Iterables.get(compiler.getChunkGraph().getAllChunks(), 0).getName()).isEqualTo("m");
@@ -2889,7 +2889,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.performTranspilationAndOptimizations(OptimizationPasses.ALL);
+    compiler.performTranspilationAndOptimizations(SegmentOfCompilationToRun.OPTIMIZATIONS);
     compiler.performFinalizations();
 
     assertThat(compiler.toSource())
@@ -2926,7 +2926,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.performTranspilationAndOptimizations(OptimizationPasses.ALL);
+    compiler.performTranspilationAndOptimizations(SegmentOfCompilationToRun.OPTIMIZATIONS);
     compiler.performFinalizations();
 
     assertThat(compiler.toSource()).isEqualTo("function f(x){alert(x)};");
@@ -2974,7 +2974,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.performTranspilationAndOptimizations(OptimizationPasses.ALL);
+    compiler.performTranspilationAndOptimizations(SegmentOfCompilationToRun.OPTIMIZATIONS);
     compiler.performFinalizations();
 
     assertThat(compiler.getWarnings()).isEmpty();
@@ -3621,7 +3621,7 @@ public final class CompilerTest {
     restoreCompilerState(compiler, stateAfterChecks);
 
     // Stage 2, all passes
-    compiler.performTranspilationAndOptimizations(OptimizationPasses.ALL);
+    compiler.performTranspilationAndOptimizations(SegmentOfCompilationToRun.OPTIMIZATIONS);
     String source = compiler.toSource();
     assertThat(source).isEqualTo(finalOutputAfterOptimizations); // test output stage 2 code
 
@@ -3640,7 +3640,8 @@ public final class CompilerTest {
     restoreCompilerState(compiler, stateAfterChecks2);
 
     // Stage 2, first half
-    compiler.performTranspilationAndOptimizations(OptimizationPasses.FIRST_HALF);
+    compiler.performTranspilationAndOptimizations(
+        SegmentOfCompilationToRun.OPTIMIZATIONS_FIRST_HALF);
     source = compiler.toSource();
     assertThat(source).isEqualTo("console.log(function(){return\"hello\"}());");
 
@@ -3650,7 +3651,8 @@ public final class CompilerTest {
     restoreCompilerState(compiler, stateAfterFirstHalfOptimizations);
 
     // Stage 2, second half
-    compiler.performTranspilationAndOptimizations(OptimizationPasses.SECOND_HALF);
+    compiler.performTranspilationAndOptimizations(
+        SegmentOfCompilationToRun.OPTIMIZATIONS_SECOND_HALF);
     source = compiler.toSource();
     assertThat(source).isEqualTo(finalOutputAfterOptimizations); // output is the same as before
   }

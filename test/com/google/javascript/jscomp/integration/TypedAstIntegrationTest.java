@@ -29,12 +29,12 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.IncrementalCheckMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.CompilerOptions.SegmentOfCompilationToRun;
 import com.google.javascript.jscomp.CrossChunkMethodMotion;
 import com.google.javascript.jscomp.DependencyOptions;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.JSChunk;
 import com.google.javascript.jscomp.ModuleIdentifier;
-import com.google.javascript.jscomp.PassConfig.OptimizationPasses;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
@@ -678,7 +678,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
           options,
           inputStream);
     }
-    compiler.stage2Passes(OptimizationPasses.ALL);
+    compiler.stage2Passes(SegmentOfCompilationToRun.OPTIMIZATIONS);
     compiler.stage3Passes();
 
     String[] expected =
@@ -957,7 +957,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
           options,
           inputStream);
     }
-    compiler.stage2Passes(OptimizationPasses.ALL);
+    compiler.stage2Passes(SegmentOfCompilationToRun.OPTIMIZATIONS);
     if (!compiler.hasErrors()) {
       compiler.stage3Passes();
     }

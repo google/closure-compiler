@@ -64,16 +64,6 @@ public abstract class PassConfig {
   protected abstract PassListBuilder getOptimizations();
 
   /**
-   * Different ways to split optimization passes. Passing one of these enum options to
-   * getOptimizations() to tell to configure which list of stage 2 passes to return.
-   */
-  public enum OptimizationPasses {
-    ALL,
-    FIRST_HALF, // Passes from beginning of stage 2 until before the early optimization loop.
-    SECOND_HALF, // Passes from the early optimization loop until the end of stage 2.
-  }
-
-  /**
    * Gets the finalization passes to run.
    *
    * <p>Finalization passes include the injection of locale-specific code and converting the AST to
