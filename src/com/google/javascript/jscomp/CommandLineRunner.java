@@ -537,6 +537,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "BUNDLE, "
                 + "WHITESPACE_ONLY, "
                 + "SIMPLE (default), "
+                + "TRANSPILE_ONLY,"
                 + "ADVANCED")
     private String compilationLevel = "SIMPLE";
 

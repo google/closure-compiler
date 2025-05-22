@@ -48,6 +48,14 @@ public enum CompilationLevel {
    * names and variables, removing code which is never called, etc.
    */
   ADVANCED_OPTIMIZATIONS,
+
+  /**
+   * TRANSPILE_ONLY only transpiles the code down to the requested `--language_out level`, including
+   * the addition of polyfills. This mode will fully parse the JS files it is running, so that it
+   * can find syntax that needs to be transpiled down and discover required polyfills. This mode
+   * will not perform any optimizations.
+   */
+  TRANSPILE_ONLY,
   ;
 
   public static @Nullable CompilationLevel fromString(String value) {
@@ -60,6 +68,8 @@ public enum CompilationLevel {
       case "WHITESPACE_ONLY":
       case "WHITESPACE":
         return CompilationLevel.WHITESPACE_ONLY;
+      case "TRANSPILE_ONLY":
+        return CompilationLevel.TRANSPILE_ONLY;
       case "SIMPLE_OPTIMIZATIONS":
       case "SIMPLE":
         return CompilationLevel.SIMPLE_OPTIMIZATIONS;
@@ -83,6 +93,9 @@ public enum CompilationLevel {
       case SIMPLE_OPTIMIZATIONS:
         applySafeCompilationOptions(options);
         break;
+      case TRANSPILE_ONLY:
+        applyTranspileOnlyOptions(options);
+        break;
       case ADVANCED_OPTIMIZATIONS:
         applyFullCompilationOptions(options);
         break;
@@ -104,6 +117,34 @@ public enum CompilationLevel {
   }
 
   /**
+   * Gets options that only transpile the code, including polyfills.
+   *
+   * @param options The CompilerOptions object to set the options on.
+   */
+  private static void applyTranspileOnlyOptions(CompilerOptions options) {
+    // ReplaceIdGenerators is on by default, but should not run in TRANSPILE_ONLY mode.
+    options.replaceIdGenerators = false;
+
+    options.setClosurePass(true);
+    options.setRenamingPolicy(VariableRenamingPolicy.OFF, PropertyRenamingPolicy.OFF);
+    options.setInlineVariables(Reach.NONE);
+    options.setInlineFunctions(Reach.NONE);
+    options.setFoldConstants(false);
+    options.setCoalesceVariableNames(false);
+    options.setDeadAssignmentElimination(false);
+    options.setCollapseVariableDeclarations(false);
+    options.convertToDottedProperties = false;
+    options.labelRenaming = false;
+    options.setRemoveUnusedVariables(Reach.NONE);
+    options.collapseObjectLiterals = false;
+    /*
+     * Turn off protecting side-effect free nodes by making them parameters to a extern function
+     * call.
+     */
+    options.setProtectHiddenSideEffects(false);
+  }
+
+  /**
    * Add options that are safe. Safe means options that won't break the
    * JavaScript code even if no symbols are exported and no coding convention
    * is used.
@@ -113,7 +154,7 @@ public enum CompilationLevel {
     // TODO(tjgq): Remove this.
     options.setDependencyOptions(DependencyOptions.sortOnly());
 
-    // ReplaceIdGenerators is on by default, but should run in simple mode.
+    // ReplaceIdGenerators is on by default, but should not run in simple mode.
     options.replaceIdGenerators = false;
 
     // Does not call applyBasicCompilationOptions(options) because the call to
@@ -210,6 +251,7 @@ public enum CompilationLevel {
       case SIMPLE_OPTIMIZATIONS:
       case WHITESPACE_ONLY:
       case BUNDLE:
+      case TRANSPILE_ONLY:
         break;
     }
   }
@@ -238,6 +280,7 @@ public enum CompilationLevel {
       case ADVANCED_OPTIMIZATIONS:
       case WHITESPACE_ONLY:
       case BUNDLE:
+      case TRANSPILE_ONLY:
         break;
     }
   }

@@ -3525,6 +3525,203 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
         "window.a=function(b,c,d){return b.slice(c+1,d)}");
   }
 
+  @Test
+  public void testTranspileOnlyModePolyfillInjection() {
+    args.add("--compilation_level=TRANSPILE_ONLY");
+    args.add("--language_in=ECMASCRIPT6");
+    args.add("--language_out=ECMASCRIPT5");
+    test(
+        """
+        const arr = [1, 2, 3];
+        const found = arr.find((element) => element > 10);
+        """,
+        """
+        var $jscomp = $jscomp || {};
+        $jscomp.scope = {};
+        $jscomp.findInternal = function(array, callback, thisArg) {
+          if (array instanceof String) array = String(array);
+          var len = array.length;
+          for (var i = 0; i < len; i++) {
+            var value = array[i];
+            if (callback.call(thisArg, value, i, array)) return {
+                i: i, v: value
+              }
+          }
+          return {
+            i: -1, v: void 0
+          }
+        };
+        $jscomp.ASSUME_ES5 = false;
+        $jscomp.ASSUME_ES6 = false;
+        $jscomp.ASSUME_ES2020 = false;
+        $jscomp.ASSUME_NO_NATIVE_MAP = false;
+        $jscomp.ASSUME_NO_NATIVE_SET = false;
+        $jscomp.ISOLATE_POLYFILLS = false;
+        $jscomp.FORCE_POLYFILL_PROMISE = false;
+        $jscomp.FORCE_POLYFILL_PROMISE_WHEN_NO_UNHANDLED_REJECTION = false;
+        $jscomp.INSTRUMENT_ASYNC_CONTEXT = true;
+        $jscomp.defineProperty =
+            $jscomp.ASSUME_ES5 || typeof Object.defineProperties == 'function' ?
+            Object.defineProperty :
+            function(target, property, descriptor) {
+              if (target == Array.prototype || target == Object.prototype)
+                return target;
+              target[property] = descriptor.value;
+              return target
+            };
+        $jscomp.getGlobal = function(passedInThis) {
+          var possibleGlobals = [
+            'object' == typeof globalThis && globalThis, passedInThis,
+            'object' == typeof window && window, 'object' == typeof self && self,
+            'object' == typeof global && global
+          ];
+          for (var i = 0; i < possibleGlobals.length; ++i) {
+            var maybeGlobal = possibleGlobals[i];
+            if (maybeGlobal && maybeGlobal['Math'] == Math) return maybeGlobal
+          }
+          return {
+            valueOf: function() {
+              throw new Error('Cannot find global object');
+            }
+          }.valueOf()
+        };
+        $jscomp.global = $jscomp.ASSUME_ES2020 ? globalThis : $jscomp.getGlobal(this);
+        $jscomp.IS_SYMBOL_NATIVE =
+            typeof Symbol === 'function' && typeof Symbol('x') === 'symbol';
+        $jscomp.TRUST_ES6_POLYFILLS =
+            !$jscomp.ISOLATE_POLYFILLS || $jscomp.IS_SYMBOL_NATIVE;
+        $jscomp.polyfills = {};
+        $jscomp.propertyToPolyfillSymbol = {};
+        $jscomp.POLYFILL_PREFIX = '$jscp$';
+        var $jscomp$lookupPolyfilledValue = function(
+            target, property, isOptionalAccess) {
+          if (isOptionalAccess && target == null) return undefined;
+          var obfuscatedName = $jscomp.propertyToPolyfillSymbol[property];
+          if (obfuscatedName == null) return target[property];
+          var polyfill = target[obfuscatedName];
+          return polyfill !== undefined ? polyfill : target[property]
+        };
+        $jscomp.polyfill = function(target, polyfill, fromLang, toLang) {
+          if (!polyfill) return;
+          if ($jscomp.ISOLATE_POLYFILLS)
+            $jscomp.polyfillIsolated(target, polyfill, fromLang, toLang);
+          else
+            $jscomp.polyfillUnisolated(target, polyfill, fromLang, toLang)
+        };
+        $jscomp.polyfillUnisolated = function(target, polyfill, fromLang, toLang) {
+          var obj = $jscomp.global;
+          var split = target.split('.');
+          for (var i = 0; i < split.length - 1; i++) {
+            var key = split[i];
+            if (!(key in obj)) return;
+            obj = obj[key]
+          }
+          var property = split[split.length - 1];
+          var orig = obj[property];
+          var impl = polyfill(orig);
+          if (impl == orig || impl == null) return;
+          $jscomp.defineProperty(
+              obj, property, {configurable: true, writable: true, value: impl})
+        };
+        $jscomp.polyfillIsolated = function(target, polyfill, fromLang, toLang) {
+          var split = target.split('.');
+          var isSimpleName = split.length === 1;
+          var root = split[0];
+          if (!isSimpleName && root in $jscomp.polyfills)
+            var ownerObject = $jscomp.polyfills;
+          else
+            ownerObject = $jscomp.global;
+          for (var i = 0; i < split.length - 1; i++) {
+            var key = split[i];
+            if (!(key in ownerObject)) return;
+            ownerObject = ownerObject[key]
+          }
+          var property = split[split.length - 1];
+          var nativeImpl = $jscomp.IS_SYMBOL_NATIVE && fromLang === 'es6' ?
+              ownerObject[property] :
+              null;
+          var impl = polyfill(nativeImpl);
+          if (impl == null) return;
+          if (isSimpleName)
+            $jscomp.defineProperty(
+                $jscomp.polyfills, property,
+                {configurable: true, writable: true, value: impl});
+          else if (impl !== nativeImpl) {
+            if ($jscomp.propertyToPolyfillSymbol[property] === undefined) {
+              var BIN_ID = Math.random() * 1E9 >>> 0;
+              $jscomp.propertyToPolyfillSymbol[property] = $jscomp.IS_SYMBOL_NATIVE ?
+                  $jscomp.global['Symbol'](property) :
+                  $jscomp.POLYFILL_PREFIX + BIN_ID + '$' + property
+            }
+            var obfuscatedName = $jscomp.propertyToPolyfillSymbol[property];
+            $jscomp.defineProperty(
+                ownerObject, obfuscatedName,
+                {configurable: true, writable: true, value: impl})
+          }
+        };
+        $jscomp.polyfill('Array.prototype.find', function(orig) {
+          if (orig) return orig;
+          var polyfill = function(callback, opt_thisArg) {
+            return $jscomp.findInternal(this, callback, opt_thisArg).v
+          };
+          return polyfill
+        }, 'es6', 'es3');
+        var arr = [1, 2, 3];
+        var found = arr.find(function(element) {
+          return element > 10
+        });
+        """);
+  }
+
+  @Test
+  public void testTranspileOnlyModeDoesNotDoOptimizations() {
+    args.add("--compilation_level=TRANSPILE_ONLY");
+    args.add("--language_in=ECMASCRIPT6");
+    args.add("--language_out=ECMASCRIPT5");
+    test(
+        "const x = () => { return 1; }; const y = x();",
+        """
+        var x = function() {
+          return 1;
+        };
+        var y = x();
+        """);
+  }
+
+  @Test
+  public void testTranspileOnlyModePreservesComments() {
+    args.add("--compilation_level=TRANSPILE_ONLY");
+    args.add("--language_in=ECMASCRIPT6");
+    args.add("--language_out=ECMASCRIPT5");
+    test(
+        "// This is a comment\nconst x = () => {};",
+        """
+        // This is a comment
+        var x = function() {};
+        """);
+  }
+
+  @Test
+  public void testTranspileOnlyModePreservesTypeAnnotations() {
+    args.add("--compilation_level=TRANSPILE_ONLY");
+    args.add("--language_in=ECMASCRIPT6");
+    args.add("--language_out=ECMASCRIPT5");
+    test(
+        "/** @type {number} */ const x = 1;",
+        """
+        /** @type {number} */
+        var x = 1;
+        """);
+  }
+
+  @Test
+  public void testTranspileOnlyModeSyntaxError() {
+    args.add("--compilation_level=TRANSPILE_ONLY");
+    args.add("--language_in=ECMASCRIPT6");
+    args.add("--language_out=ECMASCRIPT5");
+    test("const x = {", RhinoErrorReporter.PARSE_ERROR);
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {
