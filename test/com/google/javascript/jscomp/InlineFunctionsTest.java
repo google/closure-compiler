@@ -4956,6 +4956,49 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         class Foo { x = 0; }
         f(new Foo());
         """);
+
+    // TOOD: b/416551942 - Incorrectly inlines getNextVal().
+    test(
+        """
+        let nextVal = 0;
+        function getNextVal() {
+          nextVal++;  // Note: If you merge this line with the next as `++nextVal`, things work.
+          return nextVal;
+        }
+
+        // The issue appears to be related to the fact that the class is an expression.
+        const Uid = class {
+          // val is supposed to increment here.
+          val = getNextVal();
+        };
+        """,
+        """
+        let nextVal = 0;
+        var JSCompiler_inline_result$jscomp$0;
+        {
+          nextVal++;
+          JSCompiler_inline_result$jscomp$0 = nextVal;
+        }
+
+        const Uid = class {
+          // val is now always the same value.
+          val = JSCompiler_inline_result$jscomp$0;
+        };
+        """);
+
+    testSame(
+        """
+        let nextVal = 0;
+        function getNextVal() {
+          nextVal++;
+          return nextVal;
+        }
+
+        // The only difference from the previous test is Uid is a class declaration this time.
+        class Uid {
+          val = getNextVal();
+        }
+        """);
   }
 
   @Test
