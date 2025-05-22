@@ -24,6 +24,8 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -123,12 +125,16 @@ public final class XtbMessageBundle implements MessageBundle {
 
     private static final String BRANCH_ELEM_NAME = "branch";
     private static final String BRANCH_NAME_ATT_NAME = "variants";
-    private static final String MALE_GENDER_CASE = "grammatical_gender_case: MASCULINE";
-    private static final String FEMALE_GENDER_CASE = "grammatical_gender_case: FEMININE";
-    private static final String NEUTER_GENDER_CASE = "grammatical_gender_case: NEUTER";
-    private static final String OTHER_GENDER_CASE = "grammatical_gender_case: OTHER";
+    private static final String MALE_GENDER_CASE = "MASCULINE";
+    private static final String FEMALE_GENDER_CASE = "FEMININE";
+    private static final String NEUTER_GENDER_CASE = "NEUTER";
+    private static final String OTHER_GENDER_CASE = "OTHER";
     private static final String GENDER_CASE_ERROR_MESSAGE =
         "Gender case must be one of the following: MASCULINE, FEMININE, NEUTER, or OTHER.";
+
+    private static final String GENDER_VARIANT_PATTERN = "grammatical_gender_case:\\s*(\\w+)";
+    private static final Pattern GET_STRING_PATTERN = Pattern.compile(GENDER_VARIANT_PATTERN);
+    private String genderCase;
 
     String lang;
     JsMessage.@Nullable Builder msgBuilder;
@@ -166,19 +172,30 @@ public final class XtbMessageBundle implements MessageBundle {
         case PLACEHOLDER_ELEM_NAME:
           checkState(msgBuilder != null);
           String phRef = atts.getValue(PLACEHOLDER_NAME_ATT_NAME);
-          msgBuilder.appendCanonicalPlaceholderReference(phRef);
+          if (msgBuilder.hasGenderedVariants()) {
+            msgBuilder.appendCanonicalPlaceholderReference(
+                JsMessage.GrammaticalGenderCase.valueOf(genderCase), phRef);
+          } else {
+            msgBuilder.appendCanonicalPlaceholderReference(phRef);
+          }
+
           break;
         case BRANCH_ELEM_NAME:
           checkState(msgBuilder != null);
           String gender = atts.getValue(BRANCH_NAME_ATT_NAME);
           // Gender case must be one of the following: MALE, FEMALE, NEUTER, or OTHER.
-          checkState(
-              gender.contains(MALE_GENDER_CASE)
-                  || gender.contains(FEMALE_GENDER_CASE)
-                  || gender.contains(NEUTER_GENDER_CASE)
-                  || gender.contains(OTHER_GENDER_CASE),
-              GENDER_CASE_ERROR_MESSAGE);
-          msgBuilder.appendStringPart(gender);
+
+          Matcher matcher = GET_STRING_PATTERN.matcher(gender);
+          if (matcher.find()) {
+            genderCase = matcher.group(1);
+            checkState(
+                genderCase.equals(MALE_GENDER_CASE)
+                    || genderCase.equals(FEMALE_GENDER_CASE)
+                    || genderCase.equals(NEUTER_GENDER_CASE)
+                    || genderCase.equals(OTHER_GENDER_CASE),
+                GENDER_CASE_ERROR_MESSAGE);
+            msgBuilder.addGenderedMessageKey(JsMessage.GrammaticalGenderCase.valueOf(genderCase));
+          }
           break;
         default: // fall out
       }
@@ -201,12 +218,12 @@ public final class XtbMessageBundle implements MessageBundle {
     public void characters(char[] ch, int start, int length) {
       if (msgBuilder != null) {
         String part = String.valueOf(ch, start, length);
-        if (part.equals("\n") && !msgBuilder.hasParts()) {
-          // Do not add newline at the beginning of the message for branch messages.
-          return;
-        }
         // Append a string literal to the message.
-        msgBuilder.appendStringPart(part);
+        if (msgBuilder.hasGenderedVariants()) {
+          msgBuilder.appendStringPart(JsMessage.GrammaticalGenderCase.valueOf(genderCase), part);
+        } else {
+          msgBuilder.appendStringPart(part);
+        }
       }
     }
 
@@ -214,7 +231,13 @@ public final class XtbMessageBundle implements MessageBundle {
     public void ignorableWhitespace(char[] ch, int start, int length) {
       if (msgBuilder != null) {
         // Preserve whitespace in messages.
-        msgBuilder.appendStringPart(String.valueOf(ch, start, length));
+        if (msgBuilder.hasGenderedVariants()) {
+          msgBuilder.appendStringPart(
+              JsMessage.GrammaticalGenderCase.valueOf(genderCase),
+              String.valueOf(ch, start, length));
+        } else {
+          msgBuilder.appendStringPart(String.valueOf(ch, start, length));
+        }
       }
     }
 
