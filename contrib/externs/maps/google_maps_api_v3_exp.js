@@ -11568,7 +11568,7 @@ google.maps.addressValidation.AddressValidation.prototype.verdict;
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Validates an address. See <a
- * href="https://developers.google.com/maps/documentation/address-validation/requests-validate-address">https://developers.google.com/maps/documentation/address-validation/requests-validate-address</a>
+ * href="https://developers.google.com/maps/documentation/javascript/address-validation/validate-address">https://developers.google.com/maps/documentation/javascript/address-validation/validate-address</a>.
  * @param {!google.maps.addressValidation.AddressValidationRequest} request
  * @return {!Promise<!google.maps.addressValidation.AddressValidation>}
  */
@@ -11997,9 +11997,9 @@ google.maps.addressValidation.USPSData.prototype.dpvNoSecureLocation;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- * Is this a no stat address or an active address? No stat addresses are ones
- * which are not continuously occupied or addresses that the USPS does not
- * service. Returns a single character.
+ * Indicates whether the address is a no stat address or an active address. No
+ * stat addresses are ones which are not continuously occupied or addresses that
+ * the USPS does not service. Returns a single character.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSData.prototype.dpvNoStat;
@@ -12028,7 +12028,7 @@ google.maps.addressValidation.USPSData.prototype.dpvThrowback;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- * Is this place vacant? Returns a single character.
+ * Indicates whether the address is vacant. Returns a single character.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSData.prototype.dpvVacant;

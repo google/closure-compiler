@@ -11997,9 +11997,9 @@ google.maps.addressValidation.USPSData.prototype.dpvNoSecureLocation;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- * Indicates whether the address is a no stat address or an active address.
- * No stat addresses are ones which are not continuously occupied or addresses
- * that the USPS does not service. Returns a single character.
+ * Indicates whether the address is a no stat address or an active address. No
+ * stat addresses are ones which are not continuously occupied or addresses that
+ * the USPS does not service. Returns a single character.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSData.prototype.dpvNoStat;
