@@ -51,7 +51,10 @@ public final class CreateSyntheticBlocksTest extends CompilerTestCase {
                 new MinimizeExitPoints(),
                 new PeepholeRemoveDeadCode(),
                 new PeepholeMinimizeConditions(/* late= */ true),
-                new PeepholeFoldConstants(true, false /* useTypes */))
+                new PeepholeFoldConstants(
+                    /* late= */ true,
+                    /* useTypes */ false, /* collapseObjectMethodsWithoutSideEffects */
+                    false))
             .process(externs, js);
         new Denormalize(compiler, FeatureSet.BARE_MINIMUM).process(externs, js);
       }

@@ -481,7 +481,10 @@ public final class MultiPassTest extends CompilerTestCase {
                       new PeepholeSubstituteAlternateSyntax(late),
                       new PeepholeReplaceKnownMethods(late, /* useTypes= */ false),
                       new PeepholeRemoveDeadCode(),
-                      new PeepholeFoldConstants(late, false /* useTypes */),
+                      new PeepholeFoldConstants(
+                          late,
+                          /* useTypes */ false, /* collapseObjectMethodsWithoutSideEffects */
+                          false),
                       new PeepholeCollectPropertyAssignments());
                 })
             .build());

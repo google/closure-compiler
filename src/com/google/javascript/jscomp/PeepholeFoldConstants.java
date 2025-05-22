@@ -57,15 +57,18 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   private final boolean shouldUseTypes;
 
+  private final boolean collapseObjectMethodsWithoutSideEffects;
+
   /**
-   * @param late When late is false, this mean we are currently running before
-   * most of the other optimizations. In this case we would avoid optimizations
-   * that would make the code harder to analyze. When this is true, we would
-   * do anything to minimize for size.
+   * @param late When late is false, this mean we are currently running before most of the other
+   *     optimizations. In this case we would avoid optimizations that would make the code harder to
+   *     analyze. When this is true, we would do anything to minimize for size.
    */
-  PeepholeFoldConstants(boolean late, boolean shouldUseTypes) {
+  PeepholeFoldConstants(
+      boolean late, boolean shouldUseTypes, boolean collapseObjectMethodsWithoutSideEffects) {
     this.late = late;
     this.shouldUseTypes = shouldUseTypes;
+    this.collapseObjectMethodsWithoutSideEffects = collapseObjectMethodsWithoutSideEffects;
   }
 
   @Override
@@ -1756,6 +1759,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     checkArgument(NodeUtil.isNormalOrOptChainGet(n));
 
     if (!left.isObjectLit()) {
+      return n;
+    }
+
+    // Do not collapse toString() or valueOf() when PeepholeFoldConstants is run in
+    // EarlyPeepholeOptimizations. These are special function that should not be collapsed before
+    // `markPureFunctions`. MarkPureFunctions sees these function calls as being side-effect free.
+    if (!collapseObjectMethodsWithoutSideEffects
+        && AstAnalyzer.OBJECT_METHODS_WITHOUT_SIDEEFFECTS.contains(name)) {
       return n;
     }
 

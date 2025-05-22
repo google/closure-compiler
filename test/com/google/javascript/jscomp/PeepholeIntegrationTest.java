@@ -50,7 +50,8 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
         new PeepholeMinimizeConditions(late),
         new PeepholeSubstituteAlternateSyntax(late),
         new PeepholeRemoveDeadCode(),
-        new PeepholeFoldConstants(late, false /* useTypes */),
+        new PeepholeFoldConstants(
+            late, /* useTypes */ false, /* collapseObjectMethodsWithoutSideEffects= */ false),
         new PeepholeReplaceKnownMethods(late, /* useTypes= */ false),
         new MinimizeExitPoints());
   }
