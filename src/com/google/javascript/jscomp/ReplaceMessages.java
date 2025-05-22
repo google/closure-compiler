@@ -32,6 +32,7 @@ import com.google.javascript.jscomp.JsMessageVisitor.ExtractedIcuTemplateParts;
 import com.google.javascript.jscomp.JsMessageVisitor.IcuMessageTemplateString;
 import com.google.javascript.jscomp.JsMessageVisitor.MalformedException;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Node.SideEffectFlags;
 import java.util.ArrayList;
@@ -63,6 +64,8 @@ public final class ReplaceMessages {
   private final MessageBundle bundle;
   private final boolean strictReplacement;
   private final AstFactory astFactory;
+
+  private final Map<String, String> placeholderMapIds = new LinkedHashMap<>();
 
   ReplaceMessages(AbstractCompiler compiler, MessageBundle bundle, boolean strictReplacement) {
     this.compiler = compiler;
@@ -658,6 +661,170 @@ public final class ReplaceMessages {
   }
 
   /**
+   * Outputs a message with a hook expression that returns the correct variant based on the value of
+   * `goog.viewerGrammaticalGender` from XTB files with gendered messages.
+   *
+   * <p>With placeholders:
+   *
+   * <pre>{@code
+   * var WELCOME_MSG = function(name) {
+   *    return goog.msgKind.MASCULINE ? "Bienvenido + name" :
+   *           goog.msgKind.FEMININE ? "Bienvenida + name" :
+   *           goog.msgKind.NEUTER ? "Les damos la bienvenida + name" :
+   *           "Les damos la bienvenida + name";
+   * }(user.getName());
+   * }</pre>
+   */
+  private Node createNodeForGenderedMsgString(
+      Node nodeToReplace,
+      JsMessage msgToUse,
+      Map<String, Node> placeholderMap,
+      MsgOptions options) {
+
+    // Dynamically build parameter list with unique ids for each placeholder
+    Node paramList = astFactory.createParamList();
+    AstFactory.Type type = type(nodeToReplace);
+    String uniqueId =
+        compiler
+            .getUniqueIdSupplier()
+            .getUniqueId(compiler.getInput(NodeUtil.getInputId(nodeToReplace)));
+    for (String placeholderName : placeholderMap.keySet()) {
+      String placeholderId = placeholderName + uniqueId;
+      paramList.addChildToBack(astFactory.createName(placeholderId, type));
+      this.placeholderMapIds.put(placeholderName, placeholderId);
+    }
+
+    Node hookExpression =
+        createHookExpressionForGenderedMsg(type, msgToUse, options, nodeToReplace);
+
+    if (placeholderMap.isEmpty()) {
+      // The translated message read from the bundle is one of the following:
+      // 1. has gendered variants and no placeholders
+      // 2. has gendered variants and is an icu template because icu templates do not have
+      // placeholders
+
+      // Create the hook expression for the gendered message. This will be used to create the call
+      // node if there are placeholders, or returned directly if there are no placeholders.
+      return hookExpression;
+    }
+
+    Node function =
+        astFactory.createFunction("", paramList, IR.block(IR.returnNode(hookExpression)), type);
+    function.setColor(nodeToReplace.getColor());
+    compiler.reportChangeToChangeScope(function);
+
+    Node callNode = astFactory.createCall(function, type);
+
+    // Add the placeholder values to the call
+    for (Node node : placeholderMap.values()) {
+      callNode.addChildToBack(node.cloneTree());
+    }
+    return callNode;
+  }
+
+  /**
+   * Creates a ternary expression with the gendered message variants.
+   *
+   * <p>For example:
+   *
+   * <pre>{@code
+   * goog.msgKind.MASCULINE ? "Bienvenido + name" :
+   * goog.msgKind.FEMININE ? "Bienvenida + name" :
+   * goog.msgKind.NEUTER ? "Les damos la bienvenida + name" :
+   * "Les damos la bienvenida + name";
+   * }</pre>
+   */
+  private Node createHookExpressionForGenderedMsg(
+      AstFactory.Type type, JsMessage msg, MsgOptions options, Node nodeToReplace) {
+
+    Node hookHead = IR.hook(IR.name(""), IR.string(""), IR.string(""));
+    hookHead.setColor(nodeToReplace.getColor());
+    // The previous hook condition needing to be replaced
+    Node placeholderHook = hookHead;
+
+    for (JsMessage.GrammaticalGenderCase grammaticalGender : msg.getGenderedMessageVariants()) {
+      // Skip the OTHER case as it should be the last case in the hook expression
+      if (grammaticalGender.equals(JsMessage.GrammaticalGenderCase.OTHER)) {
+        continue;
+      }
+      // Hook condition ex: `goog.msgKind.MASCULINE?` or `goog.msgKind.FEMININE ?` or
+      // `goog.msgKind.NEUTER ?`
+      Node googNode = astFactory.createName("goog", type);
+      googNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+      Node condition =
+          astFactory.createGetProp(
+              astFactory.createGetProp(googNode, "msgKind", type(nodeToReplace)),
+              grammaticalGender.toString(),
+              type(nodeToReplace));
+
+      // The last child of the hook expression will be replaced with the next currentHook
+      Node currentHook =
+          IR.hook(
+              condition,
+              getMsgPartsNode(
+                  msg.getGenderedMessageParts(grammaticalGender), options, nodeToReplace),
+              astFactory.createString(""));
+      currentHook.setColor(nodeToReplace.getColor());
+
+      if (placeholderHook.getParent() != null) {
+        // Replace the previous hook condition with the current hook condition
+        Node parent = placeholderHook.getParent();
+        parent.getLastChild().replaceWith(currentHook);
+        placeholderHook = currentHook.getLastChild();
+      } else {
+        hookHead = currentHook;
+        placeholderHook = currentHook.getLastChild();
+      }
+    }
+    // The OTHER is always the last case in the hook expression
+    placeholderHook
+        .getParent()
+        .getLastChild()
+        .replaceWith(
+            getMsgPartsNode(
+                msg.getGenderedMessageParts(JsMessage.GrammaticalGenderCase.OTHER),
+                options,
+                nodeToReplace));
+    return hookHead;
+  }
+
+  /** Returns a node representing the message parts for a corresponding gender. */
+  private Node getMsgPartsNode(List<Part> msgParts, MsgOptions options, Node nodeToReplace) {
+    Node message = null;
+    for (Part msgPart : msgParts) {
+      final Node partNode;
+      if (msgPart.isPlaceholder()) {
+        // Icu template placeholders are not replaced at compile time, but rather at runtime.
+        // Therefore, we need to treat them differently.
+        if (options.isIcuTemplate()) {
+          // Add the ICU placeholder directly to the message ex: 'Hello {NAME}'
+          message =
+              astFactory.createString(
+                  message.getString() + "{" + msgPart.getCanonicalPlaceholderName() + "}");
+          continue;
+        } else {
+          // Add the placeholder name node to the message ex: 'Hello + {name+uniqueId}'
+          String placeholderId = placeholderMapIds.get(msgPart.getJsPlaceholderName());
+          partNode = astFactory.createName(placeholderId, type(nodeToReplace));
+        }
+      } else {
+        // The part is just a string literal.
+        partNode = createNodeForMsgString(options, msgPart.getString());
+      }
+      // Icu template message should be apart of the string literal
+      if (options.isIcuTemplate()) {
+        message =
+            (message == null)
+                ? partNode
+                : astFactory.createString(message.getString() + partNode.getString());
+      } else {
+        message = (message == null) ? partNode : astFactory.createAdd(message, partNode);
+      }
+    }
+    return message;
+  }
+
+  /**
    * Creates a parse tree corresponding to the remaining message parts in an iteration. The result
    * consists of one or more STRING nodes, placeholder replacement value nodes (which can be
    * arbitrary expressions), and ADD nodes.
@@ -668,6 +835,12 @@ public final class ReplaceMessages {
   private Node constructStringExprNode(
       JsMessage msgToUse, Map<String, Node> placeholderMap, MsgOptions options, Node nodeToReplace)
       throws MalformedException {
+
+    // If the message has gendered variants, create a hook expression containing the gendered
+    // variants.
+    if (!msgToUse.getGenderedMessageVariants().isEmpty()) {
+      return createNodeForGenderedMsgString(nodeToReplace, msgToUse, placeholderMap, options);
+    }
 
     if (placeholderMap.isEmpty()) {
       // The compiler does not expect to do any placeholder substitution, because the message

@@ -560,20 +560,20 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             'other{Hello {USER_IDENTIFIER}.}}');
         """,
         """
-/** @desc ICU gender-sensitive greeting */
-const MSG_EXTERNAL_123456 =
-    __jscomp_define_msg__(
-        {
-          "key":    "MSG_EXTERNAL_123456",
-          "msg_text":
-    '{USER_GENDER,select,female{Hello {USER_IDENTIFIER}.}male{Hello {USER_IDENTIFIER}.}other{Hello {USER_IDENTIFIER}.}}',
-        });
-""",
+        /** @desc ICU gender-sensitive greeting */
+        const MSG_EXTERNAL_123456 =
+            __jscomp_define_msg__(
+                {
+                  "key":    "MSG_EXTERNAL_123456",
+                  "msg_text":
+            '{USER_GENDER,select,female{Hello {USER_IDENTIFIER}.}male{Hello {USER_IDENTIFIER}.}other{Hello {USER_IDENTIFIER}.}}',
+                });
+        """,
         """
-/** @desc ICU gender-sensitive greeting */
-const MSG_EXTERNAL_123456 =
-    '{USER_GENDER,select,female{Saluton {USER_IDENTIFIER}.}male{Saluton {USER_IDENTIFIER}.}other{Saluton {USER_IDENTIFIER}.}}';
-""");
+        /** @desc ICU gender-sensitive greeting */
+        const MSG_EXTERNAL_123456 =
+            '{USER_GENDER,select,female{Saluton {USER_IDENTIFIER}.}male{Saluton {USER_IDENTIFIER}.}other{Saluton {USER_IDENTIFIER}.}}';
+        """);
   }
 
   @Test
@@ -708,27 +708,27 @@ const MSG_EXTERNAL_123456 =
             'other{Hello {USER_IDENTIFIER}.}}');
         """,
         """
-/**
- * @desc ICU gender-sensitive greeting
- * @alternateMessageId 1984
- */
-const MSG_ICU_SELECT =
-    __jscomp_define_msg__(
-        {
-          "key":    "MSG_ICU_SELECT",
-          "alt_id": "1984",
-          "msg_text":
-    '{USER_GENDER,select,female{Hello {USER_IDENTIFIER}.}male{Hello {USER_IDENTIFIER}.}other{Hello {USER_IDENTIFIER}.}}',
-        });
-""",
+        /**
+         * @desc ICU gender-sensitive greeting
+         * @alternateMessageId 1984
+         */
+        const MSG_ICU_SELECT =
+            __jscomp_define_msg__(
+                {
+                  "key":    "MSG_ICU_SELECT",
+                  "alt_id": "1984",
+                  "msg_text":
+            '{USER_GENDER,select,female{Hello {USER_IDENTIFIER}.}male{Hello {USER_IDENTIFIER}.}other{Hello {USER_IDENTIFIER}.}}',
+                });
+        """,
         """
-/**
- * @desc ICU gender-sensitive greeting
- * @alternateMessageId 1984
- */
-const MSG_ICU_SELECT =
-    '{USER_GENDER,select,female{Saluton {USER_IDENTIFIER}.}male{Saluton {USER_IDENTIFIER}.}other{Saluton {USER_IDENTIFIER}.}}';
-""");
+        /**
+         * @desc ICU gender-sensitive greeting
+         * @alternateMessageId 1984
+         */
+        const MSG_ICU_SELECT =
+            '{USER_GENDER,select,female{Saluton {USER_IDENTIFIER}.}male{Saluton {USER_IDENTIFIER}.}other{Saluton {USER_IDENTIFIER}.}}';
+        """);
   }
 
   /**
@@ -2077,31 +2077,31 @@ const MSG_ICU_SELECT =
         "/** @desc d */\n var MSG_A = 'A';");
     multiPhaseTest(
         """
-/** @desc d */
+        /** @desc d */
 
-var MSG_A = goog.getMsg('User&apos;s &lt; email &amp; address &gt; are &quot;correct&quot;', {}, {unescapeHtmlEntities: true});
-""",
+        var MSG_A = goog.getMsg('User&apos;s &lt; email &amp; address &gt; are &quot;correct&quot;', {}, {unescapeHtmlEntities: true});
+        """,
         """
-/**
- * @desc d
- */
-var MSG_A =
-    __jscomp_define_msg__(
-        {
-          "key":"MSG_A",
-          "msg_text":"User\\x26apos;s \\x26lt; email \\x26amp; address \\x26gt; are \\x26quot;correct\\x26quot;",
-          "unescapeHtmlEntities":""
-        },
-        {});
+        /**
+         * @desc d
+         */
+        var MSG_A =
+            __jscomp_define_msg__(
+                {
+                  "key":"MSG_A",
+                  "msg_text":"User\\x26apos;s \\x26lt; email \\x26amp; address \\x26gt; are \\x26quot;correct\\x26quot;",
+                  "unescapeHtmlEntities":""
+                },
+                {});
 
-""",
+        """,
         "/** @desc d */\n var MSG_A = 'User\\'s < email & address > are \"correct\"';");
     multiPhaseTest(
         """
-/** @desc d */
+        /** @desc d */
 
-var MSG_A = goog.getMsg('&lt; {$startSpan}email &amp; address{$endSpan} &gt;', {'startSpan': '<span title="&lt;info&gt;">', 'endSpan': '</span>'}, {unescapeHtmlEntities: true});
-""",
+        var MSG_A = goog.getMsg('&lt; {$startSpan}email &amp; address{$endSpan} &gt;', {'startSpan': '<span title="&lt;info&gt;">', 'endSpan': '</span>'}, {unescapeHtmlEntities: true});
+        """,
         """
         /**
          * @desc d
@@ -2125,14 +2125,14 @@ var MSG_A = goog.getMsg('&lt; {$startSpan}email &amp; address{$endSpan} &gt;', {
         """);
     multiPhaseTest(
         """
-/** @desc d */
+        /** @desc d */
 
-var MSG_A = goog.getMsg('&amp;lt;double &amp;amp; escaping&amp;gt;', {}, {unescapeHtmlEntities: true});
-""",
+        var MSG_A = goog.getMsg('&amp;lt;double &amp;amp; escaping&amp;gt;', {}, {unescapeHtmlEntities: true});
+        """,
         """
         /**
-         * @desc d
-         */
+        * @desc d
+        */
         var MSG_A =
             __jscomp_define_msg__(
                 {
@@ -2223,10 +2223,10 @@ var MSG_A = goog.getMsg('&amp;lt;double &amp;amp; escaping&amp;gt;', {}, {unesca
             .build());
     multiPhaseTest(
         """
-/** @desc d */
+        /** @desc d */
 
-var MSG_C = goog.getMsg('{$br}{$x}{$y}{$z}', {'br': '<br>', 'x': 'X', 'y': 'Y', 'z': 'Z'}, {unescapeHtmlEntities: true});
-""",
+        var MSG_C = goog.getMsg('{$br}{$x}{$y}{$z}', {'br': '<br>', 'x': 'X', 'y': 'Y', 'z': 'Z'}, {unescapeHtmlEntities: true});
+        """,
         """
         /**
          * @desc d
@@ -2298,6 +2298,286 @@ var MSG_C = goog.getMsg('{$br}{$x}{$y}{$z}', {'br': '<br>', 'x': 'X', 'y': 'Y', 
         """
         /** @desc d */
         var MSG_A = 'Hello <' + '<br>' + '&gt;';
+        """);
+  }
+
+  @Test
+  public void testReplaceGenderedMessagesWithoutPlaceholders() {
+    registerMessage(
+        getTestMessageBuilder("MSG_E")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.MASCULINE)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.MASCULINE, "Bienvenido!")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.FEMININE)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.FEMININE, "Bienvenida!")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.NEUTER)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.NEUTER, "Les damos la bienvenida!")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.OTHER)
+            .appendStringPart(
+                JsMessage.GrammaticalGenderCase.OTHER, "Les damos la bienvenida! - OTHER")
+            .build());
+
+    multiPhaseTest(
+        "/** @desc d */\nvar MSG_E = goog.getMsg('Welcome!');",
+        """
+        /**
+         * @desc d
+         */
+        var MSG_E = __jscomp_define_msg__({"key":"MSG_E", "msg_text":"Welcome!"});
+        """,
+        """
+        /** @desc d */
+        var MSG_E = goog.msgKind.MASCULINE ? 'Bienvenido!' :
+                    goog.msgKind.FEMININE  ? 'Bienvenida!' :
+                    goog.msgKind.NEUTER  ? 'Les damos la bienvenida!' :
+                    'Les damos la bienvenida! - OTHER';
+        """);
+  }
+
+  @Test
+  public void testReplaceGenderedMessagesWithoutPlaceholdersNoNeuter() {
+    registerMessage(
+        getTestMessageBuilder("MSG_E")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.MASCULINE)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.MASCULINE, "Bienvenido!")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.FEMININE)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.FEMININE, "Bienvenida!")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.OTHER)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.OTHER, "Les damos la bienvenida!")
+            .build());
+
+    multiPhaseTest(
+        "/** @desc d */\nvar MSG_E = goog.getMsg('Welcome!');",
+        """
+        /**
+         * @desc d
+         */
+        var MSG_E = __jscomp_define_msg__({"key":"MSG_E", "msg_text":"Welcome!"});
+        """,
+        """
+        /** @desc d */
+        var MSG_E = goog.msgKind.MASCULINE ? 'Bienvenido!' :
+                    goog.msgKind.FEMININE  ? 'Bienvenida!' :
+                    'Les damos la bienvenida!';
+        """);
+  }
+
+  @Test
+  public void testReplaceGenderedMessagesWithoutPlaceholdersDifferentOrder() {
+    registerMessage(
+        getTestMessageBuilder("MSG_E")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.OTHER)
+            .appendStringPart(
+                JsMessage.GrammaticalGenderCase.OTHER, "Les damos la bienvenida! - OTHER")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.NEUTER)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.NEUTER, "Les damos la bienvenida!")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.FEMININE)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.FEMININE, "Bienvenida!")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.MASCULINE)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.MASCULINE, "Bienvenido!")
+            .build());
+
+    multiPhaseTest(
+        "/** @desc d */\nvar MSG_E = goog.getMsg('Welcome!');",
+        """
+        /**
+         * @desc d
+         */
+        var MSG_E = __jscomp_define_msg__({"key":"MSG_E", "msg_text":"Welcome!"});
+        """,
+        """
+        /** @desc d */
+        var MSG_E = goog.msgKind.NEUTER  ? 'Les damos la bienvenida!' :
+                    goog.msgKind.FEMININE  ? 'Bienvenida!' :
+                    goog.msgKind.MASCULINE ? 'Bienvenido!' :
+                    'Les damos la bienvenida! - OTHER';
+        """);
+  }
+
+  @Test
+  public void testReplaceGenderedMessagesWithoutPlaceholdersDifferentOrder2() {
+
+    registerMessage(
+        getTestMessageBuilder("MSG_E")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.NEUTER)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.NEUTER, "Les damos la bienvenida!")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.OTHER)
+            .appendStringPart(
+                JsMessage.GrammaticalGenderCase.OTHER, "Les damos la bienvenida! - OTHER")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.FEMININE)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.FEMININE, "Bienvenida!")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.MASCULINE)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.MASCULINE, "Bienvenido!")
+            .build());
+
+    multiPhaseTest(
+        "/** @desc d */\nvar MSG_E = goog.getMsg('Welcome!');",
+        """
+        /**
+         * @desc d
+         */
+        var MSG_E = __jscomp_define_msg__({"key":"MSG_E", "msg_text":"Welcome!"});
+        """,
+        """
+        /** @desc d */
+        var MSG_E = goog.msgKind.NEUTER  ? 'Les damos la bienvenida!' :
+                    goog.msgKind.FEMININE ? 'Bienvenida!' :
+                    goog.msgKind.MASCULINE  ? 'Bienvenido!' :
+                    'Les damos la bienvenida! - OTHER';
+        """);
+  }
+
+  @Test
+  public void testReplaceGenderedMessagesWithoutPlaceholdersDifferentOrder3() {
+
+    registerMessage(
+        getTestMessageBuilder("MSG_E")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.NEUTER)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.NEUTER, "Les damos la bienvenida!")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.FEMININE)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.FEMININE, "Bienvenida!")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.OTHER)
+            .appendStringPart(
+                JsMessage.GrammaticalGenderCase.OTHER, "Les damos la bienvenida! - OTHER")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.MASCULINE)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.MASCULINE, "Bienvenido!")
+            .build());
+
+    multiPhaseTest(
+        "/** @desc d */\nvar MSG_E = goog.getMsg('Welcome!');",
+        """
+        /**
+         * @desc d
+         */
+        var MSG_E = __jscomp_define_msg__({"key":"MSG_E", "msg_text":"Welcome!"});
+        """,
+        """
+        /** @desc d */
+        var MSG_E = goog.msgKind.NEUTER  ? 'Les damos la bienvenida!' :
+                    goog.msgKind.FEMININE  ? 'Bienvenida!' :
+                    goog.msgKind.MASCULINE  ? 'Bienvenido!' :
+                    'Les damos la bienvenida! - OTHER';
+        """);
+  }
+
+  @Test
+  public void testReplaceGenderedMessageWithPlaceholders() {
+    registerMessage(
+        getTestMessageBuilder("MSG_E")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.MASCULINE)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.MASCULINE, "Bienvenido ")
+            .appendJsPlaceholderReference(JsMessage.GrammaticalGenderCase.MASCULINE, "name")
+            .appendStringPart(JsMessage.GrammaticalGenderCase.MASCULINE, ", a tu nuevo ")
+            .appendJsPlaceholderReference(JsMessage.GrammaticalGenderCase.MASCULINE, "device")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.FEMININE)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.FEMININE, "Bienvenida ")
+            .appendJsPlaceholderReference(JsMessage.GrammaticalGenderCase.FEMININE, "name")
+            .appendStringPart(JsMessage.GrammaticalGenderCase.FEMININE, ", a tu nuevo ")
+            .appendJsPlaceholderReference(JsMessage.GrammaticalGenderCase.FEMININE, "device")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.NEUTER)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.NEUTER, "Les damos la bienvenida ")
+            .appendJsPlaceholderReference(JsMessage.GrammaticalGenderCase.NEUTER, "name")
+            .appendStringPart(JsMessage.GrammaticalGenderCase.NEUTER, ", a tu nuevo ")
+            .appendJsPlaceholderReference(JsMessage.GrammaticalGenderCase.NEUTER, "device")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.OTHER)
+            .appendStringPart(
+                JsMessage.GrammaticalGenderCase.OTHER, "Les damos la bienvenida! - OTHER ")
+            .appendJsPlaceholderReference(JsMessage.GrammaticalGenderCase.OTHER, "name")
+            .appendStringPart(JsMessage.GrammaticalGenderCase.OTHER, ", a tu nuevo ")
+            .appendJsPlaceholderReference(JsMessage.GrammaticalGenderCase.OTHER, "device")
+            .build());
+
+    multiPhaseTest(
+        """
+        /** @desc d */
+        var MSG_E = goog.getMsg(
+            'Welcome, {$name}, to your new {$device}.',
+            {name: user.getName(), device: user.getDevice()});
+        """,
+        """
+        /**
+         * @desc d
+         */
+         var MSG_E = __jscomp_define_msg__({
+          "key": "MSG_E",
+          "msg_text": "Welcome, {$name}, to your new {$device}."
+        }, {
+          "name": user.getName(),
+          "device": user.getDevice()
+        });
+        """,
+        """
+        /** @desc d */
+        var MSG_E = function(namem1146332801$0, devicem1146332801$0) {
+          return goog.msgKind.MASCULINE ? 'Bienvenido ' + namem1146332801$0 + ', a tu nuevo ' + devicem1146332801$0 :
+                 goog.msgKind.FEMININE  ? 'Bienvenida ' + namem1146332801$0 + ', a tu nuevo ' + devicem1146332801$0 :
+                 goog.msgKind.NEUTER  ? 'Les damos la bienvenida ' + namem1146332801$0 + ', a tu nuevo ' + devicem1146332801$0 :
+                 'Les damos la bienvenida! - OTHER ' + namem1146332801$0 + ', a tu nuevo ' + devicem1146332801$0;
+        }(user.getName(), user.getDevice());
+        """);
+  }
+
+  @Test
+  public void testReplaceIcuTemplateGenderedMessageWithBundleAndJsPlaceholders() {
+
+    registerMessage(
+        getTestMessageBuilder("MSG_E")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.MASCULINE)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.MASCULINE, "Bienvenido ")
+            .appendCanonicalPlaceholderReference(JsMessage.GrammaticalGenderCase.MASCULINE, "NAME")
+            .appendStringPart(JsMessage.GrammaticalGenderCase.MASCULINE, ", a tu nuevo ")
+            .appendCanonicalPlaceholderReference(JsMessage.GrammaticalGenderCase.MASCULINE, "PHONE")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.FEMININE)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.FEMININE, "Bienvenida ")
+            .appendCanonicalPlaceholderReference(JsMessage.GrammaticalGenderCase.FEMININE, "NAME")
+            .appendStringPart(JsMessage.GrammaticalGenderCase.FEMININE, ", a tu nuevo ")
+            .appendCanonicalPlaceholderReference(JsMessage.GrammaticalGenderCase.FEMININE, "PHONE")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.NEUTER)
+            .appendStringPart(JsMessage.GrammaticalGenderCase.NEUTER, "Les damos la bienvenida ")
+            .appendCanonicalPlaceholderReference(JsMessage.GrammaticalGenderCase.NEUTER, "NAME")
+            .appendStringPart(JsMessage.GrammaticalGenderCase.NEUTER, ", a tu nuevo ")
+            .appendCanonicalPlaceholderReference(JsMessage.GrammaticalGenderCase.NEUTER, "PHONE")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.OTHER)
+            .appendStringPart(
+                JsMessage.GrammaticalGenderCase.OTHER, "Les damos la bienvenida! - OTHER ")
+            .appendCanonicalPlaceholderReference(JsMessage.GrammaticalGenderCase.OTHER, "NAME")
+            .appendStringPart(JsMessage.GrammaticalGenderCase.OTHER, ", a tu nuevo ")
+            .appendCanonicalPlaceholderReference(JsMessage.GrammaticalGenderCase.OTHER, "PHONE")
+            .build());
+
+    multiPhaseTest(
+        """
+        const {declareIcuTemplate} = goog.require('goog.i18n.messages');
+
+        var MSG_E =
+            declareIcuTemplate(
+                'Welcome {NAME}, to your new {PHONE}',
+                {
+                  description: 'Welcome message',
+                  example: {
+                    'NAME': 'John Doe',
+                    'PHONE': 'Pixel'
+                   }
+                });
+        """,
+        """
+        const {declareIcuTemplate} = goog.require('goog.i18n.messages');
+
+        var MSG_E =
+            __jscomp_define_msg__(
+                {
+                  "key":    "MSG_E",
+                  "icu_placeholder_names": ["NAME", "PHONE"],
+                  "msg_text": "Welcome {NAME}, to your new {PHONE}",
+                  "isIcuTemplate": ""
+                });
+        """,
+        """
+        const {declareIcuTemplate} = goog.require('goog.i18n.messages');
+
+        var MSG_E = goog.msgKind.MASCULINE ? 'Bienvenido {NAME}, a tu nuevo {PHONE}' :
+                    goog.msgKind.FEMININE  ? 'Bienvenida {NAME}, a tu nuevo {PHONE}' :
+                    goog.msgKind.NEUTER  ? 'Les damos la bienvenida {NAME}, a tu nuevo {PHONE}' :
+                    'Les damos la bienvenida! - OTHER {NAME}, a tu nuevo {PHONE}';
         """);
   }
 
