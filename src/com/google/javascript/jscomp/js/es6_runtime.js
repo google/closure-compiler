@@ -30,6 +30,7 @@
 'require es6/promise';
 'require es6/reflect';
 'require es6/set';
+'require es6/set_extensions'
 'require es6/string';
 'require es6/symbol';
 'require es6/typed_array';
