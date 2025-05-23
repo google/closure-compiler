@@ -40,14 +40,14 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
           "JSC_MISSING_REQUIRE",
           "''{0}'' references a fully qualified namespace, which is disallowed by the style"
               + " guide.\nPlease add a goog.require, assign or destructure it into an alias, and "
-              + "use the alias instead.");
+              + "use the alias instead.\nNamespace defined in {1}.");
 
   public static final DiagnosticType MISSING_REQUIRE_TYPE =
       DiagnosticType.disabled(
           "JSC_MISSING_REQUIRE_TYPE",
           "''{0}'' references a fully qualified namespace, which is disallowed by the style"
               + " guide.\nPlease add a goog.requireType, assign or destructure it into an alias, "
-              + "and use the alias instead.");
+              + "and use the alias instead.\nNamespace defined in {1}.");
 
   public static final DiagnosticType INCORRECT_NAMESPACE_ALIAS_REQUIRE =
       DiagnosticType.disabled(
@@ -77,13 +77,13 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
       DiagnosticType.warning(
           "JSC_MISSING_REQUIRE_IN_PROVIDES_FILE",
           "''{0}'' references a namespace which was not required by this file.\n"
-              + "Please add a goog.require.");
+              + "Please add a goog.require.\nNamespace defined in {1}.");
 
   public static final DiagnosticType MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE =
       DiagnosticType.disabled(
           "JSC_MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE",
           "''{0}'' references a namespace which was not required by this file.\n"
-              + "Please add a goog.requireType.");
+              + "Please add a goog.requireType.\nNamespace defined in {1}.");
 
   public static final DiagnosticType NON_LEGACY_GOOG_MODULE_REFERENCE =
       DiagnosticType.error(
@@ -536,7 +536,7 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
         // Not a known namespace check the parent
         continue;
       }
-
+      String fileName = requiredFile.rootNode().getSourceFileName();
       final DiagnosticType toReport;
       if (currentFile.isModule()) {
         /*
@@ -564,7 +564,7 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
         return;
       }
 
-      t.report(n, toReport, namespace);
+      t.report(n, toReport, namespace, fileName);
       return;
     }
   }
