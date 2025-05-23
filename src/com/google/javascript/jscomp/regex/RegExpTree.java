@@ -822,7 +822,7 @@ public abstract class RegExpTree {
   }
 
   /** Represents an empty portion of a RegExp such as the middle of "||" */
-  public static final class Empty extends RegExpTreeAtom {
+  private static final class Empty extends RegExpTreeAtom {
     static final Empty INSTANCE = new Empty();
 
     @Override
