@@ -37,8 +37,8 @@ public final class CompilerOptionsPreprocessor {
 
   /** Exception to indicate incompatible options in the CompilerOptions. */
   public static class InvalidOptionsException extends RuntimeException {
-    private InvalidOptionsException(String message, Object... args) {
-      super(String.format(message, args));
+    private InvalidOptionsException(String message) {
+      super(message);
     }
   }
 
