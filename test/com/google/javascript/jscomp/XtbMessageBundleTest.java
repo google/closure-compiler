@@ -183,25 +183,25 @@ public final class XtbMessageBundleTest {
     assertThat(message.asJsMessageString(JsMessage.GrammaticalGenderCase.OTHER))
         .isEqualTo("Te damos la bienvenida - OTHER, {$name}");
 
-    ImmutableList<JsMessage.Part> masculineParts =
+    ImmutableList<Part> masculineParts =
         message.getGenderedMessageParts(JsMessage.GrammaticalGenderCase.MASCULINE);
     assertThat(masculineParts).hasSize(2);
     assertThat(masculineParts.get(0).getString()).isEqualTo("Bienvenido, ");
     assertThat(masculineParts.get(1).getJsPlaceholderName()).isEqualTo("name");
 
-    ImmutableList<JsMessage.Part> feminineParts =
+    ImmutableList<Part> feminineParts =
         message.getGenderedMessageParts(JsMessage.GrammaticalGenderCase.FEMININE);
     assertThat(feminineParts).hasSize(2);
     assertThat(feminineParts.get(0).getString()).isEqualTo("Bienvenida, ");
     assertThat(feminineParts.get(1).getJsPlaceholderName()).isEqualTo("name");
 
-    ImmutableList<JsMessage.Part> neuterParts =
+    ImmutableList<Part> neuterParts =
         message.getGenderedMessageParts(JsMessage.GrammaticalGenderCase.NEUTER);
     assertThat(neuterParts).hasSize(2);
     assertThat(neuterParts.get(0).getString()).isEqualTo("Te damos la bienvenida, ");
     assertThat(neuterParts.get(1).getJsPlaceholderName()).isEqualTo("name");
 
-    ImmutableList<JsMessage.Part> otherParts =
+    ImmutableList<Part> otherParts =
         message.getGenderedMessageParts(JsMessage.GrammaticalGenderCase.OTHER);
     assertThat(otherParts).hasSize(2);
     assertThat(otherParts.get(0).getString()).isEqualTo("Te damos la bienvenida - OTHER, ");
@@ -244,25 +244,25 @@ public final class XtbMessageBundleTest {
     assertThat(message.asIcuMessageString(JsMessage.GrammaticalGenderCase.OTHER))
         .isEqualTo("Te damos la bienvenida - OTHER, {NAME}");
 
-    ImmutableList<JsMessage.Part> masculineParts =
+    ImmutableList<Part> masculineParts =
         message.getGenderedMessageParts(JsMessage.GrammaticalGenderCase.MASCULINE);
     assertThat(masculineParts).hasSize(2);
     assertThat(masculineParts.get(0).getString()).isEqualTo("Bienvenido, ");
     assertThat(masculineParts.get(1).getCanonicalPlaceholderName()).isEqualTo("NAME");
 
-    ImmutableList<JsMessage.Part> feminineParts =
+    ImmutableList<Part> feminineParts =
         message.getGenderedMessageParts(JsMessage.GrammaticalGenderCase.FEMININE);
     assertThat(feminineParts).hasSize(2);
     assertThat(feminineParts.get(0).getString()).isEqualTo("Bienvenida, ");
     assertThat(feminineParts.get(1).getCanonicalPlaceholderName()).isEqualTo("NAME");
 
-    ImmutableList<JsMessage.Part> neuterParts =
+    ImmutableList<Part> neuterParts =
         message.getGenderedMessageParts(JsMessage.GrammaticalGenderCase.NEUTER);
     assertThat(neuterParts).hasSize(2);
     assertThat(neuterParts.get(0).getString()).isEqualTo("Te damos la bienvenida, ");
     assertThat(neuterParts.get(1).getCanonicalPlaceholderName()).isEqualTo("NAME");
 
-    ImmutableList<JsMessage.Part> otherParts =
+    ImmutableList<Part> otherParts =
         message.getGenderedMessageParts(JsMessage.GrammaticalGenderCase.OTHER);
     assertThat(otherParts).hasSize(2);
     assertThat(otherParts.get(0).getString()).isEqualTo("Te damos la bienvenida - OTHER, ");
