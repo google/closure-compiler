@@ -1437,7 +1437,7 @@ public abstract class RegExpTree {
   private static final RegExpTree NEVER_MATCHES = new LookaheadAssertion(Empty.INSTANCE, false);
 
   /** Represents a lookahead assertion such as (?=...) or (?!...) */
-  public static final class LookaheadAssertion extends RegExpTree {
+  private static final class LookaheadAssertion extends RegExpTree {
     final RegExpTree body;
     final boolean positive;
 
@@ -1812,7 +1812,7 @@ public abstract class RegExpTree {
           CharRanges.EMPTY);
 
   /** Represents a set of possible characters structured as [a-zA-Z] or [^a-zA-Z] */
-  public static final class Charset extends RegExpTreeAtom {
+  private static final class Charset extends RegExpTreeAtom {
     final CharRanges ranges;
 
     /**
