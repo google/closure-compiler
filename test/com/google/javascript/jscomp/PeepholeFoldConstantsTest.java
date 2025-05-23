@@ -43,7 +43,6 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   private boolean useTypes = true;
   private int numRepetitions;
   private boolean assumeGettersPure = false;
-  private boolean collapseObjectMethodsWithoutSideEffects = true;
 
   @Override
   @Before
@@ -59,9 +58,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new PeepholeOptimizationsPass(
-        compiler,
-        getName(),
-        new PeepholeFoldConstants(late, useTypes, collapseObjectMethodsWithoutSideEffects));
+        compiler, getName(), new PeepholeFoldConstants(late, useTypes));
   }
 
   @Override
@@ -1908,91 +1905,6 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("var x = {a: 1, a() { 2; }}.a;", "var x = function() { 2; };");
     test("var x = {a() {}, a: 1}.a;", "var x = 1;");
     testSame("var x = {a() {}}.b");
-  }
-
-  @Test
-  public void testToStringAndValueOf() {
-    String toStringInObjectLiteral =
-        """
-        var x = ({
-                  toString: function() {
-                    return 1
-                  }
-                }).toString();
-        """;
-
-    String toStringInReturnStatement =
-        """
-        var x = function(foo) {
-          return {
-            toString: function() {
-              throw new Error('Cannot find global object');
-            }
-          }.toString();
-        };
-        """;
-
-    String valueOfInObjectLiteral =
-        """
-        var x = ({
-                  valueOf: function() {
-                    return 1
-                  }
-                }).valueOf();
-        """;
-
-    String valueOfInReturnStatement =
-        """
-        var x = function(foo) {
-          return {
-            valueOf: function() {
-              throw new Error('Cannot find global object');
-            }
-          }.valueOf();
-        };
-        """;
-
-    test(
-        toStringInObjectLiteral,
-        """
-        var x = function() {
-          return 1;
-        }();
-        """);
-    test(
-        toStringInReturnStatement,
-        """
-        var x = function(foo) {
-          return function() {
-            throw new Error('Cannot find global object');
-          }();
-        };
-        """);
-    test(
-        valueOfInObjectLiteral,
-        """
-        var x = function() {
-          return 1;
-        }();
-        """);
-    test(
-        valueOfInReturnStatement,
-        """
-        var x = function(foo) {
-          return function() {
-            throw new Error('Cannot find global object');
-          }();
-        };
-        """);
-
-    collapseObjectMethodsWithoutSideEffects = false;
-    // Do not collapse toString() or valueOf() when PeepholeFoldConstants is run in
-    // EarlyPeepholeOptimizations. These are special function that should not be collapsed before
-    // `markPureFunctions`. MarkPureFunctions sees these function calls as being side-effect free.
-    testSame(toStringInObjectLiteral);
-    testSame(toStringInReturnStatement);
-    testSame(valueOfInObjectLiteral);
-    testSame(valueOfInReturnStatement);
   }
 
   @Test

@@ -64,7 +64,7 @@ public class AstAnalyzer {
   private static final ImmutableSet<String> BUILTIN_FUNCTIONS_WITHOUT_SIDEEFFECTS =
       ImmutableSet.of(
           "Object", "Array", "String", "Number", "BigInt", "Boolean", "RegExp", "Error");
-  public static final ImmutableSet<String> OBJECT_METHODS_WITHOUT_SIDEEFFECTS =
+  private static final ImmutableSet<String> OBJECT_METHODS_WITHOUT_SIDEEFFECTS =
       ImmutableSet.of("toString", "valueOf");
   private static final ImmutableSet<String> REGEXP_METHODS = ImmutableSet.of("test", "exec");
   private static final ImmutableSet<String> STRING_REGEXP_METHODS =

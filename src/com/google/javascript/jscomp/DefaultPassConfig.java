@@ -1691,24 +1691,14 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("earlyPeepholeOptimizations")
           .setInternalFactory(
               (compiler) -> {
-                final boolean late = false;
-                final boolean useTypesForOptimization =
+                boolean useTypesForOptimization =
                     compiler.getOptions().useTypesForLocalOptimization;
-                // `collapseObjectMethodsWithoutSideEffects` is set to false because we do not want
-                // to  collapse toString() or valueOf() when PeepholeFoldConstants is run in
-                // EarlyPeepholeOptimizations. These are special function that should not be
-                // collapsed before `markPureFunctions`. MarkPureFunctions sees these function calls
-                // as being side-effect free.
-                final boolean collapseObjectMethodsWithoutSideEffects = false;
                 List<AbstractPeepholeOptimization> peepholeOptimizations = new ArrayList<>();
                 peepholeOptimizations.add(new PeepholeRemoveDeadCode());
                 if (compiler.getOptions().j2clPassMode.shouldAddJ2clPasses()) {
                   peepholeOptimizations.add(
                       new J2clEqualitySameRewriterPass(useTypesForOptimization));
                 }
-                peepholeOptimizations.add(
-                    new PeepholeFoldConstants(
-                        late, useTypesForOptimization, collapseObjectMethodsWithoutSideEffects));
                 return new PeepholeOptimizationsPass(
                     compiler, "earlyPeepholeOptimizations", peepholeOptimizations);
               })
@@ -1746,9 +1736,7 @@ public final class DefaultPassConfig extends PassConfig {
       optimizations.add(new J2clEqualitySameRewriterPass(useTypesForOptimization));
       optimizations.add(new J2clStringValueOfRewriterPass());
     }
-    optimizations.add(
-        new PeepholeFoldConstants(
-            late, useTypesForOptimization, /* collapseObjectMethodsWithoutSideEffects= */ true));
+    optimizations.add(new PeepholeFoldConstants(late, useTypesForOptimization));
     optimizations.add(new PeepholeCollectPropertyAssignments());
     return new PeepholeOptimizationsPass(compiler, passName, optimizations);
   }
@@ -1788,10 +1776,7 @@ public final class DefaultPassConfig extends PassConfig {
                     new PeepholeMinimizeConditions(late),
                     new PeepholeSubstituteAlternateSyntax(late),
                     new PeepholeReplaceKnownMethods(late, useTypesForOptimization),
-                    new PeepholeFoldConstants(
-                        late,
-                        useTypesForOptimization, /* collapseObjectMethodsWithoutSideEffects */
-                        true));
+                    new PeepholeFoldConstants(late, useTypesForOptimization));
               })
           .build();
 
