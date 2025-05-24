@@ -972,12 +972,11 @@ public final class JSChunkGraphTest {
             : graph.getDeepestCommonDependency(m1, m2);
     if (actual != expected) {
       assertWithMessage(
-              String.format(
-                  "Deepest common dep of %s and %s should be %s but was %s",
-                  m1.getName(),
-                  m2.getName(),
-                  expected == null ? "null" : expected.getName(),
-                  actual == null ? "null" : actual.getName()))
+              "Deepest common dep of %s and %s should be %s but was %s",
+              m1.getName(),
+              m2.getName(),
+              expected == null ? "null" : expected.getName(),
+              actual == null ? "null" : actual.getName())
           .fail();
     }
   }

@@ -3193,13 +3193,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
       for (int j = 0; j < allFunctions.size(); j++) {
         FunctionType typeA = allFunctions.get(i);
         FunctionType typeB = allFunctions.get(j);
-        assertWithMessage(String.format("equals(%s, %s)", typeA, typeB))
+        assertWithMessage("equals(%s, %s)", typeA, typeB)
             .that(typeA.equals(typeB))
             .isEqualTo(i == j);
 
         // For this particular set of functions, the functions are subtypes
         // of each other iff they have the same "this" type.
-        assertWithMessage(String.format("isSubtype(%s, %s)", typeA, typeB))
+        assertWithMessage("isSubtype(%s, %s)", typeA, typeB)
             .that(typeA.isSubtype(typeB))
             .isEqualTo(typeA.getTypeOfThis().equals(typeB.getTypeOfThis()));
 
@@ -3278,7 +3278,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
       for (int j = 0; j < allFunctions.size(); j++) {
         FunctionType typeA = allFunctions.get(i);
         FunctionType typeB = allFunctions.get(j);
-        assertWithMessage(String.format("equals(%s, %s)", typeA, typeB))
+        assertWithMessage("equals(%s, %s)", typeA, typeB)
             .that(typeA.equals(typeB))
             .isEqualTo(i == j);
 
