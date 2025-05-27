@@ -1522,6 +1522,42 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         "input != 'log' && alert('Hi!')");
   }
 
+  @Test
+  public void testSyntheticBlockCrashAroundModuleExport() {
+    // Regression test for b/417822645
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setClosurePass(true);
+    options.setWarningLevel(DiagnosticGroups.UNDEFINED_VARIABLES, CheckLevel.OFF);
+    options.syntheticBlockStartMarker = "START";
+    options.syntheticBlockEndMarker = "END";
+    Compiler result =
+        compile(
+            options,
+            """
+            goog.module('foo.bar');
+            START('hi');
+            const Foo = {A: 1, B: 2};
+            exports.Foo = Foo;
+            Foo[1] = 'A';
+            Foo[2] = 'B';
+
+            exports.fn = function() {
+              return Foo.A + Foo.B;
+            }
+            console.log(exports.fn());
+            END('hi');
+            """);
+    assertThat(result.toSource())
+        .isEqualTo(
+            """
+            START("hi");
+            var a = {a:1, b:2, 1:"A", 2:"B"};
+            console.c(a.a + a.b);
+            END("hi");
+            """);
+  }
+
   // http://blickly.github.io/closure-compiler-issues/#1131
   @Test
   public void testIssue1131() {

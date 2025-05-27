@@ -354,11 +354,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.maybeAdd(polymerPass);
     }
 
-    if (options.syntheticBlockStartMarker != null) {
-      // This pass must run before the first fold constants pass.
-      checks.maybeAdd(createSyntheticBlocks);
-    }
-
     if (options.getProcessCommonJSModules()) {
       // TODO(ChadKillingsworth): remove this branch.
       checks.maybeAdd(checkVariableReferences);
@@ -858,6 +853,11 @@ public final class DefaultPassConfig extends PassConfig {
     // Remove synthetic extern declarations of names that are now defined in source
     // This is expected to do nothing when in a monolithic build
     passes.maybeAdd(removeUnnecessarySyntheticExterns);
+
+    if (options.syntheticBlockStartMarker != null) {
+      // This pass must run before the first fold constants pass.
+      passes.maybeAdd(createSyntheticBlocks);
+    }
 
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
       passes.maybeAdd(j2clPass);
