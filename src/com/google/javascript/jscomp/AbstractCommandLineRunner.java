@@ -1083,18 +1083,20 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
         // Something after placeholder?
         out.append(wrapper.substring(suffixStart));
       }
-      // Make sure we always end output with a line feed.
-      out.append('\n');
+      if (getCommandLineConfig().includeTrailingNewline) {
+        out.append('\n');
+      }
 
       // If we have a source map, adjust its offsets to match
       // the code WITHIN the wrapper.
       if (compiler != null && compiler.getSourceMap() != null) {
         compiler.getSourceMap().setWrapperPrefix(prefix);
       }
-
     } else {
       out.append(code);
-      out.append('\n');
+      if (getCommandLineConfig().includeTrailingNewline) {
+        out.append('\n');
+      }
     }
   }
 
@@ -2969,6 +2971,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     @CanIgnoreReturnValue
     public CommandLineConfig setJsonWarningsFile(String jsonWarningsFile) {
       this.jsonWarningsFile = jsonWarningsFile;
+      return this;
+    }
+
+    private boolean includeTrailingNewline = true;
+
+    @CanIgnoreReturnValue
+    public CommandLineConfig setIncludeTrailingNewline(boolean includeTrailingNewline) {
+      this.includeTrailingNewline = includeTrailingNewline;
       return this;
     }
   }
