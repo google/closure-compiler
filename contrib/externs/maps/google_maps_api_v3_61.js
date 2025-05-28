@@ -11329,7 +11329,6 @@ google.maps.addressValidation = {};
 google.maps.addressValidation.Address = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The individual address components of the formatted and corrected address,
  * along with validation information. This provides information on the
  * validation status of the individual components.
@@ -11338,7 +11337,6 @@ google.maps.addressValidation.Address = function() {};
 google.maps.addressValidation.Address.prototype.components;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The post-processed address, formatted as a single-line address following the
  * address-formatting rules of the region where the address is located.
  * @type {string|null}
@@ -11346,7 +11344,6 @@ google.maps.addressValidation.Address.prototype.components;
 google.maps.addressValidation.Address.prototype.formattedAddress;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The types of components that were expected to be present in a correctly
  * formatted mailing address but were not found in the input AND could not be
  * inferred. Components of this type are not present in
@@ -11361,14 +11358,12 @@ google.maps.addressValidation.Address.prototype.formattedAddress;
 google.maps.addressValidation.Address.prototype.missingComponentTypes;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The post-processed address represented as a postal address.
  * @type {!google.maps.places.PostalAddress|null}
  */
 google.maps.addressValidation.Address.prototype.postalAddress;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The types of the components that are present in the
  * <code>address_components</code> but could not be confirmed to be correct.
  * This field is provided for the sake of convenience: its contents are
@@ -11384,7 +11379,6 @@ google.maps.addressValidation.Address.prototype.postalAddress;
 google.maps.addressValidation.Address.prototype.unconfirmedComponentTypes;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Any tokens in the input that could not be resolved. This might be an input
  * that was not recognized as a valid part of an address (for example in an
  * input like &quot;123235253253 Main St, San Francisco, CA, 94105&quot;, the
@@ -11407,7 +11401,6 @@ google.maps.addressValidation.Address.prototype.unresolvedTokens;
 google.maps.addressValidation.AddressComponent = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The component name text. For example, &quot;5th Avenue&quot; for a street
  * name or &quot;1253&quot; for a street number,
  * @type {string|null}
@@ -11415,7 +11408,6 @@ google.maps.addressValidation.AddressComponent = function() {};
 google.maps.addressValidation.AddressComponent.prototype.componentName;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The BCP-47 language code. This will not be present if the component name is
  * not associated with a language, such as a street number.
  * @type {string|null}
@@ -11424,7 +11416,6 @@ google.maps.addressValidation.AddressComponent.prototype
     .componentNameLanguageCode;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The type of the address component. See <a
  * href="https://developers.google.com/places/web-service/supported_types#table2">Table
  * 2: Additional types returned by the Places service</a> for a list of possible
@@ -11434,14 +11425,12 @@ google.maps.addressValidation.AddressComponent.prototype
 google.maps.addressValidation.AddressComponent.prototype.componentType;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Indicates the level of certainty that the component is correct.
  * @type {!google.maps.addressValidation.ConfirmationLevel|null}
  */
 google.maps.addressValidation.AddressComponent.prototype.confirmationLevel;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * If true, this component was not part of the input, but was inferred for the
  * address location. Including this component is recommended for a complete
  * address.
@@ -11450,7 +11439,6 @@ google.maps.addressValidation.AddressComponent.prototype.confirmationLevel;
 google.maps.addressValidation.AddressComponent.prototype.inferred;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Indicates the name of the component was replaced with a completely different
  * one. For example, replacing a wrong postal code being with one that is
  * correct for the address. This is not a cosmetic change; the input component
@@ -11460,7 +11448,6 @@ google.maps.addressValidation.AddressComponent.prototype.inferred;
 google.maps.addressValidation.AddressComponent.prototype.replaced;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Indicates a correction to a misspelling in the component name. The API does
  * not always flag changes from one spelling variant to another, such as
  * &quot;centre&quot; to &quot;center&quot;.
@@ -11469,7 +11456,6 @@ google.maps.addressValidation.AddressComponent.prototype.replaced;
 google.maps.addressValidation.AddressComponent.prototype.spellCorrected;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * If true, this component is not expected to be present in a postal address for
  * the given region. It has been retained only because it was part of the input.
  * @type {boolean}
@@ -11490,19 +11476,16 @@ google.maps.addressValidation.AddressComponent.prototype.unexpected;
 google.maps.addressValidation.AddressMetadata = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {boolean}
  */
 google.maps.addressValidation.AddressMetadata.prototype.business;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {boolean}
  */
 google.maps.addressValidation.AddressMetadata.prototype.poBox;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {boolean}
  */
 google.maps.addressValidation.AddressMetadata.prototype.residential;
@@ -11520,21 +11503,18 @@ google.maps.addressValidation.AddressMetadata.prototype.residential;
 google.maps.addressValidation.AddressValidation = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Information about the address itself as opposed to the geocode.
  * @type {!google.maps.addressValidation.Address|null}
  */
 google.maps.addressValidation.AddressValidation.prototype.address;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Information about the location and place that the address geocoded to.
  * @type {!google.maps.addressValidation.Geocode|null}
  */
 google.maps.addressValidation.AddressValidation.prototype.geocode;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Other information relevant to deliverability. <code>metadata</code> is not
  * guaranteed to be fully populated for every address sent to the Address
  * Validation API.
@@ -11543,7 +11523,6 @@ google.maps.addressValidation.AddressValidation.prototype.geocode;
 google.maps.addressValidation.AddressValidation.prototype.metadata;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The UUID that identifies this response. If the address needs to be
  * re-validated, this UUID <em>must</em> accompany the new request.
  * @type {string|null}
@@ -11551,7 +11530,6 @@ google.maps.addressValidation.AddressValidation.prototype.metadata;
 google.maps.addressValidation.AddressValidation.prototype.responseId;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Extra deliverability flags provided by USPS. Only provided in region
  * <code>US</code> and <code>PR</code>.
  * @type {!google.maps.addressValidation.USPSData|null}
@@ -11559,14 +11537,12 @@ google.maps.addressValidation.AddressValidation.prototype.responseId;
 google.maps.addressValidation.AddressValidation.prototype.uspsData;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Overall verdict flags
  * @type {!google.maps.addressValidation.Verdict|null}
  */
 google.maps.addressValidation.AddressValidation.prototype.verdict;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Validates an address. See <a
  * href="https://developers.google.com/maps/documentation/javascript/address-validation/validate-address">https://developers.google.com/maps/documentation/javascript/address-validation/validate-address</a>.
  * @param {!google.maps.addressValidation.AddressValidationRequest} request
@@ -11576,7 +11552,6 @@ google.maps.addressValidation.AddressValidation.fetchAddressValidation =
     function(request) {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Converts the AddressValidation class to a JSON object with the same
  * properties.
  * @return {Object}
@@ -11594,7 +11569,6 @@ google.maps.addressValidation.AddressValidation.prototype.toJSON =
 google.maps.addressValidation.AddressValidationRequest = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The address being validated. Unformatted addresses should be submitted
  * via {@link google.maps.places.PostalAddress.addressLines}.
  * @type {!google.maps.places.PostalAddressLiteral}
@@ -11602,7 +11576,6 @@ google.maps.addressValidation.AddressValidationRequest = function() {};
 google.maps.addressValidation.AddressValidationRequest.prototype.address;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * This field must not be set for the first address validation request. If more
  * requests are necessary to fully validate a single address (for example if the
  * changes the user makes after the initial validation need to be re-validated),
@@ -11615,7 +11588,6 @@ google.maps.addressValidation.AddressValidationRequest.prototype
     .previousResponseId;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Enables USPS CASS compatible mode. This affects <em>only</em> the {@link
  * google.maps.addressValidation.AddressValidation.uspsData} field of {@link
  * google.maps.addressValidation.AddressValidation}. Note: for USPS CASS enabled
@@ -11660,14 +11632,12 @@ google.maps.addressValidation.ConfirmationLevel = {
 google.maps.addressValidation.Geocode = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The bounds of the geocoded place.
  * @type {!google.maps.LatLngBounds|null}
  */
 google.maps.addressValidation.Geocode.prototype.bounds;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The size of the geocoded place, in meters. This is another measure of the
  * coarseness of the geocoded location, but in physical size rather than in
  * semantic meaning.
@@ -11676,14 +11646,12 @@ google.maps.addressValidation.Geocode.prototype.bounds;
 google.maps.addressValidation.Geocode.prototype.featureSizeMeters;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The geocoded location of the input.
  * @type {!google.maps.LatLngAltitude|null}
  */
 google.maps.addressValidation.Geocode.prototype.location;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The Place ID of the geocoded place. Using Place is preferred over using
  * addresses, latitude/longitude coordinates, or plus codes. Using coordinates
  * for routing or calculating driving directions will always result in the point
@@ -11697,7 +11665,6 @@ google.maps.addressValidation.Geocode.prototype.location;
 google.maps.addressValidation.Geocode.prototype.placeId;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The type(s) of place that the input geocoded to. For example,
  * <code>[&#39;locality&#39;, &#39;political&#39;]</code>. The full list of
  * types can be found in the <a
@@ -11708,14 +11675,12 @@ google.maps.addressValidation.Geocode.prototype.placeId;
 google.maps.addressValidation.Geocode.prototype.placeTypes;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The plus code corresponding to the <code>location</code>.
  * @type {!google.maps.places.PlusCode|null}
  */
 google.maps.addressValidation.Geocode.prototype.plusCode;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Returns a Place representation of this Geocode. To get full place details, a
  * call to place.fetchFields() should be made.
  * @return {undefined}
@@ -11783,63 +11748,54 @@ google.maps.addressValidation.Granularity = {
 google.maps.addressValidation.USPSAddress = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The city name.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSAddress.prototype.city;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The address line containing the city, state, and zip code.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSAddress.prototype.cityStateZipAddressLine;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The name of the firm.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSAddress.prototype.firm;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The first line of the address.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSAddress.prototype.firstAddressLine;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The second line of the address.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSAddress.prototype.secondAddressLine;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The 2-letter state code.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSAddress.prototype.state;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The Puerto Rican urbanization name.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSAddress.prototype.urbanization;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The Postal code, e.g. &quot;10009&quot;.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSAddress.prototype.zipCode;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The 4-digit postal code extension, e.g. &quot;5023&quot;.
  * @type {string|null}
  */
@@ -11861,21 +11817,18 @@ google.maps.addressValidation.USPSAddress.prototype.zipCodeExtension;
 google.maps.addressValidation.USPSData = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Abbreviated city.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSData.prototype.abbreviatedCity;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Type of the address record that matches the input address.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSData.prototype.addressRecordType;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The carrier route code. A four character code consisting of a one letter
  * prefix and a three digit route designator.
  * @type {string|null}
@@ -11883,28 +11836,24 @@ google.maps.addressValidation.USPSData.prototype.addressRecordType;
 google.maps.addressValidation.USPSData.prototype.carrierRoute;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Carrier route rate sort indicator.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSData.prototype.carrierRouteIndicator;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Indicator that the request has been CASS processed.
  * @type {boolean}
  */
 google.maps.addressValidation.USPSData.prototype.cassProcessed;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * County name.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSData.prototype.county;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The delivery point check digit. This number is added to the end of the
  * delivery_point_barcode for mechanically scanned mail. Adding all the digits
  * of the delivery_point_barcode, delivery_point_check_digit, postal code, and
@@ -11914,14 +11863,12 @@ google.maps.addressValidation.USPSData.prototype.county;
 google.maps.addressValidation.USPSData.prototype.deliveryPointCheckDigit;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The 2-digit delivery point code.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSData.prototype.deliveryPointCode;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Indicates if the address is a CMRA (Commercial Mail Receiving Agency)--a
  * private business receiving mail for clients. Returns a single character.
  * @type {string|null}
@@ -11929,7 +11876,6 @@ google.maps.addressValidation.USPSData.prototype.deliveryPointCode;
 google.maps.addressValidation.USPSData.prototype.dpvCMRA;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The possible values for DPV confirmation. Returns a single character or
  * returns no value.
  * @type {string|null}
@@ -11937,7 +11883,6 @@ google.maps.addressValidation.USPSData.prototype.dpvCMRA;
 google.maps.addressValidation.USPSData.prototype.dpvConfirmation;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Flag indicates addresses where USPS cannot knock on a door to deliver mail.
  * Returns a single character.
  * @type {string|null}
@@ -11945,7 +11890,6 @@ google.maps.addressValidation.USPSData.prototype.dpvConfirmation;
 google.maps.addressValidation.USPSData.prototype.dpvDoorNotAccessible;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Flag indicates mail is delivered to a single receptable at a site. Returns a
  * single character.
  * @type {string|null}
@@ -11953,7 +11897,6 @@ google.maps.addressValidation.USPSData.prototype.dpvDoorNotAccessible;
 google.maps.addressValidation.USPSData.prototype.dpvDrop;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Indicates that more than one DPV return code is valid for the address.
  * Returns a single character.
  * @type {string|null}
@@ -11961,7 +11904,6 @@ google.maps.addressValidation.USPSData.prototype.dpvDrop;
 google.maps.addressValidation.USPSData.prototype.dpvEnhancedDeliveryCode;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The footnotes from delivery point validation. Multiple footnotes may be
  * strung together in the same string.
  * @type {string|null}
@@ -11969,7 +11911,6 @@ google.maps.addressValidation.USPSData.prototype.dpvEnhancedDeliveryCode;
 google.maps.addressValidation.USPSData.prototype.dpvFootnote;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Flag indicates mail delivery is not performed every day of the week. Returns
  * a single character.
  * @type {string|null}
@@ -11977,7 +11918,6 @@ google.maps.addressValidation.USPSData.prototype.dpvFootnote;
 google.maps.addressValidation.USPSData.prototype.dpvNonDeliveryDays;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Integer identifying non-delivery days. It can be interrogated using bit
  * flags: 0x40 – Sunday is a non-delivery day 0x20 – Monday is a non-delivery
  * day 0x10 – Tuesday is a non-delivery day 0x08 – Wednesday is a non-delivery
@@ -11988,7 +11928,6 @@ google.maps.addressValidation.USPSData.prototype.dpvNonDeliveryDays;
 google.maps.addressValidation.USPSData.prototype.dpvNonDeliveryDaysValues;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Flag indicates door is accessible, but package will not be left due to
  * security concerns. Returns a single character.
  * @type {string|null}
@@ -11996,7 +11935,6 @@ google.maps.addressValidation.USPSData.prototype.dpvNonDeliveryDaysValues;
 google.maps.addressValidation.USPSData.prototype.dpvNoSecureLocation;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Indicates whether the address is a no stat address or an active address. No
  * stat addresses are ones which are not continuously occupied or addresses that
  * the USPS does not service. Returns a single character.
@@ -12005,21 +11943,18 @@ google.maps.addressValidation.USPSData.prototype.dpvNoSecureLocation;
 google.maps.addressValidation.USPSData.prototype.dpvNoStat;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Indicates the NoStat type. Returns a reason code as int.
  * @type {number|null}
  */
 google.maps.addressValidation.USPSData.prototype.dpvNoStatReasonCode;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Indicates the address was matched to PBSA record. Returns a single character.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSData.prototype.dpvPBSA;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Indicates that mail is not delivered to the street address. Returns a single
  * character.
  * @type {string|null}
@@ -12027,28 +11962,24 @@ google.maps.addressValidation.USPSData.prototype.dpvPBSA;
 google.maps.addressValidation.USPSData.prototype.dpvThrowback;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Indicates whether the address is vacant. Returns a single character.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSData.prototype.dpvVacant;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * eLOT Ascending/Descending Flag (A/D).
  * @type {string|null}
  */
 google.maps.addressValidation.USPSData.prototype.elotFlag;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Enhanced Line of Travel (eLOT) number.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSData.prototype.elotNumber;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Error message for USPS data retrieval. This is populated when USPS processing
  * is suspended because of the detection of artificially created addresses.
  * @type {string|null}
@@ -12056,14 +11987,12 @@ google.maps.addressValidation.USPSData.prototype.elotNumber;
 google.maps.addressValidation.USPSData.prototype.errorMessage;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * FIPS county code.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSData.prototype.fipsCountyCode;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Indicator that a default address was found, but more specific addresses
  * exist.
  * @type {boolean}
@@ -12071,7 +12000,6 @@ google.maps.addressValidation.USPSData.prototype.fipsCountyCode;
 google.maps.addressValidation.USPSData.prototype.hasDefaultAddress;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The delivery address is matchable, but the EWS file indicates that an exact
  * match will be available soon.
  * @type {boolean}
@@ -12079,63 +12007,54 @@ google.maps.addressValidation.USPSData.prototype.hasDefaultAddress;
 google.maps.addressValidation.USPSData.prototype.hasNoEWSMatch;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * LACSLink indicator.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSData.prototype.lacsLinkIndicator;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * LACSLink return code.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSData.prototype.lacsLinkReturnCode;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * PMB (Private Mail Box) unit designator.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSData.prototype.pmbDesignator;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * PMB (Private Mail Box) number.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSData.prototype.pmbNumber;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * PO Box only postal code.
  * @type {boolean}
  */
 google.maps.addressValidation.USPSData.prototype.poBoxOnlyPostalCode;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Main post office city.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSData.prototype.postOfficeCity;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Main post office state.
  * @type {string|null}
  */
 google.maps.addressValidation.USPSData.prototype.postOfficeState;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * USPS standardized address.
  * @type {!google.maps.addressValidation.USPSAddress|null}
  */
 google.maps.addressValidation.USPSData.prototype.standardizedAddress;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Footnotes from matching a street or highrise record to suite information. If
  * business name match is found, the secondary number is returned.
  * @type {string|null}
@@ -12155,7 +12074,6 @@ google.maps.addressValidation.USPSData.prototype.suiteLinkFootnote;
 google.maps.addressValidation.Verdict = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The address is considered complete if there are no unresolved tokens, no
  * unexpected or missing address components. If unset, indicates that the value
  * is <code>false</code>. See {@link
@@ -12168,7 +12086,6 @@ google.maps.addressValidation.Verdict = function() {};
 google.maps.addressValidation.Verdict.prototype.addressComplete;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Information about the granularity of the {@link
  * google.maps.addressValidation.Geocode}. This can be understood as the
  * semantic meaning of how coarse or fine the geocoded location is.
@@ -12177,7 +12094,6 @@ google.maps.addressValidation.Verdict.prototype.addressComplete;
 google.maps.addressValidation.Verdict.prototype.geocodeGranularity;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * At least one address component was inferred (i.e. added) that wasn&#39;t in
  * the input, see {@link google.maps.addressValidation.AddressComponent} for
  * details.
@@ -12186,7 +12102,6 @@ google.maps.addressValidation.Verdict.prototype.geocodeGranularity;
 google.maps.addressValidation.Verdict.prototype.hasInferredComponents;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * At least one address component was replaced - see {@link
  * google.maps.addressValidation.AddressComponent} for details.
  * @type {boolean|null}
@@ -12194,7 +12109,6 @@ google.maps.addressValidation.Verdict.prototype.hasInferredComponents;
 google.maps.addressValidation.Verdict.prototype.hasReplacedComponents;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * At least one address component cannot be categorized or validated, see {@link
  * google.maps.addressValidation.AddressComponent} for details.
  * @type {boolean}
@@ -12202,7 +12116,6 @@ google.maps.addressValidation.Verdict.prototype.hasReplacedComponents;
 google.maps.addressValidation.Verdict.prototype.hasUnconfirmedComponents;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The granularity of the <strong>input</strong> address. This is the result of
  * parsing the input address and does not give any validation signals. For
  * validation signals, refer to <code>validationGranularity</code>.
@@ -12211,7 +12124,6 @@ google.maps.addressValidation.Verdict.prototype.hasUnconfirmedComponents;
 google.maps.addressValidation.Verdict.prototype.inputGranularity;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The granularity level that the API can fully <strong>validate</strong> the
  * address to. For example, a <code>validationGranularity</code> of
  * <code>PREMISE</code> indicates all address components at the level of
@@ -17920,8 +17832,6 @@ google.maps.places.Attribution.prototype.provider;
 google.maps.places.Attribution.prototype.providerURI;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Color options for Google Maps attribution text. Attribution may be customized
  * to use any of these colors.
  *
@@ -19788,11 +19698,13 @@ google.maps.places.Place.prototype.isOpen = function(date) {};
 google.maps.places.Place.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Configures a Place Details Compact element to show a wheelchair icon if the
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
+ * google.maps.places.PlaceDetailsElement} to show a wheelchair icon if the
  * place has an accessible entrance. Append this element as a child of a {@link
- * google.maps.places.PlaceContentConfigElement} to use it.
+ * google.maps.places.PlaceContentConfigElement} to use it. For example:
+ * <pre><code> &lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-accessible-entrance-icon&gt;&lt;/gmp-place-accessible-entrance-icon&gt;<br>
+ * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceAccessibleEntranceIconElement} = await
  * google.maps.importLibrary("places")`. See
@@ -19808,19 +19720,19 @@ google.maps.places.PlaceAccessibleEntranceIconElement = function(options) {};
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlaceAccessibleEntranceIconElement</code>.
  * @record
  */
 google.maps.places.PlaceAccessibleEntranceIconElementOptions = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Configures a Place Details Compact element to show a place&#39;s address.
- * Append this element as a child of a {@link
- * google.maps.places.PlaceContentConfigElement} to use it.
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
+ * google.maps.places.PlaceDetailsElement} to show a place&#39;s address. Append
+ * this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it. For example:
+ * <pre><code> &lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-address&gt;&lt;/gmp-place-address&gt;<br>
+ * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceAddressElement} = await
  * google.maps.importLibrary("places")`. See
@@ -19835,19 +19747,18 @@ google.maps.places.PlaceAddressElement = function(options) {};
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlaceAddressElement</code>.
  * @record
  */
 google.maps.places.PlaceAddressElementOptions = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Configures a Place Details Compact element to show all available content.
- * Append this element as a child of a {@link
- * google.maps.places.PlaceDetailsCompactElement} to use it.
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
+ * google.maps.places.PlaceDetailsElement} to show all available content. Append
+ * this element as a child to use it. For example: <pre><code>
+ * &lt;gmp-place-details&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-all-content&gt;&lt;/gmp-place-all-content&gt;<br>
+ * &lt;/gmp-place-details&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceAllContentElement} = await
  * google.maps.importLibrary("places")`. See
@@ -19862,8 +19773,6 @@ google.maps.places.PlaceAllContentElement = function(options) {};
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlaceAllContentElement</code>.
  * @record
  */
@@ -19891,12 +19800,17 @@ google.maps.places.PlaceAspectRating.prototype.rating;
 google.maps.places.PlaceAspectRating.prototype.type;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Allows customization of the Google Maps attribution text in a Place Details
- * Compact element. Append this element as a child of a {@link
- * google.maps.places.PlaceContentConfigElement} to use it. If this element is
- * omitted, attribution will still be shown with default colors.
+ * Allows customization of the Google Maps attribution text in a {@link
+ * google.maps.places.PlaceDetailsCompactElement} or {@link
+ * google.maps.places.PlaceDetailsElement}. Append this element as a child of
+ * a {@link google.maps.places.PlaceContentConfigElement} to use it. If this
+ * element is omitted, attribution will still be shown with default colors. For
+ * example: <pre><code> &lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-attribution<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;light-scheme-color="black"<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dark-scheme-color="white"<br>
+ * &nbsp;&nbsp;&gt;&lt;/gmp-place-attribution&gt;<br>
+ * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceAttributionElement} = await
  * google.maps.importLibrary("places")`. See
@@ -19925,8 +19839,6 @@ google.maps.places.PlaceAttributionElement.prototype.lightSchemeColor;
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlaceAttributionElement</code>.
  * @record
  */
@@ -20101,23 +20013,39 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedLanguage;
 google.maps.places.PlaceAutocompleteRequestErrorEvent = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Configures the content to be shown by a Place Details Compact element. Append
- * this element as a child of a {@link
- * google.maps.places.PlaceDetailsCompactElement} to use it. Append any of the
- * following elements to the <code>PlaceContentConfigElement</code> to show the
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
+ * google.maps.places.PlaceDetailsElement} to show a custom set of content.
+ * Append this element as a child to use it. <br> <br> For {@link
+ * google.maps.places.PlaceDetailsCompactElement} or {@link
+ * google.maps.places.PlaceDetailsElement}, append any of the following elements
+ * to the {@link google.maps.places.PlaceContentConfigElement} to show the
  * corresponding content: <br> {@link
- * google.maps.places.PlaceMediaElement}, {@link
  * google.maps.places.PlaceAddressElement}, {@link
- * google.maps.places.PlaceRatingElement}, {@link
- * google.maps.places.PlaceTypeElement}, {@link
- * google.maps.places.PlacePriceElement}, {@link
  * google.maps.places.PlaceAccessibleEntranceIconElement}, {@link
+ * google.maps.places.PlaceAttributionElement} {@link
+ * google.maps.places.PlaceMediaElement}, {@link
  * google.maps.places.PlaceOpenNowStatusElement}, {@link
- * google.maps.places.PlaceAttributionElement} <br> The order of the children
+ * google.maps.places.PlacePriceElement}, {@link
+ * google.maps.places.PlaceRatingElement}, {@link
+ * google.maps.places.PlaceTypeElement}. <br> <br> Specific to {@link
+ * google.maps.places.PlaceDetailsElement}, you may also append any of the
+ * following elements: <br> {@link
+ * google.maps.places.PlaceFeatureListElement} {@link
+ * google.maps.places.PlaceOpeningHoursElement}, {@link
+ * google.maps.places.PlacePhoneNumberElement}, {@link
+ * google.maps.places.PlacePlusCodeElement}, {@link
+ * google.maps.places.PlaceReviewsElement}, {@link
+ * google.maps.places.PlaceSummaryElement}, {@link
+ * google.maps.places.PlaceTypeSpecificHighlightsElement}, {@link
+ * google.maps.places.PlaceWebsiteElement}. <br> <br> The order of the children
  * does not matter; the element renders content in a standard order which is not
- * customizable.
+ * customizable. Example: <pre><code> &lt;gmp-place-details&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;&lt;gmp-place-media
+ * lightbox-preferred&gt;&lt;/gmp-place-media&gt;<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;&lt;gmp-place-address&gt;&lt;/gmp-place-address&gt;<br>
+ * &nbsp;&nbsp;&lt;/gmp-place-content-config&gt;<br> &lt;/gmp-place-details&gt;
+ * </code></pre>
  *
  * Access by calling `const {PlaceContentConfigElement} = await
  * google.maps.importLibrary("places")`. See
@@ -20132,8 +20060,6 @@ google.maps.places.PlaceContentConfigElement = function(options) {};
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlaceContentConfigElement</code>.
  * @record
  */
@@ -20250,15 +20176,23 @@ google.maps.places.PlaceContextualListLayout = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Displays details for a place in a compact layout. Append a {@link
- * google.maps.places.PlaceDetailsPlaceRequestElement} to specify the place to
- * be rendered. Append a {@link
+ * google.maps.places.PlaceDetailsPlaceRequestElement} or {@link
+ * google.maps.places.PlaceDetailsLocationRequestElement} to specify the place
+ * to be rendered. Append a {@link
  * google.maps.places.PlaceContentConfigElement}, {@link
  * google.maps.places.PlaceStandardContentElement}, or {@link
  * google.maps.places.PlaceAllContentElement} to specify which content to
- * render. <br><br> To use this element, enable the <a
+ * render. <br><br> Example: <pre><code> &lt;gmp-place-details-compact&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-details-place-request<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;place="<var>PLACE_ID</var>"<br>
+ * &nbsp;&nbsp;&gt;&lt;/gmp-place-details-place-request&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;&lt;gmp-place-media
+ * lightbox-preferred&gt;&lt;/gmp-place-media&gt;<br>
+ * &nbsp;&nbsp;&lt;/gmp-place-content-config&gt;<br>
+ * &lt;/gmp-place-details-compact&gt; </code></pre> <br> To use this element,
+ * enable the <a
  * href="https://console.cloud.google.com/marketplace/product/google/placewidgets.googleapis.com"
  * >Places UI Kit API</a> for your project in the Google Cloud console.
  *
@@ -20297,8 +20231,6 @@ google.maps.places.PlaceDetailsCompactElement.prototype.truncationPreferred;
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlaceDetailsCompactElement</code>.
  * @record
  */
@@ -20319,80 +20251,95 @@ google.maps.places.PlaceDetailsCompactElementOptions.prototype
     .truncationPreferred;
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
- * An HTML element that displays details for a place. Use the
- * <code>configureFromPlace()</code> or <code>configureFromLocation()</code>
- * methods to specify the content to be rendered. To use the Place Details
- * Element, enable the <a
+ * Displays details for a place in a full layout. Append either a {@link
+ * google.maps.places.PlaceDetailsPlaceRequestElement} or {@link
+ * google.maps.places.PlaceDetailsLocationRequestElement} to specify the place
+ * to be rendered. Append a {@link
+ * google.maps.places.PlaceContentConfigElement}, {@link
+ * google.maps.places.PlaceStandardContentElement}, or {@link
+ * google.maps.places.PlaceAllContentElement} to specify which content to
+ * render. <br><br> Example: <pre><code> &lt;gmp-place-details&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-details-place-request<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;place="<var>PLACE_ID</var>"<br>
+ * &nbsp;&nbsp;&gt;&lt;/gmp-place-details-place-request&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;&lt;gmp-place-media
+ * lightbox-preferred&gt;&lt;/gmp-place-media&gt;<br>
+ * &nbsp;&nbsp;&lt;/gmp-place-content-config&gt;<br> &lt;/gmp-place-details&gt;
+ * </code></pre> <br> To use this element, enable the <a
  * href="https://console.cloud.google.com/marketplace/product/google/placewidgets.googleapis.com"
  * >Places UI Kit API</a> for your project in the Google Cloud console.
  *
  * Access by calling `const {PlaceDetailsElement} = await
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {!google.maps.places.PlaceDetailsElementOptions=} options
  * @implements {google.maps.places.PlaceDetailsElementOptions}
  * @extends {HTMLElement}
  * @constructor
  */
-google.maps.places.PlaceDetailsElement = function(options) {};
+google.maps.places.PlaceDetailsElement = function() {};
 
 /**
- * Read only. <code>Place</code> object containing the ID, location, and
- * viewport of the currently rendered place.
+ * Read only. Place object containing the ID, location, and viewport of the
+ * currently rendered place.
  * @type {!google.maps.places.Place|undefined}
  */
 google.maps.places.PlaceDetailsElement.prototype.place;
 
-/**
- * The size variant of the PlaceDetailsElement. By default, the element will
- * display <code>PlaceDetailsSize.X_LARGE</code>.
- * @type {!google.maps.places.PlaceDetailsSize|null|undefined}
- */
-google.maps.places.PlaceDetailsElement.prototype.size;
-
 
 
 /**
- * Configures the widget from a <code>LatLng</code> using reverse geocoding.
- * @param {!google.maps.LatLng|!google.maps.LatLngLiteral} location The location
- *     to render place details for.
- * @return {!Promise<void>} A promise that resolves once place data is loaded
- *     and rendered.
- */
-google.maps.places.PlaceDetailsElement.prototype.configureFromLocation =
-    function(location) {};
-
-/**
- * Configures the widget from a <code>Place</code> object or Place ID.
- * @param {!google.maps.places.Place|!{id:string}} place The place to render
- *     details for.
- * @return {!Promise<void>} A promise that resolves once place data is loaded
- *     and rendered.
- */
-google.maps.places.PlaceDetailsElement.prototype.configureFromPlace = function(
-    place) {};
-
-
-
-/**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
  * Options for <code>PlaceDetailsElement</code>.
  * @record
  */
 google.maps.places.PlaceDetailsElementOptions = function() {};
 
 /**
- * See {@link google.maps.places.PlaceDetailsElement.size}
- * @type {!google.maps.places.PlaceDetailsSize|null|undefined}
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
+ * google.maps.places.PlaceDetailsElement} to load data based on a location.
+ * Append this element as a child of a {@link
+ * google.maps.places.PlaceDetailsCompactElement} or {@link
+ * google.maps.places.PlaceDetailsElement} to load data for the specified
+ * location. For example: <pre><code> &lt;gmp-place-details&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-details-location-request<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;location="37.6207665,-122.4284806"<br>
+ * &nbsp;&nbsp;&gt;&lt;/gmp-place-details-location-request&gt;<br>
+ * &lt;/gmp-place-details&gt; </code></pre>
+ *
+ * Access by calling `const {PlaceDetailsLocationRequestElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceDetailsLocationRequestElementOptions=}
+ *     options
+ * @implements {google.maps.places.PlaceDetailsLocationRequestElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
  */
-google.maps.places.PlaceDetailsElementOptions.prototype.size;
+google.maps.places.PlaceDetailsLocationRequestElement = function(options) {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
+ * The location to render details for in the Place Details element. Normalizes
+ * to a <code>LatLngAltitude</code>.
+ * @default <code>null</code>
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.places.PlaceDetailsLocationRequestElement.prototype.location;
+
+
+
+/**
+ * Options for <code>PlaceDetailsLocationRequestElement</code>.
+ * @record
+ */
+google.maps.places.PlaceDetailsLocationRequestElementOptions = function() {};
+
+/**
+ * The location to render the place for.
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.places.PlaceDetailsLocationRequestElementOptions.prototype.location;
+
+/**
  * Orientation variants for {@link
  * google.maps.places.PlaceDetailsCompactElement}.
  *
@@ -20413,12 +20360,16 @@ google.maps.places.PlaceDetailsOrientation = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Configures a Place Details Compact element to load data based on a place
- * object, ID, or resource name. Append this element as a child of a {@link
- * google.maps.places.PlaceDetailsCompactElement} to load data for the specified
- * place.
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
+ * google.maps.places.PlaceDetailsElement} to load data based on a place object,
+ * ID, or resource name. Append this element as a child of a {@link
+ * google.maps.places.PlaceDetailsCompactElement} or {@link
+ * google.maps.places.PlaceDetailsElement} to load data for the specified place.
+ * For example: <pre><code> &lt;gmp-place-details&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-details-place-request<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;place="<var>PLACE_ID</var>"<br>
+ * &nbsp;&nbsp;&gt;&lt;/gmp-place-details-place-request&gt;<br>
+ * &lt;/gmp-place-details&gt; </code></pre>
  *
  * Access by calling `const {PlaceDetailsPlaceRequestElement} = await
  * google.maps.importLibrary("places")`. See
@@ -20434,6 +20385,7 @@ google.maps.places.PlaceDetailsPlaceRequestElement = function(options) {};
  * The place object, ID, or resource name to render details for in the Place
  * Details Compact element. This property reflects to the attribute as a
  * resource name.
+ * @default <code>null</code>
  * @type {!google.maps.places.Place|null}
  */
 google.maps.places.PlaceDetailsPlaceRequestElement.prototype.place;
@@ -20441,8 +20393,6 @@ google.maps.places.PlaceDetailsPlaceRequestElement.prototype.place;
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlaceDetailsPlaceRequestElement</code>.
  * @record
  */
@@ -20508,35 +20458,31 @@ google.maps.places.PlaceDetailsRequest.prototype.region;
 google.maps.places.PlaceDetailsRequest.prototype.sessionToken;
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * Configures a {@link google.maps.places.PlaceDetailsElement} to show a
+ * place&#39;s feature list in the &quot;About&quot; tab. Feature list can
+ * include accessibility options, amenities, accepted payment methods, and more.
+ * Append this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it. For example:
+ * <pre><code> &lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-feature-list&gt;&lt;/gmp-place-feature-list&gt;<br>
+ * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
- * Size variants for <code>PlaceDetailsElement</code>.
- *
- * Access by calling `const {PlaceDetailsSize} = await
+ * Access by calling `const {PlaceFeatureListElement} = await
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @enum {string}
+ * @implements {google.maps.places.PlaceFeatureListElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
  */
-google.maps.places.PlaceDetailsSize = {
-  /**
-   * Large variant including a large image, basic information, and contact
-   * information.
-   */
-  LARGE: 'LARGE',
-  /**
-   * Medium variant including a large image and basic information.
-   */
-  MEDIUM: 'MEDIUM',
-  /**
-   * Small variant including a small image and basic information.
-   */
-  SMALL: 'SMALL',
-  /**
-   * Extra large variant including a photo collage, reviews, and comprehensive
-   * place information.
-   */
-  X_LARGE: 'X_LARGE',
-};
+google.maps.places.PlaceFeatureListElement = function() {};
+
+
+
+/**
+ * Options for <code>PlaceFeatureListElement</code>.
+ * @record
+ */
+google.maps.places.PlaceFeatureListElementOptions = function() {};
 
 /**
  * Defines information about the geometry of a Place.
@@ -20664,11 +20610,14 @@ google.maps.places.PlaceListPlaceSelectEvent.prototype.index;
 google.maps.places.PlaceListPlaceSelectEvent.prototype.place;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Configures a Place Details Compact element to show a place&#39;s media, such
- * as photos. Append this element as a child of a {@link
- * google.maps.places.PlaceContentConfigElement} to use it.
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
+ * google.maps.places.PlaceDetailsElement} to show a place&#39;s media, such as
+ * photos. Append this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it. For example:
+ * <pre><code> &lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-media
+ * lightbox-preferred&gt;&lt;/gmp-place-media&gt;<br>
+ * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceMediaElement} = await
  * google.maps.importLibrary("places")`. See
@@ -20691,8 +20640,6 @@ google.maps.places.PlaceMediaElement.prototype.lightboxPreferred;
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlaceMediaElement</code>.
  * @record
  */
@@ -20705,11 +20652,13 @@ google.maps.places.PlaceMediaElementOptions = function() {};
 google.maps.places.PlaceMediaElementOptions.prototype.lightboxPreferred;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Configures a Place Details Compact element to show the current open or closed
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
+ * google.maps.places.PlaceDetailsElement} to show the current open or closed
  * status of a place. Append this element as a child of a {@link
- * google.maps.places.PlaceContentConfigElement} to use it.
+ * google.maps.places.PlaceContentConfigElement} to use it. For example:
+ * <pre><code> &lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-open-now-status&gt;&lt;/gmp-place-open-now-status&gt;<br>
+ * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceOpenNowStatusElement} = await
  * google.maps.importLibrary("places")`. See
@@ -20724,8 +20673,6 @@ google.maps.places.PlaceOpenNowStatusElement = function(options) {};
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlaceOpenNowStatusElement</code>.
  * @record
  */
@@ -20780,6 +20727,31 @@ google.maps.places.PlaceOpeningHours.prototype.open_now;
  * @return {boolean|undefined}
  */
 google.maps.places.PlaceOpeningHours.prototype.isOpen = function(date) {};
+
+/**
+ * Configures a {@link google.maps.places.PlaceDetailsElement} to show a
+ * place&#39;s opening hours. Append this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it. For example:
+ * <pre><code> &lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-opening-hours&gt;&lt;/gmp-place-opening-hours&gt;<br>
+ * &lt;/gmp-place-content-config&gt;<br> </code></pre>
+ *
+ * Access by calling `const {PlaceOpeningHoursElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PlaceOpeningHoursElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceOpeningHoursElement = function() {};
+
+
+
+/**
+ * Options for <code>PlaceOpeningHoursElement</code>.
+ * @record
+ */
+google.maps.places.PlaceOpeningHoursElementOptions = function() {};
 
 /**
  * Defines structured information about the opening hours of a Place.
@@ -20889,6 +20861,31 @@ google.maps.places.PlaceOptions.prototype.requestedLanguage;
 google.maps.places.PlaceOptions.prototype.requestedRegion;
 
 /**
+ * Configures a {@link google.maps.places.PlaceDetailsElement} to show a
+ * place&#39;s phone number. Append this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it. For example:
+ * <pre><code> &lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-phone-number&gt;&lt;/gmp-place-phone-number&gt;<br>
+ * &lt;/gmp-place-content-config&gt;<br> </code></pre>
+ *
+ * Access by calling `const {PlacePhoneNumberElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PlacePhoneNumberElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlacePhoneNumberElement = function() {};
+
+
+
+/**
+ * Options for <code>PlacePhoneNumberElement</code>.
+ * @record
+ */
+google.maps.places.PlacePhoneNumberElementOptions = function() {};
+
+/**
  * Represents a photo element of a Place.
  * @record
  */
@@ -20944,6 +20941,31 @@ google.maps.places.PlacePlusCode.prototype.compound_code;
  * @type {string}
  */
 google.maps.places.PlacePlusCode.prototype.global_code;
+
+/**
+ * Configures a {@link google.maps.places.PlaceDetailsElement} to show a
+ * place&#39;s plus code. Append this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it. For example:
+ * <pre><code> &lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-plus-code&gt;&lt;/gmp-place-plus-code&gt;<br>
+ * &lt;/gmp-place-content-config&gt;<br> </code></pre>
+ *
+ * Access by calling `const {PlacePlusCodeElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PlacePlusCodeElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlacePlusCodeElement = function() {};
+
+
+
+/**
+ * Options for <code>PlacePlusCodeElement</code>.
+ * @record
+ */
+google.maps.places.PlacePlusCodeElementOptions = function() {};
 
 /**
  * Prediction results for a Place Autocomplete prediction.
@@ -21007,7 +21029,7 @@ google.maps.places.PlacePrediction.prototype.types;
  * place information from the PlacePrediction is included automatically - this
  * is a convenience method to help with autocomplete session management.
  * @param {!google.maps.addressValidation.AddressValidationRequest} request
- * @return {undefined}
+ * @return {!Promise<!google.maps.addressValidation.AddressValidation>}
  */
 google.maps.places.PlacePrediction.prototype.fetchAddressValidation = function(
     request) {};
@@ -21051,11 +21073,13 @@ google.maps.places.PlacePredictionSelectEvent = function() {};
 google.maps.places.PlacePredictionSelectEvent.prototype.placePrediction;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Configures a Place Details Compact element to show a place&#39;s price level
- * or price range. Append this element as a child of a {@link
- * google.maps.places.PlaceContentConfigElement} to use it.
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
+ * google.maps.places.PlaceDetailsElement} to show a place&#39;s price level or
+ * price range. Append this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it. For example:
+ * <pre><code> &lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-price&gt;&lt;/gmp-place-price&gt;<br>
+ * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlacePriceElement} = await
  * google.maps.importLibrary("places")`. See
@@ -21070,19 +21094,19 @@ google.maps.places.PlacePriceElement = function(options) {};
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlacePriceElement</code>.
  * @record
  */
 google.maps.places.PlacePriceElementOptions = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Configures a Place Details Compact element to show a place&#39;s rating.
- * Append this element as a child of a {@link
- * google.maps.places.PlaceContentConfigElement} to use it.
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
+ * google.maps.places.PlaceDetailsElement} to show a place&#39;s rating. Append
+ * this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it. For example:
+ * <pre><code> &lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-rating&gt;&lt;/gmp-place-rating&gt;<br>
+ * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceRatingElement} = await
  * google.maps.importLibrary("places")`. See
@@ -21097,8 +21121,6 @@ google.maps.places.PlaceRatingElement = function(options) {};
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlaceRatingElement</code>.
  * @record
  */
@@ -21405,6 +21427,31 @@ google.maps.places.PlaceReview.prototype.time;
 google.maps.places.PlaceReview.prototype.aspects;
 
 /**
+ * Configures a {@link google.maps.places.PlaceDetailsElement} to show a
+ * place&#39;s reviews. Append this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it. For example:
+ * <pre><code> &lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-reviews&gt;&lt;/gmp-place-reviews&gt;<br>
+ * &lt;/gmp-place-content-config&gt;<br> </code></pre>
+ *
+ * Access by calling `const {PlaceReviewsElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PlaceReviewsElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceReviewsElement = function() {};
+
+
+
+/**
+ * Options for <code>PlaceReviewsElement</code>.
+ * @record
+ */
+google.maps.places.PlaceReviewsElementOptions = function() {};
+
+/**
  * An object used to fetch additional pages of Places results.
  * @record
  */
@@ -21523,12 +21570,20 @@ google.maps.places.PlaceSearchRequest.prototype.type;
 google.maps.places.PlaceSearchRequest.prototype.name;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Configures a Place Details Compact element to show a standard set of content
- * (media, rating, type, price, accessible entrance icon, and open now status).
- * Append this element as a child of a {@link
- * google.maps.places.PlaceDetailsCompactElement} to use it.
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
+ * google.maps.places.PlaceDetailsElement} to show a standard set of content.
+ * Append this element as a child to use it. <br> For {@link
+ * google.maps.places.PlaceDetailsElement}, standard content consists of: <ul>
+ * <li>media</li> <li>address</li> <li>rating</li> <li>type</li> <li>price</li>
+ * <li>accessible entrance icon</li> <li>website</li> <li>phone number</li>
+ * <li>opening hours</li> <li>summary</li> <li>type specific highlights</li>
+ * <li>reviews</li> <li>feature list</li> </ul> <br> For {@link
+ * google.maps.places.PlaceDetailsCompactElement}, standard content consists of:
+ * <ul> <li>media</li> <li>rating</li> <li>type</li> <li>price</li>
+ * <li>accessible entrance icon</li> <li>open now status</li> </ul> <br> For
+ * example: <pre><code> &lt;gmp-place-details&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-standard-content&gt;&lt;/gmp-place-standard-content&gt;<br>
+ * &lt;/gmp-place-details&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceStandardContentElement} = await
  * google.maps.importLibrary("places")`. See
@@ -21543,19 +21598,44 @@ google.maps.places.PlaceStandardContentElement = function(options) {};
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlaceStandardContentElement</code>.
  * @record
  */
 google.maps.places.PlaceStandardContentElementOptions = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Configures a {@link google.maps.places.PlaceDetailsElement} to show a
+ * place&#39;s summary. Append this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it. For example:
+ * <pre><code> &lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-summary&gt;&lt;/gmp-place-summary&gt;<br>
+ * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
- * Configures a Place Details Compact element to show a place&#39;s type. Append
+ * Access by calling `const {PlaceSummaryElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PlaceSummaryElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceSummaryElement = function() {};
+
+
+
+/**
+ * Options for <code>PlaceSummaryElement</code>.
+ * @record
+ */
+google.maps.places.PlaceSummaryElementOptions = function() {};
+
+/**
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
+ * google.maps.places.PlaceDetailsElement} to show a place&#39;s type. Append
  * this element as a child of a {@link
- * google.maps.places.PlaceContentConfigElement} to use it.
+ * google.maps.places.PlaceContentConfigElement} to use it. For example:
+ * <pre><code> &lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-type&gt;&lt;/gmp-place-type&gt;<br>
+ * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceTypeElement} = await
  * google.maps.importLibrary("places")`. See
@@ -21570,12 +21650,61 @@ google.maps.places.PlaceTypeElement = function(options) {};
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlaceTypeElement</code>.
  * @record
  */
 google.maps.places.PlaceTypeElementOptions = function() {};
+
+/**
+ * Configures a {@link google.maps.places.PlaceDetailsElement} to show a
+ * place&#39;s type-specific highlights, such as gas prices and EV charger
+ * availability. Append this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it. For example:
+ * <pre><code> &lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-type-specific-highlights&gt;&lt;/gmp-place-type-specific-highlights&gt;<br>
+ * &lt;/gmp-place-content-config&gt;<br> </code></pre>
+ *
+ * Access by calling `const {PlaceTypeSpecificHighlightsElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PlaceTypeSpecificHighlightsElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceTypeSpecificHighlightsElement = function() {};
+
+
+
+/**
+ * Options for <code>PlaceTypeSpecificHighlightsElement</code>.
+ * @record
+ */
+google.maps.places.PlaceTypeSpecificHighlightsElementOptions = function() {};
+
+/**
+ * Configures a {@link google.maps.places.PlaceDetailsElement} to show a
+ * place&#39;s website. Append this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it. For example:
+ * <pre><code> &lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-website&gt;&lt;/gmp-place-website&gt;<br>
+ * &lt;/gmp-place-content-config&gt;<br> </code></pre>
+ *
+ * Access by calling `const {PlaceWebsiteElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PlaceWebsiteElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceWebsiteElement = function() {};
+
+
+
+/**
+ * Options for <code>PlaceWebsiteElement</code>.
+ * @record
+ */
+google.maps.places.PlaceWebsiteElementOptions = function() {};
 
 /**
  * Contains methods related to searching for places and retrieving details about
