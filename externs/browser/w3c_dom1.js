@@ -1141,6 +1141,8 @@ Window.prototype.onerror;
 /** @type {?function (MessageEvent<*>)} */ Window.prototype.onmessageerror
 /** @type {?function (PageTransitionEvent)} */ Window.prototype.onpagehide;
 /** @type {?function (PageTransitionEvent)} */ Window.prototype.onpageshow;
+/** @type {?function (!Event)} */ Window.prototype.onpageswap;
+/** @type {?function (!Event)} */ Window.prototype.onpagereveal;
 /** @type {?function (Event)} */ Window.prototype.onfocus;
 /** @type {?function (Event)} */ Window.prototype.onhashchange;
 /** @type {?function (Event)} */ Window.prototype.onkeydown;

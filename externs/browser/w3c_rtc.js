@@ -1025,6 +1025,9 @@ RTCRtpContributingSource.prototype.senderCaptureTimeOffset;
  */
 function RTCRtpReceiver() {}
 
+/** @type {number|undefined}*/
+RTCRtpReceiver.prototype.jitterBufferTarget;
+
 /**
  * @const {!MediaStreamTrack}
  */
@@ -2659,6 +2662,34 @@ RTCInboundRtpStreamStats.prototype.totalSquaredCorruptionProbability;
 
 /** @const {number|undefined} */
 RTCInboundRtpStreamStats.prototype.corruptionMeasurements;
+
+/** @type {number|undefined} */
+RTCInboundRtpStreamStats.prototype.fecBytesReceived;
+
+/** @type {number|undefined} */
+RTCInboundRtpStreamStats.prototype.fecSsrc;
+
+/** @type {number|undefined} */
+RTCInboundRtpStreamStats.prototype.framesRendered;
+
+/** @type {number|undefined} */
+RTCInboundRtpStreamStats.prototype.pauseCount;
+
+/** @type {string|undefined} */
+RTCInboundRtpStreamStats.prototype.playoutId;
+
+/** @type {number|undefined} */
+RTCInboundRtpStreamStats.prototype.retransmittedBytesReceived;
+
+/** @type {number|undefined} */
+RTCInboundRtpStreamStats.prototype.retransmittedPacketsReceived;
+
+/** @type {number|undefined} */
+RTCInboundRtpStreamStats.prototype.rtxSsrc;
+
+/** @type {number|undefined} */
+RTCInboundRtpStreamStats.prototype.totalPausesDuration;
+
 
 /**
  * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcremoteinboundrtpstreamstats

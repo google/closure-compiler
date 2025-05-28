@@ -830,6 +830,9 @@ CSSStyleDeclaration.prototype.setExpression = function(
 /** @type {string} */ CSSStyleDeclaration.prototype.tabSize;
 /** @type {string} */ CSSStyleDeclaration.prototype.textAlignLast;
 /** @type {string} */ CSSStyleDeclaration.prototype.textAnchor;
+/** @type {string} */ CSSStyleDeclaration.prototype.textBox;
+/** @type {string} */ CSSStyleDeclaration.prototype.textBoxEdge;
+/** @type {string} */ CSSStyleDeclaration.prototype.textBoxTrim;
 /** @type {string} */ CSSStyleDeclaration.prototype.textCombineUpright;
 /** @type {string} */ CSSStyleDeclaration.prototype.textDecorationSkipInk;
 /** @type {string} */ CSSStyleDeclaration.prototype.textDecorationThickness;
@@ -2331,6 +2334,9 @@ CSSProperties.prototype.wordWrap;
 CSSProperties.prototype.zIndex;
 
 // CSS 3 properties
+
+/** @type {string} */
+CSSProperties.prototype.boxDecorationBreak;
 
 /**
  * @type {string}

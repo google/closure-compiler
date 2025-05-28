@@ -208,6 +208,9 @@ ARIAMixin.prototype.ariaPressed;
  */
 ARIAMixin.prototype.ariaReadOnly;
 
+/** @type {string|undefined} */
+ARIAMixin.prototype.ariaRelevant;
+
 /**
  * @type {string|undefined}
  * @see https://www.w3.org/TR/wai-aria-1.2/#aria-required

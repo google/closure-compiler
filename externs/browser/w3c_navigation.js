@@ -70,3 +70,45 @@ NavigationHistoryEntry.prototype.getState = function() {};
  * @see https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-navigationhistoryentry-ondispose
  */
 NavigationHistoryEntry.prototype.ondispose;
+
+
+/**
+ * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/NavigationActivation
+ */
+function NavigationActivation() {}
+
+/** @type {NavigationHistoryEntry} */
+NavigationActivation.prototype.entry;
+
+/** @type {NavigationHistoryEntry|null} */
+NavigationActivation.prototype.from;
+
+/** @type {string} */
+NavigationActivation.prototype.navigationType;
+
+
+/**
+ * @typedef {{
+ *   activation: (NavigationActivation | null),
+ *   viewTransition: (ViewTransition | null),
+ * }}
+ */
+var PageSwapEventInit;
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @param {string} type
+ * @param {PageSwapEventInit=} opt_eventInitDict
+ * @see https://developer.mozilla.org/docs/Web/API/PageSwapEvent
+ */
+function PageSwapEvent(type, opt_eventInitDict) {}
+
+/** @type {NavigationActivation | null} */
+PageSwapEvent.prototype.activation;
+
+/** @type {ViewTransition | null} */
+PageSwapEvent.prototype.viewTransition;
+
+

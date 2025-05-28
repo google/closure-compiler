@@ -1866,6 +1866,11 @@ WebGLRenderingContext.prototype.getSupportedExtensions = function() {};
 WebGLRenderingContext.prototype.getExtension = function(name) {};
 
 /**
+ * @type {string}
+ */
+WebGLRenderingContext.prototype.unpackColorSpace;
+
+/**
  * @param {number} texture
  * @return {undefined}
  */

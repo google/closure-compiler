@@ -161,3 +161,5 @@ PointerEvent.prototype.MSPOINTER_TYPE_MOUSE;
  */
 PointerEvent.prototype.getCoalescedEvents = function() {};
 
+/** @return {!Array<!PointerEvent>} */
+PointerEvent.prototype.getPredictedEvents = function() {};
