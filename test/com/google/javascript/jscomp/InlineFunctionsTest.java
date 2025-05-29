@@ -3373,8 +3373,6 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         """);
   }
 
-
-
   @Test
   public void testBug4944818() {
     test(
@@ -4956,33 +4954,22 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         class Foo { x = 0; }
         f(new Foo());
         """);
+  }
 
-    // TOOD: b/416551942 - Incorrectly inlines getNextVal().
-    test(
+  @Test
+  public void testClassField_doesNotInlineValueThatChanges() {
+    testSame(
         """
         let nextVal = 0;
         function getNextVal() {
-          nextVal++;  // Note: If you merge this line with the next as `++nextVal`, things work.
+          nextVal++;
           return nextVal;
         }
 
-        // The issue appears to be related to the fact that the class is an expression.
+        // Class expression.
         const Uid = class {
-          // val is supposed to increment here.
+          // Should not inline `nextVal` because it changes.
           val = getNextVal();
-        };
-        """,
-        """
-        let nextVal = 0;
-        var JSCompiler_inline_result$jscomp$0;
-        {
-          nextVal++;
-          JSCompiler_inline_result$jscomp$0 = nextVal;
-        }
-
-        const Uid = class {
-          // val is now always the same value.
-          val = JSCompiler_inline_result$jscomp$0;
         };
         """);
 
@@ -4994,8 +4981,9 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
           return nextVal;
         }
 
-        // The only difference from the previous test is Uid is a class declaration this time.
+        // Class declaration.
         class Uid {
+          // Should not inline `nextVal` because it changes.
           val = getNextVal();
         }
         """);

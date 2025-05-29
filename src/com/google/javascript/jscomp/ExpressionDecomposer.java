@@ -962,6 +962,10 @@ class ExpressionDecomposer {
         case DEFAULT_CASE:
         case DEFAULT_VALUE:
         case PARAM_LIST:
+        // For top-level class declarations, without this, we would have eventually returned `null`
+        // due to `case SCRIPT` above. This just makes class expressions behave the same way. Future
+        // optimizations may want to better handle class members and static blocks.
+        case CLASS:
           return null;
 
         default:
