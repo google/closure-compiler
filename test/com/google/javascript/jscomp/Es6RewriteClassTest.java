@@ -576,13 +576,11 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     test(
         "var C = new (foo || (foo = class { }))();",
         """
-        var JSCompiler_temp$jscomp$0;
-        if (JSCompiler_temp$jscomp$0 = foo) {
-        } else {
-          /** @constructor */ const testcode$classdecl$var0 = function(){};
-          JSCompiler_temp$jscomp$0 = foo = testcode$classdecl$var0;
-        }
-        var C = new JSCompiler_temp$jscomp$0;
+        var C = new (foo || (foo = (() => {
+          /** @constructor */
+          const testcode$classdecl$var0 = function() {};
+          return testcode$classdecl$var0;
+        })()))();
         """);
   }
 

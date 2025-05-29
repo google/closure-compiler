@@ -233,10 +233,10 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     test(
         "maybeTrue() && f(class{});",
         """
-        if (maybeTrue()) {
-          const testcode$classdecl$var0=class{};
-          f(testcode$classdecl$var0);
-        }
+        maybeTrue() && f((() => {
+          const testcode$classdecl$var0 = class {};
+          return testcode$classdecl$var0;
+        })());
         """);
   }
 
@@ -255,26 +255,18 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     test(
         "var c = maybeTrue() ? class A {} : anotherExpr",
         """
-        var JSCompiler_temp$jscomp$0;
-        if (maybeTrue()) {
-          const testcode$classdecl$var0=class{};
-          /** @constructor */ JSCompiler_temp$jscomp$0 = testcode$classdecl$var0;
-        } else {
-          JSCompiler_temp$jscomp$0 = anotherExpr;
-        }
-        var c = JSCompiler_temp$jscomp$0;
+        var c = maybeTrue() ? (() => {
+          const testcode$classdecl$var0 = class {};
+          return testcode$classdecl$var0;
+        })() : anotherExpr;
         """);
     test(
         "var c = maybeTrue() ? anotherExpr : class B {}",
         """
-        var JSCompiler_temp$jscomp$0;
-        if (maybeTrue()) {
-          JSCompiler_temp$jscomp$0=anotherExpr;
-        } else {
-          const testcode$classdecl$var0 = class{};
-          /** @constructor */ JSCompiler_temp$jscomp$0 = testcode$classdecl$var0
-        }
-        var c = JSCompiler_temp$jscomp$0;
+        var c = maybeTrue() ? anotherExpr : (() => {
+          const testcode$classdecl$var0 = class {};
+          return testcode$classdecl$var0;
+        })();
         """);
   }
 

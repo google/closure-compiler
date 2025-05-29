@@ -162,12 +162,6 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
       return false;
     }
 
-    if (expressionDecomposer.canExposeExpression(classNode) == DecompositionType.UNDECOMPOSABLE) {
-      // When class is undecomposable, we can make it decomposable (and therefore extractable) by
-      // wrapping it inside an IIFE. This is not needed for already movable/decomposable classes.
-      wrapClassDefInsideIIFE(classNode, parent);
-    }
-
     return true;
   }
 
@@ -188,20 +182,32 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
    *
    * }</pre>
    */
-  private void wrapClassDefInsideIIFE(Node n, Node parent) {
+  private void wrapClassDefInsideIife(Node n) {
     Preconditions.checkState(n.isClass());
+
+    final Node parent = n.getParent();
+    // We track the previous sibling of the class node to determine where to insert the IIFE.
+    final Node previous = n.getPrevious();
+
     Node returnBlock = astFactory.createBlock(astFactory.createReturn(n.detach())).srcref(n);
     Node arrowFn = IR.arrowFunction(IR.name(""), IR.paramList(), returnBlock).srcref(n);
     arrowFn.setColor(StandardColors.UNKNOWN);
     Node iife = astFactory.createCallWithUnknownType(arrowFn).srcrefTreeIfMissing(n);
-    parent.addChildToBack(iife);
+    if (previous != null) {
+      iife.insertAfter(previous);
+    } else {
+      // `n` was either the first or only child of its parent. Insert at the front.
+      parent.addChildToFront(iife);
+    }
     NodeUtil.addFeatureToScript(NodeUtil.getEnclosingScript(n), Feature.ARROW_FUNCTIONS, compiler);
     compiler.reportChangeToEnclosingScope(iife);
   }
 
   private void extractClass(NodeTraversal t, Node classNode) {
-    if (expressionDecomposer.canExposeExpression(classNode) == DecompositionType.DECOMPOSABLE) {
-      expressionDecomposer.maybeExposeExpression(classNode);
+    if (expressionDecomposer.canExposeExpression(classNode) != DecompositionType.MOVABLE) {
+      // When class is not movable, we wrap it inside an IIFE. We have observed unsafe circumstances
+      // where decomposing causes issues so this is safer. See b/417772606.
+      wrapClassDefInsideIife(classNode);
     }
     Node parent = classNode.getParent();
 

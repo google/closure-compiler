@@ -1651,13 +1651,14 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         })
         """,
         """
-        var JSCompiler_temp_const$jscomp$0 = foo;
-        const testcode$classdecl$var0 = class {};
-        {
-          testcode$classdecl$var0.y = 2;
-          let x = testcode$classdecl$var0.y;
-        }
-        JSCompiler_temp_const$jscomp$0(testcode$classdecl$var0);
+        foo((() => {
+          const testcode$classdecl$var0 = class {};
+          {
+            testcode$classdecl$var0.y = 2;
+            let x = testcode$classdecl$var0.y;
+          }
+          return testcode$classdecl$var0;
+        })());
         """);
 
     test(
@@ -1673,15 +1674,14 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """
         class A {}
         A.b;
-        var JSCompiler_temp_const$jscomp$1 = foo;
-        var JSCompiler_temp_const$jscomp$0 = A.b;
-        const testcode$classdecl$var0 = class {};
-        {
-          testcode$classdecl$var0.y = 2;
-          let x = testcode$classdecl$var0.y;
-        }
-        JSCompiler_temp_const$jscomp$1(JSCompiler_temp_const$jscomp$0.c =
-        testcode$classdecl$var0);
+        foo(A.b.c = (() => {
+          const testcode$classdecl$var0 = class {};
+          {
+            testcode$classdecl$var0.y = 2;
+            let x = testcode$classdecl$var0.y;
+          }
+          return testcode$classdecl$var0;
+        })());
         """);
   }
 
@@ -1730,12 +1730,13 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class A {}
-        var JSCompiler_temp_const$jscomp$0 = A;
-        const testcode$classdecl$var0 = class {};
-        {
-          let x = 1;
-        }
-        JSCompiler_temp_const$jscomp$0[1] = testcode$classdecl$var0;
+        A[1] = (() => {
+          const testcode$classdecl$var0 = class {};
+          {
+            let x = 1;
+          }
+          return testcode$classdecl$var0;
+        })();
         """);
   }
 
@@ -2223,12 +2224,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     test(
         "A[foo()] = class {static x;}",
         """
-        var JSCompiler_temp_const$jscomp$1 = A;
-        var JSCompiler_temp_const$jscomp$0 = foo();
-        const testcode$classdecl$var0 = class {};
-        testcode$classdecl$var0.x;
-        JSCompiler_temp_const$jscomp$1[JSCompiler_temp_const$jscomp$0] =
-            testcode$classdecl$var0;
+        A[foo()] = (() => {
+          const testcode$classdecl$var0 = class {};
+          testcode$classdecl$var0.x;
+          return testcode$classdecl$var0;
+        })();
         """);
 
     test(
