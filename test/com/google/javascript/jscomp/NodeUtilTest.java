@@ -72,6 +72,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -692,6 +693,33 @@ public final class NodeUtilTest {
       checkState(nameNode.isName(), nameNode);
 
       assertThat(NodeUtil.isNamespaceDecl(nameNode)).isTrue();
+    }
+
+    @Test
+    public void testTypedefNamespace() {
+      Node statements =
+          parse(
+              """
+              /** @typedef */ const obj = {};
+              /** @const */ obj.a = {};
+              /** @typedef @const */ obj.b = {};
+              /** @typedef */ obj.c = {};
+              /** @typedef @const */ obj.d = function() {};
+              """);
+      LinkedHashSet<String> namespaceNames = new LinkedHashSet<>();
+      LinkedHashSet<String> nonNamespaceNames = new LinkedHashSet<>();
+      for (Node statement : statements.children()) {
+        Node name =
+            statement.isExprResult() ? statement.getFirstFirstChild() : statement.getFirstChild();
+        checkState(name.isName() || name.isGetProp(), name);
+        if (NodeUtil.isNamespaceDecl(name)) {
+          namespaceNames.add(name.getQualifiedName());
+        } else {
+          nonNamespaceNames.add(name.getQualifiedName());
+        }
+      }
+      assertThat(namespaceNames).containsExactly("obj", "obj.a", "obj.b");
+      assertThat(nonNamespaceNames).containsExactly("obj.c", "obj.d");
     }
 
     private void assertGetNameResult(Node function, String name) {

@@ -1146,7 +1146,7 @@ public final class NodeUtil {
    */
   public static boolean isNamespaceDecl(Node n) {
     JSDocInfo jsdoc = getBestJSDocInfo(n);
-    if (jsdoc != null && !jsdoc.getTypeNodes().isEmpty()) {
+    if (jsdoc != null && !jsdoc.getTypeNodes().isEmpty() && !jsdoc.hasTypedefType()) {
       return false;
     }
     // In externs, we allow namespace definitions without @const.
