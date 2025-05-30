@@ -948,6 +948,10 @@ public abstract class JSType {
       }
     }
 
+    if (bType.isUnionType()) {
+      return bType.testForEquality(aType);
+    }
+
     if (aType.isFunctionType() || bType.isFunctionType()) {
       JSType otherType = aType.isFunctionType() ? bType : aType;
 
@@ -971,7 +975,7 @@ public abstract class JSType {
       }
     }
 
-    if (bType.isEnumElementType() || bType.isUnionType()) {
+    if (bType.isEnumElementType()) {
       return bType.testForEquality(aType);
     }
 
@@ -1001,6 +1005,9 @@ public abstract class JSType {
    * ECMA-262 specification.<p>
    */
   public final boolean canTestForShallowEqualityWith(JSType that) {
+    if (isNoResolvedType() || that.isNoResolvedType()) {
+      return true;
+    }
     if (isEmptyType() || that.isEmptyType()) {
       return isSubtypeOf(that) || that.isSubtypeOf(this);
     }
@@ -1140,14 +1147,6 @@ public abstract class JSType {
     }  else if (thatType.isTemplatizedType()) {
       return thatType.toMaybeTemplatizedType().getGreatestSubtypeHelper(
           thisType);
-    } else if (thisType.isNoResolvedType() && thatType.isNoResolvedType()) {
-      // NoResolvedType has some strange semantics: "isSubtypeOf(otherType)" always returns true,
-      // to avoid type mismatch errors on assignments, but registry.createUnionType() also preserves
-      // all NoResolvedTypes in unions with other types instead of dropping them as irrelevant, so
-      // that Clutz & conformance checks can see all NoResolvedTypes later on.
-      // For the purposes of computing the "greatest common subtype" of two types, use the
-      // registry.createUnionType semantics rather than the .isSubtypeOf semantics.
-      return thisType.registry.createUnionType(thisType, thatType);
     } else if (thisType.isSubtypeOf(thatType)) {
       return thisType;
     } else if (thatType.isSubtypeOf(thisType)) {
@@ -1496,7 +1495,7 @@ public abstract class JSType {
    * resolution work needs to be done.
    */
   final void eagerlyResolveToSelf() {
-    checkState(!this.isResolved());
+    checkState(!this.isResolved(), this);
     resolveResult = this;
     this.registry.getResolver().resolveIfClosed(this, this.getTypeClass());
   }

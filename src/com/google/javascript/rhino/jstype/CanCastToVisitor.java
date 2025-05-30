@@ -93,9 +93,12 @@ class CanCastToVisitor implements RelationshipVisitor<Boolean> {
   }
 
   Boolean castCastToHelper(JSType thisType, JSType thatType) {
-    if (thatType.isUnknownType()
+    if (thisType.isNoResolvedType()) {
+      return true;
+    } else if (thatType.isUnknownType()
         || thatType.isAllType()
         || thatType.isNoObjectType() // TODO(johnlenz): restrict to objects
+        || thatType.isNoResolvedType()
         || thatType.isNoType()) {
       return true;
     } else if (thisType.isRecordType() || thatType.isRecordType()) {

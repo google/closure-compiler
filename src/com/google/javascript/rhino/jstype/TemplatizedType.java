@@ -175,9 +175,6 @@ public final class TemplatizedType extends ProxyObjectType {
 
     if (!wrapsSameRawType(rawThat)) {
       if (!rawThat.isTemplatizedType()) {
-        if (this.isNoResolvedType() && rawThat.isNoResolvedType()) {
-          return registry.createUnionType(this, rawThat);
-        }
         if (this.isSubtype(rawThat)) {
           return this;
         } else if (rawThat.isSubtypeOf(this)) {

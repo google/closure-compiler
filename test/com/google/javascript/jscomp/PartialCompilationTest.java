@@ -19,13 +19,11 @@ import static com.google.common.base.Predicates.not;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static org.junit.Assert.assertThrows;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.NamedType;
-import com.google.javascript.rhino.jstype.NoType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayList;
@@ -106,7 +104,7 @@ public class PartialCompilationTest {
   public void testMissingType_assignment() throws Exception {
     assertPartialCompilationSucceeds(
         "/** @type {!some.thing.Missing} */ var foo;", // line break
-        "/** @type {number} */ var bar = foo;");
+        "/** @suppress {checkTypes} @type {number} */ var bar = foo;");
   }
 
   @Test
@@ -153,7 +151,7 @@ public class PartialCompilationTest {
         "/** @type {!some.thing.Missing<string, !AlsoMissing<!More>>} */", "var x;");
     TypedVar x = compiler.getTopScope().getSlot("x");
     assertWithMessage("type %s", x.getType()).that(x.getType().isNoResolvedType()).isTrue();
-    NoType templatizedType = (NoType) x.getType();
+    ObjectType templatizedType = x.getType().assertObjectType();
     assertThat(templatizedType.getReferenceName()).isEqualTo("some.thing.Missing");
     ImmutableList<JSType> templateTypes = templatizedType.getTemplateTypes();
     assertThat(templateTypes.get(0).isString()).isTrue();
@@ -207,29 +205,23 @@ public class PartialCompilationTest {
 
   @Test
   public void nonMonotonicDataFlowBug() throws Exception {
-    // Reproduces b/156014526
-    // TODO: b/156014526 - this should not throw an error.
-    Exception e =
-        assertThrows(
-            RuntimeException.class,
-            () ->
-                assertPartialCompilationSucceeds(
-                    """
-                    class AggregatedColumn {
-                      /**  @param {ForwardDeclaredType} col */
-                      constructor(col) {
-                        this.child = col;
-                      }
-                    }
+    // Regression test for b/156014526
+    assertPartialCompilationSucceeds(
+        """
+        class AggregatedColumn {
+          /**  @param {ForwardDeclaredType} col */
+          constructor(col) {
+            this.child = col;
+          }
+        }
 
-                    /** @param {!AggregatedColumn} col */
-                    function getColumnChain(col) {
-                        var currentColumn = col;
-                        while (currentColumn instanceof AggregatedColumn) {
-                          currentColumn = currentColumn.child;
-                        }
-                    }
-                    """));
-    assertThat(e).hasMessageThat().contains("Dataflow analysis appears to diverge");
+        /** @param {!AggregatedColumn} col */
+        function getColumnChain(col) {
+            var currentColumn = col;
+            while (currentColumn instanceof AggregatedColumn) {
+              currentColumn = currentColumn.child;
+            }
+        }
+        """);
   }
 }

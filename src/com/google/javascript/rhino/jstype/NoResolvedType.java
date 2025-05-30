@@ -42,21 +42,32 @@ package com.google.javascript.rhino.jstype;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.base.Tri;
+import com.google.javascript.rhino.ErrorReporter;
+import com.google.javascript.rhino.Node;
 import org.jspecify.annotations.Nullable;
 
 /**
- * An unresolved type that was forward declared. So we know it exists,
- * but that it wasn't pulled into this binary.
+ * An unresolved type that was forward declared. So we know it exists, but that it wasn't pulled
+ * into this binary.
  *
- * In most cases, it behaves like a bottom type in the type lattice:
- * no real type should be assigned to a NoResolvedType, but the
- * NoResolvedType is a subtype of everything. In a few cases, it behaves
- * like the unknown type: properties of this type are also NoResolved types,
- * and comparisons to other types always have an unknown result.
+ * <p>In most cases, it behaves like a sibling of the top object type.
+ *
+ * <p>Why have this class at all, and not just use the top object type or `*`?
+ *
+ * <p>Clutz relies on this class to emit .d.ts typings for JS files without having to see all their
+ * dependencies: Clutz expects unresolved types to be available when it runs, so that it can map
+ * them back to the corresponding goog.required import.
+ *
+ * <p>Clutz also sets a special JSCompiler flag so that all unresolved types are treated as forward
+ * declared. (In most non-Clutz cases, this class is only rarely used, and only if there's actually
+ * an explicit `goog.forwardDeclare` call.)
+ *
+ * <p>To address this, we would need to significantly refactor Clutz.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public final class NoResolvedType extends NoType {
+public final class NoResolvedType extends ObjectType {
   /** The name originally used to reference this type. */
   private final String referenceName;
 
@@ -71,6 +82,7 @@ public final class NoResolvedType extends NoType {
     super(registry);
     this.referenceName = checkNotNull(referenceName);
     this.templateTypes = templateTypes;
+    this.eagerlyResolveToSelf();
   }
 
   @Override
@@ -94,8 +106,41 @@ public final class NoResolvedType extends NoType {
   }
 
   @Override
-  public boolean isNoType() {
-    return false;
+  public BooleanLiteralSet getPossibleToBooleanOutcomes() {
+    return BooleanLiteralSet.BOTH;
+  }
+
+  @Override
+  public Tri testForEquality(JSType that) {
+    return Tri.UNKNOWN;
+  }
+
+  @Override
+  final JSType resolveInternal(ErrorReporter reporter) {
+    throw new AssertionError();
+  }
+
+  @Override
+  public @Nullable FunctionType getConstructor() {
+    return null;
+  }
+
+  @Override
+  public final @Nullable ObjectType getImplicitPrototype() {
+    return null;
+  }
+
+  @Override
+  final int recursionUnsafeHashCode() {
+    // NoResolvedType instances are unique within a JSTypeRegistry.
+    return System.identityHashCode(this);
+  }
+
+  @Override
+  public boolean defineProperty(
+      String propertyName, JSType type, boolean inferred, Node propertyNode) {
+    // nothing, all properties are defined
+    return true;
   }
 
   @Override

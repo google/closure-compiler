@@ -321,7 +321,7 @@ public final class UnionType extends JSType {
     if (!that.isUnknownType() && !that.isUnionType()) {
       for (int i = 0; i < alternates.size(); i++) {
         JSType alternate = alternates.get(i);
-        if (!alternate.isUnknownType() && !that.isNoResolvedType() && that.isSubtypeOf(alternate)) {
+        if (!alternate.isUnknownType() && that.isSubtypeOf(alternate)) {
           return this;
         }
       }
@@ -451,7 +451,7 @@ public final class UnionType extends JSType {
     for (int i = 0; i < alternates.size(); i++) {
       JSType t = alternates.get(i);
       // Keep all unknown/unresolved types.
-      if (t.isUnknownType() || t.isNoResolvedType() || !t.isSubtypeOf(type)) {
+      if (t.isUnknownType() || !t.isSubtypeOf(type)) {
         restricted.addAlternate(t);
       }
     }
@@ -763,13 +763,11 @@ public final class UnionType extends JSType {
           continue;
         }
 
-        // Unknown and NoResolved types may just be names that haven't
+        // Unknown types may just be names that haven't
         // been resolved yet. So keep these in the union, and just use
         // equality checking for simple de-duping.
         if (alternate.isUnknownType()
             || current.isUnknownType()
-            || alternate.isNoResolvedType()
-            || current.isNoResolvedType()
             || alternate.hasAnyTemplateTypes()
             || current.hasAnyTemplateTypes()) {
           if (alternate.equals(current)) {

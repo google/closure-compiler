@@ -576,16 +576,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(noResolvedFooType.isEnumElementType()).isFalse();
     assertThat(noResolvedFooType.isNullType()).isFalse();
     assertThat(noResolvedFooType.isNamedType()).isFalse();
-    assertThat(noResolvedFooType.isNumber()).isTrue();
+    assertThat(noResolvedFooType.isNumber()).isFalse();
     assertThat(noResolvedFooType.isNumberObjectType()).isFalse();
     assertThat(noResolvedFooType.isNumberValueType()).isFalse();
     assertThat(noResolvedFooType.isObject()).isTrue();
     assertThat(noResolvedFooType.isFunctionPrototypeType()).isFalse();
     assertThat(noResolvedFooType.isRegexpType()).isFalse();
-    assertThat(noResolvedFooType.isString()).isTrue();
+    assertThat(noResolvedFooType.isString()).isFalse();
     assertThat(noResolvedFooType.isStringObjectType()).isFalse();
     assertThat(noResolvedFooType.isStringValueType()).isFalse();
-    assertThat(noResolvedFooType.isSymbol()).isTrue();
+    assertThat(noResolvedFooType.isSymbol()).isFalse();
     assertThat(noResolvedFooType.isSymbolObjectType()).isFalse();
     assertThat(noResolvedFooType.isSymbolValueType()).isFalse();
     assertThat(noResolvedFooType.isEnumType()).isFalse();
@@ -598,24 +598,24 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(noResolvedFooType.isInstanceType()).isFalse();
 
     // isSubtype
-    assertThat(noResolvedFooType.isSubtypeOf(noResolvedFooType)).isTrue();
-    assertThat(noResolvedFooType.isSubtypeOf(NO_OBJECT_TYPE)).isTrue();
-    assertThat(noResolvedFooType.isSubtypeOf(ARRAY_TYPE)).isTrue();
-    assertThat(noResolvedFooType.isSubtypeOf(BOOLEAN_TYPE)).isTrue();
-    assertThat(noResolvedFooType.isSubtypeOf(BOOLEAN_OBJECT_TYPE)).isTrue();
-    assertThat(noResolvedFooType.isSubtypeOf(DATE_TYPE)).isTrue();
-    assertThat(noResolvedFooType.isSubtypeOf(functionType)).isTrue();
-    assertThat(noResolvedFooType.isSubtypeOf(NULL_TYPE)).isTrue();
-    assertThat(noResolvedFooType.isSubtypeOf(NUMBER_TYPE)).isTrue();
-    assertThat(noResolvedFooType.isSubtypeOf(NUMBER_OBJECT_TYPE)).isTrue();
-    assertThat(noResolvedFooType.isSubtypeOf(OBJECT_TYPE)).isTrue();
-    assertThat(noResolvedFooType.isSubtypeOf(REGEXP_TYPE)).isTrue();
-    assertThat(noResolvedFooType.isSubtypeOf(STRING_TYPE)).isTrue();
-    assertThat(noResolvedFooType.isSubtypeOf(STRING_OBJECT_TYPE)).isTrue();
-    assertThat(noResolvedFooType.isSubtypeOf(SYMBOL_TYPE)).isTrue();
-    assertThat(noResolvedFooType.isSubtypeOf(SYMBOL_OBJECT_TYPE)).isTrue();
-    assertThat(noResolvedFooType.isSubtypeOf(ALL_TYPE)).isTrue();
-    assertThat(noResolvedFooType.isSubtypeOf(VOID_TYPE)).isTrue();
+    assertType(noResolvedFooType).isSubtypeOf(noResolvedFooType);
+    assertType(noResolvedFooType).isSubtypeOf(ALL_TYPE);
+    assertType(noResolvedFooType).isNotSubtypeOf(OBJECT_TYPE);
+    assertType(noResolvedFooType).isNotSubtypeOf(NO_OBJECT_TYPE);
+    assertType(noResolvedFooType).isNotSubtypeOf(ARRAY_TYPE);
+    assertType(noResolvedFooType).isNotSubtypeOf(BOOLEAN_TYPE);
+    assertType(noResolvedFooType).isNotSubtypeOf(BOOLEAN_OBJECT_TYPE);
+    assertType(noResolvedFooType).isNotSubtypeOf(DATE_TYPE);
+    assertType(noResolvedFooType).isNotSubtypeOf(functionType);
+    assertType(noResolvedFooType).isNotSubtypeOf(NULL_TYPE);
+    assertType(noResolvedFooType).isNotSubtypeOf(NUMBER_TYPE);
+    assertType(noResolvedFooType).isNotSubtypeOf(NUMBER_OBJECT_TYPE);
+    assertType(noResolvedFooType).isNotSubtypeOf(REGEXP_TYPE);
+    assertType(noResolvedFooType).isNotSubtypeOf(STRING_TYPE);
+    assertType(noResolvedFooType).isNotSubtypeOf(STRING_OBJECT_TYPE);
+    assertType(noResolvedFooType).isNotSubtypeOf(SYMBOL_TYPE);
+    assertType(noResolvedFooType).isNotSubtypeOf(SYMBOL_OBJECT_TYPE);
+    assertType(noResolvedFooType).isNotSubtypeOf(VOID_TYPE);
 
     // canTestForEqualityWith
     assertCanTestForEqualityWith(noResolvedFooType, noResolvedFooType);
@@ -639,45 +639,42 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCanTestForEqualityWith(noResolvedFooType, VOID_TYPE);
 
     // canTestForShallowEqualityWith
-    assertThat(noResolvedFooType.canTestForShallowEqualityWith(noResolvedFooType)).isTrue();
-    assertThat(noResolvedFooType.canTestForShallowEqualityWith(NO_OBJECT_TYPE)).isTrue();
-    assertThat(noResolvedFooType.canTestForShallowEqualityWith(ARRAY_TYPE)).isTrue();
-    assertThat(noResolvedFooType.canTestForShallowEqualityWith(BOOLEAN_TYPE)).isTrue();
-    assertThat(noResolvedFooType.canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE)).isTrue();
-    assertThat(noResolvedFooType.canTestForShallowEqualityWith(DATE_TYPE)).isTrue();
-    assertThat(noResolvedFooType.canTestForShallowEqualityWith(functionType)).isTrue();
-    assertThat(noResolvedFooType.canTestForShallowEqualityWith(NULL_TYPE)).isTrue();
-    assertThat(noResolvedFooType.canTestForShallowEqualityWith(NUMBER_TYPE)).isTrue();
-    assertThat(noResolvedFooType.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE)).isTrue();
-    assertThat(noResolvedFooType.canTestForShallowEqualityWith(OBJECT_TYPE)).isTrue();
-    assertThat(noResolvedFooType.canTestForShallowEqualityWith(REGEXP_TYPE)).isTrue();
-    assertThat(noResolvedFooType.canTestForShallowEqualityWith(STRING_TYPE)).isTrue();
-    assertThat(noResolvedFooType.canTestForShallowEqualityWith(STRING_OBJECT_TYPE)).isTrue();
-    assertThat(noResolvedFooType.canTestForShallowEqualityWith(SYMBOL_TYPE)).isTrue();
-    assertThat(noResolvedFooType.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE)).isTrue();
-    assertThat(noResolvedFooType.canTestForShallowEqualityWith(ALL_TYPE)).isTrue();
-    assertThat(noResolvedFooType.canTestForShallowEqualityWith(VOID_TYPE)).isTrue();
+    assertType(noResolvedFooType).canTestForShallowEqualityWith(noResolvedFooType);
+    assertType(noResolvedFooType).canTestForShallowEqualityWith(NO_OBJECT_TYPE);
+    assertType(noResolvedFooType).canTestForShallowEqualityWith(ARRAY_TYPE);
+    assertType(noResolvedFooType).canTestForShallowEqualityWith(BOOLEAN_TYPE);
+    assertType(noResolvedFooType).canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE);
+    assertType(noResolvedFooType).canTestForShallowEqualityWith(DATE_TYPE);
+    assertType(noResolvedFooType).canTestForShallowEqualityWith(functionType);
+    assertType(noResolvedFooType).canTestForShallowEqualityWith(NULL_TYPE);
+    assertType(noResolvedFooType).canTestForShallowEqualityWith(NUMBER_TYPE);
+    assertType(noResolvedFooType).canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE);
+    assertType(noResolvedFooType).canTestForShallowEqualityWith(OBJECT_TYPE);
+    assertType(noResolvedFooType).canTestForShallowEqualityWith(REGEXP_TYPE);
+    assertType(noResolvedFooType).canTestForShallowEqualityWith(STRING_TYPE);
+    assertType(noResolvedFooType).canTestForShallowEqualityWith(STRING_OBJECT_TYPE);
+    assertType(noResolvedFooType).canTestForShallowEqualityWith(SYMBOL_TYPE);
+    assertType(noResolvedFooType).canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE);
+    assertType(noResolvedFooType).canTestForShallowEqualityWith(ALL_TYPE);
+    assertType(noResolvedFooType).canTestForShallowEqualityWith(VOID_TYPE);
 
     // isNullable
-    assertThat(noResolvedFooType.isNullable()).isTrue();
-    assertThat(noResolvedFooType.isVoidable()).isTrue();
+    assertThat(noResolvedFooType.isNullable()).isFalse();
+    assertThat(noResolvedFooType.isVoidable()).isFalse();
 
     // isObject
     assertThat(noResolvedFooType.isObject()).isTrue();
 
     // matchesXxx
-    assertThat(noResolvedFooType.matchesNumberContext()).isTrue();
-    assertThat(noResolvedFooType.matchesObjectContext()).isTrue();
-    assertThat(noResolvedFooType.matchesStringContext()).isTrue();
-    assertThat(noResolvedFooType.matchesSymbolContext()).isTrue();
+    assertThat(noResolvedFooType.matchesNumberContext()).isFalse();
+    assertThat(noResolvedFooType.matchesObjectContext()).isFalse();
+    assertThat(noResolvedFooType.matchesStringContext()).isFalse();
+    assertThat(noResolvedFooType.matchesSymbolContext()).isFalse();
 
     // toString
     assertThat(noResolvedFooType.toString()).isEqualTo("NoResolvedType<Foo>");
     assertThat(noResolvedFooType.getDisplayName()).isEqualTo("Foo");
     assertThat(noResolvedFooType.hasDisplayName()).isTrue();
-
-    // getPropertyType
-    assertTypeEquals(CHECKED_UNKNOWN_TYPE, noResolvedFooType.getPropertyType("anyProperty"));
 
     Asserts.assertResolvesToSame(noResolvedFooType);
 
@@ -685,9 +682,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(forwardDeclaredNamedType.isNoResolvedType()).isTrue();
 
     UnionType nullable = (UnionType) registry.createNullableType(noResolvedFooType);
-    assertTypeEquals(
-        nullable, nullable.getGreatestSubtype(NULL_TYPE));
-    assertTypeEquals(noResolvedFooType, nullable.getRestrictedUnion(NULL_TYPE));
+    assertType(nullable.getGreatestSubtype(NULL_TYPE)).isEqualTo(NULL_TYPE);
+    assertType(nullable.getRestrictedUnion(NULL_TYPE)).isEqualTo(noResolvedFooType);
 
     UnionType testIsVoidable = (UnionType) registry.createUnionType(noResolvedFooType, VOID_TYPE);
     assertThat(testIsVoidable.getPossibleToBooleanOutcomes()).isEqualTo(BooleanLiteralSet.BOTH);
@@ -1579,6 +1575,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(NULL_TYPE.isSubtypeOf(REGEXP_TYPE)).isFalse();
     assertThat(NULL_TYPE.isSubtypeOf(ARRAY_TYPE)).isFalse();
     assertThat(NULL_TYPE.isSubtypeOf(UNKNOWN_TYPE)).isTrue();
+    assertType(NULL_TYPE).isNotSubtypeOf(forwardDeclaredNamedType);
 
     assertThat(NULL_TYPE.isSubtypeOf(createNullableType(NO_OBJECT_TYPE))).isTrue();
     assertThat(NULL_TYPE.isSubtypeOf(createNullableType(NO_TYPE))).isTrue();
@@ -1674,10 +1671,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // getGreatestSubtype
     assertThat(NULL_TYPE.isSubtypeOf(createUnionType(forwardDeclaredNamedType, NULL_TYPE)))
         .isTrue();
-    assertTypeEquals(
-        createUnionType(forwardDeclaredNamedType, NULL_TYPE),
-        NULL_TYPE.getGreatestSubtype(
-            createUnionType(forwardDeclaredNamedType, NULL_TYPE)));
+    JSType fwdDeclaredNullUnion = createUnionType(forwardDeclaredNamedType, NULL_TYPE);
+    assertType(NULL_TYPE.getGreatestSubtype(fwdDeclaredNullUnion)).isEqualTo(NULL_TYPE);
     assertThat(NULL_TYPE.isNominalConstructorOrInterface()).isFalse();
 
     assertThat(NULL_TYPE.differsFrom(UNKNOWN_TYPE)).isTrue();
@@ -4872,10 +4867,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(NUMBER_TYPE,
         NUMBER_TYPE.getGreatestSubtype(CHECKED_UNKNOWN_TYPE));
 
-    assertTypeEquals(
-        forwardDeclaredNamedType, NO_OBJECT_TYPE.getGreatestSubtype(forwardDeclaredNamedType));
-    assertTypeEquals(
-        forwardDeclaredNamedType, forwardDeclaredNamedType.getGreatestSubtype(NO_OBJECT_TYPE));
+    assertTypeEquals(NO_OBJECT_TYPE, NO_OBJECT_TYPE.getGreatestSubtype(forwardDeclaredNamedType));
+    assertTypeEquals(NO_OBJECT_TYPE, forwardDeclaredNamedType.getGreatestSubtype(NO_OBJECT_TYPE));
 
     assertTypeEquals(CHECKED_UNKNOWN_TYPE,
         CHECKED_UNKNOWN_TYPE.getGreatestSubtype(CHECKED_UNKNOWN_TYPE));

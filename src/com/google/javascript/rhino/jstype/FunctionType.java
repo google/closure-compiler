@@ -179,14 +179,6 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
 
     if (builder.typeOfThis != null) {
       this.typeOfThis = builder.typeOfThis;
-    } else if (this instanceof NoResolvedType) {
-      /*
-       * TODO(b/112425334): Delete this special case if NO_RESOLVED_TYPE is deleted.
-       *
-       * <p>Despite being a subclass of `NoType`, `NoResolvedType` should behave more like `?`.
-       * There's no reason to believe its properties are of its own type.
-       */
-      this.typeOfThis = this.registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     } else {
       switch (kind) {
         case CONSTRUCTOR:

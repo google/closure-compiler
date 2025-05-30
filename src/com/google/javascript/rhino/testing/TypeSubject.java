@@ -154,6 +154,10 @@ public final class TypeSubject extends Subject {
     return this;
   }
 
+  public void isUnionType() {
+    check("isUnionType()").that(actualNonNull().isUnionType()).isTrue();
+  }
+
   public void isResolved() {
     check("isResolved()").that(actualNonNull().isResolved()).isTrue();
   }
@@ -203,6 +207,18 @@ public final class TypeSubject extends Subject {
 
   public void isNotSubtypeOf(JSType superType) {
     check("isSubtypeOf(%s)", superType).that(actualNonNull().isSubtypeOf(superType)).isFalse();
+  }
+
+  public void canTestForShallowEqualityWith(JSType other) {
+    check("canTestForShallowEqualityWith(%s)", other)
+        .that(actualNonNull().canTestForShallowEqualityWith(other))
+        .isTrue();
+  }
+
+  public void cannotTestForShallowEqualityWith(JSType other) {
+    check("canTestForShallowEqualityWith(%s)", other)
+        .that(actualNonNull().canTestForShallowEqualityWith(other))
+        .isFalse();
   }
 
   public void toStringIsEqualTo(String typeString) {

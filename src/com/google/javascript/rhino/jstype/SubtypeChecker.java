@@ -193,7 +193,6 @@ final class SubtypeChecker {
         return this.isEnumSubtype((EnumType) subtype, supertype);
       case NO_OBJECT:
       case NO:
-      case NO_RESOLVED:
         return this.isVariousBottomsSubtype(subtype, supertype);
       case FUNCTION:
         return this.isFunctionSubtype((FunctionType) subtype, supertype);
@@ -421,11 +420,7 @@ final class SubtypeChecker {
       return true;
     }
 
-    if (subtype instanceof NoResolvedType) {
-      return !supertype.isNoType();
-    }
-
-    return supertype.isObject() && !supertype.isNoType() && !supertype.isNoResolvedType();
+    return supertype.isObject() && !supertype.isNoType();
   }
 
   private boolean isArrowTypeSubtype(ArrowType subtype, JSType nonArrowSupertype) {

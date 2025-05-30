@@ -19777,6 +19777,23 @@ override: function(this:Foo): number
   }
 
   @Test
+  public void testForwardTypeDeclaration1() {
+    String f =
+        """
+        goog.forwardDeclare('MyType');
+        /** @param {!MyType} x */ function f(x) { }
+        """;
+    testClosureTypes(f, null);
+    testClosureTypes(
+        f + "f(3);",
+        """
+        actual parameter 1 of f does not match formal parameter
+        found   : number
+        required: MyType
+        """);
+  }
+
+  @Test
   public void testForwardTypeDeclaration2() {
     String f =
         """
