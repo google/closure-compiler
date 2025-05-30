@@ -31,7 +31,6 @@ import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -766,23 +765,6 @@ final class PolymerClassRewriter {
     }
   }
 
-  // TODO(rishipal): Consider passing behavior's module instead of behavior definition and moving
-  //  this into a common, re-usable place
-  private Map<String, Var> accumulateModuleLocalVars(BehaviorDefinition behavior) {
-    Map<String, Var> moduleLocalNames = new LinkedHashMap<>();
-    List<Var> orderedNames = new ArrayList<>();
-    SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
-    Scope globalScope = Scope.createGlobalScope(behavior.behaviorModule.getParent());
-    NodeUtil.getAllVarsDeclaredInModule(
-        behavior.behaviorModule,
-        moduleLocalNames,
-        orderedNames,
-        compiler,
-        scopeCreator,
-        globalScope);
-    return moduleLocalNames;
-  }
-
   private JSDocInfo.Builder getJSDocInfoBuilderForBehavior(
       BehaviorDefinition behavior, MemberDefinition behaviorFunctionOrProp) {
     JSDocInfo.Builder info;
@@ -791,11 +773,10 @@ final class PolymerClassRewriter {
         && behaviorFunctionOrProp.info.containsTypeDeclaration()) {
 
       if (behavior.behaviorModule != null) {
-        Map<String, Var> moduleLocalNames = accumulateModuleLocalVars(behavior);
         // Replace module local names in @type, @return and @param with unknown type
         info =
             JSDocInfo.Builder.maybeCopyFromAndReplaceNames(
-                behaviorFunctionOrProp.info, moduleLocalNames.keySet());
+                behaviorFunctionOrProp.info, behavior.getModuleLocalNames(compiler));
       } else {
         info = JSDocInfo.Builder.maybeCopyFrom(behaviorFunctionOrProp.info);
       }
@@ -886,6 +867,11 @@ final class PolymerClassRewriter {
           info = JSDocInfo.builder().parseDocumentation();
           if (behaviorProp.info != null && behaviorProp.info.getReturnType() != null) {
             info.recordType(behaviorProp.info.getReturnType());
+            if (behaviorProp.enclosingModule != null) {
+              info =
+                  JSDocInfo.Builder.maybeCopyFromAndReplaceNames(
+                      info.build(), behavior.getModuleLocalNames(compiler));
+            }
           }
         }
 

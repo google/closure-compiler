@@ -2497,19 +2497,26 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
   }
 
   @Test
-  public void testBehaviorInModule_WithBehaviorProps() {
+  public void testBehaviorInModule_WithBehaviorProps_passesTypechecking() {
     test(
         srcs(
             TestExternsBuilder.getClosureExternsAsSource(),
             """
             goog.module('Data');
+            const foo = goog.require('foo');
             class Item {}
             exports.Item = Item;
             /** @polymerBehavior */
             exports.SummaryDataBehavior = {
               properties: {
                 /** @type {!Item} */
-                ABC: {type: Object}
+                ABC: {type: Object},
+                /** @type {!foo.Item<string>} */
+                DEF: {type: Object}
+              },
+              /** @return {?Item} */
+              get x() {
+                return null;
               }
             };
             """,

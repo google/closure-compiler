@@ -71,7 +71,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -4124,11 +4123,9 @@ public final class NodeUtilTest {
       Node ast = parse(js);
       Node moduleNode = parseFirst(MODULE_BODY, js);
       Scope globalScope = Scope.createGlobalScope(ast);
-      Map<String, Var> allVariables = new LinkedHashMap<>();
-      List<Var> orderedVars = new ArrayList<>();
-      NodeUtil.getAllVarsDeclaredInModule(
-          moduleNode, allVariables, orderedVars, compiler, scopeCreator, globalScope);
-      assertThat(allVariables.keySet()).containsExactly("g", "h");
+      Set<String> allVariables =
+          NodeUtil.getAllVarNamesDeclaredInModule(moduleNode, compiler, scopeCreator, globalScope);
+      assertThat(allVariables).containsExactly("g", "h");
     }
 
     @Test
@@ -4140,19 +4137,16 @@ public final class NodeUtilTest {
       SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
       Node ast = parse(js);
       Scope globalScope = Scope.createGlobalScope(ast);
-      Map<String, Var> allVariables = new LinkedHashMap<>();
-      List<Var> orderedVars = new ArrayList<>();
-      try {
-        NodeUtil.getAllVarsDeclaredInModule(
-            ast, allVariables, orderedVars, compiler, scopeCreator, globalScope);
-        throw new RuntimeException("getAllVarsDeclaredInModule should throw an exception");
-      } catch (IllegalStateException e) {
-        assertThat(e)
-            .hasMessageThat()
-            .isEqualTo("getAllVarsDeclaredInModule expects a module body node");
-      }
-      assertThat(allVariables).isEmpty();
-      assertThat(orderedVars).isEmpty();
+      Exception ex =
+          assertThrows(
+              IllegalStateException.class,
+              () ->
+                  NodeUtil.getAllVarNamesDeclaredInModule(
+                      ast, compiler, scopeCreator, globalScope));
+
+      assertThat(ex)
+          .hasMessageThat()
+          .isEqualTo("getAllVarsDeclaredInModule expects a module body node");
     }
 
     @Test

@@ -144,6 +144,7 @@ final class PolymerClassDefinition {
       compiler.report(JSError.make(callNode, PolymerPassErrors.POLYMER_MISSING_IS));
       return null;
     }
+    Node enclosingModule = NodeUtil.getEnclosingModuleIfPresent(callNode);
 
     boolean hasGeneratedLhs = false;
     Node target;
@@ -223,7 +224,10 @@ final class PolymerClassDefinition {
       if (isFunctionDefinition) {
         methods.add(
             new MemberDefinition(
-                NodeUtil.getBestJSDocInfo(keyNode), keyNode, keyNode.getFirstChild()));
+                NodeUtil.getBestJSDocInfo(keyNode),
+                keyNode,
+                keyNode.getFirstChild(),
+                enclosingModule));
       }
     }
     CompilerInput input = compiler.getInput(NodeUtil.getEnclosingScript(callNode).getInputId());
@@ -235,7 +239,7 @@ final class PolymerClassDefinition {
         hasGeneratedLhs,
         descriptor,
         classInfo,
-        new MemberDefinition(ctorInfo, null, constructor),
+        new MemberDefinition(ctorInfo, null, constructor, enclosingModule),
         nativeBaseElement,
         properties,
         behaviorProps,
@@ -334,6 +338,7 @@ final class PolymerClassDefinition {
       compiler.report(JSError.make(classNode, PolymerPassErrors.POLYMER_CLASS_UNNAMED));
       return null;
     }
+    Node enclosingModule = NodeUtil.getEnclosingModuleIfPresent(classNode);
 
     JSDocInfo classInfo = NodeUtil.getBestJSDocInfo(classNode);
 
@@ -356,7 +361,10 @@ final class PolymerClassDefinition {
       }
       methods.add(
           new MemberDefinition(
-              NodeUtil.getBestJSDocInfo(keyNode), keyNode, keyNode.getFirstChild()));
+              NodeUtil.getBestJSDocInfo(keyNode),
+              keyNode,
+              keyNode.getFirstChild(),
+              enclosingModule));
     }
     CompilerInput input = compiler.getInput(NodeUtil.getEnclosingScript(classNode).getInputId());
 
@@ -367,7 +375,7 @@ final class PolymerClassDefinition {
         /* hasGeneratedLhs= */ false,
         propertiesDescriptor,
         classInfo,
-        new MemberDefinition(ctorInfo, null, constructor),
+        new MemberDefinition(ctorInfo, null, constructor, enclosingModule),
         null,
         properties,
         null,

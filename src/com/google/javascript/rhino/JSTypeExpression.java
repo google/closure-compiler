@@ -107,15 +107,24 @@ public final class JSTypeExpression implements Serializable {
       replaceNames(child, names);
       child = next;
     }
-    if (n.isStringLit() && names.contains(n.getString())) {
+    if (n.isStringLit() && names.contains(baseName(n.getString()))) {
       Node qMark = new Node(Token.QMARK);
-      qMark.addChildrenToBack(n.removeChildren());
+      if (n.hasChildren() && !n.getFirstChild().isBlock()) {
+        // preserve the children of the type expression unless it's a block - a BLOCK child
+        // represents a templatized type Foo<string, number>, and `?` cannot be templatized.
+        qMark.addChildrenToBack(n.removeChildren());
+      }
       if (n.hasParent()) {
         n.replaceWith(qMark);
       }
       return qMark;
     }
     return n;
+  }
+
+  private static final String baseName(String name) {
+    int dotIndex = name.indexOf('.');
+    return dotIndex == -1 ? name : name.substring(0, dotIndex);
   }
 
   /** Returns a list of all type nodes in this type expression. */

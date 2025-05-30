@@ -6021,18 +6021,16 @@ public final class NodeUtil {
    * @param orderedVars an empty list that gets populated with variable objects in the order that
    *     they appear in the module
    */
-  static void getAllVarsDeclaredInModule(
+  static Set<String> getAllVarNamesDeclaredInModule(
       final Node moduleNode,
-      final Map<String, Var> nameVarMap,
-      final List<Var> orderedVars,
       AbstractCompiler compiler,
       ScopeCreator scopeCreator,
       final Scope globalScope) {
 
     checkState(moduleNode.isModuleBody(), "getAllVarsDeclaredInModule expects a module body node");
-    checkState(nameVarMap.isEmpty());
-    checkState(orderedVars.isEmpty());
     checkState(globalScope.isGlobal(), globalScope);
+
+    final Set<String> nameVars = new LinkedHashSet<>();
 
     ScopedCallback finder =
         new ScopedCallback() {
@@ -6041,8 +6039,7 @@ public final class NodeUtil {
             Scope currentScope = t.getScope();
             if (currentScope.isModuleScope()) {
               for (Var v : currentScope.getVarIterable()) {
-                nameVarMap.put(v.getName(), v);
-                orderedVars.add(v);
+                nameVars.add(v.getName());
               }
             }
           }
@@ -6063,6 +6060,7 @@ public final class NodeUtil {
         .setCallback(finder)
         .setScopeCreator(scopeCreator)
         .traverseWithScope(moduleNode, globalScope);
+    return nameVars;
   }
 
   /**

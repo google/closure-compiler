@@ -176,6 +176,7 @@ final class PolymerPassStaticUtils {
     if (constructor != null) {
       collectConstructorPropertyJsDoc(constructor, constructorPropertyJsDoc);
     }
+    Node enclosingModule = NodeUtil.getEnclosingModuleIfPresent(descriptor);
 
     ImmutableList.Builder<MemberDefinition> members = ImmutableList.builder();
     for (Node keyNode = properties.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
@@ -193,7 +194,8 @@ final class PolymerPassStaticUtils {
       } else {
         bestJsDoc = propertiesConfigJsDoc;
       }
-      members.add(new MemberDefinition(bestJsDoc, keyNode, keyNode.getFirstChild()));
+      members.add(
+          new MemberDefinition(bestJsDoc, keyNode, keyNode.getFirstChild(), enclosingModule));
     }
     return members.build();
   }
