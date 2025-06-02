@@ -163,12 +163,14 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
                 return;
               }
               JSTypeRegistry registry = t.getCompiler().getTypeRegistry();
-              if (registry.getType(t.getScope(), typeName) == null) {
+              JSType type = registry.getType(t.getScope(), typeName);
+              if (type == null) {
                 return;
               }
-              JSType type = registry.createTypeFromCommentNode(node);
+              boolean isNonNullableName =
+                  registry.isNonNullableName(t.getScope(), typeName) && !type.isNullable();
               Nullability nullability =
-                  type.isNullable() ? Nullability.NULLABLE : Nullability.NONNULL;
+                  isNonNullableName ? Nullability.NONNULL : Nullability.NULLABLE;
               builder.add(Result.create(node, nullability));
             }
           },

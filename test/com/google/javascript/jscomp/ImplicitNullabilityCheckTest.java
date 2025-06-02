@@ -221,6 +221,32 @@ public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
         warning(ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC));
   }
 
+  @Test
+  public void shadowingGlobalTypedefWithClass() {
+    warnImplicitlyNullable(
+        """
+        /** @typedef {string} */ let Type;
+        function local() {
+          class Type {}
+          /** @type {Type} */ var x;
+        }
+        """);
+  }
+
+  @Test
+  public void shadowingGlobalClassWithTypedef() {
+    test(
+        srcs(
+            """
+            class Type {}
+            function local() {
+              /** @typedef {string} */ let Type;
+              /** @type {Type} */ var x;
+            }
+            """),
+        warning(ImplicitNullabilityCheck.IMPLICITLY_NONNULL_JSDOC));
+  }
+
   private void warnImplicitlyNullable(String js) {
     test(
         externs(DEFAULT_EXTERNS),
