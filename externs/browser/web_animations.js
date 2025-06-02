@@ -167,7 +167,13 @@ AnimationEffect.prototype.timing;
 var KeyframeEffectReadOnly = function(target, frames, options) {};
 
 /** @override */
+KeyframeEffectReadOnly.prototype.getTiming = function() {};
+
+/** @override */
 KeyframeEffectReadOnly.prototype.getComputedTiming = function() {};
+
+/** @override */
+KeyframeEffectReadOnly.prototype.updateTiming = function(timing) {};
 
 /** @override */
 KeyframeEffectReadOnly.prototype.timing;
@@ -415,7 +421,13 @@ DocumentTimeline.prototype.getAnimations = function() {};
 var SequenceEffect = function(children, timing) {};
 
 /** @override */
+SequenceEffect.prototype.getTiming = function() {};
+
+/** @override */
 SequenceEffect.prototype.getComputedTiming = function() {};
+
+/** @override */
+SequenceEffect.prototype.updateTiming = function(timing) {};
 
 /** @override */
 SequenceEffect.prototype.timing;
@@ -433,7 +445,13 @@ SequenceEffect.prototype.children;
 var GroupEffect = function(children, timing) {};
 
 /** @override */
+GroupEffect.prototype.getTiming = function() {};
+
+/** @override */
 GroupEffect.prototype.getComputedTiming = function() {};
+
+/** @override */
+GroupEffect.prototype.updateTiming = function(timing) {};
 
 /** @override */
 GroupEffect.prototype.timing;
