@@ -26,13 +26,6 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
-  @Override
-  protected CompilerOptions getDefaultOptions() {
-    CompilerOptions options = super.getDefaultOptions();
-    options.setWarningLevel(DiagnosticGroups.TOO_MANY_TYPE_PARAMS, CheckLevel.WARNING);
-    return options;
-  }
-
   @Test
   public void testCorrectSubtyping_ofRecursiveTemplateType() {
     newTest()

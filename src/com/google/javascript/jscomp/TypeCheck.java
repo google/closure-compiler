@@ -377,6 +377,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           POSSIBLE_INEXISTENT_PROPERTY,
           PROPERTY_ASSIGNMENT_TO_READONLY_VALUE,
           RhinoErrorReporter.CYCLIC_INHERITANCE_ERROR,
+          RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS,
           RhinoErrorReporter.TYPE_PARSE_ERROR,
           RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR,
           SAME_INTERFACE_MULTIPLE_IMPLEMENTS,

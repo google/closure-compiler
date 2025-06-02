@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.DiagnosticGroups.CHECK_TYPES;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
@@ -419,9 +418,15 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
           const /** null */ n = /** @type {!a.TypeDef<?>} */ (0);
           """
         },
+        null,
         // Just making sure that typechecking ran and didn't crash.  It would be reasonable
         // for there also to be other type errors in this code before the final null assignment.
-        CHECK_TYPES);
+        new DiagnosticGroup[] {
+          DiagnosticGroups.CHECK_TYPES,
+          DiagnosticGroups.CHECK_TYPES,
+          DiagnosticGroups.CHECK_TYPES,
+          DiagnosticGroups.CHECK_TYPES
+        });
   }
 
   @Test

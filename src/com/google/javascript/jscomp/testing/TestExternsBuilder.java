@@ -107,7 +107,7 @@ public class TestExternsBuilder {
           " */",
           "$jscomp.arrayFromIterable = function(iterable) {};",
           "/**",
-          " * @param {string|!Iterable<T>|!Iterator<T>|!Arguments<T>} iterable",
+          " * @param {string|!Iterable<T>|!Iterator<T>|!Arguments} iterable",
           " * @return {!Iterator<T>}",
           " * @template T",
           " */",

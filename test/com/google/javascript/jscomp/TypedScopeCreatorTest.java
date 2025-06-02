@@ -8149,10 +8149,14 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   @Test
   public void testReportBadTypeAnnotationInExtraTemplateParameter() {
-    testWarning(
-        "class C {} var /** !C<!MissingType> */ x;", RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
-    testWarning(
-        "var /** !Array<string, !MissingType> */ x;", RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+    test(
+        srcs("class C {} var /** !C<!MissingType> */ x;"),
+        warning(RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR),
+        warning(RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS));
+    test(
+        srcs("var /** !Array<string, !MissingType> */ x;"),
+        warning(RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR),
+        warning(RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS));
   }
 
   @Test
