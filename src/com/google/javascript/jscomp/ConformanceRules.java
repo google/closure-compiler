@@ -25,6 +25,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
@@ -73,6 +74,9 @@ import org.jspecify.annotations.Nullable;
 public final class ConformanceRules {
 
   private static final AllowList ALL_TS_ALLOWLIST = createTsAllowlist();
+
+  private static final Splitter ON_PROTOTYPE = Splitter.on(".prototype.");
+  private static final Splitter ON_DOT = Splitter.on(".");
 
   private static AllowList createTsAllowlist() {
     try {
@@ -1042,10 +1046,10 @@ public final class ConformanceRules {
 
     /** Extracts the method name from a provided name. */
     private static @Nullable String getPropertyFromDeclarationName(String specName) {
-      String[] parts = specName.split("\\.prototype\\.");
-      checkState(parts.length == 1 || parts.length == 2);
-      if (parts.length == 2) {
-        return parts[1];
+      List<String> parts = ON_PROTOTYPE.splitToList(specName);
+      checkState(parts.size() == 1 || parts.size() == 2);
+      if (parts.size() == 2) {
+        return parts.get(1);
       }
       return null;
     }
@@ -1053,10 +1057,10 @@ public final class ConformanceRules {
     /** Extracts the class name from a provided name. */
     private static @Nullable String getClassFromDeclarationName(String specName) {
       String tmp = specName;
-      String[] parts = tmp.split("\\.prototype\\.");
-      checkState(parts.length == 1 || parts.length == 2);
-      if (parts.length == 2) {
-        return parts[0];
+      List<String> parts = ON_PROTOTYPE.splitToList(tmp);
+      checkState(parts.size() == 1 || parts.size() == 2);
+      if (parts.size() == 2) {
+        return parts.get(0);
       }
       return null;
     }
@@ -2152,23 +2156,24 @@ public final class ConformanceRules {
    * values assigned to banned attributes are allowed as they couldn't be attacker controlled.
    */
   public static final class BanCreateDom extends AbstractRule {
-    private final List<String[]> bannedTagAttrs;
+    private final ImmutableList<String[]> bannedTagAttrs;
     private final JSType domHelperType;
     private final JSType classNameTypes;
 
     public BanCreateDom(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
       super(compiler, requirement);
-      bannedTagAttrs = new ArrayList<>();
+      ImmutableList.Builder<String[]> bannedTagAttrs = ImmutableList.builder();
       for (String value : requirement.getValueList()) {
-        String[] tagAttr = value.split("\\.");
-        if (tagAttr.length != 2 || tagAttr[0].isEmpty() || tagAttr[1].isEmpty()) {
+        List<String> tagAttr = ON_DOT.splitToList(value);
+        if (tagAttr.size() != 2 || tagAttr.get(0).isEmpty() || tagAttr.get(1).isEmpty()) {
           throw new InvalidRequirementSpec("Values must be in the format tagname.attribute.");
         }
-        tagAttr[0] = tagAttr[0].toLowerCase(Locale.ROOT);
-        bannedTagAttrs.add(tagAttr);
+        String lowercasedTag = tagAttr.get(0).toLowerCase(Locale.ROOT);
+        bannedTagAttrs.add(new String[] {lowercasedTag, tagAttr.get(1)});
       }
-      if (bannedTagAttrs.isEmpty()) {
+      this.bannedTagAttrs = bannedTagAttrs.build();
+      if (this.bannedTagAttrs.isEmpty()) {
         throw new InvalidRequirementSpec("Specify one or more values.");
       }
       domHelperType = compiler.getTypeRegistry().getGlobalType("goog.dom.DomHelper");
