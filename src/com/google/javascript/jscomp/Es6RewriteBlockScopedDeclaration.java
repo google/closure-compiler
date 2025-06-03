@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
@@ -110,12 +109,14 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
    * consider it to be inside a loop.
    */
   private boolean inLoop(Node n) {
-    Node enclosingNode = NodeUtil.getEnclosingNode(n, isLoopOrFunction);
+    Node enclosingNode =
+        NodeUtil.getEnclosingNode(n, Es6RewriteBlockScopedDeclaration::isLoopOrFunction);
     return enclosingNode != null && !enclosingNode.isFunction();
   }
 
-  private static final Predicate<Node> isLoopOrFunction =
-      (n) -> n.isFunction() || NodeUtil.isLoopStructure(n);
+  private static boolean isLoopOrFunction(Node n) {
+    return n.isFunction() || NodeUtil.isLoopStructure(n);
+  }
 
   private static void extractInlineJSDoc(Node srcDeclaration, Node srcName, Node destDeclaration) {
     JSDocInfo existingInfo = srcDeclaration.getJSDocInfo();

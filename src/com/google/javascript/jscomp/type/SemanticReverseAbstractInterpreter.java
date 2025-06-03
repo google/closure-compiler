@@ -46,47 +46,43 @@ import org.jspecify.annotations.Nullable;
 public final class SemanticReverseAbstractInterpreter extends ChainableReverseAbstractInterpreter {
 
   /** Merging function for equality between types. */
-  private static final Function<TypePair, TypePair> EQ =
-      p -> {
-        if (p.typeA == null || p.typeB == null) {
-          return null;
-        }
-        return p.typeA.getTypesUnderEquality(p.typeB);
-      };
+  private static @Nullable TypePair eq(TypePair p) {
+    if (p.typeA == null || p.typeB == null) {
+      return null;
+    }
+    return p.typeA.getTypesUnderEquality(p.typeB);
+  }
 
   /** Merging function for non-equality between types. */
-  private static final Function<TypePair, TypePair> NE =
-      p -> {
-        if (p.typeA == null || p.typeB == null) {
-          return null;
-        }
-        return p.typeA.getTypesUnderInequality(p.typeB);
-      };
+  private static @Nullable TypePair ne(TypePair p) {
+    if (p.typeA == null || p.typeB == null) {
+      return null;
+    }
+    return p.typeA.getTypesUnderInequality(p.typeB);
+  }
 
   /** Merging function for strict equality between types. */
-  private static final Function<TypePair, TypePair> SHEQ =
-      p -> {
-        if (p.typeA == null || p.typeB == null) {
-          return null;
-        }
-        return p.typeA.getTypesUnderShallowEquality(p.typeB);
-      };
+  private static @Nullable TypePair sheq(TypePair p) {
+    if (p.typeA == null || p.typeB == null) {
+      return null;
+    }
+    return p.typeA.getTypesUnderShallowEquality(p.typeB);
+  }
 
   /** Merging function for strict non-equality between types. */
-  private static final Function<TypePair, TypePair> SHNE =
-      p -> {
-        if (p.typeA == null || p.typeB == null) {
-          return null;
-        }
-        return p.typeA.getTypesUnderShallowInequality(p.typeB);
-      };
+  private static @Nullable TypePair shne(TypePair p) {
+    if (p.typeA == null || p.typeB == null) {
+      return null;
+    }
+    return p.typeA.getTypesUnderShallowInequality(p.typeB);
+  }
 
   /** Merging function for inequality comparisons between types. */
-  private final Function<TypePair, TypePair> ineq =
-      p ->
-          new TypePair(
-              p.typeA != null ? p.typeA.restrictByNotUndefined() : null,
-              p.typeB != null ? p.typeB.restrictByNotUndefined() : null);
+  private static @Nullable TypePair ineq(TypePair p) {
+    return new TypePair(
+        p.typeA != null ? p.typeA.restrictByNotUndefined() : null,
+        p.typeB != null ? p.typeB.restrictByNotUndefined() : null);
+  }
 
   /** Creates a semantic reverse abstract interpreter. */
   public SemanticReverseAbstractInterpreter(JSTypeRegistry typeRegistry) {
@@ -165,30 +161,30 @@ public final class SemanticReverseAbstractInterpreter extends ChainableReverseAb
 
       case EQ:
         if (outcome.isTruthy()) {
-          return caseEquality(condition, blindScope, EQ);
+          return caseEquality(condition, blindScope, SemanticReverseAbstractInterpreter::eq);
         } else {
-          return caseEquality(condition, blindScope, NE);
+          return caseEquality(condition, blindScope, SemanticReverseAbstractInterpreter::ne);
         }
 
       case NE:
         if (outcome.isTruthy()) {
-          return caseEquality(condition, blindScope, NE);
+          return caseEquality(condition, blindScope, SemanticReverseAbstractInterpreter::ne);
         } else {
-          return caseEquality(condition, blindScope, EQ);
+          return caseEquality(condition, blindScope, SemanticReverseAbstractInterpreter::eq);
         }
 
       case SHEQ:
         if (outcome.isTruthy()) {
-          return caseEquality(condition, blindScope, SHEQ);
+          return caseEquality(condition, blindScope, SemanticReverseAbstractInterpreter::sheq);
         } else {
-          return caseEquality(condition, blindScope, SHNE);
+          return caseEquality(condition, blindScope, SemanticReverseAbstractInterpreter::shne);
         }
 
       case SHNE:
         if (outcome.isTruthy()) {
-          return caseEquality(condition, blindScope, SHNE);
+          return caseEquality(condition, blindScope, SemanticReverseAbstractInterpreter::shne);
         } else {
-          return caseEquality(condition, blindScope, SHEQ);
+          return caseEquality(condition, blindScope, SemanticReverseAbstractInterpreter::sheq);
         }
 
       case NAME:
@@ -211,7 +207,7 @@ public final class SemanticReverseAbstractInterpreter extends ChainableReverseAb
       case GE:
       case GT:
         if (outcome.isTruthy()) {
-          return caseEquality(condition, blindScope, ineq);
+          return caseEquality(condition, blindScope, SemanticReverseAbstractInterpreter::ineq);
         }
         break;
 
@@ -231,9 +227,9 @@ public final class SemanticReverseAbstractInterpreter extends ChainableReverseAb
           Node left = condition.getParent().getPrevious(); // the switch condition
           Node right = condition.getFirstChild();
           if (outcome.isTruthy()) {
-            return caseEquality(left, right, blindScope, SHEQ);
+            return caseEquality(left, right, blindScope, SemanticReverseAbstractInterpreter::sheq);
           } else {
-            return caseEquality(left, right, blindScope, SHNE);
+            return caseEquality(left, right, blindScope, SemanticReverseAbstractInterpreter::shne);
           }
         }
 

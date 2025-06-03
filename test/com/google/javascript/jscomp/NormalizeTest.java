@@ -1388,7 +1388,7 @@ public final class NormalizeTest extends CompilerTestCase {
     testSame("var CONST = 3; var b = CONST;");
     Node n = getLastCompiler().getRoot();
 
-    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
+    Set<Node> constantNodes = findNodesWithProperty(n, NormalizeTest::isConstantName);
     assertThat(constantNodes).hasSize(2);
     for (Node hasProp : constantNodes) {
       assertThat(hasProp.getString()).isEqualTo("CONST");
@@ -1402,7 +1402,7 @@ public final class NormalizeTest extends CompilerTestCase {
     testSame("var someNonConstVar = function foo() {};");
     Node n = getLastCompiler().getRoot();
 
-    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
+    Set<Node> constantNodes = findNodesWithProperty(n, NormalizeTest::isConstantName);
     assertThat(constantNodes).hasSize(1);
     assertThat(constantNodes.iterator().next().getString()).isEqualTo("foo");
   }
@@ -1414,7 +1414,7 @@ public final class NormalizeTest extends CompilerTestCase {
     testSame("const someConstVar = function foo() {};");
     Node n = getLastCompiler().getRoot();
 
-    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
+    Set<Node> constantNodes = findNodesWithProperty(n, NormalizeTest::isConstantName);
     assertThat(constantNodes).hasSize(2); // {someConstVar, foo}
     Iterator<Node> itr = constantNodes.iterator();
     assertThat(itr.next().getString()).isEqualTo("foo");
@@ -1428,7 +1428,7 @@ public final class NormalizeTest extends CompilerTestCase {
     testSame("const someConstVar = function foo() { foo(); };");
     Node n = getLastCompiler().getRoot();
 
-    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
+    Set<Node> constantNodes = findNodesWithProperty(n, NormalizeTest::isConstantName);
     assertThat(constantNodes).hasSize(3); // {someConstVar, foo, foo}
     Iterator<Node> itr = constantNodes.iterator();
     assertThat(itr.next().getString()).isEqualTo("foo");
@@ -1448,7 +1448,7 @@ public final class NormalizeTest extends CompilerTestCase {
         """);
     Node n = getLastCompiler().getRoot();
 
-    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
+    Set<Node> constantNodes = findNodesWithProperty(n, NormalizeTest::isConstantName);
     assertThat(constantNodes).hasSize(3); // {someConstVar, foo, foo}
     Iterator<Node> itr = constantNodes.iterator();
 
@@ -1469,7 +1469,7 @@ public final class NormalizeTest extends CompilerTestCase {
         """);
     Node n = getLastCompiler().getRoot();
 
-    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
+    Set<Node> constantNodes = findNodesWithProperty(n, NormalizeTest::isConstantName);
     assertThat(constantNodes).hasSize(2); // {foo, foo}
     Iterator<Node> itr = constantNodes.iterator();
 
@@ -1484,7 +1484,7 @@ public final class NormalizeTest extends CompilerTestCase {
     testSame("use(function foo(i) { foo(i-1);});");
     Node n = getLastCompiler().getRoot();
 
-    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
+    Set<Node> constantNodes = findNodesWithProperty(n, NormalizeTest::isConstantName);
     assertThat(constantNodes).hasSize(2); // {foo, foo}
     Iterator<Node> itr = constantNodes.iterator();
 
@@ -1504,7 +1504,7 @@ public final class NormalizeTest extends CompilerTestCase {
         """);
     Node n = getLastCompiler().getRoot();
 
-    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
+    Set<Node> constantNodes = findNodesWithProperty(n, NormalizeTest::isConstantName);
     assertThat(constantNodes).hasSize(2); // {foo, foo}
     Iterator<Node> itr = constantNodes.iterator();
 
@@ -1519,7 +1519,7 @@ public final class NormalizeTest extends CompilerTestCase {
         "const {CONST: CONST} = {CONST:3}; let b = CONST;");
     Node n = getLastCompiler().getRoot();
 
-    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
+    Set<Node> constantNodes = findNodesWithProperty(n, NormalizeTest::isConstantName);
     assertThat(constantNodes).hasSize(2);
     for (Node hasProp : constantNodes) {
       assertThat(hasProp.getString()).isEqualTo("CONST");
@@ -1533,7 +1533,7 @@ public final class NormalizeTest extends CompilerTestCase {
     test("const {CONST = 3} = {}; var b = CONST;", "const {CONST: CONST = 3} = {}; var b = CONST;");
     Node n = getLastCompiler().getRoot();
 
-    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
+    Set<Node> constantNodes = findNodesWithProperty(n, NormalizeTest::isConstantName);
     assertThat(constantNodes).hasSize(2);
     for (Node hasProp : constantNodes) {
       assertThat(hasProp.getString()).isEqualTo("CONST");
@@ -1547,7 +1547,7 @@ public final class NormalizeTest extends CompilerTestCase {
     testSame("var a = {other: 4}; /** @const */ var other = 5;");
     Node n = getLastCompiler().getRoot();
 
-    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
+    Set<Node> constantNodes = findNodesWithProperty(n, NormalizeTest::isConstantName);
     assertThat(constantNodes).hasSize(1);
     for (Node hasProp : constantNodes) {
       assertThat(hasProp.getString()).isEqualTo("other");
@@ -1573,8 +1573,9 @@ public final class NormalizeTest extends CompilerTestCase {
         """);
   }
 
-  private static final Predicate<Node> IS_CONSTANT_NAME =
-      (n) -> n.getBooleanProp(Node.IS_CONSTANT_NAME);
+  private static boolean isConstantName(Node n) {
+    return n.getBooleanProp(Node.IS_CONSTANT_NAME);
+  }
 
   private Set<Node> findNodesWithProperty(Node root, Predicate<Node> prop) {
     final Set<Node> set = new LinkedHashSet<>();

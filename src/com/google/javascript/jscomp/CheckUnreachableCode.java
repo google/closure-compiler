@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.graph.GraphNode;
@@ -71,27 +70,26 @@ class CheckUnreachableCode extends NodeTraversal.AbstractCfgCallback {
   }
 
   private void initScope(ControlFlowGraph<Node> controlFlowGraph) {
-    new GraphReachability<>(controlFlowGraph, REACHABLE)
+    new GraphReachability<>(controlFlowGraph, CheckUnreachableCode::isReachable)
         .compute(controlFlowGraph.getEntry().getValue());
   }
 
-  private static final Predicate<EdgeTuple<Node, ControlFlowGraph.Branch>> REACHABLE =
-      (EdgeTuple<Node, Branch> input) -> {
-        Branch branch = input.edge;
-        if (!branch.isConditional()) {
-          return true;
-        }
-        Node predecessor = input.sourceNode;
-        Node condition = NodeUtil.getConditionExpression(predecessor);
+  private static boolean isReachable(EdgeTuple<Node, Branch> input) {
+    Branch branch = input.edge;
+    if (!branch.isConditional()) {
+      return true;
+    }
+    Node predecessor = input.sourceNode;
+    Node condition = NodeUtil.getConditionExpression(predecessor);
 
-        // TODO(user): Handle more complicated expression like true == true,
-        // etc....
-        if (condition != null) {
-          Tri val = NodeUtil.getBooleanValue(condition);
-          if (val != Tri.UNKNOWN) {
-            return val.toBoolean(true) == (branch == Branch.ON_TRUE);
-          }
-        }
-        return true;
-      };
+    // TODO(user): Handle more complicated expression like true == true,
+    // etc....
+    if (condition != null) {
+      Tri val = NodeUtil.getBooleanValue(condition);
+      if (val != Tri.UNKNOWN) {
+        return val.toBoolean(true) == (branch == Branch.ON_TRUE);
+      }
+    }
+    return true;
+  }
 }
