@@ -299,46 +299,6 @@ CSSRule.PAGE_RULE;
 
 /**
  * @constructor
- * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMap
- */
-function StylePropertyMapReadonly() {}
-
-/**
- * @const {number}
- * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/size
- */
-StylePropertyMapReadonly.prototype.size;
-
-/**
- * @param {string} property
- * @return {(!CSSStyleValue|undefined)}
- * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/get
- */
-StylePropertyMapReadonly.prototype.get = function(property) {}
-
-/**
- * @param {string} property
- * @return {!Array<!CSSStyleValue>}
- * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/getAll
- */
-StylePropertyMapReadonly.prototype.getAll = function(property) {}
-
-/**
- * @param {string} property
- * @return {boolean}
- * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/has
- */
-StylePropertyMapReadonly.prototype.has = function(property) {}
-
-/**
- * @param {function(!Array<!CSSStyleValue>, string, !StylePropertyMapReadOnly): void} callbackfn
- * @param {*=} opt_thisArg
- * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/forEach
- */
-StylePropertyMapReadonly.prototype.forEach = function(callbackfn, opt_thisArg) {}
-
-/**
- * @constructor
  * @extends {StylePropertyMapReadOnly}
  * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMap
  */
