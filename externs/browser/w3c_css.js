@@ -3700,10 +3700,8 @@ CSSInterface.prototype.rlh = function(value) {};
 /**
  * @param {number} value
  * @return {CSSUnitValue}
- * TODO(b/417987392): Adding this extern causes a test to fail.
- * Enable this extern once the root cause for the failure is fixed.
  */
-// CSSInterface.prototype.s = function(value) {};
+CSSInterface.prototype.s = function(value) {};
 
 /**
  * @param {number} value
