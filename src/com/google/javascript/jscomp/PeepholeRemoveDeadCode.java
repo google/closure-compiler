@@ -565,6 +565,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       Node next = null;
       Node cur;
 
+      // First, remove empty cases where possible: always empty default cases, or if when there is
+      // no default case, other empty cases maybe be removable as well.
       for (cur = switchBody.getFirstChild(); cur != null; cur = next) {
         next = cur.getNext();
         if (!mayHaveSideEffects(cur.getFirstChild()) && isUselessCase(cur, prev, defaultCase)) {
@@ -574,7 +576,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         }
       }
 
-      // Optimize switches with constant condition
+      // Next, optimize switches with constant condition
       if (NodeUtil.isLiteralValue(cond, false)) {
         Node caseLabel;
         Tri caseMatches = Tri.TRUE;
@@ -632,6 +634,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       }
     }
 
+    // Last, try to remove the entire switch if possible
     return tryRemoveSwitch(n);
   }
 
