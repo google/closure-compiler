@@ -686,16 +686,10 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    switch (n.getToken()) {
-      case ROOT:
-      case SCRIPT:
-      case MODULE_BODY:
-      case EXPORT:
-      case IMPORT:
-        return true;
-      default:
-        return false;
-    }
+    return switch (n.getToken()) {
+      case ROOT, SCRIPT, MODULE_BODY, EXPORT, IMPORT -> true;
+      default -> false;
+    };
   }
 
   @Override

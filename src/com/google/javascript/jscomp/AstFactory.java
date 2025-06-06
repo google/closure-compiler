@@ -421,15 +421,11 @@ final class AstFactory {
 
   private @Nullable Type getTypeOfThisForEs6Class(Node functionNode) {
     checkArgument(functionNode.isClass(), functionNode);
-    switch (this.typeMode) {
-      case JSTYPE:
-        return type(getTypeOfThisForFunctionNode(functionNode));
-      case COLOR:
-        return type(getInstanceOfColor(functionNode.getColor()));
-      case NONE:
-        return noTypeInformation();
-    }
-    throw new AssertionError();
+    return switch (this.typeMode) {
+      case JSTYPE -> type(getTypeOfThisForFunctionNode(functionNode));
+      case COLOR -> type(getInstanceOfColor(functionNode.getColor()));
+      case NONE -> noTypeInformation();
+    };
   }
 
   private FunctionType getFunctionType(Node functionNode) {
@@ -461,16 +457,12 @@ final class AstFactory {
   }
 
   Node createSingleNameDeclaration(Token tokenType, String name, Node value) {
-    switch (tokenType) {
-      case LET:
-        return createSingleLetNameDeclaration(name, value);
-      case VAR:
-        return createSingleVarNameDeclaration(name, value);
-      case CONST:
-        return createSingleConstNameDeclaration(name, value);
-      default:
-        throw new UnsupportedOperationException("Unexpeted token type: " + tokenType);
-    }
+    return switch (tokenType) {
+      case LET -> createSingleLetNameDeclaration(name, value);
+      case VAR -> createSingleVarNameDeclaration(name, value);
+      case CONST -> createSingleConstNameDeclaration(name, value);
+      default -> throw new UnsupportedOperationException("Unexpeted token type: " + tokenType);
+    };
   }
 
   /**

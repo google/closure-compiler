@@ -446,14 +446,11 @@ class ReplaceCssNames implements CompilerPass {
 
   private @Nullable JSError validateGetCssNameCall(Node callNode) {
     int childCount = callNode.getChildCount();
-    switch (childCount) {
-      case 2:
-        return validateSingleArgGetCssNameCall(callNode);
-      case 3:
-        return validateTwoArgGetCssNameCall(callNode);
-      default:
-        return JSError.make(callNode, INVALID_NUM_ARGUMENTS_ERROR, String.valueOf(childCount));
-    }
+    return switch (childCount) {
+      case 2 -> validateSingleArgGetCssNameCall(callNode);
+      case 3 -> validateTwoArgGetCssNameCall(callNode);
+      default -> JSError.make(callNode, INVALID_NUM_ARGUMENTS_ERROR, String.valueOf(childCount));
+    };
   }
 
   private @Nullable JSError validateSingleArgGetCssNameCall(Node callNode) {

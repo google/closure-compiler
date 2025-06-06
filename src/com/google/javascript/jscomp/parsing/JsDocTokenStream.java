@@ -274,30 +274,28 @@ public class JsDocTokenStream {
   }
 
   private static boolean isJSDocString(int c) {
-    switch (c) {
-      case '@':
-      case '*':
-      case ',':
-      case '<':
-      case '>':
-      case ':':
-      case '(':
-      case ')':
-      case '{':
-      case '}':
-      case '[':
-      case ']':
-      case '?':
-      case '!':
-      case '|':
-      case '=':
-      case EOF_CHAR:
-      case '\n':
-        return false;
-
-      default:
-        return !TokenUtil.isJSSpace(c);
-    }
+    return switch (c) {
+      case '@',
+          '*',
+          ',',
+          '<',
+          '>',
+          ':',
+          '(',
+          ')',
+          '{',
+          '}',
+          '[',
+          ']',
+          '?',
+          '!',
+          '|',
+          '=',
+          EOF_CHAR,
+          '\n' ->
+          false;
+      default -> !TokenUtil.isJSSpace(c);
+    };
   }
 
   /**

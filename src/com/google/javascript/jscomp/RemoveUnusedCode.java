@@ -797,20 +797,19 @@ class RemoveUnusedCode implements CompilerPass {
 
   /** Checks whether this is a recognizable call to $jscomp.polyfill. */
   private static boolean isJscompPolyfill(Node n) {
-    switch (n.getToken()) {
-      case NAME:
-        // Need to work correctly after CollapseProperties.
-        return (n.getString().equals("$jscomp$polyfill") || n.getString().equals("$jscomp$patch"))
-            && n.getNext().isStringLit();
-      case GETPROP:
-        // Need to work correctly without CollapseProperties.
-        return (n.getString().equals("polyfill") || n.getString().equals("patch"))
-            && n.getFirstChild().isName()
-            && n.getFirstChild().getString().equals("$jscomp")
-            && n.getNext().isStringLit();
-      default:
-        return false;
-    }
+    return switch (n.getToken()) {
+      case NAME ->
+          // Need to work correctly after CollapseProperties.
+          (n.getString().equals("$jscomp$polyfill") || n.getString().equals("$jscomp$patch"))
+              && n.getNext().isStringLit();
+      case GETPROP ->
+          // Need to work correctly without CollapseProperties.
+          (n.getString().equals("polyfill") || n.getString().equals("patch"))
+              && n.getFirstChild().isName()
+              && n.getFirstChild().getString().equals("$jscomp")
+              && n.getNext().isStringLit();
+      default -> false;
+    };
   }
 
   /** Traverse `Object.defineProperties(someObject, propertyDefinitions);`. */
@@ -1666,19 +1665,15 @@ class RemoveUnusedCode implements CompilerPass {
    * if there is no single name.
    */
   private static @Nullable Node nameOfParam(Node param) {
-    switch (param.getToken()) {
-      case NAME:
-        return param;
-      case DEFAULT_VALUE:
-        return nameOfParam(param.getFirstChild());
-      case ITER_REST:
-        return nameOfParam(param.getOnlyChild());
-      case ARRAY_PATTERN:
-      case OBJECT_PATTERN:
-        return null;
-      default:
-        throw new IllegalStateException("Unexpected child of PARAM_LIST: " + param.toStringTree());
-    }
+    return switch (param.getToken()) {
+      case NAME -> param;
+      case DEFAULT_VALUE -> nameOfParam(param.getFirstChild());
+      case ITER_REST -> nameOfParam(param.getOnlyChild());
+      case ARRAY_PATTERN, OBJECT_PATTERN -> null;
+      default ->
+          throw new IllegalStateException(
+              "Unexpected child of PARAM_LIST: " + param.toStringTree());
+    };
   }
 
   /**

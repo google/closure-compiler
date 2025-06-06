@@ -63,16 +63,10 @@ class MinimizedCondition {
    */
   static MinimizedCondition fromConditionNode(Node n) {
     checkState(n.hasParent());
-    switch (n.getToken()) {
-      case NOT:
-      case AND:
-      case OR:
-      case HOOK:
-      case COMMA:
-        return computeMinimizedCondition(n);
-      default:
-        return unoptimized(n);
-    }
+    return switch (n.getToken()) {
+      case NOT, AND, OR, HOOK, COMMA -> computeMinimizedCondition(n);
+      default -> unoptimized(n);
+    };
   }
 
   /**
@@ -241,20 +235,14 @@ class MinimizedCondition {
     }
 
     private MeasuredNode negate() {
-      switch (node.getToken()) {
-        case EQ:
-          return updateToken(Token.NE);
-        case NE:
-          return updateToken(Token.EQ);
-        case SHEQ:
-          return updateToken(Token.SHNE);
-        case SHNE:
-          return updateToken(Token.SHEQ);
-        case NOT:
-          return withoutNot();
-        default:
-          return addNot();
-      }
+      return switch (node.getToken()) {
+        case EQ -> updateToken(Token.NE);
+        case NE -> updateToken(Token.EQ);
+        case SHEQ -> updateToken(Token.SHNE);
+        case SHNE -> updateToken(Token.SHEQ);
+        case NOT -> withoutNot();
+        default -> addNot();
+      };
     }
 
     static MeasuredNode[] normalizeChildren(Node node, MeasuredNode[] children) {

@@ -223,32 +223,15 @@ public final class Reference implements StaticRef, Serializable {
   public boolean isLvalue() {
     Node parent = getParent();
     Token parentType = parent.getToken();
-    switch (parentType) {
-      case VAR:
-      case LET:
-      case CONST:
-        return (nameNode.hasChildren() || isLhsOfEnhancedForExpression(nameNode));
-      case DEFAULT_VALUE:
-        return parent.getFirstChild() == nameNode;
-      case INC:
-      case DEC:
-      case CATCH:
-      case ITER_REST:
-      case OBJECT_REST:
-      case PARAM_LIST:
-        return true;
-      case FOR:
-      case FOR_IN:
-      case FOR_OF:
-      case FOR_AWAIT_OF:
-        return NodeUtil.isEnhancedFor(parent) && parent.getFirstChild() == nameNode;
-      case ARRAY_PATTERN:
-      case STRING_KEY:
-      case COMPUTED_PROP:
-        return NodeUtil.isLhsByDestructuring(nameNode);
-      default:
-        return (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == nameNode);
-    }
+    return switch (parentType) {
+      case VAR, LET, CONST -> (nameNode.hasChildren() || isLhsOfEnhancedForExpression(nameNode));
+      case DEFAULT_VALUE -> parent.getFirstChild() == nameNode;
+      case INC, DEC, CATCH, ITER_REST, OBJECT_REST, PARAM_LIST -> true;
+      case FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF ->
+          NodeUtil.isEnhancedFor(parent) && parent.getFirstChild() == nameNode;
+      case ARRAY_PATTERN, STRING_KEY, COMPUTED_PROP -> NodeUtil.isLhsByDestructuring(nameNode);
+      default -> (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == nameNode);
+    };
   }
 
   Scope getScope() {

@@ -1341,14 +1341,11 @@ public final class JSTypeRegistry {
       // properties that to the best of our knowledge are available at creation
       // time and specifically not properties only defined on subtypes.
 
-      switch (type.getPropertyKind(propertyName)) {
-        case KNOWN_PRESENT:
-          return PropDefinitionKind.KNOWN;
-        case MAYBE_PRESENT:
-          return PropDefinitionKind.LOOSE_UNION;
-        case ABSENT:
-          return PropDefinitionKind.UNKNOWN;
-      }
+      return switch (type.getPropertyKind(propertyName)) {
+        case KNOWN_PRESENT -> PropDefinitionKind.KNOWN;
+        case MAYBE_PRESENT -> PropDefinitionKind.LOOSE_UNION;
+        case ABSENT -> PropDefinitionKind.UNKNOWN;
+      };
     } else {
       if (!type.isEmptyType() && !type.isUnknownType()) {
         switch (type.getPropertyKind(propertyName)) {

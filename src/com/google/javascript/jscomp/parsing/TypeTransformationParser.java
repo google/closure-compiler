@@ -494,28 +494,18 @@ public final class TypeTransformationParser {
   private boolean validTypeExpression(Node expr) {
     String name = getCallName(expr);
     Keywords keyword = nameToKeyword(name);
-    switch (keyword) {
-      case TYPE:
-        return validTemplateTypeExpression(expr);
-      case UNION:
-        return validUnionTypeExpression(expr);
-      case NONE:
-        return validNoneTypeExpression(expr);
-      case ALL:
-        return validAllTypeExpression(expr);
-      case UNKNOWN:
-        return validUnknownTypeExpression(expr);
-      case RAWTYPEOF:
-        return validRawTypeOfTypeExpression(expr);
-      case TEMPLATETYPEOF:
-        return validTemplateTypeOfExpression(expr);
-      case RECORD:
-        return validRecordTypeExpression(expr);
-      case TYPEEXPR:
-        return validNativeTypeExpr(expr);
-      default:
-        throw new IllegalStateException("Invalid type expression");
-    }
+    return switch (keyword) {
+      case TYPE -> validTemplateTypeExpression(expr);
+      case UNION -> validUnionTypeExpression(expr);
+      case NONE -> validNoneTypeExpression(expr);
+      case ALL -> validAllTypeExpression(expr);
+      case UNKNOWN -> validUnknownTypeExpression(expr);
+      case RAWTYPEOF -> validRawTypeOfTypeExpression(expr);
+      case TEMPLATETYPEOF -> validTemplateTypeOfExpression(expr);
+      case RECORD -> validRecordTypeExpression(expr);
+      case TYPEEXPR -> validNativeTypeExpr(expr);
+      default -> throw new IllegalStateException("Invalid type expression");
+    };
   }
 
   private boolean validTypePredicate(Node expr, int paramCount) {
@@ -607,16 +597,12 @@ public final class TypeTransformationParser {
     if (!checkParameterCount(expr, keyword)) {
       return false;
     }
-    switch (keyword.kind) {
-      case TYPE_PREDICATE:
-        return validTypePredicate(expr, getCallParamCount(expr));
-      case STRING_PREDICATE:
-        return validStringPredicate(expr, getCallParamCount(expr));
-      case TYPEVAR_PREDICATE:
-        return validTypevarPredicate(expr, getCallParamCount(expr));
-      default:
-        throw new IllegalStateException("Invalid boolean expression");
-    }
+    return switch (keyword.kind) {
+      case TYPE_PREDICATE -> validTypePredicate(expr, getCallParamCount(expr));
+      case STRING_PREDICATE -> validStringPredicate(expr, getCallParamCount(expr));
+      case TYPEVAR_PREDICATE -> validTypevarPredicate(expr, getCallParamCount(expr));
+      default -> throw new IllegalStateException("Invalid boolean expression");
+    };
   }
 
   /**
@@ -815,24 +801,16 @@ public final class TypeTransformationParser {
   private boolean validOperationExpression(Node expr) {
     String name = getCallName(expr);
     Keywords keyword = nameToKeyword(name);
-    switch (keyword) {
-      case COND:
-        return validConditionalExpression(expr);
-      case MAPUNION:
-        return validMapunionExpression(expr);
-      case MAPRECORD:
-        return validMaprecordExpression(expr);
-      case TYPEOFVAR:
-        return validTypeOfVarExpression(expr);
-      case INSTANCEOF:
-        return validInstanceOfExpression(expr);
-      case PRINTTYPE:
-        return validPrintTypeExpression(expr);
-      case PROPTYPE:
-        return validPropTypeExpression(expr);
-      default:
-        throw new IllegalStateException("Invalid type transformation operation");
-    }
+    return switch (keyword) {
+      case COND -> validConditionalExpression(expr);
+      case MAPUNION -> validMapunionExpression(expr);
+      case MAPRECORD -> validMaprecordExpression(expr);
+      case TYPEOFVAR -> validTypeOfVarExpression(expr);
+      case INSTANCEOF -> validInstanceOfExpression(expr);
+      case PRINTTYPE -> validPrintTypeExpression(expr);
+      case PROPTYPE -> validPropTypeExpression(expr);
+      default -> throw new IllegalStateException("Invalid type transformation operation");
+    };
   }
 
   /**
@@ -855,13 +833,10 @@ public final class TypeTransformationParser {
     }
     Keywords keyword = nameToKeyword(name);
     // Check the rest of the expression depending on the kind
-    switch (keyword.kind) {
-      case TYPE_CONSTRUCTOR:
-        return validTypeExpression(expr);
-      case OPERATION:
-        return validOperationExpression(expr);
-      default:
-        throw new IllegalStateException("Invalid type transformation expression");
-    }
+    return switch (keyword.kind) {
+      case TYPE_CONSTRUCTOR -> validTypeExpression(expr);
+      case OPERATION -> validOperationExpression(expr);
+      default -> throw new IllegalStateException("Invalid type transformation expression");
+    };
   }
 }

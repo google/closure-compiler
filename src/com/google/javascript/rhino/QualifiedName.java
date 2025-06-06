@@ -191,17 +191,12 @@ public abstract class QualifiedName {
       }
 
       String term = this.terms.get(0);
-      switch (n.getToken()) {
-        case NAME:
-        case MEMBER_FUNCTION_DEF:
-          return RhinoStringPool.uncheckedEquals(term, n.getString());
-        case THIS:
-          return RhinoStringPool.uncheckedEquals(term, THIS);
-        case SUPER:
-          return RhinoStringPool.uncheckedEquals(term, SUPER);
-        default:
-          return false;
-      }
+      return switch (n.getToken()) {
+        case NAME, MEMBER_FUNCTION_DEF -> RhinoStringPool.uncheckedEquals(term, n.getString());
+        case THIS -> RhinoStringPool.uncheckedEquals(term, THIS);
+        case SUPER -> RhinoStringPool.uncheckedEquals(term, SUPER);
+        default -> false;
+      };
     }
   }
 
@@ -262,18 +257,12 @@ public abstract class QualifiedName {
 
     @Override
     public String getComponent() {
-      switch (node.getToken()) {
-        case THIS:
-          return THIS;
-        case SUPER:
-          return SUPER;
-        case NAME:
-        case GETPROP:
-        case MEMBER_FUNCTION_DEF:
-          return node.getString();
-        default:
-          throw new IllegalStateException("Not a qualified name: " + node);
-      }
+      return switch (node.getToken()) {
+        case THIS -> THIS;
+        case SUPER -> SUPER;
+        case NAME, GETPROP, MEMBER_FUNCTION_DEF -> node.getString();
+        default -> throw new IllegalStateException("Not a qualified name: " + node);
+      };
     }
 
     @Override

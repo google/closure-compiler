@@ -530,14 +530,11 @@ final class JSTypeReconserializer {
       return false;
     }
 
-    switch (primitive) {
-      case ASSERTS_TRUTHY:
-      case ASSERTS_MATCHES_RETURN:
-        return true;
-
-      case ASSERTS_FAIL: // technically an assertion function, but not removed by ClosureCodeRemoval
-        return false;
-    }
-    throw new AssertionError();
+    return switch (primitive) {
+      case ASSERTS_TRUTHY, ASSERTS_MATCHES_RETURN -> true;
+      case ASSERTS_FAIL ->
+          // technically an assertion function, but not removed by ClosureCodeRemoval
+          false;
+    };
   }
 }

@@ -75,18 +75,18 @@ public final class CheckNoMutatedEs6Exports implements NodeTraversal.Callback, C
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    switch (n.getToken()) {
-      case SCRIPT:
-        return n.getBooleanProp(Node.ES6_MODULE);
-      case EXPORT:
+    return switch (n.getToken()) {
+      case SCRIPT -> n.getBooleanProp(Node.ES6_MODULE);
+      case EXPORT -> {
         visitExport(n);
-        return true;
-      case NAME:
+        yield true;
+      }
+      case NAME -> {
         visitName(t, n);
-        return true;
-      default:
-        return true;
-    }
+        yield true;
+      }
+      default -> true;
+    };
   }
 
   private void visitExport(Node export) {

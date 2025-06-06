@@ -1672,64 +1672,27 @@ public final class JsDocInfoParser {
 
   /** Converts a JSDoc token to its string representation. */
   private String toString(JsDocToken token) {
-    switch (token) {
-      case ANNOTATION:
-        return "@" + stream.getString();
-
-      case BANG:
-        return "!";
-
-      case COMMA:
-        return ",";
-
-      case COLON:
-        return ":";
-
-      case RIGHT_ANGLE:
-        return ">";
-
-      case LEFT_SQUARE:
-        return "[";
-
-      case LEFT_CURLY:
-        return "{";
-
-      case LEFT_PAREN:
-        return "(";
-
-      case LEFT_ANGLE:
-        return "<";
-
-      case QMARK:
-        return "?";
-
-      case PIPE:
-        return "|";
-
-      case RIGHT_SQUARE:
-        return "]";
-
-      case RIGHT_CURLY:
-        return "}";
-
-      case RIGHT_PAREN:
-        return ")";
-
-      case STAR:
-        return "*";
-
-      case ITER_REST:
-        return "...";
-
-      case EQUALS:
-        return "=";
-
-      case STRING:
-        return stream.getString();
-
-      default:
-        throw new IllegalStateException(token.toString());
-    }
+    return switch (token) {
+      case ANNOTATION -> "@" + stream.getString();
+      case BANG -> "!";
+      case COMMA -> ",";
+      case COLON -> ":";
+      case RIGHT_ANGLE -> ">";
+      case LEFT_SQUARE -> "[";
+      case LEFT_CURLY -> "{";
+      case LEFT_PAREN -> "(";
+      case LEFT_ANGLE -> "<";
+      case QMARK -> "?";
+      case PIPE -> "|";
+      case RIGHT_SQUARE -> "]";
+      case RIGHT_CURLY -> "}";
+      case RIGHT_PAREN -> ")";
+      case STAR -> "*";
+      case ITER_REST -> "...";
+      case EQUALS -> "=";
+      case STRING -> stream.getString();
+      default -> throw new IllegalStateException(token.toString());
+    };
   }
 
   /**
@@ -2252,19 +2215,18 @@ public final class JsDocInfoParser {
       return parseUnionType(next());
     } else if (token == JsDocToken.STRING) {
       String string = stream.getString();
-      switch (string) {
-        case "function":
+      return switch (string) {
+        case "function" -> {
           skipEOLs();
-          return parseFunctionType(next());
-        case "null":
-        case "undefined":
-          return newStringNode(string);
-        case "typeof":
+          yield parseFunctionType(next());
+        }
+        case "null", "undefined" -> newStringNode(string);
+        case "typeof" -> {
           skipEOLs();
-          return parseTypeofType(next());
-        default:
-          return parseTypeName(token);
-      }
+          yield parseTypeofType(next());
+        }
+        default -> parseTypeName(token);
+      };
     }
 
     restoreLookAhead(token);

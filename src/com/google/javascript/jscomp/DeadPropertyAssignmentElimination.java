@@ -301,18 +301,10 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     }
 
     private static boolean isConditionalExpression(Node n) {
-      switch (n.getToken()) {
-        case AND:
-        case OR:
-        case HOOK:
-        case COALESCE:
-        case OPTCHAIN_CALL:
-        case OPTCHAIN_GETELEM:
-        case OPTCHAIN_GETPROP:
-          return true;
-        default:
-          return false;
-      }
+      return switch (n.getToken()) {
+        case AND, OR, HOOK, COALESCE, OPTCHAIN_CALL, OPTCHAIN_GETELEM, OPTCHAIN_GETPROP -> true;
+        default -> false;
+      };
     }
 
     private void visitAssignmentLhs(Node lhs) {

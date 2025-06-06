@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableSet;
 
-
 /**
  * Abstract message formatter providing default behavior for implementations
  * of {@link MessageFormatter} needing a {@link SourceExcerptProvider}.
@@ -67,11 +66,11 @@ public abstract class AbstractMessageFormatter implements MessageFormatter {
   }
 
   String getLevelName(CheckLevel level) {
-    switch (level) {
-      case ERROR: return maybeColorize("ERROR", Color.ERROR);
-      case WARNING: return maybeColorize("WARNING", Color.WARNING);
-      default: return level.toString();
-    }
+    return switch (level) {
+      case ERROR -> maybeColorize("ERROR", Color.ERROR);
+      case WARNING -> maybeColorize("WARNING", Color.WARNING);
+      default -> level.toString();
+    };
   }
 
   protected String maybeEmbolden(String text) {

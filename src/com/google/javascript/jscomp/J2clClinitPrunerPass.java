@@ -320,20 +320,12 @@ public class J2clClinitPrunerPass implements CompilerPass {
       if (n == null) {
         return null;
       }
-      switch (n.getToken()) {
-        case EXPR_RESULT:
-        case RETURN:
-          return getCallOrNewNode(n.getFirstChild());
-        case CALL:
-        case NEW:
-          return n;
-        case CONST:
-        case LET:
-        case VAR:
-          return n.hasOneChild() ? getCallOrNewNode(n.getFirstFirstChild()) : null;
-        default:
-          return null;
-      }
+      return switch (n.getToken()) {
+        case EXPR_RESULT, RETURN -> getCallOrNewNode(n.getFirstChild());
+        case CALL, NEW -> n;
+        case CONST, LET, VAR -> n.hasOneChild() ? getCallOrNewNode(n.getFirstFirstChild()) : null;
+        default -> null;
+      };
     }
 
     /** Returns whether the specified function contains a call to the specified clinit. */

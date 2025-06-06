@@ -3285,35 +3285,22 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   private LanguageMode getParserConfigLanguageMode(CompilerOptions.LanguageMode languageMode) {
-    switch (languageMode) {
-      case ECMASCRIPT3:
-        return LanguageMode.ECMASCRIPT3;
-      case ECMASCRIPT5:
-      case ECMASCRIPT5_STRICT:
-        return LanguageMode.ECMASCRIPT5;
-      case ECMASCRIPT_2015:
-        return LanguageMode.ECMASCRIPT_2015;
-      case ECMASCRIPT_2016:
-        return LanguageMode.ECMASCRIPT_2016;
-      case ECMASCRIPT_2017:
-        return LanguageMode.ECMASCRIPT_2017;
-      case ECMASCRIPT_2018:
-        return LanguageMode.ECMASCRIPT_2018;
-      case ECMASCRIPT_2019:
-        return LanguageMode.ECMASCRIPT_2019;
-      case ECMASCRIPT_2020:
-        return LanguageMode.ECMASCRIPT_2020;
-      case ECMASCRIPT_2021:
-        return LanguageMode.ECMASCRIPT_2021;
-      case ECMASCRIPT_NEXT:
-        return LanguageMode.ES_NEXT;
-      case UNSTABLE:
-        return LanguageMode.UNSTABLE;
-      case UNSUPPORTED:
-        return LanguageMode.UNSUPPORTED;
-      default:
-        throw new IllegalStateException("Unexpected language mode: " + options.getLanguageIn());
-    }
+    return switch (languageMode) {
+      case ECMASCRIPT3 -> LanguageMode.ECMASCRIPT3;
+      case ECMASCRIPT5, ECMASCRIPT5_STRICT -> LanguageMode.ECMASCRIPT5;
+      case ECMASCRIPT_2015 -> LanguageMode.ECMASCRIPT_2015;
+      case ECMASCRIPT_2016 -> LanguageMode.ECMASCRIPT_2016;
+      case ECMASCRIPT_2017 -> LanguageMode.ECMASCRIPT_2017;
+      case ECMASCRIPT_2018 -> LanguageMode.ECMASCRIPT_2018;
+      case ECMASCRIPT_2019 -> LanguageMode.ECMASCRIPT_2019;
+      case ECMASCRIPT_2020 -> LanguageMode.ECMASCRIPT_2020;
+      case ECMASCRIPT_2021 -> LanguageMode.ECMASCRIPT_2021;
+      case ECMASCRIPT_NEXT -> LanguageMode.ES_NEXT;
+      case UNSTABLE -> LanguageMode.UNSTABLE;
+      case UNSUPPORTED -> LanguageMode.UNSUPPORTED;
+      default ->
+          throw new IllegalStateException("Unexpected language mode: " + options.getLanguageIn());
+    };
   }
 
   @Override

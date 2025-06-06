@@ -271,18 +271,13 @@ public record DependencyOptions(DependencyMode mode, ImmutableList<ModuleIdentif
       entryPointsBuilder.add(ModuleIdentifier.forClosure(closureEntryPoint));
     }
 
-    switch (dependencyMode) {
-      case NONE:
-        return DependencyOptions.none();
-      case SORT_ONLY:
-        return DependencyOptions.sortOnly();
-      case PRUNE_LEGACY:
-        return DependencyOptions.pruneLegacyForEntryPoints(entryPointsBuilder.build());
-      case PRUNE_ALLOW_NO_ENTRY_POINTS:
-        return DependencyOptions.pruneAllowNoEntryPoints(entryPointsBuilder.build());
-      case PRUNE:
-        return DependencyOptions.pruneForEntryPoints(entryPointsBuilder.build());
-    }
-    throw new AssertionError("Invalid DependencyMode");
+    return switch (dependencyMode) {
+      case NONE -> DependencyOptions.none();
+      case SORT_ONLY -> DependencyOptions.sortOnly();
+      case PRUNE_LEGACY -> DependencyOptions.pruneLegacyForEntryPoints(entryPointsBuilder.build());
+      case PRUNE_ALLOW_NO_ENTRY_POINTS ->
+          DependencyOptions.pruneAllowNoEntryPoints(entryPointsBuilder.build());
+      case PRUNE -> DependencyOptions.pruneForEntryPoints(entryPointsBuilder.build());
+    };
   }
 }

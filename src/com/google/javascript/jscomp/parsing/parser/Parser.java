@@ -1422,14 +1422,10 @@ public class Parser {
   }
 
   private boolean peekVariableDeclarationList() {
-    switch (peekType()) {
-      case VAR:
-      case CONST:
-      case LET:
-        return true;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case VAR, CONST, LET -> true;
+      default -> false;
+    };
   }
 
   // 12.6.3 The for Statement
@@ -1647,43 +1643,20 @@ public class Parser {
 
   // 11.1 Primary Expressions
   private ParseTree parsePrimaryExpression() {
-    switch (peekType()) {
-      case CLASS:
-        return parseClassExpression();
-      case SUPER:
-        return parseSuperExpression();
-      case THIS:
-        return parseThisExpression();
-      case IMPORT:
-        return parseDynamicImportExpression();
-      case IDENTIFIER:
-      case TYPE:
-      case DECLARE:
-      case MODULE:
-      case NAMESPACE:
-        return parseIdentifierExpression();
-      case NUMBER:
-      case STRING:
-      case BIGINT:
-      case TRUE:
-      case FALSE:
-      case NULL:
-        return parseLiteralExpression();
-      case NO_SUBSTITUTION_TEMPLATE:
-      case TEMPLATE_HEAD:
-        return parseTemplateLiteral(null);
-      case OPEN_SQUARE:
-        return parseArrayInitializer();
-      case OPEN_CURLY:
-        return parseObjectLiteral();
-      case OPEN_PAREN:
-        return parseCoverParenthesizedExpressionAndArrowParameterList();
-      case SLASH:
-      case SLASH_EQUAL:
-        return parseRegularExpressionLiteral();
-      default:
-        return parseMissingPrimaryExpression();
-    }
+    return switch (peekType()) {
+      case CLASS -> parseClassExpression();
+      case SUPER -> parseSuperExpression();
+      case THIS -> parseThisExpression();
+      case IMPORT -> parseDynamicImportExpression();
+      case IDENTIFIER, TYPE, DECLARE, MODULE, NAMESPACE -> parseIdentifierExpression();
+      case NUMBER, STRING, BIGINT, TRUE, FALSE, NULL -> parseLiteralExpression();
+      case NO_SUBSTITUTION_TEMPLATE, TEMPLATE_HEAD -> parseTemplateLiteral(null);
+      case OPEN_SQUARE -> parseArrayInitializer();
+      case OPEN_CURLY -> parseObjectLiteral();
+      case OPEN_PAREN -> parseCoverParenthesizedExpressionAndArrowParameterList();
+      case SLASH, SLASH_EQUAL -> parseRegularExpressionLiteral();
+      default -> parseMissingPrimaryExpression();
+    };
   }
 
   private SuperExpressionTree parseSuperExpression() {
@@ -1958,15 +1931,10 @@ public class Parser {
 
   private boolean peekPropertyName(int tokenIndex) {
     TokenType type = peekType(tokenIndex);
-    switch (type) {
-      case IDENTIFIER:
-      case STRING:
-      case NUMBER:
-      case BIGINT:
-        return true;
-      default:
-        return Keywords.isKeyword(type);
-    }
+    return switch (type) {
+      case IDENTIFIER, STRING, NUMBER, BIGINT -> true;
+      default -> Keywords.isKeyword(type);
+    };
   }
 
   private ParseTree parseObjectLiteralPropertyAssignment() {
@@ -2517,16 +2485,15 @@ public class Parser {
    * transformed tree if it parses as a LeftHandSidePattern, otherwise it returns the original tree.
    */
   private ParseTree transformLeftHandSideExpression(ParseTree tree) {
-    switch (tree.type) {
-      case ARRAY_LITERAL_EXPRESSION:
-      case OBJECT_LITERAL_EXPRESSION:
+    return switch (tree.type) {
+      case ARRAY_LITERAL_EXPRESSION, OBJECT_LITERAL_EXPRESSION -> {
         resetScanner(tree);
         // If we fail to parse as an LeftHandSidePattern then
         // parseLeftHandSidePattern will take care reporting errors.
-        return parseLeftHandSidePattern();
-      default:
-        return tree;
-    }
+        yield parseLeftHandSidePattern();
+      }
+      default -> tree;
+    };
   }
 
   private ParseTree parseLeftHandSidePattern() {
@@ -2553,27 +2520,26 @@ public class Parser {
   }
 
   private boolean peekAssignmentOperator() {
-    switch (peekType()) {
-      case EQUAL:
-      case STAR_EQUAL:
-      case STAR_STAR_EQUAL:
-      case SLASH_EQUAL:
-      case PERCENT_EQUAL:
-      case PLUS_EQUAL:
-      case MINUS_EQUAL:
-      case LEFT_SHIFT_EQUAL:
-      case RIGHT_SHIFT_EQUAL:
-      case UNSIGNED_RIGHT_SHIFT_EQUAL:
-      case AMPERSAND_EQUAL:
-      case CARET_EQUAL:
-      case BAR_EQUAL:
-      case OR_EQUAL:
-      case AND_EQUAL:
-      case QUESTION_QUESTION_EQUAL:
-        return true;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case EQUAL,
+          STAR_EQUAL,
+          STAR_STAR_EQUAL,
+          SLASH_EQUAL,
+          PERCENT_EQUAL,
+          PLUS_EQUAL,
+          MINUS_EQUAL,
+          LEFT_SHIFT_EQUAL,
+          RIGHT_SHIFT_EQUAL,
+          UNSIGNED_RIGHT_SHIFT_EQUAL,
+          AMPERSAND_EQUAL,
+          CARET_EQUAL,
+          BAR_EQUAL,
+          OR_EQUAL,
+          AND_EQUAL,
+          QUESTION_QUESTION_EQUAL ->
+          true;
+      default -> false;
+    };
   }
 
   private boolean inGeneratorContext() {
@@ -2715,15 +2681,10 @@ public class Parser {
   }
 
   private boolean peekEqualityOperator() {
-    switch (peekType()) {
-      case EQUAL_EQUAL:
-      case NOT_EQUAL:
-      case EQUAL_EQUAL_EQUAL:
-      case NOT_EQUAL_EQUAL:
-        return true;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case EQUAL_EQUAL, NOT_EQUAL, EQUAL_EQUAL_EQUAL, NOT_EQUAL_EQUAL -> true;
+      default -> false;
+    };
   }
 
   // 11.8 Relational
@@ -2739,18 +2700,11 @@ public class Parser {
   }
 
   private boolean peekRelationalOperator(Expression expressionIn) {
-    switch (peekType()) {
-      case OPEN_ANGLE:
-      case CLOSE_ANGLE:
-      case GREATER_EQUAL:
-      case LESS_EQUAL:
-      case INSTANCEOF:
-        return true;
-      case IN:
-        return expressionIn == Expression.NORMAL;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case OPEN_ANGLE, CLOSE_ANGLE, GREATER_EQUAL, LESS_EQUAL, INSTANCEOF -> true;
+      case IN -> expressionIn == Expression.NORMAL;
+      default -> false;
+    };
   }
 
   // 11.7 Shift Expression
@@ -2766,14 +2720,10 @@ public class Parser {
   }
 
   private boolean peekShiftOperator() {
-    switch (peekType()) {
-      case LEFT_SHIFT:
-      case RIGHT_SHIFT:
-      case UNSIGNED_RIGHT_SHIFT:
-        return true;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case LEFT_SHIFT, RIGHT_SHIFT, UNSIGNED_RIGHT_SHIFT -> true;
+      default -> false;
+    };
   }
 
   // 11.6 Additive Expression
@@ -2789,13 +2739,10 @@ public class Parser {
   }
 
   private boolean peekAdditiveOperator() {
-    switch (peekType()) {
-      case PLUS:
-      case MINUS:
-        return true;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case PLUS, MINUS -> true;
+      default -> false;
+    };
   }
 
   // 11.5 Multiplicative Expression
@@ -2811,14 +2758,10 @@ public class Parser {
   }
 
   private boolean peekMultiplicativeOperator() {
-    switch (peekType()) {
-      case STAR:
-      case SLASH:
-      case PERCENT:
-        return true;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case STAR, SLASH, PERCENT -> true;
+      default -> false;
+    };
   }
 
   private ParseTree parseExponentiationExpression() {
@@ -2858,18 +2801,10 @@ public class Parser {
   }
 
   private boolean peekUnaryOperator() {
-    switch (peekType()) {
-      case DELETE:
-      case VOID:
-      case TYPEOF:
-      case PLUS:
-      case MINUS:
-      case TILDE:
-      case BANG:
-        return true;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case DELETE, VOID, TYPEOF, PLUS, MINUS, TILDE, BANG -> true;
+      default -> false;
+    };
   }
 
   private static final String AWAIT = "await";
@@ -2904,13 +2839,10 @@ public class Parser {
   }
 
   private boolean peekUpdateOperator() {
-    switch (peekType()) {
-      case PLUS_PLUS:
-      case MINUS_MINUS:
-        return true;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case PLUS_PLUS, MINUS_MINUS -> true;
+      default -> false;
+    };
   }
 
   private boolean peekImportCall() {

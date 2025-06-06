@@ -53,13 +53,13 @@ public enum BooleanLiteralSet {
   BOTH;
 
   private BooleanLiteralSet fromOrdinal(int ordinal) {
-    switch (ordinal) {
-      case 0: return EMPTY;
-      case 1: return TRUE;
-      case 2: return FALSE;
-      case 3: return BOTH;
-      default: throw new IllegalArgumentException("Ordinal: " + ordinal);
-    }
+    return switch (ordinal) {
+      case 0 -> EMPTY;
+      case 1 -> TRUE;
+      case 2 -> FALSE;
+      case 3 -> BOTH;
+      default -> throw new IllegalArgumentException("Ordinal: " + ordinal);
+    };
   }
 
   /**
@@ -80,14 +80,13 @@ public enum BooleanLiteralSet {
    * Returns whether {@code this} contains the given literal value.
    */
   public boolean contains(boolean literalValue) {
-    switch (this.ordinal()) {
-      case 0: return false;
-      case 1: return literalValue;
-      case 2: return !literalValue;
-      case 3: return true;
-      default: throw new IndexOutOfBoundsException("Ordinal: " +
-          this.ordinal());
-    }
+    return switch (this.ordinal()) {
+      case 0 -> false;
+      case 1 -> literalValue;
+      case 2 -> !literalValue;
+      case 3 -> true;
+      default -> throw new IndexOutOfBoundsException("Ordinal: " + this.ordinal());
+    };
   }
 
   /**

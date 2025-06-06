@@ -550,27 +550,21 @@ public abstract class ChainableReverseAbstractInterpreter
    * defined, and would be wrong in the general case.
    */
   private @Nullable JSType getNativeTypeForTypeOf(String value) {
-    switch (value) {
-      case "number":
-        return getNativeType(NUMBER_TYPE);
-      case "boolean":
-        return getNativeType(BOOLEAN_TYPE);
-      case "string":
-        return getNativeType(STRING_TYPE);
-      case "symbol":
-        return getNativeType(SYMBOL_TYPE);
-      case "undefined":
-        return getNativeType(VOID_TYPE);
-      case "object":
-        // NOTE: This is broader than it needs to be if it's from goog.typeof, but (a) it's more
-        // consistent with common usage of the native builtin typeof, (b) it's more consistent with
-        // TypeScript, and (c) it's more useful than simply not narrowing.
-        return typeRegistry.createUnionType(getNativeType(OBJECT_TYPE), getNativeType(NULL_TYPE));
-      case "function":
-        return getNativeType(FUNCTION_TYPE);
-      default:
-        return null;
-    }
+    return switch (value) {
+      case "number" -> getNativeType(NUMBER_TYPE);
+      case "boolean" -> getNativeType(BOOLEAN_TYPE);
+      case "string" -> getNativeType(STRING_TYPE);
+      case "symbol" -> getNativeType(SYMBOL_TYPE);
+      case "undefined" -> getNativeType(VOID_TYPE);
+      case "object" ->
+          // NOTE: This is broader than it needs to be if it's from goog.typeof, but (a) it's more
+          // consistent with common usage of the native builtin typeof, (b) it's more consistent
+          // with
+          // TypeScript, and (c) it's more useful than simply not narrowing.
+          typeRegistry.createUnionType(getNativeType(OBJECT_TYPE), getNativeType(NULL_TYPE));
+      case "function" -> getNativeType(FUNCTION_TYPE);
+      default -> null;
+    };
   }
 
   /** For when {@code goog.isArray} or {@code Array.isArray} returns true. */

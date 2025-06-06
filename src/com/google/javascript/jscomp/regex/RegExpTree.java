@@ -657,15 +657,10 @@ public abstract class RegExpTree {
       }
 
       private boolean isRepetitionStart(char ch) {
-        switch (ch) {
-          case '?':
-          case '*':
-          case '+':
-          case '{':
-            return true;
-          default:
-            return false;
-        }
+        return switch (ch) {
+          case '?', '*', '+', '{' -> true;
+          default -> false;
+        };
       }
 
       /**
@@ -2183,14 +2178,11 @@ public abstract class RegExpTree {
         s.simplify(element.simplify(flags));
       }
 
-      switch (s.simplified.size()) {
-        case 0:
-          return Empty.INSTANCE;
-        case 1:
-          return s.simplified.get(0);
-        default:
-          return new Concatenation(s.simplified);
-      }
+      return switch (s.simplified.size()) {
+        case 0 -> Empty.INSTANCE;
+        case 1 -> s.simplified.get(0);
+        default -> new Concatenation(s.simplified);
+      };
     }
 
     @Override

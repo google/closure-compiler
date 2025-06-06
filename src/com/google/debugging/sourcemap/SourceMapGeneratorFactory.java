@@ -21,12 +21,9 @@ public final class SourceMapGeneratorFactory {
    * @return The appropriate source map object for the given source map format.
    */
   public static SourceMapGenerator getInstance(SourceMapFormat format) {
-    switch (format) {
-      case DEFAULT:
-      case V3:
-        return new SourceMapGeneratorV3();
-    }
-    throw new AssertionError();
+    return switch (format) {
+      case DEFAULT, V3 -> new SourceMapGeneratorV3();
+    };
   }
 
   private SourceMapGeneratorFactory() {}

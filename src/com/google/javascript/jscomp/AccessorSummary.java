@@ -55,18 +55,13 @@ final class AccessorSummary implements Serializable {
     // used to combine information from externs and from sources
     PropertyAccessKind unionWith(PropertyAccessKind other) {
       int combinedFlags = this.flags | other.flags;
-      switch (combinedFlags) {
-        case 0:
-          return NORMAL;
-        case 1:
-          return GETTER_ONLY;
-        case 2:
-          return SETTER_ONLY;
-        case 3:
-          return GETTER_AND_SETTER;
-        default:
-          throw new IllegalStateException("unexpected value: " + combinedFlags);
-      }
+      return switch (combinedFlags) {
+        case 0 -> NORMAL;
+        case 1 -> GETTER_ONLY;
+        case 2 -> SETTER_ONLY;
+        case 3 -> GETTER_AND_SETTER;
+        default -> throw new IllegalStateException("unexpected value: " + combinedFlags);
+      };
     }
   }
 

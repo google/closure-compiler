@@ -1254,17 +1254,10 @@ public abstract class JSType {
     }
 
     // other types
-    switch (testForEquality(that)) {
-      case FALSE:
-        return new TypePair(null, null);
-
-      case TRUE:
-      case UNKNOWN:
-        return new TypePair(this, that);
-    }
-
-    // switch case is exhaustive
-    throw new IllegalStateException();
+    return switch (testForEquality(that)) {
+      case FALSE -> new TypePair(null, null);
+      case TRUE, UNKNOWN -> new TypePair(this, that);
+    };
   }
 
   /**

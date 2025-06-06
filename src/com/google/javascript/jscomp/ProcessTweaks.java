@@ -155,16 +155,12 @@ class ProcessTweaks implements CompilerPass {
     }
 
     Node createDefaultValueNode() {
-      switch (this) {
-        case REGISTER_BOOLEAN:
-          return IR.falseNode();
-        case REGISTER_NUMBER:
-          return IR.number(0);
-        case REGISTER_STRING:
-          return IR.string("");
-        default:
-          throw new IllegalStateException();
-      }
+      return switch (this) {
+        case REGISTER_BOOLEAN -> IR.falseNode();
+        case REGISTER_NUMBER -> IR.number(0);
+        case REGISTER_STRING -> IR.string("");
+        default -> throw new IllegalStateException();
+      };
     }
   }
 

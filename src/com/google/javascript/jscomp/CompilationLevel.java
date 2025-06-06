@@ -62,23 +62,14 @@ public enum CompilationLevel {
     if (value == null) {
       return null;
     }
-    switch (value) {
-      case "BUNDLE":
-        return CompilationLevel.BUNDLE;
-      case "WHITESPACE_ONLY":
-      case "WHITESPACE":
-        return CompilationLevel.WHITESPACE_ONLY;
-      case "TRANSPILE_ONLY":
-        return CompilationLevel.TRANSPILE_ONLY;
-      case "SIMPLE_OPTIMIZATIONS":
-      case "SIMPLE":
-        return CompilationLevel.SIMPLE_OPTIMIZATIONS;
-      case "ADVANCED_OPTIMIZATIONS":
-      case "ADVANCED":
-        return CompilationLevel.ADVANCED_OPTIMIZATIONS;
-      default:
-        return null;
-    }
+    return switch (value) {
+      case "BUNDLE" -> CompilationLevel.BUNDLE;
+      case "WHITESPACE_ONLY", "WHITESPACE" -> CompilationLevel.WHITESPACE_ONLY;
+      case "TRANSPILE_ONLY" -> CompilationLevel.TRANSPILE_ONLY;
+      case "SIMPLE_OPTIMIZATIONS", "SIMPLE" -> CompilationLevel.SIMPLE_OPTIMIZATIONS;
+      case "ADVANCED_OPTIMIZATIONS", "ADVANCED" -> CompilationLevel.ADVANCED_OPTIMIZATIONS;
+      default -> null;
+    };
   }
 
   private CompilationLevel() {}

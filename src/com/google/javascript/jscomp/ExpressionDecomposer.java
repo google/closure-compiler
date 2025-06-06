@@ -895,18 +895,10 @@ class ExpressionDecomposer {
    * @return Whether the node is a conditional op.
    */
   private static boolean isConditionalOp(Node n) {
-    switch (n.getToken()) {
-      case HOOK:
-      case AND:
-      case OR:
-      case COALESCE:
-      case OPTCHAIN_GETELEM:
-      case OPTCHAIN_GETPROP:
-      case OPTCHAIN_CALL:
-        return true;
-      default:
-        return false;
-    }
+    return switch (n.getToken()) {
+      case HOOK, AND, OR, COALESCE, OPTCHAIN_GETELEM, OPTCHAIN_GETPROP, OPTCHAIN_CALL -> true;
+      default -> false;
+    };
   }
 
   /**

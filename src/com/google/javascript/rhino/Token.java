@@ -265,154 +265,145 @@ public enum Token {
 
   /** If the arity isn't always the same, this function returns -1 */
   public static int arity(Token token) {
-    switch (token) {
-      case ANNOTATION:
-      case ARRAYLIT:
-      case BANG:
-      case BLOCK:
-      case ROOT:
-      case BREAK:
-      case CALL:
-      case OPTCHAIN_CALL:
-      case COLON:
-      case CONST:
-      case CONTINUE:
-      case DEBUGGER:
-      case EOC:
-      case EQUALS:
-      case FOR:
-      case IF:
-      case LB:
-      case LC:
-      case NEW:
-      case OBJECTLIT:
-      case PARAM_LIST:
-      case PIPE:
-      case QMARK:
-      case REGEXP:
-      case RETURN:
-      case SCRIPT:
-      case STAR:
-      case STRING_KEY:
-      case SWITCH_BODY:
-      case TEMPLATELIT:
-      case TRY:
-      case VAR:
-      case YIELD:
-      case MEMBER_FIELD_DEF:
-      case COMPUTED_FIELD_DEF:
-        return -1;
-      case EMPTY:
-      case FALSE:
-      case IMPORT_STAR:
-      case LABEL_NAME:
-      case MEMBER_VARIABLE_DEF:
-      case NAME:
-      case NULL:
-      case NUMBER:
-      case BIGINT:
-      case STRINGLIT:
-      case TEMPLATELIT_STRING:
-      case THIS:
-      case TRUE:
-        return 0;
-      case AWAIT:
-      case BITNOT:
-      case CALL_SIGNATURE:
-      case CAST:
-      case DEC:
-      case DEFAULT_CASE:
-      case DELPROP:
-      case EXPR_RESULT:
-      case GETPROP:
-      case GETTER_DEF:
-      case INC:
-      case INDEX_SIGNATURE:
-      case ITER_REST:
-      case ITER_SPREAD:
-      case MEMBER_FUNCTION_DEF:
-      case NAMED_TYPE:
-      case NEG:
-      case NOT:
-      case OBJECT_REST:
-      case OBJECT_SPREAD:
-      case OPTCHAIN_GETPROP:
-      case POS:
-      case SETTER_DEF:
-      case TEMPLATELIT_SUB:
-      case THROW:
-      case TYPEOF:
-      case TYPE_ALIAS:
-      case VOID:
-        return 1;
-      case ADD:
-      case AND:
-      case ASSIGN:
-      case ASSIGN_ADD:
-      case ASSIGN_BITAND:
-      case ASSIGN_BITOR:
-      case ASSIGN_BITXOR:
-      case ASSIGN_DIV:
-      case ASSIGN_LSH:
-      case ASSIGN_MOD:
-      case ASSIGN_MUL:
-      case ASSIGN_EXPONENT:
-      case ASSIGN_RSH:
-      case ASSIGN_SUB:
-      case ASSIGN_URSH:
-      case ASSIGN_OR:
-      case ASSIGN_AND:
-      case ASSIGN_COALESCE:
-      case BITAND:
-      case BITOR:
-      case BITXOR:
-      case CASE:
-      case COALESCE:
-      case CATCH:
-      case COMMA:
-      case COMPUTED_PROP:
-      case DEFAULT_VALUE:
-      case DIV:
-      case DO:
-      case ENUM:
-      case EQ:
-      case EXPONENT:
-      case GE:
-      case GETELEM:
-      case OPTCHAIN_GETELEM:
-      case GT:
-      case IN:
-      case INSTANCEOF:
-      case LABEL:
-      case LE:
-      case LSH:
-      case LT:
-      case MOD:
-      case MUL:
-      case NAMESPACE:
-      case NE:
-      case OR:
-      case RSH:
-      case SWITCH:
-      case SHEQ:
-      case SHNE:
-      case SUB:
-      case TAGGED_TEMPLATELIT:
-      case URSH:
-      case WHILE:
-      case WITH:
-        return 2;
-      case CLASS:
-      case FOR_IN:
-      case FOR_OF:
-      case FOR_AWAIT_OF:
-      case FUNCTION:
-      case HOOK:
-      case IMPORT:
-      case INTERFACE:
-        return 3;
-      default:
-        throw new IllegalStateException("No arity defined for " + token);
-    }
+    return switch (token) {
+      case ANNOTATION,
+          ARRAYLIT,
+          BANG,
+          BLOCK,
+          ROOT,
+          BREAK,
+          CALL,
+          OPTCHAIN_CALL,
+          COLON,
+          CONST,
+          CONTINUE,
+          DEBUGGER,
+          EOC,
+          EQUALS,
+          FOR,
+          IF,
+          LB,
+          LC,
+          NEW,
+          OBJECTLIT,
+          PARAM_LIST,
+          PIPE,
+          QMARK,
+          REGEXP,
+          RETURN,
+          SCRIPT,
+          STAR,
+          STRING_KEY,
+          SWITCH_BODY,
+          TEMPLATELIT,
+          TRY,
+          VAR,
+          YIELD,
+          MEMBER_FIELD_DEF,
+          COMPUTED_FIELD_DEF ->
+          -1;
+      case EMPTY,
+          FALSE,
+          IMPORT_STAR,
+          LABEL_NAME,
+          MEMBER_VARIABLE_DEF,
+          NAME,
+          NULL,
+          NUMBER,
+          BIGINT,
+          STRINGLIT,
+          TEMPLATELIT_STRING,
+          THIS,
+          TRUE ->
+          0;
+      case AWAIT,
+          BITNOT,
+          CALL_SIGNATURE,
+          CAST,
+          DEC,
+          DEFAULT_CASE,
+          DELPROP,
+          EXPR_RESULT,
+          GETPROP,
+          GETTER_DEF,
+          INC,
+          INDEX_SIGNATURE,
+          ITER_REST,
+          ITER_SPREAD,
+          MEMBER_FUNCTION_DEF,
+          NAMED_TYPE,
+          NEG,
+          NOT,
+          OBJECT_REST,
+          OBJECT_SPREAD,
+          OPTCHAIN_GETPROP,
+          POS,
+          SETTER_DEF,
+          TEMPLATELIT_SUB,
+          THROW,
+          TYPEOF,
+          TYPE_ALIAS,
+          VOID ->
+          1;
+      case ADD,
+          AND,
+          ASSIGN,
+          ASSIGN_ADD,
+          ASSIGN_BITAND,
+          ASSIGN_BITOR,
+          ASSIGN_BITXOR,
+          ASSIGN_DIV,
+          ASSIGN_LSH,
+          ASSIGN_MOD,
+          ASSIGN_MUL,
+          ASSIGN_EXPONENT,
+          ASSIGN_RSH,
+          ASSIGN_SUB,
+          ASSIGN_URSH,
+          ASSIGN_OR,
+          ASSIGN_AND,
+          ASSIGN_COALESCE,
+          BITAND,
+          BITOR,
+          BITXOR,
+          CASE,
+          COALESCE,
+          CATCH,
+          COMMA,
+          COMPUTED_PROP,
+          DEFAULT_VALUE,
+          DIV,
+          DO,
+          ENUM,
+          EQ,
+          EXPONENT,
+          GE,
+          GETELEM,
+          OPTCHAIN_GETELEM,
+          GT,
+          IN,
+          INSTANCEOF,
+          LABEL,
+          LE,
+          LSH,
+          LT,
+          MOD,
+          MUL,
+          NAMESPACE,
+          NE,
+          OR,
+          RSH,
+          SWITCH,
+          SHEQ,
+          SHNE,
+          SUB,
+          TAGGED_TEMPLATELIT,
+          URSH,
+          WHILE,
+          WITH ->
+          2;
+      case CLASS, FOR_IN, FOR_OF, FOR_AWAIT_OF, FUNCTION, HOOK, IMPORT, INTERFACE -> 3;
+      default -> throw new IllegalStateException("No arity defined for " + token);
+    };
   }
 }

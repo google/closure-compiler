@@ -128,21 +128,12 @@ class StrictModeCheck extends AbstractPostOrderCallback implements CompilerPass 
    * function, or argument.
    */
   private static boolean isDeclaration(Node n) {
-    switch (n.getParent().getToken()) {
-      case LET:
-      case CONST:
-      case VAR:
-      case CATCH:
-        return true;
-      case FUNCTION:
-        return n == n.getParent().getFirstChild();
-
-      case PARAM_LIST:
-        return n.getGrandparent().isFunction();
-
-      default:
-        return false;
-    }
+    return switch (n.getParent().getToken()) {
+      case LET, CONST, VAR, CATCH -> true;
+      case FUNCTION -> n == n.getParent().getFirstChild();
+      case PARAM_LIST -> n.getGrandparent().isFunction();
+      default -> false;
+    };
   }
 
   /** Checks that an assignment is not to the "arguments" object. */

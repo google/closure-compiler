@@ -207,13 +207,10 @@ public class ParseTree {
       parseTree = parseTree.asParenExpression().expression;
     }
 
-    switch (parseTree.type) {
-      case ARRAY_PATTERN:
-      case OBJECT_PATTERN:
-        return true;
-      default:
-        return false;
-    }
+    return switch (parseTree.type) {
+      case ARRAY_PATTERN, OBJECT_PATTERN -> true;
+      default -> false;
+    };
   }
 
   /** Is valid assignment target for non-vanilla assignment operators like `+=`, `-+`, `**=`, etc */
@@ -222,18 +219,12 @@ public class ParseTree {
     while (parseTree.type == ParseTreeType.PAREN_EXPRESSION) {
       parseTree = parseTree.asParenExpression().expression;
     }
-    switch (parseTree.type) {
-      case IDENTIFIER_EXPRESSION:
-      case MEMBER_EXPRESSION:
-      case MEMBER_LOOKUP_EXPRESSION:
-      case DEFAULT_PARAMETER:
-        return true;
-      case ARRAY_PATTERN:
-      case OBJECT_PATTERN:
-        return false;
-      default:
-        return false;
-    }
+    return switch (parseTree.type) {
+      case IDENTIFIER_EXPRESSION, MEMBER_EXPRESSION, MEMBER_LOOKUP_EXPRESSION, DEFAULT_PARAMETER ->
+          true;
+      case ARRAY_PATTERN, OBJECT_PATTERN -> false;
+      default -> false;
+    };
   }
 
   /** Is valid assignment target for any assignment operator like `=`, `+=`, `-+`, `**=`, etc */
@@ -243,17 +234,16 @@ public class ParseTree {
       parseTree = parseTree.asParenExpression().expression;
     }
 
-    switch(parseTree.type) {
-      case IDENTIFIER_EXPRESSION:
-      case MEMBER_EXPRESSION:
-      case MEMBER_LOOKUP_EXPRESSION:
-      case ARRAY_PATTERN:
-      case OBJECT_PATTERN:
-      case DEFAULT_PARAMETER:
-        return true;
-      default:
-        return false;
-    }
+    return switch (parseTree.type) {
+      case IDENTIFIER_EXPRESSION,
+          MEMBER_EXPRESSION,
+          MEMBER_LOOKUP_EXPRESSION,
+          ARRAY_PATTERN,
+          OBJECT_PATTERN,
+          DEFAULT_PARAMETER ->
+          true;
+      default -> false;
+    };
   }
 
   public boolean isRestParameter() {

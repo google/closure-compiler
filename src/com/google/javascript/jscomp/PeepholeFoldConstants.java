@@ -70,42 +70,23 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   @Override
   Node optimizeSubtree(Node subtree) {
-    switch (subtree.getToken()) {
-      case OPTCHAIN_CALL:
-      case CALL:
-        return tryFoldUselessObjectDotDefinePropertiesCall(subtree);
-
-      case NEW:
-        return tryFoldCtorCall(subtree);
-
-      case TYPEOF:
-        return tryFoldTypeof(subtree);
-
-      case ITER_SPREAD:
-        return tryFoldSpread(subtree);
-
-      case ARRAYLIT:
-      case OBJECTLIT:
-        return tryFlattenArrayOrObjectLit(subtree);
-
-      case NOT:
-      case POS:
-      case NEG:
-      case BITNOT:
+    return switch (subtree.getToken()) {
+      case OPTCHAIN_CALL, CALL -> tryFoldUselessObjectDotDefinePropertiesCall(subtree);
+      case NEW -> tryFoldCtorCall(subtree);
+      case TYPEOF -> tryFoldTypeof(subtree);
+      case ITER_SPREAD -> tryFoldSpread(subtree);
+      case ARRAYLIT, OBJECTLIT -> tryFlattenArrayOrObjectLit(subtree);
+      case NOT, POS, NEG, BITNOT -> {
         tryReduceOperandsForOp(subtree);
-        return tryFoldUnaryOperator(subtree);
-
-      case VOID:
-        return tryReduceVoid(subtree);
-
-      case OPTCHAIN_GETPROP:
-      case GETPROP:
-        return tryFoldGetProp(subtree);
-
-      default:
+        yield tryFoldUnaryOperator(subtree);
+      }
+      case VOID -> tryReduceVoid(subtree);
+      case OPTCHAIN_GETPROP, GETPROP -> tryFoldGetProp(subtree);
+      default -> {
         tryReduceOperandsForOp(subtree);
-        return tryFoldBinaryOperator(subtree);
-    }
+        yield tryFoldBinaryOperator(subtree);
+      }
+    };
   }
 
   private Node tryFoldBinaryOperator(Node subtree) {

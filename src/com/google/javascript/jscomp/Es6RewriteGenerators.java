@@ -1104,19 +1104,11 @@ final class Es6RewriteGenerators implements CompilerPass {
       if (!block.hasChildren()) {
         return false;
       }
-      switch (block.getLastChild().getToken()) {
-        case BLOCK:
-          return isEndOfBlockUnreachable(block.getLastChild());
-
-        case RETURN:
-        case THROW:
-        case CONTINUE:
-        case BREAK:
-          return true;
-
-        default:
-          return false;
-      }
+      return switch (block.getLastChild().getToken()) {
+        case BLOCK -> isEndOfBlockUnreachable(block.getLastChild());
+        case RETURN, THROW, CONTINUE, BREAK -> true;
+        default -> false;
+      };
     }
 
     /** State machine context that is used during generator function transpilation. */

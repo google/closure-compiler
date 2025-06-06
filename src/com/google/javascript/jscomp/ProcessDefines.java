@@ -661,17 +661,11 @@ class ProcessDefines implements CompilerPass {
     // Values allowed in 'var CLOSURE_DEFINES = {'
     // Must be a subset of the values allowed for <val> in
     // /** @define {...} */ var DEF = <val>
-    switch (val.getToken()) {
-      case STRINGLIT:
-      case NUMBER:
-      case TRUE:
-      case FALSE:
-        return true;
-      case NEG:
-        return val.getFirstChild().isNumber();
-      default:
-        return false;
-    }
+    return switch (val.getToken()) {
+      case STRINGLIT, NUMBER, TRUE, FALSE -> true;
+      case NEG -> val.getFirstChild().isNumber();
+      default -> false;
+    };
   }
 
   private boolean hasValidValue(Define define) {

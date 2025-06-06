@@ -60,15 +60,11 @@ public enum Tri {
   }
 
   public boolean toBoolean(boolean x) {
-    switch (this) {
-      case FALSE:
-        return false;
-      case UNKNOWN:
-        return x;
-      case TRUE:
-        return true;
-    }
-    throw new AssertionError(this);
+    return switch (this) {
+      case FALSE -> false;
+      case UNKNOWN -> x;
+      case TRUE -> true;
+    };
   }
 
   public static Tri forBoolean(boolean x) {

@@ -258,15 +258,11 @@ final class PolyfillUsageFinder {
     ALL;
 
     boolean shouldInclude(boolean isGuarded) {
-      switch (this) {
-        case ALL:
-          return true;
-        case ONLY_GUARDED:
-          return isGuarded;
-        case ONLY_UNGUARDED:
-          return !isGuarded;
-      }
-      throw new AssertionError();
+      return switch (this) {
+        case ALL -> true;
+        case ONLY_GUARDED -> isGuarded;
+        case ONLY_UNGUARDED -> !isGuarded;
+      };
     }
   };
 

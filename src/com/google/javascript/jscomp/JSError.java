@@ -302,16 +302,11 @@ public record JSError(
    * @return the formatted message or {@code null}
    */
   public final @Nullable String format(CheckLevel level, MessageFormatter formatter) {
-    switch (level) {
-      case ERROR:
-        return formatter.formatError(this);
-
-      case WARNING:
-        return formatter.formatWarning(this);
-
-      default:
-        return null;
-    }
+    return switch (level) {
+      case ERROR -> formatter.formatError(this);
+      case WARNING -> formatter.formatWarning(this);
+      default -> null;
+    };
   }
 
   /** @return the offset of the region the Error applies to, or -1 if the offset is unknown. */

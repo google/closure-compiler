@@ -50,20 +50,18 @@ public class Es6RelativizeImportPaths implements CompilerPass {
   private static class Rewriter extends AbstractPreOrderCallback {
     @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      switch (n.getToken()) {
-        case ROOT:
-        case MODULE_BODY:
-        case SCRIPT:
-          return true;
-        case IMPORT:
+      return switch (n.getToken()) {
+        case ROOT, MODULE_BODY, SCRIPT -> true;
+        case IMPORT -> {
           visitImport(nodeTraversal, n);
-          return false;
-        case EXPORT:
+          yield false;
+        }
+        case EXPORT -> {
           visitExport(nodeTraversal, n);
-          return false;
-        default:
-          return false;
-      }
+          yield false;
+        }
+        default -> false;
+      };
     }
 
     private void visitImport(NodeTraversal t, Node importDecl) {

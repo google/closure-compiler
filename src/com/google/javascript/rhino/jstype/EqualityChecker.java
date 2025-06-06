@@ -313,18 +313,16 @@ final class EqualityChecker {
       return false;
     }
 
-    switch (left.getKind()) {
-      case CONSTRUCTOR:
-      case INTERFACE:
-        // constructors and interfaces use identity semantics, which we checked for above.
-        return false;
-      case ORDINARY:
-        return this.areEqualCaching(left.getTypeOfThis(), right.getTypeOfThis())
-            && this.areEqualCaching(left.getInternalArrowType(), right.getInternalArrowType())
-            && Objects.equals(left.getClosurePrimitive(), right.getClosurePrimitive());
-      default:
-        throw new AssertionError();
-    }
+    return switch (left.getKind()) {
+      case CONSTRUCTOR, INTERFACE ->
+          // constructors and interfaces use identity semantics, which we checked for above.
+          false;
+      case ORDINARY ->
+          this.areEqualCaching(left.getTypeOfThis(), right.getTypeOfThis())
+              && this.areEqualCaching(left.getInternalArrowType(), right.getInternalArrowType())
+              && Objects.equals(left.getClosurePrimitive(), right.getClosurePrimitive());
+      default -> throw new AssertionError();
+    };
   }
 
   private boolean areArrowEqual(ArrowType left, ArrowType right) {

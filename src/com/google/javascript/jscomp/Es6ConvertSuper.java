@@ -71,17 +71,11 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     Node enclosingMemberDef =
         NodeUtil.getEnclosingNode(
             exprRoot,
-            (Node n) -> {
-              switch (n.getToken()) {
-                case MEMBER_FUNCTION_DEF:
-                case GETTER_DEF:
-                case SETTER_DEF:
-                case COMPUTED_PROP:
-                  return true;
-                default:
-                  return false;
-              }
-            });
+            (Node n) ->
+                switch (n.getToken()) {
+                  case MEMBER_FUNCTION_DEF, GETTER_DEF, SETTER_DEF, COMPUTED_PROP -> true;
+                  default -> false;
+                });
 
     if (parent.isCall()) {
       // super(...)

@@ -118,20 +118,10 @@ public enum Keywords {
    * be used as a variable identifier, but only in non-strict mode.
    */
   public static boolean isStrictKeyword(TokenType token) {
-    switch(token) {
-      case IMPLEMENTS:
-      case INTERFACE:
-      case LET:
-      case PACKAGE:
-      case PRIVATE:
-      case PROTECTED:
-      case PUBLIC:
-      case STATIC:
-      case YIELD:
-        return true;
-      default:
-        return false;
-    }
+    return switch (token) {
+      case IMPLEMENTS, INTERFACE, LET, PACKAGE, PRIVATE, PROTECTED, PUBLIC, STATIC, YIELD -> true;
+      default -> false;
+    };
   }
 
   public static TokenType getTokenType(String value) {

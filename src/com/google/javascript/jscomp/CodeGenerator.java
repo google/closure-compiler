@@ -1850,16 +1850,10 @@ public class CodeGenerator {
         }
       }
     } else {
-      switch (n.getToken()) {
-        case LET:
-        case CONST:
-        case FUNCTION:
-        case CLASS:
-        case DO:
-          return true;
-        default:
-          return false;
-      }
+      return switch (n.getToken()) {
+        case LET, CONST, FUNCTION, CLASS, DO -> true;
+        default -> false;
+      };
     }
   }
 

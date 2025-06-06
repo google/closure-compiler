@@ -890,19 +890,12 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
    * always create a CFG edge into n itself because of DOs and FORs.
    */
   static Node computeFallThrough(Node n) {
-    switch (n.getToken()) {
-      case DO:
-      case FOR:
-        return computeFallThrough(n.getFirstChild());
-      case FOR_IN:
-      case FOR_OF:
-      case FOR_AWAIT_OF:
-        return n.getSecondChild();
-      case LABEL:
-        return computeFallThrough(n.getLastChild());
-      default:
-        return n;
-    }
+    return switch (n.getToken()) {
+      case DO, FOR -> computeFallThrough(n.getFirstChild());
+      case FOR_IN, FOR_OF, FOR_AWAIT_OF -> n.getSecondChild();
+      case LABEL -> computeFallThrough(n.getLastChild());
+      default -> n;
+    };
   }
 
   /**
@@ -1038,23 +1031,11 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
 
   /** Determines whether the given node can be terminated with a BREAK node. */
   static boolean isBreakStructure(Node n, boolean labeled) {
-    switch (n.getToken()) {
-      case FOR:
-      case FOR_IN:
-      case FOR_OF:
-      case FOR_AWAIT_OF:
-      case DO:
-      case WHILE:
-      case SWITCH:
-        return true;
-      case BLOCK:
-      case ROOT:
-      case IF:
-      case TRY:
-        return labeled;
-      default:
-        return false;
-    }
+    return switch (n.getToken()) {
+      case FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, DO, WHILE, SWITCH -> true;
+      case BLOCK, ROOT, IF, TRY -> labeled;
+      default -> false;
+    };
   }
 
   /**

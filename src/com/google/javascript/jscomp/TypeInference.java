@@ -2500,16 +2500,12 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
   // Sets the appropriate type on the OptChain node `n` after its children have been traversed.
   private FlowScope setOptChainNodeTypeAfterChildrenTraversed(
       Node n, FlowScope scopeAfterChildren) {
-    switch (n.getToken()) {
-      case OPTCHAIN_GETPROP:
-        return setGetPropNodeTypeAfterChildrenTraversed(n, scopeAfterChildren);
-      case OPTCHAIN_GETELEM:
-        return setGetElemNodeTypeAfterChildrenTraversed(n, scopeAfterChildren);
-      case OPTCHAIN_CALL:
-        return setCallNodeTypeAfterChildrenTraversed(n, scopeAfterChildren);
-      default:
-        throw new IllegalStateException("Illegal token inside finishTraversingOptChain");
-    }
+    return switch (n.getToken()) {
+      case OPTCHAIN_GETPROP -> setGetPropNodeTypeAfterChildrenTraversed(n, scopeAfterChildren);
+      case OPTCHAIN_GETELEM -> setGetElemNodeTypeAfterChildrenTraversed(n, scopeAfterChildren);
+      case OPTCHAIN_CALL -> setCallNodeTypeAfterChildrenTraversed(n, scopeAfterChildren);
+      default -> throw new IllegalStateException("Illegal token inside finishTraversingOptChain");
+    };
   }
 
   /**
@@ -2790,17 +2786,14 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
   }
 
   private BooleanOutcomePair traverseWithinShortCircuitingBinOp(Node n, FlowScope scope) {
-    switch (n.getToken()) {
-      case AND:
-        return traverseAnd(n, scope);
-
-      case OR:
-        return traverseOr(n, scope);
-
-      default:
+    return switch (n.getToken()) {
+      case AND -> traverseAnd(n, scope);
+      case OR -> traverseOr(n, scope);
+      default -> {
         scope = traverse(n, scope);
-        return newBooleanOutcomePair(n.getJSType(), scope);
-    }
+        yield newBooleanOutcomePair(n.getJSType(), scope);
+      }
+    };
   }
 
   private FlowScope traverseAwait(Node await, FlowScope scope) {

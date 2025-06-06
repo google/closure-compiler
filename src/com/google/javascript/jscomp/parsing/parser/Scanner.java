@@ -167,15 +167,14 @@ public class Scanner {
   }
 
   private boolean skipRegularExpressionChar() {
-    switch (peekChar()) {
-      case '\\':
-        return skipRegularExpressionBackslashSequence();
-      case '[':
-        return skipRegularExpressionClass();
-      default:
+    return switch (peekChar()) {
+      case '\\' -> skipRegularExpressionBackslashSequence();
+      case '[' -> skipRegularExpressionClass();
+      default -> {
         nextChar();
-        return true;
-    }
+        yield true;
+      }
+    };
   }
 
   private boolean skipRegularExpressionBackslashSequence() {
@@ -221,15 +220,11 @@ public class Scanner {
   }
 
   private static boolean isRegularExpressionChar(char ch) {
-    switch (ch) {
-      case '/':
-        return false;
-      case '\\':
-      case '[':
-        return true;
-      default:
-        return !isLineTerminator(ch);
-    }
+    return switch (ch) {
+      case '/' -> false;
+      case '\\', '[' -> true;
+      default -> !isLineTerminator(ch);
+    };
   }
 
   public Token peekToken() {
@@ -938,35 +933,38 @@ public class Scanner {
     }
 
     String value = getTokenString(beginIndex);
-    switch (peekChar()) {
-      case '`':
+    return switch (peekChar()) {
+      case '`' -> {
         nextChar();
-        return new TemplateLiteralToken(
+        yield new TemplateLiteralToken(
             endType,
             value,
             skipTemplateCharactersResult.getErrorMessage(),
             skipTemplateCharactersResult.getErrorLevel(),
             skipTemplateCharactersResult.getPosition(),
             getTokenRange(startingPosition));
-      case '$':
+      }
+      case '$' -> {
         nextChar(); // $
         nextChar(); // {
-        return new TemplateLiteralToken(
+        yield new TemplateLiteralToken(
             middleType,
             value,
             skipTemplateCharactersResult.getErrorMessage(),
             skipTemplateCharactersResult.getErrorLevel(),
             skipTemplateCharactersResult.getPosition(),
             getTokenRange(startingPosition));
-      default: // Should have reported error already
-        return new TemplateLiteralToken(
-            endType,
-            value,
-            skipTemplateCharactersResult.getErrorMessage(),
-            skipTemplateCharactersResult.getErrorLevel(),
-            skipTemplateCharactersResult.getPosition(),
-            getTokenRange(startingPosition));
-    }
+      }
+      default ->
+          // Should have reported error already
+          new TemplateLiteralToken(
+              endType,
+              value,
+              skipTemplateCharactersResult.getErrorMessage(),
+              skipTemplateCharactersResult.getErrorLevel(),
+              skipTemplateCharactersResult.getPosition(),
+              getTokenRange(startingPosition));
+    };
   }
 
   private String getTokenString(int beginIndex) {
@@ -1223,21 +1221,10 @@ public class Scanner {
   }
 
   private static boolean isDecimalDigit(char ch) {
-    switch (ch) {
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-        return true;
-      default:
-        return false;
-    }
+    return switch (ch) {
+      case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> true;
+      default -> false;
+    };
   }
 
   private boolean peekHexDigit() {
@@ -1283,19 +1270,10 @@ public class Scanner {
   }
 
   private static int valueOfOctalDigit(char ch) {
-    switch (ch) {
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-        return ch - '0';
-      default:
-        return -1;
-    }
+    return switch (ch) {
+      case '0', '1', '2', '3', '4', '5', '6', '7' -> ch - '0';
+      default -> -1;
+    };
   }
 
   private void skipBinaryDigits() {
@@ -1318,14 +1296,11 @@ public class Scanner {
   }
 
   private static int valueOfBinaryDigit(char ch) {
-    switch (ch) {
-      case '0':
-        return 0;
-      case '1':
-        return 1;
-      default:
-        return -1;
-    }
+    return switch (ch) {
+      case '0' -> 0;
+      case '1' -> 1;
+      default -> -1;
+    };
   }
 
   private char nextChar() {

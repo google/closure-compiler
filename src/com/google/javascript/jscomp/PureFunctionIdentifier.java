@@ -1095,15 +1095,11 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
    * <p>For NAMEs this is the name. For GETPROPs this is the last segment including a leading dot.
    */
   private static @Nullable String nameForReference(Node nameRef) {
-    switch (nameRef.getToken()) {
-      case NAME:
-        return nameRef.getString();
-      case GETPROP:
-      case OPTCHAIN_GETPROP:
-        return PROP_NAME_PREFIX + nameRef.getString();
-      default:
-        throw new IllegalStateException("Unexpected name reference: " + nameRef);
-    }
+    return switch (nameRef.getToken()) {
+      case NAME -> nameRef.getString();
+      case GETPROP, OPTCHAIN_GETPROP -> PROP_NAME_PREFIX + nameRef.getString();
+      default -> throw new IllegalStateException("Unexpected name reference: " + nameRef);
+    };
   }
 
   private PropertyAccessKind getPropertyKind(String name) {

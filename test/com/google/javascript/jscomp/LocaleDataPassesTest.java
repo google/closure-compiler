@@ -68,28 +68,27 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    switch (testMode) {
-      case PROTECT_DATA:
-        return new CompilerPass() {
-          @Override
-          public void process(Node externs, Node root) {
-            final ProtectGoogLocale extract = new ProtectGoogLocale(compiler);
-            extract.process(externs, root);
-          }
-        };
-      case REPLACE_PROTECTED_DATA:
-        return new CompilerPass() {
-          @Override
-          public void process(Node externs, Node root) {
-            final ProtectGoogLocale extract = new ProtectGoogLocale(compiler);
-            extract.process(externs, root);
-            final LocaleDataPasses.LocaleSubstitutions subs =
-                new LocaleDataPasses.LocaleSubstitutions(compiler, compiler.getOptions().locale);
-            subs.process(externs, root);
-          }
-        };
-    }
-    throw new UnsupportedOperationException("unexpected testMode: " + testMode);
+    return switch (testMode) {
+      case PROTECT_DATA ->
+          new CompilerPass() {
+            @Override
+            public void process(Node externs, Node root) {
+              final ProtectGoogLocale extract = new ProtectGoogLocale(compiler);
+              extract.process(externs, root);
+            }
+          };
+      case REPLACE_PROTECTED_DATA ->
+          new CompilerPass() {
+            @Override
+            public void process(Node externs, Node root) {
+              final ProtectGoogLocale extract = new ProtectGoogLocale(compiler);
+              extract.process(externs, root);
+              final LocaleDataPasses.LocaleSubstitutions subs =
+                  new LocaleDataPasses.LocaleSubstitutions(compiler, compiler.getOptions().locale);
+              subs.process(externs, root);
+            }
+          };
+    };
   }
 
   static class LocaleResult {

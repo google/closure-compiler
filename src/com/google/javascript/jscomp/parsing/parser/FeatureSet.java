@@ -469,40 +469,22 @@ public final class FeatureSet implements Serializable {
 
   /** Parses known strings into feature sets. */
   public static FeatureSet valueOf(String name) {
-    switch (name) {
-      case "es3":
-        return ES3;
-      case "es5":
-        return ES5;
-      case "es_2015":
-      case "es6":
-        return ES2015;
-      case "es_2016":
-      case "es7":
-        return ES2016;
-      case "es_2017":
-      case "es8":
-        return ES2017;
-      case "es_2018":
-      case "es9":
-        return ES2018;
-      case "es_2019":
-        return ES2019;
-      case "es_2020":
-        return ES2020;
-      case "es_2021":
-        return ES2021;
-      case "es_next":
-        return ES_NEXT;
-      case "es_unstable":
-        return ES_UNSTABLE;
-      case "es_unsupported":
-        return ES_UNSUPPORTED;
-      case "all":
-        return ALL;
-      default:
-        throw new IllegalArgumentException("No such FeatureSet: " + name);
-    }
+    return switch (name) {
+      case "es3" -> ES3;
+      case "es5" -> ES5;
+      case "es_2015", "es6" -> ES2015;
+      case "es_2016", "es7" -> ES2016;
+      case "es_2017", "es8" -> ES2017;
+      case "es_2018", "es9" -> ES2018;
+      case "es_2019" -> ES2019;
+      case "es_2020" -> ES2020;
+      case "es_2021" -> ES2021;
+      case "es_next" -> ES_NEXT;
+      case "es_unstable" -> ES_UNSTABLE;
+      case "es_unsupported" -> ES_UNSUPPORTED;
+      case "all" -> ALL;
+      default -> throw new IllegalArgumentException("No such FeatureSet: " + name);
+    };
   }
 
   /**

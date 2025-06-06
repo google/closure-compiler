@@ -388,16 +388,12 @@ abstract class PotentialDeclaration {
       while (n != null && !n.isStringLit() && !n.isName()) {
         n = n.getFirstChild();
       }
-      switch (n != null ? n.getString() : "") {
-        case "boolean":
-          return new Node(Token.FALSE);
-        case "number":
-          return Node.newNumber(0);
-        case "string":
-          return Node.newString("");
-        default:
-          return null;
-      }
+      return switch (n != null ? n.getString() : "") {
+        case "boolean" -> new Node(Token.FALSE);
+        case "number" -> Node.newNumber(0);
+        case "string" -> Node.newString("");
+        default -> null;
+      };
     }
   }
 

@@ -1280,15 +1280,10 @@ public class NodeTraversal {
   }
 
   private static boolean isHoistScopeRootNode(Node n) {
-    switch (n.getToken()) {
-      case FUNCTION:
-      case MODULE_BODY:
-      case ROOT:
-      case SCRIPT:
-        return true;
-      default:
-        return NodeUtil.isFunctionBlock(n);
-    }
+    return switch (n.getToken()) {
+      case FUNCTION, MODULE_BODY, ROOT, SCRIPT -> true;
+      default -> NodeUtil.isFunctionBlock(n);
+    };
   }
 
   /** Returns the closest scope binding the `this` or `super` keyword */

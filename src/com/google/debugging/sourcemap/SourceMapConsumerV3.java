@@ -307,7 +307,8 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
      */
     private Entry decodeEntry(int[] vals, int entryValues) throws SourceMapParseException {
       Entry entry;
-      switch (entryValues) {
+      return switch (entryValues) {
+        case 1 ->
         // The first values, if present are in the following order:
         //   0: the starting column in the current line of the generated file
         //   1: the id of the original source file
@@ -318,50 +319,50 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
         // Note: the previously column value for the generated file is reset
         // to '0' when a new line is encountered.  This is done in the 'build'
         // method.
-
-        case 1:
+        {
           // An unmapped section of the generated file.
-          entry = new UnmappedEntry(
-              vals[0] + previousCol);
+          entry = new UnmappedEntry(vals[0] + previousCol);
           // Set the values see for the next entry.
           previousCol = entry.getGeneratedColumn();
-          return entry;
-
-        case 4:
+          yield entry;
+        }
+        case 4 -> {
           // A mapped section of the generated file.
-          entry = new UnnamedEntry(
-              vals[0] + previousCol,
-              vals[1] + previousSrcId,
-              vals[2] + previousSrcLine,
-              vals[3] + previousSrcColumn);
+          entry =
+              new UnnamedEntry(
+                  vals[0] + previousCol,
+                  vals[1] + previousSrcId,
+                  vals[2] + previousSrcLine,
+                  vals[3] + previousSrcColumn);
           // Set the values see for the next entry.
           previousCol = entry.getGeneratedColumn();
           previousSrcId = entry.getSourceFileId();
           previousSrcLine = entry.getSourceLine();
           previousSrcColumn = entry.getSourceColumn();
-          return entry;
-
-        case 5:
+          yield entry;
+        }
+        case 5 -> {
           // A mapped section of the generated file, that has an associated
           // name.
-          entry = new NamedEntry(
-              vals[0] + previousCol,
-              vals[1] + previousSrcId,
-              vals[2] + previousSrcLine,
-              vals[3] + previousSrcColumn,
-              vals[4] + previousNameId);
+          entry =
+              new NamedEntry(
+                  vals[0] + previousCol,
+                  vals[1] + previousSrcId,
+                  vals[2] + previousSrcLine,
+                  vals[3] + previousSrcColumn,
+                  vals[4] + previousNameId);
           // Set the values see for the next entry.
           previousCol = entry.getGeneratedColumn();
           previousSrcId = entry.getSourceFileId();
           previousSrcLine = entry.getSourceLine();
           previousSrcColumn = entry.getSourceColumn();
           previousNameId = entry.getNameId();
-          return entry;
-
-        default:
-          throw new SourceMapParseException(
-              "Unexpected number of values for entry:" + entryValues);
-      }
+          yield entry;
+        }
+        default ->
+            throw new SourceMapParseException(
+                "Unexpected number of values for entry:" + entryValues);
+      };
     }
 
     private boolean tryConsumeToken(char token) {

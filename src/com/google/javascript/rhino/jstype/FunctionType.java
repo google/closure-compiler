@@ -897,18 +897,17 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   @Override
   int recursionUnsafeHashCode() {
     int hc = kind.hashCode();
-    switch (kind) {
-      case CONSTRUCTOR:
-      case INTERFACE:
-        return 31 * hc + System.identityHashCode(this); // constructors use identity semantics
-      case ORDINARY:
+    return switch (kind) {
+      // constructors use identity semantics
+      case CONSTRUCTOR, INTERFACE -> 31 * hc + System.identityHashCode(this);
+      case ORDINARY -> {
         hc = 31 * hc + typeOfThis.hashCode();
         hc = 31 * hc + call.hashCode();
         hc = 31 * hc + Objects.hashCode(getClosurePrimitive());
-        return hc;
-      default:
-        throw new AssertionError();
-    }
+        yield hc;
+      }
+      default -> throw new AssertionError();
+    };
   }
 
   public final boolean hasEqualCallType(FunctionType that) {

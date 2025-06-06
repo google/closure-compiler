@@ -313,16 +313,12 @@ class ScopedAliases implements CompilerPass {
   }
 
   private static boolean isValidAliasRhs(Node rhs) {
-    switch (rhs.getToken()) {
-      case GETPROP:
-        return isValidAliasRhs(rhs.getFirstChild());
-      case NAME:
-        return true;
-      case CALL:
-        return NodeUtil.isCallTo(rhs, GOOG_MODULE_GET);
-      default:
-        return false;
-    }
+    return switch (rhs.getToken()) {
+      case GETPROP -> isValidAliasRhs(rhs.getFirstChild());
+      case NAME -> true;
+      case CALL -> NodeUtil.isCallTo(rhs, GOOG_MODULE_GET);
+      default -> false;
+    };
   }
 
   private static boolean isAliasDefinition(Node nameNode) {
@@ -334,18 +330,16 @@ class ScopedAliases implements CompilerPass {
   }
 
   private static String getAliasedNamespace(Node rhs) {
-    switch (rhs.getToken()) {
-      case GETPROP:
-        return getAliasedNamespace(rhs.getFirstChild()) + '.' + rhs.getString();
-      case NAME:
-        return rhs.getString();
-      case CALL:
+    return switch (rhs.getToken()) {
+      case GETPROP -> getAliasedNamespace(rhs.getFirstChild()) + '.' + rhs.getString();
+      case NAME -> rhs.getString();
+      case CALL -> {
         checkState(NodeUtil.isCallTo(rhs, GOOG_MODULE_GET), rhs);
         checkState(rhs.hasTwoChildren(), rhs);
-        return rhs.getLastChild().getString();
-      default:
-        throw new RuntimeException("Invalid alias RHS:" + rhs);
-    }
+        yield rhs.getLastChild().getString();
+      }
+      default -> throw new RuntimeException("Invalid alias RHS:" + rhs);
+    };
   }
 
   private static class AliasedNode extends AliasUsage {

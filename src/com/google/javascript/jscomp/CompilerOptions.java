@@ -3041,18 +3041,13 @@ public class CompilerOptions {
       if (value == null) {
         return null;
       }
-      switch (value) {
-        case "NONE":
-          return InstrumentOption.NONE;
-        case "LINE":
-          return InstrumentOption.LINE_ONLY;
-        case "BRANCH":
-          return InstrumentOption.BRANCH_ONLY;
-        case "PRODUCTION":
-          return InstrumentOption.PRODUCTION;
-        default:
-          return null;
-      }
+      return switch (value) {
+        case "NONE" -> InstrumentOption.NONE;
+        case "LINE" -> InstrumentOption.LINE_ONLY;
+        case "BRANCH" -> InstrumentOption.BRANCH_ONLY;
+        case "PRODUCTION" -> InstrumentOption.PRODUCTION;
+        default -> null;
+      };
     }
   }
 
@@ -3130,13 +3125,10 @@ public class CompilerOptions {
 
     /** Whether this language mode defaults to strict mode */
     boolean isDefaultStrict() {
-      switch (this) {
-        case ECMASCRIPT3:
-        case ECMASCRIPT5:
-          return false;
-        default:
-          return true;
-      }
+      return switch (this) {
+        case ECMASCRIPT3, ECMASCRIPT5 -> false;
+        default -> true;
+      };
     }
 
     /** Returns a list of valid names used to select a `LanguageMode` on the command line. */
@@ -3177,39 +3169,24 @@ public class CompilerOptions {
     }
 
     public FeatureSet toFeatureSet() {
-      switch (this) {
-        case ECMASCRIPT3:
-          return FeatureSet.ES3;
-        case ECMASCRIPT5:
-        case ECMASCRIPT5_STRICT:
-          return FeatureSet.ES5;
-        case ECMASCRIPT_2015:
-          return FeatureSet.ES2015_MODULES;
-        case ECMASCRIPT_2016:
-          return FeatureSet.ES2016_MODULES;
-        case ECMASCRIPT_2017:
-          return FeatureSet.ES2017_MODULES;
-        case ECMASCRIPT_2018:
-          return FeatureSet.ES2018_MODULES;
-        case ECMASCRIPT_2019:
-          return FeatureSet.ES2019_MODULES;
-        case ECMASCRIPT_2020:
-          return FeatureSet.ES2020_MODULES;
-        case ECMASCRIPT_2021:
-          return FeatureSet.ES2021_MODULES;
-        case ECMASCRIPT_NEXT:
-          return FeatureSet.ES_NEXT;
-        case NO_TRANSPILE:
-        case UNSTABLE:
-          return FeatureSet.ES_UNSTABLE;
-        case UNSUPPORTED:
-          return FeatureSet.ES_UNSUPPORTED;
-        case STABLE:
-          throw new UnsupportedOperationException(
-              "STABLE has different feature sets for language in and out. "
-                  + "Use STABLE_IN or STABLE_OUT.");
-      }
-      throw new IllegalStateException();
+      return switch (this) {
+        case ECMASCRIPT3 -> FeatureSet.ES3;
+        case ECMASCRIPT5, ECMASCRIPT5_STRICT -> FeatureSet.ES5;
+        case ECMASCRIPT_2015 -> FeatureSet.ES2015_MODULES;
+        case ECMASCRIPT_2016 -> FeatureSet.ES2016_MODULES;
+        case ECMASCRIPT_2017 -> FeatureSet.ES2017_MODULES;
+        case ECMASCRIPT_2018 -> FeatureSet.ES2018_MODULES;
+        case ECMASCRIPT_2019 -> FeatureSet.ES2019_MODULES;
+        case ECMASCRIPT_2020 -> FeatureSet.ES2020_MODULES;
+        case ECMASCRIPT_2021 -> FeatureSet.ES2021_MODULES;
+        case ECMASCRIPT_NEXT -> FeatureSet.ES_NEXT;
+        case NO_TRANSPILE, UNSTABLE -> FeatureSet.ES_UNSTABLE;
+        case UNSUPPORTED -> FeatureSet.ES_UNSUPPORTED;
+        case STABLE ->
+            throw new UnsupportedOperationException(
+                "STABLE has different feature sets for language in and out. "
+                    + "Use STABLE_IN or STABLE_OUT.");
+      };
     }
   }
 

@@ -501,35 +501,27 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
 
     /** Whether this kind of implicit variable is created/owned by the given scope. */
     boolean isMadeByScope(AbstractScope<?, ?> scope) {
-      switch (this) {
-        case EXPORTS:
-          return scope.isModuleScope()
-              && scope.getRootNode().getParent().getBooleanProp(Node.GOOG_MODULE);
-        case SUPER:
-        case THIS:
-          return scope.isStaticBlockScope()
-              || NodeUtil.isNonArrowFunction(scope.getRootNode())
-              || scope.isMemberFieldDefScope()
-              || scope.isComputedFieldDefRhsScope();
-        case ARGUMENTS:
-          return NodeUtil.isNonArrowFunction(scope.getRootNode());
-      }
-      throw new AssertionError();
+      return switch (this) {
+        case EXPORTS ->
+            scope.isModuleScope()
+                && scope.getRootNode().getParent().getBooleanProp(Node.GOOG_MODULE);
+        case SUPER, THIS ->
+            scope.isStaticBlockScope()
+                || NodeUtil.isNonArrowFunction(scope.getRootNode())
+                || scope.isMemberFieldDefScope()
+                || scope.isComputedFieldDefRhsScope();
+        case ARGUMENTS -> NodeUtil.isNonArrowFunction(scope.getRootNode());
+      };
     }
 
     static @Nullable ImplicitVar of(String name) {
-      switch (name) {
-        case "arguments":
-          return ARGUMENTS;
-        case "super":
-          return SUPER;
-        case "this":
-          return THIS;
-        case "exports":
-          return EXPORTS;
-        default:
-          return null;
-      }
+      return switch (name) {
+        case "arguments" -> ARGUMENTS;
+        case "super" -> SUPER;
+        case "this" -> THIS;
+        case "exports" -> EXPORTS;
+        default -> null;
+      };
     }
   }
 }

@@ -176,23 +176,17 @@ class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPa
   }
 
   private static boolean isCandidateFunction(Node n) {
-    switch (n.getToken()) {
-      case FUNCTION:
-        // Named function expression can be recursive, this creates an alias of the name, meaning
-        // it might be used in an unexpected way.
-        return !NodeUtil.isNamedFunctionExpression(n);
-      case COMMA:
-      case CAST:
-        return isCandidateFunction(n.getLastChild());
-      case HOOK:
-        return isCandidateFunction(n.getSecondChild()) && isCandidateFunction(n.getLastChild());
-      case OR:
-      case AND:
-      case COALESCE:
-        return isCandidateFunction(n.getFirstChild()) && isCandidateFunction(n.getLastChild());
-      default:
-        return false;
-    }
+    return switch (n.getToken()) {
+      case FUNCTION ->
+          // Named function expression can be recursive, this creates an alias of the name, meaning
+          // it might be used in an unexpected way.
+          !NodeUtil.isNamedFunctionExpression(n);
+      case COMMA, CAST -> isCandidateFunction(n.getLastChild());
+      case HOOK -> isCandidateFunction(n.getSecondChild()) && isCandidateFunction(n.getLastChild());
+      case OR, AND, COALESCE ->
+          isCandidateFunction(n.getFirstChild()) && isCandidateFunction(n.getLastChild());
+      default -> false;
+    };
   }
 
   /**

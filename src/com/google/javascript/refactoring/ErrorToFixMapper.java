@@ -68,15 +68,14 @@ public final class ErrorToFixMapper {
     if (fix != null) {
       return ImmutableList.of(fix);
     }
-    switch (error.type().key) {
-      case "JSC_IMPLICITLY_NONNULL_JSDOC":
-      case "JSC_IMPLICITLY_NULLABLE_JSDOC":
-      case "JSC_MISSING_NULLABILITY_MODIFIER_JSDOC":
-      case "JSC_NULL_MISSING_NULLABILITY_MODIFIER_JSDOC":
-        return getFixesForImplicitNullabilityErrors(error);
-      default:
-        return ImmutableList.of();
-    }
+    return switch (error.type().key) {
+      case "JSC_IMPLICITLY_NONNULL_JSDOC",
+          "JSC_IMPLICITLY_NULLABLE_JSDOC",
+          "JSC_MISSING_NULLABILITY_MODIFIER_JSDOC",
+          "JSC_NULL_MISSING_NULLABILITY_MODIFIER_JSDOC" ->
+          getFixesForImplicitNullabilityErrors(error);
+      default -> ImmutableList.of();
+    };
   }
 
   /**
@@ -84,50 +83,37 @@ public final class ErrorToFixMapper {
    * getFixesForJsError should often be used instead of this.
    */
   public @Nullable SuggestedFix getFixForJsError(JSError error) {
-    switch (error.type().key) {
-      case "JSC_REDECLARED_VARIABLE":
-        return getFixForRedeclaration(error);
-      case "JSC_REFERENCE_BEFORE_DECLARE":
-        return getFixForEarlyReference(error);
-      case "JSC_MISSING_SEMICOLON":
-        return getFixForMissingSemicolon(error);
-      case "JSC_REQUIRES_NOT_SORTED":
-        return getFixForUnsortedRequires(error);
-      case "JSC_PROVIDES_NOT_SORTED":
-        return getFixForUnsortedProvides(error);
-      case "JSC_DEBUGGER_STATEMENT_PRESENT":
-        return new SuggestedFix.Builder()
-            .attachMatchedNodeInfo(error.node(), compiler)
-            .setDescription("Remove debugger statement")
-            .delete(error.node())
-            .build();
-      case "JSC_USELESS_EMPTY_STATEMENT":
-        return removeEmptyStatement(error);
-      case "JSC_INEXISTENT_PROPERTY_WITH_SUGGESTION":
-      case "JSC_STRICT_INEXISTENT_PROPERTY_WITH_SUGGESTION":
-        return getFixForInexistentProperty(error);
-      case "JSC_MISSING_CALL_TO_SUPER":
-        return getFixForMissingSuper(error);
-      case "JSC_INVALID_SUPER_CALL_WITH_SUGGESTION":
-        return getFixForInvalidSuper(error);
-      case "JSC_MISSING_REQUIRE":
-      case "JSC_MISSING_REQUIRE_IN_PROVIDES_FILE":
-        return getFixForMissingRequire(error, ImportType.REQUIRE);
-      case "JSC_MISSING_REQUIRE_TYPE":
-      case "JSC_MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE":
-        return getFixForMissingRequire(error, ImportType.REQUIRE_TYPE);
-      case "JSC_EXTRA_REQUIRE_WARNING":
-        return getFixForExtraRequire(error);
-      case "JSC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME":
-      case "JSC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME":
-        return getFixForReferenceToShortImportByLongName(error);
-      case "JSC_REDUNDANT_NULLABILITY_MODIFIER_JSDOC":
-        return getFixForRedundantNullabilityModifierJsDoc(error);
-      case "JSC_MISSING_CONST_ON_CONSTANT_CASE":
-        return getFixForConstantCaseErrors(error);
-      default:
-        return null;
-    }
+    return switch (error.type().key) {
+      case "JSC_REDECLARED_VARIABLE" -> getFixForRedeclaration(error);
+      case "JSC_REFERENCE_BEFORE_DECLARE" -> getFixForEarlyReference(error);
+      case "JSC_MISSING_SEMICOLON" -> getFixForMissingSemicolon(error);
+      case "JSC_REQUIRES_NOT_SORTED" -> getFixForUnsortedRequires(error);
+      case "JSC_PROVIDES_NOT_SORTED" -> getFixForUnsortedProvides(error);
+      case "JSC_DEBUGGER_STATEMENT_PRESENT" ->
+          new SuggestedFix.Builder()
+              .attachMatchedNodeInfo(error.node(), compiler)
+              .setDescription("Remove debugger statement")
+              .delete(error.node())
+              .build();
+      case "JSC_USELESS_EMPTY_STATEMENT" -> removeEmptyStatement(error);
+      case "JSC_INEXISTENT_PROPERTY_WITH_SUGGESTION",
+          "JSC_STRICT_INEXISTENT_PROPERTY_WITH_SUGGESTION" ->
+          getFixForInexistentProperty(error);
+      case "JSC_MISSING_CALL_TO_SUPER" -> getFixForMissingSuper(error);
+      case "JSC_INVALID_SUPER_CALL_WITH_SUGGESTION" -> getFixForInvalidSuper(error);
+      case "JSC_MISSING_REQUIRE", "JSC_MISSING_REQUIRE_IN_PROVIDES_FILE" ->
+          getFixForMissingRequire(error, ImportType.REQUIRE);
+      case "JSC_MISSING_REQUIRE_TYPE", "JSC_MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE" ->
+          getFixForMissingRequire(error, ImportType.REQUIRE_TYPE);
+      case "JSC_EXTRA_REQUIRE_WARNING" -> getFixForExtraRequire(error);
+      case "JSC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME",
+          "JSC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME" ->
+          getFixForReferenceToShortImportByLongName(error);
+      case "JSC_REDUNDANT_NULLABILITY_MODIFIER_JSDOC" ->
+          getFixForRedundantNullabilityModifierJsDoc(error);
+      case "JSC_MISSING_CONST_ON_CONSTANT_CASE" -> getFixForConstantCaseErrors(error);
+      default -> null;
+    };
   }
 
   private @Nullable SuggestedFix getFixForRedeclaration(JSError error) {
@@ -266,22 +252,21 @@ public final class ErrorToFixMapper {
             .insertBefore(error.node(), "!")
             .setDescription("Make type non-nullable")
             .build();
-    switch (error.type().key) {
-      case "JSC_NULL_MISSING_NULLABILITY_MODIFIER_JSDOC":
-        // When initializer was null, we can be confident about nullability
-        return ImmutableList.of(qmark);
-      case "JSC_MISSING_NULLABILITY_MODIFIER_JSDOC":
-        // Otherwise, the linter should assume ! is preferred over ?.
-        return ImmutableList.of(bang, qmark);
-      case "JSC_IMPLICITLY_NULLABLE_JSDOC":
-        // The type-based check prefers ? over ! since it only warns for names that are nullable.
-        return ImmutableList.of(qmark, bang);
-      case "JSC_IMPLICITLY_NONNULL_JSDOC":
-        // Using type-information, we can also be confident about ! for enums and typedefs.
-        return ImmutableList.of(bang);
-      default:
-        throw new IllegalArgumentException("Unexpected JSError Type: " + error.type().key);
-    }
+    return switch (error.type().key) {
+      case "JSC_NULL_MISSING_NULLABILITY_MODIFIER_JSDOC" ->
+          // When initializer was null, we can be confident about nullability
+          ImmutableList.of(qmark);
+      case "JSC_MISSING_NULLABILITY_MODIFIER_JSDOC" ->
+          // Otherwise, the linter should assume ! is preferred over ?.
+          ImmutableList.of(bang, qmark);
+      case "JSC_IMPLICITLY_NULLABLE_JSDOC" ->
+          // The type-based check prefers ? over ! since it only warns for names that are nullable.
+          ImmutableList.of(qmark, bang);
+      case "JSC_IMPLICITLY_NONNULL_JSDOC" ->
+          // Using type-information, we can also be confident about ! for enums and typedefs.
+          ImmutableList.of(bang);
+      default -> throw new IllegalArgumentException("Unexpected JSError Type: " + error.type().key);
+    };
   }
 
   private SuggestedFix removeEmptyStatement(JSError error) {

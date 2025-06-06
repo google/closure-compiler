@@ -95,15 +95,11 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   protected CompilerPass getProcessor(Compiler compiler) {
     final ReplaceMessages replaceMessages =
         new ReplaceMessages(compiler, new SimpleMessageBundle(), strictReplacement);
-    switch (testMode) {
-      case FULL_REPLACE:
-        return replaceMessages.getFullReplacementPass();
-      case PROTECT_MSGS:
-        return replaceMessages.getMsgProtectionPass();
-      case REPLACE_PROTECTED_MSGS:
-        return replaceMessages.getReplacementCompletionPass();
-    }
-    throw new UnsupportedOperationException("unexpected testMode: " + testMode);
+    return switch (testMode) {
+      case FULL_REPLACE -> replaceMessages.getFullReplacementPass();
+      case PROTECT_MSGS -> replaceMessages.getMsgProtectionPass();
+      case REPLACE_PROTECTED_MSGS -> replaceMessages.getReplacementCompletionPass();
+    };
   }
 
   /**
@@ -559,21 +555,21 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             'male{Hello {USER_IDENTIFIER}.}' +
             'other{Hello {USER_IDENTIFIER}.}}');
         """,
-        """
-        /** @desc ICU gender-sensitive greeting */
-        const MSG_EXTERNAL_123456 =
-            __jscomp_define_msg__(
-                {
-                  "key":    "MSG_EXTERNAL_123456",
-                  "msg_text":
-            '{USER_GENDER,select,female{Hello {USER_IDENTIFIER}.}male{Hello {USER_IDENTIFIER}.}other{Hello {USER_IDENTIFIER}.}}',
-                });
-        """,
-        """
-        /** @desc ICU gender-sensitive greeting */
-        const MSG_EXTERNAL_123456 =
-            '{USER_GENDER,select,female{Saluton {USER_IDENTIFIER}.}male{Saluton {USER_IDENTIFIER}.}other{Saluton {USER_IDENTIFIER}.}}';
-        """);
+"""
+/** @desc ICU gender-sensitive greeting */
+const MSG_EXTERNAL_123456 =
+    __jscomp_define_msg__(
+        {
+          "key":    "MSG_EXTERNAL_123456",
+          "msg_text":
+    '{USER_GENDER,select,female{Hello {USER_IDENTIFIER}.}male{Hello {USER_IDENTIFIER}.}other{Hello {USER_IDENTIFIER}.}}',
+        });
+""",
+"""
+/** @desc ICU gender-sensitive greeting */
+const MSG_EXTERNAL_123456 =
+    '{USER_GENDER,select,female{Saluton {USER_IDENTIFIER}.}male{Saluton {USER_IDENTIFIER}.}other{Saluton {USER_IDENTIFIER}.}}';
+""");
   }
 
   @Test
@@ -707,28 +703,28 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             'male{Hello {USER_IDENTIFIER}.}' +
             'other{Hello {USER_IDENTIFIER}.}}');
         """,
-        """
-        /**
-         * @desc ICU gender-sensitive greeting
-         * @alternateMessageId 1984
-         */
-        const MSG_ICU_SELECT =
-            __jscomp_define_msg__(
-                {
-                  "key":    "MSG_ICU_SELECT",
-                  "alt_id": "1984",
-                  "msg_text":
-            '{USER_GENDER,select,female{Hello {USER_IDENTIFIER}.}male{Hello {USER_IDENTIFIER}.}other{Hello {USER_IDENTIFIER}.}}',
-                });
-        """,
-        """
-        /**
-         * @desc ICU gender-sensitive greeting
-         * @alternateMessageId 1984
-         */
-        const MSG_ICU_SELECT =
-            '{USER_GENDER,select,female{Saluton {USER_IDENTIFIER}.}male{Saluton {USER_IDENTIFIER}.}other{Saluton {USER_IDENTIFIER}.}}';
-        """);
+"""
+/**
+ * @desc ICU gender-sensitive greeting
+ * @alternateMessageId 1984
+ */
+const MSG_ICU_SELECT =
+    __jscomp_define_msg__(
+        {
+          "key":    "MSG_ICU_SELECT",
+          "alt_id": "1984",
+          "msg_text":
+    '{USER_GENDER,select,female{Hello {USER_IDENTIFIER}.}male{Hello {USER_IDENTIFIER}.}other{Hello {USER_IDENTIFIER}.}}',
+        });
+""",
+"""
+/**
+ * @desc ICU gender-sensitive greeting
+ * @alternateMessageId 1984
+ */
+const MSG_ICU_SELECT =
+    '{USER_GENDER,select,female{Saluton {USER_IDENTIFIER}.}male{Saluton {USER_IDENTIFIER}.}other{Saluton {USER_IDENTIFIER}.}}';
+""");
   }
 
   /**
@@ -2076,32 +2072,32 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         """,
         "/** @desc d */\n var MSG_A = 'A';");
     multiPhaseTest(
-        """
-        /** @desc d */
+"""
+/** @desc d */
 
-        var MSG_A = goog.getMsg('User&apos;s &lt; email &amp; address &gt; are &quot;correct&quot;', {}, {unescapeHtmlEntities: true});
-        """,
-        """
-        /**
-         * @desc d
-         */
-        var MSG_A =
-            __jscomp_define_msg__(
-                {
-                  "key":"MSG_A",
-                  "msg_text":"User\\x26apos;s \\x26lt; email \\x26amp; address \\x26gt; are \\x26quot;correct\\x26quot;",
-                  "unescapeHtmlEntities":""
-                },
-                {});
+var MSG_A = goog.getMsg('User&apos;s &lt; email &amp; address &gt; are &quot;correct&quot;', {}, {unescapeHtmlEntities: true});
+""",
+"""
+/**
+ * @desc d
+ */
+var MSG_A =
+    __jscomp_define_msg__(
+        {
+          "key":"MSG_A",
+          "msg_text":"User\\x26apos;s \\x26lt; email \\x26amp; address \\x26gt; are \\x26quot;correct\\x26quot;",
+          "unescapeHtmlEntities":""
+        },
+        {});
 
-        """,
+""",
         "/** @desc d */\n var MSG_A = 'User\\'s < email & address > are \"correct\"';");
     multiPhaseTest(
-        """
-        /** @desc d */
+"""
+/** @desc d */
 
-        var MSG_A = goog.getMsg('&lt; {$startSpan}email &amp; address{$endSpan} &gt;', {'startSpan': '<span title="&lt;info&gt;">', 'endSpan': '</span>'}, {unescapeHtmlEntities: true});
-        """,
+var MSG_A = goog.getMsg('&lt; {$startSpan}email &amp; address{$endSpan} &gt;', {'startSpan': '<span title="&lt;info&gt;">', 'endSpan': '</span>'}, {unescapeHtmlEntities: true});
+""",
         """
         /**
          * @desc d
@@ -2124,11 +2120,11 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             '< ' + '<span title="&lt;info&gt;">' + 'email & address' + '</span>' + ' >';
         """);
     multiPhaseTest(
-        """
-        /** @desc d */
+"""
+/** @desc d */
 
-        var MSG_A = goog.getMsg('&amp;lt;double &amp;amp; escaping&amp;gt;', {}, {unescapeHtmlEntities: true});
-        """,
+var MSG_A = goog.getMsg('&amp;lt;double &amp;amp; escaping&amp;gt;', {}, {unescapeHtmlEntities: true});
+""",
         """
         /**
         * @desc d
@@ -2222,11 +2218,11 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .appendStringPart("os;")
             .build());
     multiPhaseTest(
-        """
-        /** @desc d */
+"""
+/** @desc d */
 
-        var MSG_C = goog.getMsg('{$br}{$x}{$y}{$z}', {'br': '<br>', 'x': 'X', 'y': 'Y', 'z': 'Z'}, {unescapeHtmlEntities: true});
-        """,
+var MSG_C = goog.getMsg('{$br}{$x}{$y}{$z}', {'br': '<br>', 'x': 'X', 'y': 'Y', 'z': 'Z'}, {unescapeHtmlEntities: true});
+""",
         """
         /**
          * @desc d
@@ -2505,15 +2501,15 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
           "device": user.getDevice()
         });
         """,
-        """
-        /** @desc d */
-        var MSG_E = function(namem1146332801$0, devicem1146332801$0) {
-          return goog.msgKind.MASCULINE ? 'Bienvenido ' + namem1146332801$0 + ', a tu nuevo ' + devicem1146332801$0 :
-                 goog.msgKind.FEMININE  ? 'Bienvenida ' + namem1146332801$0 + ', a tu nuevo ' + devicem1146332801$0 :
-                 goog.msgKind.NEUTER  ? 'Les damos la bienvenida ' + namem1146332801$0 + ', a tu nuevo ' + devicem1146332801$0 :
-                 'Les damos la bienvenida! - OTHER ' + namem1146332801$0 + ', a tu nuevo ' + devicem1146332801$0;
-        }(user.getName(), user.getDevice());
-        """);
+"""
+/** @desc d */
+var MSG_E = function(namem1146332801$0, devicem1146332801$0) {
+  return goog.msgKind.MASCULINE ? 'Bienvenido ' + namem1146332801$0 + ', a tu nuevo ' + devicem1146332801$0 :
+         goog.msgKind.FEMININE  ? 'Bienvenida ' + namem1146332801$0 + ', a tu nuevo ' + devicem1146332801$0 :
+         goog.msgKind.NEUTER  ? 'Les damos la bienvenida ' + namem1146332801$0 + ', a tu nuevo ' + devicem1146332801$0 :
+         'Les damos la bienvenida! - OTHER ' + namem1146332801$0 + ', a tu nuevo ' + devicem1146332801$0;
+}(user.getName(), user.getDevice());
+""");
   }
 
   @Test

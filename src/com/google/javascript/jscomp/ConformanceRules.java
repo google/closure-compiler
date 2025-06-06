@@ -277,18 +277,13 @@ public final class ConformanceRules {
     }
 
     private static TypeMatchingStrategy getTypeMatchingStrategy(Requirement requirement) {
-      switch (requirement.getTypeMatchingStrategy()) {
-        case LOOSE:
-          return TypeMatchingStrategy.LOOSE;
-        case STRICT_NULLABILITY:
-          return TypeMatchingStrategy.STRICT_NULLABILITY;
-        case SUBTYPES:
-          return TypeMatchingStrategy.SUBTYPES;
-        case EXACT:
-          return TypeMatchingStrategy.EXACT;
-        default:
-          throw new IllegalStateException("Unknown TypeMatchingStrategy");
-      }
+      return switch (requirement.getTypeMatchingStrategy()) {
+        case LOOSE -> TypeMatchingStrategy.LOOSE;
+        case STRICT_NULLABILITY -> TypeMatchingStrategy.STRICT_NULLABILITY;
+        case SUBTYPES -> TypeMatchingStrategy.SUBTYPES;
+        case EXACT -> TypeMatchingStrategy.EXACT;
+        default -> throw new IllegalStateException("Unknown TypeMatchingStrategy");
+      };
     }
 
     /**
@@ -601,16 +596,12 @@ public final class ConformanceRules {
     }
 
     private static final Precondition IS_CANDIDATE_NODE =
-        (Node n) -> {
-          switch (n.getToken()) {
-            case GETPROP:
-              return n.getFirstChild().isQualifiedName();
-            case NAME:
-              return !n.getString().isEmpty();
-            default:
-              return false;
-          }
-        };
+        (Node n) ->
+            switch (n.getToken()) {
+              case GETPROP -> n.getFirstChild().isQualifiedName();
+              case NAME -> !n.getString().isEmpty();
+              default -> false;
+            };
 
     @Override
     public final Precondition getPrecondition() {
@@ -668,16 +659,10 @@ public final class ConformanceRules {
       BANNED_PROPERTY() {
         @Override
         public boolean shouldCheck(Node n) {
-          switch (n.getToken()) {
-            case STRING_KEY:
-            case GETPROP:
-            case GETELEM:
-            case COMPUTED_PROP:
-              return true;
-
-            default:
-              return false;
-          }
+          return switch (n.getToken()) {
+            case STRING_KEY, GETPROP, GETELEM, COMPUTED_PROP -> true;
+            default -> false;
+          };
         }
       },
       BANNED_PROPERTY_WRITE() {

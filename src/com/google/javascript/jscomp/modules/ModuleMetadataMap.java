@@ -126,17 +126,10 @@ public final class ModuleMetadataMap {
 
     /** Whether this is a module (with it's own local scope). */
     public boolean isModule() {
-      switch (moduleType()) {
-        case GOOG_PROVIDE:
-        case SCRIPT:
-          return false;
-        case COMMON_JS:
-        case ES6_MODULE:
-        case GOOG_MODULE:
-        case LEGACY_GOOG_MODULE:
-          return true;
-      }
-      throw new AssertionError(moduleType());
+      return switch (moduleType()) {
+        case GOOG_PROVIDE, SCRIPT -> false;
+        case COMMON_JS, ES6_MODULE, GOOG_MODULE, LEGACY_GOOG_MODULE -> true;
+      };
     }
 
     /**

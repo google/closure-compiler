@@ -2475,27 +2475,18 @@ public class Node {
    * such as <code>a.b.c</code>, but not <code>this.a</code> .
    */
   public final boolean isUnscopedQualifiedName() {
-    switch (this.getToken()) {
-      case NAME:
-        return !getString().isEmpty();
-      case GETPROP:
-        return getFirstChild().isUnscopedQualifiedName();
-      default:
-        return false;
-    }
+    return switch (this.getToken()) {
+      case NAME -> !getString().isEmpty();
+      case GETPROP -> getFirstChild().isUnscopedQualifiedName();
+      default -> false;
+    };
   }
 
   public final boolean isValidAssignmentTarget() {
-    switch (this.getToken()) {
-      case NAME:
-      case GETPROP:
-      case GETELEM:
-      case ARRAY_PATTERN:
-      case OBJECT_PATTERN:
-        return true;
-      default:
-        return false;
-    }
+    return switch (this.getToken()) {
+      case NAME, GETPROP, GETELEM, ARRAY_PATTERN, OBJECT_PATTERN -> true;
+      default -> false;
+    };
   }
 
   @DoNotCall

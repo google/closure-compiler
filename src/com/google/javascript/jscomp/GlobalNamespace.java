@@ -2455,51 +2455,39 @@ class GlobalNamespace
      * <p>Example: `a.b` from `x = a.b = 0;`
      */
     boolean isTwin() {
-      switch (this.type) {
-        case GET_AND_SET_FROM_GLOBAL:
-        case GET_AND_SET_FROM_LOCAL:
-          return true;
-        default:
-          return false;
-      }
+      return switch (this.type) {
+        case GET_AND_SET_FROM_GLOBAL, GET_AND_SET_FROM_LOCAL -> true;
+        default -> false;
+      };
     }
 
     boolean isGet() {
-      switch (this.type) {
-        case DIRECT_GET:
-        case ALIASING_GET:
-        case SUBCLASSING_GET:
-        case CALL_GET:
-        case GET_AND_SET_FROM_GLOBAL:
-        case GET_AND_SET_FROM_LOCAL:
-        case PROTOTYPE_GET:
-          return true;
-        default:
-          return false;
-      }
+      return switch (this.type) {
+        case DIRECT_GET,
+            ALIASING_GET,
+            SUBCLASSING_GET,
+            CALL_GET,
+            GET_AND_SET_FROM_GLOBAL,
+            GET_AND_SET_FROM_LOCAL,
+            PROTOTYPE_GET ->
+            true;
+        default -> false;
+      };
     }
 
     boolean isAliasingGet() {
-      switch (this.type) {
-        case ALIASING_GET:
-        case GET_AND_SET_FROM_GLOBAL:
-        case GET_AND_SET_FROM_LOCAL:
-          return true;
-        default:
-          return false;
-      }
+      return switch (this.type) {
+        case ALIASING_GET, GET_AND_SET_FROM_GLOBAL, GET_AND_SET_FROM_LOCAL -> true;
+        default -> false;
+      };
     }
 
     boolean isSet() {
-      switch (this.type) {
-        case SET_FROM_GLOBAL:
-        case SET_FROM_LOCAL:
-        case GET_AND_SET_FROM_GLOBAL:
-        case GET_AND_SET_FROM_LOCAL:
-          return true;
-        default:
-          return false;
-      }
+      return switch (this.type) {
+        case SET_FROM_GLOBAL, SET_FROM_LOCAL, GET_AND_SET_FROM_GLOBAL, GET_AND_SET_FROM_LOCAL ->
+            true;
+        default -> false;
+      };
     }
 
     boolean isSetFromGlobal() {

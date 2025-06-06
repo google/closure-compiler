@@ -564,32 +564,17 @@ class IRFactory {
   }
 
   private static boolean isBreakTarget(Node n) {
-    switch (n.getToken()) {
-      case FOR:
-      case FOR_IN:
-      case FOR_OF:
-      case FOR_AWAIT_OF:
-      case WHILE:
-      case DO:
-      case SWITCH:
-        return true;
-      default:
-        return false;
-    }
+    return switch (n.getToken()) {
+      case FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, WHILE, DO, SWITCH -> true;
+      default -> false;
+    };
   }
 
   private static boolean isContinueTarget(Node n) {
-    switch (n.getToken()) {
-      case FOR:
-      case FOR_IN:
-      case FOR_OF:
-      case FOR_AWAIT_OF:
-      case WHILE:
-      case DO:
-        return true;
-      default:
-        return false;
-    }
+    return switch (n.getToken()) {
+      case FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, WHILE, DO -> true;
+      default -> false;
+    };
   }
 
   private static boolean labelsMatch(Node label, Node labelName) {
@@ -3426,27 +3411,20 @@ class IRFactory {
     }
 
     Node processLiteralExpression(LiteralExpressionTree expr) {
-      switch (expr.literalToken.type) {
-        case NUMBER:
-          return processNumberLiteral(expr);
-        case STRING:
-          return processStringLiteral(expr);
-        case BIGINT:
-          return processBigIntLiteral(expr);
-        case FALSE:
-        case TRUE:
-          return processBooleanLiteral(expr);
-        case NULL:
-          return processNullLiteral(expr);
-        case REGULAR_EXPRESSION:
-          return processRegExpLiteral(expr);
-        default:
-          throw new IllegalStateException(
-              "Unexpected literal type: "
-                  + expr.literalToken.getClass()
-                  + " type: "
-                  + expr.literalToken.type);
-      }
+      return switch (expr.literalToken.type) {
+        case NUMBER -> processNumberLiteral(expr);
+        case STRING -> processStringLiteral(expr);
+        case BIGINT -> processBigIntLiteral(expr);
+        case FALSE, TRUE -> processBooleanLiteral(expr);
+        case NULL -> processNullLiteral(expr);
+        case REGULAR_EXPRESSION -> processRegExpLiteral(expr);
+        default ->
+            throw new IllegalStateException(
+                "Unexpected literal type: "
+                    + expr.literalToken.getClass()
+                    + " type: "
+                    + expr.literalToken.type);
+      };
     }
 
     public Node process(ParseTree node) {
@@ -4016,33 +3994,22 @@ class IRFactory {
     checkState(length > 0);
     checkState(value.charAt(0) != '-' && value.charAt(0) != '+');
     if (value.charAt(0) == '0' && length > 1) {
-      switch (value.charAt(1)) {
-        case 'b':
-        case 'B':
+      return switch (value.charAt(1)) {
+        case 'b', 'B' -> {
           maybeWarnForFeature(token, Feature.BINARY_LITERALS);
-          return new BigInteger(value.substring(2), 2);
-        case 'o':
-        case 'O':
+          yield new BigInteger(value.substring(2), 2);
+        }
+        case 'o', 'O' -> {
           maybeWarnForFeature(token, Feature.OCTAL_LITERALS);
-          return new BigInteger(value.substring(2), 8);
-        case 'x':
-        case 'X':
-          return new BigInteger(value.substring(2), 16);
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-          throw new IllegalStateException("Nonzero BigInts can't have a leading zero");
-        default:
-          throw new IllegalStateException(
-              "Unexpected character in bigint literal: " + value.charAt(1));
-      }
+          yield new BigInteger(value.substring(2), 8);
+        }
+        case 'x', 'X' -> new BigInteger(value.substring(2), 16);
+        case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' ->
+            throw new IllegalStateException("Nonzero BigInts can't have a leading zero");
+        default ->
+            throw new IllegalStateException(
+                "Unexpected character in bigint literal: " + value.charAt(1));
+      };
     } else {
       return new BigInteger(value);
     }
@@ -4072,192 +4039,102 @@ class IRFactory {
   }
 
   private static int hexdigit(char c) {
-    switch (c) {
-      case '0':
-        return 0;
-      case '1':
-        return 1;
-      case '2':
-        return 2;
-      case '3':
-        return 3;
-      case '4':
-        return 4;
-      case '5':
-        return 5;
-      case '6':
-        return 6;
-      case '7':
-        return 7;
-      case '8':
-        return 8;
-      case '9':
-        return 9;
-      case 'a':
-      case 'A':
-        return 10;
-      case 'b':
-      case 'B':
-        return 11;
-      case 'c':
-      case 'C':
-        return 12;
-      case 'd':
-      case 'D':
-        return 13;
-      case 'e':
-      case 'E':
-        return 14;
-      case 'f':
-      case 'F':
-        return 15;
-      default:
-        throw new IllegalStateException("unexpected: " + c);
-    }
+    return switch (c) {
+      case '0' -> 0;
+      case '1' -> 1;
+      case '2' -> 2;
+      case '3' -> 3;
+      case '4' -> 4;
+      case '5' -> 5;
+      case '6' -> 6;
+      case '7' -> 7;
+      case '8' -> 8;
+      case '9' -> 9;
+      case 'a', 'A' -> 10;
+      case 'b', 'B' -> 11;
+      case 'c', 'C' -> 12;
+      case 'd', 'D' -> 13;
+      case 'e', 'E' -> 14;
+      case 'f', 'F' -> 15;
+      default -> throw new IllegalStateException("unexpected: " + c);
+    };
   }
 
   static Token transformBooleanTokenType(TokenType token) {
-    switch (token) {
-      case TRUE:
-        return Token.TRUE;
-      case FALSE:
-        return Token.FALSE;
-
-      default:
-        throw new IllegalStateException(String.valueOf(token));
-    }
+    return switch (token) {
+      case TRUE -> Token.TRUE;
+      case FALSE -> Token.FALSE;
+      default -> throw new IllegalStateException(String.valueOf(token));
+    };
   }
 
   static Token transformUpdateTokenType(TokenType token) {
-    switch (token) {
-      case PLUS_PLUS:
-        return Token.INC;
-      case MINUS_MINUS:
-        return Token.DEC;
-
-      default:
-        throw new IllegalStateException(String.valueOf(token));
-    }
+    return switch (token) {
+      case PLUS_PLUS -> Token.INC;
+      case MINUS_MINUS -> Token.DEC;
+      default -> throw new IllegalStateException(String.valueOf(token));
+    };
   }
 
   static Token transformUnaryTokenType(TokenType token) {
-    switch (token) {
-      case BANG:
-        return Token.NOT;
-      case TILDE:
-        return Token.BITNOT;
-      case PLUS:
-        return Token.POS;
-      case MINUS:
-        return Token.NEG;
-      case DELETE:
-        return Token.DELPROP;
-      case TYPEOF:
-        return Token.TYPEOF;
-
-      case VOID:
-        return Token.VOID;
-
-      default:
-        throw new IllegalStateException(String.valueOf(token));
-    }
+    return switch (token) {
+      case BANG -> Token.NOT;
+      case TILDE -> Token.BITNOT;
+      case PLUS -> Token.POS;
+      case MINUS -> Token.NEG;
+      case DELETE -> Token.DELPROP;
+      case TYPEOF -> Token.TYPEOF;
+      case VOID -> Token.VOID;
+      default -> throw new IllegalStateException(String.valueOf(token));
+    };
   }
 
   static Token transformBinaryTokenType(TokenType token) {
-    switch (token) {
-      case BAR:
-        return Token.BITOR;
-      case CARET:
-        return Token.BITXOR;
-      case AMPERSAND:
-        return Token.BITAND;
-      case EQUAL_EQUAL:
-        return Token.EQ;
-      case NOT_EQUAL:
-        return Token.NE;
-      case OPEN_ANGLE:
-        return Token.LT;
-      case LESS_EQUAL:
-        return Token.LE;
-      case CLOSE_ANGLE:
-        return Token.GT;
-      case GREATER_EQUAL:
-        return Token.GE;
-      case LEFT_SHIFT:
-        return Token.LSH;
-      case RIGHT_SHIFT:
-        return Token.RSH;
-      case UNSIGNED_RIGHT_SHIFT:
-        return Token.URSH;
-      case PLUS:
-        return Token.ADD;
-      case MINUS:
-        return Token.SUB;
-      case STAR:
-        return Token.MUL;
-      case SLASH:
-        return Token.DIV;
-      case PERCENT:
-        return Token.MOD;
-      case STAR_STAR:
-        return Token.EXPONENT;
-
-      case EQUAL_EQUAL_EQUAL:
-        return Token.SHEQ;
-      case NOT_EQUAL_EQUAL:
-        return Token.SHNE;
-
-      case IN:
-        return Token.IN;
-      case INSTANCEOF:
-        return Token.INSTANCEOF;
-      case COMMA:
-        return Token.COMMA;
-
-      case EQUAL:
-        return Token.ASSIGN;
-      case BAR_EQUAL:
-        return Token.ASSIGN_BITOR;
-      case CARET_EQUAL:
-        return Token.ASSIGN_BITXOR;
-      case AMPERSAND_EQUAL:
-        return Token.ASSIGN_BITAND;
-      case LEFT_SHIFT_EQUAL:
-        return Token.ASSIGN_LSH;
-      case RIGHT_SHIFT_EQUAL:
-        return Token.ASSIGN_RSH;
-      case UNSIGNED_RIGHT_SHIFT_EQUAL:
-        return Token.ASSIGN_URSH;
-      case PLUS_EQUAL:
-        return Token.ASSIGN_ADD;
-      case MINUS_EQUAL:
-        return Token.ASSIGN_SUB;
-      case STAR_EQUAL:
-        return Token.ASSIGN_MUL;
-      case STAR_STAR_EQUAL:
-        return Token.ASSIGN_EXPONENT;
-      case SLASH_EQUAL:
-        return Token.ASSIGN_DIV;
-      case PERCENT_EQUAL:
-        return Token.ASSIGN_MOD;
-
-      case OR:
-        return Token.OR;
-      case AND:
-        return Token.AND;
-      case QUESTION_QUESTION:
-        return Token.COALESCE;
-
-      case OR_EQUAL:
-        return Token.ASSIGN_OR;
-      case AND_EQUAL:
-        return Token.ASSIGN_AND;
-      case QUESTION_QUESTION_EQUAL:
-        return Token.ASSIGN_COALESCE;
-
-      default:
-        throw new IllegalStateException(String.valueOf(token));
-    }
+    return switch (token) {
+      case BAR -> Token.BITOR;
+      case CARET -> Token.BITXOR;
+      case AMPERSAND -> Token.BITAND;
+      case EQUAL_EQUAL -> Token.EQ;
+      case NOT_EQUAL -> Token.NE;
+      case OPEN_ANGLE -> Token.LT;
+      case LESS_EQUAL -> Token.LE;
+      case CLOSE_ANGLE -> Token.GT;
+      case GREATER_EQUAL -> Token.GE;
+      case LEFT_SHIFT -> Token.LSH;
+      case RIGHT_SHIFT -> Token.RSH;
+      case UNSIGNED_RIGHT_SHIFT -> Token.URSH;
+      case PLUS -> Token.ADD;
+      case MINUS -> Token.SUB;
+      case STAR -> Token.MUL;
+      case SLASH -> Token.DIV;
+      case PERCENT -> Token.MOD;
+      case STAR_STAR -> Token.EXPONENT;
+      case EQUAL_EQUAL_EQUAL -> Token.SHEQ;
+      case NOT_EQUAL_EQUAL -> Token.SHNE;
+      case IN -> Token.IN;
+      case INSTANCEOF -> Token.INSTANCEOF;
+      case COMMA -> Token.COMMA;
+      case EQUAL -> Token.ASSIGN;
+      case BAR_EQUAL -> Token.ASSIGN_BITOR;
+      case CARET_EQUAL -> Token.ASSIGN_BITXOR;
+      case AMPERSAND_EQUAL -> Token.ASSIGN_BITAND;
+      case LEFT_SHIFT_EQUAL -> Token.ASSIGN_LSH;
+      case RIGHT_SHIFT_EQUAL -> Token.ASSIGN_RSH;
+      case UNSIGNED_RIGHT_SHIFT_EQUAL -> Token.ASSIGN_URSH;
+      case PLUS_EQUAL -> Token.ASSIGN_ADD;
+      case MINUS_EQUAL -> Token.ASSIGN_SUB;
+      case STAR_EQUAL -> Token.ASSIGN_MUL;
+      case STAR_STAR_EQUAL -> Token.ASSIGN_EXPONENT;
+      case SLASH_EQUAL -> Token.ASSIGN_DIV;
+      case PERCENT_EQUAL -> Token.ASSIGN_MOD;
+      case OR -> Token.OR;
+      case AND -> Token.AND;
+      case QUESTION_QUESTION -> Token.COALESCE;
+      case OR_EQUAL -> Token.ASSIGN_OR;
+      case AND_EQUAL -> Token.ASSIGN_AND;
+      case QUESTION_QUESTION_EQUAL -> Token.ASSIGN_COALESCE;
+      default -> throw new IllegalStateException(String.valueOf(token));
+    };
   }
 
   // Simple helper to create nodes and set the initial node properties.

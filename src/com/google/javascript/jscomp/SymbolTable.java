@@ -2159,15 +2159,10 @@ public final class SymbolTable {
     }
 
     private boolean isNativeSourcelessType(String name) {
-      switch (name) {
-        case "null":
-        case "undefined":
-        case "void":
-          return true;
-
-        default:
-          return false;
-      }
+      return switch (name) {
+        case "null", "undefined", "void" -> true;
+        default -> false;
+      };
     }
 
     public void visitTypeNode(
