@@ -825,6 +825,321 @@ var CSSNumericType;
 
 /**
  * @constructor
+ * @extends {CSSStyleValue}
+ * @param {string} value
+ */
+function CSSKeywordValue(value) {}
+
+/**
+ * @type {string}
+ */
+CSSKeywordValue.prototype.value;
+
+/**
+ * @constructor
+ * @extends {CSSStyleValue}
+ */
+function CSSImageValue() {}
+
+/**
+ * @constructor
+ * @extends {CSSNumericValue}
+ */
+function CSSMathValue() {}
+
+/** @type {string} */
+CSSMathValue.prototype.operator;
+
+/**
+ * @constructor
+ * @extends {CSSMathValue}
+ * @param {number|!CSSNumericValue} value
+ */
+function CSSMathInvert(value) {}
+
+/** @type {!CSSNumericValue} */
+CSSMathInvert.prototype.value
+
+/**
+ * @constructor
+ * @extends {CSSMathValue}
+ * @param {number|!CSSNumericValue} lower
+ * @param {number|!CSSNumericValue} value
+ * @param {number|!CSSNumericValue} upper
+ */
+function CSSMathClamp(lower, value, upper) {}
+
+/** @type {!CSSNumericValue} */
+CSSMathClamp.prototype.lower;
+
+/** @type {!CSSNumericValue} */
+CSSMathClamp.prototype.upper;
+
+/** @type {!CSSNumericValue} */
+CSSMathClamp.prototype.value;
+
+/**
+ * @constructor
+ * @extends {CSSMathValue}
+ * @param {...(number|!CSSNumericValue)} args
+ */
+function CSSMathMin(args) {}
+
+/** @type {!CSSNumericArray} */
+CSSMathMin.prototype.values;
+
+/**
+ * @constructor
+ * @extends {CSSMathValue}
+ * @param {number|!CSSNumericValue} arg
+ */
+function CSSMathNegate(arg) {}
+
+/** @type {!CSSNumericValue} */
+CSSMathNegate.prototype.value;
+
+/**
+ * @constructor
+ * @extends {CSSMathValue}
+ * @param {...(number|!CSSNumericValue)} args
+ */
+function CSSMathProduct(args) {}
+
+/** @type {!CSSNumericArray} */
+CSSMathProduct.prototype.values;
+
+/**
+ * @constructor
+ * @extends {CSSMathValue}
+ * @param {...(number|!CSSNumericValue)} args
+ */
+function CSSMathSum(args) {}
+
+/** @type {!CSSNumericArray} */
+CSSMathSum.prototype.values;
+
+/**
+ * @constructor
+ */
+function CSSTransformComponent() {}
+
+/** @type {boolean} */
+CSSTransformComponent.prototype.is2D;
+
+/** @return {!DOMMatrix} */
+CSSTransformComponent.prototype.toMatrix = function() {};
+
+/**
+ * @override
+ * @return {string}
+ */
+CSSTransformComponent.prototype.toString = function() {};
+
+/**
+ * @typedef {{
+ *   is2D: (boolean|undefined)
+ * }}
+ */
+var CSSMatrixComponentOptions;
+
+/**
+ * @constructor
+ * @extends {CSSStyleValue}
+ * @implements {IArrayLike<!CSSTransformComponent>}
+ * @param {!Array<!CSSTransformComponent>} transforms
+ */
+function CSSTransformValue(transforms) {}
+
+/** @type {boolean} */
+CSSTransformValue.prototype.is2D;
+
+/** @type {number} */
+CSSTransformValue.prototype.length;
+
+/** @return {!DOMMatrix} */
+CSSTransformValue.prototype.toMatrix = function() {};
+
+/**
+ * @param {function(this: S, !CSSTransformComponent, number, !CSSTransformValue): ?} callbackfn
+ * @param {S=} thisArg
+ * @template S
+ * @see https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
+ */
+CSSTransformValue.prototype.forEach = function(callbackfn, thisArg) {};
+
+/**
+ * @constructor
+ * @extends {CSSTransformComponent}
+ * @param {!DOMMatrixReadOnly} matrix
+ * @param {!CSSMatrixComponentOptions=} options
+ */
+function CSSMatrixComponent(matrix, options) {}
+
+/** @type {!DOMMatrix} */
+CSSMatrixComponent.prototype.matrix;
+
+/**
+ * @constructor
+ * @param {string} variable
+ * @param {?CSSUnparsedValue=} fallback
+ */
+function CSSVariableReferenceValue(variable, fallback) {}
+
+/** @type {string} */
+CSSVariableReferenceValue.prototype.variable;
+
+/** @type {?CSSUnparsedValue} */
+CSSVariableReferenceValue.prototype.fallback;
+
+/**
+ * @typedef {(string|!CSSVariableReferenceValue)}
+ */
+var CSSUnparsedSegment;
+
+/**
+ * @constructor
+ * @extends {CSSStyleValue}
+ * @implements {IArrayLike<!CSSUnparsedSegment>}
+ * @param {!Array<!CSSUnparsedSegment>} members
+ */
+function CSSUnparsedValue(members) {}
+
+/** @type {number} */
+CSSUnparsedValue.prototype.length;
+
+/**
+ * @param {function(this: S, !CSSUnparsedSegment, number, !CSSUnparsedValue): ?} callbackfn
+ * @param {S=} thisArg
+ * @template S
+ * @see https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
+ */
+CSSUnparsedValue.prototype.forEach = function(callbackfn, thisArg) {};
+
+/**
+ * @constructor
+ * @implements {IArrayLike<!CSSNumericValue>}
+ */
+function CSSNumericArray() {}
+
+/**
+ * @param {function(this: S, !CSSNumericValue, number, !CSSNumericArray): ?} callbackfn
+ * @param {S=} thisArg
+ * @template S
+ * @see https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
+ */
+CSSNumericArray.prototype.forEach = function(callbackfn, thisArg) {};
+
+/** @type {number} */
+CSSNumericArray.prototype.length;
+
+/**
+ * @constructor
+ * @extends {CSSMathValue}
+ * @param {...(number|!CSSNumericValue)} args
+ */
+function CSSMathMax(args) {}
+
+/** @type {!CSSNumericArray} */
+CSSMathMax.prototype.values;
+
+/**
+ * @constructor
+ * @extends {Animation}
+ */
+function CSSTransition() {}
+
+/** @type {string} */
+CSSTransition.prototype.transitionProperty;
+
+/**
+ * @constructor
+ * @extends {Animation}
+ */
+function CSSAnimation() {}
+
+/** @type {string} */
+CSSAnimation.prototype.animationName;
+
+/**
+ * @constructor
+ * @extends {CSSRule}
+ */
+function CSSNestedDeclarations() {}
+
+/**
+ * @type {!CSSStyleDeclaration}
+ */
+CSSNestedDeclarations.prototype.style;
+
+/**
+ * @constructor
+ * @extends {CSSTransformComponent}
+ * @param {!CSSNumericValue|string} length
+ */
+function CSSPerspective(length) {}
+
+/** @type {!CSSNumericValue|string} */
+CSSPerspective.prototype.length;
+
+/**
+ * @constructor
+ * @extends {CSSTransformComponent}
+ * @param {!CSSNumericValue|number} x
+ * @param {!CSSNumericValue|number} y
+ * @param {!CSSNumericValue|number} z
+ * @param {!CSSNumericValue} angle
+ */
+function CSSTranslate(x, y, z, angle) {}
+
+/** @type {!CSSNumericValue|number} */ CSSTranslate.prototype.x;
+/** @type {!CSSNumericValue|number} */ CSSTranslate.prototype.y;
+/** @type {!CSSNumericValue|number} */ CSSTranslate.prototype.z;
+/** @type {!CSSNumericValue} */ CSSTranslate.prototype.angle;
+
+/**
+ * @constructor
+ * @extends {CSSTransformComponent}
+ * @param {!CSSNumericValue|number} x
+ * @param {!CSSNumericValue|number} y
+ * @param {!CSSNumericValue|number=} z
+ */
+function CSSScale(x, y, z) {}
+
+/** @type {!CSSNumericValue|number} */ CSSScale.prototype.x;
+/** @type {!CSSNumericValue|number} */ CSSScale.prototype.y;
+/** @type {!CSSNumericValue|number} */ CSSScale.prototype.z;
+
+/**
+ * @constructor
+ * @extends {CSSTransformComponent}
+ * @param {!CSSNumericValue} ax
+ * @param {!CSSNumericValue} ay
+ */
+function CSSSkew(ax, ay) {}
+
+/** @type {!CSSNumericValue} */ CSSSkew.prototype.ax;
+/** @type {!CSSNumericValue} */ CSSSkew.prototype.ay;
+
+/**
+ * @constructor
+ * @extends {CSSTransformComponent}
+ * @param {!CSSNumericValue} ax
+ */
+function CSSSkewX(ax) {}
+
+/** @type {!CSSNumericValue} */ CSSSkewX.prototype.ax;
+
+/**
+ * @constructor
+ * @extends {CSSTransformComponent}
+ * @param {!CSSNumericValue} ay
+ */
+function CSSSkewY(ay) {}
+
+/** @type {!CSSNumericValue} */ CSSSkewY.prototype.ay;
+
+/**
+ * @constructor
  * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly
  */
 function StylePropertyMapReadOnly() {}
@@ -1037,6 +1352,13 @@ Element.prototype.setAttributeNode = function(newAttr) {};
 /** @type {?function (!DragEvent)} */ Element.prototype.ondragover;
 /** @type {?function (!DragEvent)} */ Element.prototype.ondragstart;
 /** @type {?function (!DragEvent)} */ Element.prototype.ondrop;
+
+/**
+ * @constructor
+ * @extends {Element}
+ * @see https://developer.mozilla.org/docs/Web/API/MathMLElement
+ */
+function MathMLElement() {}
 
 /**
  * @constructor

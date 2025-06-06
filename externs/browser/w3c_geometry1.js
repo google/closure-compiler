@@ -221,6 +221,60 @@ DOMRectInit.prototype.width;
 DOMRectInit.prototype.height;
 
 /**
+ * @typedef {{
+ *    p1: (DOMPointInit|undefined),
+ *    p2: (DOMPointInit|undefined),
+ *    p3: (DOMPointInit|undefined),
+ *    p4: (DOMPointInit|undefined),
+ * }}
+ */
+var DOMQuadInit;
+
+/**
+ * @constructor
+ * @param {DOMPointInit=} p1
+ * @param {DOMPointInit=} p2
+ * @param {DOMPointInit=} p3
+ * @param {DOMPointInit=} p4
+ */
+function DOMQuad(p1, p2, p3, p4) {}
+
+/**
+ * @param {!DOMQuadInit} other
+ * @return {!DOMQuad}
+ */
+DOMQuad.fromQuad = function(other) {};
+
+/**
+ * @param {!DOMRectInit} other
+ * @return {!DOMQuad}
+ */
+DOMQuad.fromRect = function(other) {};
+
+/** @type {!DOMPoint} */ DOMQuad.prototype.p1;
+/** @type {!DOMPoint} */ DOMQuad.prototype.p2;
+/** @type {!DOMPoint} */ DOMQuad.prototype.p3;
+/** @type {!DOMPoint} */ DOMQuad.prototype.p4;
+
+/** @return {!DOMRect} */
+DOMQuad.prototype.getBounds = function() {};
+
+/**
+ * @constructor
+ * @implements {IArrayLike<!DOMRect>}
+ */
+function DOMRectList() {}
+
+/** @type {number} */
+DOMRectList.prototype.length;
+
+/**
+ * @param {number} index
+ * @return {?DOMRect}
+ */
+DOMRectList.prototype.item = function(index) {};
+
+/**
  * @constructor
  * @param {number=} x
  * @param {number=} y

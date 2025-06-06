@@ -357,6 +357,16 @@ SpeechSynthesisUtterance.prototype.onend = function(event) {};
 SpeechSynthesisUtterance.prototype.onerror = function(event) {};
 
 /**
+ * @type {?function(!SpeechSynthesisEvent)}
+ */
+SpeechSynthesisUtterance.prototype.onboundary;
+
+/**
+ * @type {?function(!SpeechSynthesisEvent)}
+ */
+SpeechSynthesisUtterance.prototype.onmark;
+
+/**
  * @constructor
  */
 function SpeechSynthesisVoice() {}
@@ -424,3 +434,67 @@ SpeechSynthesis.prototype.getVoices = function() {};
  * @see https://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi-errata.html
  */
 SpeechSynthesis.prototype.onvoiceschanged = function(event) {};
+
+/**
+ * @record
+ * @extends {EventInit}
+ */
+function SpeechSynthesisEventInit() {}
+
+/** @type {number|undefined} */
+SpeechSynthesisEventInit.prototype.charIndex;
+
+/** @type {number|undefined} */
+SpeechSynthesisEventInit.prototype.charLength;
+
+/** @type {number|undefined} */
+SpeechSynthesisEventInit.prototype.elapsedTime;
+
+/** @type {string|undefined} */
+SpeechSynthesisEventInit.prototype.name;
+
+/** @type {!SpeechSynthesisUtterance} */
+SpeechSynthesisEventInit.prototype.utterance;
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @param {string} type
+ * @param {!SpeechSynthesisEventInit=} eventInitDict
+ */
+function SpeechSynthesisEvent(type, eventInitDict) {}
+
+/** @type {number} */
+SpeechSynthesisEvent.prototype.charIndex;
+
+/** @type {number} */
+SpeechSynthesisEvent.prototype.charLength;
+
+/** @type {number} */
+SpeechSynthesisEvent.prototype.elapsedTime;
+
+/** @type {string} */
+SpeechSynthesisEvent.prototype.name;
+
+/** @type {!SpeechSynthesisUtterance} */
+SpeechSynthesisEvent.prototype.utterance;
+
+/**
+ * @record
+ * @extends {SpeechSynthesisEventInit}
+ */
+function SpeechSynthesisErrorEventInit() {}
+
+/** @type {string} */
+SpeechSynthesisErrorEventInit.prototype.error;
+
+/**
+ * @constructor
+ * @extends {SpeechSynthesisEvent}
+ * @param {string} type
+ * @param {!SpeechSynthesisErrorEventInit=} eventInitDict
+ */
+function SpeechSynthesisErrorEvent(type, eventInitDict) {}
+
+/** @type {string} */
+SpeechSynthesisErrorEvent.prototype.error;

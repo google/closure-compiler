@@ -489,6 +489,147 @@ function CSSUnknownRule() {}
 
 /**
  * @constructor
+ * @extends {CSSRule}
+ */
+function CSSViewTransitionRule() {}
+
+/** @type {string} */
+CSSViewTransitionRule.prototype.navigation;
+
+/** @type {!ReadonlyArray<string>} */
+CSSViewTransitionRule.prototype.types;
+
+/**
+ * @constructor
+ * @extends {CSSRule}
+ */
+function CSSGroupingRule() {}
+
+/** @type {!CSSRuleList} */
+CSSGroupingRule.prototype.cssRules;
+
+/**
+ * @param {number} index
+ * @return {undefined}
+ */
+CSSGroupingRule.prototype.deleteRule = function(index) {}
+
+/**
+ * @param {string} rule
+ * @param {number=} index
+ * @return {number}
+ */
+CSSGroupingRule.prototype.insertRule = function(rule, index) {}
+
+/**
+ * @constructor
+ * @extends {CSSGroupingRule}
+ */
+function CSSConditionRule() {}
+
+/** @type {string} */
+CSSConditionRule.prototype.conditionText;
+
+/**
+ * @constructor
+ * @extends {CSSConditionRule}
+ */
+function CSSContainerRule() {}
+
+/** @type {string} */ CSSContainerRule.prototype.containerName;
+/** @type {string} */ CSSContainerRule.prototype.containerQuery;
+
+/**
+ * @constructor
+ * @extends {CSSRule}
+ */
+function CSSCounterStyleRule() {}
+
+/** @type {string} */ CSSCounterStyleRule.prototype.additiveSymbols;
+/** @type {string} */ CSSCounterStyleRule.prototype.fallback;
+/** @type {string} */ CSSCounterStyleRule.prototype.name;
+/** @type {string} */ CSSCounterStyleRule.prototype.negative;
+/** @type {string} */ CSSCounterStyleRule.prototype.pad;
+/** @type {string} */ CSSCounterStyleRule.prototype.prefix;
+/** @type {string} */ CSSCounterStyleRule.prototype.range;
+/** @type {string} */ CSSCounterStyleRule.prototype.speakAs;
+/** @type {string} */ CSSCounterStyleRule.prototype.suffix;
+/** @type {string} */ CSSCounterStyleRule.prototype.symbols;
+/** @type {string} */ CSSCounterStyleRule.prototype.system;
+
+/**
+ * @constructor
+ * @extends {CSSRule}
+ */
+function CSSFontFeatureValuesRule() {}
+
+/** @type {string} */ CSSFontFeatureValuesRule.prototype.fontFamily;
+
+/**
+ * @constructor
+ * @extends {CSSRule}
+ */
+function CSSFontPaletteValuesRule() {}
+
+/** @type {string} */ CSSFontPaletteValuesRule.prototype.basePalette;
+/** @type {string} */ CSSFontPaletteValuesRule.prototype.fontFamily;
+/** @type {string} */ CSSFontPaletteValuesRule.prototype.name;
+/** @type {string} */ CSSFontPaletteValuesRule.prototype.overrideColors;
+
+/**
+ * @constructor
+ * @extends {CSSGroupingRule}
+ */
+function CSSLayerBlockRule() {}
+
+/** @type {string} */ CSSLayerBlockRule.prototype.name;
+
+/**
+ * @constructor
+ * @extends {CSSRule}
+ */
+function CSSLayerStatementRule() {}
+
+/** @type {!ReadonlyArray<string>} */
+CSSLayerStatementRule.prototype.nameList;
+
+/**
+ * @constructor
+ * @extends {CSSRule}
+ */
+function CSSNamespaceRule() {}
+
+/** @type {string} */ CSSNamespaceRule.prototype.namespaceURI;
+/** @type {string} */ CSSNamespaceRule.prototype.prefix;
+
+/**
+ * @constructor
+ * @extends {CSSRule}
+ */
+function CSSPropertyRule() {}
+
+/** @type {boolean} */ CSSPropertyRule.prototype.inherits;
+/** @type {?string} */ CSSPropertyRule.prototype.initialValue;
+/** @type {string}  */ CSSPropertyRule.prototype.name;
+/** @type {string}  */ CSSPropertyRule.prototype.syntax;
+
+/**
+ * @constructor
+ * @extends {CSSGroupingRule}
+ */
+function CSSScopeRule() {}
+
+/** @type {?string} */ CSSScopeRule.prototype.end;
+/** @type {?string} */ CSSScopeRule.prototype.start;
+
+/**
+ * @constructor
+ * @extends {CSSGroupingRule}
+ */
+function CSSStartingStyleRule() {}
+
+/**
+ * @constructor
  * @extends {CSSProperties}
  * @implements {IObject<(string|number), string>}
  * @implements {IArrayLike<string>}

@@ -95,7 +95,18 @@ Animation.prototype.play = function() {};
 /**
  * @return {undefined}
  */
+Animation.prototype.persist = function() {};
+
+/**
+ * @return {undefined}
+ */
 Animation.prototype.reverse = function() {};
+
+/**
+ * @param {number} playbackRate
+ * @return {undefined}
+ */
+Animation.prototype.updatePlaybackRate = function(playbackRate) {};
 
 /** @type {number} */
 Animation.prototype.currentTime;
@@ -115,6 +126,12 @@ Animation.prototype.oncancel;
 /** @type {?function(!Event)} */
 Animation.prototype.onfinish;
 
+/** @type {?function(!Event)} */
+Animation.prototype.onremove;
+
+/** @type {boolean} */
+Animation.prototype.pending;
+
 /** @type {number} */
 Animation.prototype.playbackRate;
 
@@ -123,6 +140,9 @@ Animation.prototype.playState;
 
 /** @type {!Promise<void>} */
 Animation.prototype.ready;
+
+/** @type {string} */
+Animation.prototype.replaceState;
 
 /** @type {number} */
 Animation.prototype.startTime;

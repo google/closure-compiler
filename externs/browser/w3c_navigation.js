@@ -111,4 +111,23 @@ PageSwapEvent.prototype.activation;
 /** @type {ViewTransition | null} */
 PageSwapEvent.prototype.viewTransition;
 
+/**
+ * @record
+ * @extends {EventInit}
+ */
+function PageRevealEventInit() {}
 
+/** @type {?ViewTransition} */
+PageRevealEventInit.prototype.viewTransition;
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @param {string} type
+ * @param {!PageRevealEventInit=} opt_eventInitDict
+ * @see https://developer.mozilla.org/docs/Web/API/PageRevealEvent
+ */
+function PageRevealEvent(type, opt_eventInitDict) {}
+
+/** @type {ViewTransition | null} */
+PageRevealEvent.prototype.viewTransition;

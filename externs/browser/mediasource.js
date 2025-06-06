@@ -104,6 +104,11 @@ MediaSource.prototype.onsourceopen;
 
 /**
  * @constructor
+ */
+function MediaSourceHandle() {}
+
+/**
+ * @constructor
  * @implements {EventTarget}
  */
 function SourceBuffer() {}
@@ -182,3 +187,30 @@ SourceBuffer.prototype.onupdateend;
 
 /** @type {?function(!Event)} */
 SourceBuffer.prototype.onupdatestart;
+
+/**
+ * @constructor
+ * @implements {EventTarget}
+ * @implements {IArrayLike<!SourceBuffer>}
+ */
+function SourceBufferList() {}
+
+/** @type {number} */
+SourceBufferList.prototype.length;
+
+/** @type {?function(!Event)} */
+SourceBufferList.prototype.onaddsourcebuffer;
+
+/** @type {?function(!Event)} */
+SourceBufferList.prototype.onremovesourcebuffer;
+
+/** @override */
+SourceBufferList.prototype.addEventListener = function(
+    type, listener, opt_options) {};
+
+/** @override */
+SourceBufferList.prototype.removeEventListener = function(
+    type, listener, opt_options) {};
+
+/** @override */
+SourceBufferList.prototype.dispatchEvent = function(evt) {};

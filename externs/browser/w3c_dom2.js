@@ -1781,6 +1781,27 @@ HTMLAnchorElement.prototype.attributionSrc;
 
 /**
  * @constructor
+ * @implements {IArrayLike<!Element>}
+ */
+function HTMLAllCollection() {}
+
+/** @type {number} */
+HTMLAllCollection.prototype.length;
+
+/**
+ * @param {string} nameOrIndex
+ * @return {!HTMLCollection | !Element | null}
+ */
+HTMLAllCollection.prototype.item = function(nameOrIndex) {};
+
+/**
+ * @param {string} name
+ * @return {!HTMLCollection | !Element | null}
+ */
+HTMLAllCollection.prototype.namedItem = function(name) {};
+
+/**
+ * @constructor
  * @extends {HTMLElement}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-17701901
  */

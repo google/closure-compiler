@@ -45,6 +45,12 @@ DOMException.TYPE_MISMATCH_ERR;
 
 /**
  * @constructor
+ * @implements {IObject<string, string|undefined>}
+ */
+function DOMStringMap() {}
+
+/**
+ * @constructor
  * @implements {IArrayLike<string>}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMStringList
  */

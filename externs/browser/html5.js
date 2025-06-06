@@ -5507,6 +5507,14 @@ function RadioNodeList() {}
  */
 RadioNodeList.prototype.value;
 
+/**
+ * @constructor
+ * @extends {HTMLElement}
+ */
+function HTMLDataElement() {}
+
+/** @type {string} */
+HTMLDataElement.prototype.value;
 
 /**
  * @see https://html.spec.whatwg.org/multipage/forms.html#the-datalist-element
@@ -5519,6 +5527,14 @@ function HTMLDataListElement() {}
 /** @type {HTMLCollection<!HTMLOptionElement>} */
 HTMLDataListElement.prototype.options;
 
+/**
+ * @constructor
+ * @extends {HTMLElement}
+ */
+function HTMLTimeElement() {}
+
+/** @type {string} */
+HTMLTimeElement.prototype.dateTime;
 
 /**
  * @return {boolean}
