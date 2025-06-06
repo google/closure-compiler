@@ -43,7 +43,7 @@ public final class RandomNameGeneratorTest {
     Random random = new Random(0);
 
     try {
-      new RandomNameGenerator(ImmutableSet.of(), "123abc", null, random);
+      new RandomNameGenerator(ImmutableSet.of(), "123abc", ImmutableSet.of(), random);
       assertWithMessage(
               "Constructor should throw exception when the first char of prefix is invalid")
           .fail();
@@ -53,7 +53,7 @@ public final class RandomNameGeneratorTest {
     }
 
     try {
-      new RandomNameGenerator(ImmutableSet.of(), "abc%", null, random);
+      new RandomNameGenerator(ImmutableSet.of(), "abc%", ImmutableSet.of(), random);
       assertWithMessage(
               "Constructor should throw exception when one of prefix characters is invalid")
           .fail();
@@ -72,7 +72,8 @@ public final class RandomNameGeneratorTest {
     String prefix = "prefix";
     int prefixLen = prefix.length();
     // Add a prefix to avoid dropping JavaScript keywords.
-    RandomNameGenerator ng = new RandomNameGenerator(reservedNames, prefix, null, random);
+    RandomNameGenerator ng =
+        new RandomNameGenerator(reservedNames, prefix, ImmutableSet.of(), random);
     // Generate all 1- and 2-character names.
     // alphabet length, 1st digit
     int len1 = RandomNameGenerator.NONFIRST_CHAR.size();
@@ -128,7 +129,7 @@ public final class RandomNameGeneratorTest {
   public void testFirstCharAlphabet() throws Exception {
     Random random = new Random(0);
     ImmutableSet<String> reservedNames = ImmutableSet.of();
-    RandomNameGenerator ng = new RandomNameGenerator(reservedNames, "", null, random);
+    RandomNameGenerator ng = new RandomNameGenerator(reservedNames, "", ImmutableSet.of(), random);
     // Generate all 1- and 2-character names.
     int len1 = RandomNameGenerator.FIRST_CHAR.size();
     int len2 = RandomNameGenerator.NONFIRST_CHAR.size();
@@ -160,7 +161,8 @@ public final class RandomNameGeneratorTest {
     Random random = new Random(0);
     ImmutableSet<String> reservedNames = ImmutableSet.of();
     String prefix = "prefix";
-    RandomNameGenerator ng = new RandomNameGenerator(reservedNames, prefix, null, random);
+    RandomNameGenerator ng =
+        new RandomNameGenerator(reservedNames, prefix, ImmutableSet.of(), random);
     // Generate all 1- and 2-character names.
     int len1 = RandomNameGenerator.FIRST_CHAR.size();
     int len2 = RandomNameGenerator.NONFIRST_CHAR.size();
@@ -179,8 +181,10 @@ public final class RandomNameGeneratorTest {
     Random random0 = new Random(0);
     Random random1 = new Random(1);
     ImmutableSet<String> reservedNames = ImmutableSet.of();
-    RandomNameGenerator ng0 = new RandomNameGenerator(reservedNames, "", null, random0);
-    RandomNameGenerator ng1 = new RandomNameGenerator(reservedNames, "", null, random1);
+    RandomNameGenerator ng0 =
+        new RandomNameGenerator(reservedNames, "", ImmutableSet.of(), random0);
+    RandomNameGenerator ng1 =
+        new RandomNameGenerator(reservedNames, "", ImmutableSet.of(), random1);
 
     int count = 1000;
     String[] results0 = generate(ng0, count);
@@ -200,7 +204,7 @@ public final class RandomNameGeneratorTest {
   public void testReservedNames() throws Exception {
     Random random = new Random(0);
     ImmutableSet<String> reservedNames = ImmutableSet.of("x", "ba");
-    RandomNameGenerator ng = new RandomNameGenerator(reservedNames, "", null, random);
+    RandomNameGenerator ng = new RandomNameGenerator(reservedNames, "", ImmutableSet.of(), random);
     // Generate all 1- and 2-character names (and a couple 3-character names,
     // because "x" and "ba", and keywords, shouldn't be used).
     int count =
@@ -220,7 +224,7 @@ public final class RandomNameGeneratorTest {
     Random random = new Random(0);
     ImmutableSet<String> reservedNames = ImmutableSet.of();
     RandomNameGenerator ng =
-        new RandomNameGenerator(reservedNames, "", new char[] {'a', 'b'}, random);
+        new RandomNameGenerator(reservedNames, "", ImmutableSet.of('a', 'b'), random);
     // Generate all 1- and 2-character names (and also many 3-character names,
     // because "a" and "b" shouldn't be used).
     int count =
@@ -247,11 +251,12 @@ public final class RandomNameGeneratorTest {
     Random random = new Random(0);
     ImmutableSet<String> reservedNames = ImmutableSet.of();
 
-    RandomNameGenerator ng = new RandomNameGenerator(reservedNames, "le", new char[] {'$'}, random);
+    RandomNameGenerator ng =
+        new RandomNameGenerator(reservedNames, "le", ImmutableSet.of('$'), random);
     String[] result = generate(ng, 106);
     assertThat(result).asList().doesNotContain("let");
 
-    ng = new RandomNameGenerator(reservedNames, "awai", new char[] {'$'}, random);
+    ng = new RandomNameGenerator(reservedNames, "awai", ImmutableSet.of('$'), random);
     result = generate(ng, 106);
     assertThat(result).asList().doesNotContain("await");
   }

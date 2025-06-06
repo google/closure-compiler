@@ -20,6 +20,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
 import java.util.function.Predicate;
 import org.jspecify.annotations.Nullable;
@@ -1101,8 +1102,8 @@ public final class RenamePropertiesTest extends CompilerTestCase {
             compiler,
             generatePseudoNames,
             prevUsedPropertyMap,
-            null,
-            null,
+            ImmutableSet.<Character>of(),
+            ImmutableSet.<Character>of(),
             new DefaultNameGenerator(),
             propertyNameFilter);
   }

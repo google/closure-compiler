@@ -2619,7 +2619,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   private VariableMap runVariableRenaming(
       AbstractCompiler compiler, VariableMap prevVariableMap, Node externs, Node root) {
-    char[] reservedChars = null;
+    Set<Character> reservedChars = ImmutableSet.of();
     Set<String> reservedNames = new LinkedHashSet<>();
     if (options.renamePrefixNamespace != null) {
       // don't use the prefix name as a global symbol.

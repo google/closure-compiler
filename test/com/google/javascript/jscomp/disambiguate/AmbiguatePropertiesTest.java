@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.disambiguate;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
@@ -69,7 +70,10 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
       public void process(Node externs, Node root) {
         lastPass =
             AmbiguateProperties.makePassForTesting(
-                compiler, new char[] {'$'}, new char[] {'$'}, getGatheredExternProperties());
+                compiler,
+                ImmutableSet.of('$'),
+                ImmutableSet.of('$'),
+                getGatheredExternProperties());
         lastPass.process(externs, root);
       }
     };

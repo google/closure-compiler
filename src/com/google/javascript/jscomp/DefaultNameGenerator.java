@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import org.jspecify.annotations.Nullable;
 
 /**
  * A simple class for generating unique JavaScript variable/property names.
@@ -112,11 +111,11 @@ public final class DefaultNameGenerator implements NameGenerator {
   public DefaultNameGenerator() {
     buildPriorityLookupMap();
     Set<String> reservedNames = Sets.newLinkedHashSetWithExpectedSize(0);
-    reset(reservedNames, "", null);
+    reset(reservedNames, "", ImmutableSet.of());
   }
 
   public DefaultNameGenerator(
-      Set<String> reservedNames, String prefix, char @Nullable [] reservedCharacters) {
+      Set<String> reservedNames, String prefix, Set<Character> reservedCharacters) {
     this(reservedNames, prefix, reservedCharacters, reservedCharacters);
   }
 
@@ -135,8 +134,8 @@ public final class DefaultNameGenerator implements NameGenerator {
   public DefaultNameGenerator(
       Set<String> reservedNames,
       String prefix,
-      char @Nullable [] reservedFirstCharacters,
-      char @Nullable [] reservedNonFirstCharacters) {
+      Set<Character> reservedFirstCharacters,
+      Set<Character> reservedNonFirstCharacters) {
     buildPriorityLookupMap();
     reset(reservedNames, prefix, reservedFirstCharacters, reservedNonFirstCharacters);
   }
@@ -144,7 +143,7 @@ public final class DefaultNameGenerator implements NameGenerator {
   private DefaultNameGenerator(
       Set<String> reservedNames,
       String prefix,
-      char @Nullable [] reservedCharacters,
+      Set<Character> reservedCharacters,
       Map<Character, CharPriority> priorityLookupMap) {
     // Clone the priorityLookupMap to preserve information about how often
     // characters are used.
@@ -172,8 +171,7 @@ public final class DefaultNameGenerator implements NameGenerator {
   }
 
   @Override
-  public void reset(
-      Set<String> reservedNames, String prefix, char @Nullable [] reservedCharacters) {
+  public void reset(Set<String> reservedNames, String prefix, Set<Character> reservedCharacters) {
     reset(reservedNames, prefix, reservedCharacters, reservedCharacters);
   }
 
@@ -187,8 +185,8 @@ public final class DefaultNameGenerator implements NameGenerator {
   public void reset(
       Set<String> reservedNames,
       String prefix,
-      char @Nullable [] reservedFirstCharacters,
-      char @Nullable [] reservedNonFirstCharacters) {
+      Set<Character> reservedFirstCharacters,
+      Set<Character> reservedNonFirstCharacters) {
 
     this.reservedNames = reservedNames;
     this.prefix = prefix;
@@ -205,7 +203,7 @@ public final class DefaultNameGenerator implements NameGenerator {
 
   @Override
   public NameGenerator clone(
-      Set<String> reservedNames, String prefix, char @Nullable [] reservedCharacters) {
+      Set<String> reservedNames, String prefix, Set<Character> reservedCharacters) {
     return new DefaultNameGenerator(reservedNames, prefix, reservedCharacters,
         priorityLookupMap);
   }
@@ -227,13 +225,14 @@ public final class DefaultNameGenerator implements NameGenerator {
 
   /**
    * Provides the array of available characters based on the specified arrays.
+   *
    * @param chars The list of characters that are legal
    * @param reservedCharacters The characters that should not be used
-   * @return An array of characters to use. Will return the chars array if
-   *    reservedCharacters is null or empty, otherwise creates a new array.
+   * @return An array of characters to use. Will return the chars array if reservedCharacters is
+   *     null or empty, otherwise creates a new array.
    */
-  CharPriority[] reserveCharacters(char[] chars, char[] reservedCharacters) {
-    if (reservedCharacters == null || reservedCharacters.length == 0) {
+  CharPriority[] reserveCharacters(char[] chars, Set<Character> reservedCharacterSet) {
+    if (reservedCharacterSet.isEmpty()) {
       CharPriority[] result = new CharPriority[chars.length];
       for (int i = 0; i < chars.length; i++) {
         result[i] = priorityLookupMap.get(chars[i]);
@@ -241,9 +240,7 @@ public final class DefaultNameGenerator implements NameGenerator {
       return result;
     }
     Set<Character> charSet = new LinkedHashSet<>(Chars.asList(chars));
-    for (char reservedCharacter : reservedCharacters) {
-      charSet.remove(reservedCharacter);
-    }
+    charSet.removeAll(reservedCharacterSet);
 
     CharPriority[] result = new CharPriority[charSet.size()];
     int index = 0;

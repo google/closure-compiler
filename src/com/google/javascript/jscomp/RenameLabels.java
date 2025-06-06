@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
@@ -83,7 +84,8 @@ final class RenameLabels implements CompilerPass {
     private final NameGenerator nameGenerator;
 
     private DefaultNameSupplier() {
-      this.nameGenerator = new DefaultNameGenerator(new LinkedHashSet<String>(), "", null);
+      this.nameGenerator =
+          new DefaultNameGenerator(new LinkedHashSet<String>(), "", ImmutableSet.of());
     }
 
     @Override

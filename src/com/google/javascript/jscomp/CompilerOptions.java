@@ -57,13 +57,19 @@ public class CompilerOptions {
   // The number of characters after which we insert a line break in the code
   static final int DEFAULT_LINE_LENGTH_THRESHOLD = 500;
 
-  private static final char[] POLYMER_PROPERTY_RESERVED_FIRST_CHARS =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZ$".toCharArray();
-  private static final char[] POLYMER_PROPERTY_RESERVED_NON_FIRST_CHARS = "_$".toCharArray();
-  private static final char[] ANGULAR_PROPERTY_RESERVED_FIRST_CHARS = {'$'};
+  private static final ImmutableSet<Character> POLYMER_PROPERTY_RESERVED_FIRST_CHARS =
+      ImmutableSet.copyOf(Chars.asList("ABCDEFGHIJKLMNOPQRSTUVWXYZ$".toCharArray()));
+  private static final ImmutableSet<Character> POLYMER_PROPERTY_RESERVED_NON_FIRST_CHARS =
+      ImmutableSet.of('_', '$');
+  private static final ImmutableSet<Character> ANGULAR_PROPERTY_RESERVED_FIRST_CHARS =
+      ImmutableSet.of('$');
 
   public static ImmutableSet<Character> getAngularPropertyReservedFirstChars() {
-    return ImmutableSet.copyOf(Chars.asList(ANGULAR_PROPERTY_RESERVED_FIRST_CHARS));
+    return ANGULAR_PROPERTY_RESERVED_FIRST_CHARS;
+  }
+
+  public static ImmutableSet<Character> getPolymerPropertyReservedFirstChars() {
+    return POLYMER_PROPERTY_RESERVED_FIRST_CHARS;
   }
 
   public boolean shouldRunCrossChunkCodeMotion() {
@@ -3379,34 +3385,20 @@ public class CompilerOptions {
     return this;
   }
 
-  public char[] getPropertyReservedNamingFirstChars() {
-    char[] reservedChars = null;
+  public ImmutableSet<Character> getPropertyReservedNamingFirstChars() {
     if (polymerPass) {
-      if (reservedChars == null) {
-        reservedChars = POLYMER_PROPERTY_RESERVED_FIRST_CHARS;
-      } else {
-        reservedChars = Chars.concat(reservedChars, POLYMER_PROPERTY_RESERVED_FIRST_CHARS);
-      }
+      return POLYMER_PROPERTY_RESERVED_FIRST_CHARS;
     } else if (angularPass) {
-      if (reservedChars == null) {
-        reservedChars = ANGULAR_PROPERTY_RESERVED_FIRST_CHARS;
-      } else {
-        reservedChars = Chars.concat(reservedChars, ANGULAR_PROPERTY_RESERVED_FIRST_CHARS);
-      }
+      return ANGULAR_PROPERTY_RESERVED_FIRST_CHARS;
     }
-    return reservedChars;
+    return ImmutableSet.of();
   }
 
-  public char[] getPropertyReservedNamingNonFirstChars() {
-    char[] reservedChars = null;
+  public ImmutableSet<Character> getPropertyReservedNamingNonFirstChars() {
     if (polymerPass) {
-      if (reservedChars == null) {
-        reservedChars = POLYMER_PROPERTY_RESERVED_NON_FIRST_CHARS;
-      } else {
-        reservedChars = Chars.concat(reservedChars, POLYMER_PROPERTY_RESERVED_NON_FIRST_CHARS);
-      }
+      return POLYMER_PROPERTY_RESERVED_NON_FIRST_CHARS;
     }
-    return reservedChars;
+    return ImmutableSet.of();
   }
 
   boolean shouldOptimize() {

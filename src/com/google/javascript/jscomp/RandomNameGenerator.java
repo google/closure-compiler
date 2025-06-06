@@ -99,16 +99,13 @@ public final class RandomNameGenerator implements NameGenerator {
 
   public RandomNameGenerator(Random random) {
     this.random = random;
-    reset(ImmutableSet.of(), "", null);
+    reset(ImmutableSet.of(), "", ImmutableSet.of());
   }
 
   RandomNameGenerator(
-      Set<String> reservedNames,
-      String prefix,
-      char @Nullable [] reservedCharacters,
-      Random random) {
+      Set<String> reservedNames, String prefix, Set<Character> reservedCharacters, Random random) {
     this.random = random;
-    reset(reservedNames, prefix, reservedCharacters);
+    reset(reservedNames, prefix, reservedCharacters, reservedCharacters);
   }
 
   /**
@@ -128,16 +125,15 @@ public final class RandomNameGenerator implements NameGenerator {
   RandomNameGenerator(
       Set<String> reservedNames,
       String prefix,
-      char @Nullable [] reservedFirstCharacters,
-      char @Nullable [] reservedNonFirstCharacters,
+      Set<Character> reservedFirstCharacters,
+      Set<Character> reservedNonFirstCharacters,
       Random random) {
     this.random = random;
     reset(reservedNames, prefix, reservedFirstCharacters, reservedNonFirstCharacters);
   }
 
   @Override
-  public void reset(
-      Set<String> reservedNames, String prefix, char @Nullable [] reservedCharacters) {
+  public void reset(Set<String> reservedNames, String prefix, Set<Character> reservedCharacters) {
     reset(reservedNames, prefix, reservedCharacters, reservedCharacters);
   }
 
@@ -145,16 +141,15 @@ public final class RandomNameGenerator implements NameGenerator {
   public void reset(
       Set<String> reservedNames,
       String prefix,
-      char @Nullable [] reservedFirstCharacters,
-      char @Nullable [] reservedNonFirstCharacters) {
+      Set<Character> reservedFirstCharacters,
+      Set<Character> reservedNonFirstCharacters) {
     this.reservedNames = ImmutableSet.copyOf(reservedNames);
     this.prefix = prefix;
     nameCount = 0;
 
-    // Build the character arrays to use
-    firstChars = Sets.difference(FIRST_CHAR, asSet(reservedFirstCharacters)).immutableCopy();
-    nonFirstChars =
-        Sets.difference(NONFIRST_CHAR, asSet(reservedNonFirstCharacters)).immutableCopy();
+    // Build the character sets to use
+    firstChars = Sets.difference(FIRST_CHAR, reservedFirstCharacters).immutableCopy();
+    nonFirstChars = Sets.difference(NONFIRST_CHAR, reservedNonFirstCharacters).immutableCopy();
 
     checkPrefix(prefix);
     shuffleAlphabets();
@@ -162,7 +157,7 @@ public final class RandomNameGenerator implements NameGenerator {
 
   @Override
   public NameGenerator clone(
-      Set<String> reservedNames, String prefix, char @Nullable [] reservedCharacters) {
+      Set<String> reservedNames, String prefix, Set<Character> reservedCharacters) {
     return new RandomNameGenerator(reservedNames, prefix, reservedCharacters, random);
   }
 

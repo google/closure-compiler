@@ -82,9 +82,9 @@ public class AmbiguateProperties implements CompilerPass {
 
   private final List<Node> stringNodesToRename = new ArrayList<>();
   // Can't use these to start property names.
-  private final char[] reservedFirstCharacters;
+  private final Set<Character> reservedFirstCharacters;
   // Can't use these at all in property names.
-  private final char[] reservedNonFirstCharacters;
+  private final Set<Character> reservedNonFirstCharacters;
 
   /** Map from property name to Property object */
   private final Map<String, Property> propertyMap = new LinkedHashMap<>();
@@ -116,8 +116,8 @@ public class AmbiguateProperties implements CompilerPass {
 
   public AmbiguateProperties(
       AbstractCompiler compiler,
-      char[] reservedFirstCharacters,
-      char[] reservedNonFirstCharacters,
+      Set<Character> reservedFirstCharacters,
+      Set<Character> reservedNonFirstCharacters,
       Set<String> externProperties) {
     checkState(compiler.getLifeCycleStage().isNormalized());
     this.compiler = compiler;
@@ -131,8 +131,8 @@ public class AmbiguateProperties implements CompilerPass {
 
   static AmbiguateProperties makePassForTesting(
       AbstractCompiler compiler,
-      char[] reservedFirstCharacters,
-      char[] reservedNonFirstCharacters,
+      Set<Character> reservedFirstCharacters,
+      Set<Character> reservedNonFirstCharacters,
       Set<String> externProperties) {
     AmbiguateProperties ap =
         new AmbiguateProperties(
@@ -225,7 +225,10 @@ public class AmbiguateProperties implements CompilerPass {
     // Generate new names for the properties that will be renamed.
     NameGenerator nameGen =
         new DefaultNameGenerator(
-            reservedNames.build(), "", reservedFirstCharacters, reservedNonFirstCharacters);
+            reservedNames.build(),
+            "",
+            this.reservedFirstCharacters,
+            this.reservedNonFirstCharacters);
     String[] colorMap = new String[numNewPropertyNames];
     for (int i = 0; i < numNewPropertyNames; ++i) {
       colorMap[i] = nameGen.generateNextName();

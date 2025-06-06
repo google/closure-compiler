@@ -37,7 +37,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Predicate;
-import org.jspecify.annotations.Nullable;
 
 /**
  * RenameProperties renames properties (including methods) of all JavaScript objects. This includes
@@ -76,8 +75,8 @@ class RenameProperties implements CompilerPass {
   private final List<Node> stringNodesToRename = new ArrayList<>();
   private final Map<Node, Node> callNodeToParentMap =
       new LinkedHashMap<>();
-  private final char[] reservedFirstCharacters;
-  private final char[] reservedNonFirstCharacters;
+  private final Set<Character> reservedFirstCharacters;
+  private final Set<Character> reservedNonFirstCharacters;
 
   // Map from property name to Property object
   private final Map<String, Property> propertyMap = new LinkedHashMap<>();
@@ -137,8 +136,8 @@ class RenameProperties implements CompilerPass {
       AbstractCompiler compiler,
       boolean generatePseudoNames,
       VariableMap prevUsedPropertyMap,
-      char @Nullable [] reservedFirstCharacters,
-      char @Nullable [] reservedNonFirstCharacters,
+      Set<Character> reservedFirstCharacters,
+      Set<Character> reservedNonFirstCharacters,
       NameGenerator nameGenerator) {
     this(
         compiler,
@@ -173,8 +172,8 @@ class RenameProperties implements CompilerPass {
       AbstractCompiler compiler,
       boolean generatePseudoNames,
       VariableMap prevUsedPropertyMap,
-      char @Nullable [] reservedFirstCharacters,
-      char @Nullable [] reservedNonFirstCharacters,
+      Set<Character> reservedFirstCharacters,
+      Set<Character> reservedNonFirstCharacters,
       NameGenerator nameGenerator,
       Predicate<Node> propertyRenameEligibilityFilter) {
     this.compiler = compiler;
@@ -302,7 +301,8 @@ class RenameProperties implements CompilerPass {
    *     renamed
    */
   private void generateNames(Set<Property> props, Set<String> reservedNames) {
-    nameGenerator.reset(reservedNames, "", reservedFirstCharacters, reservedNonFirstCharacters);
+    nameGenerator.reset(
+        reservedNames, "", this.reservedFirstCharacters, this.reservedNonFirstCharacters);
     for (Property p : props) {
       if (generatePseudoNames) {
         p.newName = "$" + p.oldName + "$";

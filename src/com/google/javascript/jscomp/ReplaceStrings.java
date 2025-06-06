@@ -424,7 +424,7 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
    */
   private static DefaultNameGenerator createNameGenerator() {
     final String namePrefix = "";
-    final char[] reservedChars = new char[0];
+    final ImmutableSet<Character> reservedChars = ImmutableSet.of();
     return new DefaultNameGenerator(ImmutableSet.of(), namePrefix, reservedChars);
   }
 }

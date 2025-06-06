@@ -127,7 +127,7 @@ final class RenameVars implements CompilerPass {
   private final boolean preferStableNames;
 
   /** Characters that shouldn't be used in variable names. */
-  private final char[] reservedCharacters;
+  private final Set<Character> reservedCharacters;
 
   /** A prefix to distinguish temporary local names from global names */
   private static final String LOCAL_VAR_PREFIX = "L ";
@@ -147,7 +147,7 @@ final class RenameVars implements CompilerPass {
       boolean generatePseudoNames,
       boolean preferStableNames,
       VariableMap prevUsedRenameMap,
-      char @Nullable [] reservedCharacters,
+      Set<Character> reservedCharacters,
       @Nullable Set<String> reservedNames,
       NameGenerator nameGenerator) {
     this.compiler = compiler;
@@ -421,7 +421,7 @@ final class RenameVars implements CompilerPass {
    * Determines which new names to substitute for the original names.
    */
   private void assignNames(SortedSet<Assignment> varsToRename) {
-    nameGenerator.reset(reservedNames, prefix, reservedCharacters);
+    nameGenerator.reset(reservedNames, prefix, this.reservedCharacters);
 
     NameGenerator globalNameGenerator = nameGenerator;
     // Local variables never need a prefix.
@@ -433,7 +433,7 @@ final class RenameVars implements CompilerPass {
     NameGenerator localNameGenerator =
         prefix.isEmpty()
             ? globalNameGenerator
-            : nameGenerator.clone(reservedNames, "", reservedCharacters);
+            : nameGenerator.clone(reservedNames, "", this.reservedCharacters);
 
     // Generated names and the assignments for non-local vars.
     List<Assignment> pendingAssignments = new ArrayList<>();

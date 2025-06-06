@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.debugging.sourcemap.Base64;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -161,7 +162,7 @@ class ReplaceIdGenerators implements CompilerPass {
         RenameStrategy renameStrategy, BiMap<String, String> previousMappings) {
       this.previousMappings = previousMappings.inverse();
       this.generator =
-          new DefaultNameGenerator(previousMappings.keySet(), "", null);
+          new DefaultNameGenerator(previousMappings.keySet(), "", ImmutableSet.<Character>of());
       this.renameStrategy = renameStrategy;
     }
 

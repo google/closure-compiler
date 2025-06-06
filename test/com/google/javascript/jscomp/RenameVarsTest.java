@@ -24,6 +24,7 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.testing.NodeSubject;
@@ -78,7 +79,7 @@ public final class RenameVarsTest extends CompilerTestCase {
                   generatePseudoNames,
                   preferStableNames,
                   previouslyUsedMap,
-                  null,
+                  ImmutableSet.of(),
                   null,
                   nameGenerator);
     } else {
@@ -91,7 +92,7 @@ public final class RenameVarsTest extends CompilerTestCase {
                   generatePseudoNames,
                   preferStableNames,
                   previouslyUsedMap,
-                  null,
+                  ImmutableSet.of(),
                   null,
                   new DefaultNameGenerator());
     }
@@ -863,7 +864,8 @@ public final class RenameVarsTest extends CompilerTestCase {
 
   @Test
   public void testBias() {
-    nameGenerator = new DefaultNameGenerator(new HashSet<String>(), "", null);
+    nameGenerator =
+        new DefaultNameGenerator(new HashSet<String>(), "", ImmutableSet.<Character>of());
     nameGenerator.favors("AAAAAAAAHH");
     test("var x, y", "var A, H");
   }
@@ -1239,7 +1241,7 @@ public final class RenameVarsTest extends CompilerTestCase {
               false,
               false,
               previouslyUsedMap,
-              null,
+              ImmutableSet.<Character>of(),
               closurePass.getExportedVariableNames(),
               new DefaultNameGenerator());
       renameVars.process(externs, root);

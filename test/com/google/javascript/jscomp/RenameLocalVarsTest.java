@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableSet;
 import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,10 +40,27 @@ public final class RenameLocalVarsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     if (nameGenerator != null) {
-      return new RenameVars(compiler, prefix, true, false, false, null, null, null, nameGenerator);
+      return new RenameVars(
+          compiler,
+          prefix,
+          true,
+          false,
+          false,
+          null,
+          ImmutableSet.<Character>of(),
+          null,
+          nameGenerator);
     } else {
       return new RenameVars(
-          compiler, prefix, true, false, false, null, null, null, new DefaultNameGenerator());
+          compiler,
+          prefix,
+          true,
+          false,
+          false,
+          null,
+          ImmutableSet.<Character>of(),
+          null,
+          new DefaultNameGenerator());
     }
   }
 
