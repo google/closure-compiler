@@ -664,22 +664,12 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         }
         """,
         "foo();");
-    fold(
+    foldSame(
         """
         switch ('foo') {
         case 'bar':
           bar();
           break;
-        case notConstant:
-          foobar();
-          break;
-        case 'foo':
-          foo();
-          break;
-        }
-        """,
-        """
-        switch ('foo') {
         case notConstant:
           foobar();
           break;
@@ -782,6 +772,116 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         use(x);
         let y;
         """);
+  }
+
+  @Test
+  public void testOptimizeSwitchBug335145701() {
+    foldSame(
+        """
+        function foo() { alert('foo()'); }
+        switch (1) {
+          case 1: break;
+          case foo(): break;
+        }
+        """);
+
+    foldSame(
+        """
+        function foo() { alert('foo()'); }
+        switch (1) {
+          case 0: break;
+          case 1: break;
+          case foo(): break;
+        }
+        """);
+
+    foldSame(
+        """
+        function foo() { alert('foo()'); }
+        switch (1) {
+          case 0: alert('bar'); break;
+          case 1: break;
+          case foo(): break;
+        }
+        """);
+
+    foldSame(
+        """
+        function foo() { alert('foo()'); return 1; }
+        switch (1) {
+          case 0: break;
+          case foo(): break;
+          case 2: break;
+        }
+        """);
+
+    fold(
+        """
+        function foo() { alert('foo()'); }
+        switch (1) {
+          case foo(): break;
+          case (0,1): break;
+        }
+        """,
+        """
+        function foo() { alert('foo()'); }
+        switch (1) {
+          case foo(): break;
+          case 1: break;
+        }
+        """);
+
+    foldSame(
+        """
+        function foo() { alert('foo()'); }
+        switch (x) {
+          case 1: break;
+          case foo(): break;
+        }
+        """);
+
+    fold(
+        """
+        // not valid to remove the useless case 1,
+        // it would cause the default to run and it has side-effects
+        switch (1) {
+          case 1: break;
+          default:
+            bar();
+            break;
+        }
+        """,
+        "");
+
+    foldSame(
+        """
+        function foo() { alert('foo()'); }
+        switch (1) {
+          case 0: alert('bar'); break;
+          case 1: break;
+          case foo(): break;
+        }
+        """);
+
+    foldSame(
+        """
+            function foo() { alert('foo()'); }
+            switch (bar()) {
+              case 1: break;
+              case foo(): break;
+            }
+        """);
+
+    fold(
+        """
+        // is not valid to remove the first useless case 1,
+        // because it matches and the second should not run
+        switch (1) {
+          case 1: break;
+          case 1: bar(); break;
+        }
+        """,
+        "");
   }
 
   @Test
