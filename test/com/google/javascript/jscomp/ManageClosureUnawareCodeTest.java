@@ -47,6 +47,11 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
     disableValidateAstChangeMarking();
   }
 
+  @Before
+  public void resetAditionalPasses() {
+    aditionalPasses.clear();
+  }
+
   @Override
   @After
   public void tearDown() throws Exception {
@@ -60,7 +65,12 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
   private boolean runUnwrapPass = true;
   private boolean gatherShadowNodesBeforeUnwrapping = true;
   private Node gatheredShadowNodeRoot = IR.root();
+  private final List<Node> shadowNodes = new ArrayList<>();
+  private final List<PassFactory> aditionalPasses = new ArrayList<>();
   public Optional<CompilerOptions.LanguageMode> languageInOverride = Optional.empty();
+  private static final String ARBITRARY_NUMERIC_CHANGE_CLOSURE_UNAWARE_CODE =
+      "arbitraryNumericChangeClosureUnawareCode";
+  private static final String ARBITRARY_NUMERIC_CHANGE_MAIN_AST = "arbitraryNumericChangeMainAST";
 
   @Override
   protected CompilerOptions getOptions() {
@@ -69,6 +79,43 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
       options.setLanguageIn(languageInOverride.get());
     }
     return options;
+  }
+
+  private final class ChangedScopeNodesIterativePass implements CompilerPass {
+    private final String passName;
+    private final AbstractCompiler compiler;
+
+    private ChangedScopeNodesIterativePass(String passName, AbstractCompiler compiler) {
+      this.passName = passName;
+      this.compiler = compiler;
+    }
+
+    @Override
+    public void process(Node externs, Node root) {
+      for (List<Node> changedScopeNodes = compiler.getChangedScopeNodesForPass(passName);
+          changedScopeNodes == null || !changedScopeNodes.isEmpty();
+          changedScopeNodes = compiler.getChangedScopeNodesForPass(passName)) {
+        NodeTraversal.traverseScopeRoots(
+            compiler,
+            root,
+            (passName == ARBITRARY_NUMERIC_CHANGE_CLOSURE_UNAWARE_CODE && changedScopeNodes == null)
+                ? shadowNodes
+                : changedScopeNodes,
+            new NodeTraversal.AbstractPostOrderCallback() {
+              @Override
+              public void visit(NodeTraversal t, Node node, Node parent) {
+                if (node.isNumber()) {
+                  double value = node.getDouble();
+                  if (value <= 3.0) {
+                    node.setDouble(4.0);
+                    compiler.reportChangeToEnclosingScope(node);
+                  }
+                }
+              }
+            },
+            false);
+      }
+    }
   }
 
   @Override
@@ -98,12 +145,22 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
                                 Node shadow = node.getClosureUnawareShadow();
                                 if (shadow != null) {
                                   gatheredShadowNodeRoot.addChildToBack(shadow.cloneTree());
+                                  /*
+                                   * shadow is a ROOT node that follows the pattern:
+                                   * ROOT -> SCRIPT -> EXPR_RESULT -> FUNCTION
+                                   * so we need to get the 3rd child to get to the function node.
+                                   */
+                                  shadowNodes.add(
+                                      shadow.getFirstChild().getFirstChild().getFirstChild());
                                 }
                               });
                         }
                       })
               .build());
     }
+
+    passes.addAll(aditionalPasses);
+
     if (runUnwrapPass) {
       passes.add(
           PassFactory.builder()
@@ -146,6 +203,161 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
     runWrapPass = true;
     runUnwrapPass = true;
     testSame(js);
+  }
+
+  @Test
+  public void testClosureUnawareCodePassModifiesMainAST_incorrectly() {
+    runWrapPass = true;
+    runUnwrapPass = true;
+
+    aditionalPasses.add(
+        PassFactory.builder()
+            .setName(ARBITRARY_NUMERIC_CHANGE_CLOSURE_UNAWARE_CODE)
+            .setInternalFactory(
+                (c) ->
+                    new ChangedScopeNodesIterativePass(
+                        ARBITRARY_NUMERIC_CHANGE_CLOSURE_UNAWARE_CODE, c))
+            .setRunInFixedPointLoop(true)
+            .build());
+
+    aditionalPasses.add(
+        PassFactory.builder()
+            .setName(ARBITRARY_NUMERIC_CHANGE_MAIN_AST)
+            .setInternalFactory(
+                (c) ->
+                    new CompilerPass() {
+
+                      @Override
+                      public void process(Node externs, Node root) {
+                        NodeUtil.visitPreOrder(
+                            root,
+                            (Node node) -> {
+                              if (node.isNumber()) {
+                                double value = node.getDouble();
+                                if (value == 1.0 || value == 2.0) {
+                                  node.setDouble(value + 1);
+                                  c.reportChangeToEnclosingScope(node);
+                                }
+                              }
+                            });
+                      }
+                    })
+            .setRunInFixedPointLoop(true)
+            .build());
+
+    /*
+     * This is an incorrect behavior: 1. arbitraryNumericChangeMainAST turns 1.0 to 2.0 and 2.0 to
+     * 3.0 only in the main AST. 2. arbitraryNumericChangeClosureUnawareCode turns any number <= 3.0
+     * to 4.0 only in closure-unaware shadows. Variable Y is in the main AST, so it should not be
+     * modified by the pass that changes only closure-unaware code. However, since we are also
+     * running arbitraryNumericChangeMainAST, it modifies variable Y and this change is reported to
+     * the changeTimeline, which is used by the close-unaware code pass to determine which nodes to
+     * modify, so, variable Y ends up being incorrectly modified by
+     * arbitraryNumericChangeClosureUnawareCode.
+     */
+    test(
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        /** @closureUnaware */
+        (function() {
+          var x = 1;
+        }).call(globalThis);
+        var y = 1;
+        """,
+        // After the passes run, var x should be 4, and var y should be 3.
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        /** @closureUnaware */
+        (function() {
+          var x = 4;
+        }).call(globalThis);
+        var y = 4; // This should be 3.
+        """);
+  }
+
+  @Test
+  public void testMainASTPassModifiesClosureUnawareCode_incorrectly() {
+    runWrapPass = true;
+    runUnwrapPass = true;
+    aditionalPasses.add(
+        PassFactory.builder()
+            .setName(ARBITRARY_NUMERIC_CHANGE_MAIN_AST)
+            .setInternalFactory(
+                (c) -> new ChangedScopeNodesIterativePass(ARBITRARY_NUMERIC_CHANGE_MAIN_AST, c))
+            .setRunInFixedPointLoop(true)
+            .build());
+
+    aditionalPasses.add(
+        PassFactory.builder()
+            .setName(ARBITRARY_NUMERIC_CHANGE_CLOSURE_UNAWARE_CODE)
+            .setInternalFactory(
+                (c) ->
+                    new CompilerPass() {
+
+                      @Override
+                      public void process(Node externs, Node root) {
+                        for (Node shadowRoot : shadowNodes) {
+                          NodeUtil.visitPreOrder(
+                              shadowRoot,
+                              (Node node) -> {
+                                if (node.isNumber()) {
+                                  double value = node.getDouble();
+                                  if (value == 1.0 || value == 2.0) {
+                                    node.setDouble(value + 1);
+                                    c.reportChangeToEnclosingScope(node);
+                                  }
+                                }
+                              });
+                        }
+                      }
+                    })
+            .setRunInFixedPointLoop(true)
+            .build());
+
+    /*
+     * This is an incorrect behavior. 1.arbitraryNumericChangeClosureUnawareCode turns 1.0 to 2.0
+     * and 2.0 to 3.0 only in closure-unaware shadows. 2. arbitraryNumericChangeMainAST turns any
+     * number <= 3.0 to 4.0 only in the main AST. Variable X is in a closure-unaware shadow, so it
+     * should not be modified by the pass that changes only the main AST. However, since we are also
+     * running arbitraryNumericChangeClosureUnawareCode, it modifies variable X and this change is
+     * reported to the changeTimeline, which is used by the main AST code pass to determine which
+     * nodes to modify, so, variable X ends up being incorrectly modified by
+     * arbitraryNumericChangeMainAST.
+     */
+    test(
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        /** @closureUnaware */
+        (function() {
+          var x = 1;
+        }).call(globalThis);
+        var y = 1;
+        """,
+        // After the passes run, var x should be 3, and var y should be 4.
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('foo.bar.baz_raw');
+        /** @closureUnaware */
+        (function() {
+          var x = 4; // This should be 3.
+        }).call(globalThis);
+        var y = 4;
+        """);
   }
 
   @Test
