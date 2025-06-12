@@ -865,6 +865,11 @@ google.maps.CoreLibrary.prototype.Orientation3D;
 google.maps.CoreLibrary.prototype.Point;
 
 /**
+ * @type {typeof google.maps.RPCStatus}
+ */
+google.maps.CoreLibrary.prototype.RPCStatus;
+
+/**
  * @type {typeof google.maps.Settings}
  */
 google.maps.CoreLibrary.prototype.Settings;
@@ -7045,7 +7050,7 @@ google.maps.MapsNetworkError = function() {};
 
 /**
  * Identifies the type of error produced by the API.
- * @type {!google.maps.DirectionsStatus|!google.maps.DistanceMatrixStatus|!google.maps.ElevationStatus|!google.maps.GeocoderStatus|!google.maps.MaxZoomStatus|!google.maps.places.PlacesServiceStatus|!google.maps.StreetViewStatus}
+ * @type {!google.maps.DirectionsStatus|!google.maps.DistanceMatrixStatus|!google.maps.ElevationStatus|!google.maps.GeocoderStatus|!google.maps.MaxZoomStatus|!google.maps.places.PlacesServiceStatus|!google.maps.RPCStatus|!google.maps.StreetViewStatus}
  */
 google.maps.MapsNetworkError.prototype.code;
 
@@ -8854,6 +8859,111 @@ google.maps.Projection.prototype.fromLatLngToPoint = function(latLng, point) {};
  */
 google.maps.Projection.prototype.fromPointToLatLng = function(
     pixel, noClampNoWrap) {};
+
+/**
+ * The status returned by a web service. See <a
+ * href="https://grpc.github.io/grpc/core/md_doc_statuscodes.html">https://grpc.github.io/grpc/core/md_doc_statuscodes.html</a>.
+ *
+ * Access by calling `const {RPCStatus} = await
+ * google.maps.importLibrary("core")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.RPCStatus = {
+  /**
+   * The operation was aborted, typically due to a concurrency issue such as a
+   * sequencer check failure or transaction abort.
+   */
+  ABORTED: 'ABORTED',
+  /**
+   * The entity that a client attempted to create (e.g., file or directory)
+   * already exists.
+   */
+  ALREADY_EXISTS: 'ALREADY_EXISTS',
+  /**
+   * The operation was cancelled, typically by the caller.
+   */
+  CANCELLED: 'CANCELLED',
+  /**
+   * Unrecoverable data loss or corruption.
+   */
+  DATA_LOSS: 'DATA_LOSS',
+  /**
+   * The deadline expired before the operation could complete. For operations
+   * that change the state of the system, this error may be returned even if the
+   * operation has completed successfully. For example, a successful response
+   * from a server could have been delayed long.
+   */
+  DEADLINE_EXCEEDED: 'DEADLINE_EXCEEDED',
+  /**
+   * The operation was rejected because the system is not in a state required
+   * for the operation&#39;s execution.
+   */
+  FAILED_PRECONDITION: 'FAILED_PRECONDITION',
+  /**
+   * Internal errors. This means that some invariants expected by the underlying
+   * system have been broken. This error code is reserved for serious errors.
+   */
+  INTERNAL: 'INTERNAL',
+  /**
+   * The client specified an invalid argument. Note that this differs from
+   * <code>FAILED_PRECONDITION</code>. <code>INVALID_ARGUMENT</code> indicates
+   * arguments that are problematic regardless of the state of the system (e.g.,
+   * a malformed file name).
+   */
+  INVALID_ARGUMENT: 'INVALID_ARGUMENT',
+  /**
+   * Some requested entity (e.g., file or directory) was not found.
+   */
+  NOT_FOUND: 'NOT_FOUND',
+  /**
+   * Not an error; returned on success.
+   */
+  OK: 'OK',
+  /**
+   * The operation was attempted past the valid range. E.g., seeking or reading
+   * past end-of-file. Unlike <code>INVALID_ARGUMENT</code>, this error
+   * indicates a problem that may be fixed if the system state changes. For
+   * example, a 32-bit file system will generate <code>INVALID_ARGUMENT</code>
+   * if asked to read at an offset that is not in the range [0,2^32-1], but it
+   * will generate <code>OUT_OF_RANGE</code> if asked to read from an offset
+   * past the current file size.
+   */
+  OUT_OF_RANGE: 'OUT_OF_RANGE',
+  /**
+   * The caller does not have permission to execute the specified operation.
+   * This error code does not imply the request is valid or the requested entity
+   * exists or satisfies other pre-conditions.
+   */
+  PERMISSION_DENIED: 'PERMISSION_DENIED',
+  /**
+   * Some resource has been exhausted, perhaps a per-user quota, or perhaps the
+   * entire file system is out of space.
+   */
+  RESOURCE_EXHAUSTED: 'RESOURCE_EXHAUSTED',
+  /**
+   * The request does not have valid authentication credentials for the
+   * operation.
+   */
+  UNAUTHENTICATED: 'UNAUTHENTICATED',
+  /**
+   * The service is currently unavailable. This is most likely a transient
+   * condition, which can be corrected by retrying with a backoff. Note that it
+   * is not always safe to retry non-idempotent operations.
+   */
+  UNAVAILABLE: 'UNAVAILABLE',
+  /**
+   * Operation is not implemented or not supported/enabled in this service.
+   */
+  UNIMPLEMENTED: 'UNIMPLEMENTED',
+  /**
+   * Unknown error. For example, this error may be returned when a status
+   * received from another address space belongs to an error space that is not
+   * known in this address space. Also errors raised by APIs that do not return
+   * enough error information may be converted to this error.
+   */
+  UNKNOWN: 'UNKNOWN',
+};
 
 /**
  * A rectangle overlay.
@@ -11281,7 +11391,7 @@ google.maps.event.trigger = function(instance, eventName, eventArgs) {};
  * @param {!Object} instance
  * @param {string} eventName
  * @param {!Function} handler
- * @param {(boolean|undefined)=} capture
+ * @param {boolean=} capture
  * @return {!google.maps.MapsEventListener}
  * @deprecated <code>google.maps.event.addDomListener()</code> is deprecated,
  *     use the standard <a
@@ -11298,7 +11408,7 @@ google.maps.event.addDomListener = function(
  * @param {!Object} instance
  * @param {string} eventName
  * @param {!Function} handler
- * @param {(boolean|undefined)=} capture
+ * @param {boolean=} capture
  * @return {!google.maps.MapsEventListener}
  * @deprecated <code>google.maps.event.addDomListenerOnce()</code> is
  *     deprecated, use the standard <a
@@ -11554,7 +11664,7 @@ google.maps.addressValidation.AddressValidation.fetchAddressValidation =
 /**
  * Converts the AddressValidation class to a JSON object with the same
  * properties.
- * @return {Object}
+ * @return {!Object}
  */
 google.maps.addressValidation.AddressValidation.prototype.toJSON =
     function() {};
@@ -17779,8 +17889,7 @@ google.maps.places.AccessibilityOptions.prototype
     .hasWheelchairAccessibleSeating;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
+ * Address component for the Place&#39;s location.
  *
  * Access by calling `const {AddressComponent} = await
  * google.maps.importLibrary("places")`. See
@@ -17810,8 +17919,7 @@ google.maps.places.AddressComponent.prototype.shortText;
 google.maps.places.AddressComponent.prototype.types;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
+ * Information about a data provider for a Place.
  *
  * Access by calling `const {Attribution} = await
  * google.maps.importLibrary("places")`. See
@@ -17821,12 +17929,13 @@ google.maps.places.AddressComponent.prototype.types;
 google.maps.places.Attribution = function() {};
 
 /**
- * Attribution text to be displayed for this Place result.
+ * Name of the Place&#39;s data provider.
  * @type {string|null}
  */
 google.maps.places.Attribution.prototype.provider;
 
 /**
+ * URI to the Place&#39;s data provider.
  * @type {string|null}
  */
 google.maps.places.Attribution.prototype.providerURI;
@@ -17856,8 +17965,7 @@ google.maps.places.AttributionColor = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
+ * Information about the author of user-generated content.
  *
  * Access by calling `const {AuthorAttribution} = await
  * google.maps.importLibrary("places")`. See
@@ -18913,7 +19021,7 @@ google.maps.places.FuelType = {
 };
 
 /**
- * @typedef {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|!google.maps.Circle|!google.maps.CircleLiteral|string}
+ * @typedef {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|!google.maps.Circle|!google.maps.CircleLiteral|string}
  */
 google.maps.places.LocationBias;
 
@@ -18960,8 +19068,7 @@ google.maps.places.Money.prototype.units;
 google.maps.places.Money.prototype.toString = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
+ * Information about business hours of a Place.
  *
  * Access by calling `const {OpeningHours} = await
  * google.maps.importLibrary("places")`. See
@@ -18988,8 +19095,7 @@ google.maps.places.OpeningHours.prototype.periods;
 google.maps.places.OpeningHours.prototype.weekdayDescriptions;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
+ * A period where the Place is open.
  *
  * Access by calling `const {OpeningHoursPeriod} = await
  * google.maps.importLibrary("places")`. See
@@ -19011,8 +19117,7 @@ google.maps.places.OpeningHoursPeriod.prototype.close;
 google.maps.places.OpeningHoursPeriod.prototype.open;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
+ * A point where the Place changes its opening status.
  *
  * Access by calling `const {OpeningHoursPoint} = await
  * google.maps.importLibrary("places")`. See
@@ -19149,8 +19254,7 @@ google.maps.places.PaymentOptions.prototype.acceptsDebitCards;
 google.maps.places.PaymentOptions.prototype.acceptsNFC;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
+ * Information about a photo of a Place.
  *
  * Access by calling `const {Photo} = await
  * google.maps.importLibrary("places")`. See
@@ -19241,7 +19345,7 @@ google.maps.places.Place.prototype.adrFormatAddress;
 google.maps.places.Place.prototype.allowsDogs;
 
 /**
- * Attribution text to be displayed for this Place result.
+ * Data providers that must be shown for the Place.
  * @type {!Array<!google.maps.places.Attribution>|undefined}
  */
 google.maps.places.Place.prototype.attributions;
@@ -19693,7 +19797,7 @@ google.maps.places.Place.prototype.getNextOpeningTime = function(date) {};
 google.maps.places.Place.prototype.isOpen = function(date) {};
 
 /**
- * @return {Object} a JSON object with all the requested Place properties.
+ * @return {!Object} a JSON object with all the requested Place properties.
  */
 google.maps.places.Place.prototype.toJSON = function() {};
 
@@ -21849,8 +21953,8 @@ google.maps.places.PlacesServiceStatus = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
+ * Plus code for the Place. See <a
+ * href="https://plus.codes/">https://plus.codes/</a> for more information.
  *
  * Access by calling `const {PlusCode} = await
  * google.maps.importLibrary("places")`. See
@@ -22057,9 +22161,7 @@ google.maps.places.PredictionTerm.prototype.offset;
 google.maps.places.PredictionTerm.prototype.value;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * Price level enum for Place objects.
+ * Price level for a Place.
  *
  * Access by calling `const {PriceLevel} = await
  * google.maps.importLibrary("places")`. See
@@ -22203,8 +22305,7 @@ google.maps.places.RankBy = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
+ * Information about a review of a Place.
  *
  * Access by calling `const {Review} = await
  * google.maps.importLibrary("places")`. See
