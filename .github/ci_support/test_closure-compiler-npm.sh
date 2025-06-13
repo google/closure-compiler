@@ -42,7 +42,7 @@ function main() {
   # The NPM repo is divided into multiple Yarn workspaces: one for each
   # variant of the compiler, including the Graal native builds. We only
   # need to test the java build.
-  yarn workspace google-closure-compiler run test --color --java-only
+  FORCE_COLOR=1 yarn workspace google-closure-compiler run test --java-only
 }
 
 main "$@"
