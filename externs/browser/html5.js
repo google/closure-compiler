@@ -3364,26 +3364,43 @@ BroadcastChannel.prototype.onmessageerror;
 BroadcastChannel.prototype.name;
 
 /**
- * StaticRange class.
  * @constructor
- * @see https://developer.mozilla.org/en-US/docs/Web/API/StaticRange
  */
-function StaticRange() {}
+function AbstractRange() {}
 
 /** @type {boolean} */
-StaticRange.prototype.collapsed;
+AbstractRange.prototype.collapsed;
 
 /** @type {Node} */
-StaticRange.prototype.endContainer;
+AbstractRange .prototype.endContainer;
 
 /** @type {number} */
-StaticRange.prototype.endOffset;
+AbstractRange.prototype.endOffset;
 
 /** @type {Node} */
-StaticRange.prototype.startContainer;
+AbstractRange.prototype.startContainer;
 
 /** @type {number} */
-StaticRange.prototype.startOffset;
+AbstractRange.prototype.startOffset;
+
+/**
+ * @typedef {{
+ *   endContainer: Node,
+ *   endOffset: number,
+ *   startContainer: Node,
+ *   startOffset: number,
+ * }}
+ */
+var StaticRangeInit;
+
+/**
+ * StaticRange class.
+ * @constructor
+ * @extends {AbstractRange}
+ * @param {StaticRangeInit} init
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/StaticRange
+ */
+function StaticRange(init) {}
 
 /**
  * HTML5 DataTransfer class.

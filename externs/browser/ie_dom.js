@@ -403,6 +403,24 @@ Window.prototype.external;
 Window.prototype.msCrypto;
 
 /**
+ * @constructor
+ * @deprecated
+ */
+function External() {}
+
+/**
+ * @deprecated
+ * @return {undefined}
+*/
+External.prototype.AddSearchProvider = function() {};
+
+/**
+ * @deprecated
+ * @return {undefined}
+*/
+External.prototype.IsSearchProviderInstalled = function() {};
+
+/**
  * @type {boolean}
  * @implicitCast
  * @see http://msdn.microsoft.com/en-us/library/ie/ms533072(v=vs.85).aspx

@@ -28,6 +28,7 @@
 
 /**
  * @constructor
+ * @extends {AbstractRange}
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level-2-Range-Interface
  */
 function Range() {}
@@ -83,36 +84,6 @@ Range.prototype.END_TO_END;
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-Range-compareHow
  */
 Range.prototype.END_TO_START;
-
-/**
- * @type {Node}
- * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level-2-Range-attr-startParent
- */
-Range.prototype.startContainer;
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level-2-Range-attr-startOffset
- */
-Range.prototype.startOffset;
-
-/**
- * @type {Node}
- * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level-2-Range-attr-endParent
- */
-Range.prototype.endContainer;
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level-2-Range-attr-endOffset
- */
-Range.prototype.endOffset;
-
-/**
- * @type {boolean}
- * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level-2-Range-attr-collapsed
- */
-Range.prototype.collapsed;
 
 /**
  * @type {Node}

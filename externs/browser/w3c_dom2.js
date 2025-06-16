@@ -3170,3 +3170,88 @@ AttributionSourceParams.prototype.attributionReportTo;
  * @see https://github.com/WICG/conversion-measurement-api/tree/main#registering-attribution-sources-for-windowopen-navigations
  */
 AttributionSourceParams.prototype.attributionExpiry;
+
+/**
+ * @constructor
+ * @deprecated
+ * @extends {HTMLElement}
+ */
+function HTMLMarqueeElement() {}
+
+/**
+ * @type {string}
+ * @deprecated
+ */
+HTMLMarqueeElement.prototype.behavior;
+
+/**
+ * @type {string}
+ * @deprecated
+ */
+HTMLMarqueeElement.prototype.bgColor;
+
+/**
+ * @type {string}
+ * @deprecated
+ */
+HTMLMarqueeElement.prototype.direction;
+
+/**
+ * @type {string}
+ * @deprecated
+ */
+HTMLMarqueeElement.prototype.height;
+
+/**
+ * @type {number}
+ * @deprecated
+ */
+HTMLMarqueeElement.prototype.hspace;
+
+/**
+ * @type {number}
+ * @deprecated
+ */
+HTMLMarqueeElement.prototype.loop;
+
+/**
+ * @type {number}
+ * @deprecated
+ */
+HTMLMarqueeElement.prototype.scrollAmount;
+
+/**
+ * @type {number}
+ * @deprecated
+ */
+HTMLMarqueeElement.prototype.scrollDelay;
+
+/**
+ * @type {boolean}
+ * @deprecated
+ */
+HTMLMarqueeElement.prototype.trueSpeed;
+
+/**
+ * @type {number}
+ * @deprecated
+ */
+HTMLMarqueeElement.prototype.vspace;
+
+/**
+ * @type {string}
+ * @deprecated
+ */
+HTMLMarqueeElement.prototype.width;
+
+/**
+ * @return {undefined}
+ * @deprecated
+ */
+HTMLMarqueeElement.prototype.start = function() {};
+
+/**
+ * @return {undefined}
+ * @deprecated
+ */
+HTMLMarqueeElement.prototype.stop = function() {};

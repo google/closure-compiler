@@ -936,6 +936,28 @@ CSSTransformComponent.prototype.toMatrix = function() {};
 CSSTransformComponent.prototype.toString = function() {};
 
 /**
+ * @constructor
+ * @extends {CSSTransformComponent}
+ * @param {!CSSNumericValue|number} angle_or_x
+ * @param {!CSSNumericValue|number=} y
+ * @param {!CSSNumericValue|number=} z
+ * @param {!CSSNumericValue=} angle
+ */
+function CSSRotate(angle_or_x, y, z, angle) {}
+
+/** @type {!CSSNumericValue} */
+CSSRotate.prototype.angle;
+
+/** @type {!CSSNumericValue|number} */
+CSSRotate.prototype.x;
+
+/** @type {!CSSNumericValue|number} */
+CSSRotate.prototype.y;
+
+/** @type {!CSSNumericValue|number} */
+CSSRotate.prototype.z;
+
+/**
  * @typedef {{
  *   is2D: (boolean|undefined)
  * }}

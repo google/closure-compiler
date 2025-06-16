@@ -370,6 +370,50 @@ MouseEvent.prototype.button;
 /** @type {EventTarget} */
 MouseEvent.prototype.relatedTarget;
 
+/**
+ * @constructor
+ * @deprecated
+ * @extends {UIEvent}
+ */
+function TextEvent() {}
+
+/**
+ * @type {string}
+ * @deprecated
+ */
+TextEvent.prototype.data;
+
+/**
+ * @param {string} type
+ * @param {boolean=} bubbles
+ * @param {boolean=} cancelable
+ * @param {?Window=} view
+ * @param {string=} data
+ * @return {undefined}
+ * @deprecated
+ */
+TextEvent.prototype.initTextEvent = function(type, bubbles, cancelable, view, data) {};
+
+/**
+ * @record
+ * @extends {EventInit}
+ */
+function TrackEventInit() {}
+
+/** @type {!TextTrack|undefined} */
+TrackEventInit.prototype.track;
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @param {string} type
+ * @param {TrackEventInit=} opt_eventInitDict
+ * @see https://dom.spec.whatwg.org/#interface-trackevent
+ */
+function TrackEvent(type, opt_eventInitDict) {}
+
+/** @type {!TextTrack|undefined} */
+TrackEvent.prototype.track;
 
 /**
  * @constructor
