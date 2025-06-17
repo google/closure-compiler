@@ -39,6 +39,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   List<Node> noSideEffectCalls;
 
   boolean regExpHaveSideEffects = true;
+  boolean enableArtificialPurityDebugError = false;
 
   private static final String TEST_EXTERNS =
       CompilerTypeTestCase.DEFAULT_EXTERNS
@@ -71,7 +72,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
           externObj.sef1 = function(){};
           /**@nosideeffects*/externObj.nsef1 = function(){};
           externObj.nsef2 = /**@nosideeffects*/function(){};
-          externObj.partialFn;
+          externObj.partialFn = function(){};
           externObj.partialSharedFn;
           var externObj2;
           externObj2.partialSharedFn = /**@nosideeffects*/function(){};
@@ -168,6 +169,18 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   public void tearDown() throws Exception {
     super.tearDown();
     regExpHaveSideEffects = true;
+    enableArtificialPurityDebugError = false;
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    if (enableArtificialPurityDebugError) {
+      options.setWarningLevel(
+          DiagnosticGroup.forType(PureFunctionIdentifier.UNUSED_ARTIFICIAL_PURE_ANNOTATION),
+          CheckLevel.ERROR);
+    }
+    return options;
   }
 
   /**
@@ -592,18 +605,141 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoSideEffectsJsDocOnVariable() {
+    assertPureCallsMarked(
+        """
+        /** @nosideeffects */
+        function b() { throw 0; }
+        b();
+        """,
+        ImmutableList.of("b"));
+  }
+
+  @Test
+  public void testNoSideEffectsJsDocOnMethod() {
+    assertPureCallsMarked(
+        """
+        class Foo {
+          /** @nosideeffects */ b() { throw 0; }
+        }
+        x.b();
+        """,
+        ImmutableList.of("x.b"));
+  }
+
+  @Test
+  public void testNoSideEffectsJsDoc_notPropagatedIntoNestedFunctions() {
+    assertPureCallsMarked(
+        """
+        const obj = {};
+        /** @nosideeffects */
+        function pureOuter() {
+          obj.impureInner = function() {
+            throw 1;
+          }
+          /** @nosideeffects */
+          obj.pureInner = function() {
+            throw 1;
+          }
+          throw 0;
+        }
+        pureOuter();
+        obj.impureInner();
+        obj.pureInner();
+        """,
+        ImmutableList.of("pureOuter", "obj.pureInner"));
+  }
+
+  @Test
+  public void testNoSideEffectsJsDoc_astWithinFunctionBodyStillMarkedWithSideEffects() {
+    assertPureCallsMarked(
+        """
+        /** @nosideeffects */
+        function pure() {
+          // this is marked as a side-effectful call, but because of the earlier `@nosideeffects`
+          // annotation, the call to `pure` is still marked as side-effect free.
+          externSef1();
+          externNsef1();
+          throw 0;
+        }
+        pure();
+        """,
+        ImmutableList.of("pure", "externNsef1"));
+  }
+
+  @Test
+  public void testAmbiguousExternAndSourceWithNoSideEffectsJsDoc() {
+    test(
+        externs("const a = {}; a.m = function() {};"),
+        srcs("class C { /** @nosideeffects */ m() {}} foo.m();"));
+
+    assertThat(noSideEffectCalls).isEmpty();
+  }
+
+  @Test
+  public void testMultipleMethodDefinitionsOnlyOneWithNoSideEffectsJsDoc_otherIsPure() {
+    assertPureCallsMarked(
+        """
+        class Foo {
+          /** @nosideeffects */ b() { throw 0; }
+        }
+        class Bar {
+          b() {}
+        }
+        x.b();
+        """,
+        ImmutableList.of("x.b"));
+  }
+
+  @Test
+  public void testMultipleMethodDefinitionsOnlyOneWithNoSideEffectsJsDoc_otherHasSideEffects() {
+    assertNoPureCalls(
+        """
+        class Foo {
+          /** @nosideeffects */ b() { throw 0; }
+        }
+        class Bar {
+          b() { throw 0; }
+        }
+        x.b();
+        """);
+  }
+
+  @Test
   public void testMultipleFunctionDefinitionsOnlyOneWithNoSideEffectsJsDoc() {
     String source =
         """
-        let b = undefined;
-        if (true) {
-          b = /** @nosideeffects */(function(){throw 0;});
-        } else {
+        let b = /** @nosideeffects */(function(){ throw 0; });
+        if (cond) {
           b = () => {}
         }
         b()
         """;
-    assertPureCallsMarked(source, ImmutableList.of("b"));
+    test(externs(""), srcs(source));
+    assertThat(noSideEffectCalls).hasSize(1);
+  }
+
+  @Test
+  public void testMultipleFunctionDefinitionsOnlyOneWithNoSideEffectsJsDoc_errorForDebugging() {
+    this.enableArtificialPurityDebugError = true;
+    test(
+        srcs(
+            """
+            class Foo {
+              /** @nosideeffects */ b() { throw 0; }
+            }
+            class Bar {
+              b() { throw 0; }
+            }
+            x.b();
+            """),
+        error(PureFunctionIdentifier.UNUSED_ARTIFICIAL_PURE_ANNOTATION)
+            .withMessageContaining(
+                """
+                All definitions:
+                  testcode:2:24
+                  testcode:5:2\
+                """));
   }
 
   @Test

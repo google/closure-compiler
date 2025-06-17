@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.stream.Collectors.joining;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ArrayListMultimap;
@@ -110,6 +111,17 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
   private final Multimap<Node, AmbiguatedFunctionSummary> summariesForAllNamesOfFunctionByNode =
       ArrayListMultimap.create();
 
+  /**
+   * Set of FUNCTION nodes which are artificially marked as pure, via a `@nosideeffects` JSDoc tag
+   * in source code, which triggers the compiler to ignore any actual side effects.
+   *
+   * <p>We store this here instead of in the {@link AmbiguatedFunctionSummary} because 1) this is
+   * only for debugging, and we don't want to accidentally depend on it for side effect analysis and
+   * 2) we expect the set of functions with artificial purity annotations to be small and not scale
+   * linearly with the size of the application.
+   */
+  private final LinkedHashSet<Node> artificiallyPureLiteralsForDebugging = new LinkedHashSet<>();
+
   // List of all function call sites. Storing them here during the function analysis traversal
   // prevents us from doing a second traversal to annotate them with side-effects. We can just
   // iterate the list.
@@ -146,6 +158,14 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
    */
   private static final Node IMPLICIT_PURE_FN = IR.function(IR.name(""), IR.paramList(), IR.block());
 
+  // Enable this error if you are debugging why a `@nosideeffects` annotation seems to be ignored.
+  static final DiagnosticType UNUSED_ARTIFICIAL_PURE_ANNOTATION =
+      DiagnosticType.disabled(
+          "JSC_UNUSED_ARTIFICIAL_PURE_ANNOTATION",
+          "Artificial @nosideeffects annotation cannot be enforced: found ambiguous definitions of"
+              + " {0}.\n"
+              + "All definitions:\n  {1}");
+
   private final boolean assumeGettersArePure;
 
   private boolean hasProcessed = false;
@@ -170,7 +190,40 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
     propagateSideEffects();
 
+    validateArtificialPurity();
+
     markPureFunctionCalls();
+  }
+
+  /**
+   * Check whether any function literals marked as artificially pure still have an overall
+   * AmbiguatedFunctionSummary with some side-effects, for debugging purposes.
+   *
+   * <p>This can happen when there are multiple definitions of the same function name, and one is
+   * marked as artificially pure but another is side-effect-full.
+   */
+  private void validateArtificialPurity() {
+    for (Node function : this.artificiallyPureLiteralsForDebugging) {
+      for (AmbiguatedFunctionSummary summary : summariesForAllNamesOfFunctionByNode.get(function)) {
+        if (summary.hasNoFlagsSet()) {
+          // no flags set == the function is successfully treated as pure.
+          continue;
+        }
+        String allDefinitions =
+            summariesForAllNamesOfFunctionByNode.entries().stream()
+                .filter(entry -> entry.getValue().equals(summary))
+                .map(entry -> formatSourceLocation(entry.getKey()))
+                .sorted()
+                .collect(joining("\n  "));
+        compiler.report(
+            JSError.make(
+                function, UNUSED_ARTIFICIAL_PURE_ANNOTATION, summary.name, allDefinitions));
+      }
+    }
+  }
+
+  private static String formatSourceLocation(Node node) {
+    return String.format("%s:%s:%s", node.getSourceFileName(), node.getLineno(), node.getCharno());
   }
 
   /**
@@ -464,6 +517,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         for (Node rvalue : callables) {
           if (rvalue.isFunction()) {
             summariesForAllNamesOfFunctionByNode.put(rvalue, summaryForName);
+          } else if (NodeUtil.isUndefined(rvalue)) {
           } else {
             String rvalueName = nameForReference(rvalue);
             AmbiguatedFunctionSummary rvalueSummary =
@@ -628,16 +682,36 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
     // Preloaded with an entry to represent the global scope.
     private final ArrayDeque<FunctionStackEntry> functionScopeStack =
-        new ArrayDeque<>(ImmutableList.of(new FunctionStackEntry(null)));
+        new ArrayDeque<>(ImmutableList.of(new FunctionStackEntry(null, false)));
 
+    /**
+     * A single function literal definition and associated side-effect-related information.
+     *
+     * <p>We define separate objects for function literal to simplify handling of nested function
+     * literal definitions - we push a new entry onto the stack when entering a new function
+     * literal, and pop the entry when leaving the function literal.
+     */
     static final class FunctionStackEntry {
       final Node root;
       final LinkedHashSet<Var> skiplistedVars = new LinkedHashSet<>();
       final LinkedHashSet<Var> taintedVars = new LinkedHashSet<>();
+      // Whether this function was marked as artificially pure, i.e. had a `@nosideeffects`
+      // annotation. This tells the compiler to ignore side effects from within the function body
+      // when deciding whether the given function as a whole is pure. Note that within the function
+      // body, we still record side effects on individual variables accesses; so e.g. given
+      //   /** @nosideeffects */
+      //   function foo() { console.log(1); }
+      //   foo();
+      // `foo()` will be marked as pure, but `console.log` will still be marked as impure.
+      // Also note that this doesn't extend to nested function definitions: a nested function does
+      // not inherit artificial purity from its enclosing function, which is why we need to track
+      // this on the function stack.
+      final boolean isArtificiallyPure;
       int catchDepth = 0; // The number of try-catch blocks around the current node.
 
-      FunctionStackEntry(Node root) {
+      FunctionStackEntry(Node root, boolean isArtificiallyPure) {
         this.root = root;
+        this.isArtificiallyPure = isArtificiallyPure;
       }
     }
 
@@ -658,29 +732,20 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         allFunctionCalls.add(node);
       }
 
-      if (node.isFunction()) {
-        JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(node);
-        if (jsdoc != null && jsdoc.isNoSideEffects()) {
-          // Treat all names (both local aliases and exported names) as if they don't have side
-          // effects.
-          for (AmbiguatedFunctionSummary summary : summariesForAllNamesOfFunctionByNode.get(node)) {
-            summary.setIsArtificiallyPure(true);
-            summary.bitmask = 0; // no side effects
-          }
-        }
+      FunctionStackEntry enclosingFunction = this.functionScopeStack.getLast();
+      Node root = enclosingFunction.root;
+      if (root == null || enclosingFunction.isArtificiallyPure) {
+        // Within artificially pure function literal bodies, we do not ever need to call
+        // updateSideEffectsForNode because we intentionally ignore any side effects, and still
+        // consider the function as a whole to be pure.
+        // Note: this doesn't mean that individual invocations within the function body are always
+        // considered pure - those will still be marked in a later stage of PureFunctionIdentifier.
+        // We just don't propagate any impurity to the enclosing function literal.
+        return;
       }
 
-      Node root = this.functionScopeStack.getLast().root;
-      if (root != null) {
-        for (AmbiguatedFunctionSummary summary : summariesForAllNamesOfFunctionByNode.get(root)) {
-          if (summary.isArtificiallyPure()) {
-            // Ignore node side effects for summaries that have been marked as artificially pure.
-            // We can't skip traversing the nodes in case an artificially pure node contains other
-            // function definitions.
-            continue;
-          }
-          updateSideEffectsForNode(checkNotNull(summary), traversal, node);
-        }
+      for (AmbiguatedFunctionSummary summary : summariesForAllNamesOfFunctionByNode.get(root)) {
+        updateSideEffectsForNode(checkNotNull(summary), traversal, node);
       }
     }
 
@@ -906,8 +971,10 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
       Node function = t.getScopeRoot();
       checkState(function.isFunction(), function);
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(function);
+      boolean isArtificiallyPure = jsdoc != null && jsdoc.isNoSideEffects();
 
-      this.functionScopeStack.addLast(new FunctionStackEntry(function));
+      this.functionScopeStack.addLast(new FunctionStackEntry(function, isArtificiallyPure));
       if (!summariesForAllNamesOfFunctionByNode.containsKey(function)) {
         // This function was not part of a definition which is why it was not created by
         // {@link populateDatastructuresForAnalysisTraversal}. For example, an anonymous
@@ -915,6 +982,10 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         AmbiguatedFunctionSummary summary =
             AmbiguatedFunctionSummary.createInGraph(reverseCallGraph, "<anonymous>");
         summariesForAllNamesOfFunctionByNode.put(function, summary);
+      }
+      if (isArtificiallyPure) {
+        // Record this for debugging later.
+        artificiallyPureLiteralsForDebugging.add(function);
       }
     }
 
@@ -1210,12 +1281,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
      * @return Returns true if the propagation changed the side effects on the caller.
      */
     boolean propagate(AmbiguatedFunctionSummary callee, AmbiguatedFunctionSummary caller) {
-      if (callee.isArtificiallyPure() || caller.isArtificiallyPure()) {
-        // Pure callees should never propagate their side effects to their callers
-        //   - This would already happen - this condition is just a shortcut.
-        // Pure callers should never receive side effects propagated from their callees
-        return false;
-      }
       int initialCallerFlags = caller.bitmask;
 
       if (callerIsAlias) {
@@ -1275,7 +1340,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     // The side effect flags for this set of functions.
     // TODO(nickreid): Replace this with a `Node.SideEffectFlags`.
     private int bitmask = 0;
-    private boolean isArtificiallyPure = false;
 
     /** Adds a new summary node to {@code graph}, storing the node and returning the summary. */
     static AmbiguatedFunctionSummary createInGraph(
@@ -1291,7 +1355,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
     @CanIgnoreReturnValue
     private AmbiguatedFunctionSummary setMask(int mask) {
-      checkState(!isArtificiallyPure, "Artificially pure summaries should not be modified");
       bitmask |= mask;
       return this;
     }
@@ -1344,14 +1407,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
     boolean hasNoFlagsSet() {
       return this.bitmask == 0;
-    }
-
-    void setIsArtificiallyPure(boolean isArtificiallyPure) {
-      this.isArtificiallyPure = isArtificiallyPure;
-    }
-
-    boolean isArtificiallyPure() {
-      return isArtificiallyPure;
     }
 
     @Override
