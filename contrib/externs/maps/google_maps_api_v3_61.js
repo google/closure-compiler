@@ -22600,7 +22600,7 @@ google.maps.places.SearchNearbyRankPreference = {
 google.maps.places.SearchNearbyRequest = function() {};
 
 /**
- * Excluded primary place type. See the <a
+ * Excluded primary place types. See the <a
  * href="https://developers.google.com/maps/documentation/places/web-service/place-types">full
  * list of types supported</a>. A place can only have a single primary type. Up
  * to 50 types may be specified. If you specify the same type in both
@@ -22611,7 +22611,7 @@ google.maps.places.SearchNearbyRequest = function() {};
 google.maps.places.SearchNearbyRequest.prototype.excludedPrimaryTypes;
 
 /**
- * Excluded place type. See the <a
+ * Excluded place types. See the <a
  * href="https://developers.google.com/maps/documentation/places/web-service/place-types">full
  * list of types supported</a>. A place can have many different place types. Up
  * to 50 types may be specified. If you specify the same type in both
@@ -22635,7 +22635,7 @@ google.maps.places.SearchNearbyRequest.prototype.excludedTypes;
 google.maps.places.SearchNearbyRequest.prototype.fields;
 
 /**
- * Included primary place type. See the <a
+ * Included primary place types. See the <a
  * href="https://developers.google.com/maps/documentation/places/web-service/place-types">full
  * list of types supported</a>. A place can only have a single primary type. Up
  * to 50 types may be specified. If you specify the same type in both
@@ -22646,7 +22646,7 @@ google.maps.places.SearchNearbyRequest.prototype.fields;
 google.maps.places.SearchNearbyRequest.prototype.includedPrimaryTypes;
 
 /**
- * Included place type. See the <a
+ * Included place types. See the <a
  * href="https://developers.google.com/maps/documentation/places/web-service/place-types">full
  * list of types supported</a>. A place can have many different place types. Up
  * to 50 types may be specified. If you specify the same type in both
@@ -22673,15 +22673,17 @@ google.maps.places.SearchNearbyRequest.prototype.language;
 google.maps.places.SearchNearbyRequest.prototype.locationRestriction;
 
 /**
- * Maximum number of results to return. It must be between 1 and 20,
- * inclusively.
+ * Maximum number of results to return. For acceptable values and default, see
+ * <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#searchnearbyrequest">Places
+ * API reference</a>.
  * @type {number|undefined}
  */
 google.maps.places.SearchNearbyRequest.prototype.maxResultCount;
 
 /**
  * How results will be ranked in the response.
- * @default <code>SearchNearbyRankPreference.DISTANCE</code>
+ * @default <code>SearchNearbyRankPreference.POPULARITY</code>
  * @type {!google.maps.places.SearchNearbyRankPreference|undefined}
  */
 google.maps.places.SearchNearbyRequest.prototype.rankPreference;
