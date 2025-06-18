@@ -170,7 +170,7 @@ public class TestExternsBuilder {
           "",
           "/**",
           " * @param {string|Array<string>=} locales",
-          " * @param {Object=} options",
+          " * @param {?Object=} options",
           " * @return {string}",
           " */",
           "BigInt.prototype.toLocaleString = function(locales, options) {};",
@@ -280,14 +280,14 @@ public class TestExternsBuilder {
           "/** @param {number} sliceArg */",
           "String.prototype.slice = function(sliceArg) {};",
           "/**",
-          " * @this {string|String}",
+          " * @this {string|!String}",
           " * @param {*=} opt_separator",
           " * @param {number=} opt_limit",
           " * @return {!Array<string>}",
           " */",
           "String.prototype.split = function(opt_separator, opt_limit) {};",
           "/**",
-          " * @this {string|String}",
+          " * @this {string|!String}",
           " * @param {string} search_string",
           " * @param {number=} opt_position",
           " * @return {boolean}",
@@ -295,7 +295,7 @@ public class TestExternsBuilder {
           " */",
           "String.prototype.startsWith = function(search_string, opt_position) {};",
           "/**",
-          " * @this {?String|string}",
+          " * @this {!String|string}",
           " * @param {?} regex",
           " * @param {?} str",
           " * @param {string=} opt_flags",
@@ -303,26 +303,26 @@ public class TestExternsBuilder {
           " */",
           "String.prototype.replace = function(regex, str, opt_flags) {};",
           "/**",
-          " * @this {String|string}",
+          " * @this {!String|string}",
           " * @param {number} index",
           " * @return {string}",
           " */",
           "String.prototype.charAt = function(index) {};",
           "/**",
-          " * @this {String|string}",
+          " * @this {!String|string}",
           " * @param {*} regexp",
-          " * @return {Array<string>}",
+          " * @return {!Array<string>}",
           " */",
           "String.prototype.match = function(regexp) {};",
           "/**",
-          " * @this {String|string}",
+          " * @this {!String|string}",
           " * @return {string}",
           " */",
           "String.prototype.toLowerCase = function() {};",
           "",
           "/**",
           " * @param {number} count",
-          " * @this {String|string}",
+          " * @this {!String|string}",
           " * @return {string}",
           " * @nosideeffects",
           " */",
@@ -379,6 +379,7 @@ public class TestExternsBuilder {
           " * @constructor",
           " * @param {*=} opt_value",
           " * @return {!Object}",
+          " * @template K,V",
           " */",
           "function Object(opt_value) {}",
           "",
@@ -430,7 +431,7 @@ public class TestExternsBuilder {
           "Object.setPrototypeOf = function(obj, proto) {};",
           "/**",
           " * @param {!Object} obj",
-          " * @return {Object}",
+          " * @return {?Object}",
           " * @nosideeffects",
           " */",
           "Object.getPrototypeOf = function(obj) {};",
@@ -503,7 +504,7 @@ public class TestExternsBuilder {
           "/**",
           " * @param {?function(this:S, T, number, !Array<T>): ?} callback",
           " * @param {S=} opt_thisobj",
-          " * @this {?IArrayLike<T>|string}",
+          " * @this {!IArrayLike<T>|string}",
           " * @template T,S",
           " * @return {undefined}",
           " */",
@@ -512,7 +513,7 @@ public class TestExternsBuilder {
           " * @param {?function(this:S, T, number, !Array<T>): ?} callback",
           " * @param {S=} opt_thisobj",
           " * @return {!Array<T>}",
-          " * @this {?IArrayLike<T>|string}",
+          " * @this {!IArrayLike<T>|string}",
           " * @template T,S",
           " */",
           "ReadonlyArray.prototype.filter;",
@@ -527,7 +528,7 @@ public class TestExternsBuilder {
           " * @param {?number=} end Zero-based index at which to end extraction.  slice",
           " *     extracts up to but not including end.",
           " * @return {!Array<T>}",
-          " * @this {IArrayLike<T>|string}",
+          " * @this {!IArrayLike<T>|string}",
           " * @template T",
           " * @nosideeffects",
           " */",
@@ -565,7 +566,7 @@ public class TestExternsBuilder {
           "Array.isArray = function(arr) {};",
           "",
           "/**",
-          " * @param {string|IArrayLike<T>|!Iterable<T>} arrayLike",
+          " * @param {string|!IArrayLike<T>|!Iterable<T>} arrayLike",
           " * @param {function(this:S, (string|T), number): R=} mapFn",
           " * @param {S=} thisObj",
           " * @return {!Array<R>}",
@@ -576,13 +577,13 @@ public class TestExternsBuilder {
           "/**",
           " * @param {...T} var_args",
           " * @return {number} The new length of the array.",
-          " * @this {IArrayLike<T>}",
+          " * @this {!IArrayLike<T>}",
           " * @template T",
           " * @modifies {this}",
           " */",
           "Array.prototype.push = function(var_args) {};",
           "/**",
-          " * @this {IArrayLike<T>}",
+          " * @this {!IArrayLike<T>}",
           " * @return {T}",
           " * @template T",
           " */",
@@ -591,7 +592,7 @@ public class TestExternsBuilder {
           " * @override",
           " * @param {?function(this:S, T, number, !Array<T>): ?} callback",
           " * @param {S=} opt_thisobj",
-          " * @this {?IArrayLike<T>|string}",
+          " * @this {!IArrayLike<T>|string}",
           " * @template T,S",
           " * @return {undefined}",
           " */",
@@ -601,7 +602,7 @@ public class TestExternsBuilder {
           " * @param {?function(this:S, T, number, !Array<T>): ?} callback",
           " * @param {S=} opt_thisobj",
           " * @return {!Array<T>}",
-          " * @this {?IArrayLike<T>|string}",
+          " * @this {!IArrayLike<T>|string}",
           " * @template T,S",
           " */",
           "Array.prototype.filter = function(callback, opt_thisobj) {};",
@@ -618,7 +619,7 @@ public class TestExternsBuilder {
           " * @param {?number=} end Zero-based index at which to end extraction.  slice",
           " *     extracts up to but not including end.",
           " * @return {!Array<T>}",
-          " * @this {IArrayLike<T>|string}",
+          " * @this {!IArrayLike<T>|string}",
           " * @template T",
           " * @nosideeffects",
           " */",
@@ -705,6 +706,12 @@ public class TestExternsBuilder {
           " */",
           "function alert(message) {}",
           "");
+
+  private static final String UNDEFINED_EXTERNS =
+      """
+      /** @type {undefined} */
+      var undefined;
+      """;
 
   private static final String PROMISE_EXTERNS =
       lines(
@@ -840,6 +847,14 @@ public class TestExternsBuilder {
           " */",
           "Promise.prototype.finally = function(callback) {};",
           "");
+
+  private static final String I_TEMPLATE_ARRAY_EXTERNS =
+      lines(
+          "/**",
+          " * @constructor",
+          " * @extends {Array<string>}",
+          " */",
+          "function ITemplateArray() {}");
 
   private static final String ASYNC_ITERABLE_EXTERNS =
       lines(
@@ -1024,6 +1039,8 @@ public class TestExternsBuilder {
   private boolean includeArrayExterns = false;
   private boolean includeMapExterns = false;
   private boolean includeArgumentsExterns = false;
+  private boolean includeUndefinedExterns = false;
+  private boolean includeITemplateArrayExterns = false;
   private boolean includeConsoleExterns = false;
   private boolean includeAlertExterns = false;
   private boolean includePromiseExterns = false;
@@ -1089,6 +1106,19 @@ public class TestExternsBuilder {
     includeArgumentsExterns = true;
     addArray(); // Arguments implements IArrayLike
     addIterable(); // Arguments implements Iterable
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public TestExternsBuilder addUndefined() {
+    includeUndefinedExterns = true;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public TestExternsBuilder addITemplateArray() {
+    includeITemplateArrayExterns = true;
+    addArray(); // ITemplateArray extends Array
     return this;
   }
 
@@ -1224,6 +1254,12 @@ public class TestExternsBuilder {
     }
     if (includeArgumentsExterns) {
       externSections.add(ARGUMENTS_EXTERNS);
+    }
+    if (includeUndefinedExterns) {
+      externSections.add(UNDEFINED_EXTERNS);
+    }
+    if (includeITemplateArrayExterns) {
+      externSections.add(I_TEMPLATE_ARRAY_EXTERNS);
     }
     if (includeConsoleExterns) {
       externSections.add(CONSOLE_EXTERNS);

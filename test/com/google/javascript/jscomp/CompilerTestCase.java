@@ -59,6 +59,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 
@@ -243,413 +244,28 @@ public abstract class CompilerTestCase {
    * A minimal set of externs, consisting of only those needed for the typechecker not to blow up.
    */
   protected static final String MINIMAL_EXTERNS =
-      """
-      /** @type {undefined} */
-      var undefined;
-      /**
-       * @constructor
-       * @param {*=} opt_value
-       * @return {!Object}
-       */
-      function Object(opt_value) {}
-      /**
-       * @constructor
-       * @param {...*} var_args
-       */
-      function Function(var_args) {}
-      /**
-       * @constructor
-       * @implements {Iterable<string>}
-       * @param {*=} arg
-       * @return {string}
-       */
-      function String(arg) {}
-      /**
-       * @record
-       * @template TYield
-       */
-      function IIterableResult() {};
-      /** @type {boolean} */
-      IIterableResult.prototype.done;
-      /** @type {TYield} */
-      IIterableResult.prototype.value;
-      /**
-       * @interface
-       * @template T, TReturn, TNext
-       */
-      function Iterable() {}
-      /**
-       * @interface
-       * @template T, TReturn, TNext
-       */
-      function Iterator() {}
-      /**
-       * @param {T=} value
-       * @return {!IIterableResult<T>}
-       */
-      Iterator.prototype.next;
-      /**
-       * @interface
-       * @extends {Iterator<T, ?, *>}
-       * @extends {Iterable<T, ?, *>}
-       * @template T, TReturn, TNext
-       */
-      function IteratorIterable() {}
-      /**
-       * @interface
-       * @template KEY1, VALUE1
-       */
-      function IObject() {};
-      /**
-       * @record
-       * @extends IObject<number, VALUE2>
-       * @template VALUE2
-       */
-      function IArrayLike() {};
-      /**
-       * @template T
-       * @record
-       * @extends {IArrayLike<T>}
-       * @extends {Iterable<T>}
-       */
-      function ReadonlyArray() {}
-      /**
-       * @template T
-       * @constructor
-       * @implements {ReadonlyArray<T>}
-       * @implements {IArrayLike<T>}
-       * @implements {Iterable<T>}
-       * @param {...*} var_args
-       * @return {!Array<?>}
-       */
-      function Array(var_args) {}\
-      """;
+      new TestExternsBuilder()
+          .addArray()
+          .addIterable()
+          .addObject()
+          .addUndefined()
+          .addFunction()
+          .addString()
+          .build();
 
   /** A default set of externs for testing. */
   protected static final String DEFAULT_EXTERNS =
-      MINIMAL_EXTERNS
-          + """
-          /**
-           * @type{number}
-           */
-          IArrayLike.prototype.length;
-          /** @type {?Object} */ Object.prototype.__proto__;
-          /** @return {string} */
-          Object.prototype.toString = function() {};
-          /**
-           * @param {*} propertyName
-           * @return {boolean}
-           */
-          Object.prototype.hasOwnProperty = function(propertyName) {};
-          /** @type {?Function} */ Object.prototype.constructor;
-          Object.defineProperties = function(obj, descriptors) {};
-          /** @type {!Function} */ Function.prototype.apply;
-          /** @type {!Function} */ Function.prototype.bind;
-          /** @type {!Function} */ Function.prototype.call;
-          /** @type {number} */
-          Function.prototype.length;
-          /** @type {string} */
-          Function.prototype.name;
-          /** @param {number} sliceArg */
-          String.prototype.slice = function(sliceArg) {};
-          /**
-           * @this {?String|string}
-           * @param {?} regex
-           * @param {?} str
-           * @param {string=} opt_flags
-           * @return {string}
-           */
-          String.prototype.replace = function(regex, str, opt_flags) {};
-          /** @type {number} */ String.prototype.length;
-          /**
-           * @constructor
-           * @param {*=} arg
-           * @return {number}
-           */
-          function Number(arg) {}
-          /**
-           * @constructor
-           * @param {*=} arg
-           * @return {boolean}
-           */
-          function Boolean(arg) {}
-          /**
-           * @override
-           * @type {number}
-           */
-          Array.prototype.length;
-          /**
-           * @param {*} arr
-           * @return {boolean}
-           */
-          Array.isArray = function(arr) {};
-          /** @type {number} */ ReadonlyArray.prototype.length;
-          /**
-           * @param {?function(this:S, T, number, !Array<T>): ?} callback
-           * @param {S=} opt_thisobj
-           * @this {?IArrayLike<T>|string}
-           * @template T,S
-           * @return {undefined}
-           */
-          ReadonlyArray.prototype.forEach = function(callback, opt_thisobj) {};
-          /**
-           * @param {?function(this:S, T, number, !Array<T>): ?} callback
-           * @param {S=} opt_thisobj
-           * @return {!Array<T>}
-           * @this {?IArrayLike<T>|string}
-           * @template T,S
-           */
-          ReadonlyArray.prototype.filter = function(callback, opt_thisobj) {};
-          /**
-           * @param {...T} var_args
-           * @return {number} The new length of the array.
-           * @this {IArrayLike<T>}
-           * @template T
-           * @modifies {this}
-           */
-          Array.prototype.push = function(var_args) {};
-          /**
-           * @this {IArrayLike<T>}
-           * @return {T}
-           * @template T
-           */
-          Array.prototype.shift = function() {};
-          /**
-           * @override
-           * @param {?function(this:S, T, number, !Array<T>): ?} callback
-           * @param {S=} opt_thisobj
-           * @this {?IArrayLike<T>|string}
-           * @template T,S
-           * @return {undefined}
-           */
-          Array.prototype.forEach = function(callback, opt_thisobj) {};
-          /**
-           * @override
-           * @param {?function(this:S, T, number, !Array<T>): ?} callback
-           * @param {S=} opt_thisobj
-           * @return {!Array<T>}
-           * @this {?IArrayLike<T>|string}
-           * @template T,S
-           */
-          Array.prototype.filter = function(callback, opt_thisobj) {};
-          /**
-           * @constructor
-           * @template T
-           * @implements {IArrayLike<T>}
-           */
-          function Arguments() {}
-          /** @type {number} */
-          Arguments.prototype.length;
-          /**
-           * @constructor
-           * @param {*=} opt_pattern
-           * @param {*=} opt_flags
-           * @return {!RegExp}
-           * @nosideeffects
-           */
-          function RegExp(opt_pattern, opt_flags) {}
-          /**
-           * @param {*} str The string to search.
-           * @return {?Array<string>}
-           */
-          RegExp.prototype.exec = function(str) {};
-          /**
-           * @constructor
-           */
-          function ObjectPropertyDescriptor() {}
-          /** @type {*} */
-          ObjectPropertyDescriptor.prototype.value;
-          /**
-           * @param {!Object} obj
-           * @param {string} prop
-           * @return {!ObjectPropertyDescriptor|undefined}
-           * @nosideeffects
-           */
-          Object.getOwnPropertyDescriptor = function(obj, prop) {};
-          /**
-           * @param {!Object} obj
-           * @param {string} prop
-           * @param {!Object} descriptor
-           * @return {!Object}
-           */
-          Object.defineProperty = function(obj, prop, descriptor) {};
-          /**
-           * @param {?Object} proto
-           * @param {?Object=} opt_properties
-           * @return {!Object}
-           */
-          Object.create = function(proto, opt_properties) {};
-          /**
-           * @param {!Object} obj
-           * @param {?} proto
-           * @return {!Object}
-           */
-          Object.setPrototypeOf = function(obj, proto) {};
-          /** @type {?} */ var unknown; // For producing unknowns in tests.
-          /**
-           * @constructor
-           * @param {*=} opt_description
-           * @return {symbol}
-           */
-          function Symbol(opt_description) {}
-          /** @const {!symbol} */ Symbol.iterator;
-          /**
-           * @return {!Iterator<T, ?, *>}
-           * @suppress {externsValidation}
-           */
-          Iterable.prototype[Symbol.iterator] = function() {};
-          /** @type {number} */ var NaN;
-          /**
-           * @interface
-           * @extends {IteratorIterable<T, ?, *>}
-           * @template T, TReturn, TNext
-           */
-          function Generator() {}
-          /**
-           * @param {?=} opt_value
-           * @return {!IIterableResult<T>}
-           * @override
-           */
-          Generator.prototype.next = function(opt_value) {};
-          /**
-           * @typedef {{then: ?}}
-           */
-          var Thenable;
-          /**
-           * @interface
-           * @template TYPE
-           */
-          function IThenable() {}
-          /**
-           * @param {?(function(TYPE):VALUE)=} opt_onFulfilled
-           * @param {?(function(*): *)=} opt_onRejected
-           * @return {RESULT}
-           * @template VALUE
-           * @template RESULT := type('IThenable',
-           *     cond(isUnknown(VALUE), unknown(),
-           *       mapunion(VALUE, (V) =>
-           *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
-           *           templateTypeOf(V, 0),
-           *           cond(sub(V, 'Thenable'),
-           *              unknown(),
-           *              V)))))
-           * =:
-           */
-          IThenable.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
-          /**
-           * @param {function(
-           *             function((TYPE|IThenable<TYPE>|Thenable|null)=),
-           *             function(*=))} resolver
-           * @constructor
-           * @implements {IThenable<TYPE>}
-           * @template TYPE
-           */
-          function Promise(resolver) {}
-          /**
-           * @param {VALUE=} opt_value
-           * @return {RESULT}
-           * @template VALUE
-           * @template RESULT := type('Promise',
-           *     cond(isUnknown(VALUE), unknown(),
-           *       mapunion(VALUE, (V) =>
-           *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
-           *           templateTypeOf(V, 0),
-           *           cond(sub(V, 'Thenable'),
-           *              unknown(),
-           *              V)))))
-           * =:
-           */
-          Promise.resolve = function(opt_value) {};
-          /**
-           * @param {*=} opt_error
-           * @return {!Promise<?>}
-           */
-          Promise.reject = function(opt_error) {};
-          /**
-           * @param {!Iterable<VALUE>} iterable
-           * @return {!Promise<!Array<RESULT>>}
-           * @template VALUE
-           * @template RESULT := mapunion(VALUE, (V) =>
-           *     cond(isUnknown(V),
-           *         unknown(),
-           *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
-           *             templateTypeOf(V, 0),
-           *             cond(sub(V, 'Thenable'), unknown(), V))))
-           * =:
-           */
-          Promise.all = function(iterable) {};
-          /**
-           * @param {!Iterable<VALUE>} iterable
-           * @return {!Promise<RESULT>}
-           * @template VALUE
-           * @template RESULT := mapunion(VALUE, (V) =>
-           *     cond(isUnknown(V),
-           *         unknown(),
-           *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
-           *             templateTypeOf(V, 0),
-           *             cond(sub(V, 'Thenable'), unknown(), V))))
-           * =:
-           */
-          Promise.race = function(iterable) {};
-          /**
-           * @param {?(function(this:void, TYPE):VALUE)=} opt_onFulfilled
-           * @param {?(function(this:void, *): *)=} opt_onRejected
-           * @return {RESULT}
-           * @template VALUE
-           * @template RESULT := type('Promise',
-           *     cond(isUnknown(VALUE), unknown(),
-           *       mapunion(VALUE, (V) =>
-           *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
-           *           templateTypeOf(V, 0),
-           *           cond(sub(V, 'Thenable'),
-           *              unknown(),
-           *              V)))))
-           * =:
-           * @override
-           */
-          Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
-          /**
-           * @param {function(*): RESULT} onRejected
-           * @return {!Promise<RESULT>}
-           * @template RESULT
-           */
-          Promise.prototype.catch = function(onRejected) {};
-          /**
-           * @constructor
-           * @extends {Array<string>}
-           */
-          function ITemplateArray() {}
-          /**
-           * @interface
-           * @extends {Iterable<K|V>}
-           * @template K, V
-           */
-          function ReadonlyMap() {}
-          /**
-           * @return {!IteratorIterable<K|V>}
-           */
-          ReadonlyMap.prototype.entries = function() {};
-          /**
-           * @constructor @struct
-           * @param {?Iterable<!Array<K|V>>|!Array<!Array<K|V>>=} opt_iterable
-           * @implements {ReadonlyMap<K, V>}
-           * @template K, V
-           */
-          function Map(opt_iterable) {}
-          /**
-           * @override
-           * @return {!IteratorIterable<K|V>}
-           */
-          Map.prototype.entries = function() {};
-          /**
-           * @param {string} progId
-           * @param {string=} opt_location
-           * @constructor
-           * @see http://msdn.microsoft.com/en-us/library/7sw4ddf8.aspx
-           */
-          function ActiveXObject(progId, opt_location) {}
-          """
-          + new TestExternsBuilder().addClosureExterns().build();
+      new TestExternsBuilder()
+          .addArray()
+          .addIterable()
+          .addObject()
+          .addUndefined()
+          .addFunction()
+          .addString()
+          .addPromise()
+          .addClosureExterns()
+          .addITemplateArray()
+          .build();
 
   /**
    * Constructs a test.
@@ -1712,8 +1328,15 @@ public abstract class CompilerTestCase {
       } else {
         assertWithMessage("symbol table errors").that(stErrors).isEmpty();
       }
+      LightweightMessageFormatter formatter = new LightweightMessageFormatter(compiler);
       if (expectedWarnings.isEmpty()) {
-        assertWithMessage("aggregate warnings").that(aggregateWarnings).isEmpty();
+        assertWithMessage(
+                "aggregate warnings: "
+                    + aggregateWarnings.stream()
+                        .map(formatter::formatWarning)
+                        .collect(Collectors.joining("\n")))
+            .that(aggregateWarnings)
+            .isEmpty();
       } else {
         assertWithMessage(
                 "There should be "

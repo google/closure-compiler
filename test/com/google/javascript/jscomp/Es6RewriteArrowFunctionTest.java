@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -94,15 +95,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
   @Test
   public void testPassingArrowToMethod_ExpressionBody() {
     testArrowRewriting(
-        externs(
-            MINIMAL_EXTERNS
-                + """
-                /**
-                 * @param {function(T):boolean} predicate
-                 * @return {!Array<T>}
-                 */
-                Array.prototype.filter = function(predicate) { };
-                """),
+        externs(new TestExternsBuilder().addArray().build()),
         srcs("var odds = [1,2,3,4].filter((n) => n%2 == 1);"),
         expected("var odds = [1,2,3,4].filter(function(n) { return n%2 == 1; });"));
   }

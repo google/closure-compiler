@@ -191,8 +191,8 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
         srcs(
             """
             class C {
-              constructor(unusedValue = () => {}, value = 3) {
-                this.value = value;
+              constructor(unusedValue = () => {}, usedValue = 3) {
+                this.value = usedValue;
               }
               getValue() {
                 return this.value;
@@ -204,8 +204,8 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
             """
             class C {
               constructor(                                 ) {
-                var value = 25;
-                this.value = value;
+                var usedValue = 25;
+                this.value = usedValue;
               }
               getValue() {
                 return this.value;
@@ -219,8 +219,8 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
         srcs(
             """
             class C {
-              constructor(unusedValue = () => {}, value = 3) {
-                this.value = value;
+              constructor(unusedValue = () => {}, usedValue = 3) {
+                this.value = usedValue;
               }
               getValue() {
                 return this.value;
@@ -234,8 +234,8 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
         expected(
             """
             class C {
-              constructor(                        value = 3) {
-                this.value = value;
+              constructor(                        usedValue = 3) {
+                this.value = usedValue;
               }
               getValue() {
                 return this.value;
@@ -253,8 +253,8 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
         srcs(
             """
             class C {
-              constructor(unusedValue = () => {}, value = 3) {
-                this.value = value;
+              constructor(unusedValue = () => {}, usedValue = 3) {
+                this.value = usedValue;
               }
               getValue() {
                 return this.value;
@@ -269,8 +269,8 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
             class C {
             // default value removed, but no arguments removed or inlined
             // due to subclass.
-              constructor(unusedValue           , value = 3) {
-                this.value = value;
+              constructor(unusedValue           , usedValue = 3) {
+                this.value = usedValue;
               }
               getValue() {
                 return this.value;
@@ -289,16 +289,16 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
         srcs(
             """
             class C {
-              constructor(unusedValue = () => {}, value = 3) {
-                this.value = value;
+              constructor(unusedValue = () => {}, usedValue = 3) {
+                this.value = usedValue;
               }
               getValue() {
                 return this.value;
               }
             }
             class SubC extends C {
-              constructor(value) {
-                super(0, value); // calls super constructor
+              constructor(usedValue) {
+                super(0, usedValue); // calls super constructor
               }
             }
             console.log(new SubC(25).getValue());
@@ -308,8 +308,8 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
             """
             class C {
             // First parameter removed because it was never used.
-              constructor(                        value = 3) {
-                this.value = value;
+              constructor(                        usedValue = 3) {
+                this.value = usedValue;
               }
               getValue() {
                 return this.value;
@@ -318,10 +318,10 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
             class SubC extends C {
             // Parameter was inlined with the only value ever passed to it.
               constructor(     ) {
-                var value$jscomp$1 = 25;
+                var usedValue = 25;
             // first parameter to super() was removed to match its removal in the
             // definition above.
-                super(   value$jscomp$1);
+                super(   usedValue);
               }
             }
             console.log(new SubC(  ).getValue());
@@ -334,16 +334,16 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
         srcs(
             """
             const C = class { // class expression instead of declaration
-              constructor(unusedValue = () => {}, value = 3) {
-                this.value = value;
+              constructor(unusedValue = () => {}, usedValue = 3) {
+                this.value = usedValue;
               }
               getValue() {
                 return this.value;
               }
             }
             const SubC = class extends C { // class expression instead of declaration
-              constructor(value) {
-                super(0, value); // calls super constructor
+              constructor(usedValue) {
+                super(0, usedValue); // calls super constructor
               }
             }
             console.log(new SubC(25).getValue());
@@ -353,8 +353,8 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
             """
             const C = class {
             // First parameter removed because it was never used.
-              constructor(                        value = 3) {
-                this.value = value;
+              constructor(                        usedValue = 3) {
+                this.value = usedValue;
               }
               getValue() {
                 return this.value;
@@ -363,10 +363,10 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
             const SubC = class extends C {
             // Parameter was inlined with the only value ever passed to it.
               constructor(     ) {
-                var value$jscomp$1 = 25;
+                var usedValue = 25;
             // first parameter to super() was removed to match its removal in the
             // definition above.
-                super(   value$jscomp$1);
+                super(   usedValue);
               }
             }
             console.log(new SubC(  ).getValue());

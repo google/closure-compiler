@@ -449,7 +449,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             configurable: true,
             enumerable: true,
             /** @this {Foo} */ get: function() { return this.bar_;},
-            /** @this {Foo} */ set: function(value) { this.bar_ = value; }
+            /** @this {Foo} */ set: function(value$jscomp$1) { this.bar_ = value$jscomp$1; }
           }
         });
         """;
@@ -467,7 +467,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             configurable: true,
             enumerable: true,
             /** @this {Foo} */ get: function() { return this.b;},
-            /** @this {Foo} */ set: function(value) { this.b = value; }
+            /** @this {Foo} */ set: function(value$jscomp$1) { this.b = value$jscomp$1; }
           }
         });
         """;
@@ -490,7 +490,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             configurable: true,
             enumerable: true,
             /** @this {Foo} */ get: function() { return this.bar_;},
-            /** @this {Foo} */ set: function(value) { this.bar_ = value; }
+            /** @this {Foo} */ set: function(value$jscomp$1) { this.bar_ = value$jscomp$1; }
           }
         });
         """;
@@ -508,7 +508,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             configurable: true,
             enumerable: true,
             /** @this {Foo} */ get: function() { return this.b;},
-            /** @this {Foo} */ set: function(value) { this.b = value; }
+            /** @this {Foo} */ set: function(value$jscomp$1) { this.b = value$jscomp$1; }
           }
         });
         """;
@@ -531,7 +531,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             configurable: true,
             enumerable: true,
             /** @this {Foo} */ get: function() { return this.bar_;},
-            /** @this {Foo} */ set: function(value) { this.bar_ = value; }
+            /** @this {Foo} */ set: function(value$jscomp$1) { this.bar_ = value$jscomp$1; }
           }
         });
         """;
@@ -549,7 +549,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             configurable: true,
             enumerable: true,
             /** @this {Foo} */ get: function() { return this.b;},
-            /** @this {Foo} */ set: function(value) { this.b = value; }
+            /** @this {Foo} */ set: function(value$jscomp$1) { this.b = value$jscomp$1; }
           }
         });
         """;
@@ -2409,9 +2409,9 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
     ignoreWarnings(DiagnosticGroups.MISSING_PROPERTIES);
     test(
         """
-        /** @param {!Object<string>} obj */
-        function f(obj) {
-          return obj.x;
+        /** @param {!Object<string>} obj$jscomp$6 */
+        function f(obj$jscomp$6) {
+          return obj$jscomp$6.x;
         }
         class OtherClass {
           constructor() {
@@ -2420,11 +2420,11 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         }
         """,
         """
-        /** @param {!Object<string>} obj */
-        function f(obj) {
+        /** @param {!Object<string>} obj$jscomp$6 */
+        function f(obj$jscomp$6) {
         // Can't ambiguate this 'x' to 'a' since we don't track different Object types uniquely
         // and OtherClass is also assignable to !Object<string>
-          return obj.x;
+          return obj$jscomp$6.x;
         }
         class OtherClass {
           constructor() {

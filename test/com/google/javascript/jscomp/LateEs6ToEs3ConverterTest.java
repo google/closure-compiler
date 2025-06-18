@@ -208,7 +208,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     testSame("var obj = {get latest () {return undefined;}}");
-    testSame("var obj = {set latest (str) {}}");
+    testSame("var obj = {set latest (strParam) {}}");
     test(
         "var obj = {'a' : 2, get l () {return null;}, ['f' + 1] : 1}",
         """
@@ -217,9 +217,9 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
           ($jscomp$compprop0['f' + 1] = 1, $jscomp$compprop0));
         """);
     test(
-        "var obj = {['a' + 'b'] : 2, set l (str) {}}",
+        "var obj = {['a' + 'b'] : 2, set l (strParam) {}}",
         """
-        var $jscomp$compprop0 = {set l (str) {}};
+        var $jscomp$compprop0 = {set l (strParam) {}};
         var obj = ($jscomp$compprop0['a' + 'b'] = 2, $jscomp$compprop0);
         """);
   }

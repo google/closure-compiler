@@ -33,26 +33,18 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     super(
         MINIMAL_EXTERNS
             + """
-/** @type {function(this: string, ...*): string} */ String.prototype.replaceAll;
-/** @type {function(this: string, ...*): string} */ String.prototype.replace;
-/** @type {function(this: string, ...*): string} */ String.prototype.substring;
-/** @type {function(this: string, ...*): string} */ String.prototype.substr;
-/** @type {function(this: string, ...*): string} */ String.prototype.slice;
-/** @type {function(this: string, ...*): string} */ String.prototype.charAt;
-/** @type {function(this: Array, ...*): !Array} */ Array.prototype.slice;
-/** @type {function(this: Array, ...*): !Array<?>} */ Array.prototype.concat;
-/** @type {function(this: Array, ...*): !Array<?>} */ function returnArrayType() {}
-/** @type {function(this: Array, ...*): !Array<?>|string} */ function returnUnionType(){}
-/** @constructor */ function Foo(){}
-/** @type {function(this: Foo, ...*): !Foo} */ Foo.prototype.concat
-var obj = new Foo();
-/**
- * @param {...T} var_args
- * @return {!Array<T>}
- * @template T
- */
-Array.of = function(var_args) {};
-""");
+            /** @type {function(this: Array, ...*): !Array<?>} */ function returnArrayType() {}
+            /** @type {function(this: Array, ...*): !Array<?>|string} */ function returnUnionType(){}
+            /** @constructor */ function Foo(){}
+            /** @type {function(this: Foo, ...*): !Foo} */ Foo.prototype.concat
+            var obj = new Foo();
+            /**
+             * @param {...T} var_args
+             * @return {!Array<T>}
+             * @template T
+             */
+            Array.of = function(var_args) {};
+            """);
   }
 
   @Override
@@ -772,13 +764,13 @@ Array.of = function(var_args) {};
     foldSame(
         """
         /** @constructor */ function A() {};
-        A.prototype.substring = function(begin, end) {};
+        A.prototype.substring = function(begin$jscomp$1, end$jscomp$1) {};
         function f(/** !A */ a) { a.substring(0, 1); }
         """);
     foldSame(
         """
         /** @constructor */ function A() {};
-        A.prototype.slice = function(begin, end) {};
+        A.prototype.slice = function(begin$jscomp$1, end$jscomp$1) {};
         function f(/** !A */ a) { a.slice(0, 1); }
         """);
 

@@ -43,17 +43,16 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class PolymerPassTest extends CompilerTestCase {
   private static final String EXTERNS_PREFIX =
-      MINIMAL_EXTERNS
-          + """
-          /** @constructor */
-          var Element = function() {};
-          /** @constructor @extends {Element} */
-          var HTMLElement = function() {};
-          /** @constructor @extends {HTMLElement} */
-          var HTMLInputElement = function() {};
-          /** @constructor @extends {HTMLElement} */
-          var PolymerElement = function() {};
-          """;
+      """
+      /** @constructor */
+      var Element = function() {};
+      /** @constructor @extends {Element} */
+      var HTMLElement = function() {};
+      /** @constructor @extends {HTMLElement} */
+      var HTMLInputElement = function() {};
+      /** @constructor @extends {HTMLElement} */
+      var PolymerElement = function() {};
+      """;
 
   private static final String EXTERNS_SUFFIX =
       """
