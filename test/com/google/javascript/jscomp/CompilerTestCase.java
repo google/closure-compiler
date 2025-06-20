@@ -24,6 +24,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.joining;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
@@ -59,7 +60,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 
@@ -1334,7 +1334,7 @@ public abstract class CompilerTestCase {
                 "aggregate warnings: "
                     + aggregateWarnings.stream()
                         .map(formatter::formatWarning)
-                        .collect(Collectors.joining("\n")))
+                        .collect(joining("\n")))
             .that(aggregateWarnings)
             .isEmpty();
       } else {
