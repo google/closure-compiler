@@ -938,6 +938,9 @@ md.$mdDateLocaleProvider.prototype.weekNumberFormatter = function(weekNum) {};
 /** @type {function(Date): string} */
 md.$mdDateLocaleProvider.prototype.longDateFormatter = function(date) {};
 
+/** @type {function(string): boolean} */
+md.$mdDateLocaleProvider.prototype.isDateComplete = function(dateString) {};
+
 
 /******************************************************************************
  * $mdGestureProvider
