@@ -15,8 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Predicates.not;
-import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -65,11 +63,7 @@ public class PartialCompilationTest {
             /* no-op */
           }
         });
-    CompilerOptions options = new CompilerOptions();
-    options.setAssumeForwardDeclaredForMissingTypes(true);
-    options.setStrictModeInput(true);
-    options.setPreserveDetailedSourceInfo(true);
-    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilerOptions options = createCompilerOptions();
     compiler.init(
         ImmutableList.of(),
         Collections.singletonList(SourceFile.fromCode("input.js", Joiner.on('\n').join(code))),
@@ -77,11 +71,22 @@ public class PartialCompilationTest {
     compiler.parse();
     compiler.check();
 
-    ImmutableList<JSError> sourcesErrors =
-        compiler.getErrors().stream()
-            .filter(not(DiagnosticGroups.MISSING_SOURCES_WARNINGS::matches))
-            .collect(toImmutableList());
-    assertThat(sourcesErrors).isEmpty();
+    assertWithMessage("Expected no errors").that(compiler.getErrors()).isEmpty();
+    assertWithMessage("Expected no warnings").that(compiler.getWarnings()).isEmpty();
+  }
+
+  private static CompilerOptions createCompilerOptions() {
+    CompilerOptions options = new CompilerOptions();
+    options.setAssumeForwardDeclaredForMissingTypes(true);
+    options.setClosurePass(true);
+    options.setStrictModeInput(true);
+    options.setPreserveDetailedSourceInfo(true);
+    options.setWarningLevel(DiagnosticGroups.UNDEFINED_VARIABLES, CheckLevel.OFF);
+    options.setWarningLevel(DiagnosticGroups.MISSING_SOURCES_WARNINGS, CheckLevel.OFF);
+    options.setWarningLevel(
+        DiagnosticGroup.forType(FunctionTypeBuilder.RESOLVED_TAG_EMPTY), CheckLevel.OFF);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    return options;
   }
 
   @Test
