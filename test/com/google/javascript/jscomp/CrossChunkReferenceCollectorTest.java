@@ -255,7 +255,6 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
     assertThat(statements).hasSize(1);
     TopLevelStatement varStatement = statements.get(0);
     Reference declaredNameReference = varStatement.getDeclaredNameReference();
-    assertThat(declaredNameReference).isNotNull();
     assertThat(declaredNameReference).isEqualTo(xRefs.references.get(0));
     assertThat(varStatement.getNonDeclarationReferences()).isEmpty();
     Node valueNode = varStatement.getDeclaredValueNode();
@@ -273,7 +272,6 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
 
     TopLevelStatement functionDeclaration = statements.get(0);
     Reference declaredNameReference = functionDeclaration.getDeclaredNameReference();
-    assertThat(declaredNameReference).isNotNull();
     assertThat(declaredNameReference).isEqualTo(xRefs.references.get(0));
     assertThat(functionDeclaration.getNonDeclarationReferences()).isEmpty();
   }
@@ -288,7 +286,6 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
 
     TopLevelStatement assignmentStatement = statements.get(1);
     Reference declaredNameReference = assignmentStatement.getDeclaredNameReference();
-    assertThat(declaredNameReference).isNotNull();
     assertThat(declaredNameReference).isEqualTo(xRefs.references.get(1));
     assertThat(assignmentStatement.getNonDeclarationReferences()).isEmpty();
     Node valueNode = assignmentStatement.getDeclaredValueNode();
@@ -306,7 +303,6 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
 
     TopLevelStatement assignmentStatement = statements.get(1);
     Reference declaredNameReference = assignmentStatement.getDeclaredNameReference();
-    assertThat(declaredNameReference).isNotNull();
     assertThat(declaredNameReference).isEqualTo(xRefs.references.get(1));
     assertThat(assignmentStatement.getNonDeclarationReferences()).isEmpty();
     Node valueNode = assignmentStatement.getDeclaredValueNode();
@@ -326,7 +322,6 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
 
     TopLevelStatement inheritsStatement = statements.get(2);
     Reference declaredNameReference = inheritsStatement.getDeclaredNameReference();
-    assertThat(declaredNameReference).isNotNull();
     assertThat(declaredNameReference).isEqualTo(refsToB.references.get(1));
     assertThat(inheritsStatement.getNonDeclarationReferences())
         .containsExactly(refsToA.references.get(1));

@@ -1808,7 +1808,7 @@ public final class NodeUtilTest {
 
       // Literals
       assertThat(NodeUtil.getNumberValue(parseExpr("1"))).isEqualTo(1.0);
-      assertThat(NodeUtil.getNumberValue(parseExpr("1n"))).isEqualTo(null);
+      assertThat(NodeUtil.getNumberValue(parseExpr("1n"))).isNull();
       assertThat(NodeUtil.getNumberValue(parseExpr("-1"))).isEqualTo(-1.0);
       assertThat(NodeUtil.getNumberValue(parseExpr("+1"))).isEqualTo(1.0);
       assertThat(NodeUtil.getNumberValue(parseExpr("22"))).isEqualTo(22.0);
@@ -1864,7 +1864,7 @@ public final class NodeUtilTest {
 
       // Literals
       assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("1"))).isEqualTo(1.0);
-      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("1n"))).isEqualTo(null);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("1n"))).isNull();
       assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("-1"))).isEqualTo(-1.0);
       assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("+1"))).isEqualTo(1.0);
       assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("22"))).isEqualTo(22.0);

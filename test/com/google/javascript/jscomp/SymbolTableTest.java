@@ -1606,7 +1606,6 @@ public final class SymbolTableTest {
     assertThat(foo).isNotNull();
     assertThat(fooAlias).isNotNull();
     assertThat(bar).isNotNull();
-    assertThat(baz).isNotNull();
     assertThat(baz).isEqualTo(bazAlias);
 
     Symbol barScope = table.getSymbolForScope(table.getScope(bar));

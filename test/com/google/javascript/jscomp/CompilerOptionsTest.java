@@ -106,8 +106,7 @@ public final class CompilerOptionsTest {
   public void testMinimumBrowserFeatureSetYearRequiredFor_returnsUnspecifiedIfUnsupported() {
     // Newer features, in particular anything in ES_NEXT, may not be part of a browser featureset
     // year yet.
-    assertThat(BrowserFeaturesetYear.minimumRequiredFor(Feature.PUBLIC_CLASS_FIELDS))
-        .isEqualTo(null);
+    assertThat(BrowserFeaturesetYear.minimumRequiredFor(Feature.PUBLIC_CLASS_FIELDS)).isNull();
   }
 
   @Test

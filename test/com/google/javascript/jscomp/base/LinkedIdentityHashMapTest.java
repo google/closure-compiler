@@ -83,7 +83,7 @@ public final class LinkedIdentityHashMapTest {
     assertThat(map.get(KEY_0)).isEqualTo("world");
 
     map.put(KEY_0, null);
-    assertThat(map.get(KEY_0)).isEqualTo(null);
+    assertThat(map.get(KEY_0)).isNull();
   }
 
   @Test

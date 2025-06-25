@@ -78,7 +78,7 @@ public final class CharRangesTest {
 
     assertThat(isbs2).isEqualTo(isbs);
     assertThat(isbs).isNotEqualTo(esbs);
-    assertThat(isbs).isNotEqualTo(null);
+    assertThat(isbs).isNotNull();
     assertThat(isbs).isNotEqualTo(new Object());
 
     assertThat(isbs2.hashCode()).isEqualTo(isbs.hashCode());
