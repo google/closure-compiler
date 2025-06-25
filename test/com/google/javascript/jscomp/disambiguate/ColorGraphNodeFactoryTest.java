@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.disambiguate;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.colors.ColorId.fromAscii;
@@ -143,7 +144,7 @@ public final class ColorGraphNodeFactoryTest {
         sampleTypes.stream().map(factory::createNode).collect(toImmutableSet());
 
     // Then
-    assertThat(flatSamples.stream().map(ColorGraphNode::getIndex).collect(toImmutableSet()))
+    assertThat(flatSamples.stream().map(ColorGraphNode::getIndex).collect(toImmutableList()))
         .containsNoDuplicates();
   }
 
