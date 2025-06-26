@@ -16455,6 +16455,16 @@ google.maps.maps3d.Map3DElement.prototype.defaultUIDisabled;
 google.maps.maps3d.Map3DElement.prototype.heading;
 
 /**
+ * Adds a usage attribution ID to the initializer, which helps Google understand
+ * which libraries and samples are helpful to developers, such as usage of a
+ * marker clustering library. To opt out of sending the usage attribution ID, it
+ * is safe to delete this property. Only unique values will be sent. Changes to
+ * this value after instantiation may be ignored.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.internalUsageAttributionIds;
+
+/**
  * The maximum altitude above the ground which will be displayed on the map. A
  * valid value is between <code>0</code> and <code>63170000</code> meters (Earth
  * radius multiplied by 10).
@@ -16609,6 +16619,12 @@ google.maps.maps3d.Map3DElementOptions.prototype.defaultUIDisabled;
  * @type {number|null|undefined}
  */
 google.maps.maps3d.Map3DElementOptions.prototype.heading;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.internalUsageAttributionIds}.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.internalUsageAttributionIds;
 
 /**
  * See {@link google.maps.maps3d.Map3DElement.maxAltitude}.
