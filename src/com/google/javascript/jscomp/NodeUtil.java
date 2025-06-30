@@ -1243,14 +1243,12 @@ public final class NodeUtil {
    */
   private static boolean isPureIterable(Node node) {
     // TODO(b/127862986): The type of the iterable should also allow us to say it's pure.
-    switch (node.getToken()) {
-      case ARRAYLIT:
-      case STRINGLIT:
-      case TEMPLATELIT:
-        return true; // These iterables are known to be pure.
-      default:
-        return false; // Anything else, including a non-iterable (e.g. `null`), would be impure.
-    }
+    return switch (node.getToken()) {
+      // These iterables are known to be pure.
+      case ARRAYLIT, STRINGLIT, TEMPLATELIT -> true;
+      // Anything else, including a non-iterable (e.g. `null`), would be impure.
+      default -> false;
+    };
   }
 
   /**
@@ -1337,150 +1335,106 @@ public final class NodeUtil {
    * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
    */
   public static int precedence(Token type) {
-    switch (type) {
-      case COMMA:
-        return 0;
-      case ASSIGN_BITOR:
-      case ASSIGN_BITXOR:
-      case ASSIGN_BITAND:
-      case ASSIGN_LSH:
-      case ASSIGN_RSH:
-      case ASSIGN_URSH:
-      case ASSIGN_ADD:
-      case ASSIGN_SUB:
-      case ASSIGN_MUL:
-      case ASSIGN_EXPONENT:
-      case ASSIGN_DIV:
-      case ASSIGN_MOD:
-      case ASSIGN_OR:
-      case ASSIGN_AND:
-      case ASSIGN_COALESCE:
-      case ASSIGN:
-        return 1;
-      case YIELD:
-        return 2;
-      case HOOK:
-        return 3; // ?: operator
-      case OR:
-        return 4;
-      case AND:
-        return 5;
-      case COALESCE:
-        return 6;
-      case BITOR:
-        return 7;
-      case BITXOR:
-        return 8;
-      case BITAND:
-        return 9;
-      case EQ:
-      case NE:
-      case SHEQ:
-      case SHNE:
-        return 10;
-      case LT:
-      case GT:
-      case LE:
-      case GE:
-      case INSTANCEOF:
-      case IN:
-        return 11;
-      case LSH:
-      case RSH:
-      case URSH:
-        return 12;
-      case SUB:
-      case ADD:
-        return 13;
-      case MUL:
-      case MOD:
-      case DIV:
-        return 14;
-
-      case EXPONENT:
-        return 15;
-
-      case AWAIT:
-      case NEW:
-      case DELPROP:
-      case TYPEOF:
-      case VOID:
-      case NOT:
-      case BITNOT:
-      case POS:
-      case NEG:
-        return 16; // Unary operators
-
-      case INC:
-      case DEC:
-        return 17; // Update operators
-
-      case CALL:
-      case GETELEM:
-      case GETPROP:
-      case OPTCHAIN_CALL:
-      case OPTCHAIN_GETELEM:
-      case OPTCHAIN_GETPROP:
-      case NEW_TARGET:
-      case IMPORT_META:
-      // Data values
-      case ARRAYLIT:
-      case ARRAY_PATTERN:
-      case DEFAULT_VALUE:
-      case DESTRUCTURING_LHS:
-      case EMPTY: // TODO(johnlenz): remove this.
-      case FALSE:
-      case FUNCTION:
-      case CLASS:
-      case INTERFACE:
-      case NAME:
-      case NULL:
-      case NUMBER:
-      case BIGINT:
-      case OBJECTLIT:
-      case OBJECT_PATTERN:
-      case REGEXP:
-      case ITER_REST:
-      case OBJECT_REST:
-      case ITER_SPREAD:
-      case OBJECT_SPREAD:
-      case STRINGLIT:
-      case STRING_KEY:
-      case MEMBER_VARIABLE_DEF:
-      case INDEX_SIGNATURE:
-      case CALL_SIGNATURE:
-      case THIS:
-      case SUPER:
-      case TRUE:
-      case TAGGED_TEMPLATELIT:
-      case TEMPLATELIT:
-      case DYNAMIC_IMPORT:
-      // Tokens from the type declaration AST
-      case UNION_TYPE:
-        return 18;
-      case FUNCTION_TYPE:
-        return 19;
-      case ARRAY_TYPE:
-      case PARAMETERIZED_TYPE:
-        return 20;
-      case STRING_TYPE:
-      case NUMBER_TYPE:
-      case BOOLEAN_TYPE:
-      case ANY_TYPE:
-      case RECORD_TYPE:
-      case NULLABLE_TYPE:
-      case NAMED_TYPE:
-      case UNDEFINED_TYPE:
-      case VOID_TYPE:
-      case GENERIC_TYPE:
-        return 21;
-      case CAST:
-        return 22;
-
-      default:
+    return switch (type) {
+      case COMMA -> 0;
+      case ASSIGN_BITOR,
+          ASSIGN_BITXOR,
+          ASSIGN_BITAND,
+          ASSIGN_LSH,
+          ASSIGN_RSH,
+          ASSIGN_URSH,
+          ASSIGN_ADD,
+          ASSIGN_SUB,
+          ASSIGN_MUL,
+          ASSIGN_EXPONENT,
+          ASSIGN_DIV,
+          ASSIGN_MOD,
+          ASSIGN_OR,
+          ASSIGN_AND,
+          ASSIGN_COALESCE,
+          ASSIGN ->
+          1;
+      case YIELD -> 2;
+      // ?: operator
+      case HOOK -> 3;
+      case OR -> 4;
+      case AND -> 5;
+      case COALESCE -> 6;
+      case BITOR -> 7;
+      case BITXOR -> 8;
+      case BITAND -> 9;
+      case EQ, NE, SHEQ, SHNE -> 10;
+      case LT, GT, LE, GE, INSTANCEOF, IN -> 11;
+      case LSH, RSH, URSH -> 12;
+      case SUB, ADD -> 13;
+      case MUL, MOD, DIV -> 14;
+      case EXPONENT -> 15;
+      // Unary operators
+      case AWAIT, NEW, DELPROP, TYPEOF, VOID, NOT, BITNOT, POS, NEG -> 16;
+      // Update operators
+      case INC, DEC -> 17;
+      case CALL,
+          GETELEM,
+          GETPROP,
+          OPTCHAIN_CALL,
+          OPTCHAIN_GETELEM,
+          OPTCHAIN_GETPROP,
+          NEW_TARGET,
+          IMPORT_META,
+          // Data values
+          ARRAYLIT,
+          ARRAY_PATTERN,
+          DEFAULT_VALUE,
+          DESTRUCTURING_LHS,
+          EMPTY, // TODO(johnlenz): remove this.
+          FALSE,
+          FUNCTION,
+          CLASS,
+          INTERFACE,
+          NAME,
+          NULL,
+          NUMBER,
+          BIGINT,
+          OBJECTLIT,
+          OBJECT_PATTERN,
+          REGEXP,
+          ITER_REST,
+          OBJECT_REST,
+          ITER_SPREAD,
+          OBJECT_SPREAD,
+          STRINGLIT,
+          STRING_KEY,
+          MEMBER_VARIABLE_DEF,
+          INDEX_SIGNATURE,
+          CALL_SIGNATURE,
+          THIS,
+          SUPER,
+          TRUE,
+          TAGGED_TEMPLATELIT,
+          TEMPLATELIT,
+          DYNAMIC_IMPORT,
+          // Tokens from the type declaration AST
+          UNION_TYPE ->
+          18;
+      case FUNCTION_TYPE -> 19;
+      case ARRAY_TYPE, PARAMETERIZED_TYPE -> 20;
+      case STRING_TYPE,
+          NUMBER_TYPE,
+          BOOLEAN_TYPE,
+          ANY_TYPE,
+          RECORD_TYPE,
+          NULLABLE_TYPE,
+          NAMED_TYPE,
+          UNDEFINED_TYPE,
+          VOID_TYPE,
+          GENERIC_TYPE ->
+          21;
+      case CAST -> 22;
+      default -> {
         checkArgument(type != Token.TEMPLATELIT_STRING);
         throw new IllegalStateException("Unknown precedence for " + type);
-    }
+      }
+    };
   }
 
   public static boolean isUndefined(Node n) {

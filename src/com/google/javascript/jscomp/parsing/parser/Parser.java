@@ -1080,59 +1080,58 @@ public class Parser {
 
   /** This function reflects the ECMA standard. Most places use peekStatement instead. */
   private boolean peekStatementStandard() {
-    switch (peekType()) {
-      case OPEN_CURLY:
-      case VAR:
-      case CONST:
-      case SEMI_COLON:
-      case IF:
-      case DO:
-      case WHILE:
-      case FOR:
-      case CONTINUE:
-      case BREAK:
-      case RETURN:
-      case WITH:
-      case SWITCH:
-      case THROW:
-      case TRY:
-      case DEBUGGER:
-      case YIELD:
-      case IDENTIFIER:
-      case TYPE:
-      case DECLARE:
-      case MODULE:
-      case NAMESPACE:
-      case THIS:
-      case CLASS:
-      case SUPER:
-      case NUMBER:
-      case BIGINT:
-      case STRING:
-      case NO_SUBSTITUTION_TEMPLATE:
-      case TEMPLATE_HEAD:
-      case NULL:
-      case TRUE:
-      case SLASH: // regular expression literal
-      case SLASH_EQUAL: // regular expression literal
-      case FALSE:
-      case OPEN_SQUARE:
-      case OPEN_PAREN:
-      case NEW:
-      case DELETE:
-      case VOID:
-      case TYPEOF:
-      case PLUS_PLUS:
-      case MINUS_MINUS:
-      case PLUS:
-      case MINUS:
-      case TILDE:
-      case BANG:
-      case IMPORT:
-        return true;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case OPEN_CURLY,
+          VAR,
+          CONST,
+          SEMI_COLON,
+          IF,
+          DO,
+          WHILE,
+          FOR,
+          CONTINUE,
+          BREAK,
+          RETURN,
+          WITH,
+          SWITCH,
+          THROW,
+          TRY,
+          DEBUGGER,
+          YIELD,
+          IDENTIFIER,
+          TYPE,
+          DECLARE,
+          MODULE,
+          NAMESPACE,
+          THIS,
+          CLASS,
+          SUPER,
+          NUMBER,
+          BIGINT,
+          STRING,
+          NO_SUBSTITUTION_TEMPLATE,
+          TEMPLATE_HEAD,
+          NULL,
+          TRUE,
+          SLASH, // regular expression literal
+          SLASH_EQUAL, // regular expression literal
+          FALSE,
+          OPEN_SQUARE,
+          OPEN_PAREN,
+          NEW,
+          DELETE,
+          VOID,
+          TYPEOF,
+          PLUS_PLUS,
+          MINUS_MINUS,
+          PLUS,
+          MINUS,
+          TILDE,
+          BANG,
+          IMPORT ->
+          true;
+      default -> false;
+    };
   }
 
   // 12.1 Block
@@ -2218,46 +2217,44 @@ public class Parser {
   }
 
   private boolean peekExpression() {
-    switch (peekType()) {
-      case BANG:
-      case CLASS:
-      case DELETE:
-      case FALSE:
-      case FUNCTION:
-      case IDENTIFIER:
-      case TYPE:
-      case DECLARE:
-      case MODULE:
-      case NAMESPACE:
-      case MINUS:
-      case MINUS_MINUS:
-      case NEW:
-      case NULL:
-      case NUMBER:
-      case BIGINT:
-      case OPEN_CURLY:
-      case OPEN_PAREN:
-      case OPEN_SQUARE:
-      case PLUS:
-      case PLUS_PLUS:
-      case SLASH: // regular expression literal
-      case SLASH_EQUAL:
-      case STRING:
-      case NO_SUBSTITUTION_TEMPLATE:
-      case TEMPLATE_HEAD:
-      case SUPER:
-      case THIS:
-      case TILDE:
-      case TRUE:
-      case TYPEOF:
-      case VOID:
-      case YIELD:
-        return true;
-      case IMPORT:
-        return peekImportCall() || peekImportDot();
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case BANG,
+          CLASS,
+          DELETE,
+          FALSE,
+          FUNCTION,
+          IDENTIFIER,
+          TYPE,
+          DECLARE,
+          MODULE,
+          NAMESPACE,
+          MINUS,
+          MINUS_MINUS,
+          NEW,
+          NULL,
+          NUMBER,
+          BIGINT,
+          OPEN_CURLY,
+          OPEN_PAREN,
+          OPEN_SQUARE,
+          PLUS,
+          PLUS_PLUS,
+          SLASH, // regular expression literal
+          SLASH_EQUAL, // regular expression literal
+          STRING,
+          NO_SUBSTITUTION_TEMPLATE,
+          TEMPLATE_HEAD,
+          SUPER,
+          THIS,
+          TILDE,
+          TRUE,
+          TYPEOF,
+          VOID,
+          YIELD ->
+          true;
+      case IMPORT -> peekImportCall() || peekImportDot();
+      default -> false;
+    };
   }
 
   private ParseTree parse(Expression expressionIn) {

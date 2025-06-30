@@ -263,48 +263,45 @@ public class Scanner {
   }
 
   private static boolean isWhitespace(char ch) {
-    switch (ch) {
-      case '\u0009': // Tab
-      case '\u000B': // Vertical Tab
-      case '\u000C': // Form Feed
-      case '\u0020': // Space
-      case '\u00A0': // No-break space
-      case '\uFEFF': // Byte Order Mark
-      case '\n': // Line Feed
-      case '\r': // Carriage Return
-      case '\u2028': // Line Separator
-      case '\u2029': // Paragraph Separator
-      case '\u3000': // Ideographic Space
-        // TODO: there are other Unicode Category 'Zs' chars that should go here.
-        return true;
-      default:
-        return false;
-    }
+    return switch (ch) {
+      case '\u0009', // Tab
+          '\u000B', // Vertical Tab
+          '\u000C', // Form Feed
+          '\u0020', // Space
+          '\u00A0', // No-break space
+          '\uFEFF', // Byte Order Mark
+          '\n', // Line Feed
+          '\r', // Carriage Return
+          '\u2028', // Line Separator
+          '\u2029', // Paragraph Separator
+          '\u3000' -> // Ideographic Space
+          // TODO: there are other Unicode Category 'Zs' chars that should go here.
+          true;
+      default -> false;
+    };
   }
 
   // 7.3 Line Terminators
   private static boolean isLineTerminator(char ch) {
-    switch (ch) {
-      case '\n': // Line Feed
-      case '\r': // Carriage Return
-      case '\u2028': // Line Separator
-      case '\u2029': // Paragraph Separator
-        return true;
-      default:
-        return false;
-    }
+    return switch (ch) {
+      case '\n', // Line Feed
+          '\r', // Carriage Return
+          '\u2028', // Line Separator
+          '\u2029' -> // Paragraph Separator
+          true;
+      default -> false;
+    };
   }
 
   // Allow line separator and paragraph separator in string literals.
   // https://github.com/tc39/proposal-json-superset
   private static boolean isStringLineTerminator(char ch) {
-    switch (ch) {
-      case '\u2028': // Line Separator
-      case '\u2029': // Paragraph Separator
-        return false;
-      default:
-        return isLineTerminator(ch);
-    }
+    return switch (ch) {
+      case '\u2028', // Line Separator
+          '\u2029' -> // Paragraph Separator
+          false;
+      default -> isLineTerminator(ch);
+    };
   }
 
   // 7.4 Comments
