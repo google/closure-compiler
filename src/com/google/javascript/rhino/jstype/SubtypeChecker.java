@@ -192,8 +192,19 @@ final class SubtypeChecker {
       case FUNCTION -> this.isFunctionSubtype((FunctionType) subtype, supertype);
       case TEMPLATE -> this.isTemplateSubtype((TemplateType) subtype, supertype);
       case PROXY_OBJECT -> this.isProxyObjectSubtype((ProxyObjectType) subtype, supertype);
+      case WELL_KNOWN_SYMBOL -> this.isWellKnownSymbolSubtype((KnownSymbolType) subtype, supertype);
       default -> this.isSubtypeHelper(subtype, supertype);
     };
+  }
+
+  private boolean isWellKnownSymbolSubtype(KnownSymbolType subtype, JSType supertype) {
+    if (supertype.isKnownSymbolValueType()) {
+      return subtype.equals(supertype);
+    }
+    if (supertype.isSymbolValueType()) {
+      return true;
+    }
+    return isSubtypeHelper(subtype, supertype);
   }
 
   private boolean isSubtypeHelper(JSType subtype, JSType supertype) {

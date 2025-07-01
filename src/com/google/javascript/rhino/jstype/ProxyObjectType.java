@@ -261,6 +261,11 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
+  public final KnownSymbolType toMaybeKnownSymbolType() {
+    return referencedType.toMaybeKnownSymbolType();
+  }
+
+  @Override
   public final Tri testForEquality(JSType that) {
     return referencedType.testForEquality(that);
   }

@@ -119,6 +119,11 @@ public final class EnumElementType extends ObjectType {
   }
 
   @Override
+  public boolean matchesSymbolContext() {
+    return primitiveType.matchesSymbolContext();
+  }
+
+  @Override
   public boolean canBeCalled() {
     return primitiveType.canBeCalled();
   }

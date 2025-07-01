@@ -22,7 +22,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bob Jervis
+ *   Nick Santos
  *   Google Inc.
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -39,82 +39,42 @@
 
 package com.google.javascript.rhino.jstype;
 
-import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_OBJECT_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_TYPE;
-
-import com.google.javascript.jscomp.base.Tri;
-
 /**
- * Symbol type.
+ * A concrete instance of a JavaScript symbol.
  *
- * @author johnlenz@google.com (John Lenz)
+ * <p>This includes all "well-known" symbols in the spec - Symbol.iterator, Symbol.asyncIterator,
+ * etc.
+ *
+ * <p>This is analogous to the {@link EnumElementType} class - each KnownSymbolType is a subtype of
+ * the general symbol type, but unique KnownSymbolTypes are not subtypes of one another.
  */
-public class SymbolType extends ValueType {
-  SymbolType(JSTypeRegistry registry) {
+public final class KnownSymbolType extends SymbolType {
+  private static final JSTypeClass TYPE_CLASS = JSTypeClass.WELL_KNOWN_SYMBOL;
+
+  private final String name;
+
+  public KnownSymbolType(JSTypeRegistry registry, String name) {
     super(registry);
+    this.name = name;
   }
 
   @Override
   JSTypeClass getTypeClass() {
-    return JSTypeClass.SYMBOL;
-  }
-
-  @Override
-  public Tri testForEquality(JSType that) {
-    Tri result = super.testForEquality(that);
-    if (result != null) {
-      return result;
-    }
-
-    if (that.canCastTo(getNativeType(SYMBOL_TYPE))
-        || that.canCastTo(getNativeType(SYMBOL_OBJECT_TYPE))) {
-      return Tri.UNKNOWN;
-    }
-    return Tri.FALSE;
-  }
-
-  @Override
-  public boolean isSymbolValueType() {
-    return true;
-  }
-
-  @Override
-  public boolean matchesNumberContext() {
-    return false;
-  }
-
-  @Override
-  public boolean matchesStringContext() {
-    return false;
-  }
-
-  @Override
-  public boolean matchesSymbolContext() {
-    return true;
-  }
-
-  @Override
-  public boolean matchesObjectContext() {
-    return true;
+    return TYPE_CLASS;
   }
 
   @Override
   public String getDisplayName() {
-    return "symbol";
+    return name;
   }
 
   @Override
-  public JSType autoboxesTo() {
-    return getNativeType(SYMBOL_OBJECT_TYPE);
+  public boolean isKnownSymbolValueType() {
+    return true;
   }
 
   @Override
-  public BooleanLiteralSet getPossibleToBooleanOutcomes() {
-    return BooleanLiteralSet.TRUE;
-  }
-
-  @Override
-  public <T> T visit(Visitor<T> visitor) {
-    return visitor.caseSymbolType();
+  public KnownSymbolType toMaybeKnownSymbolType() {
+    return this;
   }
 }

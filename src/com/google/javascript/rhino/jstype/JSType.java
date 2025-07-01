@@ -236,6 +236,10 @@ public abstract class JSType {
     return false;
   }
 
+  public boolean isKnownSymbolValueType() {
+    return false;
+  }
+
   /**
    * Tests whether the type is a string (value or Object).
    * @return <code>this &lt;: (String, string)</code>
@@ -435,6 +439,10 @@ public abstract class JSType {
   @SuppressWarnings("AmbiguousMethodReference")
   public static @Nullable FunctionType toMaybeFunctionType(JSType type) {
     return type == null ? null : type.toMaybeFunctionType();
+  }
+
+  public @Nullable KnownSymbolType toMaybeKnownSymbolType() {
+    return null;
   }
 
   public final boolean isEnumElementType() {
