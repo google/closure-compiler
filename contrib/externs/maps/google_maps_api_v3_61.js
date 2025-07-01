@@ -5858,9 +5858,9 @@ google.maps.MapCanvasProjection = function() {};
 /**
  * Computes the geographical coordinates from pixel coordinates in the map&#39;s
  * container.
- * @param {?google.maps.Point} pixel
+ * @param {!google.maps.Point|null} pixel
  * @param {boolean=} noClampNoWrap
- * @return {?google.maps.LatLng}
+ * @return {!google.maps.LatLng|null}
  */
 google.maps.MapCanvasProjection.prototype.fromContainerPixelToLatLng = function(
     pixel, noClampNoWrap) {};
@@ -5868,9 +5868,9 @@ google.maps.MapCanvasProjection.prototype.fromContainerPixelToLatLng = function(
 /**
  * Computes the geographical coordinates from pixel coordinates in the div that
  * holds the draggable map.
- * @param {?google.maps.Point} pixel
+ * @param {!google.maps.Point|null} pixel
  * @param {boolean=} noClampNoWrap
- * @return {?google.maps.LatLng}
+ * @return {!google.maps.LatLng|null}
  */
 google.maps.MapCanvasProjection.prototype.fromDivPixelToLatLng = function(
     pixel, noClampNoWrap) {};
@@ -5879,7 +5879,7 @@ google.maps.MapCanvasProjection.prototype.fromDivPixelToLatLng = function(
  * Computes the pixel coordinates of the given geographical location in the
  * map&#39;s container element.
  * @param {!google.maps.LatLng|!google.maps.LatLngLiteral} latLng
- * @return {?google.maps.Point}
+ * @return {!google.maps.Point|null}
  */
 google.maps.MapCanvasProjection.prototype.fromLatLngToContainerPixel = function(
     latLng) {};
@@ -5887,8 +5887,8 @@ google.maps.MapCanvasProjection.prototype.fromLatLngToContainerPixel = function(
 /**
  * Computes the pixel coordinates of the given geographical location in the DOM
  * element that holds the draggable map.
- * @param {google.maps.LatLng|google.maps.LatLngLiteral|null} latLng
- * @return {?google.maps.Point}
+ * @param {!google.maps.LatLng|!google.maps.LatLngLiteral|null} latLng
+ * @return {!google.maps.Point|null}
  */
 google.maps.MapCanvasProjection.prototype.fromLatLngToDivPixel = function(
     latLng) {};
@@ -5897,7 +5897,7 @@ google.maps.MapCanvasProjection.prototype.fromLatLngToDivPixel = function(
  * The visible region of the map. Returns <code>null</code> if the map has no
  * size. Returns <code>null</code> if the OverlayView is on a
  * StreetViewPanorama.
- * @return {?google.maps.VisibleRegion}
+ * @return {!google.maps.VisibleRegion|null}
  */
 google.maps.MapCanvasProjection.prototype.getVisibleRegion = function() {};
 
@@ -6634,10 +6634,10 @@ google.maps.MapType.prototype.tileSize;
  * Returns a tile for the given tile coordinate (x, y) and zoom level. This tile
  * will be appended to the given ownerDocument. Not available for base map
  * types.
- * @param {google.maps.Point} tileCoord Tile coordinates.
+ * @param {!google.maps.Point} tileCoord Tile coordinates.
  * @param {number} zoom Tile zoom.
- * @param {Document} ownerDocument The document which owns this tile.
- * @return {Element|null} Resulting tile.
+ * @param {!Document} ownerDocument The document which owns this tile.
+ * @return {!Element|null} Resulting tile.
  */
 google.maps.MapType.prototype.getTile = function(
     tileCoord, zoom, ownerDocument) {};
@@ -6645,8 +6645,8 @@ google.maps.MapType.prototype.getTile = function(
 /**
  * Releases the given tile, performing any necessary cleanup. The provided tile
  * will have already been removed from the document. Optional.
- * @param {Element|null} tile Tile to release.
- * @return {undefined}
+ * @param {!Element|null} tile Tile to release.
+ * @return {void}
  */
 google.maps.MapType.prototype.releaseTile = function(tile) {};
 
@@ -7193,7 +7193,7 @@ google.maps.MapsServerError = function() {};
  * Access by calling `const {Marker} = await
  * google.maps.importLibrary("marker")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {google.maps.MarkerOptions=} opts Named optional arguments
+ * @param {!google.maps.MarkerOptions=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  * @deprecated As of February 21st, 2024, google.maps.Marker is deprecated.
@@ -7251,7 +7251,7 @@ google.maps.Marker.prototype.getLabel = function() {};
 
 /**
  * Get the map or panaroama the {@link google.maps.Marker} is rendered on.
- * @return {google.maps.Map|google.maps.StreetViewPanorama}
+ * @return {!google.maps.Map|!google.maps.StreetViewPanorama|null}
  */
 google.maps.Marker.prototype.getMap = function() {};
 
@@ -7346,7 +7346,7 @@ google.maps.Marker.prototype.setLabel = function(label) {};
 /**
  * Renders the {@link google.maps.Marker} on the specified map or panorama. If
  * map is set to <code>null</code>, the marker will be removed.
- * @param {google.maps.Map|google.maps.StreetViewPanorama} map
+ * @param {!google.maps.Map|!google.maps.StreetViewPanorama|null} map
  * @return {undefined}
  */
 google.maps.Marker.prototype.setMap = function(map) {};
@@ -7360,7 +7360,7 @@ google.maps.Marker.prototype.setOpacity = function(opacity) {};
 
 /**
  * Set the options for the {@link google.maps.Marker}.
- * @param {google.maps.MarkerOptions} options
+ * @param {!google.maps.MarkerOptions|null} options
  * @return {undefined}
  */
 google.maps.Marker.prototype.setOptions = function(options) {};
@@ -20260,14 +20260,15 @@ google.maps.places.PlaceContextualListConfigElement.prototype.mapHidden;
 google.maps.places.PlaceContextualListConfigElementOptions = function() {};
 
 /**
- * The layout. Default is {@link
- * google.maps.places.PlaceContextualListLayout.VERTICAL}.
+ * The layout.
+ * @default {@link google.maps.places.PlaceContextualListLayout.VERTICAL}
  * @type {!google.maps.places.PlaceContextualListLayout|null|undefined}
  */
 google.maps.places.PlaceContextualListConfigElementOptions.prototype.layout;
 
 /**
- * Whether the map is hidden. Default is to show the map (value false).
+ * True if the map should be hidden.
+ * @default <code>false</code>
  * @type {boolean|null|undefined}
  */
 google.maps.places.PlaceContextualListConfigElementOptions.prototype.mapHidden;
@@ -22854,6 +22855,11 @@ google.maps.visualization = {};
  * @param {google.maps.visualization.HeatmapLayerOptions=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
+ * @deprecated The Heatmap Layer functionality in the Maps JavaScript API is no
+ *     longer supported. This API was deprecated in May 2025 and will be made
+ *     unavailable in a later version of the Maps JavaScript API, releasing in
+ *     May 2026. For more info, see <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>).
  */
 google.maps.visualization.HeatmapLayer = function(opts) {};
 
