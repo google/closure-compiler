@@ -2753,6 +2753,46 @@ chrome.enterprise.reportingPrivate.TriggeredRuleInfo;
 chrome.enterprise.reportingPrivate.DetectorInfo;
 
 /**
+ * Returns the anti-virus signals.
+ * Since Chrome 105.
+ * @param {!chrome.enterprise.reportingPrivate.UserContext} userContext The
+ *     current user context.
+ * @param {(function(!chrome.enterprise.reportingPrivate.AntiVirusSignal): void)}
+ *     callback Called back with the response.
+ */
+chrome.enterprise.reportingPrivate.getAvInfo = function(
+    userContext, callback) {};
+
+/**
+ * User context.
+ * @typedef {?{
+ *   userId: string,
+ * }}
+ */
+chrome.enterprise.reportingPrivate.UserContext;
+
+/**
+ * Possible states for the Anti-virus product state.
+ * @enum {number}
+ */
+chrome.enterprise.reportingPrivate.AntiVirusProductState = {
+  ON: 0,
+  OFF: 1,
+  SNOOZED: 2,
+  EXPIRED: 3,
+};
+
+/**
+ * Type of the object returned by getAvInfo.
+ * @typedef {?{
+ *   displayName: string,
+ *   productId: string,
+ *   state: chrome.enterprise.reportingPrivate.AntiVirusProductState,
+ * }}
+ */
+chrome.enterprise.reportingPrivate.AntiVirusSignal;
+
+/**
  * @see https://developer.chrome.com/extensions/extension.html
  * @const
  */
