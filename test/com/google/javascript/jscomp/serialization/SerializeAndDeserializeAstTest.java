@@ -835,6 +835,28 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     assertThat(result.ast.getRuntimeLibraries()).containsExactly("base", "es6/string");
   }
 
+  @Test
+  public void wellKnownSymbolsBecomeSymbol() throws IOException {
+    enableTypeCheck();
+    Result result =
+        testAndReturnResult(
+            externs(
+                """
+                /** @type {symbol} */
+                Symbol.foobar;
+                """),
+            srcs("Symbol.foobar"),
+            expected("Symbol.foobar"));
+
+    Node newScript = result.sourceRoot.getFirstChild();
+    checkState(newScript.isScript(), newScript);
+
+    Node foobar = newScript.getFirstFirstChild();
+
+    assertNode(foobar).matchesQualifiedName("Symbol.foobar");
+    assertThat(foobar.getColor()).isSameInstanceAs(StandardColors.SYMBOL);
+  }
+
   @Override
   public void testSame(String code) {
     this.test(code, code);

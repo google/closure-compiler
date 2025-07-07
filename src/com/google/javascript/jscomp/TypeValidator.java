@@ -888,6 +888,8 @@ class TypeValidator implements Serializable {
           if (n.hasChildren()) {
             n.getFirstChild().setJSType(varType);
           }
+        } else if (parent.isExprResult()) {
+          n.setJSType(varType);
         } else {
           checkState(parent.isFunction() || parent.isClass());
           parent.setJSType(varType);

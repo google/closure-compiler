@@ -2601,6 +2601,44 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSymbolsDeclaredInExterns() {
+    testSame(
+        externs(
+            CompilerTypeTestCase.DEFAULT_EXTERNS,
+            """
+            /** @const {symbol} */
+            Symbol.fooBar;
+            /** @type {number} */
+            Symbol.nonSymbolStatic;
+            """),
+        srcs(""));
+
+    TypedVar fooBar = globalScope.getVar("Symbol.fooBar");
+    TypedVar nonSymbolStatic = globalScope.getVar("Symbol.nonSymbolStatic");
+
+    assertType(fooBar.getType()).toStringIsEqualTo("Symbol.fooBar");
+    assertType(nonSymbolStatic.getType()).isNumber();
+  }
+
+  @Test
+  public void testSymbolIterator_includedByDefault() {
+    testSame(externs(""), srcs(""));
+
+    TypedVar iterator = globalScope.getVar("Symbol.iterator");
+
+    assertType(iterator.getType()).toStringIsEqualTo("Symbol.iterator");
+    assertThat(iterator.getType().isKnownSymbolValueType()).isTrue();
+  }
+
+  @Test
+  public void testNewSymbolsInSrcCode() {
+    testSame(srcs("/** @type {symbol} */ const s = Symbol();"));
+
+    TypedVar iterator = globalScope.getVar("s");
+    assertThat(iterator.getType().toString()).isEqualTo("symbol");
+  }
+
+  @Test
   public void testPropertyDeclarationOnInstanceType() {
     testSame(
         """

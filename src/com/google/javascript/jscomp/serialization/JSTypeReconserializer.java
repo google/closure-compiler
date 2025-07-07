@@ -164,6 +164,8 @@ final class JSTypeReconserializer {
       forwardedType = type.toMaybeNamedType().getReferencedType();
     } else if (type.isEnumElementType()) {
       forwardedType = type.toMaybeEnumElementType().getPrimitiveType();
+    } else if (type.isKnownSymbolValueType()) {
+      forwardedType = registry.getNativeType(JSTypeNative.SYMBOL_TYPE);
     } else if (type.isTemplatizedType()) {
       forwardedType = type.toMaybeTemplatizedType().getReferencedType();
     } else if (type.isFunctionType()

@@ -41,6 +41,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.REGEXP_FUNCTION_TY
 import static com.google.javascript.rhino.jstype.JSTypeNative.REGEXP_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
@@ -51,6 +52,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.ListMultimap;
@@ -86,6 +88,7 @@ import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.KnownSymbolType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
@@ -574,7 +577,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     declareNativeFunctionType(s, OBJECT_FUNCTION_TYPE);
     declareNativeFunctionType(s, REGEXP_FUNCTION_TYPE);
     declareNativeFunctionType(s, STRING_OBJECT_FUNCTION_TYPE);
+    declareNativeFunctionType(s, SYMBOL_OBJECT_FUNCTION_TYPE);
     declareNativeValueType(s, "undefined", VOID_TYPE);
+    addWellKnownSymbols(s);
 
     gatherAllProvides(root);
 
@@ -584,6 +589,39 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     memoized.put(root, s);
 
     return s;
+  }
+
+  /**
+   * Symbols that are defined in the language spec.
+   *
+   * <p>NOTE: adding a symbol to this list is necessary only to make it available in Clutz output.
+   * By default, JSCompiler will note any Symbol.* references in externs whether or not they are in
+   * this list, but Clutz runs without including all externs so relies on this list to know what is
+   * / is not a well-known symbol.
+   */
+  private static final ImmutableSet<String> WELL_KNOWN_SYMBOLS =
+      ImmutableSet.of(
+          // go/keep-sorted start
+          "Symbol.asyncDispose",
+          "Symbol.asyncIterator",
+          "Symbol.dispose",
+          "Symbol.hasInstance",
+          "Symbol.isConcatSpreadable",
+          "Symbol.iterator",
+          "Symbol.match",
+          "Symbol.replace",
+          "Symbol.species",
+          "Symbol.toPrimitive",
+          "Symbol.toStringTag",
+          "Symbol.unscopables"
+          // go/keep-sorted end
+          );
+
+  private void addWellKnownSymbols(TypedScope scope) {
+    for (String symbol : WELL_KNOWN_SYMBOLS) {
+      JSType type = new KnownSymbolType(typeRegistry, symbol);
+      declareNativeType(scope, symbol, type);
+    }
   }
 
   private void declareNativeFunctionType(TypedScope scope, JSTypeNative tId) {
@@ -2325,7 +2363,26 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         @Nullable Node rValue,
         @Nullable Supplier<RValueInfo> declaredRValueTypeSupplier) {
       if (info != null && info.hasType()) {
-        return getDeclaredTypeInAnnotation(lValue, info);
+        JSType type = getDeclaredTypeInAnnotation(lValue, info);
+
+        if (type.isSymbol()
+            && lValue.isFromExterns()
+            && lValue.isGetProp()
+            && lValue.getFirstChild().matchesName("Symbol")
+            && currentScope.isGlobal()) {
+          // Create a unique subtype type for this name.
+          // Currently we only look specifically for extern properties on the global Symbol object
+          // itself - so
+          //   /** @const {symbol} */
+          //   Symbol.iterator;
+          // but not:
+          //   /** @const {symbol} */
+          //   const x = Symbol();
+          // We could consider relaxing that in the future & also defining known symbols from
+          // source code.
+          return new KnownSymbolType(typeRegistry, lValue.getQualifiedName());
+        }
+        return type;
       } else if (rValue != null
           && rValue.isFunction()
           && shouldUseFunctionLiteralType(
