@@ -54,6 +54,73 @@ import org.jspecify.annotations.Nullable;
  */
 public final class Property implements StaticTypedSlot, StaticTypedRef {
 
+  enum KeyKind {
+    STRING,
+    SYMBOL
+  }
+
+  /**
+   * A valid key for a property. May be either a string or a well-known symbol such as
+   * Symbol.iterator.
+   */
+  public sealed interface Key {
+    KeyKind kind();
+
+    @Nullable String string();
+
+    @Nullable KnownSymbolType symbol();
+
+    String humanReadableName();
+
+    default boolean matches(String stringKey) {
+      return this.kind().equals(KeyKind.STRING) && this.string().equals(stringKey);
+    }
+  }
+
+  /** A property string key, such as a in {a: 0}; */
+  public record StringKey(String string) implements Key {
+    public StringKey {
+      checkNotNull(string);
+    }
+
+    @Override
+    public @Nullable KnownSymbolType symbol() {
+      return null;
+    }
+
+    @Override
+    public KeyKind kind() {
+      return KeyKind.STRING;
+    }
+
+    @Override
+    public String humanReadableName() {
+      return string();
+    }
+  }
+
+  /** A property well-known symbol key, such as Symbol.iterator. */
+  public record SymbolKey(KnownSymbolType symbol) implements Key {
+    public SymbolKey {
+      checkNotNull(symbol);
+    }
+
+    @Override
+    public @Nullable String string() {
+      return null;
+    }
+
+    @Override
+    public KeyKind kind() {
+      return KeyKind.SYMBOL;
+    }
+
+    @Override
+    public String humanReadableName() {
+      return symbol().getDisplayName();
+    }
+  }
+
   /** A property instance associated with particular owner type. */
   public static final class OwnedProperty {
     private final ObjectType owner;
@@ -86,9 +153,13 @@ public final class Property implements StaticTypedSlot, StaticTypedRef {
   private static final long serialVersionUID = 1L;
 
   /**
-   * Property's name.
+   * Property's name. Either a String or a KnownSymbolType.
+   *
+   * <p>NOTE(lharker): storing this as a Key would be correct & more type-safe, but that caused some
+   * OOMs when I tried it, presumably because of the extra memory usage. So we store this as a plain
+   * Object for now. All the non-private API methods should use Key though.
    */
-  private final String name;
+  private final Object name;
 
   /**
    * Property's type.
@@ -109,9 +180,20 @@ public final class Property implements StaticTypedSlot, StaticTypedRef {
   /** The JSDocInfo for this property. */
   private @Nullable JSDocInfo docInfo = null;
 
-  Property(String name, JSType type, boolean inferred,
-      Node propertyNode) {
+  Property(String name, JSType type, boolean inferred, Node propertyNode) {
     this.name = checkNotNull(name);
+    this.type = checkNotNull(type, "Null type specified for %s", name);
+    this.inferred = inferred;
+    this.propertyNode = propertyNode;
+  }
+
+  Property(Key name, JSType type, boolean inferred, Node propertyNode) {
+    checkNotNull(name);
+    this.name =
+        switch (name.kind()) {
+          case STRING -> name.string();
+          case SYMBOL -> name.symbol();
+        };
     this.type = checkNotNull(type, "Null type specified for %s", name);
     this.inferred = inferred;
     this.propertyNode = propertyNode;
@@ -119,7 +201,14 @@ public final class Property implements StaticTypedSlot, StaticTypedRef {
 
   @Override
   public String getName() {
-    return name;
+    switch (name) {
+      case String s:
+        return s;
+      case KnownSymbolType s:
+        return s.getDisplayName();
+      default:
+        throw new AssertionError();
+    }
   }
 
   @Override

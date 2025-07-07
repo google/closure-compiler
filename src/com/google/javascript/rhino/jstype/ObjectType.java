@@ -574,7 +574,7 @@ public abstract class ObjectType extends JSType {
 
   /** Returns a list of properties defined or inferred on this type and any of its supertypes. */
   public final ImmutableSortedSet<String> getPropertyNames() {
-    return getPropertyMap().keySet();
+    return getPropertyMap().getAllKeys().stringKeys();
   }
 
   @Override
