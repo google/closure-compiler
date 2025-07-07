@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
@@ -26,7 +25,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -705,67 +703,75 @@ public final class JSDocInfoPrinterTest {
 
   @Test
   public void testExterns() {
-    testSameFileoverview("/** @externs */ ");
+    builder.recordExterns();
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info)).isEqualTo("/** @externs */ ");
   }
 
   @Test
   public void testTypeSummary() {
-    testSameFileoverview("/** @typeSummary */ ");
+    builder.recordTypeSummary();
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info)).isEqualTo("/** @typeSummary */ ");
   }
 
   @Test
   public void testExport() {
-    testSame("/** @export */ ");
+    builder.recordExport();
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info)).isEqualTo("/** @export */ ");
   }
 
   @Test
   public void testAbstract() {
-    testSame("/** @abstract */ ");
+    builder.recordAbstract();
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info)).isEqualTo("/** @abstract */ ");
   }
 
   @Test
   public void testImplicitCast() {
-    testSame("/** @implicitCast */ ");
-  }
-
-  @Test
-  public void testNoCollapse() {
-    testSame("/** @nocollapse */ ");
+    builder.recordImplicitCast();
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info)).isEqualTo("/** @implicitCast */ ");
   }
 
   @Test
   public void testClosurePrimitive() {
-    testSame("/** @closurePrimitive {testPrimitive} */ ");
+    builder.recordClosurePrimitiveId("testPrimitive");
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info)).isEqualTo("/** @closurePrimitive {testPrimitive} */ ");
   }
 
   @Test
-  public void testNgInect() {
-    testSame("/** @ngInject */ ");
+  public void testNoCollapse() {
+    builder.recordNoCollapse();
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info)).isEqualTo("/** @nocollapse */ ");
+  }
+
+  @Test
+  public void testNgInject() {
+    builder.recordNgInject(true);
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info)).isEqualTo("/** @ngInject */ ");
   }
 
   @Test
   public void testTsType() {
-    testSame("/** @tsType ():string */ ");
-    testSame("/** @tsType ():string @tsType (x:string):number */ ");
+    builder.recordTsType("():string");
+    JSDocInfo info = builder.buildAndReset();
+
+    assertThat(jsDocInfoPrinter.print(info)).isEqualTo("/** @tsType ():string */ ");
   }
 
-  private void testSame(String jsdoc) {
-    test(jsdoc, jsdoc);
-  }
+  @Test
+  public void testTsType_multipleTsTypes() {
+    builder.recordTsType("():string");
+    builder.recordTsType("(x:string):number");
+    JSDocInfo info = builder.buildAndReset();
 
-  private void testSameFileoverview(String jsdoc) {
-    test(jsdoc, jsdoc, JsDocInfoParser::parseFileOverviewJsdoc);
-  }
-
-  private void test(String input, String output) {
-    test(input, output, JsDocInfoParser::parseJsdoc);
-  }
-
-  private void test(String input, String output, Function<String, JSDocInfo> parser) {
-    assertThat(input).startsWith("/**");
-    String contents = input.substring("/**".length());
-    JSDocInfo info = parser.apply(contents);
-    assertWithMessage("Parse error on parsing JSDoc: " + input).that(info).isNotNull();
-    assertThat(jsDocInfoPrinter.print(info)).isEqualTo(output);
+    assertThat(jsDocInfoPrinter.print(info))
+        .isEqualTo("/** @tsType ():string @tsType (x:string):number */ ");
   }
 }

@@ -63,6 +63,7 @@ public final class JsDocInfoParser {
 
   private static final String TSICKLE_MISSING_TYPE_PLACEHOLDER =
       "JsDocInfoParser_TsickleMode_MissingSupertypePlaceholder";
+  private static final String TS_TYPE_PLACEHOLDER = "JsDocInfoParser_tsType_PlaceHolder";
 
   private final JsDocTokenStream stream;
   private final JSDocInfo.Builder jsdocBuilder;
@@ -169,6 +170,8 @@ public final class JsDocInfoParser {
     TSICKLE // make some extra allowances for tsickle-generated JSDoc
   }
 
+  private final boolean recordTsType;
+
   public JsDocInfoParser(
       JsDocTokenStream stream,
       String comment,
@@ -188,6 +191,7 @@ public final class JsDocInfoParser {
       this.jsdocBuilder.recordOriginalCommentString(comment);
       this.jsdocBuilder.recordOriginalCommentPosition(commentPosition);
     }
+    this.recordTsType = config.jsDocParsingMode().shouldParseDescriptions();
     this.annotations = config.annotations();
     this.suppressionNames = config.suppressionNames();
     this.closurePrimitiveNames = config.closurePrimitiveNames();
@@ -529,7 +533,11 @@ public final class JsDocInfoParser {
 
             String tsType = tsTypeInfo.string;
 
-            jsdocBuilder.recordTsType(tsType);
+            if (recordTsType) {
+              jsdocBuilder.recordTsType(tsType);
+            } else {
+              jsdocBuilder.recordTsType(TS_TYPE_PLACEHOLDER);
+            }
             token = tsTypeInfo.token;
             return token;
           }

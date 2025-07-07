@@ -2531,6 +2531,7 @@ public class JSDocInfo implements Serializable {
      * Records that the {@link JSDocInfo} being built should have its {@link
      * JSDocInfo#isImplicitCast()} flag set to {@code true}.
      */
+    @CanIgnoreReturnValue
     public boolean recordImplicitCast() {
       return populateBit(Bit.IMPLICITCAST, true);
     }
