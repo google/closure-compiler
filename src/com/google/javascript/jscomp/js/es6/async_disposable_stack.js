@@ -89,6 +89,7 @@ $jscomp.polyfill('AsyncDisposableStack', function(orig) {
     });
   };
   // https://tc39.es/proposal-explicit-resource-management/#sec-asyncdisposablestack.prototype-@@asyncDispose
+  /** @const */
   AsyncDisposableStack.prototype[Symbol.asyncDispose] =
       AsyncDisposableStack.prototype.disposeAsync;
 

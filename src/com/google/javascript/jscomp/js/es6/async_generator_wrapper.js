@@ -210,9 +210,12 @@ $jscomp.AsyncGeneratorWrapper = function(
    */
   this.executionQueue_ = new $jscomp.AsyncGeneratorWrapper$ExecutionQueue_();
 
-  /** @type {$jscomp.AsyncGeneratorWrapper<VALUE>} */
+  /**
+   * @type {function(this:$jscomp.AsyncGeneratorWrapper<VALUE>):
+   *     !$jscomp.AsyncGeneratorWrapper<VALUE>}
+   */
   this[Symbol.asyncIterator] =
-      /** @return {$jscomp.AsyncGeneratorWrapper<VALUE>} */ function() {
+      /** @return {!$jscomp.AsyncGeneratorWrapper<VALUE>} */ function() {
         return this;
       };
 

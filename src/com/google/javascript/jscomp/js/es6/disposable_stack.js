@@ -79,6 +79,7 @@ $jscomp.polyfill('DisposableStack', function(orig) {
     return;
   };
   // https://tc39.es/proposal-explicit-resource-management/#sec-disposablestack.prototype-@@dispose)
+  /** @const */
   DisposableStack.prototype[Symbol.dispose] = DisposableStack.prototype.dispose;
 
   // https://tc39.es/proposal-explicit-resource-management/#sec-disposablestack.prototype.use
