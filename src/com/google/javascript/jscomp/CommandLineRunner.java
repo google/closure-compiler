@@ -259,50 +259,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "modules.")
     private List<String> chunk = new ArrayList<>();
 
-    // TODO(b/395966861): deprecate and remove this in favor of --stage2_filename_to_restore_from
-    // TODO(b/395966861): delete this flag
-    @Option(
-        name = "--continue-saved-compilation",
-        usage = "Filename where a stage 1 compilation state was previously saved.",
-        hidden = true)
-    private @Nullable String continueSavedCompilationFile = null;
-
-    // TODO(b/395966861): delete this flag
-    @Option(
-        name = "--stage2_filename_to_restore_from",
-        usage = "Filename where a stage 2 compilation state was previously saved.",
-        hidden = true)
-    private @Nullable String stage2FilenameToRestoreFrom = null;
-
-    // TODO(b/395966861): delete this flag
-    @Option(
-        name = "--restore_stage2_from_file",
-        usage = "Filename where a stage 2 compilation state was previously saved.",
-        hidden = true)
-    private @Nullable String restoreStage2FromFile = null;
-
-    // TODO(bradfordcsmith): deprecate and remove this in favor of --save_stage1_to_file
-    // TODO(b/395966861): delete this flag
-    @Option(
-        name = "--save-after-checks",
-        usage = "Filename to save stage 1 state so that the compilation can be resumed later.",
-        hidden = true)
-    private @Nullable String saveAfterChecksFile = null;
-
-    // TODO(b/395966861): delete this flag
-    @Option(
-        name = "--save_stage1_to_file",
-        usage = "Filename to save stage 1 state so that the compilation can be resumed later.",
-        hidden = true)
-    private @Nullable String saveStage1ToFile = null;
-
-    // TODO(b/395966861): delete this flag
-    @Option(
-        name = "--stage2_filename_to_save_to",
-        usage = "Filename to save stage 2 state so that the compilation can be resumed later.",
-        hidden = true)
-    private @Nullable String stage2FilenameToSaveTo = null;
-
     @Option(
         name = "--filename_to_save_to",
         usage = "Filename to save state so that the compilation can be resumed later.",
@@ -1820,63 +1776,28 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
           .setErrorFormat(flags.errorFormat);
 
       SegmentOfCompilationToRun segmentOfCompilationToRun = flags.segmentOfCompilationToRun;
-      if (!segmentOfCompilationToRun.equals(SegmentOfCompilationToRun.ENTIRE_COMPILATION)) {
-        switch (segmentOfCompilationToRun) {
-          case CHECKS:
-            checkState(
-                flags.filenameToRestoreFrom == null,
-                "Cannot restore and run CHECKS segment of compilation");
-            config.setSaveCompilationStateToFilename(flags.filenameToSaveTo, 1);
-            break;
-          case OPTIMIZATIONS:
-            config.setContinueSavedCompilationFileName(flags.filenameToRestoreFrom, 1);
-            config.setSaveCompilationStateToFilename(flags.filenameToSaveTo, 2);
-            break;
-          case FINALIZATIONS:
-            checkState(
-                flags.filenameToSaveTo == null,
-                "Cannot run FINALIZATIONS segment of compilation and then save the result");
-            config.setContinueSavedCompilationFileName(flags.filenameToRestoreFrom, 2);
-            break;
-          default:
-            throw new IllegalStateException(
-                "Cannot run %s segment of compilation: " + flags.segmentOfCompilationToRun);
-        }
-      } else {
-        // TODO(b/395966861): delete this else block
-        String stage1RestoreFile = flags.stage2FilenameToRestoreFrom;
-        if (stage1RestoreFile == null) {
-          // TODO(bradfordcsmith): deprecate and remove this flag
-          stage1RestoreFile = flags.continueSavedCompilationFile;
-        }
-        if (stage1RestoreFile != null) {
-          config.setContinueSavedCompilationFileName(
-              stage1RestoreFile, /* restoredCompilationStage= */ 1);
-        }
-        String stage2RestoreFile = flags.restoreStage2FromFile;
-        if (stage1RestoreFile != null) {
+      switch (segmentOfCompilationToRun) {
+        case CHECKS:
           checkState(
-              stage2RestoreFile == null, "cannot restore both from stage 1 and from stage 2");
-          config.setContinueSavedCompilationFileName(stage1RestoreFile, 1);
-        } else if (stage2RestoreFile != null) {
-          config.setContinueSavedCompilationFileName(stage2RestoreFile, 2);
-        }
-
-        String stage1SaveFile = flags.saveStage1ToFile;
-        if (stage1SaveFile == null) {
-          // TODO(bradfordcsmith): deprecate and remove this flag
-          stage1SaveFile = flags.saveAfterChecksFile;
-        }
-        String stage2SaveFile = flags.stage2FilenameToSaveTo;
-        if (stage1SaveFile != null) {
-          checkState(stage2SaveFile == null, "cannot save both stage 1 and stage 2");
-          checkState(stage1RestoreFile == null, "cannot perform stage 1 on a restored stage 1");
-          config.setSaveCompilationStateToFilename(stage1SaveFile, 1);
-        } else if (stage2SaveFile != null) {
-          checkState(stage2RestoreFile == null, "Cannot perform stage 2 on a restored stage 2");
-          checkState(stage1RestoreFile != null, "Saving stage 2 requires restoring from stage 1");
-          config.setSaveCompilationStateToFilename(stage2SaveFile, 2);
-        }
+              flags.filenameToRestoreFrom == null,
+              "Cannot restore and run CHECKS segment of compilation");
+          config.setSaveCompilationStateToFilename(flags.filenameToSaveTo, 1);
+          break;
+        case OPTIMIZATIONS:
+          config.setContinueSavedCompilationFileName(flags.filenameToRestoreFrom, 1);
+          config.setSaveCompilationStateToFilename(flags.filenameToSaveTo, 2);
+          break;
+        case FINALIZATIONS:
+          checkState(
+              flags.filenameToSaveTo == null,
+              "Cannot run FINALIZATIONS segment of compilation and then save the result");
+          config.setContinueSavedCompilationFileName(flags.filenameToRestoreFrom, 2);
+          break;
+        case ENTIRE_COMPILATION:
+          break;
+        default:
+          throw new IllegalStateException(
+              "Cannot run %s segment of compilation: " + flags.segmentOfCompilationToRun);
       }
     }
 
