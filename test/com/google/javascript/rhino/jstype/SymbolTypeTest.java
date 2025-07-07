@@ -112,6 +112,48 @@ public final class SymbolTypeTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void defineSymbolProperty_structuralType() {
+    ObjectType structural = registry.createAnonymousObjectType(null);
+    Property.SymbolKey foo = new Property.SymbolKey(new KnownSymbolType(registry, "foo"));
+
+    structural.defineDeclaredProperty(foo, STRING_TYPE, null);
+    structural.defineDeclaredProperty("bar", NUMBER_TYPE, null);
+    structural.defineDeclaredProperty("raz", NUMBER_TYPE, null);
+
+    assertType(structural).withTypeOfProp(foo.symbol()).isString();
+    assertType(structural)
+        .toStringIsEqualTo(
+            """
+            {
+              bar: number,
+              [foo]: string,
+              raz: number
+            }\
+            """);
+  }
+
+  @Test
+  public void defineSymbolProperty_overlappingSymbolAndStringKeyNames() {
+    ObjectType structural = registry.createAnonymousObjectType(null);
+    Property.SymbolKey foo1 = new Property.SymbolKey(new KnownSymbolType(registry, "foo"));
+    Property.SymbolKey foo2 = new Property.SymbolKey(new KnownSymbolType(registry, "foo"));
+
+    structural.defineDeclaredProperty(foo1, STRING_TYPE, null);
+    structural.defineDeclaredProperty(foo2, NUMBER_TYPE, null);
+    structural.defineDeclaredProperty("foo", STRING_TYPE, null);
+
+    assertType(structural)
+        .toStringIsEqualTo(
+            """
+            {
+              foo: string,
+              [foo]: string,
+              [foo]: number
+            }\
+            """);
+  }
+
+  @Test
   public void defineSymbolProperty_templatized() {
     Property.SymbolKey foo = new Property.SymbolKey(new KnownSymbolType(registry, "Symbol.foo"));
     TemplateType arrayKey = registry.getArrayElementKey();

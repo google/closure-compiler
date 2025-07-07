@@ -63,7 +63,7 @@ public final class Property implements StaticTypedSlot, StaticTypedRef {
    * A valid key for a property. May be either a string or a well-known symbol such as
    * Symbol.iterator.
    */
-  public sealed interface Key {
+  public sealed interface Key extends Comparable<Key> {
     KeyKind kind();
 
     @Nullable String string();
@@ -74,6 +74,25 @@ public final class Property implements StaticTypedSlot, StaticTypedRef {
 
     default boolean matches(String stringKey) {
       return this.kind().equals(KeyKind.STRING) && this.string().equals(stringKey);
+    }
+
+    @Override
+    default int compareTo(Key other) {
+      // For string keys we just compare by string
+      // For symbols, we need some way to distinguish unique symbols with the same human-readable
+      // name, so just append the hash code. (This isn't guaranteed to avoid collisions, but the
+      // chance of collisions is very very low.)
+      String thisName =
+          switch (this.kind()) {
+            case STRING -> this.string();
+            case SYMBOL -> this.symbol().getDisplayName() + this.symbol().hashCode();
+          };
+      String otherName =
+          switch (other.kind()) {
+            case STRING -> other.string();
+            case SYMBOL -> other.symbol().getDisplayName() + other.symbol().hashCode();
+          };
+      return thisName.compareTo(otherName);
     }
   }
 

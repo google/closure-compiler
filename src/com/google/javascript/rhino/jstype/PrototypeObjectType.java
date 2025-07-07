@@ -297,13 +297,18 @@ public class PrototypeObjectType extends ObjectType {
     }
 
     // Use a tree set so that the properties are sorted.
-    Set<String> propertyNames = new TreeSet<>();
+    Set<Property.Key> propertyNames = new TreeSet<>();
     for (ObjectType current = this; current != null; current = current.getImplicitPrototype()) {
       if (current.isNativeObjectType() || propertyNames.size() > MAX_PRETTY_PRINTED_PROPERTIES) {
         break;
       }
 
-      propertyNames.addAll(current.getOwnPropertyNames());
+      for (String stringKey : current.getOwnPropertyNames()) {
+        propertyNames.add(new Property.StringKey(stringKey));
+      }
+      for (KnownSymbolType symbolKey : current.getOwnPropertyKnownSymbols()) {
+        propertyNames.add(new Property.SymbolKey(symbolKey));
+      }
     }
 
     // Don't pretty print recursively. It would cause infinite recursion.
@@ -318,7 +323,7 @@ public class PrototypeObjectType extends ObjectType {
               }
 
               int i = 0;
-              for (String property : propertyNames) {
+              for (Property.Key property : propertyNames) {
                 i++;
 
                 if (!sb.isForAnnotations() && i > MAX_PRETTY_PRINTED_PROPERTIES) {
@@ -326,7 +331,17 @@ public class PrototypeObjectType extends ObjectType {
                   break;
                 }
 
-                sb.append(property).append(": ").appendNonNull(this.getPropertyType(property));
+                switch (property.kind()) {
+                  case STRING:
+                    sb.append(property.humanReadableName());
+                    break;
+                  case SYMBOL:
+                    sb.append("[");
+                    sb.append(property.humanReadableName());
+                    sb.append("]");
+                    break;
+                }
+                sb.append(": ").appendNonNull(this.getPropertyType(property));
                 if (i < propertyNames.size()) {
                   sb.append(",");
                   if (multiline) {
