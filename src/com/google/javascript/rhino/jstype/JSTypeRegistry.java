@@ -623,7 +623,7 @@ public final class JSTypeRegistry {
 
     iiterableResultValueTemplate = new TemplateType(this, "TYield");
     FunctionType iiterableResultFunctionType =
-        nativeInterface("IIterableResult", iiterableResultValueTemplate);
+        nativeRecord("IIterableResult", iiterableResultValueTemplate);
     registerNativeType(JSTypeNative.I_ITERABLE_RESULT_FUNCTION_TYPE, iiterableResultFunctionType);
     ObjectType iiterableResultType = iiterableResultFunctionType.getInstanceType();
     registerNativeType(JSTypeNative.I_ITERABLE_RESULT_TYPE, iiterableResultType);
@@ -1306,6 +1306,12 @@ public final class JSTypeRegistry {
    * type check this property"). The type registry, on the other hand, should attempt to minimize
    * false negatives ("if this property is assigned anywhere in the program, it must show up in the
    * type registry").
+   *
+   * <p>Only string property keys are registered, not symbol property keys. This is largely for
+   * historical reasons - JSCompiler has allowed accessing properties on a struct via any symbol
+   * type, instead of reporting missing properties; and even if we do implement missing properties
+   * for symbol prop accesses, this method is not needed for "STRICT_MISSING_PROPERTIES" errors
+   * which we might default all symbol props to.
    */
   public void registerPropertyOnType(String propertyName, JSType type) {
     if (type.isUnionType()) {

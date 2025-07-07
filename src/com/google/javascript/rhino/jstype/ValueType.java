@@ -74,7 +74,7 @@ abstract class ValueType extends JSType {
   }
 
   @Override
-  public HasPropertyKind getPropertyKind(String propertyName, boolean autobox) {
+  public HasPropertyKind getPropertyKind(Property.Key propertyName, boolean autobox) {
     if (autobox && isBoxableScalar()) {
       return autoboxesTo().getPropertyKind(propertyName, autobox);
     } else {
@@ -84,7 +84,7 @@ abstract class ValueType extends JSType {
 
   @Override
   final int recursionUnsafeHashCode() {
-    // Subclasses of this type are unique within a JSTypeRegisty.
+    // Subclasses of this type are unique within a JSTypeRegistry.
     return System.identityHashCode(this);
   }
 }

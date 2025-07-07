@@ -78,8 +78,7 @@ public final class SymbolTypeTest extends BaseJSTypeTestCase {
   @Test
   public void knownSymbolType_isSubtypeOfSymbolType() {
     KnownSymbolType knownSymbolType = new KnownSymbolType(registry, "Symbol.iterator");
-    JSType symbolType = registry.getNativeType(JSTypeNative.SYMBOL_TYPE);
-    assertThat(knownSymbolType.isSubtypeOf(symbolType)).isTrue();
+    assertThat(knownSymbolType.isSubtypeOf(SYMBOL_TYPE)).isTrue();
   }
 
   @Test
@@ -101,5 +100,112 @@ public final class SymbolTypeTest extends BaseJSTypeTestCase {
     assertType(foo2).isNotSubtypeOf(bar);
     assertType(bar).isNotSubtypeOf(foo1);
     assertType(bar).isNotSubtypeOf(foo2);
+  }
+
+  @Test
+  public void defineSymbolProperty() {
+    Property.SymbolKey foo = new Property.SymbolKey(new KnownSymbolType(registry, "foo"));
+
+    ARRAY_TYPE.defineDeclaredProperty(foo, STRING_TYPE, null);
+
+    assertType(ARRAY_TYPE).withTypeOfProp(foo.symbol()).isString();
+  }
+
+  @Test
+  public void defineSymbolProperty_templatized() {
+    Property.SymbolKey foo = new Property.SymbolKey(new KnownSymbolType(registry, "Symbol.foo"));
+    TemplateType arrayKey = registry.getArrayElementKey();
+    ObjectType promiseType = registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE);
+    JSType promiseOfArrayKey = registry.createTemplatizedType(promiseType, arrayKey);
+
+    // /** @type {T|!Promise<T>} */
+    // Array.prototype[Symbol.foo];
+    JSType fooPropType = registry.createUnionType(arrayKey, promiseOfArrayKey);
+    JSType stringArray = registry.createTemplatizedType(ARRAY_TYPE, STRING_TYPE);
+    ARRAY_TYPE.defineDeclaredProperty(foo, fooPropType, null);
+
+    assertType(ARRAY_TYPE).withTypeOfProp(foo.symbol()).isUnionOf(arrayKey, promiseOfArrayKey);
+    // for an Array<string>, Symbol.foo is a (string|Promise<string>)
+    assertType(stringArray)
+        .withTypeOfProp(foo.symbol())
+        .isUnionOf(STRING_TYPE, registry.createTemplatizedType(promiseType, STRING_TYPE));
+    assertType(stringArray.findPropertyType(foo))
+        .isUnionOf(STRING_TYPE, registry.createTemplatizedType(promiseType, STRING_TYPE));
+  }
+
+  @Test
+  public void defineSymbolProperty_symbolsWithSameNameAreStillUnique() {
+    Property.SymbolKey foo1 = new Property.SymbolKey(new KnownSymbolType(registry, "Symbol.foo"));
+    Property.SymbolKey foo2 = new Property.SymbolKey(new KnownSymbolType(registry, "Symbol.foo"));
+
+    ARRAY_TYPE.defineDeclaredProperty(foo1, registry.getNativeType(JSTypeNative.STRING_TYPE), null);
+
+    assertType(ARRAY_TYPE).withTypeOfProp(foo1.symbol()).isString();
+    assertThat(ARRAY_TYPE.hasProperty(foo2)).isFalse();
+  }
+
+  @Test
+  public void defineSymbolProperty_hasOwnPropertyVsHasProperty() {
+    ObjectType iterable = registry.getNativeObjectType(JSTypeNative.ITERABLE_TYPE);
+    // IterableIterator extends Iterable
+    ObjectType iterableIterator = registry.getNativeObjectType(JSTypeNative.ITERATOR_ITERABLE_TYPE);
+
+    Property.SymbolKey foo = new Property.SymbolKey(new KnownSymbolType(registry, "foo"));
+    iterable.defineDeclaredProperty(foo, STRING_TYPE, null);
+
+    assertType(iterableIterator).hasProperty(foo.symbol());
+    assertThat(iterableIterator.hasOwnProperty(foo)).isFalse();
+
+    assertType(iterable).hasProperty(foo.symbol());
+    assertThat(iterable.hasOwnProperty(foo)).isTrue();
+  }
+
+  @Test
+  public void symbolPropertiesDoNotConflictWithStrings() {
+    KnownSymbolType foo = new KnownSymbolType(registry, "Symbol.foo");
+    ARRAY_TYPE.defineDeclaredProperty(new Property.SymbolKey(foo), STRING_TYPE, null);
+
+    assertThat(ARRAY_TYPE.hasProperty("foo")).isFalse();
+  }
+
+  @Test
+  public void structuralSubtypingAccountsForSymbolProps() {
+    // /** @record */
+    // class String {
+    //    /** @type {string} */
+    //   [Symbol.foo];
+    // }
+    FunctionType stringPropCtor =
+        FunctionType.builder(registry).forInterface().setName("String").buildAndResolve();
+    stringPropCtor.setImplicitMatch(true);
+    Property.Key foo = new Property.SymbolKey(new KnownSymbolType(registry, "Symbol.foo"));
+    stringPropCtor.getPrototype().defineDeclaredProperty(foo, STRING_TYPE, null);
+    ObjectType stringProp = stringPropCtor.getInstanceType();
+    // /** @record */
+    // class StringOrNumber {
+    //    /** @type {string|number} */
+    //   [Symbol.foo];
+    // }
+    FunctionType stringOrNumberPropCtor =
+        FunctionType.builder(registry).forInterface().setName("StringOrNumber").buildAndResolve();
+    stringOrNumberPropCtor.setImplicitMatch(true);
+    stringOrNumberPropCtor
+        .getPrototype()
+        .defineDeclaredProperty(foo, createUnionType(NUMBER_TYPE, STRING_TYPE), null);
+    ObjectType stringOrNumberProp = stringOrNumberPropCtor.getInstanceType();
+
+    // The subtyping chain is
+    //  String < StringOrNumber < Object
+    assertType(OBJECT_TYPE).isNotSubtypeOf(stringProp);
+    assertType(OBJECT_TYPE).isNotSubtypeOf(stringOrNumberProp);
+
+    assertType(stringOrNumberProp).isNotSubtypeOf(stringProp);
+    assertType(stringOrNumberProp)
+        .isSubtypeOf(stringOrNumberProp);
+    assertType(stringOrNumberProp).isSubtypeOf(OBJECT_TYPE);
+
+    assertType(stringProp).isSubtypeOf(stringOrNumberProp);
+    assertType(stringProp).isSubtypeOf(stringProp);
+    assertType(stringProp).isSubtypeOf(OBJECT_TYPE);
   }
 }

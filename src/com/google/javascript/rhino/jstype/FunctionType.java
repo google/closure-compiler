@@ -406,8 +406,8 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   }
 
   @Override
-  public final Property getSlot(String name) {
-    if ("prototype".equals(name)) {
+  public final Property getSlot(Property.Key name) {
+    if (name.matches("prototype")) {
       // Lazy initialization of the prototype field.
       getPrototype();
       return prototypeSlot;
@@ -641,14 +641,14 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   }
 
   @Override
-  public final JSType getPropertyType(String name) {
+  public final JSType getPropertyType(Property.Key name) {
     if (!hasOwnProperty(name)) {
       // Define the "call", "apply", and "bind" functions lazily.
-      boolean isCall = "call".equals(name);
-      boolean isBind = "bind".equals(name);
+      boolean isCall = name.matches("call");
+      boolean isBind = name.matches("bind");
       if (isCall || isBind) {
         defineDeclaredProperty(name, getCallOrBindSignature(isCall), source);
-      } else if ("apply".equals(name)) {
+      } else if (name.matches("apply")) {
         // Define the "apply" function lazily.
         FunctionParamBuilder builder = new FunctionParamBuilder(registry);
 
@@ -748,8 +748,8 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   }
 
   @Override
-  boolean defineProperty(String name, JSType type, boolean inferred, Node propertyNode) {
-    if ("prototype".equals(name)) {
+  boolean defineProperty(Property.Key name, JSType type, boolean inferred, Node propertyNode) {
+    if (name.matches("prototype")) {
       ObjectType objType = type.toObjectType();
       if (objType != null) {
         if (prototypeSlot != null && objType.equals(prototypeSlot.getType())) {

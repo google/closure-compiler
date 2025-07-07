@@ -155,7 +155,7 @@ public final class TemplatizedType extends ProxyObjectType {
   }
 
   @Override
-  public @Nullable JSType getPropertyType(String propertyName) {
+  public @Nullable JSType getPropertyType(Property.Key propertyName) {
     JSType result = super.getPropertyType(propertyName);
     return result == null ? null : result.visit(replacer);
   }

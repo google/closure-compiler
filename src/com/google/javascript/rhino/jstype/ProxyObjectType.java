@@ -80,7 +80,7 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public final HasPropertyKind getPropertyKind(String propertyName, boolean autobox) {
+  public final HasPropertyKind getPropertyKind(Property.Key propertyName, boolean autobox) {
     return referencedType.getPropertyKind(propertyName, autobox);
   }
 
@@ -305,13 +305,14 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  boolean defineProperty(String propertyName, JSType type, boolean inferred, Node propertyNode) {
+  boolean defineProperty(
+      Property.Key propertyName, JSType type, boolean inferred, Node propertyNode) {
     return referencedObjType == null
         || referencedObjType.defineProperty(propertyName, type, inferred, propertyNode);
   }
 
   @Override
-  protected JSType findPropertyTypeWithoutConsideringTemplateTypes(String propertyName) {
+  protected JSType findPropertyTypeWithoutConsideringTemplateTypes(Property.Key propertyName) {
     return referencedType.findPropertyType(propertyName);
   }
 
@@ -328,7 +329,7 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public final void setPropertyJSDocInfo(String propertyName, JSDocInfo info) {
+  public final void setPropertyJSDocInfo(Property.Key propertyName, JSDocInfo info) {
     if (referencedObjType != null) {
       referencedObjType.setPropertyJSDocInfo(propertyName, info);
     }

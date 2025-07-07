@@ -210,7 +210,7 @@ public final class UnionType extends JSType {
   }
 
   @Override
-  protected JSType findPropertyTypeWithoutConsideringTemplateTypes(String propertyName) {
+  protected JSType findPropertyTypeWithoutConsideringTemplateTypes(Property.Key propertyName) {
     JSType propertyType = null;
 
     for (JSType alternate : alternates) {
@@ -369,7 +369,7 @@ public final class UnionType extends JSType {
   }
 
   @Override
-  public HasPropertyKind getPropertyKind(String pname, boolean autobox) {
+  public HasPropertyKind getPropertyKind(Property.Key pname, boolean autobox) {
     boolean found = false;
     boolean always = true;
     for (int i = 0; i < alternates.size(); i++) {

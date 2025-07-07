@@ -125,8 +125,8 @@ public final class UnknownType extends ObjectType {
   }
 
   @Override
-  boolean defineProperty(String propertyName, JSType type,
-      boolean inferred, Node propertyNode) {
+  boolean defineProperty(
+      Property.Key propertyName, JSType type, boolean inferred, Node propertyNode) {
     // nothing to define
     return true;
   }

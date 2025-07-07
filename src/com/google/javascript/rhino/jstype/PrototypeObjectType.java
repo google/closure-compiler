@@ -196,19 +196,17 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  boolean defineProperty(String name, JSType type, boolean inferred,
-      Node propertyNode) {
+  boolean defineProperty(Property.Key name, JSType type, boolean inferred, Node propertyNode) {
     if (hasOwnDeclaredProperty(name)) {
       return false;
     }
-    Property newProp = new Property(
-        name, type, inferred, propertyNode);
+    Property newProp = new Property(name, type, inferred, propertyNode);
     properties.putProperty(name, newProp);
     return true;
   }
 
   @Override
-  public void setPropertyJSDocInfo(String propertyName, JSDocInfo info) {
+  public void setPropertyJSDocInfo(Property.Key propertyName, JSDocInfo info) {
     if (info != null) {
       if (properties.getOwnProperty(propertyName) == null) {
         // If docInfo was attached, but the type of the property
@@ -228,7 +226,7 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  public void setPropertyNode(String propertyName, Node defSite) {
+  public void setPropertyNode(Property.Key propertyName, Node defSite) {
     Property property = properties.getOwnProperty(propertyName);
     if (property != null) {
       property.setNode(defSite);

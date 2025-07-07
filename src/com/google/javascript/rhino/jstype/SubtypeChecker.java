@@ -369,26 +369,49 @@ final class SubtypeChecker {
     // 2) And for each property of supertype, its type must be
     //    a super type of the corresponding property of subtype.
 
+    PropertyMap.AllKeys keys =
+        supertype.isRecordType() ? null : supertype.getPropertyMap().getAllKeys();
     Iterable<String> props =
         // NOTE: Inline record literal types always have Object as a supertype. In these cases, we
         // really only care about the properties explicitly declared in the record literal, and not
         // about any properties inherited from Object.prototype. On the other hand, @record types
         // allow inheritance and we need to match against inherited properties as well.
-        supertype.isRecordType() ? supertype.getOwnPropertyNames() : supertype.getPropertyNames();
+        supertype.isRecordType() ? supertype.getOwnPropertyNames() : keys.stringKeys();
 
     for (String property : props) {
-      JSType supertypeProp = supertype.getPropertyType(property);
-      if (subtype.hasProperty(property)) {
-        JSType subtypeProp = subtype.getPropertyType(property);
-        if (!this.isSubtypeCaching(subtypeProp, supertypeProp)) {
-          return false;
-        }
-      } else if (!optionality.isOptional(supertypeProp)) {
-        // Currently, any type that explicitly includes undefined (eg, `?|undefined`) is optional.
+      if (!checkPropertyPresence(
+          new Property.StringKey(property), subtype, supertype, optionality)) {
+        return false;
+      }
+    }
+    Iterable<KnownSymbolType> knownSymbols =
+        supertype.isRecordType() ? supertype.getOwnPropertyKnownSymbols() : keys.knownSymbolKeys();
+
+    for (KnownSymbolType knownSymbolType : knownSymbols) {
+      Property.Key knownSymbolTypeKey = new Property.SymbolKey(knownSymbolType);
+      if (!checkPropertyPresence(knownSymbolTypeKey, subtype, supertype, optionality)) {
         return false;
       }
     }
 
+    return true;
+  }
+
+  private boolean checkPropertyPresence(
+      Property.Key propertyKey,
+      ObjectType subtype,
+      ObjectType supertype,
+      PropertyOptionality optionality) {
+
+    JSType supertypeProp = supertype.getPropertyType(propertyKey);
+    if (subtype.hasProperty(propertyKey)) {
+      JSType subtypeProp = subtype.getPropertyType(propertyKey);
+      if (!this.isSubtypeCaching(subtypeProp, supertypeProp)) {
+        return false;
+      }
+    } else if (!optionality.isOptional(supertypeProp)) {
+      return false;
+    }
     return true;
   }
 

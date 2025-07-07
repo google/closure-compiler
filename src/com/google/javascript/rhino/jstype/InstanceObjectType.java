@@ -110,8 +110,7 @@ final class InstanceObjectType extends PrototypeObjectType {
   }
 
   @Override
-  boolean defineProperty(String name, JSType type, boolean inferred,
-      Node propertyNode) {
+  boolean defineProperty(Property.Key name, JSType type, boolean inferred, Node propertyNode) {
     ObjectType proto = getImplicitPrototype();
     if (proto != null && proto.hasOwnDeclaredProperty(name)) {
       return false;

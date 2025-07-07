@@ -6058,6 +6058,36 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(sub.hasOwnProperty("none")).isFalse();
   }
 
+  /**
+   * Tests that hasOwnProperty returns true when a property is defined directly on a class and false
+   * if the property is defined on the supertype or not at all.
+   */
+  @Test
+  public void testHasOwnProperty_symbol() {
+    ObjectType sup = registry.createObjectType(null, registry.createAnonymousObjectType(null));
+    ObjectType sub = registry.createObjectType(null, sup);
+    Property.Key baseSymbol = new Property.SymbolKey(new KnownSymbolType(registry, "base"));
+    Property.Key subSymbol = new Property.SymbolKey(new KnownSymbolType(registry, "sub"));
+    Property.Key noneSymbol = new Property.SymbolKey(new KnownSymbolType(registry, "none"));
+
+    sup.defineProperty(baseSymbol, getBottomType(), false, null);
+    sub.defineProperty(subSymbol, getBottomType(), false, null);
+
+    assertThat(sup.hasProperty(baseSymbol)).isTrue();
+    assertThat(sup.hasProperty(subSymbol)).isFalse();
+    assertThat(sup.hasOwnProperty(baseSymbol)).isTrue();
+    assertThat(sup.hasOwnProperty(subSymbol)).isFalse();
+    assertThat(sup.hasOwnProperty(noneSymbol)).isFalse();
+    assertThat(sup.hasOwnProperty("none")).isFalse();
+
+    assertThat(sub.hasProperty(baseSymbol)).isTrue();
+    assertThat(sub.hasProperty(subSymbol)).isTrue();
+    assertThat(sub.hasOwnProperty(baseSymbol)).isFalse();
+    assertThat(sub.hasOwnProperty(subSymbol)).isTrue();
+    assertThat(sub.hasOwnProperty(noneSymbol)).isFalse();
+    assertThat(sub.hasOwnProperty("none")).isFalse();
+  }
+
   @Test
   public void testNamedTypeHasOwnProperty() {
     namedGoogBar.getImplicitPrototype().defineProperty("base", getBottomType(), false, null);
@@ -6084,6 +6114,29 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(subInterfaceInstType.hasProperty("sub")).isTrue();
     assertThat(subInterfaceInstType.hasOwnProperty("base")).isFalse();
     assertThat(subInterfaceInstType.hasOwnProperty("sub")).isTrue();
+    assertThat(subInterfaceInstType.hasOwnProperty("none")).isFalse();
+  }
+
+  @Test
+  public void testInterfaceHasOwnProperty_symbol() {
+    Property.Key baseSymbol = new Property.SymbolKey(new KnownSymbolType(registry, "base"));
+    Property.Key subSymbol = new Property.SymbolKey(new KnownSymbolType(registry, "sub"));
+    Property.Key noneSymbol = new Property.SymbolKey(new KnownSymbolType(registry, "none"));
+    interfaceInstType.defineProperty(baseSymbol, getBottomType(), false, null);
+    subInterfaceInstType.defineProperty(subSymbol, getBottomType(), false, null);
+
+    assertThat(interfaceInstType.hasProperty(baseSymbol)).isTrue();
+    assertThat(interfaceInstType.hasProperty(subSymbol)).isFalse();
+    assertThat(interfaceInstType.hasOwnProperty(baseSymbol)).isTrue();
+    assertThat(interfaceInstType.hasOwnProperty(subSymbol)).isFalse();
+    assertThat(interfaceInstType.hasOwnProperty(noneSymbol)).isFalse();
+    assertThat(interfaceInstType.hasOwnProperty("none")).isFalse();
+
+    assertThat(subInterfaceInstType.hasProperty(baseSymbol)).isTrue();
+    assertThat(subInterfaceInstType.hasProperty(subSymbol)).isTrue();
+    assertThat(subInterfaceInstType.hasOwnProperty(baseSymbol)).isFalse();
+    assertThat(subInterfaceInstType.hasOwnProperty(subSymbol)).isTrue();
+    assertThat(subInterfaceInstType.hasOwnProperty(noneSymbol)).isFalse();
     assertThat(subInterfaceInstType.hasOwnProperty("none")).isFalse();
   }
 
@@ -6120,6 +6173,45 @@ public class JSTypeTest extends BaseJSTypeTestCase {
                 "hasOwnProperty",
                 "constructor",
                 "base"));
+
+    assertThat(NO_OBJECT_TYPE.getPropertyNames()).isEmpty();
+  }
+
+  @Test
+  public void testGetPropertyNames_symbol() {
+    ObjectType sup = registry.createObjectType(null, registry.createAnonymousObjectType(null));
+    ObjectType sub = registry.createObjectType(null, sup);
+    final ObjectType bottomType = getBottomType();
+    Property.Key baseSymbol = new Property.SymbolKey(new KnownSymbolType(registry, "base"));
+    Property.Key subSymbol = new Property.SymbolKey(new KnownSymbolType(registry, "sub"));
+
+    sup.defineProperty(baseSymbol, bottomType, false, null);
+    sub.defineProperty(subSymbol, bottomType, false, null);
+
+    assertThat(sub.getPropertyNames())
+        .isEqualTo(
+            ImmutableSet.of(
+                "isPrototypeOf",
+                "toLocaleString",
+                "propertyIsEnumerable",
+                "toString",
+                "valueOf",
+                "hasOwnProperty",
+                "constructor"));
+    assertThat(sup.getPropertyNames())
+        .isEqualTo(
+            ImmutableSet.of(
+                "isPrototypeOf",
+                "toLocaleString",
+                "propertyIsEnumerable",
+                "toString",
+                "valueOf",
+                "hasOwnProperty",
+                "constructor"));
+    assertThat(sup.getAllKeys().knownSymbolKeys()).containsExactly(baseSymbol.symbol());
+    assertThat(sub.getAllKeys().knownSymbolKeys())
+        .containsExactly(baseSymbol.symbol(), subSymbol.symbol());
+    assertThat(sub.getOwnPropertyKnownSymbols()).containsExactly(subSymbol.symbol());
 
     assertThat(NO_OBJECT_TYPE.getPropertyNames()).isEmpty();
   }

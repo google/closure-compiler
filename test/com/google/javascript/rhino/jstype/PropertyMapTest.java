@@ -148,7 +148,7 @@ public class PropertyMapTest {
   }
 
   @Test
-  public void lookUpKeysFromParent() {
+  public void lookUpKeysFromParent_stringKey() {
     ObjectType parentType =
         registry.createRecordType(ImmutableMap.of("x", numberType)).assertObjectType();
     ObjectType childType = registry.createObjectType("Child", parentType);
@@ -159,7 +159,17 @@ public class PropertyMapTest {
     assertThat(child.findClosest("x").getValue().getType()).isEqualTo(numberType);
     assertThat(child.findClosest(new Property.StringKey("x")).getValue().getType())
         .isEqualTo(numberType);
+  }
 
-    // TODO: b/358577041 - Add tests for symbol keys.
+  @Test
+  public void lookUpKeysFromParent_symbolKey() {
+    ObjectType parentType = registry.createRecordType(ImmutableMap.of()).assertObjectType();
+    parentType.defineDeclaredProperty(symbolKey, numberType, null);
+    ObjectType childType = registry.createObjectType("Child", parentType);
+    PropertyMap child = new PropertyMap();
+    child.setParentSource(childType);
+
+    assertThat(child.getOwnProperty(symbolKey)).isNull();
+    assertThat(child.findClosest(symbolKey).getValue().getType()).isEqualTo(numberType);
   }
 }

@@ -152,26 +152,52 @@ public abstract class JSType {
 
   /**
    * Checks whether the property is present on the object.
+   *
    * @param pname The property name.
    */
-  public HasPropertyKind getPropertyKind(String pname) {
+  public HasPropertyKind getPropertyKind(Property.Key pname) {
     return getPropertyKind(pname, true);
   }
 
   /**
    * Checks whether the property is present on the object.
+   *
    * @param pname The property name.
    * @param autobox Whether to check for the presents on an autoboxed type
    */
-  public HasPropertyKind getPropertyKind(String pname, boolean autobox) {
+  public HasPropertyKind getPropertyKind(Property.Key pname, boolean autobox) {
     return HasPropertyKind.ABSENT;
   }
 
   /**
    * Checks whether the property is present on the object.
+   *
+   * @param pname The property name.
+   * @param autobox Whether to check for the presents on an autoboxed type
+   */
+  public final HasPropertyKind getPropertyKind(String pname, boolean autobox) {
+    return getPropertyKind(new Property.StringKey(pname), autobox);
+  }
+
+  /**
+   * Checks whether the property is present on the object.
+   *
+   * @param pname The property name.
+   */
+  public final HasPropertyKind getPropertyKind(String pname) {
+    return getPropertyKind(new Property.StringKey(pname));
+  }
+
+  /**
+   * Checks whether the property is present on the object.
+   *
    * @param pname The property name.
    */
   public final boolean hasProperty(String pname) {
+    return hasProperty(new Property.StringKey(pname));
+  }
+
+  public final boolean hasProperty(Property.Key pname) {
     return !getPropertyKind(pname, false).equals(HasPropertyKind.ABSENT);
   }
 
@@ -811,7 +837,7 @@ public abstract class JSType {
    * @return The property's type. {@code null} if the current type cannot have properties, or if the
    *     type is not found.
    */
-  public final @Nullable JSType findPropertyType(String propertyName) {
+  public final @Nullable JSType findPropertyType(Property.Key propertyName) {
     @Nullable JSType propertyType = findPropertyTypeWithoutConsideringTemplateTypes(propertyName);
     if (propertyType == null) {
       return null;
@@ -829,6 +855,18 @@ public abstract class JSType {
   }
 
   /**
+   * Coerces this type to an Object type, then gets the type of the property whose name is given.
+   *
+   * <p>Unlike {@link ObjectType#getPropertyType}, returns null if the property is not found.
+   *
+   * @return The property's type. {@code null} if the current type cannot have properties, or if the
+   *     type is not found.
+   */
+  public final @Nullable JSType findPropertyType(String propertyName) {
+    return findPropertyType(new Property.StringKey(propertyName));
+  }
+
+  /**
    * Looks up a property on this type, but without properly replacing any templates in the result.
    *
    * <p>Subclasses can override this if they need more complicated logic for property lookup than
@@ -838,7 +876,8 @@ public abstract class JSType {
    * need to lookup a property on a random JSType
    */
   @ForOverride
-  protected @Nullable JSType findPropertyTypeWithoutConsideringTemplateTypes(String propertyName) {
+  protected @Nullable JSType findPropertyTypeWithoutConsideringTemplateTypes(
+      Property.Key propertyName) {
     ObjectType autoboxObjType = ObjectType.cast(autoboxesTo());
     if (autoboxObjType != null) {
       return autoboxObjType.findPropertyType(propertyName);

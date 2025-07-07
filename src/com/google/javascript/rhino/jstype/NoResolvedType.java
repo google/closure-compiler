@@ -138,7 +138,7 @@ public final class NoResolvedType extends ObjectType {
 
   @Override
   public boolean defineProperty(
-      String propertyName, JSType type, boolean inferred, Node propertyNode) {
+      Property.Key propertyName, JSType type, boolean inferred, Node propertyNode) {
     // nothing, all properties are defined
     return true;
   }

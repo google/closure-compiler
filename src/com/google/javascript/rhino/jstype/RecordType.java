@@ -114,8 +114,8 @@ public final class RecordType extends PrototypeObjectType {
   }
 
   @Override
-  boolean defineProperty(String propertyName, JSType type,
-      boolean inferred, Node propertyNode) {
+  boolean defineProperty(
+      Property.Key propertyName, JSType type, boolean inferred, Node propertyNode) {
     if (isFrozen) {
       return false;
     }
