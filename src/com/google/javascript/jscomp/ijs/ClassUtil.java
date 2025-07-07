@@ -72,6 +72,15 @@ final class ClassUtil {
   }
 
   /**
+   * Return whether the given node represents a MEMBER_FIELD_DEF that is inside a class with a name.
+   */
+  static boolean isComputedMemberInsideClassWithName(Node fieldNode) {
+    return fieldNode.getParent().isClassMembers()
+        && fieldNode.getFirstChild().isGetProp()
+        && fieldNode.getFirstFirstChild().matchesName("Symbol");
+  }
+
+  /**
    * Return the fully qualified name of a MEMBER_FIELD_DEF. It is invalid to call this method for a
    * field that belongs to a nameless class.
    */

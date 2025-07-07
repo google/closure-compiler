@@ -85,8 +85,10 @@ abstract class ProcessConstJsdocCallback extends NodeTraversal.AbstractPostOrder
           case GETPROP:
             currentFile.recordNameDeclaration(expr);
             break;
+          case GETELEM:
+            break;
           default:
-            throw new RuntimeException("Unexpected declaration: " + expr);
+            throw new IllegalArgumentException("Unexpected declaration: " + expr);
         }
         break;
       case VAR:
@@ -112,6 +114,8 @@ abstract class ProcessConstJsdocCallback extends NodeTraversal.AbstractPostOrder
         && GOOG_DEFINE.matches(rhs.getFirstChild())
         && lhs.isQualifiedName()) {
       currentFile.recordDefine(rhs);
+    } else if (lhs.isGetElem()) {
+      return;
     } else {
       recordNameDeclaration(lhs, rhs);
       if (!lhs.isDestructuringLhs() && rhs != null) {

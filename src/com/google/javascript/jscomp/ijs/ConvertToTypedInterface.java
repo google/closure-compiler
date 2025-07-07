@@ -194,32 +194,40 @@ public class ConvertToTypedInterface implements CompilerPass {
               NodeUtil.deleteNode(n, t.getCompiler());
               return false;
             case ASSIGN:
-              Node lhs = expr.getFirstChild();
-              if (!lhs.isQualifiedName()
-                  || (lhs.isName() && !t.inGlobalScope() && !t.inModuleScope())
-                  || (!ClassUtil.isThisPropInsideClassWithName(lhs)
-                      && !t.inGlobalHoistScope()
-                      && !t.inModuleHoistScope())) {
-                NodeUtil.deleteNode(n, t.getCompiler());
-                return false;
+              if (shouldPreserveAssignment(expr, t)) {
+                return true;
               }
-              return true;
+              NodeUtil.deleteNode(n, t.getCompiler());
+              return false;
             case GETPROP:
               if (!expr.isQualifiedName() || expr.getJSDocInfo() == null) {
                 NodeUtil.deleteNode(n, t.getCompiler());
                 return false;
               }
               return true;
+            case GETELEM:
+              if (isSymbolProp(expr.getSecondChild()) && expr.getJSDocInfo() != null) {
+                return true;
+              }
+
+              NodeUtil.deleteNode(n, t.getCompiler());
+              return false;
             default:
               NodeUtil.deleteNode(n, t.getCompiler());
               return false;
           }
         case COMPUTED_PROP:
+          if (ClassUtil.isComputedMemberInsideClassWithName(n)) {
+            return true;
+          }
           if (!NodeUtil.isLhsByDestructuring(n.getSecondChild())) {
             NodeUtil.deleteNode(n, t.getCompiler());
           }
           return false;
         case COMPUTED_FIELD_DEF:
+          if (ClassUtil.isComputedMemberInsideClassWithName(n)) {
+            return true;
+          }
           NodeUtil.deleteNode(n, t.getCompiler());
           return false;
         case THROW:
@@ -510,6 +518,7 @@ public class ConvertToTypedInterface implements CompilerPass {
             // No further simplification is needed for MEMBER_FIELD_DEF's when we call
             // `simplifyAll()` so we will break.
           case MEMBER_FIELD_DEF:
+          case COMPUTED_FIELD_DEF:
             break;
           case EMPTY:
             // a lonely `;` in a class body can just be deleted.
@@ -519,6 +528,13 @@ public class ConvertToTypedInterface implements CompilerPass {
           case GETTER_DEF:
           case SETTER_DEF:
             processFunction(member.getLastChild());
+            break;
+          case COMPUTED_PROP:
+            checkState(
+                member.getSecondChild().isFunction(),
+                "Non-function computed class member: %s",
+                member);
+            processFunction(member.getSecondChild());
             break;
           default:
             throw new AssertionError(member.getToken() + " should not be handled by processClass");
@@ -589,5 +605,28 @@ public class ConvertToTypedInterface implements CompilerPass {
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
       jsdocNode.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
     }
+  }
+
+  static boolean isSymbolProp(Node lhs) {
+    return lhs.isGetProp() && lhs.getFirstChild().matchesName("Symbol");
+  }
+
+  private static boolean shouldPreserveAssignment(Node expr, NodeTraversal t) {
+    Node lhs = expr.getFirstChild();
+    // Ignore assignments in function bodies, unless they're also a constructor with a this. prop.
+    if (!t.inGlobalHoistScope() && !t.inModuleHoistScope()) {
+      return ClassUtil.isThisPropInsideClassWithName(lhs);
+    }
+
+    // Well-known symbol properties, like Foo.prototype[Symbol.iterator] = function() {};
+    if (lhs.isGetElem() && isSymbolProp(lhs.getSecondChild())) {
+      return lhs.getFirstChild().isQualifiedName();
+    }
+    // Assignments to names don't have global typechecking side-effects even within the 'hoist
+    // scope'
+    if (lhs.isName()) {
+      return t.inGlobalScope() || t.inModuleScope();
+    }
+    return lhs.isQualifiedName();
   }
 }

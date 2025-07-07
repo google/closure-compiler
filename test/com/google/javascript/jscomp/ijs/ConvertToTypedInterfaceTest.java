@@ -87,6 +87,17 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         class Foo {
         }
         """);
+    test(
+        """
+        class Foo {
+          [Symbol.iterator]
+        }
+        """,
+        """
+        class Foo {
+          [Symbol.iterator]
+        }
+        """);
   }
 
   @Test
@@ -2364,6 +2375,36 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   public void testPolymerCallsDeclareType() {
     testSame("Polymer({is: 'exampleApp'});");
     testSame("const ExampleApp = Polymer({is: 'exampleApp'});");
+  }
+
+  @Test
+  public void testWellKnownSymbolComputedPropsPreserved() {
+    test(
+        """
+        class Foo {
+          /** @return {?} */
+          [Symbol.iterator]() { return []; }
+          static [Symbol.dispose]() { return; }
+        }
+        """,
+        """
+        class Foo {
+          /** @return {?} */
+          [Symbol.iterator]() {}
+          static [Symbol.dispose]() {}
+        }
+        """);
+  }
+
+  @Test
+  public void testSymbolProperties_nonClass() {
+    testSame(
+        "/** @constructor */ function Foo() {} Foo.prototype[Symbol.iterator] = function(x,y,z)"
+            + " {}");
+
+    testSame("/** @constructor */ function Foo() {} /** @type {str} */ Foo[Symbol.iterator];");
+
+    test("weirdDynamicThing()[Symbol.iterator] = function() {};", "");
   }
 
   @Test
