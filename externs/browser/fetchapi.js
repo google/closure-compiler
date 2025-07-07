@@ -98,7 +98,10 @@ Headers.prototype.set = function(name, value) {};
 /** @return {!Iterator<string>} */
 Headers.prototype.values = function() {};
 
-/** @return {!Iterator<!Array<string>>} */
+/**
+ * @return {!Iterator<!Array<string>>}
+ * @override
+ */
 Headers.prototype[Symbol.iterator] = function() {};
 
 

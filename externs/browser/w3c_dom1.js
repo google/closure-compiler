@@ -491,6 +491,9 @@ function FragmentDirective() {}
  */
 function NodeList() {}
 
+/** @override */
+NodeList.prototype[Symbol.iterator] = function() {};
+
 /**
  * @type {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-203510337
@@ -540,6 +543,9 @@ NodeList.prototype.values = function() {};
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1780488922
  */
 function NamedNodeMap() {}
+
+/** @override */
+NamedNodeMap.prototype[Symbol.iterator] = function() {};
 
 /**
  * @type {number}

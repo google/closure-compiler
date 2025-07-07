@@ -485,6 +485,9 @@ var FormDataEntryValue;
  */
 function FormData(form) {}
 
+/** @override */
+FormData.prototype[Symbol.iterator] = function() {};
+
 /**
  * @param {string} name
  * @param {?Blob|string} value

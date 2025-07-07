@@ -2505,7 +2505,7 @@ DisposableStack.prototype.move = function() {};
 function AsyncDisposable() {}
 
 /**
- * @return {void}
+ * @return {!Promise<void>}
  */
 AsyncDisposable.prototype[Symbol.asyncDispose] = function() {};
 

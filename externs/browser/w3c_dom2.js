@@ -103,6 +103,9 @@ Document.prototype.importNode = function(externalNode, deep) {};
  */
 function HTMLCollection() {}
 
+/** @override */
+HTMLCollection.prototype[Symbol.iterator] = function() {};
+
 /**
  * @type {number}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-40057551
@@ -131,6 +134,9 @@ HTMLCollection.prototype.namedItem = function(name) {};
  * @see https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#htmloptionscollection
  */
 function HTMLOptionsCollection() {}
+
+/** @override */
+HTMLOptionsCollection.prototype[Symbol.iterator] = function() {};
 
 /**
  * @type {number}
@@ -764,6 +770,9 @@ HTMLBodyElement.prototype.vLink;
  * @see https://html.spec.whatwg.org/multipage/infrastructure.html#the-htmlformcontrolscollection-interface
  */
 function HTMLFormControlsCollection() {}
+
+/** @override */
+HTMLFormControlsCollection.prototype[Symbol.iterator] = function() {};
 
 /**
  * @param {string} name

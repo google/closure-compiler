@@ -1863,6 +1863,12 @@ jQuery.prototype.stop = function(arg1, arg2, jumpToEnd) {};
 jQuery.prototype.submit = function(arg1, handler) {};
 
 /**
+ * @override
+ * @return {!Iterator<*>}
+ */
+jQuery.prototype[Symbol.iterator] = function() {};
+
+/**
  * @record
  */
 function jQuerySupport() {};

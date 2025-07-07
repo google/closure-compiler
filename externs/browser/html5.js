@@ -5518,6 +5518,9 @@ HTMLFieldSetElement.prototype.willValidate;
  */
 function RadioNodeList() {}
 
+/** @override */
+RadioNodeList.prototype[Symbol.iterator] = function() {};
+
 /**
  * @type {string}
  * @see https://html.spec.whatwg.org/multipage/infrastructure.html#radionodelist

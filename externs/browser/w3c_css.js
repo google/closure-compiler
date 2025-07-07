@@ -638,6 +638,9 @@ function CSSStartingStyleRule() {}
  */
 function CSSStyleDeclaration() {}
 
+/** @override */
+CSSStyleDeclaration.prototype[Symbol.iterator] = function() {};
+
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration-cssText

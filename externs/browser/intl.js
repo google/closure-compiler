@@ -58,11 +58,13 @@ Intl.ResolvedSegmenterOptions.prototype.granularity;
 /**
  * @record
  * @template T
+ * @extends {IteratorIterable<T>}
  */
 Intl.SegmentIterator = function() {};
 
 /**
  * @return {!Intl.SegmentIterator<T>}
+ * @override
  */
 Intl.SegmentIterator.prototype[Symbol.iterator] = function() {};
 

@@ -73,6 +73,14 @@ URLSearchParams.prototype.delete = function(name) {};
 URLSearchParams.prototype.entries = function() {};
 
 /**
+ * @return {!IteratorIterable<!Array<string>>}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/keys
+ * @override
+ */
+URLSearchParams.prototype[Symbol.iterator] = function() {};
+
+/**
  * @param {function(string, string)} callback
  * @return {undefined}
  */
