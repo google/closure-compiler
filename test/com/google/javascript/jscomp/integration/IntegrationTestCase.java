@@ -61,6 +61,7 @@ abstract class IntegrationTestCase {
               .addArray()
               .addAlert()
               .addClosureExterns()
+              .addMap()
               .addExtra(
                   """
                   /**
@@ -82,13 +83,6 @@ abstract class IntegrationTestCase {
                    * @extends {Array<string>}
                    */
                   var ITemplateArray = function() {};
-                  /**
-                   * @constructor @struct
-                   * @param {?Iterable<!Array<K|V>>|!Array<!Array<K|V>>=} opt_iterable
-                   * @implements {ReadonlyMap<K, V>}
-                   * @template K, V
-                   */
-                  function Map(opt_iterable) {}
                   /** @constructor */
                   var Set;
                   /** @constructor */ function Window() {}

@@ -94,6 +94,8 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
              * @template T
              */
             function Set() {}
+            /** @override */
+            Set.prototype[Symbol.iterator] = function() {};
             """)
         .addSource(
             """
@@ -167,12 +169,16 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
     newTest()
         .addExterns(
             """
-            /** @constructor
+            /**
+             * @constructor
              * @implements {Iterable<T>}
              * @template T
              */
             function Set() {}
+            /** @override */
+            Set.prototype[Symbol.iterator] = function() {};
             """)
+        .includeDefaultExterns()
         .addSource(
             """
             function f(/** !Set<(string|number)>*/ x){};
