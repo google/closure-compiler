@@ -137,9 +137,13 @@ public final class SymbolTypeTest extends BaseJSTypeTestCase {
     ObjectType structural = registry.createAnonymousObjectType(null);
     Property.SymbolKey foo1 = new Property.SymbolKey(new KnownSymbolType(registry, "foo"));
     Property.SymbolKey foo2 = new Property.SymbolKey(new KnownSymbolType(registry, "foo"));
+    Property.SymbolKey foo3 = new Property.SymbolKey(new KnownSymbolType(registry, "foo"));
 
     structural.defineDeclaredProperty(foo1, STRING_TYPE, null);
     structural.defineDeclaredProperty(foo2, NUMBER_TYPE, null);
+    // add a symbol key recursively referencing the type itself, to verify we don't get infinite
+    // recursion.
+    structural.defineDeclaredProperty(foo3, structural, null);
     structural.defineDeclaredProperty("foo", STRING_TYPE, null);
 
     assertType(structural)
@@ -147,8 +151,9 @@ public final class SymbolTypeTest extends BaseJSTypeTestCase {
             """
             {
               foo: string,
+              [foo]: number,
               [foo]: string,
-              [foo]: number
+              [foo]: {...}
             }\
             """);
   }

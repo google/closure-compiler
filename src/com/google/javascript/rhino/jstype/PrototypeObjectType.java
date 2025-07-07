@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -284,6 +285,46 @@ public class PrototypeObjectType extends ObjectType {
     return true;
   }
 
+  private record PropertyForPrettyPrinting(Property.Key key, JSType type) {
+    private void appendTo(TypeStringBuilder sb) {
+      switch (key.kind()) {
+        case STRING:
+          sb.append(key.humanReadableName());
+          break;
+        case SYMBOL:
+          sb.append("[");
+          sb.append(key.humanReadableName());
+          sb.append("]");
+          break;
+      }
+      sb.append(": ").appendNonNull(type);
+    }
+  }
+
+  private static final Comparator<PropertyForPrettyPrinting> PROP_COMPARATOR =
+      (thisProp, otherProp) -> {
+        // Handle the easy case where the property names are distinct.
+        if (!thisProp.key().humanReadableName().equals(otherProp.key().humanReadableName())) {
+          return thisProp.key().humanReadableName().compareTo(otherProp.key().humanReadableName());
+        }
+        return switch (thisProp.key().kind()) {
+          case STRING ->
+              switch (otherProp.key().kind()) {
+                case STRING -> thisProp.key().string().compareTo(otherProp.key().string());
+                case SYMBOL -> -1; // order string keys before symbol keys
+              };
+          case SYMBOL ->
+              switch (otherProp.key().kind()) {
+                case STRING -> 1; // order string keys before symbol keys.
+                case SYMBOL ->
+                    // Given two symbol keys with the same human-readable name, compare them by
+                    // their type string. This should be rare, so it's not a big performance hit to
+                    // do the extra toString()s.
+                    thisProp.type().toString().compareTo(otherProp.type().toString());
+              };
+        };
+      };
+
   @Override
   void appendTo(TypeStringBuilder sb) {
     if (hasReferenceName()) {
@@ -296,25 +337,27 @@ public class PrototypeObjectType extends ObjectType {
       return;
     }
 
+    // Don't pretty print recursively. It would cause infinite recursion.
+    this.prettyPrint = false;
+
     // Use a tree set so that the properties are sorted.
-    Set<Property.Key> propertyNames = new TreeSet<>();
+    Set<PropertyForPrettyPrinting> properties = new TreeSet<>(PROP_COMPARATOR);
     for (ObjectType current = this; current != null; current = current.getImplicitPrototype()) {
-      if (current.isNativeObjectType() || propertyNames.size() > MAX_PRETTY_PRINTED_PROPERTIES) {
+      if (current.isNativeObjectType() || properties.size() > MAX_PRETTY_PRINTED_PROPERTIES) {
         break;
       }
 
       for (String stringKey : current.getOwnPropertyNames()) {
-        propertyNames.add(new Property.StringKey(stringKey));
+        var key = new Property.StringKey(stringKey);
+        properties.add(new PropertyForPrettyPrinting(key, current.getPropertyType(key)));
       }
       for (KnownSymbolType symbolKey : current.getOwnPropertyKnownSymbols()) {
-        propertyNames.add(new Property.SymbolKey(symbolKey));
+        var key = new Property.SymbolKey(symbolKey);
+        properties.add(new PropertyForPrettyPrinting(key, current.getPropertyType(key)));
       }
     }
 
-    // Don't pretty print recursively. It would cause infinite recursion.
-    this.prettyPrint = false;
-
-    boolean multiline = !sb.isForAnnotations() && propertyNames.size() > 1;
+    boolean multiline = !sb.isForAnnotations() && properties.size() > 1;
     sb.append("{")
         .indent(
             () -> {
@@ -323,7 +366,7 @@ public class PrototypeObjectType extends ObjectType {
               }
 
               int i = 0;
-              for (Property.Key property : propertyNames) {
+              for (PropertyForPrettyPrinting property : properties) {
                 i++;
 
                 if (!sb.isForAnnotations() && i > MAX_PRETTY_PRINTED_PROPERTIES) {
@@ -331,18 +374,8 @@ public class PrototypeObjectType extends ObjectType {
                   break;
                 }
 
-                switch (property.kind()) {
-                  case STRING:
-                    sb.append(property.humanReadableName());
-                    break;
-                  case SYMBOL:
-                    sb.append("[");
-                    sb.append(property.humanReadableName());
-                    sb.append("]");
-                    break;
-                }
-                sb.append(": ").appendNonNull(this.getPropertyType(property));
-                if (i < propertyNames.size()) {
+                property.appendTo(sb);
+                if (i < properties.size()) {
                   sb.append(",");
                   if (multiline) {
                     sb.breakLineAndIndent();
