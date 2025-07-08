@@ -139,9 +139,9 @@ public final class RewriteCallerCodeLocationTest extends CompilerTestCase {
         const [foo, setFoo] = signal(0);
         """,
         """
-function signal(val, here = goog.callerLocation()) {}
-const [foo, setFoo] = signal(0, goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:22'));
-""");
+        function signal(val, here = goog.callerLocation()) {}
+        const [foo, setFoo] = signal(0, goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:22'));
+        """);
   }
 
   @Test
@@ -152,9 +152,9 @@ const [foo, setFoo] = signal(0, goog.callerLocationIdInternalDoNotCallOrElse('te
         const {foo, setFoo} = signal(0);
         """,
         """
-function signal(val, here = goog.callerLocation()) {}
-const {foo, setFoo} = signal(0, goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:22'));
-""");
+        function signal(val, here = goog.callerLocation()) {}
+        const {foo, setFoo} = signal(0, goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:22'));
+        """);
   }
 
   @Test
@@ -165,9 +165,9 @@ const {foo, setFoo} = signal(0, goog.callerLocationIdInternalDoNotCallOrElse('te
         const obj = {prop: signal(0)};
         """,
         """
-function signal(val, here = goog.callerLocation()) {}
-const obj = {prop: signal(0, goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:19'))};
-""");
+        function signal(val, here = goog.callerLocation()) {}
+        const obj = {prop: signal(0, goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:19'))};
+        """);
   }
 
   @Test
@@ -178,9 +178,9 @@ const obj = {prop: signal(0, goog.callerLocationIdInternalDoNotCallOrElse('testc
         const maybeSignal = Math.random() ? signal(0) : null;
         """,
         """
-function signal(val, here = goog.callerLocation()) {}
-const maybeSignal = Math.random() ? signal(0, goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:36')) : null;
-""");
+        function signal(val, here = goog.callerLocation()) {}
+        const maybeSignal = Math.random() ? signal(0, goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:36')) : null;
+        """);
   }
 
   @Test
@@ -191,9 +191,9 @@ const maybeSignal = Math.random() ? signal(0, goog.callerLocationIdInternalDoNot
         const intermediateFunction = (() => signal(0))();
         """,
         """
-function signal(val, here = goog.callerLocation()) {}
-const intermediateFunction = (() => signal(0, goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:36')))();
-""");
+        function signal(val, here = goog.callerLocation()) {}
+        const intermediateFunction = (() => signal(0, goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:36')))();
+        """);
   }
 
   @Test
@@ -204,9 +204,9 @@ const intermediateFunction = (() => signal(0, goog.callerLocationIdInternalDoNot
         const signalArray = [signal(0), signal(1)];
         """,
         """
-function signal(val, here = goog.callerLocation()) {}
-const signalArray = [signal(0, goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:21')), signal(1, goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:32'))];
-""");
+        function signal(val, here = goog.callerLocation()) {}
+        const signalArray = [signal(0, goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:21')), signal(1, goog.callerLocationIdInternalDoNotCallOrElse('testcode:2:32'))];
+        """);
   }
 
   @Test
@@ -418,12 +418,12 @@ const signalArray = [signal(0, goog.callerLocationIdInternalDoNotCallOrElse('tes
         (0,module$exports$main.signal)(0);
         """,
         """
-function module$contents$main_signal(val, here = goog.callerLocation()) {
-  return val;
-}
-module$exports$main.signal = module$contents$main_signal;
-(0,module$exports$main.signal)(0, goog.callerLocationIdInternalDoNotCallOrElse('testcode:7:0'));
-""");
+        function module$contents$main_signal(val, here = goog.callerLocation()) {
+          return val;
+        }
+        module$exports$main.signal = module$contents$main_signal;
+        (0,module$exports$main.signal)(0, goog.callerLocationIdInternalDoNotCallOrElse('testcode:7:0'));
+        """);
   }
 
   @Test
@@ -465,5 +465,22 @@ module$exports$main.signal = module$contents$main_signal;
         }
         signal();
         """);
+  }
+
+  @Test
+  public void testFunctionWithCallerLocationParameterInExterns() {
+    test(
+        externs(
+            """
+            /**
+             * @fileoverview
+             * @typeSummary
+             * @externs
+             */
+            var goog = {};
+            function signal(x = goog.callerLocation()) {};
+            """),
+        srcs("signal();"),
+        expected("signal(goog.callerLocationIdInternalDoNotCallOrElse('testcode:1:0'));"));
   }
 }

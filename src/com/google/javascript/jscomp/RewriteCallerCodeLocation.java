@@ -37,7 +37,7 @@ import java.util.Objects;
  *
  * <p>i.e. `signal(0, goog.callerLocationIdInternalDoNotCallOrElse(path/to/file.ts:lineno:charno))`
  */
-class RewriteCallerCodeLocation implements CompilerPass {
+public final class RewriteCallerCodeLocation implements CompilerPass {
 
   static final DiagnosticType JSC_CALLER_LOCATION_POSITION_ERROR =
       DiagnosticType.error(
@@ -61,7 +61,7 @@ class RewriteCallerCodeLocation implements CompilerPass {
           "Do not use goog.callerLocation in an anonymous functions. Functions that use"
               + " goog.callerLocation should be named.");
 
-  private static final QualifiedName GOOG_CALLER_LOCATION_QUALIFIED_NAME =
+  public static final QualifiedName GOOG_CALLER_LOCATION_QUALIFIED_NAME =
       QualifiedName.of("goog.callerLocation");
 
   private final AbstractCompiler compiler;
@@ -84,9 +84,17 @@ class RewriteCallerCodeLocation implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root, new FindCallerLocationFunctions());
+    // Find all functions that have goog.callerLocation as a default parameter. We want to traverse
+    // the root node as well as the externs because the function that contains `goog.callerLocation`
+    // parameter could be an
+    // .i.js file in the externs node subtree
+    NodeTraversal.traverse(compiler, compiler.getRoot(), new FindCallerLocationFunctions());
     if (!callerLocationFunctionNames.isEmpty()) {
-      NodeTraversal.traverse(compiler, root, new RewriteCallerLocationFunctionCalls());
+      // Rewrite call-sites of functions that have goog.callerLocation as a default parameter. We
+      // want to traverse the root node as well as the externs to ensure the scope of the call-site
+      // is the same scope as the function with the `goog.callerLocation` parameter.
+      NodeTraversal.traverse(
+          compiler, compiler.getRoot(), new RewriteCallerLocationFunctionCalls());
     }
   }
 
@@ -250,7 +258,9 @@ class RewriteCallerCodeLocation implements CompilerPass {
 
       Var callerLocationFunction = functionVarAndPosition.getFunctionVar();
       Var calleeFunction = t.getScope().getVar(moduleContentsName);
-      if (!Objects.equals(calleeFunction, callerLocationFunction)) {
+      if (callerLocationFunction == null
+          || calleeFunction == null
+          || !Objects.equals(callerLocationFunction.getNameNode(), calleeFunction.getNameNode())) {
         return;
       }
 

@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
+import com.google.javascript.jscomp.RewriteCallerCodeLocation;
 import com.google.javascript.jscomp.Scope;
 import com.google.javascript.jscomp.Var;
 import com.google.javascript.rhino.IR;
@@ -553,6 +554,11 @@ public class ConvertToTypedInterface implements CompilerPass {
       for (Node arg = paramList.getFirstChild(); arg != null; arg = arg.getNext()) {
         if (arg.isDefaultValue()) {
           Node rhs = arg.getLastChild();
+          if (rhs.isCall()
+              && RewriteCallerCodeLocation.GOOG_CALLER_LOCATION_QUALIFIED_NAME.matches(
+                  rhs.getFirstChild())) {
+            continue;
+          }
           rhs.replaceWith(NodeUtil.newUndefinedNode(rhs));
           compiler.reportChangeToEnclosingScope(arg);
         }

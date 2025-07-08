@@ -1351,6 +1351,14 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogCallerLocationDefaultValueIsPreserved() {
+    testSame("function f(a = goog.callerLocation()) {}");
+    test(
+        "function f(a = 1, b = goog.callerLocation()) {}",
+        "function f(a = void 0, b = goog.callerLocation()) {}");
+  }
+
+  @Test
   public void testConstJsdocPropagationForNames_defaultValue() {
     test(
         """
