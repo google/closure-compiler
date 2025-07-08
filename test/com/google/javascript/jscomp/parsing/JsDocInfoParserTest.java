@@ -1757,14 +1757,14 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParseTsType_typesOnlyMode() {
-    assertThat(parse("@tsType ():this */", Config.JsDocParsing.TYPES_ONLY).getTsTypes())
+    assertThat(parse("@tsType ():this */", JsDocParsing.TYPES_ONLY).getTsTypes())
         .containsExactly("JsDocInfoParser_tsType_PlaceHolder");
   }
 
   @Test
   public void testParseTsType_includeDescriptions() {
     assertThat(
-            parse("@tsType ():this */", Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE)
+            parse("@tsType ():this */", JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE)
                 .getTsTypes())
         .containsExactly("():this");
   }
