@@ -463,7 +463,7 @@ public final class NamedType extends ProxyObjectType {
     }
 
     void commit(ObjectType target) {
-      var unused = target.defineProperty(propertyName, type, inferred, propertyNode);
+      target.defineProperty(propertyName, type, inferred, propertyNode);
     }
   }
 
