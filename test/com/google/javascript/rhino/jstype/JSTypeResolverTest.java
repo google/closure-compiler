@@ -42,6 +42,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.rhino.ErrorReporter;
 import java.util.ArrayList;
 import java.util.function.Consumer;
@@ -310,11 +311,13 @@ public final class JSTypeResolverTest {
     private Consumer<JSType> ctor = (t) -> {};
     private Consumer<JSType> resolve = (t) -> {};
 
+    @CanIgnoreReturnValue
     CustomTypeBuilder setCtor(Consumer<JSType> x) {
       this.ctor = x;
       return this;
     }
 
+    @CanIgnoreReturnValue
     CustomTypeBuilder setResolve(Consumer<JSType> x) {
       this.resolve = x;
       return this;

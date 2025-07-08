@@ -49,6 +49,7 @@ import com.github.difflib.patch.Patch;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Fact;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.List;
 
 /**
@@ -65,11 +66,13 @@ public final class TextDiffFactsBuilder {
     this.title = title;
   }
 
+  @CanIgnoreReturnValue
   public TextDiffFactsBuilder expectedText(String expectedText) {
     this.expectedText = expectedText;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public TextDiffFactsBuilder actualText(String actualText) {
     this.actualText = actualText;
     return this;
