@@ -107,7 +107,7 @@ public final class Reference implements StaticRef, Serializable {
     Node parent = node.getParent();
 
     // Special case for class B extends A, A is not a declaration.
-    if (parent.isClass() && node != parent.getFirstChild()) {
+    if (parent.isClass() && !node.isFirstChildOf(parent)) {
       return false;
     }
 

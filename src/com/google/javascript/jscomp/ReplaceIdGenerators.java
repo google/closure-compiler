@@ -412,8 +412,7 @@ class ReplaceIdGenerators implements CompilerPass {
                 IR.templateLiteralString(rename, rename).srcrefIfMissing(child));
           } else {
             newTemplateLit.addChildToBack(
-                IR.templateLiteralSubstitution(child.getFirstChild().detach())
-                    .srcrefIfMissing(child));
+                IR.templateLiteralSubstitution(child.removeFirstChild()).srcrefIfMissing(child));
           }
         }
         arg.replaceWith(newTemplateLit);

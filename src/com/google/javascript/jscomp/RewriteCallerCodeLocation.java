@@ -120,7 +120,7 @@ class RewriteCallerCodeLocation implements CompilerPass {
 
       // Check for misuse of goog.callerLocation.
       if (parent.isCall() && parent.getParent().isDefaultValue()) {
-        if (parent.getParent().getParent().isStringKey()) {
+        if (parent.getGrandparent().isStringKey()) {
           // Throw an error when `goog.callerLocation` is used in an object literal.
           // E.g:
           // function foo({val1, val2, here = goog.callerLocation()}) {}

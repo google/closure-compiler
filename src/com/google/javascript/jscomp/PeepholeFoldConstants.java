@@ -527,7 +527,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         && areNodesEqualForInlining(left, right.getFirstFirstChild())) {
 
       var newLeft = right.getFirstChild().getLastChild().detach();
-      right.getFirstChild().detach();
+      right.removeFirstChild();
       right.addChildToFront(newLeft);
       newRight = right;
 
