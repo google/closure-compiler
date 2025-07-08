@@ -69,7 +69,9 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.JSTypeResolver;
+import com.google.javascript.rhino.jstype.KnownSymbolType;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.StaticTypedRef;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
@@ -922,6 +924,78 @@ public final class TypeInferenceTest {
     assuming("x", createUndefinableType(OBJECT_TYPE));
     inFunction("x['z'] = 3;");
     verify("x", OBJECT_TYPE);
+  }
+
+  @Test
+  public void testGetElemDereference_knownSymbol() {
+    ObjectType array = getNativeObjectType(ARRAY_TYPE);
+    KnownSymbolType sym = new KnownSymbolType(registry, "sym");
+    array.defineDeclaredProperty(new Property.SymbolKey(sym), getNativeType(STRING_TYPE), null);
+    assuming("o", array);
+    assuming("sym", sym);
+
+    inFunction("const x = o[sym];");
+    verify("x", STRING_TYPE);
+  }
+
+  @Test
+  public void testGetElemDereference_knownSymbol_nullable() {
+    ObjectType array = getNativeObjectType(ARRAY_TYPE);
+    KnownSymbolType sym = new KnownSymbolType(registry, "sym");
+    array.defineDeclaredProperty(new Property.SymbolKey(sym), getNativeType(STRING_TYPE), null);
+    assuming("o", createNullableType(array));
+    assuming("sym", sym);
+
+    inFunction("const x = o[sym];");
+    verify("x", STRING_TYPE);
+  }
+
+  @Test
+  public void testGetElemDereference_knownSymbol_union() {
+    ObjectType array = getNativeObjectType(ARRAY_TYPE);
+    ObjectType promise = getNativeObjectType(JSTypeNative.PROMISE_TYPE);
+    KnownSymbolType sym = new KnownSymbolType(registry, "sym");
+    array.defineDeclaredProperty(new Property.SymbolKey(sym), getNativeType(STRING_TYPE), null);
+    promise.defineDeclaredProperty(new Property.SymbolKey(sym), getNativeType(NUMBER_TYPE), null);
+    assuming("o", registry.createUnionType(array, promise));
+    assuming("sym", sym);
+
+    inFunction("const x = o[sym];");
+    verify("x", registry.createUnionType(getNativeType(STRING_TYPE), getNativeType(NUMBER_TYPE)));
+  }
+
+  @Test
+  public void testGetElemDereference_knownSymbol_union_notOnAllAlternates() {
+    ObjectType array = getNativeObjectType(ARRAY_TYPE);
+    ObjectType promise = getNativeObjectType(JSTypeNative.PROMISE_TYPE);
+    KnownSymbolType sym = new KnownSymbolType(registry, "sym");
+    array.defineDeclaredProperty(new Property.SymbolKey(sym), getNativeType(STRING_TYPE), null);
+    // don't define sym on promise
+    assuming("o", registry.createUnionType(array, promise));
+    assuming("sym", sym);
+
+    inFunction("const x = o[sym];");
+    verify("x", UNKNOWN_TYPE);
+  }
+
+  @Test
+  public void testGetElemDereference_knownSymbol_onAllType() {
+    KnownSymbolType sym = new KnownSymbolType(registry, "sym");
+    assuming("o", ALL_TYPE);
+    assuming("sym", sym);
+
+    inFunction("const x = o[sym];");
+    verify("x", UNKNOWN_TYPE);
+  }
+
+  @Test
+  public void testGetElemDereference_knownSymbol_onUnknownType() {
+    KnownSymbolType sym = new KnownSymbolType(registry, "sym");
+    assuming("o", UNKNOWN_TYPE);
+    assuming("sym", sym);
+
+    inFunction("const x = o[sym];");
+    verify("x", UNKNOWN_TYPE);
   }
 
   @Test

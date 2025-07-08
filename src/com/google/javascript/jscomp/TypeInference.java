@@ -59,7 +59,9 @@ import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.KnownSymbolType;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.jstype.TemplateType;
@@ -2452,36 +2454,70 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
   }
 
   private void inferGetElemType(Node n) {
+    JSType objType = getJSType(n.getFirstChild()).restrictByNotNullOrUndefined();
     Node indexKey = n.getLastChild();
     JSType indexType = getJSType(indexKey);
-    JSType inferredType = unknownType;
-    if (indexType.isSymbolValueType()) {
+
+    final JSType inferredType;
+    if (indexType.isKnownSymbolValueType()) {
+      inferredType = dereferenceKnownSymbolProp(objType, indexType.toMaybeKnownSymbolType());
+    } else if (indexType.isSymbolValueType()) {
       // For now, allow symbols definitions/access on any type. In the future only allow them
       // on the subtypes for which they are defined.
-      // TODO(b/77474174): Type well known symbol accesses.
+      // TODO(b/77474174): be stricter about accesses for non-well-known symbols
+      inferredType = unknownType;
     } else {
-      JSType type = getJSType(n.getFirstChild()).restrictByNotNullOrUndefined();
-
-      // If this is a union type, then we must extract type arguments from each option.
-      UnionType.Builder argumentTypes = UnionType.builder(registry);
-      Collection<JSType> alternates =
-          type.isUnionType() ? type.toMaybeUnionType().getAlternates() : ImmutableList.of(type);
-      for (JSType option : alternates) {
-        TemplateTypeMap typeMap = option.getTemplateTypeMap();
-        if (!typeMap.hasTemplateType(registry.getObjectElementKey())) {
-          // This isn't an array or object, drop out.
-          argumentTypes = null;
-          break;
-        }
-
-        // Extract the element type and add all options to our set of alternates.
-        argumentTypes.addAlternate(typeMap.getResolvedTemplateType(registry.getObjectElementKey()));
-      }
-
-      // Unwrap the union if possible, and fail if we had no alternates.
-      inferredType = (argumentTypes == null) ? null : argumentTypes.build();
+      inferredType = dereferenceIndexSignature(objType);
     }
     n.setJSType(inferredType != null ? inferredType : unknownType);
+  }
+
+  private @Nullable JSType dereferenceKnownSymbolProp(JSType obj, KnownSymbolType indexSymbol) {
+    // If this is a union type, then we must extract type arguments from each option.
+    UnionType.Builder argumentTypes = UnionType.builder(registry);
+    Collection<JSType> alternates =
+        obj.isUnionType() ? obj.toMaybeUnionType().getAlternates() : ImmutableList.of(obj);
+    Property.Key key = new Property.SymbolKey(indexSymbol);
+    for (JSType option : alternates) {
+      if (option.toMaybeObjectType() == null) {
+        // This isn't an array or object, drop out.
+        argumentTypes = null;
+        break;
+      }
+
+      // Extract the element type and add all options to our set of alternates.
+      JSType propertyType = option.toMaybeObjectType().findPropertyType(key);
+      if (propertyType == null) {
+        // this union member doesn't have the property. just make it unknown.
+        argumentTypes = null;
+        break;
+      }
+      argumentTypes.addAlternate(propertyType);
+    }
+
+    // Unwrap the union if possible, and fail if we had no alternates.
+    return (argumentTypes == null) ? null : argumentTypes.build();
+  }
+
+  private @Nullable JSType dereferenceIndexSignature(JSType obj) {
+    // If this is a union type, then we must extract type arguments from each option.
+    UnionType.Builder argumentTypes = UnionType.builder(registry);
+    Collection<JSType> alternates =
+        obj.isUnionType() ? obj.toMaybeUnionType().getAlternates() : ImmutableList.of(obj);
+    for (JSType option : alternates) {
+      TemplateTypeMap typeMap = option.getTemplateTypeMap();
+      if (!typeMap.hasTemplateType(registry.getObjectElementKey())) {
+        // This isn't an array or object, drop out.
+        argumentTypes = null;
+        break;
+      }
+
+      // Extract the element type and add all options to our set of alternates.
+      argumentTypes.addAlternate(typeMap.getResolvedTemplateType(registry.getObjectElementKey()));
+    }
+
+    // Unwrap the union if possible, and fail if we had no alternates.
+    return (argumentTypes == null) ? null : argumentTypes.build();
   }
 
   private FlowScope traverseGetProp(Node n, FlowScope scope) {
