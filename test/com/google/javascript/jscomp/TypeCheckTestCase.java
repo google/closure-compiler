@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DESCRIPTION_EQUALITY;
@@ -122,12 +121,13 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
   @CheckReturnValue
   public final class TypeTestBuilder {
     private String source;
-    private String externs;
+    private final List<String> externs = new ArrayList<>();
     private String sourceNameExtension = "";
     private boolean includeDefaultExterns = false;
     private final ArrayList<DiagnosticType> diagnosticTypes = new ArrayList<>();
     private final ArrayList<String> diagnosticDescriptions = new ArrayList<>();
     private boolean diagnosticsAreErrors = false;
+    private boolean hasRun = false;
 
     private TypeTestBuilder() {}
 
@@ -138,8 +138,7 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     }
 
     public TypeTestBuilder addExterns(String externs) {
-      checkState(this.externs == null, "Can only have one externs right now.");
-      this.externs = externs;
+      this.externs.add(externs);
       return this;
     }
 
@@ -174,10 +173,13 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
           this.diagnosticTypes.isEmpty() || this.diagnosticDescriptions.isEmpty(),
           "Cannot expect both diagnostic types and diagnostic descriptions");
       checkState(this.source != null, "Must provide source");
+      checkState(!this.hasRun, "Cannot run the same test twice");
+      this.hasRun = true;
+      if (this.includeDefaultExterns) {
+        this.externs.add(0, DEFAULT_EXTERNS);
+      }
 
-      String allExterns =
-          String.join(
-              "\n", this.includeDefaultExterns ? DEFAULT_EXTERNS : "", nullToEmpty(this.externs));
+      String allExterns = String.join("\n", this.externs);
 
       final List<Object> diagnostics;
       final Correspondence<JSError, Object> correspondence;
