@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multiset;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -68,6 +69,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
 
     private Builder() {}
 
+    @CanIgnoreReturnValue
     Builder withRenamer(Renamer renamer) {
       this.renamer = renamer;
       return this;
@@ -78,6 +80,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
      *
      * <p>This option is {@code true} by default.
      */
+    @CanIgnoreReturnValue
     Builder withMarkChanges(boolean markChanges) {
       this.markChanges = markChanges;
       return this;
@@ -90,6 +93,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
      *
      * <p>This option is {@code false} by default.
      */
+    @CanIgnoreReturnValue
     Builder withAssertOnChange(boolean assertOnChange) {
       this.assertOnChange = assertOnChange;
       return this;

@@ -1369,6 +1369,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     }
 
     /** Marks the function as having "modifies this" side effects. */
+    @CanIgnoreReturnValue
     AmbiguatedFunctionSummary setMutatesThis() {
       return setMask(MUTATES_THIS);
     }
@@ -1380,6 +1381,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     }
 
     /** Marks the function as having "throw" side effects. */
+    @CanIgnoreReturnValue
     AmbiguatedFunctionSummary setThrows() {
       return setMask(THROWS);
     }
@@ -1390,6 +1392,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     }
 
     /** Marks the function as having "modifies globals" side effects. */
+    @CanIgnoreReturnValue
     AmbiguatedFunctionSummary setMutatesGlobalStateAndAllOtherFlags() {
       return setMask(THROWS | MUTATES_THIS | MUTATES_ARGUMENTS | MUTATES_GLOBAL_STATE);
     }
@@ -1401,6 +1404,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     }
 
     /** Marks the function as having "modifies arguments" side effects. */
+    @CanIgnoreReturnValue
     AmbiguatedFunctionSummary setMutatesArguments() {
       return setMask(MUTATES_ARGUMENTS);
     }

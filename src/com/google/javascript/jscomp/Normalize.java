@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.BoilerplateRenamer;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -96,6 +97,7 @@ final class Normalize implements CompilerPass {
      *
      * <p>This option is {@code false} by default.
      */
+    @CanIgnoreReturnValue
     Builder assertOnChange(boolean assertOnChange) {
       this.assertOnChange = assertOnChange;
       return this;
@@ -807,6 +809,7 @@ final class Normalize implements CompilerPass {
      *     to the front of parent's child list.
      * @return The inserted child node.
      */
+    @CanIgnoreReturnValue
     private static Node addToFront(Node parent, Node newChild, Node after) {
       if (after == null) {
         parent.addChildToFront(newChild);

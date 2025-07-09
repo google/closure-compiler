@@ -4479,6 +4479,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
+  @CanIgnoreReturnValue
   private static Node checkNotModule(Node script, String msg, Object... args) {
     checkArgument(script.isScript(), script);
     if (!script.hasOneChild()) {

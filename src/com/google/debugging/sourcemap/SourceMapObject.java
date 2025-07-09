@@ -16,6 +16,7 @@
 
 package com.google.debugging.sourcemap;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.List;
 import java.util.Map;
 
@@ -111,51 +112,61 @@ public class SourceMapObject {
     private List<SourceMapSection> sections;
     private Map<String, Object> extensions;
 
+    @CanIgnoreReturnValue
     public Builder setVersion(int version) {
       this.version = version;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setLineCount(int lineCount) {
       this.lineCount = lineCount;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setSourceRoot(String sourceRoot) {
       this.sourceRoot = sourceRoot;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setFile(String file) {
       this.file = file;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setMappings(String mappings) {
       this.mappings = mappings;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setSources(String[] sources) {
       this.sources = sources;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setSourcesContent(String[] sourcesContent) {
       this.sourcesContent = sourcesContent;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setNames(String[] names) {
       this.names = names;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setSections(List<SourceMapSection> sections) {
       this.sections = sections;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setExtensions(Map<String, Object> extensions) {
       this.extensions = extensions;
       return this;

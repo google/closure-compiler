@@ -26,6 +26,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.disambiguate.DisambiguateProperties;
 import com.google.javascript.jscomp.ijs.IjsErrors;
@@ -85,6 +86,7 @@ public class DiagnosticGroups {
     return new DiagnosticGroup(types);
   }
 
+  @CanIgnoreReturnValue
   static DiagnosticGroup registerGroup(String name, DiagnosticGroup group) {
     groupsByName.put(name, group);
     return group;

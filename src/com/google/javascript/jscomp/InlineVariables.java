@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.ReferenceCollector.Behavior;
 import com.google.javascript.rhino.JSDocInfo;
@@ -1028,6 +1029,7 @@ class InlineVariables implements CompilerPass {
       return isKnown && value != other;
     }
 
+    @CanIgnoreReturnValue
     T setKnownValueOnce(T value) {
       checkState(!isKnown, "already known");
       this.value = value;

@@ -323,6 +323,7 @@ public final class ReplaceMessages {
     // LinkedHashMap to keep the keys in the order we set them so our output is deterministic.
     private final LinkedHashMap<String, Node> keyToValueNodeMap = new LinkedHashMap<>();
 
+    @CanIgnoreReturnValue
     private QuotedKeyObjectLitBuilder addString(String key, String value) {
       return addNode(key, astFactory.createString(value));
     }

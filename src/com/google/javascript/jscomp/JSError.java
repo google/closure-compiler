@@ -204,6 +204,7 @@ public record JSError(
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder setNodeRange(Node start, Node end) {
       Preconditions.checkState(
           Objects.equals(DEFAULT_SOURCENAME, this.sourceName),
