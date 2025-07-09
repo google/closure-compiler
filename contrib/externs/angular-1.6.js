@@ -202,6 +202,7 @@ angular.reloadWithDebugInfo = function() {};
  * @param {Object|Array|Date|string|number|boolean} obj
  * @param {number|boolean=} opt_pretty
  * @return {string}
+ * @nosideeffects
  */
 angular.toJson = function(obj, opt_pretty) {};
 
