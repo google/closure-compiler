@@ -6630,7 +6630,7 @@ CustomStateSet.prototype.keys = function() {};
 CustomStateSet.prototype.values = function() {};
 
 /**
- * @return {!Iterator<string>}
+ * @return {!IteratorIterable<string>}
  */
 CustomStateSet.prototype[Symbol.iterator] = function() {};
 

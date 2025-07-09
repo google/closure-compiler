@@ -3229,7 +3229,7 @@ RTCStatsReport.prototype.has = function(key) {};
 RTCStatsReport.prototype.size;
 
 /**
- * @return {!Iterator<!Array<string|!RTCStats>>}
+ * @return {!IteratorIterable<!Array<string|!RTCStats>>}
  */
 RTCStatsReport.prototype[Symbol.iterator] = function() {};
 

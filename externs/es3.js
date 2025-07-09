@@ -643,7 +643,7 @@ Function.prototype.toString = function() {};
 function ReadonlyArray() {}
 
 /**
- * @return {!Iterator<T>}
+ * @return {!IteratorIterable<T>}
  * @override
  */
 ReadonlyArray.prototype[Symbol.iterator] = function() {};
@@ -820,7 +820,7 @@ ReadonlyArray.prototype.length;
 function Array(var_args) {}
 
 /**
- * @return {!Iterator<T>}
+ * @return {!IteratorIterable<T>}
  * @override
  */
 Array.prototype[Symbol.iterator] = function() {};

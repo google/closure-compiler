@@ -76,7 +76,7 @@ ReadonlyMap.prototype.size;
 ReadonlyMap.prototype.values = function() {};
 
 /**
- * @return {!Iterator<!Array<K|V>>}
+ * @return {!IteratorIterable<!Array<K|V>>}
  * @nosideeffects
  */
 ReadonlyMap.prototype[Symbol.iterator] = function() {};
@@ -165,7 +165,7 @@ Map.prototype.values = function() {};
 
 /**
  * @override
- * @return {!Iterator<!Array<K|V>>}
+ * @return {!IteratorIterable<!Array<K|V>>}
  * @nosideeffects
  */
 Map.prototype[Symbol.iterator] = function() {};
@@ -225,7 +225,7 @@ function SetLike() {}
 SetLike.prototype.has = function(element) {};
 
 /**
- * @return {!Iterator<VALUE>}
+ * @return {!IteratorIterable<VALUE>}
  */
 SetLike.prototype.keys = function() {};
 
@@ -372,7 +372,7 @@ Set.prototype.isSubsetOf = function(other) {};
 Set.prototype.isDisjointFrom = function(other) {};
 
 /**
- * @return {!Iterator<VALUE>}
+ * @return {!IteratorIterable<VALUE>}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/Symbol.iterator
  * @override
  */
