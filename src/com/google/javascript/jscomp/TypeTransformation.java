@@ -108,7 +108,6 @@ class TypeTransformation {
     }
   }
 
-  @SuppressWarnings("unchecked")
   TypeTransformation(AbstractCompiler compiler, StaticTypedScope typeEnv) {
     this.compiler = compiler;
     this.registry = compiler.getTypeRegistry();
@@ -240,17 +239,17 @@ class TypeTransformation {
     return eval(ttlAst, typeVars, ImmutableMap.of());
   }
 
-  /** Evaluates the type transformation expression and returns the resulting type.
+  /**
+   * Evaluates the type transformation expression and returns the resulting type.
    *
    * @param ttlAst The node representing the type transformation expression
    * @param typeVars The environment containing the information about the type variables
    * @param nameVars The environment containing the information about the name variables
    * @return JSType The resulting type after the transformation
    */
-  @SuppressWarnings("unchecked")
   @VisibleForTesting
-  JSType eval(Node ttlAst, ImmutableMap<String, JSType> typeVars,
-      ImmutableMap<String, String> nameVars) {
+  JSType eval(
+      Node ttlAst, ImmutableMap<String, JSType> typeVars, ImmutableMap<String, String> nameVars) {
     JSType result = evalInternal(ttlAst, new NameResolver(typeVars, nameVars));
     return result.isEmptyType() ? getUnknownType() : result;
   }

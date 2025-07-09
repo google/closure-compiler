@@ -75,7 +75,6 @@ class CompilerExecutor {
     this.timeout = timeout;
   }
 
-  @SuppressWarnings("unchecked")
   <T> T runInCompilerThread(final Callable<T> callable, final boolean dumpTraceReport) {
     ExecutorService executor = getExecutorService();
     T result = null;

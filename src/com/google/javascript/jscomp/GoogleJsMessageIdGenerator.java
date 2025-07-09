@@ -103,7 +103,6 @@ public final class GoogleJsMessageIdGenerator implements IdGenerator {
       return FP.fingerprint(tmp, 0, tmp.length);
     }
 
-    @SuppressWarnings("fallthrough")
     private static int hash32(byte[] str, int start, int limit, int c) {
       int a = 0x9e3779b9;
       int b = 0x9e3779b9;
