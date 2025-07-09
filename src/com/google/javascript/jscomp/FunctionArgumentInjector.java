@@ -192,10 +192,9 @@ class FunctionArgumentInjector {
    * <p>Inlining this without taking precautions would cause the call site value to be modified
    * (bad).
    */
-  Set<String> findModifiedParameters(Node fnNode) {
+  ImmutableSet<String> findModifiedParameters(Node fnNode) {
     ImmutableSet<String> names = getFunctionParameterSet(fnNode);
-    Set<String> unsafeNames = new LinkedHashSet<>();
-    return findModifiedParameters(fnNode.getLastChild(), names, unsafeNames, false);
+    return ImmutableSet.copyOf(findModifiedParameters(fnNode.getLastChild(), names, false));
   }
 
   /**
@@ -208,12 +207,11 @@ class FunctionArgumentInjector {
    *
    * @param n The node in question.
    * @param names The set of names to check.
-   * @param unsafe The set of names that require aliases.
    * @param inInnerFunction Whether the inspection is occurring on a inner function.
    */
   private static Set<String> findModifiedParameters(
-      Node n, ImmutableSet<String> names, Set<String> unsafe, boolean inInnerFunction) {
-    checkArgument(unsafe != null);
+      Node n, ImmutableSet<String> names, boolean inInnerFunction) {
+    LinkedHashSet<String> unsafe = new LinkedHashSet<>();
     if (n.isName()) {
       if (names.contains(n.getString()) && (inInnerFunction || canNameValueChange(n))) {
         unsafe.add(n.getString());
@@ -228,7 +226,7 @@ class FunctionArgumentInjector {
     }
 
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      findModifiedParameters(c, names, unsafe, inInnerFunction);
+      unsafe.addAll(findModifiedParameters(c, names, inInnerFunction));
     }
 
     return unsafe;
@@ -266,20 +264,21 @@ class FunctionArgumentInjector {
    *
    * @param fnNode The FUNCTION node to be inlined.
    * @param argMap The argument list for the call to fnNode.
-   * @param namesNeedingTemps The set of names to update.
+   * @param modifiedParameters The set of parameters known to be modified, which automatically need
+   *     temps.
    */
-  void maybeAddTempsForCallArguments(
+  ImmutableSet<String> gatherCallArgumentsNeedingTemps(
       AbstractCompiler compiler,
       Node fnNode,
       ImmutableMap<String, Node> argMap,
-      Set<String> namesNeedingTemps,
+      ImmutableSet<String> modifiedParameters,
       CodingConvention convention) {
+    checkArgument(fnNode.isFunction(), fnNode);
     if (argMap.isEmpty()) {
       // No arguments to check, we are done.
-      return;
+      return modifiedParameters;
     }
-
-    checkArgument(fnNode.isFunction(), fnNode);
+    Set<String> namesNeedingTemps = new LinkedHashSet<>(modifiedParameters);
     Node block = fnNode.getLastChild();
 
     /*
@@ -413,6 +412,7 @@ class FunctionArgumentInjector {
         }
       }
     }
+    return ImmutableSet.copyOf(namesNeedingTemps);
   }
 
   /**

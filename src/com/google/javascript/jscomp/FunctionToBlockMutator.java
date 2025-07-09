@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.FunctionArgumentInjector.THIS_MARKER;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.InlineRenamer;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -146,14 +147,19 @@ class FunctionToBlockMutator {
     }
 
     // TODO(johnlenz): Mark NAME nodes constant for parameters that are not modified.
-    Set<String> namesToAlias = functionArgumentInjector.findModifiedParameters(newFnNode);
+    ImmutableSet<String> modifiedParameters =
+        functionArgumentInjector.findModifiedParameters(newFnNode);
     ImmutableMap<String, Node> args =
         functionArgumentInjector.getFunctionCallParameterMap(
             newFnNode, callNode, this.safeNameIdSupplier);
     boolean hasArgs = !args.isEmpty();
+    ImmutableSet<String> allNamesToAlias = ImmutableSet.of();
     if (hasArgs) {
-      functionArgumentInjector.maybeAddTempsForCallArguments(
-          compiler, newFnNode, args, namesToAlias, compiler.getCodingConvention());
+      ImmutableSet<String> temps =
+          functionArgumentInjector.gatherCallArgumentsNeedingTemps(
+              compiler, newFnNode, args, modifiedParameters, compiler.getCodingConvention());
+      allNamesToAlias =
+          ImmutableSet.<String>builder().addAll(modifiedParameters).addAll(temps).build();
     }
 
     Node newBlock = NodeUtil.getFunctionBody(newFnNode);
@@ -161,7 +167,7 @@ class FunctionToBlockMutator {
     newBlock.detach();
 
     if (hasArgs) {
-      Node inlineResult = aliasAndInlineArguments(newBlock, args, namesToAlias);
+      Node inlineResult = aliasAndInlineArguments(newBlock, args, allNamesToAlias);
       checkState(newBlock == inlineResult);
     }
 
