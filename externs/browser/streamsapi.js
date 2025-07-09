@@ -212,13 +212,6 @@ ReadableStream.prototype.locked;
 ReadableStream.prototype.cancel = function(reason) {};
 
 /**
- * @param {!ReadableStreamIteratorOptions=} options
- * @return {!AsyncIterator<VALUE>}
- * @see https://streams.spec.whatwg.org/#rs-get-iterator
- */
-ReadableStream.prototype.getIterator = function(options) {};
-
-/**
  * @param {{ mode:(undefined|string) }=} opt_options
  * @return {(!ReadableStreamDefaultReader<VALUE>|!ReadableStreamBYOBReader)}
  * @see https://streams.spec.whatwg.org/#rs-get-reader
