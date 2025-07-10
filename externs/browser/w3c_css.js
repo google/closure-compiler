@@ -3313,6 +3313,12 @@ Element.prototype.clientWidth;
 Element.prototype.clientHeight;
 
 /**
+ * @type {number}
+ * @see https://drafts.csswg.org/cssom-view/#dom-element-currentcsszoom
+ */
+Element.prototype.currentCSSZoom;
+
+/**
  * @record
  * @see https://drafts.csswg.org/cssom-view/#dictdef-checkvisibilityoptions
  */
