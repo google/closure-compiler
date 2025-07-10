@@ -126,6 +126,12 @@ google.maps.AddressValidationLibrary.prototype.Granularity;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.addressValidation.PossibleNextAction}
+ */
+google.maps.AddressValidationLibrary.prototype.PossibleNextAction;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.addressValidation.USPSAddress}
  */
 google.maps.AddressValidationLibrary.prototype.USPSAddress;
@@ -7193,7 +7199,7 @@ google.maps.MapsServerError = function() {};
  * Access by calling `const {Marker} = await
  * google.maps.importLibrary("marker")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {!google.maps.MarkerOptions=} opts
+ * @param {google.maps.MarkerOptions=} opts Named optional arguments
  * @extends {google.maps.MVCObject}
  * @constructor
  * @deprecated As of February 21st, 2024, google.maps.Marker is deprecated.
@@ -7251,7 +7257,7 @@ google.maps.Marker.prototype.getLabel = function() {};
 
 /**
  * Get the map or panaroama the {@link google.maps.Marker} is rendered on.
- * @return {!google.maps.Map|!google.maps.StreetViewPanorama|null}
+ * @return {google.maps.Map|google.maps.StreetViewPanorama}
  */
 google.maps.Marker.prototype.getMap = function() {};
 
@@ -7346,7 +7352,7 @@ google.maps.Marker.prototype.setLabel = function(label) {};
 /**
  * Renders the {@link google.maps.Marker} on the specified map or panorama. If
  * map is set to <code>null</code>, the marker will be removed.
- * @param {!google.maps.Map|!google.maps.StreetViewPanorama|null} map
+ * @param {google.maps.Map|google.maps.StreetViewPanorama} map
  * @return {undefined}
  */
 google.maps.Marker.prototype.setMap = function(map) {};
@@ -7360,7 +7366,7 @@ google.maps.Marker.prototype.setOpacity = function(opacity) {};
 
 /**
  * Set the options for the {@link google.maps.Marker}.
- * @param {!google.maps.MarkerOptions|null} options
+ * @param {google.maps.MarkerOptions} options
  * @return {undefined}
  */
 google.maps.Marker.prototype.setOptions = function(options) {};
@@ -11848,6 +11854,54 @@ google.maps.addressValidation.Granularity = {
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
+ * Offers an interpretive summary of the API response, intended to assist in
+ * determining a potential subsequent action to take. This field is derived from
+ * other fields in the API response and should not be considered as a guarantee
+ * of address accuracy or deliverability.
+ *
+ * Access by calling `const {PossibleNextAction} = await
+ * google.maps.importLibrary("addressValidation")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.addressValidation.PossibleNextAction = {
+  /**
+   * The API response does not contain signals that warrant one of the other
+   * PossibleNextAction values. You might consider using the post-processed
+   * address without further prompting your customer, though this does not
+   * guarantee the address is valid, and the address might still contain
+   * corrections. It is your responsibility to determine if and how to prompt
+   * your customer, depending on your own risk assessment.
+   */
+  ACCEPT: 'ACCEPT',
+  /**
+   * One or more fields of the API response indicate potential minor issues with
+   * the post-processed address, for example the <code>postal_code</code>
+   * address component was <code>replaced</code>. Prompting your customer to
+   * review the address could help improve the quality of the address.
+   */
+  CONFIRM: 'CONFIRM',
+  /**
+   * The API response indicates the post-processed address might be missing a
+   * subpremises. Prompting your customer to review the address and consider
+   * adding a unit number could help improve the quality of the address. The
+   * post-processed address might also have other minor issues. Note: this enum
+   * value can only be returned for US addresses.
+   */
+  CONFIRM_ADD_SUBPREMISES: 'CONFIRM_ADD_SUBPREMISES',
+  /**
+   * One or more fields of the API response indicate a potential issue with the
+   * post-processed address, for example the
+   * <code>verdict.validation_granularity</code> is <code>OTHER</code>.
+   * Prompting your customer to edit the address could help improve the quality
+   * of the address.
+   */
+  FIX: 'FIX',
+};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
  * USPS representation of a US address.
  *
  * Access by calling `const {USPSAddress} = await
@@ -12232,6 +12286,13 @@ google.maps.addressValidation.Verdict.prototype.hasUnconfirmedComponents;
  * @type {!google.maps.addressValidation.Granularity|null}
  */
 google.maps.addressValidation.Verdict.prototype.inputGranularity;
+
+/**
+ * A possible next action to take based on other fields in the API response.
+ * See {@link google.maps.addressValidation.PossibleNextAction} for details.
+ * @type {!google.maps.addressValidation.PossibleNextAction|null}
+ */
+google.maps.addressValidation.Verdict.prototype.possibleNextAction;
 
 /**
  * The granularity level that the API can fully <strong>validate</strong> the
@@ -19286,6 +19347,18 @@ google.maps.places.Photo = function() {};
 google.maps.places.Photo.prototype.authorAttributions;
 
 /**
+ * A link where user can flag a problem with the photo.
+ * @type {string|null}
+ */
+google.maps.places.Photo.prototype.flagContentURI;
+
+/**
+ * A link to show the photo on Google Maps.
+ * @type {string|null}
+ */
+google.maps.places.Photo.prototype.googleMapsURI;
+
+/**
  * The height of the photo in pixels.
  * @type {number}
  */
@@ -22336,6 +22409,18 @@ google.maps.places.Review = function() {};
  * @type {!google.maps.places.AuthorAttribution|null}
  */
 google.maps.places.Review.prototype.authorAttribution;
+
+/**
+ * A link where user can flag a problem with the review.
+ * @type {string|null}
+ */
+google.maps.places.Review.prototype.flagContentURI;
+
+/**
+ * A link to show the review on Google Maps.
+ * @type {string|null}
+ */
+google.maps.places.Review.prototype.googleMapsURI;
 
 /**
  * @type {!Date|null}
