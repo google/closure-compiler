@@ -26,6 +26,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -38,12 +39,14 @@ import com.google.common.io.BaseEncoding;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.errorprone.annotations.MustBeClosed;
 import com.google.javascript.jscomp.CodePrinter.LicenseTracker;
 import com.google.javascript.jscomp.CompilerInput.ModuleType;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.ExperimentalForceTranspile;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.CompilerOptions.SegmentOfCompilationToRun;
+import com.google.javascript.jscomp.ExpressionDecomposer.Workaround;
 import com.google.javascript.jscomp.JSChunkGraph.ChunkDependenceException;
 import com.google.javascript.jscomp.JSChunkGraph.MissingChunkException;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
@@ -88,6 +91,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.IOException;
 import java.io.InputStream;
@@ -97,11 +101,13 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -1355,15 +1361,129 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
+  private int currentPassIndex = -1;
+
   @Override
   final void beforePass(String passName) {
-    super.beforePass(passName);
+    this.currentPassIndex++;
   }
 
   @Override
   final void afterPass(String passName) {
-    super.afterPass(passName);
     this.maybePrintSourceAfterEachPass(passName);
+  }
+
+  private LifeCycleStage stage = LifeCycleStage.RAW;
+
+  /** Returns the current life-cycle stage of the AST we're working on. */
+  @Override
+  public LifeCycleStage getLifeCycleStage() {
+    return stage;
+  }
+
+  /** Set the current life-cycle state. */
+  @Override
+  public void setLifeCycleStage(LifeCycleStage stage) {
+    this.stage = stage;
+  }
+
+  @Override
+  public AstFactory createAstFactory() {
+    return hasTypeCheckingRun()
+        ? (hasOptimizationColors()
+            ? AstFactory.createFactoryWithColors(stage, getColorRegistry())
+            : AstFactory.createFactoryWithTypes(stage, getTypeRegistry()))
+        : AstFactory.createFactoryWithoutTypes(stage);
+  }
+
+  @Override
+  public AstFactory createAstFactoryWithoutTypes() {
+    return AstFactory.createFactoryWithoutTypes(stage);
+  }
+
+  @Override
+  public AstAnalyzer getAstAnalyzer() {
+    return new AstAnalyzer(this, getOptions().getAssumeGettersArePure());
+  }
+
+  @Override
+  public ExpressionDecomposer createDefaultExpressionDecomposer() {
+    return createExpressionDecomposer(
+        this.getUniqueNameIdSupplier(),
+        ImmutableSet.of(),
+        Scope.createGlobalScope(new Node(Token.SCRIPT)));
+  }
+
+  @Override
+  public ExpressionDecomposer createExpressionDecomposer(
+      Supplier<String> uniqueNameIdSupplier,
+      ImmutableSet<String> knownConstantFunctions,
+      Scope scope) {
+    // If the output is ES5, then it may end up running on IE11, so enable a workaround
+    // for one of its bugs.
+    final EnumSet<Workaround> enabledWorkarounds =
+        FeatureSet.ES5.contains(getOptions().getOutputFeatureSet())
+            ? EnumSet.of(Workaround.BROKEN_IE11_LOCATION_ASSIGN)
+            : EnumSet.noneOf(Workaround.class);
+    return new ExpressionDecomposer(
+        this, uniqueNameIdSupplier, knownConstantFunctions, scope, enabledWorkarounds);
+  }
+
+  @Override
+  public boolean isDebugLoggingEnabled() {
+    return this.getOptions().getDebugLogDirectory() != null;
+  }
+
+  @Override
+  public final List<String> getDebugLogFilterList() {
+    if (this.getOptions().getDebugLogFilter() == null) {
+      return new ArrayList<>();
+    }
+    return Splitter.on(',').omitEmptyStrings().splitToList(this.getOptions().getDebugLogFilter());
+  }
+
+  @MustBeClosed
+  @Override
+  public final LogFile createOrReopenLog(
+      Class<?> owner, String firstNamePart, String... restNameParts) {
+    if (!this.isDebugLoggingEnabled()) {
+      return LogFile.createNoOp();
+    }
+
+    Path dir = getOptions().getDebugLogDirectory();
+    Path relativeParts = Path.of(firstNamePart, restNameParts);
+    Path file = dir.resolve(owner.getSimpleName()).resolve(relativeParts);
+
+    // If a filter list for log file names was provided, only create a log file if any
+    // of the filter strings matches.
+    List<String> filters = getDebugLogFilterList();
+    if (filters.isEmpty()) {
+      return LogFile.createOrReopen(file);
+    }
+
+    for (String filter : filters) {
+      if (file.toString().contains(filter)) {
+        return LogFile.createOrReopen(file);
+      }
+    }
+    return LogFile.createNoOp();
+  }
+
+  @Override
+  @MustBeClosed
+  public final LogFile createOrReopenIndexedLog(
+      Class<?> owner, String firstNamePart, String... restNameParts) {
+    checkState(this.currentPassIndex >= 0, this.currentPassIndex);
+
+    String index = Strings.padStart(Integer.toString(this.currentPassIndex), 3, '0');
+    int length = restNameParts.length;
+    if (length == 0) {
+      firstNamePart = index + "_" + firstNamePart;
+    } else {
+      restNameParts[length - 1] = index + "_" + restNameParts[length - 1];
+    }
+
+    return this.createOrReopenLog(owner, firstNamePart, restNameParts);
   }
 
   private void maybePrintSourceAfterEachPass(String passName) {

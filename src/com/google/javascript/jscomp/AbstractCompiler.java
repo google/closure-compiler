@@ -16,17 +16,11 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.MustBeClosed;
-import com.google.errorprone.annotations.OverridingMethodsMustInvokeSuper;
-import com.google.javascript.jscomp.ExpressionDecomposer.Workaround;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.diagnostic.LogFile;
@@ -41,13 +35,9 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.Serializable;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -57,24 +47,21 @@ import org.jspecify.annotations.Nullable;
  * An abstract compiler, to help remove the circular dependency of passes on JSCompiler.
  *
  * <p>This is an abstract class, so that we can make the methods package-private.
+ *
+ * <p>Note: Please avoid adding any new local state or concrete implementations to this class, as
+ * there will be concrete implementations of AbstractCompiler where inheriting a default
+ * implementation is likely incorrect. Local State should instate be declared in any concrete
+ * implementations of AbstractCompiler that need it.
  */
 public abstract class AbstractCompiler implements SourceExcerptProvider, CompilerInputProvider {
   static final DiagnosticType READ_ERROR =
       DiagnosticType.error("JSC_READ_ERROR", "Cannot read file {0}: {1}");
 
-  private int currentPassIndex = -1;
-
   /** Will be called before each pass runs. */
-  @OverridingMethodsMustInvokeSuper
-  void beforePass(String passName) {
-    this.currentPassIndex++;
-  }
+  abstract void beforePass(String passName);
 
   /** Will be called after each pass finishes. */
-  @OverridingMethodsMustInvokeSuper
-  void afterPass(String passName) {}
-
-  private LifeCycleStage stage = LifeCycleStage.RAW;
+  abstract void afterPass(String passName);
 
   // TODO(nicksantos): Decide if all of these are really necessary.
   // Many of them are just accessors that should be passed to the
@@ -292,19 +279,17 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   public abstract ReverseAbstractInterpreter getReverseAbstractInterpreter();
 
   /** Returns the current life-cycle stage of the AST we're working on. */
-  public LifeCycleStage getLifeCycleStage() {
-    return stage;
-  }
+  public abstract LifeCycleStage getLifeCycleStage();
 
   private static final String FILL_FILE_SUFFIX = "$fillFile";
 
   /** Empty modules get an empty "fill" file, so that we can move code into an empty module. */
-  static String createFillFileName(String moduleName) {
+  static final String createFillFileName(String moduleName) {
     return moduleName + FILL_FILE_SUFFIX;
   }
 
   /** Returns whether a file name was created by {@link createFillFileName}. */
-  public static boolean isFillFileName(String fileName) {
+  public static final boolean isFillFileName(String fileName) {
     return fileName.endsWith(FILL_FILE_SUFFIX);
   }
 
@@ -398,9 +383,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   public abstract ErrorManager getErrorManager();
 
   /** Set the current life-cycle state. */
-  void setLifeCycleStage(LifeCycleStage stage) {
-    this.stage = stage;
-  }
+  abstract void setLifeCycleStage(LifeCycleStage stage);
 
   /**
    * Are the nodes equal for the purpose of inlining? If type aware optimizations are on, type
@@ -591,50 +574,26 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    * colors. The AstFactory does not understand colors, although color support could certainly be
    * added if it proves useful.
    */
-  public final AstFactory createAstFactory() {
-    return hasTypeCheckingRun()
-        ? (hasOptimizationColors()
-            ? AstFactory.createFactoryWithColors(stage, getColorRegistry())
-            : AstFactory.createFactoryWithTypes(stage, getTypeRegistry()))
-        : AstFactory.createFactoryWithoutTypes(stage);
-  }
+  public abstract AstFactory createAstFactory();
 
   /**
    * Returns a new AstFactory that will not add type information, regardless of whether type
    * checking has already happened.
    */
-  public final AstFactory createAstFactoryWithoutTypes() {
-    return AstFactory.createFactoryWithoutTypes(stage);
-  }
+  public abstract AstFactory createAstFactoryWithoutTypes();
 
   /**
    * Returns a new AstAnalyzer configured correctly to answer questions about Nodes in the AST
    * currently being compiled.
    */
-  public AstAnalyzer getAstAnalyzer() {
-    return new AstAnalyzer(this, getOptions().getAssumeGettersArePure());
-  }
+  public abstract AstAnalyzer getAstAnalyzer();
 
-  public ExpressionDecomposer createDefaultExpressionDecomposer() {
-    return createExpressionDecomposer(
-        this.getUniqueNameIdSupplier(),
-        ImmutableSet.of(),
-        Scope.createGlobalScope(new Node(Token.SCRIPT)));
-  }
+  public abstract ExpressionDecomposer createDefaultExpressionDecomposer();
 
-  public ExpressionDecomposer createExpressionDecomposer(
+  public abstract ExpressionDecomposer createExpressionDecomposer(
       Supplier<String> uniqueNameIdSupplier,
       ImmutableSet<String> knownConstantFunctions,
-      Scope scope) {
-    // If the output is ES5, then it may end up running on IE11, so enable a workaround
-    // for one of its bugs.
-    final EnumSet<Workaround> enabledWorkarounds =
-        FeatureSet.ES5.contains(getOptions().getOutputFeatureSet())
-            ? EnumSet.of(Workaround.BROKEN_IE11_LOCATION_ASSIGN)
-            : EnumSet.noneOf(Workaround.class);
-    return new ExpressionDecomposer(
-        this, uniqueNameIdSupplier, knownConstantFunctions, scope, enabledWorkarounds);
-  }
+      Scope scope);
 
   public abstract ModuleMetadataMap getModuleMetadataMap();
 
@@ -644,43 +603,14 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   public abstract void setModuleMap(ModuleMap moduleMap);
 
-  public final boolean isDebugLoggingEnabled() {
-    return this.getOptions().getDebugLogDirectory() != null;
-  }
+  public abstract boolean isDebugLoggingEnabled();
 
-  public final List<String> getDebugLogFilterList() {
-    if (this.getOptions().getDebugLogFilter() == null) {
-      return new ArrayList<>();
-    }
-    return Splitter.on(',').omitEmptyStrings().splitToList(this.getOptions().getDebugLogFilter());
-  }
+  public abstract List<String> getDebugLogFilterList();
 
   /** Provides logging access to a file with the specified name. */
   @MustBeClosed
-  public final LogFile createOrReopenLog(
-      Class<?> owner, String firstNamePart, String... restNameParts) {
-    if (!this.isDebugLoggingEnabled()) {
-      return LogFile.createNoOp();
-    }
-
-    Path dir = getOptions().getDebugLogDirectory();
-    Path relativeParts = Path.of(firstNamePart, restNameParts);
-    Path file = dir.resolve(owner.getSimpleName()).resolve(relativeParts);
-
-    // If a filter list for log file names was provided, only create a log file if any
-    // of the filter strings matches.
-    List<String> filters = getDebugLogFilterList();
-    if (filters.isEmpty()) {
-      return LogFile.createOrReopen(file);
-    }
-
-    for (String filter : filters) {
-      if (file.toString().contains(filter)) {
-        return LogFile.createOrReopen(file);
-      }
-    }
-    return LogFile.createNoOp();
-  }
+  public abstract LogFile createOrReopenLog(
+      Class<?> owner, String firstNamePart, String... restNameParts);
 
   /**
    * Provides logging access to a file with the specified name, differentiated by the index of the
@@ -690,20 +620,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    * "[debug_log_directory]/[owner_name]/([name_part[i]]/){0,n-1}[pass_index]_[name_part[n]]".
    */
   @MustBeClosed
-  public final LogFile createOrReopenIndexedLog(
-      Class<?> owner, String firstNamePart, String... restNameParts) {
-    checkState(this.currentPassIndex >= 0, this.currentPassIndex);
-
-    String index = Strings.padStart(Integer.toString(this.currentPassIndex), 3, '0');
-    int length = restNameParts.length;
-    if (length == 0) {
-      firstNamePart = index + "_" + firstNamePart;
-    } else {
-      restNameParts[length - 1] = index + "_" + restNameParts[length - 1];
-    }
-
-    return this.createOrReopenLog(owner, firstNamePart, restNameParts);
-  }
+  public abstract LogFile createOrReopenIndexedLog(
+      Class<?> owner, String firstNamePart, String... restNameParts);
 
   /** Returns the InputId of the synthetic code input (even if it is not initialized yet). */
   abstract InputId getSyntheticCodeInputId();
