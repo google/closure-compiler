@@ -262,6 +262,22 @@ AudioContext.prototype.createGainNode = function() {};
 AudioContext.prototype.createDelayNode = function(maxDelayTime) {};
 
 /**
+ * @return {!AudioTimestamp}
+ */
+AudioContext.prototype.getOutputTimestamp = function() {};
+
+/**
+ * @record
+ */
+function AudioTimestamp() {};
+
+/** @type {number} */
+AudioTimestamp.prototype.contextTime;
+
+/** @type {number} */
+AudioTimestamp.prototype.performanceTime;
+
+/**
  * @param {number} numberOfChannels
  * @param {number} length
  * @param {number} sampleRate
@@ -471,6 +487,12 @@ AudioParam.prototype.setValueCurveAtTime = function(
 AudioParam.prototype.cancelScheduledValues = function(startTime) {};
 
 /**
+ * @param {number} cancelTime
+ * @return {!AudioParam}
+ */
+AudioParam.prototype.cancelAndHoldAtTime = function(cancelTime) {};
+
+/**
  * @constructor
  * @extends {AudioParam}
  */
@@ -484,6 +506,32 @@ function GainNode() {}
 
 /** @type {!AudioParam} */
 GainNode.prototype.gain;
+
+/**
+ * @record
+ */
+function AudioNodeOptions() {};
+
+/** @type {(number|undefined)} */
+AudioNodeOptions.prototype.channelCount;
+
+/** @type {(string|undefined)} */
+AudioNodeOptions.prototype.channelCountMode;
+
+/** @type {(string|undefined)} */
+AudioNodeOptions.prototype.channelInterpretation;
+
+/**
+ * @record
+ * @extends {AudioNodeOptions}
+ */
+function DelayOptions() {};
+
+/** @type {(number|undefined)} */
+DelayOptions.prototype.delayTime;
+
+/** @type {(number|undefined)} */
+DelayOptions.prototype.maxDelayTime;
 
 /**
  * @constructor
@@ -1218,10 +1266,24 @@ function StereoPannerNode() {}
 StereoPannerNode.prototype.pan;
 
 /**
+ * @record
+ * @extends {AudioNodeOptions}
+ */
+function ConvolverOptions() {};
+
+/** @type {(AudioBuffer|undefined)} */
+ConvolverOptions.prototype.buffer;
+
+/** @type {(boolean|undefined)} */
+ConvolverOptions.prototype.disableNormalization;
+
+/**
  * @constructor
  * @extends {AudioNode}
+ * @param {!BaseAudioContext} context
+ * @param {!ConvolverOptions=} options
  */
-function ConvolverNode() {}
+function ConvolverNode(context, options) {}
 
 /** @type {?AudioBuffer} */
 ConvolverNode.prototype.buffer;
@@ -1539,8 +1601,10 @@ MediaStreamAudioSourceNode.prototype.mediaStream;
 /**
  * @constructor
  * @extends {AudioNode}
+ * @param {!AudioContext} context
+ * @param {!AudioNodeOptions=} options
  */
-function MediaStreamAudioDestinationNode() {}
+function MediaStreamAudioDestinationNode(context, options) {}
 
 /** @type {!MediaStream} */
 MediaStreamAudioDestinationNode.prototype.stream;
@@ -1585,8 +1649,8 @@ AudioWorkletGlobalScope.prototype.registerProcessor = function(
  */
 function AudioWorkletNode(context, name, options) {}
 
-/** @type {!EventListener|function()} */
-AudioWorkletNode.prototype.onprocesserror;
+/** @type {?function(!ErrorEvent)} */
+AudioWorkletNode.prototype.onprocessorerror;
 
 /** @type {!Object<string, !AudioParam>} */
 AudioWorkletNode.prototype.parameters;

@@ -1336,7 +1336,7 @@ Element.prototype.setAttributeNode = function(newAttr) {};
 
 /** @type {?function (Event)} */ Element.prototype.onabort;
 /** @type {?function (Event)} */ Element.prototype.onbeforeinput;
-/** @type {?function (Event)} */ Element.prototype.onbeforeunload;
+/** @type {?function (BeforeUnloadEvent)} */ Element.prototype.onbeforeunload;
 /** @type {?function (Event)} */ Element.prototype.onblur;
 /** @type {?function (Event)} */ Element.prototype.onchange;
 /** @type {?function (Event)} */ Element.prototype.onclick;
@@ -1467,7 +1467,7 @@ Window.prototype.removeEventListener = function(type, listener, opt_options) {};
 Window.prototype.dispatchEvent = function(evt) {};
 
 /** @type {?function (Event)} */ Window.prototype.onabort;
-/** @type {?function (Event)} */ Window.prototype.onbeforeunload;
+/** @type {?function (BeforeUnloadEvent)} */ Window.prototype.onbeforeunload;
 /** @type {?function (Event)} */ Window.prototype.onblur;
 /** @type {?function (Event)} */ Window.prototype.onchange;
 /** @type {?function (Event)} */ Window.prototype.onclick;

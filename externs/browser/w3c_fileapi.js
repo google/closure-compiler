@@ -27,6 +27,9 @@ function BlobPropertyBag() {};
 /** @type {(string|undefined)} */
 BlobPropertyBag.prototype.type;
 
+/** @type {(string|undefined)} */
+BlobPropertyBag.prototype.endings;
+
 /**
  * @see http://dev.w3.org/2006/webapi/FileAPI/#dfn-Blob
  * @param {Array<ArrayBuffer|ArrayBufferView|Blob|string>=} opt_blobParts

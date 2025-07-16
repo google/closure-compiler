@@ -593,8 +593,8 @@ InputEventInit.prototype.inputType;
 /** @type {undefined|?DataTransfer} */
 InputEventInit.prototype.dataTransfer;
 
-/** @type {undefined|function():!Array<!StaticRange>} */
-InputEventInit.prototype.getTargetRanges;
+/** @type {undefined|!Array<!StaticRange>} */
+InputEventInit.prototype.targetRanges;
 
 /**
  * @constructor
@@ -649,3 +649,12 @@ PromiseRejectionEvent.prototype.promise;
 
 /** @type {*} */
 PromiseRejectionEvent.prototype.reason;
+
+/**
+ * @constructor
+ * @extends {Event}
+ */
+function BeforeUnloadEvent() {}
+
+/** @type {?} */
+BeforeUnloadEvent.prototype.returnValue;

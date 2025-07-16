@@ -31,7 +31,8 @@ navigator.requestMIDIAccess = function(opt_options) {};
 
 /**
  * @typedef {{
- *   sysex: boolean
+ *   software: (boolean|undefined),
+ *   sysex: (boolean|undefined)
  * }}
  */
 var MIDIOptions;

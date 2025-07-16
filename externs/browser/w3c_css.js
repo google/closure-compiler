@@ -121,6 +121,18 @@ MediaList.prototype.length;
 MediaList.prototype.item = function(index) {};
 
 /**
+ * @param {string} medium
+ * @return {undefined}
+ */
+MediaList.prototype.appendMedium = function(medium) {};
+
+/**
+ * @param {string} medium
+ * @return {undefined}
+ */
+MediaList.prototype.deleteMedium = function(medium) {};
+
+/**
  * @interface
  * @see http://www.w3.org/TR/DOM-Level-2-Style/stylesheets.html#StyleSheets-LinkStyle
  */
@@ -296,6 +308,13 @@ CSSRule.FONT_FACE_RULE;
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSRule-ruleType
  */
 CSSRule.PAGE_RULE;
+
+/** @const {number} */ CSSRule.NAMESPACE_RULE;
+/** @const {number} */ CSSRule.KEYFRAMES_RULE;
+/** @const {number} */ CSSRule.KEYFRAME_RULE;
+/** @const {number} */ CSSRule.SUPPORTS_RULE;
+/** @const {number} */ CSSRule.COUNTER_STYLE_RULE;
+/** @const {number} */ CSSRule.FONT_FEATURE_VALUES_RULE;
 
 /**
  * @constructor

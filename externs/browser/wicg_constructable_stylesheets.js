@@ -33,6 +33,9 @@ CSSStyleSheetInit.prototype.alternate;
 /** @type {(undefined|boolean)} */
 CSSStyleSheetInit.prototype.disabled;
 
+/** @type {(undefined|string)} */
+CSSStyleSheetInit.prototype.baseURL;
+
 /**
  * @param {string} text
  * @return {!Promise<!CSSStyleSheet>}

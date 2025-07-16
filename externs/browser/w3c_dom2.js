@@ -1183,6 +1183,16 @@ HTMLInputElement.prototype.focus = function() {};
 HTMLInputElement.prototype.select = function() {};
 
 /**
+ * @type {string}
+ */
+HTMLInputElement.prototype.popoverTargetAction;
+
+/**
+ * @type {?Element}
+ */
+HTMLInputElement.prototype.popoverTargetElement;
+
+/**
  * @constructor
  * @extends {HTMLElement}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-24874179
@@ -1335,6 +1345,16 @@ HTMLButtonElement.prototype.type;
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-72856782
  */
 HTMLButtonElement.prototype.value;
+
+/**
+ * @type {string}
+ */
+HTMLButtonElement.prototype.popoverTargetAction;
+
+/**
+ * @type {?Element}
+ */
+HTMLButtonElement.prototype.popoverTargetElement;
 
 /**
  * @constructor

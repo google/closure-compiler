@@ -51,6 +51,32 @@ Document.prototype.getAnimations = function() {};
 ShadowRoot.prototype.getAnimations = function() {};
 
 /**
+ * @record
+ * @extends {EventInit}
+ */
+function AnimationPlaybackEventInit() {};
+
+/** @type {?(CSSNumericValue|number)} */
+AnimationPlaybackEventInit.prototype.currentTime;
+
+/** @type {?CSSNumericValue|number} */
+AnimationPlaybackEventInit.prototype.timelineTime;
+
+/**
+ * @constructor
+ * @param {string} type
+ * @param {!AnimationPlaybackEventInit=} eventInitDict
+ * @extends {Event}
+ */
+function AnimationPlaybackEvent(type, eventInitDict) {};
+
+/** @type {?CSSNumericValue|number} */
+AnimationPlaybackEvent.prototype.currentTime;
+
+/** @type {?CSSNumericValue|number} */
+AnimationPlaybackEvent.prototype.timelineTime;
+
+/**
  * @constructor
  * @param {?AnimationEffect=} effect
  * @param {AnimationTimeline=} timeline

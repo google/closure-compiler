@@ -2225,6 +2225,52 @@ HTMLInputElement.prototype.showPicker = function() {};
 
 /**
  * @constructor
+ * @implements {EventTarget}
+ */
+function RemotePlayback() {}
+
+/** @type {?function(!Event)} */
+RemotePlayback.prototype.onconnect;
+
+/** @type {?function(!Event)} */
+RemotePlayback.prototype.onconnecting;
+
+/** @type {?function(!Event)} */
+RemotePlayback.prototype.ondisconnect;
+
+/** @type {string} */
+RemotePlayback.prototype.state;
+
+/**
+ * @param {function(boolean):void} callback
+ * @return {!Promise<number>}
+ */
+RemotePlayback.prototype.watchAvailability = function(callback) {};
+
+/**
+ * @param {number} id
+ * @return {!Promise<void>}
+ */
+RemotePlayback.prototype.cancelWatchAvailability = function(id) {};
+
+/**
+ * @return {!Promise<void>}
+ */
+RemotePlayback.prototype.prompt = function() {};
+
+/** @override */
+RemotePlayback.prototype.addEventListener = function(
+  type, listener, opt_useCapture) {};
+
+/** @override */
+RemotePlayback.prototype.dispatchEvent = function(evt) {};
+
+/** @override */
+RemotePlayback.prototype.removeEventListener = function(
+  type, listener, opt_options) {};
+
+/**
+ * @constructor
  * @extends {HTMLElement}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement
  */
@@ -2364,6 +2410,9 @@ HTMLMediaElement.prototype.defaultMuted;
 
 /** @type {boolean} */
 HTMLMediaElement.prototype.disableRemotePlayback;
+
+/** @type {!RemotePlayback} */
+HTMLMediaElement.prototype.remote;
 
 /** @type {boolean} */
 HTMLMediaElement.prototype.preservesPitch;
@@ -5968,6 +6017,11 @@ Navigator.prototype.clearAppBadge = function() {};
  * @see https://developer.mozilla.org/docs/Web/API/Navigator/pdfViewerEnabled
  */
 Navigator.prototype.pdfViewerEnabled;
+
+/**
+ * @type {?string}
+ */
+Navigator.prototype.doNotTrack;
 
 /**
  * @constructor

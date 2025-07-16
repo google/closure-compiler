@@ -916,6 +916,13 @@ RTCRtpSendParameters.prototype.degradationPreference;
  */
 function RTCRtpReceiveParameters() {}
 
+/**
+ * @constructor
+ * @param {!Worker} worker
+ * @param {?=} options
+ * @param {!Array<?>=} transfer
+ */
+function RTCRtpScriptTransform(worker, options, transfer) {}
 
 /**
  * @constructor
@@ -937,6 +944,11 @@ RTCRtpSender.prototype.track;
  * @const {?RTCDtlsTransport}
  */
 RTCRtpSender.prototype.transport;
+
+/**
+ * @const {?RTCRtpScriptTransform}
+ */
+RTCRtpSender.prototype.transform;
 
 /**
  * @param {?MediaStreamTrack} track
@@ -1037,6 +1049,9 @@ RTCRtpReceiver.prototype.track;
  * @const {?RTCDtlsTransport}
  */
 RTCRtpReceiver.prototype.transport;
+
+/** @type {?RTCRtpScriptTransform} */
+RTCRtpReceiver.prototype.transform;
 
 /**
  * @return {!RTCRtpReceiveParameters}
