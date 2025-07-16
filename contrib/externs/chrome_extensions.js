@@ -2722,6 +2722,15 @@ chrome.enterprise.reportingPrivate.reportDataMaskingEvent = function(
     event, callback) {};
 
 /**
+ * @since Chrome 139.
+ * Calls a callback when a data masking rule is triggered.
+ * @param {function(!Array<!chrome.enterprise.reportingPrivate.DataMaskingRules>):
+ *     void} callback Called back with the response.
+ */
+chrome.enterprise.reportingPrivate.onDataMaskingRulesTriggered = function(
+    callback) {};
+
+/**
  * Data masking event.
  * @typedef {?{
  *   url: string,
@@ -2731,6 +2740,16 @@ chrome.enterprise.reportingPrivate.reportDataMaskingEvent = function(
  * }}
  */
 chrome.enterprise.reportingPrivate.DataMaskingEvent;
+
+/**
+ * Data masking rule.
+ * @typedef {?{
+ *   url: string,
+ *   triggeredRuleInfo:
+ * Array<chrome.enterprise.reportingPrivate.TriggeredRuleInfo>,
+ * }}
+ */
+chrome.enterprise.reportingPrivate.DataMaskingRules;
 
 /**
  * Triggered rule info.
@@ -2747,7 +2766,9 @@ chrome.enterprise.reportingPrivate.TriggeredRuleInfo;
  * @typedef {?{
  *   detectorId: string,
  *   displayName: string,
- *   detectorType: string,
+ *   detectorType: (!string|undefined),
+ *   maskType: (!string|undefined),
+ *   pattern: (!string|undefined),
  * }}
  */
 chrome.enterprise.reportingPrivate.DetectorInfo;
