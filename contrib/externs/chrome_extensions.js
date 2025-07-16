@@ -2660,6 +2660,7 @@ chrome.enterprise.reportingPrivate.PasswordProtectionTrigger = {
  *   onFileAttachedProviders: (!Array<string>|undefined),
  *   onFileDownloadedProviders: (!Array<string>|undefined),
  *   onBulkDataEntryProviders: (!Array<string>|undefined),
+ *   onPrintProviders: (!Array<string>|undefined),
  *   onSecurityEventProviders: (!Array<string>|undefined),
  *   realtimeUrlCheckMode: chrome.enterprise.reportingPrivate.RealtimeUrlCheckMode,
  *   browserVersion: string,
@@ -2667,11 +2668,10 @@ chrome.enterprise.reportingPrivate.PasswordProtectionTrigger = {
  *   siteIsolationEnabled: (!boolean|undefined),
  *   builtInDnsClientEnabled: (!boolean|undefined),
  *   passwordProtectionWarningTrigger: chrome.enterprise.reportingPrivate.PasswordProtectionTrigger,
- *   chromeCleanupEnabled: (!boolean|undefined),
  *   chromeRemoteDesktopAppBlocked: (!boolean|undefined),
- *   thirdPartyBlockingEnabled: (!boolean|undefined),
  *   osFirewall: chrome.enterprise.reportingPrivate.SettingValue,
  *   systemDnsServers: (!Array<string>|undefined),
+ *   enterpriseProfileId: (!string|undefined),
  * }}
  */
 chrome.enterprise.reportingPrivate.ContextInfo;
