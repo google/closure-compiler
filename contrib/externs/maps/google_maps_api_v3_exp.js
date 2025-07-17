@@ -18642,6 +18642,131 @@ google.maps.places.AutocompletionRequest.prototype.location;
 google.maps.places.AutocompletionRequest.prototype.radius;
 
 /**
+ * BasicPlaceAutocompleteElement is an <code>HTMLElement</code> subclass which
+ * provides a UI component for the Places Autocomplete API.
+ *
+ * Access by calling `const {BasicPlaceAutocompleteElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.BasicPlaceAutocompleteElementOptions} options
+ * @implements {google.maps.places.BasicPlaceAutocompleteElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.BasicPlaceAutocompleteElement = function(options) {};
+
+/**
+ * Included primary <a
+ * href="https://developers.google.com/maps/documentation/places/javascript/place-types">Place
+ * type</a> (for example, &quot;restaurant&quot; or &quot;gas_station&quot;).
+ * <br/><br/> A Place is only returned if its primary type is included in this
+ * list. Up to 5 values can be specified. If no types are specified, all Place
+ * types are returned.
+ * @type {!Array<string>|null}
+ */
+google.maps.places.BasicPlaceAutocompleteElement.prototype.includedPrimaryTypes;
+
+/**
+ * Only include results in the specified regions, specified as up to 15 CLDR
+ * two-character region codes. An empty set will not restrict the results. If
+ * both <code>locationRestriction</code> and <code>includedRegionCodes</code>
+ * are set, the results will be located in the area of intersection.
+ * @type {!Array<string>|null}
+ */
+google.maps.places.BasicPlaceAutocompleteElement.prototype.includedRegionCodes;
+
+/**
+ * A soft boundary or hint to use when searching for places.
+ * @type {!google.maps.places.LocationBias|null}
+ */
+google.maps.places.BasicPlaceAutocompleteElement.prototype.locationBias;
+
+/**
+ * Bounds to constrain search results.
+ * @type {!google.maps.places.LocationRestriction|null}
+ */
+google.maps.places.BasicPlaceAutocompleteElement.prototype.locationRestriction;
+
+/**
+ * The name to be used for the input element. See <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#name">https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#name</a>
+ * for details. Follows the same behavior as the name attribute for inputs. Note
+ * that this is the name that will be used when a form is submitted. See <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form">https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form</a>
+ * for details.
+ * @type {string|null}
+ */
+google.maps.places.BasicPlaceAutocompleteElement.prototype.name;
+
+/**
+ * The origin from which to calculate distance. If not specified, distance is
+ * not calculated. The altitude, if given, is not used in the calculation.
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.places.BasicPlaceAutocompleteElement.prototype.origin;
+
+/**
+ * A language identifier for the language in which the results should be
+ * returned, if possible. Results in the selected language may be given a higher
+ * ranking, but suggestions are not restricted to this language. See the <a
+ * href="https://developers.google.com/maps/faq#languagesupport">list of
+ * supported languages</a>.
+ * @type {string|null}
+ */
+google.maps.places.BasicPlaceAutocompleteElement.prototype.requestedLanguage;
+
+/**
+ * A region code which is used for result formatting and for result filtering.
+ * It does not restrict the suggestions to this country. The region code accepts
+ * a <a
+ * href="https://en.wikipedia.org/wiki/List_of_Internet_top-level_domains#Country_code_top-level_domains">ccTLD
+ * (&quot;top-level domain&quot;)</a> two-character value. Most ccTLD codes are
+ * identical to ISO 3166-1 codes, with some notable exceptions. For example, the
+ * United Kingdom&#39;s ccTLD is &quot;uk&quot; (<code>.co.uk</code>) while its
+ * ISO 3166-1 code is &quot;gb&quot; (technically for the entity of &quot;The
+ * United Kingdom of Great Britain and Northern Ireland&quot;).
+ * @type {string|null}
+ */
+google.maps.places.BasicPlaceAutocompleteElement.prototype.requestedRegion;
+
+/**
+ * The unit system used to display distances. If not specified, the unit system
+ * is determined by requestedRegion.
+ * @type {!google.maps.UnitSystem|null|undefined}
+ */
+google.maps.places.BasicPlaceAutocompleteElement.prototype.unitSystem;
+
+
+
+/**
+ * Options for constructing a BasicPlaceAutocompleteElement.
+ * @record
+ */
+google.maps.places.BasicPlaceAutocompleteElementOptions = function() {};
+
+/**
+ * @type {!google.maps.places.LocationBias|null|undefined}
+ */
+google.maps.places.BasicPlaceAutocompleteElementOptions.prototype.locationBias;
+
+/**
+ * @type {!google.maps.places.LocationRestriction|null|undefined}
+ */
+google.maps.places.BasicPlaceAutocompleteElementOptions.prototype
+    .locationRestriction;
+
+/**
+ * @type {string|null|undefined}
+ */
+google.maps.places.BasicPlaceAutocompleteElementOptions.prototype.name;
+
+/**
+ * @type {string|null|undefined}
+ */
+google.maps.places.BasicPlaceAutocompleteElementOptions.prototype
+    .requestedLanguage;
+
+/**
  * The operational status of the Place, if it is a business, returned in a
  * PlaceResult (indicates whether the place is operational, or closed either
  * temporarily or permanently). Specify these by value, or the constant&#39;s
@@ -19106,6 +19231,30 @@ google.maps.places.LocationBias;
  * @typedef {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral}
  */
 google.maps.places.LocationRestriction;
+
+/**
+ * The preferred media size in cases where multiple sizes are supported, such as
+ * the vertical {@link google.maps.places.PlaceSearchElement}.
+ *
+ * Access by calling `const {MediaSize} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.MediaSize = {
+  /**
+   * Large media size.
+   */
+  LARGE: 'LARGE',
+  /**
+   * Medium media size.
+   */
+  MEDIUM: 'MEDIUM',
+  /**
+   * Small media size.
+   */
+  SMALL: 'SMALL',
+};
 
 /**
  * A representation of an amount of money with its currency type.
@@ -19891,9 +20040,10 @@ google.maps.places.Place.prototype.isOpen = function(date) {};
 google.maps.places.Place.prototype.toJSON = function() {};
 
 /**
- * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
- * google.maps.places.PlaceDetailsElement} to show a wheelchair icon if the
- * place has an accessible entrance. Append this element as a child of a {@link
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement}, {@link
+ * google.maps.places.PlaceDetailsElement}, or {@link
+ * google.maps.places.PlaceSearchElement} to show a wheelchair icon if the place
+ * has an accessible entrance. Append this element as a child of a {@link
  * google.maps.places.PlaceContentConfigElement} to use it. For example:
  * <pre><code> &lt;gmp-place-content-config&gt;<br>
  * &nbsp;&nbsp;&lt;gmp-place-accessible-entrance-icon&gt;&lt;/gmp-place-accessible-entrance-icon&gt;<br>
@@ -19919,8 +20069,9 @@ google.maps.places.PlaceAccessibleEntranceIconElement = function(options) {};
 google.maps.places.PlaceAccessibleEntranceIconElementOptions = function() {};
 
 /**
- * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
- * google.maps.places.PlaceDetailsElement} to show a place&#39;s address. Append
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement}, {@link
+ * google.maps.places.PlaceDetailsElement}, or {@link
+ * google.maps.places.PlaceSearchElement} to show a place&#39;s address. Append
  * this element as a child of a {@link
  * google.maps.places.PlaceContentConfigElement} to use it. For example:
  * <pre><code> &lt;gmp-place-content-config&gt;<br>
@@ -19946,8 +20097,9 @@ google.maps.places.PlaceAddressElement = function(options) {};
 google.maps.places.PlaceAddressElementOptions = function() {};
 
 /**
- * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
- * google.maps.places.PlaceDetailsElement} to show all available content. Append
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement}, {@link
+ * google.maps.places.PlaceDetailsElement}, or {@link
+ * google.maps.places.PlaceSearchElement} to show all available content. Append
  * this element as a child to use it. For example: <pre><code>
  * &lt;gmp-place-details&gt;<br>
  * &nbsp;&nbsp;&lt;gmp-place-all-content&gt;&lt;/gmp-place-all-content&gt;<br>
@@ -19994,8 +20146,9 @@ google.maps.places.PlaceAspectRating.prototype.type;
 
 /**
  * Allows customization of the Google Maps attribution text in a {@link
- * google.maps.places.PlaceDetailsCompactElement} or {@link
- * google.maps.places.PlaceDetailsElement}. Append this element as a child of
+ * google.maps.places.PlaceDetailsCompactElement}, {@link
+ * google.maps.places.PlaceDetailsElement}, or {@link
+ * google.maps.places.PlaceSearchElement}. Append this element as a child of
  * a {@link google.maps.places.PlaceContentConfigElement} to use it. If this
  * element is omitted, attribution will still be shown with default colors. For
  * example: <pre><code> &lt;gmp-place-content-config&gt;<br>
@@ -20206,11 +20359,13 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedLanguage;
 google.maps.places.PlaceAutocompleteRequestErrorEvent = function() {};
 
 /**
- * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
- * google.maps.places.PlaceDetailsElement} to show a custom set of content.
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement}, {@link
+ * google.maps.places.PlaceDetailsElement} or {@link
+ * google.maps.places.PlaceSearchElement} to show a custom set of content.
  * Append this element as a child to use it. <br> <br> For {@link
- * google.maps.places.PlaceDetailsCompactElement} or {@link
- * google.maps.places.PlaceDetailsElement}, append any of the following elements
+ * google.maps.places.PlaceDetailsCompactElement}, {@link
+ * google.maps.places.PlaceDetailsElement} or {@link
+ * google.maps.places.PlaceSearchElement}, append any of the following elements
  * to the {@link google.maps.places.PlaceContentConfigElement} to show the
  * corresponding content: <br> {@link
  * google.maps.places.PlaceAddressElement}, {@link
@@ -20700,112 +20855,9 @@ google.maps.places.PlaceGeometry.prototype.location;
 google.maps.places.PlaceGeometry.prototype.viewport;
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
- * An HTML element that displays the results of a place search in a list. Use
- * the <code>configureFromSearchByTextRequest()</code> or
- * <code>configureFromSearchNearbyRequest()</code> methods to specify the
- * request to render results for. To use the Place List Element, enable the <a
- * href="https://console.cloud.google.com/marketplace/product/google/placewidgets.googleapis.com"
- * >Places UI Kit API</a> for your project in the Google Cloud console.
- *
- * Access by calling `const {PlaceListElement} = await
- * google.maps.importLibrary("places")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {!google.maps.places.PlaceListElementOptions=} options
- * @implements {google.maps.places.PlaceListElementOptions}
- * @extends {HTMLElement}
- * @constructor
- */
-google.maps.places.PlaceListElement = function(options) {};
-
-/**
- * Read only. Array of <code>Place</code> objects containing the IDs, locations,
- * and viewports of the currently rendered places.
- * @type {!Array<!google.maps.places.Place>}
- */
-google.maps.places.PlaceListElement.prototype.places;
-
-/**
- * Whether or not the list items are selectable. If true, the list items will be
- * buttons that dispatch the <code>gmp-placeselect</code> event when clicked.
- * Accessible keyboard navigation and selection is also supported.
- * @type {boolean}
- */
-google.maps.places.PlaceListElement.prototype.selectable;
-
-
-
-/**
- * Configures the widget to render search results from a Places Text Search API
- * request.
- * @param {!google.maps.places.SearchByTextRequest} request The request to
- *     render results for. The <code>fields</code> property of the
- *     <code>SearchByTextRequest</code> is not required.
- * @return {!Promise<void>} A promise that resolves once place data is loaded
- *     and rendered.
- */
-google.maps.places.PlaceListElement.prototype.configureFromSearchByTextRequest =
-    function(request) {};
-
-/**
- * Configures the widget to render search results from a Places Nearby Search
- * API request.
- * @param {!google.maps.places.SearchNearbyRequest} request The request to
- *     render results for. The <code>fields</code> property of the
- *     <code>SearchNearbyRequest</code> is not required.
- * @return {!Promise<void>} A promise that resolves once place data is loaded
- *     and rendered.
- */
-google.maps.places.PlaceListElement.prototype.configureFromSearchNearbyRequest =
-    function(request) {};
-
-
-
-/**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
- * Options for <code>PlaceListElement</code>.
- * @record
- */
-google.maps.places.PlaceListElementOptions = function() {};
-
-/**
- * See {@link google.maps.places.PlaceListElement.selectable}
- * @type {boolean|null|undefined}
- */
-google.maps.places.PlaceListElementOptions.prototype.selectable;
-
-/**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
- * This event is emitted by the <code>PlaceListElement</code> when the user
- * selects a place.
- *
- * Access by calling `const {PlaceListPlaceSelectEvent} = await
- * google.maps.importLibrary("places")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @extends {Event}
- * @constructor
- */
-google.maps.places.PlaceListPlaceSelectEvent = function() {};
-
-/**
- * The list index of the selected place.
- * @type {number}
- */
-google.maps.places.PlaceListPlaceSelectEvent.prototype.index;
-
-/**
- * A <code>Place</code> object containing the ID, location, and viewport of the
- * selected place.
- * @type {!google.maps.places.Place}
- */
-google.maps.places.PlaceListPlaceSelectEvent.prototype.place;
-
-/**
- * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
- * google.maps.places.PlaceDetailsElement} to show a place&#39;s media, such as
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement}, {@link
+ * google.maps.places.PlaceDetailsElement}, or {@link
+ * google.maps.places.PlaceSearchElement} to show a place&#39;s media, such as
  * photos. Append this element as a child of a {@link
  * google.maps.places.PlaceContentConfigElement} to use it. For example:
  * <pre><code> &lt;gmp-place-content-config&gt;<br>
@@ -20831,6 +20883,16 @@ google.maps.places.PlaceMediaElement = function(options) {};
  */
 google.maps.places.PlaceMediaElement.prototype.lightboxPreferred;
 
+/**
+ * The preferred media size in cases where multiple sizes are supported, such as
+ * the vertical {@link google.maps.places.PlaceSearchElement}. The vertical
+ * <code>PlaceSearchElement</code> will use <code>MediaSize.SMALL</code> by
+ * default if this is not specified.
+ * @default <code>null</code>
+ * @type {!google.maps.places.MediaSize|null|undefined}
+ */
+google.maps.places.PlaceMediaElement.prototype.preferredSize;
+
 
 
 /**
@@ -20846,8 +20908,161 @@ google.maps.places.PlaceMediaElementOptions = function() {};
 google.maps.places.PlaceMediaElementOptions.prototype.lightboxPreferred;
 
 /**
- * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
- * google.maps.places.PlaceDetailsElement} to show the current open or closed
+ * See {@link google.maps.places.PlaceMediaElement.preferredSize}.
+ * @type {!google.maps.places.MediaSize|null|undefined}
+ */
+google.maps.places.PlaceMediaElementOptions.prototype.preferredSize;
+
+/**
+ * Configures a {@link google.maps.places.PlaceSearchElement} to load results
+ * based on a nearby search request. The <code>locationRestriction</code>
+ * property is required for the search element to load. Any other configured
+ * properties will be ignored if <code>locationRestriction</code> is not set.
+ * Append this element as a child of a {@link
+ * google.maps.places.PlaceSearchElement} to load results. For example:
+ * <pre><code> &lt;gmp-place-search&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-nearby-search-request<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;location-restriction="<var>RADIUS</var>@<var>LAT</var>,<var>LNG</var>"<br>
+ * &nbsp;&nbsp;&gt;&lt;/gmp-place-nearby-search-request&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;&lt;gmp-place-media
+ * lightbox-preferred&gt;&lt;/gmp-place-media&gt;<br>
+ * &nbsp;&nbsp;&lt;/gmp-place-content-config&gt;<br> &lt;/gmp-place-search&gt;
+ * </code></pre>
+ *
+ * Access by calling `const {PlaceNearbySearchRequestElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceNearbySearchRequestElementOptions=} options
+ * @implements {google.maps.places.PlaceNearbySearchRequestElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceNearbySearchRequestElement = function(options) {};
+
+/**
+ * @default <code>null</code>
+ * @type {!Array<string>|null|undefined}
+ */
+google.maps.places.PlaceNearbySearchRequestElement.prototype
+    .excludedPrimaryTypes;
+
+/**
+ * @default <code>null</code>
+ * @type {!Array<string>|null|undefined}
+ */
+google.maps.places.PlaceNearbySearchRequestElement.prototype.excludedTypes;
+
+/**
+ * @default <code>null</code>
+ * @type {!Array<string>|null|undefined}
+ */
+google.maps.places.PlaceNearbySearchRequestElement.prototype
+    .includedPrimaryTypes;
+
+/**
+ * @default <code>null</code>
+ * @type {!Array<string>|null|undefined}
+ */
+google.maps.places.PlaceNearbySearchRequestElement.prototype.includedTypes;
+
+/**
+ * @default <code>null</code>
+ * @type {!google.maps.Circle|!google.maps.CircleLiteral|null|undefined}
+ */
+google.maps.places.PlaceNearbySearchRequestElement.prototype
+    .locationRestriction;
+
+/**
+ * @default <code>null</code>
+ * @type {number|null|undefined}
+ */
+google.maps.places.PlaceNearbySearchRequestElement.prototype.maxResultCount;
+
+/**
+ * @default <code>null</code>
+ * @type {!google.maps.places.SearchNearbyRankPreference|null|undefined}
+ */
+google.maps.places.PlaceNearbySearchRequestElement.prototype.rankPreference;
+
+
+
+/**
+ * Options for <code>PlaceNearbySearchRequestElement</code>.
+ * @record
+ */
+google.maps.places.PlaceNearbySearchRequestElementOptions = function() {};
+
+/**
+ * Excluded primary place types. See {@link
+ * google.maps.places.PlaceNearbySearchRequestElement.excludedPrimaryTypes}
+ * and {@link google.maps.places.SearchNearbyRequest.excludedPrimaryTypes} for
+ * more details.
+ * @type {!Array<string>|null|undefined}
+ */
+google.maps.places.PlaceNearbySearchRequestElementOptions.prototype
+    .excludedPrimaryTypes;
+
+/**
+ * Excluded place types. See {@link
+ * google.maps.places.PlaceNearbySearchRequestElement.excludedTypes} and {@link
+ * google.maps.places.SearchNearbyRequest.excludedTypes} for more details.
+ * @type {!Array<string>|null|undefined}
+ */
+google.maps.places.PlaceNearbySearchRequestElementOptions.prototype
+    .excludedTypes;
+
+/**
+ * Included primary place types. See {@link
+ * google.maps.places.PlaceNearbySearchRequestElement.includedPrimaryTypes}
+ * and {@link google.maps.places.SearchNearbyRequest.includedPrimaryTypes} for
+ * more details.
+ * @type {!Array<string>|null|undefined}
+ */
+google.maps.places.PlaceNearbySearchRequestElementOptions.prototype
+    .includedPrimaryTypes;
+
+/**
+ * Included place types. See {@link
+ * google.maps.places.PlaceNearbySearchRequestElement.includedTypes} and {@link
+ * google.maps.places.SearchNearbyRequest.includedTypes} for more details.
+ * @type {!Array<string>|null|undefined}
+ */
+google.maps.places.PlaceNearbySearchRequestElementOptions.prototype
+    .includedTypes;
+
+/**
+ * The region to search. See {@link
+ * google.maps.places.PlaceNearbySearchRequestElement.locationRestriction}
+ * and {@link google.maps.places.SearchNearbyRequest.locationRestriction} for
+ * more details.
+ * @type {!google.maps.Circle|!google.maps.CircleLiteral|null|undefined}
+ */
+google.maps.places.PlaceNearbySearchRequestElementOptions.prototype
+    .locationRestriction;
+
+/**
+ * Maximum number of results to return. See {@link
+ * google.maps.places.PlaceNearbySearchRequestElement.maxResultCount} and {@link
+ * google.maps.places.SearchNearbyRequest.maxResultCount} for more details.
+ * @type {number|null|undefined}
+ */
+google.maps.places.PlaceNearbySearchRequestElementOptions.prototype
+    .maxResultCount;
+
+/**
+ * How results will be ranked in the response. See {@link
+ * google.maps.places.PlaceNearbySearchRequestElement.rankPreference} and {@link
+ * google.maps.places.SearchNearbyRankPreference} for more details.
+ * @type {!google.maps.places.SearchNearbyRankPreference|null|undefined}
+ */
+google.maps.places.PlaceNearbySearchRequestElementOptions.prototype
+    .rankPreference;
+
+/**
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement}, {@link
+ * google.maps.places.PlaceDetailsElement}, or {@link
+ * google.maps.places.PlaceSearchElement} to show the current open or closed
  * status of a place. Append this element as a child of a {@link
  * google.maps.places.PlaceContentConfigElement} to use it. For example:
  * <pre><code> &lt;gmp-place-content-config&gt;<br>
@@ -21267,8 +21482,9 @@ google.maps.places.PlacePredictionSelectEvent = function() {};
 google.maps.places.PlacePredictionSelectEvent.prototype.placePrediction;
 
 /**
- * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
- * google.maps.places.PlaceDetailsElement} to show a place&#39;s price level or
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement}, {@link
+ * google.maps.places.PlaceDetailsElement}, or {@link
+ * google.maps.places.PlaceSearchElement} to show a place&#39;s price level or
  * price range. Append this element as a child of a {@link
  * google.maps.places.PlaceContentConfigElement} to use it. For example:
  * <pre><code> &lt;gmp-place-content-config&gt;<br>
@@ -21294,8 +21510,9 @@ google.maps.places.PlacePriceElement = function(options) {};
 google.maps.places.PlacePriceElementOptions = function() {};
 
 /**
- * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
- * google.maps.places.PlaceDetailsElement} to show a place&#39;s rating. Append
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement}, {@link
+ * google.maps.places.PlaceDetailsElement}, or {@link
+ * google.maps.places.PlaceSearchElement} to show a place&#39;s rating. Append
  * this element as a child of a {@link
  * google.maps.places.PlaceContentConfigElement} to use it. For example:
  * <pre><code> &lt;gmp-place-content-config&gt;<br>
@@ -21646,6 +21863,143 @@ google.maps.places.PlaceReviewsElement = function() {};
 google.maps.places.PlaceReviewsElementOptions = function() {};
 
 /**
+ * Attribution positions for {@link google.maps.places.PlaceSearchElement}.
+ *
+ * Access by calling `const {PlaceSearchAttributionPosition} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.PlaceSearchAttributionPosition = {
+  /**
+   * Attribution at the bottom of the PlaceSearchElement
+   */
+  BOTTOM: 'BOTTOM',
+  /**
+   * Attribution at the top of the PlaceSearchElement
+   */
+  TOP: 'TOP',
+};
+
+/**
+ * Displays the results of a place search in a list. Append a {@link
+ * google.maps.places.PlaceTextSearchRequestElement} or {@link
+ * google.maps.places.PlaceNearbySearchRequestElement} to specify the request to
+ * render results for. Append a {@link
+ * google.maps.places.PlaceContentConfigElement}, {@link
+ * google.maps.places.PlaceStandardContentElement}, or {@link
+ * google.maps.places.PlaceAllContentElement} to specify which content to
+ * render. <br><br> Example: <pre><code> &lt;gmp-place-search&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-text-search-request<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;text-query="<var>QUERY</var>"<br>
+ * &nbsp;&nbsp;&gt;&lt;/gmp-place-text-search-request&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;&lt;gmp-place-media
+ * lightbox-preferred&gt;&lt;/gmp-place-media&gt;<br>
+ * &nbsp;&nbsp;&lt;/gmp-place-content-config&gt;<br> &lt;/gmp-place-search&gt;
+ * </code></pre> <br> To use the Place Search Element, enable the <a
+ * href="https://console.cloud.google.com/marketplace/product/google/placewidgets.googleapis.com"
+ * >Places UI Kit API</a> for your project in the Google Cloud console.
+ *
+ * Access by calling `const {PlaceSearchElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PlaceSearchElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceSearchElement = function() {};
+
+/**
+ * The position of the attribution logo and legal disclosure button.
+ * @default <code>PlaceSearchAttributionPosition.TOP</code>
+ * @type {!google.maps.places.PlaceSearchAttributionPosition|null|undefined}
+ */
+google.maps.places.PlaceSearchElement.prototype.attributionPosition;
+
+/**
+ * The orientation variant (vertical or horizontal) of the element.
+ * @default <code>PlaceSearchOrientation.VERTICAL</code>
+ * @type {!google.maps.places.PlaceSearchOrientation|null|undefined}
+ */
+google.maps.places.PlaceSearchElement.prototype.orientation;
+
+/**
+ * Read only. Array of <code>Place</code> objects containing the IDs, locations,
+ * and viewports of the currently rendered places.
+ * @type {!Array<!google.maps.places.Place>}
+ */
+google.maps.places.PlaceSearchElement.prototype.places;
+
+/**
+ * Whether or not the list items are selectable. If true, the list items will be
+ * buttons that dispatch the <code>gmp-select</code> event when clicked.
+ * Accessible keyboard navigation and selection is also supported.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.PlaceSearchElement.prototype.selectable;
+
+/**
+ * If true, truncates certain lines of content to fit on one line instead of
+ * wrapping.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.PlaceSearchElement.prototype.truncationPreferred;
+
+
+
+/**
+ * Options for <code>PlaceSearchElement</code>.
+ * @record
+ */
+google.maps.places.PlaceSearchElementOptions = function() {};
+
+/**
+ * See {@link google.maps.places.PlaceSearchElement.attributionPosition}.
+ * @type {!google.maps.places.PlaceSearchAttributionPosition|null|undefined}
+ */
+google.maps.places.PlaceSearchElementOptions.prototype.attributionPosition;
+
+/**
+ * See {@link google.maps.places.PlaceSearchElement.orientation}.
+ * @type {!google.maps.places.PlaceSearchOrientation|null|undefined}
+ */
+google.maps.places.PlaceSearchElementOptions.prototype.orientation;
+
+/**
+ * See {@link google.maps.places.PlaceSearchElement.selectable}
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.PlaceSearchElementOptions.prototype.selectable;
+
+/**
+ * See {@link google.maps.places.PlaceSearchElement.truncationPreferred}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.PlaceSearchElementOptions.prototype.truncationPreferred;
+
+/**
+ * Orientation variants for {@link google.maps.places.PlaceSearchElement}.
+ *
+ * Access by calling `const {PlaceSearchOrientation} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.PlaceSearchOrientation = {
+  /**
+   * Horizontal orientation.
+   */
+  HORIZONTAL: 'HORIZONTAL',
+  /**
+   * Vertical orientation.
+   */
+  VERTICAL: 'VERTICAL',
+};
+
+/**
  * An object used to fetch additional pages of Places results.
  * @record
  */
@@ -21764,8 +22118,27 @@ google.maps.places.PlaceSearchRequest.prototype.type;
 google.maps.places.PlaceSearchRequest.prototype.name;
 
 /**
- * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
- * google.maps.places.PlaceDetailsElement} to show a standard set of content.
+ * This event fires when a place is selected from a list of places. Access the
+ * selection with <code>event.place</code>.
+ *
+ * Access by calling `const {PlaceSelectEvent} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {Event}
+ * @constructor
+ */
+google.maps.places.PlaceSelectEvent = function() {};
+
+/**
+ * The selected place.
+ * @type {!google.maps.places.Place}
+ */
+google.maps.places.PlaceSelectEvent.prototype.place;
+
+/**
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement}, {@link
+ * google.maps.places.PlaceDetailsElement}, or {@link
+ * google.maps.places.PlaceSearchElement} to show a standard set of content.
  * Append this element as a child to use it. <br> For {@link
  * google.maps.places.PlaceDetailsElement}, standard content consists of: <ul>
  * <li>media</li> <li>address</li> <li>rating</li> <li>type</li> <li>price</li>
@@ -21774,8 +22147,11 @@ google.maps.places.PlaceSearchRequest.prototype.name;
  * <li>reviews</li> <li>feature list</li> </ul> <br> For {@link
  * google.maps.places.PlaceDetailsCompactElement}, standard content consists of:
  * <ul> <li>media</li> <li>rating</li> <li>type</li> <li>price</li>
- * <li>accessible entrance icon</li> <li>open now status</li> </ul> <br> For
- * example: <pre><code> &lt;gmp-place-details&gt;<br>
+ * <li>accessible entrance icon</li> <li>open now status</li> </ul> <br>
+ * For {@link google.maps.places.PlaceSearchElement}, standard content consists
+ * of: <ul> <li>media</li> <li>rating</li> <li>type</li> <li>price</li>
+ * <li>accessible entrance icon</li> </ul> <br> For example: <pre><code>
+ * &lt;gmp-place-details&gt;<br>
  * &nbsp;&nbsp;&lt;gmp-place-standard-content&gt;&lt;/gmp-place-standard-content&gt;<br>
  * &lt;/gmp-place-details&gt;<br> </code></pre>
  *
@@ -21823,8 +22199,230 @@ google.maps.places.PlaceSummaryElement = function() {};
 google.maps.places.PlaceSummaryElementOptions = function() {};
 
 /**
- * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
- * google.maps.places.PlaceDetailsElement} to show a place&#39;s type. Append
+ * Configures a {@link google.maps.places.PlaceSearchElement} to load results
+ * based on a text search request. The <code>textQuery</code> property is
+ * required for the search element to load. Any other configured properties will
+ * be ignored if <code>textQuery</code> is not set. Append this element as a
+ * child of a {@link google.maps.places.PlaceSearchElement} to load results. For
+ * example: <pre><code> &lt;gmp-place-search&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-text-search-request<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;text-query="<var>QUERY</var>"<br>
+ * &nbsp;&nbsp;&gt;&lt;/gmp-place-text-search-request&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;&lt;gmp-place-media
+ * lightbox-preferred&gt;&lt;/gmp-place-media&gt;<br>
+ * &nbsp;&nbsp;&lt;/gmp-place-content-config&gt;<br> &lt;/gmp-place-search&gt;
+ * </code></pre>
+ *
+ * Access by calling `const {PlaceTextSearchRequestElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceTextSearchRequestElementOptions=} options
+ * @implements {google.maps.places.PlaceTextSearchRequestElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceTextSearchRequestElement = function(options) {};
+
+/**
+ * @default <code>null</code>
+ * @type {!Array<!google.maps.places.EVConnectorType>|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElement.prototype.evConnectorTypes;
+
+/**
+ * @default <code>null</code>
+ * @type {number|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElement.prototype
+    .evMinimumChargingRateKw;
+
+/**
+ * @default <code>null</code>
+ * @type {string|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElement.prototype.includedType;
+
+/**
+ * @default <code>null</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElement.prototype.isOpenNow;
+
+/**
+ * @default <code>null</code>
+ * @type {string|!google.maps.LatLngAltitude|!google.maps.LatLngBounds|!google.maps.Circle|!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngBoundsLiteral|!google.maps.CircleLiteral|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElement.prototype.locationBias;
+
+/**
+ * @default <code>null</code>
+ * @type {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElement.prototype.locationRestriction;
+
+/**
+ * @default <code>null</code>
+ * @type {number|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElement.prototype.maxResultCount;
+
+/**
+ * @default <code>null</code>
+ * @type {number|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElement.prototype.minRating;
+
+/**
+ * @default <code>null</code>
+ * @type {!Array<!google.maps.places.PriceLevel>|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElement.prototype.priceLevels;
+
+/**
+ * @default <code>null</code>
+ * @type {!google.maps.places.SearchByTextRankPreference|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElement.prototype.rankPreference;
+
+/**
+ * @default <code>null</code>
+ * @type {string|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElement.prototype.textQuery;
+
+/**
+ * @default <code>null</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElement.prototype
+    .useStrictTypeFiltering;
+
+
+
+/**
+ * Options for <code>PlaceTextSearchRequestElement</code>.
+ * @record
+ */
+google.maps.places.PlaceTextSearchRequestElementOptions = function() {};
+
+/**
+ * The list of preferred EV connector types. See {@link
+ * google.maps.places.SearchByTextRequest.evSearchOptions} and {@link
+ * google.maps.places.PlaceTextSearchRequestElement.evConnectorTypes} for more
+ * details.
+ * @type {!Array<!google.maps.places.EVConnectorType>|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElementOptions.prototype
+    .evConnectorTypes;
+
+/**
+ * Minimum required charging rate in kilowatts. See {@link
+ * google.maps.places.SearchByTextRequest.evSearchOptions} and {@link
+ * google.maps.places.PlaceTextSearchRequestElement.evMinimumChargingRateKw} for
+ * more details.
+ * @type {number|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElementOptions.prototype
+    .evMinimumChargingRateKw;
+
+/**
+ * The requested place type. See {@link
+ * google.maps.places.SearchByTextRequest.includedType} and {@link
+ * google.maps.places.PlaceTextSearchRequestElement.includedType} for more
+ * details.
+ * @type {string|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElementOptions.prototype.includedType;
+
+/**
+ * Used to restrict the search to places that are currently open. See {@link
+ * google.maps.places.SearchByTextRequest.isOpenNow} and {@link
+ * google.maps.places.PlaceTextSearchRequestElement.isOpenNow} for more details.
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElementOptions.prototype.isOpenNow;
+
+/**
+ * Location bias for the search. See {@link
+ * google.maps.places.SearchByTextRequest.locationBias} and {@link
+ * google.maps.places.PlaceTextSearchRequestElement.locationBias} for more
+ * details.
+ * @type {string|!google.maps.LatLngAltitude|!google.maps.LatLngBounds|!google.maps.Circle|!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngBoundsLiteral|!google.maps.CircleLiteral|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElementOptions.prototype.locationBias;
+
+/**
+ * Location restriction for the search. See {@link
+ * google.maps.places.SearchByTextRequest.locationRestriction} and {@link
+ * google.maps.places.PlaceTextSearchRequestElement.locationRestriction} for
+ * more details.
+ * @type {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElementOptions.prototype
+    .locationRestriction;
+
+/**
+ * Maximum number of results to return. See {@link
+ * google.maps.places.SearchByTextRequest.maxResultCount} and {@link
+ * google.maps.places.PlaceTextSearchRequestElement.maxResultCount} for more
+ * details.
+ * @type {number|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElementOptions.prototype
+    .maxResultCount;
+
+/**
+ * Filter out results whose average user rating is strictly less than this
+ * limit. See {@link google.maps.places.SearchByTextRequest.minRating}
+ * and {@link google.maps.places.PlaceTextSearchRequestElement.minRating} for
+ * more details.
+ * @type {number|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElementOptions.prototype.minRating;
+
+/**
+ * Used to restrict the search to places that are marked as certain price
+ * levels. See {@link google.maps.places.SearchByTextRequest.priceLevels}
+ * and {@link google.maps.places.PlaceTextSearchRequestElement.priceLevels} for
+ * more details.
+ * @type {!Array<!google.maps.places.PriceLevel>|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElementOptions.prototype.priceLevels;
+
+/**
+ * How results will be ranked in the response. See {@link
+ * google.maps.places.SearchByTextRequest.rankPreference} and {@link
+ * google.maps.places.PlaceTextSearchRequestElement.rankPreference} for more
+ * details.
+ * @type {!google.maps.places.SearchByTextRankPreference|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElementOptions.prototype
+    .rankPreference;
+
+/**
+ * The text query for textual search. See {@link
+ * google.maps.places.SearchByTextRequest.textQuery} and {@link
+ * google.maps.places.PlaceTextSearchRequestElement.textQuery} for more details.
+ * @type {string|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElementOptions.prototype.textQuery;
+
+/**
+ * Used to set strict type filtering for {@link
+ * google.maps.places.SearchByTextRequest.includedType}. See {@link
+ * google.maps.places.SearchByTextRequest.useStrictTypeFiltering} and {@link
+ * google.maps.places.PlaceTextSearchRequestElement.useStrictTypeFiltering} for
+ * more details.
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.PlaceTextSearchRequestElementOptions.prototype
+    .useStrictTypeFiltering;
+
+/**
+ * Configures a {@link google.maps.places.PlaceDetailsCompactElement}, {@link
+ * google.maps.places.PlaceDetailsElement}, or {@link
+ * google.maps.places.PlaceSearchElement} to show a place&#39;s type. Append
  * this element as a child of a {@link
  * google.maps.places.PlaceContentConfigElement} to use it. For example:
  * <pre><code> &lt;gmp-place-content-config&gt;<br>
