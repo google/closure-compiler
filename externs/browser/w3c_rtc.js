@@ -3598,7 +3598,7 @@ RTCPeerConnection.prototype.dispatchEvent = function(evt) {};
  *    successCallbackOrConstraintsOrOfferOptions
  * @param {!RTCPeerConnectionErrorCallback=} errorCallback
  * @param {!MediaConstraints=} constraints
- * @return {!Promise<!RTCSessionDescription>}
+ * @return {!Promise<!RTCSessionDescriptionInit>}
  */
 RTCPeerConnection.prototype.createOffer = function(
     successCallbackOrConstraintsOrOfferOptions, errorCallback, constraints) {};
@@ -3608,7 +3608,7 @@ RTCPeerConnection.prototype.createOffer = function(
  *    successCallbackOrConstraints
  * @param {!RTCPeerConnectionErrorCallback=} errorCallback
  * @param {!MediaConstraints=} constraints
- * @return {!Promise<!RTCSessionDescription>|undefined}
+ * @return {!Promise<!RTCSessionDescriptionInit>|undefined}
  */
 RTCPeerConnection.prototype.createAnswer = function(
     successCallbackOrConstraints, errorCallback, constraints) {};
@@ -3623,10 +3623,10 @@ RTCPeerConnection.prototype.setLocalDescription = function(
     description, successCallback, errorCallback) {};
 
 /**
- * @param {!RTCSessionDescription} description
+ * @param {!RTCSessionDescriptionInit} description
  * @param {!RTCVoidCallback=} successCallback
  * @param {!RTCPeerConnectionErrorCallback=} errorCallback
- * @return {!Promise<!RTCSessionDescription>}
+ * @return {!Promise<void>}
  */
 RTCPeerConnection.prototype.setRemoteDescription = function(
     description, successCallback, errorCallback) {};
