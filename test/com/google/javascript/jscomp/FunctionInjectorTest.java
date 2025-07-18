@@ -2150,8 +2150,7 @@ public final class FunctionInjectorTest {
     final Node tree = parse(compiler, code);
 
     final Node fnNode = findFunction(tree, fnName);
-    final ImmutableSet<String> unsafe =
-        ImmutableSet.copyOf(functionArgumentInjector.findModifiedParameters(fnNode));
+    final ImmutableSet<String> unsafe = functionArgumentInjector.findModifiedParameters(fnNode);
 
     // can-inline tester
     Method tester =
@@ -2227,8 +2226,7 @@ public final class FunctionInjectorTest {
 
     final Node fnNode = findFunction(tree, fnName);
     assertThat(fnNode).isNotNull();
-    final ImmutableSet<String> unsafe =
-        ImmutableSet.copyOf(functionArgumentInjector.findModifiedParameters(fnNode));
+    final ImmutableSet<String> unsafe = functionArgumentInjector.findModifiedParameters(fnNode);
     assertThat(fnNode).isNotNull();
 
     // inline tester
