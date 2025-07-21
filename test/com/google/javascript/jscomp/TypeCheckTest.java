@@ -20084,51 +20084,6 @@ override: function(this:Foo): number
   }
 
   @Test
-  public void testGetTypedPercent1() {
-    String js =
-        """
-        var id = function(x) { return x; }
-        var id2 = function(x) { return id(x); }
-        """;
-    assertThat(getTypedPercent(js)).isWithin(0.1).of(50.0);
-  }
-
-  @Test
-  public void testGetTypedPercent2() {
-    String js = "var x = {}; x.y = 1;";
-    assertThat(getTypedPercent(js)).isWithin(0.1).of(100.0);
-  }
-
-  @Test
-  public void testGetTypedPercent3() {
-    String js = "var f = function(x) { x.a = x.b; }";
-    assertThat(getTypedPercent(js)).isWithin(0.1).of(25.0);
-  }
-
-  @Test
-  public void testGetTypedPercent4() {
-    String js =
-        """
-        var n = {};
-        /** @constructor */ n.T = function() {};
-        /** @type {n.T} */ var x = new n.T();
-        """;
-    assertThat(getTypedPercent(js)).isWithin(0.1).of(100.0);
-  }
-
-  @Test
-  public void testGetTypedPercent5() {
-    String js = "/** @enum {number} */ keys = {A: 1,B: 2,C: 3};";
-    assertThat(getTypedPercent(js)).isWithin(0.1).of(100.0);
-  }
-
-  @Test
-  public void testGetTypedPercent6() {
-    String js = "a = {TRUE: 1, FALSE: 0};";
-    assertThat(getTypedPercent(js)).isWithin(0.1).of(100.0);
-  }
-
-  @Test
   public void testPrototypePropertyReference() {
     TypeCheckResult p =
         parseAndTypeCheckWithScope(
@@ -20150,28 +20105,6 @@ override: function(this:Foo): number
     FunctionType fooType = (FunctionType) p.scope.getVar("Foo").getType();
     assertThat(fooType.getPrototype().getPropertyType("bar").toString())
         .isEqualTo("function(this:Foo, number): undefined");
-  }
-
-  @Test
-  public void testResolvingNamedTypes() {
-    String externs = new TestExternsBuilder().addObject().build();
-    String js =
-        """
-        /** @constructor */
-        var Foo = function() {}
-        /** @param {number} a */
-        Foo.prototype.foo = function(a) {
-          return this.baz().toString();
-        };
-        /** @return {Baz} */
-        Foo.prototype.baz = function() { return new Baz(); };
-        /** @constructor
-          * @extends Foo */
-        var Bar = function() {};
-        /** @constructor */
-        var Baz = function() {};
-        """;
-    assertThat(getTypedPercentWithExterns(externs, js)).isWithin(0.1).of(100.0);
   }
 
   @Test

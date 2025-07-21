@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerTypeTestCase.CLOSURE_DEFS;
 import static com.google.javascript.jscomp.CompilerTypeTestCase.DEFAULT_EXTERNS;
 import static com.google.javascript.jscomp.TypeCheckTestCase.TypeTestBuilder.newTest;
@@ -27,7 +26,7 @@ import org.junit.runners.JUnit4;
 
 /** Tests {@link TypeCheck} on non-transpiled code. */
 @RunWith(JUnit4.class)
-public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
+public final class TypeCheckNoTranspileTest {
 
   @Test
   public void testCorrectSubtyping_ofRecursiveTemplateType() {
@@ -1180,18 +1179,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             It's possible that 'Sub.MyNumber' refers to a value, not a type.
             """)
         .run();
-  }
-
-  @Test
-  public void testGetTypedPercent() {
-    // Make sure names declared with `const` and `let` are counted correctly for typed percentage.
-    // This was created my a modifying a copy of TypeCheckTest.testGetTypedPercent1()
-    String js =
-        """
-        const id = function(x) { return x; }
-        let id2 = function(x) { return id(x); }
-        """;
-    assertThat(getTypedPercent(js)).isWithin(0.1).of(50.0);
   }
 
   @Test

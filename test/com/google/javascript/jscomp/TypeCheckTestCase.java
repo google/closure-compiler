@@ -80,21 +80,6 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     return functionType.getInstanceType();
   }
 
-  protected double getTypedPercent(String js) {
-    return getTypedPercentWithExterns("", js);
-  }
-
-  protected double getTypedPercentWithExterns(String externs, String js) {
-    Node jsRoot = IR.root(compiler.parseTestCode(js));
-
-    Node externsRoot = IR.root(compiler.parseTestCode(externs));
-    IR.root(externsRoot, jsRoot);
-
-    TypeCheck t = makeTypeCheck();
-    t.processForTesting(externsRoot, jsRoot);
-    return t.getTypedPercent();
-  }
-
   protected void checkObjectType(ObjectType objectType, String propertyName, JSType expectedType) {
     assertWithMessage(
             "Expected " + objectType.getReferenceName() + " to have property " + propertyName)
