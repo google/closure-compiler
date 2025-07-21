@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.TypeCheckTestCase.TypeTestBuilder.newTest;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.javascript.rhino.jstype.JSType;
 import org.junit.Ignore;
@@ -542,8 +543,8 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   public void testTemplatizedTypeSubtypes2() {
     JSType arrayOfNumber = createTemplatizedType(getNativeArrayType(), getNativeNumberType());
     JSType arrayOfString = createTemplatizedType(getNativeArrayType(), getNativeStringType());
-    assertThat(arrayOfString.isSubtypeOf(createUnionType(arrayOfNumber, getNativeNullVoidType())))
-        .isFalse();
+    assertType(arrayOfString)
+        .isNotSubtypeOf(createUnionType(arrayOfNumber, getNativeNullVoidType()));
   }
 
   @Test

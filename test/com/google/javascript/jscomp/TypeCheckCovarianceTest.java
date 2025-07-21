@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_PROPERTY;
 import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_UNION_PROPERTY;
+import static com.google.javascript.jscomp.TypeCheckTestCase.TypeTestBuilder.newTest;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,7 +26,7 @@ import org.junit.runners.JUnit4;
 
 /** Tests {@link TypeCheck}. */
 @RunWith(JUnit4.class)
-public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
+public final class TypeCheckCovarianceTest {
 
   @Test
   public void testIterableCovariant() {
@@ -597,7 +598,6 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   @Test
   public void testCovarianceForRecordType14a() {
     // Verify loose property check behavior
-    disableStrictMissingPropertyChecks();
     newTest()
         .addExterns(
             """
@@ -615,6 +615,7 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             ri.x.obj.y();
             """)
         .includeDefaultExterns()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -644,7 +645,6 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   @Test
   public void testCovarianceForRecordType15() {
     // Verify loose property check behavior
-    disableStrictMissingPropertyChecks();
     newTest()
         .addExterns(
             """
@@ -665,6 +665,7 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             ri.x.obj.y();
             """)
         .includeDefaultExterns()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -718,7 +719,6 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
 
   @Test
   public void testCovarianceForRecordType18() {
-    disableStrictMissingPropertyChecks();
     newTest()
         .addExterns(
             """
@@ -737,13 +737,13 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             f.z;
             """)
         .includeDefaultExterns()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
   @Test
   public void testCovarianceForRecordType19a() {
     // Verify loose property check behavior
-    disableStrictMissingPropertyChecks();
     newTest()
         .addExterns(
             """
@@ -764,6 +764,7 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
             var x = b.prop1
             """)
         .includeDefaultExterns()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 

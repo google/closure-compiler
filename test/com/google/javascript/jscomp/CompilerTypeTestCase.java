@@ -84,9 +84,9 @@ abstract class CompilerTypeTestCase {
   protected JSTypeRegistry registry;
   protected TestErrorReporter errorReporter;
 
-  protected CompilerOptions getDefaultOptions() {
+  static final CompilerOptions defaultOptions() {
     CompilerOptions options = new CompilerOptions();
-    options.setCodingConvention(getCodingConvention());
+    options.setCodingConvention(new GoogleCodingConvention());
     options.setLanguage(LanguageMode.UNSUPPORTED);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.MISPLACED_TYPE_ANNOTATION, CheckLevel.WARNING);
@@ -95,6 +95,10 @@ abstract class CompilerTypeTestCase {
     options.setWarningLevel(DiagnosticGroups.JSDOC_MISSING_TYPE, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.BOUNDED_GENERICS, CheckLevel.WARNING);
     return options;
+  }
+
+  protected CompilerOptions getDefaultOptions() {
+    return defaultOptions();
   }
 
   protected CodingConvention getCodingConvention() {

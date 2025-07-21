@@ -16,13 +16,15 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.TypeCheckTestCase.TypeTestBuilder.newTest;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests {@link TypeCheck}. */
 @RunWith(JUnit4.class)
-public final class TypeCheckStructuralInterfaceTest extends TypeCheckTestCase {
+public final class TypeCheckStructuralInterfaceTest {
 
   /**
    * although C1 does not declare to extend Interface1, obj2 : C1 still structurally matches obj1 :

@@ -16,6 +16,9 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.CompilerTypeTestCase.CLOSURE_DEFS;
+import static com.google.javascript.jscomp.CompilerTypeTestCase.DEFAULT_EXTERNS;
+import static com.google.javascript.jscomp.TypeCheckTestCase.TypeTestBuilder.newTest;
 
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Test;
@@ -319,7 +322,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testTypedefOfPropertyInBlock() {
-    disableStrictMissingPropertyChecks();
     newTest()
         .addExterns("/** @interface */ function Foo() {}")
         .addSource(
@@ -335,12 +337,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
               }
             }
             """)
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
   @Test
   public void testTypedefOfPropertyInFunctionScope() {
-    disableStrictMissingPropertyChecks();
     newTest()
         .addExterns("/** @interface */ function Foo() {}")
         .addSource(
@@ -356,6 +358,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
               }
             }
             """)
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -1193,7 +1196,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testBlockScopedVarInLoop1() {
-    disableStrictMissingPropertyChecks();
     newTest()
         .includeDefaultExterns()
         .addSource(
@@ -1211,6 +1213,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
               }
             }
             """)
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -5060,7 +5063,7 @@ override: function(number): undefined
 
   @Test
   public void testClassAnnotatedWithUnrestricted() {
-    disableStrictMissingPropertyChecks();
+
     newTest()
         .addSource(
             """
@@ -5068,12 +5071,13 @@ override: function(number): undefined
             var foo = new Foo();
             foo.x = 42;
             """)
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
   @Test
   public void testClassAnnotatedWithDictDotAccess() {
-    disableStrictMissingPropertyChecks();
+
     newTest()
         .addSource(
             """
@@ -5082,6 +5086,7 @@ override: function(number): undefined
             foo.x = 42;
             """)
         .addDiagnostic("Cannot do '.' access on a dict")
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -9772,19 +9777,19 @@ override: function(this:Bar, number): undefined
 
   @Test
   public void testTypeCheckingEsModule_importSpecs() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
-    newTest().addSource("import {x} from './input0';").run();
+    newTest().addSource("import {x} from './input0';").suppress(DiagnosticGroups.MODULE_LOAD).run();
   }
 
   @Test
   public void testTypeCheckingEsModule_importStar() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
-    newTest().addSource("import * as mod from './input0';").run();
+    newTest()
+        .addSource("import * as mod from './input0';")
+        .suppress(DiagnosticGroups.MODULE_LOAD)
+        .run();
   }
 
   @Test
   public void testExplicitUnrestrictedOverridesSuperImplicitStruct() {
-    disableStrictMissingPropertyChecks();
     newTest()
         .addSource(
             """
@@ -9794,12 +9799,12 @@ override: function(this:Bar, number): undefined
               foo() { this.x; this.x = 0; this[0]; this[0] = 0; }
             }
             """)
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
   @Test
   public void testImplicitStructOverridesSuperExplicitUnrestricted() {
-    disableStrictMissingPropertyChecks();
     newTest()
         .addSource(
             """
@@ -9815,12 +9820,12 @@ override: function(this:Bar, number): undefined
                 + " declared the property, make sure to give it a type.)")
         .addDiagnostic("Cannot do '[]' access on a struct")
         .addDiagnostic("Cannot do '[]' access on a struct")
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
   @Test
   public void testExplicitUnrestrictedOverridesSuperExplicitStruct() {
-    disableStrictMissingPropertyChecks();
     newTest()
         .addSource(
             """
@@ -9831,12 +9836,12 @@ override: function(this:Bar, number): undefined
               foo() { this.x; this.x = 0; this[0]; this[0] = 0;}
             }
             """)
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
   @Test
   public void testImplicitUnrestrictedDoesNotOverridesSuperExplicitStruct() {
-    disableStrictMissingPropertyChecks();
     newTest()
         .addSource(
             """
@@ -9852,6 +9857,7 @@ override: function(this:Bar, number): undefined
                 + " declared the property, make sure to give it a type.)")
         .addDiagnostic("Cannot do '[]' access on a struct")
         .addDiagnostic("Cannot do '[]' access on a struct")
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -9895,7 +9901,6 @@ override: function(this:Bar, number): undefined
 
   @Test
   public void testDynamicImport() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     newTest()
         .addSource(
             """
@@ -9908,6 +9913,7 @@ override: function(this:Bar, number): undefined
             found   : Promise<?>
             required: string
             """)
+        .suppress(DiagnosticGroups.MODULE_LOAD)
         .run();
   }
 

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.TypeCheckTestCase.TypeTestBuilder.newTest;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
@@ -93,7 +94,7 @@ public class OptionalChainTypeCheckTest {
   }
 
   @RunWith(Parameterized.class)
-  public static final class OptChainGetElemTests extends TypeCheckTestCase {
+  public static final class OptChainGetElemTests {
     @Parameter public OptChainTestCase testCase;
 
     /**
@@ -240,13 +241,6 @@ public class OptionalChainTypeCheckTest {
               .build());
     }
 
-    @Override
-    protected CompilerOptions getDefaultOptions() {
-      CompilerOptions options = super.getDefaultOptions();
-      options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
-      return options;
-    }
-
     @Test
     public void test() {
       String js = createTestString(testCase);
@@ -259,7 +253,7 @@ public class OptionalChainTypeCheckTest {
   }
 
   @RunWith(Parameterized.class)
-  public static final class OptChainGetPropTests extends TypeCheckTestCase {
+  public static final class OptChainGetPropTests {
     @Parameter public OptChainTestCase testCase;
 
     @Parameters
@@ -337,13 +331,6 @@ public class OptionalChainTypeCheckTest {
               .build());
     }
 
-    @Override
-    protected CompilerOptions getDefaultOptions() {
-      CompilerOptions options = super.getDefaultOptions();
-      options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
-      return options;
-    }
-
     @Test
     public void test() {
       String js = createTestString(testCase);
@@ -371,13 +358,6 @@ public class OptionalChainTypeCheckTest {
               .withExpr("x.prop;")
               .mustReport("Cannot do '.' access on a dict")
               .build());
-    }
-
-    @Override
-    protected CompilerOptions getDefaultOptions() {
-      CompilerOptions options = super.getDefaultOptions();
-      options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
-      return options;
     }
 
     @Test
@@ -474,7 +454,7 @@ public class OptionalChainTypeCheckTest {
   }
 
   @RunWith(Parameterized.class)
-  public static final class OptChainCallTests extends TypeCheckTestCase {
+  public static final class OptChainCallTests {
 
     @Parameter public OptChainTestCase testCase;
 
@@ -590,13 +570,6 @@ public class OptionalChainTypeCheckTest {
       return js.toString();
     }
 
-    @Override
-    protected CompilerOptions getDefaultOptions() {
-      CompilerOptions options = super.getDefaultOptions();
-      options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
-      return options;
-    }
-
     @Test
     public void testOptChainCallExpressions() {
       String js = createOptChainCallTestString(testCase);
@@ -610,12 +583,6 @@ public class OptionalChainTypeCheckTest {
 
   @RunWith(JUnit4.class)
   public static final class OptChainTestsNonParameterized extends TypeCheckTestCase {
-    @Override
-    protected CompilerOptions getDefaultOptions() {
-      CompilerOptions options = super.getDefaultOptions();
-      options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
-      return options;
-    }
 
     // Confirms that OPTCHAIN_GETELEM nodes are inferred as unknown type
     @Test

@@ -76,6 +76,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
       Cannot add a property to a struct instance after it is constructed. (If you already declared the property, make sure to give it a type.)
       """;
 
+  // Would be good to clean this up, and use the static newTest() instead.
+  private TypeTestBuilder newTest() {
+    return super.newTestLegacy();
+  }
+
   @Test
   public void testInitialTypingScope() {
     TypedScope s =

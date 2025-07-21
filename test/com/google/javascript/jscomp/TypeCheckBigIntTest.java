@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.TypeCheckTestCase.TypeTestBuilder.newTest;
+
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,7 +25,7 @@ import org.junit.runners.JUnit4;
 
 /** Tests {@link TypeCheck}. */
 @RunWith(JUnit4.class)
-public final class TypeCheckBigIntTest extends TypeCheckTestCase {
+public final class TypeCheckBigIntTest {
 
   @Test
   public void testTypeofBigInt() {

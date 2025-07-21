@@ -16,22 +16,20 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.TypeCheck.POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION;
+import static com.google.javascript.jscomp.TypeCheckTestCase.TypeTestBuilder.newTest;
 
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
-import com.google.javascript.rhino.jstype.JSType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests {@link TypeCheck}. */
 @RunWith(JUnit4.class)
-public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
+public final class TypeCheckBugsAndIssuesTest {
 
   @Test
   public void testIssue61a() {
-    disableStrictMissingPropertyChecks();
     newTest()
         .addSource(
             """
@@ -50,6 +48,7 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
             found   : number
             required: string
             """)
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -944,7 +943,7 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
   /** Tests that the match method of strings returns nullable arrays. */
   @Test
   public void testBug908701() {
-    this.newTest()
+    newTest()
         .addExterns(new TestExternsBuilder().addString().build())
         .addSource(
             """
@@ -977,9 +976,15 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
   @Test
   public void testBug911118a() {
     // verifying the type assigned to function expressions assigned variables
-    TypedScope s = parseAndTypeCheckWithScope("var a = function(){};").scope;
-    JSType type = s.getVar("a").getType();
-    assertThat(type.toString()).isEqualTo("function(): undefined");
+    newTest()
+        .addSource("var a = function() {}; /** @type {!null} */ const b = a;")
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : function(): undefined
+            required: None
+            """)
+        .run();
   }
 
   /**
@@ -1058,7 +1063,6 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
 
   @Test
   public void testBug1859535() {
-    disableStrictMissingPropertyChecks();
     newTest()
         .addSource(
             """
@@ -1089,12 +1093,12 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
             };
             """)
         .includeDefaultExterns()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
   @Test
   public void testBug1940591() {
-    disableStrictMissingPropertyChecks();
     newTest()
         .addSource(
             """
@@ -1107,6 +1111,7 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
              */
             a.g = function(x) { x.name = 'a'; }
             """)
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -1180,8 +1185,6 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
 
   @Test
   public void testBug2335992() {
-    disableStrictMissingPropertyChecks();
-
     newTest()
         .addSource(
             """
@@ -1196,13 +1199,12 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
             found   : number
             required: string
             """)
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
   @Test
   public void testBug2341812() {
-    disableStrictMissingPropertyChecks();
-
     newTest()
         .addSource(
             """
@@ -1216,6 +1218,7 @@ public final class TypeCheckBugsAndIssuesTest extends TypeCheckTestCase {
              * @return {string} */
             function foo(x) { return x.index; }
             """)
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 

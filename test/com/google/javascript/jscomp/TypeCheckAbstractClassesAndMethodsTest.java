@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.TypeCheckTestCase.TypeTestBuilder.newTest;
+
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,7 +25,7 @@ import org.junit.runners.JUnit4;
 
 /** Tests {@link TypeCheck}. */
 @RunWith(JUnit4.class)
-public final class TypeCheckAbstractClassesAndMethodsTest extends TypeCheckTestCase {
+public final class TypeCheckAbstractClassesAndMethodsTest {
 
   @Test
   public void testAbstractMethodInAbstractClass() {
@@ -171,7 +173,7 @@ public final class TypeCheckAbstractClassesAndMethodsTest extends TypeCheckTestC
     // concrete subclass fails to implement it.
     newTest()
         .addSource(
-            CLOSURE_DEFS
+            CompilerTypeTestCase.CLOSURE_DEFS
                 + """
                 /** @abstract @constructor */ var A = function() {};
                 A.prototype.foo = goog.abstractMethod;
