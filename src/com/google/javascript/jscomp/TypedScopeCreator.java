@@ -91,6 +91,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.KnownSymbolType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
+import com.google.javascript.rhino.jstype.Property.StringKey;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
@@ -907,7 +908,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             declarePropertyIfNamespaceType(
                 parentType.toMaybeObjectType(),
                 exportsVar.getNameNode(),
-                moduleNamespace.getComponent(),
+                new StringKey(moduleNamespace.getComponent()),
                 exportsVar.getType(),
                 exportsVar.getNameNode(),
                 typeDoc);
@@ -1109,14 +1110,28 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      */
     void processObjectLitProperties(Node objLit, ObjectType objLitType, boolean declareOnOwner) {
       for (Node keyNode = objLit.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
-        if (keyNode.isComputedProp() || keyNode.isSpread()) {
+        if (keyNode.isSpread()) {
           // Don't try defining computed or spread properties on an object. Note that for spread
           // type inference will try to determine the properties and types. We cannot do it here as
           // we don't have all the type information of the spread object.
           continue;
         }
-        Node value = keyNode.getFirstChild();
-        String memberName = NodeUtil.getObjectOrClassLitKeyName(keyNode);
+        final Property.Key memberName;
+        final Node value;
+        final String qualifiedName;
+        if (keyNode.isComputedProp()) {
+          KnownSymbolType symbol = extractKnownSymbolKey(currentScope, keyNode.getFirstChild());
+          if (symbol == null) {
+            continue;
+          }
+          qualifiedName = null;
+          memberName = new Property.SymbolKey(symbol);
+          value = keyNode.getSecondChild();
+        } else {
+          value = keyNode.getFirstChild();
+          memberName = new Property.StringKey(NodeUtil.getObjectOrClassLitKeyName(keyNode));
+          qualifiedName = NodeUtil.getBestLValueName(keyNode);
+        }
         JSDocInfo info = keyNode.getJSDocInfo();
         JSType valueType = getDeclaredType(info, keyNode, value, null);
         JSType keyType =
@@ -1126,7 +1141,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
         // Try to declare this property in the current scope if it
         // has an authoritative name.
-        String qualifiedName = NodeUtil.getBestLValueName(keyNode);
         if (qualifiedName != null) {
           new SlotDefiner()
               .forDeclarationNode(keyNode)
@@ -2723,7 +2737,41 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     /**
-     * Declare the symbol for a qualified name in the global scope.
+     * Declare a computed property on its owner type
+     *
+     * @param info The doc info for this property.
+     * @param n A top-level GETELEM node (it should not be contained inside another GETPROP).
+     * @param rhsValue The node that {@code n} is being initialized to, or {@code null} if this is a
+     *     stub declaration.
+     */
+    void maybeDeclareGetElem(JSDocInfo info, Node n, @Nullable Node rhsValue) {
+      checkArgument(n.isGetElem(), n);
+      Node ownerNode = n.getFirstChild();
+      Node key = n.getSecondChild();
+      KnownSymbolType keyType = extractKnownSymbolKey(currentScope, key);
+      if (keyType == null) {
+        return;
+      }
+      JSType valueType = getDeclaredType(info, n, rhsValue, null);
+      if (valueType == null) {
+        return;
+      }
+      String ownerName = ownerNode.getQualifiedName();
+      ObjectType ownerType = getObjectSlot(ownerName);
+      if (ownerType == null) {
+        return;
+      }
+      declarePropertyIfNamespaceType(
+          ownerType,
+          ownerNode,
+          new Property.SymbolKey(keyType),
+          valueType,
+          n,
+          /* jsdocInfo= */ null);
+    }
+
+    /**
+     * Declare the symbol for a qualified name in the current scope.
      *
      * @param info The doc info for this property.
      * @param n A top-level GETPROP node (it should not be contained inside another GETPROP).
@@ -2810,7 +2858,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         ObjectType ownerType = getObjectSlot(ownerName);
         if (ownerType != null) {
           declarePropertyIfNamespaceType(
-              ownerType, ownerNode, propName, valueType, n, /* jsdocInfo= */ null);
+              ownerType, ownerNode, new StringKey(propName), valueType, n, /* jsdocInfo= */ null);
         }
 
         // this is a memory optimization: we don't need to declare .prototype props in the scope.
@@ -3075,7 +3123,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     void declarePropertyIfNamespaceType(
         ObjectType ownerType,
         Node ownerNode,
-        String propName,
+        Property.Key propName,
         JSType valueType,
         Node declarationNode,
         @Nullable JSDocInfo jsdocInfo) {
@@ -3145,12 +3193,16 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           // Handle initialization of properties.
           // We only allow qualified name declarations of the form
           //   /** @type {number} */ a.b.c = rhs;
+          // or, for symbol-typed properties:
+          //   /** @type {number} */ a.b[Symbol.something] = rhs;
           // TODO(b/77597706): Ensure that CheckJSDoc warns for JSDoc on assignments not to
           // qualified names, e.g.
           //   /** @type {number} */ [a.b.c] = someArr;
           Node firstChild = n.getFirstChild();
           if (firstChild.isGetProp() && firstChild.isQualifiedName()) {
             maybeDeclareQualifiedName(t, n.getJSDocInfo(), firstChild, n, firstChild.getNext());
+          } else if (firstChild.isGetElem() && firstChild.getFirstChild().isQualifiedName()) {
+            maybeDeclareGetElem(n.getJSDocInfo(), firstChild, firstChild.getNext());
           } else if (undeclaredNamesForClosure.contains(firstChild)) {
             defineAssignAsIfVarDeclaration(n);
           }
@@ -3170,6 +3222,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           // Handle stubbed properties.
           if (parent.isExprResult() && n.isQualifiedName()) {
             maybeDeclareQualifiedName(t, n.getJSDocInfo(), n, parent, null);
+          }
+          break;
+
+        case GETELEM:
+          // Handle stubbed properties.
+          if (parent.isExprResult() && n.getFirstChild().isQualifiedName()) {
+            maybeDeclareGetElem(n.getJSDocInfo(), n, null);
           }
           break;
 
@@ -3502,6 +3561,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         defineMemberField(n);
       } else if ((n.isGetterDef() || n.isSetterDef()) && parent.isClassMembers()) {
         defineGetterSetter(n);
+      } else if (n.isComputedFieldDef()
+          || (n.isComputedProp()
+              && n.getBooleanProp(Node.COMPUTED_PROP_METHOD)
+              && parent.isClassMembers())) {
+        defineComputedMemberField(n);
       }
     }
 
@@ -3527,6 +3591,34 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       ObjectType ownerType = determineOwnerTypeForClassMember(n);
       String propName = n.getString();
       ownerType.defineDeclaredProperty(propName, declaredType, n);
+      n.setJSType(declaredType);
+    }
+
+    void defineComputedMemberField(Node n) {
+      Node key = n.getFirstChild();
+      if (!key.isQualifiedName()) {
+        return;
+      }
+      JSType keyType = currentScope.lookupQualifiedName(key.getQualifiedNameObject());
+      if (keyType == null || !keyType.isKnownSymbolValueType()) {
+        return;
+      }
+      Node rhs = n.getLastChild();
+      JSType declaredType = getDeclaredType(n.getJSDocInfo(), n, rhs, null);
+      // When there's no JSDoc type declaration for a field:
+      // If we can infer a type other than UNKNOWN for an initial value, use that as the field type
+      // Otherwise, set the field's type to the ALL type ('*')
+      if (declaredType == null) {
+        JSType rhsType = rhs == null ? null : super.getDeclaredRValueType(null, rhs);
+        declaredType =
+            rhsType != null && !rhsType.isUnknownType()
+                ? rhsType
+                : getNativeType(JSTypeNative.ALL_TYPE);
+      }
+
+      ObjectType ownerType = determineOwnerTypeForClassMember(n);
+      ownerType.defineDeclaredProperty(
+          new Property.SymbolKey(keyType.toMaybeKnownSymbolType()), declaredType, n);
       n.setJSType(declaredType);
     }
 
@@ -3580,7 +3672,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         return ownerType.getInstanceType();
       } else {
         checkState(
-            member.isMemberFunctionDef() || member.isGetterDef() || member.isSetterDef(), member);
+            member.isMemberFunctionDef()
+                || member.isGetterDef()
+                || member.isSetterDef()
+                || member.isComputedProp()
+                || member.isComputedFieldDef(),
+            member);
         return ownerType.getPrototype();
       }
     }
@@ -3673,5 +3770,14 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * malformed with multiple module IDs.
      */
     return Iterables.getFirst(metadata.googNamespaces(), null);
+  }
+
+  private static @Nullable KnownSymbolType extractKnownSymbolKey(
+      TypedScope currentScope, Node key) {
+    if (!key.isQualifiedName()) {
+      return null;
+    }
+    JSType type = currentScope.lookupQualifiedName(key.getQualifiedNameObject());
+    return type != null ? type.toMaybeKnownSymbolType() : null;
   }
 }

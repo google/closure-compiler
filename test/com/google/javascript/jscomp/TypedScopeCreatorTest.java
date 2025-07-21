@@ -54,6 +54,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.JSTypeResolver;
+import com.google.javascript.rhino.jstype.KnownSymbolType;
 import com.google.javascript.rhino.jstype.NamedType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayDeque;
@@ -2345,6 +2346,42 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testStructuralInterfaceMatchingOnInterface_symbolProps() {
+    testSame(
+        externs(
+            new TestExternsBuilder().addIterable().build(),
+            """
+            /** @const {symbol} */
+            Symbol.number;
+            /** @const {symbol} */
+            Symbol.string;
+            """),
+        srcs(
+            """
+            /** @record */
+            class I {
+              constructor() {
+                /** @type {string} */
+                this[Symbol.string];
+              }
+              /** @type {number} */
+              [Symbol.number];
+            }
+            """));
+
+    FunctionType iCtor = globalScope.getVar("I").getType().assertFunctionType();
+    assertType(iCtor).toStringIsEqualTo("(typeof I)");
+    assertThat(iCtor.isStructuralInterface()).isTrue();
+    KnownSymbolType stringSym =
+        globalScope.getVar("Symbol.string").getType().toMaybeKnownSymbolType();
+    KnownSymbolType numberSym =
+        globalScope.getVar("Symbol.number").getType().toMaybeKnownSymbolType();
+
+    assertType(iCtor.getInstanceType()).hasProperty(stringSym);
+    assertType(iCtor.getPrototype()).hasProperty(numberSym);
+  }
+
+  @Test
   public void testPropertiesOnInterface() {
     testSame(
         """
@@ -3223,6 +3260,82 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertType(method).toStringIsEqualTo("function(this:Foo, string): undefined");
     FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
     assertType(foo.getInstanceType()).withTypeOfProp("method").isEqualTo(method);
+  }
+
+  @Test
+  public void testEs5ClassWithWellKnownSymbolTypedMethod() {
+    testSame(
+        externs(
+            new TestExternsBuilder().addIterable().build(),
+            """
+            /** @const {symbol}  */
+            Symbol.dispose;
+            """),
+        srcs(
+            """
+            /** @constructor */
+            function Foo() {}
+            /**
+             * @param {string} x
+             * @param {number} y
+             */
+            Foo.prototype[Symbol.iterator] = function(x, y) {}
+            /** @return {symbol} */
+            Foo.prototype[Symbol.dispose] = function() { return Symbol.dispose; }
+            """));
+
+    FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
+    KnownSymbolType symbolIteratorType =
+        (KnownSymbolType) findNameType("Symbol.iterator", globalScope);
+    KnownSymbolType symbolDisposeType =
+        (KnownSymbolType) findNameType("Symbol.dispose", globalScope);
+    assertType(foo.getInstanceType()).hasProperty(symbolIteratorType);
+    assertType(foo.getInstanceType()).hasProperty(symbolDisposeType);
+
+    assertType(foo.getInstanceType())
+        .withTypeOfProp(symbolIteratorType)
+        .toStringIsEqualTo("function(this:Foo, string, number): undefined");
+    assertType(foo.getInstanceType())
+        .withTypeOfProp(symbolDisposeType)
+        .toStringIsEqualTo("function(this:Foo): symbol");
+  }
+
+  @Test
+  public void testClassWithWellKnownSymbolTypedMethod() {
+    testSame(
+        externs(
+            new TestExternsBuilder().addIterable().build(),
+            """
+            /** @const {symbol}  */
+            Symbol.dispose;
+            """),
+        srcs(
+            """
+            class Foo {
+              /**
+               * @param {string} x
+               * @param {number} y
+               */
+              [Symbol.iterator](x, y) {}
+              /** @return {symbol} */
+              [Symbol.dispose]() { return Symbol.dispose; }
+            }
+            """));
+
+    FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
+    KnownSymbolType symbolIteratorType =
+        (KnownSymbolType) findNameType("Symbol.iterator", globalScope);
+    KnownSymbolType symbolDisposeType =
+        (KnownSymbolType) findNameType("Symbol.dispose", globalScope);
+    assertType(foo.getInstanceType()).hasProperty(symbolIteratorType);
+    assertType(foo.getInstanceType()).hasProperty(symbolDisposeType);
+
+    assertType(foo.getInstanceType())
+        .withTypeOfProp(symbolIteratorType)
+        .toStringIsEqualTo("function(this:Foo, string, number): undefined");
+    assertType(foo.getInstanceType())
+        .withTypeOfProp(symbolDisposeType)
+        .toStringIsEqualTo("function(this:Foo): symbol");
   }
 
   @Test
@@ -8723,6 +8836,28 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     }
 
     assertThat(actualId).isEqualTo(expectedId);
+  }
+
+  @Test
+  public void testObjectLitWithDeclaredSymbolProperty() {
+    testSame(
+        externs(
+            new TestExternsBuilder().addIterable().build(),
+            """
+            /** @const {symbol}  */
+            Symbol.foo;
+            """),
+        srcs(
+            """
+            const foo = {
+              /** @const */
+              [Symbol.foo]: 0
+            };
+            """));
+
+    ObjectType foo = findNameType("foo", globalScope).assertObjectType();
+    KnownSymbolType symbolFooType = (KnownSymbolType) findNameType("Symbol.foo", globalScope);
+    assertType(foo).withTypeOfProp(symbolFooType).isNumber();
   }
 
   @Test

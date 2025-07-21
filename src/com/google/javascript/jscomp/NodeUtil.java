@@ -4634,7 +4634,8 @@ public final class NodeUtil {
         || (node.getParent().isAssign() && node.isFirstChildOf(node.getParent()))
         || (node.getParent().isExprResult() && isNormalGet(node))
         || node.isMemberFieldDef()
-        || node.isComputedFieldDef()) {
+        || node.isComputedFieldDef()
+        || node.isComputedProp()) {
       return info != null && info.isConstant();
     }
     checkArgument(node.isName(), node);
