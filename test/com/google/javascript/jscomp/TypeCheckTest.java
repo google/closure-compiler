@@ -24,6 +24,7 @@ import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 import static com.google.javascript.jscomp.TypeCheck.POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION;
 import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_PROPERTY;
 import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_UNION_PROPERTY;
+import static com.google.javascript.jscomp.TypeCheckTestCase.TypeTestBuilder.newTest;
 import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
 import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
@@ -75,11 +76,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
       """
       Cannot add a property to a struct instance after it is constructed. (If you already declared the property, make sure to give it a type.)
       """;
-
-  // Would be good to clean this up, and use the static newTest() instead.
-  private TypeTestBuilder newTest() {
-    return super.newTestLegacy();
-  }
 
   @Test
   public void testInitialTypingScope() {
@@ -496,7 +492,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testTypeCheckDefaultExterns() {
-    this.newTest()
+    newTest()
         .addExterns(new TestExternsBuilder().addArray().build())
         .addSource(
             """
@@ -2116,8 +2112,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testPropertyInferredPropagation() {
     // Checking sloppy property check behavior
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @return {Object} */
@@ -2205,7 +2201,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testPropertyInference5() {
-    disableStrictMissingPropertyChecks();
     // "x_" is a known property of an unknown type.
     newTest()
         .addSource(
@@ -2215,6 +2210,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             /** @return {string} */
             F.prototype.bar = function() { if (this.x_) return this.x_; };
             """)
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -2324,8 +2320,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNoPersistentTypeInferenceForObjectProperties() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {Object} o
@@ -2346,8 +2342,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNoPersistentTypeInferenceForFunctionProperties() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {Function} o
@@ -2450,8 +2446,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testObjectPropertyTypeInferredInLocalScope1a() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {!Object} o
@@ -2492,9 +2488,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testObjectPropertyTypeInferredInLocalScope2a() {
     // This test is specifically checking loose property check behavior.
-    disableStrictMissingPropertyChecks();
-
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /**
@@ -2553,8 +2548,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testObjectPropertyTypeInferredInLocalScope3() {
-    disableStrictMissingPropertyChecks();
-
     // inferrence of undeclared properties
     newTest()
         .addSource(
@@ -2579,6 +2572,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             found   : (number|string)
             required: string
             """)
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -2658,8 +2652,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testMismatchingOverridingInferredPropertyBeforeDeclaredProperty3() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @type {Object} */ var n = {};
@@ -3055,18 +3049,16 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNumericComparison3() {
-    compiler
-        .getOptions()
-        .setWarningLevel(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
-    newTest().addSource("/**@param {string} a*/ function f(a) {return a < 3;}").run();
+    newTest()
+        .suppress(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS)
+        .addSource("/**@param {string} a*/ function f(a) {return a < 3;}")
+        .run();
   }
 
   @Test
   public void testNumericComparison4() {
-    compiler
-        .getOptions()
-        .setWarningLevel(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     newTest()
+        .suppress(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS)
         .addSource(
             """
             /**@param {(number|undefined)} a*/
@@ -3108,18 +3100,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testStringComparison2() {
-    compiler
-        .getOptions()
-        .setWarningLevel(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
-    newTest().addSource("/**@param {Object} a*/ function f(a) {return a < 'x';}").run();
+    newTest()
+        .suppress(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS)
+        .addSource("/**@param {Object} a*/ function f(a) {return a < 'x';}")
+        .run();
   }
 
   @Test
   public void testStringComparison3() {
-    compiler
-        .getOptions()
-        .setWarningLevel(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
-    newTest().addSource("/**@param {number} a*/ function f(a) {return a < 'x';}").run();
+    newTest()
+        .suppress(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS)
+        .addSource("/**@param {number} a*/ function f(a) {return a < 'x';}")
+        .run();
   }
 
   @Test
@@ -3146,10 +3138,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testStringComparison6() {
-    compiler
-        .getOptions()
-        .setWarningLevel(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     newTest()
+        .suppress(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS)
         .addSource(
             """
             /**@return {void} */
@@ -3180,10 +3170,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testValueOfComparison2() {
-    compiler
-        .getOptions()
-        .setWarningLevel(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     newTest()
+        .suppress(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS)
         .addExterns(new TestExternsBuilder().addObject().build())
         .addSource(
             """
@@ -3200,10 +3188,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testValueOfComparison3() {
-    compiler
-        .getOptions()
-        .setWarningLevel(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     newTest()
+        .suppress(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS)
         .addExterns(new TestExternsBuilder().addObject().build())
         .addSource(
             """
@@ -3833,7 +3819,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testVarArgParameterWithTemplateType() {
-    this.newTest()
+    newTest()
         .addExterns(new TestExternsBuilder().addArray().build())
         .addSource(
             """
@@ -3856,7 +3842,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testRestParameters() {
-    this.newTest()
+    newTest()
         .addExterns(new TestExternsBuilder().addArray().build())
         .addSource(
             """
@@ -3878,7 +3864,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testRestParameterWithTemplateType() {
-    this.newTest()
+    newTest()
         .addExterns(new TestExternsBuilder().addArray().build())
         .addSource(
             """
@@ -4158,9 +4144,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // We want to make sure that 'prop' isn't declared on all objects.
 
     // This test is specifically checking loose property check behavior.
-    disableStrictMissingPropertyChecks();
-
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @type {!Function} */ var f = function() {
@@ -6680,9 +6665,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testEnum42c() {
-    disableStrictMissingPropertyChecks();
-
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {number} x */ function f(x) {}
@@ -8235,9 +8219,8 @@ override: function(): string
 
   @Test
   public void testGenericBoundExplicitUnknown() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.BOUNDED_GENERICS, CheckLevel.OFF);
-
     newTest()
+        .suppress(DiagnosticGroups.BOUNDED_GENERICS)
         .addSource(
             """
             /**
@@ -8879,9 +8862,8 @@ override: function(): string
 
   @Test
   public void testCyclicGenericBoundGenericError() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.BOUNDED_GENERICS, CheckLevel.OFF);
-
     newTest()
+        .suppress(DiagnosticGroups.BOUNDED_GENERICS)
         .addSource(
             """
             /**
@@ -8899,9 +8881,8 @@ override: function(): string
 
   @Test
   public void testUnitCyclicGenericBoundGenericError() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.BOUNDED_GENERICS, CheckLevel.OFF);
-
     newTest()
+        .suppress(DiagnosticGroups.BOUNDED_GENERICS)
         .addSource(
             """
             /**
@@ -8915,9 +8896,8 @@ override: function(): string
 
   @Test
   public void testSecondUnitCyclicGenericBoundGenericError() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.BOUNDED_GENERICS, CheckLevel.OFF);
-
     newTest()
+        .suppress(DiagnosticGroups.BOUNDED_GENERICS)
         .addSource(
             """
             /**
@@ -9502,9 +9482,8 @@ override: function(): string
 
   @Test
   public void testInterfaceAssignment8() {
-    disableStrictMissingPropertyChecks();
-
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @interface */var I = function() {};
@@ -13416,9 +13395,8 @@ override: (Object|null|string)
   @Test
   public void testGlobalThis2b() {
     // Only reported if strict property checks are enabled
-    disableStrictMissingPropertyChecks();
-
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @constructor */ function Bindow() {}
@@ -13432,8 +13410,8 @@ override: (Object|null|string)
 
   @Test
   public void testGlobalThis2c() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @constructor */ function Bindow() {}
@@ -14507,8 +14485,8 @@ override: (Object|null|string)
 
   @Test
   public void testQualifiedNameInference5() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             var ns = {};
@@ -14548,8 +14526,8 @@ override: (Object|null|string)
 
   @Test
   public void testQualifiedNameInference7() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             var ns = {};
@@ -14572,7 +14550,6 @@ override: (Object|null|string)
 
   @Test
   public void testQualifiedNameInference8() {
-    disableStrictMissingPropertyChecks();
     testClosureTypesMultipleWarnings(
         """
         var ns = {};
@@ -14585,6 +14562,7 @@ override: (Object|null|string)
         f(new ns.Foo(true));
         """,
         ImmutableList.of(
+            "Property Foo never defined on ns",
             """
             actual parameter 1 of ns.Foo does not match formal parameter
             found   : boolean
@@ -14637,8 +14615,8 @@ override: (Object|null|string)
 
   @Test
   public void testQualifiedNameInference11() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @constructor */ function Foo() {}
@@ -14654,7 +14632,6 @@ override: (Object|null|string)
 
   @Test
   public void testQualifiedNameInference12() {
-    disableStrictMissingPropertyChecks();
     // We should be able to tell that the two 'this' properties
     // are different.
     newTest()
@@ -14666,13 +14643,15 @@ override: (Object|null|string)
               f(function() { this.bar = true; });
             }
             """)
+        // Checking loose property behavior
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
   @Test
   public void testQualifiedNameInference13() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @constructor */ function Foo() {}
@@ -14691,8 +14670,8 @@ override: (Object|null|string)
   @Test
   public void testQualifiedNameInference14() {
     // Unconditional blocks don't cause functions to be treated as inferred.
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @constructor */ function Foo() {}
@@ -15123,26 +15102,24 @@ override: (Object|null|string)
 
   @Test
   public void testBitOperation7() {
-    compiler
-        .getOptions()
-        .setWarningLevel(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
-    newTest().addSource("var x = null; x |= undefined; x &= 3; x ^= '3'; x |= true;").run();
+    newTest()
+        .suppress(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS)
+        .addSource("var x = null; x |= undefined; x &= 3; x ^= '3'; x |= true;")
+        .run();
   }
 
   @Test
   public void testBitOperation8() {
-    compiler
-        .getOptions()
-        .setWarningLevel(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
-    newTest().addSource("var x = void 0; x |= new Number(3);").run();
+    newTest()
+        .suppress(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS)
+        .addSource("var x = void 0; x |= new Number(3);")
+        .run();
   }
 
   @Test
   public void testBitOperation9() {
-    compiler
-        .getOptions()
-        .setWarningLevel(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     newTest()
+        .suppress(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS)
         .addSource("var x = void 0; x |= {};")
         .addDiagnostic(
             """
@@ -15547,7 +15524,7 @@ override: (Object|null|string)
 
   @Test
   public void testFunctionBind4() {
-    this.newTest()
+    newTest()
         .addSource(
             """
             /** @param {...number} x */
@@ -15566,7 +15543,7 @@ override: (Object|null|string)
 
   @Test
   public void testFunctionBind5() {
-    this.newTest()
+    newTest()
         .addSource(
             """
             /** @param {...number} x */
@@ -15959,9 +15936,8 @@ override: (Object|null|string)
     // a union).
 
     // This test is specifically checking loose property check behavior.
-    disableStrictMissingPropertyChecks();
-
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             for (var i = 0; i < 10; i++) {
@@ -16971,8 +16947,8 @@ override: (Object|null|string)
   @Test
   public void testDefinePropertyOnNullableObject1() {
     // checking loose property behavior
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @type {Object} */ var n = {};
@@ -17009,8 +16985,8 @@ override: (Object|null|string)
   @Test
   public void testDefinePropertyOnObject() {
     // checking loose property behavior
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @type {!Object} */ var n = {};
@@ -17029,8 +17005,8 @@ override: (Object|null|string)
   @Test
   public void testDefinePropertyOnNullableObject2() {
     // checking loose property behavior
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @constructor */ var T = function() {};
@@ -17208,7 +17184,6 @@ override: (Object|null|string)
 
   @Test
   public void testAddingMethodsUsingPrototypeIdiomSimpleNamespace() {
-    disableStrictMissingPropertyChecks();
     Node js1Node =
         parseAndTypeCheck(
             DEFAULT_EXTERNS,
@@ -18959,8 +18934,6 @@ override: function(this:Foo): number
 
   @Test
   public void testPrototypeLoop() {
-    disableStrictMissingPropertyChecks();
-
     testClosureTypesMultipleWarnings(
         suppressMissingProperty("foo")
             + """
@@ -18988,18 +18961,22 @@ override: function(this:Foo): number
 
   @Test
   public void testImplementsExtendsLoop() {
-    disableStrictMissingPropertyChecks();
-
     testClosureTypesMultipleWarnings(
-        suppressMissingProperty("foo")
-            + """
-            /** @constructor
-             * @implements {F} */var G = function() {};
-            /** @constructor
-             * @extends {G} */var F = function() {};
-            alert((new F).foo);
-            """,
-        ImmutableList.of("Cycle detected in inheritance chain of type F"));
+        """
+        /**
+         * @constructor
+         * @implements {F}
+         */
+        var G = function() {};
+        /**
+         * @constructor
+         * @extends {G}
+         */
+        var F = function() {};
+        alert((new F).foo);
+        """,
+        ImmutableList.of(
+            "Cycle detected in inheritance chain of type F", "Property foo never defined on F"));
   }
 
   // TODO(johnlenz): This test causes an infinite loop,
@@ -20123,9 +20100,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty1b() {
-    disableStrictMissingPropertyChecks();
-
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @constructor */ function Foo() {}
@@ -20137,8 +20113,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty2a() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @constructor */ function Foo() {}
@@ -20177,9 +20153,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty3b() {
-    disableStrictMissingPropertyChecks();
-
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @constructor */ function Foo() {}
@@ -20191,7 +20166,6 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty4a() {
-    disableStrictMissingPropertyChecks();
     newTest()
         .addSource(
             """
@@ -20200,6 +20174,7 @@ override: function(this:Foo): number
             (new Foo).b = 3;
             """)
         .addDiagnostic("Property a never defined on Foo")
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -20245,9 +20220,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty6b() {
-    disableStrictMissingPropertyChecks();
-
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @constructor */ function Foo() {}
@@ -20286,9 +20260,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty9() {
-    disableStrictMissingPropertyChecks();
-
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {Object} obj */
@@ -20299,8 +20272,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty10() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {Object} obj */
@@ -20311,8 +20284,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty11() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {Object} obj */
@@ -20323,8 +20296,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty12() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {Object} obj */
@@ -20337,8 +20310,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty15() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {Object} x */
@@ -20349,8 +20322,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty16() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {Object} x */
@@ -20374,8 +20347,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty18() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {Object} x */
@@ -20386,8 +20359,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty19() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {Object} x */
@@ -20400,8 +20373,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty20() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {Object} x */
@@ -20414,8 +20387,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty21() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {Object} x */
@@ -20426,8 +20399,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty22() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {Object} x
@@ -20557,8 +20530,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty30b() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @return {*} */
@@ -20588,9 +20561,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty31b() {
-    disableStrictMissingPropertyChecks();
-
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @return {Array|number} */
@@ -20605,8 +20577,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty32() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @return {Array|number} */
@@ -20622,8 +20594,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty33() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {Object} x */
@@ -20665,8 +20637,6 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty35b() {
-    disableStrictMissingPropertyChecks();
-
     // Bar has specialProp defined, so Bar|Baz may have specialProp defined.
     newTest()
         .addSource(
@@ -20677,6 +20647,7 @@ override: function(this:Foo): number
             /** @param {Foo|Bar} x */ function f(x) { x.specialProp = 1; }
             /** @param {Bar|Baz} x */ function g(x) { return x.specialProp; }
             """)
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -20700,8 +20671,6 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty36b() {
-    disableStrictMissingPropertyChecks();
-
     // Foo has baz defined, and SubFoo has bar defined, so some objects with
     // bar may have baz.
     newTest()
@@ -20714,6 +20683,7 @@ override: function(this:Foo): number
             SubFoo.prototype.bar = 0;
             /** @param {{bar: number}} x */ function f(x) { return x.baz; }
             """)
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -20749,8 +20719,6 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty37b() {
-    disableStrictMissingPropertyChecks();
-
     // This used to emit a missing property warning because we couldn't
     // determine that the inf(Foo, {isVisible:boolean}) == SubFoo.
     newTest()
@@ -20771,6 +20739,7 @@ override: function(this:Foo): number
              */
             function g(x) { return x.isVisible; }
             """)
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -20790,8 +20759,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty39a() {
-    disableStrictMissingPropertyChecks();
-    this.newTest()
+    newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addExterns(new TestExternsBuilder().addString().build())
         .addSource(
             """
@@ -20851,8 +20820,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty41b() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {(Array|Date)} x */
@@ -20877,8 +20846,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty43() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             function f(x) {
@@ -20890,8 +20859,8 @@ override: function(this:Foo): number
 
   @Test
   public void testMissingProperty_notReportedInPropertyAbsenceCheck() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             function f(/** !Object */ x) {
@@ -20905,8 +20874,8 @@ override: function(this:Foo): number
   // about missing properties are emitted
   @Test
   public void optChainGetPropAllowLoosePropertyAccess() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {?Object} x */
@@ -20921,8 +20890,8 @@ override: function(this:Foo): number
   // emit a warning about missing properties
   @Test
   public void normalGetPropNotAllowLoosePropertyAccess() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {?Object} x */
@@ -20939,8 +20908,8 @@ override: function(this:Foo): number
   // about missing properties are emitted
   @Test
   public void optChainGetElemAllowLoosePropertyAccess() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {?Object} x */
@@ -20955,8 +20924,8 @@ override: function(this:Foo): number
   // a warning about missing properties
   @Test
   public void normalGetElemNotAllowLoosePropertyAccess() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {?Object} x */
@@ -20973,8 +20942,8 @@ override: function(this:Foo): number
   // about missing properties are emitted
   @Test
   public void optChainCallAllowLoosePropertyAccess() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {?Object} x */
@@ -20989,8 +20958,8 @@ override: function(this:Foo): number
   // a warning about missing properties
   @Test
   public void normalCallNotAllowLoosePropertyAccess() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {?Object} x */
@@ -21007,8 +20976,8 @@ override: function(this:Foo): number
   // but x?.(prop.access) is not
   @Test
   public void getNotFirstChildOfOptChainCallNotAllowLoosePropertyAccess() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {?Object} x */
@@ -21025,8 +20994,8 @@ override: function(this:Foo): number
   // but x?.[prop.access] is not
   @Test
   public void getNotFirstChildOfOptionalGetElemNotAllowLoosePropertyAccess() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {?Object} x */
@@ -21542,7 +21511,7 @@ override: function(this:Foo): number
 
   @Test
   public void testTemplateType7() {
-    this.newTest()
+    newTest()
         .addExterns(new TestExternsBuilder().addArray().build())
         .addSource(
             """
@@ -22230,7 +22199,7 @@ override: function(this:Foo): number
   public void testTemplateTypeForwardReference_declaredMissing() {
     compiler.forwardDeclareType("Foo");
     compiler.forwardDeclareType("DoesNotExist");
-    newTest()
+    newTestLegacy() // using the legacy test method to support compiler.forwardDeclareType
         .addSource(
             """
             /** @param {!Foo<DoesNotExist>} x */
@@ -22243,7 +22212,7 @@ override: function(this:Foo): number
   public void testTemplateTypeForwardReference_extends() {
     compiler.forwardDeclareType("Bar");
     compiler.forwardDeclareType("Baz");
-    newTest()
+    newTestLegacy() // using the legacy test method to support compiler.forwardDeclareType
         .addSource(
             """
             /** @constructor @extends {Bar<Baz>} */
@@ -23039,8 +23008,8 @@ override: function(this:Sub, string): undefined
   @Test
   public void testPropertyCanBeDefinedInObject() {
     // This test is specifically checking loose property check behavior.
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @interface */ function I() {};
@@ -23676,22 +23645,20 @@ override: number
 
   @Test
   public void testUnknownTypeReport() {
-    enableReportUnknownTypes();
     newTest()
         .addSource("function id(x) { return x; }")
+        .enableReportUnknownTypes()
         .addDiagnostic("could not determine the type of this expression")
         .run();
   }
 
   @Test
   public void testUnknownTypeReport_allowsUnknownIfStatement() {
-    enableReportUnknownTypes();
-    newTest().addSource("function id(x) { x; }").run();
+    newTest().addSource("function id(x) { x; }").enableReportUnknownTypes().run();
   }
 
   @Test
   public void testUnknownForIn() {
-    enableReportUnknownTypes();
     newTest()
         .addSource(
             """
@@ -23700,6 +23667,7 @@ override: number
             y
             in x) {}
             """)
+        .enableReportUnknownTypes()
         .run();
   }
 
@@ -23729,8 +23697,8 @@ override: number
 
   @Test
   public void testNonexistentPropertyAccessOnStructOrObject() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /**
@@ -23823,9 +23791,8 @@ override: number
 
   @Test
   public void testNonexistentPropertyAccessStructRecordSubtype() {
-    disableStrictMissingPropertyChecks();
-
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /**
@@ -23876,8 +23843,8 @@ override: number
   @Test
   public void testIssue1024a() {
     // This test is specifically checking loose property check behavior.
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             /** @param {Object} a */
@@ -25307,8 +25274,6 @@ override: number
 
   @Test
   public void testOptimizePropertyMap1b() {
-    disableStrictMissingPropertyChecks();
-
     // For non object-literal types such as Function, the behavior doesn't change.
     // The stray property is added as unknown.
     newTest()
@@ -25325,13 +25290,12 @@ override: number
               var /** null */ n = x.prop;
             }
             """)
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
   @Test
   public void testOptimizePropertyMap2() {
-    disableStrictMissingPropertyChecks();
-
     // Don't add the inferred property to all Foo values.
     newTest()
         .addSource(
@@ -25348,6 +25312,7 @@ override: number
             }
             """)
         .addDiagnostic("Property b never defined on x")
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -25395,7 +25360,6 @@ override: number
 
   @Test
   public void testOptimizePropertyMap3b() {
-    disableStrictMissingPropertyChecks();
     // For @record types, add the stray property to the index as before.
     newTest()
         .addSource(
@@ -25413,6 +25377,7 @@ override: number
               var /** null */ n = x.b;
             }
             """)
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -25452,9 +25417,6 @@ override: number
 
   @Test
   public void testOptimizePropertyMap6() {
-    // Checking loose property behavior
-    disableStrictMissingPropertyChecks();
-
     // The stray property doesn't appear on other inline record types.
     newTest()
         .addSource(
@@ -25469,6 +25431,8 @@ override: number
             }
             """)
         .addDiagnostic("Property b never defined on x")
+        // Checking loose property behavior
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -25506,9 +25470,6 @@ override: number
 
   @Test
   public void testOptimizePropertyMap9() {
-    // Checking loose property checks behavior
-    disableStrictMissingPropertyChecks();
-
     // Don't add the stray property to all types that meet with {a: number, c: string}.
     newTest()
         .addSource(
@@ -25525,6 +25486,8 @@ override: number
             }
             """)
         .addDiagnostic("Property b never defined on Foo")
+        // Checking loose property behavior
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -26587,10 +26550,8 @@ override: number
   @Test
   public void testComparisonTreatingUnknownAsNumber() {
     // Because 'x' is unknown, we allow either of the comparible types: number or string.
-    compiler
-        .getOptions()
-        .setWarningLevel(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     newTest()
+        .suppress(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS)
         .addSource(
             """
             /** @constructor */
@@ -26611,10 +26572,8 @@ override: number
   @Test
   public void testComparisonTreatingUnknownAsNumber_leftTypeUnknown() {
     // Because 'x' is unknown, we allow either of the comparible types: number or string.
-    compiler
-        .getOptions()
-        .setWarningLevel(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     newTest()
+        .suppress(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS)
         .addSource(
             """
             /** @constructor */
@@ -26911,7 +26870,7 @@ required: string
   @Test
   public void testReassignedSymbolAccessedInClosureIsFlowInsensitive() {
     // This code is technically correct, but the compiler will probably never be able to prove it.
-    this.newTest()
+    newTest()
         .addExterns(new TestExternsBuilder().addString().build())
         .addSource(
             """
@@ -28749,8 +28708,8 @@ It's possible that a local variable called 'service' is shadowing the intended g
 
   @Test
   public void testNullCheckAvoidsInexistentPropertyError() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             function use(x) {}
@@ -28763,8 +28722,8 @@ It's possible that a local variable called 'service' is shadowing the intended g
 
   @Test
   public void testTripleEqualsNonNullCheckGivesInexistentPropertyError() {
-    disableStrictMissingPropertyChecks();
     newTest()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .addSource(
             """
             function use(x) {}
@@ -28892,10 +28851,8 @@ It's possible that a local variable called 'service' is shadowing the intended g
 
   @Test
   public void testDynamicImport1() {
-    compiler
-        .getOptions()
-        .setWarningLevel(DiagnosticGroup.forType(ModuleLoader.INVALID_MODULE_PATH), CheckLevel.OFF);
     newTest()
+        .suppress(DiagnosticGroup.forType(ModuleLoader.INVALID_MODULE_PATH))
         .addSource("/** @type {number} */ var foo = import('foo.js');")
         .addDiagnostic(
             """
@@ -28908,18 +28865,16 @@ It's possible that a local variable called 'service' is shadowing the intended g
 
   @Test
   public void testDynamicImport2() {
-    compiler
-        .getOptions()
-        .setWarningLevel(DiagnosticGroup.forType(ModuleLoader.INVALID_MODULE_PATH), CheckLevel.OFF);
-    newTest().addSource("/** @type {Promise} */ var foo2 = import('foo.js');").run();
+    newTest()
+        .suppress(DiagnosticGroup.forType(ModuleLoader.INVALID_MODULE_PATH))
+        .addSource("/** @type {Promise} */ var foo2 = import('foo.js');")
+        .run();
   }
 
   @Test
   public void testDynamicImport3() {
-    compiler
-        .getOptions()
-        .setWarningLevel(DiagnosticGroup.forType(ModuleLoader.INVALID_MODULE_PATH), CheckLevel.OFF);
     newTest()
+        .suppress(DiagnosticGroup.forType(ModuleLoader.INVALID_MODULE_PATH))
         .addSource("/** @type {Promise<{default: number}>} */ var foo = import('foo.js');")
         .run();
   }
@@ -29027,7 +28982,7 @@ It's possible that a local variable called 'service' is shadowing the intended g
     // support this, but does allow suppressing it via checkTypes in .closure.js files, and then
     // treats the resulting subtype as "unknown" as not to mislead type-based optimizations into
     // thinking it can handle this type.
-    newTest()
+    newTestLegacy() // using the legacy method so we can access compiler.getTopScope() later.
         .addSource(
             """
             /** @fileoverview @suppress {checkTypes} */

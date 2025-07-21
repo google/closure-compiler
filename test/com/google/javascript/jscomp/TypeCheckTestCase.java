@@ -44,13 +44,10 @@ import org.junit.Before;
 
 public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
 
-  private boolean reportUnknownTypes = false;
-
   @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    this.reportUnknownTypes = false;
     // Enable missing override checks that are disabled by default.
     compiler.getOptions().setWarningLevel(DiagnosticGroups.MISSING_OVERRIDE, CheckLevel.WARNING);
     compiler
@@ -59,16 +56,6 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     compiler
         .getOptions()
         .setWarningLevel(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.WARNING);
-  }
-
-  protected void disableStrictMissingPropertyChecks() {
-    compiler
-        .getOptions()
-        .setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
-  }
-
-  protected void enableReportUnknownTypes() {
-    this.reportUnknownTypes = true;
   }
 
   protected static ObjectType getInstanceType(Node js1Node) {
@@ -104,11 +91,7 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
    */
   @Deprecated
   final TypeTestBuilder newTestLegacy() {
-    TypeTestBuilder builder = new TypeTestBuilder(compiler);
-    if (this.reportUnknownTypes) {
-      builder.enableReportUnknownTypes();
-    }
-    return builder;
+    return new TypeTestBuilder(compiler);
   }
 
   @CheckReturnValue
