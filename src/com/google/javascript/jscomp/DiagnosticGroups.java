@@ -724,6 +724,11 @@ public class DiagnosticGroups {
         "implicitWeakEntryPoint", JSChunkGraph.IMPLICIT_WEAK_ENTRY_POINT_ERROR);
   }
 
+  public static final DiagnosticGroup ARTIFICIAL_FUNCTION_PURITY_VALIDATION =
+      DiagnosticGroups.registerGroup(
+          "artificialFunctionPurityValidation",
+          PureFunctionIdentifier.UNUSED_ARTIFICIAL_PURE_ANNOTATION);
+
   /** Adds warning levels by name. */
   public void setWarningLevel(CompilerOptions options, String name, CheckLevel level) {
     DiagnosticGroup group = forName(name);
