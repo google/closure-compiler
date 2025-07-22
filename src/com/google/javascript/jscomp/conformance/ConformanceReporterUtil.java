@@ -32,16 +32,7 @@ public final class ConformanceReporterUtil {
       int lineNumber,
       int charno) {
     ConformanceViolation.Builder violation = ConformanceViolation.newBuilder();
-
-    Requirement.Builder reqBuilder = Requirement.newBuilder();
-    if (req.hasType()) {
-      reqBuilder.setType(req.getType());
-    }
-    reqBuilder.addAllValue(req.getValueList());
-    if (req.hasJavaClass()) {
-      reqBuilder.setJavaClass(req.getJavaClass());
-    }
-    violation.setRequirement(reqBuilder);
+    violation.setRequirement(req);
 
     WhitelistEntry.Builder allowlistEntryBuilder = WhitelistEntry.newBuilder();
     if (allowlistEntry.isPresent() && allowlistEntry.get().hasReason()) {
