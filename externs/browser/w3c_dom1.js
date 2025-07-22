@@ -1466,6 +1466,18 @@ Window.prototype.removeEventListener = function(type, listener, opt_options) {};
 /** @override */
 Window.prototype.dispatchEvent = function(evt) {};
 
+/** @type {!Navigator} */
+Window.prototype.clientInformation;
+
+/** @type {?function(!DeviceMotionEvent)} */
+Window.prototype.ondevicemotion;
+
+/** @type {?function(!DeviceOrientationEvent)} */
+Window.prototype.ondeviceorientation;
+
+/** @type {?function(!DeviceOrientationEvent)} */
+Window.prototype.ondeviceorientationabsolute;
+
 /** @type {?function (Event)} */ Window.prototype.onabort;
 /** @type {?function (BeforeUnloadEvent)} */ Window.prototype.onbeforeunload;
 /** @type {?function (Event)} */ Window.prototype.onblur;

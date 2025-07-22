@@ -367,6 +367,28 @@ AudioNode.prototype.channelCountMode;
  */
 AudioNode.prototype.channelInterpretation;
 
+
+/**
+ * @constructor
+ * @extends {AudioNode}
+ */
+function AudioScheduledSourceNode() {}
+
+/** @type {?function(!Event)} */
+AudioScheduledSourceNode.prototype.onended;
+
+/**
+ * @param {(number|undefined)} when
+ * @return {undefined}
+ */
+AudioScheduledSourceNode.prototype.start = function(when) {};
+
+/**
+ * @param {(number|undefined)} when
+ * @return {undefined}
+ */
+AudioScheduledSourceNode.prototype.stop = function(when) {};
+
 /**
  * @constructor
  * @extends {AudioNode}
@@ -520,6 +542,18 @@ AudioNodeOptions.prototype.channelCountMode;
 
 /** @type {(string|undefined)} */
 AudioNodeOptions.prototype.channelInterpretation;
+
+/**
+ * @record
+ * @extends {AudioNodeOptions}
+ */
+function IIRFilterOptions() {};
+
+/** @type {!Array<number>} */
+IIRFilterOptions.prototype.feedback;
+
+/** @type {!Array<number>} */
+IIRFilterOptions.prototype.feedforward;
 
 /**
  * @record
@@ -1473,9 +1507,11 @@ BiquadFilterNode.prototype.getFrequencyResponse = function(
 
 /**
  * @constructor
+ * @param {!BaseAudioContext} context
+ * @param {!IIRFilterOptions=} options
  * @extends {AudioNode}
  */
-function IIRFilterNode() {}
+function IIRFilterNode(context, options) {}
 
 /**
  * @param {!Float32Array} frequencyHz
@@ -1505,10 +1541,30 @@ WaveShaperNode.prototype.oversample;
 function WaveTable() {}
 
 /**
+ * @record
+ * @extends {AudioNodeOptions}
+ */
+function OscillatorOptions() {}
+
+/** @type {number|undefined} */
+OscillatorOptions.prototype.detune;
+
+/** @type {number|undefined} */
+OscillatorOptions.prototype.frequency;
+
+/** @type {!PeriodicWave|undefined} */
+OscillatorOptions.prototype.periodicWave;
+
+/** @type {string|undefined} */
+OscillatorOptions.prototype.type;
+
+/**
  * @constructor
+ * @param {!BaseAudioContext} context
+ * @param {!OscillatorOptions=} options
  * @extends {AudioNode}
  */
-function OscillatorNode() {}
+function OscillatorNode(context, options) {}
 
 /**
  * @type {string}
@@ -1553,10 +1609,33 @@ OscillatorNode.prototype.setPeriodicWave = function(periodicWave) {};
 /** @type {?function(!Event)} */
 OscillatorNode.prototype.onended;
 
+
+/**
+ * @record
+ */
+function PeriodicWaveConstraints() { }
+
+/** @type {boolean|undefined} */
+PeriodicWaveConstraints.prototype.disableNormalization;
+
+/**
+ * @record
+ * @extends {PeriodicWaveConstraints}
+ */
+function PeriodicWaveOptions() {}
+
+/** @type {(!Array<number>|!Float32Array)|undefined} */
+PeriodicWaveOptions.prototype.imag;
+
+/** @type {(!Array<number>|!Float32Array)|undefined} */
+PeriodicWaveOptions.prototype.real;
+
 /**
  * @constructor
+ * @param {!BaseAudioContext} context
+ * @param {!PeriodicWaveOptions=} options
  */
-function PeriodicWave() {}
+function PeriodicWave(context, options) {}
 
 /**
  * @record

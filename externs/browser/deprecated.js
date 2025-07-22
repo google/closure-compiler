@@ -51,6 +51,20 @@ XSLTProcessor.prototype.transformToDocument = function(source) {};
  */
 XSLTProcessor.prototype.transformToFragment = function(source, document) {};
 
+/**
+ * @return {undefined}
+ */
+XSLTProcessor.prototype.clearParameters = function() {};
+
+
+/**
+ * @param {string|null} namespaceURI
+ * @param {string} localName
+ * @param {*} value
+ * @return {undefined}
+ */
+XSLTProcessor.prototype.setParameter = function(namespaceURI, localName, value) {};
+
 // The "methods" object is a place to hang arbitrary external
 // properties. It is a throwback to pre-typed days, and should
 // not be used for any new definitions; it exists only to bridge

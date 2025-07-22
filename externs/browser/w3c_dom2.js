@@ -429,6 +429,18 @@ function HTMLElement() {}
 
 /**
  * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/accessKeyLabel
+ */
+HTMLElement.prototype.accessKeyLabel;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/writingSuggestions
+ */
+HTMLElement.prototype.writingSuggestions;
+
+/**
+ * @type {string}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-78276800
  */
 HTMLElement.prototype.title;
@@ -1469,6 +1481,9 @@ HTMLOListElement.prototype.start;
  */
 HTMLOListElement.prototype.type;
 
+/** @type {boolean} */
+HTMLOListElement.prototype.reversed;
+
 /**
  * @constructor
  * @extends {HTMLElement}
@@ -2058,6 +2073,12 @@ HTMLObjectElement.prototype.vspace;
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-38538620
  */
 HTMLObjectElement.prototype.width;
+
+/**
+ * @return {?Document}
+ * @see https://developer.mozilla.org/docs/Web/API/HTMLObjectElement/getSVGDocument
+ */
+HTMLObjectElement.prototype.getSVGDocument = function() {};
 
 /**
  * @constructor

@@ -411,6 +411,13 @@ Element.prototype.removeAttributeNS = function(namespaceURI, localName) {};
 Element.prototype.setAttributeNodeNS = function(newAttr) {};
 
 /**
+ * @param {string} html
+ * @return {undefined}
+ * @see https://developer.mozilla.org/docs/Web/API/Element/setHTMLUnsafe
+ */
+Element.prototype.setHTMLUnsafe = function(html) {};
+
+/**
  * @param {?string} namespaceURI
  * @param {string} qualifiedName
  * @param {string|number|boolean} value Values are converted to strings with

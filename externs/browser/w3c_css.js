@@ -486,6 +486,12 @@ CSSImportRule.prototype.media;
  */
 CSSImportRule.prototype.styleSheet;
 
+/** @type {?string} */
+CSSImportRule.prototype.layerName;
+
+/** @type {?string} */
+CSSImportRule.prototype.supportsText;
+
 /**
  * @constructor
  * @extends {CSSRule}
@@ -2402,6 +2408,9 @@ CSSProperties.prototype.unicodeBidi;
  */
 CSSProperties.prototype.verticalAlign;
 
+/** @type {string} */
+CSSProperties.prototype.viewTransitionClass;
+
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-visibility
@@ -3182,6 +3191,11 @@ CaretPosition.prototype.offsetNode;
  * @see http://www.w3.org/TR/cssom-view/#dom-caretposition-offset
  */
 CaretPosition.prototype.offset;
+
+/**
+ * @return {?DOMRect}
+ */
+CaretPosition.prototype.getClientRect = function() {};
 
 /**
  * @type {!StylePropertyMap}
@@ -4269,6 +4283,31 @@ TransitionEvent.prototype.elapsedTime;
  * @see https://www.w3.org/TR/css-transitions-1/#Events-TransitionEvent-pseudoElement
  */
 TransitionEvent.prototype.pseudoElement;
+
+/**
+ * @record
+ * @extends {EventInit}
+ */
+function ContentVisibilityAutoStateChangeEventInit() {}
+
+/**
+ * @type {boolean|undefined}
+ */
+ContentVisibilityAutoStateChangeEventInit.prototype.skipped;
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @param {string} type
+ * @param {!ContentVisibilityAutoStateChangeEventInit=} eventInitDict
+ * @see https://developer.mozilla.org/docs/Web/API/ContentVisibilityAutoStateChangeEvent
+ */
+function ContentVisibilityAutoStateChangeEvent(type, eventInitDict) {}
+
+/**
+ * @type {boolean}
+ */
+ContentVisibilityAutoStateChangeEvent.prototype.skipped;
 
 /**
  * @constructor

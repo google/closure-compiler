@@ -143,6 +143,9 @@ function XPathResult() {}
  */
 XPathResult.prototype.booleanValue;
 
+/** @type {boolean} */
+XPathResult.prototype.invalidIteratorState;
+
 /**
  * @type {boolean} {@see XPathException.TYPE_ERR}
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult-invalid-iterator-state

@@ -411,12 +411,19 @@ var AnimationTimeline = function() {};
 /** @type {?number} */
 AnimationTimeline.prototype.currentTime;
 
+/**
+ * @typedef {{
+ *   originTime: (number|undefined)
+ * }}
+ */
+var DocumentTimelineOptions;
 
 /**
  * @constructor
+ * @param {!DocumentTimelineOptions=} options
  * @implements {AnimationTimeline}
  */
-var DocumentTimeline = function() {};
+var DocumentTimeline = function(options) {};
 
 /** @override */
 DocumentTimeline.prototype.currentTime;

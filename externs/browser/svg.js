@@ -8583,6 +8583,16 @@ SVGElement.prototype.tabIndex;
 
 
 /**
+ * @typedef {{
+ *   clipped: (boolean|undefined),
+ *   fill: (boolean|undefined),
+ *   markers: (boolean|undefined),
+ *   stroke: (boolean|undefined)
+ * }}
+ */
+var SVGBoundingBoxOptions;
+
+/**
  * @constructor
  * @extends {SVGElement}
  *
@@ -8598,9 +8608,10 @@ SVGGraphicsElement.prototype.transform;
 
 
 /**
+ * @param {!SVGBoundingBoxOptions=} options
  * @return {!DOMRect}
  */
-SVGGraphicsElement.prototype.getBBox = function() {};
+SVGGraphicsElement.prototype.getBBox = function(options) {};
 
 
 /**
@@ -8613,6 +8624,36 @@ SVGGraphicsElement.prototype.getCTM = function() {};
  * @return {!Object}
  */
 SVGGraphicsElement.prototype.getScreenCTM = function() {};
+
+
+/**
+ * @constructor
+ * @extends {SVGGraphicsElement}
+ * @see https://developer.mozilla.org/docs/Web/API/SVGGeometryElement
+ */
+function SVGGeometryElement() {}
+
+/**
+ * @type {!SVGAnimatedNumber}
+ */
+SVGGeometryElement.prototype.pathLength;
+
+/**
+ * @param {number} distance
+ * @return {!DOMPoint}
+ */
+SVGGeometryElement.prototype.getPointAtLength = function(distance) {};
+
+/**
+ * @return {number}
+ */
+SVGGeometryElement.prototype.getTotalLength = function() {};
+
+/**
+ * @param {!DOMPointInit|undefined} point
+ * @return {boolean}
+ */
+SVGGeometryElement.prototype.isPointInFill = function(point) {};
 
 
 /**

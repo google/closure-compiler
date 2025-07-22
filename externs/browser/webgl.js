@@ -3403,6 +3403,21 @@ EXT_color_buffer_half_float.prototype.RGBA16F_EXT;
 /** @const {number} */
 EXT_color_buffer_half_float.prototype.UNSIGNED_NORMALIZED_EXT;
 
+/**
+ * @interface
+ * @see https://www.khronos.org/registry/webgl/extensions/WEBGL_color_buffer_float/
+ */
+function WEBGL_color_buffer_float() {}
+
+/** @const {number} */
+WEBGL_color_buffer_float.prototype.RGBA32F_EXT;
+
+/** @const {number} */
+WEBGL_color_buffer_float.prototype.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE_EXT;
+
+/** @const {number} */
+WEBGL_color_buffer_float.prototype.UNSIGNED_NORMALIZED_EXT;
+
 
 /**
  * @see https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_etc1/
@@ -3514,11 +3529,20 @@ var WEBGL_compressed_texture_astc;
  *   COMPRESSED_SRGB8_ETC2: number,
  *   COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2: number,
  *   COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2: number,
- *   COMPRESSED_RGBA8_ETC2_EAC
+ *   COMPRESSED_RGBA8_ETC2_EAC: number,
+ *   COMPRESSED_SRGB8_ALPHA8_ETC2_EAC: number
  * }}
  * @see https://developer.mozilla.org/docs/Web/API/WEBGL_compressed_texture_etc
  */
 var WEBGL_compressed_texture_etc;
+
+/**
+ * @typedef {{
+ *   UNSIGNED_INT_24_8_WEBGL: number
+ * }}
+ * @see https://developer.mozilla.org/docs/Web/API/WEBGL_depth_texture
+ */
+var WEBGL_depth_texture;
 
 /**
  * @typedef {{

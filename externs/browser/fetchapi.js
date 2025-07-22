@@ -104,6 +104,11 @@ Headers.prototype.values = function() {};
  */
 Headers.prototype[Symbol.iterator] = function() {};
 
+/**
+ * @return {!Array<string>}
+ */
+Headers.prototype.getSetCookie = function() {};
+
 
 /**
  * @typedef {

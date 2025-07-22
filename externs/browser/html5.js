@@ -2148,6 +2148,12 @@ HTMLIFrameElement.prototype.allowFullscreen;
  */
 HTMLIFrameElement.prototype.contentWindow;
 
+/**
+ * @return {?Document}
+ * @see https://developer.mozilla.org/docs/Web/API/HTMLIframeElement/getSVGDocument
+ */
+HTMLIFrameElement.prototype.getSVGDocument= function() {};
+
 /** @type {string} */
 HTMLInputElement.prototype.autocomplete;
 
@@ -2510,6 +2516,12 @@ HTMLImageElement.prototype.onload;
 /** @type {?function(Event)} */
 HTMLImageElement.prototype.onerror;
 
+/**
+ * @type {string}
+ * @deprecated
+*/
+HTMLImageElement.prototype.lowsrc;
+
 /** @type {string} */
 HTMLMediaElement.prototype.preload;
 
@@ -2814,6 +2826,14 @@ TextTrackCue.prototype.endTime;
 /** @type {string} */
 TextTrackCue.prototype.text;
 
+/** @type {?function(!Event)} */
+TextTrackCue.prototype.onenter;
+
+/** @type {?function(!Event)} */
+TextTrackCue.prototype.onexit;
+
+/** @type {boolean} */
+TextTrackCue.prototype.pauseOnExit;
 
 
 /**
@@ -4777,6 +4797,12 @@ HTMLEmbedElement.prototype.src;
  */
 HTMLEmbedElement.prototype.type;
 
+/**
+ * @return {?Document}
+ * @see https://developer.mozilla.org/docs/Web/API/HTMLEmbedElement/getSVGDocument
+ */
+HTMLEmbedElement.prototype.getSVGDocument = function() {};
+
 // Fullscreen APIs.
 
 /**
@@ -5174,6 +5200,18 @@ ShadowRoot.prototype.styleSheets;
  */
 ShadowRoot.prototype.getHTML = function(options) {};
 
+/** @type {boolean} */
+ShadowRoot.prototype.clonable;
+
+/** @type {boolean} */
+ShadowRoot.prototype.serializable;
+
+/**
+ * @param {string} html
+ * @return {undefined}
+ */
+ShadowRoot.prototype.setHTMLUnsafe = function(html) {};
+
 /**
  * @typedef {string}
  * @see https://dom.spec.whatwg.org/#enumdef-shadowrootmode
@@ -5203,6 +5241,8 @@ ShadowRootInit.prototype.delegatesFocus;
 /** @type {(undefined|SlotAssignmentMode)} */
 ShadowRootInit.prototype.slotAssignment;
 
+/** @type {(boolean|undefined)} */
+ShadowRootInit.prototype.serializable;
 
 /**
  * @see http://www.w3.org/TR/shadow-dom/#the-content-element
@@ -5488,6 +5528,17 @@ function HTMLTemplateElement() {}
  */
 HTMLTemplateElement.prototype.content;
 
+/** @type {boolean} */
+HTMLTemplateElement.prototype.shadowRootClonable;
+
+/** @type {boolean} */
+HTMLTemplateElement.prototype.shadowRootDelegatesFocus;
+
+/** @type {string} */
+HTMLTemplateElement.prototype.shadowRootMode;
+
+/** @type {boolean} */
+HTMLTemplateElement.prototype.shadowRootSerializable;
 
 /**
  * @type {?Document}
@@ -5509,6 +5560,11 @@ HTMLLinkElement.prototype.as;
  */
 HTMLLinkElement.prototype.crossOrigin;
 
+/** @type {string} */
+HTMLLinkElement.prototype.imageSizes;
+
+/** @type {string} */
+HTMLLinkElement.prototype.imageSrcset;
 
 /**
  * @return {boolean}
@@ -5733,6 +5789,17 @@ HTMLProgressElement.prototype.labels;
  */
 function HTMLTrackElement() {}
 
+/** @const {number} */
+HTMLTrackElement.prototype.NONE;
+
+/** @const {number} */
+HTMLTrackElement.prototype.LOADING;
+
+/** @const {number} */
+HTMLTrackElement.prototype.LOADED;
+
+/** @const {number} */
+HTMLTrackElement.prototype.ERROR;
 
 /** @type {string} */
 HTMLTrackElement.prototype.kind;
@@ -6211,6 +6278,9 @@ CustomElementRegistry.prototype.upgrade = function(root) {};
 
 /** @type {!CustomElementRegistry} */
 var customElements;
+
+/** @type {!Navigator} */
+var clientInformation;
 
 /**
  * @constructor
@@ -6713,6 +6783,23 @@ ViewTransition.prototype.updateCallbackDone;
 
 /** @return {undefined} */
 ViewTransition.prototype.skipTransition = function() {};
+
+/** @const {!ViewTransitionTypeSet} */
+ViewTransition.prototype.types;
+
+
+/**
+ * @constructor
+ */
+function ViewTransitionTypeSet() {}
+
+/**
+ * @param {function(this: THIS, string, string, CustomStateSet)} callback
+ * @param {THIS=} opt_thisArg
+ * @this {THIS}
+ * @template THIS
+ */
+ViewTransitionTypeSet.prototype.forEach = function(callback, opt_thisArg) {};
 
 /**
  * @record

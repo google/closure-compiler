@@ -168,6 +168,9 @@ MediaTrackCapabilities.prototype.logicalSurface;
 /** @type {Array<string>} */
 MediaTrackCapabilities.prototype.cursor;
 
+/** @type {!Array<boolean>|undefined} */
+MediaTrackCapabilities.prototype.backgroundBlur;
+
 /**
  * @interface
  * @see https://www.w3.org/TR/screen-capture
@@ -256,29 +259,31 @@ MediaTrackSettings.prototype.pointsOfInterest;
 MediaTrackSettings.prototype.exposureCompensation;
 
 /** @type {number} */
-MediaTrackSettings.prototype.colorTemperature
+MediaTrackSettings.prototype.colorTemperature;
 
 /** @type {number} */
-MediaTrackSettings.prototype.iso
+MediaTrackSettings.prototype.iso;
 
 /** @type {number} */
-MediaTrackSettings.prototype.brightness
+MediaTrackSettings.prototype.brightness;
 
 /** @type {number} */
-MediaTrackSettings.prototype.contrast
+MediaTrackSettings.prototype.contrast;
 
 /** @type {number} */
-MediaTrackSettings.prototype.saturation
+MediaTrackSettings.prototype.saturation;
 
 /** @type {number} */
-MediaTrackSettings.prototype.sharpness
+MediaTrackSettings.prototype.sharpness;
 
 /** @type {number} */
-MediaTrackSettings.prototype.zoom
+MediaTrackSettings.prototype.zoom;
 
 /** @type {boolean} */
-MediaTrackSettings.prototype.torch
+MediaTrackSettings.prototype.torch;
 
+/** @type {boolean|undefined} */
+MediaTrackSettings.prototype.backgroundBlur;
 
 /**
  * @interface
@@ -350,6 +355,9 @@ MediaTrackSupportedConstraints.prototype.restrictOwnAudio;
 
 /** @type {boolean|undefined} */
 MediaTrackSupportedConstraints.prototype.suppressLocalAudioPlayback;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.backgroundBlur;
 
 /**
  * @constructor
@@ -1457,6 +1465,9 @@ MediaTrackConstraintSet.prototype.restrictOwnAudio;
 /** @type {ConstrainBoolean|undefined} */
 MediaTrackConstraintSet.prototype.suppressLocalAudioPlayback;
 
+/** @type {ConstrainBoolean|undefined} */
+MediaTrackConstraintSet.prototype.backgroundBlur;
+
 /**
  * @record
  * @extends {MediaTrackConstraintSet}
@@ -1489,6 +1500,11 @@ MediaStreamConstraints.prototype.video;
  * @type {boolean|undefined}
  */
 MediaStreamConstraints.prototype.preferCurrentTab;
+
+/**
+ * @type {string|undefined}
+ */
+MediaStreamConstraints.prototype.peerIdentity;
 
 /**
  * @constructor

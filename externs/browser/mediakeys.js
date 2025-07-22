@@ -246,6 +246,9 @@ MediaKeySession.prototype.removeEventListener = function(
 /** @override */
 MediaKeySession.prototype.dispatchEvent = function(evt) {};
 
+/** @type {?function(!Event)} */
+MediaKeySession.prototype.onkeystatuseschange;
+
 /**
  * @record
  * @extends {EventInit}
