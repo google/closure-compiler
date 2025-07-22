@@ -8293,6 +8293,11 @@ google.maps.PlacesLibrary.prototype.PlaceContextualListConfigElement;
 google.maps.PlacesLibrary.prototype.PlaceContextualListLayout;
 
 /**
+ * @type {typeof google.maps.places.PlaceContextualListMapMode}
+ */
+google.maps.PlacesLibrary.prototype.PlaceContextualListMapMode;
+
+/**
  * @type {typeof google.maps.places.PlacePrediction}
  */
 google.maps.PlacesLibrary.prototype.PlacePrediction;
@@ -20477,6 +20482,12 @@ google.maps.places.PlaceContextualListConfigElement.prototype.layout;
  */
 google.maps.places.PlaceContextualListConfigElement.prototype.mapHidden;
 
+/**
+ * The map mode used in Place Contextual Element for a list of places.
+ * @type {!google.maps.places.PlaceContextualListMapMode|null|undefined}
+ */
+google.maps.places.PlaceContextualListConfigElement.prototype.mapMode;
+
 
 
 /**
@@ -20522,6 +20533,32 @@ google.maps.places.PlaceContextualListLayout = {
    * Vertical list layout: list items are rendered as cards in a vertical list.
    */
   VERTICAL: 'VERTICAL',
+};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * The map mode used in Place Contextual Element for a list of places.
+ *
+ * Access by calling `const {PlaceContextualListMapMode} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.PlaceContextualListMapMode = {
+  /**
+   * A transparent layer of major streets on satellite, or photorealistic
+   * imagery in 3D.
+   */
+  HYBRID: 'HYBRID',
+  /**
+   * No map.
+   */
+  NONE: 'NONE',
+  /**
+   * A normal 2D street map.
+   */
+  ROADMAP: 'ROADMAP',
 };
 
 /**
@@ -23021,6 +23058,18 @@ google.maps.places.Review.prototype.flagContentURI;
 google.maps.places.Review.prototype.googleMapsURI;
 
 /**
+ * The review text in its original language.
+ * @type {string|null}
+ */
+google.maps.places.Review.prototype.originalText;
+
+/**
+ * An IETF language code indicating the original language of the review.
+ * @type {string|null}
+ */
+google.maps.places.Review.prototype.originalTextLanguageCode;
+
+/**
  * @type {!Date|null}
  */
 google.maps.places.Review.prototype.publishTime;
@@ -23040,17 +23089,13 @@ google.maps.places.Review.prototype.rating;
 google.maps.places.Review.prototype.relativePublishTimeDescription;
 
 /**
- * The text of a review.
+ * The localized text of the review.
  * @type {string|null}
  */
 google.maps.places.Review.prototype.text;
 
 /**
- * An IETF language code indicating the language in which this review is
- * written. Note that this code includes only the main language tag without any
- * secondary tag indicating country or region. For example, all the English
- * reviews are tagged as <code>'en'</code> rather than &#39;en-AU&#39; or
- * &#39;en-UK&#39;.
+ * An IETF language code indicating the localized language of the review.
  * @type {string|null}
  */
 google.maps.places.Review.prototype.textLanguageCode;
