@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.javascript.jscomp.ConformanceConfig.LibraryLevelNonAllowlistedConformanceViolationsBehavior.UNSPECIFIED;
@@ -37,10 +38,13 @@ import java.util.Map.Entry;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Provides a framework for checking code against a set of user configured conformance rules. The
- * rules are specified by the ConformanceConfig proto, which allows for both standard checks
- * (forbidden properties, variables, or dependencies) and allow for more complex checks using custom
- * rules than specify
+ * Provides a framework for checking code against a set of user configured conformance requirements
+ * {@link Requirement}. The requirements are specified by the ConformanceConfig proto, which allows
+ * for both standard checks (forbidden properties, variables, or dependencies) and allow for more
+ * complex checks using requirements of CUSTOM type.
+ *
+ * <p>The requirements are translated into rules {@link CheckConformance.Rule} which are then
+ * checked by this pass.
  *
  * <p>Conformance violations are both reported as compiler errors, and are also reported separately
  * to the {cI gue@link ErrorManager}
@@ -62,12 +66,25 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
 
   private final AbstractCompiler compiler;
   private final ImmutableList<Category> categories;
-  // Map of root requirements to their behavior specified in their configs, or of their extending
-  // requirement's config. Only populated if the conformance reporting mode is
-  // RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG, i.e. the
-  // conformance checks are being run during the CheckJS action.
+
+  /**
+   * Map of root requirements to their behavior specified in their configs, or of their extending
+   * requirement's config. It is only populated if both of the following conditions are met:
+   *
+   * <ol>
+   *   <li>the conformance reporting mode is RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG,
+   *       i.e. the conformance checks are being run during the CheckJS action.
+   *   <li>the requirement has a behavior that is different from the default UNSPECIFIED behavior
+   *       (i.e. RECORD_ONLY or REPORT_AS_BUILD_ERROR).
+   * </ol>
+   *
+   * The behavior of each library-level requirement gets stored in this map, and gets passed into
+   * the check() method of its corresponding rule to determine whether to record or report the
+   * conformance violations.
+   */
   private final Map<Requirement, LibraryLevelNonAllowlistedConformanceViolationsBehavior>
       mergedBehaviors = new LinkedHashMap<>();
+
   // Map of rules to their behavior. Populated from the mergedBehaviors map. The behavior of each
   // rule is passed into the check() method of the rule to determine whether to record or report the
   // conformance violations.
@@ -177,7 +194,7 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
       if (category.precondition.shouldCheck(n)) {
         for (int r = category.rules.size() - 1; r >= 0; r--) {
           Rule rule = category.rules.get(r);
-          var behavior = ruleToBehavior.get(rule);
+          var behavior = checkNotNull(ruleToBehavior.getOrDefault(rule, UNSPECIFIED));
           rule.check(t, n, behavior);
         }
       }
@@ -204,11 +221,16 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
     List<Requirement> mergedRequirements =
         mergeRequirements(compiler, configs, isLibraryLevelReportingMode);
     for (Requirement requirement : mergedRequirements) {
-      LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior =
-          isLibraryLevelReportingMode ? mergedBehaviors.get(requirement) : UNSPECIFIED;
+      var behavior = UNSPECIFIED;
       Rule rule = initRule(compiler, requirement);
       if (rule != null) {
         builder.put(rule.getPrecondition(), rule);
+        if (isLibraryLevelReportingMode && mergedBehaviors.containsKey(requirement)) {
+          behavior = mergedBehaviors.get(requirement);
+          checkNotNull(
+              behavior,
+              "The mergeBehaviors method inserted a null behavior in the mergedBehaviors map");
+        }
         ruleToBehavior.put(rule, behavior);
       }
     }
@@ -418,8 +440,9 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
           if (!isLibraryLevelConformanceReportingMode) {
             rootRequirements.put(builder, UNSPECIFIED);
           } else {
-            rootRequirements.put(
-                builder, config.getLibraryLevelNonAllowlistedConformanceViolationsBehavior());
+            var hasBehavior = config.hasLibraryLevelNonAllowlistedConformanceViolationsBehavior();
+            var behavior = config.getLibraryLevelNonAllowlistedConformanceViolationsBehavior();
+            rootRequirements.put(builder, hasBehavior ? behavior : UNSPECIFIED);
           }
         }
       }
@@ -453,7 +476,7 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
       var behavior = entry.getValue();
       removeDuplicates(builder);
       Requirement requirement = builder.build();
-      if (isLibraryLevelConformanceReportingMode && behavior != UNSPECIFIED) {
+      if (isLibraryLevelConformanceReportingMode && behavior != null && behavior != UNSPECIFIED) {
         mergedBehaviors.put(requirement, behavior);
       }
       cleanedUpRootRequirements.add(requirement);
@@ -575,6 +598,13 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
     requirement.clearOnlyApplyToRegexp().addAllOnlyApplyToRegexp(list4);
   }
 
+  /**
+   * Translates a requirement specified in the conformance config file into a rule instance.
+   *
+   * @param compiler the compiler to use for the rule.
+   * @param requirement the requirement to initialize the rule for.
+   * @return the initialized rule, or null if the requirement is invalid.
+   */
   private static @Nullable Rule initRule(AbstractCompiler compiler, Requirement requirement) {
     try {
       switch (requirement.getType()) {

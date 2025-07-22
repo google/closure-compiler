@@ -3281,6 +3281,28 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMissingBehaviorInLibraryLevelReportingMode() {
+    // the conformance reporting mode is RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG, i.e.
+    // as if the CheckJS action is being run.
+    reportingMode = ConformanceReportingMode.RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG;
+    allowSourcelessWarnings();
+    baseConfiguration =
+        """
+        requirement: {
+          rule_id: "gws:goog.Promise.X"
+          type: BANNED_NAME
+          error_message: "Prefer using native Promise equivalents. See go/gws-js-conformance#goog-promise"
+          value: "goog.Promise.all"
+        }
+        """;
+    testWarning(
+        """
+        goog.Promise.all();
+        """,
+        CheckConformance.CONFORMANCE_VIOLATION);
+  }
+
+  @Test
   public void
       testSimpleExtends_disallowsOverridingLibraryLevelBehaviorToADifferentValue_inLibraryLevelConformanceMode() {
     // the conformance reporting mode is RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG, i.e.
