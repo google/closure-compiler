@@ -1129,7 +1129,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           value = keyNode.getSecondChild();
         } else {
           value = keyNode.getFirstChild();
-          memberName = new Property.StringKey(NodeUtil.getObjectOrClassLitKeyName(keyNode));
+          memberName = new StringKey(NodeUtil.getObjectOrClassLitKeyName(keyNode));
           qualifiedName = NodeUtil.getBestLValueName(keyNode);
         }
         JSDocInfo info = keyNode.getJSDocInfo();
