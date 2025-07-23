@@ -54,7 +54,8 @@ import org.jspecify.annotations.Nullable;
  */
 public final class Property implements StaticTypedSlot, StaticTypedRef {
 
-  enum KeyKind {
+  /** What kind of property this is - currently the spec only supports strings & symbols. */
+  public enum KeyKind {
     STRING,
     SYMBOL
   }
@@ -84,8 +85,8 @@ public final class Property implements StaticTypedSlot, StaticTypedRef {
     }
 
     @Override
-    public @Nullable KnownSymbolType symbol() {
-      return null;
+    public KnownSymbolType symbol() {
+      throw new UnsupportedOperationException();
     }
 
     @Override
@@ -106,8 +107,8 @@ public final class Property implements StaticTypedSlot, StaticTypedRef {
     }
 
     @Override
-    public @Nullable String string() {
-      return null;
+    public String string() {
+      throw new UnsupportedOperationException();
     }
 
     @Override
