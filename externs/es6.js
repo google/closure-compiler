@@ -1345,7 +1345,7 @@ var Thenable;
  * and respective type inference where available.
  * {@see goog.Thenable} inherits from this making all promises
  * interoperate.
- * @interface
+ * @record
  * @struct
  * @template TYPE
  */
@@ -1375,12 +1375,22 @@ IThenable.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
 
 
 /**
+ * NOTE: For consistency with TypeScript, prefer `PromiseLike` over `IThenable`.
+ * @record
+ * @struct
+ * @template TYPE
+ * @extends {IThenable<TYPE>}
+ */
+function PromiseLike() {}
+
+
+/**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
  * @param {function(
  *             function((TYPE|IThenable<TYPE>|Thenable|null)=),
  *             function(*=))} resolver
  * @constructor
- * @implements {IThenable<TYPE>}
+ * @implements {PromiseLike<TYPE>}
  * @template TYPE
  */
 function Promise(resolver) {}
