@@ -96,8 +96,9 @@ public interface ErrorManager extends ErrorHandler {
    * https://source.corp.google.com/piper///depot/google3/third_party/java_src/jscomp/java/com/google/javascript/jscomp/ConformanceRules.java;rcl=783510053;l=364
    *
    * <p>The implementations of this method always delegate to this method (return true) as long as
-   * the violation is not in a generated code file (which is always safe and never reported). For
-   * all violations other violations (except in generated code), this method returns true.
+   * the violation is not in a generated code file (which is always safe and never reported) or is
+   * being used by ConformanceAllowlister to generate allowlist updates (therefore not reported).
+   * For all violations other violations (except in generated code), this method returns true.
    */
   // TODO: b/332922526 - Rename this method and all its overrides to
   // {@code shouldReportConformanceViolationIgnoringAllowlists} or similar.
