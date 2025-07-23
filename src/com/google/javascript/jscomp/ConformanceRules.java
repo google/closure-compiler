@@ -346,6 +346,7 @@ public final class ConformanceRules {
       boolean shouldReport =
           compiler
               .getErrorManager()
+              // returns true even if the violation is allowlisted
               .shouldReportConformanceViolation(
                   requirement,
                   allowlist != null
@@ -354,6 +355,9 @@ public final class ConformanceRules {
                   err,
                   behavior);
 
+      // if the violation is not in a gencode or we're not in library level reporting mode,
+      // determined by `shouldReport` above, then check the allowlists to decide whether to actually
+      // report the violation or not.
       if (shouldReport && allowlist == null && (onlyApplyTo == null || onlyApplyTo.matches(path))) {
         compiler.report(err);
       }

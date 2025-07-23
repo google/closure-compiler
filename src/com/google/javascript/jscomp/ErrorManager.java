@@ -86,8 +86,21 @@ public interface ErrorManager extends ErrorHandler {
 
   /**
    * Return true if the conformance violation should be reported. This is called even if the
-   * violation is whitelisted.
+   * violation is allowlisted and override implementations all can return true despite allowlisting.
+   *
+   * <p>This method's name is misleading.
+   *
+   * <p>It is called by the {@code AbstractRule.report} method, but none of the implementations of
+   * this method actually check whether the violation is allowlisted or not. The actual checking of
+   * allowlists is done later at the call-site in the {@code AbstractRule.report} method. See -
+   * https://source.corp.google.com/piper///depot/google3/third_party/java_src/jscomp/java/com/google/javascript/jscomp/ConformanceRules.java;rcl=783510053;l=364
+   *
+   * <p>The implementations of this method always delegate to this method (return true) as long as
+   * the violation is not in a generated code file (which is always safe and never reported). For
+   * all violations other violations (except in generated code), this method returns true.
    */
+  // TODO: b/332922526 - Rename this method and all its overrides to
+  // {@code shouldReportConformanceViolationIgnoringAllowlists} or similar.
   default boolean shouldReportConformanceViolation(
       Requirement requirement,
       Optional<WhitelistEntry> whitelistEntry,
