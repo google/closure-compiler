@@ -1313,18 +1313,12 @@ class IRFactory {
       JSDocInfo jsDocInfo = parseJSDocInfoOnToken(literal);
       NonJSDocComment comment = parseNonJSDocCommentAt(literal.getStart(), true);
 
-      final Node node;
-      switch (input.type) {
-        case NUMBER:
-          node = newStringNode(output, DToA.numberToString(normalizeNumber(literal)));
-          break;
-        case BIGINT:
-          node = newStringNode(output, normalizeBigInt(literal).toString());
-          break;
-        default:
-          node = newStringNode(output, normalizeString(literal, false));
-          break;
-      }
+      final Node node =
+          switch (input.type) {
+            case NUMBER -> newStringNode(output, DToA.numberToString(normalizeNumber(literal)));
+            case BIGINT -> newStringNode(output, normalizeBigInt(literal).toString());
+            default -> newStringNode(output, normalizeString(literal, false));
+          };
 
       if (jsDocInfo != null) {
         node.setJSDocInfo(jsDocInfo);

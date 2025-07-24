@@ -198,44 +198,35 @@ class OptimizeConstructors implements CompilerPass, OptimizeCalls.CallGraphCompi
   static boolean isAssigningReference(Node n) {
     Node parent = n.getParent();
     Node gparent = parent.getParent();
-    switch (parent.getToken()) {
-      case LET:
-      case CONST:
-      case VAR:
-        return n.hasChildren(); // value assigned
-      case STRING_KEY:
-        return gparent.isObjectPattern();
-      case COMPUTED_PROP:
-        return parent.getLastChild() == n && gparent.isObjectPattern();
-      case ARRAY_PATTERN:
-      case DEFAULT_VALUE: // object or array or function parameter
-      case PARAM_LIST:
-      case OBJECT_REST:
-      case ITER_REST:
-      case INC:
-      case DEC:
-        return true;
-      case FUNCTION:
-      case CLASS:
-      case CATCH:
-        return parent.getFirstChild() == n;
-      case ASSIGN:
-      case ASSIGN_BITOR:
-      case ASSIGN_BITXOR:
-      case ASSIGN_BITAND:
-      case ASSIGN_LSH:
-      case ASSIGN_RSH:
-      case ASSIGN_URSH:
-      case ASSIGN_ADD:
-      case ASSIGN_SUB:
-      case ASSIGN_MUL:
-      case ASSIGN_DIV:
-      case ASSIGN_MOD:
-      case ASSIGN_EXPONENT:
-        return parent.getFirstChild() != n;
-      default:
-        return false;
-    }
+    return switch (parent.getToken()) {
+      case LET, CONST, VAR -> n.hasChildren(); // value assigned
+      case STRING_KEY -> gparent.isObjectPattern();
+      case COMPUTED_PROP -> parent.getLastChild() == n && gparent.isObjectPattern();
+      case ARRAY_PATTERN,
+          DEFAULT_VALUE, // object or array or function parameter
+          PARAM_LIST,
+          OBJECT_REST,
+          ITER_REST,
+          INC,
+          DEC ->
+          true;
+      case FUNCTION, CLASS, CATCH -> parent.getFirstChild() == n;
+      case ASSIGN,
+          ASSIGN_BITOR,
+          ASSIGN_BITXOR,
+          ASSIGN_BITAND,
+          ASSIGN_LSH,
+          ASSIGN_RSH,
+          ASSIGN_URSH,
+          ASSIGN_ADD,
+          ASSIGN_SUB,
+          ASSIGN_MUL,
+          ASSIGN_DIV,
+          ASSIGN_MOD,
+          ASSIGN_EXPONENT ->
+          parent.getFirstChild() != n;
+      default -> false;
+    };
   }
 
   private boolean isClassExtendsExpression(Node n) {

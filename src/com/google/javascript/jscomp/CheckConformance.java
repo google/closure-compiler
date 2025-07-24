@@ -607,40 +607,31 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
    */
   private static @Nullable Rule initRule(AbstractCompiler compiler, Requirement requirement) {
     try {
-      switch (requirement.getType()) {
-        case CUSTOM:
-          return new ConformanceRules.CustomRuleProxy(compiler, requirement);
-        case NO_OP:
-          return new ConformanceRules.NoOp(compiler, requirement);
-        case BANNED_CODE_PATTERN:
-          return new ConformanceRules.BannedCodePattern(compiler, requirement);
-        case BANNED_DEPENDENCY:
-          return new ConformanceRules.BannedDependency(compiler, requirement);
-        case BANNED_DEPENDENCY_REGEX:
-          return new ConformanceRules.BannedDependencyRegex(compiler, requirement);
-        case BANNED_ENHANCE:
-          return new ConformanceRules.BannedEnhance(compiler, requirement);
-        case BANNED_MODS_REGEX:
-          return new ConformanceRules.BannedModsRegex(compiler, requirement);
-        case BANNED_NAME:
-        case BANNED_NAME_CALL:
-          return new ConformanceRules.BannedName(compiler, requirement);
-        case BANNED_PROPERTY:
-        case BANNED_PROPERTY_READ:
-        case BANNED_PROPERTY_WRITE:
-        case BANNED_PROPERTY_NON_CONSTANT_WRITE:
-        case BANNED_PROPERTY_CALL:
-          return new ConformanceRules.BannedProperty(compiler, requirement);
-        case RESTRICTED_NAME_CALL:
-          return new ConformanceRules.RestrictedNameCall(compiler, requirement);
-        case RESTRICTED_METHOD_CALL:
-          return new ConformanceRules.RestrictedMethodCall(compiler, requirement);
-        case RESTRICTED_PROPERTY_WRITE:
-          return new ConformanceRules.RestrictedPropertyWrite(compiler, requirement);
-        case BANNED_STRING_REGEX:
-          return new ConformanceRules.BannedStringRegex(compiler, requirement);
-      }
-      throw new AssertionError();
+      return switch (requirement.getType()) {
+        case CUSTOM -> new ConformanceRules.CustomRuleProxy(compiler, requirement);
+        case NO_OP -> new ConformanceRules.NoOp(compiler, requirement);
+        case BANNED_CODE_PATTERN -> new ConformanceRules.BannedCodePattern(compiler, requirement);
+        case BANNED_DEPENDENCY -> new ConformanceRules.BannedDependency(compiler, requirement);
+        case BANNED_DEPENDENCY_REGEX ->
+            new ConformanceRules.BannedDependencyRegex(compiler, requirement);
+        case BANNED_ENHANCE -> new ConformanceRules.BannedEnhance(compiler, requirement);
+        case BANNED_MODS_REGEX -> new ConformanceRules.BannedModsRegex(compiler, requirement);
+        case BANNED_NAME,
+            BANNED_NAME_CALL ->
+            new ConformanceRules.BannedName(compiler, requirement);
+        case BANNED_PROPERTY,
+            BANNED_PROPERTY_READ,
+            BANNED_PROPERTY_WRITE,
+            BANNED_PROPERTY_NON_CONSTANT_WRITE,
+            BANNED_PROPERTY_CALL ->
+            new ConformanceRules.BannedProperty(compiler, requirement);
+        case RESTRICTED_NAME_CALL -> new ConformanceRules.RestrictedNameCall(compiler, requirement);
+        case RESTRICTED_METHOD_CALL ->
+            new ConformanceRules.RestrictedMethodCall(compiler, requirement);
+        case RESTRICTED_PROPERTY_WRITE ->
+            new ConformanceRules.RestrictedPropertyWrite(compiler, requirement);
+        case BANNED_STRING_REGEX -> new ConformanceRules.BannedStringRegex(compiler, requirement);
+      };
     } catch (InvalidRequirementSpec e) {
       reportInvalidRequirement(compiler, requirement, e.getMessage());
       return null;

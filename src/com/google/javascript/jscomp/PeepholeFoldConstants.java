@@ -1122,22 +1122,16 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     int rvalInt = rightVal.intValue();
     int bits = ecmascriptToInt32(leftVal);
 
-    double result;
-    switch (n.getToken()) {
-      case LSH:
-        result = bits << rvalInt;
-        break;
-      case RSH:
-        result = bits >> rvalInt;
-        break;
-      case URSH:
-        // JavaScript always treats the result of >>> as unsigned.
-        // We must force Java to do the same here.
-        result = 0xffffffffL & (bits >>> rvalInt);
-        break;
-      default:
-        throw new AssertionError("Unknown shift operator: " + n.getToken());
-    }
+    double result =
+        switch (n.getToken()) {
+          case LSH -> bits << rvalInt;
+          case RSH -> bits >> rvalInt;
+          case URSH ->
+              // JavaScript always treats the result of >>> as unsigned.
+              // We must force Java to do the same here.
+              0xffffffffL & (bits >>> rvalInt);
+          default -> throw new AssertionError("Unknown shift operator: " + n.getToken());
+        };
 
     Node newNumber = NodeUtil.numberNode(result, n);
     reportChangeToEnclosingScope(n);

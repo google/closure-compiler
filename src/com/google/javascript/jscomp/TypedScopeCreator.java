@@ -3626,25 +3626,19 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       String name = n.getString();
       FunctionType methodType = n.getLastChild().getJSType().toMaybeFunctionType();
 
-      final JSType propertyType;
-      switch (n.getToken()) {
-        case GETTER_DEF:
-          // TODO(sdh): consider only falling back on unknown if the function body is empty? But
-          // we need to not report a conflicting type error if there's different unknowns.
-          propertyType =
-              methodType.isReturnTypeInferred() ? unknownType : methodType.getReturnType();
-          break;
-
-        case SETTER_DEF:
-          propertyType =
-              methodType.getParameters().isEmpty()
-                  ? unknownType
-                  : methodType.getParameters().get(0).getJSType();
-          break;
-
-        default:
-          throw new AssertionError(n.toStringTree());
-      }
+      final JSType propertyType =
+          switch (n.getToken()) {
+            case GETTER_DEF ->
+                // TODO(sdh): consider only falling back on unknown if the function body is empty?
+                // But
+                // we need to not report a conflicting type error if there's different unknowns.
+                methodType.isReturnTypeInferred() ? unknownType : methodType.getReturnType();
+            case SETTER_DEF ->
+                methodType.getParameters().isEmpty()
+                    ? unknownType
+                    : methodType.getParameters().get(0).getJSType();
+            default -> throw new AssertionError(n.toStringTree());
+          };
 
       ObjectType ownerType = determineOwnerTypeForClassMember(n);
       // TODO(b/116797078): correctly model getters/setters and stop treating this as a normal

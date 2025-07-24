@@ -582,23 +582,13 @@ public final class NodeUtil {
 
     if (s.length() > 2 && s.charAt(0) == '0') {
       // Attempt to convert hex, octal, and binary formats.
-      int radix;
-      switch (s.charAt(1)) {
-        case 'x':
-        case 'X':
-          radix = 16;
-          break;
-        case 'o':
-        case 'O':
-          radix = 8;
-          break;
-        case 'b':
-        case 'B':
-          radix = 2;
-          break;
-        default:
-          radix = 0;
-      }
+      int radix =
+          switch (s.charAt(1)) {
+            case 'x', 'X' -> 16;
+            case 'o', 'O' -> 8;
+            case 'b', 'B' -> 2;
+            default -> 0;
+          };
       if (radix != 0) {
         try {
           return new BigInteger(s.substring(2), radix);

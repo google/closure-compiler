@@ -2454,20 +2454,13 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.EXTRACT_PROTOTYPE_MEMBER_DECLARATIONS)
           .setInternalFactory(
               (compiler) -> {
-                Pattern pattern;
-                switch (options.extractPrototypeMemberDeclarations) {
-                  case USE_GLOBAL_TEMP:
-                    pattern = Pattern.USE_GLOBAL_TEMP;
-                    break;
-                  case USE_CHUNK_TEMP:
-                    pattern = Pattern.USE_CHUNK_TEMP;
-                    break;
-                  case USE_IIFE:
-                    pattern = Pattern.USE_IIFE;
-                    break;
-                  default:
-                    throw new IllegalStateException("unexpected");
-                }
+                Pattern pattern =
+                    switch (options.extractPrototypeMemberDeclarations) {
+                      case USE_GLOBAL_TEMP -> Pattern.USE_GLOBAL_TEMP;
+                      case USE_CHUNK_TEMP -> Pattern.USE_CHUNK_TEMP;
+                      case USE_IIFE -> Pattern.USE_IIFE;
+                      default -> throw new IllegalStateException("unexpected");
+                    };
 
                 return new ExtractPrototypeMemberDeclarations(compiler, pattern);
               })

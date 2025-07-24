@@ -147,26 +147,21 @@ public class CoverageInstrumentationPass implements CompilerPass {
 
   private Node createConditionalObjectDecl(String name, Node srcref) {
     // Make sure to quote properties so they are not renamed.
-    Node jscovData;
-    switch (instrumentOption) {
-      case BRANCH_ONLY:
-        jscovData =
-            IR.objectlit(
-                IR.quotedStringKey("fileNames", IR.arraylit()),
-                IR.quotedStringKey("branchPresent", IR.arraylit()),
-                IR.quotedStringKey("branchesInLine", IR.arraylit()),
-                IR.quotedStringKey("branchesTaken", IR.arraylit()));
-        break;
-      case LINE_ONLY:
-        jscovData =
-            IR.objectlit(
-                IR.quotedStringKey("fileNames", IR.arraylit()),
-                IR.quotedStringKey("instrumentedLines", IR.arraylit()),
-                IR.quotedStringKey("executedLines", IR.arraylit()));
-        break;
-      default:
-        throw new AssertionError("Unexpected option: " + instrumentOption);
-    }
+    Node jscovData =
+        switch (instrumentOption) {
+          case BRANCH_ONLY ->
+              IR.objectlit(
+                  IR.quotedStringKey("fileNames", IR.arraylit()),
+                  IR.quotedStringKey("branchPresent", IR.arraylit()),
+                  IR.quotedStringKey("branchesInLine", IR.arraylit()),
+                  IR.quotedStringKey("branchesTaken", IR.arraylit()));
+          case LINE_ONLY ->
+              IR.objectlit(
+                  IR.quotedStringKey("fileNames", IR.arraylit()),
+                  IR.quotedStringKey("instrumentedLines", IR.arraylit()),
+                  IR.quotedStringKey("executedLines", IR.arraylit()));
+          default -> throw new AssertionError("Unexpected option: " + instrumentOption);
+        };
 
     // Add the __jscov var to the window as a quoted key so it can be found even if property
     // renaming is enabled.

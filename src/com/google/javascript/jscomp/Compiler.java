@@ -1998,27 +1998,19 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   void initializeModuleLoader() {
-    ModuleResolverFactory moduleResolverFactory = null;
 
-    switch (options.getModuleResolutionMode()) {
-      case BROWSER:
-        moduleResolverFactory = BrowserModuleResolver.FACTORY;
-        break;
-      case NODE:
-        // processJsonInputs requires a module loader to already be defined
-        // so we redefine it afterwards with the package.json inputs
-        moduleResolverFactory =
-            new NodeModuleResolver.Factory(processJsonInputs(chunkGraph.getAllInputs()));
-        break;
-      case WEBPACK:
-        moduleResolverFactory = new WebpackModuleResolver.Factory(inputPathByWebpackId);
-        break;
-      case BROWSER_WITH_TRANSFORMED_PREFIXES:
-        moduleResolverFactory =
-            new BrowserWithTransformedPrefixesModuleResolver.Factory(
-                options.getBrowserResolverPrefixReplacements());
-        break;
-    }
+    ModuleResolverFactory moduleResolverFactory =
+        switch (options.getModuleResolutionMode()) {
+          case BROWSER -> BrowserModuleResolver.FACTORY;
+          case NODE ->
+              // processJsonInputs requires a module loader to already be defined
+              // so we redefine it afterwards with the package.json inputs
+              new NodeModuleResolver.Factory(processJsonInputs(chunkGraph.getAllInputs()));
+          case WEBPACK -> new WebpackModuleResolver.Factory(inputPathByWebpackId);
+          case BROWSER_WITH_TRANSFORMED_PREFIXES ->
+              new BrowserWithTransformedPrefixesModuleResolver.Factory(
+                  options.getBrowserResolverPrefixReplacements());
+        };
 
     this.moduleLoader =
         ModuleLoader.builder()
@@ -3170,22 +3162,17 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // Create a list of passes based on which segment of optimizations we are running.
     List<PassFactory> optimizationPassList = new ArrayList<>();
 
-    switch (segmentOfCompilationToRun) {
-      case OPTIMIZATIONS:
-        optimizationPassList = allOptimizationPassesToRun;
-        break;
-      case OPTIMIZATIONS_FIRST_HALF:
-        optimizationPassList =
-            passListUntil(allOptimizationPassesToRun, PassNames.OPTIMIZATIONS_HALFWAY_POINT);
-        break;
-      case OPTIMIZATIONS_SECOND_HALF:
-        optimizationPassList =
-            passListAfter(allOptimizationPassesToRun, PassNames.OPTIMIZATIONS_HALFWAY_POINT);
-        break;
-      default:
-        throw new IllegalArgumentException(
-            "Unsupported segment of optimizations to run: " + segmentOfCompilationToRun);
-    }
+    optimizationPassList =
+        switch (segmentOfCompilationToRun) {
+          case OPTIMIZATIONS -> allOptimizationPassesToRun;
+          case OPTIMIZATIONS_FIRST_HALF ->
+              passListUntil(allOptimizationPassesToRun, PassNames.OPTIMIZATIONS_HALFWAY_POINT);
+          case OPTIMIZATIONS_SECOND_HALF ->
+              passListAfter(allOptimizationPassesToRun, PassNames.OPTIMIZATIONS_HALFWAY_POINT);
+          default ->
+              throw new IllegalArgumentException(
+                  "Unsupported segment of optimizations to run: " + segmentOfCompilationToRun);
+        };
 
     return optimizationPassList;
   }

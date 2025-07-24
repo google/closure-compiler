@@ -669,25 +669,19 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
   }
 
   private Node deletionNodeForRestProperty(Node restTempVarNameNode, Node property) {
-    final Node get;
-    switch (property.getToken()) {
-      case STRING_KEY:
-        get =
-            property.isQuotedStringKey()
-                ? astFactory.createGetElem(
-                    restTempVarNameNode, astFactory.createString(property.getString()))
-                : astFactory.createGetPropWithUnknownType(
-                    restTempVarNameNode, property.getString());
-        break;
-
-      case NAME:
-        get = astFactory.createGetElem(restTempVarNameNode, property);
-        break;
-
-      default:
-        throw new IllegalStateException(
-            "Unexpected property to delete node: " + property.toStringTree());
-    }
+    final Node get =
+        switch (property.getToken()) {
+          case STRING_KEY ->
+              property.isQuotedStringKey()
+                  ? astFactory.createGetElem(
+                      restTempVarNameNode, astFactory.createString(property.getString()))
+                  : astFactory.createGetPropWithUnknownType(
+                      restTempVarNameNode, property.getString());
+          case NAME -> astFactory.createGetElem(restTempVarNameNode, property);
+          default ->
+              throw new IllegalStateException(
+                  "Unexpected property to delete node: " + property.toStringTree());
+        };
 
     return astFactory.createDelProp(get);
   }

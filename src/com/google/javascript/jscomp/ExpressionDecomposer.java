@@ -715,18 +715,14 @@ class ExpressionDecomposer {
       expr.replaceWith(spreadCopy);
 
       // Move the original node into a legal context.
-      switch (parent.getToken()) {
-        case ARRAYLIT:
-        case CALL:
-        case NEW:
-          tempNameValue = astFactory.createArraylit(expr).srcref(expr.getOnlyChild());
-          break;
-        case OBJECTLIT:
-          tempNameValue = astFactory.createObjectLit(expr).srcref(expr.getOnlyChild());
-          break;
-        default:
-          throw new IllegalStateException("Unexpected parent of SPREAD:" + parent.toStringTree());
-      }
+      tempNameValue =
+          switch (parent.getToken()) {
+            case ARRAYLIT, CALL, NEW -> astFactory.createArraylit(expr).srcref(expr.getOnlyChild());
+            case OBJECTLIT -> astFactory.createObjectLit(expr).srcref(expr.getOnlyChild());
+            default ->
+                throw new IllegalStateException(
+                    "Unexpected parent of SPREAD:" + parent.toStringTree());
+          };
     } else {
       // Replace the expression with the temporary name.
       expr.replaceWith(replacementValueNode);

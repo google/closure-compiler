@@ -169,17 +169,13 @@ public final class CompileTask
    *     (BROWSER, CUSTOM).
    */
   public void setEnvironment(String value) {
-    switch (value) {
-      case "BROWSER":
-        this.environment = CompilerOptions.Environment.BROWSER;
-        break;
-      case "CUSTOM":
-        this.environment = CompilerOptions.Environment.CUSTOM;
-        break;
-      default:
-        throw new BuildException(
-            "Unrecognized 'environment' option value (" + value + ")");
-    }
+    this.environment =
+        switch (value) {
+          case "BROWSER" -> CompilerOptions.Environment.BROWSER;
+          case "CUSTOM" -> CompilerOptions.Environment.CUSTOM;
+          default ->
+              throw new BuildException("Unrecognized 'environment' option value (" + value + ")");
+        };
   }
 
   /**

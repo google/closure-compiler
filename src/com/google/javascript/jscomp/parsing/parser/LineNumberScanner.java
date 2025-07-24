@@ -89,14 +89,13 @@ final class LineNumberScanner {
   }
 
   private static boolean isLineTerminator(char ch) {
-    switch (ch) {
-      case '\n': // Line Feed
-      case '\r': // Carriage Return
-      case '\u2028': // Line Separator
-      case '\u2029': // Paragraph Separator
-        return true;
-      default:
-        return false;
-    }
+    return switch (ch) {
+      case '\n', // Line Feed
+          '\r', // Carriage Return
+          '\u2028', // Line Separator
+          '\u2029' -> // Paragraph Separator
+          true;
+      default -> false;
+    };
   }
 }

@@ -715,25 +715,16 @@ public final class ConformanceRules {
         throw new InvalidRequirementSpec("missing value");
       }
 
-      switch (requirement.getType()) {
-        case BANNED_PROPERTY:
-          this.requirementPrecondition = RequirementPrecondition.BANNED_PROPERTY;
-          break;
-        case BANNED_PROPERTY_READ:
-          this.requirementPrecondition = RequirementPrecondition.BANNED_PROPERTY_READ;
-          break;
-        case BANNED_PROPERTY_WRITE:
-          this.requirementPrecondition = RequirementPrecondition.BANNED_PROPERTY_WRITE;
-          break;
-        case BANNED_PROPERTY_NON_CONSTANT_WRITE:
-          this.requirementPrecondition = RequirementPrecondition.BANNED_PROPERTY_NON_CONSTANT_WRITE;
-          break;
-        case BANNED_PROPERTY_CALL:
-          this.requirementPrecondition = RequirementPrecondition.BANNED_PROPERTY_CALL;
-          break;
-        default:
-          throw new AssertionError(requirement.getType());
-      }
+      this.requirementPrecondition =
+          switch (requirement.getType()) {
+            case BANNED_PROPERTY -> RequirementPrecondition.BANNED_PROPERTY;
+            case BANNED_PROPERTY_READ -> RequirementPrecondition.BANNED_PROPERTY_READ;
+            case BANNED_PROPERTY_WRITE -> RequirementPrecondition.BANNED_PROPERTY_WRITE;
+            case BANNED_PROPERTY_NON_CONSTANT_WRITE ->
+                RequirementPrecondition.BANNED_PROPERTY_NON_CONSTANT_WRITE;
+            case BANNED_PROPERTY_CALL -> RequirementPrecondition.BANNED_PROPERTY_CALL;
+            default -> throw new AssertionError(requirement.getType());
+          };
 
       this.registry = compiler.getTypeRegistry();
 
@@ -1608,22 +1599,13 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      boolean violation;
 
-      switch (n.getToken()) {
-        case GETPROP:
-        case GETELEM:
-        case NEW:
-        case CALL:
-          violation = report(n.getFirstChild());
-          break;
-        case IN:
-          violation = report(n.getLastChild());
-          break;
-        default:
-          violation = false;
-          break;
-      }
+      boolean violation =
+          switch (n.getToken()) {
+            case GETPROP, GETELEM, NEW, CALL -> report(n.getFirstChild());
+            case IN -> report(n.getLastChild());
+            default -> false;
+          };
 
       return violation ? ConformanceResult.VIOLATION : ConformanceResult.CONFORMANCE;
     }

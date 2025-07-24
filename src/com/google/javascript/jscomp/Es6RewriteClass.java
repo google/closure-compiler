@@ -504,19 +504,18 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
      *     always be a new node, as this method will insert it into the returned EXPR_RESULT.
      */
     final Node getDeclaration(AstFactory astFactory, Node toDeclareOn) {
-      Node decl = null;
 
-      switch (kind()) {
-        case QUOTED_PROPERTY:
-          decl = astFactory.createGetElem(toDeclareOn, astFactory.createString(propertyKey()));
-          break;
-        case COMPUTED_PROPERTY:
-          // No need to declare computed properties as they're unaffected by property collapsing
-          throw new UnsupportedOperationException(this.toString());
-        case NORMAL_PROPERTY:
-          decl = astFactory.createGetProp(toDeclareOn, propertyKey(), type(propertyType()));
-          break;
-      }
+      Node decl =
+          switch (kind()) {
+            case QUOTED_PROPERTY ->
+                astFactory.createGetElem(toDeclareOn, astFactory.createString(propertyKey()));
+            case COMPUTED_PROPERTY ->
+                // No need to declare computed properties as they're unaffected by property
+                // collapsing
+                throw new UnsupportedOperationException(this.toString());
+            case NORMAL_PROPERTY ->
+                astFactory.createGetProp(toDeclareOn, propertyKey(), type(propertyType()));
+          };
 
       decl.setJSDocInfo(jsDocInfo());
       decl = astFactory.exprResult(decl);

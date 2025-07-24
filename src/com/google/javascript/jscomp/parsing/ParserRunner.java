@@ -153,31 +153,21 @@ public final class ParserRunner {
       Config config) {
     LanguageMode languageMode = config.languageMode();
     boolean isStrictMode = config.strictMode().isStrict();
-    Mode parserConfigLanguageMode = null;
-    switch (languageMode) {
-      case ECMASCRIPT3:
-        parserConfigLanguageMode = Mode.ES3;
-        break;
-
-      case ECMASCRIPT5:
-        parserConfigLanguageMode = Mode.ES5;
-        break;
-
-      case ECMASCRIPT_2015:
-      case ECMASCRIPT_2016:
-        parserConfigLanguageMode = Mode.ES6_OR_ES7;
-        break;
-      case ECMASCRIPT_2017:
-      case ECMASCRIPT_2018:
-      case ECMASCRIPT_2019:
-      case ECMASCRIPT_2020:
-      case ECMASCRIPT_2021:
-      case ES_NEXT:
-      case UNSTABLE:
-      case UNSUPPORTED:
-        parserConfigLanguageMode = Mode.ES8_OR_GREATER;
-        break;
-    }
+    Mode parserConfigLanguageMode =
+        switch (languageMode) {
+          case ECMASCRIPT3 -> Mode.ES3;
+          case ECMASCRIPT5 -> Mode.ES5;
+          case ECMASCRIPT_2015, ECMASCRIPT_2016 -> Mode.ES6_OR_ES7;
+          case ECMASCRIPT_2017,
+              ECMASCRIPT_2018,
+              ECMASCRIPT_2019,
+              ECMASCRIPT_2020,
+              ECMASCRIPT_2021,
+              ES_NEXT,
+              UNSTABLE,
+              UNSUPPORTED ->
+              Mode.ES8_OR_GREATER;
+        };
     return new com.google.javascript.jscomp.parsing.parser.Parser.Config(
         checkNotNull(parserConfigLanguageMode), isStrictMode);
   }

@@ -763,17 +763,12 @@ class FunctionInjector {
           }
         });
 
-    switch (innerFns.size()) {
-      case 0:
-        cached = NO_FUNCTIONS;
-        break;
-      case 1:
-        cached = innerFns.get(0);
-        break;
-      default:
-        cached = MULTIPLE_FUNCTIONS;
-        break;
-    }
+    cached =
+        switch (innerFns.size()) {
+          case 0 -> NO_FUNCTIONS;
+          case 1 -> innerFns.get(0);
+          default -> MULTIPLE_FUNCTIONS;
+        };
 
     this.innerFunctionCache.put(containerFn, cached);
     return cached;

@@ -333,55 +333,46 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
   private static boolean isDefinitelyRValue(Node rvalue) {
     Node parent = rvalue.getParent();
 
-    switch (parent.getToken()) {
-      case AND:
-      case ARRAYLIT:
-      case CALL:
-      case COALESCE:
-      case COMMA:
-      case EQ:
-      case GETELEM:
-      case GETPROP:
-      case HOOK:
-      case INSTANCEOF:
-      case NEW:
-      case NOT:
-      case NAME:
-      case OPTCHAIN_CALL:
-      case OPTCHAIN_GETELEM:
-      case OPTCHAIN_GETPROP:
-      case OR:
-      case RETURN:
-      case SHEQ:
-      case TAGGED_TEMPLATELIT:
-      case TYPEOF:
-      case YIELD:
-        return true;
-
-      case CASE:
-      case IF:
-      case SWITCH:
-      case WHILE:
-        return rvalue.isFirstChildOf(parent); // the condition is always an r-value
-
-      case EXPR_RESULT:
-        // Extern declarations are sometimes stubs. These must be considered L-values with no
-        // associated R-values.
-        return !rvalue.isFromExterns();
-
-      case ASSIGN:
-      case CLASS: // `extends` clause.
-        return rvalue.isSecondChildOf(parent);
-
-      case STRING_KEY: // Assignment to an object literal property. Excludes object destructuring.
-        return parent.getParent().isObjectLit();
-
-      default:
-        // Anything not explicitly listed may not be an R-value. We only worry about the likely
-        // cases for nominal function values since those are what interest us and its safe to miss
-        // some R-values. It's more important that we correctly identify L-values.
-        return false;
-    }
+    return switch (parent.getToken()) {
+      case AND,
+          ARRAYLIT,
+          CALL,
+          COALESCE,
+          COMMA,
+          EQ,
+          GETELEM,
+          GETPROP,
+          HOOK,
+          INSTANCEOF,
+          NEW,
+          NOT,
+          NAME,
+          OPTCHAIN_CALL,
+          OPTCHAIN_GETELEM,
+          OPTCHAIN_GETPROP,
+          OR,
+          RETURN,
+          SHEQ,
+          TAGGED_TEMPLATELIT,
+          TYPEOF,
+          YIELD ->
+          true;
+      case CASE, IF, SWITCH, WHILE ->
+          rvalue.isFirstChildOf(parent); // the condition is always an r-value
+      case EXPR_RESULT ->
+          // Extern declarations are sometimes stubs. These must be considered L-values with no
+          // associated R-values.
+          !rvalue.isFromExterns();
+      case ASSIGN, CLASS -> // `extends` clause.
+          rvalue.isSecondChildOf(parent);
+      case STRING_KEY -> // Assignment to an object literal property. Excludes object destructuring.
+          parent.getParent().isObjectLit();
+      default ->
+          // Anything not explicitly listed may not be an R-value. We only worry about the likely
+          // cases for nominal function values since those are what interest us and its safe to miss
+          // some R-values. It's more important that we correctly identify L-values.
+          false;
+    };
   }
 
   private ImmutableList<Node> getGoogCacheCallableExpression(Cache cacheCall) {

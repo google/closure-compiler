@@ -254,19 +254,12 @@ public final class ColorPool {
         TypeProto sample = Iterables.getFirst(viewToProto.values(), null);
         checkNotNull(sample, id);
 
-        final Color result;
-        switch (sample.getKindCase()) {
-          case OBJECT:
-            result = this.reconcileObjectProtos(id, viewToProto);
-            break;
-
-          case UNION:
-            result = this.reconcileUnionProtos(id, viewToProto);
-            break;
-
-          default:
-            throw new AssertionError(sample);
-        }
+        final Color result =
+            switch (sample.getKindCase()) {
+              case OBJECT -> this.reconcileObjectProtos(id, viewToProto);
+              case UNION -> this.reconcileUnionProtos(id, viewToProto);
+              default -> throw new AssertionError(sample);
+            };
 
         checkState(result != null, id);
         this.idToColor.put(id, result);

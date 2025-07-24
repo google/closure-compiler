@@ -308,21 +308,13 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
       // cases we only want the name node
       Node nameToUse = record.createNewNameReferenceNode().srcrefTree(staticMember);
 
-      Node transpiledNode;
-
-      switch (staticMember.getToken()) {
-        case BLOCK:
-          transpiledNode = staticMember.detach();
-          break;
-        case MEMBER_FIELD_DEF:
-          transpiledNode = convNonCompFieldToGetProp(nameToUse, staticMember.detach());
-          break;
-        case COMPUTED_FIELD_DEF:
-          transpiledNode = convCompFieldToGetElem(nameToUse, staticMember.detach());
-          break;
-        default:
-          throw new IllegalStateException(String.valueOf(staticMember));
-      }
+      Node transpiledNode =
+          switch (staticMember.getToken()) {
+            case BLOCK -> staticMember.detach();
+            case MEMBER_FIELD_DEF -> convNonCompFieldToGetProp(nameToUse, staticMember.detach());
+            case COMPUTED_FIELD_DEF -> convCompFieldToGetElem(nameToUse, staticMember.detach());
+            default -> throw new IllegalStateException(String.valueOf(staticMember));
+          };
       transpiledNode.insertBefore(insertionPoint);
       t.reportCodeChange();
     }

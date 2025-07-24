@@ -617,17 +617,11 @@ public final class SuggestedFix {
 
     private static Node createImportNode(
         ImportType importType, @Nullable String alias, String namespace) {
-      final String requireFlavor;
-      switch (importType) {
-        case REQUIRE:
-          requireFlavor = "require";
-          break;
-        case REQUIRE_TYPE:
-          requireFlavor = "requireType";
-          break;
-        default:
-          throw new AssertionError();
-      }
+      final String requireFlavor =
+          switch (importType) {
+            case REQUIRE -> "require";
+            case REQUIRE_TYPE -> "requireType";
+          };
 
       Node callNode = IR.call(IR.getprop(IR.name("goog"), requireFlavor), IR.string(namespace));
 

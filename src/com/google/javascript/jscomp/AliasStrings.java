@@ -117,18 +117,16 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
 
   @Override
   public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-    switch (n.getToken()) {
-      case TEMPLATELIT:
-      case TAGGED_TEMPLATELIT:
-      case TEMPLATELIT_SUB: // technically redundant, since it must be a child of the others
-        // TODO(bradfordcsmith): Consider replacing long and/or frequently occurring substrings
-        // within template literals with template substitutions.
-        return false;
-      case CALL:
-        return !ReplaceMessagesConstants.isProtectedMessage(n);
-      default:
-        return true;
-    }
+    return switch (n.getToken()) {
+      case TEMPLATELIT,
+          TAGGED_TEMPLATELIT,
+          TEMPLATELIT_SUB -> // technically redundant, since it must be a child of the others
+          // TODO(bradfordcsmith): Consider replacing long and/or frequently occurring substrings
+          // within template literals with template substitutions.
+          false;
+      case CALL -> !ReplaceMessagesConstants.isProtectedMessage(n);
+      default -> true;
+    };
   }
 
   @Override

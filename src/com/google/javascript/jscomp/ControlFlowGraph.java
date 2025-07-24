@@ -141,49 +141,37 @@ public class ControlFlowGraph<N> extends
    */
   public static boolean isEnteringNewCfgNode(Node n) {
     Node parent = n.getParent();
-    switch (parent.getToken()) {
-      case BLOCK:
-      case ROOT:
-      case SCRIPT:
-      case TRY:
-      case SWITCH_BODY:
-        return true;
-      case FUNCTION:
-        // A function node represents the start of a function where the name
-        // bleeds into the local scope and parameters are assigned
-        // to the formal argument names. The node includes the name of the
-        // function and the PARAM_LIST since we assume the whole set up process
-        // is atomic without change in control flow. The next change of
-        // control is going into the function's body, represented by the second
-        // child.
-        return n != parent.getSecondChild();
-      case WHILE:
-      case DO:
-      case IF:
-        // These control structures are represented by a node that holds the
-        // condition. Each of them is a branch node based on its condition.
-        return NodeUtil.getConditionExpression(parent) != n;
-
-      case FOR:
-        // The FOR(;;) node differs from other control structures in that
-        // it has an initialization and an increment statement. Those
-        // two statements have corresponding CFG nodes to represent them.
-        // The FOR node only represents the condition check for each iteration.
-        // That way the following:
-        // for(var x = 0; x < 10; x++) { } has a graph that is isomorphic to
-        // var x = 0; while(x<10) {  x++; }
-        return NodeUtil.getConditionExpression(parent) != n;
-      case FOR_IN:
-        // TODO(user): Investigate how we should handle the case where
-        // we have a very complex expression inside the FOR-IN header.
-        return n != parent.getFirstChild();
-      case CASE:
-      case CATCH:
-      case WITH:
-        return n != parent.getFirstChild(); // exclude the condition
-      default:
-        return false;
-    }
+    return switch (parent.getToken()) {
+      case BLOCK, ROOT, SCRIPT, TRY, SWITCH_BODY -> true;
+      case FUNCTION ->
+          // A function node represents the start of a function where the name
+          // bleeds into the local scope and parameters are assigned
+          // to the formal argument names. The node includes the name of the
+          // function and the PARAM_LIST since we assume the whole set up process
+          // is atomic without change in control flow. The next change of
+          // control is going into the function's body, represented by the second
+          // child.
+          n != parent.getSecondChild();
+      case WHILE, DO, IF ->
+          // These control structures are represented by a node that holds the
+          // condition. Each of them is a branch node based on its condition.
+          NodeUtil.getConditionExpression(parent) != n;
+      case FOR ->
+          // The FOR(;;) node differs from other control structures in that
+          // it has an initialization and an increment statement. Those
+          // two statements have corresponding CFG nodes to represent them.
+          // The FOR node only represents the condition check for each iteration.
+          // That way the following:
+          // for(var x = 0; x < 10; x++) { } has a graph that is isomorphic to
+          // var x = 0; while(x<10) {  x++; }
+          NodeUtil.getConditionExpression(parent) != n;
+      case FOR_IN ->
+          // TODO(user): Investigate how we should handle the case where
+          // we have a very complex expression inside the FOR-IN header.
+          n != parent.getFirstChild();
+      case CASE, CATCH, WITH -> n != parent.getFirstChild(); // exclude the condition
+      default -> false;
+    };
   }
 
   @Override

@@ -82,27 +82,26 @@ class InferConsts implements CompilerPass {
     }
     Token declarationType = v.declarationType();
 
-    switch (declarationType) {
-      case LET:
-        // Check that non-destructuring let names are actually assigned at declaration.
-        return !nameNode.getParent().isLet() || nameNode.hasChildren();
-      case CONST:
-      case CATCH:
-      case CLASS:
-      case PARAM_LIST: // Parameters cannot be referenced before declaration.
-      case FUNCTION: // Function hoisting means no references before declaration.
-        return true;
-      case IMPORT:
-        // ES module exports are mutable.
-        // TODO(lharker): make this check smarter if we start optimizing unrewritten modules.
-        return false;
-      case VAR:
-        // var hoisting requires this extra work to make sure the 'declaration' is also the first
-        // reference.
-        return refCollection.firstReferenceIsAssigningDeclaration()
-            && refCollection.isWellDefined();
-      default:
-        throw new IllegalStateException("Unrecognized declaration type " + declarationType);
-    }
+    return switch (declarationType) {
+      case LET ->
+          // Check that non-destructuring let names are actually assigned at declaration.
+          !nameNode.getParent().isLet() || nameNode.hasChildren();
+      case CONST,
+          CATCH,
+          CLASS,
+          PARAM_LIST, // Parameters cannot be referenced before declaration.
+          FUNCTION -> // Function hoisting means no references before declaration.
+          true;
+      case IMPORT ->
+          // ES module exports are mutable.
+          // TODO(lharker): make this check smarter if we start optimizing unrewritten modules.
+          false;
+      case VAR ->
+          // var hoisting requires this extra work to make sure the 'declaration' is also the first
+          // reference.
+          refCollection.firstReferenceIsAssigningDeclaration() && refCollection.isWellDefined();
+      default ->
+          throw new IllegalStateException("Unrecognized declaration type " + declarationType);
+    };
   }
 }
