@@ -1158,13 +1158,14 @@ public abstract class RegExpTree {
     private static int suffixLen(int min, int max) {
       // This mirrors the branches that renders a suffix in appendSourceCode below.
       if (max == Integer.MAX_VALUE) {
-        switch (min) {
-          case 0: // *
-          case 1: // +
-            return 1;
-          default:
-            return 3 + numDecimalDigits(min); // {3,}
-        }
+        return switch (min) {
+          case 0, // *
+              1 // +
+              ->
+              1;
+          default -> // {3,}
+              3 + numDecimalDigits(min);
+        };
       }
       if (min == 0 && max == 1) {
         return 1; // ?
