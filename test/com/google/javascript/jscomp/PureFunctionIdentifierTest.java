@@ -743,6 +743,49 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConstructorPropertyWithSideEffects_skipDebuggingError() {
+    this.enableArtificialPurityDebugError = true;
+    testNoWarning(
+        externs("Object.prototype.constructor = function() {};"),
+        srcs(
+            """
+            class Foo {
+              /** @nosideeffects */
+              constructor() { throw 0; }
+            }
+            new Foo();
+            """));
+  }
+
+  @Test
+  public void testNoSideEffectsOnConstructor() {
+    assertPureCallsMarked(
+        """
+        class Foo {
+          /** @nosideeffects */ constructor() { throw 0; }
+        }
+        new Foo();
+        """,
+        ImmutableList.of("Foo"));
+  }
+
+  @Test
+  public void testNoSideEffectsOnConstructor_ambiguousWithOtherSideEffects() {
+    assertPureCallsMarked(
+        """
+        class Foo {
+          /** @nosideeffects */ constructor() { throw 0; }
+        }
+        class Bar {
+          constructor() { throw 0; }
+        }
+        new Foo();
+        new Bar();
+        """,
+        ImmutableList.of("Foo"));
+  }
+
+  @Test
   public void testNoSideEffectsNoPropagationFromOtherCalls() {
     String source =
         """

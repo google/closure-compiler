@@ -209,6 +209,14 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           // no flags set == the function is successfully treated as pure.
           continue;
         }
+        if (summary.name.equals(".constructor")) {
+          // .constructor is a special case - almost all the time, constructors get invoked by
+          // `new Foo();` instead of `new something.constructor();` are a special case - most of the
+          // time they are invoked not by the
+          // this.constructor property & JSCompiler doesn't support this.constructor + property
+          // renaming well. So don't report this error, as it's not particularly helpful.
+          continue;
+        }
         String allDefinitions =
             summariesForAllNamesOfFunctionByNode.entries().stream()
                 .filter(entry -> entry.getValue().equals(summary))
