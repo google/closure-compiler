@@ -8238,6 +8238,11 @@ google.maps.PlacesLibrary.prototype.FuelPrice;
 google.maps.PlacesLibrary.prototype.FuelType;
 
 /**
+ * @type {typeof google.maps.places.GoogleMapsLinks}
+ */
+google.maps.PlacesLibrary.prototype.GoogleMapsLinks;
+
+/**
  * @type {typeof google.maps.places.Money}
  */
 google.maps.PlacesLibrary.prototype.Money;
@@ -18750,6 +18755,18 @@ google.maps.places.BasicPlaceAutocompleteElement.prototype.unitSystem;
 google.maps.places.BasicPlaceAutocompleteElementOptions = function() {};
 
 /**
+ * @type {!Array<string>|null|undefined}
+ */
+google.maps.places.BasicPlaceAutocompleteElementOptions.prototype
+    .includedPrimaryTypes;
+
+/**
+ * @type {!Array<string>|null|undefined}
+ */
+google.maps.places.BasicPlaceAutocompleteElementOptions.prototype
+    .includedRegionCodes;
+
+/**
  * @type {!google.maps.places.LocationBias|null|undefined}
  */
 google.maps.places.BasicPlaceAutocompleteElementOptions.prototype.locationBias;
@@ -18766,10 +18783,26 @@ google.maps.places.BasicPlaceAutocompleteElementOptions.prototype
 google.maps.places.BasicPlaceAutocompleteElementOptions.prototype.name;
 
 /**
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.places.BasicPlaceAutocompleteElementOptions.prototype.origin;
+
+/**
  * @type {string|null|undefined}
  */
 google.maps.places.BasicPlaceAutocompleteElementOptions.prototype
     .requestedLanguage;
+
+/**
+ * @type {string|null|undefined}
+ */
+google.maps.places.BasicPlaceAutocompleteElementOptions.prototype
+    .requestedRegion;
+
+/**
+ * @type {!google.maps.UnitSystem|null|undefined}
+ */
+google.maps.places.BasicPlaceAutocompleteElementOptions.prototype.unitSystem;
 
 /**
  * The operational status of the Place, if it is a business, returned in a
@@ -19228,6 +19261,48 @@ google.maps.places.FuelType = {
 };
 
 /**
+ * Links to trigger different Google Maps actions.
+ *
+ * Access by calling `const {GoogleMapsLinks} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.GoogleMapsLinks = function() {};
+
+/**
+ * A link to show the directions to the place on Google Maps. The link only
+ * populates the destination location and uses the default travel mode
+ * <code>DRIVE</code>.
+ * @type {string|null}
+ */
+google.maps.places.GoogleMapsLinks.prototype.directionsURI;
+
+/**
+ * A link to show the photos for the place on Google Maps.
+ * @type {string|null}
+ */
+google.maps.places.GoogleMapsLinks.prototype.photosURI;
+
+/**
+ * A link to show the place on Google Maps.
+ * @type {string|null}
+ */
+google.maps.places.GoogleMapsLinks.prototype.placeURI;
+
+/**
+ * A link to show the reviews for the place on Google Maps.
+ * @type {string|null}
+ */
+google.maps.places.GoogleMapsLinks.prototype.reviewsURI;
+
+/**
+ * A link to write a review for the place on Google Maps.
+ * @type {string|null}
+ */
+google.maps.places.GoogleMapsLinks.prototype.writeAReviewURI;
+
+/**
  * @typedef {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|!google.maps.Circle|!google.maps.CircleLiteral|string}
  */
 google.maps.places.LocationBias;
@@ -19651,6 +19726,12 @@ google.maps.places.Place.prototype.formattedAddress;
  * @type {!google.maps.places.FuelOptions|null|undefined}
  */
 google.maps.places.Place.prototype.fuelOptions;
+
+/**
+ * Links to trigger different Google Maps actions.
+ * @type {!google.maps.places.GoogleMapsLinks|null|undefined}
+ */
+google.maps.places.Place.prototype.googleMapsLinks;
 
 /**
  * URL of the official Google page for this place. This is the Google-owned page
@@ -20323,6 +20404,18 @@ google.maps.places.PlaceAutocompleteElement.prototype.unitSystem;
 google.maps.places.PlaceAutocompleteElementOptions = function() {};
 
 /**
+ * @type {!Array<string>|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype
+    .includedPrimaryTypes;
+
+/**
+ * @type {!Array<string>|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype
+    .includedRegionCodes;
+
+/**
  * @type {!google.maps.places.LocationBias|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElementOptions.prototype.locationBias;
@@ -20339,9 +20432,24 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype
 google.maps.places.PlaceAutocompleteElementOptions.prototype.name;
 
 /**
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype.origin;
+
+/**
  * @type {string|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedLanguage;
+
+/**
+ * @type {string|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedRegion;
+
+/**
+ * @type {!google.maps.UnitSystem|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype.unitSystem;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
@@ -20659,11 +20767,12 @@ google.maps.places.PlaceDetailsCompactElementOptions.prototype
  * Access by calling `const {PlaceDetailsElement} = await
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceDetailsElementOptions=} options
  * @implements {google.maps.places.PlaceDetailsElementOptions}
  * @extends {HTMLElement}
  * @constructor
  */
-google.maps.places.PlaceDetailsElement = function() {};
+google.maps.places.PlaceDetailsElement = function(options) {};
 
 /**
  * Read only. Place object containing the ID, location, and viewport of the
@@ -21941,11 +22050,12 @@ google.maps.places.PlaceSearchAttributionPosition = {
  * Access by calling `const {PlaceSearchElement} = await
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceSearchElementOptions=} options
  * @implements {google.maps.places.PlaceSearchElementOptions}
  * @extends {HTMLElement}
  * @constructor
  */
-google.maps.places.PlaceSearchElement = function() {};
+google.maps.places.PlaceSearchElement = function(options) {};
 
 /**
  * The position of the attribution logo and legal disclosure button.
