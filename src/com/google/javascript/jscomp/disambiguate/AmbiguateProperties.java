@@ -543,6 +543,10 @@ public class AmbiguateProperties implements CompilerPass {
           // This only applies for ES6 classes, not generic properties called 'constructor', which
           // is why it's handled in this method specifically.
           continue;
+        } else if (member.isBlock()) {
+          // ES2022 static initialization blocks don't have names so can't be renamed.
+          // Example: `class C { static { alert('foo'); } }`
+          continue;
         }
 
         Color memberOwnerColor;

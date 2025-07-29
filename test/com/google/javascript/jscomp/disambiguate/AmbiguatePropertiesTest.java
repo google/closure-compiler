@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.disambiguate;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.Compiler;
@@ -1743,7 +1742,25 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testSingleClass_withSingleStaticMemberField_ambiguated() {
-    test("class Foo { static field = 2; }", "class Foo { static a = 2; }");
+    test(
+        """
+        class Foo {
+          static field = 1;
+          static {
+            Foo.field = 2;
+            this.field = 3;
+          }
+        }
+        """,
+        """
+        class Foo {
+          static a = 1;
+          static {
+            Foo.a = 2;
+            this.a = 3;
+          }
+        }
+        """);
   }
 
   @Test
@@ -2483,31 +2500,13 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testEs2022StaticInitializationBlock_notAmbiguated() {
-    RuntimeException thrownException =
-        assertThrows(
-            RuntimeException.class,
-            () ->
-                testSame(
-                    """
-                    class Foo {
-                      static {
-                        alert('Nothing to ambiguate');
-                      }
-                    }
-                    """));
-
-    assertThat(thrownException)
-        .hasMessageThat()
-        .contains(
-            """
-            INTERNAL COMPILER ERROR.
-            Please report this problem.
-
-            null
-              Node(CLASS): testcode:1:0
-            class Foo {
-              Parent(SCRIPT): testcode:1:0
-            class Foo {
-            """);
+    testSame(
+        """
+        class Foo {
+          static {
+            alert('Nothing to ambiguate');
+          }
+        }
+        """);
   }
 }
