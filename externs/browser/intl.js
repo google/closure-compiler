@@ -602,3 +602,10 @@ Intl.Locale.prototype.minimize = function() {};
  * @return {!Intl.UnicodeBCP47LocaleIdentifier}
  */
 Intl.Locale.prototype.toString = function() {};
+
+/**
+ * @param {(string|!Array<string>)=} locale
+ * @return {!Array<string>}
+ * @see https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Intl/getCanonicalLocales
+ */
+Intl.getCanonicalLocales = function(locale) {};
