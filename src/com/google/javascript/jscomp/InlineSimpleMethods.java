@@ -351,6 +351,7 @@ class InlineSimpleMethods implements CompilerPass {
               case COMPUTED_PROP: // complicated
               case OBJECT_SPREAD:
               case COMPUTED_FIELD_DEF:
+              case BLOCK: // ES2022 static initialization blocks are never methods.
                 break;
               default:
                 throw new IllegalStateException("Unexpected " + n.getToken() + " key: " + key);

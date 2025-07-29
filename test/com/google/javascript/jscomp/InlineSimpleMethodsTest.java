@@ -15,9 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertThrows;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -605,32 +602,14 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
 
   @Test
   public void testStaticInitializationBlockDoesntCrash() {
-    RuntimeException thrownException =
-        assertThrows(
-            RuntimeException.class,
-            () ->
-                testSame(
-                    """
-                    class C {
-                      static {
-                        alert('foo');
-                      }
-                    }
-                    """));
-
-    assertThat(thrownException)
-        .hasMessageThat()
-        .contains(
-            """
-            INTERNAL COMPILER ERROR.
-            Please report this problem.
-
-            Unexpected CLASS_MEMBERS key: BLOCK 2:9  [source_file: testcode]
-              Node(CLASS_MEMBERS): testcode:1:0
-            class C {
-              Parent(CLASS): testcode:1:0
-            class C {
-            """);
+    testSame(
+        """
+        class C {
+          static {
+            alert('foo');
+          }
+        }
+        """);
   }
 
   @Test
