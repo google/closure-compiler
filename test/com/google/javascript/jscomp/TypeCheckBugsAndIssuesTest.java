@@ -1179,7 +1179,7 @@ public final class TypeCheckBugsAndIssuesTest {
             function Map2() { Map.call(this); };
             Map2.prototype = proto(Map);
             """)
-        .includeDefaultExterns()
+        .addExterns(new TestExternsBuilder().addMap().addObject().build())
         .run();
   }
 

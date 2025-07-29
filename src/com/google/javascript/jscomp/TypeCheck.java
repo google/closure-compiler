@@ -61,10 +61,12 @@ import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.JSTypeRegistry.PropDefinitionKind;
+import com.google.javascript.rhino.jstype.KnownSymbolType;
 import com.google.javascript.rhino.jstype.NamedType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.Property.OwnedProperty;
+import com.google.javascript.rhino.jstype.Property.StringKey;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplatizedType;
@@ -1365,10 +1367,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       // and 'property' is declared on it.
       // object.property = ...;
       ObjectType objectCastType = ObjectType.cast(objectJsType.restrictByNotNullOrUndefined());
-      JSType expectedPropertyType = getPropertyTypeIfDeclared(objectCastType, pname);
+      JSType expectedPropertyType = getPropertyTypeIfDeclared(objectCastType, new StringKey(pname));
 
-      checkPropertyInheritanceOnGetpropAssign(
-          nodeToWarn, object, pname, info, expectedPropertyType);
+      checkPropertyInheritanceOnAssignment(
+          nodeToWarn, object, new StringKey(pname), info, expectedPropertyType);
 
       // If we successfully found a non-unknown declared type, validate the assignment and don't do
       // any further checks.
@@ -1381,6 +1383,15 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         }
         return;
       }
+    } else if (lvalue.isGetElem() && lvalue.getSecondChild().getJSType().isKnownSymbolValueType()) {
+      Node object = lvalue.getFirstChild();
+      JSType objectJsType = getJSType(object);
+      ObjectType objectCastType = ObjectType.cast(objectJsType.restrictByNotNullOrUndefined());
+      KnownSymbolType property = lvalue.getLastChild().getJSType().toMaybeKnownSymbolType();
+      JSType expectedPropertyType =
+          getPropertyTypeIfDeclared(objectCastType, new Property.SymbolKey(property));
+      checkPropertyInheritanceOnAssignment(
+          nodeToWarn, object, new Property.SymbolKey(property), info, expectedPropertyType);
     }
 
     // Check qualified name sets to 'object' and 'object.property'.
@@ -1441,8 +1452,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
   }
 
-  private void checkPropertyInheritanceOnGetpropAssign(
-      Node assign, Node object, String property, JSDocInfo info, JSType propertyType) {
+  private void checkPropertyInheritanceOnAssignment(
+      Node assign, Node object, Property.Key property, JSDocInfo info, JSType propertyType) {
     // Inheritance checks for prototype properties.
     //
     // TODO(nicksantos): This isn't the right place to do this check. We
@@ -1475,6 +1486,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       //   GETPROP
       //     ? = object
       //     STRING = property
+      // or
+      //  ASSIGN = assign
+      //    GETELEM
+      //      ? = object
+      //      ? = property
 
       // We only care about checking a static property assignment.
       @Nullable FunctionType ctorType = getJSType(object).toMaybeFunctionType();
@@ -1488,7 +1504,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   private void checkPropertyInheritanceOnPrototypeLitKey(
-      Node key, String propertyName, ObjectType type) {
+      Node key, Property.Key propertyName, ObjectType type) {
     // Inheritance checks for prototype objlit properties.
     //
     // TODO(nicksantos): This isn't the right place to do this check. We
@@ -1504,7 +1520,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   private void checkPropertyInheritanceOnClassMember(
-      Node key, String propertyName, FunctionType ctorType) {
+      Node key, Property.Key propertyName, FunctionType ctorType) {
     if (key.isStaticMember()) {
       checkDeclaredPropertyAgainstPrototypalInheritance(
           key, ctorType, propertyName, key.getJSDocInfo(), ctorType.getPropertyType(propertyName));
@@ -1514,7 +1530,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   private void checkPropertyInheritance(
-      Node key, String propertyName, FunctionType ctorType, ObjectType type) {
+      Node key, Property.Key propertyName, FunctionType ctorType, ObjectType type) {
     if (ctorType == null || !ctorType.hasInstanceType()) {
       return;
     }
@@ -1582,7 +1598,28 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
     // Validate computed properties similarly to how we validate GETELEMs.
     if (key.isComputedProp() || key.isComputedFieldDef()) {
-      validator.expectIndexMatch(key, ownerType, getJSType(key.getFirstChild()));
+      JSType keyType = getJSType(key.getFirstChild());
+      validator.expectIndexMatch(key, ownerType, keyType);
+      if (keyType.isKnownSymbolValueType()) {
+        if (owner.isClass()) {
+          FunctionType classConstructorType = owner.getJSType().assertFunctionType();
+          checkPropertyInheritanceOnClassMember(
+              key, new Property.SymbolKey(keyType.toMaybeKnownSymbolType()), classConstructorType);
+        } else {
+          checkState(owner.isObjectLit(), "Unexpected owner %s", owner);
+          // Check if this property has an expected declared type on the owner.
+          ObjectType objectCastType = ObjectType.cast(ownerType.restrictByNotNullOrUndefined());
+          JSType expectedPropertyType =
+              getPropertyTypeIfDeclared(
+                  objectCastType, new Property.SymbolKey(keyType.toMaybeKnownSymbolType()));
+          validator.expectCanAssignToPropertyOf(
+              key,
+              expectedPropertyType,
+              getJSType(key.getSecondChild()),
+              owner,
+              keyType.toMaybeKnownSymbolType().getDisplayName());
+        }
+      }
       return;
     }
 
@@ -1646,11 +1683,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     // Validate inheritance for classes and object literals used as prototypes
+    Property.Key propertyKey = new StringKey(propertyName);
     if (owner.isClass()) {
       FunctionType classConstructorType = owner.getJSType().assertFunctionType();
-      checkPropertyInheritanceOnClassMember(key, propertyName, classConstructorType);
+      checkPropertyInheritanceOnClassMember(key, propertyKey, classConstructorType);
     } else if (ownerType.toMaybeObjectType() != null) {
-      checkPropertyInheritanceOnPrototypeLitKey(key, propertyName, ownerType.toMaybeObjectType());
+      checkPropertyInheritanceOnPrototypeLitKey(key, propertyKey, ownerType.toMaybeObjectType());
     }
   }
 
@@ -1685,13 +1723,13 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void checkDeclaredPropertyAgainstNominalInheritance(
       Node n,
       FunctionType ctorType,
-      String propertyName,
+      Property.Key propertyName,
       @Nullable JSDocInfo info,
       JSType propertyType) {
 
     // No need to check special properties; @override is not required for them, nor they are
     // manually typed by the developers.
-    if ("__proto__".equals(propertyName) || "constructor".equals(propertyName)) {
+    if (propertyName.matches("__proto__") || propertyName.matches("constructor")) {
       return;
     }
 
@@ -1720,7 +1758,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           if (isDeclaredLocally(ctorType, propertyName) && !declaresOverride(info)) {
             compiler.report(
                 JSError.make(
-                    n, HIDDEN_SUPERCLASS_PROPERTY, propertyName, superClass.getReferenceName()));
+                    n,
+                    HIDDEN_SUPERCLASS_PROPERTY,
+                    propertyName.humanReadableName(),
+                    superClass.getReferenceName()));
           }
           validator.checkPropertyType(
               n, ctorType.getTypeOfThis(), superClass, propertyName, propertyType);
@@ -1742,7 +1783,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             JSError.make(
                 n,
                 HIDDEN_INTERFACE_PROPERTY,
-                propertyName,
+                propertyName.humanReadableName(),
                 propSlot.getOwnerInstanceType().getReferenceName()));
       }
     }
@@ -1750,11 +1791,14 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (!foundProperty && declaresOverride(info)) {
       compiler.report(
           JSError.make(
-              n, UNKNOWN_OVERRIDE, propertyName, ctorType.getInstanceType().getReferenceName()));
+              n,
+              UNKNOWN_OVERRIDE,
+              propertyName.humanReadableName(),
+              ctorType.getInstanceType().getReferenceName()));
     }
   }
 
-  private static boolean isDeclaredLocally(FunctionType ctorType, String propertyName) {
+  private static boolean isDeclaredLocally(FunctionType ctorType, Property.Key propertyName) {
     checkState(ctorType.isConstructor());
     return ctorType.getPrototype().hasOwnProperty(propertyName)
         || ctorType.getInstanceType().hasOwnProperty(propertyName);
@@ -1778,7 +1822,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void checkDeclaredPropertyAgainstPrototypalInheritance(
       Node n,
       ObjectType receiverType,
-      String propertyName,
+      Property.Key propertyName,
       @Nullable JSDocInfo info,
       JSType propertyType) {
     // TODO(nickreid): Right now this is only expected to run on ctors. However, it wouldn't be bad
@@ -1802,7 +1846,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             JSError.make(
                 n, //
                 UNKNOWN_PROTOTYPAL_OVERRIDE,
-                propertyName,
+                propertyName.humanReadableName(),
                 receiverType.toString()));
       }
     } else {
@@ -1811,7 +1855,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             JSError.make(
                 n, //
                 HIDDEN_PROTOTYPAL_SUPERTYPE_PROPERTY,
-                propertyName,
+                propertyName.humanReadableName(),
                 supertypeWithProperty.toString()));
       }
 
@@ -1821,7 +1865,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             JSError.make(
                 n,
                 HIDDEN_PROTOTYPAL_SUPERTYPE_PROPERTY_MISMATCH,
-                propertyName,
+                propertyName.humanReadableName(),
                 supertypeWithProperty.toString(),
                 overriddenPropertyType.toString(),
                 propertyType.toString()));
@@ -3250,7 +3294,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   /**
    * Returns the type of the property with the given name if declared. Otherwise returns unknown.
    */
-  private JSType getPropertyTypeIfDeclared(@Nullable ObjectType objectType, String propertyName) {
+  private JSType getPropertyTypeIfDeclared(
+      @Nullable ObjectType objectType, Property.Key propertyName) {
     if (objectType != null
         && objectType.hasProperty(propertyName)
         && !objectType.isPropertyTypeInferred(propertyName)) {

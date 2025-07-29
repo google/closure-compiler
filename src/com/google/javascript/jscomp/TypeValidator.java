@@ -52,10 +52,12 @@ import com.google.javascript.rhino.jstype.JSType.Nullability;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.KnownSymbolType;
 import com.google.javascript.rhino.jstype.NamedType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.Property.OwnedProperty;
+import com.google.javascript.rhino.jstype.Property.StringKey;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
@@ -949,12 +951,19 @@ class TypeValidator implements Serializable {
       Node n, ObjectType instance, ObjectType ancestorInterface) {
     // Case: `/** @interface */ class Foo { constructor() { this.prop; } }`
     for (String prop : ancestorInterface.getOwnPropertyNames()) {
-      expectInterfaceProperty(n, instance, ancestorInterface, prop);
+      expectInterfaceProperty(n, instance, ancestorInterface, new StringKey(prop));
+    }
+    for (KnownSymbolType symbol : ancestorInterface.getOwnPropertyKnownSymbols()) {
+      expectInterfaceProperty(n, instance, ancestorInterface, new Property.SymbolKey(symbol));
     }
     if (ancestorInterface.getImplicitPrototype() != null) {
       // Case: `/** @interface */ class Foo { prop() { } }`
       for (String prop : ancestorInterface.getImplicitPrototype().getOwnPropertyNames()) {
-        expectInterfaceProperty(n, instance, ancestorInterface, prop);
+        expectInterfaceProperty(n, instance, ancestorInterface, new StringKey(prop));
+      }
+      for (KnownSymbolType symbol :
+          ancestorInterface.getImplicitPrototype().getOwnPropertyKnownSymbols()) {
+        expectInterfaceProperty(n, instance, ancestorInterface, new Property.SymbolKey(symbol));
       }
     }
   }
@@ -964,7 +973,7 @@ class TypeValidator implements Serializable {
    * typed.
    */
   private void expectInterfaceProperty(
-      Node n, ObjectType instance, ObjectType implementedInterface, String propName) {
+      Node n, ObjectType instance, ObjectType implementedInterface, Property.Key propName) {
     OwnedProperty propSlot = instance.findClosestDefinition(propName);
     if (propSlot == null
         || (!instance.getConstructor().isInterface() && propSlot.isOwnedByInterface())) {
@@ -974,7 +983,7 @@ class TypeValidator implements Serializable {
         return;
       }
       if (implementedInterface.getPropertyType(propName).isVoidable()) {
-        // Voidable properties don't require explicit initializaition in type constructors.
+        // Voidable properties don't require explicit initialization in type constructors.
         return;
       }
 
@@ -984,7 +993,7 @@ class TypeValidator implements Serializable {
           JSError.make(
               n,
               INTERFACE_METHOD_NOT_IMPLEMENTED,
-              propName,
+              propName.humanReadableName(),
               implementedInterface.getReferenceName(),
               instance.toString()));
     } else {
@@ -1007,7 +1016,7 @@ class TypeValidator implements Serializable {
    * Check the property is correctly typed (i.e. subtype of the parent property's type declaration).
    */
   void checkPropertyType(
-      Node n, JSType instance, ObjectType parent, String propertyName, JSType found) {
+      Node n, JSType instance, ObjectType parent, Property.Key propertyName, JSType found) {
     JSType required = parent.getPropertyType(propertyName);
     TemplateTypeMap typeMap = instance.getTemplateTypeMap();
     if (!typeMap.isEmpty() && required.hasAnyTemplateTypes()) {
@@ -1025,7 +1034,7 @@ class TypeValidator implements Serializable {
             parent.getConstructor().isInterface()
                 ? HIDDEN_INTERFACE_PROPERTY_MISMATCH
                 : HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
-            propertyName,
+            propertyName.humanReadableName(),
             parent.getReferenceName(),
             required.toString(),
             found.toString(),
