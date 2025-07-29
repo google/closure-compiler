@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.disambiguate;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.Compiler;
@@ -2478,5 +2479,35 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         }
         new Bar().a();
         """);
+  }
+
+  @Test
+  public void testEs2022StaticInitializationBlock_notAmbiguated() {
+    RuntimeException thrownException =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                testSame(
+                    """
+                    class Foo {
+                      static {
+                        alert('Nothing to ambiguate');
+                      }
+                    }
+                    """));
+
+    assertThat(thrownException)
+        .hasMessageThat()
+        .contains(
+            """
+            INTERNAL COMPILER ERROR.
+            Please report this problem.
+
+            null
+              Node(CLASS): testcode:1:0
+            class Foo {
+              Parent(SCRIPT): testcode:1:0
+            class Foo {
+            """);
   }
 }
