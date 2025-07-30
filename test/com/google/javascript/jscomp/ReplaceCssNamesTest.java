@@ -53,6 +53,9 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
           .put("goog", "g")
           .put("fooStylesBar", "fsr")
           .put("fooStylesBaz", "fsz")
+          .put("--foo-bar", "--fb")
+          .put("---foo-baz", "--fbz")
+          .put("--foo-bar-baz--qux", "--fbzq")
           .buildOrThrow();
 
   Map<String, String> replacementMapFull =
@@ -63,6 +66,9 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
           .put("unrelated", "l")
           .put("long-suffix", "m")
           .put("long-prefix-suffix1", "h-i")
+          .put("--foo-bar", "--fb")
+          .put("---foo-baz", "--fbz")
+          .put("--foo-bar-baz--qux", "--fbzq")
           .buildOrThrow();
 
   CssRenamingMap renamingMap;
@@ -152,6 +158,18 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testValidSetCssNameMapping_byPart_withCssVariable() {
+    test(
+        """
+        goog.setCssNameMapping({classy: 'c',selector: 's',"--foo":'--f',"--biz-baz":'--b'}, 'BY_PART');
+        const x = goog.getCssName('--foo'),
+          y = goog.getCssName('--biz-baz'),
+          z = goog.getCssName('classy-selector');
+        """,
+        "const x = '--f', y = '--b', z = 'c-s';");
+  }
+
+  @Test
   public void testValidSetCssNameMapping_byWhole() {
     test(
         """
@@ -170,6 +188,18 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
           z = goog.getCssName('foo-biz');
         """,
         "const x = 'bar', y = 'baz', z = 'foo-biz';");
+  }
+
+  @Test
+  public void testValidSetCssNameMapping_byWhole_withCssVariable() {
+    test(
+        """
+        goog.setCssNameMapping({classy: 'c',"--foo":'--f',"--biz-baz":'--b'}, 'BY_WHOLE');
+        const x = goog.getCssName('--foo'),
+          y = goog.getCssName('--biz-baz'),
+          z = goog.getCssName('classy');
+        """,
+        "const x = '--f', y = '--b', z = 'c';");
   }
 
   @Test
@@ -260,6 +290,23 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testOneArgWithCssVariables_byWhole() {
+    renamingMap = getFullMap();
+
+    test(
+        "var x = goog.getCssName('--foo-bar')", //
+        "var x = '--fb'");
+
+    test(
+        "var x = goog.getCssName('---foo-baz')", //
+        "var x = '--fbz'");
+
+    test(
+        "var x = goog.getCssName('--foo-bar-baz--qux')", //
+        "var x = '--fbzq'");
+  }
+
+  @Test
   public void testOneArgWithCompositeClassNamesWithUnknownParts() {
     test(
         "var x = goog.getCssName('goog-header-active')",
@@ -273,6 +320,21 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
         "setClass(goog.getCssName('inactive-buttonbar'))",
         "setClass('inactive-buttonbar')",
         warning(UNKNOWN_SYMBOL_WARNING));
+  }
+
+  @Test
+  public void testOneArgWithCssVariable() {
+    test(
+        "var x = goog.getCssName('--foo-bar')", //
+        "var x = '--fb'");
+
+    test(
+        "var x = goog.getCssName('---foo-baz')", //
+        "var x = '--fbz'");
+
+    test(
+        "var x = goog.getCssName('--foo-bar-baz--qux')", //
+        "var x = '--fbzq'");
   }
 
   @Test

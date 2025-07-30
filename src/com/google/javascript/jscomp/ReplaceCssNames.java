@@ -508,27 +508,37 @@ class ReplaceCssNames implements CompilerPass {
     String[] parts = name.split("-");
     if (symbolMap != null) {
       String replacement = null;
-      switch (symbolMap.getStyle()) {
-        case BY_WHOLE:
-          replacement = symbolMap.get(name);
-          if (replacement == null) {
-            compiler.report(JSError.make(n, UNKNOWN_SYMBOL_WARNING, name, name));
-            return;
-          }
-          break;
-        case BY_PART:
-          String[] replaced = new String[parts.length];
-          for (int i = 0; i < parts.length; i++) {
-            String part = symbolMap.get(parts[i]);
-            if (part == null) {
-              // If we can't encode all parts, don't encode any of it.
-              compiler.report(JSError.make(n, UNKNOWN_SYMBOL_WARNING, parts[i], name));
+
+      if (name.startsWith("--")) {
+        // Force BY_WHOLE style for CSS variables.
+        replacement = symbolMap.get(name);
+        if (replacement == null) {
+          compiler.report(JSError.make(n, UNKNOWN_SYMBOL_WARNING, name, name));
+          return;
+        }
+      } else {
+        switch (symbolMap.getStyle()) {
+          case BY_WHOLE:
+            replacement = symbolMap.get(name);
+            if (replacement == null) {
+              compiler.report(JSError.make(n, UNKNOWN_SYMBOL_WARNING, name, name));
               return;
             }
-            replaced[i] = part;
-          }
-          replacement = Joiner.on("-").join(replaced);
-          break;
+            break;
+          case BY_PART:
+            String[] replaced = new String[parts.length];
+            for (int i = 0; i < parts.length; i++) {
+              String part = symbolMap.get(parts[i]);
+              if (part == null) {
+                // If we can't encode all parts, don't encode any of it.
+                compiler.report(JSError.make(n, UNKNOWN_SYMBOL_WARNING, parts[i], name));
+                return;
+              }
+              replaced[i] = part;
+            }
+            replacement = Joiner.on("-").join(replaced);
+            break;
+        }
       }
       n.setString(replacement);
     }

@@ -622,10 +622,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
     }
 
     if (style == CssRenamingMap.Style.BY_PART) {
-      // Make sure that no keys contain -'s
+      // Make sure that no class keys contain -'s
+      // Variable keys can contain -'s since they're always named BY_WHOLE.
       List<String> errors = new ArrayList<>();
       for (String key : cssNames.keySet()) {
-        if (key.contains("-")) {
+        if (key.contains("-") && !key.startsWith("--")) {
           errors.add(key);
         }
       }
