@@ -720,25 +720,129 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
-  public void testMultipleFunctionDefinitionsOnlyOneWithNoSideEffectsJsDoc_errorForDebugging() {
+  public void testNoSideEffectsJsDoc_errorIfCannotBeApplied_ambiguousDefModifyingArguments() {
     this.enableArtificialPurityDebugError = true;
     test(
         srcs(
             """
             class Foo {
-              /** @nosideeffects */ b() { throw 0; }
+              /** @nosideeffects */ b() { throw 0; } // line 2
             }
             class Bar {
-              b() { throw 0; }
+              b(obj) { obj.prop = 34; } // line 5
             }
             x.b();
             """),
         error(PureFunctionIdentifier.UNUSED_ARTIFICIAL_PURE_ANNOTATION)
             .withMessageContaining(
                 """
-                All definitions:
-                  testcode:2:24
+                Side-effectful definitions:
                   testcode:5:2\
+                """));
+  }
+
+  @Test
+  public void testNoSideEffectsJsDoc_errorIfCannotBeApplied_ambiguousDefModifyingThis() {
+    this.enableArtificialPurityDebugError = true;
+    test(
+        srcs(
+            """
+            class Foo {
+              /** @nosideeffects */ b() { throw 0; } // line 2
+            }
+            class Bar {
+              b() { this.prop = 34; } // line 5
+            }
+            x.b();
+            """),
+        error(PureFunctionIdentifier.UNUSED_ARTIFICIAL_PURE_ANNOTATION)
+            .withMessageContaining(
+                """
+                Side-effectful definitions:
+                  testcode:5:2\
+                """));
+  }
+
+  @Test
+  public void testNoSideEffectsJsDoc_errorIfCannotBeApplied_ambiguousDefWithThrow() {
+    this.enableArtificialPurityDebugError = true;
+    test(
+        srcs(
+            """
+            class Foo {
+              /** @nosideeffects */ b() { throw 0; } // line 2
+            }
+            class Bar {
+              b() { throw 0; } // line 5
+            }
+            x.b();
+            """),
+        error(PureFunctionIdentifier.UNUSED_ARTIFICIAL_PURE_ANNOTATION)
+            .withMessageContaining(
+                """
+                Side-effectful definitions:
+                  testcode:5:2\
+                """));
+  }
+
+  @Test
+  public void testNoSideEffectsJsDoc_errorIfCannotBeApplied_ambiguousExternFunction() {
+    this.enableArtificialPurityDebugError = true;
+    test(
+        externs(
+            """
+            class Bar {
+              b() {}
+            }
+            """),
+        srcs(
+            """
+            class Foo {
+              /** @nosideeffects */ b() { throw 0; } // line 2
+            }
+            x.b();
+            """),
+        error(PureFunctionIdentifier.UNUSED_ARTIFICIAL_PURE_ANNOTATION)
+            .withMessageContaining(
+                """
+                Side-effectful definitions:
+                  externs:2:2\
+                """));
+  }
+
+  @Test
+  public void testMultipleFunctionDefinitions_onlySomeWithNoSideEffectsJsDoc_errorForDebugging() {
+    this.enableArtificialPurityDebugError = true;
+    test(
+        srcs(
+            """
+            class Foo {
+              /** @nosideeffects */ b() { throw 0; } // line 2
+            }
+            class Bar {
+              b() { throw 0; } // line 5
+            }
+            class Baz {
+              b() {} // line 8
+            }
+            class Qux {
+              b() {
+                // multiple side-effectful lines doesn't cause duplicate error message lines.
+                if (cond) {
+                  throw 1;
+                } else {
+                  throw 2;
+                }
+              } // line 11
+            }
+            x.b();
+            """),
+        error(PureFunctionIdentifier.UNUSED_ARTIFICIAL_PURE_ANNOTATION)
+            .withMessageContaining(
+                """
+                Side-effectful definitions:
+                  testcode:5:2
+                  testcode:11:2\
                 """));
   }
 
