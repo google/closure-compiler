@@ -61,6 +61,18 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   }
 
   @Test
+  public void testUselessLabels() {
+    late = false;
+    test("a:b:{break a;}", "");
+    test("a:b:{break b;}", "");
+    test("a:{break a;}", "");
+    late = true;
+    test("a:b:{break a;}", "");
+    test("a:b:{break b;}", "");
+    test("a:{break a;}", "");
+  }
+
+  @Test
   public void testTrueFalse() {
     late = false;
     testSame("x = true");

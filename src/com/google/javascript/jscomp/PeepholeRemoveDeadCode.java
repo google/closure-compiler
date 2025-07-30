@@ -151,9 +151,17 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       stmt = child;
     }
     if (stmt.isBreak() && stmt.getFirstChild().getString().equals(labelName)) {
-      reportChangeToEnclosingScope(n);
-      n.detach();
-      return null;
+      if (n.getParent().isLabel()) {
+        Node replacement = IR.block().srcref(n);
+        n.replaceWith(replacement);
+        reportChangeToEnclosingScope(replacement);
+        return replacement;
+      } else {
+        Node parent = n.getParent();
+        n.detach();
+        reportChangeToEnclosingScope(parent);
+        return null;
+      }
     }
     return n;
   }

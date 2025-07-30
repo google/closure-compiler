@@ -316,6 +316,20 @@ public final class ControlFlowAnalysisTest {
   }
 
   @Test
+  public void testBreakToStatement() throws IOException {
+    String src = "X: break X;";
+    ControlFlowGraph<Node> cfg = createCfg(src);
+    assertReturnEdge(cfg, Token.BREAK);
+  }
+
+  @Test
+  public void testBreakWithMultipleLabels() throws IOException {
+    String src = "La: Lb: break La;";
+    ControlFlowGraph<Node> cfg = createCfg(src);
+    assertReturnEdge(cfg, Token.BREAK);
+  }
+
+  @Test
   public void testBreakingWhile() {
     String src = "var x; while(true) { break; } x();";
     ControlFlowGraph<Node> cfg = createCfg(src);

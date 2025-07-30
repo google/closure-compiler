@@ -75,6 +75,17 @@ public final class IntegrationTest extends IntegrationTestCase {
   private static final String CLOSURE_COMPILED = "";
 
   @Test
+  public void testBreakToStatement() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    test(options, "L: break L;", "");
+    test(options, "L: { break L; }", "");
+    test(options, "L: M: break L;", "");
+    test(options, "L: M: break M;", "");
+  }
+
+  @Test
   public void testSubstituteEs6Syntax() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

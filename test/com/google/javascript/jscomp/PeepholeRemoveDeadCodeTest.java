@@ -95,6 +95,14 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRemoveUselessLabelWithFollowingBreak() {
+    fold("a:b: break b;", "");
+    // Note: the break is only removed if the parent
+    // is the break target.
+    foldSame("a:b: break a;");
+  }
+
+  @Test
   public void testFoldBlock() {
     fold("{{foo()}}", "foo()");
     fold("{foo();{}}", "foo()");
@@ -1986,6 +1994,13 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         };
         a.b.property;
         """);
+  }
+
+  @Test
+  public void testFoldLabelledEmptyBlock() {
+    fold("a:{}", "");
+    fold("a:b:{}", "");
+    fold("a:b:c:{}", "");
   }
 
   @Test

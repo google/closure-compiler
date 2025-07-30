@@ -1033,7 +1033,7 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
   static boolean isBreakStructure(Node n, boolean labeled) {
     return switch (n.getToken()) {
       case FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, DO, WHILE, SWITCH -> true;
-      case BLOCK, ROOT, IF, TRY -> labeled;
+      case BLOCK, IF, TRY, BREAK -> labeled;
       default -> false;
     };
   }
