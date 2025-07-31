@@ -22,7 +22,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
 import com.google.common.io.CharSource;
@@ -297,7 +296,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
         out.append("\n# Warning ")
             .append(type.key)
             .append(": ")
-            .println(Iterables.get(LINE_SPLITTER.split(type.format), 0));
+            .println(LINE_SPLITTER.split(type.format).iterator().next());
 
         for (String warning : warningsByType.get(type)) {
           out.println(warning);
