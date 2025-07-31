@@ -1052,4 +1052,24 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
         bar();
         """);
   }
+
+  @Test
+  public void testUnusedCodeInStaticInitializationBlock() {
+    this.keepLocals = false;
+
+    test(
+        """
+        class C {
+          static {
+            let x = 1;
+          }
+        }
+        """,
+        """
+        class C {
+          static {
+          }
+        }
+        """);
+  }
 }

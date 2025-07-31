@@ -1389,6 +1389,10 @@ class RemoveUnusedCode implements CompilerPass {
           traverseChildren(member, scope);
           break;
 
+        case BLOCK:
+          traverseChildren(member, scopeCreator.createScope(member, scope));
+          break;
+
         default:
           throw new IllegalStateException(
               "Unexpected child of CLASS_MEMBERS: " + member.toStringTree());
