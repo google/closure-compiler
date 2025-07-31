@@ -2913,7 +2913,7 @@ WebGLRenderingContext.prototype.viewport = function(x, y, width, height) {};
 
 
 /**
- * @constructor
+ * @record
  */
 function WebGLContextAttributes() {}
 
