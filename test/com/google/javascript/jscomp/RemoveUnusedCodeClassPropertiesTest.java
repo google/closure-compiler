@@ -1072,4 +1072,34 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
         }
         """);
   }
+
+  @Test
+  public void testClassReferencedInFieldInitializer() {
+    this.keepLocals = false;
+    this.keepGlobals = false;
+
+    test(
+        """
+        class One {
+          field = 1;
+        }
+        class Two {
+          field = new One();
+        }
+        const two = new Two();
+        alert(two);
+        alert(two.field);
+        alert(two.field.field);
+        """,
+        """
+        // Note: class One is errantly removed here.
+        class Two {
+          field = new One();
+        }
+        const two = new Two();
+        alert(two);
+        alert(two.field);
+        alert(two.field.field);
+        """);
+  }
 }
