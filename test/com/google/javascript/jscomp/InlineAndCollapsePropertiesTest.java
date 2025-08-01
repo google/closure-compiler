@@ -3564,6 +3564,40 @@ use(Foo$Bar$baz$A);
   }
 
   @Test
+  public void testClassExpressionWithInnerClassName() {
+    test(
+        """
+        const OuterName = class InnerName {
+          static sf1 = 1;
+          static sf2 = InnerName.sf1;
+          static sf3 = this.sf2;
+
+          static {
+            Object.defineProperties(InnerName.prototype, {bar: {value: 1}});
+            InnerName.sf2++;
+            this.sf3++;
+          }
+        };
+        """,
+        // TODO: b/435685153 - Resolve the incorrect InnerName rewrite to OuterName.
+        // Incorrectly replaces InnerName with OuterName. OuterName will not yet be defined when
+        // referenced from the static field initializer and static initialization block.
+        """
+        const OuterName = class InnerName {
+          static sf1 = 1;
+          static sf2 = OuterName.sf1;
+          static sf3 = this.sf2;
+
+          static {
+            Object.defineProperties(OuterName.prototype, {bar:{value:1}});
+            OuterName.sf2++;
+            this.sf3++;
+          }
+        };
+        """);
+  }
+
+  @Test
   public void testCommaCallAliasing1() {
     test(
         """
