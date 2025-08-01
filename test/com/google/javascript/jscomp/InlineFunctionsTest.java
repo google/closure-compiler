@@ -258,6 +258,71 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testInlineFunctions1_arrowFn() {
+    test(
+        """
+        const foo = () => 4;
+        foo();
+        """,
+        "4");
+  }
+
+  @Test
+  public void testInlineFunctions1_arrowFn_block() {
+    test(
+        """
+        const foo = () => { return 4; };
+        foo();
+        """,
+        "4");
+  }
+
+  @Test
+  public void testInlineFunctions1_inArrowFn() {
+    test(
+        """
+        const foo = () => 4;
+        (() => foo())();
+        """,
+        "4");
+  }
+
+  @Test
+  public void testInlineFunctions1_inArrowFn_block() {
+    test(
+        """
+        const foo = () => 4;
+        (() => {
+          let a = foo();
+          [].forEach(() => a += 1);
+          return a;
+        })();
+        """,
+        // Why is the IIFE not inlined here?
+        // This happens whether or not the function references
+        // a local.
+        """
+        (() => {
+          let a = 4;
+          [].forEach(() => {
+            return a = a + 1;
+          });
+          return a;
+        })();
+        """);
+  }
+
+  @Test
+  public void testInlineFunctions1_arrowFnArg() {
+    test(
+        """
+        const bar = (f) => f();
+        bar(() => 4);
+        """,
+        "4");
+  }
+
+  @Test
   public void testInlineFunctions2() {
     // inline simple constants
     // NOTE: CD is not inlined.
