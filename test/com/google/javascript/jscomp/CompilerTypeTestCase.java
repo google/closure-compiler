@@ -26,7 +26,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_TYPE;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import static com.google.javascript.rhino.testing.TypeSubject.types;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -45,8 +44,6 @@ import org.junit.Before;
 
 /** This class is mostly used by passes testing {@link TypeCheck}. */
 abstract class CompilerTypeTestCase {
-  protected static final Joiner LINE_JOINER = Joiner.on('\n');
-
   static final String CLOSURE_DEFS =
       """
       goog.inherits = function(x, y) {};

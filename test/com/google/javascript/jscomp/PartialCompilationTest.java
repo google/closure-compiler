@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.NamedType;
@@ -44,7 +43,7 @@ public class PartialCompilationTest {
    * Asserts that the given lines of code compile and only give errors matching the {@link
    * DiagnosticGroups#MISSING_SOURCES_WARNINGS} category.
    */
-  private void assertPartialCompilationSucceeds(String... code) throws Exception {
+  private void assertPartialCompilationSucceeds(String code) throws Exception {
     compiler = new Compiler();
     compiler.setErrorManager(
         new BasicErrorManager() {
@@ -66,7 +65,7 @@ public class PartialCompilationTest {
     CompilerOptions options = createCompilerOptions();
     compiler.init(
         ImmutableList.of(),
-        Collections.singletonList(SourceFile.fromCode("input.js", Joiner.on('\n').join(code))),
+        Collections.singletonList(SourceFile.fromCode("input.js", code)),
         options);
     compiler.parse();
     compiler.check();
@@ -92,68 +91,93 @@ public class PartialCompilationTest {
   @Test
   public void testUsesMissingCode() throws Exception {
     assertPartialCompilationSucceeds(
-        "goog.provide('missing_code_user');",
-        "goog.require('some.thing.Missing');",
-        "missing_code_user.fnUsesMissingNs = function() {",
-        "  missing_code_user.missingNamespace.foo();",
-        "  missingTopLevelNamespace.bar();",
-        "};");
+        """
+        goog.provide('missing_code_user');
+        goog.require('some.thing.Missing');
+        missing_code_user.fnUsesMissingNs = function() {
+          missing_code_user.missingNamespace.foo();
+          missingTopLevelNamespace.bar();
+        };
+        """);
   }
 
   @Test
   public void testMissingType_variable() throws Exception {
-    assertPartialCompilationSucceeds("/** @type {!some.thing.Missing} */ var foo;");
+    assertPartialCompilationSucceeds(
+        """
+        /** @type {!some.thing.Missing} */ var foo;
+        """);
   }
 
   @Test
   public void testMissingType_assignment() throws Exception {
     assertPartialCompilationSucceeds(
-        "/** @type {!some.thing.Missing} */ var foo;", // line break
-        "/** @suppress {checkTypes} @type {number} */ var bar = foo;");
+        """
+        /** @type {!some.thing.Missing} */ var foo;
+        /** @suppress {checkTypes} @type {number} */ var bar = foo;
+        """);
   }
 
   @Test
   public void testMissingRequire() throws Exception {
     assertPartialCompilationSucceeds(
-        "goog.provide('missing_extends');", // line break
-        "goog.require('some.thing.Missing');");
+        """
+        goog.provide('missing_extends');
+        goog.require('some.thing.Missing');
+        """);
   }
 
   @Test
   public void testMissingExtends() throws Exception {
     assertPartialCompilationSucceeds(
-        "goog.provide('missing_extends');",
-        "/** @constructor @extends {some.thing.Missing} */",
-        "missing_extends.Extends = function() {}");
+        """
+        goog.provide('missing_extends');
+        /** @constructor @extends {some.thing.Missing} */
+        missing_extends.Extends = function() {}
+        """);
   }
 
   @Test
   public void testMissingExtends_template() throws Exception {
     assertPartialCompilationSucceeds(
-        "goog.provide('missing_extends');",
-        "/** @constructor @extends {some.thing.Missing<string>} x */",
-        "missing_extends.Extends = function() {}");
+        """
+        goog.provide('missing_extends');
+        /** @constructor @extends {some.thing.Missing<string>} x */
+        missing_extends.Extends = function() {}
+        """);
   }
 
   @Test
   public void testMissingType_typedefAlias() throws Exception {
-    assertPartialCompilationSucceeds("/** @typedef {string} */ var typedef;");
+    assertPartialCompilationSucceeds(
+        """
+        /** @typedef {string} */ var typedef;
+        """);
   }
 
   @Test
   public void testMissingType_typedefField() throws Exception {
-    assertPartialCompilationSucceeds("/** @typedef {some.thing.Missing} */ var typedef;");
+    assertPartialCompilationSucceeds(
+        """
+        /** @typedef {some.thing.Missing} */ var typedef;
+        """);
   }
 
   @Test
   public void testMissingEs6Externs() throws Exception {
-    assertPartialCompilationSucceeds("let foo = {a, b};");
+    assertPartialCompilationSucceeds(
+        """
+        let foo = {a, b};
+        """);
   }
 
   @Test
   public void testUnresolvedGenerics() throws Exception {
     assertPartialCompilationSucceeds(
-        "/** @type {!some.thing.Missing<string, !AlsoMissing<!More>>} */", "var x;");
+        """
+        /** @type {!some.thing.Missing<string, !AlsoMissing<!More>>} */
+        var x;
+        """);
     TypedVar x = compiler.getTopScope().getSlot("x");
     assertWithMessage("type %s", x.getType()).that(x.getType().isNoResolvedType()).isTrue();
     ObjectType templatizedType = x.getType().assertObjectType();
@@ -170,7 +194,11 @@ public class PartialCompilationTest {
 
   @Test
   public void testUnresolvedUnions() throws Exception {
-    assertPartialCompilationSucceeds("/** @type {some.thing.Foo|some.thing.Bar} */", "var x;");
+    assertPartialCompilationSucceeds(
+        """
+        /** @type {some.thing.Foo|some.thing.Bar} */
+        var x;
+        """);
     TypedVar x = compiler.getTopScope().getSlot("x");
     assertWithMessage("type %s", x.getType()).that(x.getType().isUnionType()).isTrue();
     UnionType unionType = (UnionType) x.getType();
@@ -197,15 +225,17 @@ public class PartialCompilationTest {
   @Test
   public void testUnresolvedGenerics_defined() throws Exception {
     assertPartialCompilationSucceeds(
-        "/** @param {!some.thing.Missing<string>} x */",
-        "function useMissing(x) {}",
-        "/** @const {!some.thing.Missing<string>} */",
-        "var x;",
-        "/** @constructor @template T */",
-        "some.thing.Missing = function () {}",
-        "function missingInside() {",
-        "  useMissing(new some.thing.Missing());",
-        "}");
+        """
+        /** @param {!some.thing.Missing<string>} x */
+        function useMissing(x) {}
+        /** @const {!some.thing.Missing<string>} */
+        var x;
+        /** @constructor @template T */
+        some.thing.Missing = function () {}
+        function missingInside() {
+          useMissing(new some.thing.Missing());
+        }
+        """);
   }
 
   @Test

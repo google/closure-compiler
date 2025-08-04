@@ -537,12 +537,14 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
       .setOutputTypes(true)
       .setTypeRegistry(compiler.getTypeRegistry());
 
-    compiler.setExternExports(Joiner.on("\n").join(
-        "/**",
-        " * @fileoverview Generated externs.",
-        " * @externs",
-        " */",
-        builder.build()));
+    compiler.setExternExports(
+        """
+        /**
+         * @fileoverview Generated externs.
+         * @externs
+         */
+        """
+            + builder.build());
   }
 
   @Override

@@ -31,53 +31,47 @@ import java.util.List;
  */
 public class TestExternsBuilder {
 
-  private static final Joiner LINE_JOINER = Joiner.on('\n');
-
-  private static final String lines(String... lines) {
-    return LINE_JOINER.join(lines);
-  }
-
   // Closure definitions that are not technically externs but serve a similar purpose.
   private static final String CLOSURE_EXTERNS =
-      lines(
-          "/** @const */ var goog = {};",
-          "goog.module = function(ns) {};",
-          "goog.module.declareLegacyNamespace = function() {};",
-          "goog.module.preventModuleExportSealing = function() {};",
-          "/** @return {?} */",
-          "goog.module.get = function(ns) {};",
-          "goog.provide = function(ns) {};",
-          "/** @return {?} */",
-          "goog.require = function(ns) {};",
-          "/** @return {?} */",
-          "goog.requireType = function(ns) {};",
-          "goog.requireDynamic = function(ns) {};",
-          "goog.loadModule = function(ns) {};",
-          "/** @return {?} */",
-          "goog.forwardDeclare = function(ns) {};",
-          "goog.setTestOnly = function() {};",
-          "goog.scope = function(fn) {};",
-          "goog.declareModuleId = function(ns) {};",
-          "/**",
-          " * @param {string} name",
-          " * @param {T} defaultValue",
-          " * @return {T}",
-          " * @template T",
-          " */",
-          "goog.define = function(name, defaultValue) {};",
-          "goog.exportSymbol = function(publicName, symbol) {};",
-          "goog.inherits = function(childCtor, parentCtor) {",
-          "  childCtor.superClass_ = parentCtor.prototype;",
-          "};",
-          "goog.getMsg = function(str) {};",
-          "/**",
-          " * @param {T} symbol",
-          " * @return {T|undefined}",
-          " * @template T",
-          " * @noinline",
-          " */",
-          "goog.weakUsage = function(symbol) {};",
-          "");
+      """
+      /** @const */ var goog = {};
+      goog.module = function(ns) {};
+      goog.module.declareLegacyNamespace = function() {};
+      goog.module.preventModuleExportSealing = function() {};
+      /** @return {?} */
+      goog.module.get = function(ns) {};
+      goog.provide = function(ns) {};
+      /** @return {?} */
+      goog.require = function(ns) {};
+      /** @return {?} */
+      goog.requireType = function(ns) {};
+      goog.requireDynamic = function(ns) {};
+      goog.loadModule = function(ns) {};
+      /** @return {?} */
+      goog.forwardDeclare = function(ns) {};
+      goog.setTestOnly = function() {};
+      goog.scope = function(fn) {};
+      goog.declareModuleId = function(ns) {};
+      /**
+       * @param {string} name
+       * @param {T} defaultValue
+       * @return {T}
+       * @template T
+       */
+      goog.define = function(name, defaultValue) {};
+      goog.exportSymbol = function(publicName, symbol) {};
+      goog.inherits = function(childCtor, parentCtor) {
+        childCtor.superClass_ = parentCtor.prototype;
+      };
+      goog.getMsg = function(str) {};
+      /**
+       * @param {T} symbol
+       * @return {T|undefined}
+       * @template T
+       * @noinline
+       */
+      goog.weakUsage = function(symbol) {};
+      """;
 
   /**
    * There are some rare cases where we want to use the closure externs defined above as if they
@@ -92,628 +86,630 @@ public class TestExternsBuilder {
 
   // Runtime library stubs that are not technically externs but serve a similar purpose.
   private static final String JSCOMP_LIBRARIES =
-      lines(
-          "/** @const */",
-          "var $jscomp = {};",
-          "/**",
-          " * @param {function(new: ?)} subclass",
-          " * @param {function(new: ?)} superclass",
-          " */",
-          "$jscomp.inherits = function(subclass, superclass) {};",
-          "/**",
-          " * @param {!Iterable<T>} iterable",
-          " * @return {!Array<T>}",
-          " * @template T",
-          " */",
-          "$jscomp.arrayFromIterable = function(iterable) {};",
-          "/**",
-          " * @param {string|!Iterable<T>|!Iterator<T>|!Arguments} iterable",
-          " * @return {!Iterator<T>}",
-          " * @template T",
-          " */",
-          "$jscomp.makeIterator = function(iterable) {};",
-          "$jscomp.makeAsyncIterator = function(asyncIterable) {};",
-          "/**",
-          " * @param {!Iterator<T>} iterator",
-          " * @return {!Array<T>}",
-          " * @template T",
-          " */",
-          "$jscomp.arrayFromIterator = function(iterator) {};",
-          "/**",
-          " * @param {function(): !Generator<?>} generatorFunction",
-          " * @return {!Promise<?>}",
-          " */",
-          "$jscomp.asyncExecutePromiseGeneratorFunction = function(generatorFunction) {};",
-          "/**",
-          "* @type {!Global}",
-          "*/",
-          "var globalThis;",
-          "/** @type {!Global} */",
-          "$jscomp.global = globalThis;",
-          "/** @const {typeof Reflect.construct} */",
-          "$jscomp.construct = Reflect.construct;",
-          "/** @constructor */",
-          "$jscomp.AsyncGeneratorWrapper = function(generator) {};",
-          "/** @constructor */",
-          "$jscomp.AsyncGeneratorWrapper$ActionRecord = function(action, value) {};",
-          "/** @enum {number} */",
-          "$jscomp.AsyncGeneratorWrapper$ActionEnum = {",
-          "  YIELD_VALUE: 0,",
-          "  YIELD_STAR: 1,",
-          "  AWAIT_VALUE: 2,",
-          "};");
+      """
+      /** @const */
+      var $jscomp = {};
+      /**
+       * @param {function(new: ?)} subclass
+       * @param {function(new: ?)} superclass
+       */
+      $jscomp.inherits = function(subclass, superclass) {};
+      /**
+       * @param {!Iterable<T>} iterable
+       * @return {!Array<T>}
+       * @template T
+       */
+      $jscomp.arrayFromIterable = function(iterable) {};
+      /**
+       * @param {string|!Iterable<T>|!Iterator<T>|!Arguments} iterable
+       * @return {!Iterator<T>}
+       * @template T
+       */
+      $jscomp.makeIterator = function(iterable) {};
+      $jscomp.makeAsyncIterator = function(asyncIterable) {};
+      /**
+       * @param {!Iterator<T>} iterator
+       * @return {!Array<T>}
+       * @template T
+       */
+      $jscomp.arrayFromIterator = function(iterator) {};
+      /**
+       * @param {function(): !Generator<?>} generatorFunction
+       * @return {!Promise<?>}
+       */
+      $jscomp.asyncExecutePromiseGeneratorFunction = function(generatorFunction) {};
+      /**
+      * @type {!Global}
+      */
+      var globalThis;
+      /** @type {!Global} */
+      $jscomp.global = globalThis;
+      /** @const {typeof Reflect.construct} */
+      $jscomp.construct = Reflect.construct;
+      /** @constructor */
+      $jscomp.AsyncGeneratorWrapper = function(generator) {};
+      /** @constructor */
+      $jscomp.AsyncGeneratorWrapper$ActionRecord = function(action, value) {};
+      /** @enum {number} */
+      $jscomp.AsyncGeneratorWrapper$ActionEnum = {
+        YIELD_VALUE: 0,
+        YIELD_STAR: 1,
+        AWAIT_VALUE: 2,
+      };\
+      """;
 
   private static final String BIGINT_EXTERNS =
-      lines(
-          "/**",
-          " * @constructor",
-          " * @param {bigint|number|string} arg",
-          " * @return {bigint}",
-          " */",
-          "function BigInt(arg) {}",
-          "",
-          "/**",
-          " * @this {BigInt|bigint}",
-          " * @param {number} width",
-          " * @param {bigint} bigint",
-          " * @return {bigint}",
-          " */",
-          "BigInt.asIntN = function(width, bigint) {};",
-          "",
-          "/**",
-          " * @this {BigInt|bigint}",
-          " * @param {number} width",
-          " * @param {bigint} bigint",
-          " * @return {bigint}",
-          " */",
-          "BigInt.asUintN = function(width, bigint) {};",
-          "",
-          "/**",
-          " * @param {string|Array<string>=} locales",
-          " * @param {?Object=} options",
-          " * @return {string}",
-          " */",
-          "BigInt.prototype.toLocaleString = function(locales, options) {};",
-          "",
-          "/**",
-          " * @this {BigInt|bigint}",
-          " * @param {number=} radix",
-          " * @return {string}",
-          " */",
-          "BigInt.prototype.toString = function(radix) {};",
-          "",
-          "/**",
-          " * @return {bigint}",
-          " */",
-          "BigInt.prototype.valueOf = function() {};",
-          "");
+      """
+      /**
+       * @constructor
+       * @param {bigint|number|string} arg
+       * @return {bigint}
+       */
+      function BigInt(arg) {}
+
+      /**
+       * @this {BigInt|bigint}
+       * @param {number} width
+       * @param {bigint} bigint
+       * @return {bigint}
+       */
+      BigInt.asIntN = function(width, bigint) {};
+
+      /**
+       * @this {BigInt|bigint}
+       * @param {number} width
+       * @param {bigint} bigint
+       * @return {bigint}
+       */
+      BigInt.asUintN = function(width, bigint) {};
+
+      /**
+       * @param {string|Array<string>=} locales
+       * @param {?Object=} options
+       * @return {string}
+       */
+      BigInt.prototype.toLocaleString = function(locales, options) {};
+
+      /**
+       * @this {BigInt|bigint}
+       * @param {number=} radix
+       * @return {string}
+       */
+      BigInt.prototype.toString = function(radix) {};
+
+      /**
+       * @return {bigint}
+       */
+      BigInt.prototype.valueOf = function() {};
+      """;
 
   private static final String ITERABLE_EXTERNS =
-      lines(
-          // Symbol is needed for Symbol.iterator
-          "/**",
-          " * @constructor",
-          " * @param {*=} opt_description",
-          " * @return {symbol}",
-          " * @nosideeffects",
-          " */",
-          "function Symbol(opt_description) {}",
-          "",
-          "/** @const {!symbol} */ Symbol.iterator;",
-          "",
-          "/**",
-          " * @record",
-          " * @template TYield",
-          " */",
-          "function IIterableResult() {};",
-          "/** @type {boolean} */",
-          "IIterableResult.prototype.done;",
-          "/** @type {TYield} */",
-          "IIterableResult.prototype.value;",
-          "",
-          "/**",
-          " * @interface",
-          " * @template T, TReturn, TNext",
-          " */",
-          "function Iterator() {}",
-          "/**",
-          " * @param {T=} value",
-          " * @return {!IIterableResult<T>}",
-          " */",
-          "Iterator.prototype.next;",
-          "",
-          "/**",
-          " * @interface",
-          " * @template T, TReturn, TNext",
-          " */",
-          "function Iterable() {}",
-          "",
-          "/**",
-          " * @return {!Iterator<T, ?, *>}",
-          " * @suppress {externsValidation}",
-          " */",
-          "Iterable.prototype[Symbol.iterator] = function() {};",
-          "",
-          "/**",
-          " * @interface",
-          " * @extends {Iterator<T, ?, *>}",
-          " * @extends {Iterable<T, ?, *>}",
-          " * @template T, TReturn, TNext",
-          " */",
-          "function IteratorIterable() {}",
-          "",
-          "/**",
-          " * @interface",
-          " * @extends {IteratorIterable<T, ?, *>}",
-          " * @template T, TReturn, TNext",
-          " */",
-          "function Generator() {}",
-          "/**",
-          " * @param {?=} opt_value",
-          " * @return {!IIterableResult<T>}",
-          " * @override",
-          " */",
-          "Generator.prototype.next = function(opt_value) {};",
-          "/**",
-          " * @param {T} value",
-          " * @return {!IIterableResult<T>}",
-          " */",
-          "Generator.prototype.return = function(value) {};",
-          "/**",
-          " * @param {?} exception",
-          " * @return {!IIterableResult<T>}",
-          " */",
-          "Generator.prototype.throw = function(exception) {};",
-          "");
+      """
+      // Symbol is needed for Symbol.iterator
+      /**
+       * @constructor
+       * @param {*=} opt_description
+       * @return {symbol}
+       * @nosideeffects
+       */
+      function Symbol(opt_description) {}
+
+      /** @const {!symbol} */ Symbol.iterator;
+
+      /**
+       * @record
+       * @template TYield
+       */
+      function IIterableResult() {};
+      /** @type {boolean} */
+      IIterableResult.prototype.done;
+      /** @type {TYield} */
+      IIterableResult.prototype.value;
+
+      /**
+       * @interface
+       * @template T, TReturn, TNext
+       */
+      function Iterator() {}
+      /**
+       * @param {T=} value
+       * @return {!IIterableResult<T>}
+       */
+      Iterator.prototype.next;
+
+      /**
+       * @interface
+       * @template T, TReturn, TNext
+       */
+      function Iterable() {}
+
+      /**
+       * @return {!Iterator<T, ?, *>}}
+       * @suppress {externsValidation}
+       */
+      Iterable.prototype[Symbol.iterator] = function() {};
+
+      /**
+       * @interface
+       * @extends {Iterator<T, ?, *>}}
+       * @extends {Iterable<T, ?, *>}}
+       * @template T, TReturn, TNext
+       */
+      function IteratorIterable() {}
+
+      /**
+       * @interface
+       * @extends {IteratorIterable<T, ?, *>}}
+       * @template T, TReturn, TNext
+       */
+      function Generator() {}
+      /**
+       * @param {?=} opt_value
+       * @return {!IIterableResult<T>}
+       * @override
+       */
+      Generator.prototype.next = function(opt_value) {};
+      /**
+       * @param {T} value
+       * @return {!IIterableResult<T>}
+       */
+      Generator.prototype.return = function(value) {};
+      /**
+       * @param {?} exception
+       * @return {!IIterableResult<T>}
+       */
+      Generator.prototype.throw = function(exception) {};
+      """;
 
   private static final String STRING_EXTERNS =
-      lines(
-          "/**",
-          " * @constructor",
-          " * @implements {Iterable<string>}",
-          " * @param {*=} arg",
-          " * @return {string}",
-          " */",
-          "function String(arg) {}",
-          "/** @override @return {!Iterator<string>} */",
-          "String.prototype[Symbol.iterator] = function() {};",
-          "/** @type {number} */",
-          "String.prototype.length;",
-          "/** @param {number} sliceArg */",
-          "String.prototype.slice = function(sliceArg) {};",
-          "/**",
-          " * @this {string|!String}",
-          " * @param {*=} opt_separator",
-          " * @param {number=} opt_limit",
-          " * @return {!Array<string>}",
-          " */",
-          "String.prototype.split = function(opt_separator, opt_limit) {};",
-          "/**",
-          " * @this {string|!String}",
-          " * @param {string} search_string",
-          " * @param {number=} opt_position",
-          " * @return {boolean}",
-          " * @nosideeffects",
-          " */",
-          "String.prototype.startsWith = function(search_string, opt_position) {};",
-          "/**",
-          " * @this {!String|string}",
-          " * @param {?} regex",
-          " * @param {?} str",
-          " * @param {string=} opt_flags",
-          " * @return {string}",
-          " */",
-          "String.prototype.replace = function(regex, str, opt_flags) {};",
-          "/**",
-          " * @this {!String|string}",
-          " * @param {number} index",
-          " * @return {string}",
-          " */",
-          "String.prototype.charAt = function(index) {};",
-          "/**",
-          " * @this {!String|string}",
-          " * @param {*} regexp",
-          " * @return {!Array<string>}",
-          " */",
-          "String.prototype.match = function(regexp) {};",
-          "/**",
-          " * @this {!String|string}",
-          " * @return {string}",
-          " */",
-          "String.prototype.toLowerCase = function() {};",
-          "",
-          "/**",
-          " * @param {number} count",
-          " * @this {!String|string}",
-          " * @return {string}",
-          " * @nosideeffects",
-          " */",
-          "String.prototype.repeat = function(count) {};",
-          "",
-          "/**",
-          " * @param {string} searchString",
-          " * @param {number=} position",
-          " * @return {boolean}",
-          " * @nosideeffects",
-          " */",
-          "String.prototype.includes = function(searchString, position) {};",
-          "");
+      """
+      /**
+       * @constructor
+       * @implements {Iterable<string>}
+       * @param {*=} arg
+       * @return {string}
+       */
+      function String(arg) {}
+      /** @override @return {!Iterator<string>} */
+      String.prototype[Symbol.iterator] = function() {};
+      /** @type {number} */
+      String.prototype.length;
+      /** @param {number} sliceArg */
+      String.prototype.slice = function(sliceArg) {};
+      /**
+       * @this {string|!String}
+       * @param {*=} opt_separator
+       * @param {number=} opt_limit
+       * @return {!Array<string>}
+       */
+      String.prototype.split = function(opt_separator, opt_limit) {};
+      /**
+       * @this {string|!String}
+       * @param {string} search_string
+       * @param {number=} opt_position
+       * @return {boolean}
+       * @nosideeffects
+       */
+      String.prototype.startsWith = function(search_string, opt_position) {};
+      /**
+       * @this {!String|string}
+       * @param {?} regex
+       * @param {?} str
+       * @param {string=} opt_flags
+       * @return {string}
+       */
+      String.prototype.replace = function(regex, str, opt_flags) {};
+      /**
+       * @this {!String|string}
+       * @param {number} index
+       * @return {string}
+       */
+      String.prototype.charAt = function(index) {};
+      /**
+       * @this {!String|string}
+       * @param {*} regexp
+       * @return {!Array<string>}
+       */
+      String.prototype.match = function(regexp) {};
+      /**
+       * @this {!String|string}
+       * @return {string}
+       */
+      String.prototype.toLowerCase = function() {};
+
+      /**
+       * @param {number} count
+       * @this {!String|string}
+       * @return {string}
+       * @nosideeffects
+       */
+      String.prototype.repeat = function(count) {};
+
+      /**
+       * @param {string} searchString
+       * @param {number=} position
+       * @return {boolean}
+       * @nosideeffects
+       */
+      String.prototype.includes = function(searchString, position) {};
+      """;
   private static final String FUNCTION_EXTERNS =
-      lines(
-          "/**",
-          " * @constructor",
-          " * @param {...*} var_args",
-          " */",
-          "function Function(var_args) {}",
-          "/** @type {!Function} */ Function.prototype.apply;",
-          "/** @type {!Function} */ Function.prototype.bind;",
-          "/** @type {!Function} */ Function.prototype.call;",
-          "/** @type {number} */",
-          "Function.prototype.length;",
-          "/** @type {string} */",
-          "Function.prototype.name;",
-          "");
+      """
+      /**
+       * @constructor
+       * @param {...*} var_args
+       */
+      function Function(var_args) {}
+      /** @type {!Function} */ Function.prototype.apply;
+      /** @type {!Function} */ Function.prototype.bind;
+      /** @type {!Function} */ Function.prototype.call;
+      /** @type {number} */
+      Function.prototype.length;
+      /** @type {string} */
+      Function.prototype.name;
+      """;
   private static final String OBJECT_EXTERNS =
-      lines(
-          "/**",
-          " * @record",
-          " * @template THIS",
-          " */",
-          "function ObjectPropertyDescriptor() {}",
-          "/** @type {(*|undefined)} */",
-          "ObjectPropertyDescriptor.prototype.value;",
-          "/** @type {(function(this: THIS):?)|undefined} */",
-          "ObjectPropertyDescriptor.prototype.get;",
-          "",
-          "/** @type {(function(this: THIS, ?):void)|undefined} */",
-          "ObjectPropertyDescriptor.prototype.set;",
-          "",
-          "/** @type {boolean|undefined} */",
-          "ObjectPropertyDescriptor.prototype.writable;",
-          "",
-          "/** @type {boolean|undefined} */",
-          "ObjectPropertyDescriptor.prototype.enumerable;",
-          "",
-          "/** @type {boolean|undefined} */",
-          "ObjectPropertyDescriptor.prototype.configurable;",
-          "",
-          "/**",
-          " * @constructor",
-          " * @param {*=} opt_value",
-          " * @return {!Object}",
-          " * @template K,V",
-          " */",
-          "function Object(opt_value) {}",
-          "",
-          "/** @type {?Object} */ Object.prototype.__proto__;",
-          "/** @return {string} */",
-          "Object.prototype.toString = function() {};",
-          "/**",
-          " * @param {*} propertyName",
-          " * @return {boolean}",
-          " */",
-          "Object.prototype.hasOwnProperty = function(propertyName) {};",
-          "/** @type {?Function} */ Object.prototype.constructor;",
-          "/** @return {*} */",
-          "Object.prototype.valueOf = function() {};",
-          "/**",
-          " * @param {!Object} obj",
-          " * @param {string} prop",
-          " * @return {!ObjectPropertyDescriptor|undefined}",
-          " * @nosideeffects",
-          " */",
-          "Object.getOwnPropertyDescriptor = function(obj, prop) {};",
-          "/**",
-          " * @param {!Object} obj",
-          " * @param {string | symbol} prop",
-          " * @param {!ObjectPropertyDescriptor} descriptor",
-          " * @return {!Object}",
-          " */",
-          "Object.defineProperty = function(obj, prop, descriptor) {};",
-          "",
-          "/**",
-          " * @template T",
-          " * @param {T} obj",
-          " * @param {!Object<string|symbol, !ObjectPropertyDescriptor<T>>} props",
-          " * @return {T}",
-          " */",
-          "Object.defineProperties = function(obj, props) {};",
-          "",
-          "/**",
-          " * @param {?Object} proto",
-          " * @param {?Object=} opt_properties",
-          " * @return {!Object}",
-          " */",
-          "Object.create = function(proto, opt_properties) {};",
-          "/**",
-          " * @param {!Object} obj",
-          " * @param {?} proto",
-          " * @return {!Object}",
-          " */",
-          "Object.setPrototypeOf = function(obj, proto) {};",
-          "/**",
-          " * @param {!Object} obj",
-          " * @return {?Object}",
-          " * @nosideeffects",
-          " */",
-          "Object.getPrototypeOf = function(obj) {};",
-          "",
-          "/**",
-          " * @param {!Object} target",
-          " * @param {...(Object|null|undefined)} var_args",
-          " * @return {!Object}",
-          " */",
-          "Object.assign = function(target, var_args) {};",
-          "",
-          "/**",
-          " * @param {T} obj",
-          " * @return {T}",
-          " * @template T",
-          " */",
-          "Object.seal = function(obj) {}",
-          "");
+      """
+      /**
+       * @record
+       * @template THIS
+       */
+      function ObjectPropertyDescriptor() {}
+      /** @type {(*|undefined)} */
+      ObjectPropertyDescriptor.prototype.value;
+      /** @type {(function(this: THIS):?)|undefined} */
+      ObjectPropertyDescriptor.prototype.get;
+
+      /** @type {(function(this: THIS, ?):void)|undefined} */
+      ObjectPropertyDescriptor.prototype.set;
+
+      /** @type {boolean|undefined} */
+      ObjectPropertyDescriptor.prototype.writable;
+
+      /** @type {boolean|undefined} */
+      ObjectPropertyDescriptor.prototype.enumerable;
+
+      /** @type {boolean|undefined} */
+      ObjectPropertyDescriptor.prototype.configurable;
+
+      /**
+       * @constructor
+       * @param {*=} opt_value
+       * @return {!Object}
+       * @template K,V
+       */
+      function Object(opt_value) {}
+
+      /** @type {?Object} */ Object.prototype.__proto__;
+      /** @return {string} */
+      Object.prototype.toString = function() {};
+      /**
+       * @param {*} propertyName
+       * @return {boolean}
+       */
+      Object.prototype.hasOwnProperty = function(propertyName) {};
+      /** @type {?Function} */ Object.prototype.constructor;
+      /** @return {*} */
+      Object.prototype.valueOf = function() {};
+      /**
+       * @param {!Object} obj
+       * @param {string} prop
+       * @return {!ObjectPropertyDescriptor|undefined}
+       * @nosideeffects
+       */
+      Object.getOwnPropertyDescriptor = function(obj, prop) {};
+      /**
+       * @param {!Object} obj
+       * @param {string | symbol} prop
+       * @param {!ObjectPropertyDescriptor} descriptor
+       * @return {!Object}
+       */
+      Object.defineProperty = function(obj, prop, descriptor) {};
+
+      /**
+       * @template T
+       * @param {T} obj
+       * @param {!Object<string|symbol, !ObjectPropertyDescriptor<T>>} props
+       * @return {T}
+       */
+      Object.defineProperties = function(obj, props) {};
+
+      /**
+       * @param {?Object} proto
+       * @param {?Object=} opt_properties
+       * @return {!Object}
+       */
+      Object.create = function(proto, opt_properties) {};
+      /**
+       * @param {!Object} obj
+       * @param {?} proto
+       * @return {!Object}
+       */
+      Object.setPrototypeOf = function(obj, proto) {};
+      /**
+       * @param {!Object} obj
+       * @return {?Object}
+       * @nosideeffects
+       */
+      Object.getPrototypeOf = function(obj) {};
+
+      /**
+       * @param {!Object} target
+       * @param {...(Object|null|undefined)} var_args
+       * @return {!Object}
+       */
+      Object.assign = function(target, var_args) {};
+
+      /**
+       * @param {T} obj
+       * @return {T}
+       * @template T
+       */
+      Object.seal = function(obj) {}
+      """;
 
   private static final String REFLECT_EXTERNS =
-      lines(
-          "/** @const */",
-          "var Reflect = {}",
-          "",
-          "/**",
-          " * @param {function(new: ?, ...?)} targetConstructorFn",
-          " * @param {!Array<?>} argList",
-          " * @param {function(new: TARGET, ...?)=} opt_newTargetConstructorFn",
-          " * @return {TARGET}",
-          " * @template TARGET",
-          " * @nosideeffects",
-          " */",
-          "Reflect.construct = function(",
-          "    targetConstructorFn, argList, opt_newTargetConstructorFn) {};",
-          "",
-          "/**",
-          " * @param {!Object} target",
-          " * @param {?Object} proto",
-          " * @return {boolean}",
-          " */",
-          "Reflect.setPrototypeOf = function(target, proto) {};",
-          "");
+      """
+      /** @const */
+      var Reflect = {}
+
+      /**
+       * @param {function(new: ?, ...?)} targetConstructorFn
+       * @param {!Array<?>} argList
+       * @param {function(new: TARGET, ...?)=} opt_newTargetConstructorFn
+       * @return {TARGET}
+       * @template TARGET
+       * @nosideeffects
+       */
+      Reflect.construct = function(
+          targetConstructorFn, argList, opt_newTargetConstructorFn) {};
+
+      /**
+       * @param {!Object} target
+       * @param {?Object} proto
+       * @return {boolean}
+       */
+      Reflect.setPrototypeOf = function(target, proto) {};
+      """;
 
   private static final String ARRAY_EXTERNS =
-      lines(
-          "/**",
-          " * @interface",
-          " * @template KEY1, VALUE1",
-          " */",
-          "function IObject() {};",
-          "",
-          "/**",
-          " * @record",
-          " * @extends IObject<number, VALUE2>",
-          " * @template VALUE2",
-          " */",
-          "function IArrayLike() {};",
-          "",
-          "/** @type {number} */",
-          "IArrayLike.prototype.length;",
-          "",
-          "/**",
-          " * @template T",
-          " * @record",
-          " * @extends {IArrayLike<T>}",
-          " * @extends {Iterable<T>}",
-          " */",
-          "function ReadonlyArray(var_args) {}",
-          "/** @type {number} */ ReadonlyArray.prototype.length;",
-          "/**",
-          " * @param {?function(this:S, T, number, !Array<T>): ?} callback",
-          " * @param {S=} opt_thisobj",
-          " * @this {!IArrayLike<T>|string}",
-          " * @template T,S",
-          " * @return {undefined}",
-          " */",
-          "ReadonlyArray.prototype.forEach;",
-          "/**",
-          " * @param {?function(this:S, T, number, !Array<T>): ?} callback",
-          " * @param {S=} opt_thisobj",
-          " * @return {!Array<T>}",
-          " * @this {!IArrayLike<T>|string}",
-          " * @template T,S",
-          " */",
-          "ReadonlyArray.prototype.filter;",
-          "/**",
-          " * @param {...*} var_args",
-          " * @return {!Array<?>}",
-          " * @this {*}",
-          " */",
-          "ReadonlyArray.prototype.concat;",
-          "/**",
-          " * @param {?number=} begin Zero-based index at which to begin extraction.",
-          " * @param {?number=} end Zero-based index at which to end extraction.  slice",
-          " *     extracts up to but not including end.",
-          " * @return {!Array<T>}",
-          " * @this {!IArrayLike<T>|string}",
-          " * @template T",
-          " * @nosideeffects",
-          " */",
-          "ReadonlyArray.prototype.slice;",
-          "",
-          "/**",
-          " * @return {!IteratorIterable<T>}",
-          " */",
-          "ReadonlyArray.prototype.values;",
-          "",
-          "/**",
-          " * @param {T} searchElement",
-          " * @param {number=} fromIndex",
-          " * @return {boolean}",
-          " * @this {!IArrayLike<T>|string}",
-          " * @template T",
-          " * @nosideeffects",
-          " */",
-          "ReadonlyArray.prototype.includes;",
-          "/**",
-          " * @template T",
-          " * @constructor",
-          " * @implements {ReadonlyArray<T>}",
-          " * @implements {IArrayLike<T>}",
-          " * @implements {Iterable<T>}",
-          " * @param {...*} var_args",
-          " * @return {!Array<?>}",
-          " */",
-          "function Array(var_args) {}",
-          "/** @override */",
-          "Array.prototype[Symbol.iterator] = function() {};",
-          "/** @override @type {number} */ Array.prototype.length;",
-          "/**",
-          " * @param {*} arr",
-          " * @return {boolean}",
-          " */",
-          "Array.isArray = function(arr) {};",
-          "",
-          "/**",
-          " * @param {string|!IArrayLike<T>|!Iterable<T>} arrayLike",
-          " * @param {function(this:S, (string|T), number): R=} mapFn",
-          " * @param {S=} thisObj",
-          " * @return {!Array<R>}",
-          " * @template T,S,R",
-          " */",
-          "Array.from = function(arrayLike, mapFn, thisObj) {}",
-          "",
-          "/**",
-          " * @param {...T} var_args",
-          " * @return {number} The new length of the array.",
-          " * @this {!IArrayLike<T>}",
-          " * @template T",
-          " * @modifies {this}",
-          " */",
-          "Array.prototype.push = function(var_args) {};",
-          "/**",
-          " * @this {!IArrayLike<T>}",
-          " * @return {T}",
-          " * @template T",
-          " */",
-          "Array.prototype.shift = function() {};",
-          "/**",
-          " * @override",
-          " * @param {?function(this:S, T, number, !Array<T>): ?} callback",
-          " * @param {S=} opt_thisobj",
-          " * @this {!IArrayLike<T>|string}",
-          " * @template T,S",
-          " * @return {undefined}",
-          " */",
-          "Array.prototype.forEach = function(callback, opt_thisobj) {};",
-          "/**",
-          " * @override",
-          " * @param {?function(this:S, T, number, !Array<T>): ?} callback",
-          " * @param {S=} opt_thisobj",
-          " * @return {!Array<T>}",
-          " * @this {!IArrayLike<T>|string}",
-          " * @template T,S",
-          " */",
-          "Array.prototype.filter = function(callback, opt_thisobj) {};",
-          "/**",
-          " * @override",
-          " * @param {...*} var_args",
-          " * @return {!Array<?>}",
-          " * @this {*}",
-          " */",
-          "Array.prototype.concat = function(var_args) {};",
-          "/**",
-          " * @override",
-          " * @param {?number=} begin Zero-based index at which to begin extraction.",
-          " * @param {?number=} end Zero-based index at which to end extraction.  slice",
-          " *     extracts up to but not including end.",
-          " * @return {!Array<T>}",
-          " * @this {!IArrayLike<T>|string}",
-          " * @template T",
-          " * @nosideeffects",
-          " */",
-          "Array.prototype.slice = function(begin, end) {};",
-          "",
-          "/**",
-          " * @override",
-          " * @return {!IteratorIterable<T>}",
-          " */",
-          "Array.prototype.values;",
-          "",
-          "/**",
-          " * @override",
-          " * @param {T} searchElement",
-          " * @param {number=} fromIndex",
-          " * @return {boolean}",
-          " * @this {!IArrayLike<T>|string}",
-          " * @template T",
-          " * @nosideeffects",
-          " */",
-          "Array.prototype.includes = function(searchElement, fromIndex) {};",
-          "");
+      """
+      /**
+       * @interface
+       * @template KEY1, VALUE1
+       */
+      function IObject() {};
+
+      /**
+       * @record
+       * @extends IObject<number, VALUE2>
+       * @template VALUE2
+       */
+      function IArrayLike() {};
+
+      /** @type {number} */
+      IArrayLike.prototype.length;
+
+      /**
+       * @template T
+       * @record
+       * @extends {IArrayLike<T>}
+       * @extends {Iterable<T>}
+       */
+      function ReadonlyArray(var_args) {}
+      /** @type {number} */ ReadonlyArray.prototype.length;
+      /**
+       * @param {?function(this:S, T, number, !Array<T>): ?} callback
+       * @param {S=} opt_thisobj
+       * @this {!IArrayLike<T>|string}
+       * @template T,S
+       * @return {undefined}
+       */
+      ReadonlyArray.prototype.forEach;
+      /**
+       * @param {?function(this:S, T, number, !Array<T>): ?} callback
+       * @param {S=} opt_thisobj
+       * @return {!Array<T>}
+       * @this {!IArrayLike<T>|string}
+       * @template T,S
+       */
+      ReadonlyArray.prototype.filter;
+      /**
+       * @param {...*} var_args
+       * @return {!Array<?>}
+       * @this {*}
+       */
+      ReadonlyArray.prototype.concat;
+      /**
+       * @param {?number=} begin Zero-based index at which to begin extraction.
+       * @param {?number=} end Zero-based index at which to end extraction.  slice
+       * extracts up to but not including end.
+       * @return {!Array<T>}
+       * @this {!IArrayLike<T>|string}
+       * @template T
+       * @nosideeffects
+       */
+      ReadonlyArray.prototype.slice;
+
+      /**
+       * @return {!IteratorIterable<T>}
+       */
+      ReadonlyArray.prototype.values;
+
+      /**
+       * @param {T} searchElement
+       * @param {number=} fromIndex
+       * @return {boolean}
+       * @this {!IArrayLike<T>|string}
+       * @template T
+       * @nosideeffects
+       */
+      ReadonlyArray.prototype.includes;
+      /**
+       * @template T
+       * @constructor
+       * @implements {ReadonlyArray<T>}
+       * @implements {IArrayLike<T>}
+       * @implements {Iterable<T>}
+       * @param {...*} var_args
+       * @return {!Array<?>}
+       */
+      function Array(var_args) {}
+      /** @override */
+      Array.prototype[Symbol.iterator] = function() {};
+      /** @override @type {number} */ Array.prototype.length;
+      /**
+       * @param {*} arr
+       * @return {boolean}
+       */
+      Array.isArray = function(arr) {};
+
+      /**
+       * @param {string|!IArrayLike<T>|!Iterable<T>} arrayLike
+       * @param {function(this:S, (string|T), number): R=} mapFn
+       * @param {S=} thisObj
+       * @return {!Array<R>}
+       * @template T,S,R
+       */
+      Array.from = function(arrayLike, mapFn, thisObj) {}
+
+      /**
+       * @param {...T} var_args
+       * @return {number} The new length of the array.
+       * @this {!IArrayLike<T>}
+       * @template T
+       * @modifies {this}
+       */
+      Array.prototype.push = function(var_args) {};
+      /**
+       * @this {!IArrayLike<T>}
+       * @return {T}
+       * @template T
+       */
+      Array.prototype.shift = function() {};
+      /**
+       * @override
+       * @param {?function(this:S, T, number, !Array<T>): ?} callback
+       * @param {S=} opt_thisobj
+       * @this {!IArrayLike<T>|string}
+       * @template T,S
+       * @return {undefined}
+       */
+      Array.prototype.forEach = function(callback, opt_thisobj) {};
+      /**
+       * @override
+       * @param {?function(this:S, T, number, !Array<T>): ?} callback
+       * @param {S=} opt_thisobj
+       * @return {!Array<T>}
+       * @this {!IArrayLike<T>|string}
+       * @template T,S
+       */
+      Array.prototype.filter = function(callback, opt_thisobj) {};
+      /**
+       * @override
+       * @param {...*} var_args
+       * @return {!Array<?>}
+       * @this {*}
+       */
+      Array.prototype.concat = function(var_args) {};
+      /**
+       * @override
+       * @param {?number=} begin Zero-based index at which to begin extraction.
+       * @param {?number=} end Zero-based index at which to end extraction.  slice
+       * extracts up to but not including end.
+       * @return {!Array<T>}
+       * @this {!IArrayLike<T>|string}
+       * @template T
+       * @nosideeffects
+       */
+      Array.prototype.slice = function(begin, end) {};
+
+      /**
+       * @override
+       * @return {!IteratorIterable<T>}
+       */
+      Array.prototype.values;
+
+      /**
+       * @override
+       * @param {T} searchElement
+       * @param {number=} fromIndex
+       * @return {boolean}
+       * @this {!IArrayLike<T>|string}
+       * @template T
+       * @nosideeffects
+       */
+      Array.prototype.includes = function(searchElement, fromIndex) {};
+      """;
   private static final String MAP_EXTERNS =
-      lines(
-          "/**",
-          " * @interface",
-          " * @extends {Iterable<K|V>}",
-          " * @template K, V",
-          " */",
-          "function ReadonlyMap() {}",
-          "/**",
-          " * @return {!IteratorIterable<K|V>}",
-          " */",
-          "ReadonlyMap.prototype.entries = function() {};",
-          "/**",
-          " * @constructor @struct",
-          " * @param {?Iterable<!Array<K|V>>|!Array<!Array<K|V>>=} opt_iterable",
-          " * @implements {ReadonlyMap<K, V>}",
-          " * @template K, V",
-          " */",
-          "function Map(opt_iterable) {}",
-          "/** @override */",
-          "Map.prototype[Symbol.iterator] = function() {};",
-          "/**",
-          " * @override",
-          " * @return {!IteratorIterable<K|V>}",
-          " */",
-          "Map.prototype.entries = function() {};");
+      """
+      /**
+       * @interface
+       * @extends {Iterable<K|V>}
+       * @template K, V
+       */
+      function ReadonlyMap() {}
+      /**
+       * @return {!IteratorIterable<K|V>}
+       */
+      ReadonlyMap.prototype.entries = function() {};
+      /**
+       * @constructor @struct
+       * @param {?Iterable<!Array<K|V>>|!Array<!Array<K|V>>=} opt_iterable
+       * @implements {ReadonlyMap<K, V>}
+       * @template K, V
+       */
+      function Map(opt_iterable) {}
+      /** @override */
+      Map.prototype[Symbol.iterator] = function() {};
+      /**
+       * @override
+       * @return {!IteratorIterable<K|V>}
+       */
+      Map.prototype.entries = function() {};\
+      """;
 
   private static final String ARGUMENTS_EXTERNS =
-      lines(
-          "/**",
-          " * @constructor",
-          " * @implements {IArrayLike<?>}",
-          " * @implements {Iterable<?>}",
-          " */",
-          "function Arguments() {}",
-          "",
-          "/** @type {number} */",
-          "Arguments.prototype.length;",
-          "/** @override */",
-          "Arguments.prototype[Symbol.iterator] = function() {};",
-          "",
-          "/** @type {!Arguments} */",
-          "var arguments;",
-          "");
+      """
+      /**
+       * @constructor
+       * @implements {IArrayLike<?>}
+       * @implements {Iterable<?>}
+       */
+      function Arguments() {}
+
+      /** @type {number} */
+      Arguments.prototype.length;
+      /** @override */
+      Arguments.prototype[Symbol.iterator] = function() {};
+
+      /** @type {!Arguments} */
+      var arguments;
+      """;
 
   private static final String CONSOLE_EXTERNS =
-      lines(
-          "/** @constructor */",
-          "function Console() {};",
-          "",
-          "/**",
-          " * @param {...*} var_args",
-          " * @return {undefined}",
-          " */",
-          "Console.prototype.log = function(var_args) {};",
-          "",
-          "/** @const {!Console} */",
-          "var console;",
-          "");
+      """
+      /** @constructor */
+      function Console() {};
+
+      /**
+       * @param {...*} var_args
+       * @return {undefined}
+       */
+      Console.prototype.log = function(var_args) {};
+
+      /** @const {!Console} */
+      var console;
+      """;
 
   private static final String ALERT_EXTERNS =
-      lines(
-          "/**",
-          " * @param {*} message",
-          " * @return {undefined}",
-          " */",
-          "function alert(message) {}",
-          "");
+      """
+      /**
+       * @param {*} message
+       * @return {undefined}
+       */
+      function alert(message) {}
+      """;
 
   private static final String UNDEFINED_EXTERNS =
       """
@@ -722,322 +718,326 @@ public class TestExternsBuilder {
       """;
 
   private static final String PROMISE_EXTERNS =
-      lines(
-          "", //
-          "/**",
-          " * @typedef {{then: ?}}",
-          " */",
-          "var Thenable;",
-          "",
-          "",
-          "/**",
-          " * @interface",
-          " * @template TYPE",
-          " */",
-          "function IThenable() {}",
-          "",
-          "",
-          "/**",
-          " * @param {?(function(TYPE):VALUE)=} opt_onFulfilled",
-          " * @param {?(function(*): *)=} opt_onRejected",
-          " * @return {RESULT}",
-          " * @template VALUE",
-          " *",
-          " * @template RESULT := type('IThenable',",
-          " *     cond(isUnknown(VALUE), unknown(),",
-          " *       mapunion(VALUE, (V) =>",
-          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
-          " *           templateTypeOf(V, 0),",
-          " *           cond(sub(V, 'Thenable'),",
-          " *              unknown(),",
-          " *              V)))))",
-          " * =:",
-          " */",
-          "IThenable.prototype.then = function(opt_onFulfilled, opt_onRejected) {};",
-          "",
-          "",
-          "/**",
-          " * @param {function(",
-          " *             function((TYPE|IThenable<TYPE>|Thenable|null)=),",
-          " *             function(*=))} resolver",
-          " * @constructor",
-          " * @implements {IThenable<TYPE>}",
-          " * @template TYPE",
-          " */",
-          "function Promise(resolver) {}",
-          "",
-          "",
-          "/**",
-          " * @param {VALUE=} opt_value",
-          " * @return {RESULT}",
-          " * @template VALUE",
-          " * @template RESULT := type('Promise',",
-          " *     cond(isUnknown(VALUE), unknown(),",
-          " *       mapunion(VALUE, (V) =>",
-          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
-          " *           templateTypeOf(V, 0),",
-          " *           cond(sub(V, 'Thenable'),",
-          " *              unknown(),",
-          " *              V)))))",
-          " * =:",
-          " */",
-          "Promise.resolve = function(opt_value) {};",
-          "",
-          "",
-          "/**",
-          " * @param {*=} opt_error",
-          " * @return {!Promise<?>}",
-          " */",
-          "Promise.reject = function(opt_error) {};",
-          "",
-          "",
-          "/**",
-          " * @param {!Iterable<VALUE>} iterable",
-          " * @return {!Promise<!Array<RESULT>>}",
-          " * @template VALUE",
-          " * @template RESULT := mapunion(VALUE, (V) =>",
-          " *     cond(isUnknown(V),",
-          " *         unknown(),",
-          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
-          " *             templateTypeOf(V, 0),",
-          " *             cond(sub(V, 'Thenable'), unknown(), V))))",
-          " * =:",
-          " */",
-          "Promise.all = function(iterable) {};",
-          "",
-          "",
-          "/**",
-          " * @param {!Iterable<VALUE>} iterable",
-          " * @return {!Promise<RESULT>}",
-          " * @template VALUE",
-          " * @template RESULT := mapunion(VALUE, (V) =>",
-          " *     cond(isUnknown(V),",
-          " *         unknown(),",
-          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
-          " *             templateTypeOf(V, 0),",
-          " *             cond(sub(V, 'Thenable'), unknown(), V))))",
-          " * =:",
-          " */",
-          "Promise.race = function(iterable) {};",
-          "",
-          "",
-          "/**",
-          " * @param {?(function(this:void, TYPE):VALUE)=} opt_onFulfilled",
-          " * @param {?(function(this:void, *): *)=} opt_onRejected",
-          " * @return {RESULT}",
-          " * @template VALUE",
-          " *",
-          " * @template RESULT := type('Promise',",
-          " *     cond(isUnknown(VALUE), unknown(),",
-          " *       mapunion(VALUE, (V) =>",
-          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
-          " *           templateTypeOf(V, 0),",
-          " *           cond(sub(V, 'Thenable'),",
-          " *              unknown(),",
-          " *              V)))))",
-          " * =:",
-          " * @override",
-          " */",
-          "Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};",
-          "",
-          "",
-          "/**",
-          " * @param {function(*): RESULT} onRejected",
-          " * @return {!Promise<RESULT>}",
-          " * @template RESULT",
-          " */",
-          "Promise.prototype.catch = function(onRejected) {};",
-          "",
-          "",
-          "/**",
-          " * @param {function()} callback",
-          " * @return {!Promise<TYPE>}",
-          " */",
-          "Promise.prototype.finally = function(callback) {};",
-          "");
+      """
+
+      /**
+       * @typedef {{then: ?}}
+       */
+      var Thenable;
+
+
+      /**
+       * @interface
+       * @template TYPE
+       */
+      function IThenable() {}
+
+
+      /**
+       * @param {?(function(TYPE):VALUE)=} opt_onFulfilled
+       * @param {?(function(*): *)=} opt_onRejected
+       * @return {RESULT}
+       * @template VALUE
+       *
+       * @template RESULT := type('IThenable',
+       * cond(isUnknown(VALUE), unknown(),
+       * mapunion(VALUE, (V) =>
+       * cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
+       * templateTypeOf(V, 0),
+       * cond(sub(V, 'Thenable'),
+       * unknown(),
+       * V)))))
+       * =:
+       */
+      IThenable.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
+
+
+      /**
+       * @param {function(
+       * function((TYPE|IThenable<TYPE>|Thenable|null)=),
+       * function(*=))} resolver
+       * @constructor
+       * @implements {IThenable<TYPE>}
+       * @template TYPE
+       */
+      function Promise(resolver) {}
+
+
+      /**
+       * @param {VALUE=} opt_value
+       * @return {RESULT}
+       * @template VALUE
+       * @template RESULT := type('Promise',
+       * cond(isUnknown(VALUE), unknown(),
+       * mapunion(VALUE, (V) =>
+       * cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
+       * templateTypeOf(V, 0),
+       * cond(sub(V, 'Thenable'),
+       * unknown(),
+       * V)))))
+       * =:
+       */
+      Promise.resolve = function(opt_value) {};
+
+
+      /**
+       * @param {*=} opt_error
+       * @return {!Promise<?>}
+       */
+      Promise.reject = function(opt_error) {};
+
+
+      /**
+       * @param {!Iterable<VALUE>} iterable
+       * @return {!Promise<!Array<RESULT>>}
+       * @template VALUE
+       * @template RESULT := mapunion(VALUE, (V) =>
+       * cond(isUnknown(V),
+       * unknown(),
+       * cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
+       * templateTypeOf(V, 0),
+       * cond(sub(V, 'Thenable'), unknown(), V))))
+       * =:
+       */
+      Promise.all = function(iterable) {};
+
+
+      /**
+       * @param {!Iterable<VALUE>} iterable
+       * @return {!Promise<RESULT>}
+       * @template VALUE
+       * @template RESULT := mapunion(VALUE, (V) =>
+       * cond(isUnknown(V),
+       * unknown(),
+       * cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
+       * templateTypeOf(V, 0),
+       * cond(sub(V, 'Thenable'), unknown(), V))))
+       * =:
+       */
+      Promise.race = function(iterable) {};
+
+
+      /**
+       * @param {?(function(this:void, TYPE):VALUE)=} opt_onFulfilled
+       * @param {?(function(this:void, *): *)=} opt_onRejected
+       * @return {RESULT}
+       * @template VALUE
+       *
+       * @template RESULT := type('Promise',
+       * cond(isUnknown(VALUE), unknown(),
+       * mapunion(VALUE, (V) =>
+       * cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
+       * templateTypeOf(V, 0),
+       * cond(sub(V, 'Thenable'),
+       * unknown(),
+       * V)))))
+       * =:
+       * @override
+       */
+      Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
+
+
+      /**
+       * @param {function(*): RESULT} onRejected
+       * @return {!Promise<RESULT>}
+       * @template RESULT
+       */
+      Promise.prototype.catch = function(onRejected) {};
+
+
+      /**
+       * @param {function()} callback
+       * @return {!Promise<TYPE>}
+       */
+      Promise.prototype.finally = function(callback) {};
+      """;
 
   private static final String I_TEMPLATE_ARRAY_EXTERNS =
-      lines(
-          "/**",
-          " * @constructor",
-          " * @extends {Array<string>}",
-          " */",
-          "function ITemplateArray() {}");
+      """
+      /**
+       * @constructor
+       * @extends {Array<string>}
+       */
+      function ITemplateArray() {}\
+      """;
 
   private static final String ASYNC_ITERABLE_EXTERNS =
-      lines(
-          "/**",
-          " * @const {symbol}",
-          " */",
-          "Symbol.asyncIterator;",
-          "/**",
-          " * @interface",
-          " * @template T, TReturn, TNext",
-          " */",
-          "function AsyncIterator() {}",
-          "/**",
-          " * @param {?=} opt_value",
-          " * @return {!Promise<!IIterableResult<T>>}",
-          " */",
-          "AsyncIterator.prototype.next;",
-          "/**",
-          " * @interface",
-          " * @template T, TReturn, TNext",
-          " */",
-          "function AsyncIterable() {}",
-          "/**",
-          " * @return {!AsyncIterator<T,?,*>}",
-          " */",
-          "AsyncIterable.prototype[Symbol.asyncIterator] = function() {};",
-          "/**",
-          " * @interface",
-          " * @extends {AsyncIterator<T,?,*>}",
-          " * @extends {AsyncIterable<T,?,*>}",
-          " * @template T, TReturn, TNext",
-          " */",
-          "function AsyncIteratorIterable() {}",
-          "/**",
-          " * @interface",
-          " * @extends {AsyncIteratorIterable<T,?,*>}",
-          " * @template T, TReturn, TNext",
-          " */",
-          "function AsyncGenerator() {}",
-          "/**",
-          " * @param {?=} opt_value",
-          " * @return {!Promise<!IIterableResult<T>>}",
-          " * @override",
-          " */",
-          "AsyncGenerator.prototype.next = function(opt_value) {};",
-          "/**",
-          " * @param {T} value",
-          " * @return {!Promise<!IIterableResult<T>>}",
-          " */",
-          "AsyncGenerator.prototype.return = function(value) {};",
-          "/**",
-          " * @param {?} exception",
-          " * @return {!Promise<!IIterableResult<T>>}",
-          " */",
-          "AsyncGenerator.prototype.throw = function(exception) {};");
+      """
+      /**
+       * @const {symbol}
+       */
+      Symbol.asyncIterator;
+      /**
+       * @interface
+       * @template T, TReturn, TNext
+       */
+      function AsyncIterator() {}
+      /**
+       * @param {?=} opt_value
+       * @return {!Promise<!IIterableResult<T>>}
+       */
+      AsyncIterator.prototype.next;
+      /**
+       * @interface
+       * @template T, TReturn, TNext
+       */
+      function AsyncIterable() {}
+      /**
+       * @return {!AsyncIterator<T,?,*>}
+       */
+      AsyncIterable.prototype[Symbol.asyncIterator] = function() {};
+      /**
+       * @interface
+       * @extends {AsyncIterator<T,?,*>}
+       * @extends {AsyncIterable<T,?,*>}
+       * @template T, TReturn, TNext
+       */
+      function AsyncIteratorIterable() {}
+      /**
+       * @interface
+       * @extends {AsyncIteratorIterable<T,?,*>}
+       * @template T, TReturn, TNext
+       */
+      function AsyncGenerator() {}
+      /**
+       * @param {?=} opt_value
+       * @return {!Promise<!IIterableResult<T>>}
+       * @override
+       */
+      AsyncGenerator.prototype.next = function(opt_value) {};
+      /**
+       * @param {T} value
+       * @return {!Promise<!IIterableResult<T>>}
+       */
+      AsyncGenerator.prototype.return = function(value) {};
+      /**
+       * @param {?} exception
+       * @return {!Promise<!IIterableResult<T>>}
+       */
+      AsyncGenerator.prototype.throw = function(exception) {};\
+      """;
 
   // Test cases that perform transpilation of ES6 classes but use a non-injecting compiler need
   // these definitions.
   private static final String ES6_CLASS_TRANSPILATION_EXTERNS =
-      lines(
-          "var $jscomp = {};",
-          "",
-          "/**",
-          " * @param {?} subClass",
-          " * @param {?} superClass",
-          " * @return {?} newClass",
-          " */",
-          "$jscomp.inherits = function(subClass, superClass) {};",
-          "");
+      """
+      var $jscomp = {};
+
+      /**
+       * @param {?} subClass
+       * @param {?} superClass
+       * @return {?} newClass
+       */
+      $jscomp.inherits = function(subClass, superClass) {};
+      """;
 
   private static final String MATH_EXTERNS =
-      lines(
-          "", //
-          "/** @const */",
-          "var Math = {};",
-          "",
-          "/**",
-          " * @return {number}",
-          " * @nosideeffects",
-          " */",
-          "Math.random = function() {};",
-          "",
-          "/**",
-          " * @param {number} a",
-          " * @param {number} b",
-          " * @return {number}",
-          " * @nosideeffects",
-          " */",
-          "Math.max = function(a, b) {};",
-          "",
-          "/**",
-          " * @param {number} a",
-          " * @param {number} b",
-          " * @return {number}",
-          " * @nosideeffects",
-          " */",
-          "Math.min = function(a, b) {};",
-          "",
-          "/**",
-          " * @param {number} a",
-          " * @param {number} b",
-          " * @return {number}",
-          " * @nosideeffects",
-          " */",
-          "Math.pow = function(a, b) {};",
-          "");
+      """
+
+      /** @const */
+      var Math = {};
+
+      /**
+       * @return {number}
+       * @nosideeffects
+       */
+      Math.random = function() {};
+
+      /**
+       * @param {number} a
+       * @param {number} b
+       * @return {number}
+       * @nosideeffects
+       */
+      Math.max = function(a, b) {};
+
+      /**
+       * @param {number} a
+       * @param {number} b
+       * @return {number}
+       * @nosideeffects
+       */
+      Math.min = function(a, b) {};
+
+      /**
+       * @param {number} a
+       * @param {number} b
+       * @return {number}
+       * @nosideeffects
+       */
+      Math.pow = function(a, b) {};
+      """;
 
   private static final String REG_EXP_EXTERNS =
-      lines(
-          "/**",
-          " * @constructor",
-          " * @param {*=} opt_pattern",
-          " * @param {*=} opt_flags",
-          " * @return {!RegExp}",
-          " * @throws {SyntaxError} if opt_pattern is an invalid pattern.",
-          " */",
-          "function RegExp(opt_pattern, opt_flags) {}",
-          "/**",
-          " * @param {*} str The string to search.",
-          " * @return {?RegExpResult}",
-          " */",
-          "RegExp.prototype.exec = function(str) {};",
-          "/**",
-          " * @constructor",
-          " * @extends {Array<string>}",
-          " */",
-          "var RegExpResult = function() {};",
-          "/** @type {string} */",
-          "RegExp.$1;");
+      """
+      /**
+       * @constructor
+       * @param {*=} opt_pattern
+       * @param {*=} opt_flags
+       * @return {!RegExp}
+       * @throws {SyntaxError} if opt_pattern is an invalid pattern.
+       */
+      function RegExp(opt_pattern, opt_flags) {}
+      /**
+       * @param {*} str The string to search.
+       * @return {?RegExpResult}
+       */
+      RegExp.prototype.exec = function(str) {};
+      /**
+       * @constructor
+       * @extends {Array<string>}
+       */
+      var RegExpResult = function() {};
+      /** @type {string} */
+      RegExp.$1;\
+      """;
 
   private static final String HTML_ELEMENT_EXTERNS =
-      lines(
-          "/** @constructor */",
-          "function Node() {}",
-          "/** @constructor @extends {Node} */",
-          "function Element() {}",
-          "/** @constructor @extends {Element} */",
-          "function HTMLElement() {}");
+      """
+      /** @constructor */
+      function Node() {}
+      /** @constructor @extends {Node} */
+      function Element() {}
+      /** @constructor @extends {Element} */
+      function HTMLElement() {}\
+      """;
 
   private static final String POLYMER_EXTERNS =
-      lines(
-          "",
-          "/**",
-          " * @param {!Object} init",
-          " * @return {!function(new:HTMLElement)}",
-          " */",
-          "function Polymer(init) {}",
-          "",
-          "Polymer.ElementMixin = function(mixin) {}",
-          "",
-          "/** @typedef {!Object} */",
-          "var PolymerElementProperties;",
-          "",
-          "/** @interface */",
-          "function Polymer_ElementMixin() {}",
-          "/** @type {string} */",
-          "Polymer_ElementMixin.prototype._importPath;",
-          "",
-          "/**",
-          "* @interface",
-          "* @extends {Polymer_ElementMixin}",
-          "*/",
-          "function Polymer_LegacyElementMixin(){}",
-          "/** @type {boolean} */",
-          "Polymer_LegacyElementMixin.prototype.isAttached;",
-          "/**",
-          " * @constructor",
-          " * @extends {HTMLElement}",
-          " * @implements {Polymer_LegacyElementMixin}",
-          " */",
-          "var PolymerElement = function() {};", // Polymer 1
-          "",
-          "/** @constructor @extends {HTMLElement} */",
-          "Polymer.Element = function() {};", // Polymer 2
-          "");
+      """
+
+      /**
+       * @param {!Object} init
+       * @return {!function(new:HTMLElement)}
+       */
+      function Polymer(init) {}
+
+      Polymer.ElementMixin = function(mixin) {}
+
+      /** @typedef {!Object} */
+      var PolymerElementProperties;
+
+      /** @interface */
+      function Polymer_ElementMixin() {}
+      /** @type {string} */
+      Polymer_ElementMixin.prototype._importPath;
+
+      /**
+      * @interface
+      * @extends {Polymer_ElementMixin}
+      */
+      function Polymer_LegacyElementMixin(){}
+      /** @type {boolean} */
+      Polymer_LegacyElementMixin.prototype.isAttached;
+      /**
+       * @constructor
+       * @extends {HTMLElement}
+       * @implements {Polymer_LegacyElementMixin}
+       */
+      var PolymerElement = function() {};  // Polymer 1
+
+      /** @constructor @extends {HTMLElement} */
+      Polymer.Element = function() {};  // Polymer 2
+      """;
 
   private boolean includeBigIntExterns = false;
   private boolean includeIterableExterns = false;
@@ -1230,12 +1230,12 @@ public class TestExternsBuilder {
   public String build() {
     List<String> externSections = new ArrayList<>();
     externSections.add(
-        lines(
-            "/**", //
-            " * @fileoverview",
-            " * @externs",
-            " */",
-            ""));
+        """
+        /**
+         * @fileoverview
+         * @externs
+         */
+        """);
     if (includeBigIntExterns) {
       externSections.add(BIGINT_EXTERNS);
     }
@@ -1303,7 +1303,7 @@ public class TestExternsBuilder {
       externSections.add(POLYMER_EXTERNS);
     }
     externSections.addAll(extraExterns);
-    return LINE_JOINER.join(externSections);
+    return Joiner.on('\n').join(externSections);
   }
 
   public SourceFile buildExternsFile(String filePath) {
