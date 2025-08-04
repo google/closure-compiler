@@ -52,12 +52,10 @@ import com.google.javascript.rhino.jstype.JSType.Nullability;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.KnownSymbolType;
 import com.google.javascript.rhino.jstype.NamedType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.Property.OwnedProperty;
-import com.google.javascript.rhino.jstype.Property.StringKey;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
@@ -950,20 +948,13 @@ class TypeValidator implements Serializable {
   private void expectInterfaceProperties(
       Node n, ObjectType instance, ObjectType ancestorInterface) {
     // Case: `/** @interface */ class Foo { constructor() { this.prop; } }`
-    for (String prop : ancestorInterface.getOwnPropertyNames()) {
-      expectInterfaceProperty(n, instance, ancestorInterface, new StringKey(prop));
-    }
-    for (KnownSymbolType symbol : ancestorInterface.getOwnPropertyKnownSymbols()) {
-      expectInterfaceProperty(n, instance, ancestorInterface, new Property.SymbolKey(symbol));
+    for (Property.Key prop : ancestorInterface.getOwnPropertyKeys()) {
+      expectInterfaceProperty(n, instance, ancestorInterface, prop);
     }
     if (ancestorInterface.getImplicitPrototype() != null) {
       // Case: `/** @interface */ class Foo { prop() { } }`
-      for (String prop : ancestorInterface.getImplicitPrototype().getOwnPropertyNames()) {
-        expectInterfaceProperty(n, instance, ancestorInterface, new StringKey(prop));
-      }
-      for (KnownSymbolType symbol :
-          ancestorInterface.getImplicitPrototype().getOwnPropertyKnownSymbols()) {
-        expectInterfaceProperty(n, instance, ancestorInterface, new Property.SymbolKey(symbol));
+      for (Property.Key prop : ancestorInterface.getImplicitPrototype().getOwnPropertyKeys()) {
+        expectInterfaceProperty(n, instance, ancestorInterface, prop);
       }
     }
   }
@@ -1049,7 +1040,7 @@ class TypeValidator implements Serializable {
   void expectAbstractMethodsImplemented(Node n, FunctionType ctorType) {
     checkArgument(ctorType.isConstructor());
 
-    Map<String, ObjectType> abstractMethodSuperTypeMap = new LinkedHashMap<>();
+    Map<Property.Key, ObjectType> abstractMethodSuperTypeMap = new LinkedHashMap<>();
     FunctionType currSuperCtor = ctorType.getSuperClassConstructor();
     if (currSuperCtor == null || !currSuperCtor.isAbstract()) {
       return;
@@ -1057,7 +1048,7 @@ class TypeValidator implements Serializable {
 
     while (currSuperCtor != null && currSuperCtor.isAbstract()) {
       ObjectType superType = currSuperCtor.getInstanceType();
-      for (String prop : currSuperCtor.getPrototype().getOwnPropertyNames()) {
+      for (Property.Key prop : currSuperCtor.getPrototype().getOwnPropertyKeys()) {
         FunctionType maybeAbstractMethod = superType.findPropertyType(prop).toMaybeFunctionType();
         if (maybeAbstractMethod != null
             && maybeAbstractMethod.isAbstract()
@@ -1070,7 +1061,7 @@ class TypeValidator implements Serializable {
 
     ObjectType instance = ctorType.getInstanceType();
     for (var entry : abstractMethodSuperTypeMap.entrySet()) {
-      String method = entry.getKey();
+      Property.Key method = entry.getKey();
       ObjectType superType = entry.getValue();
       FunctionType abstractMethod = instance.findPropertyType(method).toMaybeFunctionType();
       if (abstractMethod == null || abstractMethod.isAbstract()) {
@@ -1080,7 +1071,7 @@ class TypeValidator implements Serializable {
             JSError.make(
                 n,
                 ABSTRACT_METHOD_NOT_IMPLEMENTED,
-                method,
+                method.humanReadableName(),
                 superType.toString(),
                 instance.toString()));
       }

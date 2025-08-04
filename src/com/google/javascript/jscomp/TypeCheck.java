@@ -2499,19 +2499,19 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void checkInterfaceConflictProperties(
       Node n,
       String functionName,
-      Map<String, ObjectType> properties,
-      Map<String, ObjectType> currentProperties,
+      Map<Property.Key, ObjectType> properties,
+      Map<Property.Key, ObjectType> currentProperties,
       ObjectType interfaceType) {
     ObjectType implicitProto = interfaceType.getImplicitPrototype();
-    Set<String> currentPropertyNames;
+    ImmutableSet<Property.Key> currentPropertyNames;
     if (implicitProto == null) {
       // This can be the case if interfaceType is proxy to a non-existent
       // object (which is a bad type annotation, but shouldn't crash).
       currentPropertyNames = ImmutableSet.of();
     } else {
-      currentPropertyNames = implicitProto.getOwnPropertyNames();
+      currentPropertyNames = implicitProto.getOwnPropertyKeys();
     }
-    for (String name : currentPropertyNames) {
+    for (Property.Key name : currentPropertyNames) {
       ObjectType oType = properties.get(name);
       currentProperties.put(name, interfaceType);
       if (oType != null) {
@@ -2531,7 +2531,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
                 n,
                 INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
                 functionName,
-                name,
+                name.humanReadableName(),
                 oType.toString(),
                 interfaceType.toString()));
       }
@@ -2695,8 +2695,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // Check whether the extended interfaces have any conflicts
     if (functionType.getExtendedInterfacesCount() > 1) {
       // Only check when extending more than one interfaces
-      LinkedHashMap<String, ObjectType> properties = new LinkedHashMap<>();
-      LinkedHashMap<String, ObjectType> currentProperties = new LinkedHashMap<>();
+      LinkedHashMap<Property.Key, ObjectType> properties = new LinkedHashMap<>();
+      LinkedHashMap<Property.Key, ObjectType> currentProperties = new LinkedHashMap<>();
       for (ObjectType interfaceType : functionType.getExtendedInterfaces()) {
         currentProperties.clear();
         checkInterfaceConflictProperties(

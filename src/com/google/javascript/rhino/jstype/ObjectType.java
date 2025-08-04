@@ -54,7 +54,6 @@ import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.Property.OwnedProperty;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
@@ -672,6 +671,22 @@ public abstract class ObjectType extends JSType {
     // but currently it does not.  Check if this is a constructor and add them, but
     // this could possibly break things so it should be done separately.
     return getPropertyMap().getOwnPropertyNames();
+  }
+
+  /**
+   * Returns the names of all the properties directly on this type.
+   */
+  public final ImmutableSet<Property.Key> getOwnPropertyKeys() {
+    Set<String> ownPropertyNames = this.getOwnPropertyNames();
+    Set<KnownSymbolType> ownSymbols = this.getOwnPropertyKnownSymbols();
+    ImmutableSet.Builder<Property.Key> ownPropertyKeys = ImmutableSet.builder();
+    for (String propertyName : ownPropertyNames) {
+      ownPropertyKeys.add(new Property.StringKey(propertyName));
+    }
+    for (KnownSymbolType symbol : ownSymbols) {
+      ownPropertyKeys.add(new Property.SymbolKey(symbol));
+    }
+    return ownPropertyKeys.build();
   }
 
   /**

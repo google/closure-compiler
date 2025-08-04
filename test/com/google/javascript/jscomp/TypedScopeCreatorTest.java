@@ -57,6 +57,7 @@ import com.google.javascript.rhino.jstype.JSTypeResolver;
 import com.google.javascript.rhino.jstype.KnownSymbolType;
 import com.google.javascript.rhino.jstype.NamedType;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.Property;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
@@ -3336,6 +3337,37 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertType(foo.getInstanceType())
         .withTypeOfProp(symbolDisposeType)
         .toStringIsEqualTo("function(this:Foo): symbol");
+  }
+
+  @Test
+  public void testClassWithWellKnownSymbolTypedMethod_abstract() {
+    testSame(
+        externs(
+            new TestExternsBuilder().addIterable().build(),
+            """
+            /** @const {symbol}  */
+            Symbol.dispose;
+            """),
+        srcs(
+            """
+            /** @abstract */
+            class Foo {
+              /**
+               * @param {string} x
+               * @param {number} y
+               * @abstract
+               */
+              [Symbol.iterator](x, y) {}
+            }
+            """));
+
+    FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
+    KnownSymbolType symbolIteratorType =
+        (KnownSymbolType) findNameType("Symbol.iterator", globalScope);
+    assertType(foo.getInstanceType()).hasProperty(symbolIteratorType);
+    assertType(foo.getInstanceType().getPropertyType(new Property.SymbolKey(symbolIteratorType)))
+        .isFunctionTypeThat()
+        .isAbstract();
   }
 
   @Test

@@ -454,6 +454,21 @@ public final class TypeCheckAbstractClassesAndMethodsTest {
   }
 
   @Test
+  public void testAbstractMethodInEs6NotImplemented_symbolProp() {
+    newTest()
+        .addSource(
+            """
+            /** @abstract */ class A {
+              /** @abstract */ [Symbol.iterator]() {}
+            }
+            class B extends A {}
+            """)
+        .addDiagnostic("property Symbol.iterator on abstract class A is not implemented by type B")
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
   public void testAbstractMethodHandling1() {
     newTest()
         .addSource(
@@ -603,6 +618,35 @@ public final class TypeCheckAbstractClassesAndMethodsTest {
         .addDiagnostic(
 """
 mismatch of the foo property on type Baz and the type of the property it overrides from interface IFoo
+original: function(this:IFoo): number
+override: function(this:Foo): string
+""")
+        .run();
+  }
+
+  @Test
+  public void testOverriddenReturnDoesntMatchOnAbstractClass_symbolProp() {
+    newTest()
+        .addSource(
+            """
+            /** @interface */ function IFoo() {}
+            /** @return {number} */ IFoo.prototype[Symbol.iterator] = function() {}
+            /** @constructor */ function Foo() {}
+            /** @return {string} */ Foo.prototype[Symbol.iterator] = function() {}
+            /** @constructor @extends {Foo} */ function Bar() {}
+            /**
+             * @constructor
+             * @abstract
+             * @extends {Bar}
+             * @implements {IFoo}
+             */
+            function Baz() {}
+            /** @return {string} */
+            function test() { return (/** @type {Baz} */ (null))[Symbol.iterator](); }
+            """)
+        .addDiagnostic(
+"""
+mismatch of the Symbol.iterator property on type Baz and the type of the property it overrides from interface IFoo
 original: function(this:IFoo): number
 override: function(this:Foo): string
 """)

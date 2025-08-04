@@ -349,6 +349,10 @@ public final class TypeSubject extends Subject {
           .isEqualTo(name);
     }
 
+    public void isAbstract() {
+      check("isAbstract()").that(actualFunctionType().isAbstract()).isTrue();
+    }
+
     public void hasPrimitiveId(ClosurePrimitive id) {
       check("getClosurePrimitive()")
           .that(actualNonNull().toMaybeFunctionType().getClosurePrimitive())
