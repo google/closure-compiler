@@ -58,6 +58,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
@@ -1536,10 +1537,10 @@ public abstract class CompilerTestCase {
           .that(scriptNode)
           .isNotNull();
       assertWithMessage("Missing line number in warning: " + jserror)
-          .that(-1 != jserror.getLineNumber())
+          .that(jserror.lineno() != -1)
           .isTrue();
       assertWithMessage("Missing char number in warning: " + jserror)
-          .that(-1 != jserror.charno())
+          .that(jserror.charno() != -1)
           .isTrue();
     }
   }
@@ -1898,7 +1899,7 @@ public abstract class CompilerTestCase {
       } else if (part instanceof Postcondition postcondition) {
         postconditions.add(postcondition);
       } else {
-        throw new IllegalStateException("unexepected " + part.getClass().getName());
+        throw new IllegalStateException("unexpected " + part.getClass().getName());
       }
     }
     if (EXPECTED_SAME.equals(expected)) {
@@ -1983,26 +1984,52 @@ public abstract class CompilerTestCase {
     final CheckLevel level;
     final DiagnosticType diagnostic;
     final NamedPredicate<String> messagePredicate;
+    final int line;
+    final int charno;
+    final int length;
 
     Diagnostic(
         CheckLevel level,
         DiagnosticType diagnostic,
         @Nullable NamedPredicate<String> messagePredicate) {
+      this(level, diagnostic, messagePredicate, -1, -1, -1);
+    }
+
+    Diagnostic(
+        CheckLevel level,
+        DiagnosticType diagnostic,
+        @Nullable NamedPredicate<String> messagePredicate,
+        int line,
+        int charno,
+        int length) {
       this.level = level;
       this.diagnostic = diagnostic;
       this.messagePredicate = messagePredicate;
+      this.line = line;
+      this.charno = charno;
+      this.length = length;
     }
 
-    private boolean matches(JSError error) {
-      return Objects.equals(diagnostic, error.type())
-          && (messagePredicate == null || messagePredicate.apply(error.description()));
-    }
-
-    private String formatDiff(JSError error) {
+    private Optional<String> formatDiff(JSError error) {
       if (!Objects.equals(diagnostic, error.type())) {
-        return "diagnostic type " + error.type().key + " did not match";
+        return Optional.of(
+            String.format(
+                "diagnostic type <%s> did not match <%s>", error.type().key, diagnostic.key));
       }
-      return "message \"" + error.description() + "\" was not " + messagePredicate;
+      if (messagePredicate != null && !messagePredicate.apply(error.description())) {
+        return Optional.of(
+            String.format("message <%s> was not <%s>", error.description(), messagePredicate));
+      }
+      if (line != -1 && error.lineno() != line) {
+        return Optional.of(String.format("line <%d> did not match <%d>", error.lineno(), line));
+      }
+      if (charno != -1 && error.charno() != charno) {
+        return Optional.of(String.format("charno <%d> did not match <%d>", error.charno(), charno));
+      }
+      if (length != -1 && error.length() != length) {
+        return Optional.of(String.format("length <%d> did not match <%d>", error.length(), length));
+      }
+      return Optional.empty();
     }
 
     public Diagnostic withMessage(final String expectedRaw) {
@@ -2021,6 +2048,10 @@ public abstract class CompilerTestCase {
           diagnostic,
           NamedPredicate.of(
               message -> message.contains(substring), "containing \"" + substring + "\""));
+    }
+
+    public Diagnostic withLocation(int line, int charno, int length) {
+      return new Diagnostic(level, diagnostic, messagePredicate, line, charno, length);
     }
 
     @Override
@@ -2043,9 +2074,9 @@ public abstract class CompilerTestCase {
 
   private static final Correspondence<JSError, Diagnostic> DIAGNOSTIC_CORRESPONDENCE =
       Correspondence.from(
-              (JSError actual, Diagnostic expected) -> expected.matches(actual),
+              (JSError actual, Diagnostic expected) -> expected.formatDiff(actual).isEmpty(),
               "is a JSError matching")
-          .formattingDiffsUsing((actual, expected) -> expected.formatDiff(actual));
+          .formattingDiffsUsing((actual, expected) -> expected.formatDiff(actual).get());
 
   private static class NamedPredicate<T> implements Predicate<T> {
     final Predicate<T> delegate;
