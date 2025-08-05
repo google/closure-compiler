@@ -40,6 +40,7 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Precision;
 import com.google.javascript.jscomp.Compiler.ScriptNodeLicensesOnlyTracker;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.SegmentOfCompilationToRun;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.serialization.AstNode;
 import com.google.javascript.jscomp.serialization.LazyAst;
@@ -539,6 +540,49 @@ public final class CompilerTest {
         SourceFile.fromCode("extern.js", ""), SourceFile.fromCode("test.js", badJsDoc), options);
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(compiler.getErrors()).hasSize(1);
+  }
+
+  @Test
+  public void testArtificialFunctionValidation_defaultsToOnIfEnablesDiambiguateProperties() {
+    Compiler compiler = new Compiler();
+    CompilerOptions options = createNewFlagBasedOptions();
+    options.setDisambiguateProperties(true);
+    compiler.initOptions(options);
+
+    assertThat(
+            options
+                .getWarningsGuard()
+                .mustRunChecks(DiagnosticGroups.ARTIFICIAL_FUNCTION_PURITY_VALIDATION))
+        .isEqualTo(Tri.TRUE);
+  }
+
+  @Test
+  public void testArtificialFunctionValidation_canOverrideDefault() {
+    Compiler compiler = new Compiler();
+    CompilerOptions options = createNewFlagBasedOptions();
+    options.setDisambiguateProperties(true);
+    options.setWarningLevel(DiagnosticGroups.ARTIFICIAL_FUNCTION_PURITY_VALIDATION, CheckLevel.OFF);
+    compiler.initOptions(options);
+
+    assertThat(
+            options
+                .getWarningsGuard()
+                .mustRunChecks(DiagnosticGroups.ARTIFICIAL_FUNCTION_PURITY_VALIDATION))
+        .isEqualTo(Tri.FALSE);
+  }
+
+  @Test
+  public void testArtificialFunctionValidation_defaultBehaviorWhenDisambiguateDisabled() {
+    Compiler compiler = new Compiler();
+    CompilerOptions options = createNewFlagBasedOptions();
+    options.setDisambiguateProperties(false);
+    compiler.initOptions(options);
+
+    assertThat(
+            options
+                .getWarningsGuard()
+                .mustRunChecks(DiagnosticGroups.ARTIFICIAL_FUNCTION_PURITY_VALIDATION))
+        .isEqualTo(Tri.UNKNOWN);
   }
 
   @Test

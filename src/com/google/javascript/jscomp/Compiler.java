@@ -51,6 +51,7 @@ import com.google.javascript.jscomp.JSChunkGraph.ChunkDependenceException;
 import com.google.javascript.jscomp.JSChunkGraph.MissingChunkException;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.SortingErrorManager.ErrorReportGenerator;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.deps.BrowserModuleResolver;
 import com.google.javascript.jscomp.deps.BrowserWithTransformedPrefixesModuleResolver;
@@ -574,6 +575,21 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // explicitly enables missing-provide checks.
     if (options.skipNonTranspilationPasses && !options.enables(DiagnosticGroups.MISSING_PROVIDE)) {
       options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.OFF);
+    }
+
+    // The default warning level of ARTIFICIAL_FUNCTION_PURITY_VALIDATION varies with whether or not
+    // property disambiguation is enabled: if yes, it defaults to ERROR; if no, it defaults to OFF.
+    // This is because without property disambiguation, it's often impossible for the compiler to
+    // enforce function purity; and we expect projects that are code-size-sensitive enough to care
+    // to have disambiguation already enabled.
+    // We still want to allow individual projects to explicitly disable or enable this error.
+    if (options.shouldDisambiguateProperties()
+        && options
+            .getWarningsGuard()
+            .mustRunChecks(DiagnosticGroups.ARTIFICIAL_FUNCTION_PURITY_VALIDATION)
+            .equals(Tri.UNKNOWN)) {
+      options.setWarningLevel(
+          DiagnosticGroups.ARTIFICIAL_FUNCTION_PURITY_VALIDATION, CheckLevel.ERROR);
     }
   }
 
