@@ -3349,7 +3349,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             """)
         .addDiagnostic(
             """
-            variable b redefined with type String, original definition at [testcode]:1 with type (Number|null)
+            variable b redefined with type String, original definition at testcode0:1 with type (Number|null)
             """)
         .run();
   }
@@ -3360,7 +3360,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource("/** @type{Number}*/var b; if (true) /** @type{!String} */var b;")
         .addDiagnostic(
             """
-            variable b redefined with type String, original definition at [testcode]:1 with type (Number|null)
+            variable b redefined with type String, original definition at testcode0:1 with type (Number|null)
             """)
         .run();
   }
@@ -4656,7 +4656,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             /** @param {number} x */ goog.foo = function(x) {};
             /** @param {number} x */ goog.foo = function(x) {};
             """)
-        .addDiagnostic("variable goog.foo redefined, original definition at [testcode]:2")
+        .addDiagnostic("variable goog.foo redefined, original definition at testcode0:2")
         .run();
   }
 
@@ -4707,7 +4707,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             goog.foo = function(x) {};
             /** @return {undefined} */ goog.foo = function(x) {};
             """)
-        .addDiagnostic("variable goog.foo redefined, original definition at [testcode]:2")
+        .addDiagnostic("variable goog.foo redefined, original definition at testcode0:2")
         .run();
   }
 
@@ -4793,7 +4793,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             """)
         .addDiagnostic(
             """
-            variable goog.foo redefined with type string, original definition at [testcode]:2 with type Foo
+            variable goog.foo redefined with type string, original definition at testcode0:2 with type Foo
             """)
         .run();
   }
@@ -5644,7 +5644,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 """
                 actual parameter 1 of f does not match formal parameter
                 found   : (number|string)
-                required: null at [testcode] line 4 : 6
+                required: null at testcode0 line 4 : 6
                 """))
         .run();
   }
@@ -5664,7 +5664,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 """
                 initializing variable
                 found   : string
-                required: None at [testcode] line 1 : 114
+                required: None at testcode0 line 1 : 114
                 """))
         .run();
   }
@@ -5684,7 +5684,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 """
                 initializing variable
                 found   : (string|undefined)
-                required: None at [testcode] line 1 : 114
+                required: None at testcode0 line 1 : 114
                 """))
         .run();
   }
@@ -5704,7 +5704,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 """
                 initializing variable
                 found   : (boolean|number|string)
-                required: None at [testcode] line 1 : 114
+                required: None at testcode0 line 1 : 114
                 """))
         .run();
   }
@@ -5724,7 +5724,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 """
                 initializing variable
                 found   : string
-                required: None at [testcode] line 1 : 114
+                required: None at testcode0 line 1 : 114
                 """))
         .run();
   }
@@ -5744,7 +5744,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 """
                 initializing variable
                 found   : (string|undefined)
-                required: None at [testcode] line 1 : 114
+                required: None at testcode0 line 1 : 114
                 """))
         .run();
   }
@@ -5764,7 +5764,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 """
                 initializing variable
                 found   : (boolean|number|string)
-                required: None at [testcode] line 1 : 114
+                required: None at testcode0 line 1 : 114
                 """))
         .run();
   }
@@ -6107,7 +6107,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testEnum3() {
     newTest()
         .addSource("/**@enum*/var a={BB:1,BB:2}")
-        .addDiagnostic("variable a.BB redefined, original definition at [testcode]:1")
+        .addDiagnostic("variable a.BB redefined, original definition at testcode0:1")
         .run();
   }
 
@@ -6293,7 +6293,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             var goog = {};
             /**@enum*/goog .a={BB:1,BB:2}
             """)
-        .addDiagnostic("variable goog.a.BB redefined, original definition at [testcode]:2")
+        .addDiagnostic("variable goog.a.BB redefined, original definition at testcode0:2")
         .run();
   }
 
@@ -9169,7 +9169,7 @@ override: function(): string
              */
             ns.A = function() {};
             """)
-        .addDiagnostic("variable ns.A redefined, original definition at [testcode]:6")
+        .addDiagnostic("variable ns.A redefined, original definition at testcode0:6")
         .run();
   }
 
@@ -19947,7 +19947,7 @@ override: function(this:Foo): number
             """)
         .addDiagnostic(
             """
-            variable goog.Bar redefined with type None, original definition at [testcode]:2 with type (typeof goog.Bar)
+            variable goog.Bar redefined with type None, original definition at testcode0:2 with type (typeof goog.Bar)
             """)
         .run();
   }
@@ -22074,7 +22074,7 @@ override: function(this:Foo): number
             """)
         .addDiagnostic(
             """
-            variable T redefined with type undefined, original definition at [testcode]:5 with type T
+            variable T redefined with type undefined, original definition at testcode0:5 with type T
             """)
         .run();
   }
@@ -25513,7 +25513,7 @@ override: number
             /** @return {(B|A|C)} */
             function fun () {}
             """)
-        .addDiagnostic("variable fun redefined, original definition at [testcode]:14")
+        .addDiagnostic("variable fun redefined, original definition at testcode0:14")
         .run();
   }
 
@@ -25540,7 +25540,7 @@ override: number
             """)
         .addDiagnostic(
             """
-            variable ns.x redefined with type {x: string}, original definition at [testcode]:2 with type {x: number}
+            variable ns.x redefined with type {x: string}, original definition at testcode0:2 with type {x: number}
             """)
         .run();
   }
@@ -25559,7 +25559,7 @@ override: number
             variable ns.x redefined with type {
               x: number,
               y: boolean
-            }, original definition at [testcode]:2 with type {x: number}
+            }, original definition at testcode0:2 with type {x: number}
             """)
         .run();
   }
@@ -25577,7 +25577,7 @@ override: number
             """)
         .addDiagnostic(
             """
-            variable ns.x redefined with type rec4, original definition at [testcode]:4 with type rec3
+            variable ns.x redefined with type rec4, original definition at testcode0:4 with type rec3
             """)
         .run();
   }
@@ -25596,7 +25596,7 @@ override: number
             """)
         .addDiagnostic(
             """
-            variable ns.x redefined with type rec4, original definition at [testcode]:5 with type rec3
+            variable ns.x redefined with type rec4, original definition at testcode0:5 with type rec3
             """)
         .run();
   }
@@ -25615,7 +25615,7 @@ override: number
             """)
         .addDiagnostic(
             """
-            variable ns.x redefined with type rec4, original definition at [testcode]:5 with type rec3
+            variable ns.x redefined with type rec4, original definition at testcode0:5 with type rec3
             """)
         .run();
   }
@@ -25657,11 +25657,11 @@ override: number
             """)
         .addDiagnostic(
             """
-            variable ns.x redefined with type {prop: number}, original definition at [testcode]:5 with type rec
+            variable ns.x redefined with type {prop: number}, original definition at testcode0:5 with type rec
             """)
         .addDiagnostic(
             """
-            variable ns.y redefined with type rec, original definition at [testcode]:8 with type {prop: number}
+            variable ns.y redefined with type rec, original definition at testcode0:8 with type {prop: number}
             """)
         .run();
   }
@@ -25683,11 +25683,11 @@ override: number
             """)
         .addDiagnostic(
             """
-            variable ns.x redefined with type {prop: string}, original definition at [testcode]:5 with type rec
+            variable ns.x redefined with type {prop: string}, original definition at testcode0:5 with type rec
             """)
         .addDiagnostic(
             """
-            variable ns.y redefined with type rec, original definition at [testcode]:8 with type {prop: number}
+            variable ns.y redefined with type rec, original definition at testcode0:8 with type {prop: number}
             """)
         .run();
   }
@@ -25709,11 +25709,11 @@ override: number
             """)
         .addDiagnostic(
             """
-            variable ns.x redefined with type {prop: string}, original definition at [testcode]:5 with type rec
+            variable ns.x redefined with type {prop: string}, original definition at testcode0:5 with type rec
             """)
         .addDiagnostic(
             """
-            variable ns.y redefined with type rec, original definition at [testcode]:8 with type {prop: number}
+            variable ns.y redefined with type rec, original definition at testcode0:8 with type {prop: number}
             """)
         .run();
   }
@@ -25734,7 +25734,7 @@ override: number
             """)
         .addDiagnostic(
             """
-            variable ns.x redefined with type {prop: (I|null)}, original definition at [testcode]:7 with type rec
+            variable ns.x redefined with type {prop: (I|null)}, original definition at testcode0:7 with type rec
             """)
         .run();
   }
@@ -25755,7 +25755,7 @@ override: number
             """)
         .addDiagnostic(
             """
-            variable ns.x redefined with type {prop: (I<number>|null)}, original definition at [testcode]:7 with type rec
+            variable ns.x redefined with type {prop: (I<number>|null)}, original definition at testcode0:7 with type rec
             """)
         .run();
   }
@@ -25776,7 +25776,7 @@ override: number
             """)
         .addDiagnostic(
             """
-            variable ns.x redefined with type {prop: (I<string>|null)}, original definition at [testcode]:7 with type rec
+            variable ns.x redefined with type {prop: (I<string>|null)}, original definition at testcode0:7 with type rec
             """)
         .run();
   }
@@ -25797,7 +25797,7 @@ override: number
             """)
         .addDiagnostic(
             """
-            variable ns.x redefined with type {value: string}, original definition at [testcode]:5 with type (null|rec<string>)
+            variable ns.x redefined with type {value: string}, original definition at testcode0:5 with type (null|rec<string>)
             """)
         .run();
   }
@@ -27867,7 +27867,7 @@ required: string
         .addDiagnostic(
             """
             actual parameter 1 of f does not match formal parameter
-            found   : {g: (typeof <anonymous@[testcode]:2>)}
+            found   : {g: (typeof <anonymous@testcode0:2>)}
             required: {g: function(): string}
             missing : []
             mismatch: [g]
@@ -28984,6 +28984,7 @@ It's possible that a local variable called 'service' is shadowing the intended g
     // thinking it can handle this type.
     newTestLegacy() // using the legacy method so we can access compiler.getTopScope() later.
         .addSource(
+            "testcode0.closure.js",
             """
             /** @fileoverview @suppress {checkTypes} */
             class Foo {}
@@ -28994,7 +28995,6 @@ It's possible that a local variable called 'service' is shadowing the intended g
              */
             class FooBar {}
             """)
-        .usingSourceNameExtension(".closure.js")
         .run();
 
     FunctionType fooBar = compiler.getTopScope().getVar("FooBar").getType().assertFunctionType();

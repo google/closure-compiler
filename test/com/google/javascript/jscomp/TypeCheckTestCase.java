@@ -96,9 +96,8 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
 
   @CheckReturnValue
   public static final class TypeTestBuilder {
-    private String source;
+    private final List<SourceFile> sources = new ArrayList<>();
     private final List<String> externs = new ArrayList<>();
-    private String sourceNameExtension = "";
     private boolean includeDefaultExterns = false;
     private final ArrayList<DiagnosticType> diagnosticTypes = new ArrayList<>();
     private final ArrayList<String> diagnosticDescriptions = new ArrayList<>();
@@ -125,28 +124,30 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
       this.compiler = compiler;
     }
 
-    public TypeTestBuilder addSource(String source) {
-      checkState(this.source == null, "Can only have one source right now.");
-      this.source = source;
+    @CanIgnoreReturnValue
+    public TypeTestBuilder addSource(String code) {
+      return addSource("testcode" + sources.size(), code);
+    }
+
+    @CanIgnoreReturnValue
+    public TypeTestBuilder addSource(String filename, String code) {
+      this.sources.add(SourceFile.fromCode(filename, code));
       return this;
     }
 
+    @CanIgnoreReturnValue
     public TypeTestBuilder addExterns(String externs) {
       this.externs.add(externs);
       return this;
     }
 
     @CanIgnoreReturnValue
-    public TypeTestBuilder usingSourceNameExtension(String extension) {
-      this.sourceNameExtension = extension;
-      return this;
-    }
-
     public TypeTestBuilder includeDefaultExterns() {
       this.includeDefaultExterns = true;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public TypeTestBuilder diagnosticsAreErrors() {
       this.diagnosticsAreErrors = true;
       return this;
@@ -164,6 +165,7 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
       return this;
     }
 
+    @CanIgnoreReturnValue
     public TypeTestBuilder addDiagnostic(DiagnosticType x) {
       this.diagnosticTypes.add(x);
       return this;
@@ -176,10 +178,7 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     }
 
     public void run() {
-      checkState(
-          this.diagnosticTypes.isEmpty() || this.diagnosticDescriptions.isEmpty(),
-          "Cannot expect both diagnostic types and diagnostic descriptions");
-      checkState(this.source != null, "Must provide source");
+      checkState(!this.sources.isEmpty(), "Must provide a source");
       checkState(!this.hasRun, "Cannot run the same test twice");
       this.hasRun = true;
       if (this.includeDefaultExterns) {
@@ -201,8 +200,7 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
         compiler.getOptions().setWarningLevel(suppress, CheckLevel.OFF);
       }
 
-      parseAndTypeCheckWithScope(
-          compiler, allExterns, this.source, sourceNameExtension, reportUnknownTypes);
+      parseAndTypeCheckWithScope(compiler, allExterns, this.sources, reportUnknownTypes);
 
       final ImmutableList<JSError> assertedErrors;
       final ImmutableList<JSError> emptyErrors;
@@ -255,19 +253,19 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
   @CanIgnoreReturnValue
   protected TypeCheckResult parseAndTypeCheckWithScope(
       String externs, String js, String sourceNameExtension) {
-    return parseAndTypeCheckWithScope(compiler, externs, js, sourceNameExtension, false);
+    return parseAndTypeCheckWithScope(
+        compiler,
+        externs,
+        ImmutableList.of(SourceFile.fromCode("[testcode]" + sourceNameExtension, js)),
+        false);
   }
 
   @CanIgnoreReturnValue
   protected static TypeCheckResult parseAndTypeCheckWithScope(
-      Compiler compiler,
-      String externs,
-      String js,
-      String sourceNameExtension,
-      boolean reportUnknownTypes) {
+      Compiler compiler, String externs, List<SourceFile> sources, boolean reportUnknownTypes) {
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("[externs]", externs)),
-        ImmutableList.of(SourceFile.fromCode("[testcode]" + sourceNameExtension, js)),
+        sources,
         compiler.getOptions());
     compiler.parse();
 

@@ -3523,7 +3523,7 @@ public final class TypeCheckNoTranspileTest {
         .addDiagnostic(
             """
             actual parameter 1 of foo does not match formal parameter
-            found   : (typeof <anonymous@[testcode]:3>)
+            found   : (typeof <anonymous@testcode0:3>)
             required: function(new:Foo): ?
             """)
         .run();
@@ -8248,7 +8248,7 @@ override: function(this:Bar, number): undefined
             """)
         .addDiagnostic(
             """
-            assignment to property str of <anonymous@[testcode]:9>
+            assignment to property str of <anonymous@testcode0:9>
             found   : number
             required: string
             """)
@@ -8275,7 +8275,7 @@ override: function(this:Bar, number): undefined
             """)
         .addDiagnostic(
             """
-            assignment to property str of <anonymous@[testcode]:9>
+            assignment to property str of <anonymous@testcode0:9>
             found   : number
             required: string
             """)
