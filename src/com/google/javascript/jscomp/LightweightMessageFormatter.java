@@ -191,7 +191,7 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
         // charno == sourceExcerpt.length() means something is missing
         // at the end of the line
         if (format.equals(LINE) && 0 <= charno && charno <= sourceExcerpt.length()) {
-          padLine(charno, sourceExcerpt, b, length, error.node());
+          padLine(error, charno, sourceExcerpt, b, length, error.node());
         }
       }
     }
@@ -213,7 +213,20 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
   }
 
   private void padLine(
-      int charno, String sourceExcerpt, StringBuilder b, int errLength, Node errorNode) {
+      JSError error,
+      int charno,
+      String sourceExcerpt,
+      StringBuilder b,
+      int errLength,
+      Node errorNode) {
+    // This can occur when somehow code is requesting to "pad" a line that is shorter than the
+    // starting charno where we will insert '^' characters.
+    // This typically indicates a bug somewhere else in the compiler, and by using checkState we
+    // will automatically report a user-"friendly" message that asks them to file a bug.
+    checkState(
+        charno <= sourceExcerpt.length(),
+        "Cannot format source excerpt; unexpected start character for error:\n %s",
+        error);
     // Append leading whitespace
     for (int i = 0; i < charno; i++) {
       char c = sourceExcerpt.charAt(i);
@@ -247,11 +260,7 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
       b.append(sourceExcerpt);
       b.append("\n");
       int charWithLineNumberOffset = startCharno + sourceExcerpt.indexOf('|') + 2;
-      checkState(
-          charWithLineNumberOffset <= sourceExcerpt.length(),
-          "Cannot format source excerpt; unexpected start character for error:\n %s",
-          error);
-      padLine(charWithLineNumberOffset, sourceExcerpt, b, -1, null);
+      padLine(error, charWithLineNumberOffset, sourceExcerpt, b, -1, null);
       return;
     }
     List<String> lines = Splitter.on('\n').splitToList(sourceExcerpt);
@@ -274,11 +283,7 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
       if (shouldPrintLine) {
         b.append(line);
         b.append("\n");
-        checkState(
-            charWithLineNumberOffset <= sourceExcerpt.length(),
-            "Cannot format source excerpt; unexpected start character for error\n%s",
-            error);
-        padLine(charWithLineNumberOffset, line, b, remainingLength, errorNode);
+        padLine(error, charWithLineNumberOffset, line, b, remainingLength, errorNode);
       }
 
       // add 1 to represent the newline; subtract the offset of the "  5| ".

@@ -228,8 +228,28 @@ public final class LightweightMessageFormatterTest {
     n.setSourceFileForTesting("javascript/complex.js");
     JSError error = JSError.make(n, FOO_TYPE);
     LightweightMessageFormatter formatter = formatter("    if (foobar) {", SourceExcerpt.FULL, 5);
+    Exception ex = assertThrows(Exception.class, () -> formatter.formatError(error));
+    assertThat(ex).hasMessageThat().contains("unexpected start character for error");
+  }
 
-    assertThrows(Exception.class, () -> formatter.formatError(error));
+  @Test
+  public void testMultiline_charNoOutOfBoundsCrashes2() {
+    Node n = Node.newString("foobar").setLinenoCharno(0, 2);
+    n.setLength(0);
+    n.setSourceFileForTesting("javascript/complex.js");
+    JSError error = JSError.make(n, FOO_TYPE);
+    LightweightMessageFormatter formatter =
+        formatter(
+            // The first line is intentionally too short.
+            """
+            b
+            /** @export {(number|undefined)} */
+            """,
+            SourceExcerpt.FULL,
+            5);
+
+    Exception ex = assertThrows(Exception.class, () -> formatter.formatError(error));
+    assertThat(ex).hasMessageThat().contains("unexpected start character for error");
   }
 
   @Test
