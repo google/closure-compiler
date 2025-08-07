@@ -19,10 +19,13 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE;
 
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.KnownSymbolType;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.Property;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import org.junit.Test;
@@ -816,6 +819,38 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
   }
 
   @Test
+  public void testJsDocIsPropagatedToClassField_computed() {
+    // Given
+    testSame(
+        externs(
+            new TestExternsBuilder()
+                .addIterable()
+                .addExtra("/** @const {symbol} */ Symbol.foobar")
+                .build()),
+        srcs(
+            """
+            class Foo {
+              /**
+               * I'm a field.
+               * @const
+               */
+               [Symbol.foobar] = 5;
+            }
+
+            var x = new Foo();
+            """));
+
+    ObjectType xType = (ObjectType) inferredTypeOfName("x");
+    assertThat(xType.toString()).isEqualTo("Foo");
+    KnownSymbolType foobarSymbol = inferredTypeOfName("Symbol.foobar").toMaybeKnownSymbolType();
+
+    // Then
+    assertThat(
+            xType.getPropertyJSDocInfo(new Property.SymbolKey(foobarSymbol)).getBlockDescription())
+        .isEqualTo("I'm a field.");
+  }
+
+  @Test
   public void testJSDocIsNotPropagatedFromSuppressionsOnFieldProperties_Es5() {
     // Given
     testSame(
@@ -1024,6 +1059,38 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
 
     // Then
     assertThat(xType.getPropertyJSDocInfo("method").getBlockDescription())
+        .isEqualTo("I'm a method.");
+  }
+
+  @Test
+  public void testJsDocIsPropagatedToMethodProperties_computed() {
+    // Given
+    testSame(
+        externs(
+            new TestExternsBuilder()
+                .addIterable()
+                .addExtra("/** @const {symbol} */ Symbol.foobar")
+                .build()),
+        srcs(
+            """
+            class Foo {
+              /**
+               * I'm a method.
+               * @return {number} a
+               */
+               [Symbol.foobar]() { }
+            }
+
+            var x = new Foo();
+            """));
+
+    ObjectType xType = (ObjectType) inferredTypeOfName("x");
+    assertThat(xType.toString()).isEqualTo("Foo");
+    KnownSymbolType foobarSymbol = inferredTypeOfName("Symbol.foobar").toMaybeKnownSymbolType();
+
+    // Then
+    assertThat(
+            xType.getPropertyJSDocInfo(new Property.SymbolKey(foobarSymbol)).getBlockDescription())
         .isEqualTo("I'm a method.");
   }
 

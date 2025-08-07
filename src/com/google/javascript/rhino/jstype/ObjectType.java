@@ -508,6 +508,11 @@ public abstract class ObjectType extends JSType {
 
   @SuppressWarnings("IdentifierName") // for compatibility with former 3p code
   public final @Nullable JSDocInfo getPropertyJSDocInfo(String propertyName) {
+    return this.getPropertyJSDocInfo(new Property.StringKey(propertyName));
+  }
+
+  @SuppressWarnings("IdentifierName") // for compatibility with former 3p code
+  public final @Nullable JSDocInfo getPropertyJSDocInfo(Property.Key propertyName) {
     Property p = getSlot(propertyName);
     return p == null ? null : p.getJSDocInfo();
   }

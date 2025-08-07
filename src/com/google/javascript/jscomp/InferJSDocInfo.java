@@ -23,6 +23,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.Property;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -122,6 +123,8 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements CompilerPass {
       case SETTER_DEF:
       case MEMBER_FUNCTION_DEF:
       case MEMBER_FIELD_DEF:
+      case COMPUTED_PROP:
+      case COMPUTED_FIELD_DEF:
         inferJSDocForObjectKeyOrClassField(n, parent);
         return;
 
@@ -206,7 +209,16 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements CompilerPass {
       return;
     }
 
-    String propName = n.getString();
+    Property.Key propName;
+    if (n.isComputedFieldDef() || n.isComputedProp()) {
+      JSType keyType = n.getFirstChild().getJSType();
+      if (keyType == null || !keyType.isKnownSymbolValueType()) {
+        return;
+      }
+      propName = new Property.SymbolKey(keyType.toMaybeKnownSymbolType());
+    } else {
+      propName = new Property.StringKey(n.getString());
+    }
     if (owningType.hasOwnProperty(propName) && owningType.getPropertyJSDocInfo(propName) == null) {
       owningType.setPropertyJSDocInfo(propName, typeDoc);
     }
