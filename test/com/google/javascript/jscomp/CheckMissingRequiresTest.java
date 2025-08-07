@@ -1653,6 +1653,271 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
         """);
   }
 
+  @Test
+  public void testWarning_googScopeAliasOfModule() throws Exception {
+    checkRequireInProvidesFileWarning(
+        "foo.Bar",
+        """
+        goog.module('foo.Bar');
+        goog.module.declareLegacyNamespace();
+        /** @constructor */
+        exports = function() {};
+        """,
+        """
+        goog.provide('test');
+
+        goog.scope(function() {
+        const Bar = foo.Bar;
+        })(); // end goog.scope
+        """);
+  }
+
+  @Test
+  public void testNoWarning_googScopeAliasOfModule() throws Exception {
+    checkNoWarning(
+        """
+        goog.module('foo.Bar');
+        goog.module.declareLegacyNamespace();
+        exports = class {};
+        exports.Baz = class { static fn() {} };
+        """,
+        """
+        goog.provide('test');
+        goog.require('foo.Bar');
+
+        goog.scope(function() {
+        const Bar = foo.Bar;
+        const Baz = foo.Bar.Baz;
+        test.fn = function() {
+          new Bar(); Bar.fn();
+          new Baz(); Baz.fn();
+          new Bar.Baz(); Bar.Baz.fn();
+        }
+        })(); // end goog.scope
+        """);
+  }
+
+  @Test
+  public void testWarning_googScopeAlias_unprovidedParentOfModule() throws Exception {
+    test(
+        srcs(
+            """
+            goog.module('foo.Bar');
+            goog.module.declareLegacyNamespace();
+            /** @constructor */
+            exports = function() {};
+            """,
+            """
+            goog.provide('test');
+
+            goog.scope(function() {
+            const fooLocal = foo;
+            function fn() { return fooLocal.Bar; }
+            })(); // end goog.scope
+            """),
+        warning(CheckMissingRequires.MISSING_REQUIRE_IN_GOOG_SCOPE));
+  }
+
+  @Test
+  public void testWarning_googScopeAlias_unprovidedParentOfModule_typeRef() throws Exception {
+    test(
+        srcs(
+            """
+            goog.module('foo.Bar');
+            goog.module.declareLegacyNamespace();
+            /** @constructor */
+            exports = function() {};
+            """,
+            """
+            goog.provide('test');
+
+            goog.scope(function() {
+            const fooLocal = foo;
+            function fn() { /** @type {!fooLocal.Bar} */ var x; }
+            })(); // end goog.scope
+            """),
+        warning(CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_GOOG_SCOPE));
+  }
+
+  @Test
+  public void testWarning_googScopeAlias_providedParentOfModule() throws Exception {
+    test(
+        srcs(
+            "goog.provide('foo');",
+            """
+            goog.module('foo.Bar');
+            goog.module.declareLegacyNamespace();
+            /** @constructor */
+            exports = function() {};
+            """,
+            """
+            goog.provide('test');
+
+            goog.scope(function() {
+            const fooLocal = foo;
+            function fn() { return fooLocal.Bar; }
+            })(); // end goog.scope
+            """),
+        warning(CheckMissingRequires.MISSING_REQUIRE_IN_PROVIDES_FILE)
+            .withMessageContaining("'foo'"),
+        warning(CheckMissingRequires.MISSING_REQUIRE_IN_GOOG_SCOPE)
+            .withMessageContaining("'foo.Bar'"));
+  }
+
+  @Test
+  public void testWarning_googScopeAlias_providedParentOfModule_typeRef() throws Exception {
+    test(
+        srcs(
+            "goog.provide('foo');",
+            """
+            goog.module('foo.Bar');
+            goog.module.declareLegacyNamespace();
+            /** @constructor */
+            exports = function() {};
+            """,
+            """
+            goog.provide('test');
+
+            goog.scope(function() {
+            const fooLocal = foo;
+            function fn() { /** @type {!fooLocal.Bar} */ var x; }
+            })(); // end goog.scope
+            """),
+        warning(CheckMissingRequires.MISSING_REQUIRE_IN_PROVIDES_FILE).withMessageContaining("foo"),
+        warning(CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_GOOG_SCOPE)
+            .withMessageContaining("foo.Bar"));
+  }
+
+  @Test
+  public void testWarning_googScopeAlias_providedParentOfModule_requireParent() throws Exception {
+    test(
+        srcs(
+            "goog.provide('foo');",
+            """
+            goog.module('foo.Bar');
+            goog.module.declareLegacyNamespace();
+            /** @constructor */
+            exports = function() {};
+            """,
+            """
+            goog.provide('test');
+            goog.require('foo');
+
+            goog.scope(function() {
+            const fooLocal = foo;
+            function fn() { return fooLocal.Bar; }
+            })(); // end goog.scope
+            """),
+        warning(CheckMissingRequires.MISSING_REQUIRE_IN_GOOG_SCOPE)
+            .withMessageContaining("'foo.Bar'"));
+  }
+
+  @Test
+  public void testWarning_googScopeAlias_providedParentOfModule_googModuleGetParent()
+      throws Exception {
+    test(
+        srcs(
+            "goog.provide('foo');",
+            """
+            goog.module('foo.Bar');
+            goog.module.declareLegacyNamespace();
+            /** @constructor */
+            exports = function() {};
+            """,
+            """
+            goog.provide('test');
+            goog.require('foo');
+
+            goog.scope(function() {
+            const fooLocal = goog.module.get('foo');
+            function fn() { return fooLocal.Bar; }
+            })(); // end goog.scope
+            """),
+        warning(CheckMissingRequires.MISSING_REQUIRE_IN_GOOG_SCOPE)
+            .withMessageContaining("'foo.Bar'"));
+  }
+
+  @Test
+  public void testWarning_googScopeAlias_providedParentOfModule_googModuleGetParent_propRef()
+      throws Exception {
+    test(
+        srcs(
+            "goog.provide('foo');",
+            """
+            goog.module('foo.bar');
+            goog.module.declareLegacyNamespace();
+            """,
+            """
+            goog.module('foo.bar.Raz.Baz');
+            goog.module.declareLegacyNamespace();
+            exports = class {};
+            """,
+            """
+            goog.provide('test');
+            goog.require('foo.bar');
+
+            goog.scope(function() {
+            const fooBarRaz = goog.module.get('foo.bar').Raz;
+            function fn() { return fooBarRaz.Baz; }
+            })(); // end goog.scope
+            """),
+        warning(CheckMissingRequires.MISSING_REQUIRE_IN_GOOG_SCOPE)
+            .withMessageContaining("'foo.bar.Raz.Baz'"));
+  }
+
+  @Test
+  public void testWarning_googScopeAlias_providedParentOfModule_typeRef_requireParent()
+      throws Exception {
+    test(
+        srcs(
+            """
+            goog.provide('foo');
+            """,
+            """
+            goog.module('foo.Bar');
+            goog.module.declareLegacyNamespace();
+            /** @constructor */
+            exports = function() {};
+            """,
+            """
+            goog.provide('test');
+            goog.require('foo');
+
+            goog.scope(function() {
+            const fooLocal = foo;
+            function fn() { /** @type {!fooLocal.Bar} */ var x; }
+            })(); // end goog.scope
+            """),
+        // this warning could reasonably be INCORRECT_NAMESPACE_ALIAS_REQUIRE_TYPE, but
+        // the extra complexity to distinguish the two cases doesn't seem worthwhile.
+        warning(CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_GOOG_SCOPE)
+            .withMessageContaining("foo.Bar"));
+  }
+
+  @Test
+  public void testWarning_googScopeAliasOfParentOfModule_childStillRequired() throws Exception {
+    test(
+        srcs(
+            """
+            goog.module('foo.Bar');
+            goog.module.declareLegacyNamespace();
+            /** @constructor */
+            exports = function() {};
+            """,
+            """
+            goog.provide('test');
+            // Note that there is a require for foo.Bar, which is correct,  but the warning is
+            // still triggered because of the alias `const fooLocal = foo;`.
+            goog.require('foo.Bar');
+
+            goog.scope(function() {
+            const fooLocal = foo;
+            function fn() { return fooLocal.Bar; }
+            })(); // end goog.scope
+            """),
+        warning(CheckMissingRequires.MISSING_REQUIRE_IN_GOOG_SCOPE));
+  }
+
   private void checkNoWarning(String... js) {
     testSame(srcs(js));
   }

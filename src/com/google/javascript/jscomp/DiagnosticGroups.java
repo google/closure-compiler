@@ -424,6 +424,8 @@ public class DiagnosticGroups {
           "missingRequire",
           CheckMissingRequires.MISSING_REQUIRE,
           CheckMissingRequires.MISSING_REQUIRE_IN_PROVIDES_FILE,
+          CheckMissingRequires.MISSING_REQUIRE_IN_GOOG_SCOPE,
+          CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_GOOG_SCOPE,
           CheckMissingRequires.MISSING_REQUIRE_TYPE,
           CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE,
           CheckMissingRequires.INCORRECT_NAMESPACE_ALIAS_REQUIRE,

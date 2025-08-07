@@ -91,6 +91,16 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
           "''{0}'' references the name of a module without goog.declareLegacyNamespace(), which "
               + "is not actually defined. Use goog.module.get() instead.");
 
+  public static final DiagnosticType MISSING_REQUIRE_IN_GOOG_SCOPE =
+      DiagnosticType.warning(
+          "JSC_MISSING_REQUIRE_IN_GOOG_SCOPE",
+          "''{0}'' is its own namespace. Please add a goog.require and reference that alias.");
+
+  public static final DiagnosticType MISSING_REQUIRE_TYPE_IN_GOOG_SCOPE =
+      DiagnosticType.warning(
+          "JSC_MISSING_REQUIRE_TYPE_IN_GOOG_SCOPE ",
+          "''{0}'' is its own namespace. Please add a goog.requireType and reference that alias.");
+
   public static final DiagnosticType MISSING_REQUIRE_FOR_GOOG_MODULE_GET =
       DiagnosticType.warning(
           "JSC_MISSING_REQUIRE_FOR_GOOG_MODULE_GET",
@@ -428,9 +438,11 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
       return;
     }
 
-    if (!currentFile.isModule()) {
-      // Don't worry about aliases outside of module files for now.
-      // TODO - b/390433455: also check aliases within the top level of a goog.scope file.
+    boolean inModule = currentFile.isModule();
+    boolean inGoogScope = !inModule && isGoogScopeBody(localVar.getScopeRoot());
+
+    if (!inModule && !inGoogScope) {
+      // Don't worry about aliases outside of module files and goog.scopes for now.
       return;
     }
 
@@ -441,25 +453,121 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
       return;
     }
 
-    NodeUtil.GoogRequire require = NodeUtil.getGoogRequireInfo(localVar);
+    if (inGoogScope) {
+      checkMissingRequireThroughShortNameInGoogScope(
+          t, n, localVar, currentFile, qualifiedName, referenceStrength);
+    } else {
+      checkMissingRequireThroughShortNameInModule(
+          t,
+          n,
+          NodeUtil.getGoogRequireInfo(localVar),
+          currentFile,
+          qualifiedName,
+          referenceStrength);
+    }
+  }
+
+  private void checkMissingRequireThroughShortNameInGoogScope(
+      NodeTraversal t,
+      Node n,
+      Var localVar,
+      ModuleMetadata currentFile,
+      QualifiedName qualifiedName,
+      Strength referenceStrength) {
+    Node initialValue = localVar.getInitialValue();
+    if (initialValue == null) {
+      return;
+    }
+    // There are two cases we have to handle (assume 'foo.bar' is a module or provide, below);
+    //  1) a legacy namespace, possibly with extra properties:
+    //        const alias = foo.bar;
+    //        const alias = foo.bar.baz;
+    //  2) a goog.module.get, possibly with extra properties:
+    //      const alias = goog.module.get('foo.bar');
+    //      const alias = goog.module.get('foo.bar').baz;
+    // Ignore any other initial value. This pass isn't designed to check arbitrary chains of import
+    // aliases, and we just look at direct aliases of Closure namespaces. For example, we will not
+    // find aliases such as:
+    //    alias.something = foo.bar;
+    // This aligns with the behavior of the ScopedAliases pass goog.scope handling.
+
+    // Case (1) - the initial value is a legacy namespace + potential extra properties
+    if (initialValue.isQualifiedName()) {
+      QualifiedName aliasedName = initialValue.getQualifiedNameObject();
+      QualifiedName normalizedQualifiedName = swapRootOfQualifiedName(qualifiedName, aliasedName);
+
+      // Find longest prefix match that is actually a provide/legacy namespace, if any.
+      ModuleMetadata originalImport = null;
+      for (QualifiedName subName = aliasedName; subName != null; subName = subName.getOwner()) {
+        ModuleMetadata imported = moduleByNamespace.get(subName.join());
+        if (imported != null) {
+          originalImport = imported;
+          break;
+        }
+      }
+      checkNormalizedShortNameImport(
+          t, n, currentFile, originalImport, normalizedQualifiedName, referenceStrength);
+      return;
+    }
+
+    // Case (2) - the initial value is a goog.module.get + potential extra properties
+    while (initialValue.isGetProp()) {
+      initialValue = initialValue.getFirstChild();
+    }
+    if (!NodeUtil.isGoogModuleGetCall(initialValue)) {
+      return;
+    }
+    String importedNamespace = initialValue.getSecondChild().getString();
+    ModuleMetadata originalImport = moduleByNamespace.get(importedNamespace);
+    if (originalImport != null && !originalImport.hasLegacyGoogNamespaces()) {
+      // We trust the import from a non-legacy module, as they should not overlap.
+      return;
+    }
+    QualifiedName aliasedName = QualifiedName.of(importedNamespace);
+    for (Node prop = initialValue.getParent(); prop.isGetProp(); prop = prop.getParent()) {
+      aliasedName = aliasedName.getprop(prop.getString());
+    }
+    QualifiedName normalizedQualifiedName = swapRootOfQualifiedName(qualifiedName, aliasedName);
+    checkNormalizedShortNameImport(
+        t, n, currentFile, originalImport, normalizedQualifiedName, referenceStrength);
+  }
+
+  private void checkMissingRequireThroughShortNameInModule(
+      NodeTraversal t,
+      Node n,
+      NodeUtil.GoogRequire require,
+      ModuleMetadata currentFile,
+      QualifiedName qualifiedName,
+      Strength referenceStrength) {
     if (require == null) {
-        // It is a local name, not an import.
-        // NOTE: this *could be a local alias* of an imported name
-        //   but at some point the only real fix is to not use `goog.provide`
-        //   or `goog.module.declareLegacyNamespace` because it is always
-        //   possible to obfuscate the use of the namespace.
-        return;
-      }
+      // It is a local name, not an import.
+      // NOTE: this *could be a local alias* of an imported name
+      //   but at some point the only real fix is to not use `goog.provide`
+      //   or `goog.module.declareLegacyNamespace` because it is always
+      //   possible to obfuscate the use of the namespace.
+      return;
+    }
 
-      ModuleMetadata originalRequiredFile = moduleByNamespace.get(require.namespace());
-      if (originalRequiredFile == null || !originalRequiredFile.hasLegacyGoogNamespaces()) {
-        // We trust the import from a non-legacy module, as they should not overlap.
-        return;
-      }
+    ModuleMetadata originalRequiredFile = moduleByNamespace.get(require.namespace());
+    if (originalRequiredFile == null || !originalRequiredFile.hasLegacyGoogNamespaces()) {
+      // We trust the import from a non-legacy module, as they should not overlap.
+      return;
+    }
 
-      // Verify namespace usage
-      QualifiedName normalizeQualifiedName = normalizeQualifiedName(qualifiedName, require);
+    // Verify namespace usage
+    QualifiedName normalizeQualifiedName = normalizeQualifiedNamePlusImport(qualifiedName, require);
 
+    checkNormalizedShortNameImport(
+        t, n, currentFile, originalRequiredFile, normalizeQualifiedName, referenceStrength);
+  }
+
+  private void checkNormalizedShortNameImport(
+      NodeTraversal t,
+      Node n,
+      ModuleMetadata currentFile,
+      ModuleMetadata originalImport,
+      QualifiedName normalizedQualifiedName,
+      Strength referenceStrength) {
     // TESTCASES, where A.B should not be used through A:
     // checked here
     // X  const A = require('A'); ref(A.B);  // error, missing require A.B
@@ -469,7 +577,7 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
     //
 
     // Look for the longest prefix match against a provided namespace.
-    for (QualifiedName subName = normalizeQualifiedName;
+    for (QualifiedName subName = normalizedQualifiedName;
         subName != null;
         subName = subName.getOwner()) {
       String namespace = subName.join();
@@ -490,15 +598,28 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
       // it up. Write a different message if the namespace is already imported vs missing.
 
       if (!hasAcceptableRequire(currentFile, subName, requiredFile, referenceStrength)
-          || originalRequiredFile != requiredFile) {
-
-        // `originalRequiredFile != requiredFile` then the file is being referenced through
-        // the wrong namespace even though it is being `goog.require`d in the file.
-
-        DiagnosticType toReport =
-            referenceStrength.isStrong
-                ? INDIRECT_NAMESPACE_REF_REQUIRE
-                : INDIRECT_NAMESPACE_REF_REQUIRE_TYPE;
+          || originalImport == null
+          || originalImport != requiredFile) {
+        // Why check `originalImport == null|| originalImport != requiredFile`? in case the imported
+        // file does have an acceptable goog.require in this file, but this particular reference is
+        // still through the wrong namespace.
+        // For example:
+        //   const foo = goog.require('my.foo');
+        //   const bar = goog.require('my.foo.bar');
+        // (...)
+        //    use(foo.bar); // should be use(bar);
+        DiagnosticType toReport;
+        if (currentFile.isModule()) {
+          toReport =
+              referenceStrength.isStrong
+                  ? INDIRECT_NAMESPACE_REF_REQUIRE
+                  : INDIRECT_NAMESPACE_REF_REQUIRE_TYPE;
+        } else {
+          toReport =
+              referenceStrength.isStrong
+                  ? MISSING_REQUIRE_IN_GOOG_SCOPE
+                  : MISSING_REQUIRE_TYPE_IN_GOOG_SCOPE;
+        }
         t.report(n, toReport, namespace);
       }
 
@@ -570,18 +691,30 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
   }
 
   /**
-   * Given a qualified name with local root name and a import that defines that name, transform that
-   * name so that it is a fully qualified name.
+   * Given a qualified name with local root name and an import that defines that name, transform
+   * that name so that it is a fully qualified name.
    */
-  private QualifiedName normalizeQualifiedName(
+  private QualifiedName normalizeQualifiedNamePlusImport(
       QualifiedName qualifiedName, NodeUtil.GoogRequire imported) {
     QualifiedName newQName = QualifiedName.of(imported.namespace());
 
     if (imported.property() != null) {
       newQName = newQName.getprop(imported.property());
     }
+    return swapRootOfQualifiedName(qualifiedName, newQName);
+  }
 
-    var components = qualifiedName.components().iterator();
+  /**
+   * Replaces the root name of the original qname with the newRoot (which may be a simple or complex
+   * qualified name).
+   *
+   * <p>For example: if original is `oldRoot.a.b.c`, and newRoot is `newRoot.withProperty`, returns
+   * `newRoot.withProperty.a.b.c`.
+   */
+  private static QualifiedName swapRootOfQualifiedName(
+      QualifiedName original, QualifiedName newRoot) {
+    QualifiedName newQName = newRoot;
+    var components = original.components().iterator();
     components.next(); // skip the root
     while (components.hasNext()) {
       String component = components.next();
