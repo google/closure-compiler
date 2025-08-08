@@ -558,13 +558,11 @@ class TypeValidator implements Serializable {
     ObjectType dereferenced = objType.dereference();
     if (dereferenced != null
         && dereferenced.getTemplateTypeMap().hasTemplateKey(typeRegistry.getObjectIndexKey())) {
-      expectCanAssignTo(
-          indexNode,
-          indexType,
+      JSType templateType =
           dereferenced
               .getTemplateTypeMap()
-              .getResolvedTemplateType(typeRegistry.getObjectIndexKey()),
-          "restricted index type");
+              .getResolvedTemplateType(typeRegistry.getObjectIndexKey());
+      expectCanAssignTo(indexNode, indexType, templateType, "restricted index type");
     } else if (dereferenced != null && dereferenced.isArrayType()) {
       expectNumberOrSymbol(indexNode, indexType, "array access");
     } else if (objType.isStruct()) {
@@ -1144,6 +1142,10 @@ class TypeValidator implements Serializable {
     this.mismatches.registerMismatch(error.node(), found, required);
   }
 
+  private static String formatNodeLocation(Node node) {
+    return String.format("%s:%s:%s", node.getSourceFileName(), node.getLineno(), node.getCharno());
+  }
+
   /** Formats a found/required error message. */
   private static String formatFoundRequired(
       String description,
@@ -1156,6 +1158,27 @@ class TypeValidator implements Serializable {
     if (foundStr.equals(requiredStr)) {
       foundStr = found.toAnnotationString(Nullability.IMPLICIT);
       requiredStr = required.toAnnotationString(Nullability.IMPLICIT);
+    }
+    if (foundStr.equals(requiredStr)) {
+      // For some types, their annotation strings will be identical, but they might be identically
+      // named structures in different scopes (and have theoretically different "fully-qualified"
+      // names).
+      // The general case of giving a correct fully qualified name is quite difficult, so instead we
+      // address some common cases where we know that types have a concrete name to use.
+      if (found.isEnumElementType()) {
+        foundStr =
+            foundStr
+                + " (enum definition: "
+                + formatNodeLocation(found.toMaybeEnumElementType().getEnumType().getSource())
+                + ")";
+      }
+      if (required.isEnumElementType()) {
+        requiredStr =
+            requiredStr
+                + " (enum definition: "
+                + formatNodeLocation(required.toMaybeEnumElementType().getEnumType().getSource())
+                + ")";
+      }
     }
     String missingStr = "";
     String mismatchStr = "";

@@ -1993,6 +1993,63 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testMismatchInObjectKeyShouldShowBothTypes() {
+    newTest()
+        .includeDefaultExterns()
+        .addSource(
+            "a.js",
+            """
+            goog.module('my.a');
+
+            /** @enum {string} */
+            const MyEnum = {
+              KEY1: 'VALUE1',
+              KEY2: 'VALUE2',
+            };
+
+            exports = {MyEnum};
+            """)
+        .addSource(
+            "b.js",
+            """
+            goog.module('my.b');
+
+            /** @enum {string} */
+            const MyEnum = {
+              KEY1: 'VALUE1',
+              KEY2: 'VALUE2',
+            };
+
+            exports = {MyEnum};
+            """)
+        .addSource(
+            "c.js",
+            """
+            goog.module('my.c');
+
+            const a = goog.require('my.a');
+            const b = goog.require('my.b');
+
+            /**
+             * @typedef {!Object<!a.MyEnum, *>}
+             */
+            let MyObjectTypedef;
+
+            /** @type {MyObjectTypedef} */
+            const myObject = {};
+
+            myObject[b.MyEnum.KEY1] = 'some value';
+            """)
+        .addDiagnostic(
+            """
+            restricted index type
+            found   : string (enum definition: b.js:4:15)
+            required: string (enum definition: a.js:4:15)
+            """)
+        .run();
+  }
+
+  @Test
   public void testObjLitDef5() {
     newTest()
         .addSource(
