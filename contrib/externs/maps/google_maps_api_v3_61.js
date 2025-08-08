@@ -580,7 +580,8 @@ google.maps.ColorScheme = {
    */
   DARK: 'DARK',
   /**
-   * The color scheme is selected based on system preferences.
+   * The color scheme is selected based on system preferences, which are checked
+   * once at method execution time.
    */
   FOLLOW_SYSTEM: 'FOLLOW_SYSTEM',
   /**
@@ -6049,8 +6050,6 @@ google.maps.MapElement.prototype.zoom;
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * MapElementOptions object used to define the properties that can be set on a
  * MapElement.
  * @record
@@ -17629,8 +17628,6 @@ google.maps.maps3d.SteadyChangeEvent.prototype.isSteady;
 google.maps.marker = {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * This event is created from clicking an Advanced Marker. Access the
  * marker&#39;s position with <code>event.target.position</code>.
  *
@@ -20535,11 +20532,12 @@ google.maps.places.PlaceContentConfigElementOptions = function() {};
  * Access by calling `const {PlaceContextualElement} = await
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceContextualElementOptions=} options
  * @implements {google.maps.places.PlaceContextualElementOptions}
  * @extends {HTMLElement}
  * @constructor
  */
-google.maps.places.PlaceContextualElement = function() {};
+google.maps.places.PlaceContextualElement = function(options) {};
 
 /**
  * The context token.
@@ -20572,11 +20570,12 @@ google.maps.places.PlaceContextualElementOptions.prototype.contextToken;
  * Access by calling `const {PlaceContextualListConfigElement} = await
  * google.maps.importLibrary("places")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlaceContextualListConfigElementOptions=} options
  * @implements {google.maps.places.PlaceContextualListConfigElementOptions}
  * @extends {HTMLElement}
  * @constructor
  */
-google.maps.places.PlaceContextualListConfigElement = function() {};
+google.maps.places.PlaceContextualListConfigElement = function(options) {};
 
 /**
  * The layout.
@@ -20619,6 +20618,13 @@ google.maps.places.PlaceContextualListConfigElementOptions.prototype.layout;
  * @type {boolean|null|undefined}
  */
 google.maps.places.PlaceContextualListConfigElementOptions.prototype.mapHidden;
+
+/**
+ * The map mode used in Place Contextual Element for a list of places.
+ * @default {@link google.maps.places.PlaceContextualListMapMode.ROADMAP}
+ * @type {!google.maps.places.PlaceContextualListMapMode|null|undefined}
+ */
+google.maps.places.PlaceContextualListConfigElementOptions.prototype.mapMode;
 
 /**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
