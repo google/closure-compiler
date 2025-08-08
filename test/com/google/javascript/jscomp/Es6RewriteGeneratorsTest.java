@@ -33,7 +33,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Unit tests for {@link Es6RewriteGenerators}. */
 @RunWith(JUnit4.class)
 public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
@@ -1913,5 +1912,87 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
     Node createGenerator = callNode.getFirstChild();
     return createGenerator.getNext().getNext();
+  }
+
+  // The following tests demonstrate the bug in how "break" is handled in a "finally" block.
+  // The "expected" output is the actual, incorrect output of the compiler, and a comment
+  // is added to the test to indicate that the test is expected to fail with the fix.
+  @Test
+  public void testFinallyReturnCancelledByOuterBreak() {
+    rewriteGeneratorSwitchBodyWithVars(
+        """
+        OUT: do {
+          try {
+            yield 1234;
+            return 'innerTry';
+          } finally {
+            break OUT;
+          }
+        } while(false);
+        """,
+        "",
+        """
+          GEN_CONTEXT$0.setFinallyBlock(5);
+          return GEN_CONTEXT$0.yield(1234, 7);
+        case 7:
+          return GEN_CONTEXT$0.return("innerTry");
+        case 5:
+          GEN_CONTEXT$0.enterFinallyBlock();
+          GEN_CONTEXT$0.jumpTo(0);
+          break; // This break is wrong. It should not be here.
+          GEN_CONTEXT$0.leaveFinallyBlock(2);
+          break;
+        case 2:
+          if (false) {
+            GEN_CONTEXT$0.jumpTo(1);
+            break;
+          }
+          GEN_CONTEXT$0.jumpToEnd();
+        """);
+  }
+
+  @Test
+  public void testFinallyReturnCancelledByOuterBreak_nested() {
+    rewriteGeneratorSwitchBodyWithVars(
+        """
+        OUT: do {
+          try {
+            try {
+              yield 1;
+              return 'innerTry';
+            } finally {
+              break OUT;
+            }
+          } finally {
+            yield 2;
+          }
+        } while (false);
+        """,
+        "",
+        """
+          GEN_CONTEXT$0.setFinallyBlock(5);
+          GEN_CONTEXT$0.setFinallyBlock(7);
+          return GEN_CONTEXT$0.yield(1, 9);
+        case 9:
+          return GEN_CONTEXT$0.return("innerTry");
+        case 7:
+          GEN_CONTEXT$0.enterFinallyBlock(0, 5);
+          GEN_CONTEXT$0.jumpThroughFinallyBlocks(0);
+          break; // This break is wrong. It should not be here.
+          GEN_CONTEXT$0.leaveFinallyBlock(5);
+          break;
+        case 5:
+          GEN_CONTEXT$0.enterFinallyBlock();
+          return GEN_CONTEXT$0.yield(2, 10);
+        case 10:
+          GEN_CONTEXT$0.leaveFinallyBlock(2);
+          break;
+        case 2:
+          if (false) {
+            GEN_CONTEXT$0.jumpTo(1);
+            break;
+          }
+          GEN_CONTEXT$0.jumpToEnd();
+        """);
   }
 }
