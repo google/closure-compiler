@@ -68,7 +68,8 @@ public class ConformanceAllowlister {
                 Requirement requirement,
                 Optional<Requirement.WhitelistEntry> whitelistEntry,
                 JSError diagnostic,
-                LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior) {
+                LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior,
+                boolean isAllowlisted) {
               errors.add(diagnostic);
               return false;
             }

@@ -343,6 +343,8 @@ public final class ConformanceRules {
 
       String path = NodeUtil.getSourceName(n);
       AllowList allowlist = path != null ? findAllowListForPath(path) : null;
+      boolean isAllowlisted =
+          !(allowlist == null && (onlyApplyTo == null || onlyApplyTo.matches(path)));
       boolean shouldReport =
           compiler
               .getErrorManager()
@@ -353,12 +355,13 @@ public final class ConformanceRules {
                       ? Optional.fromNullable(allowlist.allowlistEntry)
                       : Optional.absent(),
                   err,
-                  behavior);
+                  behavior,
+                  isAllowlisted);
 
       // if the violation is not in a gencode or we're not in library level reporting mode,
       // determined by `shouldReport` above, then check the allowlists to decide whether to actually
       // report the violation or not.
-      if (shouldReport && allowlist == null && (onlyApplyTo == null || onlyApplyTo.matches(path))) {
+      if (shouldReport && !isAllowlisted) {
         compiler.report(err);
       }
     }

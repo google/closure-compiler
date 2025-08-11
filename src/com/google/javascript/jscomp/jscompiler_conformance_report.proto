@@ -108,6 +108,20 @@ message JsCompilerConformanceReport {
     int32 line_no = 4;
     int32 col_no = 5;
     string rule_id = 6;
+    // if this violation is a RECORD_ONLY violation during CheckJS, what should
+    // the library deps conformance checker do with it. This field's value only
+    // matters for RECORD_ONLY violations (e.g. Boq Web violations) and not for
+    // the global violations (e.g. go/jscp violations) or
+    // "extra_conformance_configs" of `js_library`.
+    LibraryDepsConformanceCheckerAllowlistReason
+        library_deps_conformance_checker_allowlist_reason = 7;
+
+    // Specifies whether a violation is allowlisted for the library deps
+    // conformance checker and why
+    enum LibraryDepsConformanceCheckerAllowlistReason {
+      NOT_ALLOWLISTED = 0;
+      ALLOWLISTED_BOQ_WEB = 1;
+    }
   }
 
   // If the report comes from a raw_js_library, the name of the

@@ -17,9 +17,12 @@
 package com.google.javascript.jscomp.conformance;
 
 import com.google.common.base.Optional;
+import com.google.javascript.jscomp.ConformanceConfig.LibraryLevelNonAllowlistedConformanceViolationsBehavior;
 import com.google.javascript.jscomp.JsCompilerConformanceReport.ConformanceViolation;
+import com.google.javascript.jscomp.JsCompilerConformanceReport.ConformanceViolation.LibraryDepsConformanceCheckerAllowlistReason;
 import com.google.javascript.jscomp.Requirement;
 import com.google.javascript.jscomp.Requirement.WhitelistEntry;
+import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
 /** Utility methods for writing out JSCompiler conformance reports. */
@@ -30,7 +33,8 @@ public final class ConformanceReporterUtil {
       Optional<WhitelistEntry> allowlistEntry,
       String sourceName,
       int lineNumber,
-      int charno) {
+      int charno,
+      LibraryDepsConformanceCheckerAllowlistReason libraryDepsConformanceCheckerAllowlistReason) {
     ConformanceViolation.Builder violation = ConformanceViolation.newBuilder();
     violation.setRequirement(req);
 
@@ -44,6 +48,9 @@ public final class ConformanceReporterUtil {
         .setPath(sourceName)
         .setLineNo(lineNumber)
         .setColNo(charno);
+
+    violation.setLibraryDepsConformanceCheckerAllowlistReason(
+        libraryDepsConformanceCheckerAllowlistReason);
 
     // Use the requirement's ruleId if it's available, or the name of the first config file
     // otherwise.
@@ -78,6 +85,22 @@ public final class ConformanceReporterUtil {
     }
 
     return path.substring(slashIndex + 1, dotIndex);
+  }
+
+  /**
+   * Returns true if the violation is a Boq Web violation.
+   *
+   * <p>This is determined by checking if the requirement has a behavior of RECORD_ONLY. Currently,
+   * only Boq Web violations have this behavior.
+   */
+  public static boolean isBoqWebViolation(
+      Requirement requirement,
+      Map<Requirement, LibraryLevelNonAllowlistedConformanceViolationsBehavior>
+          violationsBehavior) {
+    return violationsBehavior.containsKey(requirement)
+        && violationsBehavior
+            .get(requirement)
+            .equals(LibraryLevelNonAllowlistedConformanceViolationsBehavior.RECORD_ONLY);
   }
 
   private ConformanceReporterUtil() {}

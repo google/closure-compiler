@@ -81,8 +81,9 @@ public class ThreadSafeDelegatingErrorManager implements ErrorManager {
       Requirement requirement,
       Optional<Requirement.WhitelistEntry> whitelistEntry,
       JSError diagnostic,
-      LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior) {
+      LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior,
+      boolean isAllowlisted) {
     return delegated.shouldReportConformanceViolation(
-        requirement, whitelistEntry, diagnostic, behavior);
+        requirement, whitelistEntry, diagnostic, behavior, isAllowlisted);
   }
 }
