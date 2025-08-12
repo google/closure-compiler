@@ -97,10 +97,24 @@ public final class ConformanceReporterUtil {
       Requirement requirement,
       Map<Requirement, LibraryLevelNonAllowlistedConformanceViolationsBehavior>
           violationsBehavior) {
-    return violationsBehavior.containsKey(requirement)
-        && violationsBehavior
-            .get(requirement)
-            .equals(LibraryLevelNonAllowlistedConformanceViolationsBehavior.RECORD_ONLY);
+    LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior =
+        getSavedBehavior(requirement, violationsBehavior);
+    return behavior.equals(LibraryLevelNonAllowlistedConformanceViolationsBehavior.RECORD_ONLY);
+  }
+
+  /**
+   * Returns the behavior saved in the violationsBehavior map for the given requirement.
+   *
+   * @param requirement The requirement to find the behavior for.
+   * @param violationsBehavior The map of requirements to behaviors.
+   * @return The behavior saved in the violationsBehavior map for the given requirement, or
+   *     UNSPECIFIED if the requirement is not found in the map.
+   */
+  private static LibraryLevelNonAllowlistedConformanceViolationsBehavior getSavedBehavior(
+      Requirement requirement,
+      Map<Requirement, LibraryLevelNonAllowlistedConformanceViolationsBehavior>
+          violationsBehavior) {
+    return LibraryLevelNonAllowlistedConformanceViolationsBehavior.UNSPECIFIED;
   }
 
   private ConformanceReporterUtil() {}
