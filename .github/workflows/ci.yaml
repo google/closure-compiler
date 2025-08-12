@@ -51,7 +51,7 @@ jobs:
         # Clone closure-compiler repo from the commit under test into current directory.
       - name: Checkout Current closure-compiler Commit
         # https://github.com/marketplace/actions/checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
       # https://github.com/bazel-contrib/setup-bazel
       - uses: bazel-contrib/setup-bazel@4fd964a13a440a8aeb0be47350db2fc640f19ca8 # v0.15.0
@@ -120,7 +120,7 @@ jobs:
         # Clone closure-compiler-npm repo from master into the current directory.
       - name: Checkout Current closure-compiler-npm Commit
         # https://github.com/marketplace/actions/checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
           repository: google/closure-compiler-npm
           ref: master
@@ -129,7 +129,7 @@ jobs:
         # submodule
       - name: Checkout Current closure-compiler Commit
         # https://github.com/marketplace/actions/checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
           path: compiler
 
@@ -169,7 +169,7 @@ jobs:
         # Clone closure-compiler repo from the commit under test into current directory.
       - name: Checkout Current closure-compiler Commit
         # https://github.com/marketplace/actions/checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -206,7 +206,7 @@ jobs:
     # Checkout the piper-cut-cl.json from the most recent two commits
     - name: Checkout Current closure-compiler Commit
       # https://github.com/marketplace/actions/checkout
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
       with:
         fetch-depth: 2
         sparse-checkout: |
@@ -235,7 +235,7 @@ jobs:
     # This is much more expensive than just checking out the most recent
     # 2 commits, as done above, so only do this if actually cutting a release
     - name: Checkout all closure-compiler commits and tags
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
       if: ${{ steps.detect_changes.outputs.foundNewRelease == 'true' }}
       with:
         # a depth of 0 triggers a fetch of all historical commits/branches/tags
