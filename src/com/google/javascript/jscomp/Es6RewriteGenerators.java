@@ -1139,8 +1139,12 @@ final class Es6RewriteGenerators implements CompilerPass {
        */
       Case currentCase;
 
+      // A counter for the number of finally blocks we are currently inside.
+      // This value is used for two purposes:
+      // 1. At COMPILE-TIME, to determine if a break/continue is inside a finally block.
+      // 2. At RUNTIME, its value is emitted into the generated code to manage the
+      //    exception-handling stack.
       int nestedFinallyBlockCount = 0;
-
       boolean thisReferenceFound;
       boolean argumentsReferenceFound;
 
@@ -1514,7 +1518,11 @@ final class Es6RewriteGenerators implements CompilerPass {
       /** Converts "break" and "continue" statements into state machine jumps. */
       void replaceBreakContinueWithJump(Node sourceNode, Case section, int breakSuppressors) {
         final String jumpMethod;
-        if (finallyCases.isEmpty() || finallyCases.getFirst().id < section.id) {
+        if (nestedFinallyBlockCount > 0) {
+          // If we are in a finally block, we need to use jumpThroughFinallyBlocks to ensure that
+          // the finally block is correctly exited.
+          jumpMethod = "jumpThroughFinallyBlocks";
+        } else if (finallyCases.isEmpty() || finallyCases.getFirst().id < section.id) {
           // There are no finally blocks that should be exectuted pior to jumping
           jumpMethod = "jumpTo";
         } else {
@@ -1530,7 +1538,14 @@ final class Es6RewriteGenerators implements CompilerPass {
                   type(StandardColors.NULL_OR_VOID),
                   section.getNumber(sourceNode))
               .insertBefore(sourceNode);
-          sourceNode.replaceWith(createBreakNodeFor(sourceNode));
+          if (nestedFinallyBlockCount == 0) {
+            sourceNode.replaceWith(createBreakNodeFor(sourceNode));
+          } else {
+            // If we are in a finally block, we need to detach the source node to prevent an extra
+            // break from being generated. The break is not needed because the
+            // jumpThroughFinallyBlocks call will handle the control flow.
+            sourceNode.detach();
+          }
         } else {
           // "break;" inside a loop or swtich statement:
           // for (...) {

@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+/** Tests for {@link Es6RewriteGenerators} */
 @RunWith(JUnit4.class)
 public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
@@ -1914,9 +1915,46 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     return createGenerator.getNext().getNext();
   }
 
-  // The following tests demonstrate the bug in how "break" is handled in a "finally" block.
-  // The "expected" output is the actual, incorrect output of the compiler, and a comment
-  // is added to the test to indicate that the test is expected to fail with the fix.
+  @Test
+  public void testBreakInNestedFinally() {
+    rewriteGeneratorSwitchBodyWithVars(
+        """
+        OUTER: do {
+          try {
+            try {
+              yield 1;
+            } finally {
+              break OUTER;
+            }
+          } finally {
+            break OUTER;
+          }
+        } while (false);
+        """,
+        "",
+        """
+          GEN_CONTEXT$0.setFinallyBlock(5);
+          GEN_CONTEXT$0.setFinallyBlock(7);
+          return GEN_CONTEXT$0.yield(1, 7);
+        case 7:
+          GEN_CONTEXT$0.enterFinallyBlock(0, 5);
+          GEN_CONTEXT$0.jumpThroughFinallyBlocks(0);
+          GEN_CONTEXT$0.leaveFinallyBlock(5);
+          break;
+        case 5:
+          GEN_CONTEXT$0.enterFinallyBlock();
+          GEN_CONTEXT$0.jumpThroughFinallyBlocks(0);
+          GEN_CONTEXT$0.leaveFinallyBlock(2);
+          break;
+        case 2:
+          if (false) {
+            GEN_CONTEXT$0.jumpTo(1);
+            break;
+          }
+          GEN_CONTEXT$0.jumpToEnd();
+        """);
+  }
+
   @Test
   public void testFinallyReturnCancelledByOuterBreak() {
     rewriteGeneratorSwitchBodyWithVars(
@@ -1938,8 +1976,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
           return GEN_CONTEXT$0.return("innerTry");
         case 5:
           GEN_CONTEXT$0.enterFinallyBlock();
-          GEN_CONTEXT$0.jumpTo(0);
-          break; // This break is wrong. It should not be here.
+          GEN_CONTEXT$0.jumpThroughFinallyBlocks(0);
           GEN_CONTEXT$0.leaveFinallyBlock(2);
           break;
         case 2:
@@ -1978,13 +2015,53 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         case 7:
           GEN_CONTEXT$0.enterFinallyBlock(0, 5);
           GEN_CONTEXT$0.jumpThroughFinallyBlocks(0);
-          break; // This break is wrong. It should not be here.
           GEN_CONTEXT$0.leaveFinallyBlock(5);
           break;
         case 5:
           GEN_CONTEXT$0.enterFinallyBlock();
           return GEN_CONTEXT$0.yield(2, 10);
         case 10:
+          GEN_CONTEXT$0.leaveFinallyBlock(2);
+          break;
+        case 2:
+          if (false) {
+            GEN_CONTEXT$0.jumpTo(1);
+            break;
+          }
+          GEN_CONTEXT$0.jumpToEnd();
+        """);
+  }
+
+  @Test
+  public void testContinueInNestedFinallyInLoop() {
+    rewriteGeneratorSwitchBodyWithVars(
+        """
+        OUT: do {
+          try {
+            yield 1;
+          } finally {
+            try {
+              yield 2;
+            } finally {
+              continue OUT;
+            }
+          }
+        } while (false);
+        """,
+        "",
+        """
+          GEN_CONTEXT$0.setFinallyBlock(5);
+          return GEN_CONTEXT$0.yield(1, 5);
+        case 5:
+          GEN_CONTEXT$0.enterFinallyBlock();
+          GEN_CONTEXT$0.setFinallyBlock(8);
+          return GEN_CONTEXT$0.yield(2, 8);
+        case 8:
+          GEN_CONTEXT$0.enterFinallyBlock(0, 0, 1);
+          GEN_CONTEXT$0.jumpThroughFinallyBlocks(2);
+          GEN_CONTEXT$0.leaveFinallyBlock(9, 1);
+          break;
+        case 9:
           GEN_CONTEXT$0.leaveFinallyBlock(2);
           break;
         case 2:
