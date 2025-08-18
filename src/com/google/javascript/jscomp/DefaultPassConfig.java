@@ -155,11 +155,10 @@ public final class DefaultPassConfig extends PassConfig {
     TranspilationPasses.addTranspilationRuntimeLibraries(passes);
 
     if (options.needsTranspilationFrom(ES2015) && options.getRewritePolyfills()) {
-        if (options.getIsolatePolyfills()) {
-          throw new IllegalStateException(
-              "Polyfill isolation cannot be used in transpileOnly mode");
-        }
-        TranspilationPasses.addRewritePolyfillPass(passes);
+      if (options.getIsolatePolyfills()) {
+        throw new IllegalStateException("Polyfill isolation cannot be used in transpileOnly mode");
+      }
+      TranspilationPasses.addRewritePolyfillPass(passes);
     } else if (options.getInjectPolyfillsNewerThan() != null) {
       TranspilationPasses.addRewritePolyfillPass(passes);
     }
@@ -601,6 +600,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(rewriteGlobalDeclarationsForTryCatchWrapping);
     }
 
+    passes.maybeAdd(createEmptyPass(PassNames.BEFORE_EXTRACT_PROTOTYPE_MEMBER_DECLARATIONS));
     // The mapped name anonymous function pass makes use of information that
     // the extract prototype member declarations pass removes so the former
     // happens before the latter.
@@ -1140,7 +1140,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.foldConstants) {
       passes.maybeAdd(peepholeOptimizations);
     }
-
 
     passes.assertAllLoopablePasses();
     return passes;
@@ -2164,8 +2163,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new ClosureOptimizePrimitives(
-                      compiler,
-                      compiler.getOptions().getOutputFeatureSet().contains(ES2015)))
+                      compiler, compiler.getOptions().getOutputFeatureSet().contains(ES2015)))
           .build();
 
   /** Puts global symbols into a single object. */
