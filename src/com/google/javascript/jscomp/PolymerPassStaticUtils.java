@@ -72,15 +72,19 @@ final class PolymerPassStaticUtils {
     // imported from an ES module, the rewriting should set the original name to `PolymerElement`.
     // When imported from an goog module (TS), we'll have a GETPROP like
     // `module$polymer$polymer_element.PolymerElement`.
-    // YT Polymer components may also extend the `PolymerElementWithoutHtml` base class.
+    // YT Polymer components may also extend the `PolymerElementWithoutHtml` or
+    // `PolymerLiteControllerBase` base classes.
     return !heritage.isEmpty()
         && (POLYMER_DOT_ELEMENT.matches(heritage)
-            || heritage.matchesName("PolymerElement")
-            || "PolymerElement".equals(heritage.getOriginalQualifiedName())
-            || (heritage.isGetProp() && heritage.getString().equals("PolymerElement"))
-            || heritage.matchesName("PolymerElementWithoutHtml")
-            || "PolymerElementWithoutHtml".equals(heritage.getOriginalQualifiedName())
-            || (heritage.isGetProp() && heritage.getString().equals("PolymerElementWithoutHtml")));
+            || matches(heritage, "PolymerElement")
+            || matches(heritage, "PolymerElementWithoutHtml")
+            || matches(heritage, "PolymerLiteControllerBase"));
+  }
+
+  private static boolean matches(Node n, String name) {
+    return n.matchesName(name)
+        || name.equals(n.getOriginalQualifiedName())
+        || (n.isGetProp() && n.getString().equals(name));
   }
 
   /**
