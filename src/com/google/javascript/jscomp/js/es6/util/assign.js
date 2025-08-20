@@ -21,6 +21,7 @@
 'require util/owns';
 'require util/polyfill';
 'require util/shouldpolyfill';
+'require util/toobject';
 
 /**
  * Equivalent to the Object.assign() method, but guaranteed to be available for use in code
@@ -40,13 +41,16 @@ $jscomp.assign =
     ($jscomp.ASSUME_ES6 ||
      ($jscomp.TRUST_ES6_POLYFILLS && typeof Object.assign == 'function')) ?
     Object.assign :
-    /**
-     * @param {!Object} target
-     * @param {...?Object} var_args
-     * @return {!Object}
-     * @suppress {reportUnknownTypes}
-     */
-    function(target, var_args) {
+     /**
+      * @param {!Object} target
+      * @param {...?Object} var_args
+      * @return {!Object}
+      * @suppress {reportUnknownTypes}
+      */
+     function(target, var_args) {
+      // Run abstract operation ToObject on the input as per the spec.
+      target = $jscomp.toObject(target);
+
       for (var i = 1; i < arguments.length; i++) {
         var source = arguments[i];
         if (!source) continue;

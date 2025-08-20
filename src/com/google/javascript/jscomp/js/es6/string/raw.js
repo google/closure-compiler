@@ -20,6 +20,7 @@
  */
 
 'require util/polyfill';
+'require util/toobject';
 
 $jscomp.polyfill('String.raw', function(orig) {
   if (orig) return orig;
@@ -28,15 +29,15 @@ $jscomp.polyfill('String.raw', function(orig) {
    * Polyfills String.raw.
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/raw
+   * @see https://tc39.es/ecma262/multipage/text-processing.html#sec-string.raw
    *
    * @param {!ITemplateArray} strings List of string fragments to concatenate.
    * @param {...*} var_args Values to go between string fragments.
    * @return {string}
    */
   var stringRaw = function(strings, var_args) {
-    if (strings == null) {
-      throw new TypeError('Cannot convert undefined or null to object');
-    }
+    // Run abstract operation ToObject on the input as per the spec.
+    strings = /** @type {!ITemplateArray} */ ($jscomp.toObject(strings));
     var raw = strings.raw;
     var rawlen = raw.length;
     var result = "";
