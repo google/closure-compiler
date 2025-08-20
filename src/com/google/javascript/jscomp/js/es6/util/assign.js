@@ -37,7 +37,8 @@
  * @return {!Object} The target object is returned.
  */
 $jscomp.assign =
-    ($jscomp.TRUST_ES6_POLYFILLS && typeof Object.assign == 'function') ?
+    ($jscomp.ASSUME_ES6 ||
+     ($jscomp.TRUST_ES6_POLYFILLS && typeof Object.assign == 'function')) ?
     Object.assign :
     /**
      * @param {!Object} target
