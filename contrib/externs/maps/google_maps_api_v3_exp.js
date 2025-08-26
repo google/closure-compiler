@@ -12678,6 +12678,11 @@ google.maps.drawing.DrawingControlOptions.prototype.position;
  * @param {google.maps.drawing.DrawingManagerOptions=} options
  * @extends {google.maps.MVCObject}
  * @constructor
+ * @deprecated Drawing library functionality in the Maps JavaScript API is
+ *     deprecated. This API was deprecated in August 2025 and will be made
+ *     unavailable in a later version of the Maps JavaScript API, releasing in
+ *     May 2026. For more info, see <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>
  */
 google.maps.drawing.DrawingManager = function(options) {};
 
@@ -24865,10 +24870,7 @@ google.maps.routes.Route.prototype.optimizedIntermediateWaypointIndices;
 /**
  * The list of {@link google.maps.LatLngAltitude}s of the route, which can be
  * used to draw a route polyline. Granularity of the path can be controlled by
- * setting {@link google.maps.routes.ComputeRoutesRequest.polylineQuality}. The
- * <code>&quot;path&quot;</code> field must be requested in {@link
- * google.maps.routes.ComputeRoutesRequest.fields} in order for this field to be
- * populated.
+ * setting {@link google.maps.routes.ComputeRoutesRequest.polylineQuality}.
  * @type {!Array<!google.maps.LatLngAltitude>|undefined}
  */
 google.maps.routes.Route.prototype.path;
@@ -24902,11 +24904,11 @@ google.maps.routes.Route.prototype.routeToken;
 
 /**
  * Groupings of sections of the route path with their corresponding speed
- * reading. For this field to be populated, <code>&quot;path&quot;</code> and
- * <code>&quot;travelAdvisory&quot;</code> must be requested in {@link
- * google.maps.routes.ComputeRoutesRequest.fields}. In addition, {@link
+ * reading. For this field to be populated, {@link
  * google.maps.routes.ComputeRoutesRequest.routingPreference} must be set to
- * <code>TRAFFIC_AWARE</code> or <code>TRAFFIC_AWARE_OPTIMAL</code>.
+ * <code>TRAFFIC_AWARE</code> or <code>TRAFFIC_AWARE_OPTIMAL</code> and {@link
+ * google.maps.routes.ComputeRoutesRequest.extraComputations} must include
+ * <code>TRAFFIC_ON_POLYLINE</code>.
  * @type {!Array<!google.maps.routes.SpeedPath>|undefined}
  */
 google.maps.routes.Route.prototype.speedPaths;
@@ -24977,13 +24979,13 @@ google.maps.routes.Route.computeRoutes = function(request) {};
  * alter the polyline style based on travel mode and transit line. </li> </ul>
  * <br> Traffic polylines: <ul> <li> Requirements: <ul> <li>The
  * <code>&quot;path&quot;</code> and <code>&quot;travelAdvisory&quot;</code>
- * fields must be requested in {@link
- * google.maps.routes.ComputeRoutesRequest.fields} </li> <li> {@link
- * google.maps.routes.ComputeRoutesRequest.routingPreference} must be set to
- * <code>TRAFFIC_AWARE</code> or <code>TRAFFIC_AWARE_OPTIMAL</code>. </li>
- * <li> {@link google.maps.routes.ComputeRoutesRequest.extraComputations} must
- * include <code>TRAFFIC_ON_POLYLINE</code>. </li> </ul> </li> <li> Creates a
- * polyline for each route interval when the speed reading differs from the
+ * fields (or just <code>&quot;speedPaths&quot;</code> as a shorthand) must be
+ * requested in {@link google.maps.routes.ComputeRoutesRequest.fields}. </li>
+ * <li> {@link google.maps.routes.ComputeRoutesRequest.routingPreference} must
+ * be set to <code>TRAFFIC_AWARE</code> or <code>TRAFFIC_AWARE_OPTIMAL</code>.
+ * </li> <li> {@link google.maps.routes.ComputeRoutesRequest.extraComputations}
+ * must include <code>TRAFFIC_ON_POLYLINE</code>. </li> </ul> </li> <li> Creates
+ * a polyline for each route interval when the speed reading differs from the
  * preceding interval. Polylines have default speed-based styling applied.
  * Options can be passed in to alter the polyline style based on speed. </li>
  * </ul> <br> Overall polyline: <ul> <li> Requirements: <ul> <li> The
@@ -25106,21 +25108,18 @@ google.maps.routes.RouteLeg.prototype.localizedValues;
  * The list of {@link google.maps.LatLngAltitude}s of the route leg, which can
  * be used to draw a route leg polyline. Granularity of the path can be
  * controlled by setting {@link
- * google.maps.routes.ComputeRoutesRequest.polylineQuality}. The
- * <code>&quot;path&quot;</code> field must be requested in {@link
- * google.maps.routes.ComputeRoutesRequest.fields} in order for this field to be
- * populated.
+ * google.maps.routes.ComputeRoutesRequest.polylineQuality}.
  * @type {!Array<!google.maps.LatLngAltitude>}
  */
 google.maps.routes.RouteLeg.prototype.path;
 
 /**
  * Groupings of sections of the route leg path with their corresponding speed
- * reading. For this field to be populated, <code>&quot;path&quot;</code> and
- * <code>&quot;travelAdvisory&quot;</code> must be requested in {@link
- * google.maps.routes.ComputeRoutesRequest.fields}. In addition, {@link
+ * reading. For this field to be populated, {@link
  * google.maps.routes.ComputeRoutesRequest.routingPreference} must be set to
- * <code>TRAFFIC_AWARE</code> or <code>TRAFFIC_AWARE_OPTIMAL</code>.
+ * <code>TRAFFIC_AWARE</code> or <code>TRAFFIC_AWARE_OPTIMAL</code> and {@link
+ * google.maps.routes.ComputeRoutesRequest.extraComputations} must include
+ * <code>TRAFFIC_ON_POLYLINE</code>.
  * @type {!Array<!google.maps.routes.SpeedPath>}
  */
 google.maps.routes.RouteLeg.prototype.speedPaths;
@@ -25796,48 +25795,45 @@ google.maps.routes.RouteModifiers = function() {};
 
 /**
  * When set to <code>true</code>, avoids ferries where reasonable, giving
- * preference to routes not containing ferries. Applies only when {@link
- * google.maps.routes.ComputeRoutesRequest.travelMode} is set to
- * <code>DRIVING</code> or <code>TWO_WHEELER</code>.
+ * preference to routes not containing ferries. Applies only to
+ * <code>DRIVING</code> or <code>TWO_WHEELER</code> {@link
+ * google.maps.TravelMode}.
  * @type {boolean|null|undefined}
  */
 google.maps.routes.RouteModifiers.prototype.avoidFerries;
 
 /**
  * When set to <code>true</code>, avoids highways where reasonable, giving
- * preference to routes not containing highways. Applies only when {@link
- * google.maps.routes.ComputeRoutesRequest.travelMode} is set to
- * <code>DRIVING</code> or <code>TWO_WHEELER</code>.
+ * preference to routes not containing highways. Applies only to
+ * <code>DRIVING</code> or <code>TWO_WHEELER</code> {@link
+ * google.maps.TravelMode}.
  * @type {boolean|null|undefined}
  */
 google.maps.routes.RouteModifiers.prototype.avoidHighways;
 
 /**
  * When set to <code>true</code>, avoids navigating indoors where reasonable,
- * giving preference to routes not containing indoor navigation. Applies only
- * when {@link google.maps.routes.ComputeRoutesRequest.travelMode} is set to
- * <code>WALKING</code>.
+ * giving preference to routes not containing indoor navigation. Applies only to
+ * <code>WALKING</code> {@link google.maps.TravelMode}.
  * @type {boolean|null|undefined}
  */
 google.maps.routes.RouteModifiers.prototype.avoidIndoor;
 
 /**
  * When set to <code>true</code>, avoids toll roads where reasonable, giving
- * preference to routes not containing toll roads. Applies only when {@link
- * google.maps.routes.ComputeRoutesRequest.travelMode} is set to
- * <code>DRIVING</code> or <code>TWO_WHEELER</code>.
+ * preference to routes not containing toll roads. Applies only to
+ * <code>DRIVING</code> or <code>TWO_WHEELER</code> {@link
+ * google.maps.TravelMode}.
  * @type {boolean|null|undefined}
  */
 google.maps.routes.RouteModifiers.prototype.avoidTolls;
 
 /**
- * Encapsulates information about toll passes. If toll passes are
- * provided, {@link google.maps.routes.RouteMatrix.computeRouteMatrix} tries to
- * return the pass price. If toll passes are not provided, {@link
- * google.maps.routes.RouteMatrix.computeRouteMatrix} treats the toll pass as
- * unknown and tries to return the cash price. Applies only when {@link
- * google.maps.routes.ComputeRoutesRequest.travelMode} is set to
- * <code>DRIVING</code> or <code>TWO_WHEELER</code>. See <a
+ * Encapsulates information about toll passes. If toll passes are provided, the
+ * API tries to return the pass price. If toll passes are not provided, the API
+ * treats the toll pass as unknown and tries to return the cash price. Applies
+ * only to <code>DRIVING</code> or <code>TWO_WHEELER</code> {@link
+ * google.maps.TravelMode}. See <a
  * href="https://developers.google.com/maps/documentation/routes/reference/rest/v2/RouteModifiers#tollpass">TollPass</a>
  * for a list of valid values.
  * @type {!Iterable<string>|null|undefined}
@@ -25894,8 +25890,7 @@ google.maps.routes.RoutePolylineOptions = function() {};
  * <code>FOLLOW_SYSTEM</code>, the polylines will be drawn in the same
  * dark/light mode as the map. When not specified, {@link
  * google.maps.routes.Route.createPolylines} attempts to use the
- * <code>colorScheme</code> of the map. If that is not available, the method
- * falls back to light mode styling.
+ * <code>colorScheme</code> of the map or falls back to the system default.
  * @type {!google.maps.ColorScheme|undefined}
  */
 google.maps.routes.RoutePolylineOptions.prototype.colorScheme;
