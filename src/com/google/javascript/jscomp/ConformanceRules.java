@@ -455,6 +455,12 @@ public final class ConformanceRules {
 
       for (String typeName : typeNames) {
         JSType type = registry.getGlobalType(typeName);
+        if (type == null) {
+          // For a few types like `google3.javascript.apps.wiz.events.wiz_event.WizEvent`, we need
+          // to resolve via closure namespace. This is because the class type WizEvent is exported
+          // from a goog.module, so is not a global type name in the global type registry.
+          type = registry.resolveViaClosureNamespace(typeName);
+        }
         if (type != null) {
           types.add(type);
         }
