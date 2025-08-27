@@ -316,8 +316,10 @@ public class TranspilationPasses {
               (compiler) ->
                   new InstrumentAsyncContext(
                       compiler,
-                      compiler.getOptions().getOutputFeatureSet().contains(Feature.ASYNC_FUNCTIONS),
-                      compiler.getOptions().getDiagnoseAsyncContextSafariCrash()))
+                      compiler
+                          .getOptions()
+                          .getOutputFeatureSet()
+                          .contains(Feature.ASYNC_FUNCTIONS)))
           .build();
 
   static final PassFactory es6ConvertSuper =

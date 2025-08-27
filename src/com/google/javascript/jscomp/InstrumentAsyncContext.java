@@ -65,11 +65,6 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   private final Set<Node> hasSuper = new LinkedHashSet<>();
 
   public InstrumentAsyncContext(AbstractCompiler compiler, boolean shouldInstrumentAwait) {
-    this(compiler, shouldInstrumentAwait, false);
-  }
-
-  public InstrumentAsyncContext(
-      AbstractCompiler compiler, boolean shouldInstrumentAwait, boolean unusedDiagnoseSafari) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.shouldInstrumentAwait = shouldInstrumentAwait;
