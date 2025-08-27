@@ -36,7 +36,18 @@ public final class ConformanceReporterUtil {
       int charno,
       LibraryDepsConformanceCheckerAllowlistReason libraryDepsConformanceCheckerAllowlistReason) {
     ConformanceViolation.Builder violation = ConformanceViolation.newBuilder();
-    violation.setRequirement(req);
+    Requirement.Builder reqBuilder =
+        req.toBuilder()
+            .clearWhitelistRegexp()
+            .clearWhitelist()
+            .clearAllowlist()
+            .clearAllowlistRegexp()
+            .clearWhitelistEntry()
+            .clearAllowlistEntry()
+            .clearOnlyApplyTo()
+            .clearOnlyApplyToRegexp();
+
+    violation.setRequirement(reqBuilder.build());
 
     WhitelistEntry.Builder allowlistEntryBuilder = WhitelistEntry.newBuilder();
     if (allowlistEntry.isPresent() && allowlistEntry.get().hasReason()) {
