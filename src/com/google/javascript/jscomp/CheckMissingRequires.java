@@ -506,7 +506,13 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
         }
       }
       checkNormalizedShortNameImport(
-          t, n, currentFile, originalImport, normalizedQualifiedName, referenceStrength);
+          t,
+          n,
+          currentFile,
+          originalImport,
+          qualifiedName,
+          normalizedQualifiedName,
+          referenceStrength);
       return;
     }
 
@@ -529,7 +535,13 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
     }
     QualifiedName normalizedQualifiedName = swapRootOfQualifiedName(qualifiedName, aliasedName);
     checkNormalizedShortNameImport(
-        t, n, currentFile, originalImport, normalizedQualifiedName, referenceStrength);
+        t,
+        n,
+        currentFile,
+        originalImport,
+        qualifiedName,
+        normalizedQualifiedName,
+        referenceStrength);
   }
 
   private void checkMissingRequireThroughShortNameInModule(
@@ -558,7 +570,13 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
     QualifiedName normalizeQualifiedName = normalizeQualifiedNamePlusImport(qualifiedName, require);
 
     checkNormalizedShortNameImport(
-        t, n, currentFile, originalRequiredFile, normalizeQualifiedName, referenceStrength);
+        t,
+        n,
+        currentFile,
+        originalRequiredFile,
+        qualifiedName,
+        normalizeQualifiedName,
+        referenceStrength);
   }
 
   private void checkNormalizedShortNameImport(
@@ -566,6 +584,7 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
       Node n,
       ModuleMetadata currentFile,
       ModuleMetadata originalImport,
+      QualifiedName originalQualifiedName,
       QualifiedName normalizedQualifiedName,
       Strength referenceStrength) {
     // TESTCASES, where A.B should not be used through A:
@@ -620,7 +639,33 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
                   ? MISSING_REQUIRE_IN_GOOG_SCOPE
                   : MISSING_REQUIRE_TYPE_IN_GOOG_SCOPE;
         }
-        t.report(n, toReport, namespace);
+
+        Node errorNode = n;
+        // Get the right location if it is a code reference.
+        int diff = normalizedQualifiedName.getComponentCount() - subName.getComponentCount();
+        if (n.isQualifiedName()) {
+          for (int i = 0; i < diff && errorNode.isGetProp(); i++) {
+            errorNode = errorNode.getFirstChild();
+          }
+          t.report(NodeUtil.getRootOfQualifiedName(errorNode), errorNode, toReport, namespace);
+        } else {
+          // JSDoc reference case
+          // Trim the original qualified name from the source text by the same difference.
+          QualifiedName errorQName = originalQualifiedName;
+          for (int i = 0; i < diff; i++) {
+            errorQName = errorQName.getOwner();
+          }
+
+          String correctName = errorQName.join();
+          // For JSDoc, the entire qualified name is a single STRINGLIT node.
+          // To report the error on the correct sub-expression, we create a new
+          // temporary node with the correct string and length.
+          Node newErrorNode = n.cloneNode();
+          newErrorNode.setString(correctName);
+          newErrorNode.setLength(correctName.length());
+
+          t.report(newErrorNode, toReport, namespace);
+        }
       }
 
       // We found the imported namespace: done

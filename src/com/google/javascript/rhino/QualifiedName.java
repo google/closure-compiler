@@ -128,6 +128,8 @@ public abstract class QualifiedName {
     return sb.toString();
   }
 
+  public abstract int getComponentCount();
+
   /**
    * Returns a new qualified name object with {@code this} name as the owner and the given string as
    * the property name.
@@ -174,6 +176,11 @@ public abstract class QualifiedName {
     @Override
     public Iterable<String> components() {
       return terms.subList(0, size);
+    }
+
+    @Override
+    public int getComponentCount() {
+      return size;
     }
 
     @Override
@@ -237,6 +244,11 @@ public abstract class QualifiedName {
           && RhinoStringPool.uncheckedEquals(n.getString(), prop)
           && owner.matches(n.getFirstChild());
     }
+
+    @Override
+    public int getComponentCount() {
+      return owner.getComponentCount() + 1;
+    }
   }
 
   /**
@@ -283,6 +295,17 @@ public abstract class QualifiedName {
     @Override
     public boolean matches(Node n) {
       return n.matchesQualifiedName(node);
+    }
+
+    @Override
+    public int getComponentCount() {
+      int count = 1;
+      Node current = this.node;
+      while (current.isGetProp()) {
+        count++;
+        current = current.getFirstChild();
+      }
+      return count;
     }
   }
 

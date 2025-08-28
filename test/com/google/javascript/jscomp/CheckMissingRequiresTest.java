@@ -836,6 +836,67 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   }
 
   @Test
+  public void testIndirectNamespaceRef_errorLocation() {
+    test(
+        srcs(
+            "goog.provide('goog.dom');",
+            "goog.provide('goog.dom.TagName'); goog.dom.TagName = {B: 'b'};",
+            """
+            goog.module('test');
+            const dom = goog.require('goog.dom');
+            const x = dom.TagName.B;
+            """),
+        warning(CheckMissingRequires.INDIRECT_NAMESPACE_REF_REQUIRE)
+            .withMessage(
+                "'goog.dom.TagName' should have its own goog.require.\n"
+                    + "Please add a separate goog.require and use that alias instead.")
+            .withLocation(3, 10, 11));
+  }
+
+  @Test
+  public void testIndirectNamespaceRef_jsdoc_errorLocation() {
+    test(
+        srcs(
+            "goog.provide('goog.dom');",
+            """
+            goog.provide('goog.dom.TagName');
+            /** @const */
+            goog.dom.TagName = {};
+            goog.dom.TagName.C = class {};
+            """,
+            """
+            goog.module('test');
+            const dom = goog.require('goog.dom');
+            /** @type {dom.TagName.C} */
+            const x = null;
+            """),
+        warning(CheckMissingRequires.INDIRECT_NAMESPACE_REF_REQUIRE_TYPE)
+            .withMessage(
+                "'goog.dom.TagName' should have its own goog.requireType.\n"
+                    + "Please add a separate goog.requireType and use that alias instead.")
+            .withLocation(3, 11, 11));
+  }
+
+  @Test
+  public void testIndirectNamespaceRef_jsdoc_errorLocation_withFunction() {
+    test(
+        srcs(
+            "goog.provide('goog.dom');",
+            "goog.provide('goog.dom.TagName'); /** @enum {string} */ goog.dom.TagName = {B: 'b'};",
+            """
+            goog.module('test');
+            const dom = goog.require('goog.dom');
+            /** @type {function(dom.TagName)} */
+            const x = null;
+            """),
+        warning(CheckMissingRequires.INDIRECT_NAMESPACE_REF_REQUIRE_TYPE)
+            .withMessage(
+                "'goog.dom.TagName' should have its own goog.requireType.\n"
+                    + "Please add a separate goog.requireType and use that alias instead.")
+            .withLocation(3, 20, 11));
+  }
+
+  @Test
   public void testWarning_missingRequire_nestedModuleIndirectRef() throws Exception {
     checkIndirectNamespaceRefRequireWarning(
         "foo.bar.Baz",
@@ -1982,5 +2043,25 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
         srcs(js),
         warning(CheckMissingRequires.MISSING_REQUIRE_FOR_GOOG_MODULE_GET)
             .withMessageContaining("'" + namespace + "'"));
+  }
+
+  @Test
+  public void testIndirectNamespaceRef_jsdoc_errorLocation_longNamespace() {
+    test(
+        srcs(
+            "goog.provide('goog.dom');",
+            "goog.provide('goog.dom.tags');",
+            "goog.provide('goog.dom.tags.misc'); /** @const */ goog.dom.tags.misc = {FOO: 'foo'};",
+            """
+            goog.module('test');
+            const dom = goog.require('goog.dom');
+            /** @type {dom.tags.misc.FOO} */
+            const x = null;
+            """),
+        warning(CheckMissingRequires.INDIRECT_NAMESPACE_REF_REQUIRE_TYPE)
+            .withMessage(
+                "'goog.dom.tags.misc' should have its own goog.requireType.\n"
+                    + "Please add a separate goog.requireType and use that alias instead.")
+            .withLocation(3, 11, 13)); // dom.tags.misc
   }
 }
