@@ -2217,6 +2217,35 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("alert(12 & x & 20);", "alert(x & 4);");
   }
 
+
+  @Test
+  public void testTemplateLiteralConcat() {
+      // --- Issue #4148 core case: template + template should merge
+
+//    string + template literal (with any order)
+//    string + string (already working)
+//    template literal + template literal (template literal can include referenced variable
+//    or valid HTML)
+
+      test(
+              "const x = 'X'; console.log('pre' + `${x}`);",
+              "const x = 'X'; console.log(`pre${x}`);");
+
+      test(
+              """
+              var a = document.location.href;
+              console.log(`<h1>${a}</h1>` + `<p>The URL is ${a}.</p>`);
+              """,
+              """
+              var a = document.location.href;
+              console.log(`<h1>${a}</h1><p>The URL is ${a}.</p>`);
+              """
+      );
+
+  }
+
+
+
   private void foldBigIntTypes(String js, String expected) {
     test(
         "function f(/** @type {bigint} */ x) { " + js + " }",
