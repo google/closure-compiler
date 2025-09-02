@@ -120,7 +120,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     return arraylit;
   }
 
-  private strictfp Node tryFoldKnownNumberMethods(Node subtree, Node callTarget) {
+  private Node tryFoldKnownNumberMethods(Node subtree, Node callTarget) {
     checkArgument(subtree.isCall() && callTarget.isGetProp());
     String methodName = callTarget.getString();
     switch (methodName) {
@@ -171,7 +171,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
   }
 
   /** Tries to evaluate a method on the Math object */
-  private strictfp Node tryFoldKnownMathMethods(Node subtree, Node callTarget) {
+  private Node tryFoldKnownMathMethods(Node subtree, Node callTarget) {
     checkArgument(subtree.isCall() && callTarget.isGetProp());
 
     // first collect the arguments, if they are all numbers then we proceed
