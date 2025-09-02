@@ -81,7 +81,7 @@ public class IR {
   public static Node function(Node name, Node params, Node body) {
     checkState(name.isName());
     checkState(params.isParamList());
-    checkState(body.isBlock());
+    checkState(body.isBlock() || body.isEmpty());
     return new Node(Token.FUNCTION, name, params, body);
   }
 
@@ -835,12 +835,14 @@ public class IR {
           CONTINUE,
           DEBUGGER,
           DO,
+          ENUM,
           EXPR_RESULT,
           FOR,
           FOR_IN,
           FOR_OF,
           FOR_AWAIT_OF,
           IF,
+          INTERFACE,
           LABEL,
           LET,
           SWITCH,
