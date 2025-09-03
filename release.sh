@@ -19,7 +19,7 @@ readonly SCRIPT_NAME=$(basename "$0")
 readonly MAVEN_PROJECTS="parent main shaded unshaded externs"
 
 deploy_to_sonatype=true
-sonatype_auto_release=false
+sonatype_auto_publish=false
 bazel_executable=""
 bazel_bin=$(pwd)/bazel-bin
 bazel_define_flag=""
@@ -28,12 +28,12 @@ usage() {
   echo ""
   echo "${SCRIPT_NAME}: Build and release script for Closure Compiler."
   echo ""
-  echo "Usage: ${SCRIPT_NAME} [--no-deploy] [--sonatype-auto-release] [--help]"
+  echo "Usage: ${SCRIPT_NAME} [--no-deploy] [--sonatype-auto-publish] [--help]"
   echo ""
   echo "Options:"
   echo "  --help                    Print this help output and exit."
   echo "  --no-deploy               Prepare all the maven artifacts but skip the deployment to Sonatype."
-  echo "  --sonatype-auto-release   Automatically release the staging repository on Sonatype after deployment."
+  echo "  --sonatype-auto-publish   Automatically publish the staging repository to Sonatype after deployment."
   echo ""
   echo "Use the environment variable RELEASE_NUM to specify the release number:"
   echo "  RELEASE_NUM=v1234567890 ./${SCRIPT_NAME}"
@@ -46,8 +46,8 @@ parse_arguments() {
         deploy_to_sonatype=false
         shift
         ;;
-      --sonatype-auto-release)
-        sonatype_auto_release=true
+      --sonatype-auto-publish)
+        sonatype_auto_publish=true
         shift
         ;;
       --help)
@@ -131,7 +131,7 @@ package_and_deploy() {
 
   if [[ "${deploy_to_sonatype}" == true ]]; then
     echo "Deploying Maven artifacts to Sonatype..."
-    mvn -f closure-compiler-parent.pom.xml deploy "-DautoReleaseAfterClose=${sonatype_auto_release}"
+    mvn -f closure-compiler-parent.pom.xml deploy "-DautoPublish=${sonatype_auto_publish}"
     rm -rf "${mvn_temp_wd}"
   else
     echo "Packaging Maven artifacts..."
