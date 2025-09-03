@@ -60,11 +60,8 @@ class InlineFunctions implements CompilerPass {
           "JSC_FAILED_REQUIRED_INLINING",
           "function {1} annotated @requireInlining could not be inlined here");
 
-  // TODO(nicksantos): This needs to be completely rewritten to use scopes
-  // to do variable lookups. Right now, it assumes that all functions are
-  // uniquely named variables. There's currently a stopgap scope-check
-  // to ensure that this doesn't produce invalid code. But in the long run,
-  // this needs a major refactor.
+  // Note: This pass assumes that all functions are uniquely named variables as enforced by
+  // the normalization pass.
   private final Map<String, FunctionState> fns = new LinkedHashMap<>();
   private final Map<Node, String> anonFns = new LinkedHashMap<>();
 
