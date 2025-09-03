@@ -20716,26 +20716,6 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedRegion;
 google.maps.places.PlaceAutocompleteElementOptions.prototype.unitSystem;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * This event is emitted by the PlaceAutocompleteElement when there is an issue
- * with the network request.
- *
- * Access by calling `const {PlaceAutocompleteRequestErrorEvent} = await
- * google.maps.importLibrary("places")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @extends {Event}
- * @constructor
- * @deprecated The <code>gmp-requesterror</code> event will continue to trigger
- *     in the beta channel, but will not trigger in alpha or at release. For
- *     migration purposes, continue to listen to the
- *     <code>gmp-requesterror</code> event, but also add an event listener for
- *     the <code>gmp-error</code> event, which returns an <code>Event</code>
- *     object.
- */
-google.maps.places.PlaceAutocompleteRequestErrorEvent = function() {};
-
-/**
  * Configures a {@link google.maps.places.PlaceDetailsCompactElement}, {@link
  * google.maps.places.PlaceDetailsElement} or {@link
  * google.maps.places.PlaceSearchElement} to show a custom set of content.
