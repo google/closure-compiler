@@ -55,10 +55,14 @@ import org.jspecify.annotations.Nullable;
  */
 class InlineFunctions implements CompilerPass {
 
-  static final DiagnosticType FAILED_REQUIRED_INLINING =
-      DiagnosticType.error(
-          "JSC_FAILED_REQUIRED_INLINING",
-          "function {1} annotated @requireInlining could not be inlined here");
+  // NOTE: this diagnostic is only emitted in debug mode and may not cover all inlinings which
+  // occur in practice. This allows us to test the pass independently and to obtain information
+  // about what inlinings occurred and why.
+  static final DiagnosticType MISSED_REQUIRED_INLINING =
+      DiagnosticType.warning(
+          "JSC_MISSED_REQUIRED_INLINING",
+          "function annotated @requireInlining could not be inlined on this pass: {0}. Context:"
+              + " {1}");
 
   // Note: This pass assumes that all functions are uniquely named variables as enforced by
   // the normalization pass.
@@ -195,8 +199,8 @@ class InlineFunctions implements CompilerPass {
       }
 
       switch (n.getToken()) {
-          // Functions expressions in the form of:
-          //   var fooFn = function(x) { return ... }
+        // Functions expressions in the form of:
+        //   var fooFn = function(x) { return ... }
         case VAR:
         case LET:
         case CONST:
@@ -209,8 +213,8 @@ class InlineFunctions implements CompilerPass {
           }
           break;
 
-          // Named functions
-          // function Foo(x) { return ... }
+        // Named functions
+        // function Foo(x) { return ... }
         case FUNCTION:
           Preconditions.checkState(NodeUtil.isStatementBlock(parent) || parent.isLabel());
           if (NodeUtil.isFunctionDeclaration(n)) {
@@ -229,8 +233,8 @@ class InlineFunctions implements CompilerPass {
      */
     public void findFunctionExpressions(NodeTraversal t, Node n) {
       switch (n.getToken()) {
-          // Functions expressions in the form of:
-          //   (function(){})();
+        // Functions expressions in the form of:
+        //   (function(){})();
         case OPTCHAIN_CALL:
         case CALL:
           Node fnNode = null;
@@ -264,9 +268,7 @@ class InlineFunctions implements CompilerPass {
     String name = fn.getName();
     FunctionState functionState = getOrCreateFunctionState(name);
     updateFunctionStateForInlining(fn, chunk, name, functionState);
-    if (hasRequireInliningAnnotation(fn.getFunctionNode()) && !functionState.canInline()) {
-      compiler.report(JSError.make(fn.getFunctionNode(), FAILED_REQUIRED_INLINING));
-    }
+    checkState(!(hasRequireInliningAnnotation(fn.getFunctionNode()) && !functionState.canInline()));
   }
 
   /**
@@ -370,7 +372,7 @@ class InlineFunctions implements CompilerPass {
     return jsDocInfo != null && jsDocInfo.isNoInline();
   }
 
-  private boolean hasRequireInliningAnnotation(Node fnNode) {
+  private static boolean hasRequireInliningAnnotation(Node fnNode) {
     JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(fnNode);
     return jsDocInfo != null && jsDocInfo.isRequireInlining();
   }
@@ -435,7 +437,7 @@ class InlineFunctions implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-          // Function calls
+        // Function calls
         case OPTCHAIN_CALL:
         case CALL:
           Node child = n.getFirstChild();
@@ -608,6 +610,18 @@ class InlineFunctions implements CompilerPass {
         // so mark the function as uninlinable.
         // TODO(johnlenz): Should we just remove it from fns here?
         functionState.disallowInlining();
+      } else if ((parent.isAssign()
+              && parent.getJSDocInfo() != null
+              && parent.getJSDocInfo().isConstant()
+              && parent.getSecondChild() == n)
+          || (parent.getParent() != null
+              && parent.getParent().isConst()
+              && parent.getFirstChild() == n)) {
+        // e.g. const bar = foo; exports.bar = foo;
+        // We can't see through this reference right now, but we will be able
+        // to once `bar` is inlined; so we shouldn't remove `foo` right now but
+        // this is probably okay with @requireInlining.
+        functionState.setRemove(false);
       } else {
         // e.g. var fn = bar; <== we can't inline "bar"
         // As this reference can't be inlined mark the function as
@@ -673,9 +687,6 @@ class InlineFunctions implements CompilerPass {
     Iterator<Entry<String, FunctionState>> i;
     for (i = fns.entrySet().iterator(); i.hasNext(); ) {
       FunctionState functionState = i.next().getValue();
-      if (hasRequireInliningAnnotation(functionState.getFn().getFunctionNode())) {
-        continue;
-      }
       if (functionState.hasReferences()) {
         // Only inline function if it decreases the code size.
         boolean lowersCost = minimizeCost(functionState);
@@ -717,13 +728,14 @@ class InlineFunctions implements CompilerPass {
    * @return Whether inlining the function reduces code size.
    */
   private boolean inliningLowersCost(FunctionState functionState) {
-    return injector.inliningLowersCost(
-        functionState.getChunk(),
-        functionState.getFn().getFunctionNode(),
-        functionState.getReferences(),
-        functionState.getNamesToAlias(),
-        functionState.canRemove(),
-        functionState.getReferencesThis());
+    return functionState.requireInlining()
+        || injector.inliningLowersCost(
+            functionState.getChunk(),
+            functionState.getFn().getFunctionNode(),
+            functionState.getReferences(),
+            functionState.getNamesToAlias(),
+            functionState.canRemove(),
+            functionState.getReferencesThis());
   }
 
   /**
@@ -769,14 +781,14 @@ class InlineFunctions implements CompilerPass {
     Node fnNode = functionState.getFn().getFunctionNode();
     Set<String> names = findCalledFunctions(fnNode);
     if (!names.isEmpty()) {
-      // Prevent the removal of the referenced functions.
+      // Prevent the removal of the referenced functions unless they will be immediately inlined.
       for (String name : names) {
         FunctionState fsCalled = fns.get(name);
         if (fsCalled != null && fsCalled.canRemove()) {
           fsCalled.setRemove(false);
           // For functions that can no longer be removed, check if they should
           // still be inlined.
-          if (!minimizeCost(fsCalled)) {
+          if (!minimizeCost(fsCalled) && !fsCalled.requireInlining()) {
             // It can't be inlined remove it from the list.
             fsCalled.disallowInlining();
           }
@@ -871,6 +883,9 @@ class InlineFunctions implements CompilerPass {
     private @Nullable JSChunk chunk = null;
     private @Nullable Set<String> namesToAlias = null;
 
+    private boolean hasRequireInliningAnnotation = false;
+    private boolean hasRequireInliningAnnotationInitialized = false;
+
     boolean hasExistingFunctionDefinition() {
       return (fn != null);
     }
@@ -929,6 +944,17 @@ class InlineFunctions implements CompilerPass {
 
     public boolean canInline() {
       return inline;
+    }
+
+    boolean requireInlining() {
+      if (fn == null) {
+        return false;
+      }
+      if (!hasRequireInliningAnnotationInitialized) {
+        hasRequireInliningAnnotationInitialized = true;
+        hasRequireInliningAnnotation = hasRequireInliningAnnotation(fn.getFunctionNode());
+      }
+      return hasRequireInliningAnnotation;
     }
 
     public void disallowInlining() {

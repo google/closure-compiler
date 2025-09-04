@@ -46,6 +46,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    enableDebugLogging(true);
     maybeEnableInferConsts();
     enableNormalize();
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
@@ -91,11 +92,43 @@ public class InlineFunctionsTest extends CompilerTestCase {
         /** @requireInlining */ function foo() {console.log('hi');console.log('bye');}
         foo();foo();foo();
         """,
-        "{console.log('hi');console.log('bye');}".repeat(3));
+        """
+        {console.log('hi');console.log('bye');}
+        {console.log('hi');console.log('bye');}
+        {console.log('hi');console.log('bye');}
+        """);
   }
 
   @Test
-  public void testEncourageInliningCascades() {
+  public void testRequireInliningAliased() {
+    // Aliasing @requireInlining functions is allowed when they are
+    // const. The idea is that that declaration will be inlined and then
+    // a later InlineFunctions will inline as required.
+    testSame(
+        """
+        /** @requireInlining */ function foo() {console.log('hi');console.log('bye');}
+        const bar = foo;
+        bar();bar();bar();
+        """);
+  }
+
+  @Test
+  public void testRequireInliningNested() {
+    test(
+        """
+        /** @requireInlining */ function foo() {console.log('hi');console.log('bye');}
+        /** @requireInlining */ function bar() {foo();}
+        bar();bar();bar();
+        """,
+        """
+        {{console.log('hi');console.log('bye');}}
+        {{console.log('hi');console.log('bye');}}
+        {{console.log('hi');console.log('bye');}}
+        """);
+  }
+
+  @Test
+  public void testRequireInliningCascades() {
     disableCompareAsTree();
     test(
         """
