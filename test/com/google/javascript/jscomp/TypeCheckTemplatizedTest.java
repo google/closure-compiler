@@ -954,4 +954,51 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
             """)
         .run();
   }
+
+  @Test
+  public void testTemplateTypeOnEnclosingClass_usedInLet() {
+    newTest()
+        .addSource(
+            """
+            /** @template T */
+            class GenericClass {
+              /** @template V */
+              foo(/** V */ param) {
+                let anonymousFunction = function () {
+                  let /** ?T */ tRef = null;
+                  let another = function() {
+                    function andYetAnother() {
+                      let /** ?T */ tRefNested = null;
+                    }
+                  };
+                };
+              }
+            }
+            """)
+        // TODO: b/441946038 - this should not be an error
+        .addDiagnostic("Bad type annotation. Unknown type T")
+        .addDiagnostic("Bad type annotation. Unknown type T")
+        .run();
+  }
+
+  @Test
+  public void testTemplateTypeOnEnclosingClass_usedInNestedFunction() {
+    newTest()
+        .addSource(
+            """
+            /** @template T */
+            class GenericClass {
+              foo() {
+                let anonymousFunction = function () {
+                  /** @param {T} p */
+                  let another = function(p) {
+                  };
+                };
+              }
+            }
+            """)
+        // TODO: b/441946038 - this should not be an error
+        .addDiagnostic("Bad type annotation. Unknown type T")
+        .run();
+  }
 }
