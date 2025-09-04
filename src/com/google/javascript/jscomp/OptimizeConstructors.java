@@ -57,12 +57,14 @@ import org.jspecify.annotations.Nullable;
  */
 class OptimizeConstructors implements CompilerPass, OptimizeCalls.CallGraphCompilerPass {
   private final AbstractCompiler compiler;
+  private final AstAnalyzer astAnalyzer;
 
   // All constructor definition nodes that are to be removed.
   final ArrayList<Node> removableConstructors = new ArrayList<>();
 
   OptimizeConstructors(AbstractCompiler compiler) {
     this.compiler = checkNotNull(compiler);
+    this.astAnalyzer = compiler.getAstAnalyzer();
   }
 
   @Override
@@ -406,7 +408,7 @@ class OptimizeConstructors implements CompilerPass, OptimizeCalls.CallGraphCompi
 
       if (param.isDefaultValue()
           && param.getFirstChild().isName()
-          && !new AstAnalyzer(compiler, true).mayHaveSideEffects(param.getLastChild())) {
+          && !astAnalyzer.mayHaveSideEffects(param.getLastChild())) {
         // a default parameter whose value is determined to be side-effect free
         continue;
       }
