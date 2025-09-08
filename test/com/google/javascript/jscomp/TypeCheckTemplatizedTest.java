@@ -956,6 +956,25 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testTemplateTypeOnEnclosingClass_usedInLet_es5() {
+    newTest()
+        .addSource(
+            """
+            /**
+             * @template T
+             * @constructor
+             */
+            function GenericClass() {}
+            GenericClass.prototype.foo = function() {
+              let anonymousFunction = function () {
+                let /** ?T */ tRef = null;
+              };
+            };
+            """)
+        .run();
+  }
+
+  @Test
   public void testTemplateTypeOnEnclosingClass_usedInLet() {
     newTest()
         .addSource(
@@ -975,9 +994,6 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
               }
             }
             """)
-        // TODO: b/441946038 - this should not be an error
-        .addDiagnostic("Bad type annotation. Unknown type T")
-        .addDiagnostic("Bad type annotation. Unknown type T")
         .run();
   }
 
@@ -997,8 +1013,6 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
               }
             }
             """)
-        // TODO: b/441946038 - this should not be an error
-        .addDiagnostic("Bad type annotation. Unknown type T")
         .run();
   }
 }

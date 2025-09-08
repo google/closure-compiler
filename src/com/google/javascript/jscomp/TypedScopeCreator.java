@@ -1161,33 +1161,42 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     /**
-     * Returns the type specified in a JSDoc annotation near a GETPROP, NAME, member function, or
-     * object literal key.
+     * Returns the type specified in a JSDoc annotation near a GETPROP, NAME, object literal member,
+     * or class field.
      *
      * <p>Extracts type information from the {@code @type} tag.
      */
     private JSType getDeclaredTypeInAnnotation(Node node, JSDocInfo info) {
-      checkArgument(info.hasType());
-
-      ImmutableList<TemplateType> ownerTypeKeys = ImmutableList.of();
-      Node ownerNode = NodeUtil.getBestLValueOwner(node);
-      String ownerName = NodeUtil.getBestLValueName(ownerNode);
-      ObjectType ownerType = null;
-      if (ownerName != null) {
-        TypedVar ownerVar = currentScope.getVar(ownerName);
-        if (ownerVar != null) {
-          ownerType = getPrototypeOwnerType(ObjectType.cast(ownerVar.getType()));
-          if (ownerType != null) {
-            ownerTypeKeys = ownerType.getTemplateTypeMap().getTemplateKeys();
-          }
-        }
-      }
+      checkArgument(info.hasType(), info);
+      ImmutableList<TemplateType> ownerTypeKeys = findOwnerTypeKeys(node);
 
       StaticTypedScope templateScope =
           !ownerTypeKeys.isEmpty()
               ? typeRegistry.createScopeWithTemplates(currentScope, ownerTypeKeys)
               : currentScope;
       return info.getType().evaluate(templateScope, typeRegistry);
+    }
+
+    ImmutableList<TemplateType> findOwnerTypeKeys(Node node) {
+      if (node != null && !node.isStaticMember() && node.getParent().isClassMembers()) {
+        JSType classType = node.getGrandparent().getJSType();
+        if (classType != null) {
+          return classType.toMaybeFunctionType().getTemplateTypeMap().getTemplateKeys();
+        }
+        return ImmutableList.of();
+      }
+      Node ownerNode = NodeUtil.getBestLValueOwner(node);
+      String ownerName = NodeUtil.getBestLValueName(ownerNode);
+      if (ownerName != null) {
+        TypedVar ownerVar = currentScope.getVar(ownerName);
+        if (ownerVar != null) {
+          JSType ownerType = getPrototypeOwnerType(ObjectType.cast(ownerVar.getType()));
+          if (ownerType != null) {
+            return ownerType.getTemplateTypeMap().getTemplateKeys();
+          }
+        }
+      }
+      return ImmutableList.of();
     }
 
     /**
@@ -3351,36 +3360,64 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           }
         }
 
-        // Also add template params to the scope so that JSTypeRegistry can find them (they
-        // were already registered by FunctionTypeBuilder).
-        JSDocInfo info = NodeUtil.getBestJSDocInfo(functionNode);
-        if (info != null) {
-          Iterable<String> templateNames =
-              Iterables.concat(info.getTemplateTypeNames(), info.getTypeTransformations().keySet());
-          if (!Iterables.isEmpty(templateNames)) {
-            CompilerInput input = getCompilerInput();
-            JSType voidType = typeRegistry.getNativeType(VOID_TYPE);
-            // Declare any template names in the function scope. This means that if someone shadows
-            // an outer variable FOO with a @template FOO and refers to FOO inside the method, we
-            // will treat it as undefined, rather than the correct type, which could lead to weird
-            // errors. Ideally we'd have a "don't use me" type that gives an error at use.
-            for (String name : templateNames) {
-              if (!currentScope.canDeclare(name)) {
-                validator.expectUndeclaredVariable(
-                    NodeUtil.getSourceName(functionNode),
-                    input,
-                    functionNode,
-                    functionNode.getParent(),
-                    currentScope.getVar(name),
-                    name,
-                    voidType);
-              }
-              currentScope.declare(name, functionNode, voidType, input, /* inferred= */ false);
-            }
-          }
-        }
+        declareTemplatesInFunctionBody(functionNode, functionType);
       }
     } // end declareParameters
+
+    private void declareTemplatesInFunctionBody(Node functionNode, FunctionType functionType) {
+      // Add template params to the scope.
+      // This lets JSTypeRegistry resolve references to template types within the function body
+      // scope. (they were already registered as types by FunctionTypeBuilder, but they need to be
+      // in a TypedScope to let JSTypeRegistry correctly handle scoping).
+      JSDocInfo info = NodeUtil.getBestJSDocInfo(functionNode);
+      Set<String> templateNames = new LinkedHashSet<>();
+
+      boolean isPossiblePrototypeMethod =
+          !functionType.hasInstanceType() && (info == null || !info.hasThisType());
+      if (isPossiblePrototypeMethod) {
+        // If this is a prototype method, add any @template types from the prototype owner.
+        // e.g. given
+        //   /** @template T */
+        //   class Foo {
+        //     bar() {}
+        //   }
+        // We want to declare 'T' in the scope of 'bar'
+        Node ownerNode = NodeUtil.getBestLValue(functionNode);
+        for (TemplateType templateKey : findOwnerTypeKeys(ownerNode)) {
+          templateNames.add(templateKey.getReferenceName());
+        }
+      }
+      if (info != null) {
+        // Add @template parameters from the JSDoc on this function directly. For example, given
+        //   /** @template U */
+        //   function foo() {}
+        // This declares 'U'.
+        templateNames.addAll(info.getTemplateTypeNames());
+        templateNames.addAll(info.getTypeTransformations().keySet());
+      }
+      if (templateNames.isEmpty()) {
+        return;
+      }
+      CompilerInput input = getCompilerInput();
+      JSType voidType = getNativeType(VOID_TYPE);
+      // Declare any template names in the function scope. This means that if someone shadows
+      // an outer variable FOO with a @template FOO and refers to FOO inside the method, we
+      // will treat it as undefined, rather than the correct type, which could lead to weird
+      // errors. Ideally we'd have a "don't use me" type that gives an error at use.
+      for (String name : templateNames) {
+        if (!currentScope.canDeclare(name)) {
+          validator.expectUndeclaredVariable(
+              NodeUtil.getSourceName(functionNode),
+              input,
+              functionNode,
+              functionNode.getParent(),
+              currentScope.getVar(name),
+              name,
+              voidType);
+        }
+        currentScope.declare(name, functionNode, voidType, input, /* inferred= */ false);
+      }
+    }
 
     /**
      * Declares the name(s) in a positional AST parameter in the scope.
