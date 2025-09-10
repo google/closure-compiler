@@ -17468,14 +17468,14 @@ google.maps.maps3d.Polygon3DElement.prototype.geodesic;
  * cut-outs inside the polygon.
  * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>>|null|undefined}
  */
-google.maps.maps3d.Polygon3DElement.prototype.innerCoordinates;
+google.maps.maps3d.Polygon3DElement.prototype.innerPaths;
 
 /**
  * The ordered sequence of coordinates that designates a closed loop. Altitude
  * is ignored in certain modes and thus optional.
  * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
  */
-google.maps.maps3d.Polygon3DElement.prototype.outerCoordinates;
+google.maps.maps3d.Polygon3DElement.prototype.path;
 
 /**
  * The stroke color. All CSS3 colors are supported.
@@ -17494,6 +17494,25 @@ google.maps.maps3d.Polygon3DElement.prototype.strokeWidth;
  * @type {number|null|undefined}
  */
 google.maps.maps3d.Polygon3DElement.prototype.zIndex;
+
+/**
+ * The ordered sequence of coordinates that designates a closed loop. Altitude
+ * is ignored in certain modes and thus optional.
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @deprecated Use <code>path</code> instead. This property will be removed in a
+ *     future release.
+ */
+google.maps.maps3d.Polygon3DElement.prototype.outerCoordinates;
+
+/**
+ * The ordered sequence of coordinates that designates a closed loop. Unlike
+ * polylines, a polygon may consist of one or more paths, which create multiple
+ * cut-outs inside the polygon.
+ * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>>|null|undefined}
+ * @deprecated Use <code>innerPaths</code> instead. This property will be
+ *     removed in a future release.
+ */
+google.maps.maps3d.Polygon3DElement.prototype.innerCoordinates;
 
 
 
@@ -17620,13 +17639,6 @@ google.maps.maps3d.Polyline3DElement = function(options) {};
 google.maps.maps3d.Polyline3DElement.prototype.altitudeMode;
 
 /**
- * The ordered sequence of coordinates of the Polyline. Altitude is ignored in
- * certain modes and thus optional.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
- */
-google.maps.maps3d.Polyline3DElement.prototype.coordinates;
-
-/**
  * Specifies whether parts of the polyline which could be occluded are drawn or
  * not. Polylines can be occluded by map geometry (e.g. buildings).
  * @default <code>false</code>
@@ -17666,6 +17678,13 @@ google.maps.maps3d.Polyline3DElement.prototype.outerColor;
 google.maps.maps3d.Polyline3DElement.prototype.outerWidth;
 
 /**
+ * The ordered sequence of coordinates of the Polyline. Altitude is ignored in
+ * certain modes and thus optional.
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElement.prototype.path;
+
+/**
  * The stroke color. All CSS3 colors are supported.
  * @type {string|null|undefined}
  */
@@ -17682,6 +17701,15 @@ google.maps.maps3d.Polyline3DElement.prototype.strokeWidth;
  * @type {number|null|undefined}
  */
 google.maps.maps3d.Polyline3DElement.prototype.zIndex;
+
+/**
+ * The ordered sequence of coordinates of the Polyline. Altitude is ignored in
+ * certain modes and thus optional.
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @deprecated Use <code>path</code> instead. This property will be removed in a
+ *     future release.
+ */
+google.maps.maps3d.Polyline3DElement.prototype.coordinates;
 
 
 
