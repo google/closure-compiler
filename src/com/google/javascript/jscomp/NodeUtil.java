@@ -4837,7 +4837,6 @@ public final class NodeUtil {
         // Assume undefined leaks in this and call results.
       case CALL:
       case OPTCHAIN_CALL:
-      case NEW:
       case GETELEM:
       case GETPROP:
       case OPTCHAIN_GETELEM:
@@ -4864,6 +4863,7 @@ public final class NodeUtil {
       case NULL:
       case TRUE:
       case FALSE:
+      case NEW:
         return true;
       case TEMPLATELIT_STRING:
         return value.getCookedString() != null;
