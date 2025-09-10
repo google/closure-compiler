@@ -78,7 +78,8 @@ public final class AstValidatorTest extends CompilerTestCase {
                 lastCheckViolationMessages.add(message);
               }
             },
-            /* validateScriptFeatures= */ true);
+            /* validateScriptFeatures= */ true,
+            /* shouldValidateRequiredInlinings= */ true);
     astValidator.setTypeValidationMode(typeInfoValidationMode);
     return astValidator;
   }
@@ -1719,5 +1720,26 @@ public final class AstValidatorTest extends CompilerTestCase {
 
     shadowHost.setClosureUnawareShadow(IR.root(this.parseValidScript("(function(){})").detach()));
     expectValid(f, Check.STATEMENT);
+  }
+
+  @Test
+  public void checkRequiredInlinings_failsWithRemainingRequiredInlinings() {
+    // Write a reference to a function that required inlining. We need an enclosing statement
+    // because the expression checker will look for a parent.
+    Node myFunction = IR.name("myFunction");
+    IR.root(IR.script(IR.exprResult(myFunction)));
+
+    // Add the requireInlining annotation.
+    var jsDocInfo = JSDocInfo.builder();
+    jsDocInfo.recordRequireInlining();
+    myFunction.setJSDocInfo(jsDocInfo.build());
+
+    // A surviving requireInlining annotation should cause a validation failure.
+    expectInvalid(
+        myFunction,
+        Check.EXPRESSION,
+        "Type information missing\nmyFunction",
+        "@requireInlining node failed to be inlined.",
+        "Type information missing\nmyFunction");
   }
 }

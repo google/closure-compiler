@@ -335,6 +335,7 @@ public class JSDocInfo implements Serializable {
     COLLAPSIBLE_OR_BREAK_MY_CODE,
     NOCOVERAGE,
     REQUIRE_INLINING,
+    ENCOURAGE_INLINING,
 
     NG_INJECT,
     WIZ_ACTION,
@@ -867,6 +868,13 @@ public class JSDocInfo implements Serializable {
    */
   public boolean isRequireInlining() {
     return checkBit(Bit.REQUIRE_INLINING);
+  }
+
+  /**
+   * Returns whether the {@code @encourageInlining} annotation is present on this {@link JSDocInfo}.
+   */
+  public boolean isEncourageInlining() {
+    return checkBit(Bit.ENCOURAGE_INLINING);
   }
 
   /**
@@ -1690,6 +1698,14 @@ public class JSDocInfo implements Serializable {
     }
 
     /**
+     * Returns whether the {@code @encourageInlining} annotation is present on this {@link
+     * JSDocInfo}.
+     */
+    public boolean isEncourageInlining() {
+      return checkBit(Bit.ENCOURAGE_INLINING);
+    }
+
+    /**
      * Builds a {@link JSDocInfo} object based on the populated information and returns it.
      *
      * @return a {@link JSDocInfo} object populated with the values given to this builder. If no
@@ -2338,6 +2354,18 @@ public class JSDocInfo implements Serializable {
      */
     public boolean recordNoInline() {
       return populateBit(Bit.NOINLINE, true);
+    }
+
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isEncourageInlining()} flag set to {@code true}.
+     *
+     * @return {@code true} if the encourageInlining flag was recorded and {@code false} if it was
+     *     already recorded
+     */
+    @CanIgnoreReturnValue
+    public boolean recordEncourageInlining() {
+      return populateBit(Bit.ENCOURAGE_INLINING, true);
     }
 
     /**

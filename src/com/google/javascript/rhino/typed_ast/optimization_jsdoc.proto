@@ -86,4 +86,8 @@ enum JsdocTag {
 
   // Used by OptimizeParameters
   JSDOC_USED_VIA_DOT_CONSTRUCTOR = 39;
+
+  // Used to encourage function inlining to enable other optimizations,
+  // especially constant folding of object literals.
+  JSDOC_ENCOURAGE_INLINING = 40;
 }

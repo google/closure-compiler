@@ -63,11 +63,19 @@ public final class AstValidator implements CompilerPass {
   /** Validate that a SCRIPT's FeatureSet property includes all features if this is enabled. */
   private final boolean isScriptFeatureValidationEnabled;
 
+  // TODO: varomodt - make this the default.
+  /** Validate that all required inlinings were performed. */
+  private final boolean shouldValidateRequiredInlinings;
+
   public AstValidator(
-      AbstractCompiler compiler, ViolationHandler handler, boolean validateScriptFeatures) {
+      AbstractCompiler compiler,
+      ViolationHandler handler,
+      boolean validateScriptFeatures,
+      boolean shouldValidateRequiredInlinings) {
     this.compiler = compiler;
     this.violationHandler = handler;
     this.isScriptFeatureValidationEnabled = validateScriptFeatures;
+    this.shouldValidateRequiredInlinings = shouldValidateRequiredInlinings;
   }
 
   public AstValidator(AbstractCompiler compiler) {
@@ -88,7 +96,10 @@ public final class AstValidator implements CompilerPass {
                     + (n.hasParent() ? n.getParent().toStringTree() : " no parent "));
           }
         },
-        validateScriptFeatures);
+        validateScriptFeatures,
+        /* shouldValidateRequiredInlinings= */ compiler
+            .getOptions()
+            .shouldValidateRequiredInlinings());
   }
 
   /**
@@ -322,9 +333,10 @@ public final class AstValidator implements CompilerPass {
 
   public void validateExpression(Node n) {
     validateTypeInformation(n);
+    validateRequiredInlinings(n);
 
     switch (n.getToken()) {
-        // Childless expressions
+      // Childless expressions
       case NEW_TARGET:
         validateFeature(Feature.NEW_TARGET, n);
         validateProperties(n);
@@ -343,7 +355,7 @@ public final class AstValidator implements CompilerPass {
         validateChildless(n);
         return;
 
-        // General unary ops
+      // General unary ops
       case DELPROP:
       case POS:
       case NEG:
@@ -360,7 +372,7 @@ public final class AstValidator implements CompilerPass {
         validateIncDecOp(n);
         return;
 
-        // Assignments
+      // Assignments
       case ASSIGN:
         validateAssignmentExpression(n);
         return;
@@ -383,7 +395,7 @@ public final class AstValidator implements CompilerPass {
         return;
       case ASSIGN_COALESCE:
         validateFeature(Feature.NULL_COALESCE_OP, n);
-        // fall-through
+      // fall-through
       case ASSIGN_OR:
       case ASSIGN_AND:
         validateFeature(Feature.LOGICAL_ASSIGNMENT, n);
@@ -394,7 +406,7 @@ public final class AstValidator implements CompilerPass {
         validateTrinaryOp(n);
         return;
 
-        // Node types that require special handling
+      // Node types that require special handling
       case STRINGLIT:
         validateStringLit(n);
         return;
@@ -411,7 +423,7 @@ public final class AstValidator implements CompilerPass {
         validateName(n);
         return;
 
-        // General binary ops
+      // General binary ops
       case EXPONENT:
         validateFeature(Feature.EXPONENT_OP, n);
         validateBinaryOp(n);
@@ -2339,5 +2351,16 @@ public final class AstValidator implements CompilerPass {
 
   private void validateProperties(Node n) {
     n.validateProperties(errorMessage -> violation(errorMessage, n));
+  }
+
+  private void validateRequiredInlinings(Node n) {
+    if (!shouldValidateRequiredInlinings) {
+      return;
+    }
+    // Any node with JSDoc that says that it was required to be inlined is an error.
+    var jsdocInfo = n.getJSDocInfo();
+    if (jsdocInfo != null && jsdocInfo.isRequireInlining()) {
+      violation("@requireInlining node failed to be inlined.", n);
+    }
   }
 }

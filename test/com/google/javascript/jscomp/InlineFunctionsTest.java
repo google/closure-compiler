@@ -100,6 +100,67 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRequireInliningWarnsWhenNotPossible() {
+    testWarning(
+        """
+        /** @requireInlining */ function foo(q) { console.log(q); console.log('bye'); }
+        console.log(/** @type {?} */ (foo).name);
+        """,
+        InlineFunctions.MISSED_REQUIRED_INLINING);
+  }
+
+  @Test
+  public void testEncourageInlining() {
+    test(
+        """
+        /** @encourageInlining */ function foo() {console.log('hi');console.log('bye');}
+        foo();foo();foo();
+        """,
+        """
+        {console.log('hi');console.log('bye');}
+        {console.log('hi');console.log('bye');}
+        {console.log('hi');console.log('bye');}
+        """);
+  }
+
+  @Test
+  public void testEncourageInliningAliased() {
+    // Aliasing @requireInlining functions is allowed when they are
+    // const. The idea is that that declaration will be inlined and then
+    // a later InlineFunctions will inline as required.
+    testSame(
+        """
+        /** @encourageInlining */ function foo() {console.log('hi');console.log('bye');}
+        const bar = foo;
+        bar();bar();bar();
+        """);
+  }
+
+  @Test
+  public void testEncourageInliningNested() {
+    test(
+        """
+        /** @encourageInlining */ function foo() {console.log('hi');console.log('bye');}
+        /** @encourageInlining */ function bar() {foo();}
+        bar();bar();bar();
+        """,
+        """
+        {{console.log('hi');console.log('bye');}}
+        {{console.log('hi');console.log('bye');}}
+        {{console.log('hi');console.log('bye');}}
+        """);
+  }
+
+  @Test
+  public void testEncourageInliningDoesNotWarnWhenNotPossible() {
+    testSame(
+        """
+        /** @encourageInlining */ function foo(q) {console.log(q);console.log('bye');}
+        console.log(/** @type {?} */ (foo).name);
+        """);
+  }
+
+  @Test
   public void testRequireInliningAliased() {
     // Aliasing @requireInlining functions is allowed when they are
     // const. The idea is that that declaration will be inlined and then
@@ -133,7 +194,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
     test(
         """
         const a = class {constructor() {} setA(value) {this.a = value;} setB(value) {this.b =\
-         value;}}; /** @requireInlining */ function fromRecord(rec) { return new\
+         value;}}; /** @encourageInlining */ function fromRecord(rec) { return new\
          a().setA(rec.a).setB(rec.b); }; console.log(fromRecord({a: 1, b: fromRecord({a: 2,\
          b: fromRecord({a: 4, b: 5}) }) }) );\
         """,

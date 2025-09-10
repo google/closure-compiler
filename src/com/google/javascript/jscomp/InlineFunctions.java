@@ -55,17 +55,16 @@ import org.jspecify.annotations.Nullable;
  */
 class InlineFunctions implements CompilerPass {
 
-  // NOTE: this diagnostic is only emitted in debug mode and may not cover all inlinings which
-  // occur in practice. This allows us to test the pass independently and to obtain information
-  // about what inlinings occurred and why.
   static final DiagnosticType MISSED_REQUIRED_INLINING =
       DiagnosticType.warning(
           "JSC_MISSED_REQUIRED_INLINING",
-          "function annotated @requireInlining could not be inlined on this pass: {0}. Context:"
-              + " {1}");
+          "function {1} annotated @requireInlining could not be inlined here");
 
-  // Note: This pass assumes that all functions are uniquely named variables as enforced by
-  // the normalization pass.
+  // TODO(nicksantos): This needs to be completely rewritten to use scopes
+  // to do variable lookups. Right now, it assumes that all functions are
+  // uniquely named variables. There's currently a stopgap scope-check
+  // to ensure that this doesn't produce invalid code. But in the long run,
+  // this needs a major refactor.
   private final Map<String, FunctionState> fns = new LinkedHashMap<>();
   private final Map<Node, String> anonFns = new LinkedHashMap<>();
 
@@ -281,20 +280,21 @@ class InlineFunctions implements CompilerPass {
 
     // If the function has multiple definitions, don't inline it.
     if (functionState.hasExistingFunctionDefinition()) {
-      functionState.disallowInlining();
+      functionState.disallowInlining(
+          compiler, DisallowInliningReason.MULTIPLE_FUNCTION_DEFINITIONS);
       return;
     }
     Node fnNode = fn.getFunctionNode();
 
     if (hasNoInlineAnnotation(fnNode)) {
-      functionState.disallowInlining();
+      functionState.disallowInlining(compiler, DisallowInliningReason.NO_INLINE_ANNOTATION);
       return;
     }
 
     if (enforceMaxSizeAfterInlining
         && !isAlwaysInlinable(fnNode)
         && maxSizeAfterInlining <= NodeUtil.countAstSizeUpToLimit(fnNode, maxSizeAfterInlining)) {
-      functionState.disallowInlining();
+      functionState.disallowInlining(compiler, DisallowInliningReason.TARGET_SIZE_EXCEEDS_LIMIT);
       return;
     }
 
@@ -307,7 +307,7 @@ class InlineFunctions implements CompilerPass {
       }
 
       if (hasNonInlinableParam(NodeUtil.getFunctionParameters(fnNode))) {
-        functionState.disallowInlining();
+        functionState.disallowInlining(compiler, DisallowInliningReason.NON_INLINABLE_PARAM);
       }
 
       // verify the function meets all the requirements.
@@ -315,7 +315,7 @@ class InlineFunctions implements CompilerPass {
       // run-time cost of this pass.
       if (!isCandidateFunction(fn)) {
         // It doesn't meet the requirements.
-        functionState.disallowInlining();
+        functionState.disallowInlining(compiler, DisallowInliningReason.NOT_CANDIDATE_FUNCTION);
       }
 
       // Set the module and gather names that need temporaries.
@@ -341,7 +341,7 @@ class InlineFunctions implements CompilerPass {
           // values for locals.  If there are simple values, or constants
           // we could still inline.
           if (!assumeMinimumCapture && hasLocalNames(fnNode)) {
-            functionState.disallowInlining();
+            functionState.disallowInlining(compiler, DisallowInliningReason.HAS_LOCAL_NAMES);
           }
         }
       }
@@ -353,16 +353,17 @@ class InlineFunctions implements CompilerPass {
             && NodeUtil.has(block, (n) -> n.isLet() || n.isConst(), alwaysTrue())) {
           // The function might capture a variable that's not in scope at the call site,
           // so don't inline.
-          functionState.disallowInlining();
+          functionState.disallowInlining(
+              compiler, DisallowInliningReason.CAPTURED_VARIABLE_NOT_IN_SCOPE);
         }
       }
 
       if (fnNode.isGeneratorFunction()) {
-        functionState.disallowInlining();
+        functionState.disallowInlining(compiler, DisallowInliningReason.GENERATOR_FUNCTION);
       }
 
       if (fnNode.isAsyncFunction()) {
-        functionState.disallowInlining();
+        functionState.disallowInlining(compiler, DisallowInliningReason.ASYNC_FUNCTION);
       }
     }
   }
@@ -370,6 +371,11 @@ class InlineFunctions implements CompilerPass {
   private boolean hasNoInlineAnnotation(Node fnNode) {
     JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(fnNode);
     return jsDocInfo != null && jsDocInfo.isNoInline();
+  }
+
+  private static boolean hasEncourageInliningAnnotation(Node fnNode) {
+    JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(fnNode);
+    return jsDocInfo != null && jsDocInfo.isEncourageInlining();
   }
 
   private static boolean hasRequireInliningAnnotation(Node fnNode) {
@@ -550,7 +556,12 @@ class InlineFunctions implements CompilerPass {
       if (!referenceAdded) {
         // Don't try to remove a function if we can't inline all
         // the references.
-        functionState.setRemove(false);
+        functionState.setRemove(
+            false,
+            compiler,
+            CannotRemoveReason.UNINLINABLE_REFERENCE,
+            ShouldWarnWhenRequireInliningCannotInline.NO,
+            /* contextNode= */ callNode);
       }
     }
 
@@ -609,7 +620,7 @@ class InlineFunctions implements CompilerPass {
         // e.g. bar = something; <== we can't inline "bar"
         // so mark the function as uninlinable.
         // TODO(johnlenz): Should we just remove it from fns here?
-        functionState.disallowInlining();
+        functionState.disallowInlining(compiler, DisallowInliningReason.REASSIGNED);
       } else if ((parent.isAssign()
               && parent.getJSDocInfo() != null
               && parent.getJSDocInfo().isConstant()
@@ -621,12 +632,21 @@ class InlineFunctions implements CompilerPass {
         // We can't see through this reference right now, but we will be able
         // to once `bar` is inlined; so we shouldn't remove `foo` right now but
         // this is probably okay with @requireInlining.
-        functionState.setRemove(false);
+        functionState.setRemove(
+            false,
+            compiler,
+            CannotRemoveReason.UNREMOVABLE_REFERENCE,
+            ShouldWarnWhenRequireInliningCannotInline.NO);
       } else {
         // e.g. var fn = bar; <== we can't inline "bar"
         // As this reference can't be inlined mark the function as
         // unremovable.
-        functionState.setRemove(false);
+        functionState.setRemove(
+            false,
+            compiler,
+            CannotRemoveReason.UNREMOVABLE_REFERENCE,
+            ShouldWarnWhenRequireInliningCannotInline.YES,
+            /* contextNode= */ parent);
       }
     }
   }
@@ -712,7 +732,11 @@ class InlineFunctions implements CompilerPass {
     if (!inliningLowersCost(functionState)) {
       // Try again without Block inlining references
       if (functionState.hasBlockInliningReferences()) {
-        functionState.setRemove(false);
+        functionState.setRemove(
+            false,
+            compiler,
+            CannotRemoveReason.BLOCK_INLINING_REFERENCE,
+            ShouldWarnWhenRequireInliningCannotInline.YES);
         functionState.removeBlockInliningReferences();
         if (!functionState.hasReferences() || !inliningLowersCost(functionState)) {
           return false;
@@ -729,6 +753,7 @@ class InlineFunctions implements CompilerPass {
    */
   private boolean inliningLowersCost(FunctionState functionState) {
     return functionState.requireInlining()
+        || functionState.encourageInlining()
         || injector.inliningLowersCost(
             functionState.getChunk(),
             functionState.getFn().getFunctionNode(),
@@ -785,12 +810,18 @@ class InlineFunctions implements CompilerPass {
       for (String name : names) {
         FunctionState fsCalled = fns.get(name);
         if (fsCalled != null && fsCalled.canRemove()) {
-          fsCalled.setRemove(false);
+          fsCalled.setRemove(
+              false,
+              compiler,
+              CannotRemoveReason.CALLED_BY_INLINED_FUNCTION,
+              ShouldWarnWhenRequireInliningCannotInline.NO);
           // For functions that can no longer be removed, check if they should
           // still be inlined.
-          if (!minimizeCost(fsCalled) && !fsCalled.requireInlining()) {
+          if (!minimizeCost(fsCalled)
+              && !fsCalled.requireInlining()
+              && !fsCalled.encourageInlining()) {
             // It can't be inlined remove it from the list.
-            fsCalled.disallowInlining();
+            fsCalled.disallowInlining(compiler, DisallowInliningReason.COST);
           }
         }
       }
@@ -886,6 +917,9 @@ class InlineFunctions implements CompilerPass {
     private boolean hasRequireInliningAnnotation = false;
     private boolean hasRequireInliningAnnotationInitialized = false;
 
+    private boolean hasEncourageInliningAnnotation = false;
+    private boolean hasEncourageInliningAnnotationInitialized = false;
+
     boolean hasExistingFunctionDefinition() {
       return (fn != null);
     }
@@ -946,7 +980,18 @@ class InlineFunctions implements CompilerPass {
       return inline;
     }
 
-    boolean requireInlining() {
+    public boolean encourageInlining() {
+      if (fn == null) {
+        return false;
+      }
+      if (!hasEncourageInliningAnnotationInitialized) {
+        hasEncourageInliningAnnotationInitialized = true;
+        hasEncourageInliningAnnotation = hasEncourageInliningAnnotation(fn.getFunctionNode());
+      }
+      return hasEncourageInliningAnnotation;
+    }
+
+    public boolean requireInlining() {
       if (fn == null) {
         return false;
       }
@@ -957,7 +1002,21 @@ class InlineFunctions implements CompilerPass {
       return hasRequireInliningAnnotation;
     }
 
-    public void disallowInlining() {
+    public void disallowInlining(AbstractCompiler compiler, DisallowInliningReason reason) {
+      disallowInlining(compiler, reason, ShouldWarnWhenRequireInliningCannotInline.YES);
+    }
+
+    public void disallowInlining(
+        AbstractCompiler compiler,
+        DisallowInliningReason reason,
+        ShouldWarnWhenRequireInliningCannotInline shouldWarnWhenRequireInliningCannotInline) {
+      if (requireInlining()
+          && compiler.isDebugLoggingEnabled()
+          && shouldWarnWhenRequireInliningCannotInline
+              == ShouldWarnWhenRequireInliningCannotInline.YES) {
+        compiler.report(
+            JSError.make(fn.getFunctionNode(), MISSED_REQUIRED_INLINING, reason.name()));
+      }
       this.inline = false;
 
       // No need to keep references to function that can't be inlined.
@@ -970,7 +1029,31 @@ class InlineFunctions implements CompilerPass {
       return remove;
     }
 
-    public void setRemove(boolean remove) {
+    public void setRemove(
+        boolean remove,
+        AbstractCompiler compiler,
+        CannotRemoveReason reason,
+        ShouldWarnWhenRequireInliningCannotInline shouldWarnIfRequireInlining) {
+      setRemove(remove, compiler, reason, shouldWarnIfRequireInlining, /* contextNode= */ null);
+    }
+
+    public void setRemove(
+        boolean remove,
+        AbstractCompiler compiler,
+        CannotRemoveReason reason,
+        ShouldWarnWhenRequireInliningCannotInline shouldWarnIfRequireInlining,
+        @Nullable Node contextNode) {
+      if (!remove
+          && (shouldWarnIfRequireInlining != ShouldWarnWhenRequireInliningCannotInline.NO)
+          && requireInlining()
+          && compiler.isDebugLoggingEnabled()) {
+        compiler.report(
+            JSError.make(
+                fn.getFunctionNode(),
+                MISSED_REQUIRED_INLINING,
+                reason.name(),
+                contextNode == null ? "unknown" : contextNode.toString()));
+      }
       this.remove = remove;
     }
 
@@ -1168,5 +1251,31 @@ class InlineFunctions implements CompilerPass {
     void setRequiresDecomposition(boolean newVal) {
       this.requiresDecomposition = newVal;
     }
+  }
+
+  static enum ShouldWarnWhenRequireInliningCannotInline {
+    YES,
+    NO;
+  }
+
+  static enum CannotRemoveReason {
+    BLOCK_INLINING_REFERENCE,
+    CALLED_BY_INLINED_FUNCTION,
+    UNINLINABLE_REFERENCE,
+    UNREMOVABLE_REFERENCE;
+  }
+
+  static enum DisallowInliningReason {
+    ASYNC_FUNCTION,
+    CAPTURED_VARIABLE_NOT_IN_SCOPE,
+    COST,
+    GENERATOR_FUNCTION,
+    HAS_LOCAL_NAMES,
+    MULTIPLE_FUNCTION_DEFINITIONS,
+    NON_INLINABLE_PARAM,
+    NOT_CANDIDATE_FUNCTION,
+    NO_INLINE_ANNOTATION,
+    REASSIGNED,
+    TARGET_SIZE_EXCEEDS_LIMIT;
   }
 }

@@ -74,6 +74,10 @@ public final class JSDocSerializer {
       builder.addKind(JsdocTag.JSDOC_NO_INLINE);
     }
 
+    if (jsdoc.isEncourageInlining()) {
+      builder.addKind(JsdocTag.JSDOC_ENCOURAGE_INLINING);
+    }
+
     if (jsdoc.isRequireInlining()) {
       builder.addKind(JsdocTag.JSDOC_REQUIRE_INLINING);
     }
@@ -259,6 +263,9 @@ public final class JSDocSerializer {
           continue;
         case JSDOC_REQUIRE_INLINING:
           builder.recordRequireInlining();
+          continue;
+        case JSDOC_ENCOURAGE_INLINING:
+          builder.recordEncourageInlining();
           continue;
         case JSDOC_PROVIDE_GOOG:
           builder.recordProvideGoog();

@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.integration;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -3264,5 +3265,105 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         Selector.create().build();
         """,
         "retrieveElementRef(); class a { constructor() { retrieveElementRef(); } } new a();");
+  }
+
+  @Test
+  public void testRequireAndEncourageInlining_complexCase() {
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addConsole()
+                .addClosureExterns()
+                .buildExternsFile("externs.js"));
+    CompilerOptions options = createCompilerOptions();
+    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2020);
+    options.setValidateRequiredInlinings(true);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    // @requireInlining should inline through multiple references and aliases.
+    test(
+        options,
+        """
+        /** @requireInlining */ function foo() {console.log('hi');console.log('bye');}
+        const bar = foo;
+        /** @requireInlining */ function baz() {bar();bar();}
+        /** @requireInlining */ function qux() {baz();}
+        qux();qux();qux();
+        """,
+        """
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        """);
+
+    // @encourageInlining should do the same.
+    test(
+        options,
+        """
+        /** @encourageInlining */ function foo() {console.log('hi');console.log('bye');}
+        const bar = foo;
+        /** @encourageInlining */ function baz() {bar();bar();}
+        /** @encourageInlining */ function qux() {baz();}
+        qux();qux();qux();
+        """,
+        """
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        """);
+
+    // but failures are okay for @encourageInlining
+    test(
+        options,
+        """
+        /** @encourageInlining */ function foo(q) { console.log(q); console.log('bye'); }
+        console.log(/** @type {?} */ (foo).name);
+        """,
+        """
+        console.log(function(a) {
+          console.log(a);
+          console.log("bye");
+        }.a)
+        """);
+
+    // and not for @requireInlining
+    var thrown =
+        assertThrows(
+            RuntimeException.class,
+            () -> {
+              test(
+                  options,
+                  """
+                  /** @requireInlining */ function foo(q) { console.log(q); console.log('bye'); }
+                  console.log(/** @type {?} */ (foo).name);
+                  """,
+                  "");
+            });
+    assertThat(thrown).hasMessageThat().contains("Validity check failed for earlyInlineVariables");
+    assertThat(thrown).hasCauseThat().isInstanceOf(IllegalStateException.class);
+    assertThat(thrown)
+        .hasCauseThat()
+        .hasCauseThat()
+        .hasMessageThat()
+        .contains("@requireInlining node failed to be inlined");
   }
 }

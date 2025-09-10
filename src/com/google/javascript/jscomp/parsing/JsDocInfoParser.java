@@ -754,9 +754,24 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case ENCOURAGE_INLINING:
+          if (!jsdocBuilder.recordEncourageInlining()) {
+            addParserWarning(Msg.JSDOC_ENCOURAGE_INLINING);
+          }
+          if (jsdocBuilder.isRequireInlining()) {
+            addParserWarning(Msg.JSDOC_INCOMPAT_INLINING);
+          }
+          if (jsdocBuilder.isNoInline()) {
+            addParserWarning(Msg.JSDOC_INCOMPAT_INLINING);
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case REQUIRE_INLINING:
           if (!jsdocBuilder.recordRequireInlining()) {
             addParserWarning(Msg.JSDOC_REQUIRE_INLINING);
+          }
+          if (jsdocBuilder.isEncourageInlining()) {
+            addParserWarning(Msg.JSDOC_INCOMPAT_INLINING);
           }
           if (jsdocBuilder.isNoInline()) {
             addParserWarning(Msg.JSDOC_INCOMPAT_INLINING);
@@ -766,6 +781,9 @@ public final class JsDocInfoParser {
         case NO_INLINE:
           if (!jsdocBuilder.recordNoInline()) {
             addParserWarning(Msg.JSDOC_NOINLINE);
+          }
+          if (jsdocBuilder.isEncourageInlining()) {
+            addParserWarning(Msg.JSDOC_INCOMPAT_INLINING);
           }
           if (jsdocBuilder.isRequireInlining()) {
             addParserWarning(Msg.JSDOC_INCOMPAT_INLINING);
