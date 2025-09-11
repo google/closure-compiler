@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.JsMessage.Part;
 import com.google.javascript.jscomp.JsMessage.PlaceholderFormatException;
 import com.google.javascript.jscomp.JsMessage.StringPart;
@@ -63,6 +64,7 @@ public final class ReplaceMessages {
   private final AbstractCompiler compiler;
   private final MessageBundle bundle;
   private final boolean strictReplacement;
+  private final boolean collapsePropertiesHasRun;
   private final AstFactory astFactory;
 
   private final Map<String, String> placeholderMapIds = new LinkedHashMap<>();
@@ -72,6 +74,9 @@ public final class ReplaceMessages {
     this.astFactory = compiler.createAstFactory();
     this.bundle = bundle;
     this.strictReplacement = strictReplacement;
+    this.collapsePropertiesHasRun =
+        compiler.getOptions().getPropertyCollapseLevel() == PropertyCollapseLevel.ALL
+            && compiler.getOptions().doLateLocalization();
   }
 
   /**
@@ -669,10 +674,10 @@ public final class ReplaceMessages {
    *
    * <pre>{@code
    * var WELCOME_MSG = function(name) {
-   *    return goog.msgKind.MASCULINE ? "Bienvenido + name" :
-   *           goog.msgKind.FEMININE ? "Bienvenida + name" :
-   *           goog.msgKind.NEUTER ? "Les damos la bienvenida + name" :
-   *           "Les damos la bienvenida + name";
+   *    return goog.msgKind.MASCULINE ? "Bienvenido " + name :
+   *           goog.msgKind.FEMININE ? "Bienvenida " + name :
+   *           goog.msgKind.NEUTER ? "Les damos la bienvenida " + name :
+   *           "Les damos la bienvenida " + name;
    * }(user.getName());
    * }</pre>
    */
@@ -724,6 +729,45 @@ public final class ReplaceMessages {
   }
 
   /**
+   * Creates a node representing the grammatical gender condition.
+   *
+   * <p>For example:
+   *
+   * <pre>{@code
+   * goog.msgKind.MASCULINE ? "Bienvenido + name" :
+   * goog.msgKind.FEMININE ? "Bienvenida + name" :
+   * goog.msgKind.NEUTER ? "Les damos la bienvenida + name" :
+   * "Les damos la bienvenida + name";
+   * }</pre>
+   */
+  private Node createConditionForGrammaticalGender(
+      AstFactory.Type type, JsMessage.GrammaticalGenderCase grammaticalGender, Node nodeToReplace) {
+
+    // NOTE: Collapse properties isn't guarantee to collapse any given property but if
+    // we get a partial collapse of "goog.msgKind" then something has gone very wrong
+    // so this seems reasonable rather than the alternative (traversing the AST to find the values).
+    if (collapsePropertiesHasRun) {
+      String referenceName =
+          switch (grammaticalGender) {
+            case MASCULINE -> "goog$msgKind$MASCULINE";
+            case FEMININE -> "goog$msgKind$FEMININE";
+            case NEUTER -> "goog$msgKind$NEUTER";
+            default -> "goog$msgKind$OTHER";
+          };
+      Node result = astFactory.createName(referenceName, type(nodeToReplace));
+      result.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+      return result;
+    } else {
+      Node googNode = astFactory.createName("goog", type);
+      googNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+      return astFactory.createGetProp(
+          astFactory.createGetProp(googNode, "msgKind", type(nodeToReplace)),
+          grammaticalGender.toString(),
+          type(nodeToReplace));
+    }
+  }
+
+  /**
    * Creates a ternary expression with the gendered message variants.
    *
    * <p>For example:
@@ -750,13 +794,7 @@ public final class ReplaceMessages {
       }
       // Hook condition ex: `goog.msgKind.MASCULINE?` or `goog.msgKind.FEMININE ?` or
       // `goog.msgKind.NEUTER ?`
-      Node googNode = astFactory.createName("goog", type);
-      googNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-      Node condition =
-          astFactory.createGetProp(
-              astFactory.createGetProp(googNode, "msgKind", type(nodeToReplace)),
-              grammaticalGender.toString(),
-              type(nodeToReplace));
+      Node condition = createConditionForGrammaticalGender(type, grammaticalGender, nodeToReplace);
 
       // The last child of the hook expression will be replaced with the next currentHook
       Node currentHook =
