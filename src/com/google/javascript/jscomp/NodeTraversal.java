@@ -714,22 +714,10 @@ public class NodeTraversal {
 
   /**
    * Traverses *just* the contents of provided scope nodes (and optionally scopes nested within
-   * them) but will fall back on traversing the entire AST from root if a null scope nodes list is
-   * provided.
-   *
-   * @param root If scopeNodes is null, this method will just traverse 'root' instead. If scopeNodes
-   *     is not null, this parameter is ignored.
+   * them)
    */
   public static void traverseScopeRoots(
-      AbstractCompiler compiler,
-      @Nullable Node root,
-      @Nullable List<Node> scopeNodes,
-      Callback cb,
-      boolean traverseNested) {
-    if (scopeNodes == null) {
-      NodeTraversal.traverse(compiler, root, cb);
-      return;
-    }
+      AbstractCompiler compiler, List<Node> scopeNodes, Callback cb, boolean traverseNested) {
 
     class TraverseScopeRootsCallback implements ScopedCallback {
       boolean insideScopeNode = false;

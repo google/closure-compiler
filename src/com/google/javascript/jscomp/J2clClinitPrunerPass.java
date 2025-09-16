@@ -43,11 +43,11 @@ public class J2clClinitPrunerPass implements CompilerPass {
 
   private final Map<String, Node> emptiedClinitMethods = new LinkedHashMap<>();
   private final AbstractCompiler compiler;
-  private final List<Node> changedScopeNodes;
+  private final @Nullable List<Node> initialChangedScopeNodes;
 
-  J2clClinitPrunerPass(AbstractCompiler compiler, List<Node> changedScopeNodes) {
+  J2clClinitPrunerPass(AbstractCompiler compiler, List<Node> initialChangedScopeNodes) {
     this.compiler = compiler;
-    this.changedScopeNodes = changedScopeNodes;
+    this.initialChangedScopeNodes = initialChangedScopeNodes;
   }
 
   @Override
@@ -56,9 +56,8 @@ public class J2clClinitPrunerPass implements CompilerPass {
       return;
     }
 
-    removeRedundantClinits(root, changedScopeNodes);
-
-    pruneEmptyClinits(root, changedScopeNodes);
+    removeRedundantClinits(root, initialChangedScopeNodes);
+    pruneEmptyClinits(root, initialChangedScopeNodes);
 
     if (emptiedClinitMethods.isEmpty()) {
       // Since no clinits are pruned, we don't need look for more opportunities.
@@ -76,23 +75,35 @@ public class J2clClinitPrunerPass implements CompilerPass {
     new PureFunctionIdentifier.Driver(compiler).process(externs, root);
   }
 
-  private void removeRedundantClinits(Node root, List<Node> changedScopeNodes) {
+  private void removeRedundantClinits(Node root, @Nullable List<Node> changedScopeNodes) {
     List<Node> changedRoots = getNonNestedParentScopeNodes(changedScopeNodes);
-    NodeTraversal.traverseScopeRoots(
-        compiler, root, changedRoots, new RedundantClinitPruner(changedRoots), true);
+    traverseScopeRootsWithFallback(
+        root, changedRoots, new RedundantClinitPruner(changedRoots), true);
 
-    NodeTraversal.traverseScopeRoots(
-        compiler, root, changedScopeNodes, new LookAheadRedundantClinitPruner(), false);
+    traverseScopeRootsWithFallback(
+        root, changedScopeNodes, new LookAheadRedundantClinitPruner(), false);
   }
 
-  private void pruneEmptyClinits(Node root, List<Node> changedScopes) {
+  private void pruneEmptyClinits(Node root, @Nullable List<Node> changedScopes) {
     // Clear emptiedClinitMethods before EmptyClinitPruner to populate only with new ones.
     emptiedClinitMethods.clear();
-    NodeTraversal.traverseScopeRoots(compiler, root, changedScopes, new EmptyClinitPruner(), false);
+    traverseScopeRootsWithFallback(root, changedScopes, new EmptyClinitPruner(), false);
 
     // Make sure replacements are to final destination instead of pointing intermediate ones.
     for (Entry<String, Node> clinitReplacementEntry : emptiedClinitMethods.entrySet()) {
       clinitReplacementEntry.setValue(resolveReplacement(clinitReplacementEntry.getValue()));
+    }
+  }
+
+  private void traverseScopeRootsWithFallback(
+      Node root,
+      @Nullable List<Node> scopeRoots,
+      NodeTraversal.Callback callback,
+      boolean traverseNested) {
+    if (scopeRoots == null) {
+      NodeTraversal.traverse(compiler, root, callback);
+    } else {
+      NodeTraversal.traverseScopeRoots(compiler, scopeRoots, callback, traverseNested);
     }
   }
 

@@ -90,30 +90,36 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
       this.compiler = compiler;
     }
 
+
     @Override
     public void process(Node externs, Node root) {
+      var cb =
+          new NodeTraversal.AbstractPostOrderCallback() {
+            @Override
+            public void visit(NodeTraversal t, Node node, Node parent) {
+              if (node.isNumber()) {
+                double value = node.getDouble();
+                if (value <= 3.0) {
+                  node.setDouble(4.0);
+                  compiler.reportChangeToEnclosingScope(node);
+                }
+              }
+            }
+          };
       for (List<Node> changedScopeNodes = compiler.getChangedScopeNodesForPass(passName);
           changedScopeNodes == null || !changedScopeNodes.isEmpty();
           changedScopeNodes = compiler.getChangedScopeNodesForPass(passName)) {
-        NodeTraversal.traverseScopeRoots(
-            compiler,
-            root,
-            (passName == ARBITRARY_NUMERIC_CHANGE_CLOSURE_UNAWARE_CODE && changedScopeNodes == null)
-                ? shadowNodes
-                : changedScopeNodes,
-            new NodeTraversal.AbstractPostOrderCallback() {
-              @Override
-              public void visit(NodeTraversal t, Node node, Node parent) {
-                if (node.isNumber()) {
-                  double value = node.getDouble();
-                  if (value <= 3.0) {
-                    node.setDouble(4.0);
-                    compiler.reportChangeToEnclosingScope(node);
-                  }
-                }
-              }
-            },
-            false);
+        // changedScopeNodes is only null if this is the first run of this pass.
+        if (changedScopeNodes != null) {
+          NodeTraversal.traverseScopeRoots(
+              compiler, changedScopeNodes, cb, /* traverseNested= */ false);
+          continue;
+        }
+        if (passName.equals(ARBITRARY_NUMERIC_CHANGE_CLOSURE_UNAWARE_CODE)) {
+          NodeTraversal.traverseScopeRoots(compiler, shadowNodes, cb, /* traverseNested= */ false);
+        } else {
+          NodeTraversal.traverse(compiler, root, cb);
+        }
       }
     }
   }

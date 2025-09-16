@@ -804,14 +804,13 @@ public final class NodeTraversalTest {
     Node fooFunction = tree.getFirstChild();
 
     // Traverse without entering nested scopes.
-    NodeTraversal.traverseScopeRoots(
-        compiler, null, ImmutableList.of(fooFunction), callback, false);
+    NodeTraversal.traverseScopeRoots(compiler, ImmutableList.of(fooFunction), callback, false);
     assertThat(callback.strings).containsExactly("string in foo");
 
     callback.strings.clear();
 
     // Traverse *with* entering nested scopes, now also sees "string nested in baz".
-    NodeTraversal.traverseScopeRoots(compiler, null, ImmutableList.of(fooFunction), callback, true);
+    NodeTraversal.traverseScopeRoots(compiler, ImmutableList.of(fooFunction), callback, true);
     assertThat(callback.strings).containsExactly("string in foo", "string nested in baz");
   }
 
@@ -838,15 +837,14 @@ public final class NodeTraversalTest {
     Node fooFunction = tree.getSecondChild().getFirstFirstChild();
 
     // Traverse without entering nested scopes.
-    NodeTraversal.traverseScopeRoots(
-        compiler, null, ImmutableList.of(fooFunction), callback, false);
+    NodeTraversal.traverseScopeRoots(compiler, ImmutableList.of(fooFunction), callback, false);
     assertThat(callback.varNames)
         .containsExactly("varDefinedInScript", "foo", "bar", "varDefinedInFoo", "baz");
 
     callback.varNames.clear();
 
     // Traverse *with* entering nested scopes, now also sees "varDefinedInBaz".
-    NodeTraversal.traverseScopeRoots(compiler, null, ImmutableList.of(fooFunction), callback, true);
+    NodeTraversal.traverseScopeRoots(compiler, ImmutableList.of(fooFunction), callback, true);
     assertThat(callback.varNames)
         .containsExactly(
             "varDefinedInScript", "foo", "bar", "varDefinedInFoo", "baz", "varDefinedInBaz");
@@ -882,7 +880,7 @@ public final class NodeTraversalTest {
     Node fooFunction = tree.getFirstChild();
 
     NodeTraversal.traverseScopeRoots(
-        compiler, null, ImmutableList.of(fooFunction), new TestCallback(), true);
+        compiler, ImmutableList.of(fooFunction), new TestCallback(), true);
     assertThat(scopesEntered).hasSize(3); // Function, function's body, and the block inside it.
   }
 

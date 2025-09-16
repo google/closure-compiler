@@ -265,7 +265,6 @@ class FunctionToBlockMutator {
     // Make variable names unique to this instance.
     NodeTraversal.traverseScopeRoots(
         compiler,
-        null,
         ImmutableList.of(fnNode),
         MakeDeclaredNamesUnique.builder()
             .withRenamer(
