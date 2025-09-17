@@ -184,6 +184,8 @@ public final class FeatureSet implements Serializable {
     TRAILING_COMMA("trailing comma", LangVersion.ES5),
 
     // ES2015 features (besides modules): all stable browsers are now fully compliant
+    // go/keep-sorted start
+    ARRAY_DESTRUCTURING("array destructuring", LangVersion.ES2015),
     ARRAY_PATTERN_REST("array pattern rest", LangVersion.ES2015),
     ARROW_FUNCTIONS("arrow function", LangVersion.ES2015),
     BINARY_LITERALS("binary literal", LangVersion.ES2015),
@@ -193,21 +195,21 @@ public final class FeatureSet implements Serializable {
     COMPUTED_PROPERTIES("computed property", LangVersion.ES2015),
     CONST_DECLARATIONS("const declaration", LangVersion.ES2015),
     DEFAULT_PARAMETERS("default parameter", LangVersion.ES2015),
-    ARRAY_DESTRUCTURING("array destructuring", LangVersion.ES2015),
-    OBJECT_DESTRUCTURING("object destructuring", LangVersion.ES2015),
-    EXTENDED_OBJECT_LITERALS("extended object literal", LangVersion.ES2015),
     FOR_OF("for-of loop", LangVersion.ES2015),
     GENERATORS("generator", LangVersion.ES2015),
     LET_DECLARATIONS("let declaration", LangVersion.ES2015),
     MEMBER_DECLARATIONS("member declaration", LangVersion.ES2015),
     NEW_TARGET("new.target", LangVersion.ES2015),
+    OBJECT_DESTRUCTURING("object destructuring", LangVersion.ES2015),
     OCTAL_LITERALS("octal literal", LangVersion.ES2015),
     REGEXP_FLAG_U("RegExp flag 'u'", LangVersion.ES2015),
     REGEXP_FLAG_Y("RegExp flag 'y'", LangVersion.ES2015),
     REST_PARAMETERS("rest parameter", LangVersion.ES2015),
+    SHORTHAND_OBJECT_PROPERTIES("shorthand object property", LangVersion.ES2015),
     SPREAD_EXPRESSIONS("spread expression", LangVersion.ES2015),
     SUPER("super", LangVersion.ES2015),
     TEMPLATE_LITERALS("template literal", LangVersion.ES2015),
+    // go/keep-sorted end
 
     // ES modules
     MODULES("modules", LangVersion.ES2015),

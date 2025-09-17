@@ -2962,15 +2962,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testExtendedObjectLiteral() {
-    expectFeatures(Feature.EXTENDED_OBJECT_LITERALS);
-    testExtendedObjectLiteral("var a = {b};");
-    testExtendedObjectLiteral("var a = {b, c};");
-    testExtendedObjectLiteral("var a = {b, c: d, e};");
-    testExtendedObjectLiteral("var a = {type};");
-    testExtendedObjectLiteral("var a = {declare};");
-    testExtendedObjectLiteral("var a = {namespace};");
-    testExtendedObjectLiteral("var a = {module};");
+  public void testShorthandObjectProperty() {
+    expectFeatures(Feature.SHORTHAND_OBJECT_PROPERTIES);
+    testShorthandObjectProperty("var a = {b};");
+    testShorthandObjectProperty("var a = {b, c};");
+    testShorthandObjectProperty("var a = {b, c: d, e};");
+    testShorthandObjectProperty("var a = {type};");
+    testShorthandObjectProperty("var a = {declare};");
+    testShorthandObjectProperty("var a = {namespace};");
+    testShorthandObjectProperty("var a = {module};");
 
     expectFeatures();
     parseError("var a = { '!@#$%' };", "':' expected");
@@ -2979,13 +2979,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("var a = { else };", "Cannot use keyword in short object literal");
   }
 
-  private void testExtendedObjectLiteral(String js) {
+  private void testShorthandObjectProperty(String js) {
     mode = LanguageMode.ECMASCRIPT_2015;
     strictMode = SLOPPY;
     parse(js);
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning(js, requiresLanguageModeMessage(Feature.EXTENDED_OBJECT_LITERALS));
+    parseWarning(js, requiresLanguageModeMessage(Feature.SHORTHAND_OBJECT_PROPERTIES));
   }
 
   @Test

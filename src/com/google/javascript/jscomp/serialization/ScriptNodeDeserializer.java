@@ -178,7 +178,7 @@ final class ScriptNodeDeserializer {
 
         case STRING_KEY:
           if (node.isShorthandProperty()) {
-            this.addScriptFeature(Feature.EXTENDED_OBJECT_LITERALS);
+            this.addScriptFeature(Feature.SHORTHAND_OBJECT_PROPERTIES);
           }
           return;
 

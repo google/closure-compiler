@@ -2031,7 +2031,7 @@ public final class AstValidator implements CompilerPass {
     validateChildCount(n, 1);
     validateExpression(n.getFirstChild());
     if (n.getBooleanProp(Node.IS_SHORTHAND_PROPERTY)) {
-      validateFeature(Feature.EXTENDED_OBJECT_LITERALS, n);
+      validateFeature(Feature.SHORTHAND_OBJECT_PROPERTIES, n);
     }
   }
 

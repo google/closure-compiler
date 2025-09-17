@@ -54,7 +54,7 @@ class SubstituteEs6Syntax extends AbstractPostOrderCallback implements CompilerP
         break;
       case SCRIPT:
         if (objectLiteralShorthandWasAdded) {
-          NodeUtil.addFeatureToScript(n, Feature.EXTENDED_OBJECT_LITERALS, compiler);
+          NodeUtil.addFeatureToScript(n, Feature.SHORTHAND_OBJECT_PROPERTIES, compiler);
           objectLiteralShorthandWasAdded = false; // false for the next script
         }
         break;

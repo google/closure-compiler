@@ -1372,7 +1372,7 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testFeatureValidation_extendedObjectLiterals() {
-    testFeatureValidation("var obj = { x };", Feature.EXTENDED_OBJECT_LITERALS);
+    testFeatureValidation("var obj = { x };", Feature.SHORTHAND_OBJECT_PROPERTIES);
   }
 
   @Test

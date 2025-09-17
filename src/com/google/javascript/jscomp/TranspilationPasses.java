@@ -203,7 +203,9 @@ public class TranspilationPasses {
                 if (compiler.getOptions().needsTranspilationOf(Feature.OPTIONAL_CATCH_BINDING)) {
                   peepholeTranspilations.add(new RewriteCatchWithNoBinding(compiler));
                 }
-                if (compiler.getOptions().needsTranspilationOf(Feature.EXTENDED_OBJECT_LITERALS)) {
+                if (compiler
+                    .getOptions()
+                    .needsTranspilationOf(Feature.SHORTHAND_OBJECT_PROPERTIES)) {
                   peepholeTranspilations.add(new Es6NormalizeShorthandProperties(compiler));
                 }
                 if (compiler.getOptions().needsTranspilationOf(Feature.NEW_TARGET)) {

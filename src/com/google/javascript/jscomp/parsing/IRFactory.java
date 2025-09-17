@@ -2437,7 +2437,7 @@ class IRFactory {
         node.addChildToBack(key);
       }
       if (maybeWarn) {
-        maybeWarnForFeature(objTree, Feature.EXTENDED_OBJECT_LITERALS);
+        maybeWarnForFeature(objTree, Feature.SHORTHAND_OBJECT_PROPERTIES);
       }
       return node;
     }
