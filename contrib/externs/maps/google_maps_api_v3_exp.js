@@ -24015,9 +24015,9 @@ google.maps.routes.ComputeRouteMatrixRequest.prototype.departureTime;
 
 /**
  * Array of destinations, which determines the columns of the response matrix. A
- * value passed as a string may be an address or <a
- * href="https://plus.codes">plus code</a>. Altitude values are not taken into
- * consideration.
+ * value passed as a string may be an address, a <a
+ * href="https://plus.codes">plus code</a>, or a Place resource name. Altitude
+ * values are not taken into consideration.
  * @type {!Iterable<string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitudeLiteral|google.maps.routes.DirectionalLocationLiteral|google.maps.places.Place|google.maps.routes.Waypoint>}
  */
 google.maps.routes.ComputeRouteMatrixRequest.prototype.destinations;
@@ -24056,14 +24056,15 @@ google.maps.routes.ComputeRouteMatrixRequest.prototype.language;
 
 /**
  * Array of origins, which determines the rows of the response matrix. A value
- * passed as a string may be an address or <a href="https://plus.codes">plus
- * code</a>. Altitude values are not taken into consideration. <br><br> Several
- * size restrictions apply to the cardinality of origins and destinations: <ul>
- * <li> The total number of origins and destinations specified as
- * <code>string</code>s or {@link google.maps.places.Place}s must be no greater
- * than 50. </li> <li> The product of the number of origins and the number of
- * destinations must be no greater than 625. </li> <li> The product of the
- * number of origins and destinations must be no greater than 100 if {@link
+ * passed as a string may be an address, a <a href="https://plus.codes">plus
+ * code</a>, or a Place resource name. Altitude values are not taken into
+ * consideration. <br><br> Several size restrictions apply to the cardinality of
+ * origins and destinations: <ul> <li> The total number of origins and
+ * destinations specified as <code>string</code>s or {@link
+ * google.maps.places.Place}s must be no greater than 50. </li> <li> The product
+ * of the number of origins and the number of destinations must be no greater
+ * than 625. </li> <li> The product of the number of origins and destinations
+ * must be no greater than 100 if {@link
  * google.maps.routes.ComputeRouteMatrixRequest.routingPreference} is set to
  * <code>TRAFFIC_AWARE_OPTIMAL</code>. </li> <li> The product of the number of
  * origins and destinations must be no greater than 100 if {@link
@@ -24224,9 +24225,9 @@ google.maps.routes.ComputeRoutesRequest.prototype.computeAlternativeRoutes;
 google.maps.routes.ComputeRoutesRequest.prototype.departureTime;
 
 /**
- * The destination of the route. A value passed as a string may be an address or
- * <a href="https://plus.codes">plus code</a>. Altitude values are not taken
- * into consideration for computing routes.
+ * The destination of the route. A value passed as a string may be an address,
+ * <a href="https://plus.codes">plus code</a>, or a Place resource name.
+ * Altitude values are not taken into consideration for computing routes.
  * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitudeLiteral|google.maps.routes.DirectionalLocationLiteral|google.maps.places.Place|google.maps.routes.Waypoint}
  */
 google.maps.routes.ComputeRoutesRequest.prototype.destination;
@@ -24286,9 +24287,9 @@ google.maps.routes.ComputeRoutesRequest.prototype.language;
 google.maps.routes.ComputeRoutesRequest.prototype.optimizeWaypointOrder;
 
 /**
- * The origin of the route. A value passed as a string may be an address or <a
- * href="https://plus.codes">plus code</a>. Altitude values are not taken into
- * consideration for computing routes.
+ * The origin of the route. A value passed as a string may be an address, <a
+ * href="https://plus.codes">plus code</a>, or a Place resource name. Altitude
+ * values are not taken into consideration for computing routes.
  * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitudeLiteral|google.maps.routes.DirectionalLocationLiteral|google.maps.places.Place|google.maps.routes.Waypoint}
  */
 google.maps.routes.ComputeRoutesRequest.prototype.origin;
@@ -24997,12 +24998,13 @@ google.maps.routes.Route.computeRoutes = function(request) {};
  * preceding interval. Polylines have default speed-based styling applied.
  * Options can be passed in to alter the polyline style based on speed. </li>
  * </ul> <br> Overall polyline: <ul> <li> Requirements: <ul> <li> The
- * <code>&quot;path&quot;</code> field must be requested in {@link
- * google.maps.routes.ComputeRoutesRequest.fields}. </li> </ul> </li> <li>
- * Creates a single polyline for the entire route with default styling applied.
- * Options can be passed in to alter the polyline style based on the route
- * travel mode. For further customization, create polylines directly
- * using {@link google.maps.routes.Route.path}. </li> </ul>
+ * <code>&quot;path&quot;</code> or <code>&quot;legs&quot;</code> field must be
+ * requested in {@link google.maps.routes.ComputeRoutesRequest.fields}. </li>
+ * </ul> </li> <li> Creates a single polyline for the entire route with default
+ * styling applied. Options can be passed in to alter the polyline style based
+ * on the route travel mode. For further customization, create polylines
+ * directly using {@link google.maps.routes.Route.path} or {@link
+ * google.maps.routes.RouteLeg.path}. </li> </ul>
  * @param {!google.maps.routes.RoutePolylineOptions=} options
  * @return {!Array<!google.maps.Polyline>}
  */
@@ -26505,8 +26507,8 @@ google.maps.routes.VehicleInfo.prototype.emissionType;
 google.maps.routes.Waypoint = function() {};
 
 /**
- * The location of the waypoint. A string may be an address or <a
- * href="https://plus.codes">plus code</a>.
+ * The location of the waypoint. A string may be an address, a <a
+ * href="https://plus.codes">plus code</a>, or a Place resource name.
  * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitudeLiteral|google.maps.routes.DirectionalLocationLiteral|google.maps.places.Place}
  */
 google.maps.routes.Waypoint.prototype.location;
