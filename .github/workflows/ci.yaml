@@ -122,7 +122,7 @@ jobs:
         # https://github.com/marketplace/actions/checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
-          repository: google/closure-compiler-npm
+          repository: chadkillingsworth/closure-compiler-npm
           ref: master
 
         # Clone closure-compiler repo from the commit under test into the npm repo compiler
