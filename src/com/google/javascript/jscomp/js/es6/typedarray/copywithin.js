@@ -18,6 +18,9 @@
 'require util/polyfill';
 
 /**
+ * Technically shipped with the initial version of TypedArray, but Cobalt 9 does
+ * not support it at all and Cobalt 11 only support it in 4/9 TypedArray
+ * classes.
  * @param {*} orig
  * @return {*}
  */
