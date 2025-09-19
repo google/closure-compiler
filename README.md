@@ -144,6 +144,10 @@ To achieve these goals closure compiler places many restrictions on its input:
 
 ## Getting Started
 
+IMPORTANT: The NPM packages are not built and distributed by Google. They are an
+Open Source contribution from ChadKillingsworth, who manages and builds them
+from a separate repository at https://github.com/ChadKillingsworth/closure-compiler-npm.
+
 The easiest way to install the compiler is with [NPM](https://npmjs.com) or
 [Yarn](https://yarnpkg.com):
 
