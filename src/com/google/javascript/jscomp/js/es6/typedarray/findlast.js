@@ -47,6 +47,12 @@ $jscomp.typedArrayFindLast = function(orig) {
 };
 
 $jscomp.polyfill(
+    'BigInt64Array.prototype.findLast', $jscomp.typedArrayFindLast, 'es_next',
+    'es_2020');
+$jscomp.polyfill(
+    'BigUint64Array.prototype.findLast', $jscomp.typedArrayFindLast, 'es_next',
+    'es_2020');
+$jscomp.polyfill(
     'Int8Array.prototype.findLast', $jscomp.typedArrayFindLast, 'es_next',
     'es5');
 $jscomp.polyfill(

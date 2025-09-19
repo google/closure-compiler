@@ -31,6 +31,10 @@ $jscomp.typedArrayAt = function(orig) {
 };
 
 $jscomp.polyfill(
+    'BigInt64Array.prototype.at', $jscomp.typedArrayAt, 'es_next', 'es_2020');
+$jscomp.polyfill(
+    'BigUint64Array.prototype.at', $jscomp.typedArrayAt, 'es_next', 'es_2020');
+$jscomp.polyfill(
     'Int8Array.prototype.at', $jscomp.typedArrayAt, 'es_next', 'es5');
 $jscomp.polyfill(
     'Uint8Array.prototype.at', $jscomp.typedArrayAt, 'es_next', 'es5');
