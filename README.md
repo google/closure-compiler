@@ -312,7 +312,7 @@ new compiler({
 This package will provide programmatic access to the native Graal binary in most
 cases, and will fall back to the Java version otherwise.
 
-#### Please see the [closure-compiler-npm](https://github.com/google/closure-compiler-npm/tree/master/packages/google-closure-compiler) repository for documentation on accessing the compiler in JS.
+#### Please see the [closure-compiler-npm](https://github.com/chadkillingsworth/closure-compiler-npm/tree/master/packages/google-closure-compiler) repository for documentation on accessing the compiler in JS.
 
 ## Compiling Multiple Scripts
 

@@ -5,7 +5,7 @@
   "license": "Apache-2",
   "private": true,
   "devDependencies": {
-    "closure-compiler-npm": "google/closure-compiler-npm"
+    "closure-compiler-npm": "chadkillingsworth/closure-compiler-npm"
   },
   "scripts": {
     "compile": "java -jar bazel-bin/compiler_uberjar_deploy.jar"
