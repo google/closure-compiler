@@ -25,15 +25,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import com.google.javascript.jscomp.CompilerOptions.AliasTransformation;
-import com.google.javascript.jscomp.CompilerOptions.AliasTransformationHandler;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
-import com.google.javascript.rhino.SourcePosition;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -86,7 +83,6 @@ class ScopedAliases implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final PreprocessorSymbolTable preprocessorSymbolTable;
-  private final AliasTransformationHandler transformationHandler;
   private CompilerInput uniqueIdInput;
 
   // Errors
@@ -153,16 +149,17 @@ class ScopedAliases implements CompilerPass {
 
   /**
    * @deprecated use the builder instead of this constructor
+   * @param transformationHandler this is unused and only exists for legacy compatibility with
+   *     bazel/rules_closure. Delete once bazel/rules_closure is cleaned up.
    */
   @Deprecated
   ScopedAliases(
       AbstractCompiler compiler,
       @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
-      AliasTransformationHandler transformationHandler) {
+      Object transformationHandler) {
     this(
         compiler,
         preprocessorSymbolTable,
-        transformationHandler,
         ImmutableSet.of(),
         InvalidModuleGetHandling.PRESERVE);
   }
@@ -170,12 +167,10 @@ class ScopedAliases implements CompilerPass {
   private ScopedAliases(
       AbstractCompiler compiler,
       @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
-      AliasTransformationHandler transformationHandler,
       Set<String> closureNamespaces,
       InvalidModuleGetHandling invalidModuleGetHandling) {
     this.compiler = compiler;
     this.preprocessorSymbolTable = preprocessorSymbolTable;
-    this.transformationHandler = transformationHandler;
     this.closureNamespaces = closureNamespaces;
     this.invalidModuleGetHandling = invalidModuleGetHandling;
   }
@@ -188,8 +183,6 @@ class ScopedAliases implements CompilerPass {
 
     private final AbstractCompiler compiler;
     private @Nullable PreprocessorSymbolTable preprocessorSymbolTable = null;
-    private AliasTransformationHandler transformationHandler =
-        CompilerOptions.NULL_ALIAS_TRANSFORMATION_HANDLER;
     private @Nullable ModuleMetadataMap moduleMetadataMap = null;
     private InvalidModuleGetHandling invalidModuleGetHandling = InvalidModuleGetHandling.PRESERVE;
 
@@ -219,17 +212,10 @@ class ScopedAliases implements CompilerPass {
       return this;
     }
 
-    @CanIgnoreReturnValue
-    Builder setAliasTransformationHandler(AliasTransformationHandler aliasTransformationHandler) {
-      this.transformationHandler = aliasTransformationHandler;
-      return this;
-    }
-
     ScopedAliases build() {
       return new ScopedAliases(
           compiler,
           preprocessorSymbolTable,
-          transformationHandler,
           moduleMetadataMap == null
               ? ImmutableSet.of()
               : moduleMetadataMap.getModulesByGoogNamespace().keySet(),
@@ -423,8 +409,6 @@ class ScopedAliases implements CompilerPass {
 
     private boolean hasErrors = false;
 
-    private @Nullable AliasTransformation transformation = null;
-
     // The body of the function that is passed to goog.scope.
     // Set when the traversal enters the body, and set back to null when it exits.
     private @Nullable Node scopeFunctionBody = null;
@@ -479,9 +463,6 @@ class ScopedAliases implements CompilerPass {
       }
       Node scopeMethodCall = findScopeMethodCall(t.getScopeRoot());
       if (scopeMethodCall != null) {
-        transformation =
-            transformationHandler.logAliasTransformation(
-                scopeMethodCall.getSourceFileName(), getSourceRegion(scopeMethodCall));
         findAliases(t.getScope());
         scopeFunctionBody = scopeMethodCall.getLastChild().getLastChild();
       }
@@ -495,7 +476,6 @@ class ScopedAliases implements CompilerPass {
         injectedDecls.clear();
         aliases.clear();
         forbiddenLocals.clear();
-        transformation = null;
         hasNamespaceShadows = false;
       } else if (inGoogScopeBody()) {
         // Called on inner scopes within a goog.scope, including both block scopes and
@@ -521,21 +501,6 @@ class ScopedAliases implements CompilerPass {
           }
         }
       }
-    }
-
-    private SourcePosition<AliasTransformation> getSourceRegion(Node n) {
-      Node testNode = n;
-      Node next = null;
-      for (; next != null || testNode.isScript(); ) {
-        next = testNode.getNext();
-        testNode = testNode.getParent();
-      }
-
-      int endLine = next == null ? Integer.MAX_VALUE : next.getLineno();
-      int endChar = next == null ? Integer.MAX_VALUE : next.getCharno();
-      SourcePosition<AliasTransformation> pos = new SourcePosition<AliasTransformation>() {};
-      pos.setPositionInformation(n.getLineno(), n.getCharno(), endLine, endChar);
-      return pos;
     }
 
     private void report(Node n, DiagnosticType error, String... arguments) {
@@ -660,8 +625,6 @@ class ScopedAliases implements CompilerPass {
       aliases.put(name, aliasVar);
 
       String qualifiedName = getAliasedNamespace(initialValue);
-      transformation.addAlias(name, qualifiedName);
-
       int rootIndex = qualifiedName.indexOf('.');
       if (rootIndex != -1) {
         String qNameRoot = qualifiedName.substring(0, rootIndex);

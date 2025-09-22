@@ -41,7 +41,6 @@ import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.SourcePosition;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -1166,9 +1165,6 @@ public class CompilerOptions {
     return assumeStaticInheritanceIsNotUsed;
   }
 
-  /** Data holder Alias Transformation information accumulated during a compile. */
-  private transient AliasTransformationHandler aliasHandler;
-
   /** Handler for compiler warnings and errors. */
   transient @Nullable ErrorHandler errorHandler;
 
@@ -1458,7 +1454,6 @@ public class CompilerOptions {
     chunkOutputType = ChunkOutputType.GLOBAL_NAMESPACE;
 
     // Debugging
-    aliasHandler = NULL_ALIAS_TRANSFORMATION_HANDLER;
     errorHandler = null;
     printSourceAfterEachPass = false;
     strictMessageReplacement = false;
@@ -1949,12 +1944,12 @@ public class CompilerOptions {
     return environment;
   }
 
-  public void setAliasTransformationHandler(AliasTransformationHandler changes) {
-    this.aliasHandler = changes;
-  }
-
-  public AliasTransformationHandler getAliasTransformationHandler() {
-    return this.aliasHandler;
+  /**
+   * @deprecated this always returns null and is slated for removal.
+   */
+  @Deprecated
+  public @Nullable Object getAliasTransformationHandler() {
+    return null;
   }
 
   /**
@@ -2852,7 +2847,6 @@ public class CompilerOptions {
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .omitNullValues()
-        .add("aliasHandler", getAliasTransformationHandler())
         .add("aliasStringsMode", getAliasStringsMode())
         .add("ambiguateProperties", ambiguateProperties)
         .add("angularPass", angularPass)
@@ -3254,78 +3248,6 @@ public class CompilerOptions {
     LARGE, // Alias all string literals with a length greater than 100 characters.
     ALL, // Alias all string literals where it may improve code size
     ALL_AGGRESSIVE // Alias all string regardless of code size
-  }
-
-  /**
-   * A Role Specific Interface for JS Compiler that represents a data holder object which is used to
-   * store goog.scope alias code changes to code made during a compile. There is no guarantee that
-   * individual alias changes are invoked in the order they occur during compilation, so
-   * implementations should not assume any relevance to the order changes arrive.
-   *
-   * <p>Calls to the mutators are expected to resolve very quickly, so implementations should not
-   * perform expensive operations in the mutator methods.
-   */
-  public interface AliasTransformationHandler {
-
-    /**
-     * Builds an AliasTransformation implementation and returns it to the caller.
-     *
-     * <p>Callers are allowed to request multiple AliasTransformation instances for the same file,
-     * though it is expected that the first and last char values for multiple instances will not
-     * overlap.
-     *
-     * <p>This method is expected to have a side-effect of storing off the created
-     * AliasTransformation, which guarantees that invokers of this interface cannot leak
-     * AliasTransformation to this implementation that the implementor did not create
-     *
-     * @param sourceFile the source file the aliases re contained in.
-     * @param position the region of the source file associated with the goog.scope call. The item
-     *     of the SourcePosition is the returned AliasTransformation
-     */
-    public AliasTransformation logAliasTransformation(
-        String sourceFile, SourcePosition<AliasTransformation> position);
-  }
-
-  /**
-   * A Role Specific Interface for the JS Compiler to report aliases used to change the code during
-   * a compile.
-   *
-   * <p>While aliases defined by goog.scope are expected to by only 1 per file, and the only
-   * top-level structure in the file, this is not enforced.
-   */
-  public interface AliasTransformation {
-
-    /**
-     * Adds an alias definition to the AliasTransformation instance.
-     *
-     * <p>Last definition for a given alias is kept if an alias is inserted multiple times (since
-     * this is generally the behavior in JavaScript code).
-     *
-     * @param alias the name of the alias.
-     * @param definition the definition of the alias.
-     */
-    void addAlias(String alias, String definition);
-  }
-
-  /** A Null implementation of the CodeChanges interface which performs all operations as a No-Op */
-  static final AliasTransformationHandler NULL_ALIAS_TRANSFORMATION_HANDLER =
-      new NullAliasTransformationHandler();
-
-  private static class NullAliasTransformationHandler implements AliasTransformationHandler {
-    private static final AliasTransformation NULL_ALIAS_TRANSFORMATION =
-        new NullAliasTransformation();
-
-    @Override
-    public AliasTransformation logAliasTransformation(
-        String sourceFile, SourcePosition<AliasTransformation> position) {
-      position.setItem(NULL_ALIAS_TRANSFORMATION);
-      return NULL_ALIAS_TRANSFORMATION;
-    }
-
-    private static class NullAliasTransformation implements AliasTransformation {
-      @Override
-      public void addAlias(String alias, String definition) {}
-    }
   }
 
   /** An environment specifies the built-in externs that are loaded for a given compilation. */

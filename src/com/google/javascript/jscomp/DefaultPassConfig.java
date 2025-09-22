@@ -1567,7 +1567,6 @@ public final class DefaultPassConfig extends PassConfig {
                 preprocessorSymbolTableFactory.maybeInitialize(compiler);
                 return ScopedAliases.builder(compiler)
                     .setPreprocessorSymbolTable(preprocessorSymbolTableFactory.getInstanceOrNull())
-                    .setAliasTransformationHandler(options.getAliasTransformationHandler())
                     .setModuleMetadataMap(compiler.getModuleMetadataMap())
                     .setInvalidModuleGetHandling(InvalidModuleGetHandling.DELETE)
                     .build();
