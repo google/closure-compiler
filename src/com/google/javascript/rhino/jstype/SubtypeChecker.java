@@ -318,19 +318,6 @@ final class SubtypeChecker {
         }
         return this.isStructuralSubtypeHelper(
             subtype, supertype, PropertyOptionality.VOIDABLE_PROPS_ARE_OPTIONAL);
-      } else if (!subAndSuperAreSameBaseType
-        && supertype.isRecordType()
-        && this.isUsingStructuralTyping) {
-      /*
-       * Anonymous record types are always considered structurally when supertypes.
-       *
-       * <p>Structural typing is the only kind of typing they support. However, we limit to the case
-       * where the supertype is the record, because records shouldn't be subtypes of nominal types.
-       */
-      // TODO: lharker - check whether this is dead code and delete if so.
-      // context - review comments on cl/807854446;.
-      return this.isStructuralSubtypeHelper(
-          subtype, supertype, PropertyOptionality.ALL_PROPS_ARE_REQUIRED);
     }
 
     /*
