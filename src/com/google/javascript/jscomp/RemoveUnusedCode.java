@@ -87,6 +87,31 @@ class RemoveUnusedCode implements CompilerPass {
   private static final ImmutableSet<String> IMPLICITLY_USED_PROPERTIES =
       ImmutableSet.of("length", "toString", "valueOf", "constructor", "prototype");
 
+  /**
+   * Supported TypedArray subclasses.
+   *
+   * <p>Keep in sync with TYPED_ARRAY_CLASSES in js/build_polyfill_table.js.
+   */
+  // LINT.IfChange(typed_array_classes)
+  private static final ImmutableSet<String> TYPED_ARRAY_CLASSES =
+      ImmutableSet.of(
+          "Int8Array",
+          "Uint8Array",
+          "Uint8ClampedArray",
+          "Int16Array",
+          "Uint16Array",
+          "Int32Array",
+          "Uint32Array",
+          "Float32Array",
+          "Float64Array",
+          "BigInt64Array",
+          "BigUint64Array");
+
+  // LINT.ThenChange(
+  // //depot/google3/third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/build_polyfill_table.js:typed_array_classes,
+  // //depot/google3/third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/util/polyfill.js:typed_array_classes
+  // )
+
   private final AbstractCompiler compiler;
   private final AstAnalyzer astAnalyzer;
 
@@ -723,10 +748,26 @@ class RemoveUnusedCode implements CompilerPass {
       // TODO(bradfordcsmith): Should also handle Object.create() and Object.defineProperty().
       traverseObjectDefinePropertiesCall(callNode, scope);
     } else if (removeUnusedPolyfills && isJscompPolyfill(callee)) {
+      boolean isPolyfillTypedArrayMethod =
+          callee.isName()
+              ? callee.getString().equals("$jscomp$polyfillTypedArrayMethod")
+              : callee.isGetProp() && callee.getString().equals("polyfillTypedArrayMethod");
+
       Node firstArg = callee.getNext();
-      String polyfillName = firstArg.getString();
-      PolyfillInfo info = createPolyfillInfo(callNode, scope, polyfillName);
-      polyfills.put(info.key, info);
+      String polyfillOrMethodName = firstArg.getString();
+
+      if (isPolyfillTypedArrayMethod) {
+        String methodName = polyfillOrMethodName;
+        for (String className : TYPED_ARRAY_CLASSES) {
+          String polyfillName = className + ".prototype." + methodName;
+          PolyfillInfo info = createPolyfillInfo(callNode, scope, polyfillName);
+          polyfills.put(info.key, info);
+        }
+      } else {
+        String polyfillName = polyfillOrMethodName;
+        PolyfillInfo info = createPolyfillInfo(callNode, scope, polyfillName);
+        polyfills.put(info.key, info);
+      }
       // Only traverse the callee (to mark it as used).  The arguments may be traversed later.
       traverseNode(callNode.getFirstChild(), scope);
     } else if (NodeUtil.isGoogWeakUsageCall(callNode)
@@ -798,16 +839,24 @@ class RemoveUnusedCode implements CompilerPass {
   /** Checks whether this is a recognizable call to $jscomp.polyfill. */
   private static boolean isJscompPolyfill(Node n) {
     return switch (n.getToken()) {
-      case NAME ->
-          // Need to work correctly after CollapseProperties.
-          (n.getString().equals("$jscomp$polyfill") || n.getString().equals("$jscomp$patch"))
-              && n.getNext().isStringLit();
-      case GETPROP ->
-          // Need to work correctly without CollapseProperties.
-          (n.getString().equals("polyfill") || n.getString().equals("patch"))
-              && n.getFirstChild().isName()
-              && n.getFirstChild().getString().equals("$jscomp")
-              && n.getNext().isStringLit();
+      case NAME -> {
+        // Need to work correctly after CollapseProperties.
+        String name = n.getString();
+        yield (name.equals("$jscomp$polyfill")
+                || name.equals("$jscomp$patch")
+                || name.equals("$jscomp$polyfillTypedArrayMethod"))
+            && n.getNext().isStringLit();
+      }
+      case GETPROP -> {
+        // Need to work correctly without CollapseProperties.
+        String propertyName = n.getString();
+        yield (propertyName.equals("polyfill")
+                || propertyName.equals("patch")
+                || propertyName.equals("polyfillTypedArrayMethod"))
+            && n.getFirstChild().isName()
+            && n.getFirstChild().getString().equals("$jscomp")
+            && n.getNext().isStringLit();
+      }
       default -> false;
     };
   }
@@ -2352,7 +2401,11 @@ class RemoveUnusedCode implements CompilerPass {
 
     @Override
     public void removeInternal(AbstractCompiler compiler) {
-      NodeUtil.deleteNode(polyfillNode, compiler);
+      // When usages of $jscomp.polyfillTypedArrayMethod are removed, it results in multiple
+      // attempts to delete the same polyfill function due to the various TypedArray subclasses.
+      if (!alreadyRemoved(polyfillNode)) {
+        NodeUtil.deleteNode(polyfillNode, compiler);
+      }
     }
 
     @Override

@@ -80,6 +80,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
       var $jscomp = {};
       $jscomp.polyfill = function(
           /** string */ name, /** Function */ func, /** string */ from, /** string */ to) {};
+      $jscomp.polyfillTypedArrayMethod = function(
+          /** string */ name, /** Function */ func, /** string */ from, /** string */ to) {};
       """;
 
   private static final String JSCOMP_PATCH =
@@ -2937,6 +2939,34 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     enableTypeCheck();
     // We no longer use type information to make polyfill removal decisions.
     testRemoveUnusedPolyfills_globalWithPrototypePolyfill_untyped();
+  }
+
+  @Test
+  public void testRemoveUnusedPolyfills_typedArrayMethod_untyped() {
+    final String typedArrayAtPolyfill =
+        "$jscomp.polyfillTypedArrayMethod('at', function() {}, 'es_2022', 'es5');";
+    PolyfillRemovalTester tester =
+        new PolyfillRemovalTester()
+            .addExterns(
+                new TestExternsBuilder()
+                    .addConsole()
+                    .addExtra(
+                        JSCOMP_POLYFILL,
+                        "/** @constructor */ function Int8Array() {}",
+                        "/** @type {function(number):number} */ Int8Array.prototype.at;",
+                        "/** @constructor */ function Float32Array() {}",
+                        "/** @type {function(number):number} */ Float32Array.prototype.at;",
+                        "/** @constructor */ function BigInt64Array() {}",
+                        "/** @type {function(number):number} */ BigInt64Array.prototype.at;")
+                    .build())
+            .addPolyfill(typedArrayAtPolyfill);
+
+    // unused polyfill is removed
+    tester.expectPolyfillsRemovedTest("console.log('.at() is not called')", typedArrayAtPolyfill);
+    // used polyfill is not removed - usage via one TypedArray type is sufficient to keep it
+    tester.expectNoRemovalTest("console.log(new Int8Array().at(0))");
+    tester.expectNoRemovalTest("console.log(new Float32Array().at(0))");
+    tester.expectNoRemovalTest("console.log(new BigInt64Array().at(0))");
   }
 
   @Test

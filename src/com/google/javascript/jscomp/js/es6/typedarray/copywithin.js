@@ -29,30 +29,5 @@ $jscomp.typedArrayCopyWithin = function(orig) {
   return Array.prototype.copyWithin;
 };
 
-$jscomp.polyfill(
-    'Int8Array.prototype.copyWithin', $jscomp.typedArrayCopyWithin, 'es6',
-    'es5');
-$jscomp.polyfill(
-    'Uint8Array.prototype.copyWithin', $jscomp.typedArrayCopyWithin, 'es6',
-    'es5');
-$jscomp.polyfill(
-    'Uint8ClampedArray.prototype.copyWithin', $jscomp.typedArrayCopyWithin,
-    'es6', 'es5');
-$jscomp.polyfill(
-    'Int16Array.prototype.copyWithin', $jscomp.typedArrayCopyWithin, 'es6',
-    'es5');
-$jscomp.polyfill(
-    'Uint16Array.prototype.copyWithin', $jscomp.typedArrayCopyWithin, 'es6',
-    'es5');
-$jscomp.polyfill(
-    'Int32Array.prototype.copyWithin', $jscomp.typedArrayCopyWithin, 'es6',
-    'es5');
-$jscomp.polyfill(
-    'Uint32Array.prototype.copyWithin', $jscomp.typedArrayCopyWithin, 'es6',
-    'es5');
-$jscomp.polyfill(
-    'Float32Array.prototype.copyWithin', $jscomp.typedArrayCopyWithin, 'es6',
-    'es5');
-$jscomp.polyfill(
-    'Float64Array.prototype.copyWithin', $jscomp.typedArrayCopyWithin, 'es6',
-    'es5');
+$jscomp.polyfillTypedArrayMethod(
+    'copyWithin', $jscomp.typedArrayCopyWithin, 'es6', 'es5');

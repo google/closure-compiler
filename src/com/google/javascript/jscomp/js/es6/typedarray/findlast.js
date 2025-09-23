@@ -46,36 +46,5 @@ $jscomp.typedArrayFindLast = function(orig) {
   return polyfill;
 };
 
-$jscomp.polyfill(
-    'BigInt64Array.prototype.findLast', $jscomp.typedArrayFindLast, 'es_next',
-    'es_2020');
-$jscomp.polyfill(
-    'BigUint64Array.prototype.findLast', $jscomp.typedArrayFindLast, 'es_next',
-    'es_2020');
-$jscomp.polyfill(
-    'Int8Array.prototype.findLast', $jscomp.typedArrayFindLast, 'es_next',
-    'es5');
-$jscomp.polyfill(
-    'Uint8Array.prototype.findLast', $jscomp.typedArrayFindLast, 'es_next',
-    'es5');
-$jscomp.polyfill(
-    'Uint8ClampedArray.prototype.findLast', $jscomp.typedArrayFindLast,
-    'es_next', 'es5');
-$jscomp.polyfill(
-    'Int16Array.prototype.findLast', $jscomp.typedArrayFindLast, 'es_next',
-    'es5');
-$jscomp.polyfill(
-    'Uint16Array.prototype.findLast', $jscomp.typedArrayFindLast, 'es_next',
-    'es5');
-$jscomp.polyfill(
-    'Int32Array.prototype.findLast', $jscomp.typedArrayFindLast, 'es_next',
-    'es5');
-$jscomp.polyfill(
-    'Uint32Array.prototype.findLast', $jscomp.typedArrayFindLast, 'es_next',
-    'es5');
-$jscomp.polyfill(
-    'Float32Array.prototype.findLast', $jscomp.typedArrayFindLast, 'es_next',
-    'es5');
-$jscomp.polyfill(
-    'Float64Array.prototype.findLast', $jscomp.typedArrayFindLast, 'es_next',
-    'es5');
+$jscomp.polyfillTypedArrayMethod(
+    'findLast', $jscomp.typedArrayFindLast, 'es_next', 'es5');

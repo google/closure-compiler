@@ -3470,6 +3470,29 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
           var polyfill = target[obfuscatedName];
           return polyfill !== undefined ? polyfill : target[property]
         };
+        $jscomp.TYPED_ARRAY_CLASSES = function() {
+          var classes = [
+            'Int8', 'Uint8', 'Uint8Clamped', 'Int16', 'Uint16', 'Int32', 'Uint32',
+            'Float32', 'Float64'
+          ];
+          if ($jscomp.global.BigInt64Array) {
+            classes.push('BigInt64');
+            classes.push('BigUint64')
+          }
+          return classes
+        }();
+        $jscomp.polyfillTypedArrayMethod = function(
+            methodName, polyfill, fromLang, toLang) {
+          if (!polyfill) return;
+          for (var i = 0; i < $jscomp.TYPED_ARRAY_CLASSES.length; i++) {
+            var target =
+                $jscomp.TYPED_ARRAY_CLASSES[i] + 'Array.prototype.' + methodName;
+            if ($jscomp.ISOLATE_POLYFILLS)
+              $jscomp.polyfillIsolated(target, polyfill, fromLang, toLang);
+            else
+              $jscomp.polyfillUnisolated(target, polyfill, fromLang, toLang)
+          }
+        };
         $jscomp.polyfill = function(target, polyfill, fromLang, toLang) {
           if (!polyfill) return;
           if ($jscomp.ISOLATE_POLYFILLS)

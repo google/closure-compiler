@@ -29,21 +29,5 @@ $jscomp.typedArrayFill = function(orig) {
   return Array.prototype.fill;
 };
 
-$jscomp.polyfill(
-    'Int8Array.prototype.fill', $jscomp.typedArrayFill, 'es6', 'es5');
-$jscomp.polyfill(
-    'Uint8Array.prototype.fill', $jscomp.typedArrayFill, 'es6', 'es5');
-$jscomp.polyfill(
-    'Uint8ClampedArray.prototype.fill', $jscomp.typedArrayFill, 'es6', 'es5');
-$jscomp.polyfill(
-    'Int16Array.prototype.fill', $jscomp.typedArrayFill, 'es6', 'es5');
-$jscomp.polyfill(
-    'Uint16Array.prototype.fill', $jscomp.typedArrayFill, 'es6', 'es5');
-$jscomp.polyfill(
-    'Int32Array.prototype.fill', $jscomp.typedArrayFill, 'es6', 'es5');
-$jscomp.polyfill(
-    'Uint32Array.prototype.fill', $jscomp.typedArrayFill, 'es6', 'es5');
-$jscomp.polyfill(
-    'Float32Array.prototype.fill', $jscomp.typedArrayFill, 'es6', 'es5');
-$jscomp.polyfill(
-    'Float64Array.prototype.fill', $jscomp.typedArrayFill, 'es6', 'es5');
+$jscomp.polyfillTypedArrayMethod(
+    'fill', $jscomp.typedArrayFill, 'es6', 'es5');

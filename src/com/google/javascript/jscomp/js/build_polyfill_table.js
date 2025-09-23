@@ -32,6 +32,30 @@ const ORDER = [
 ];
 
 /**
+ * Supported TypedArray subclasses.
+ *
+ * @const {!Array<string>}
+ */
+// LINT.IfChange(typed_array_classes)
+const TYPED_ARRAY_CLASSES = [
+  'Int8Array',
+  'Uint8Array',
+  'Uint8ClampedArray',
+  'Int16Array',
+  'Uint16Array',
+  'Int32Array',
+  'Uint32Array',
+  'Float32Array',
+  'Float64Array',
+  'BigInt64Array',
+  'BigUint64Array',
+];
+// LINT.ThenChange(
+// //depot/google3/third_party/java_src/jscomp/java/com/google/javascript/jscomp/RemoveUnusedCode.java:typed_array_classes,
+// //depot/google3/third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/util/polyfill.js:typed_array_classes
+// )
+
+/**
  * Prints to stderr and exits.
  * @param {string} message
  */
@@ -63,13 +87,11 @@ class PolyfillTable {
   polyfill(lib) {
     return (polyfill, impl, fromLang, toLang) => {
       if (!ORDER.includes(fromLang)) {
-        throw new Error(
-            `Unknown language version ${fromLang} for ${polyfill}`);
+        throw new Error(`Unknown language version ${fromLang} for ${polyfill}`);
       }
 
       if (!ORDER.includes(toLang)) {
-        throw new Error(
-            `Unknown language version ${toLang} for ${polyfill}`);
+        throw new Error(`Unknown language version ${toLang} for ${polyfill}`);
       }
 
       this.symbolToFile.set(polyfill, this.symbolToFile.get(polyfill) || []);
@@ -80,6 +102,21 @@ class PolyfillTable {
         this.versions.set(lib, maxVersion(this.versions.get(lib), toLang));
       }
       this.rows.push(row);
+    };
+  }
+
+  /**
+   * Returns a shim for $jscomp.polyfillTypedArrayMethod.
+   * @param {string} lib Library currently being scanned.
+   * @return {function(string, ?Function, string, string)}
+   */
+  polyfillTypedArrayMethod(lib) {
+    return (methodName, impl, fromLang, toLang) => {
+      for (let i = 0; i < TYPED_ARRAY_CLASSES.length; i++) {
+        const className = TYPED_ARRAY_CLASSES[i];
+        const target = className + '.prototype.' + methodName;
+        this.polyfill(lib)(target, impl, fromLang, toLang);
+      }
     };
   }
 
@@ -101,7 +138,8 @@ class PolyfillTable {
     try {
       new Function('$jscomp', data)({
         global: global,
-        polyfill: this.polyfill(lib, table),
+        polyfill: this.polyfill(lib),
+        polyfillTypedArrayMethod: this.polyfillTypedArrayMethod(lib),
       });
     } catch (err) {
       throw new Error('Failed to parse file: ' + lib + ': ' + err);
@@ -119,9 +157,8 @@ class PolyfillTable {
       // First check for duplicate provided symbols.
       for (const entry of this.symbolToFile.entries()) {
         if (entry[1].length != 1) {
-          errors.add(
-              `ERROR - ${entry[0]} provided by multiple files:${
-                  entry[1].map(f => '\n    ' + f).join('')}`);
+          errors.add(`ERROR - ${entry[0]} provided by multiple files:${
+              entry[1].map(f => '\n    ' + f).join('')}`);
         }
       }
       // Next ensure all deps have nonincreasing versions.
@@ -186,22 +223,21 @@ function maxVersion(version1, version2) {
 
 const table = new PolyfillTable();
 
-const reads = process.argv.slice(2).map(filename =>
-  new Promise((fulfill, reject) =>
-    fs.readFile(filename, 'utf8', (err, data) => {
-      try {
-        if (err) {
-          reject(err);
-        } else {
-          const lib = filename.replace(/^.*?\/js\/|\.js$/g, '');
-          table.readFile(lib, data);
-          fulfill('');
-        }
-      } catch (err) {
-        reject(err);
-      }
-    })));
+const reads = process.argv.slice(2).map(
+    filename => new Promise(
+        (fulfill, reject) => fs.readFile(filename, 'utf8', (err, data) => {
+          try {
+            if (err) {
+              reject(err);
+            } else {
+              const lib = filename.replace(/^.*?\/js\/|\.js$/g, '');
+              table.readFile(lib, data);
+              fulfill('');
+            }
+          } catch (err) {
+            reject(err);
+          }
+        })));
 
 Promise.all(reads).then(
-    success => console.log(table.build()),
-    failure => fail(failure.stack));
+    success => console.log(table.build()), failure => fail(failure.stack));
