@@ -79,7 +79,6 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   private boolean parseInlineSourceMaps;
   private ImmutableList<String> runtimeLibraries = null;
   private Optional<PassFactory> preSerializePassFactory = Optional.empty();
-  private boolean skipMatchingScriptFeaturesBeforeAndAfterSerialization = false;
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -240,13 +239,11 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testEmptyClassDeclaration() {
-    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame("class Foo {}");
   }
 
   @Test
   public void testEmptyClassDeclarationWithExtends() {
-    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame("class Foo {} class Bar extends Foo {}");
   }
 
@@ -278,7 +275,6 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testClassDeclarationWithFields() {
-    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame(
         """
         class Foo {
@@ -305,7 +301,6 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testEmptyClassStaticBlock() {
-    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame(
         """
         class Foo {
@@ -317,7 +312,6 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testClassStaticBlock_variables() {
-    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame(
         """
         class Foo {
@@ -332,7 +326,6 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testClassStaticBlock_function() {
-    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame(
         """
         class Foo {
@@ -346,7 +339,6 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testMultipleClassStaticBlocks() {
-    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame(
         """
         class Foo {
@@ -402,13 +394,11 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testFunctionCallRestAndSpread() {
-    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame("function f(...x) {} f(...[1, 2, 3]);");
   }
 
   @Test
   public void testFunctionDefaultAndDestructuringParameters() {
-    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame("function f([a, b], x = 0, {y, ...z} = {y: 1}) {}");
   }
 
@@ -932,11 +922,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     new AstValidator(deserializingCompiler, /* validateScriptFeatures= */ true)
         .validateRoot(newRoot);
 
-    // TODO(b/394454662): Remove this condition once feature set with deserialization and parser are
-    // in sync.
-    if (!skipMatchingScriptFeaturesBeforeAndAfterSerialization) {
-      assertFeatureSetsOfScriptsMatch(oldRoot, newRoot);
-    }
+    assertFeatureSetsOfScriptsMatch(oldRoot, newRoot);
 
     consumer = null;
     return new Result(ast, registry, newSourceRoot, deserializingCompiler);

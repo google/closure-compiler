@@ -177,7 +177,7 @@ final class ScriptNodeDeserializer {
           return;
 
         case STRING_KEY:
-          if (node.isShorthandProperty()) {
+          if (node.isShorthandProperty() && context.equals(FeatureContext.OBJECT_LITERAL)) {
             this.addScriptFeature(Feature.SHORTHAND_OBJECT_PROPERTIES);
           }
           return;
@@ -218,9 +218,10 @@ final class ScriptNodeDeserializer {
           }
           return;
         case ITER_REST:
-          this.addScriptFeature(Feature.ARRAY_PATTERN_REST);
           if (context.equals(FeatureContext.PARAM_LIST)) {
             this.addScriptFeature(Feature.REST_PARAMETERS);
+          } else {
+            this.addScriptFeature(Feature.ARRAY_PATTERN_REST);
           }
           return;
         case ITER_SPREAD:
@@ -290,7 +291,6 @@ final class ScriptNodeDeserializer {
         case CLASS:
           this.addScriptFeature(Feature.CLASSES);
           return;
-        case CLASS_MEMBERS:
         case MEMBER_FUNCTION_DEF:
           this.addScriptFeature(Feature.MEMBER_DECLARATIONS);
           return;
@@ -707,6 +707,8 @@ final class ScriptNodeDeserializer {
     // the top of a block scope, e.g. within an if/while/for loop block, or a plain `{ }` block
     BLOCK_SCOPE,
     FUNCTION,
+    // includes objects like `return {x, y};` but /not/ object destructuring like `const {x} = o;`
+    OBJECT_LITERAL,
     NONE;
   }
 
@@ -733,6 +735,8 @@ final class ScriptNodeDeserializer {
         return FeatureContext.BLOCK_SCOPE;
       case FUNCTION:
         return FeatureContext.FUNCTION;
+      case OBJECTLIT:
+        return FeatureContext.OBJECT_LITERAL;
       default:
         return FeatureContext.NONE;
     }
