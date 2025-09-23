@@ -1775,6 +1775,20 @@ Array.prototype.flatMap = function(callback, thisArg) {};
  */
 Array.prototype.flat = function(depth) {};
 
+/**
+ * NOTE: this is an ES2023 extern.
+ * @override
+ * @param {number} start
+ * @param {number=} skipCount
+ * @param {...T} var_toAdd
+ * @return {!Array<T>}
+ * @this {!IArrayLike<T>}
+ * @template T
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSpliced
+ */
+Array.prototype.toSpliced = function(start, skipCount, var_toAdd) {};
+
 /** @return {!IteratorIterable<number>} */
 ReadonlyArray.prototype.keys;
 
@@ -1896,6 +1910,19 @@ ReadonlyArray.prototype.flatMap = function(callback, thisArg) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flat
  */
 ReadonlyArray.prototype.flat = function(depth) {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {number} start
+ * @param {number=} skipCount
+ * @param {...T} var_toAdd
+ * @return {!Array<T>}
+ * @this {!IArrayLike<T>}
+ * @template T
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSpliced
+ */
+ReadonlyArray.prototype.toSpliced = function(start, skipCount, var_toAdd) {};
 
 /**
  * @param {!Iterable<*>} errors
