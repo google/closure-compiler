@@ -1941,14 +1941,6 @@ public class CompilerOptions {
   }
 
   /**
-   * @deprecated this always returns null and is slated for removal.
-   */
-  @Deprecated
-  public @Nullable Object getAliasTransformationHandler() {
-    return null;
-  }
-
-  /**
    * Set a custom handler for warnings and errors.
    *
    * <p>This is mostly used for piping the warnings and errors to a file behind the scenes.

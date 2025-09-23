@@ -147,23 +147,6 @@ class ScopedAliases implements CompilerPass {
     }
   }
 
-  /**
-   * @deprecated use the builder instead of this constructor
-   * @param transformationHandler this is unused and only exists for legacy compatibility with
-   *     bazel/rules_closure. Delete once bazel/rules_closure is cleaned up.
-   */
-  @Deprecated
-  ScopedAliases(
-      AbstractCompiler compiler,
-      @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
-      Object transformationHandler) {
-    this(
-        compiler,
-        preprocessorSymbolTable,
-        ImmutableSet.of(),
-        InvalidModuleGetHandling.PRESERVE);
-  }
-
   private ScopedAliases(
       AbstractCompiler compiler,
       @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
