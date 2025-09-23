@@ -3278,7 +3278,13 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilerOptions options = createCompilerOptions();
     options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2020);
-    options.setValidateRequiredInlinings(true);
+    options.setCollapseProperties(true);
+    options.setInlineConstantVars(true);
+    options.setInlineFunctions(CompilerOptions.Reach.ALL);
+    options.setInlineProperties(true);
+    options.setMaxOptimizationLoopIterations(2);
+    options.setRemoveClosureAsserts(true);
+    options.setSmartNameRemoval(true);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
     // @requireInlining should inline through multiple references and aliases.

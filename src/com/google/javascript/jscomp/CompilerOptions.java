@@ -545,9 +545,6 @@ public class CompilerOptions {
    */
   int optimizationLoopMaxIterations;
 
-  /** Validates that all required inlinings were successful. */
-  public boolean validateRequiredInlinings;
-
   // --------------------------------
   // Renaming
   // --------------------------------
@@ -1387,7 +1384,6 @@ public class CompilerOptions {
     outputJsStringUsage = false;
     convertToDottedProperties = false;
     rewriteFunctionExpressions = false;
-    validateRequiredInlinings = false;
 
     // Renaming
     variableRenaming = VariableRenamingPolicy.OFF;
@@ -3320,13 +3316,5 @@ public class CompilerOptions {
         && !checksOnly
         && !shouldGenerateTypedExterns()
         && !instrumentForCoverageOnly;
-  }
-
-  public void setValidateRequiredInlinings(boolean validateRequiredInlinings) {
-    this.validateRequiredInlinings = validateRequiredInlinings;
-  }
-
-  boolean shouldValidateRequiredInlinings() {
-    return validateRequiredInlinings;
   }
 }
