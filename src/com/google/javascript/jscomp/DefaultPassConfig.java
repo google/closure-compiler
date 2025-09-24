@@ -1733,6 +1733,7 @@ public final class DefaultPassConfig extends PassConfig {
     if (compiler.getOptions().j2clPassMode.shouldAddJ2clPasses()) {
       optimizations.add(new J2clEqualitySameRewriterPass(useTypesForOptimization));
       optimizations.add(new J2clStringValueOfRewriterPass());
+      optimizations.add(new J2clUndefinedChecksRewriterPass());
     }
     optimizations.add(new PeepholeFoldConstants(late, useTypesForOptimization));
     optimizations.add(new PeepholeCollectPropertyAssignments());
