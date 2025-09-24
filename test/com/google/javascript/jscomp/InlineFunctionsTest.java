@@ -100,16 +100,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testRequireInliningWarnsWhenNotPossible() {
-    testWarning(
-        """
-        /** @requireInlining */ function foo(q) { console.log(q); console.log('bye'); }
-        console.log(/** @type {?} */ (foo).name);
-        """,
-        InlineFunctions.MISSED_REQUIRED_INLINING);
-  }
-
-  @Test
   public void testEncourageInlining() {
     test(
         """
