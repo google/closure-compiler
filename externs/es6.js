@@ -1813,6 +1813,19 @@ Array.prototype.toSorted = function(compareFn) {};
  */
 Array.prototype.toSpliced = function(start, skipCount, var_toAdd) {};
 
+/**
+ * NOTE: this is an ES2023 extern.
+ * @override
+ * @param {number} index
+ * @param {T} value
+ * @return {!Array<T>}
+ * @this {!IArrayLike<T>}
+ * @template T
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/with
+ */
+Array.prototype.with = function(index, value) {};
+
 /** @return {!IteratorIterable<number>} */
 ReadonlyArray.prototype.keys;
 
@@ -1969,6 +1982,18 @@ ReadonlyArray.prototype.toSorted = function(compareFn) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSpliced
  */
 ReadonlyArray.prototype.toSpliced = function(start, skipCount, var_toAdd) {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {number} index
+ * @param {T} value
+ * @return {!Array<T>}
+ * @this {!IArrayLike<T>}
+ * @template T
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/with
+ */
+ReadonlyArray.prototype.with = function(index, value) {};
 
 /**
  * @param {!Iterable<*>} errors
