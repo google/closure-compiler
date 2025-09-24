@@ -23,3 +23,4 @@
 'require es6/typedarray/fill';
 'require es6/typedarray/findlast';
 'require es6/typedarray/findlastindex';
+'require es6/typedarray/toreversed';

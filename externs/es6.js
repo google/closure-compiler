@@ -710,6 +710,16 @@ TypedArray.prototype.subarray = function(begin, opt_end) {};
 TypedArray.prototype.values = function() {};
 
 /**
+ * NOTE: this is an ES2023 extern.
+ * @return {THIS}
+ * @this {THIS}
+ * @template THIS
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toReversed
+ */
+TypedArray.prototype.toReversed = function() {};
+
+/**
  * @return {string}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toLocaleString
