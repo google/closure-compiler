@@ -80,7 +80,7 @@ final class ConvertChunksToESModules implements CompilerPass {
 
   static final DiagnosticType ASSIGNMENT_TO_IMPORT =
       DiagnosticType.error(
-          "JSC_IMPORT_ASSIGN", "Imported symbol \"{0}\" in chunk \"{1}\" cannot be assigned");
+          "JSC_IMPORT_ASSIGN", "Imported symbol \"{0}\" in chunk \"{1}\" cannot be assigned (defined in \"{2}\")");
 
   static final DiagnosticType UNABLE_TO_COMPUTE_RELATIVE_PATH =
       DiagnosticType.error(
@@ -428,7 +428,7 @@ final class ConvertChunksToESModules implements CompilerPass {
     if (definingChunk != referencingChunk) {
       if (NodeUtil.isLhsOfAssign(nameNode)) {
         t.report(
-            nameNode, ASSIGNMENT_TO_IMPORT, nameNode.getString(), getChunkName(referencingChunk));
+            nameNode, ASSIGNMENT_TO_IMPORT, nameNode.getString(), getChunkName(referencingChunk), getChunkName(definingChunk));
       }
 
       // Mark the chunk where the name is declared as needing an export for this name
