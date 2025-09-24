@@ -1789,6 +1789,19 @@ Array.prototype.toReversed = function() {};
 /**
  * NOTE: this is an ES2023 extern.
  * @override
+ * @param {function(T, T): number=} compareFn A function that defines the sort
+ *     order.
+ * @return {!Array<T>}
+ * @this {!IArrayLike<T>}
+ * @template VALUE
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSorted
+ */
+Array.prototype.toSorted = function(compareFn) {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @override
  * @param {number} start
  * @param {number=} skipCount
  * @param {...T} var_toAdd
@@ -1931,6 +1944,18 @@ ReadonlyArray.prototype.flat = function(depth) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toReversed
  */
 ReadonlyArray.prototype.toReversed = function() {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {function(T, T): number=} compareFn A function that defines the sort
+ *     order.
+ * @return {!Array<T>}
+ * @this {!IArrayLike<T>}
+ * @template T
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSorted
+ */
+ReadonlyArray.prototype.toSorted = function(compareFn) {};
 
 /**
  * NOTE: this is an ES2023 extern.
