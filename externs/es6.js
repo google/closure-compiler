@@ -720,6 +720,17 @@ TypedArray.prototype.values = function() {};
 TypedArray.prototype.toReversed = function() {};
 
 /**
+ * NOTE: this is an ES2023 extern.
+ * @param {function(number, number): number=} compareFn
+ * @return {THIS}
+ * @this {THIS}
+ * @template THIS
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toSorted
+ */
+TypedArray.prototype.toSorted = function(compareFn) {};
+
+/**
  * @return {string}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toLocaleString
@@ -1126,6 +1137,28 @@ BigInt64Array.from = function(source, mapFn, thisArg) {};
  */
 BigInt64Array.of = function(var_args) {};
 
+/**
+ * @param {(function(bigint, bigint) : number)=} opt_compareFunction
+ * @return {THIS}
+ * @this {THIS}
+ * @template THIS
+ * @override
+ * @suppress {checkTypes} The types are specialized in this override.
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/sort
+ */
+BigInt64Array.prototype.sort = function(opt_compareFunction) {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {function(bigint, bigint): number=} compareFn
+ * @return {!BigInt64Array}
+ * @nosideeffects
+ * @override
+ * @suppress {checkTypes} The types are specialized in this override.
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toSorted
+ */
+BigInt64Array.prototype.toSorted = function(compareFn) {};
+
 
 /**
  * @param {number|ArrayBufferView|Array<bigint>|ArrayBuffer|SharedArrayBuffer}
@@ -1162,6 +1195,28 @@ BigUint64Array.from = function(source, mapFn, thisArg) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/of
  */
 BigUint64Array.of = function(var_args) {};
+
+/**
+ * @param {(function(bigint, bigint) : number)=} opt_compareFunction
+ * @return {THIS}
+ * @this {THIS}
+ * @template THIS
+ * @override
+ * @suppress {checkTypes} The types are specialized in this override.
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/sort
+ */
+BigUint64Array.prototype.sort = function(opt_compareFunction) {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {function(bigint, bigint): number=} compareFn
+ * @return {!BigUint64Array}
+ * @nosideeffects
+ * @override
+ * @suppress {checkTypes} The types are specialized in this override.
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toSorted
+ */
+BigUint64Array.prototype.toSorted = function(compareFn) {};
 
 /**
  * @param {ArrayBuffer|SharedArrayBuffer} buffer
