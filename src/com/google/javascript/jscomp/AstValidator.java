@@ -516,6 +516,7 @@ public final class AstValidator implements CompilerPass {
         return;
 
       case FUNCTION:
+        validateRequiredInlinings(n);
         validateFunctionExpression(n);
         return;
 
