@@ -25,3 +25,4 @@
 'require es6/typedarray/findlastindex';
 'require es6/typedarray/toreversed';
 'require es6/typedarray/tosorted';
+'require es6/typedarray/with';

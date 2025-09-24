@@ -731,6 +731,18 @@ TypedArray.prototype.toReversed = function() {};
 TypedArray.prototype.toSorted = function(compareFn) {};
 
 /**
+ * NOTE: this is an ES2023 extern.
+ * @param {number} index
+ * @param {number} value
+ * @return {THIS}
+ * @this {THIS}
+ * @template THIS
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/with
+ */
+TypedArray.prototype.with = function(index, value) {};
+
+/**
  * @return {string}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toLocaleString
@@ -1159,6 +1171,17 @@ BigInt64Array.prototype.sort = function(opt_compareFunction) {};
  */
 BigInt64Array.prototype.toSorted = function(compareFn) {};
 
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {number} index
+ * @param {bigint} value
+ * @return {!BigInt64Array}
+ * @nosideeffects
+ * @override
+ * @suppress {checkTypes} The types are specialized in this override.
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/with
+ */
+BigInt64Array.prototype.with = function(index, value) {};
 
 /**
  * @param {number|ArrayBufferView|Array<bigint>|ArrayBuffer|SharedArrayBuffer}
@@ -1217,6 +1240,18 @@ BigUint64Array.prototype.sort = function(opt_compareFunction) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toSorted
  */
 BigUint64Array.prototype.toSorted = function(compareFn) {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {number} index
+ * @param {bigint} value
+ * @return {!BigUint64Array}
+ * @nosideeffects
+ * @override
+ * @suppress {checkTypes} The types are specialized in this override.
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/with
+ */
+BigUint64Array.prototype.with = function(index, value) {};
 
 /**
  * @param {ArrayBuffer|SharedArrayBuffer} buffer
