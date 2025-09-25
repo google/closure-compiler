@@ -756,7 +756,7 @@ public class CodeGenerator {
               break;
           }
           if (init != null) {
-            add("=");
+            cc.addOp("=", true);
             addExpr(init, 1, Context.OTHER);
           }
           add(";");
