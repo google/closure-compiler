@@ -157,6 +157,12 @@ public final class NodeSubject extends Subject {
               .expectedText(mismatch.expected.toStringTree())
               .actualText(mismatch.actual.toStringTree())
               .build());
+    } else if (expectedOutputJs.trim().isEmpty()) {
+      // Don't use the text diff fact because everything is new. Avoid prefixing the output with +.
+      facts.add(
+          simpleFact(
+              // Indent by 4 spaces.
+              "Empty expected JS. Actual JS is:\n    " + actualOutputJs.replace("\n", "\n    ")));
     } else {
       facts.addAll(
           new TextDiffFactsBuilder("JS diff")
