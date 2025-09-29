@@ -3290,15 +3290,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return jsRoot;
   }
 
-  /**
-   * Some tests don't want to call the compiler "wholesale," they may not want to call check and/or
-   * optimize. With this method, tests can execute custom optimization loops.
-   */
-  @VisibleForTesting
-  void setPhaseOptimizer(PhaseOptimizer po) {
-    this.phaseOptimizer = po;
-  }
-
   @Override
   public int getChangeStamp() {
     return changeStamp;

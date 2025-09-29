@@ -52,7 +52,6 @@ public final class PhaseOptimizerTest {
     compiler.initCompilerOptionsIfTesting();
     tracker = new PerformanceTracker(dummyExternsRoot, dummyRoot, TracerMode.TIMING_ONLY);
     optimizer = new PhaseOptimizer(compiler, tracker);
-    compiler.setPhaseOptimizer(optimizer);
   }
 
   @Test

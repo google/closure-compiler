@@ -55,7 +55,6 @@ public final class MultiPassTest extends CompilerTestCase {
             .setRunInFixedPointLoop(true)
             .setInternalFactory(ValidityCheck::new)
             .build());
-    compiler.setPhaseOptimizer(phaseopt);
     return phaseopt;
   }
 
