@@ -50,7 +50,6 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
       return new CompilerPass() {
         @Override
         public void process(Node externs, Node root) {
-          compiler.resetUniqueNameId();
           MakeDeclaredNamesUnique.Builder renamer =
               MakeDeclaredNamesUnique.builder().withAssertOnChange(assertOnChange);
           if (!useDefaultRenamer) {

@@ -2259,7 +2259,6 @@ a = temp$jscomp$2;
 
     Node expresionNode = nodeFinderFn.apply(compiler).apply(tree);
 
-    compiler.resetUniqueNameId();
     DecompositionType result = decomposer.canExposeExpression(expresionNode);
     assertThat(result).isEqualTo(expectedResult);
   }
@@ -2327,7 +2326,6 @@ a = temp$jscomp$2;
 
     Node expr = nodeFinder.apply(tree);
 
-    compiler.resetUniqueNameId();
     decomposer.maybeExposeExpression(expr);
     processForTypecheck(compiler, tree);
 
@@ -2359,7 +2357,6 @@ a = temp$jscomp$2;
     DecompositionType result = decomposer.canExposeExpression(expr);
     assertThat(result).isEqualTo(DecompositionType.DECOMPOSABLE);
 
-    compiler.resetUniqueNameId();
     decomposer.maybeExposeExpression(expr);
     validateSourceInfo(compiler, tree);
     assertNode(tree).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
@@ -2398,7 +2395,6 @@ a = temp$jscomp$2;
     Node expr = nodeFinder.apply(tree);
     assertWithMessage("Expected node was not found.").that(expr).isNotNull();
 
-    compiler.resetUniqueNameId();
     decomposer.moveExpression(expr);
     validateSourceInfo(compiler, tree);
     assertNode(tree).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
@@ -2407,7 +2403,6 @@ a = temp$jscomp$2;
       // find a basis for comparison:
       Node originalExpr = nodeFinder.apply(originalTree);
 
-      compiler.resetUniqueNameId();
       decomposer.moveExpression(originalExpr);
       processForTypecheck(compiler, originalTree);
 

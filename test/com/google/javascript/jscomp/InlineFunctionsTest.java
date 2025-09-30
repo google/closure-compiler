@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Supplier;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import org.junit.Before;
@@ -42,6 +43,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
     enableInferConsts();
   }
 
+  private UniqueIdSupplier uniqueIdSupplier = new UniqueIdSupplier();
+
   @Override
   @Before
   public void setUp() throws Exception {
@@ -56,19 +59,27 @@ public class InlineFunctionsTest extends CompilerTestCase {
     assumeStrictThis = false;
     assumeMinimumCapture = false;
     maxSizeAfterInlining = CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING;
+    uniqueIdSupplier = new UniqueIdSupplier();
   }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    compiler.resetUniqueNameId();
-
     return new InlineFunctions(
         compiler,
-        compiler.getUniqueNameIdSupplier(),
+        uniqueIdSupplier,
         inliningReach,
         assumeStrictThis,
         assumeMinimumCapture,
         maxSizeAfterInlining);
+  }
+
+  private static class UniqueIdSupplier implements Supplier<String> {
+    private int nextId = 0;
+
+    @Override
+    public String get() {
+      return "v" + nextId++; // prefix with "v" to distinguish from Compiler's unique id supplier.
+    }
   }
 
   /** Returns the number of times the pass should be run before results are verified. */
@@ -191,18 +202,22 @@ public class InlineFunctionsTest extends CompilerTestCase {
         """
         const\
          a=class{constructor(){}setA(value){this.a=value}setB(value$jscomp$1){this.b=value$jscomp$1}};var\
-         JSCompiler_temp_const$jscomp$1=console;var\
-         JSCompiler_temp_const$jscomp$0=JSCompiler_temp_const$jscomp$1.log;var\
-         JSCompiler_inline_result$jscomp$2;{var\
-         rec$jscomp$inline_5={a:4,b:5};JSCompiler_inline_result$jscomp$2=(new\
-         a).setA(rec$jscomp$inline_5.a).setB(rec$jscomp$inline_5.b)}var\
-         JSCompiler_inline_result$jscomp$3;
-        {var rec$jscomp$inline_7={a:2,b:JSCompiler_inline_result$jscomp$2};JSCompiler_inline_result$jscomp$3=(new\
-         a).setA(rec$jscomp$inline_7.a).setB(rec$jscomp$inline_7.b)}var\
-         JSCompiler_inline_result$jscomp$4;{var\
-         rec$jscomp$inline_9={a:1,b:JSCompiler_inline_result$jscomp$3};JSCompiler_inline_result$jscomp$4=(new\
-         a).setA(rec$jscomp$inline_9.a).setB(rec$jscomp$inline_9.b)}JSCompiler_temp_const$jscomp$0.call(\
-        JSCompiler_temp_const$jscomp$1,JSCompiler_inline_result$jscomp$4)\
+         JSCompiler_temp_const$jscomp$v1=console;var\
+         JSCompiler_temp_const$jscomp$v0=JSCompiler_temp_const$jscomp$v1.log;var\
+         JSCompiler_inline_result$jscomp$v2;{var\
+         rec$jscomp$inline_0={a:4,b:5};JSCompiler_inline_result$jscomp$v2=(new\
+         a).setA(rec$jscomp$inline_0.a).setB(rec$jscomp$inline_0.b)}var\
+         JSCompiler_inline_result$jscomp$v3;
+        {var rec$jscomp$inline_1={a:2,b:JSCompiler_inline_result$jscomp$v2};\
+        JSCompiler_inline_result$jscomp$v3=(new a).setA(rec$jscomp$inline_1.a)\
+        .setB(rec$jscomp$inline_1.b)}\
+        var JSCompiler_inline_result$jscomp$v4;\
+        {var rec$jscomp$inline_2={a:1,b:JSCompiler_inline_result$jscomp$v3};\
+        JSCompiler_inline_result$jscomp$v4=(new a).setA(rec$jscomp$inline_2.a)\
+        .setB(rec$jscomp$inline_2.b)}\
+        JSCompiler_temp_const$jscomp$v0.call(\
+        JSCompiler_temp_const$jscomp$v1,\
+        JSCompiler_inline_result$jscomp$v4)\
         """);
   }
 
@@ -291,7 +306,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   @Test
   public void testInlineEmptyFunction4() {
     // Empty function, params with side-effects forces block inlining.
-    test("function foo(){}\n foo(x());", "{var JSCompiler_inline_anon_param_0 = x();}");
+    test("function foo(){}\n foo(x());", "{var JSCompiler_inline_anon_param_v0 = x();}");
   }
 
   @Test
@@ -300,12 +315,12 @@ public class InlineFunctionsTest extends CompilerTestCase {
     test(
         "function foo(){}\n foo?.(x());",
         """
-        var JSCompiler_inline_result$jscomp$0;
+        var JSCompiler_inline_result$jscomp$v0;
         {
-          var JSCompiler_inline_anon_param_1 = x();
-          JSCompiler_inline_result$jscomp$0 = void 0;
+          var JSCompiler_inline_anon_param_v1 = x();
+          JSCompiler_inline_result$jscomp$v0 = void 0;
         }
-        JSCompiler_inline_result$jscomp$0;
+        JSCompiler_inline_result$jscomp$v0;
         """);
   }
 
@@ -596,8 +611,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
           y = x$jscomp$inline_0++;
         }
         {
-          var x$jscomp$inline_2 = i;
-          y = x$jscomp$inline_2++;
+          var x$jscomp$inline_1 = i;
+          y = x$jscomp$inline_1++;
         }
         """);
   }
@@ -688,14 +703,14 @@ public class InlineFunctionsTest extends CompilerTestCase {
         var d = b() + foo()
         """,
         """
-        var JSCompiler_inline_result$jscomp$0;
+        var JSCompiler_inline_result$jscomp$v0;
         {
-          var x$jscomp$inline_1;
-          JSCompiler_inline_result$jscomp$0 = function(a$jscomp$inline_2) {
-            return a$jscomp$inline_2 + 1;
+          var x$jscomp$inline_0;
+          JSCompiler_inline_result$jscomp$v0 = function(a$jscomp$inline_1) {
+            return a$jscomp$inline_1 + 1;
           };
         }
-        var d = c+JSCompiler_inline_result$jscomp$0;
+        var d = c+JSCompiler_inline_result$jscomp$v0;
         """);
   }
 
@@ -757,14 +772,14 @@ public class InlineFunctionsTest extends CompilerTestCase {
         """,
         """
         function _x() {
-          var JSCompiler_inline_result$jscomp$0;
+          var JSCompiler_inline_result$jscomp$v0;
           {
-            var x$jscomp$inline_1;
-            JSCompiler_inline_result$jscomp$0 = function(a$jscomp$inline_2) {
-              return a$jscomp$inline_2+1
+            var x$jscomp$inline_0;
+            JSCompiler_inline_result$jscomp$v0 = function(a$jscomp$inline_1) {
+              return a$jscomp$inline_1+1
             };
           }
-          var d = c + JSCompiler_inline_result$jscomp$0;
+          var d = c + JSCompiler_inline_result$jscomp$v0;
         }
         """);
   }
@@ -855,13 +870,13 @@ public class InlineFunctionsTest extends CompilerTestCase {
         """
         var d;
         {
-          JSCompiler_inline_label_plex_1:{
+          JSCompiler_inline_label_plex_v0:{
             if(1+2) {
               d = 0;
-              break JSCompiler_inline_label_plex_1;
+              break JSCompiler_inline_label_plex_v0;
             } else {
               d = 1;
-              break JSCompiler_inline_label_plex_1;
+              break JSCompiler_inline_label_plex_v0;
             }
             d=void 0;
           }
@@ -882,13 +897,13 @@ public class InlineFunctionsTest extends CompilerTestCase {
         """
         var d;
         {
-          JSCompiler_inline_label_complex_1:{
+          JSCompiler_inline_label_complex_v0:{
             if (1+2) {
               d=0;
-              break JSCompiler_inline_label_complex_1;
+              break JSCompiler_inline_label_complex_v0;
             } else {
               d = 1;
-              break JSCompiler_inline_label_complex_1;
+              break JSCompiler_inline_label_complex_v0;
             }
             d=void 0
           }
@@ -917,12 +932,12 @@ public class InlineFunctionsTest extends CompilerTestCase {
         """,
         """
         var window={};
-        var JSCompiler_inline_result$jscomp$0;
+        var JSCompiler_inline_result$jscomp$v0;
         {
           window.bar++;
-          JSCompiler_inline_result$jscomp$0 = 3;
+          JSCompiler_inline_result$jscomp$v0 = 3;
         }
-        var x = {y: 1, z: JSCompiler_inline_result$jscomp$0};
+        var x = {y: 1, z: JSCompiler_inline_result$jscomp$v0};
         """);
   }
 
@@ -935,14 +950,14 @@ public class InlineFunctionsTest extends CompilerTestCase {
         """,
         """
         var window = {};
-        var JSCompiler_temp_const$jscomp$0 = alert();
-        var JSCompiler_inline_result$jscomp$1;
+        var JSCompiler_temp_const$jscomp$v0 = alert();
+        var JSCompiler_inline_result$jscomp$v1;
         {
          window.bar++;
-         JSCompiler_inline_result$jscomp$1 = 3;}
+         JSCompiler_inline_result$jscomp$v1 = 3;}
         var x = {
-          y: JSCompiler_temp_const$jscomp$0,
-          z: JSCompiler_inline_result$jscomp$1
+          y: JSCompiler_temp_const$jscomp$v0,
+          z: JSCompiler_inline_result$jscomp$v1
         };
         """);
   }
@@ -956,16 +971,16 @@ public class InlineFunctionsTest extends CompilerTestCase {
         """,
         """
         var window = {};
-        var JSCompiler_temp_const$jscomp$1 = alert();
-        var JSCompiler_temp_const$jscomp$0 = alert2();
-        var JSCompiler_inline_result$jscomp$2;
+        var JSCompiler_temp_const$jscomp$v1 = alert();
+        var JSCompiler_temp_const$jscomp$v0 = alert2();
+        var JSCompiler_inline_result$jscomp$v2;
         {
          window.bar++;
-         JSCompiler_inline_result$jscomp$2 = 3;}
+         JSCompiler_inline_result$jscomp$v2 = 3;}
         var x = {
-          a: JSCompiler_temp_const$jscomp$1,
-          b: JSCompiler_temp_const$jscomp$0,
-          c: JSCompiler_inline_result$jscomp$2
+          a: JSCompiler_temp_const$jscomp$v1,
+          b: JSCompiler_temp_const$jscomp$v0,
+          c: JSCompiler_inline_result$jscomp$v2
         };
         """);
   }
@@ -1005,13 +1020,13 @@ public class InlineFunctionsTest extends CompilerTestCase {
         """
         class X {}
         {
-          var e$jscomp$inline_0 = {target:{}};
-          var el$jscomp$inline_1;
+          var e$jscomp$inline_1 = {target:{}};
+          var el$jscomp$inline_2;
           {
-            var x$jscomp$inline_2 = e$jscomp$inline_0.target;
-            el$jscomp$inline_1 = x$jscomp$inline_2 instanceof X ? x$jscomp$inline_2 : null;
+            var x$jscomp$inline_3 = e$jscomp$inline_1.target;
+            el$jscomp$inline_2 = x$jscomp$inline_3 instanceof X ? x$jscomp$inline_3 : null;
           }
-          for(;el$jscomp$inline_1 != null; el$jscomp$inline_1 = el$jscomp$inline_1.parent);
+          for(;el$jscomp$inline_2 != null; el$jscomp$inline_2 = el$jscomp$inline_2.parent);
         }
         """);
   }
@@ -1029,13 +1044,13 @@ public class InlineFunctionsTest extends CompilerTestCase {
         """
         class X {}
         {
-          var e$jscomp$inline_0 = {target:{}};
-          var el$jscomp$inline_1;
+          var e$jscomp$inline_1 = {target:{}};
+          var el$jscomp$inline_2;
           {
-            var x$jscomp$inline_2 = e$jscomp$inline_0.target;
-            el$jscomp$inline_1 = x$jscomp$inline_2 instanceof X ? x$jscomp$inline_2 : null;
+            var x$jscomp$inline_3 = e$jscomp$inline_1.target;
+            el$jscomp$inline_2 = x$jscomp$inline_3 instanceof X ? x$jscomp$inline_3 : null;
           }
-          for(;el$jscomp$inline_1 != null; el$jscomp$inline_1 = el$jscomp$inline_1.parent);
+          for(;el$jscomp$inline_2 != null; el$jscomp$inline_2 = el$jscomp$inline_2.parent);
         }
         """);
   }
@@ -1054,16 +1069,16 @@ public class InlineFunctionsTest extends CompilerTestCase {
         """
         class X {}
         {
-          var e$jscomp$inline_0 = {target: {}};
-          var JSCompiler_inline_result$jscomp$inline_1;
+          var e$jscomp$inline_1 = {target: {}};
+          var JSCompiler_inline_result$jscomp$inline_2;
           {
-            var x$jscomp$inline_2 = e$jscomp$inline_0.target;
-            JSCompiler_inline_result$jscomp$inline_1 =
-                x$jscomp$inline_2 instanceof X ? x$jscomp$inline_2 : null
+            var x$jscomp$inline_3 = e$jscomp$inline_1.target;
+            JSCompiler_inline_result$jscomp$inline_2 =
+                x$jscomp$inline_3 instanceof X ? x$jscomp$inline_3 : null
           }
-          for (let el$jscomp$inline_3 = JSCompiler_inline_result$jscomp$inline_1;
-               el$jscomp$inline_3 != null;
-               el$jscomp$inline_3 = el$jscomp$inline_3.parent) {}
+          for (let el$jscomp$inline_4 = JSCompiler_inline_result$jscomp$inline_2;
+               el$jscomp$inline_4 != null;
+               el$jscomp$inline_4 = el$jscomp$inline_4.parent) {}
         }
         """);
   }
@@ -1082,16 +1097,16 @@ public class InlineFunctionsTest extends CompilerTestCase {
         """
         class X {}
         {
-          var e$jscomp$inline_0 = {target: {}};
-          var JSCompiler_inline_result$jscomp$inline_1;
+          var e$jscomp$inline_1 = {target: {}};
+          var JSCompiler_inline_result$jscomp$inline_2;
           {
-            var x$jscomp$inline_2 = e$jscomp$inline_0.target;
-            JSCompiler_inline_result$jscomp$inline_1 =
-                x$jscomp$inline_2 instanceof X ? x$jscomp$inline_2 : null
+            var x$jscomp$inline_3 = e$jscomp$inline_1.target;
+            JSCompiler_inline_result$jscomp$inline_2 =
+                x$jscomp$inline_3 instanceof X ? x$jscomp$inline_3 : null
           }
-          for (let el$jscomp$inline_3 = JSCompiler_inline_result$jscomp$inline_1;
-               el$jscomp$inline_3 != null;
-               el$jscomp$inline_3 = el$jscomp$inline_3.parent) {}
+          for (let el$jscomp$inline_4 = JSCompiler_inline_result$jscomp$inline_2;
+               el$jscomp$inline_4 != null;
+               el$jscomp$inline_4 = el$jscomp$inline_4.parent) {}
         }
         """);
   }
@@ -1120,24 +1135,24 @@ public class InlineFunctionsTest extends CompilerTestCase {
         """,
         """
         {
-          var JSCompiler_inline_result$jscomp$0;
-              {
-                JSCompiler_inline_label_foo_2: {
-                  switch(x) {
-                    case 1:
-                      JSCompiler_inline_result$jscomp$0 = 2;
-                      break JSCompiler_inline_label_foo_2;
-                    case 2:
-                      JSCompiler_inline_result$jscomp$0 = 3;
-                      break JSCompiler_inline_label_foo_2;
-                    default:
-                      JSCompiler_inline_result$jscomp$0 = 4;
-                      break JSCompiler_inline_label_foo_2;
-                  }
-                  JSCompiler_inline_result$jscomp$0 = void 0;
-                }
+          var JSCompiler_inline_result$jscomp$v1;
+          {
+            JSCompiler_inline_label_foo_v2: {
+              switch(x) {
+                case 1:
+                  JSCompiler_inline_result$jscomp$v1 = 2;
+                  break JSCompiler_inline_label_foo_v2;
+                case 2:
+                  JSCompiler_inline_result$jscomp$v1 = 3;
+                  break JSCompiler_inline_label_foo_v2;
+                default:
+                  JSCompiler_inline_result$jscomp$v1 = 4;
+                  break JSCompiler_inline_label_foo_v2;
               }
-          const f$jscomp$inline_0 = JSCompiler_inline_result$jscomp$0;
+              JSCompiler_inline_result$jscomp$v1 = void 0;
+            }
+          }
+          const f$jscomp$inline_0 = JSCompiler_inline_result$jscomp$v1;
           console.log(f$jscomp$inline_0);
         }
         """);
@@ -1169,7 +1184,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   @Test
   public void testMixedModeInlining2() {
     // Base line tests, block inlining. Block inlining is needed by possible-side-effect parameter.
-    test("function foo(){return 1} foo(x());", "{var JSCompiler_inline_anon_param_0=x();1}");
+    test("function foo(){return 1} foo(x());", "{var JSCompiler_inline_anon_param_v0=x();1}");
   }
 
   @Test
@@ -1178,12 +1193,12 @@ public class InlineFunctionsTest extends CompilerTestCase {
     test(
         "function foo(){return 1} foo?.(x());",
         """
-        var JSCompiler_inline_result$jscomp$0;
+        var JSCompiler_inline_result$jscomp$v0;
         {
-          var JSCompiler_inline_anon_param_1 = x();
-          JSCompiler_inline_result$jscomp$0 = 1;
+          var JSCompiler_inline_anon_param_v1 = x();
+          JSCompiler_inline_result$jscomp$v0 = 1;
         }
-        JSCompiler_inline_result$jscomp$0;
+        JSCompiler_inline_result$jscomp$v0;
         """);
   }
 
@@ -1191,7 +1206,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testMixedModeInlining3() {
     // Inline using both modes.
     test(
-        "function foo(){return 1} foo();foo(x());", "1;{var JSCompiler_inline_anon_param_0=x();1}");
+        "function foo(){return 1} foo();foo(x());",
+        "1;{var JSCompiler_inline_anon_param_v0=x();1}");
   }
 
   @Test
@@ -1201,12 +1217,12 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "function foo(){return 1} foo?.();foo?.(x?.());",
         """
         1;
-        var JSCompiler_inline_result$jscomp$0;
+        var JSCompiler_inline_result$jscomp$v0;
         {
-          var JSCompiler_inline_anon_param_1 = x?.();
-          JSCompiler_inline_result$jscomp$0 = 1;
+          var JSCompiler_inline_anon_param_v1 = x?.();
+          JSCompiler_inline_result$jscomp$v0 = 1;
         }
-        JSCompiler_inline_result$jscomp$0;
+        JSCompiler_inline_result$jscomp$v0;
         """);
   }
 
@@ -1218,9 +1234,16 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "function foo(){return 1} foo(); foo(x()); foo(1);foo(1,x());",
         """
         1;
-        {var JSCompiler_inline_anon_param_0=x();1}
+        {
+          var JSCompiler_inline_anon_param_v0 = x();
+          1;
+        }
         1;
-        {var JSCompiler_inline_anon_param_3 = 1; var JSCompiler_inline_anon_param_4=x();1}
+        {
+          var JSCompiler_inline_anon_param_v3 = 1;
+          var JSCompiler_inline_anon_param_v4 = x();
+          1;
+        }
         """);
   }
 
@@ -1262,15 +1285,15 @@ public class InlineFunctionsTest extends CompilerTestCase {
         foo(1,2);
         foo(2,3,x());
         """,
-"""
-1+2+1+2+4+5+6+7+8+9+1+2+3+10; // inlining of the foo(1,2); call
-{
-var a$jscomp$inline_0 = 2; // temp for arg 2
-var b$jscomp$inline_1 = 3; // temp for arg 3
-  var JSCompiler_inline_anon_param_2 = x();
-  a$jscomp$inline_0 + b$jscomp$inline_1 + a$jscomp$inline_0 + b$jscomp$inline_1 + 4 + 5 + 6 + 7 + 8 + 9 + 1 + 2 + 3 + 10;
-}
-""");
+        """
+        1+2+1+2+4+5+6+7+8+9+1+2+3+10; // inlining of the foo(1,2); call
+        {
+        var a$jscomp$inline_0 = 2; // temp for arg 2
+        var b$jscomp$inline_1 = 3; // temp for arg 3
+          var JSCompiler_inline_anon_param_v0 = x();
+          a$jscomp$inline_0 + b$jscomp$inline_1 + a$jscomp$inline_0 + b$jscomp$inline_1 + 4 + 5 + 6 + 7 + 8 + 9 + 1 + 2 + 3 + 10;
+        }
+        """);
   }
 
   @Test
@@ -1465,12 +1488,12 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     test(
         "function foo(x){return function(){ return x; }} repeat(foo([]))",
         """
-        var JSCompiler_inline_result$jscomp$0;
+        var JSCompiler_inline_result$jscomp$v0;
         {
-        var x$jscomp$inline_1=[];
-        JSCompiler_inline_result$jscomp$0=function(){return x$jscomp$inline_1};
+        var x$jscomp$inline_0=[];
+        JSCompiler_inline_result$jscomp$v0=function(){return x$jscomp$inline_0};
         }
-        repeat(JSCompiler_inline_result$jscomp$0)
+        repeat(JSCompiler_inline_result$jscomp$v0)
         """);
   }
 
@@ -1652,7 +1675,7 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         """,
         """
         var a=3;
-        {var a$jscomp$inline_1=5;{a}}
+        {var a$jscomp$inline_0=5;{a}}
         """);
   }
 
@@ -1798,7 +1821,7 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         """,
         """
         var a=3;
-        {var a$jscomp$inline_1=5;{a}}
+        {var a$jscomp$inline_0=5;{a}}
         """);
   }
 
@@ -1852,12 +1875,12 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         let a = 0;
         function _goo() {
           let a$jscomp$2 = 2;
-          var JSCompiler_inline_result$jscomp$0;
+          var JSCompiler_inline_result$jscomp$v0;
           {
-             let a$jscomp$inline_1 = 3;
-             JSCompiler_inline_result$jscomp$0 = a + a;
+             let a$jscomp$inline_0 = 3;
+             JSCompiler_inline_result$jscomp$v0 = a + a;
           }
-          let x = JSCompiler_inline_result$jscomp$0;
+          let x = JSCompiler_inline_result$jscomp$v0;
         }
         """);
   }
@@ -1875,12 +1898,12 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         const a = 0;
         function _goo() {
           const a$jscomp$2 = 2;
-          var JSCompiler_inline_result$jscomp$0;
+          var JSCompiler_inline_result$jscomp$v0;
           {
-            const a$jscomp$inline_1 = 3;
-            JSCompiler_inline_result$jscomp$0 = a + a;
+            const a$jscomp$inline_0 = 3;
+            JSCompiler_inline_result$jscomp$v0 = a + a;
           }
-          const x = JSCompiler_inline_result$jscomp$0;
+          const x = JSCompiler_inline_result$jscomp$v0;
         }
         """);
   }
@@ -2286,7 +2309,7 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
   public void testComplexInlineNoResultNoParamCall2() {
     test(
         "function f() { if (true) { return; } else; } f();",
-        "{JSCompiler_inline_label_f_0:{ if(true)break JSCompiler_inline_label_f_0;else; } }");
+        "{JSCompiler_inline_label_f_v0:{ if(true)break JSCompiler_inline_label_f_v0;else; } }");
   }
 
   @Test
@@ -2322,10 +2345,10 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         "function f(){if (true){return;}else;} z=f();",
         """
         {
-          JSCompiler_inline_label_f_0: {
+          JSCompiler_inline_label_f_v0: {
             if (true) {
               z = void 0;
-              break JSCompiler_inline_label_f_0;
+              break JSCompiler_inline_label_f_v0;
             }else;
             z = void 0;
           }
@@ -2339,13 +2362,13 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         "function f(){if (true){return;}else return;} z=f();",
         """
         {
-          JSCompiler_inline_label_f_0: {
+          JSCompiler_inline_label_f_v0: {
             if(true) {
               z = void 0;
-              break JSCompiler_inline_label_f_0;
+              break JSCompiler_inline_label_f_v0;
             } else {
               z=void 0;
-              break JSCompiler_inline_label_f_0;
+              break JSCompiler_inline_label_f_v0;
             }
             z=void 0;
           }
@@ -2359,12 +2382,12 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         "function f(){if (true){return 1;}else return 0;} z=f();",
         """
         {
-        JSCompiler_inline_label_f_0:{
+        JSCompiler_inline_label_f_v0:{
         if(true){z=1;
-        break JSCompiler_inline_label_f_0;
+        break JSCompiler_inline_label_f_v0;
         } else {
         z=0;
-        break JSCompiler_inline_label_f_0;}
+        break JSCompiler_inline_label_f_v0;}
         z = void 0
         }
         }
@@ -2393,13 +2416,13 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         """
         var b=1;
         {
-          JSCompiler_inline_label_f_2: {
+          JSCompiler_inline_label_f_v0: {
             if(1) {
               z = b();
-              break JSCompiler_inline_label_f_2;
+              break JSCompiler_inline_label_f_v0;
             } else {
               z = true;
-              break JSCompiler_inline_label_f_2
+              break JSCompiler_inline_label_f_v0
             }
             z = void 0;
           }
@@ -2455,10 +2478,10 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         """
         var z;
         {
-          JSCompiler_inline_label_f_0:{
+          JSCompiler_inline_label_f_v0:{
             if(true) {
               z = void 0;
-              break JSCompiler_inline_label_f_0;
+              break JSCompiler_inline_label_f_v0;
             } else;
             z = void 0;
           }
@@ -2473,13 +2496,13 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         """
         var z;
         {
-          JSCompiler_inline_label_f_0:{
+          JSCompiler_inline_label_f_v0:{
             if (true) {
               z = void 0;
-              break JSCompiler_inline_label_f_0;
+              break JSCompiler_inline_label_f_v0;
             } else {
               z = void 0;
-              break JSCompiler_inline_label_f_0;
+              break JSCompiler_inline_label_f_v0;
             }
             z=void 0;
           }
@@ -2494,13 +2517,13 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         """
         var z;
         {
-          JSCompiler_inline_label_f_0:{
+          JSCompiler_inline_label_f_v0:{
             if (true) {
               z = 1;
-              break JSCompiler_inline_label_f_0;
+              break JSCompiler_inline_label_f_v0;
             } else {
               z = 0;
-              break JSCompiler_inline_label_f_0;
+              break JSCompiler_inline_label_f_v0;
             }
             z = void 0;
           }
@@ -2536,13 +2559,13 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         var b=1;
         var z;
         {
-          JSCompiler_inline_label_f_2:{
+          JSCompiler_inline_label_f_v0:{
             if (1) {
               z = b();
-              break JSCompiler_inline_label_f_2;
+              break JSCompiler_inline_label_f_v0;
             } else {
               z = true;
-              break JSCompiler_inline_label_f_2;
+              break JSCompiler_inline_label_f_v0;
             }
             z = void 0;
           }
@@ -2591,9 +2614,9 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     test(
         "function f(){a()}c=z=f()",
         """
-        var JSCompiler_inline_result$jscomp$0;
-        {a();JSCompiler_inline_result$jscomp$0=void 0;}
-        c=z=JSCompiler_inline_result$jscomp$0
+        var JSCompiler_inline_result$jscomp$v0;
+        {a();JSCompiler_inline_result$jscomp$v0=void 0;}
+        c=z=JSCompiler_inline_result$jscomp$v0
         """);
   }
 
@@ -2602,9 +2625,9 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     test(
         "function f(){a()}c=z=f()",
         """
-        var JSCompiler_inline_result$jscomp$0;
-        {a();JSCompiler_inline_result$jscomp$0=void 0;}
-        c=z=JSCompiler_inline_result$jscomp$0
+        var JSCompiler_inline_result$jscomp$v0;
+        {a();JSCompiler_inline_result$jscomp$v0=void 0;}
+        c=z=JSCompiler_inline_result$jscomp$v0
         """);
   }
 
@@ -2613,9 +2636,9 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     test(
         "function f(){a()}if(z=f());",
         """
-        var JSCompiler_inline_result$jscomp$0;
-        {a();JSCompiler_inline_result$jscomp$0=void 0;}
-        if(z=JSCompiler_inline_result$jscomp$0);
+        var JSCompiler_inline_result$jscomp$v0;
+        {a();JSCompiler_inline_result$jscomp$v0=void 0;}
+        if(z=JSCompiler_inline_result$jscomp$v0);
         """);
   }
 
@@ -2624,10 +2647,10 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     test(
         "function f(){a()}if(z.y=f());",
         """
-        var JSCompiler_temp_const$jscomp$0=z;
-        var JSCompiler_inline_result$jscomp$1;
-        {a();JSCompiler_inline_result$jscomp$1=void 0;}
-        if(JSCompiler_temp_const$jscomp$0.y=JSCompiler_inline_result$jscomp$1);
+        var JSCompiler_temp_const$jscomp$v0=z;
+        var JSCompiler_inline_result$jscomp$v1;
+        {a();JSCompiler_inline_result$jscomp$v1=void 0;}
+        if(JSCompiler_temp_const$jscomp$v0.y=JSCompiler_inline_result$jscomp$v1);
         """);
   }
 
@@ -2675,14 +2698,14 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
             else
               var head$jscomp$inline_3 = 0;
             {
-               var element$jscomp$inline_0 = styleSheet$jscomp$inline_2;
-               var stylesString$jscomp$inline_1=a;
+               var element$jscomp$inline_4 = styleSheet$jscomp$inline_2;
+               var stylesString$jscomp$inline_5=a;
                if (goog$userAgent$IE)
-                 element$jscomp$inline_0.cssText = stylesString$jscomp$inline_1;
+                 element$jscomp$inline_4.cssText = stylesString$jscomp$inline_5;
                else {
-                 var propToSet$jscomp$inline_2 = 'innerText';
-                 element$jscomp$inline_0[propToSet$jscomp$inline_2] =
-                     stylesString$jscomp$inline_1
+                 var propToSet$jscomp$inline_6 = 'innerText';
+                 element$jscomp$inline_4[propToSet$jscomp$inline_6] =
+                     stylesString$jscomp$inline_5
                }
             }
             styleSheet$jscomp$inline_2;
@@ -2761,8 +2784,8 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         """
         {
           {
-            var a$jscomp$inline_0 = void 0;
-            call(function() { return a$jscomp$inline_0; });
+            var a$jscomp$inline_2 = void 0;
+            call(function() { return a$jscomp$inline_2; });
           }
         }
         """);
@@ -2793,8 +2816,8 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         """
         {
           {
-            var a$jscomp$inline_0 = void 0;
-            call(function() { return a$jscomp$inline_0; });
+            var a$jscomp$inline_2 = void 0;
+            call(function() { return a$jscomp$inline_2; });
           }
         }
         """);
@@ -2820,11 +2843,11 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         "function f(){a=1;return 1} var x = 1; x += f()",
         """
         var x = 1;
-        var JSCompiler_temp_const$jscomp$0 = x;
-        var JSCompiler_inline_result$jscomp$1;
+        var JSCompiler_temp_const$jscomp$v0 = x;
+        var JSCompiler_inline_result$jscomp$v1;
         {a=1;
-         JSCompiler_inline_result$jscomp$1=1}
-        x = JSCompiler_temp_const$jscomp$0 + JSCompiler_inline_result$jscomp$1;
+         JSCompiler_inline_result$jscomp$v1=1}
+        x = JSCompiler_temp_const$jscomp$v0 + JSCompiler_inline_result$jscomp$v1;
         """);
   }
 
@@ -2842,15 +2865,15 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         );
         """,
         """
-        var JSCompiler_inline_result$jscomp$0;
+        var JSCompiler_inline_result$jscomp$v0;
         {
-        var ret$jscomp$inline_1={};
-        ret$jscomp$inline_1[ONE]='a';
-        ret$jscomp$inline_1[TWO]='b';
-        JSCompiler_inline_result$jscomp$0 = ret$jscomp$inline_1;
+        var ret$jscomp$inline_0={};
+        ret$jscomp$inline_0[ONE]='a';
+        ret$jscomp$inline_0[TWO]='b';
+        JSCompiler_inline_result$jscomp$v0 = ret$jscomp$inline_0;
         }
         {
-        descriptions_=JSCompiler_inline_result$jscomp$0;
+        descriptions_ = JSCompiler_inline_result$jscomp$v0;
         }
         """);
   }
@@ -2981,10 +3004,10 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     test(
         "((function(){var a; return function(){foo()}})())();",
         """
-        var JSCompiler_inline_result$jscomp$0;
-        {var a$jscomp$inline_1;
-        JSCompiler_inline_result$jscomp$0=function(){foo()};}
-        JSCompiler_inline_result$jscomp$0()
+        var JSCompiler_inline_result$jscomp$v0;
+        {var a$jscomp$inline_0;
+        JSCompiler_inline_result$jscomp$v0=function(){foo()};}
+        JSCompiler_inline_result$jscomp$v0()
         """);
   }
 
@@ -3210,7 +3233,7 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
 
     assumeStrictThis = true;
     // In strict mode, "this" is never coerced so we can use the provided value.
-    test("function f(){} f.call(new g);", "{var JSCompiler_inline_this_0=new g}");
+    test("function f(){} f.call(new g);", "{var JSCompiler_inline_this_v0=new g}");
   }
 
   @Test
@@ -3222,7 +3245,7 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
 
     assumeStrictThis = true;
     // In strict mode, "this" is never coerced so we can use the provided value.
-    test("function f(){} f.call(g());", "{var JSCompiler_inline_this_0=g()}");
+    test("function f(){} f.call(g());", "{var JSCompiler_inline_this_v0=g()}");
   }
 
   @Test
@@ -3236,7 +3259,7 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     // In strict mode, "this" is never coerced so we can use the provided value.
     test(
         "function f(){this} f.call(new g);",
-        "{var JSCompiler_inline_this_0=new g;JSCompiler_inline_this_0}");
+        "{var JSCompiler_inline_this_v0=new g;JSCompiler_inline_this_v0}");
   }
 
   @Test
@@ -3246,11 +3269,13 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     test(
         "function f(a){a=1;this} f.call();",
         "{var a$jscomp$inline_0=void 0; a$jscomp$inline_0=1; void 0;}");
+
+    this.uniqueIdSupplier = new UniqueIdSupplier();
     test(
         "function f(a){a=1;this} f.call(x, x);",
         """
-        {var JSCompiler_inline_this_1 = x; var a$jscomp$inline_0=x; a$jscomp$inline_0=1;
-            JSCompiler_inline_this_1;}
+        {var JSCompiler_inline_this_v0 = x; var a$jscomp$inline_0=x; a$jscomp$inline_0=1;
+            JSCompiler_inline_this_v0;}
         """);
   }
 
@@ -3313,23 +3338,27 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         """
         var factorial;
         {
-        var M$jscomp$inline_4 = function(f$jscomp$2) {
-          return function(n){if(n===0)return 1;else return n*f$jscomp$2(n-1)}
-        };
-        {
-        var f$jscomp$inline_0=function(f$jscomp$inline_7){
-          return M$jscomp$inline_4(
-            function(arg$jscomp$inline_8){
-              return f$jscomp$inline_7(f$jscomp$inline_7)(arg$jscomp$inline_8)
-             })
-        };
-        factorial=M$jscomp$inline_4(
-          function(arg$jscomp$inline_1){
-            return f$jscomp$inline_0(f$jscomp$inline_0)(arg$jscomp$inline_1)
-        });
+          var M$jscomp$inline_2 = function(f$jscomp$2) {
+            return function(n) {
+              if (n === 0) {
+                return 1;
+              } else {
+                return n * f$jscomp$2(n - 1);
+              }
+            };
+          };
+          {
+            var f$jscomp$inline_7 = function(f$jscomp$inline_5) {
+              return M$jscomp$inline_2(function(arg$jscomp$inline_6) {
+                return f$jscomp$inline_5(f$jscomp$inline_5)(arg$jscomp$inline_6);
+              });
+            };
+            factorial = M$jscomp$inline_2(function(arg$jscomp$inline_8) {
+              return f$jscomp$inline_7(f$jscomp$inline_7)(arg$jscomp$inline_8);
+            });
+          }
         }
-        }
-        factorial(5)
+        factorial(5);
         """);
   }
 
@@ -3371,17 +3400,17 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         """,
         """
         for(;1;) {
-          var JSCompiler_inline_result$jscomp$0;
+          var JSCompiler_inline_result$jscomp$v0;
           {
-            JSCompiler_inline_label_f_1: {
+            JSCompiler_inline_label_f_v1: {
               if(x()) {
-                JSCompiler_inline_result$jscomp$0 = y();
-                break JSCompiler_inline_label_f_1;
+                JSCompiler_inline_result$jscomp$v0 = y();
+                break JSCompiler_inline_label_f_v1;
               }
-              JSCompiler_inline_result$jscomp$0 = void 0;
+              JSCompiler_inline_result$jscomp$v0 = void 0;
             }
           }
-          var m = JSCompiler_inline_result$jscomp$0 || z()
+          var m = JSCompiler_inline_result$jscomp$v0 || z()
         }
         """);
   }
@@ -3397,10 +3426,10 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         for(;1;) {
           var m;
           {
-            JSCompiler_inline_label_f_0: {
+            JSCompiler_inline_label_f_v0: {
               if(x()) {
                 m = y();
-                break JSCompiler_inline_label_f_0;
+                break JSCompiler_inline_label_f_v0;
               }
               m = void 0;
             }
@@ -3469,18 +3498,22 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
           }
         };
         var module$exports$foo$Foo$options_;
-        var JSCompiler_temp_const$jscomp$1 = console;
-        var JSCompiler_temp_const$jscomp$0 = JSCompiler_temp_const$jscomp$1.log;
-        var JSCompiler_inline_result$jscomp$2;
+        var JSCompiler_temp_const$jscomp$v1 = console;
+        var JSCompiler_temp_const$jscomp$v0 = JSCompiler_temp_const$jscomp$v1.log;
+        var JSCompiler_inline_result$jscomp$v2;
         {
-          var JSCompiler_StaticMethods_isKnown$self$jscomp$inline_3;
+          var JSCompiler_StaticMethods_isKnown$self$jscomp$inline_0;
           {
             module$exports$foo$Foo$$0clinit();
-            JSCompiler_StaticMethods_isKnown$self$jscomp$inline_3 = new module$exports$foo$Foo("abc");
+            JSCompiler_StaticMethods_isKnown$self$jscomp$inline_0 = new module$exports$foo$Foo("abc");
           }
-          JSCompiler_inline_result$jscomp$2 = module$exports$foo$Foo$options_.includes(JSCompiler_StaticMethods_isKnown$self$jscomp$inline_3.o_);
+          JSCompiler_inline_result$jscomp$v2 =
+              module$exports$foo$Foo$options_.includes(
+                  JSCompiler_StaticMethods_isKnown$self$jscomp$inline_0.o_);
         }
-        JSCompiler_temp_const$jscomp$0.call(JSCompiler_temp_const$jscomp$1, JSCompiler_inline_result$jscomp$2);
+        JSCompiler_temp_const$jscomp$v0.call(
+            JSCompiler_temp_const$jscomp$v1,
+            JSCompiler_inline_result$jscomp$v2);
         """);
   }
 
@@ -3511,14 +3544,14 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
           return "a";
         };
 
-        var JSCompiler_temp_const$jscomp$1 = console;
-        var JSCompiler_temp_const$jscomp$0 = JSCompiler_temp_const$jscomp$1.log;
-        var JSCompiler_inline_result$jscomp$2;
+        var JSCompiler_temp_const$jscomp$v1 = console;
+        var JSCompiler_temp_const$jscomp$v0 = JSCompiler_temp_const$jscomp$v1.log;
+        var JSCompiler_inline_result$jscomp$v2;
         {
-          var x$jscomp$inline_3 = initAndReturnA();
-          JSCompiler_inline_result$jscomp$2 = options_.includes(x$jscomp$inline_3);
+          var x$jscomp$inline_0 = initAndReturnA();
+          JSCompiler_inline_result$jscomp$v2 = options_.includes(x$jscomp$inline_0);
         }
-        JSCompiler_temp_const$jscomp$0.call(JSCompiler_temp_const$jscomp$1, JSCompiler_inline_result$jscomp$2);
+        JSCompiler_temp_const$jscomp$v0.call(JSCompiler_temp_const$jscomp$v1, JSCompiler_inline_result$jscomp$v2);
         """);
   }
 
@@ -3547,18 +3580,18 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         """
         HangoutStarter.prototype.launchHangout = function() {
           var self$jscomp$2 = a.b;
-          var JSCompiler_temp_const$jscomp$0 = goog.Uri;
-          var JSCompiler_inline_result$jscomp$1;
+          var JSCompiler_temp_const$jscomp$v0 = goog.Uri;
+          var JSCompiler_inline_result$jscomp$v1;
           {
-          var self$jscomp$inline_2 = self$jscomp$2;
-          if (!self$jscomp$inline_2.domServices_) {
-            self$jscomp$inline_2.domServices_ = goog$component$DomServices.get(
-                self$jscomp$inline_2.appContext_);
+          var self$jscomp$inline_0 = self$jscomp$2;
+          if (!self$jscomp$inline_0.domServices_) {
+            self$jscomp$inline_0.domServices_ = goog$component$DomServices.get(
+                self$jscomp$inline_0.appContext_);
           }
-          JSCompiler_inline_result$jscomp$1=self$jscomp$inline_2.domServices_;
+          JSCompiler_inline_result$jscomp$v1=self$jscomp$inline_0.domServices_;
           }
-          var myUrl = new JSCompiler_temp_const$jscomp$0(
-              JSCompiler_inline_result$jscomp$1.getDomHelper().
+          var myUrl = new JSCompiler_temp_const$jscomp$v0(
+              JSCompiler_inline_result$jscomp$v1.getDomHelper().
                   getWindow().location.href)
         }
         """);
@@ -3656,18 +3689,28 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
     test(
         "(function(){var a=10;(function(){var b=a;a++;alert(b)})()})();",
         """
-        {var a$jscomp$inline_0=10;
-        {var b$jscomp$inline_1=a$jscomp$inline_0;
-        a$jscomp$inline_0++;alert(b$jscomp$inline_1)}}
+        {
+          var a$jscomp$inline_1 = 10;
+          {
+            var b$jscomp$inline_2 = a$jscomp$inline_1;
+            a$jscomp$inline_1++;
+            alert(b$jscomp$inline_2);
+          }
+        }
         """);
 
     assumeMinimumCapture = true;
     test(
         "(function(){var a=10;(function(){var b=a;a++;alert(b)})()})();",
         """
-        {var a$jscomp$inline_2=10;
-        {var b$jscomp$inline_0=a$jscomp$inline_2;
-        a$jscomp$inline_2++;alert(b$jscomp$inline_0)}}
+        {
+          var a$jscomp$inline_1 = 10;
+          {
+            var b$jscomp$inline_3 = a$jscomp$inline_1;
+            a$jscomp$inline_1++;
+            alert(b$jscomp$inline_3);
+          }
+        }
         """);
   }
 
@@ -3728,11 +3771,13 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
             var arr$jscomp$inline_0 = [1,2,3,4,5];
             var i$jscomp$inline_1 = 0;
             var l$jscomp$inline_2 = arr$jscomp$inline_0.length;
-            for(;i$jscomp$inline_1 < l$jscomp$inline_2; i$jscomp$inline_1++) {
+            for(; i$jscomp$inline_1 < l$jscomp$inline_2; i$jscomp$inline_1++) {
               var j$jscomp$inline_3 = arr$jscomp$inline_0[i$jscomp$inline_1];
               (function(){
                 var k$jscomp$inline_4 = j$jscomp$inline_3;
-                setTimeout(function() {result += k$jscomp$inline_4; }, 5*i$jscomp$inline_1)
+                setTimeout(function() {
+                  result += k$jscomp$inline_4;
+                }, 5 * i$jscomp$inline_1)
               })()
             }
           }
@@ -3761,12 +3806,12 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         function _testLocalVariable_(){
           var result = 0;
           {
-            var j$jscomp$inline_2 = [i];
+            var j$jscomp$inline_1 = [i];
             {
-              var j$jscomp$inline_0 = j$jscomp$inline_2; // this temp is needed.
-              setTimeout(function(){ result += j$jscomp$inline_0; }, 5*i);
+              var j$jscomp$inline_3 = j$jscomp$inline_1; // this temp is needed.
+              setTimeout(function(){ result += j$jscomp$inline_3; }, 5*i);
             }
-            j$jscomp$inline_2 = null; // because this value can be modified later.
+            j$jscomp$inline_1 = null; // because this value can be modified later.
           }
         }
         """);
@@ -3862,18 +3907,18 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         """
         function _Z(){}
         function _X(){
-          var JSCompiler_temp_const$jscomp$2=_Z;
-          var JSCompiler_temp_const$jscomp$1=a;
-          var JSCompiler_temp_const$jscomp$0=b;
-          var JSCompiler_inline_result$jscomp$3;
+          var JSCompiler_temp_const$jscomp$v2=_Z;
+          var JSCompiler_temp_const$jscomp$v1=a;
+          var JSCompiler_temp_const$jscomp$v0=b;
+          var JSCompiler_inline_result$jscomp$v3;
           {
             singleton.loader_();
-            JSCompiler_inline_result$jscomp$3=void 0;
+            JSCompiler_inline_result$jscomp$v3=void 0;
           }
-          new JSCompiler_temp_const$jscomp$2(
-            JSCompiler_temp_const$jscomp$1,
-            JSCompiler_temp_const$jscomp$0,
-            JSCompiler_inline_result$jscomp$3,
+          new JSCompiler_temp_const$jscomp$v2(
+            JSCompiler_temp_const$jscomp$v1,
+            JSCompiler_temp_const$jscomp$v0,
+            JSCompiler_inline_result$jscomp$v3,
             g())}
         """);
     tester.tearDown();
@@ -3891,17 +3936,17 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         """
         function _Z(){}
         function _X(){
-          var JSCompiler_temp_const$jscomp$1=a;
-          var JSCompiler_temp_const$jscomp$0=b;
-          var JSCompiler_inline_result$jscomp$2;
+          var JSCompiler_temp_const$jscomp$v1=a;
+          var JSCompiler_temp_const$jscomp$v0=b;
+          var JSCompiler_inline_result$jscomp$v2;
           {
             singleton.loader_();
-            JSCompiler_inline_result$jscomp$2=void 0;
+            JSCompiler_inline_result$jscomp$v2=void 0;
           }
           new _Z(
-            JSCompiler_temp_const$jscomp$1,
-            JSCompiler_temp_const$jscomp$0,
-            JSCompiler_inline_result$jscomp$2,
+            JSCompiler_temp_const$jscomp$v1,
+            JSCompiler_temp_const$jscomp$v0,
+            JSCompiler_inline_result$jscomp$v2,
             g())}
         """);
   }
@@ -4055,13 +4100,13 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         """,
         """
         {
-          var JSCompiler_inline_result$jscomp$inline_0;
+          var JSCompiler_inline_result$jscomp$inline_2;
           {
-            var x$jscomp$inline_1 = 1;
-            var args$jscomp$inline_2 = [8];
-            JSCompiler_inline_result$jscomp$inline_0 = x$jscomp$inline_1 + args$jscomp$inline_2[0];
+            var x$jscomp$inline_3 = 1;
+            var args$jscomp$inline_4 = [8];
+            JSCompiler_inline_result$jscomp$inline_2 = x$jscomp$inline_3 + args$jscomp$inline_4[0];
           }
-          JSCompiler_inline_result$jscomp$inline_0
+          JSCompiler_inline_result$jscomp$inline_2
         }
         """);
 
@@ -4738,15 +4783,15 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         bar(...foo(arg));
         """,
         """
-        var JSCompiler_temp_const$jscomp$0 = bar;
-        var JSCompiler_inline_result$jscomp$1;
+        var JSCompiler_temp_const$jscomp$v0 = bar;
+        var JSCompiler_inline_result$jscomp$v1;
         {
-          var x$jscomp$inline_2 = arg;
+          var x$jscomp$inline_0 = arg;
           qux();
-          JSCompiler_inline_result$jscomp$1 = x$jscomp$inline_2;
+          JSCompiler_inline_result$jscomp$v1 = x$jscomp$inline_0;
         }
 
-        JSCompiler_temp_const$jscomp$0(...JSCompiler_inline_result$jscomp$1);
+        JSCompiler_temp_const$jscomp$v0(...JSCompiler_inline_result$jscomp$v1);
         """);
   }
 
@@ -4762,18 +4807,18 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         bar(...zap(), foo(arg));
         """,
         """
-        var JSCompiler_temp_const$jscomp$1 = bar;
-        var JSCompiler_temp_const$jscomp$0 = [...zap()];
-        var JSCompiler_inline_result$jscomp$2;
+        var JSCompiler_temp_const$jscomp$v1 = bar;
+        var JSCompiler_temp_const$jscomp$v0 = [...zap()];
+        var JSCompiler_inline_result$jscomp$v2;
         {
-          var x$jscomp$inline_3 = arg;
+          var x$jscomp$inline_0 = arg;
           qux();
-          JSCompiler_inline_result$jscomp$2 = x$jscomp$inline_3;
+          JSCompiler_inline_result$jscomp$v2 = x$jscomp$inline_0;
         }
 
-        JSCompiler_temp_const$jscomp$1(
-          ...JSCompiler_temp_const$jscomp$0,
-          JSCompiler_inline_result$jscomp$2);
+        JSCompiler_temp_const$jscomp$v1(
+          ...JSCompiler_temp_const$jscomp$v0,
+          JSCompiler_inline_result$jscomp$v2);
         """);
   }
 
@@ -4790,19 +4835,19 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         bar?.(...zap?.(), foo?.(arg));
         """,
         """
-        let JSCompiler_temp_const$jscomp$0;
+        let JSCompiler_temp_const$jscomp$v0;
         // Optional call to `bar` gets decomposed to if- else.
-        if ((JSCompiler_temp_const$jscomp$0 = bar) == null) {
+        if ((JSCompiler_temp_const$jscomp$v0 = bar) == null) {
           void 0;
         } else {
-          var JSCompiler_temp_const$jscomp$2 = [...zap?.()];
-          var JSCompiler_inline_result$jscomp$3;
+          var JSCompiler_temp_const$jscomp$v2 = [...zap?.()];
+          var JSCompiler_inline_result$jscomp$v3;
           {
             qux?.();
-            JSCompiler_inline_result$jscomp$3 = arg;
+            JSCompiler_inline_result$jscomp$v3 = arg;
           }
-          JSCompiler_temp_const$jscomp$0(...JSCompiler_temp_const$jscomp$2,
-         JSCompiler_inline_result$jscomp$3);
+          JSCompiler_temp_const$jscomp$v0(...JSCompiler_temp_const$jscomp$v2,
+         JSCompiler_inline_result$jscomp$v3);
         }
         """);
   }
@@ -4819,16 +4864,16 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         bar.method(foo(arg));
         """,
         """
-        var JSCompiler_temp_const$jscomp$1 = bar;
-        var JSCompiler_temp_const$jscomp$0 = JSCompiler_temp_const$jscomp$1.method;
-        var JSCompiler_inline_result$jscomp$2;
+        var JSCompiler_temp_const$jscomp$v1 = bar;
+        var JSCompiler_temp_const$jscomp$v0 = JSCompiler_temp_const$jscomp$v1.method;
+        var JSCompiler_inline_result$jscomp$v2;
         {
-          var x$jscomp$inline_3 = arg;
+          var x$jscomp$inline_0 = arg;
           qux();
-          JSCompiler_inline_result$jscomp$2 = x$jscomp$inline_3;
+          JSCompiler_inline_result$jscomp$v2 = x$jscomp$inline_0;
          }
-        JSCompiler_temp_const$jscomp$0.call(JSCompiler_temp_const$jscomp$1,
-         JSCompiler_inline_result$jscomp$2);
+        JSCompiler_temp_const$jscomp$v0.call(JSCompiler_temp_const$jscomp$v1,
+         JSCompiler_inline_result$jscomp$v2);
         """);
   }
 
@@ -4850,16 +4895,16 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         """
         class C {
           method() {
-            var JSCompiler_temp_const$jscomp$0 = this.privateMethod
-            var JSCompiler_inline_result$jscomp$1;
+            var JSCompiler_temp_const$jscomp$v0 = this.privateMethod
+            var JSCompiler_inline_result$jscomp$v1;
             {
-              var x$jscomp$inline_2 = arg;
+              var x$jscomp$inline_0 = arg;
               qux();
-              JSCompiler_inline_result$jscomp$1 = x$jscomp$inline_2;
+              JSCompiler_inline_result$jscomp$v1 = x$jscomp$inline_0;
             }
-            JSCompiler_temp_const$jscomp$0.call(
+            JSCompiler_temp_const$jscomp$v0.call(
                 this,
-                JSCompiler_inline_result$jscomp$1);
+                JSCompiler_inline_result$jscomp$v1);
           }
         }
         """);
@@ -4891,16 +4936,16 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
 
         class C extends B {
           method() {
-            var JSCompiler_temp_const$jscomp$0 = super.privateMethod;
-            var JSCompiler_inline_result$jscomp$1
+            var JSCompiler_temp_const$jscomp$v0 = super.privateMethod;
+            var JSCompiler_inline_result$jscomp$v1
             {
-              var x$jscomp$inline_2 = arg;
+              var x$jscomp$inline_0 = arg;
               qux();
-              JSCompiler_inline_result$jscomp$1 = x$jscomp$inline_2;
+              JSCompiler_inline_result$jscomp$v1 = x$jscomp$inline_0;
             }
-            JSCompiler_temp_const$jscomp$0.call(
+            JSCompiler_temp_const$jscomp$v0.call(
                 this,
-                JSCompiler_inline_result$jscomp$1);
+                JSCompiler_inline_result$jscomp$v1);
           }
         }
         """);
@@ -4922,14 +4967,14 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         bar.call(null, foo(arg));
         """,
         """
-        var JSCompiler_inline_result$jscomp$0;
+        var JSCompiler_inline_result$jscomp$v0;
         {
-          var x$jscomp$inline_1 = arg;
+          var x$jscomp$inline_0 = arg;
           qux();
-          JSCompiler_inline_result$jscomp$0 = x$jscomp$inline_1;
+          JSCompiler_inline_result$jscomp$v0 = x$jscomp$inline_0;
         }
         {
-          JSCompiler_inline_result$jscomp$0;
+          JSCompiler_inline_result$jscomp$v0;
         }
         """);
   }
@@ -5152,15 +5197,15 @@ var b$jscomp$inline_1 = 3; // temp for arg 3
         """,
         """
         window.g = function(a, b, c) {
-         var JSCompiler_inline_result$jscomp$0;
+         var JSCompiler_inline_result$jscomp$v0;
         {
-          var value$jscomp$inline_1 = a;
-          var begin$jscomp$inline_2 = b + 1;
-          var end$jscomp$inline_3 = b = c;
-          JSCompiler_inline_result$jscomp$0 =
-           value$jscomp$inline_1.slice(begin$jscomp$inline_2, end$jscomp$inline_3);
+          var value$jscomp$inline_0 = a;
+          var begin$jscomp$inline_1 = b + 1;
+          var end$jscomp$inline_2 = b = c;
+          JSCompiler_inline_result$jscomp$v0 =
+           value$jscomp$inline_0.slice(begin$jscomp$inline_1, end$jscomp$inline_2);
         }
-        return JSCompiler_inline_result$jscomp$0;
+        return JSCompiler_inline_result$jscomp$v0;
         };
         """);
   }
@@ -5197,14 +5242,14 @@ function getEndIndex() {
   }
   return getEndIndex();
 }
-var JSCompiler_temp_const$jscomp$0 = window;
-var JSCompiler_inline_result$jscomp$1;
+var JSCompiler_temp_const$jscomp$v0 = window;
+var JSCompiler_inline_result$jscomp$v1;
 {
-  var begin$jscomp$inline_2 = index - 1;
-  var end$jscomp$inline_3 = getEndIndex();
-  JSCompiler_inline_result$jscomp$1 = text.slice(begin$jscomp$inline_2, end$jscomp$inline_3);
+  var begin$jscomp$inline_0 = index - 1;
+  var end$jscomp$inline_1 = getEndIndex();
+  JSCompiler_inline_result$jscomp$v1 = text.slice(begin$jscomp$inline_0, end$jscomp$inline_1);
 }
-JSCompiler_temp_const$jscomp$0.bug = JSCompiler_inline_result$jscomp$1;
+JSCompiler_temp_const$jscomp$v0.bug = JSCompiler_inline_result$jscomp$v1;
 """);
   }
 
@@ -5220,18 +5265,19 @@ JSCompiler_temp_const$jscomp$0.bug = JSCompiler_inline_result$jscomp$1;
           return f(a, b.x + 1, b.x = c);
         };
         """,
-"""
-window.g = function(a, b, c) {
-    var JSCompiler_inline_result$jscomp$0;
-{
-  var value$jscomp$inline_1 = a;
-  var begin$jscomp$inline_2 = b.x + 1;
-  var end$jscomp$inline_3 = b.x = c;
-  JSCompiler_inline_result$jscomp$0 = value$jscomp$inline_1.slice(begin$jscomp$inline_2, end$jscomp$inline_3);
-}
-return JSCompiler_inline_result$jscomp$0;
-};
-""");
+        """
+        window.g = function(a, b, c) {
+            var JSCompiler_inline_result$jscomp$v0;
+        {
+          var value$jscomp$inline_0 = a;
+          var begin$jscomp$inline_1 = b.x + 1;
+          var end$jscomp$inline_2 = b.x = c;
+          JSCompiler_inline_result$jscomp$v0 =
+              value$jscomp$inline_0.slice(begin$jscomp$inline_1, end$jscomp$inline_2);
+        }
+        return JSCompiler_inline_result$jscomp$v0;
+        };
+        """);
   }
 
   @Test
@@ -5246,18 +5292,18 @@ return JSCompiler_inline_result$jscomp$0;
           return f(a, b.x + 1, b.y = c);
         };
         """,
-"""
-window.g = function(a, b, c) {
-  var JSCompiler_inline_result$jscomp$0;
-  {
-    var value$jscomp$inline_1 = a;
-    var begin$jscomp$inline_2 = b.x + 1;
-    var end$jscomp$inline_3 = b.y = c;
-    JSCompiler_inline_result$jscomp$0 = value$jscomp$inline_1.slice(begin$jscomp$inline_2, end$jscomp$inline_3);
-  }
-  return JSCompiler_inline_result$jscomp$0;
-};
-""");
+        """
+        window.g = function(a, b, c) {
+          var JSCompiler_inline_result$jscomp$v0;
+          {
+            var value$jscomp$inline_0 = a;
+            var begin$jscomp$inline_1 = b.x + 1;
+            var end$jscomp$inline_2 = b.y = c;
+            JSCompiler_inline_result$jscomp$v0 = value$jscomp$inline_0.slice(begin$jscomp$inline_1, end$jscomp$inline_2);
+          }
+          return JSCompiler_inline_result$jscomp$v0;
+        };
+        """);
   }
 
   @Test
@@ -5271,18 +5317,18 @@ window.g = function(a, b, c) {
           return f(a, b = c, b + 1);
         };
         """,
-"""
-window.g = function(a, b, c) {
-  var JSCompiler_inline_result$jscomp$0;
-  {
-// Evaluates all args until `b=c` in order
-    var value$jscomp$inline_1 = a;
-    var begin$jscomp$inline_2 = b = c;
-    JSCompiler_inline_result$jscomp$0 = value$jscomp$inline_1.slice(begin$jscomp$inline_2, b + 1);
-  }
-  return JSCompiler_inline_result$jscomp$0;
-};
-""");
+        """
+        window.g = function(a, b, c) {
+          var JSCompiler_inline_result$jscomp$v0;
+          {
+            // Evaluates all args until `b=c` in order
+            var value$jscomp$inline_0 = a;
+            var begin$jscomp$inline_1 = b = c;
+            JSCompiler_inline_result$jscomp$v0 = value$jscomp$inline_0.slice(begin$jscomp$inline_1, b + 1);
+          }
+          return JSCompiler_inline_result$jscomp$v0;
+        };
+        """);
   }
 
   @Test
@@ -5315,18 +5361,18 @@ window.g = function(a, b, c) {
           return f(a, ++b, b++);
         };
         """,
-"""
-window.g = function(a, b, c) {
-  var JSCompiler_inline_result$jscomp$0;
-  {
-    var value$jscomp$inline_1 = a;
-    var begin$jscomp$inline_2 = ++b;
-    var end$jscomp$inline_3 = b++;
-    JSCompiler_inline_result$jscomp$0 = value$jscomp$inline_1.slice(begin$jscomp$inline_2, end$jscomp$inline_3);
-  }
-  return JSCompiler_inline_result$jscomp$0;
-};
-""");
+        """
+        window.g = function(a, b, c) {
+          var JSCompiler_inline_result$jscomp$v0;
+          {
+            var value$jscomp$inline_0 = a;
+            var begin$jscomp$inline_1 = ++b;
+            var end$jscomp$inline_2 = b++;
+            JSCompiler_inline_result$jscomp$v0 = value$jscomp$inline_0.slice(begin$jscomp$inline_1, end$jscomp$inline_2);
+          }
+          return JSCompiler_inline_result$jscomp$v0;
+        };
+        """);
   }
 
   @Test
@@ -5342,13 +5388,13 @@ window.g = function(a, b, c) {
         """,
         """
         window.g = function(value) {
-          var JSCompiler_inline_result$jscomp$0;
+          var JSCompiler_inline_result$jscomp$v0;
           {
-            var a$jscomp$inline_1 = ++value;
-            var b$jscomp$inline_2 = value++;
-            JSCompiler_inline_result$jscomp$0 = a$jscomp$inline_1 + b$jscomp$inline_2;
+            var a$jscomp$inline_0 = ++value;
+            var b$jscomp$inline_1 = value++;
+            JSCompiler_inline_result$jscomp$v0 = a$jscomp$inline_0 + b$jscomp$inline_1;
           }
-          return JSCompiler_inline_result$jscomp$0;
+          return JSCompiler_inline_result$jscomp$v0;
         };
         """);
   }
@@ -5366,13 +5412,13 @@ window.g = function(a, b, c) {
         """,
         """
         window.g = function(value) {
-          var JSCompiler_inline_result$jscomp$0;
+          var JSCompiler_inline_result$jscomp$v0;
           {
-            var a$jscomp$inline_1 = ++value;
-            var b$jscomp$inline_2 = ++value;
-            JSCompiler_inline_result$jscomp$0 = a$jscomp$inline_1 + b$jscomp$inline_2;
+            var a$jscomp$inline_0 = ++value;
+            var b$jscomp$inline_1 = ++value;
+            JSCompiler_inline_result$jscomp$v0 = a$jscomp$inline_0 + b$jscomp$inline_1;
           }
-          return JSCompiler_inline_result$jscomp$0;
+          return JSCompiler_inline_result$jscomp$v0;
         };
         """);
   }
@@ -5388,18 +5434,18 @@ window.g = function(a, b, c) {
           return add(value, ++value, ++value);
         };
         """,
-"""
-window.g = function(value$jscomp$1) {
-  var JSCompiler_inline_result$jscomp$0;
-  {
-    var value$jscomp$inline_1 = value$jscomp$1;
-    var a$jscomp$inline_2 = ++value$jscomp$1;
-    var b$jscomp$inline_3 = ++value$jscomp$1;
-    JSCompiler_inline_result$jscomp$0 = value$jscomp$inline_1 + a$jscomp$inline_2 + b$jscomp$inline_3;
-  }
-  return JSCompiler_inline_result$jscomp$0;
-};
-""");
+        """
+        window.g = function(value$jscomp$1) {
+          var JSCompiler_inline_result$jscomp$v0;
+          {
+            var value$jscomp$inline_0 = value$jscomp$1;
+            var a$jscomp$inline_1 = ++value$jscomp$1;
+            var b$jscomp$inline_2 = ++value$jscomp$1;
+            JSCompiler_inline_result$jscomp$v0 = value$jscomp$inline_0 + a$jscomp$inline_1 + b$jscomp$inline_2;
+          }
+          return JSCompiler_inline_result$jscomp$v0;
+        };
+        """);
   }
 
   @Test
@@ -5414,17 +5460,17 @@ window.g = function(value$jscomp$1) {
           return add(++value, ++value);
         };
         """,
-"""
-value = 10;
-window.g = function() {
-  var JSCompiler_inline_result$jscomp$0;
-  {
-    var a$jscomp$inline_1 = ++value;
-    var b$jscomp$inline_2 = ++value;
-    JSCompiler_inline_result$jscomp$0 = (value = 0 ) + a$jscomp$inline_1 + b$jscomp$inline_2;
-  }
-  return JSCompiler_inline_result$jscomp$0;
-};
-""");
+        """
+        value = 10;
+        window.g = function() {
+          var JSCompiler_inline_result$jscomp$v0;
+          {
+            var a$jscomp$inline_0 = ++value;
+            var b$jscomp$inline_1 = ++value;
+            JSCompiler_inline_result$jscomp$v0 = (value = 0 ) + a$jscomp$inline_0 + b$jscomp$inline_1;
+          }
+          return JSCompiler_inline_result$jscomp$v0;
+        };
+        """);
   }
 }

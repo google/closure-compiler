@@ -2171,7 +2171,6 @@ public final class FunctionInjectorTest {
           }
         };
 
-    compiler.resetUniqueNameId();
     TestCallback test = new TestCallback(fnName, tester);
     NodeTraversal.traverse(compiler, tree, test);
   }
@@ -2269,8 +2268,6 @@ public final class FunctionInjectorTest {
             return true;
           }
         };
-
-    compiler.resetUniqueNameId();
 
     ChangeVerifier verifier = new ChangeVerifier(compiler).snapshot(mainRoot);
     TestCallback test = new TestCallback(fnName, tester);

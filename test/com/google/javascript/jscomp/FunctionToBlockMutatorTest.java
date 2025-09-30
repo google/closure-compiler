@@ -289,7 +289,6 @@ public final class FunctionToBlockMutatorTest {
           return true;
         };
 
-    compiler.resetUniqueNameId();
     TestCallback test = new TestCallback(fnName, tester);
     NodeTraversal.traverse(compiler, script, test);
   }

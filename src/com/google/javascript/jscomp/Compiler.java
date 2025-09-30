@@ -1739,13 +1739,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return uniqueNameId++;
   }
 
-  /** Resets the unique name id counter */
-  @Deprecated
-  @VisibleForTesting
-  void resetUniqueNameId() {
-    uniqueNameId = 0;
-  }
-
   /**
    * Legacy supplier for getting unique names.
    *
