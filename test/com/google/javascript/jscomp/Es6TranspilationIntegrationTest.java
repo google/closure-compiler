@@ -2165,8 +2165,7 @@ $jscomp.inherits(FooPromise, Promise);
             """);
     test(externs, srcs, expected);
     // No $jscomp.initSymbol in externs
-    testExternChanges(
-        externs("alert(Symbol.thimble);"), srcs(""), expected("alert(Symbol.thimble)"));
+    testSame(externs("alert(Symbol.thimble);"), srcs(""));
   }
 
   @Test

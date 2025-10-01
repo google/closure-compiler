@@ -1419,7 +1419,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   public AstAnalyzer getAstAnalyzer() {
-    return new AstAnalyzer(this, getOptions().getAssumeGettersArePure());
+    CompilerOptions options = getOptions();
+    var analysisSettings =
+        AstAnalyzer.Options.builder()
+            .setUseTypesForLocalOptimization(options.shouldUseTypesForLocalOptimization())
+            .setAssumeGettersArePure(options.getAssumeGettersArePure())
+            .setHasRegexpGlobalReferences(this.hasRegExpGlobalReferences())
+            .build();
+    return new AstAnalyzer(analysisSettings, typeRegistry, getAccessorSummary());
   }
 
   @Override

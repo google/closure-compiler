@@ -17,9 +17,9 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.auto.value.AutoBuilder;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.colors.Color;
@@ -27,6 +27,8 @@ import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Logic for answering questions about portions of the AST.
@@ -70,12 +72,44 @@ public class AstAnalyzer {
   private static final ImmutableSet<String> STRING_REGEXP_METHODS =
       ImmutableSet.of("match", "replace", "search", "split");
 
-  private final AbstractCompiler compiler;
+  private final JSTypeRegistry typeRegistry;
+  private final AccessorSummary accessorSummary;
+  private final boolean useTypesForLocalOptimization;
   private final boolean assumeGettersArePure;
+  private final boolean hasRegexpGlobalReferences;
 
-  AstAnalyzer(AbstractCompiler compiler, boolean assumeGettersArePure) {
-    this.compiler = checkNotNull(compiler);
-    this.assumeGettersArePure = assumeGettersArePure;
+  AstAnalyzer(
+      Options options,
+      @Nullable JSTypeRegistry typeRegistry,
+      @Nullable AccessorSummary accessorSummary) {
+    checkArgument(
+        options.assumeGettersArePure || accessorSummary != null,
+        "accessorSummary must be provided if assumeGettersArePure is false");
+    this.typeRegistry = typeRegistry;
+    this.accessorSummary = accessorSummary;
+    this.useTypesForLocalOptimization = options.useTypesForLocalOptimization;
+    this.assumeGettersArePure = options.assumeGettersArePure;
+    this.hasRegexpGlobalReferences = options.hasRegexpGlobalReferences;
+  }
+
+  static record Options(
+      boolean useTypesForLocalOptimization,
+      boolean assumeGettersArePure,
+      boolean hasRegexpGlobalReferences) {
+    @AutoBuilder
+    static interface Builder {
+      Builder setUseTypesForLocalOptimization(boolean value);
+
+      Builder setAssumeGettersArePure(boolean value);
+
+      Builder setHasRegexpGlobalReferences(boolean value);
+
+      Options build();
+    }
+
+    static Builder builder() {
+      return new AutoBuilder_AstAnalyzer_Options_Builder();
+    }
   }
 
   /**
@@ -180,7 +214,7 @@ public class AstAnalyzer {
         }
       }
 
-      if (!compiler.hasRegExpGlobalReferences()) {
+      if (!hasRegexpGlobalReferences) {
         if (callee.getFirstChild().isRegExp() && REGEXP_METHODS.contains(callee.getString())) {
           return false;
         } else if (isTypedAsString(callee.getFirstChild())) {
@@ -215,15 +249,14 @@ public class AstAnalyzer {
       return true;
     }
 
-    if (compiler.getOptions().useTypesForLocalOptimization) {
+    if (useTypesForLocalOptimization) {
       Color color = n.getColor();
       if (color != null) {
         return color.equals(StandardColors.STRING);
       }
       JSType type = n.getJSType();
       if (type != null) {
-        JSType nativeStringType =
-            compiler.getTypeRegistry().getNativeType(JSTypeNative.STRING_TYPE);
+        JSType nativeStringType = typeRegistry.getNativeType(JSTypeNative.STRING_TYPE);
         if (type.equals(nativeStringType)) {
           return true;
         }
@@ -534,7 +567,6 @@ public class AstAnalyzer {
    * the current node's type is one of the reasons why a subtree has side effects.
    */
   boolean nodeTypeMayHaveSideEffects(Node n) {
-    checkNotNull(compiler);
     if (NodeUtil.isAssignmentOp(n)) {
       return true;
     }
@@ -589,8 +621,6 @@ public class AstAnalyzer {
   }
 
   private PropertyAccessKind getPropertyKind(String name) {
-    return assumeGettersArePure
-        ? PropertyAccessKind.NORMAL
-        : compiler.getAccessorSummary().getKind(name);
+    return assumeGettersArePure ? PropertyAccessKind.NORMAL : accessorSummary.getKind(name);
   }
 }

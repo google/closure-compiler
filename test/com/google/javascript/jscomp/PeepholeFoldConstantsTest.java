@@ -2263,6 +2263,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
         ImmutableList.of(SourceFile.fromCode("testcode", js)),
         options);
     Node root = compiler.parseInputs();
+    compiler.setAccessorSummary(AccessorSummary.create(ImmutableMap.of()));
     assertWithMessage(
             "Unexpected parse error(s): "
                 + Joiner.on("\n").join(compiler.getErrors())
