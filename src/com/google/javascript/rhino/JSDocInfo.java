@@ -1244,7 +1244,12 @@ public class JSDocInfo implements Serializable {
     return checkBit(Bit.SASS_GENERATED_CSS_TS);
   }
 
-  /** Returns whether JSDoc is annotated with the {@code @closureUnawareCode} annotation. */
+  /**
+   * Returns whether JSDoc is annotated with the {@code @closureUnawareCode} annotation. Generally,
+   * prefer calling {@link Node#isClosureUnawareCode() instead of referencing this jsdoc, as this
+   * annotation is NOT serialized to TypedAST (because an equivalent bit is instead set in the
+   * SourceFile's TypedAST representation).
+   */
   public boolean isClosureUnawareCode() {
     return checkBit(Bit.CLOSURE_UNAWARE_CODE);
   }
