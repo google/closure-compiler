@@ -98,13 +98,18 @@ public final class AstValidator implements CompilerPass {
         },
         validateScriptFeatures,
         /* shouldValidateRequiredInlinings= */
-        // Required inlinings don't make sense without inlining. If we don't inline
-        // properties we might not be able to inline functions defined on namespaces.
-        compiler.getOptions().shouldInlineProperties()
+        // Non-optimized code might not perform all required inlinings.
+        compiler.getOptions().shouldOptimize()
+            // Required inlinings don't make sense without inlining. If we don't inline
+            // properties we might not be able to inline functions defined on namespaces.
+            && compiler.getOptions().shouldInlineProperties()
             && compiler.getOptions().inlineConstantVars
             && compiler.getOptions().smartNameRemoval
             && compiler.getOptions().getInlineFunctionsLevel().isOn()
             && compiler.getOptions().getInlineFunctionsLevel().includesGlobals()
+            // Coverage runs may break some inlining.
+            && compiler.getOptions().getInstrumentForCoverageOption()
+                == CompilerOptions.InstrumentOption.NONE
             // We need to collapse properties or functions might be retained due to
             // being written on an exported namespace.
             && compiler
