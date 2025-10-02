@@ -8297,11 +8297,6 @@ google.maps.PlacesLibrary.prototype.PlaceContextualListConfigElement;
 google.maps.PlacesLibrary.prototype.PlaceContextualListLayout;
 
 /**
- * @type {typeof google.maps.places.PlaceContextualListMapMode}
- */
-google.maps.PlacesLibrary.prototype.PlaceContextualListMapMode;
-
-/**
  * @type {typeof google.maps.places.PlacePrediction}
  */
 google.maps.PlacesLibrary.prototype.PlacePrediction;
@@ -16678,11 +16673,17 @@ google.maps.maps3d.FlyAroundAnimationOptions = function() {};
 google.maps.maps3d.FlyAroundAnimationOptions.prototype.camera;
 
 /**
- * The duration of the animation in milliseconds. This is the total duration of
- * the animation, not the duration of a single rotation.
+ * The duration of one animation cycle in milliseconds.
  * @type {number|undefined}
  */
 google.maps.maps3d.FlyAroundAnimationOptions.prototype.durationMillis;
+
+/**
+ * Specifies the number of times an animation should repeat. If the number is
+ * zero, the animation will complete immediately after it starts.
+ * @type {number|undefined}
+ */
+google.maps.maps3d.FlyAroundAnimationOptions.prototype.repeatCount;
 
 /**
  * The number of rounds to rotate around the center in the given duration. This
@@ -16690,6 +16691,8 @@ google.maps.maps3d.FlyAroundAnimationOptions.prototype.durationMillis;
  * will cause the camera to rotate in a counter-clockwise direction instead of
  * the default clockwise direction.
  * @type {number|undefined}
+ * @deprecated Please use {@link
+ *     google.maps.maps3d.FlyAroundAnimationOptions.repeatCount} instead.
  */
 google.maps.maps3d.FlyAroundAnimationOptions.prototype.rounds;
 
@@ -16777,12 +16780,11 @@ google.maps.maps3d.Map3DElement.prototype.bounds;
 google.maps.maps3d.Map3DElement.prototype.center;
 
 /**
- * When <code>true</code>, all default UI buttons are disabled. Does not disable
- * the keyboard and gesture controls.
+ * When <code>true</code>, all default UI buttons are hidden.
  * @default <code>false</code>
  * @type {boolean|null|undefined}
  */
-google.maps.maps3d.Map3DElement.prototype.defaultUIDisabled;
+google.maps.maps3d.Map3DElement.prototype.defaultUIHidden;
 
 /**
  * The compass heading of the map, in degrees, where due north is zero. When
@@ -16885,17 +16887,28 @@ google.maps.maps3d.Map3DElement.prototype.roll;
  */
 google.maps.maps3d.Map3DElement.prototype.tilt;
 
+/**
+ * When <code>true</code>, all default UI buttons are disabled. Does not disable
+ * the keyboard and gesture controls.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ * @deprecated Please use {@link
+ *     google.maps.maps3d.Map3DElement.defaultUIHidden} instead. This property
+ *     will be removed in a future release.
+ */
+google.maps.maps3d.Map3DElement.prototype.defaultUIDisabled;
+
 
 
 /**
- * This method orbits the camera around a given location for a given duration,
- * making the given number of rounds in that time. <br /><br /> By default, the
- * camera orbits clockwise. If given a negative number for rounds, the camera
- * will orbit in a counter-clockwise direction instead. <br /><br /> The method
- * is asynchronous because animations can only start after the map has loaded a
- * minimum amount. The method returns once the animation has been started. <br
- * /><br /> If the number of rounds is zero, no spin will occur, and the
- * animation will complete immediately after it starts.
+ * This method orbits the camera around a given location for a given duration.
+ * The animation can be repeated by the given number of
+ * <code>repeatCounts</code>. <br /><br /> The camera will move in a clockwise
+ * direction. <br /><br /> The method is asynchronous because animations can
+ * only start after the map has loaded a minimum amount. The method returns once
+ * the animation has been started. <br /><br /> If the number of
+ * <code>repeatCounts</code> is zero, no spin will occur, and the animation will
+ * complete immediately after it starts.
  * @param {!google.maps.maps3d.FlyAroundAnimationOptions} options
  * @return {undefined}
  */
@@ -16946,10 +16959,10 @@ google.maps.maps3d.Map3DElementOptions.prototype.bounds;
 google.maps.maps3d.Map3DElementOptions.prototype.center;
 
 /**
- * See {@link google.maps.maps3d.Map3DElement.defaultUIDisabled}.
+ * See {@link google.maps.maps3d.Map3DElement.defaultUIHidden}.
  * @type {boolean|null|undefined}
  */
-google.maps.maps3d.Map3DElementOptions.prototype.defaultUIDisabled;
+google.maps.maps3d.Map3DElementOptions.prototype.defaultUIHidden;
 
 /**
  * See {@link google.maps.maps3d.Map3DElement.heading}.
@@ -17022,6 +17035,15 @@ google.maps.maps3d.Map3DElementOptions.prototype.roll;
  * @type {number|null|undefined}
  */
 google.maps.maps3d.Map3DElementOptions.prototype.tilt;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.defaultUIDisabled}.
+ * @type {boolean|null|undefined}
+ * @deprecated Please use {@link
+ *     google.maps.maps3d.Map3DElement.defaultUIHidden} instead. This property
+ *     will be removed in a future release.
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.defaultUIDisabled;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
@@ -20864,12 +20886,6 @@ google.maps.places.PlaceContextualListConfigElement.prototype.layout;
  */
 google.maps.places.PlaceContextualListConfigElement.prototype.mapHidden;
 
-/**
- * The map mode used in Place Contextual Element for a list of places.
- * @type {!google.maps.places.PlaceContextualListMapMode|null|undefined}
- */
-google.maps.places.PlaceContextualListConfigElement.prototype.mapMode;
-
 
 
 /**
@@ -20895,13 +20911,6 @@ google.maps.places.PlaceContextualListConfigElementOptions.prototype.layout;
 google.maps.places.PlaceContextualListConfigElementOptions.prototype.mapHidden;
 
 /**
- * The map mode used in Place Contextual Element for a list of places.
- * @default {@link google.maps.places.PlaceContextualListMapMode.ROADMAP}
- * @type {!google.maps.places.PlaceContextualListMapMode|null|undefined}
- */
-google.maps.places.PlaceContextualListConfigElementOptions.prototype.mapMode;
-
-/**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
  * The list of layouts that the Place Contextual Element supports for the list
@@ -20922,32 +20931,6 @@ google.maps.places.PlaceContextualListLayout = {
    * Vertical list layout: list items are rendered as cards in a vertical list.
    */
   VERTICAL: 'VERTICAL',
-};
-
-/**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
- * The map mode used in Place Contextual Element for a list of places.
- *
- * Access by calling `const {PlaceContextualListMapMode} = await
- * google.maps.importLibrary("places")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @enum {string}
- */
-google.maps.places.PlaceContextualListMapMode = {
-  /**
-   * A transparent layer of major streets on satellite, or photorealistic
-   * imagery in 3D.
-   */
-  HYBRID: 'HYBRID',
-  /**
-   * No map.
-   */
-  NONE: 'NONE',
-  /**
-   * A normal 2D street map.
-   */
-  ROADMAP: 'ROADMAP',
 };
 
 /**
@@ -21368,6 +21351,7 @@ google.maps.places.PlaceMediaElementOptions.prototype.preferredSize;
 google.maps.places.PlaceNearbySearchRequestElement = function(options) {};
 
 /**
+ * Excluded primary place types.
  * @default <code>null</code>
  * @type {!Array<string>|null|undefined}
  */
@@ -21375,12 +21359,14 @@ google.maps.places.PlaceNearbySearchRequestElement.prototype
     .excludedPrimaryTypes;
 
 /**
+ * Excluded place types.
  * @default <code>null</code>
  * @type {!Array<string>|null|undefined}
  */
 google.maps.places.PlaceNearbySearchRequestElement.prototype.excludedTypes;
 
 /**
+ * Included primary place type.
  * @default <code>null</code>
  * @type {!Array<string>|null|undefined}
  */
@@ -21388,12 +21374,14 @@ google.maps.places.PlaceNearbySearchRequestElement.prototype
     .includedPrimaryTypes;
 
 /**
+ * Included place type.
  * @default <code>null</code>
  * @type {!Array<string>|null|undefined}
  */
 google.maps.places.PlaceNearbySearchRequestElement.prototype.includedTypes;
 
 /**
+ * The region to search. Normalizes to a <code>Circle</code>.
  * @default <code>null</code>
  * @type {!google.maps.Circle|!google.maps.CircleLiteral|null|undefined}
  */
@@ -21401,12 +21389,14 @@ google.maps.places.PlaceNearbySearchRequestElement.prototype
     .locationRestriction;
 
 /**
+ * Maximum number of results to return.
  * @default <code>null</code>
  * @type {number|null|undefined}
  */
 google.maps.places.PlaceNearbySearchRequestElement.prototype.maxResultCount;
 
 /**
+ * How results will be ranked in the response.
  * @default <code>null</code>
  * @type {!google.maps.places.SearchNearbyRankPreference|null|undefined}
  */
@@ -22653,12 +22643,14 @@ google.maps.places.PlaceSummaryElementOptions = function() {};
 google.maps.places.PlaceTextSearchRequestElement = function(options) {};
 
 /**
+ * The list of preferred EV connector types.
  * @default <code>null</code>
  * @type {!Array<!google.maps.places.EVConnectorType>|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.evConnectorTypes;
 
 /**
+ * Minimum required charging rate in kilowatts.
  * @default <code>null</code>
  * @type {number|null|undefined}
  */
@@ -22666,60 +22658,74 @@ google.maps.places.PlaceTextSearchRequestElement.prototype
     .evMinimumChargingRateKw;
 
 /**
+ * The requested place type.
  * @default <code>null</code>
  * @type {string|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.includedType;
 
 /**
+ * Used to restrict the search to places that are currently open.
  * @default <code>null</code>
  * @type {boolean|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.isOpenNow;
 
 /**
+ * Location bias for the search. Normalizes to a <code>LatLngAltitude |
+ * LatLngBounds | Circle | string</code>.
  * @default <code>null</code>
- * @type {string|!google.maps.LatLngAltitude|!google.maps.LatLngBounds|!google.maps.Circle|!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngBoundsLiteral|!google.maps.CircleLiteral|null|undefined}
+ * @type {!google.maps.places.LocationBias|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.locationBias;
 
 /**
+ * Location restriction for the search. Normalizes to a
+ * <code>LatLngBounds</code>.
  * @default <code>null</code>
  * @type {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.locationRestriction;
 
 /**
+ * Maximum number of results to return.
  * @default <code>null</code>
  * @type {number|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.maxResultCount;
 
 /**
+ * Filter out results whose average user rating is strictly less than this
+ * limit.
  * @default <code>null</code>
  * @type {number|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.minRating;
 
 /**
+ * Used to restrict the search to places that are marked as certain price
+ * levels.
  * @default <code>null</code>
  * @type {!Array<!google.maps.places.PriceLevel>|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.priceLevels;
 
 /**
+ * How results will be ranked in the response.
  * @default <code>null</code>
  * @type {!google.maps.places.SearchByTextRankPreference|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.rankPreference;
 
 /**
+ * The text query for textual search.
  * @default <code>null</code>
  * @type {string|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.textQuery;
 
 /**
+ * Used to set strict type filtering for &#39;includedType&#39;.
  * @default <code>null</code>
  * @type {boolean|null|undefined}
  */
@@ -22776,7 +22782,7 @@ google.maps.places.PlaceTextSearchRequestElementOptions.prototype.isOpenNow;
  * google.maps.places.SearchByTextRequest.locationBias} and {@link
  * google.maps.places.PlaceTextSearchRequestElement.locationBias} for more
  * details.
- * @type {string|!google.maps.LatLngAltitude|!google.maps.LatLngBounds|!google.maps.Circle|!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngBoundsLiteral|!google.maps.CircleLiteral|null|undefined}
+ * @type {!google.maps.places.LocationBias|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElementOptions.prototype.locationBias;
 
@@ -22935,6 +22941,19 @@ google.maps.places.PlaceWebsiteElementOptions = function() {};
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!HTMLDivElement|!google.maps.Map} attrContainer
  * @constructor
+ * @deprecated As of March 1st, 2025, google.maps.places.PlacesService is not
+ *     available to new customers. Please use {@link google.maps.places.Place}
+ *     instead. At this time, google.maps.places.PlacesService is not scheduled
+ *     to be discontinued, but {@link google.maps.places.Place} is recommended
+ *     over google.maps.places.PlacesService. While
+ *     google.maps.places.PlacesService will continue to receive bug fixes for
+ *     any major regressions, existing bugs in google.maps.places.PlacesService
+ *     will not be addressed. At least 12 months notice will be given before
+ *     support is discontinued. Please see <a
+ *     href="https://developers.google.com/maps/legacy">https://developers.google.com/maps/legacy</a>
+ *     for additional details and <a
+ *     href="https://developers.google.com/maps/documentation/javascript/places-migration-overview">https://developers.google.com/maps/documentation/javascript/places-migration-overview</a>
+ *     for the migration guide.
  */
 google.maps.places.PlacesService = function(attrContainer) {};
 
@@ -23581,15 +23600,13 @@ google.maps.places.SearchByTextRequest = function() {};
 google.maps.places.SearchByTextRequest.prototype.evSearchOptions;
 
 /**
- * Required when you use this request with {@link
- * google.maps.places.Place.searchByText}. Fields to be included in the
- * response, <a
+ * Fields to be included in the response, <a
  * href="https://developers.google.com/maps/billing/understanding-cost-of-use#places-product">which
  * will be billed for</a>. If <code>[&#39;*&#39;]</code> is passed in, all
  * available fields will be returned and billed for (this is not recommended for
  * production deployments). You can request any property in the {@link
  * google.maps.places.Place} class as a field.
- * @type {!Array<string>|undefined}
+ * @type {!Array<string>}
  */
 google.maps.places.SearchByTextRequest.prototype.fields;
 
@@ -23758,15 +23775,13 @@ google.maps.places.SearchNearbyRequest.prototype.excludedPrimaryTypes;
 google.maps.places.SearchNearbyRequest.prototype.excludedTypes;
 
 /**
- * Required when you use this request with {@link
- * google.maps.places.Place.searchNearby}. Fields to be included in the
- * response, <a
+ * Fields to be included in the response, <a
  * href="https://developers.google.com/maps/billing/understanding-cost-of-use#places-product">which
  * will be billed for</a>. If <code>[&#39;*&#39;]</code> is passed in, all
  * available fields will be returned and billed for (this is not recommended for
  * production deployments). You can request any property in the {@link
  * google.maps.places.Place} class as a field.
- * @type {!Array<string>|undefined}
+ * @type {!Array<string>}
  */
 google.maps.places.SearchNearbyRequest.prototype.fields;
 
