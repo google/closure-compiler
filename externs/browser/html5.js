@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 The Closure Compiler Authors
+ * Copyright 2025 The Closure Compiler Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1982,6 +1982,12 @@ HTMLElement.prototype.inert;
 
 /** @type {boolean} */
 HTMLElement.prototype.spellcheck;
+
+/** @type {?function(!Event): void} */
+HTMLElement.prototype.onbeforematch;
+
+/** @type {?function(!Event): void} */
+HTMLElement.prototype.onpointerrawupdate;
 
 /**
  * @see https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-face-example
@@ -3969,6 +3975,9 @@ History.prototype.state;
  * @type {string}
  */
 History.prototype.scrollRestoration;
+
+/** @type {boolean} */
+Window.prototype.originAgentCluster;
 
 /**
  * Add history property to Window.
@@ -6080,6 +6089,21 @@ Navigator.prototype.setAppBadge = function(contents) {};
 Navigator.prototype.clearAppBadge = function() {};
 
 /**
+ * @type {?}
+ * @see https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#sctn-credProtect-extension
+ */
+Navigator.prototype.credentialProtectionPolicy;
+
+/** @type {?} */
+Navigator.prototype.enforceCredentialProtectionPolicy;
+
+/** @type {?} */
+Navigator.prototype.largeBlob;
+
+/** @type {!NavigatorLogin} */
+Navigator.prototype.login;
+
+/**
  * @type {boolean}
  * @see https://developer.mozilla.org/docs/Web/API/Navigator/pdfViewerEnabled
  */
@@ -6089,6 +6113,18 @@ Navigator.prototype.pdfViewerEnabled;
  * @type {?string}
  */
 Navigator.prototype.doNotTrack;
+
+/**
+ * @interface
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/NavigatorLogin
+ */
+function NavigatorLogin() {}
+
+/**
+ * @param {string} status
+ * @return {!Promise<string>}
+ */
+NavigatorLogin.prototype.setStatus = function(status) {};
 
 /**
  * @constructor
@@ -6527,6 +6563,34 @@ SecurityPolicyViolationEventInit.prototype.lineNumber;
 
 /** @type {undefined|number} */
 SecurityPolicyViolationEventInit.prototype.columnNumber;
+
+
+/**
+ * @see https://www.w3.org/TR/CSP3/#security-violation-reports
+ * @constructor
+ */
+function CSPViolationReportBody() {}
+
+/** @const {string} */
+CSPViolationReportBody.prototype.blockedURL;
+
+/** @const {string} */
+CSPViolationReportBody.prototype.documentURL;
+
+/** @const {string} */
+CSPViolationReportBody.prototype.effectiveDirective;
+
+/** @const {string} */
+CSPViolationReportBody.prototype.originalPolicy;
+
+/** @const {string} */
+CSPViolationReportBody.prototype.referrer;
+
+/** @const {string} */
+CSPViolationReportBody.prototype.sample;
+
+/** @const {number} */
+CSPViolationReportBody.prototype.statusCode;
 
 
 /**
