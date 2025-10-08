@@ -77,6 +77,7 @@ public class PrototypeObjectType extends ObjectType {
   private final PropertyMap properties = new PropertyMap();
   private final boolean nativeType;
   private final boolean anonymousType;
+  private boolean fromEmptyObjLitExtern;
 
   // NOTE(nicksantos): The implicit prototype can change over time.
   // Modeling this is a bear. Always call getImplicitPrototype(), because
@@ -105,6 +106,7 @@ public class PrototypeObjectType extends ObjectType {
     this.templateParamCount = builder.templateParamCount;
     this.nativeType = builder.nativeType;
     this.anonymousType = builder.anonymousType;
+    this.fromEmptyObjLitExtern = builder.externsEmptyObjLit;
 
     this.properties.setParentSource(this);
 
@@ -137,6 +139,7 @@ public class PrototypeObjectType extends ObjectType {
 
     private boolean nativeType;
     private boolean anonymousType;
+    private boolean externsEmptyObjLit;
 
     private TemplateTypeMap templateTypeMap;
     private int templateParamCount;
@@ -164,6 +167,11 @@ public class PrototypeObjectType extends ObjectType {
 
     final T setAnonymous(boolean x) {
       this.anonymousType = x;
+      return castThis();
+    }
+
+    final T setFromExternsEmptyObjectLit(boolean x) {
+      this.externsEmptyObjLit = x;
       return castThis();
     }
 
@@ -535,5 +543,9 @@ public class PrototypeObjectType extends ObjectType {
     } else {
       return System.identityHashCode(this);
     }
+  }
+
+  public boolean isFromEmptyObjLitExtern() {
+    return fromEmptyObjLitExtern;
   }
 }
