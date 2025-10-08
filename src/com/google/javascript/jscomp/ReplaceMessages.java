@@ -833,31 +833,29 @@ public final class ReplaceMessages {
     for (Part msgPart : msgParts) {
       final Node partNode;
       if (msgPart.isPlaceholder()) {
-        // Icu template placeholders are not replaced at compile time, but rather at runtime.
-        // Therefore, we need to treat them differently.
-        if (options.isIcuTemplate()) {
+        // `placeholderMapIds` contains only the placeholders from traditional goog.getMsg() calls.
+        // If a placeholder name is not found in this map, it is assumed to be an ICU placeholder.
+        String placeholderId = placeholderMapIds.get(msgPart.getJsPlaceholderName());
+        if (placeholderId == null) {
           // Add the ICU placeholder directly to the message ex: 'Hello {NAME}'
           message =
               astFactory.createString(
                   message.getString() + "{" + msgPart.getCanonicalPlaceholderName() + "}");
           continue;
         } else {
-          // Add the placeholder name node to the message ex: 'Hello + {name+uniqueId}'
-          String placeholderId = placeholderMapIds.get(msgPart.getJsPlaceholderName());
           partNode = astFactory.createName(placeholderId, type(nodeToReplace));
         }
       } else {
         // The part is just a string literal.
         partNode = createNodeForMsgString(options, msgPart.getString());
       }
-      // Icu template message should be apart of the string literal
-      if (options.isIcuTemplate()) {
-        message =
-            (message == null)
-                ? partNode
-                : astFactory.createString(message.getString() + partNode.getString());
+
+      if (message == null) {
+        message = partNode;
+      } else if (partNode.isString() && message.isString()) {
+        message = astFactory.createString(message.getString() + partNode.getString());
       } else {
-        message = (message == null) ? partNode : astFactory.createAdd(message, partNode);
+        message = astFactory.createAdd(message, partNode);
       }
     }
     return message;
@@ -1233,6 +1231,7 @@ public final class ReplaceMessages {
           jsMessageBuilder.setId(meaningForIdGeneration);
         }
       }
+
       return new ProtectedJsMessage(
           jsMessageBuilder.build(),
           node,
