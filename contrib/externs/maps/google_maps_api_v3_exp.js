@@ -8207,6 +8207,16 @@ google.maps.PlacesLibrary.prototype.BusinessStatus;
 google.maps.PlacesLibrary.prototype.ConnectorAggregation;
 
 /**
+ * @type {typeof google.maps.places.ConsumerAlert}
+ */
+google.maps.PlacesLibrary.prototype.ConsumerAlert;
+
+/**
+ * @type {typeof google.maps.places.ConsumerAlertDetails}
+ */
+google.maps.PlacesLibrary.prototype.ConsumerAlertDetails;
+
+/**
  * @type {typeof google.maps.places.EVChargeOptions}
  */
 google.maps.PlacesLibrary.prototype.EVChargeOptions;
@@ -8839,6 +8849,7 @@ google.maps.PolylineOptions.prototype.visible;
 google.maps.PolylineOptions.prototype.zIndex;
 
 /**
+ * Projection interface.
  * @record
  */
 google.maps.Projection = function() {};
@@ -8852,7 +8863,7 @@ google.maps.Projection = function() {};
  * <code>null</code> if the projection cannot calculate the <code>Point</code>.
  * @param {!google.maps.LatLng|!google.maps.LatLngLiteral} latLng
  * @param {!google.maps.Point=} point
- * @return {?google.maps.Point}
+ * @return {!google.maps.Point|null}
  */
 google.maps.Projection.prototype.fromLatLngToPoint = function(latLng, point) {};
 
@@ -8865,7 +8876,7 @@ google.maps.Projection.prototype.fromLatLngToPoint = function(latLng, point) {};
  * <code>LatLng</code>.
  * @param {!google.maps.Point} pixel
  * @param {boolean=} noClampNoWrap
- * @return {?google.maps.LatLng}
+ * @return {!google.maps.LatLng|null}
  */
 google.maps.Projection.prototype.fromPointToLatLng = function(
     pixel, noClampNoWrap) {};
@@ -16902,13 +16913,14 @@ google.maps.maps3d.Map3DElement.prototype.defaultUIDisabled;
 
 /**
  * This method orbits the camera around a given location for a given duration.
- * The animation can be repeated by the given number of
- * <code>repeatCounts</code>. <br /><br /> The camera will move in a clockwise
- * direction. <br /><br /> The method is asynchronous because animations can
- * only start after the map has loaded a minimum amount. The method returns once
- * the animation has been started. <br /><br /> If the number of
- * <code>repeatCounts</code> is zero, no spin will occur, and the animation will
- * complete immediately after it starts.
+ * The animation can be repeated by the given number of {@link
+ * google.maps.maps3d.FlyAroundAnimationOptions.repeatCount} times. <br /><br />
+ * The camera will move in a clockwise direction. <br /><br /> The method is
+ * asynchronous because animations can only start after the map has loaded a
+ * minimum amount. The method returns once the animation has been started. <br
+ * /><br /> If the number of {@link
+ * google.maps.maps3d.FlyAroundAnimationOptions.repeatCount} times is zero, no
+ * spin will occur, and the animation will complete immediately after it starts.
  * @param {!google.maps.maps3d.FlyAroundAnimationOptions} options
  * @return {undefined}
  */
@@ -17969,6 +17981,28 @@ google.maps.marker.AdvancedMarkerClickEvent = function() {};
  * @constructor
  */
 google.maps.marker.AdvancedMarkerElement = function(options) {};
+
+/**
+ * A <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/CSS/length-percentage">CSS
+ * length-percentage</a> value which is used to offset the anchor point of the
+ * marker from the top left corner of the marker. This is useful when using a
+ * visual which has an anchor point that is different than the typical bottom
+ * center point of the default marker. The default value is &quot;-%50&quot;.
+ * @type {string|null|undefined}
+ */
+google.maps.marker.AdvancedMarkerElement.prototype.anchorLeft;
+
+/**
+ * A <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/CSS/length-percentage">CSS
+ * length-percentage</a> value which is used to offset the anchor point of the
+ * marker from the top left corner of the marker. This is useful when using a
+ * visual which has an anchor point that is different than the typical bottom
+ * center point of the default marker. The default value is &quot;-%100&quot;.
+ * @type {string|null|undefined}
+ */
+google.maps.marker.AdvancedMarkerElement.prototype.anchorTop;
 
 /**
  * See {@link
@@ -19210,6 +19244,69 @@ google.maps.places.ConnectorAggregation.prototype.outOfServiceCount;
 google.maps.places.ConnectorAggregation.prototype.type;
 
 /**
+ * The consumer alert message. All text are rendered in the language specified
+ * by the <code>languageCode</code> field.
+ *
+ * Access by calling `const {ConsumerAlert} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.ConsumerAlert = function() {};
+
+/**
+ * The details of the consumer alert message.
+ * @type {!google.maps.places.ConsumerAlertDetails|null}
+ */
+google.maps.places.ConsumerAlert.prototype.details;
+
+/**
+ * The language code of the consumer alert message.
+ * @type {string|null}
+ */
+google.maps.places.ConsumerAlert.prototype.languageCode;
+
+/**
+ * The overview of the consumer alert message.
+ * @type {string|null}
+ */
+google.maps.places.ConsumerAlert.prototype.overview;
+
+/**
+ * Details of the consumer alert message.
+ *
+ * Access by calling `const {ConsumerAlertDetails} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.ConsumerAlertDetails = function() {};
+
+/**
+ * The title to show for a link to provide more information.
+ * @type {string|null}
+ */
+google.maps.places.ConsumerAlertDetails.prototype.aboutLinkTitle;
+
+/**
+ * The URI for a link to provide more information.
+ * @type {string|null}
+ */
+google.maps.places.ConsumerAlertDetails.prototype.aboutLinkURI;
+
+/**
+ * The description of the consumer alert message.
+ * @type {string|null}
+ */
+google.maps.places.ConsumerAlertDetails.prototype.description;
+
+/**
+ * The title to show together with the detailed description.
+ * @type {string|null}
+ */
+google.maps.places.ConsumerAlertDetails.prototype.title;
+
+/**
  * Information about the EV charging station hosted in the place.
  *
  * Access by calling `const {EVChargeOptions} = await
@@ -19989,6 +20086,12 @@ google.maps.places.Place.prototype.attributions;
  * @type {!google.maps.places.BusinessStatus|null|undefined}
  */
 google.maps.places.Place.prototype.businessStatus;
+
+/**
+ * The consumer alert for this place.
+ * @type {!google.maps.places.ConsumerAlert|null|undefined}
+ */
+google.maps.places.Place.prototype.consumerAlert;
 
 /**
  * The location&#39;s display name. <code>null</code> if there is no name.
@@ -23509,6 +23612,19 @@ google.maps.places.Review.prototype.text;
  * @type {string|null}
  */
 google.maps.places.Review.prototype.textLanguageCode;
+
+/**
+ * The month of the date when the review author visited the place. This field is
+ * 0-based; 0 is January, and 11 is December.
+ * @type {number|null}
+ */
+google.maps.places.Review.prototype.visitDateMonth;
+
+/**
+ * The year of the date when the review author visited the place.
+ * @type {number|null}
+ */
+google.maps.places.Review.prototype.visitDateYear;
 
 /**
  * A widget that provides query predictions based on a user&#39;s text input. It
