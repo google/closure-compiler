@@ -35,7 +35,6 @@ import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.jscomp.testing.JSCompCorrespondences;
-import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -149,8 +148,6 @@ abstract class IntegrationTestCase {
   // The most recently used compiler.
   protected @Nullable Compiler lastCompiler;
 
-  protected boolean useNoninjectingCompiler = false;
-
   protected String inputFileNamePrefix;
   protected String inputFileNameSuffix;
 
@@ -158,7 +155,6 @@ abstract class IntegrationTestCase {
   public void setUp() {
     externs = DEFAULT_EXTERNS;
     lastCompiler = null;
-    useNoninjectingCompiler = false;
     inputFileNamePrefix = "i";
     inputFileNameSuffix = ".js";
   }
@@ -327,18 +323,11 @@ abstract class IntegrationTestCase {
 
   @CanIgnoreReturnValue
   protected Compiler compile(CompilerOptions options, ImmutableList<JSChunk> chunks) {
-    Compiler compiler =
-        useNoninjectingCompiler
-            ? createNoninjectingCompiler(new BlackHoleErrorManager())
-            : createCompiler(new BlackHoleErrorManager());
+    Compiler compiler = createCompiler(new BlackHoleErrorManager());
 
     lastCompiler = compiler;
     var unused = compiler.compileChunks(externs, chunks, options);
     return compiler;
-  }
-
-  Compiler createNoninjectingCompiler(ErrorManager errorManager) {
-    return new NoninjectingCompiler(errorManager);
   }
 
   Compiler createCompiler(ErrorManager errorManager) {

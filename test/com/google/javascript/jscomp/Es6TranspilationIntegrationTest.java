@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.jscomp.serialization.SerializationOptions;
-import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Before;
 import org.junit.Test;
@@ -153,13 +152,14 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   @Test
   public void testObjectLiteralStringKeysWithNoValue() {
     test("var x = {a, b};", "var x = {a: a, b: b};");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
+    assertThat(getLastCompiler().getInjectedLibraries()).isEmpty();
   }
 
   @Test
   public void testSpreadLibInjection() {
     test("var x = [...a];", "var x=[].concat((0, $jscomp.arrayFromIterable)(a))");
-    assertThat(getLastCompiler().getInjected()).containsExactly("es6/util/arrayfromiterable");
+    assertThat(getLastCompiler().getInjectedLibraries())
+        .containsExactly("es6/util/arrayfromiterable");
   }
 
   @Test
@@ -167,7 +167,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "var x = {/** @return {number} */ a() { return 0; } };",
         "var x = {/** @return {number} */ a: function() { return 0; } };");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
+    assertThat(getLastCompiler().getInjectedLibraries()).isEmpty();
   }
 
   @Test
@@ -485,7 +485,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         var C = function() { D.apply(this, arguments); };
         $jscomp.inherits(C, D);
         """);
-    assertThat(getLastCompiler().getInjected())
+    assertThat(getLastCompiler().getInjectedLibraries())
         .containsExactly("es6/util/inherits", "es6/util/construct", "es6/util/arrayfromiterable");
 
     test(
@@ -2089,13 +2089,13 @@ $jscomp.inherits(FooPromise, Promise);
         externs(externsFileWithSymbol), //
         srcs("let a = alert(Symbol.thimble);"),
         expected("var a = alert(Symbol.thimble)"));
-    assertThat(getLastCompiler().getInjected()).containsExactly("es6/symbol");
+    assertThat(getLastCompiler().getInjectedLibraries()).containsExactly("es6/symbol");
 
     test(
         externs(externsFileWithSymbol), //
         srcs("let a = alert(Symbol.iterator);"),
         expected("var a = alert(Symbol.iterator)"));
-    assertThat(getLastCompiler().getInjected()).containsExactly("es6/symbol");
+    assertThat(getLastCompiler().getInjectedLibraries()).containsExactly("es6/symbol");
 
     test(
         externs(externsFileWithSymbol),
@@ -2609,15 +2609,5 @@ function inorder1(t) {
     // then the test would fail because Es6RewriteBlockScopeDeclaration does not even
     // look at destructuring declarations, expecting them to already have been
     // rewritten, and this test does not include that pass.
-  }
-
-  @Override
-  protected Compiler createCompiler() {
-    return new NoninjectingCompiler();
-  }
-
-  @Override
-  protected NoninjectingCompiler getLastCompiler() {
-    return (NoninjectingCompiler) super.getLastCompiler();
   }
 }

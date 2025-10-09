@@ -19,7 +19,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
@@ -207,7 +206,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
   public void testConstnessPreservedInNewDeclarations() {
     testForOf(
         "for (let CID of [1, 2, 3]) { alert(CID); }",
-        """
+"""
 var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3])
 var $jscomp$key$m1146332801$0$CID = $jscomp$iter$0.next();
 for (;
@@ -385,15 +384,5 @@ for (;
               {}
             }
             """));
-  }
-
-  @Override
-  protected Compiler createCompiler() {
-    return new NoninjectingCompiler();
-  }
-
-  @Override
-  protected NoninjectingCompiler getLastCompiler() {
-    return (NoninjectingCompiler) super.getLastCompiler();
   }
 }

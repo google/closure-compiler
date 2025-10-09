@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
-import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import java.util.ArrayList;
 import java.util.List;
@@ -529,10 +528,5 @@ public final class MultiPassTest extends CompilerTestCase {
             .setName("arrowFunctionPass")
             .setInternalFactory(Es6RewriteArrowFunction::new)
             .build());
-  }
-
-  @Override
-  protected Compiler createCompiler() {
-    return new NoninjectingCompiler();
   }
 }

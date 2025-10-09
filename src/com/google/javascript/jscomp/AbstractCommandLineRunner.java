@@ -2225,12 +2225,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   @VisibleForTesting
   void printBundleTo(JSChunk chunk, Appendable out) throws IOException {
     ImmutableList<CompilerInput> inputs = chunk.getInputs();
+    CompilerOptions options = compiler.getOptions();
     // Prebuild ASTs before they're needed in getLoadFlags, for performance and because
     // StackOverflowErrors can be hit if not prebuilt.
-    if (compiler.getOptions().numParallelThreads > 1) {
+    if (options.numParallelThreads > 1) {
       new PrebuildAst(compiler, compiler.getOptions().numParallelThreads).prebuild(inputs);
     }
-    if (!compiler.getOptions().preventLibraryInjection) {
+    if (options.getRuntimeLibraryMode() == CompilerOptions.RuntimeLibraryMode.INJECT) {
       // ES6 modules will need a runtime in a bundle. Skip appending this runtime if there are no
       // ES6 modules to cut down on size.
       for (CompilerInput input : inputs) {

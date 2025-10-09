@@ -22,7 +22,6 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.StandardColors;
-import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -48,16 +47,6 @@ import org.junit.runners.JUnit4;
 public final class Es6ConvertSuperTest extends CompilerTestCase {
   public Es6ConvertSuperTest() {
     super(MINIMAL_EXTERNS);
-  }
-
-  @Override
-  protected Compiler createCompiler() {
-    return new NoninjectingCompiler();
-  }
-
-  @Override
-  protected NoninjectingCompiler getLastCompiler() {
-    return (NoninjectingCompiler) super.getLastCompiler();
   }
 
   @Override

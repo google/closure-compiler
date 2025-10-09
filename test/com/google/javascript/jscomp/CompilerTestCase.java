@@ -387,6 +387,7 @@ public abstract class CompilerTestCase {
     if (debugLoggingEnabled) {
       CompilerTestCaseUtils.setDebugLogDirectoryOn(options);
     }
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
 
     return options;
   }
@@ -542,8 +543,8 @@ public abstract class CompilerTestCase {
   /**
    * When comparing expected to actual, ignore nodes created through compiler.ensureLibraryInjected
    *
-   * <p>This differs from using a {@link com.google.javascript.jscomp.testing.NoninjectingCompiler}
-   * in that the compiler still injects the polyfills when requested.
+   * <p>This differs from using {@link CompilerOptions.RuntimeLibraryMode.RECORD_ONLY} in that the
+   * compiler still injects the polyfills when requested.
    */
   protected final void disableCompareSyntheticCode() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");

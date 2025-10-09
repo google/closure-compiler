@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOS
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,13 +29,13 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class InjectTranspilationRuntimeLibrariesTest {
 
-  private NoninjectingCompiler compiler;
+  private Compiler compiler;
   private LanguageMode languageOut;
   private boolean instrumentAsyncContext;
 
   @Before
   public void setup() {
-    compiler = new NoninjectingCompiler();
+    compiler = new Compiler();
     languageOut = LanguageMode.ECMASCRIPT5;
     instrumentAsyncContext = false;
   }
@@ -51,6 +50,7 @@ public class InjectTranspilationRuntimeLibrariesTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(this.languageOut);
     options.setInstrumentAsyncContext(instrumentAsyncContext);
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
 
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("externs", "")),
@@ -60,7 +60,7 @@ public class InjectTranspilationRuntimeLibrariesTest {
     new InjectTranspilationRuntimeLibraries(compiler)
         .process(compiler.getExternsRoot(), compiler.getJsRoot());
 
-    return compiler.getInjected();
+    return ImmutableSet.copyOf(compiler.getInjectedLibraries());
   }
 
   @Test
@@ -136,7 +136,7 @@ public class InjectTranspilationRuntimeLibrariesTest {
         """);
 
     assertThat(compiler.getErrors()).isEmpty();
-    assertThat(compiler.getInjected()).isEmpty();
+    assertThat(compiler.getInjectedLibraries()).isEmpty();
   }
 
   @Test

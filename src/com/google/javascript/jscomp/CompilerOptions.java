@@ -877,8 +877,23 @@ public class CompilerOptions {
   /** Runtime libraries to always inject. */
   List<String> forceLibraryInjection = ImmutableList.of();
 
+  /**
+   * What to do with the runtime libraries under the js/ directory: the compiler can ignore them
+   * completely; can validate any attempted library usage is correct but not modify the AST; or both
+   * validate & add to the AST.
+   */
+  public enum RuntimeLibraryMode {
+    INJECT,
+    // mode where the compiler is building a TypedAST for the runtime libraries & can't use them,
+    // or where the compiler is in transpile-only mode and running per-file.
+    NO_OP,
+    // for testing - compiler records that it was asked to inject a runtime library, but does not
+    // modify the AST
+    RECORD_ONLY
+  }
+
   /** Runtime libraries to never inject. */
-  boolean preventLibraryInjection = false;
+  private RuntimeLibraryMode runtimeLibraryMode = RuntimeLibraryMode.INJECT;
 
   boolean assumeForwardDeclaredForMissingTypes = false;
 
@@ -1510,7 +1525,7 @@ public class CompilerOptions {
 
   /** Skip all possible passes, to make the compiler as fast as possible. */
   public void skipAllCompilerPasses() {
-    skipNonTranspilationPasses = true;
+    setSkipNonTranspilationPasses(true);
   }
 
   /** Whether the warnings guard in this Options object enables the given group of warnings. */
@@ -2702,7 +2717,16 @@ public class CompilerOptions {
 
   /** Sets the set of libraries to never inject, even if required. */
   public void setPreventLibraryInjection(boolean preventLibraryInjection) {
-    this.preventLibraryInjection = preventLibraryInjection;
+    this.runtimeLibraryMode =
+        preventLibraryInjection ? RuntimeLibraryMode.NO_OP : RuntimeLibraryMode.INJECT;
+  }
+
+  public void setRuntimeLibraryMode(RuntimeLibraryMode runtimeLibraryMode) {
+    this.runtimeLibraryMode = runtimeLibraryMode;
+  }
+
+  RuntimeLibraryMode getRuntimeLibraryMode() {
+    return this.runtimeLibraryMode;
   }
 
   public void setUnusedImportsToRemove(@Nullable ImmutableSet<String> unusedImportsToRemove) {
@@ -2946,7 +2970,6 @@ public class CompilerOptions {
         .add("preserveNonJSDocComments", getPreserveNonJSDocComments())
         .add("preserveTypeAnnotations", preserveTypeAnnotations)
         .add("prettyPrint", prettyPrint)
-        .add("preventLibraryInjection", preventLibraryInjection)
         .add("printConfig", printConfig)
         .add("printInputDelimiter", printInputDelimiter)
         .add("printSourceAfterEachPass", printSourceAfterEachPass)
@@ -2982,6 +3005,7 @@ public class CompilerOptions {
             rewriteGlobalDeclarationsForTryCatchWrapping)
         .add("rewriteModulesBeforeTypechecking", rewriteModulesBeforeTypechecking)
         .add("rewritePolyfills", rewritePolyfills)
+        .add("runtimeLibraryMode", runtimeLibraryMode)
         .add("skipNonTranspilationPasses", skipNonTranspilationPasses)
         .add("smartNameRemoval", smartNameRemoval)
         .add("sourceMapDetailLevel", sourceMapDetailLevel)

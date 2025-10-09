@@ -1038,9 +1038,6 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   @Test
   public void ambiguatePropertiesWithAliases() {
-    // Avoid injecting the polyfills, so we don't have to include them in the expected output.
-    useNoninjectingCompiler = true;
-
     // include externs definitions for the stuff that would have been injected
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
@@ -1063,6 +1060,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     options.setAmbiguateProperties(true);
     options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    // Avoid injecting the polyfills, so we don't have to include them in the expected output.
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
     test(
         options,
         """
@@ -1140,8 +1139,6 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   @Test
   public void ambiguatePropertiesWithMixins() {
-    // Avoid injecting the polyfills, so we don't have to include them in the expected output.
-    useNoninjectingCompiler = true;
 
     // include externs definitions for the stuff that would have been injected
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
@@ -1165,6 +1162,9 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     options.setAmbiguateProperties(true);
     options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    // Avoid injecting the polyfills, so we don't have to include them in the expected output.
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+
     test(
         options,
         """
@@ -3047,8 +3047,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setVariableRenaming(VariableRenamingPolicy.OFF);
     options.setPrettyPrint(true);
 
-    // Create a noninjecting compiler avoid comparing all the polyfill code.
-    useNoninjectingCompiler = true;
+    // Avoid comparing all the polyfill code.
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
 
     // include externs definitions for the stuff that would have been injected
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
@@ -3103,8 +3103,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setVariableRenaming(VariableRenamingPolicy.OFF);
     options.setPrettyPrint(true);
 
-    // Create a noninjecting compiler avoid comparing all the polyfill code.
-    useNoninjectingCompiler = true;
+    // Avoid comparing all the polyfill code.
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
 
     // include externs definitions for the stuff that would have been injected
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
@@ -3152,7 +3152,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testInitSymbolIteratorInjection() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    useNoninjectingCompiler = true;
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
     externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
@@ -3177,7 +3177,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testInitSymbolIteratorInjectionWithES6Syntax() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    useNoninjectingCompiler = true;
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
     externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
@@ -4123,8 +4123,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setOptimizeCalls(false);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
 
-    // Create a noninjecting compiler avoid comparing all the polyfill code.
-    useNoninjectingCompiler = true;
+    // Avoid comparing all the polyfill code.
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
 
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
@@ -4208,9 +4208,10 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   @Test
   public void testDefaultParameterRemoval() {
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+
     test(
         options,
         "foo = { func: (params = {}) => { console.log(params); } }",
@@ -4237,7 +4238,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testAsyncIter() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
-    useNoninjectingCompiler = true;
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
 
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
@@ -4293,9 +4294,9 @@ async function abc() {
 
   @Test
   public void testDestructuringRest() {
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
 
     test(options, "const {y} = {}", "const {y} = {}");
 

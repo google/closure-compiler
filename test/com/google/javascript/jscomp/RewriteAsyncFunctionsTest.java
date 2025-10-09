@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.testing.CodeSubTree;
-import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
@@ -66,18 +65,6 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return RewriteAsyncFunctions.create(compiler);
-  }
-
-  // Don't let the compiler actually inject any code.
-  // It just makes the expected output hard to read and write.
-  @Override
-  protected Compiler createCompiler() {
-    return new NoninjectingCompiler();
-  }
-
-  @Override
-  protected NoninjectingCompiler getLastCompiler() {
-    return (NoninjectingCompiler) super.getLastCompiler();
   }
 
   private final Color getGlobalColor(ColorId colorId) {

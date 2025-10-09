@@ -23,7 +23,6 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.StandardColors;
-import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -2662,7 +2661,7 @@ $jscomp.inherits(FooPromise, Promise);
         let C = function() {};
         C.prototype.foo = function*() { yield 1;};
         """);
-    assertThat(getLastCompiler().getInjected()).isEmpty();
+    assertThat(getLastCompiler().getInjectedLibraries()).isEmpty();
   }
 
   @Test
@@ -3054,16 +3053,6 @@ $jscomp.inherits(FooPromise, Promise);
       }
     }
     return null;
-  }
-
-  @Override
-  protected Compiler createCompiler() {
-    return new NoninjectingCompiler();
-  }
-
-  @Override
-  protected NoninjectingCompiler getLastCompiler() {
-    return (NoninjectingCompiler) super.getLastCompiler();
   }
 
   /**

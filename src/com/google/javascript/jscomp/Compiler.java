@@ -413,6 +413,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
     }
 
+    if (options.skipNonTranspilationPasses) {
+      options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.NO_OP);
+    }
+
     moduleLoader = ModuleLoader.EMPTY;
 
     reconcileOptionsWithGuards();
@@ -4076,12 +4080,40 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.accessorSummary = checkNotNull(summary);
   }
 
+  /**
+   * The subdir js/ contains libraries of code that we inject at compile-time only if requested by
+   * this function.
+   *
+   * <p>Notice that these libraries will almost always create global symbols.
+   *
+   * @param resourceName The name of the library. For example, if "base" is is specified, then we
+   *     load js/base.js
+   * @param force Inject the library even if compiler options say not to.
+   * @return The last node of the most-recently-injected runtime library. If new code was injected,
+   *     this will be the last expression node of the library. If the caller needs to add additional
+   *     code, they should add it as the next sibling of this node. If no runtime libraries have
+   *     been injected, then null is returned.
+   */
   @Override
   protected Node ensureLibraryInjected(String resourceName, boolean force) {
-    boolean shouldInject =
-        force || (!options.skipNonTranspilationPasses && !options.preventLibraryInjection);
-    if (injectedLibraries.contains(resourceName) || !shouldInject) {
+    if (injectedLibraries.contains(resourceName)) {
       return lastInjectedLibrary;
+    }
+    switch (options.getRuntimeLibraryMode()) {
+      case RECORD_ONLY -> {
+        if (!force) {
+          injectedLibraries.add(resourceName);
+          return lastInjectedLibrary;
+        }
+      }
+      case NO_OP -> {
+        if (!force) {
+          return lastInjectedLibrary;
+        }
+      }
+      case INJECT -> {
+        // Keep going.
+      }
     }
 
     checkState(!getLifeCycleStage().isNormalized(), "runtime library injected after normalization");
@@ -4172,7 +4204,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  ImmutableList<String> getInjectedLibraries() {
+  public ImmutableList<String> getInjectedLibraries() {
     return ImmutableList.copyOf(injectedLibraries);
   }
 

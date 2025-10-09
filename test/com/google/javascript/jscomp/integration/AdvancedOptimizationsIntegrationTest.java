@@ -40,7 +40,6 @@ import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
-import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -58,12 +57,12 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
   @Test
   public void testGoogProvideAndRequire_used() {
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
     options.setVariableRenaming(VariableRenamingPolicy.OFF);
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -122,8 +121,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
   @Test
   public void testObjectDestructuring_forLoopInitializer_doesNotCrash() {
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
@@ -187,8 +186,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
   @Test
   public void testVariableUsedAsArgumentMultipleTimes() {
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
     options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
     options.setVariableRenaming(VariableRenamingPolicy.OFF);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -220,8 +219,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
   @Test
   public void testTSVariableReassignmentAndAliasingDueToDecoration() {
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
@@ -328,8 +327,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
   @Test
   public void testFoldSpread() {
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
@@ -346,8 +345,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testBug303058080() {
     // Avoid including the transpilation library
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
@@ -395,8 +394,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testBug123583793() {
     // Avoid including the transpilation library
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
@@ -425,14 +424,14 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             f = (delete d.a, d);
         b.call(a, {a:e, d:f});
         """);
-    assertThat(((NoninjectingCompiler) lastCompiler).getInjected()).contains("es6/object/assign");
+    assertThat(lastCompiler.getInjectedLibraries()).contains("es6/object/assign");
   }
 
   @Test
   public void testBug173319540() {
     // Avoid including the transpilation library
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
@@ -872,7 +871,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setVariableRenaming(VariableRenamingPolicy.OFF);
 
     // we don't want to see injected library code in the output
-    useNoninjectingCompiler = true;
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+
     test(
         options,
         """
@@ -1132,14 +1132,13 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setRewritePolyfills(true);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
 
-    useNoninjectingCompiler = true;
     compile(options, new String[] {"for (const x of [1, 2, 3].values()) { alert(x); }"});
 
     assertThat(lastCompiler.getResult().errors).isEmpty();
     assertThat(lastCompiler.getResult().warnings).isEmpty();
-    assertThat(((NoninjectingCompiler) lastCompiler).getInjected())
-        .containsExactly("es6/array/values");
+    assertThat(lastCompiler.getInjectedLibraries()).containsExactly("es6/array/values");
   }
 
   @Test
@@ -1234,8 +1233,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setExportLocalPropertyDefinitions(true);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setPrettyPrint(true);
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
 
-    useNoninjectingCompiler = true;
     test(
         options,
         """
@@ -2029,8 +2028,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
-    // Create a noninjecting compiler avoid comparing all the polyfill code.
-    useNoninjectingCompiler = true;
+    // Avoid comparing all the polyfill code.
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
 
     // include externs definitions for the stuff that would have been injected
     externs =
@@ -2108,8 +2107,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
 
-    useNoninjectingCompiler = true;
     externs =
         ImmutableList.of(
             new TestExternsBuilder()
@@ -2201,8 +2200,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
 
-    useNoninjectingCompiler = true;
     externs =
         ImmutableList.of(
             new TestExternsBuilder()
@@ -2354,8 +2353,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
   @Test
   public void testRestDoesntBlockPropertyDisambiguation() {
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
     // TODO(b/116532470): the compiler should compile this down to nothing.

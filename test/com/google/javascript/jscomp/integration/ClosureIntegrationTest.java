@@ -1591,7 +1591,7 @@ goog.exportSymbol('foo.example.ClassName', module$contents$foo$example$ClassName
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     options.setClosurePass(true);
-    useNoninjectingCompiler = true;
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
 
     String originalModule =
         """

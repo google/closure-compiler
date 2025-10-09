@@ -15,12 +15,12 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
-import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -80,23 +80,26 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.MISSING_POLYFILL, CheckLevel.WARNING);
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
     return options;
   }
 
   @Override
   protected Compiler createCompiler() {
-    return new NoninjectingCompiler() {
+    // TODO: b/421971366 - stop overriding ensureLibraryInjected
+    return new Compiler() {
       @Nullable Node lastInjected = null;
 
       @Override
       public Node ensureLibraryInjected(String library, boolean force) {
-        if (getInjected().contains(library)) {
+        if (getInjectedLibraries().contains(library)) {
           // already injected
           return lastInjected;
         } else {
           // super method just records library in `injected`
-          super.ensureLibraryInjected(library, force);
+          super.ensureLibraryInjected(library, /* force= */ false);
           Node parent = getNodeForCodeInsertion(null);
+          checkState(injectableLibraries.containsKey(library), "Missing %s", library);
           Node ast = parseSyntheticCode(library, injectableLibraries.get(library));
           Node lastChild = ast.getLastChild();
           Node firstChild = ast.removeChildren();

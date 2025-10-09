@@ -77,6 +77,13 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
     previousMappings = null;
   }
 
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.INJECT);
+    return options;
+  }
+
   @Test
   public void testBackwardCompat() {
     testWithPseudo(
