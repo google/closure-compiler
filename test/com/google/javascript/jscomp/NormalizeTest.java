@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -1368,19 +1367,6 @@ public final class NormalizeTest extends CompilerTestCase {
   public void testIssue() {
     allowExternsChanges();
     test(externs("var a,b,c; var a,b"), srcs("a(), b()"), expected("a(), b()"));
-  }
-
-  @Test
-  public void testNormalizeSyntheticCode() {
-    Compiler compiler = new Compiler();
-    CompilerOptions options = new CompilerOptions();
-    options.setEmitUseStrict(false);
-    compiler.init(new ArrayList<SourceFile>(), new ArrayList<SourceFile>(), options);
-    String code = "function f(x) {} function g(x) {}";
-    Node ast = compiler.parseSyntheticCode("testNormalizeSyntheticCode", code);
-    Normalize.normalizeSyntheticCode(compiler, ast, "prefix_");
-    assertThat(compiler.toSource(ast))
-        .isEqualTo("function f(x$jscomp$prefix_0){}function g(x$jscomp$prefix_1){}");
   }
 
   @Test

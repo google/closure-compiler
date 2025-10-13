@@ -22,7 +22,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
-import com.google.javascript.jscomp.MakeDeclaredNamesUnique.BoilerplateRenamer;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -106,18 +105,6 @@ final class Normalize implements CompilerPass {
     Normalize build() {
       return new Normalize(this);
     }
-  }
-
-  static void normalizeSyntheticCode(AbstractCompiler compiler, Node js, String prefix) {
-    NodeTraversal.traverse(compiler, js, new Normalize.NormalizeStatements(compiler, false));
-    NodeTraversal.traverse(
-        compiler,
-        js,
-        MakeDeclaredNamesUnique.builder()
-            .withRenamer(
-                new BoilerplateRenamer(
-                    compiler.getCodingConvention(), compiler.getUniqueNameIdSupplier(), prefix))
-            .build());
   }
 
   static Node parseAndNormalizeTestCode(AbstractCompiler compiler, String code) {
