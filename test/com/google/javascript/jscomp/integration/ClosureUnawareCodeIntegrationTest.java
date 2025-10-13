@@ -38,6 +38,7 @@ import com.google.protobuf.TextFormat;
 import com.google.protobuf.TextFormat.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -58,13 +59,8 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     return options;
   }
 
-  @Test
-  public void testNoOptimizeClosureUnawareCode_doesntOptimizeClasses() {
-    CompilerOptions options = createCompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
-
+  @Before
+  public void setup() {
     externs =
         ImmutableList.<SourceFile>builder()
             .addAll(externs)
@@ -78,6 +74,14 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
                     var globalThis;
                     """))
             .build();
+  }
+
+  @Test
+  public void testNoOptimizeClosureUnawareCode_doesntOptimizeClasses() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
 
     test(
         options,
@@ -131,20 +135,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilerOptions options = createCompilerOptions();
     options.setSkipNonTranspilationPasses(true);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
-
-    externs =
-        ImmutableList.<SourceFile>builder()
-            .addAll(externs)
-            .add(
-                SourceFile.fromCode(
-                    "globalthis.js",
-                    """
-                    /**
-                     * @type {?}
-                     */
-                    var globalThis;
-                    """))
-            .build();
 
     // Sadly, we can't use 'test' to validate this, because it will parse the "use strict" pragma
     // in the expected output into a BLOCK with the use_strict property set. This is correct, but
@@ -231,20 +221,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
 
-    externs =
-        ImmutableList.<SourceFile>builder()
-            .addAll(externs)
-            .add(
-                SourceFile.fromCode(
-                    "globalthis.js",
-                    """
-                    /**
-                     * @type {?}
-                     */
-                    var globalThis;
-                    """))
-            .build();
-
     test(
         options,
         """
@@ -273,20 +249,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
     // Set to true by default for most tests, defaults to false for most prod builds.
     options.setPrettyPrint(false);
-
-    externs =
-        ImmutableList.<SourceFile>builder()
-            .addAll(externs)
-            .add(
-                SourceFile.fromCode(
-                    "globalthis.js",
-                    """
-                    /**
-                     * @type {?}
-                     */
-                    var globalThis;
-                    """))
-            .build();
 
     // These compile and test steps are mostly copied from `test`, but instead of doing an AST level
     // validation we do a byte-for-byte comparison of the source output.
@@ -334,20 +296,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
 
-    externs =
-        ImmutableList.<SourceFile>builder()
-            .addAll(externs)
-            .add(
-                SourceFile.fromCode(
-                    "globalthis.js",
-                    """
-                    /**
-                     * @type {?}
-                     */
-                    var globalThis;
-                    """))
-            .build();
-
     test(
         options,
         """
@@ -383,20 +331,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
-
-    externs =
-        ImmutableList.<SourceFile>builder()
-            .addAll(externs)
-            .add(
-                SourceFile.fromCode(
-                    "globalthis.js",
-                    """
-                    /**
-                     * @type {?}
-                     */
-                    var globalThis;
-                    """))
-            .build();
 
     test(
         options,
@@ -456,15 +390,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .addAll(externs)
             .add(
                 SourceFile.fromCode(
-                    "globalthis.js",
-                    """
-                    /**
-                     * @type {?}
-                     */
-                    var globalThis;
-                    """))
-            .add(
-                SourceFile.fromCode(
                     "user_defined_externs.js",
                     """
                     /**
@@ -521,15 +446,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .addAll(externs)
             .add(
                 SourceFile.fromCode(
-                    "globalthis.js",
-                    """
-                    /**
-                     * @type {?}
-                     */
-                    var globalThis;
-                    """))
-            .add(
-                SourceFile.fromCode(
                     "user_defined_externs.js",
                     """
                     /**
@@ -553,20 +469,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
-
-    externs =
-        ImmutableList.<SourceFile>builder()
-            .addAll(externs)
-            .add(
-                SourceFile.fromCode(
-                    "globalthis.js",
-                    """
-                    /**
-                     * @type {?}
-                     */
-                    var globalThis;
-                    """))
-            .build();
 
     test(
         options,
@@ -600,20 +502,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
-
-    externs =
-        ImmutableList.<SourceFile>builder()
-            .addAll(externs)
-            .add(
-                SourceFile.fromCode(
-                    "globalthis.js",
-                    """
-                    /**
-                     * @type {?}
-                     */
-                    var globalThis;
-                    """))
-            .build();
 
     // this test-case is trying to ensure that even when there are jsdoc comments in the
     // closure-unaware portions of the AST that aren't attached to specific nodes / expressions
@@ -652,20 +540,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
-
-    externs =
-        ImmutableList.<SourceFile>builder()
-            .addAll(externs)
-            .add(
-                SourceFile.fromCode(
-                    "globalthis.js",
-                    """
-                    /**
-                     * @type {?}
-                     */
-                    var globalThis;
-                    """))
-            .build();
 
     // this test-case is trying to ensure that even when there are jsdoc comments in the
     // closure-unaware portions of the AST that aren't attached to specific nodes / expressions
@@ -707,20 +581,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
 
-    externs =
-        ImmutableList.<SourceFile>builder()
-            .addAll(externs)
-            .add(
-                SourceFile.fromCode(
-                    "globalthis.js",
-                    """
-                    /**
-                     * @type {?}
-                     */
-                    var globalThis;
-                    """))
-            .build();
-
     // this test-case is trying to ensure that even when the special handling for JSDoc comments in
     // closureUnaware code we can still report jsdoc errors for code that is not within the
     // closure-unaware subsection of the AST.
@@ -757,20 +617,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
 
-    externs =
-        ImmutableList.<SourceFile>builder()
-            .addAll(externs)
-            .add(
-                SourceFile.fromCode(
-                    "globalthis.js",
-                    """
-                    /**
-                     * @type {?}
-                     */
-                    var globalThis;
-                    """))
-            .build();
-
     // this test-case is trying to ensure that even when the special handling for JSDoc comments in
     // closureUnaware code we can still report jsdoc errors for code that is not within the
     // closure-unaware subsection of the AST.
@@ -800,20 +646,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
-
-    externs =
-        ImmutableList.<SourceFile>builder()
-            .addAll(externs)
-            .add(
-                SourceFile.fromCode(
-                    "globalthis.js",
-                    """
-                    /**
-                     * @type {?}
-                     */
-                    var globalThis;
-                    """))
-            .build();
 
     // Normally, the RemoveCastNodes would remove all the CAST nodes from the AST before it is ever
     // serialized into a TypedAST. We don't want to run RemoveCastNodes over closure-unaware code,
@@ -861,20 +693,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
 
     options.setPreserveNonJSDocComments(true);
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
-
-    externs =
-        ImmutableList.<SourceFile>builder()
-            .addAll(externs)
-            .add(
-                SourceFile.fromCode(
-                    "globalthis.js",
-                    """
-                    /**
-                     * @type {?}
-                     */
-                    var globalThis;
-                    """))
-            .build();
 
     // Normally, the RemoveCastNodes would remove all the CAST nodes from the AST before it is ever
     // serialized into a TypedAST. We don't want to run RemoveCastNodes over closure-unaware code,
@@ -949,20 +767,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
 
     options.setPreserveNonJSDocComments(true);
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
-
-    externs =
-        ImmutableList.<SourceFile>builder()
-            .addAll(externs)
-            .add(
-                SourceFile.fromCode(
-                    "globalthis.js",
-                    """
-                    /**
-                     * @type {?}
-                     */
-                    var globalThis;
-                    """))
-            .build();
 
     // Normally, the RemoveCastNodes would remove all the CAST nodes from the AST before it is ever
     // serialized into a TypedAST. We don't want to run RemoveCastNodes over closure-unaware code,
