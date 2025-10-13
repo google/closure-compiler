@@ -105,6 +105,15 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
     passes.maybeAdd(
         PassFactory.builder()
+            .setName("rewritePolyfills")
+            .setInternalFactory(
+                c ->
+                    new RewritePolyfills(
+                        c, /* injectPolyfills= */ true, /* isolatePolyfills= */ false, null))
+            .build());
+
+    passes.maybeAdd(
+        PassFactory.builder()
             .setName("convertTypesToColors")
             .setInternalFactory(
                 (c) ->

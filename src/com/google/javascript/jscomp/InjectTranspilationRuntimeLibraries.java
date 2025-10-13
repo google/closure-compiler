@@ -58,7 +58,7 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
 
     FeatureSet outputFeatures = compiler.getOptions().getOutputFeatureSet();
 
-    // Check for references to global `Symbol`, getters/setters, and class `extends` clauses
+    // Check for references to getters/setters and class `extends` clauses
     if (!outputFeatures.contains(used)) {
       NodeTraversal.traverse(compiler, root, this);
     }
@@ -144,22 +144,14 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case GETPROP:
-        if (!n.isFromExterns()) {
-          visitGetprop(t, n);
-        }
-        break;
-
+      case GETTER_DEF, SETTER_DEF -> {
         // TODO(johnlenz): this check doesn't belong here.
-      case GETTER_DEF:
-      case SETTER_DEF:
         if (!getterSetterSupported) {
           TranspilationUtil.cannotConvert(
               compiler, n, "ES5 getters/setters (consider using --language_out=ES5)");
         }
-        break;
-
-      case CLASS:
+      }
+      case CLASS -> {
         // This is technically an optimization - we could just always inject these when we see
         // Feature.CLASSES. That's fine for real code, but just makes some unit testing
         // harder because more runtime libraries are injected.
@@ -173,25 +165,8 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
           TranspilationUtil.preloadTranspilationRuntimeFunction(compiler, "arrayFromIterable");
           injectedClassExtendsLibraries = true;
         }
-        break;
-      default:
-        break;
-    }
-  }
-
-  /** @return Whether {@code n} is a reference to the global "Symbol" function. */
-  private boolean isGlobalSymbol(NodeTraversal t, Node n) {
-    if (!n.matchesName("Symbol")) {
-      return false;
-    }
-    Var var = t.getScope().getVar("Symbol");
-    return var == null || var.isGlobal();
-  }
-
-  private void visitGetprop(NodeTraversal t, Node n) {
-    Node receiverNode = n.getFirstChild();
-    if (isGlobalSymbol(t, receiverNode)) {
-      compiler.ensureLibraryInjected("es6/symbol", false);
+      }
+      default -> {}
     }
   }
 }
