@@ -3371,31 +3371,4 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         .hasMessageThat()
         .contains("@requireInlining node failed to be inlined");
   }
-
-  @Test
-  public void
-      testShouldValidateRequiredInlings_throwsIfSetWithoutSufficientlyAdvancedOptimizations() {
-    CompilerOptions options = createCompilerOptions();
-    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setValidateRequiredInlinings(true);
-
-    var thrown =
-        assertThrows(
-            IllegalStateException.class,
-            () -> {
-              test(options, "", "");
-            });
-    assertThat(thrown).hasMessageThat().contains("shouldValidateRequiredInlinings");
-    assertThat(thrown).hasMessageThat().contains("missing property collapsing");
-  }
-
-  @Test
-  public void testShouldValidateRequiredInlings_okIfUsingAdvancedOptimizations() {
-    CompilerOptions options = createCompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
-    options.setValidateRequiredInlinings(true);
-
-    test(options, "", "");
-  }
 }

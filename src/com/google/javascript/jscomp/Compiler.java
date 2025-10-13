@@ -420,24 +420,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     moduleLoader = ModuleLoader.EMPTY;
 
     reconcileOptionsWithGuards();
-    switch (options.getShouldValidateRequiredInlinings()) {
-      case TRUE -> {
-        var sufficientOptimizations =
-            InlineFunctions.checkOptimizationLevelSupportsRequireInlining(options);
-        checkState(
-            sufficientOptimizations.shouldValidate(),
-            "shouldValidateRequiredInlinings cannot be set unless CompilerOptions enables"
-                + " sufficient optimization, but found: %s",
-            sufficientOptimizations.optMessage());
-      }
-      case FALSE -> {
-        // do nothing.
-      }
-      case UNKNOWN ->
-          options.setValidateRequiredInlinings(
-              InlineFunctions.checkOptimizationLevelSupportsRequireInlining(options)
-                  .shouldValidate());
-    }
 
     // TODO(johnlenz): generally, the compiler should not be changing the options object
     // provided by the user.  This should be handled a different way.
