@@ -481,25 +481,20 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
     checkState(callNode.isCall());
     checkState(callNode.getLastChild().isStringLit());
     switch (parent.getToken()) {
-      case EXPR_RESULT:
+      case EXPR_RESULT -> {
         String key = extractFirstArgumentName(callNode);
         currentModuleInfo.importsByLongRequiredName.putIfAbsent(key, parent);
-        return;
-      case NAME:
-      case DESTRUCTURING_LHS:
-        checkShortGoogRequireCall(t, callNode, parent.getParent());
-        return;
-      case AWAIT:
+      }
+      case NAME, DESTRUCTURING_LHS -> checkShortGoogRequireCall(t, callNode, parent.getParent());
+      case AWAIT -> {
         Token grandParentToken = parent.getParent().getToken();
         if (grandParentToken.equals(Token.DESTRUCTURING_LHS)
             || grandParentToken.equals(Token.NAME)) {
           checkShortGoogRequireCall(t, callNode, parent.getGrandparent());
         }
-        return;
-      default:
-        break;
+      }
+      default -> t.report(callNode, REQUIRE_NOT_AT_TOP_LEVEL);
     }
-    t.report(callNode, REQUIRE_NOT_AT_TOP_LEVEL);
   }
 
   private void checkShortGoogRequireCall(NodeTraversal t, Node callNode, Node declaration) {

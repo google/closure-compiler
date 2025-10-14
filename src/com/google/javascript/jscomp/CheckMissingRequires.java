@@ -152,13 +152,14 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
    */
   private boolean isInGlobalControlFlowScope(Node n) {
     switch (n.getToken()) {
-      case SCRIPT:
-      case ROOT:
+      case SCRIPT, ROOT -> {
         return true;
-      case MODULE_BODY:
-      case BLOCK: // class static blocks
+      }
+      case MODULE_BODY, BLOCK -> {
+        // class static blocks need to create a new cfg root
         return false;
-      case FUNCTION:
+      }
+      case FUNCTION -> {
         if (controlFlowScopeDepth > 0) {
           return false;
         }
@@ -168,8 +169,8 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
           return true;
         }
         return isIIFE(n);
-      default:
-        throw new AssertionError("Unexpected control flow root: " + n);
+      }
+      default -> throw new AssertionError("Unexpected control flow root: " + n);
     }
   }
 
