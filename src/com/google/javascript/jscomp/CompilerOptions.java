@@ -320,12 +320,11 @@ public class CompilerOptions {
   public void setIncrementalChecks(IncrementalCheckMode value) {
     incrementalCheckMode = value;
     switch (value) {
-      case OFF:
-        break;
-      case GENERATE_IJS:
+      case OFF -> {}
+      case GENERATE_IJS -> {
         setPreserveTypeAnnotations(true);
         setOutputJs(OutputJs.NORMAL);
-        break;
+      }
     }
   }
 
@@ -1652,18 +1651,18 @@ public class CompilerOptions {
   /** Set the variable inlining policy for the compiler. */
   public void setInlineVariables(Reach reach) {
     switch (reach) {
-      case ALL:
+      case ALL -> {
         this.inlineVariables = true;
         this.inlineLocalVariables = true;
-        break;
-      case LOCAL_ONLY:
+      }
+      case LOCAL_ONLY -> {
         this.inlineVariables = false;
         this.inlineLocalVariables = true;
-        break;
-      case NONE:
+      }
+      case NONE -> {
         this.inlineVariables = false;
         this.inlineLocalVariables = false;
-        break;
+      }
     }
   }
 
@@ -1679,18 +1678,18 @@ public class CompilerOptions {
   /** Set the variable removal policy for the compiler. */
   public void setRemoveUnusedVariables(Reach reach) {
     switch (reach) {
-      case ALL:
+      case ALL -> {
         this.removeUnusedVars = true;
         this.removeUnusedLocalVars = true;
-        break;
-      case LOCAL_ONLY:
+      }
+      case LOCAL_ONLY -> {
         this.removeUnusedVars = false;
         this.removeUnusedLocalVars = true;
-        break;
-      case NONE:
+      }
+      case NONE -> {
         this.removeUnusedVars = false;
         this.removeUnusedLocalVars = false;
-        break;
+      }
     }
   }
 

@@ -4175,15 +4175,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       String directive = node.getFirstChild().getString();
       List<String> words = Splitter.on(' ').limit(2).splitToList(directive);
       switch (words.get(0)) {
-        case "use":
+        case "use" -> {
           // 'use strict' is ignored (and deleted).
-          break;
-        case "require":
-          // 'require lib'; pulls in the named library before this one.
-          ensureLibraryInjected(words.get(1), force);
-          break;
-        default:
-          throw new RuntimeException("Bad directive: " + directive);
+        }
+        case "require" ->
+            // 'require lib'; pulls in the named library before this one.
+            ensureLibraryInjected(words.get(1), force);
+        default -> throw new RuntimeException("Bad directive: " + directive);
       }
       node.detach();
     }

@@ -60,7 +60,7 @@ class ConstCheck extends AbstractPostOrderCallback implements CompilerPass {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case NAME:
+      case NAME -> {
         if (NodeUtil.isNameDeclaration(parent)) {
           String name = n.getString();
           Var var = t.getScope().getVar(name);
@@ -76,51 +76,43 @@ class ConstCheck extends AbstractPostOrderCallback implements CompilerPass {
             }
           }
         }
-        break;
-
-      case ASSIGN:
-      case ASSIGN_BITOR:
-      case ASSIGN_BITXOR:
-      case ASSIGN_BITAND:
-      case ASSIGN_LSH:
-      case ASSIGN_RSH:
-      case ASSIGN_URSH:
-      case ASSIGN_ADD:
-      case ASSIGN_SUB:
-      case ASSIGN_MUL:
-      case ASSIGN_DIV:
-      case ASSIGN_MOD:
-      case ASSIGN_EXPONENT:
-        {
-          Node lhs = n.getFirstChild();
-          if (lhs.isName()) {
-            String name = lhs.getString();
-            Var var = t.getScope().getVar(name);
-            if (isConstant(var, lhs) && !initializedConstants.add(var)) {
-              reportError(n, var, name);
-            } else if (var != null && var.isGoogModuleExports() && !initializedConstants.add(var)) {
-              compiler.report(
-                  JSError.make(n, CONST_REASSIGNED_VALUE_ERROR, "exports", n.getSourceFileName()));
-            }
+      }
+      case ASSIGN,
+          ASSIGN_BITOR,
+          ASSIGN_BITXOR,
+          ASSIGN_BITAND,
+          ASSIGN_LSH,
+          ASSIGN_RSH,
+          ASSIGN_URSH,
+          ASSIGN_ADD,
+          ASSIGN_SUB,
+          ASSIGN_MUL,
+          ASSIGN_DIV,
+          ASSIGN_MOD,
+          ASSIGN_EXPONENT -> {
+        Node lhs = n.getFirstChild();
+        if (lhs.isName()) {
+          String name = lhs.getString();
+          Var var = t.getScope().getVar(name);
+          if (isConstant(var, lhs) && !initializedConstants.add(var)) {
+            reportError(n, var, name);
+          } else if (var != null && var.isGoogModuleExports() && !initializedConstants.add(var)) {
+            compiler.report(
+                JSError.make(n, CONST_REASSIGNED_VALUE_ERROR, "exports", n.getSourceFileName()));
           }
-          break;
         }
-
-      case INC:
-      case DEC:
-        {
-          Node lhs = n.getFirstChild();
-          if (lhs.isName()) {
-            String name = lhs.getString();
-            Var var = t.getScope().getVar(name);
-            if (isConstant(var, lhs)) {
-              reportError(n, var, name);
-            }
+      }
+      case INC, DEC -> {
+        Node lhs = n.getFirstChild();
+        if (lhs.isName()) {
+          String name = lhs.getString();
+          Var var = t.getScope().getVar(name);
+          if (isConstant(var, lhs)) {
+            reportError(n, var, name);
           }
-          break;
         }
-      default:
-        break;
+      }
+      default -> {}
     }
   }
 

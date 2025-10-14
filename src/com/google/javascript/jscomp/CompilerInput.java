@@ -417,7 +417,7 @@ public class CompilerInput implements DependencyInfo {
 
     void visitSubtree(Node n, @Nullable Node parent) {
       switch (n.getToken()) {
-        case CALL:
+        case CALL -> {
           if (n.hasTwoChildren()
               && n.getFirstChild().isGetProp()
               && n.getFirstFirstChild().matchesName("goog")) {
@@ -435,7 +435,7 @@ public class CompilerInput implements DependencyInfo {
                 if (parent.isExprResult() && parent.getParent().isModuleBody()) {
                   loadFlags.put("module", "goog");
                 }
-                // Fall-through
+              // Fall-through
               case "provide":
                 if (!argument.isStringLit()) {
                   return;
@@ -478,43 +478,33 @@ public class CompilerInput implements DependencyInfo {
                 return;
             }
           }
-          break;
-
-        case MODULE_BODY:
+        }
+        case MODULE_BODY -> {
           if (!parent.getBooleanProp(Node.GOOG_MODULE)) {
             provides.add(modulePath.toModuleName());
             loadFlags.put("module", "es6");
           }
-          break;
-
-        case IMPORT:
+        }
+        case IMPORT -> {
           visitEs6ModuleName(n.getLastChild(), n);
           return;
-
-        case EXPORT:
+        }
+        case EXPORT -> {
           if (NodeUtil.isExportFrom(n)) {
             visitEs6ModuleName(n.getLastChild(), n);
           }
           return;
-
-        case EXPR_RESULT:
-        case CONST:
-        case LET:
-        case VAR:
-        case BLOCK:
-        case NAME:
-        case DESTRUCTURING_LHS:
-          break;
-
-        case SCRIPT:
+        }
+        case EXPR_RESULT, CONST, LET, VAR, BLOCK, NAME, DESTRUCTURING_LHS -> {}
+        case SCRIPT -> {
           JSDocInfo jsdoc = n.getJSDocInfo();
           if (jsdoc != null && jsdoc.isProvideGoog()) {
             provides.add("goog");
           }
-          break;
-
-        default:
+        }
+        default -> {
           return;
+        }
       }
 
       for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {

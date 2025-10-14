@@ -76,20 +76,11 @@ public enum CompilationLevel {
 
   public void setOptionsForCompilationLevel(CompilerOptions options) {
     switch (this) {
-      case BUNDLE:
-        break;
-      case WHITESPACE_ONLY:
-        applyBasicCompilationOptions(options);
-        break;
-      case SIMPLE_OPTIMIZATIONS:
-        applySafeCompilationOptions(options);
-        break;
-      case TRANSPILE_ONLY:
-        applyTranspileOnlyOptions(options);
-        break;
-      case ADVANCED_OPTIMIZATIONS:
-        applyFullCompilationOptions(options);
-        break;
+      case BUNDLE -> {}
+      case WHITESPACE_ONLY -> applyBasicCompilationOptions(options);
+      case SIMPLE_OPTIMIZATIONS -> applySafeCompilationOptions(options);
+      case TRANSPILE_ONLY -> applyTranspileOnlyOptions(options);
+      case ADVANCED_OPTIMIZATIONS -> applyFullCompilationOptions(options);
     }
   }
 
@@ -233,17 +224,13 @@ public enum CompilationLevel {
    */
   public void setTypeBasedOptimizationOptions(CompilerOptions options) {
     switch (this) {
-      case ADVANCED_OPTIMIZATIONS:
+      case ADVANCED_OPTIMIZATIONS -> {
         options.setDisambiguateProperties(true);
         options.setAmbiguateProperties(true);
         options.setInlineProperties(true);
         options.setUseTypesForLocalOptimization(true);
-        break;
-      case SIMPLE_OPTIMIZATIONS:
-      case WHITESPACE_ONLY:
-      case BUNDLE:
-      case TRANSPILE_ONLY:
-        break;
+      }
+      case SIMPLE_OPTIMIZATIONS, WHITESPACE_ONLY, BUNDLE, TRANSPILE_ONLY -> {}
     }
   }
 
@@ -258,7 +245,7 @@ public enum CompilationLevel {
     // Global variables and properties names can't conflict.
     options.reserveRawExports = false;
     switch (this) {
-      case SIMPLE_OPTIMIZATIONS:
+      case SIMPLE_OPTIMIZATIONS -> {
         // Enable global variable optimizations (but not property optimizations)
         options.setVariableRenaming(VariableRenamingPolicy.ALL);
         options.setCollapsePropertiesLevel(PropertyCollapseLevel.MODULE_EXPORT);
@@ -267,12 +254,8 @@ public enum CompilationLevel {
         options.setInlineFunctions(Reach.ALL);
         options.setInlineVariables(Reach.ALL);
         options.setRemoveUnusedVariables(Reach.ALL);
-        break;
-      case ADVANCED_OPTIMIZATIONS:
-      case WHITESPACE_ONLY:
-      case BUNDLE:
-      case TRANSPILE_ONLY:
-        break;
+      }
+      case ADVANCED_OPTIMIZATIONS, WHITESPACE_ONLY, BUNDLE, TRANSPILE_ONLY -> {}
     }
   }
 }

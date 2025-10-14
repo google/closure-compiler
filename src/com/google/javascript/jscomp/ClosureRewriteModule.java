@@ -340,23 +340,23 @@ final class ClosureRewriteModule implements CompilerPass {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case ROOT:
-        case MODULE_BODY:
+        case ROOT, MODULE_BODY -> {
           return true;
-
-        case SCRIPT:
+        }
+        case SCRIPT -> {
           if (NodeUtil.isGoogModuleFile(n)) {
             checkAndSetStrictModeDirective(t, n);
           }
           return true;
-
-        case NAME:
+        }
+        case NAME -> {
           preprocessExportDeclaration(t, n);
           return true;
-
-        default:
+        }
+        default -> {
           // Don't traverse into non-module scripts.
           return !parent.isScript();
+        }
       }
     }
   }
@@ -365,10 +365,8 @@ final class ClosureRewriteModule implements CompilerPass {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case MODULE_BODY:
-          recordModuleBody(n);
-          break;
-        case CALL:
+        case MODULE_BODY -> recordModuleBody(n);
+        case CALL -> {
           Node method = n.getFirstChild();
           if (!method.isGetProp()) {
             break;
@@ -390,35 +388,24 @@ final class ClosureRewriteModule implements CompilerPass {
           } else if (method.matchesQualifiedName(GOOG_MODULE_GET)) {
             recordGoogModuleGet(t, n);
           }
-          break;
-
-        case CLASS:
-        case FUNCTION:
+        }
+        case CLASS, FUNCTION -> {
           if (isTopLevel(t, n, ScopeType.BLOCK)) {
             recordTopLevelClassOrFunctionName(n);
           }
-          break;
-
-        case CONST:
-        case LET:
-        case VAR:
+        }
+        case CONST, LET, VAR -> {
           if (isTopLevel(t, n, n.isVar() ? ScopeType.EXEC_CONTEXT : ScopeType.BLOCK)) {
             recordTopLevelVarNames(n);
           }
-          break;
-
-        case GETPROP:
+        }
+        case GETPROP -> {
           if (isExportPropertyAssignment(t, n)) {
             recordExportsPropertyAssignment(t, n);
           }
-          break;
-
-        case NAME:
-          maybeRecordExportDeclaration(t, n);
-          break;
-
-        default:
-          break;
+        }
+        case NAME -> maybeRecordExportDeclaration(t, n);
+        default -> {}
       }
 
       return true;
@@ -443,7 +430,7 @@ final class ClosureRewriteModule implements CompilerPass {
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
 
       switch (n.getToken()) {
-        case SCRIPT:
+        case SCRIPT -> {
           ScriptDescription currentDescription = scriptDescriptions.removeFirst();
           checkState(currentDescription.rootNode == n);
           if (n.isFromExterns() && !NodeUtil.isFromTypeSummary(n)) {
@@ -460,17 +447,15 @@ final class ClosureRewriteModule implements CompilerPass {
           if (globalScope == null) {
             globalScope = t.getScope().getGlobalScope();
           }
-          break;
-
-        case MODULE_BODY:
+        }
+        case MODULE_BODY -> {
           if (parent.getBooleanProp(Node.GOOG_MODULE)) {
             updateModuleBodyEarly(n);
           } else {
             return false;
           }
-          break;
-
-        case CALL:
+        }
+        case CALL -> {
           Node method = n.getFirstChild();
           if (!method.isGetProp()) {
             break;
@@ -487,16 +472,13 @@ final class ClosureRewriteModule implements CompilerPass {
           } else if (GOOG_MODULE_PREVENTMODULEEXPORTSEALING.matches(method)) {
             updateGoogPreventModuleExportsSealing(n);
           }
-          break;
-
-        case GETPROP:
+        }
+        case GETPROP -> {
           if (isExportPropertyAssignment(t, n)) {
             updateExportsPropertyAssignment(n, t);
           }
-          break;
-
-        default:
-          break;
+        }
+        default -> {}
       }
 
       if (n.getJSDocInfo() != null) {
@@ -509,24 +491,18 @@ final class ClosureRewriteModule implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case MODULE_BODY:
-          updateModuleBody(n);
-          break;
-
-        case NAME:
+        case MODULE_BODY -> updateModuleBody(n);
+        case NAME -> {
           maybeUpdateTopLevelName(t, n);
           maybeUpdateExportDeclaration(t, n);
           t.getScope(); // Creating the scope here has load-bearing side-effects.
           maybeUpdateExportNameRef(t, n);
-          break;
-
-        case SCRIPT:
+        }
+        case SCRIPT -> {
           checkState(currentScript.rootNode == n);
           popScript();
-          break;
-
-        default:
-          break;
+        }
+        default -> {}
       }
     }
   }
@@ -723,10 +699,10 @@ final class ClosureRewriteModule implements CompilerPass {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case ROOT:
-        case SCRIPT:
+        case ROOT, SCRIPT -> {
           return true;
-        case EXPR_RESULT:
+        }
+        case EXPR_RESULT -> {
           Node call = n.getFirstChild();
           if (NodeUtil.isCallTo(call, GOOG_LOADMODULE) && call.getLastChild().isFunction()) {
             parent.putBooleanProp(Node.GOOG_MODULE, true);
@@ -746,8 +722,10 @@ final class ClosureRewriteModule implements CompilerPass {
             t.reportCodeChange();
           }
           return false;
-        default:
+        }
+        default -> {
           return false;
+        }
       }
     }
   }
@@ -1926,8 +1904,7 @@ final class ClosureRewriteModule implements CompilerPass {
     JSDocInfo jsdoc = nameParent.getJSDocInfo();
 
     switch (nameParent.getToken()) {
-      case FUNCTION:
-      case CLASS:
+      case FUNCTION, CLASS -> {
         if (!NodeUtil.isStatement(nameParent) || nameParent.getFirstChild() != nameNode) {
           return false;
         }
@@ -1946,10 +1923,8 @@ final class ClosureRewriteModule implements CompilerPass {
         placeholder.replaceWith(newDeclaration);
         NodeUtil.removeName(nameParent);
         return true;
-
-      case VAR:
-      case LET:
-      case CONST:
+      }
+      case VAR, LET, CONST -> {
         Node rhs = nameNode.hasChildren() ? nameNode.getLastChild().detach() : null;
         if (jsdoc == null) {
           // Get inline JSDocInfo if there is no JSDoc on the actual declaration.
@@ -1973,13 +1948,9 @@ final class ClosureRewriteModule implements CompilerPass {
         newStatement.srcrefTreeIfMissing(nameParent);
         NodeUtil.replaceDeclarationChild(nameNode, newStatement);
         return true;
-
-      case OBJECT_PATTERN:
-      case ARRAY_PATTERN:
-      case PARAM_LIST:
-        throw new RuntimeException("Not supported");
-      default:
-        break;
+      }
+      case OBJECT_PATTERN, ARRAY_PATTERN, PARAM_LIST -> throw new RuntimeException("Not supported");
+      default -> {}
     }
     return false;
   }

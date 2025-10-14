@@ -281,7 +281,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case CALL:
+        case CALL -> {
           if (n.getFirstChild().matchesQualifiedName(Es6RewriteClass.INHERITS)) {
             inheritsCalls.add(n);
             nodeOrder.put(n, nodeOrder.size());
@@ -289,25 +289,16 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
           if (NodeUtil.isObjectDefinePropertiesDefinition(n)) {
             visitDefinedPropertiesCall(t, n);
           }
-          break;
-        case CONST:
-        case LET:
-        case VAR:
-          visitVariableDeclaration(n);
-          break;
-        case ASSIGN:
-          visitAssign(t, n);
-          break;
-        case GETPROP:
+        }
+        case CONST, LET, VAR -> visitVariableDeclaration(n);
+        case ASSIGN -> visitAssign(t, n);
+        case GETPROP -> {
           if (parent.isExprResult()) {
             visitGetProp(t, n);
           }
-          break;
-        case FUNCTION:
-          visitFunctionClassDef(n);
-          break;
-        default:
-          break;
+        }
+        case FUNCTION -> visitFunctionClassDef(n);
+        default -> {}
       }
     }
 
