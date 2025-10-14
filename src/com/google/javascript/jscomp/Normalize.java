@@ -126,10 +126,8 @@ final class Normalize implements CompilerPass {
   public void process(Node externs, Node root) {
     MakeDeclaredNamesUnique renamer =
         MakeDeclaredNamesUnique.builder().withAssertOnChange(assertOnChange).build();
-    NodeTraversal.traverseRoots(compiler, renamer, externs, root);
-
     NodeTraversal.traverseRoots(
-        compiler, new NormalizeStatements(compiler, assertOnChange), externs, root);
+        compiler, new NormalizeStatements(compiler, assertOnChange, renamer), externs, root);
 
     NodeTraversal.builder()
         .setCompiler(compiler)
@@ -214,17 +212,22 @@ final class Normalize implements CompilerPass {
    * - LABEL node of children other than LABEL, BLOCK, WHILE, FOR, or DO are moved into a block.<br>
    * - Add constant annotations based on coding convention. <br>
    */
-  static class NormalizeStatements implements NodeTraversal.Callback {
+  static class NormalizeStatements implements NodeTraversal.ScopedCallback {
     private final AbstractCompiler compiler;
     private final AstFactory astFactory;
     private final boolean assertOnChange;
+    private final MakeDeclaredNamesUnique makeDeclaredNamesUnique;
     private final RewriteLogicalAssignmentOperatorsHelper rewriteLogicalAssignmentOperatorsHelper;
 
     /** Prefer using {@link Normalize} as a compiler pass instead of using this class directly. */
     @VisibleForTesting
-    NormalizeStatements(AbstractCompiler compiler, boolean assertOnChange) {
+    NormalizeStatements(
+        AbstractCompiler compiler,
+        boolean assertOnChange,
+        @Nullable MakeDeclaredNamesUnique makeDeclaredNamesUnique) {
       this.compiler = compiler;
       this.assertOnChange = assertOnChange;
+      this.makeDeclaredNamesUnique = makeDeclaredNamesUnique;
       this.astFactory = compiler.createAstFactory();
       this.rewriteLogicalAssignmentOperatorsHelper =
           new RewriteLogicalAssignmentOperatorsHelper(
@@ -239,7 +242,25 @@ final class Normalize implements CompilerPass {
     }
 
     @Override
+    public void enterScope(NodeTraversal t) {
+      if (makeDeclaredNamesUnique != null) {
+        makeDeclaredNamesUnique.enterScope(t);
+      }
+    }
+
+    @Override
+    public void exitScope(NodeTraversal t) {
+      if (makeDeclaredNamesUnique != null) {
+        makeDeclaredNamesUnique.exitScope(t);
+      }
+    }
+
+    @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      if (makeDeclaredNamesUnique != null) {
+        var unused = makeDeclaredNamesUnique.shouldTraverse(t, n, parent);
+      }
+
       Node oldParent = n.getParent();
       doStatementNormalizations(n);
       checkState(
@@ -251,6 +272,10 @@ final class Normalize implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      if (makeDeclaredNamesUnique != null) {
+        makeDeclaredNamesUnique.visit(t, n, parent);
+      }
+
       switch (n.getToken()) {
         case WHILE:
           Node expr = n.getFirstChild();

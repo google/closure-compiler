@@ -417,7 +417,7 @@ public final class DenormalizeTest extends CompilerTestCase {
     public NormalizeAndDenormalizePass(AbstractCompiler compiler, FeatureSet outputFeatureSet) {
       this.compiler = compiler;
       denormalizePass = new Denormalize(compiler, outputFeatureSet);
-      normalizePass = new NormalizeStatements(compiler, false);
+      normalizePass = new NormalizeStatements(compiler, false, null);
     }
 
     @Override

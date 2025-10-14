@@ -2490,7 +2490,7 @@ a = temp$jscomp$2;
 
   private static Node parse(Compiler compiler, String js) {
     Node n = compiler.parseTestCode(js);
-    NodeTraversal.traverse(compiler, n, new NormalizeStatements(compiler, false));
+    NodeTraversal.traverse(compiler, n, new NormalizeStatements(compiler, false, null));
     assertThat(compiler.getErrors()).isEmpty();
     return n;
   }

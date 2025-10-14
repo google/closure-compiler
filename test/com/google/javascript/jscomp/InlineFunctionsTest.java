@@ -3620,9 +3620,9 @@ public class InlineFunctionsTest extends CompilerTestCase {
         """,
         """
         (function($){
-          $.fn.multicheck=function(options) {
+          $.fn.multicheck=function(options$jscomp$1) {
             {
-              options.checkboxes=$(this).siblings(':checkbox');
+              options$jscomp$1.checkboxes=$(this).siblings(':checkbox');
               {
                 $(this).data('checkboxes');
               }
