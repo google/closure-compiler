@@ -1069,6 +1069,28 @@ public final class NormalizeTest extends CompilerTestCase {
     test(
         srcs("var a;", "import {a as a} from './foo.js'; let b = a;"),
         expected("var a;", "import {a as a$jscomp$1} from './foo.js'; let b = a$jscomp$1;"));
+
+    test(
+        """
+        function one() {
+          var index = 1;
+          return index;
+        }
+        function two() {
+          var index = 2;
+          var id = (index += 3).toString();
+        }
+        """,
+        """
+        function one() {
+          var index = 1;
+          return index;
+        }
+        function two() {
+          var index$jscomp$1 = 2;
+          var id = (index$jscomp$1 = index$jscomp$1 + 3).toString();
+        }
+        """);
   }
 
   @Test

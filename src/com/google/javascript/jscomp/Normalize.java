@@ -322,7 +322,12 @@ final class Normalize implements CompilerPass {
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      Node oldParent = n.getParent();
       doStatementNormalizations(n);
+      checkState(
+          n.getParent() == oldParent,
+          "n's parent changed during normalization. It needs to stay the same so that we properly"
+              + " visit any added nodes.");
       return true;
     }
 
@@ -779,16 +784,23 @@ final class Normalize implements CompilerPass {
       if (!shorthand.getFirstChild().isName()) {
         return;
       }
-      Node name = shorthand.getFirstChild();
-      shorthand.setToken(NodeUtil.getOpFromAssignmentOp(shorthand));
-      Node insertPoint = IR.empty();
-      shorthand.replaceWith(insertPoint);
-      Node assign =
-          astFactory.createAssign(name.cloneNode().srcref(name), shorthand).srcref(shorthand);
-      assign.setJSDocInfo(shorthand.getJSDocInfo());
-      shorthand.setJSDocInfo(null);
-      insertPoint.replaceWith(assign);
-      reportCodeChange("assign shorthand", assign);
+
+      checkArgument(shorthand.hasTwoChildren(), "Expected two children for shorthand assignment.");
+      Node lhs = shorthand.getFirstChild();
+      Node rhs = shorthand.getSecondChild();
+      lhs.detach();
+      rhs.detach();
+
+      Token op = NodeUtil.getOpFromAssignmentOp(shorthand);
+      Node opNode =
+          new Node(op, lhs.cloneNode().srcref(lhs), rhs).srcref(shorthand).copyTypeFrom(shorthand);
+
+      // Change the original ASSIGN_X to an ASSIGN.
+      shorthand.setToken(Token.ASSIGN);
+      shorthand.addChildToBack(lhs);
+      shorthand.addChildToBack(opNode);
+
+      reportCodeChange("assign shorthand", shorthand);
     }
 
     /**
