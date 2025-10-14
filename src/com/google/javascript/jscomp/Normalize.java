@@ -18,20 +18,16 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
@@ -65,10 +61,10 @@ final class Normalize implements CompilerPass {
   private final AstFactory astFactory;
   private final boolean assertOnChange;
 
-  Normalize(Builder builder) {
-    this.compiler = builder.compiler;
-    this.assertOnChange = builder.assertOnChange;
-    this.astFactory = builder.compiler.createAstFactory();
+  private Normalize(Builder builder) {
+    compiler = builder.compiler;
+    assertOnChange = builder.assertOnChange;
+    astFactory = builder.compiler.createAstFactory();
   }
 
   static Normalize createNormalizeForOptimizations(AbstractCompiler compiler) {
@@ -85,7 +81,7 @@ final class Normalize implements CompilerPass {
     private final AbstractCompiler compiler;
     private boolean assertOnChange = false;
 
-    Builder(AbstractCompiler compiler) {
+    private Builder(AbstractCompiler compiler) {
       this.compiler = compiler;
     }
 
@@ -105,12 +101,6 @@ final class Normalize implements CompilerPass {
     Normalize build() {
       return new Normalize(this);
     }
-  }
-
-  static Node parseAndNormalizeTestCode(AbstractCompiler compiler, String code) {
-    Node js = compiler.parseTestCode(code);
-    NodeTraversal.traverse(compiler, js, new Normalize.NormalizeStatements(compiler, false));
-    return js;
   }
 
   private void reportCodeChange(String changeDescription, Node n) {
@@ -216,80 +206,6 @@ final class Normalize implements CompilerPass {
     }
   }
 
-  /** Walk the AST tree and verify that constant names are used consistently. */
-  static class VerifyConstants extends AbstractPostOrderCallback implements CompilerPass {
-
-    private final AbstractCompiler compiler;
-    private final boolean checkUserDeclarations;
-
-    VerifyConstants(AbstractCompiler compiler, boolean checkUserDeclarations) {
-      this.compiler = compiler;
-      this.checkUserDeclarations = checkUserDeclarations;
-    }
-
-    @Override
-    public void process(Node externs, Node root) {
-      Node externsAndJs = root.getParent();
-      checkState(externsAndJs != null);
-      checkState(externsAndJs.hasChild(externs));
-      NodeTraversal.traverseRoots(compiler, this, externs, root);
-    }
-
-    private final Map<String, Boolean> constantMap = new LinkedHashMap<>();
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isName()) {
-        String name = n.getString();
-        if (n.getString().isEmpty()) {
-          return;
-        }
-
-        boolean isConst = n.getBooleanProp(Node.IS_CONSTANT_NAME);
-        if (checkUserDeclarations) {
-          boolean expectedConst = false;
-          CodingConvention convention = compiler.getCodingConvention();
-          if (NodeUtil.isConstantName(n) || NodeUtil.isConstantByConvention(convention, n)) {
-            expectedConst = true;
-          } else {
-            expectedConst = false;
-
-            JSDocInfo info = null;
-            Var var = t.getScope().getVar(n.getString());
-            if (var != null) {
-              info = var.getJSDocInfo();
-            }
-
-            if (info != null && info.isConstant()) {
-              expectedConst = true;
-            } else {
-              expectedConst = false;
-            }
-          }
-
-          if (expectedConst) {
-            Preconditions.checkState(
-                expectedConst == isConst, "The name %s is not annotated as constant.", name);
-          } else {
-            Preconditions.checkState(
-                expectedConst == isConst, "The name %s should not be annotated as constant.", name);
-          }
-        }
-
-        Boolean value = constantMap.get(name);
-        if (value == null) {
-          constantMap.put(name, isConst);
-        } else if (value.booleanValue() != isConst) {
-          throw new IllegalStateException(
-              "The name "
-                  + name
-                  + " is not consistently annotated as constant. Expected "
-                  + ImmutableMap.copyOf(constantMap));
-        }
-      }
-    }
-  }
-
   /**
    * Simplify the AST:<br>
    * - VAR declarations split, so they represent exactly one child declaration. <br>
@@ -304,6 +220,8 @@ final class Normalize implements CompilerPass {
     private final boolean assertOnChange;
     private final RewriteLogicalAssignmentOperatorsHelper rewriteLogicalAssignmentOperatorsHelper;
 
+    /** Prefer using {@link Normalize} as a compiler pass instead of using this class directly. */
+    @VisibleForTesting
     NormalizeStatements(AbstractCompiler compiler, boolean assertOnChange) {
       this.compiler = compiler;
       this.assertOnChange = assertOnChange;

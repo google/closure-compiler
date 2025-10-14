@@ -15,8 +15,16 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * A compiler pass that verifies the structure of the AST conforms to a number of invariants.
@@ -86,7 +94,7 @@ class ValidityCheck implements CompilerPass {
 
       if (compiler.getLifeCycleStage().isNormalizedUnobfuscated()) {
         boolean checkUserDeclarations = true;
-        CompilerPass pass = new Normalize.VerifyConstants(compiler, checkUserDeclarations);
+        CompilerPass pass = new VerifyConstants(compiler, checkUserDeclarations);
         pass.process(externs, root);
       }
     }
@@ -113,6 +121,80 @@ class ValidityCheck implements CompilerPass {
               + externProperties
               + "\nto:\n"
               + compiler.getExternProperties());
+    }
+  }
+
+  /** Walk the AST tree and verify that constant names are used consistently. */
+  static final class VerifyConstants extends AbstractPostOrderCallback implements CompilerPass {
+
+    private final AbstractCompiler compiler;
+    private final boolean checkUserDeclarations;
+
+    @VisibleForTesting
+    VerifyConstants(AbstractCompiler compiler, boolean checkUserDeclarations) {
+      this.compiler = compiler;
+      this.checkUserDeclarations = checkUserDeclarations;
+    }
+
+    @Override
+    public void process(Node externs, Node root) {
+      Node externsAndJs = root.getParent();
+      checkState(externsAndJs != null);
+      checkState(externsAndJs.hasChild(externs));
+      NodeTraversal.traverseRoots(compiler, this, externs, root);
+    }
+
+    private final Map<String, Boolean> constantMap = new LinkedHashMap<>();
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isName()) {
+        String name = n.getString();
+        if (n.getString().isEmpty()) {
+          return;
+        }
+
+        boolean isConst = n.getBooleanProp(Node.IS_CONSTANT_NAME);
+        if (checkUserDeclarations) {
+          boolean expectedConst = false;
+          CodingConvention convention = compiler.getCodingConvention();
+          if (NodeUtil.isConstantName(n) || NodeUtil.isConstantByConvention(convention, n)) {
+            expectedConst = true;
+          } else {
+            expectedConst = false;
+
+            JSDocInfo info = null;
+            Var var = t.getScope().getVar(n.getString());
+            if (var != null) {
+              info = var.getJSDocInfo();
+            }
+
+            if (info != null && info.isConstant()) {
+              expectedConst = true;
+            } else {
+              expectedConst = false;
+            }
+          }
+
+          if (expectedConst) {
+            checkState(expectedConst == isConst, "The name %s is not annotated as constant.", name);
+          } else {
+            checkState(
+                expectedConst == isConst, "The name %s should not be annotated as constant.", name);
+          }
+        }
+
+        Boolean value = constantMap.get(name);
+        if (value == null) {
+          constantMap.put(name, isConst);
+        } else if (value.booleanValue() != isConst) {
+          throw new IllegalStateException(
+              "The name "
+                  + name
+                  + " is not consistently annotated as constant. Expected "
+                  + ImmutableMap.copyOf(constantMap));
+        }
+      }
     }
   }
 }

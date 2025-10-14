@@ -1303,7 +1303,7 @@ public abstract class CompilerTestCase {
 
         if (normalizeEnabled) {
           boolean verifyDeclaredConstants = true;
-          new Normalize.VerifyConstants(compiler, verifyDeclaredConstants)
+          new ValidityCheck.VerifyConstants(compiler, verifyDeclaredConstants)
               .process(externsRoot, mainRoot);
         }
       }

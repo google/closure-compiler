@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
+import com.google.javascript.jscomp.Normalize.NormalizeStatements;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -2488,7 +2489,8 @@ a = temp$jscomp$2;
   }
 
   private static Node parse(Compiler compiler, String js) {
-    Node n = Normalize.parseAndNormalizeTestCode(compiler, js);
+    Node n = compiler.parseTestCode(js);
+    NodeTraversal.traverse(compiler, n, new NormalizeStatements(compiler, false));
     assertThat(compiler.getErrors()).isEmpty();
     return n;
   }
