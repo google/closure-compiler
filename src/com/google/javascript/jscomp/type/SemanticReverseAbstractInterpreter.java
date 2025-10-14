@@ -96,11 +96,7 @@ public final class SemanticReverseAbstractInterpreter extends ChainableReverseAb
     // Check for the typeof operator.
     Token operatorToken = condition.getToken();
     switch (operatorToken) {
-      case EQ:
-      case NE:
-      case SHEQ:
-      case SHNE:
-      case CASE:
+      case EQ, NE, SHEQ, SHNE, CASE -> {
         Node left;
         Node right;
         if (operatorToken == Token.CASE) {
@@ -136,12 +132,11 @@ public final class SemanticReverseAbstractInterpreter extends ChainableReverseAb
                 operandNode, operandType, stringNode.getString(), resultEqualsValue, blindScope);
           }
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
     switch (operatorToken) {
-      case AND:
+      case AND -> {
         if (outcome.isTruthy()) {
           return caseAndOrNotShortCircuiting(
               condition.getFirstChild(), condition.getLastChild(), blindScope, Outcome.TRUE);
@@ -149,8 +144,8 @@ public final class SemanticReverseAbstractInterpreter extends ChainableReverseAb
           return caseAndOrMaybeShortCircuiting(
               condition.getFirstChild(), condition.getLastChild(), blindScope, Outcome.TRUE);
         }
-
-      case OR:
+      }
+      case OR -> {
         if (!outcome.isTruthy()) {
           return caseAndOrNotShortCircuiting(
               condition.getFirstChild(), condition.getLastChild(), blindScope, Outcome.FALSE);
@@ -158,92 +153,81 @@ public final class SemanticReverseAbstractInterpreter extends ChainableReverseAb
           return caseAndOrMaybeShortCircuiting(
               condition.getFirstChild(), condition.getLastChild(), blindScope, Outcome.FALSE);
         }
-
-      case EQ:
+      }
+      case EQ -> {
         if (outcome.isTruthy()) {
           return caseEquality(condition, blindScope, SemanticReverseAbstractInterpreter::eq);
         } else {
           return caseEquality(condition, blindScope, SemanticReverseAbstractInterpreter::ne);
         }
-
-      case NE:
+      }
+      case NE -> {
         if (outcome.isTruthy()) {
           return caseEquality(condition, blindScope, SemanticReverseAbstractInterpreter::ne);
         } else {
           return caseEquality(condition, blindScope, SemanticReverseAbstractInterpreter::eq);
         }
-
-      case SHEQ:
+      }
+      case SHEQ -> {
         if (outcome.isTruthy()) {
           return caseEquality(condition, blindScope, SemanticReverseAbstractInterpreter::sheq);
         } else {
           return caseEquality(condition, blindScope, SemanticReverseAbstractInterpreter::shne);
         }
-
-      case SHNE:
+      }
+      case SHNE -> {
         if (outcome.isTruthy()) {
           return caseEquality(condition, blindScope, SemanticReverseAbstractInterpreter::shne);
         } else {
           return caseEquality(condition, blindScope, SemanticReverseAbstractInterpreter::sheq);
         }
-
-      case NAME:
-      case GETPROP:
+      }
+      case NAME, GETPROP -> {
         return caseNameOrGetProp(condition, blindScope, outcome);
-
-      case ASSIGN:
+      }
+      case ASSIGN -> {
         return firstPreciserScopeKnowingConditionOutcome(
             condition.getFirstChild(),
             firstPreciserScopeKnowingConditionOutcome(
                 condition.getSecondChild(), blindScope, outcome),
             outcome);
-
-      case NOT:
+      }
+      case NOT -> {
         return firstPreciserScopeKnowingConditionOutcome(
             condition.getFirstChild(), blindScope, outcome.not());
-
-      case LE:
-      case LT:
-      case GE:
-      case GT:
+      }
+      case LE, LT, GE, GT -> {
         if (outcome.isTruthy()) {
           return caseEquality(condition, blindScope, SemanticReverseAbstractInterpreter::ineq);
         }
-        break;
-
-      case INSTANCEOF:
+      }
+      case INSTANCEOF -> {
         return caseInstanceOf(
             condition.getFirstChild(), condition.getLastChild(), blindScope, outcome);
-
-      case IN:
+      }
+      case IN -> {
         if (outcome.isTruthy() && condition.getFirstChild().isStringLit()) {
           return caseIn(
               condition.getLastChild(), condition.getFirstChild().getString(), blindScope);
         }
-        break;
-
-      case CASE:
-        {
-          Node left = condition.getParent().getPrevious(); // the switch condition
-          Node right = condition.getFirstChild();
-          if (outcome.isTruthy()) {
-            return caseEquality(left, right, blindScope, SemanticReverseAbstractInterpreter::sheq);
-          } else {
-            return caseEquality(left, right, blindScope, SemanticReverseAbstractInterpreter::shne);
-          }
+      }
+      case CASE -> {
+        Node left = condition.getParent().getPrevious(); // the switch condition
+        Node right = condition.getFirstChild();
+        if (outcome.isTruthy()) {
+          return caseEquality(left, right, blindScope, SemanticReverseAbstractInterpreter::sheq);
+        } else {
+          return caseEquality(left, right, blindScope, SemanticReverseAbstractInterpreter::shne);
         }
-
-      case CALL:
-        {
-          Node left = condition.getFirstChild();
-          String leftName = left.getQualifiedName();
-          if ("Array.isArray".equals(leftName) && left.getNext() != null) {
-            return caseIsArray(left.getNext(), blindScope, outcome);
-          }
-          break;
+      }
+      case CALL -> {
+        Node left = condition.getFirstChild();
+        String leftName = left.getQualifiedName();
+        if ("Array.isArray".equals(leftName) && left.getNext() != null) {
+          return caseIsArray(left.getNext(), blindScope, outcome);
         }
-      default:
-        break;
+      }
+      default -> {}
     }
 
     return nextPreciserScopeKnowingConditionOutcome(condition, blindScope, outcome);

@@ -695,14 +695,9 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case EXPORT:
-        visitExport(t, n);
-        break;
-      case IMPORT:
-        visitImport(t, n);
-        break;
-      default:
-        break;
+      case EXPORT -> visitExport(t, n);
+      case IMPORT -> visitImport(t, n);
+      default -> {}
     }
   }
 

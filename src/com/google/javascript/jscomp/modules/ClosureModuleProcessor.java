@@ -314,17 +314,19 @@ final class ClosureModuleProcessor implements ModuleProcessor {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case MODULE_BODY:
-        case SCRIPT:
-        case CALL: // Traverse into goog.loadModule calls.
-        case BLOCK:
+        case MODULE_BODY,
+            SCRIPT,
+            CALL, // Traverse into goog.loadModule calls.
+            BLOCK -> {
           return true;
-        case FUNCTION:
+        }
+        case FUNCTION -> {
           // Only traverse into functions that are the argument of a goog.loadModule call, which is
           // the module root. Avoid traversing function declarations like:
           //     goog.module('a.b'); function (exports) { exports.x = 0; }
           return parent.isCall() && parent == metadata.rootNode();
-        case EXPR_RESULT:
+        }
+        case EXPR_RESULT -> {
           Node expr = n.getFirstChild();
           if (expr.isAssign()) {
             maybeInitializeExports(expr);
@@ -332,14 +334,15 @@ final class ClosureModuleProcessor implements ModuleProcessor {
             maybeInitializeExportsStub(expr);
           }
           return false;
-        case CONST:
-        case VAR:
-        case LET:
+        }
+        case CONST, VAR, LET -> {
           // Note that `let` is valid only for `goog.forwardDeclare`.
           maybeInitializeRequire(n);
           return false;
-        default:
+        }
+        default -> {
           return false;
+        }
       }
     }
 

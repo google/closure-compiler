@@ -119,7 +119,7 @@ public abstract class ChainableReverseAbstractInterpreter
    */
   protected @Nullable JSType getTypeIfRefinable(Node node, FlowScope scope) {
     switch (node.getToken()) {
-      case NAME:
+      case NAME -> {
         StaticTypedSlot nameVar = scope.getSlot(node.getString());
         if (nameVar != null) {
           JSType nameVarType = nameVar.getType();
@@ -129,8 +129,8 @@ public abstract class ChainableReverseAbstractInterpreter
           return nameVarType;
         }
         return null;
-
-      case GETPROP:
+      }
+      case GETPROP -> {
         String qualifiedName = node.getQualifiedName();
         if (qualifiedName == null) {
           return null;
@@ -147,8 +147,8 @@ public abstract class ChainableReverseAbstractInterpreter
           propVarType = getNativeType(UNKNOWN_TYPE);
         }
         return propVarType;
-      default:
-        break;
+      }
+      default -> {}
     }
     return null;
   }
@@ -162,24 +162,23 @@ public abstract class ChainableReverseAbstractInterpreter
   @CheckReturnValue
   protected FlowScope declareNameInScope(FlowScope scope, Node node, JSType type) {
     switch (node.getToken()) {
-      case NAME:
+      case NAME -> {
         return scope.inferSlotType(node.getString(), type);
-
-      case GETPROP:
+      }
+      case GETPROP -> {
         String qualifiedName = node.getQualifiedName();
         checkNotNull(qualifiedName);
 
         JSType origType = node.getJSType();
         origType = origType == null ? getNativeType(UNKNOWN_TYPE) : origType;
         return scope.inferQualifiedSlot(node, qualifiedName, origType, type, false);
-
-      case THIS:
+      }
+      case THIS -> {
         // "this" references aren't currently modeled in the CFG.
         return scope;
-
-      default:
-        throw new IllegalArgumentException("Node cannot be refined. \n" +
-            node.toStringTree());
+      }
+      default ->
+          throw new IllegalArgumentException("Node cannot be refined. \n" + node.toStringTree());
     }
   }
 

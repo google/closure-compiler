@@ -173,15 +173,9 @@ public final class DisambiguateProperties implements CompilerPass {
     void addRenameUsesResult(RenameUsesResult renameUsesResult) {
       total++;
       switch (renameUsesResult) {
-        case INVALIDATED:
-          numInvalidated++;
-          break;
-        case ONLY_ONE_CLUSTER:
-          numOnlyOneCluster++;
-          break;
-        case DISAMBIGUATED:
-          numDisambiguated++;
-          break;
+        case INVALIDATED -> numInvalidated++;
+        case ONLY_ONE_CLUSTER -> numOnlyOneCluster++;
+        case DISAMBIGUATED -> numDisambiguated++;
       }
     }
 

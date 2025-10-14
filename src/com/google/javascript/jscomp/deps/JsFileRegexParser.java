@@ -203,14 +203,11 @@ public final class JsFileRegexParser extends JsFileLineParser {
 
     Map<String, String> loadFlags = new LinkedHashMap<>();
     switch (moduleType) {
-      case GOOG_MODULE:
-        loadFlags.put("module", "goog");
-        break;
-      case ES6_MODULE:
-        loadFlags.put("module", "es6");
-        break;
-      default:
+      case GOOG_MODULE -> loadFlags.put("module", "goog");
+      case ES6_MODULE -> loadFlags.put("module", "es6");
+      default -> {
         // Nothing to do here.
+      }
     }
 
     DependencyInfo dependencyInfo =

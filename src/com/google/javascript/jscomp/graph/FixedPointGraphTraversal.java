@@ -138,7 +138,7 @@ public final class FixedPointGraphTraversal<N, E> {
     // on the next iteration.
     workSet.remove(node);
     switch (traversalDirection) {
-      case OUTWARDS:
+      case OUTWARDS -> {
         N sourceValue = node.getValue();
         for (DiGraphEdge<N, E> edge : node.getOutEdges()) {
           N destValue = edge.getDestination().getValue();
@@ -147,7 +147,8 @@ public final class FixedPointGraphTraversal<N, E> {
           }
         }
         return;
-      case INWARDS:
+      }
+      case INWARDS -> {
         N revSourceValue = node.getValue();
         for (DiGraphEdge<N, E> edge : node.getInEdges()) {
           N revDestValue = edge.getSource().getValue();
@@ -156,6 +157,7 @@ public final class FixedPointGraphTraversal<N, E> {
           }
         }
         return;
+      }
     }
     throw new AssertionError("Unrecognized direction " + traversalDirection);
   }

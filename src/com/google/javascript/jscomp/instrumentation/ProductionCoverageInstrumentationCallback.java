@@ -110,13 +110,13 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
     String functionName = functionNameStack.peek();
 
     switch (node.getToken()) {
-      case FUNCTION:
+      case FUNCTION -> {
         // If the function node has been visited by visit() then we can be assured that all its
         // children nodes have been visited and properly instrumented.
         functionNameStack.pop();
         instrumentBlockNode(node.getLastChild(), fileName, functionName, Type.FUNCTION);
-        break;
-      case IF:
+      }
+      case IF -> {
         Node ifTrueNode = node.getSecondChild();
         instrumentBlockNode(ifTrueNode, sourceFileName, functionName, Type.BRANCH);
         if (node.getChildCount() == 2) {
@@ -132,8 +132,8 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
             || (ifFalseNode.hasChildren() && !ifFalseNode.getFirstChild().isIf())) {
           instrumentBlockNode(ifFalseNode, sourceFileName, functionName, Type.BRANCH_DEFAULT);
         }
-        break;
-      case SWITCH:
+      }
+      case SWITCH -> {
         boolean hasDefaultCase = false;
         Node switchBody = node.getSecondChild();
         for (Node c = switchBody.getFirstChild(); c != null; c = c.getNext()) {
@@ -152,8 +152,8 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
           switchBody.addChildToBack(defaultCase);
           instrumentBlockNode(defaultBlock, sourceFileName, functionName, Type.BRANCH_DEFAULT);
         }
-        break;
-      case HOOK:
+      }
+      case HOOK -> {
         Node ifTernaryIsTrueExpression = node.getSecondChild();
         Node ifTernaryIsFalseExpression = node.getLastChild();
 
@@ -163,10 +163,8 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
             ifTernaryIsFalseExpression, sourceFileName, functionName, Type.BRANCH);
 
         compiler.reportChangeToEnclosingScope(node);
-        break;
-      case OR:
-      case AND:
-      case COALESCE:
+      }
+      case OR, AND, COALESCE -> {
         // Only instrument the second child of the binary operation because the first child will
         // always execute, or the first child is part of a chain of binary operations and would have
         // already been instrumented.
@@ -175,13 +173,14 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
             secondExpression, sourceFileName, functionName, Type.BRANCH);
 
         compiler.reportChangeToEnclosingScope(node);
-        break;
-      default:
+      }
+      default -> {
         if (NodeUtil.isLoopStructure(node)) {
           Node blockNode = NodeUtil.getLoopCodeBlock(node);
           checkNotNull(blockNode);
           instrumentBlockNode(blockNode, sourceFileName, functionName, Type.BRANCH);
         }
+      }
     }
   }
 

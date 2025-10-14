@@ -375,37 +375,36 @@ public class AmbiguateProperties implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case GETPROP:
-        case OPTCHAIN_GETPROP:
+        case GETPROP, OPTCHAIN_GETPROP -> {
           processGetProp(n);
           return;
-
-        case CALL:
+        }
+        case CALL -> {
           processCall(n);
           return;
-
-        case NAME:
+        }
+        case NAME -> {
           // handle ES5-style classes
           if (NodeUtil.isNameDeclaration(parent) || parent.isFunction()) {
             graphNodeFactory.createNode(getColor(n));
           }
           return;
-
-        case OBJECTLIT:
-        case OBJECT_PATTERN:
+        }
+        case OBJECTLIT, OBJECT_PATTERN -> {
           processObjectLitOrPattern(n);
           return;
-
-        case GETELEM:
+        }
+        case GETELEM -> {
           processGetElem(n);
           return;
-
-        case CLASS:
+        }
+        case CLASS -> {
           processClass(n);
           return;
-
-        default:
+        }
+        default -> {
           // Nothing to do.
+        }
       }
     }
 
@@ -452,7 +451,7 @@ public class AmbiguateProperties implements CompilerPass {
     private void processObjectProperty(Node objectLit, Node key, Color type) {
       checkArgument(objectLit.isObjectLit() || objectLit.isObjectPattern(), objectLit);
       switch (key.getToken()) {
-        case COMPUTED_PROP:
+        case COMPUTED_PROP -> {
           if (key.getFirstChild().isStringLit()) {
             // If this quoted prop name is statically determinable, ensure we don't rename some
             // other property in a way that could conflict with it.
@@ -461,11 +460,8 @@ public class AmbiguateProperties implements CompilerPass {
             // want to be consistent with how other quoted properties invalidate property names.
             quotedNames.add(key.getFirstChild().getString());
           }
-          break;
-        case MEMBER_FUNCTION_DEF:
-        case GETTER_DEF:
-        case SETTER_DEF:
-        case STRING_KEY:
+        }
+        case MEMBER_FUNCTION_DEF, GETTER_DEF, SETTER_DEF, STRING_KEY -> {
           if (key.isQuotedStringKey()) {
             // If this quoted prop name is statically determinable, ensure we don't rename some
             // other property in a way that could conflict with it
@@ -473,15 +469,13 @@ public class AmbiguateProperties implements CompilerPass {
           } else {
             maybeMarkCandidate(key, type);
           }
-          break;
-
-        case OBJECT_REST:
-        case OBJECT_SPREAD:
-          break; // Nothing to do.
-
-        default:
-          throw new IllegalStateException(
-              "Unexpected child of " + objectLit.getToken() + ": " + key.toStringTree());
+        }
+        case OBJECT_REST, OBJECT_SPREAD -> {
+          // Nothing to do.
+        }
+        default ->
+            throw new IllegalStateException(
+                "Unexpected child of " + objectLit.getToken() + ": " + key.toStringTree());
       }
     }
 

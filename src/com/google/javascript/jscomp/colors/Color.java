@@ -73,12 +73,11 @@ public abstract class Color {
 
   public static Color createUnion(Set<Color> elements) {
     switch (elements.size()) {
-      case 0:
-        throw new IllegalStateException();
-      case 1:
+      case 0 -> throw new IllegalStateException();
+      case 1 -> {
         return Iterables.getOnlyElement(elements);
-      default:
-        break;
+      }
+      default -> {}
     }
 
     ImmutableSet.Builder<Color> instanceColors = ImmutableSet.builder();

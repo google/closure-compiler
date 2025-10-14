@@ -222,24 +222,16 @@ public class JsFileFullParser {
       info.loadFlags.put("module", "goog");
     }
     switch (module.moduleType()) {
-      case GOOG_PROVIDE:
-        info.moduleType = FileInfo.ModuleType.GOOG_PROVIDE;
-        break;
-      case GOOG_MODULE:
-        info.moduleType = FileInfo.ModuleType.GOOG_MODULE;
-        break;
-      case LEGACY_GOOG_MODULE:
+      case GOOG_PROVIDE -> info.moduleType = FileInfo.ModuleType.GOOG_PROVIDE;
+      case GOOG_MODULE -> info.moduleType = FileInfo.ModuleType.GOOG_MODULE;
+      case LEGACY_GOOG_MODULE -> {
         info.moduleType = FileInfo.ModuleType.GOOG_MODULE;
         info.isLegacyNamespace = true;
-        break;
-      case ES6_MODULE:
-        info.moduleType = FileInfo.ModuleType.ES_MODULE;
-        break;
-      case COMMON_JS:
-      case SCRIPT:
-        // Treat these as unknown for now; we can extend the enum if we care about these.
-        info.moduleType = FileInfo.ModuleType.UNKNOWN;
-        break;
+      }
+      case ES6_MODULE -> info.moduleType = FileInfo.ModuleType.ES_MODULE;
+      case COMMON_JS, SCRIPT ->
+          // Treat these as unknown for now; we can extend the enum if we care about these.
+          info.moduleType = FileInfo.ModuleType.UNKNOWN;
     }
     info.goog = module.usesClosure();
     recordModuleMetadata(info, module);
@@ -273,70 +265,56 @@ public class JsFileFullParser {
     boolean fileOverview = comment.value.contains("@fileoverview");
     for (CommentAnnotation annotation : CommentAnnotation.parse(comment.value)) {
       switch (annotation.name) {
-        case "@fileoverview":
-        case "@author":
-        case "@see":
-        case "@link":
-          break;
-        case "@mods":
+        case "@fileoverview", "@author", "@see", "@link" -> {}
+        case "@mods" -> {
           if (!annotation.value.isEmpty()) {
             info.mods.add(annotation.value);
           }
-          break;
-        case "@visibility":
+        }
+        case "@visibility" -> {
           if (!annotation.value.isEmpty()) {
             info.visibility.add(annotation.value);
           }
-          break;
-        case "@modName":
+        }
+        case "@modName" -> {
           if (!annotation.value.isEmpty()) {
             info.modName.add(annotation.value);
           }
-          break;
-        case "@config":
-          info.isConfig = true;
-          break;
-        case "@provideGoog":
-          info.provideGoog = true;
-          break;
-        case "@requirecss":
+        }
+        case "@config" -> info.isConfig = true;
+        case "@provideGoog" -> info.provideGoog = true;
+        case "@requirecss" -> {
           if (!annotation.value.isEmpty()) {
             info.requiresCss.add(annotation.value);
           }
-          break;
-        case "@deltemplate":
-        case "@hassoydeltemplate":
+        }
+        case "@deltemplate", "@hassoydeltemplate" -> {
           // TODO(b/210468818): Remove legacy @hassoydeltemplate annotation once Soy gencode has
           // been updated to use the new one.
           if (!annotation.value.isEmpty()) {
             info.deltemplates.add(annotation.value);
           }
-          break;
-        case "@delcall":
-        case "@hassoydelcall":
+        }
+        case "@delcall", "@hassoydelcall" -> {
           // TODO(b/210468818): Remove legacy @hassoydelcall annotation once Soy gencode has
           // been updated to use the new one.
           if (!annotation.value.isEmpty()) {
             info.delcalls.add(annotation.value);
           }
-          break;
-        case "@externs":
-          info.isExterns = true;
-          break;
-        case "@enhanceable":
-        case "@pintomodule":
-        case "@mayhaveextraedge":
-          info.customAnnotations.put(annotation.name.substring(1), annotation.value);
-          break;
-        case "@enhance":
+        }
+        case "@externs" -> info.isExterns = true;
+        case "@enhanceable", "@pintomodule", "@mayhaveextraedge" ->
+            info.customAnnotations.put(annotation.name.substring(1), annotation.value);
+        case "@enhance" -> {
           if (!annotation.value.isEmpty()) {
             info.customAnnotations.put(annotation.name.substring(1), annotation.value);
           }
-          break;
-        default:
+        }
+        default -> {
           if (fileOverview) {
             info.customAnnotations.put(annotation.name.substring(1), annotation.value);
           }
+        }
       }
     }
   }
