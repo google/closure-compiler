@@ -3198,21 +3198,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       List<PassFactory> allOptimizationPassesToRun) {
 
     // Create a list of passes based on which segment of optimizations we are running.
-    List<PassFactory> optimizationPassList = new ArrayList<>();
-
-    optimizationPassList =
-        switch (segmentOfCompilationToRun) {
-          case OPTIMIZATIONS -> allOptimizationPassesToRun;
-          case OPTIMIZATIONS_FIRST_HALF ->
-              passListUntil(allOptimizationPassesToRun, PassNames.OPTIMIZATIONS_HALFWAY_POINT);
-          case OPTIMIZATIONS_SECOND_HALF ->
-              passListAfter(allOptimizationPassesToRun, PassNames.OPTIMIZATIONS_HALFWAY_POINT);
-          default ->
-              throw new IllegalArgumentException(
-                  "Unsupported segment of optimizations to run: " + segmentOfCompilationToRun);
-        };
-
-    return optimizationPassList;
+    return switch (segmentOfCompilationToRun) {
+      case OPTIMIZATIONS -> allOptimizationPassesToRun;
+      case OPTIMIZATIONS_FIRST_HALF ->
+          passListUntil(allOptimizationPassesToRun, PassNames.OPTIMIZATIONS_HALFWAY_POINT);
+      case OPTIMIZATIONS_SECOND_HALF ->
+          passListAfter(allOptimizationPassesToRun, PassNames.OPTIMIZATIONS_HALFWAY_POINT);
+      default ->
+          throw new IllegalArgumentException(
+              "Unsupported segment of optimizations to run: " + segmentOfCompilationToRun);
+    };
   }
 
   /**
