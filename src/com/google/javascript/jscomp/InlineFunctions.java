@@ -31,10 +31,12 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -1277,5 +1279,57 @@ class InlineFunctions implements CompilerPass {
     NO_INLINE_ANNOTATION,
     REASSIGNED,
     TARGET_SIZE_EXCEEDS_LIMIT;
+  }
+
+  record ShouldRequireInlining(boolean shouldValidate, String optMessage) {}
+
+  static ShouldRequireInlining checkOptimizationLevelSupportsRequireInlining(
+      CompilerOptions options) {
+    // Non-optimized code might not perform all required inlinings.
+    List<String> problems = new ArrayList<>();
+    if (!options.shouldOptimize()) {
+      problems.add("non-optimized code");
+    }
+    // Required inlinings don't make sense without inlining. If we don't inline
+    // properties we might not be able to inline functions defined on namespaces.
+    if (!options.shouldInlineProperties()) {
+      problems.add("missing shouldInlineProperties");
+    }
+    if (!options.inlineConstantVars) {
+      problems.add("missing inlineConstantVars");
+    }
+    if (!options.smartNameRemoval) {
+      problems.add("missing smartNameRemoval");
+    }
+    if (!options.getInlineFunctionsLevel().isOn()) {
+      problems.add("missing inlineFunctions");
+    }
+    if (!options.getInlineFunctionsLevel().includesGlobals()) {
+      problems.add("inlineFunctions does not include globals");
+    }
+    // Coverage runs may break some inlining.
+    if (options.getInstrumentForCoverageOption() != CompilerOptions.InstrumentOption.NONE) {
+      problems.add("instrumentForCoverageOption enabled");
+    }
+    // We need to collapse properties or functions might be retained due to
+    // being written on an exported namespace.
+    if (!options.getPropertyCollapseLevel().equals(CompilerOptions.PropertyCollapseLevel.ALL)) {
+      problems.add("missing property collapsing");
+    }
+    // Avoid inlining failures due to asserts.
+    if (!options.removeClosureAsserts) {
+      problems.add("missing removeClosureAsserts");
+    }
+    // We need more than one inlining pass for most required inlinings to work. This
+    // eliminates 'fast' mode.
+    if (options.optimizationLoopMaxIterations == 1) {
+      problems.add(
+          "optimizationLoopMaxIterations should be >= 2, but is: "
+              + options.optimizationLoopMaxIterations);
+    }
+    if (problems.isEmpty()) {
+      return new ShouldRequireInlining(true, "");
+    }
+    return new ShouldRequireInlining(false, String.format("[%s]", String.join(", ", problems)));
   }
 }

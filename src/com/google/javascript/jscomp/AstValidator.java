@@ -23,6 +23,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.InputId;
@@ -97,30 +98,7 @@ public final class AstValidator implements CompilerPass {
           }
         },
         validateScriptFeatures,
-        /* shouldValidateRequiredInlinings= */
-        // Non-optimized code might not perform all required inlinings.
-        compiler.getOptions().shouldOptimize()
-            // Required inlinings don't make sense without inlining. If we don't inline
-            // properties we might not be able to inline functions defined on namespaces.
-            && compiler.getOptions().shouldInlineProperties()
-            && compiler.getOptions().inlineConstantVars
-            && compiler.getOptions().smartNameRemoval
-            && compiler.getOptions().getInlineFunctionsLevel().isOn()
-            && compiler.getOptions().getInlineFunctionsLevel().includesGlobals()
-            // Coverage runs may break some inlining.
-            && compiler.getOptions().getInstrumentForCoverageOption()
-                == CompilerOptions.InstrumentOption.NONE
-            // We need to collapse properties or functions might be retained due to
-            // being written on an exported namespace.
-            && compiler
-                .getOptions()
-                .getPropertyCollapseLevel()
-                .equals(CompilerOptions.PropertyCollapseLevel.ALL)
-            // Avoid inlining failures due to asserts.
-            && compiler.getOptions().removeClosureAsserts
-            // We need more than one inlining pass for most required inlinings to work. This
-            // eliminates 'fast' mode.
-            && compiler.getOptions().optimizationLoopMaxIterations > 1);
+        compiler.getOptions().getShouldValidateRequiredInlinings().equals(Tri.TRUE));
   }
 
   /**

@@ -837,6 +837,9 @@ public class CompilerOptions {
   /** List of properties that we report invalidation errors for. */
   private ImmutableSet<String> propertiesThatMustDisambiguate;
 
+  /** Whether to enforce that the @requireInlining annotation works. */
+  private Tri validateRequireInliningAnnotation;
+
   /** Rewrite CommonJS modules so that they can be concatenated together. */
   private boolean processCommonJSModules = false;
 
@@ -1399,6 +1402,7 @@ public class CompilerOptions {
     outputJsStringUsage = false;
     convertToDottedProperties = false;
     rewriteFunctionExpressions = false;
+    validateRequireInliningAnnotation = Tri.UNKNOWN;
 
     // Renaming
     variableRenaming = VariableRenamingPolicy.OFF;
@@ -2030,6 +2034,22 @@ public class CompilerOptions {
 
   public ImmutableSet<String> getPropertiesThatMustDisambiguate() {
     return this.propertiesThatMustDisambiguate;
+  }
+
+  /**
+   * Ensures that functions labelled with `@requireInlining` JSDoc are, in fact, actually inlined by
+   * the optimizer.
+   *
+   * <p>This may only be set when using advanced optimizations, as otherwise the compiler is unable
+   * to do most inlining. The compiler will throw an exception during initialization if this is set
+   * to true, but advanced optimizations are not being used.
+   */
+  public void setValidateRequiredInlinings(boolean validateRequireInliningAnnotation) {
+    this.validateRequireInliningAnnotation = Tri.forBoolean(validateRequireInliningAnnotation);
+  }
+
+  Tri getShouldValidateRequiredInlinings() {
+    return validateRequireInliningAnnotation;
   }
 
   public void setPreserveDetailedSourceInfo(boolean preserveDetailedSourceInfo) {
