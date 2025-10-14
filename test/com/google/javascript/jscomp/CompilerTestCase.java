@@ -1756,26 +1756,23 @@ public abstract class CompilerTestCase {
         node != null;
         node = node.getNext()) {
       switch (node.getToken()) {
-        case FUNCTION:
+        case FUNCTION -> {
           if (name.equals(node.getFirstChild().getString())) {
             return node;
           }
-          break;
-        case VAR:
-        case CONST:
-        case LET:
+        }
+        case VAR, CONST, LET -> {
           if (name.equals(node.getFirstChild().getString())) {
             return node.getFirstChild();
           }
-          break;
-        case EXPR_RESULT:
+        }
+        case EXPR_RESULT -> {
           if (node.getFirstChild().isAssign()
               && node.getFirstFirstChild().matchesQualifiedName(name)) {
             return node.getFirstFirstChild();
           }
-          break;
-        default:
-          break;
+        }
+        default -> {}
       }
     }
     return null;

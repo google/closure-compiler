@@ -3026,24 +3026,12 @@ $jscomp.inherits(FooPromise, Promise);
   /** Returns the first node (preorder) in the given AST that matches the given qualified name */
   private Node getNodeWithName(Node root, String name) {
     switch (root.getToken()) {
-      case GETPROP:
-      case OPTCHAIN_GETPROP:
+      case GETPROP, OPTCHAIN_GETPROP, NAME, STRINGLIT, MEMBER_FUNCTION_DEF, STRING_KEY -> {
         if (root.getString().equals(name)) {
           return root;
         }
-        break;
-
-      case NAME:
-      case STRINGLIT:
-      case MEMBER_FUNCTION_DEF:
-      case STRING_KEY:
-        if (root.getString().equals(name)) {
-          return root;
-        }
-        break;
-
-      default:
-        break;
+      }
+      default -> {}
     }
 
     for (Node child = root.getFirstChild(); child != null; child = child.getNext()) {

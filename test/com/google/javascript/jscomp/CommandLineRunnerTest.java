@@ -3855,23 +3855,21 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
     Supplier<List<JSChunk>> modulesSupplier = null;
 
     switch (useModules) {
-      case NONE:
+      case NONE -> {
         List<SourceFile> inputs = new ArrayList<>();
         for (int i = 0; i < original.length; i++) {
           inputs.add(SourceFile.fromCode(getFilename(i), original[i]));
         }
         inputsSupplier = Suppliers.ofInstance(inputs);
-        break;
-      case STAR:
-        modulesSupplier =
-            Suppliers.<List<JSChunk>>ofInstance(
-                ImmutableList.copyOf(JSChunkGraphBuilder.forStar().addChunks(original).build()));
-        break;
-      case CHAIN:
-        modulesSupplier =
-            Suppliers.<List<JSChunk>>ofInstance(
-                ImmutableList.copyOf(JSChunkGraphBuilder.forChain().addChunks(original).build()));
-        break;
+      }
+      case STAR ->
+          modulesSupplier =
+              Suppliers.<List<JSChunk>>ofInstance(
+                  ImmutableList.copyOf(JSChunkGraphBuilder.forStar().addChunks(original).build()));
+      case CHAIN ->
+          modulesSupplier =
+              Suppliers.<List<JSChunk>>ofInstance(
+                  ImmutableList.copyOf(JSChunkGraphBuilder.forChain().addChunks(original).build()));
     }
 
     runner.enableTestMode(

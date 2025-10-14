@@ -697,14 +697,10 @@ public final class LiveVariablesAnalysisTest {
 
     // Set up test case
     switch (wrapper) {
-      case FUNCTION:
-        src = "function _FUNCTION(param1, param2 = 1, ...param3){" + src + "}";
-        break;
-      case ASYNC_FUNCTION:
-        src = "async function _FUNCTION(param1, param2 = 1, ...param3){" + src + "}";
-        break;
-      default:
-        break;
+      case FUNCTION -> src = "function _FUNCTION(param1, param2 = 1, ...param3){" + src + "}";
+      case ASYNC_FUNCTION ->
+          src = "async function _FUNCTION(param1, param2 = 1, ...param3){" + src + "}";
+      default -> {}
     }
     Node n = compiler.parseTestCode(src).removeFirstChild();
     checkState(n.isFunction(), n);

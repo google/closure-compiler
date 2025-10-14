@@ -1635,15 +1635,9 @@ public final class AstValidatorTest extends CompilerTestCase {
   private List<String> doCheck(Node n, Check level) {
     AstValidator validator = createValidator(createCompiler());
     switch (level) {
-      case SCRIPT:
-        validator.validateScript(n);
-        break;
-      case STATEMENT:
-        validator.validateStatement(n);
-        break;
-      case EXPRESSION:
-        validator.validateExpression(n);
-        break;
+      case SCRIPT -> validator.validateScript(n);
+      case STATEMENT -> validator.validateStatement(n);
+      case EXPRESSION -> validator.validateExpression(n);
     }
     return lastCheckViolationMessages;
   }
