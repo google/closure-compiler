@@ -41,25 +41,24 @@ class SubstituteEs6Syntax extends AbstractPostOrderCallback implements CompilerP
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case FUNCTION:
+      case FUNCTION -> {
         if (n.isArrowFunction()) {
           maybeSimplifyArrowFunctionBody(n, n.getLastChild());
         }
-        break;
-      case STRING_KEY:
+      }
+      case STRING_KEY -> {
         if (n.getFirstChild().isName() && n.getFirstChild().getString().equals(n.getString())) {
           n.setShorthandProperty(true);
           objectLiteralShorthandWasAdded = true;
         }
-        break;
-      case SCRIPT:
+      }
+      case SCRIPT -> {
         if (objectLiteralShorthandWasAdded) {
           NodeUtil.addFeatureToScript(n, Feature.SHORTHAND_OBJECT_PROPERTIES, compiler);
           objectLiteralShorthandWasAdded = false; // false for the next script
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
   }
 

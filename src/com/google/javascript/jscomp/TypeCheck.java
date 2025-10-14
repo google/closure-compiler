@@ -1169,25 +1169,19 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     JSType targetType = getJSType(target);
 
     switch (spreadNode.getParent().getToken()) {
-      case OBJECTLIT:
+      case OBJECTLIT -> {
         // Case: `var x = {A: a, B: b, ...obj}`.
         // Nothing to check about object spread.
-        break;
-
-      case ARRAYLIT:
-      case CALL:
-      case OPTCHAIN_CALL:
-      case NEW:
-        // Case: `var x = [a, b, ...itr]`
-        // Case: `var x = fn(a, b, ...itr)`
-        // Case: `var x = fn?.(a, b, ...itr)`
-        validator.expectAutoboxesToIterable(
-            target, targetType, "Spread operator only applies to Iterable types");
-        break;
-
-      default:
-        throw new IllegalStateException(
-            "Unexpected parent of SPREAD: " + spreadNode.getParent().toStringTree());
+      }
+      case ARRAYLIT, CALL, OPTCHAIN_CALL, NEW ->
+          // Case: `var x = [a, b, ...itr]`
+          // Case: `var x = fn(a, b, ...itr)`
+          // Case: `var x = fn?.(a, b, ...itr)`
+          validator.expectAutoboxesToIterable(
+              target, targetType, "Spread operator only applies to Iterable types");
+      default ->
+          throw new IllegalStateException(
+              "Unexpected parent of SPREAD: " + spreadNode.getParent().toStringTree());
     }
   }
 
@@ -1917,7 +1911,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   static @Nullable JSType getObjectLitKeyTypeFromValueType(Node key, JSType valueType) {
     if (valueType != null) {
       switch (key.getToken()) {
-        case GETTER_DEF:
+        case GETTER_DEF -> {
           // GET must always return a function type.
           if (valueType.isFunctionType()) {
             FunctionType fntype = valueType.toMaybeFunctionType();
@@ -1925,8 +1919,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           } else {
             return null;
           }
-          break;
-        case SETTER_DEF:
+        }
+        case SETTER_DEF -> {
           if (valueType.isFunctionType()) {
             // SET must always return a function type.
             FunctionType fntype = valueType.toMaybeFunctionType();
@@ -1936,9 +1930,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           } else {
             return null;
           }
-          break;
-        default:
-          break;
+        }
+        default -> {}
       }
     }
     return valueType;
@@ -3121,12 +3114,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       return;
     }
     switch (op) {
-      case ASSIGN_LSH:
-      case ASSIGN_RSH:
-      case LSH:
-      case RSH:
-      case ASSIGN_URSH:
-      case URSH:
+      case ASSIGN_LSH, ASSIGN_RSH, LSH, RSH, ASSIGN_URSH, URSH -> {
         if (operatorType.isNumber()) {
           // TypeInference set the operator type to 'number', so we know bigint isn't involved.
           // NOTE: >>> and >>>= aren't valid operations for bigint, so TypeInference ignores the
@@ -3147,18 +3135,17 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           validator.expectBigIntOrNumber(left, leftType, "left operand");
           validator.expectBigIntOrNumber(right, rightType, "right operand");
         }
-        break;
-
-      case ASSIGN_DIV:
-      case ASSIGN_MOD:
-      case ASSIGN_MUL:
-      case ASSIGN_SUB:
-      case ASSIGN_EXPONENT:
-      case DIV:
-      case MOD:
-      case MUL:
-      case SUB:
-      case EXPONENT:
+      }
+      case ASSIGN_DIV,
+          ASSIGN_MOD,
+          ASSIGN_MUL,
+          ASSIGN_SUB,
+          ASSIGN_EXPONENT,
+          DIV,
+          MOD,
+          MUL,
+          SUB,
+          EXPONENT -> {
         if (operatorType.isNumber()) {
           // TypeInference set the operator type to 'number', so we know bigint isn't involved.
           validator.expectNumber(left, leftType, "left operand");
@@ -3167,14 +3154,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           validator.expectBigIntOrNumber(left, leftType, "left operand");
           validator.expectBigIntOrNumber(right, rightType, "right operand");
         }
-        break;
-
-      case ASSIGN_BITAND:
-      case ASSIGN_BITXOR:
-      case ASSIGN_BITOR:
-      case BITAND:
-      case BITXOR:
-      case BITOR:
+      }
+      case ASSIGN_BITAND, ASSIGN_BITXOR, ASSIGN_BITOR, BITAND, BITXOR, BITOR -> {
         if (operatorType.isNumber()) {
           // This condition is meant to catch any old cases (where bigint isn't involved)
           validator.expectBitwiseable(left, leftType, "bad left operand to bitwise operator");
@@ -3183,14 +3164,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           validator.expectBigIntOrNumber(left, leftType, "bad left operand to bitwise operator");
           validator.expectBigIntOrNumber(right, rightType, "bad right operand to bitwise operator");
         }
-        break;
-
-      case ASSIGN_ADD:
-      case ADD:
-        break;
-
-      default:
-        report(n, UNEXPECTED_TOKEN, op.toString());
+      }
+      case ASSIGN_ADD, ADD -> {}
+      default -> report(n, UNEXPECTED_TOKEN, op.toString());
     }
     ensureTyped(n);
   }

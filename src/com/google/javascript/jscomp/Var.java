@@ -40,12 +40,8 @@ public class Var extends AbstractVar<Scope, Var> implements StaticSlot, StaticRe
     super(name, nameNode, scope, index, input, implicitGoogNamespaceDefinition);
     if (nameNode != null) {
       switch (nameNode.getToken()) {
-        case MODULE_BODY:
-        case NAME:
-        case IMPORT_STAR:
-          break;
-        default:
-          throw new IllegalArgumentException("Invalid name node " + nameNode);
+        case MODULE_BODY, NAME, IMPORT_STAR -> {}
+        default -> throw new IllegalArgumentException("Invalid name node " + nameNode);
       }
     }
   }

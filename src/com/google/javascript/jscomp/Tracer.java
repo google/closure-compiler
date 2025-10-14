@@ -335,18 +335,10 @@ final class Tracer {
 
     // We know it's less than 5 now
     switch (numSpaces) {
-      case 1:
-        sb.append(" ");
-        break;
-      case 2:
-        sb.append("  ");
-        break;
-      case 3:
-        sb.append("   ");
-        break;
-      case 4:
-        sb.append("    ");
-        break;
+      case 1 -> sb.append(" ");
+      case 2 -> sb.append("  ");
+      case 3 -> sb.append("   ");
+      case 4 -> sb.append("    ");
     }
   }
 

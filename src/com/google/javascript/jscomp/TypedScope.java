@@ -212,17 +212,17 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
 
   private @Nullable JSType getImplicitVarType(ImplicitVar var) {
     switch (var) {
-      case ARGUMENTS:
+      case ARGUMENTS -> {
         // Look for an extern named "arguments" and use its type if available.
         // TODO(sdh): consider looking for "Arguments" ctor rather than "arguments" var: this could
         // allow deleting the variable, which doesn't really belong in externs in the first place.
         TypedVar globalArgs = getGlobalScope().getVar(Var.ARGUMENTS);
         return globalArgs != null && globalArgs.isExtern() ? globalArgs.getType() : null;
-
-      case THIS:
+      }
+      case THIS -> {
         return getTypeOfThis();
-
-      case SUPER:
+      }
+      case SUPER -> {
         // Inside a constructor, `super` may have two different types. Calls to `super()` use the
         // super-ctor type, while property accesses use the super-instance type. This logic always
         // returns the latter case.
@@ -235,9 +235,9 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
         } else {
           return receiverType.getImplicitPrototype();
         }
-
-      case EXPORTS:
-        throw new AssertionError("TypedScopes should not contain an implicit 'exports'");
+      }
+      case EXPORTS ->
+          throw new AssertionError("TypedScopes should not contain an implicit 'exports'");
     }
 
     throw new AssertionError();
