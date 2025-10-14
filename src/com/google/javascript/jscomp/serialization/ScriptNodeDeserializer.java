@@ -101,14 +101,14 @@ final class ScriptNodeDeserializer {
       int currentLine = this.previousLine + astNode.getRelativeLine();
       int currentColumn = this.previousColumn + astNode.getRelativeColumn();
 
-      Node n = this.owner().deserializeSingleNode(astNode);
-      n.setStaticSourceFileFrom(sourceFileTemplate);
+      Node n = this.owner().deserializeSingleNode(astNode, sourceFileTemplate);
       if (astNode.hasType() && this.owner().colorPoolShard.isPresent()) {
         n.setColor(this.owner().colorPoolShard.get().getColor(astNode.getType()));
       }
       long properties = astNode.getBooleanProperties();
       if (properties > 0) {
-        n.deserializeProperties(filterOutCastProp(astNode.getBooleanProperties()));
+        n.deserializeProperties(
+            filterOutCastProp(properties), sourceFileTemplate.getIsInClosureUnawareSubtree());
       }
       n.setJSDocInfo(JSDocSerializer.deserializeJsdoc(astNode.getJsdoc(), stringPool));
       n.setLinenoCharno(currentLine, currentColumn);
@@ -121,19 +121,24 @@ final class ScriptNodeDeserializer {
       @Nullable FeatureContext newContext = contextFor(context, n);
       if (Node.hasBitSet(properties, NodeProperty.CLOSURE_UNAWARE_SHADOW.getNumber())) {
         AstNode serializedShadowChild = astNode.getChild(0);
+        Node closureUnawareSubtreeTemplateNode = sourceFileTemplate.cloneTree();
+        closureUnawareSubtreeTemplateNode.setIsInClosureUnawareSubtree(true);
         // Unlike normal deserialization, we want to avoid recording features for code within the
         // shadow because we don't run transpilation passes over it and later stages of the compiler
         // attempt to validate that transpilation has successfully run over the entire AST and no
         // features remain that won't work in the given language output level.
-        Node shadowedCode = this.visit(serializedShadowChild, null, sourceFileTemplate);
+        Node shadowedCode =
+            this.visit(serializedShadowChild, null, closureUnawareSubtreeTemplateNode);
         this.owner().setOriginalNameIfPresent(serializedShadowChild, shadowedCode);
         // The shadowed code is only the "source" parts of the shadow structure, and does not
         // include the synthetic code that is needed for the compiler to consider it a valid
         // standalone AST. We recreate that here.
         // This must be kept in sync with the shadow structure created by TypedAstSerializer.
         Node shadowRoot = IR.root(IR.script(IR.exprResult(shadowedCode)));
-        shadowRoot.getFirstChild().setStaticSourceFileFrom(sourceFileTemplate);
-        shadowRoot.getFirstFirstChild().setStaticSourceFileFrom(sourceFileTemplate);
+        shadowRoot.clonePropsFrom(closureUnawareSubtreeTemplateNode);
+        shadowRoot.getFirstChild().clonePropsFrom(closureUnawareSubtreeTemplateNode);
+        shadowRoot.getFirstFirstChild().clonePropsFrom(closureUnawareSubtreeTemplateNode);
+
         n.setClosureUnawareShadow(shadowRoot);
         return n;
       }
@@ -352,323 +357,339 @@ final class ScriptNodeDeserializer {
    * <p>Prefer calling this method over calling a regular Node.* or IR.* method when possible. This
    * method integrates with {@link RhinoStringPool} to cache String interning results.
    */
-  private Node stringNode(Token token, AstNode n) {
-    return Node.newString(token, this.stringPool.getInternedStrings(), n.getStringValuePointer());
+  private Node stringNode(Token token, AstNode n, Node templateNode) {
+    Node str =
+        Node.newString(token, this.stringPool.getInternedStrings(), n.getStringValuePointer());
+    str.clonePropsFrom(templateNode);
+    return str;
   }
 
-  private Node deserializeSingleNode(AstNode n) {
+  private Node newNodeFromTemplate(Token token, Node templateNode) {
+    Node n = templateNode.cloneTree();
+    n.setToken(token);
+    return n;
+  }
+
+  private Node deserializeSingleNode(AstNode n, Node templateNode) {
     switch (n.getKind()) {
       case SOURCE_FILE:
-        return new Node(Token.SCRIPT);
+        return newNodeFromTemplate(Token.SCRIPT, templateNode);
 
       case NUMBER_LITERAL:
-        return IR.number(n.getDoubleValue());
+        Node numberNode = IR.number(n.getDoubleValue());
+        numberNode.clonePropsFrom(templateNode);
+        return numberNode;
       case STRING_LITERAL:
-        return stringNode(Token.STRINGLIT, n);
+        return stringNode(Token.STRINGLIT, n, templateNode);
       case IDENTIFIER:
-        return stringNode(Token.NAME, n);
+        return stringNode(Token.NAME, n, templateNode);
       case FALSE:
-        return new Node(Token.FALSE);
+        return newNodeFromTemplate(Token.FALSE, templateNode);
       case TRUE:
-        return new Node(Token.TRUE);
+        return newNodeFromTemplate(Token.TRUE, templateNode);
       case NULL:
-        return new Node(Token.NULL);
+        return newNodeFromTemplate(Token.NULL, templateNode);
       case THIS:
-        return new Node(Token.THIS);
+        return newNodeFromTemplate(Token.THIS, templateNode);
       case VOID:
-        return new Node(Token.VOID);
+        return newNodeFromTemplate(Token.VOID, templateNode);
       case BIGINT_LITERAL:
         String bigintString = this.stringPool.get(n.getStringValuePointer());
-        return IR.bigint(new BigInteger(bigintString));
+        Node bi = IR.bigint(new BigInteger(bigintString));
+        bi.clonePropsFrom(templateNode);
+        return bi;
       case REGEX_LITERAL:
-        return new Node(Token.REGEXP);
+        return newNodeFromTemplate(Token.REGEXP, templateNode);
       case ARRAY_LITERAL:
-        return new Node(Token.ARRAYLIT);
+        return newNodeFromTemplate(Token.ARRAYLIT, templateNode);
       case OBJECT_LITERAL:
-        return new Node(Token.OBJECTLIT);
+        return newNodeFromTemplate(Token.OBJECTLIT, templateNode);
 
       case ASSIGNMENT:
-        return new Node(Token.ASSIGN);
+        return newNodeFromTemplate(Token.ASSIGN, templateNode);
       case CALL:
-        return new Node(Token.CALL);
+        return newNodeFromTemplate(Token.CALL, templateNode);
       case NEW:
-        return new Node(Token.NEW);
+        return newNodeFromTemplate(Token.NEW, templateNode);
       case PROPERTY_ACCESS:
-        return stringNode(Token.GETPROP, n);
+        return stringNode(Token.GETPROP, n, templateNode);
       case ELEMENT_ACCESS:
-        return new Node(Token.GETELEM);
+        return newNodeFromTemplate(Token.GETELEM, templateNode);
 
       case COMMA:
-        return new Node(Token.COMMA);
+        return newNodeFromTemplate(Token.COMMA, templateNode);
       case BOOLEAN_OR:
-        return new Node(Token.OR);
+        return newNodeFromTemplate(Token.OR, templateNode);
       case BOOLEAN_AND:
-        return new Node(Token.AND);
+        return newNodeFromTemplate(Token.AND, templateNode);
       case HOOK:
-        return new Node(Token.HOOK);
+        return newNodeFromTemplate(Token.HOOK, templateNode);
       case EQUAL:
-        return new Node(Token.EQ);
+        return newNodeFromTemplate(Token.EQ, templateNode);
       case NOT_EQUAL:
-        return new Node(Token.NE);
+        return newNodeFromTemplate(Token.NE, templateNode);
       case LESS_THAN:
-        return new Node(Token.LT);
+        return newNodeFromTemplate(Token.LT, templateNode);
       case LESS_THAN_EQUAL:
-        return new Node(Token.LE);
+        return newNodeFromTemplate(Token.LE, templateNode);
       case GREATER_THAN:
-        return new Node(Token.GT);
+        return newNodeFromTemplate(Token.GT, templateNode);
       case GREATER_THAN_EQUAL:
-        return new Node(Token.GE);
+        return newNodeFromTemplate(Token.GE, templateNode);
       case TRIPLE_EQUAL:
-        return new Node(Token.SHEQ);
+        return newNodeFromTemplate(Token.SHEQ, templateNode);
       case NOT_TRIPLE_EQUAL:
-        return new Node(Token.SHNE);
+        return newNodeFromTemplate(Token.SHNE, templateNode);
       case NOT:
-        return new Node(Token.NOT);
+        return newNodeFromTemplate(Token.NOT, templateNode);
       case POSITIVE:
-        return new Node(Token.POS);
+        return newNodeFromTemplate(Token.POS, templateNode);
       case NEGATIVE:
-        return new Node(Token.NEG);
+        return newNodeFromTemplate(Token.NEG, templateNode);
       case TYPEOF:
-        return new Node(Token.TYPEOF);
+        return newNodeFromTemplate(Token.TYPEOF, templateNode);
       case INSTANCEOF:
-        return new Node(Token.INSTANCEOF);
+        return newNodeFromTemplate(Token.INSTANCEOF, templateNode);
       case IN:
-        return new Node(Token.IN);
+        return newNodeFromTemplate(Token.IN, templateNode);
 
       case ADD:
-        return new Node(Token.ADD);
+        return newNodeFromTemplate(Token.ADD, templateNode);
       case SUBTRACT:
-        return new Node(Token.SUB);
+        return newNodeFromTemplate(Token.SUB, templateNode);
       case MULTIPLY:
-        return new Node(Token.MUL);
+        return newNodeFromTemplate(Token.MUL, templateNode);
       case DIVIDE:
-        return new Node(Token.DIV);
+        return newNodeFromTemplate(Token.DIV, templateNode);
       case MODULO:
-        return new Node(Token.MOD);
+        return newNodeFromTemplate(Token.MOD, templateNode);
       case EXPONENT:
-        return new Node(Token.EXPONENT);
+        return newNodeFromTemplate(Token.EXPONENT, templateNode);
       case BITWISE_NOT:
-        return new Node(Token.BITNOT);
+        return newNodeFromTemplate(Token.BITNOT, templateNode);
       case BITWISE_OR:
-        return new Node(Token.BITOR);
+        return newNodeFromTemplate(Token.BITOR, templateNode);
       case BITWISE_AND:
-        return new Node(Token.BITAND);
+        return newNodeFromTemplate(Token.BITAND, templateNode);
       case BITWISE_XOR:
-        return new Node(Token.BITXOR);
+        return newNodeFromTemplate(Token.BITXOR, templateNode);
       case LEFT_SHIFT:
-        return new Node(Token.LSH);
+        return newNodeFromTemplate(Token.LSH, templateNode);
       case RIGHT_SHIFT:
-        return new Node(Token.RSH);
+        return newNodeFromTemplate(Token.RSH, templateNode);
       case UNSIGNED_RIGHT_SHIFT:
-        return new Node(Token.URSH);
+        return newNodeFromTemplate(Token.URSH, templateNode);
       case PRE_INCREMENT:
-        return new Node(Token.INC);
+        return newNodeFromTemplate(Token.INC, templateNode);
       case POST_INCREMENT:
-        Node postInc = new Node(Token.INC);
+        Node postInc = newNodeFromTemplate(Token.INC, templateNode);
         postInc.putBooleanProp(Node.INCRDECR_PROP, true);
         return postInc;
       case PRE_DECREMENT:
-        return new Node(Token.DEC);
+        return newNodeFromTemplate(Token.DEC, templateNode);
       case POST_DECREMENT:
-        Node postDec = new Node(Token.DEC);
+        Node postDec = newNodeFromTemplate(Token.DEC, templateNode);
         postDec.putBooleanProp(Node.INCRDECR_PROP, true);
         return postDec;
 
       case ASSIGN_ADD:
-        return new Node(Token.ASSIGN_ADD);
+        return newNodeFromTemplate(Token.ASSIGN_ADD, templateNode);
       case ASSIGN_SUBTRACT:
-        return new Node(Token.ASSIGN_SUB);
+        return newNodeFromTemplate(Token.ASSIGN_SUB, templateNode);
       case ASSIGN_MULTIPLY:
-        return new Node(Token.ASSIGN_MUL);
+        return newNodeFromTemplate(Token.ASSIGN_MUL, templateNode);
       case ASSIGN_DIVIDE:
-        return new Node(Token.ASSIGN_DIV);
+        return newNodeFromTemplate(Token.ASSIGN_DIV, templateNode);
       case ASSIGN_MODULO:
-        return new Node(Token.ASSIGN_MOD);
+        return newNodeFromTemplate(Token.ASSIGN_MOD, templateNode);
       case ASSIGN_EXPONENT:
-        return new Node(Token.ASSIGN_EXPONENT);
+        return newNodeFromTemplate(Token.ASSIGN_EXPONENT, templateNode);
       case ASSIGN_BITWISE_OR:
-        return new Node(Token.ASSIGN_BITOR);
+        return newNodeFromTemplate(Token.ASSIGN_BITOR, templateNode);
       case ASSIGN_BITWISE_AND:
-        return new Node(Token.ASSIGN_BITAND);
+        return newNodeFromTemplate(Token.ASSIGN_BITAND, templateNode);
       case ASSIGN_BITWISE_XOR:
-        return new Node(Token.ASSIGN_BITXOR);
+        return newNodeFromTemplate(Token.ASSIGN_BITXOR, templateNode);
       case ASSIGN_LEFT_SHIFT:
-        return new Node(Token.ASSIGN_LSH);
+        return newNodeFromTemplate(Token.ASSIGN_LSH, templateNode);
       case ASSIGN_RIGHT_SHIFT:
-        return new Node(Token.ASSIGN_RSH);
+        return newNodeFromTemplate(Token.ASSIGN_RSH, templateNode);
       case ASSIGN_UNSIGNED_RIGHT_SHIFT:
-        return new Node(Token.ASSIGN_URSH);
+        return newNodeFromTemplate(Token.ASSIGN_URSH, templateNode);
 
       case YIELD:
-        return new Node(Token.YIELD);
+        return newNodeFromTemplate(Token.YIELD, templateNode);
       case AWAIT:
-        return new Node(Token.AWAIT);
+        return newNodeFromTemplate(Token.AWAIT, templateNode);
       case DELETE:
-        return new Node(Token.DELPROP);
+        return newNodeFromTemplate(Token.DELPROP, templateNode);
       case TAGGED_TEMPLATELIT:
-        return new Node(Token.TAGGED_TEMPLATELIT);
+        return newNodeFromTemplate(Token.TAGGED_TEMPLATELIT, templateNode);
       case TEMPLATELIT:
-        return new Node(Token.TEMPLATELIT);
+        return newNodeFromTemplate(Token.TEMPLATELIT, templateNode);
       case TEMPLATELIT_SUB:
-        return new Node(Token.TEMPLATELIT_SUB);
+        return newNodeFromTemplate(Token.TEMPLATELIT_SUB, templateNode);
       case TEMPLATELIT_STRING:
         {
           TemplateStringValue templateStringValue = n.getTemplateStringValue();
-          return Node.newTemplateLitString(
-              this.stringPool.getInternedStrings(),
-              templateStringValue.getCookedStringPointer(),
-              templateStringValue.getRawStringPointer());
+          Node templateLitString =
+              Node.newTemplateLitString(
+                  this.stringPool.getInternedStrings(),
+                  templateStringValue.getCookedStringPointer(),
+                  templateStringValue.getRawStringPointer());
+          templateLitString.clonePropsFrom(templateNode);
+          return templateLitString;
         }
       case NEW_TARGET:
-        return new Node(Token.NEW_TARGET);
+        return newNodeFromTemplate(Token.NEW_TARGET, templateNode);
       case COMPUTED_PROP:
-        return new Node(Token.COMPUTED_PROP);
+        return newNodeFromTemplate(Token.COMPUTED_PROP, templateNode);
       case IMPORT_META:
-        return new Node(Token.IMPORT_META);
+        return newNodeFromTemplate(Token.IMPORT_META, templateNode);
       case OPTCHAIN_PROPERTY_ACCESS:
-        return stringNode(Token.OPTCHAIN_GETPROP, n);
+        return stringNode(Token.OPTCHAIN_GETPROP, n, templateNode);
       case OPTCHAIN_CALL:
-        return new Node(Token.OPTCHAIN_CALL);
+        return newNodeFromTemplate(Token.OPTCHAIN_CALL, templateNode);
       case OPTCHAIN_ELEMENT_ACCESS:
-        return new Node(Token.OPTCHAIN_GETELEM);
+        return newNodeFromTemplate(Token.OPTCHAIN_GETELEM, templateNode);
       case COALESCE:
-        return new Node(Token.COALESCE);
+        return newNodeFromTemplate(Token.COALESCE, templateNode);
       case DYNAMIC_IMPORT:
-        return new Node(Token.DYNAMIC_IMPORT);
+        return newNodeFromTemplate(Token.DYNAMIC_IMPORT, templateNode);
 
       case ASSIGN_OR:
-        return new Node(Token.ASSIGN_OR);
+        return newNodeFromTemplate(Token.ASSIGN_OR, templateNode);
       case ASSIGN_AND:
-        return new Node(Token.ASSIGN_AND);
+        return newNodeFromTemplate(Token.ASSIGN_AND, templateNode);
       case ASSIGN_COALESCE:
-        return new Node(Token.ASSIGN_COALESCE);
+        return newNodeFromTemplate(Token.ASSIGN_COALESCE, templateNode);
 
       case EXPRESSION_STATEMENT:
-        return new Node(Token.EXPR_RESULT);
+        return newNodeFromTemplate(Token.EXPR_RESULT, templateNode);
       case BREAK_STATEMENT:
-        return new Node(Token.BREAK);
+        return newNodeFromTemplate(Token.BREAK, templateNode);
       case CONTINUE_STATEMENT:
-        return new Node(Token.CONTINUE);
+        return newNodeFromTemplate(Token.CONTINUE, templateNode);
       case DEBUGGER_STATEMENT:
-        return new Node(Token.DEBUGGER);
+        return newNodeFromTemplate(Token.DEBUGGER, templateNode);
       case DO_STATEMENT:
-        return new Node(Token.DO);
+        return newNodeFromTemplate(Token.DO, templateNode);
       case FOR_STATEMENT:
-        return new Node(Token.FOR);
+        return newNodeFromTemplate(Token.FOR, templateNode);
       case FOR_IN_STATEMENT:
-        return new Node(Token.FOR_IN);
+        return newNodeFromTemplate(Token.FOR_IN, templateNode);
       case FOR_OF_STATEMENT:
-        return new Node(Token.FOR_OF);
+        return newNodeFromTemplate(Token.FOR_OF, templateNode);
       case FOR_AWAIT_OF_STATEMENT:
-        return new Node(Token.FOR_AWAIT_OF);
+        return newNodeFromTemplate(Token.FOR_AWAIT_OF, templateNode);
       case IF_STATEMENT:
-        return new Node(Token.IF);
+        return newNodeFromTemplate(Token.IF, templateNode);
       case RETURN_STATEMENT:
-        return new Node(Token.RETURN);
+        return newNodeFromTemplate(Token.RETURN, templateNode);
       case SWITCH_STATEMENT:
-        return new Node(Token.SWITCH);
+        return newNodeFromTemplate(Token.SWITCH, templateNode);
       case SWITCH_BODY:
-        return new Node(Token.SWITCH_BODY);
+        return newNodeFromTemplate(Token.SWITCH_BODY, templateNode);
       case THROW_STATEMENT:
-        return new Node(Token.THROW);
+        return newNodeFromTemplate(Token.THROW, templateNode);
       case TRY_STATEMENT:
-        return new Node(Token.TRY);
+        return newNodeFromTemplate(Token.TRY, templateNode);
       case WHILE_STATEMENT:
-        return new Node(Token.WHILE);
+        return newNodeFromTemplate(Token.WHILE, templateNode);
       case EMPTY:
-        return new Node(Token.EMPTY);
+        return newNodeFromTemplate(Token.EMPTY, templateNode);
       case WITH:
-        return new Node(Token.WITH);
+        return newNodeFromTemplate(Token.WITH, templateNode);
       case IMPORT:
-        return new Node(Token.IMPORT);
+        return newNodeFromTemplate(Token.IMPORT, templateNode);
       case EXPORT:
-        return new Node(Token.EXPORT);
+        return newNodeFromTemplate(Token.EXPORT, templateNode);
 
       case VAR_DECLARATION:
-        return new Node(Token.VAR);
+        return newNodeFromTemplate(Token.VAR, templateNode);
       case CONST_DECLARATION:
-        return new Node(Token.CONST);
+        return newNodeFromTemplate(Token.CONST, templateNode);
       case LET_DECLARATION:
-        return new Node(Token.LET);
+        return newNodeFromTemplate(Token.LET, templateNode);
       case FUNCTION_LITERAL:
-        return new Node(Token.FUNCTION);
+        return newNodeFromTemplate(Token.FUNCTION, templateNode);
       case CLASS_LITERAL:
-        return new Node(Token.CLASS);
+        return newNodeFromTemplate(Token.CLASS, templateNode);
 
       case BLOCK:
-        return new Node(Token.BLOCK);
+        return newNodeFromTemplate(Token.BLOCK, templateNode);
       case LABELED_STATEMENT:
-        return new Node(Token.LABEL);
+        return newNodeFromTemplate(Token.LABEL, templateNode);
       case LABELED_NAME:
-        return stringNode(Token.LABEL_NAME, n);
+        return stringNode(Token.LABEL_NAME, n, templateNode);
       case CLASS_MEMBERS:
-        return new Node(Token.CLASS_MEMBERS);
+        return newNodeFromTemplate(Token.CLASS_MEMBERS, templateNode);
       case METHOD_DECLARATION:
-        return stringNode(Token.MEMBER_FUNCTION_DEF, n);
+        return stringNode(Token.MEMBER_FUNCTION_DEF, n, templateNode);
       case FIELD_DECLARATION:
-        return stringNode(Token.MEMBER_FIELD_DEF, n);
+        return stringNode(Token.MEMBER_FIELD_DEF, n, templateNode);
       case COMPUTED_PROP_FIELD:
-        return new Node(Token.COMPUTED_FIELD_DEF);
+        return newNodeFromTemplate(Token.COMPUTED_FIELD_DEF, templateNode);
       case PARAMETER_LIST:
-        return new Node(Token.PARAM_LIST);
+        return newNodeFromTemplate(Token.PARAM_LIST, templateNode);
       case RENAMABLE_STRING_KEY:
-        return stringNode(Token.STRING_KEY, n);
+        return stringNode(Token.STRING_KEY, n, templateNode);
       case QUOTED_STRING_KEY:
-        Node quotedStringKey = stringNode(Token.STRING_KEY, n);
+        Node quotedStringKey = stringNode(Token.STRING_KEY, n, templateNode);
         quotedStringKey.setQuotedStringKey();
         return quotedStringKey;
       case CASE:
-        return new Node(Token.CASE);
+        return newNodeFromTemplate(Token.CASE, templateNode);
       case DEFAULT_CASE:
-        return new Node(Token.DEFAULT_CASE);
+        return newNodeFromTemplate(Token.DEFAULT_CASE, templateNode);
       case CATCH:
-        return new Node(Token.CATCH);
+        return newNodeFromTemplate(Token.CATCH, templateNode);
       case SUPER:
-        return new Node(Token.SUPER);
+        return newNodeFromTemplate(Token.SUPER, templateNode);
       case ARRAY_PATTERN:
-        return new Node(Token.ARRAY_PATTERN);
+        return newNodeFromTemplate(Token.ARRAY_PATTERN, templateNode);
       case OBJECT_PATTERN:
-        return new Node(Token.OBJECT_PATTERN);
+        return newNodeFromTemplate(Token.OBJECT_PATTERN, templateNode);
       case DESTRUCTURING_LHS:
-        return new Node(Token.DESTRUCTURING_LHS);
+        return newNodeFromTemplate(Token.DESTRUCTURING_LHS, templateNode);
       case DEFAULT_VALUE:
-        return new Node(Token.DEFAULT_VALUE);
+        return newNodeFromTemplate(Token.DEFAULT_VALUE, templateNode);
 
       case RENAMABLE_GETTER_DEF:
       case QUOTED_GETTER_DEF:
-        Node getterDef = stringNode(Token.GETTER_DEF, n);
+        Node getterDef = stringNode(Token.GETTER_DEF, n, templateNode);
         if (n.getKind().equals(NodeKind.QUOTED_GETTER_DEF)) {
           getterDef.setQuotedStringKey();
         }
         return getterDef;
       case RENAMABLE_SETTER_DEF:
       case QUOTED_SETTER_DEF:
-        Node setterDef = stringNode(Token.SETTER_DEF, n);
+        Node setterDef = stringNode(Token.SETTER_DEF, n, templateNode);
         if (n.getKind().equals(NodeKind.QUOTED_SETTER_DEF)) {
           setterDef.setQuotedStringKey();
         }
         return setterDef;
 
       case IMPORT_SPECS:
-        return new Node(Token.IMPORT_SPECS);
+        return newNodeFromTemplate(Token.IMPORT_SPECS, templateNode);
       case IMPORT_SPEC:
-        return new Node(Token.IMPORT_SPEC);
+        return newNodeFromTemplate(Token.IMPORT_SPEC, templateNode);
       case IMPORT_STAR:
-        return stringNode(Token.IMPORT_STAR, n);
+        return stringNode(Token.IMPORT_STAR, n, templateNode);
       case EXPORT_SPECS:
-        return new Node(Token.EXPORT_SPECS);
+        return newNodeFromTemplate(Token.EXPORT_SPECS, templateNode);
       case EXPORT_SPEC:
-        return new Node(Token.EXPORT_SPEC);
+        return newNodeFromTemplate(Token.EXPORT_SPEC, templateNode);
       case MODULE_BODY:
-        return new Node(Token.MODULE_BODY);
+        return newNodeFromTemplate(Token.MODULE_BODY, templateNode);
       case ITER_REST:
-        return new Node(Token.ITER_REST);
+        return newNodeFromTemplate(Token.ITER_REST, templateNode);
       case ITER_SPREAD:
-        return new Node(Token.ITER_SPREAD);
+        return newNodeFromTemplate(Token.ITER_SPREAD, templateNode);
       case OBJECT_REST:
-        return new Node(Token.OBJECT_REST);
+        return newNodeFromTemplate(Token.OBJECT_REST, templateNode);
       case OBJECT_SPREAD:
-        return new Node(Token.OBJECT_SPREAD);
+        return newNodeFromTemplate(Token.OBJECT_SPREAD, templateNode);
 
       case NODE_KIND_UNSPECIFIED:
       case UNRECOGNIZED:

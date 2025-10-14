@@ -242,7 +242,17 @@ class IRFactory {
 
   // Use a template node for properties set on all nodes to minimize the
   // memory footprint associated with these.
-  private final Node templateNode;
+  // templateNode acts as the current template node for the IRFactory. The template node is updated
+  // from defaultTemplateNode to closureUnawareTemplateNode whenever a new closure-unaware code
+  // range is entered in the transform method and swapped back to the defaultTemplateNode when the
+  // closure-unaware code range is exited.
+  // This is safe because while on a closure unaware code range, only nodes that should have the
+  // IS_IN_CLOSURE_UNAWARE_SUBTREE property are created.
+  // An alternative was to directly update the templateNode's propListHead, but we don't want to
+  // expose the propListHead outside of the Node class.
+  private Node templateNode;
+  private final Node defaultTemplateNode;
+  private final Node closureUnawareTemplateNode;
 
   private final CommentTracker jsdocTracker;
   private final CommentTracker nonJsdocTracker;
@@ -282,7 +292,9 @@ class IRFactory {
     this.sourceFile = sourceFile;
     this.fileWithContent = fileWithContent;
     // The template node properties are applied to all nodes in this transform.
-    this.templateNode = createTemplateNode();
+    this.defaultTemplateNode = createTemplateNode();
+    this.templateNode = defaultTemplateNode;
+    this.closureUnawareTemplateNode = createClosureUnawareTemplateNode();
 
     // Sometimes this will be null in tests.
     this.sourceName = sourceFile == null ? null : sourceFile.getName();
@@ -349,6 +361,16 @@ class IRFactory {
     Node templateNode = new Node(Token.SCRIPT);
     templateNode.setStaticSourceFile(sourceFile);
     return templateNode;
+  }
+
+  private Node createClosureUnawareTemplateNode() {
+    // We clone the default template node, so that the source file property, and other potential
+    // properties are shared
+    Node closureUnawareTemplateNode = defaultTemplateNode.cloneNode();
+
+    // We add the IS_IN_CLOSURE_UNAWARE_SUBTREE property to the head of the property list.
+    closureUnawareTemplateNode.setIsInClosureUnawareSubtree(true);
+    return closureUnawareTemplateNode;
   }
 
   public static IRFactory transformTree(
@@ -946,8 +968,10 @@ class IRFactory {
   Node transform(ParseTree tree) {
     JSDocInfo info = parseJSDocInfoOnTree(tree);
     NonJSDocComment comment = parseNonJSDocCommentAt(tree.getStart(), false);
+    boolean isRootOfClosureUnawareSubTree = (info != null && info.isClosureUnawareCode());
 
-    if (info != null && info.isClosureUnawareCode()) {
+    if (isRootOfClosureUnawareSubTree) {
+      templateNode = closureUnawareTemplateNode;
       SourceRange nextClosureUnawareRange = tree.location;
       LineAndColumn nextClosureUnawareRangeStart =
           LineAndColumn.fromSourcePosition(nextClosureUnawareRange.start);
@@ -965,6 +989,9 @@ class IRFactory {
     }
     if (comment != null) {
       node.setNonJSDocComment(comment);
+    }
+    if (isRootOfClosureUnawareSubTree) {
+      templateNode = defaultTemplateNode;
     }
     setSourceInfo(node, tree);
     return node;

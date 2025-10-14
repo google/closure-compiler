@@ -47,6 +47,7 @@ import static com.google.javascript.jscomp.base.JSCompDoubles.isPositive;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -58,9 +59,11 @@ import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.jstype.JSType;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -205,6 +208,9 @@ public class Node {
     CLOSURE_UNAWARE_SHADOW,
     // Indicates that a string node is a private identifier (e.g. `class { #privateProp }`).
     PRIVATE_IDENTIFIER,
+    // Indicates that this node is part of a subtree detached because it originated
+    // from a Closure-unaware file.
+    IS_IN_CLOSURE_UNAWARE_SUBTREE,
   }
 
   // Avoid cloning "values" repeatedly in hot code, we save it off now.
@@ -649,6 +655,23 @@ public class Node {
       return null;
     }
     return (Node) this.getProp(Prop.CLOSURE_UNAWARE_SHADOW);
+  }
+
+  public final void setIsInClosureUnawareSubtree(boolean value) {
+    if (propListHead == null
+        || propListHead.propType != Prop.SOURCE_FILE.ordinal()
+        || propListHead.next != null) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Cannot set IS_IN_CLOSURE_UNAWARE_SUBTREE property on a node which proplist is not a"
+                  + " single SOURCE_FILE prop: %s %s",
+              this, getPropListDebugString()));
+    }
+    this.putBooleanProp(Prop.IS_IN_CLOSURE_UNAWARE_SUBTREE, value);
+  }
+
+  public final boolean getIsInClosureUnawareSubtree() {
+    return this.getBooleanProp(Prop.IS_IN_CLOSURE_UNAWARE_SUBTREE);
   }
 
   /**
@@ -1250,12 +1273,26 @@ public class Node {
     return propSet;
   }
 
+  /** Returns a string representation of the properties on this node, for debugging. */
+  public final String getPropListDebugString() {
+    PropListItem propListItem = this.propListHead;
+    List<String> propListStrRepr = new ArrayList<>();
+    while (propListItem != null) {
+      propListStrRepr.add(Prop.values()[propListItem.propType].name());
+      propListItem = propListItem.next;
+    }
+    Joiner joiner = Joiner.on("->");
+    return joiner.join(propListStrRepr);
+  }
+
   @SuppressWarnings("EnumOrdinal") // performance tuning
-  public final void deserializeProperties(long propSet) {
+  public final void deserializeProperties(long propSet, boolean isInClosureUnawareSubtree) {
     if (this.isRoot()) {
       checkState(this.propListHead == null, this.propListHead);
     } else {
-      checkState(this.propListHead.propType == Prop.SOURCE_FILE.ordinal(), this.propListHead);
+      checkState(
+          this.validatePropListTailOrdering(isInClosureUnawareSubtree),
+          "Node not ready to receive properties");
     }
 
     // We'll gather the bits for CONST_VAR_FLAGS and SIDE_EFFECT_FLAGS into these variables.
@@ -2135,6 +2172,94 @@ public class Node {
   /** Returns true if this node is equivalent semantically to another */
   public final boolean isEquivalentTo(Node node) {
     return isEquivalentTo(node, false, true, false, false);
+  }
+
+  /**
+   * Returns the second to last item in the property list, for nodes in a closure-unaware subtree
+   * this will return IS_IN_CLOSURE_UNAWARE_SUBTREE -> SOURCE_FILE. For nodes int the main AST this
+   * will return [ANY_OTHER_PROPERTY] -> SOURCE_FILE. This method is only intended to temporarily
+   * test the IS_IN_CLOSURE_UNAWARE_SUBTREE -> SOURCE_FILE part of the property list is correctly
+   * shared between two subtrees of the same @closureUnaware annotated source file.
+   */
+  // TODO(user): these getters and the following two validation methods are a bit redundant.
+  // We should consider simplifying them in a follow up CL.
+  private final @Nullable PropListItem getSecondToLastPropListItem() {
+    PropListItem propListItem = propListHead;
+    if (propListItem == null || propListItem.next == null) {
+      return null;
+    }
+    while (propListItem.next.next != null) {
+      propListItem = propListItem.next;
+    }
+    return propListItem;
+  }
+
+  private final @Nullable PropListItem getLastPropListItem() {
+    PropListItem propListItem = propListHead;
+    if (propListItem == null) {
+      return null;
+    }
+    while (propListItem.next != null) {
+      propListItem = propListItem.next;
+    }
+    return propListItem;
+  }
+
+  private final boolean validatePropListTailOrdering(boolean shouldNodeBeClosureUnaware) {
+
+    PropListItem prev = null;
+    PropListItem curr = this.propListHead;
+    if (curr == null) {
+      return false;
+    }
+    while (curr.next != null) {
+      prev = curr;
+      curr = curr.next;
+    }
+    if (curr.propType != Prop.SOURCE_FILE.ordinal()) {
+      return false;
+    }
+
+    if (shouldNodeBeClosureUnaware) {
+      if (prev == null || prev.propType != Prop.IS_IN_CLOSURE_UNAWARE_SUBTREE.ordinal()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @VisibleForTesting
+  public static final boolean validateMemorySensitivePropertyGuarantees(
+      Node node1,
+      boolean shouldNode1BeClosureUnaware,
+      Node node2,
+      boolean shouldNode2BeClosureUnaware) {
+    // checks to do here:
+    // 1. there should be only one sourcefile proplist item and it should be the last item
+    // 2. if there is a proplist item that is IS_INCLOSURE_UNAWARE_SUBTREE it should be followed by
+    // a SOURCE_FILE proplist item
+    // 3. if there is another node, check that the actual proplist items are the same for the
+    // sourcefile and the IS_IN_CLOSURE_UNAWARE_SUBTREE
+    // validate that the last two elements of the property list are IS_IN_CLOSURE_UNAWARE_SUBTREE
+    // and SOURCE_FILE, also validate that these propelist items are the same actual item and not
+    // only the same values.
+
+    if (!node1.validatePropListTailOrdering(shouldNode1BeClosureUnaware)) {
+      return false;
+    }
+    if (!node2.validatePropListTailOrdering(shouldNode2BeClosureUnaware)) {
+      return false;
+    }
+    if (node1.getLastPropListItem() != node2.getLastPropListItem()) {
+      return false;
+    }
+    if (shouldNode1BeClosureUnaware && shouldNode2BeClosureUnaware) {
+      if (node1.getSecondToLastPropListItem() != node2.getSecondToLastPropListItem()) {
+        return false;
+      }
+    }
+    // return true if all of the property list items are what we expect.
+    return true;
   }
 
   /**

@@ -8411,4 +8411,76 @@ console.log(new X(1));
       this.node = node;
     }
   }
+
+  @Test
+  public void testIsInClosureUnawareSubtreeProperty_isCorrectlySet() {
+    Node script =
+        parseWarning(
+            """
+            /**
+             * @fileoverview
+             * @closureUnaware
+             */
+            goog.module('a.b');
+            /** @closureUnaware */
+            (function() {
+              const x = 5;
+            }).call(globalThis);
+            let string1 = "ClosureAwareString";
+            /** @closureUnaware */
+            (function() {
+              const y = 5;
+            }).call(globalThis);
+            """,
+            "@closureUnaware annotation is not allowed in this compilation",
+            "@closureUnaware annotation is not allowed in this compilation",
+            "@closureUnaware annotation is not allowed in this compilation");
+
+    Node moduleBody = script.getFirstChild();
+
+    Node firstUnawareFunctionExprResult = moduleBody.getSecondChild();
+    Node awareLet = firstUnawareFunctionExprResult.getNext();
+    Node secondUnawareFunctionExprResult = awareLet.getNext();
+    Node firstUnawareFunctionFunctionNode =
+        firstUnawareFunctionExprResult.getFirstChild().getFirstChild().getFirstChild();
+    Node secondUnawareFunctionFunctionNode =
+        secondUnawareFunctionExprResult.getFirstChild().getFirstChild().getFirstChild();
+
+    assertThat(firstUnawareFunctionFunctionNode.getIsInClosureUnawareSubtree()).isTrue();
+    assertThat(secondUnawareFunctionFunctionNode.getIsInClosureUnawareSubtree()).isTrue();
+
+    assertThat(awareLet.getIsInClosureUnawareSubtree()).isFalse();
+
+    assertThat(
+            Node.validateMemorySensitivePropertyGuarantees(
+                firstUnawareFunctionFunctionNode,
+                true,
+                firstUnawareFunctionFunctionNode.getFirstChild(),
+                true))
+        .isTrue();
+    assertThat(
+            Node.validateMemorySensitivePropertyGuarantees(
+                secondUnawareFunctionFunctionNode,
+                true,
+                secondUnawareFunctionFunctionNode.getFirstChild(),
+                true))
+        .isTrue();
+    assertThat(
+            Node.validateMemorySensitivePropertyGuarantees(
+                firstUnawareFunctionFunctionNode, true, secondUnawareFunctionFunctionNode, true))
+        .isTrue();
+
+    assertThat(
+            Node.validateMemorySensitivePropertyGuarantees(
+                firstUnawareFunctionFunctionNode, true, awareLet, false))
+        .isTrue();
+    assertThat(
+            Node.validateMemorySensitivePropertyGuarantees(
+                secondUnawareFunctionFunctionNode, true, awareLet, false))
+        .isTrue();
+    assertThat(
+            Node.validateMemorySensitivePropertyGuarantees(
+                firstUnawareFunctionFunctionNode, true, awareLet, false))
+        .isTrue();
+  }
 }

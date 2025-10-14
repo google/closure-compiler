@@ -121,6 +121,10 @@ final class PropTranslator {
       case SYNTHESIZED_UNFULFILLED_NAME_DECLARATION ->
           NodeProperty.SYNTHESIZED_UNFULFILLED_NAME_DECLARATION;
       case CLOSURE_UNAWARE_SHADOW,
+          // This property is intentionally not included in the serialized TypedAST because it can
+          // be re-synthesized when we deserialize nodes later, as it is inferrable from the AST
+          // shape.
+          IS_IN_CLOSURE_UNAWARE_SUBTREE,
           SIDE_EFFECT_FLAGS,
           DECLARED_TYPE_EXPR,
           FEATURE_SET,

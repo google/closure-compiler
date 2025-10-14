@@ -31,6 +31,7 @@ import com.google.javascript.jscomp.AstValidator;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
+import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.PassFactory;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.colors.ColorRegistry;
@@ -813,6 +814,20 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
     assertThat(result.compiler.toSource(result.sourceRoot))
         .isEqualTo("(function(){window[\"foo\"]=5})()");
+
+    NodeTraversal.Callback cb =
+        new NodeTraversal.AbstractPostOrderCallback() {
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            assertThat(n.getIsInClosureUnawareSubtree()).isTrue();
+            if (parent != null) {
+              assertThat(Node.validateMemorySensitivePropertyGuarantees(n, true, parent, true))
+                  .isTrue();
+            }
+          }
+        };
+
+    NodeTraversal.traverse(result.compiler, shadowedContent, cb);
   }
 
   @Test
