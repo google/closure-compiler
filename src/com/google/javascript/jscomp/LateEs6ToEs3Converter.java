@@ -75,21 +75,9 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    switch (n.getToken()) {
-      case SCRIPT:
-        // For all scripts, initialize the injection point to be top of the script
-        templateLitInsertionPoint = n.getFirstChild();
-        break;
-      case GETTER_DEF:
-      case SETTER_DEF:
-        if (FeatureSet.ES3.contains(compiler.getOptions().getOutputFeatureSet())) {
-          TranspilationUtil.cannotConvert(
-              compiler, n, "ES5 getters/setters (consider using --language_out=ES5)");
-          return false;
-        }
-        break;
-      default:
-        break;
+    if (n.isScript()) {
+      // For all scripts, initialize the injection point to be top of the script
+      templateLitInsertionPoint = n.getFirstChild();
     }
     return true;
   }

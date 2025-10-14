@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 
@@ -1272,10 +1271,13 @@ $jscomp.inherits(FooPromise, Promise);
   }
 
   @Test
-  public void testOutputLevelES3_gettersSettersAreReported() {
+  public void testOutputLevelES3_classGettersSettersAreReported() {
     setLanguageOut(LanguageMode.ECMASCRIPT3);
-    testError("class C { get x() { return 1; }}", TranspilationUtil.CANNOT_CONVERT);
-    testError("class C { set x(value) {}}", TranspilationUtil.CANNOT_CONVERT);
+    testError(
+        "class C { get x() { return 1; }}",
+        ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT);
+    testError(
+        "class C { set x(value) {}}", ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT);
   }
 
   @Test
@@ -2191,8 +2193,11 @@ $jscomp.inherits(FooPromise, Promise);
   /** ES5 getters and setters should report an error if the languageOut is ES3. */
   @Test
   public void testEs5GettersAndSetters_es3() {
-    testError("let x = { get y() {} };", CANNOT_CONVERT);
-    testError("let x = { set y(value) {} };", CANNOT_CONVERT);
+    testError(
+        "let x = { get y() {} };", ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT);
+    testError(
+        "let x = { set y(value) {} };",
+        ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT);
   }
 
   /** ES5 getters and setters on object literals should be left alone if the languageOut is ES5. */

@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -125,37 +124,15 @@ public class InjectTranspilationRuntimeLibrariesTest {
   }
 
   @Test
-  public void testAllowsEs5GetterSetterWithEs5Out() {
-    this.languageOut = LanguageMode.ECMASCRIPT5;
-    parseAndRunInjectionPass(
-        """
-        var o = {
-          get x() {},
-          set x(val) {}
-        };
-        """);
-
-    assertThat(compiler.getErrors()).isEmpty();
-    assertThat(compiler.getInjectedLibraries()).isEmpty();
+  public void testClassInheritance_injectsInheritsAndConstruct() {
+    ImmutableSet<String> injected = parseAndRunInjectionPass("class A {} class B extends A {}");
+    assertThat(injected)
+        .containsExactly("es6/util/inherits", "es6/util/construct", "es6/util/arrayfromiterable");
   }
 
   @Test
-  public void testCannotConvertEs5GetterToEs3() {
-    this.languageOut = LanguageMode.ECMASCRIPT3;
-    parseAndRunInjectionPass("var o = {get x() {}};");
-
-    assertThat(compiler.getErrors())
-        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
-        .containsExactly(TranspilationUtil.CANNOT_CONVERT);
-  }
-
-  @Test
-  public void testCannotConvertEs5SetterToEs3() {
-    this.languageOut = LanguageMode.ECMASCRIPT3;
-    parseAndRunInjectionPass("var o = {set x(val) {}};");
-
-    assertThat(compiler.getErrors())
-        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
-        .containsExactly(TranspilationUtil.CANNOT_CONVERT);
+  public void testClass_noInheritances_doesNotInject() {
+    ImmutableSet<String> injected = parseAndRunInjectionPass("class A {}");
+    assertThat(injected).isEmpty();
   }
 }

@@ -264,4 +264,28 @@ public class ReportUntranspilableFeaturesTest extends CompilerTestCase {
          at minimum ES_NEXT, which is not yet supported by any browser featureset year.\
         """);
   }
+
+  @Test
+  public void testCannotConvertEs5GetterToEs3() {
+    this.languageOut = LanguageMode.ECMASCRIPT3;
+    testError("var o = {get x() {}};", UNTRANSPILABLE_FEATURE_PRESENT);
+  }
+
+  @Test
+  public void testCannotConvertEs5SetterToEs3() {
+    this.languageOut = LanguageMode.ECMASCRIPT3;
+    testError("var o = {set x(val) {}};", UNTRANSPILABLE_FEATURE_PRESENT);
+  }
+
+  @Test
+  public void testAllowsEs5GetterSetterWithEs5Out() {
+    this.languageOut = LanguageMode.ECMASCRIPT5;
+    testNoWarning(
+        """
+        var o = {
+          get x() {},
+          set x(val) {}
+        };
+        """);
+  }
 }
