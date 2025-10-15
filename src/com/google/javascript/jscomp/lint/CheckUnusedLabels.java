@@ -61,8 +61,7 @@ public final class CheckUnusedLabels implements NodeTraversal.Callback, Compiler
   @Override
   public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case BREAK:
-      case CONTINUE:
+      case BREAK, CONTINUE -> {
         if (n.hasChildren()) {
           LabelContext temp = currentContext;
           while (temp != null) {
@@ -74,11 +73,10 @@ public final class CheckUnusedLabels implements NodeTraversal.Callback, Compiler
           }
         }
         return false;
-      case LABEL:
-        currentContext = new LabelContext(n.getFirstChild().getString(), currentContext);
-        break;
-      default:
-        break;
+      }
+      case LABEL ->
+          currentContext = new LabelContext(n.getFirstChild().getString(), currentContext);
+      default -> {}
     }
     return true;
   }

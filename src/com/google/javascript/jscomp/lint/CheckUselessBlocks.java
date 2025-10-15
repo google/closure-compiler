@@ -84,27 +84,23 @@ public final class CheckUselessBlocks implements NodeTraversal.Callback, Compile
   @Override
   public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case BLOCK:
+      case BLOCK -> {
         if (isLoneBlock(n)) {
           loneBlocks.push(n);
         }
-        break;
-      case LET:
-      case CONST:
-        allowLoneBlock(parent);
-        break;
-      case CLASS:
+      }
+      case LET, CONST -> allowLoneBlock(parent);
+      case CLASS -> {
         if (NodeUtil.isClassDeclaration(n)) {
           allowLoneBlock(parent);
         }
-        break;
-      case FUNCTION:
+      }
+      case FUNCTION -> {
         if (NodeUtil.isFunctionDeclaration(n)) {
           allowLoneBlock(parent);
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
     return true;
   }

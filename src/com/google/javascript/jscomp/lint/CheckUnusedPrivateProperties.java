@@ -66,11 +66,10 @@ public class CheckUnusedPrivateProperties implements CompilerPass, NodeTraversal
 
   private String getPropName(Node n) {
     switch (n.getToken()) {
-      case GETPROP:
-      case MEMBER_FUNCTION_DEF:
+      case GETPROP, MEMBER_FUNCTION_DEF -> {
         return n.getString();
-      default:
-        break;
+      }
+      default -> {}
     }
     throw new RuntimeException("Unexpected node type: " + n);
   }
@@ -90,49 +89,36 @@ public class CheckUnusedPrivateProperties implements CompilerPass, NodeTraversal
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case SCRIPT:
-        {
+      case SCRIPT ->
           // exiting the script, report any privates not used in the file.
           reportUnused(t);
-          break;
-        }
-
-      case GETPROP:
-        {
-          String propName = n.getString();
-          if (isPinningPropertyUse(n) || !isCandidatePropertyDefinition(n)) {
-            used.add(propName);
-          } else {
-            // Only consider "private" properties.
-            if (isCheckablePrivatePropDecl(n)) {
-              candidates.add(n);
-            }
-          }
-          break;
-        }
-
-      case MEMBER_FUNCTION_DEF:
-        {
-          // Only consider "private" methods.
+      case GETPROP -> {
+        String propName = n.getString();
+        if (isPinningPropertyUse(n) || !isCandidatePropertyDefinition(n)) {
+          used.add(propName);
+        } else {
+          // Only consider "private" properties.
           if (isCheckablePrivatePropDecl(n)) {
             candidates.add(n);
           }
-          break;
         }
-
-      case OBJECTLIT:
-        {
-          // Assume any object literal definition might be a reflection on the
-          // class property.
-          for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-            if (c.isStringKey() || c.isGetterDef() || c.isSetterDef() || c.isMemberFunctionDef()) {
-              used.add(c.getString());
-            }
+      }
+      case MEMBER_FUNCTION_DEF -> {
+        // Only consider "private" methods.
+        if (isCheckablePrivatePropDecl(n)) {
+          candidates.add(n);
+        }
+      }
+      case OBJECTLIT -> {
+        // Assume any object literal definition might be a reflection on the
+        // class property.
+        for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+          if (c.isStringKey() || c.isGetterDef() || c.isSetterDef() || c.isMemberFunctionDef()) {
+            used.add(c.getString());
           }
-          break;
         }
-
-      case CALL:
+      }
+      case CALL -> {
         // Look for properties referenced through a property rename function.
         Node target = n.getFirstChild();
         if (n.hasMoreThanOneChild()
@@ -142,19 +128,15 @@ public class CheckUnusedPrivateProperties implements CompilerPass, NodeTraversal
             used.add(propName.getString());
           }
         }
-        break;
-
-      case FUNCTION:
+      }
+      case FUNCTION -> {
         JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
         if (info != null && (info.isConstructor() || info.isInterface())) {
           recordConstructorOrInterface(n);
         }
-        break;
-      case CLASS:
-        recordConstructorOrInterface(n);
-        break;
-      default:
-        break;
+      }
+      case CLASS -> recordConstructorOrInterface(n);
+      default -> {}
     }
   }
 
