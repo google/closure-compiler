@@ -181,8 +181,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
       this.typeOfThis = builder.typeOfThis;
     } else {
       switch (kind) {
-        case CONSTRUCTOR:
-        case INTERFACE:
+        case CONSTRUCTOR, INTERFACE -> {
           InstanceObjectType.Builder typeOfThisBuilder = InstanceObjectType.builderForCtor(this);
 
           ImmutableSet<TemplateType> ctorKeys = builder.constructorOnlyKeys;
@@ -193,15 +192,10 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
           }
 
           this.typeOfThis = typeOfThisBuilder.build();
-          break;
-
-        case ORDINARY:
-          this.typeOfThis = this.registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
-          break;
-
-        case NONE:
-          this.typeOfThis = this;
-          break;
+        }
+        case ORDINARY ->
+            this.typeOfThis = this.registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
+        case NONE -> this.typeOfThis = this;
       }
     }
 
@@ -277,20 +271,24 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
       return false;
     }
     switch (this.propAccess) {
-      case STRUCT:
+      case STRUCT -> {
         return true;
-      case DICT:
+      }
+      case DICT -> {
         return false;
-      case ANY_EXPLICIT:
+      }
+      case ANY_EXPLICIT -> {
         // For anything EXPLICITLY marked as @unresticted do not look to the super type.
         return false;
-      case ANY:
+      }
+      case ANY -> {
         FunctionType superc = getSuperClassConstructor();
         if (superc != null && superc.makesStructs()) {
           setStruct();
           return true;
         }
         return false;
+      }
     }
     throw new AssertionError();
   }
@@ -304,20 +302,24 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
       return false;
     }
     switch (this.propAccess) {
-      case DICT:
+      case DICT -> {
         return true;
-      case STRUCT:
+      }
+      case STRUCT -> {
         return false;
-      case ANY_EXPLICIT:
+      }
+      case ANY_EXPLICIT -> {
         // For anything EXPLICITLY marked as @unresticted do not look to the super type.
         return false;
-      case ANY:
+      }
+      case ANY -> {
         FunctionType superc = getSuperClassConstructor();
         if (superc != null && superc.makesDicts()) {
           setDict();
           return true;
         }
         return false;
+      }
     }
     throw new AssertionError();
   }
@@ -1592,20 +1594,15 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
       // Verify that the builder is an a sensible state before instantiating a function.
 
       switch (this.kind) {
-        case CONSTRUCTOR:
-        case INTERFACE:
+        case CONSTRUCTOR, INTERFACE -> {
           /*
            * These kinds have no implication on whether `returnsOwnInstanceType` is reasonable. This
            * configuration may be intended to synthesize an instance type. The return type and
            * instance type are independent.
            */
-          break;
-        case NONE:
-          checkState(this.returnsOwnInstanceType);
-          break;
-        case ORDINARY:
-          checkState(!this.returnsOwnInstanceType);
-          break;
+        }
+        case NONE -> checkState(this.returnsOwnInstanceType);
+        case ORDINARY -> checkState(!this.returnsOwnInstanceType);
       }
 
       if (this.returnsOwnInstanceType) {
@@ -1616,13 +1613,8 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
       }
 
       switch (this.kind) {
-        case CONSTRUCTOR:
-        case INTERFACE:
-          break;
-        case NONE:
-        case ORDINARY:
-          checkState(this.constructorOnlyKeys.isEmpty());
-          break;
+        case CONSTRUCTOR, INTERFACE -> {}
+        case NONE, ORDINARY -> checkState(this.constructorOnlyKeys.isEmpty());
       }
 
       return new FunctionType(this);

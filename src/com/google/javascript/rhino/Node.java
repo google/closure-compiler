@@ -1065,42 +1065,42 @@ public class Node {
       // property that was discovered by a check in `deserializeProperties()`, so initially
       // this method was created to cover the checks previously done there.
       switch (prop) {
-        case IS_PARENTHESIZED:
+        case IS_PARENTHESIZED -> {
           if (!IR.mayBeExpression(this)) {
             violationMessageConsumer.accept("non-expression is parenthesized");
           }
-          break;
-        case ARROW_FN:
+        }
+        case ARROW_FN -> {
           if (!isFunction()) {
             violationMessageConsumer.accept("invalid ARROW_FN prop");
           }
-          break;
-        case ASYNC_FN:
+        }
+        case ASYNC_FN -> {
           if (!isFunction()) {
             violationMessageConsumer.accept("invalid ASYNC_FN prop");
           }
-          break;
-        case SYNTHETIC:
+        }
+        case SYNTHETIC -> {
           if (!isBlock()) {
             violationMessageConsumer.accept("invalid SYNTHETIC prop");
           }
-          break;
-        case COLOR_FROM_CAST:
+        }
+        case COLOR_FROM_CAST -> {
           if (getColor() == null) {
             violationMessageConsumer.accept("COLOR_FROM_CAST with no Color");
           }
-          break;
-        case START_OF_OPT_CHAIN:
+        }
+        case START_OF_OPT_CHAIN -> {
           if (!(isOptChainCall() || isOptChainGetElem() || isOptChainGetProp())) {
             violationMessageConsumer.accept("START_OF_OPT_CHAIN on non-optional Node");
           }
-          break;
-        case CONSTANT_VAR_FLAGS:
+        }
+        case CONSTANT_VAR_FLAGS -> {
           if (!(isName() || isImportStar())) {
             violationMessageConsumer.accept("invalid CONST_VAR_FLAGS");
           }
-          break;
-        case SYNTHESIZED_UNFULFILLED_NAME_DECLARATION:
+        }
+        case SYNTHESIZED_UNFULFILLED_NAME_DECLARATION -> {
           // note: we could relax this restriction if VarCheck needed to generate other forms of
           // synthetic externs
           if (!isVar()) {
@@ -1111,17 +1111,17 @@ public class Node {
             violationMessageConsumer.accept(
                 "Expected all synthetic unfulfilled declarations to be `var <name>`");
           }
-          break;
-        case CLOSURE_UNAWARE_SHADOW:
+        }
+        case CLOSURE_UNAWARE_SHADOW -> {
           PropListItem shadowProp = lookupProperty(Prop.CLOSURE_UNAWARE_SHADOW);
           if (!(shadowProp instanceof Node.ObjectPropListItem)
               || !(shadowProp.getObjectValue() instanceof Node)) {
             violationMessageConsumer.accept("CLOSURE_UNAWARE_SHADOW property must point to a Node");
           }
-          break;
-        default:
+        }
+        default -> {
           // No validation is currently done for other properties
-          break;
+        }
       }
     }
   }
@@ -1213,10 +1213,9 @@ public class Node {
       Prop prop = propValues[propListItem.propType];
 
       switch (prop) {
-        case TYPE_BEFORE_CAST:
-          propSet = setNodePropertyBit(propSet, NodeProperty.COLOR_FROM_CAST);
-          break;
-        case CONSTANT_VAR_FLAGS:
+        case TYPE_BEFORE_CAST ->
+            propSet = setNodePropertyBit(propSet, NodeProperty.COLOR_FROM_CAST);
+        case CONSTANT_VAR_FLAGS -> {
           int intVal = propListItem.getIntValue();
           if (anyBitSet(intVal, ConstantVarFlags.INFERRED)) {
             propSet = setNodePropertyBit(propSet, NodeProperty.IS_INFERRED_CONSTANT);
@@ -1224,26 +1223,25 @@ public class Node {
           if (anyBitSet(intVal, ConstantVarFlags.DECLARED)) {
             propSet = setNodePropertyBit(propSet, NodeProperty.IS_DECLARED_CONSTANT);
           }
-          break;
-        case SIDE_EFFECT_FLAGS:
-          propSet = setNodePropertySideEffectFlags(propSet, propListItem.getIntValue());
-          break;
-        case CLOSURE_UNAWARE_SHADOW:
-          // This is a bit of an unusual case, because the CLOSURE_UNAWARE_SHADOW Prop is a Node
-          // pointer, not a boolean.
-          // However, it is treated as a boolean property in the TypedAST representation as a signal
-          // that the child ASTNode is shadowed code and not a normal child node.
-          // We check for this bit when building in ScriptNodeDeserializer.
-          propSet = setNodePropertyBit(propSet, NodeProperty.CLOSURE_UNAWARE_SHADOW);
-          break;
-        default:
+        }
+        case SIDE_EFFECT_FLAGS ->
+            propSet = setNodePropertySideEffectFlags(propSet, propListItem.getIntValue());
+        case CLOSURE_UNAWARE_SHADOW ->
+            // This is a bit of an unusual case, because the CLOSURE_UNAWARE_SHADOW Prop is a Node
+            // pointer, not a boolean.
+            // However, it is treated as a boolean property in the TypedAST representation as a
+            // signal
+            // that the child ASTNode is shadowed code and not a normal child node.
+            // We check for this bit when building in ScriptNodeDeserializer.
+            propSet = setNodePropertyBit(propSet, NodeProperty.CLOSURE_UNAWARE_SHADOW);
+        default -> {
           if (propListItem instanceof Node.IntPropListItem) {
             NodeProperty nodeProperty = PropTranslator.serialize(prop);
             if (nodeProperty != null) {
               propSet = setNodePropertyBit(propSet, nodeProperty);
             }
           }
-          break;
+        }
       }
     }
     return propSet;
@@ -1305,39 +1303,27 @@ public class Node {
       }
       NodeProperty nodeProperty = NodeProperty.forNumber(i);
       switch (nodeProperty) {
-        case IS_DECLARED_CONSTANT:
-          constantVarFlags |= ConstantVarFlags.DECLARED;
-          break;
-        case IS_INFERRED_CONSTANT:
-          constantVarFlags |= ConstantVarFlags.INFERRED;
-          break;
-        case MUTATES_GLOBAL_STATE:
-          sideEffectFlags |= SideEffectFlags.MUTATES_GLOBAL_STATE;
-          break;
-        case MUTATES_THIS:
-          sideEffectFlags |= SideEffectFlags.MUTATES_THIS;
-          break;
-        case MUTATES_ARGUMENTS:
-          sideEffectFlags |= SideEffectFlags.MUTATES_ARGUMENTS;
-          break;
-        case THROWS:
-          sideEffectFlags |= SideEffectFlags.THROWS;
-          break;
-        case CLOSURE_UNAWARE_SHADOW:
+        case IS_DECLARED_CONSTANT -> constantVarFlags |= ConstantVarFlags.DECLARED;
+        case IS_INFERRED_CONSTANT -> constantVarFlags |= ConstantVarFlags.INFERRED;
+        case MUTATES_GLOBAL_STATE -> sideEffectFlags |= SideEffectFlags.MUTATES_GLOBAL_STATE;
+        case MUTATES_THIS -> sideEffectFlags |= SideEffectFlags.MUTATES_THIS;
+        case MUTATES_ARGUMENTS -> sideEffectFlags |= SideEffectFlags.MUTATES_ARGUMENTS;
+        case THROWS -> sideEffectFlags |= SideEffectFlags.THROWS;
+        case CLOSURE_UNAWARE_SHADOW -> {
           // Ignore this - we need the deserialized child to actually set the shadow.
           // We'll check for this higher up in the call stack.
           // If we don't ignore this, then a boolean prop is created (and then later clobbered)
           // representing this property, which seems silly at best and potentially dangerous at
           // worst.
-          break;
-        default:
+        }
+        default -> {
           // All other properties are booleans that are 1-to-1 equivalent with Node properties.
           Prop prop = PropTranslator.deserialize(nodeProperty);
           if (prop == null) {
             throw new IllegalStateException("Can not translate " + nodeProperty + " to AST Prop");
           }
           this.propListHead = new IntPropListItem((byte) prop.ordinal(), 1, this.propListHead);
-          break;
+        }
       }
     }
 
@@ -2396,18 +2382,23 @@ public class Node {
    */
   public final @Nullable String getQualifiedName() {
     switch (token) {
-      case NAME:
+      case NAME -> {
         String name = getString();
         return name.isEmpty() ? null : name;
-      case GETPROP:
+      }
+      case GETPROP -> {
         StringBuilder builder = getQualifiedNameForGetProp(0);
         return builder != null ? builder.toString() : null;
-      case THIS:
+      }
+      case THIS -> {
         return "this";
-      case SUPER:
+      }
+      case SUPER -> {
         return "super";
-      default:
+      }
+      default -> {
         return null;
+      }
     }
   }
 

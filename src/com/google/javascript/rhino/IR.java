@@ -602,16 +602,13 @@ public class IR {
     Node objectlit = new Node(Token.OBJECTLIT);
     for (Node propdef : propdefs) {
       switch (propdef.getToken()) {
-        case STRING_KEY:
-        case MEMBER_FUNCTION_DEF:
-        case GETTER_DEF:
-        case SETTER_DEF:
-
-        case OBJECT_SPREAD:
-        case COMPUTED_PROP:
-          break;
-        default:
-          throw new IllegalStateException("Unexpected OBJECTLIT child: " + propdef);
+        case STRING_KEY,
+            MEMBER_FUNCTION_DEF,
+            GETTER_DEF,
+            SETTER_DEF,
+            OBJECT_SPREAD,
+            COMPUTED_PROP -> {}
+        default -> throw new IllegalStateException("Unexpected OBJECTLIT child: " + propdef);
       }
 
       objectlit.addChildToBack(propdef);

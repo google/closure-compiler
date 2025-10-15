@@ -146,14 +146,8 @@ public final class JSTypeResolver {
     checkState(identical(captured, expected), "Captured %s; Expected %s", captured, expected);
 
     switch (this.state) {
-      case CLOSED:
-      case CLOSING:
-        this.doResolve(captured);
-        break;
-
-      case OPEN:
-        this.resolutionQueue.addLast(captured);
-        break;
+      case CLOSED, CLOSING -> this.doResolve(captured);
+      case OPEN -> this.resolutionQueue.addLast(captured);
     }
   }
 
