@@ -254,6 +254,17 @@ final class ScriptNodeDeserializer {
           return;
         case COMPUTED_PROP:
           this.addScriptFeature(Feature.COMPUTED_PROPERTIES);
+          boolean isGetter = node.getBooleanProp(Node.COMPUTED_PROP_GETTER);
+          boolean isSetter = node.getBooleanProp(Node.COMPUTED_PROP_SETTER);
+          boolean isClassMember = context.equals(FeatureContext.CLASS_MEMBERS);
+          if (isGetter) {
+            this.addScriptFeature(Feature.GETTER);
+          } else if (isSetter) {
+            this.addScriptFeature(Feature.SETTER);
+          }
+          if ((isGetter || isSetter) && isClassMember) {
+            this.addScriptFeature(Feature.CLASS_GETTER_SETTER);
+          }
           return;
         case OPTCHAIN_GETPROP:
         case OPTCHAIN_CALL:

@@ -1879,14 +1879,17 @@ public final class AstValidator implements CompilerPass {
       validateFunctionExpression(n.getLastChild());
       if (n.getBooleanProp(Node.COMPUTED_PROP_GETTER)) {
         validateObjectLitComputedPropGetKey(n);
+        validateFeature(Feature.CLASS_GETTER_SETTER, n);
       } else if (n.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
         validateObjectLitComputedPropSetKey(n);
+        validateFeature(Feature.CLASS_GETTER_SETTER, n);
       }
     }
   }
 
   private void validateObjectLitComputedPropGetKey(Node n) {
     validateFeature(Feature.COMPUTED_PROPERTIES, n);
+    validateFeature(Feature.GETTER, n);
     validateNodeType(Token.COMPUTED_PROP, n);
     validateProperties(n);
     validateChildCount(n);
@@ -1904,6 +1907,7 @@ public final class AstValidator implements CompilerPass {
 
   private void validateObjectLitComputedPropSetKey(Node n) {
     validateFeature(Feature.COMPUTED_PROPERTIES, n);
+    validateFeature(Feature.SETTER, n);
     validateNodeType(Token.COMPUTED_PROP, n);
     validateProperties(n);
     validateChildCount(n);

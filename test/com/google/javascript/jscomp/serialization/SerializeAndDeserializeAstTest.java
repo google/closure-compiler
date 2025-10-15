@@ -78,6 +78,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   private boolean includeTypes;
   private boolean resolveSourceMapAnnotations;
   private boolean parseInlineSourceMaps;
+  private boolean checkJsDocEquality;
   private ImmutableList<String> runtimeLibraries = null;
   private Optional<PassFactory> preSerializePassFactory = Optional.empty();
 
@@ -111,6 +112,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     enableCreateModuleMap();
     enableSourceInformationAnnotator();
     this.includeTypes = true;
+    this.checkJsDocEquality = true;
     this.resolveSourceMapAnnotations = true;
     this.parseInlineSourceMaps = true;
     this.runtimeLibraries = ImmutableList.of();
@@ -167,6 +169,11 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   @Test
+  public void testObjectWithComputedGetter() {
+    testSame("let obj = {get [x]() {}};");
+  }
+
+  @Test
   public void testObjectWithSetter() {
     testSame("let obj = {set x(value) {}};");
   }
@@ -174,6 +181,11 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   @Test
   public void testObjectWithQuotedSetter() {
     testSame("let obj = {set 'x'(value) {}};");
+  }
+
+  @Test
+  public void testObjectWithComputedSetter() {
+    testSame("let obj = {set [x](value) {}};");
   }
 
   @Test
@@ -259,17 +271,40 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
         }
         """);
 
-    // Type checking will report computed property accesses as errors for a class,
-    // so disable it for this case which contains several.
-    disableTypeCheck();
+    this.checkJsDocEquality = false; // @unrestricted
     testSame(
         """
+        /** @unrestricted */
         class Foo {
           a() {}
           'b'() {}
           get c() {}
           set d(x) {}
           ['e']() {}
+        }
+        """);
+  }
+
+  @Test
+  public void testClassDeclarationWithComputedGetter() {
+    this.checkJsDocEquality = false; // @dict
+    testSame(
+        """
+        /** @dict */
+        class Foo {
+          get ['a']() {}
+        }
+        """);
+  }
+
+  @Test
+  public void testClassDeclarationWithComputedSetter() {
+    this.checkJsDocEquality = false; // @dict
+    testSame(
+        """
+        /** @dict */
+        class Foo {
+          set ['a'](val) {}
         }
         """);
   }
@@ -931,7 +966,11 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     }
 
     Node expectedRoot = this.parseExpectedJs(expected);
-    assertNode(newSourceRoot).isEqualIncludingJsDocTo(expectedRoot);
+    if (checkJsDocEquality) {
+      assertNode(newSourceRoot).isEqualIncludingJsDocTo(expectedRoot);
+    } else {
+      assertNode(newSourceRoot).isEqualTo(expectedRoot);
+    }
     Node newRoot = IR.root(newExternsRoot, newSourceRoot);
 
     new AstValidator(deserializingCompiler, /* validateScriptFeatures= */ true)
