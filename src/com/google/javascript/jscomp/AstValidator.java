@@ -282,200 +282,127 @@ public final class AstValidator implements CompilerPass {
 
     switch (n.getToken()) {
       // Childless expressions
-      case NEW_TARGET:
+      case NEW_TARGET -> {
         validateFeature(Feature.NEW_TARGET, n);
         validateProperties(n);
         validateChildless(n);
-        return;
-      case IMPORT_META:
+      }
+      case IMPORT_META -> {
         validateFeature(Feature.IMPORT_META, n);
         validateProperties(n);
         validateChildless(n);
-        return;
-      case FALSE:
-      case NULL:
-      case THIS:
-      case TRUE:
+      }
+      case FALSE, NULL, THIS, TRUE -> {
         validateProperties(n);
         validateChildless(n);
-        return;
+      }
 
       // General unary ops
-      case DELPROP:
-      case POS:
-      case NEG:
-      case NOT:
-      case TYPEOF:
-      case VOID:
-      case BITNOT:
-      case CAST:
-        validateUnaryOp(n);
-        return;
-
-      case INC:
-      case DEC:
-        validateIncDecOp(n);
-        return;
+      case DELPROP, POS, NEG, NOT, TYPEOF, VOID, BITNOT, CAST -> validateUnaryOp(n);
+      case INC, DEC -> validateIncDecOp(n);
 
       // Assignments
-      case ASSIGN:
-        validateAssignmentExpression(n);
-        return;
-      case ASSIGN_EXPONENT:
+      case ASSIGN -> validateAssignmentExpression(n);
+      case ASSIGN_EXPONENT -> {
         validateFeature(Feature.EXPONENT_OP, n);
         validateCompoundAssignmentExpression(n);
-        return;
-      case ASSIGN_BITOR:
-      case ASSIGN_BITXOR:
-      case ASSIGN_BITAND:
-      case ASSIGN_LSH:
-      case ASSIGN_RSH:
-      case ASSIGN_URSH:
-      case ASSIGN_ADD:
-      case ASSIGN_SUB:
-      case ASSIGN_MUL:
-      case ASSIGN_DIV:
-      case ASSIGN_MOD:
-        validateCompoundAssignmentExpression(n);
-        return;
-      case ASSIGN_COALESCE:
+      }
+      case ASSIGN_BITOR,
+          ASSIGN_BITXOR,
+          ASSIGN_BITAND,
+          ASSIGN_LSH,
+          ASSIGN_RSH,
+          ASSIGN_URSH,
+          ASSIGN_ADD,
+          ASSIGN_SUB,
+          ASSIGN_MUL,
+          ASSIGN_DIV,
+          ASSIGN_MOD ->
+          validateCompoundAssignmentExpression(n);
+      case ASSIGN_COALESCE -> {
         validateFeature(Feature.NULL_COALESCE_OP, n);
-      // fall-through
-      case ASSIGN_OR:
-      case ASSIGN_AND:
         validateFeature(Feature.LOGICAL_ASSIGNMENT, n);
         validateCompoundAssignmentExpression(n);
-        return;
+      }
+      case ASSIGN_OR, ASSIGN_AND -> {
+        validateFeature(Feature.LOGICAL_ASSIGNMENT, n);
+        validateCompoundAssignmentExpression(n);
+      }
 
-      case HOOK:
-        validateTrinaryOp(n);
-        return;
+      case HOOK -> validateTrinaryOp(n);
 
       // Node types that require special handling
-      case STRINGLIT:
-        validateStringLit(n);
-        return;
-
-      case NUMBER:
-        validateNumber(n);
-        return;
-
-      case BIGINT:
-        validateBigInt(n);
-        return;
-
-      case NAME:
-        validateName(n);
-        return;
+      case STRINGLIT -> validateStringLit(n);
+      case NUMBER -> validateNumber(n);
+      case BIGINT -> validateBigInt(n);
+      case NAME -> validateName(n);
 
       // General binary ops
-      case EXPONENT:
+      case EXPONENT -> {
         validateFeature(Feature.EXPONENT_OP, n);
         validateBinaryOp(n);
-        return;
-      case COALESCE:
+      }
+      case COALESCE -> {
         validateFeature(Feature.NULL_COALESCE_OP, n);
         validateBinaryOp(n);
-        return;
-      case COMMA:
-      case OR:
-      case AND:
-      case BITOR:
-      case BITXOR:
-      case BITAND:
-      case EQ:
-      case NE:
-      case SHEQ:
-      case SHNE:
-      case LT:
-      case GT:
-      case LE:
-      case GE:
-      case INSTANCEOF:
-      case IN:
-      case LSH:
-      case RSH:
-      case URSH:
-      case SUB:
-      case ADD:
-      case MUL:
-      case MOD:
-      case DIV:
-        validateBinaryOp(n);
-        return;
+      }
+      case COMMA,
+          OR,
+          AND,
+          BITOR,
+          BITXOR,
+          BITAND,
+          EQ,
+          NE,
+          SHEQ,
+          SHNE,
+          LT,
+          GT,
+          LE,
+          GE,
+          INSTANCEOF,
+          IN,
+          LSH,
+          RSH,
+          URSH,
+          SUB,
+          ADD,
+          MUL,
+          MOD,
+          DIV ->
+          validateBinaryOp(n);
 
-      case GETELEM:
-        validateGetElem(n);
-        return;
+      case GETELEM -> validateGetElem(n);
+      case OPTCHAIN_GETELEM -> validateOptChainGetElem(n);
 
-      case OPTCHAIN_GETELEM:
-        validateOptChainGetElem(n);
-        return;
+      case GETPROP -> validateGetProp(n);
+      case OPTCHAIN_GETPROP -> validateOptChainGetProp(n);
 
-      case GETPROP:
-        validateGetProp(n);
-        return;
+      case ARRAYLIT -> validateArrayLit(n);
+      case OBJECTLIT -> validateObjectLit(n);
+      case REGEXP -> validateRegExpLit(n);
 
-      case OPTCHAIN_GETPROP:
-        validateOptChainGetProp(n);
-        return;
+      case CALL -> validateCall(n);
+      case OPTCHAIN_CALL -> validateOptChainCall(n);
+      case NEW -> validateNew(n);
 
-      case ARRAYLIT:
-        validateArrayLit(n);
-        return;
-
-      case OBJECTLIT:
-        validateObjectLit(n);
-        return;
-
-      case REGEXP:
-        validateRegExpLit(n);
-        return;
-
-      case CALL:
-        validateCall(n);
-        return;
-
-      case OPTCHAIN_CALL:
-        validateOptChainCall(n);
-        return;
-
-      case NEW:
-        validateNew(n);
-        return;
-
-      case FUNCTION:
+      case FUNCTION -> {
         validateRequiredInlinings(n);
         validateFunctionExpression(n);
-        return;
+      }
+      case CLASS -> validateClass(n);
 
-      case CLASS:
-        validateClass(n);
-        return;
+      case TEMPLATELIT -> validateTemplateLit(n);
+      case TAGGED_TEMPLATELIT -> validateTaggedTemplateLit(n);
 
-      case TEMPLATELIT:
-        validateTemplateLit(n);
-        return;
-
-      case TAGGED_TEMPLATELIT:
-        validateTaggedTemplateLit(n);
-        return;
-
-      case YIELD:
-        validateYield(n);
-        return;
-
-      case AWAIT:
-        validateAwait(n);
-        return;
-
-      case DYNAMIC_IMPORT:
+      case YIELD -> validateYield(n);
+      case AWAIT -> validateAwait(n);
+      case DYNAMIC_IMPORT -> {
         validateFeature(Feature.DYNAMIC_IMPORT, n);
         validateUnaryOp(n);
-        return;
+      }
 
-      default:
-        violation("Expected expression but was " + n.getToken(), n);
+      default -> violation("Expected expression but was " + n.getToken(), n);
     }
   }
 
