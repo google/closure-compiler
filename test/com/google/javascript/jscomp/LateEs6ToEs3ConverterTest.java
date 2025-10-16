@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
@@ -58,6 +57,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     enableTypeInfoValidation();
     replaceTypesWithColors();
     enableMultistageCompilation();
+    setGenericNameReplacements(REPLACEMENT_PREFIXES);
   }
 
   @Override
@@ -273,41 +273,37 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
    */
   @Test
   public void testTaggedTemplateLiteral_singleScript() {
-    taggedTemplateLiteralTestRunner(
-        srcs("tag``"),
-        expected(
-            """
-            /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
-                $jscomp.createTemplateTagFirstArg(['']);
-            tag(TAGGED_TEMPLATE_TMP_VAR$0);
-            """));
+    test(
+        "tag``",
+        """
+        /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
+            $jscomp.createTemplateTagFirstArg(['']);
+        tag(TAGGED_TEMPLATE_TMP_VAR$0);
+        """);
 
-    taggedTemplateLiteralTestRunner(
-        srcs("tag`${hello} world`"),
-        expected(
-            """
-            /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
-                $jscomp.createTemplateTagFirstArg(['', ' world']);
-            tag(TAGGED_TEMPLATE_TMP_VAR$0, hello);
-            """));
+    test(
+        "tag`${hello} world`",
+        """
+        /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
+            $jscomp.createTemplateTagFirstArg(['', ' world']);
+        tag(TAGGED_TEMPLATE_TMP_VAR$0, hello);
+        """);
 
-    taggedTemplateLiteralTestRunner(
-        srcs("tag`${hello} ${world}`"),
-        expected(
-            """
-            /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
-                $jscomp.createTemplateTagFirstArg(['', ' ', '']);
-            tag(TAGGED_TEMPLATE_TMP_VAR$0, hello, world);
-            """));
+    test(
+        "tag`${hello} ${world}`",
+        """
+        /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
+            $jscomp.createTemplateTagFirstArg(['', ' ', '']);
+        tag(TAGGED_TEMPLATE_TMP_VAR$0, hello, world);
+        """);
 
-    taggedTemplateLiteralTestRunner(
-        srcs("tag`\"`"),
-        expected(
-            """
-            /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
-                $jscomp.createTemplateTagFirstArg(['"']);
-            tag(TAGGED_TEMPLATE_TMP_VAR$0);
-            """));
+    test(
+        "tag`\"`",
+        """
+        /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
+            $jscomp.createTemplateTagFirstArg(['"']);
+        tag(TAGGED_TEMPLATE_TMP_VAR$0);
+        """);
 
     // The cooked string and the raw string are different.
     // Note that this test is tricky to read, because any escape sequences will be escaped twice.
@@ -321,25 +317,23 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     //     \\\t      ->   \<tab character>   -> <tab character> (length: 1)
     //     \\\\t     ->   \\t                -> \t              (length: 2)
     //
-    taggedTemplateLiteralTestRunner(
-        srcs("tag`a\\tb`"),
-        expected(
-            """
-            /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
-                $jscomp.createTemplateTagFirstArgWithRaw(['a\\tb'],['a\\\\tb']);
-            tag(TAGGED_TEMPLATE_TMP_VAR$0);
-            """));
+    test(
+        "tag`a\\tb`",
+        """
+        /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
+            $jscomp.createTemplateTagFirstArgWithRaw(['a\\tb'],['a\\\\tb']);
+        tag(TAGGED_TEMPLATE_TMP_VAR$0);
+        """);
 
-    taggedTemplateLiteralTestRunner(
-        srcs("tag()`${hello} world`"),
-        expected(
-            """
-            /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
-                $jscomp.createTemplateTagFirstArg(['', ' world']);
-            tag()(TAGGED_TEMPLATE_TMP_VAR$0, hello);
-            """));
+    test(
+        "tag()`${hello} world`",
+        """
+        /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
+            $jscomp.createTemplateTagFirstArg(['', ' world']);
+        tag()(TAGGED_TEMPLATE_TMP_VAR$0, hello);
+        """);
 
-    taggedTemplateLiteralTestRunner(
+    test(
         externs(RUNTIME_STUBS, "var a = {}; a.b;"),
         srcs("a.b`${hello} world`"),
         expected(
@@ -350,32 +344,29 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             """));
 
     // https://github.com/google/closure-compiler/issues/1299
-    taggedTemplateLiteralTestRunner(
-        srcs("tag`<p class=\"foo\">${x}</p>`"),
-        expected(
-            """
-            /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
-                $jscomp.createTemplateTagFirstArg(['<p class="foo">','</p>']);
-            tag(TAGGED_TEMPLATE_TMP_VAR$0, x);
-            """));
-    taggedTemplateLiteralTestRunner(
-        srcs("tag`<p class='foo'>${x}</p>`"),
-        expected(
-            """
-            /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
-                $jscomp.createTemplateTagFirstArg(['<p class=\\'foo\\'>','</p>']);
-            tag(TAGGED_TEMPLATE_TMP_VAR$0, x);
-            """));
+    test(
+        "tag`<p class=\"foo\">${x}</p>`",
+        """
+        /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
+            $jscomp.createTemplateTagFirstArg(['<p class="foo">','</p>']);
+        tag(TAGGED_TEMPLATE_TMP_VAR$0, x);
+        """);
+    test(
+        "tag`<p class='foo'>${x}</p>`",
+        """
+        /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
+            $jscomp.createTemplateTagFirstArg(['<p class=\\'foo\\'>','</p>']);
+        tag(TAGGED_TEMPLATE_TMP_VAR$0, x);
+        """);
 
     // invalid escape sequences result in undefined cooked string
-    taggedTemplateLiteralTestRunner(
-        srcs("tag`\\unicode`"),
-        expected(
-            """
-            /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
-                $jscomp.createTemplateTagFirstArgWithRaw([void 0],['\\\\unicode']);
-            tag(TAGGED_TEMPLATE_TMP_VAR$0);
-            """));
+    test(
+        "tag`\\unicode`",
+        """
+        /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
+            $jscomp.createTemplateTagFirstArgWithRaw([void 0],['\\\\unicode']);
+        tag(TAGGED_TEMPLATE_TMP_VAR$0);
+        """);
   }
 
   /**
@@ -384,7 +375,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
    */
   @Test
   public void testTaggedTemplateLiteral_insertPosition_singleScript() {
-    taggedTemplateLiteralTestRunner(
+    test(
         externs(""), // clear the default externs which contain the runtime stubs
         srcs(
             RUNTIME_STUBS
@@ -402,7 +393,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
                 var b;
                 """));
 
-    taggedTemplateLiteralTestRunner(
+    test(
         externs(""), // clear the default externs which contain the runtime stubs
         srcs(
             RUNTIME_STUBS
@@ -419,7 +410,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
                 function foo() {tag(TAGGED_TEMPLATE_TMP_VAR$0);}
                 """));
 
-    taggedTemplateLiteralTestRunner(
+    test(
         externs(""), // clear the default externs which contain the runtime stubs
         srcs(
             RUNTIME_STUBS
@@ -443,7 +434,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
    */
   @Test
   public void testTaggedTemplateLiteral_insertPosition_multipleScripts() {
-    taggedTemplateLiteralTestRunner(
+    test(
         externs(""), // clear the default externs which contain the runtime stubs
         srcs(
             RUNTIME_STUBS + SCRIPT1,
@@ -460,7 +451,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             tag(TAGGED_TEMPLATE_TMP_VAR$0); var b;
             """));
 
-    taggedTemplateLiteralTestRunner(
+    test(
         externs(""), // clear the default externs which contain the runtime stubs
         srcs(
             RUNTIME_STUBS + SCRIPT1,
@@ -477,7 +468,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             function foo() {tag(TAGGED_TEMPLATE_TMP_VAR$0);}
             """));
 
-    taggedTemplateLiteralTestRunner(
+    test(
         externs(""), // clear the default externs which contain the runtime stubs
         srcs(
             SCRIPT1 + RUNTIME_STUBS,
@@ -493,24 +484,6 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             var a = {};
             function foo() {function bar() {tag(TAGGED_TEMPLATE_TMP_VAR$0);}}
             """));
-  }
-
-  /** Runs the tagged template literal test with externs. */
-  private void taggedTemplateLiteralTestRunner(Externs externs, Sources inputs, Expected outputs) {
-    ImmutableList<SourceFile> modifiedOutputFiles =
-        UnitTestUtils.updateGenericVarNamesInExpectedFiles(
-            (FlatSources) inputs, outputs, REPLACEMENT_PREFIXES);
-    Expected exp = expected(modifiedOutputFiles);
-    test(externs, inputs, exp);
-  }
-
-  /** Runs the tagged template literal test. */
-  private void taggedTemplateLiteralTestRunner(Sources inputs, Expected outputs) {
-    ImmutableList<SourceFile> modifiedOutputFiles =
-        UnitTestUtils.updateGenericVarNamesInExpectedFiles(
-            (FlatSources) inputs, outputs, REPLACEMENT_PREFIXES);
-    Expected exp = expected(modifiedOutputFiles);
-    test(inputs, exp);
   }
 
   @Test

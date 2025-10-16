@@ -44,6 +44,7 @@ import static com.google.common.truth.Truth.assertAbout;
 import static com.google.javascript.jscomp.testing.ColorSubject.colors;
 import static com.google.javascript.rhino.testing.TypeSubject.types;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.StringSubject;
@@ -56,6 +57,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
@@ -74,6 +76,7 @@ public final class NodeSubject extends Subject {
 
   private final Node actual;
   private Function<Node, String> serializer;
+  private ImmutableMap<String, String> genericNameReplacements = ImmutableMap.of();
 
   @CheckReturnValue
   public static NodeSubject assertNode(Node node) {
@@ -97,6 +100,13 @@ public final class NodeSubject extends Subject {
   @CanIgnoreReturnValue
   public NodeSubject usingSerializer(Function<Node, String> serializer) {
     this.serializer = serializer;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public NodeSubject withGenericNameReplacements(
+      ImmutableMap<String, String> genericNameReplacements) {
+    this.genericNameReplacements = genericNameReplacements;
     return this;
   }
 
@@ -162,12 +172,20 @@ public final class NodeSubject extends Subject {
       facts.add(
           simpleFact(
               // Indent by 4 spaces.
-              "Empty expected JS. Actual JS is:\n    " + actualOutputJs.replace("\n", "\n    ")));
+              "Empty expected JS. Actual JS is:\n    "
+                  + applyGenericNames(actualOutputJs).replace("\n", "\n    ")));
     } else {
+      String expectedJsNormalized = applyGenericNames(expectedOutputJs);
+      String actualJsNormalized = applyGenericNames(actualOutputJs);
+      if (expectedJsNormalized.equals(actualJsNormalized)) {
+        // Somehow, the generic name replacement eliminated any diff. Use the original input.
+        expectedJsNormalized = expectedOutputJs;
+        actualJsNormalized = actualOutputJs;
+      }
       facts.addAll(
           new TextDiffFactsBuilder("JS diff")
-              .expectedText(expectedOutputJs)
-              .actualText(actualOutputJs)
+              .expectedText(expectedJsNormalized)
+              .actualText(actualJsNormalized)
               .build());
     }
     if (checkJsdoc) {
@@ -182,6 +200,14 @@ public final class NodeSubject extends Subject {
       }
     }
     failWithoutActual(simpleFact("Node tree inequality"), facts.toArray(new Fact[0]));
+  }
+
+  private String applyGenericNames(String input) {
+    for (Entry<String, String> replacement : genericNameReplacements.entrySet()) {
+      // Replace the actual name with the generic name.
+      input = input.replace(replacement.getKey(), replacement.getValue());
+    }
+    return input;
   }
 
   @CanIgnoreReturnValue

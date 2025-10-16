@@ -229,6 +229,8 @@ public abstract class CompilerTestCase {
 
   private final Map<String, String> webpackModulesById = new LinkedHashMap<>();
 
+  private ImmutableMap<String, String> genericNameReplacements = ImmutableMap.of();
+
   /** Whether {@link #setUp} has run. */
   private boolean setUpRan = false;
 
@@ -792,6 +794,22 @@ public abstract class CompilerTestCase {
     this.webpackModulesById.putAll(webpackModulesById);
   }
 
+  /**
+   * A map of replacement generic names to the prefix of the original generated one.
+   *
+   * <p>If set, used in conjunction with {@link UnitTestUtils#updateGenericVarNamesInExpectedFiles}
+   * on expected output.
+   *
+   * <p>Note: Requires that sources are a {@link FlatSources}.
+   */
+  protected final void setGenericNameReplacements(Map<String, String> genericNameReplacements) {
+    this.genericNameReplacements = ImmutableMap.copyOf(genericNameReplacements);
+  }
+
+  protected final void disableGenericNameReplacements() {
+    genericNameReplacements = ImmutableMap.of();
+  }
+
   /** Returns a newly created TypeCheck. */
   private static TypeCheck createTypeCheck(Compiler compiler) {
     ReverseAbstractInterpreter rai =
@@ -1046,6 +1064,18 @@ public abstract class CompilerTestCase {
       Expected expectedObj,
       List<Diagnostic> diagnostics,
       List<Postcondition> postconditions) {
+    var genericNameMapping = new LinkedHashMap<String, String>();
+    if (!genericNameReplacements.isEmpty() && expectedObj != null) {
+      checkState(inputsObj instanceof FlatSources);
+      expectedObj =
+          expected(
+              UnitTestUtils.updateGenericVarNamesInExpectedFiles(
+                  (FlatSources) inputsObj,
+                  expectedObj,
+                  genericNameReplacements,
+                  genericNameMapping));
+    }
+
     List<SourceFile> inputs =
         (inputsObj instanceof FlatSources flatSources) ? flatSources.sources : null;
     List<SourceFile> expected = expectedObj != null ? expectedObj.expected : null;
@@ -1410,10 +1440,12 @@ public abstract class CompilerTestCase {
           if (compareJsDoc) {
             assertNode(mainRoot)
                 .usingSerializer(createPrettyPrinter(compiler))
+                .withGenericNameReplacements(ImmutableMap.copyOf(genericNameMapping))
                 .isEqualIncludingJsDocTo(expectedRoot);
           } else {
             assertNode(mainRoot)
                 .usingSerializer(createPrettyPrinter(compiler))
+                .withGenericNameReplacements(ImmutableMap.copyOf(genericNameMapping))
                 .isEqualTo(expectedRoot);
           }
         } else {

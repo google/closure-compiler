@@ -60,6 +60,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     enableTypeInfoValidation();
     replaceTypesWithColors();
     enableMultistageCompilation();
+    setGenericNameReplacements(REPLACEMENTS_MAP);
   }
 
   @Override
@@ -81,7 +82,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testDefaultParameterUsingThis() {
-    testAsyncRewriting(
+    test(
         """
         class X {
           /**
@@ -136,7 +137,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testInnerArrowFunctionUsingThis() {
-    testAsyncRewriting(
+    test(
         """
         class X {
           async m() {
@@ -182,7 +183,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testInnerSuperCall() {
-    testAsyncRewriting(
+    test(
         externs(new TestExternsBuilder().addPromise().addJSCompLibraries().build()),
         srcs(
             """
@@ -275,7 +276,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testInnerSuperReference() {
-    testAsyncRewriting(
+    test(
         externs(new TestExternsBuilder().addFunction().addJSCompLibraries().build()),
         srcs(
             """
@@ -365,7 +366,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testMultipleSuperAccessesInAsyncFunction_havingNonIdenticalUnknownTypes() {
-    testAsyncRewriting(
+    test(
         """
         class UpdatingElement {
           getUpdateComplete() {
@@ -403,7 +404,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testNestedArrowFunctionUsingThis() {
-    testAsyncRewriting(
+    test(
         """
         class X {
           m() {
@@ -430,7 +431,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testInnerArrowFunctionUsingArguments() {
-    testAsyncRewriting(
+    test(
         externs(new TestExternsBuilder().addArguments().addJSCompLibraries().build()),
         srcs(
             """
@@ -489,7 +490,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testAwaitReplacement() {
-    testAsyncRewriting(
+    test(
         "async function foo(promise) { return await promise; }",
         """
         function foo(promise) {
@@ -513,7 +514,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testArgumentsReplacement_asyncFunction() {
-    testAsyncRewriting(
+    test(
         "async function f(a, b, ...rest) { return arguments.length; }",
         """
         function f(a, b, ...rest) {
@@ -528,7 +529,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testArgumentsReplacement_asyncClosure() {
-    testAsyncRewriting(
+    test(
         """
         function outer() {
           /**
@@ -555,7 +556,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testArgumentsReplacement_normalClosureInAsync() {
-    testAsyncRewriting(
+    test(
         externs(new TestExternsBuilder().addFunction().addJSCompLibraries().build()),
         srcs(
             """
@@ -583,7 +584,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testClassMethod() {
-    testAsyncRewriting(
+    test(
         """
         class A {
           /**
@@ -615,7 +616,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testAsyncClassMethodWithAsyncArrow() {
-    testAsyncRewriting(
+    test(
         externs(new TestExternsBuilder().addConsole().addJSCompLibraries().build()),
         srcs(
             """
@@ -649,7 +650,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testNonAsyncClassMethodWithAsyncArrow() {
-    testAsyncRewriting(
+    test(
         externs(new TestExternsBuilder().addConsole().addJSCompLibraries().build()),
         srcs(
             """
@@ -680,7 +681,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testArrowFunctionExpressionBody() {
-    testAsyncRewriting(
+    test(
         "let f = async () => 1;",
         """
         let f = () => {
@@ -694,7 +695,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testGlobalScopeArrowFunctionRefersToThis() {
-    testAsyncRewriting(
+    test(
         "let f = async () => this;",
         """
         let f = () => {
@@ -709,7 +710,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testGlobalScopeAsyncArrowFunctionDefaultParamValueRefersToThis() {
-    testAsyncRewriting(
+    test(
         "let f = async (t = this) => t;",
         """
         let f = (t = this) => {
@@ -723,7 +724,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testNestedAsyncArrowFunctionDefaultParamValueRefersToThis() {
-    testAsyncRewriting(
+    test(
         """
         let f = async function(outerT = this) {
           return async (t = this) => t;
@@ -759,21 +760,5 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
         """,
         TranspilationUtil.CANNOT_CONVERT_YET,
         "Transpilation of 'assignment to super property' is not yet implemented.");
-  }
-
-  private void testAsyncRewriting(Externs externs, Sources sources, Expected expected) {
-    Expected updatedExpected =
-        expected(
-            UnitTestUtils.updateGenericVarNamesInExpectedFiles(
-                (FlatSources) sources, expected, REPLACEMENTS_MAP));
-    test(externs, sources, updatedExpected);
-  }
-
-  private void testAsyncRewriting(String source, String expected) {
-    Expected updatedExpected =
-        expected(
-            UnitTestUtils.updateGenericVarNamesInExpectedFiles(
-                (FlatSources) srcs(source), expected(expected), REPLACEMENTS_MAP));
-    test(srcs(source), updatedExpected);
   }
 }

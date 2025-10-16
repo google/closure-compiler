@@ -48,6 +48,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     enableTypeCheck();
     replaceTypesWithColors();
     enableMultistageCompilation();
+    setGenericNameReplacements(ImmutableMap.of("COMPFIELD", "$jscomp$compfield$"));
   }
 
   @Override
@@ -56,16 +57,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
       new Es6ExtractClasses(compiler).process(externs, root);
       new RewriteClassMembers(compiler).process(externs, root);
     };
-  }
-
-  private void computedFieldTest(Sources srcs, Expected originalExpected) {
-    Expected modifiedExpected =
-        expected(
-            UnitTestUtils.updateGenericVarNamesInExpectedFiles(
-                (FlatSources) srcs,
-                originalExpected,
-                ImmutableMap.of("COMPFIELD", "$jscomp$compfield$")));
-    test(srcs, modifiedExpected);
   }
 
   @Test
@@ -213,38 +204,36 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testMultipleStaticBlocks() {
-    computedFieldTest(
-        srcs(
-            """
-            var z = 1
-            /** @unrestricted */
-            class C {
-              static x = 2;
-              static {
-                z = z + this.x;
-              }
-              static [z] = 3;
-              static w = 5;
-              static {
-                z = z + this.w;
-              }
-            }
-            """),
-        expected(
-            """
-            var z = 1
-            var COMPFIELD$0 = z;
-            class C {}
-            C.x = 2;
-            {
-                z = z + C.x;
-            }
-            C[COMPFIELD$0] = 3;
-            C.w = 5;
-            {
-                z = z + C.w;
-            }
-            """)); //
+    test(
+        """
+        var z = 1
+        /** @unrestricted */
+        class C {
+          static x = 2;
+          static {
+            z = z + this.x;
+          }
+          static [z] = 3;
+          static w = 5;
+          static {
+            z = z + this.w;
+          }
+        }
+        """,
+        """
+        var z = 1
+        var COMPFIELD$0 = z;
+        class C {}
+        C.x = 2;
+        {
+            z = z + C.x;
+        }
+        C[COMPFIELD$0] = 3;
+        C.w = 5;
+        {
+            z = z + C.w;
+        }
+        """);
   }
 
   @Test
@@ -491,26 +480,24 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testComputedPropInNonStaticField() {
-    computedFieldTest(
-        srcs(
-            """
-            /** @unrestricted */
-            class C {
-              [x+=1];
-              [x+=2] = 3;
-            }
-            """),
-        expected(
-            """
-            var $jscomp$compfield$m1146332801$0 = x = x + 1;
-            var $jscomp$compfield$m1146332801$1 = x = x + 2;
-            class C {
-              constructor() {
-                this[$jscomp$compfield$m1146332801$0];
-                this[$jscomp$compfield$m1146332801$1] = 3;
-               }
-            }
-            """));
+    test(
+        """
+        /** @unrestricted */
+        class C {
+          [x+=1];
+          [x+=2] = 3;
+        }
+        """,
+        """
+        var COMPFIELD$0 = x = x + 1;
+        var COMPFIELD$1 = x = x + 2;
+        class C {
+          constructor() {
+            this[COMPFIELD$0];
+            this[COMPFIELD$1] = 3;
+           }
+        }
+        """);
 
     test(
         """
@@ -698,140 +685,130 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testSideEffectsInComputedField() {
-    computedFieldTest(
-        srcs(
-            """
-            function bar() {
-              this.x = 3;
-              /** @unrestricted */
-              class Foo {
-                y;
-                [this.x] = 2;
-              }
+    test(
+        """
+        function bar() {
+          this.x = 3;
+          /** @unrestricted */
+          class Foo {
+            y;
+            [this.x] = 2;
+          }
+        }
+        """,
+        """
+        function bar() {
+          this.x = 3;
+          var COMPFIELD$0 = this.x;
+          class Foo {
+            constructor() {
+              this.y;
+              this[COMPFIELD$0] = 2;
             }
-            """),
-        expected(
-            """
-            function bar() {
-              this.x = 3;
-              var COMPFIELD$0 = this.x;
-              class Foo {
-                constructor() {
-                  this.y;
-                  this[COMPFIELD$0] = 2;
-                }
-              }
-            }
-            """));
+          }
+        }
+        """);
 
-    computedFieldTest(
-        srcs(
-            """
-            class E {
-              y() { return 1; }
+    test(
+        """
+        class E {
+          y() { return 1; }
+        }
+        class F extends E {
+          x() {
+            return /** @unrestricted */ class {
+              [super.y()] = 4;
             }
-            class F extends E {
-              x() {
-                return /** @unrestricted */ class {
-                  [super.y()] = 4;
-                }
-              }
-            }
-            """),
-        expected(
-            """
-            class E {
-              y() { return 1; }
-            }
-            class F extends E {
-              x() {
-                var COMPFIELD$0 = super.y();
-                const testcode$classdecl$var0 = class {
-                  constructor() {
-                    this[COMPFIELD$0] = 4;
-                  }
-                };
-                return testcode$classdecl$var0;
-              }
-            }
-            """));
-
-    computedFieldTest(
-        srcs(
-            """
-            function bar(num) {}
-            /** @unrestricted */
-            class Foo {
-              [bar(1)] = 'a';
-              static b = bar(3);
-              static [bar(2)] = bar(4);
-            }
-            """),
-        expected(
-            """
-            function bar(num) {}
-            var COMPFIELD$0 = bar(1);
-            var COMPFIELD$1 = bar(2);
-            class Foo {
+          }
+        }
+        """,
+        """
+        class E {
+          y() { return 1; }
+        }
+        class F extends E {
+          x() {
+            var COMPFIELD$0 = super.y();
+            const testcode$classdecl$var0 = class {
               constructor() {
-                this[COMPFIELD$0] = 'a'
+                this[COMPFIELD$0] = 4;
               }
-            }
-            Foo.b = bar(3);
-            Foo[COMPFIELD$1] = bar(4);
-            """));
+            };
+            return testcode$classdecl$var0;
+          }
+        }
+        """);
 
-    computedFieldTest(
-        srcs(
-            """
-            let x = 'hello';
-            /** @unrestricted */ class Foo {
-              static n = (x=5);
-              static [x] = 'world';
-            }
-            """),
-        expected(
-            """
-            let x = 'hello';
-            var COMPFIELD$0 = x;
-            class Foo {}
-            Foo.n = x = 5;
-            Foo[COMPFIELD$0] = 'world';
-            """));
+    test(
+        """
+        function bar(num) {}
+        /** @unrestricted */
+        class Foo {
+          [bar(1)] = 'a';
+          static b = bar(3);
+          static [bar(2)] = bar(4);
+        }
+        """,
+        """
+        function bar(num) {}
+        var COMPFIELD$0 = bar(1);
+        var COMPFIELD$1 = bar(2);
+        class Foo {
+          constructor() {
+            this[COMPFIELD$0] = 'a'
+          }
+        }
+        Foo.b = bar(3);
+        Foo[COMPFIELD$1] = bar(4);
+        """);
 
-    computedFieldTest(
-        srcs(
-            """
-            function foo(num) {}
-            /** @unrestricted */
-            class Baz {
-              ['f' + foo(1)];
-              static x = foo(6);
-              ['m' + foo(2)]() {};
-              static [foo(3)] = foo(7);
-              [foo(4)] = 2;
-              get [foo(5)]() {}
-            }
-            """),
-        expected(
-            """
-            function foo(num) {}
-            var COMPFIELD$0 = 'f' + foo(1);
-            var COMPFIELD$1 = 'm' + foo(2);
-            var COMPFIELD$2 = foo(3);
-            var COMPFIELD$3 = foo(4);
-            var COMPFIELD$4 = foo(5);
-            class Baz {
-              constructor() {
-                this[COMPFIELD$0];
-                this[COMPFIELD$3] = 2;
-              }
-              [COMPFIELD$1]() {}
-              get [COMPFIELD$4]() {}
-            }
-            Baz.x = foo(6);
-            Baz[COMPFIELD$2] = foo(7);
-            """));
+    test(
+        """
+        let x = 'hello';
+        /** @unrestricted */ class Foo {
+          static n = (x=5);
+          static [x] = 'world';
+        }
+        """,
+        """
+        let x = 'hello';
+        var COMPFIELD$0 = x;
+        class Foo {}
+        Foo.n = x = 5;
+        Foo[COMPFIELD$0] = 'world';
+        """);
+
+    test(
+        """
+        function foo(num) {}
+        /** @unrestricted */
+        class Baz {
+          ['f' + foo(1)];
+          static x = foo(6);
+          ['m' + foo(2)]() {};
+          static [foo(3)] = foo(7);
+          [foo(4)] = 2;
+          get [foo(5)]() {}
+        }
+        """,
+        """
+        function foo(num) {}
+        var COMPFIELD$0 = 'f' + foo(1);
+        var COMPFIELD$1 = 'm' + foo(2);
+        var COMPFIELD$2 = foo(3);
+        var COMPFIELD$3 = foo(4);
+        var COMPFIELD$4 = foo(5);
+        class Baz {
+          constructor() {
+            this[COMPFIELD$0];
+            this[COMPFIELD$3] = 2;
+          }
+          [COMPFIELD$1]() {}
+          get [COMPFIELD$4]() {}
+        }
+        Baz.x = foo(6);
+        Baz[COMPFIELD$2] = foo(7);
+        """);
   }
 
   @Test
@@ -1252,32 +1229,29 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testInstanceComputedWithNonemptyConstructorAndSuper() {
-
-    computedFieldTest(
-        srcs(
-            """
-            class A { constructor() { alert(1); } }
-            /** @unrestricted */ class C extends A {
-              ['x'] = 1;
-              constructor() {
-                super();
-                this['y'] = 2;
-                this['z'] = 3;
-              }
-            }
-            """),
-        expected(
-            """
-            class A { constructor() { alert(1); } }
-            class C extends A {
-              constructor() {
-                super()
-                this['x'] = 1
-                this['y'] = 2;
-                this['z'] = 3;
-              }
-            }
-            """));
+    test(
+        """
+        class A { constructor() { alert(1); } }
+        /** @unrestricted */ class C extends A {
+          ['x'] = 1;
+          constructor() {
+            super();
+            this['y'] = 2;
+            this['z'] = 3;
+          }
+        }
+        """,
+        """
+        class A { constructor() { alert(1); } }
+        class C extends A {
+          constructor() {
+            super()
+            this['x'] = 1
+            this['y'] = 2;
+            this['z'] = 3;
+          }
+        }
+        """);
   }
 
   @Test

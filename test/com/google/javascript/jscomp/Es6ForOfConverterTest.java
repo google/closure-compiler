@@ -46,6 +46,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     enableTypeInfoValidation();
     replaceTypesWithColors();
     enableMultistageCompilation();
+    setGenericNameReplacements(ImmutableMap.of("KEY", "$jscomp$key$"));
   }
 
   @Override
@@ -53,23 +54,10 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     return new Es6ForOfConverter(compiler);
   }
 
-  private void testForOf(String src, String originalExpected) {
-    testForOf(externs(EXTERNS_BASE), srcs(src), expected(originalExpected));
-  }
-
-  private void testForOf(Externs externs, Sources srcs, Expected originalExpected) {
-    // change the "KEY" in expected with "$jscomp$key$m123..456" name
-    Expected modifiedExpected =
-        expected(
-            UnitTestUtils.updateGenericVarNamesInExpectedFiles(
-                (FlatSources) srcs, originalExpected, ImmutableMap.of("KEY", "$jscomp$key$")));
-    test(externs, srcs, modifiedExpected);
-  }
-
   @Test
   public void testForOfLoop() {
     // With array literal and declaring new bound variable.
-    testForOf(
+    test(
         "for (var i of [1,2,3]) { console.log(i); }",
         """
         var i;
@@ -85,7 +73,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         """);
 
     // With simple assign instead of var declaration in bound variable.
-    testForOf(
+    test(
         "for (i of [1,2,3]) { console.log(i); }",
         """
         var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3])
@@ -100,7 +88,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         """);
 
     // With name instead of array literal.
-    testForOf(
+    test(
         "for (var i of arr) { console.log(i); }",
         """
         var i;
@@ -116,7 +104,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         """);
 
     // for of with const initializer
-    testForOf(
+    test(
         "for (const i of [1,2,3]) { console.log(i); }",
         """
         var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3]);
@@ -131,7 +119,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         """);
 
     // multiple for-of loops with the const initializer name
-    testForOf(
+    test(
         "for (const i of [1,2,3]) { console.log(i); } for (const i of [4,5,6]) { console.log(i); }",
         """
         var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3]);
@@ -155,7 +143,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         """);
 
     // With empty loop body.
-    testForOf(
+    test(
         "for (var i of [1,2,3]);",
         """
         var i;
@@ -169,7 +157,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         """);
 
     // With no block in for loop body.
-    testForOf(
+    test(
         "for (var i of [1,2,3]) console.log(i);",
         """
         var i;
@@ -185,7 +173,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         """);
 
     // Iteration var shadows an outer var ()
-    testForOf(
+    test(
         "var i = 'outer'; for (let i of [1, 2, 3]) { alert(i); } alert(i);",
         """
         var i = 'outer';
@@ -204,7 +192,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
 
   @Test
   public void testConstnessPreservedInNewDeclarations() {
-    testForOf(
+    test(
         "for (let CID of [1, 2, 3]) { alert(CID); }",
 """
 var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3])
@@ -232,7 +220,7 @@ for (;
 
   @Test
   public void testForOfRedeclaredVar() {
-    testForOf(
+    test(
         """
         for (let x of []) {
           let x = 0;
@@ -253,7 +241,7 @@ for (;
 
   @Test
   public void testForOfJSDoc() {
-    testForOf(
+    test(
         "for (/** @type {string} */ let x of []) {}",
         """
         var $jscomp$iter$0=(0, $jscomp.makeIterator)([]);
@@ -264,7 +252,7 @@ for (;
           {}
         }
         """);
-    testForOf(
+    test(
         "for (/** @type {string} */ x of []) {}",
         """
         var $jscomp$iter$0=(0, $jscomp.makeIterator)([]);
@@ -294,7 +282,7 @@ for (;
   @Test
   public void testLabelForOf() {
     // Tests if iterator variables come before a single label
-    testForOf(
+    test(
         "a: for(var i of [1,2]){console.log(i)}",
         """
         var i;
@@ -309,7 +297,7 @@ for (;
         }
         """);
     // Test if the iterator variables come before two labels
-    testForOf(
+    test(
         "a: b: for(var x of [1,2]){console.log(x)}",
         """
         var x;
@@ -327,7 +315,7 @@ for (;
 
   @Test
   public void testForOfWithQualifiedNameInitializer() {
-    testForOf(
+    test(
         "var obj = {a: 0}; for (obj.a of [1,2,3]) { console.log(obj.a); }",
         """
         var obj = {a: 0};
@@ -345,7 +333,7 @@ for (;
 
   @Test
   public void testForOfWithComplexInitializer() {
-    testForOf(
+    test(
         "function f() { return {}; } for (f()['x' + 1] of [1,2,3]) {}",
         """
         function f() { return {}; }
@@ -361,7 +349,7 @@ for (;
 
   @Test
   public void testForLetOfWithoutExterns() {
-    testForOf(
+    test(
         // add only minimal runtime library stubs to prevent AstFactory crash
         externs(
             """
