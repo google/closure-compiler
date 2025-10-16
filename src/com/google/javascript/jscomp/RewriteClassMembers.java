@@ -19,10 +19,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import org.jspecify.annotations.Nullable;
@@ -36,6 +38,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
   private final Deque<ClassRecord> classStack;
 
   private static final String COMP_FIELD_VAR = "$jscomp$compfield$";
+  private static final String STATIC_INIT_METHOD_NAME = "$jscomp$staticInit$";
 
   public RewriteClassMembers(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -92,6 +95,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
         checkState(!classStack.isEmpty());
         classStack.peek().recordStaticBlock(n);
         break;
+      // e.g. method with a computed property name
       case COMPUTED_PROP:
         if (n.getParent().isClassMembers()) {
           checkState(!classStack.isEmpty());
@@ -138,9 +142,6 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
   private void visitClass(NodeTraversal t, Node classNode) {
     ClassRecord currClassRecord = classStack.remove();
     checkState(currClassRecord.classNode == classNode, "unexpected node: %s", classNode);
-    if (currClassRecord.cannotConvert) {
-      return;
-    }
     rewriteSideEffectedComputedProp(t, currClassRecord);
     rewriteInstanceMembers(t, currClassRecord);
     rewriteStaticMembers(t, currClassRecord);
@@ -250,6 +251,11 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
     return COMP_FIELD_VAR + compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
   }
 
+  /** Returns $jscomp$staticInit$[FILE_ID]$[number] */
+  private String generateUniqueStaticInitMethodName(NodeTraversal t) {
+    return STATIC_INIT_METHOD_NAME + compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
+  }
+
   /** Rewrites and moves all side effected computed field keys to the top */
   private void rewriteSideEffectedComputedProp(NodeTraversal t, ClassRecord record) {
     Deque<Node> computedPropMembers = record.computedPropMembers;
@@ -300,7 +306,31 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
   /** Rewrites and moves all static blocks and fields */
   private void rewriteStaticMembers(NodeTraversal t, ClassRecord record) {
     Deque<Node> staticMembers = record.staticMembers;
-    Node insertionPoint = addTemporaryInsertionPointAfterNode(record.insertionPointAfterClass);
+    if (staticMembers.isEmpty()) {
+      return;
+    }
+
+    // Add new static method "$jscomp$staticInit$[FILE_ID]$[number]".
+    // All the static initialization logic goes into this method. We need a static method as opposed
+    // to doing this logic alongside the class because #private members can only be accessed within
+    // the class.
+    String staticInitMethodName = generateUniqueStaticInitMethodName(t);
+    Node staticInitMethodFunc =
+        astFactory.createEmptyFunction(
+            AstFactory.type(JSTypeNative.FUNCTION_TYPE, StandardColors.TOP_OBJECT));
+    Node staticInitMethod =
+        astFactory.createMemberFunctionDef(staticInitMethodName, staticInitMethodFunc);
+    staticInitMethod.setStaticMember(true);
+    Node classMembers = NodeUtil.getClassMembers(record.classNode);
+    staticInitMethod.srcrefTree(classMembers);
+    classMembers.addChildToBack(staticInitMethod);
+    compiler.reportChangeToChangeScope(staticInitMethodFunc);
+    // Record the feature corresponding to a static method.
+    NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.MEMBER_DECLARATIONS, compiler);
+
+    Node staticInitBlock = staticInitMethod.getFirstChild().getLastChild();
+    Node insertionPoint = IR.empty();
+    staticInitBlock.addChildToFront(insertionPoint);
 
     while (!staticMembers.isEmpty()) {
       Node staticMember = staticMembers.remove();
@@ -319,6 +349,19 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
       t.reportCodeChange();
     }
     insertionPoint.detach();
+
+    // Add a call to the static initialization method after the class definition.
+    Node staticInitCall =
+        astFactory
+            .createCall(
+                astFactory.createGetProp(
+                    record.createNewNameReferenceNode(),
+                    staticInitMethodName,
+                    AstFactory.type(staticInitMethodFunc)),
+                AstFactory.type(JSTypeNative.VOID_TYPE, StandardColors.NULL_OR_VOID))
+            .srcrefTree(classMembers);
+    Node staticInitCallStmt = astFactory.exprResult(staticInitCall);
+    staticInitCallStmt.insertAfter(record.insertionPointAfterClass);
   }
 
   /**
@@ -390,12 +433,6 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
     return tempNode;
   }
 
-  private Node addTemporaryInsertionPointAfterNode(Node node) {
-    Node tempNode = IR.empty();
-    tempNode.insertAfter(node);
-    return tempNode;
-  }
-
   /**
    * Gets the location of the statement declaring the class
    *
@@ -431,9 +468,6 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
    * Accumulates information about different classes while going down the AST in shouldTraverse()
    */
   private static final class ClassRecord {
-
-    boolean cannotConvert;
-
     // Instance fields
     final Deque<Node> instanceMembers = new ArrayDeque<>();
     // Static fields + static blocks
