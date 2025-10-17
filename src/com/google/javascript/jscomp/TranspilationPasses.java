@@ -89,10 +89,9 @@ public class TranspilationPasses {
       passes.maybeAdd(es6ExtractClasses);
     }
 
-    if (options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS)
-        || options.needsTranspilationOf(Feature.CLASS_STATIC_BLOCK)) {
-      passes.maybeAdd(rewriteClassMembers);
-    }
+    // We always run this pass as it will normalize the AST and properly conditionally rewrites
+    // class fields only if that transpilation is needed.
+    passes.maybeAdd(rewriteClassMembers);
 
     if (options.needsTranspilationOf(Feature.LOGICAL_ASSIGNMENT)) {
       passes.maybeAdd(rewriteLogicalAssignmentOperatorsPass);

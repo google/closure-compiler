@@ -36,15 +36,19 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
   private final AstFactory astFactory;
   private final SynthesizeExplicitConstructors ctorCreator;
   private final Deque<ClassRecord> classStack;
+  private final boolean transpileClassFields;
 
   private static final String COMP_FIELD_VAR = "$jscomp$compfield$";
   private static final String STATIC_INIT_METHOD_NAME = "$jscomp$staticInit$";
 
   public RewriteClassMembers(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.astFactory = compiler.createAstFactory();
-    this.ctorCreator = new SynthesizeExplicitConstructors(compiler);
-    this.classStack = new ArrayDeque<>();
+
+    astFactory = compiler.createAstFactory();
+    ctorCreator = new SynthesizeExplicitConstructors(compiler);
+    classStack = new ArrayDeque<>();
+    // Note: This covers both public fields as well as static fields (they launched together).
+    transpileClassFields = compiler.getOptions().needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS);
   }
 
   @Override
@@ -52,21 +56,27 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
     // All declared names are already unique post normalization to ensure that name shadowing can't
     // occur in classes and public fields don't share names with constructor parameters
     NodeTraversal.traverse(compiler, root, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(
-        compiler,
-        root,
-        FeatureSet.BARE_MINIMUM.with(Feature.PUBLIC_CLASS_FIELDS, Feature.CLASS_STATIC_BLOCK));
+
+    // We transpiled away class static blocks. We always do this, regardless of language out, to
+    // normalize the AST.
+    FeatureSet transpiledFeatures = FeatureSet.BARE_MINIMUM.with(Feature.CLASS_STATIC_BLOCK);
+    if (transpileClassFields) {
+      // We removed public and static field declarations if they need transpilation.
+      transpiledFeatures = transpiledFeatures.with(Feature.PUBLIC_CLASS_FIELDS);
+    }
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, transpiledFeatures);
   }
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case SCRIPT:
+      case SCRIPT -> {
         FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
         return scriptFeatures == null
             || scriptFeatures.contains(Feature.PUBLIC_CLASS_FIELDS)
             || scriptFeatures.contains(Feature.CLASS_STATIC_BLOCK);
-      case CLASS:
+      }
+      case CLASS -> {
         Node classNameNode = NodeUtil.getNameNode(n);
         checkState(classNameNode != null, "Class missing a name: %s", n);
         Node classInsertionPoint = getStatementDeclaringClass(n, classNameNode);
@@ -76,36 +86,35 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
             "Class name shadows variable declaring the class: %s",
             n);
         classStack.push(new ClassRecord(n, classNameNode, classInsertionPoint));
-        break;
-      case COMPUTED_FIELD_DEF:
+      }
+      case COMPUTED_FIELD_DEF -> {
         checkState(!classStack.isEmpty());
         if (NodeUtil.canBeSideEffected(n.getFirstChild())) {
           classStack.peek().computedPropMembers.add(n);
         }
         classStack.peek().enterField(n);
-        break;
-      case MEMBER_FIELD_DEF:
+      }
+      case MEMBER_FIELD_DEF -> {
         checkState(!classStack.isEmpty());
         classStack.peek().enterField(n);
-        break;
-      case BLOCK:
+      }
+      case BLOCK -> {
         if (!NodeUtil.isClassStaticBlock(n)) {
           break;
         }
         checkState(!classStack.isEmpty());
         classStack.peek().recordStaticBlock(n);
-        break;
-      // e.g. method with a computed property name
-      case COMPUTED_PROP:
+        // e.g. method with a computed property name
+      }
+      case COMPUTED_PROP -> {
         if (n.getParent().isClassMembers()) {
           checkState(!classStack.isEmpty());
           if (NodeUtil.canBeSideEffected(n.getFirstChild())) {
             classStack.peek().computedPropMembers.add(n);
           }
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
     return true;
   }
@@ -124,17 +133,10 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case CLASS:
-        visitClass(t, n);
-        break;
-      case THIS:
-        visitThis(t, n);
-        break;
-      case SUPER:
-        visitSuper(t, n);
-        break;
-      default:
-        break;
+      case CLASS -> visitClass(t, n);
+      case THIS -> visitThis(t, n);
+      case SUPER -> visitSuper(t, n);
+      default -> {}
     }
   }
 
@@ -143,7 +145,9 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
     ClassRecord currClassRecord = classStack.remove();
     checkState(currClassRecord.classNode == classNode, "unexpected node: %s", classNode);
     rewriteSideEffectedComputedProp(t, currClassRecord);
-    rewriteInstanceMembers(t, currClassRecord);
+    if (transpileClassFields) {
+      rewriteInstanceMembers(t, currClassRecord);
+    }
     rewriteStaticMembers(t, currClassRecord);
   }
 
@@ -291,8 +295,8 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
       Node thisNode = astFactory.createThisForEs6ClassMember(instanceMember);
       Node transpiledNode =
           instanceMember.isMemberFieldDef()
-              ? convNonCompFieldToGetProp(thisNode, instanceMember.detach())
-              : convCompFieldToGetElem(thisNode, instanceMember.detach());
+              ? convNonCompFieldToGetProp(thisNode, instanceMember, /* isStatic= */ false)
+              : convCompFieldToGetElem(thisNode, instanceMember, /* isStatic= */ false);
 
       transpiledNode.insertBefore(insertionPoint);
     }
@@ -341,8 +345,10 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
       Node transpiledNode =
           switch (staticMember.getToken()) {
             case BLOCK -> staticMember.detach();
-            case MEMBER_FIELD_DEF -> convNonCompFieldToGetProp(nameToUse, staticMember.detach());
-            case COMPUTED_FIELD_DEF -> convCompFieldToGetElem(nameToUse, staticMember.detach());
+            case MEMBER_FIELD_DEF ->
+                convNonCompFieldToGetProp(nameToUse, staticMember, /* isStatic= */ true);
+            case COMPUTED_FIELD_DEF ->
+                convCompFieldToGetElem(nameToUse, staticMember, /* isStatic= */ true);
             default -> throw new IllegalStateException(String.valueOf(staticMember));
           };
       transpiledNode.insertBefore(insertionPoint);
@@ -368,24 +374,35 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
    * Creates a node that represents receiver.key = value; where the key and value comes from the
    * non-computed field
    */
-  private Node convNonCompFieldToGetProp(Node receiver, Node noncomputedField) {
+  private Node convNonCompFieldToGetProp(Node receiver, Node noncomputedField, boolean isStatic) {
     checkArgument(noncomputedField.isMemberFieldDef());
-    checkArgument(noncomputedField.getParent() == null, noncomputedField);
     checkArgument(receiver.getParent() == null, receiver);
+
+    if (transpileClassFields) {
+      noncomputedField.detach();
+    }
+
+    Node fieldValue = null;
+    // We always move out the static field initialization.
+    if (isStatic || transpileClassFields) {
+      fieldValue = noncomputedField.getFirstChild();
+    }
+
     Node getProp =
         astFactory.createGetProp(
             receiver, noncomputedField.getString(), AstFactory.type(noncomputedField));
-    Node fieldValue = noncomputedField.getFirstChild();
     Node result =
         (fieldValue != null)
             ? astFactory.createAssignStatement(getProp, fieldValue.detach())
             : astFactory.exprResult(getProp);
-    // Move any JSDoc from the field declaration to the child of the EXPR_RESULT,
-    // which represents the new declaration.
-    // noncomputedField is already detached, so there's no benefit to calling
-    // NodeUtil.getBestJSDocInfo(noncomputedField). For now at least,
-    // the JSDocInfo we want will always be directly on noncomputedField in all cases.
-    result.getFirstChild().setJSDocInfo(noncomputedField.getJSDocInfo());
+    if (transpileClassFields) {
+      // Move any JSDoc from the field declaration to the child of the EXPR_RESULT, which represents
+      // the new declaration.
+      // noncomputedField is already detached, so there's no benefit to calling
+      // NodeUtil.getBestJSDocInfo(noncomputedField). For now at least, the JSDocInfo we want will
+      // always be directly on noncomputedField in all cases.
+      result.getFirstChild().setJSDocInfo(noncomputedField.getJSDocInfo());
+    }
     result.srcrefTreeIfMissing(noncomputedField);
     return result;
   }
@@ -394,16 +411,39 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
    * Creates a node that represents receiver[key] = value; where the key and value comes from the
    * computed field
    */
-  private Node convCompFieldToGetElem(Node receiver, Node computedField) {
+  private Node convCompFieldToGetElem(Node receiver, Node computedField, boolean isStatic) {
     checkArgument(computedField.isComputedFieldDef(), computedField);
-    checkArgument(computedField.getParent() == null, computedField);
     checkArgument(receiver.getParent() == null, receiver);
-    Node getElem = astFactory.createGetElem(receiver, computedField.removeFirstChild());
-    Node fieldValue = computedField.getLastChild();
+
+    if (transpileClassFields) {
+      computedField.detach();
+    }
+
+    Node fieldValue = null;
+    if (computedField.getChildCount() == 2 && (isStatic || transpileClassFields)) {
+      fieldValue = computedField.getLastChild();
+    }
+
+    Node compFieldNameExpr;
+    if (transpileClassFields) {
+      compFieldNameExpr = computedField.removeFirstChild();
+    } else {
+      compFieldNameExpr = computedField.getFirstChild().cloneTree();
+    }
+
+    Node getElem = astFactory.createGetElem(receiver, compFieldNameExpr);
     Node result =
         (fieldValue != null)
             ? astFactory.createAssignStatement(getElem, fieldValue.detach())
             : astFactory.exprResult(getElem);
+    if (transpileClassFields) {
+      // Move any JSDoc from the field declaration to the child of the EXPR_RESULT, which represents
+      // the new declaration.
+      // computedField is already detached, so there's no benefit to calling
+      // NodeUtil.getBestJSDocInfo(computedField). For now at least, the JSDocInfo we want will
+      // always be directly on computedField in all cases.
+      result.getFirstChild().setJSDocInfo(computedField.getJSDocInfo());
+    }
     result.srcrefTreeIfMissing(computedField);
     return result;
   }

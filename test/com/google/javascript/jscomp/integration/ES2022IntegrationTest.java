@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.integration;
 
-
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -338,14 +337,7 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
         }
         """,
         """
-        /** @unrestricted */
-        class a {
-          static a = alert(2);
-          f2 = 'hi';
-          f3 = 5;
-          4 = 4;
-          f6 = alert(1);
-        }
+        alert(2);
         """);
   }
 
@@ -364,17 +356,31 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
         options,
         """
         window.test = function() {
-        var x = 0;
-        /** @unrestricted */
-        class MyClass {
-          static f1 = x;
-          static [(x = 1)] = 1; // (x = 1) executes before assigning 'static f1 = x'
-        }
-        console.log(MyClass.f1); // prints 1
+          var x = 0;
+          /** @unrestricted */
+          class MyClass {
+            static f1 = x;
+            static[(x = 1)] = 1;  // (x = 1) executes before assigning 'static f1 = x'
+          }
+          console.log(MyClass.f1);  // prints 1
         };
         """,
         // TODO(b/189993301): this should be logging '1' instead
-        "window.a = function() { console.log(0); };");
+        """
+        window.c = function() {
+          var b = 0, d = b = 1;
+          class a {
+            static a;
+            static[d];
+            static b() {
+              a.a = b;
+              a[d] = 1
+            }
+          }
+          a.b();
+          console.log(a.a)
+        }
+        """);
   }
 
   @Test
@@ -392,24 +398,28 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
         options,
         """
         window.test = function() {
-        var x = 0;
-        /** @unrestricted */
-        class MyClass {
-          static f1 = x;
-          static [(x = 1)]() {}; // (x = 1) executes before assigning 'static f1 = x'
-        }
-        console.log(MyClass.f1); // prints 1
+          var x = 0;
+          /** @unrestricted */
+          class MyClass {
+            static f1 = x;
+            static[(x = 1)]() {};  // (x = 1) executes before assigning 'static f1 = x'
+          }
+          console.log(MyClass.f1);  // prints 1
         };
         """,
         """
-        window.b=function(){
-          var a=0;
-          class c {
-            static a=a;
-            static [a=1](){}
+        window.c = function() {
+          var b = 0, d = b = 1;
+          class a {
+            static a;
+            static[d]() {}
+            static b() {
+              a.a = b
+            }
           }
-          console.log(c.a)
-        };
+          a.b();
+          console.log(a.a)
+        }
         """);
   }
 
