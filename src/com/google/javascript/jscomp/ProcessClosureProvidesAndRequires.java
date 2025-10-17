@@ -150,7 +150,7 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case CALL:
+        case CALL -> {
           Node left = n.getFirstChild();
           if (left.isGetProp()) {
             Node name = left.getFirstChild();
@@ -191,20 +191,12 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
               }
             }
           }
-          break;
-
-        case ASSIGN:
-        case NAME:
-          // If this is an assignment to a provided name, remove the provided object.
-          handleCandidateProvideDefinition(t, n, parent);
-          break;
-
-        case EXPR_RESULT:
-          handleStubDefinition(t, n);
-          break;
-
-        default:
-          break;
+        }
+        case ASSIGN, NAME ->
+            // If this is an assignment to a provided name, remove the provided object.
+            handleCandidateProvideDefinition(t, n, parent);
+        case EXPR_RESULT -> handleStubDefinition(t, n);
+        default -> {}
       }
     }
   }

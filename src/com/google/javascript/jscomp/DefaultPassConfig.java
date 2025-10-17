@@ -135,18 +135,13 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.getLanguageIn().toFeatureSet().has(Feature.MODULES)) {
       passes.maybeAdd(rewriteGoogJsImports);
       switch (options.getEs6ModuleTranspilation()) {
-        case COMPILE:
-          TranspilationPasses.addEs6ModulePass(passes, preprocessorSymbolTableFactory);
-          break;
-        case TO_COMMON_JS_LIKE_MODULES:
-          TranspilationPasses.addEs6ModuleToCjsPass(passes);
-          break;
-        case RELATIVIZE_IMPORT_PATHS:
-          TranspilationPasses.addEs6RewriteImportPathPass(passes);
-          break;
-        case NONE:
+        case COMPILE ->
+            TranspilationPasses.addEs6ModulePass(passes, preprocessorSymbolTableFactory);
+        case TO_COMMON_JS_LIKE_MODULES -> TranspilationPasses.addEs6ModuleToCjsPass(passes);
+        case RELATIVIZE_IMPORT_PATHS -> TranspilationPasses.addEs6RewriteImportPathPass(passes);
+        case NONE -> {
           // nothing
-          break;
+        }
       }
     }
 

@@ -158,18 +158,18 @@ public final class XtbMessageBundle implements MessageBundle {
     public void startElement(String uri, String localName, String qName,
                              Attributes atts) {
       switch (qName) {
-        case BUNDLE_ELEM_NAME:
+        case BUNDLE_ELEM_NAME -> {
           checkState(lang == null);
           lang = atts.getValue(LANG_ATT_NAME);
           checkState(lang != null && !lang.isEmpty());
-          break;
-        case TRANSLATION_ELEM_NAME:
+        }
+        case TRANSLATION_ELEM_NAME -> {
           checkState(msgBuilder == null);
           String id = atts.getValue(MESSAGE_ID_ATT_NAME);
           checkState(id != null && !id.isEmpty());
           msgBuilder = new JsMessage.Builder().setKey(id).setId(id);
-          break;
-        case PLACEHOLDER_ELEM_NAME:
+        }
+        case PLACEHOLDER_ELEM_NAME -> {
           checkState(msgBuilder != null);
           String phRef = atts.getValue(PLACEHOLDER_NAME_ATT_NAME);
           if (msgBuilder.hasGenderedVariants()) {
@@ -178,9 +178,8 @@ public final class XtbMessageBundle implements MessageBundle {
           } else {
             msgBuilder.appendCanonicalPlaceholderReference(phRef);
           }
-
-          break;
-        case BRANCH_ELEM_NAME:
+        }
+        case BRANCH_ELEM_NAME -> {
           checkState(msgBuilder != null);
           String gender = atts.getValue(BRANCH_NAME_ATT_NAME);
           // Gender case must be one of the following: MALE, FEMALE, NEUTER, or OTHER.
@@ -196,8 +195,8 @@ public final class XtbMessageBundle implements MessageBundle {
                 GENDER_CASE_ERROR_MESSAGE);
             msgBuilder.addGenderedMessageKey(JsMessage.GrammaticalGenderCase.valueOf(genderCase));
           }
-          break;
-        default: // fall out
+        }
+        default -> {}
       }
     }
 

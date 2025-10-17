@@ -143,7 +143,7 @@ public class J2clPass implements CompilerPass {
         final String qualifiedFnName;
         final String fnName;
         switch (n.getToken()) {
-          case ASSIGN:
+          case ASSIGN -> {
             // TODO(b/69730966): Delete this branch when ES5 syntax support is no longer needed.
             if (!n.getLastChild().isFunction()) {
               return;
@@ -156,15 +156,14 @@ public class J2clPass implements CompilerPass {
 
             qualifiedFnName = qualifiedNameNode.getQualifiedName();
             fnName = qualifiedNameNode.getString();
-            break;
-
-          case MEMBER_FUNCTION_DEF:
+          }
+          case MEMBER_FUNCTION_DEF -> {
             qualifiedFnName = NodeUtil.getBestLValueName(n);
             fnName = n.getString();
-            break;
-
-          default:
+          }
+          default -> {
             return;
+          }
         }
 
         if (fnNamesToInline.contains(fnName)) {

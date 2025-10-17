@@ -123,26 +123,23 @@ public final class ExtraRequireRemover implements CompilerPass, NodeTraversal.Ca
   public void visit(NodeTraversal t, Node n, Node parent) {
     maybeAddJsDocUsages(n);
     switch (n.getToken()) {
-      case NAME:
+      case NAME -> {
         if (!NodeUtil.isLValue(n) && !parent.isGetProp()) {
           visitQualifiedName(n);
         }
-        break;
-      case GETPROP:
+      }
+      case GETPROP -> {
         // If parent is a GETPROP, they will handle all the usages.
         if (!parent.isGetProp() && n.isQualifiedName()) {
           visitQualifiedName(n);
         }
-        break;
-      case CALL:
-        visitCallNode(n, parent);
-        break;
-      case SCRIPT:
+      }
+      case CALL -> visitCallNode(n, parent);
+      case SCRIPT -> {
         removeExtraRequiresInScript();
         reset();
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
   }
 

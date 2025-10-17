@@ -51,13 +51,8 @@ public final class DiagnosticToSuppressionMapper {
   /** Prints a sorted map of all valid suppressions to System.out */
   void printSuppressions(OutputFormat output) {
     switch (output) {
-      case JSON:
-        printAsJson(createSuppressionMap());
-        break;
-
-      case MD:
-        printAsMarkdown(createSuppressionMap());
-        break;
+      case JSON -> printAsJson(createSuppressionMap());
+      case MD -> printAsMarkdown(createSuppressionMap());
     }
   }
 

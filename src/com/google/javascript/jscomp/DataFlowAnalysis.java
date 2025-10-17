@@ -321,21 +321,17 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
     final L result;
     switch (inEdges.size()) {
-      case 0:
+      case 0 -> {
         return;
-
-      case 1:
-        result = this.getInputFromEdge(inEdges.get(0));
-        break;
-
-      default:
-        {
-          FlowJoiner<L> joiner = this.createFlowJoiner();
-          for (DiGraphEdge<N, Branch> inEdge : inEdges) {
-            joiner.joinFlow(this.getInputFromEdge(inEdge));
-          }
-          result = joiner.finish();
+      }
+      case 1 -> result = this.getInputFromEdge(inEdges.get(0));
+      default -> {
+        FlowJoiner<L> joiner = this.createFlowJoiner();
+        for (DiGraphEdge<N, Branch> inEdge : inEdges) {
+          joiner.joinFlow(this.getInputFromEdge(inEdge));
         }
+        result = joiner.finish();
+      }
     }
 
     if (this.isForward()) {

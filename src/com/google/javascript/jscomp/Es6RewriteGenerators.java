@@ -434,58 +434,22 @@ final class Es6RewriteGenerators implements CompilerPass {
         return;
       }
       switch (statement.getToken()) {
-        case LABEL:
-          transpileLabel(statement);
-          break;
-
-        case BLOCK:
-          transpileBlock(statement);
-          break;
-
-        case EXPR_RESULT:
-          transpileExpressionResult(statement);
-          break;
-
-        case VAR:
-          transpileVar(statement);
-          break;
-
-        case RETURN:
-          transpileReturn(statement);
-          break;
-
-        case THROW:
-          transpileThrow(statement);
-          break;
-
-        case IF:
-          transpileIf(statement, breakCase);
-          break;
-
-        case FOR:
-          transpileFor(statement, breakCase, continueCase);
-          break;
-
-        case FOR_IN:
-          transpileForIn(statement, breakCase, continueCase);
-          break;
-
-        case DO:
-          transpileDo(statement, breakCase, continueCase);
-          break;
-
-        case TRY:
-          transpileTry(statement, breakCase);
-          break;
-
-        case SWITCH:
-          transpileSwitch(statement, breakCase);
-          break;
-
-        default:
-          // NOTE: There is no WHILE case, becasue this pass runs after normalization,
-          // which converts all while loops to for loops.
-          throw new IllegalStateException("Unsupported token: " + statement.getToken());
+        case LABEL -> transpileLabel(statement);
+        case BLOCK -> transpileBlock(statement);
+        case EXPR_RESULT -> transpileExpressionResult(statement);
+        case VAR -> transpileVar(statement);
+        case RETURN -> transpileReturn(statement);
+        case THROW -> transpileThrow(statement);
+        case IF -> transpileIf(statement, breakCase);
+        case FOR -> transpileFor(statement, breakCase, continueCase);
+        case FOR_IN -> transpileForIn(statement, breakCase, continueCase);
+        case DO -> transpileDo(statement, breakCase, continueCase);
+        case TRY -> transpileTry(statement, breakCase);
+        case SWITCH -> transpileSwitch(statement, breakCase);
+        default ->
+            // NOTE: There is no WHILE case, becasue this pass runs after normalization,
+            // which converts all while loops to for loops.
+            throw new IllegalStateException("Unsupported token: " + statement.getToken());
       }
     }
 

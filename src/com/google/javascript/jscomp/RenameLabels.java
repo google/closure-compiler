@@ -164,16 +164,9 @@ final class RenameLabels implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node node, Node parent) {
       switch (node.getToken()) {
-        case LABEL:
-          visitLabel(t, node);
-          break;
-
-        case BREAK:
-        case CONTINUE:
-          visitBreakOrContinue(t, node);
-          break;
-        default:
-          break;
+        case LABEL -> visitLabel(t, node);
+        case BREAK, CONTINUE -> visitBreakOrContinue(t, node);
+        default -> {}
       }
     }
 

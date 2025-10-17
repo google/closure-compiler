@@ -147,16 +147,14 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case CALL:
+      case CALL -> {
         {
           this.checkGoogFunctions(t, n);
           this.maybeProcessClassBaseCall(n);
           this.checkPropertyRenameCall(n);
         }
-        break;
-
-      case FUNCTION:
-      case CLASS:
+      }
+      case FUNCTION, CLASS -> {
         if (!t.inGlobalHoistScope() || n.isFromExterns()) {
           return;
         }
@@ -173,26 +171,21 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
                   name,
                   pn.toString()));
         }
-        break;
-
-      case EXPR_RESULT:
+      }
+      case EXPR_RESULT -> {
         if (!n.getFirstChild().isAssign() || !n.getFirstFirstChild().isQualifiedName()) {
           break;
         }
         String lhs = n.getFirstFirstChild().getQualifiedName();
         checkPossibleGoogProvideInit(lhs, n.getFirstChild().getJSDocInfo(), n);
-        break;
-      case VAR:
-      case CONST:
-      case LET:
+      }
+      case VAR, CONST, LET -> {
         if (!n.getFirstChild().isName()) {
           break;
         }
         checkPossibleGoogProvideInit(n.getFirstChild().getString(), n.getJSDocInfo(), n);
-        break;
-
-      default:
-        break;
+      }
+      default -> {}
     }
   }
 
@@ -239,19 +232,18 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
     // reporting the change when we actually do the replacement.
     String methodName = callee.getString();
     switch (methodName) {
-      case "inherits":
-        // Note: inherits is allowed in local scope
-        processInheritsCall(call);
-        break;
-      case "addDependency":
+      case "inherits" ->
+          // Note: inherits is allowed in local scope
+          processInheritsCall(call);
+      case "addDependency" -> {
         if (validateUnaliasablePrimitiveCall(t, call, methodName)) {
           processAddDependency(call);
         }
-        break;
-      case "setCssNameMapping":
+      }
+      case "setCssNameMapping" -> {
         var unused = processSetCssNameMapping(compiler, call, call.getParent());
-        break;
-      case "forwardDeclare":
+      }
+      case "forwardDeclare" -> {
         if (validatePrimitiveCallWithMessage(
             t,
             call,
@@ -259,11 +251,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
             ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR)) {
           processForwardDeclare(call);
         }
-        break;
-      case "weakUsage":
-        validateWeakUsageCall(call);
-        break;
-      default: // fall out
+      }
+      case "weakUsage" -> validateWeakUsageCall(call);
+      default -> {}
     }
   }
 
@@ -752,16 +742,14 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
     String calleeName = callee.getQualifiedName();
 
     switch (call.getChildCount() - 1) {
-      case 1:
-      case 2:
-        break;
-      default:
-        compiler.report(
-            JSError.make(
-                call,
-                INVALID_RENAME_FUNCTION,
-                calleeName,
-                "Must be called with 1 or 2 arguments."));
+      case 1, 2 -> {}
+      default ->
+          compiler.report(
+              JSError.make(
+                  call,
+                  INVALID_RENAME_FUNCTION,
+                  calleeName,
+                  "Must be called with 1 or 2 arguments."));
     }
 
     Node propName = callee.getNext();

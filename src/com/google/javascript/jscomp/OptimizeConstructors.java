@@ -269,18 +269,21 @@ class OptimizeConstructors implements CompilerPass, OptimizeCalls.CallGraphCompi
 
   private static boolean isDefinitionClassLiteralOrFunction(Node n) {
     switch (n.getToken()) {
-      case FUNCTION:
+      case FUNCTION -> {
         // TODO(b/176208718): ideally this is only return true for normal functions, but it is
         // harmless to include other function types and checking for "normal" function is currently
         // non-trivial.
         return true;
-      case CLASS:
+      }
+      case CLASS -> {
         // `class NameNode {`
         // find the constructor
         Node constructorMemberFunctionDef = NodeUtil.getEs6ClassConstructorMemberFunctionDef(n);
         return constructorMemberFunctionDef != null;
-      default:
+      }
+      default -> {
         return false;
+      }
     }
   }
 

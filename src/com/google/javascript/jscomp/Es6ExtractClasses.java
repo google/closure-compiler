@@ -114,18 +114,15 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case CLASS:
+        case CLASS -> {
           if (needsInnerNameRewriting(n, parent)) {
             classStack.removeFirst();
             n.getFirstChild().replaceWith(IR.empty().srcref(n.getFirstChild()));
             compiler.reportChangeToEnclosingScope(n);
           }
-          break;
-        case NAME:
-          maybeUpdateClassSelfRef(t, n);
-          break;
-        default:
-          break;
+        }
+        case NAME -> maybeUpdateClassSelfRef(t, n);
+        default -> {}
       }
     }
 

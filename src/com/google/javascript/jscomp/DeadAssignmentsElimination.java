@@ -160,29 +160,24 @@ class DeadAssignmentsElimination extends NodeTraversal.AbstractCfgCallback imple
         continue;
       }
       switch (n.getToken()) {
-        case IF:
-        case WHILE:
-        case DO:
+        case IF, WHILE, DO -> {
           tryRemoveAssignment(t, NodeUtil.getConditionExpression(n), state, allVarsInFn);
           continue;
-        case FOR:
-        case FOR_IN:
-        case FOR_OF:
-        case FOR_AWAIT_OF:
+        }
+        case FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF -> {
           if (n.isVanillaFor()) {
             tryRemoveAssignment(t, NodeUtil.getConditionExpression(n), state, allVarsInFn);
           }
           continue;
-        case SWITCH:
-        case CASE:
-        case RETURN:
+        }
+        case SWITCH, CASE, RETURN -> {
           if (n.hasChildren()) {
             tryRemoveAssignment(t, n.getFirstChild(), state, allVarsInFn);
           }
           continue;
           // TODO(user): case VAR: Remove var a=1;a=2;.....
-        default:
-          break;
+        }
+        default -> {}
       }
 
       tryRemoveAssignment(t, n, state, allVarsInFn);
@@ -353,39 +348,33 @@ class DeadAssignmentsElimination extends NodeTraversal.AbstractCfgCallback imple
     while (n != exprRoot) {
       VariableLiveness state = VariableLiveness.MAYBE_LIVE;
       switch (n.getParent().getToken()) {
-        case OR:
-        case AND:
-        case COALESCE:
+        case OR, AND, COALESCE -> {
           // If the currently node is the first child of
           // AND/OR, be conservative only consider the READs
           // of the second operand.
           if (n.getNext() != null) {
-            state = isVariableReadBeforeKill(
-                n.getNext(), variable);
+            state = isVariableReadBeforeKill(n.getNext(), variable);
             if (state == VariableLiveness.KILL) {
               state = VariableLiveness.MAYBE_LIVE;
             }
           }
-          break;
-
-        case HOOK:
+        }
+        case HOOK -> {
           // If current node is the condition, check each following
           // branch, otherwise it is a conditional branch and the
           // other branch can be ignored.
           if (n.getNext() != null && n.getNext().getNext() != null) {
-            state = checkHookBranchReadBeforeKill(
-                n.getNext(), n.getNext().getNext(), variable);
+            state = checkHookBranchReadBeforeKill(n.getNext(), n.getNext().getNext(), variable);
           }
-          break;
-
-        default:
-          for (Node sibling = n.getNext(); sibling != null;
-               sibling = sibling.getNext()) {
+        }
+        default -> {
+          for (Node sibling = n.getNext(); sibling != null; sibling = sibling.getNext()) {
             state = isVariableReadBeforeKill(sibling, variable);
             if (state != VariableLiveness.MAYBE_LIVE) {
               break;
             }
           }
+        }
       }
 
       // If we see a READ or KILL there is no need to continue.
@@ -435,14 +424,10 @@ class DeadAssignmentsElimination extends NodeTraversal.AbstractCfgCallback imple
     }
 
     switch (n.getToken()) {
-      // Conditionals
-      case OR:
-      case AND:
-      case COALESCE:
-        VariableLiveness v1 = isVariableReadBeforeKill(
-          n.getFirstChild(), variable);
-        VariableLiveness v2 = isVariableReadBeforeKill(
-          n.getLastChild(), variable);
+      case OR, AND, COALESCE -> {
+        // Conditionals
+        VariableLiveness v1 = isVariableReadBeforeKill(n.getFirstChild(), variable);
+        VariableLiveness v2 = isVariableReadBeforeKill(n.getLastChild(), variable);
         // With a AND/OR/COALESCE the first branch always runs, but the second is
         // may not.
         if (v1 != VariableLiveness.MAYBE_LIVE) {
@@ -452,24 +437,23 @@ class DeadAssignmentsElimination extends NodeTraversal.AbstractCfgCallback imple
         } else {
           return VariableLiveness.MAYBE_LIVE;
         }
-      case HOOK:
-        VariableLiveness first = isVariableReadBeforeKill(
-            n.getFirstChild(), variable);
+      }
+      case HOOK -> {
+        VariableLiveness first = isVariableReadBeforeKill(n.getFirstChild(), variable);
         if (first != VariableLiveness.MAYBE_LIVE) {
           return first;
         }
-        return checkHookBranchReadBeforeKill(
-            n.getSecondChild(), n.getLastChild(), variable);
-
-      default:
+        return checkHookBranchReadBeforeKill(n.getSecondChild(), n.getLastChild(), variable);
+      }
+      default -> {
         // Expressions are evaluated left-right, depth first.
-        for (Node child = n.getFirstChild();
-            child != null; child = child.getNext()) {
+        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
           VariableLiveness state = isVariableReadBeforeKill(child, variable);
           if (state != VariableLiveness.MAYBE_LIVE) {
             return state;
           }
         }
+      }
     }
 
     return VariableLiveness.MAYBE_LIVE;

@@ -200,11 +200,9 @@ class InlineFunctions implements CompilerPass {
       }
 
       switch (n.getToken()) {
-        // Functions expressions in the form of:
-        //   var fooFn = function(x) { return ... }
-        case VAR:
-        case LET:
-        case CONST:
+        case VAR, LET, CONST -> {
+          // Functions expressions in the form of:
+          //   var fooFn = function(x) { return ... }
           Preconditions.checkState(n.hasOneChild(), n);
           Node nameNode = n.getFirstChild();
           if (nameNode.isName()
@@ -212,19 +210,17 @@ class InlineFunctions implements CompilerPass {
               && nameNode.getFirstChild().isFunction()) {
             maybeAddFunction(new FunctionVar(n), t.getChunk());
           }
-          break;
-
-        // Named functions
-        // function Foo(x) { return ... }
-        case FUNCTION:
+          // Named functions
+          // function Foo(x) { return ... }
+        }
+        case FUNCTION -> {
           Preconditions.checkState(NodeUtil.isStatementBlock(parent) || parent.isLabel());
           if (NodeUtil.isFunctionDeclaration(n)) {
             Function fn = new NamedFunction(n);
             maybeAddFunction(fn, t.getChunk());
           }
-          break;
-        default:
-          break;
+        }
+        default -> {}
       }
     }
 
@@ -234,10 +230,9 @@ class InlineFunctions implements CompilerPass {
      */
     public void findFunctionExpressions(NodeTraversal t, Node n) {
       switch (n.getToken()) {
-        // Functions expressions in the form of:
-        //   (function(){})();
-        case OPTCHAIN_CALL:
-        case CALL:
+        case OPTCHAIN_CALL, CALL -> {
+          // Functions expressions in the form of:
+          //   (function(){})();
           Node fnNode = null;
           if (n.getFirstChild().isFunction()) {
             fnNode = n.getFirstChild();
@@ -254,9 +249,8 @@ class InlineFunctions implements CompilerPass {
             maybeAddFunction(fn, t.getChunk());
             anonFns.put(fnNode, fn.getName());
           }
-          break;
-        default:
-          break;
+        }
+        default -> {}
       }
     }
   }
@@ -445,9 +439,8 @@ class InlineFunctions implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        // Function calls
-        case OPTCHAIN_CALL:
-        case CALL:
+        case OPTCHAIN_CALL, CALL -> {
+          // Function calls
           Node child = n.getFirstChild();
           String name = null;
           // NOTE: The normalization pass ensures that local names do not collide with global names.
@@ -473,9 +466,8 @@ class InlineFunctions implements CompilerPass {
               callback.visitCallSite(t, n, functionState);
             }
           }
-          break;
-        default:
-          break;
+        }
+        default -> {}
       }
     }
   }

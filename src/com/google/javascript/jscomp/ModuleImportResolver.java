@@ -119,7 +119,7 @@ final class ModuleImportResolver {
       return null;
     }
     switch (module.metadata().moduleType()) {
-      case GOOG_PROVIDE:
+      case GOOG_PROVIDE -> {
         // Expect this to be a global variable
         Node provide = module.metadata().rootNode();
         if (provide != null && provide.isScript()) {
@@ -128,19 +128,19 @@ final class ModuleImportResolver {
           // Unknown module requires default to 'goog provides', but we don't want to type them.
           return null;
         }
-
-      case GOOG_MODULE:
-      case LEGACY_GOOG_MODULE:
+      }
+      case GOOG_MODULE, LEGACY_GOOG_MODULE -> {
         // TODO(b/124919359): Fix getGoogModuleScopeRoot to never return null.
         Node scopeRoot = getGoogModuleScopeRoot(module);
         return scopeRoot != null ? ScopedName.of("exports", scopeRoot) : null;
-      case ES6_MODULE:
+      }
+      case ES6_MODULE -> {
         Node moduleBody = module.metadata().rootNode().getFirstChild(); // SCRIPT -> MODULE_BODY
         return ScopedName.of(Export.NAMESPACE, moduleBody);
-      case COMMON_JS:
-        throw new IllegalStateException("Type checking CommonJs modules not yet supported");
-      case SCRIPT:
-        throw new IllegalStateException("Cannot import a name from a SCRIPT");
+      }
+      case COMMON_JS ->
+          throw new IllegalStateException("Type checking CommonJs modules not yet supported");
+      case SCRIPT -> throw new IllegalStateException("Cannot import a name from a SCRIPT");
     }
     throw new AssertionError();
   }
@@ -306,15 +306,14 @@ final class ModuleImportResolver {
             ? binding.metadata()
             : binding.originatingExport().moduleMetadata();
     switch (originalMetadata.moduleType()) {
-      case ES6_MODULE:
+      case ES6_MODULE -> {
         Node scriptNode = originalMetadata.rootNode();
         // Imports of nonexistent modules have a null 'root node'. Imports of names from scripts are
         // meaningless.
         checkState(scriptNode == null || scriptNode.isScript(), scriptNode);
         return ScopedName.of(name, scriptNode != null ? scriptNode.getOnlyChild() : null);
-      case GOOG_MODULE:
-      case GOOG_PROVIDE:
-      case LEGACY_GOOG_MODULE:
+      }
+      case GOOG_MODULE, GOOG_PROVIDE, LEGACY_GOOG_MODULE -> {
         ScopedName closureModuleObject =
             getScopedNameForClosureNamespace(binding.closureNamespace());
         if (closureModuleObject == null) {
@@ -328,12 +327,14 @@ final class ModuleImportResolver {
         return ScopedName.of(
             closureModuleObject.getName() + "." + binding.originatingExport().exportName(),
             closureModuleObject.getScopeRoot());
-      case SCRIPT:
+      }
+      case SCRIPT -> {
         // Importing SCRIPTs should not allow you to look up names in scope.
         // we also don't really support CommonJs.
         return ScopedName.of(name, null);
-      case COMMON_JS:
-        throw new IllegalStateException("Typechecking CommonJS modules is not supported");
+      }
+      case COMMON_JS ->
+          throw new IllegalStateException("Typechecking CommonJS modules is not supported");
     }
     throw new AssertionError();
   }

@@ -211,7 +211,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     final JSDocInfo jsDocInfo;
 
     switch (node.getToken()) {
-      case NAME:
+      case NAME -> {
         // Case: `var MSG_HELLO = 'Message';`
         if (parent == null || !NodeUtil.isNameDeclaration(parent)) {
           return;
@@ -221,9 +221,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
         originalMessageKey = node.getOriginalName();
         msgNode = node.getFirstChild();
         jsDocInfo = parent.getJSDocInfo();
-        break;
-
-      case ASSIGN:
+      }
+      case ASSIGN -> {
         // Case: `somenamespace.someclass.MSG_HELLO = 'Message';`
         Node getProp = node.getFirstChild();
         if (!getProp.isGetProp()) {
@@ -234,9 +233,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
         originalMessageKey = getProp.getOriginalName();
         msgNode = node.getLastChild();
         jsDocInfo = node.getJSDocInfo();
-        break;
-
-      case STRING_KEY:
+      }
+      case STRING_KEY -> {
         // Case: `var t = {MSG_HELLO: 'Message'}`;
         if (node.isQuotedStringKey() || !node.hasChildren() || parent.isObjectPattern()) {
           // Don't require goog.getMsg() for quoted keys
@@ -255,18 +253,17 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
         originalMessageKey = node.getOriginalName();
         msgNode = node.getFirstChild();
         jsDocInfo = node.getJSDocInfo();
-        break;
-
-      case MEMBER_FIELD_DEF:
+      }
+      case MEMBER_FIELD_DEF -> {
         // Case: `class Foo { MSG_HELLO = 'Message'; }`
         possiblyObfuscatedMessageKey = node.getString();
         originalMessageKey = node.getOriginalName();
         msgNode = node.getFirstChild();
         jsDocInfo = node.getJSDocInfo();
-        break;
-
-      default:
+      }
+      default -> {
         return;
+      }
     }
 
     String messageKeyFromLhs =
@@ -628,9 +625,10 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    */
   private static String extractStringFromStringExprNode(Node node) throws MalformedException {
     switch (node.getToken()) {
-      case STRINGLIT:
+      case STRINGLIT -> {
         return node.getString();
-      case TEMPLATELIT:
+      }
+      case TEMPLATELIT -> {
         if (node.hasOneChild()) {
           // Cooked string can be null only for tagged template literals.
           // A tagged template literal would hit the default case below.
@@ -639,14 +637,15 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
           throw new MalformedException(
               "Template literals with substitutions are not allowed.", node);
         }
-      case ADD:
+      }
+      case ADD -> {
         StringBuilder sb = new StringBuilder();
         for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
           sb.append(extractStringFromStringExprNode(child));
         }
         return sb.toString();
-      default:
-        throw new MalformedException("literal string or concatenation expected", node);
+      }
+      default -> throw new MalformedException("literal string or concatenation expected", node);
     }
   }
 

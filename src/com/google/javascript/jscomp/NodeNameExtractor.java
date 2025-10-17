@@ -44,10 +44,10 @@ class NodeNameExtractor {
    */
   String getName(Node node) {
     switch (node.getToken()) {
-      case CLASS:
-      case FUNCTION:
+      case CLASS, FUNCTION -> {
         return NodeUtil.getName(node);
-      case GETPROP:
+      }
+      case GETPROP -> {
         Node lhsOfDot = node.getFirstChild();
         Node rhsOfDot = lhsOfDot.getNext();
         String lhsOfDotName = getName(lhsOfDot);
@@ -57,7 +57,8 @@ class NodeNameExtractor {
         } else {
           return lhsOfDotName + delimiter + rhsOfDotName;
         }
-      case GETELEM:
+      }
+      case GETELEM -> {
         Node outsideBrackets = node.getFirstChild();
         Node insideBrackets = outsideBrackets.getNext();
         String nameOutsideBrackets = getName(outsideBrackets);
@@ -67,30 +68,34 @@ class NodeNameExtractor {
         } else {
           return nameOutsideBrackets + delimiter + nameInsideBrackets;
         }
-      case NAME:
+      }
+      case NAME -> {
         return node.getString();
-      case STRINGLIT:
-      case STRING_KEY:
-      case MEMBER_FUNCTION_DEF:
-        return TokenStream.isJSIdentifier(node.getString()) ?
-            node.getString() : ("__" + nextUniqueInt++);
-      case NUMBER:
+      }
+      case STRINGLIT, STRING_KEY, MEMBER_FUNCTION_DEF -> {
+        return TokenStream.isJSIdentifier(node.getString())
+            ? node.getString()
+            : ("__" + nextUniqueInt++);
+      }
+      case NUMBER -> {
         return NodeUtil.getStringValue(node);
-      case THIS:
+      }
+      case THIS -> {
         return "this";
-      case CALL:
-      case COMPUTED_PROP:
+      }
+      case CALL, COMPUTED_PROP -> {
         return getName(node.getFirstChild());
-      default:
+      }
+      default -> {
         StringBuilder sb = new StringBuilder();
-        for (Node child = node.getFirstChild(); child != null;
-             child = child.getNext()) {
+        for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
           if (sb.length() > 0) {
             sb.append(delimiter);
           }
           sb.append(getName(child));
         }
         return sb.toString();
+      }
     }
   }
 }

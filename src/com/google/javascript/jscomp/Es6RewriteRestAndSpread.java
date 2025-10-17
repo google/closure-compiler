@@ -58,21 +58,16 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
   @Override
   public void visit(NodeTraversal traversal, Node current, Node parent) {
     switch (current.getToken()) {
-      case ITER_REST:
-        visitRestParam(traversal, current, parent);
-        break;
-      case ARRAYLIT:
-      case NEW:
-      case CALL:
+      case ITER_REST -> visitRestParam(traversal, current, parent);
+      case ARRAYLIT, NEW, CALL -> {
         for (Node child = current.getFirstChild(); child != null; child = child.getNext()) {
           if (child.isSpread()) {
             visitArrayLitOrCallWithSpread(current);
             break;
           }
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
   }
 

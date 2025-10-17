@@ -522,12 +522,13 @@ class FunctionInjector {
     } else {
       ExpressionDecomposer decomposer = getDecomposer(ref.scope);
       switch (decomposer.canExposeExpression(callNode)) {
-        case MOVABLE:
+        case MOVABLE -> {
           return CallSiteType.EXPRESSION;
-        case DECOMPOSABLE:
+        }
+        case DECOMPOSABLE -> {
           return CallSiteType.DECOMPOSABLE_EXPRESSION;
-        case UNDECOMPOSABLE:
-          break;
+        }
+        case UNDECOMPOSABLE -> {}
       }
     }
 
@@ -568,30 +569,24 @@ class FunctionInjector {
     String resultName = null;
     boolean needsDefaultReturnResult = true;
     switch (callSiteType) {
-      case SIMPLE_ASSIGNMENT:
+      case SIMPLE_ASSIGNMENT -> {
         resultName = parent.getFirstChild().getString();
         removeConstantVarAnnotation(ref.scope, resultName);
-        break;
-
-      case VAR_DECL_SIMPLE_ASSIGNMENT:
+      }
+      case VAR_DECL_SIMPLE_ASSIGNMENT -> {
         resultName = parent.getString();
         removeConstantVarAnnotation(ref.scope, resultName);
-        break;
-
-      case SIMPLE_CALL:
+      }
+      case SIMPLE_CALL -> {
         resultName = null; // "foo()" doesn't need a result.
         needsDefaultReturnResult = false;
-        break;
-
-      case EXPRESSION:
-        throw new IllegalStateException("Movable expressions must be moved before inlining.");
-
-      case DECOMPOSABLE_EXPRESSION:
-        throw new IllegalStateException(
-            "Decomposable expressions must be decomposed before inlining.");
-
-      default:
-        throw new IllegalStateException("Unexpected call site type.");
+      }
+      case EXPRESSION ->
+          throw new IllegalStateException("Movable expressions must be moved before inlining.");
+      case DECOMPOSABLE_EXPRESSION ->
+          throw new IllegalStateException(
+              "Decomposable expressions must be decomposed before inlining.");
+      default -> throw new IllegalStateException("Unexpected call site type.");
     }
 
     FunctionToBlockMutator mutator = new FunctionToBlockMutator(compiler, this.safeNameIdSupplier);
@@ -606,32 +601,28 @@ class FunctionInjector {
     // can replace either a VAR name assignment, assignment expression or
     // a EXPR_RESULT.
     switch (callSiteType) {
-      case VAR_DECL_SIMPLE_ASSIGNMENT:
+      case VAR_DECL_SIMPLE_ASSIGNMENT -> {
         // Remove the call from the name node.
         Node firstChild = parent.removeFirstChild();
         NodeUtil.markFunctionsDeleted(firstChild, compiler);
         Preconditions.checkState(!parent.hasChildren());
         // Add the call, after the VAR.
         newBlock.insertAfter(grandParent);
-        break;
-
-      case SIMPLE_ASSIGNMENT:
+      }
+      case SIMPLE_ASSIGNMENT -> {
         // The assignment is now part of the inline function so
         // replace it completely.
         Preconditions.checkState(grandParent.isExprResult());
         grandParent.replaceWith(newBlock);
         NodeUtil.markFunctionsDeleted(grandParent, compiler);
-        break;
-
-      case SIMPLE_CALL:
+      }
+      case SIMPLE_CALL -> {
         // If nothing is looking at the result just replace the call.
         Preconditions.checkState(parent.isExprResult());
         parent.replaceWith(newBlock);
         NodeUtil.markFunctionsDeleted(parent, compiler);
-        break;
-
-      default:
-        throw new IllegalStateException("Unexpected call site type.");
+      }
+      default -> throw new IllegalStateException("Unexpected call site type.");
     }
 
     return newBlock;

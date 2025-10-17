@@ -650,7 +650,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
 
   private boolean allDefinitionsAreCandidateFunctions(Node n) {
     switch (n.getToken()) {
-      case CLASS:
+      case CLASS -> {
         if (NodeUtil.isNamedClassExpression(n)) {
           // name creates an alias, making it hard to be sure we've seen all calls
           return false;
@@ -675,7 +675,8 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
                 && !isUsedViaDotConstructor(functionNode);
           }
         }
-      case FUNCTION:
+      }
+      case FUNCTION -> {
         // Named function expression can refer to themselves,
         return !NodeUtil.isNamedFunctionExpression(n)
             // "arguments" can refer to all parameters or their count.
@@ -684,19 +685,21 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
             && !mayReferenceParamBeforeBody(n)
             // `/** @usedViaDotConstructor */ function f(a) {...}` means back off.
             && !isUsedViaDotConstructor(n);
-      case CAST:
-      case COMMA:
+      }
+      case CAST, COMMA -> {
         return allDefinitionsAreCandidateFunctions(n.getLastChild());
-      case HOOK:
+      }
+      case HOOK -> {
         return allDefinitionsAreCandidateFunctions(n.getSecondChild())
             && allDefinitionsAreCandidateFunctions(n.getLastChild());
-      case OR:
-      case AND:
-      case COALESCE:
+      }
+      case OR, AND, COALESCE -> {
         return allDefinitionsAreCandidateFunctions(n.getFirstChild())
             && allDefinitionsAreCandidateFunctions(n.getLastChild());
-      default:
+      }
+      default -> {
         return false;
+      }
     }
   }
 
@@ -1035,19 +1038,16 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     // are "this", "arguments", local names, and functions that capture local
     // values.
     switch (n.getToken()) {
-      case AWAIT:
-      case YIELD:
-      case THIS:
-      case SUPER:
-      case ITER_SPREAD:
-      case OBJECT_SPREAD:
+      case AWAIT, YIELD, THIS, SUPER, ITER_SPREAD, OBJECT_SPREAD -> {
         return false;
-      case FUNCTION:
+      }
+      case FUNCTION -> {
         // Don't move function closures.
         // TODO(johnlenz): Closure that only contain global reference can be
         // moved.
         return false;
-      case NAME:
+      }
+      case NAME -> {
         if (n.getString().equals("arguments")) {
           return false;
         } else {
@@ -1058,9 +1058,8 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
             return false;
           }
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
 
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {

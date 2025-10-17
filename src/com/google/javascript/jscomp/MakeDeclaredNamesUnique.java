@@ -145,13 +145,8 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case NAME:
-      case IMPORT_STAR:
-        visitNameOrImportStar(t, n, parent);
-        break;
-
-      default:
-        break;
+      case NAME, IMPORT_STAR -> visitNameOrImportStar(t, n, parent);
+      default -> {}
     }
   }
 

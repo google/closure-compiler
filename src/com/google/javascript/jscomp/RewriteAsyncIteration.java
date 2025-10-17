@@ -239,13 +239,13 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
   public void visit(NodeTraversal t, Node n, Node parent) {
     LexicalContext ctx = contextStack.element();
     switch (n.getToken()) {
+      case PARAM_LIST -> {
         // Async Generators (and popping contexts)
-      case PARAM_LIST:
         // Done handling parameter list, so pop its context
         checkState(n.equals(ctx.contextRoot), n);
         contextStack.pop();
-        break;
-      case FUNCTION:
+      }
+      case FUNCTION -> {
         checkState(n.equals(ctx.contextRoot));
         if (n.isAsyncGeneratorFunction()) {
           convertAsyncGenerator(n);
@@ -253,53 +253,50 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
         }
         // Done handling function, so pop its context
         contextStack.pop();
-        break;
-      case AWAIT:
+      }
+      case AWAIT -> {
         checkNotNull(ctx.function);
         if (ctx.function.isAsyncGeneratorFunction()) {
           convertAwaitOfAsyncGenerator(ctx, n);
         }
-        break;
-      case YIELD: // Includes yield*
+      }
+      case YIELD -> {
+        // Includes yield*
         checkNotNull(ctx.function);
         if (ctx.function.isAsyncGeneratorFunction()) {
           convertYieldOfAsyncGenerator(ctx, n);
         }
-        break;
-      case RETURN:
+      }
+      case RETURN -> {
         checkNotNull(ctx.function);
         if (ctx.function.isAsyncGeneratorFunction()) {
           convertReturnOfAsyncGenerator(ctx, n);
         }
-        break;
-
         // For-Await-Of loops
-      case FOR_AWAIT_OF:
+      }
+      case FOR_AWAIT_OF -> {
         checkNotNull(ctx.function);
         checkState(ctx.function.isAsyncFunction());
         replaceForAwaitOf(ctx, n);
         NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
-        break;
-
         // Maintaining references to this/arguments/super
-      case THIS:
+      }
+      case THIS -> {
         if (ctx.mustReplaceThisSuperArgs()) {
           replaceThis(ctx, n);
         }
-        break;
-      case NAME:
+      }
+      case NAME -> {
         if (ctx.mustReplaceThisSuperArgs() && n.matchesName("arguments")) {
           replaceArguments(ctx, n);
         }
-        break;
-      case SUPER:
+      }
+      case SUPER -> {
         if (ctx.mustReplaceThisSuperArgs()) {
           replaceSuper(ctx, n, parent);
         }
-        break;
-
-      default:
-        break;
+      }
+      default -> {}
     }
   }
 

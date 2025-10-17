@@ -304,55 +304,56 @@ abstract class GuardedCallback<T> implements NodeTraversal.Callback {
     Context descend(AbstractCompiler compiler, Node parent, Node child) {
       boolean first = child == parent.getFirstChild();
       switch (parent.getToken()) {
-        case CAST:
+        case CAST -> {
           // Casts are irrelevant.
           return this;
-        case COMMA:
+        }
+        case COMMA -> {
           // `Promise, whatever` is safe.
           // `whatever, Promise` is same as outer context.
           return child == parent.getLastChild() ? this : propagate(true);
-        case AND:
+        }
+        case AND -> {
           // `Promise && whatever` never returns Promise itself, so it is safe.
           // `whatever && Promise` may return Promise, so return outer context.
           return first ? link(parent, true) : this;
-        case OR:
-        case COALESCE:
+        }
+        case OR, COALESCE -> {
           // `Promise || whatever` and `Promise ?? whatever`
           // may return Promise (unsafe), but is itself a conditional.
           // `whatever || Promise` and `whatever ?? Promise`
           // is same as outer context.
           return first ? link(parent, false) : this;
-        case HOOK:
+        }
+        case HOOK -> {
           // `Promise ? whatever : whatever` is a safe conditional.
           // `whatever ? Promise : whatever` (etc) is same as outer context.
           return first ? link(parent, true) : this;
-        case IF:
+        }
+        case IF -> {
           // `if (Promise) whatever` is a safe conditional.
           // `if (whatever) { ... }` is nothing.
           // TODO(sdh): Handle do/while/for/for-of/for-in?
           return first ? link(parent, true) : EMPTY;
-        case INSTANCEOF:
-        case ASSIGN:
+        }
+        case INSTANCEOF, ASSIGN -> {
           // `Promise instanceof whatever` is safe, `whatever instanceof Promise` is not.
           // `Promise = whatever` is a bad idea, but it's safe w.r.t. polyfills.
           return propagate(first);
-        case TYPEOF:
-        case NOT:
-        case EQ:
-        case NE:
-        case SHEQ:
-        case SHNE:
+        }
+        case TYPEOF, NOT, EQ, NE, SHEQ, SHNE -> {
           // `typeof Promise` is always safe, as is `Promise == whatever`, etc.
           return propagate(true);
-        case CALL:
+        }
+        case CALL -> {
           // `String(Promise)` is safe, `Promise(whatever)` or `whatever(Promise)` is not.
           return propagate(!first && isPropertyTestFunction(compiler, parent));
-        case ROOT:
+        }
+        case ROOT -> {
           // This case causes problems for isStatement() so handle it separately.
           return EMPTY;
-        case OPTCHAIN_CALL:
-        case OPTCHAIN_GETELEM:
-        case OPTCHAIN_GETPROP:
+        }
+        case OPTCHAIN_CALL, OPTCHAIN_GETELEM, OPTCHAIN_GETPROP -> {
           if (first) {
             // thisNode?.rest.of.chain
             // OR firstChild?.thisNode.rest.of.chain
@@ -364,9 +365,11 @@ abstract class GuardedCallback<T> implements NodeTraversal.Callback {
             // or `first?.thisNode`
             return propagate(false);
           }
-        default:
+        }
+        default -> {
           // Expressions propagate linked conditionals; statements do not.
           return NodeUtil.isStatement(parent) ? EMPTY : propagate(false);
+        }
       }
     }
   }

@@ -358,22 +358,16 @@ class FunctionArgumentInjector {
       } else if (references > 1) {
         // Safe is a misnomer, this is a check for "large".
         switch (cArg.getToken()) {
-          case NAME:
+          case NAME -> {
             String name = cArg.getString();
             // Don't worry about whether this is global or local, just check if it is
             // "exported" in either case.
             requiresTemporary =
                 (convention.isExported(name, true) || convention.isExported(name, false));
-            break;
-          case THIS:
-            requiresTemporary = false;
-            break;
-          case STRINGLIT:
-            requiresTemporary = (cArg.getString().length() >= 2);
-            break;
-          default:
-            requiresTemporary = !NodeUtil.isImmutableValue(cArg);
-            break;
+          }
+          case THIS -> requiresTemporary = false;
+          case STRINGLIT -> requiresTemporary = (cArg.getString().length() >= 2);
+          default -> requiresTemporary = !NodeUtil.isImmutableValue(cArg);
         }
       }
 
@@ -432,17 +426,17 @@ class FunctionArgumentInjector {
   boolean mayHaveConditionalCode(Node n) {
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       switch (c.getToken()) {
-        case FUNCTION:
-        case AND:
-        case OR:
-        case HOOK:
-        case COALESCE:
-        case OPTCHAIN_CALL:
-        case OPTCHAIN_GETELEM:
-        case OPTCHAIN_GETPROP:
+        case FUNCTION,
+            AND,
+            OR,
+            HOOK,
+            COALESCE,
+            OPTCHAIN_CALL,
+            OPTCHAIN_GETELEM,
+            OPTCHAIN_GETPROP -> {
           return true;
-        default:
-          break;
+        }
+        default -> {}
       }
       if (mayHaveConditionalCode(c)) {
         return true;
@@ -634,14 +628,8 @@ class FunctionArgumentInjector {
       return;
     } else if (n.isName()) {
       switch (n.getParent().getToken()) {
-        case VAR:
-        case LET:
-        case CONST:
-        case CATCH:
-          names.add(n.getString());
-          break;
-        default:
-          break;
+        case VAR, LET, CONST, CATCH -> names.add(n.getString());
+        default -> {}
       }
     }
 

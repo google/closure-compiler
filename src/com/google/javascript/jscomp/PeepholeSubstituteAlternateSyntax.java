@@ -212,51 +212,45 @@ class PeepholeSubstituteAlternateSyntax
     }
     String targetName = callTarget.getString();
     switch (targetName) {
-      case "Boolean":
-        {
-          // Fold Boolean(a) to !!a
-          // http://www.ecma-international.org/ecma-262/6.0/index.html#sec-boolean-constructor-boolean-value
-          // and
-          // http://www.ecma-international.org/ecma-262/6.0/index.html#sec-logical-not-operator-runtime-semantics-evaluation
-          int paramCount = n.getChildCount() - 1;
-          // only handle the single known parameter case
-          if (paramCount == 1) {
-            Node value = n.getLastChild().detach();
-            Node replacement;
-            if (NodeUtil.isBooleanResult(value)) {
-              // If it is already a boolean do nothing.
-              replacement = value;
-            } else {
-              // Replace it with a "!!value"
-              replacement = IR.not(IR.not(value).srcref(n));
-            }
-            n.replaceWith(replacement);
-            reportChangeToEnclosingScope(replacement);
+      case "Boolean" -> {
+        // Fold Boolean(a) to !!a
+        // http://www.ecma-international.org/ecma-262/6.0/index.html#sec-boolean-constructor-boolean-value
+        // and
+        // http://www.ecma-international.org/ecma-262/6.0/index.html#sec-logical-not-operator-runtime-semantics-evaluation
+        int paramCount = n.getChildCount() - 1;
+        // only handle the single known parameter case
+        if (paramCount == 1) {
+          Node value = n.getLastChild().detach();
+          Node replacement;
+          if (NodeUtil.isBooleanResult(value)) {
+            // If it is already a boolean do nothing.
+            replacement = value;
+          } else {
+            // Replace it with a "!!value"
+            replacement = IR.not(IR.not(value).srcref(n));
           }
-          break;
+          n.replaceWith(replacement);
+          reportChangeToEnclosingScope(replacement);
         }
-
-      case "String":
-        {
-          // Fold String(a) to '' + (a) on immutable literals,
-          // which allows further optimizations
-          //
-          // We can't do this in the general case, because String(a) has
-          // slightly different semantics than '' + (a). See
-          // https://blickly.github.io/closure-compiler-issues/#759
-          Node value = callTarget.getNext();
-          if (value != null && value.getNext() == null && NodeUtil.isImmutableValue(value)) {
-            Node addition = IR.add(IR.string("").srcref(callTarget), value.detach());
-            n.replaceWith(addition);
-            reportChangeToEnclosingScope(addition);
-            return addition;
-          }
-          break;
+      }
+      case "String" -> {
+        // Fold String(a) to '' + (a) on immutable literals,
+        // which allows further optimizations
+        //
+        // We can't do this in the general case, because String(a) has
+        // slightly different semantics than '' + (a). See
+        // https://blickly.github.io/closure-compiler-issues/#759
+        Node value = callTarget.getNext();
+        if (value != null && value.getNext() == null && NodeUtil.isImmutableValue(value)) {
+          Node addition = IR.add(IR.string("").srcref(callTarget), value.detach());
+          n.replaceWith(addition);
+          reportChangeToEnclosingScope(addition);
+          return addition;
         }
-
-      default:
+      }
+      default -> {
         // nothing.
-        break;
+      }
     }
     return n;
   }
@@ -377,22 +371,21 @@ class PeepholeSubstituteAlternateSyntax
 
     if (result != null) {
       switch (result.getToken()) {
-        case VOID:
+        case VOID -> {
           Node operand = result.getFirstChild();
           if (!mayHaveSideEffects(operand)) {
             n.removeFirstChild();
             reportChangeToEnclosingScope(n);
           }
-          break;
-        case NAME:
+        }
+        case NAME -> {
           String name = result.getString();
           if (name.equals("undefined")) {
             n.removeFirstChild();
             reportChangeToEnclosingScope(n);
           }
-          break;
-        default:
-          break;
+        }
+        default -> {}
       }
     }
 
@@ -515,21 +508,19 @@ class PeepholeSubstituteAlternateSyntax
       action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
     } else {
       switch (arg.getToken()) {
-        case STRINGLIT:
-          // "Array('a')" --> "['a']"
-          action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
-          break;
-        case NUMBER:
+        case STRINGLIT ->
+            // "Array('a')" --> "['a']"
+            action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
+        case NUMBER -> {
           // "Array(0)" --> "[]"
           if (arg.getDouble() == 0) {
             action = FoldArrayAction.SAFE_TO_FOLD_WITHOUT_ARGS;
           }
-          break;
-        case ARRAYLIT:
-          // "Array([args])" --> "[[args]]"
-          action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
-          break;
-        default:
+        }
+        case ARRAYLIT ->
+            // "Array([args])" --> "[[args]]"
+            action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
+        default -> {}
       }
     }
     return action;
@@ -557,18 +548,13 @@ class PeepholeSubstituteAlternateSyntax
   private Node reduceTrueFalse(Node n) {
     if (late) {
       switch (n.getParent().getToken()) {
-        case EQ:
-        case GT:
-        case GE:
-        case LE:
-        case LT:
-        case NE:
+        case EQ, GT, GE, LE, LT, NE -> {
           Node number = IR.number(n.isTrue() ? 1 : 0);
           n.replaceWith(number);
           reportChangeToEnclosingScope(number);
           return number;
-        default:
-          break;
+        }
+        default -> {}
       }
 
       Node not = IR.not(IR.number(n.isTrue() ? 0 : 1));

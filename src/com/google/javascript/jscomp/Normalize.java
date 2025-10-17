@@ -277,7 +277,7 @@ final class Normalize implements CompilerPass {
       }
 
       switch (n.getToken()) {
-        case WHILE:
+        case WHILE -> {
           Node expr = n.getFirstChild();
           n.setToken(Token.FOR);
           Node empty = IR.empty();
@@ -285,40 +285,21 @@ final class Normalize implements CompilerPass {
           empty.insertBefore(expr);
           empty.cloneNode().insertAfter(expr);
           reportCodeChange("WHILE node", n);
-          break;
-
-        case FUNCTION:
+        }
+        case FUNCTION -> {
           if (visitFunction(n)) {
             reportCodeChange("Function declaration", n);
           }
-          break;
-
-        case ARRAYLIT:
-        case CALL:
-        case PARAM_LIST:
-        case NEW:
-        case OBJECTLIT:
-        case OPTCHAIN_CALL:
-          n.setTrailingComma(false);
-          break;
-
-        case NAME:
+        }
+        case ARRAYLIT, CALL, PARAM_LIST, NEW, OBJECTLIT, OPTCHAIN_CALL -> n.setTrailingComma(false);
+        case NAME -> {
           annotateConstantsByConvention(n);
           annotateFunctionExpressionNameAsConstant(n);
-          break;
-
-        case DESTRUCTURING_LHS:
-          normalizeDestructuringLhs(n);
-          break;
-
-        case ASSIGN_OR:
-        case ASSIGN_AND:
-        case ASSIGN_COALESCE:
-          rewriteLogicalAssignmentOperatorsHelper.visitLogicalAssignmentOperator(t, n);
-          break;
-
-        default:
-          break;
+        }
+        case DESTRUCTURING_LHS -> normalizeDestructuringLhs(n);
+        case ASSIGN_OR, ASSIGN_AND, ASSIGN_COALESCE ->
+            rewriteLogicalAssignmentOperatorsHelper.visitLogicalAssignmentOperator(t, n);
+        default -> {}
       }
     }
 
@@ -551,22 +532,17 @@ final class Normalize implements CompilerPass {
       Node last = n.getLastChild();
       // TODO(moz): Avoid adding blocks for cases like "label: let x;"
       switch (last.getToken()) {
-        case LABEL:
-        case BLOCK:
-        case FOR:
-        case FOR_IN:
-        case FOR_OF:
-        case FOR_AWAIT_OF:
-        case WHILE:
-        case DO:
+        case LABEL, BLOCK, FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, WHILE, DO -> {
           return;
-        default:
+        }
+        default -> {
           Node block = IR.block();
           block.srcrefIfMissing(last);
           last.replaceWith(block);
           block.addChildToFront(last);
           reportCodeChange("LABEL normalization", n);
           return;
+        }
       }
     }
 
@@ -586,12 +562,8 @@ final class Normalize implements CompilerPass {
         Node insertBefore = (before == null) ? c : before;
         Node insertBeforeParent = (before == null) ? n : beforeParent;
         switch (c.getToken()) {
-          case LABEL:
-            extractForInitializer(c, insertBefore, insertBeforeParent);
-            break;
-          case FOR_IN:
-          case FOR_OF:
-          case FOR_AWAIT_OF:
+          case LABEL -> extractForInitializer(c, insertBefore, insertBeforeParent);
+          case FOR_IN, FOR_OF, FOR_AWAIT_OF -> {
             Node first = c.getFirstChild();
             if (first.isVar()) {
               Node lhs = first.getFirstChild();
@@ -628,8 +600,8 @@ final class Normalize implements CompilerPass {
               }
               reportCodeChange("FOR-IN var declaration", n);
             }
-            break;
-          case FOR:
+          }
+          case FOR -> {
             if (!c.getFirstChild().isEmpty()) {
               Node init = c.getFirstChild();
 
@@ -653,9 +625,8 @@ final class Normalize implements CompilerPass {
               newStatement.insertBefore(insertBefore);
               reportCodeChange("FOR initializer", n);
             }
-            break;
-          default:
-            break;
+          }
+          default -> {}
         }
       }
     }

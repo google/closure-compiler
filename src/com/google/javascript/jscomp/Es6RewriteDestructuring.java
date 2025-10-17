@@ -85,7 +85,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
     this.namespace = compiler.getTranspilationNamespace();
 
     switch (this.rewriteMode) {
-      case REWRITE_ALL_OBJECT_PATTERNS:
+      case REWRITE_ALL_OBJECT_PATTERNS -> {
         this.featuresToTriggerRunningPass =
             FeatureSet.BARE_MINIMUM.with(
                 Feature.DEFAULT_PARAMETERS,
@@ -97,18 +97,18 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
         // input language featureSet (such as ES6=>ES5) the pass would be skipped.
         this.featuresToMarkAsRemoved =
             featuresToTriggerRunningPass.with(Feature.OBJECT_PATTERN_REST);
-        break;
-      case REWRITE_OBJECT_REST:
+      }
+      case REWRITE_OBJECT_REST -> {
         // TODO(bradfordcsmith): We shouldn't really need to remove default parameters for this
         // case.
         this.featuresToTriggerRunningPass =
             FeatureSet.BARE_MINIMUM.with(Feature.OBJECT_PATTERN_REST);
         this.featuresToMarkAsRemoved = this.featuresToTriggerRunningPass;
-        break;
-      default:
-        throw new AssertionError(
-            "Es6RewriteDestructuring cannot handle ObjectDestructuringRewriteMode "
-                + this.rewriteMode);
+      }
+      default ->
+          throw new AssertionError(
+              "Es6RewriteDestructuring cannot handle ObjectDestructuringRewriteMode "
+                  + this.rewriteMode);
     }
   }
 
@@ -160,27 +160,21 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
       return scriptFeatures.containsAtLeastOneOf(featuresToTriggerRunningPass);
     }
     switch (n.getToken()) {
-      case PARAM_LIST:
-        pullDestructuringOutOfParams(n, parent);
-        break;
-      case ARRAY_PATTERN:
-      case OBJECT_PATTERN:
-        {
-          boolean hasRest = n.isObjectPattern() && n.hasChildren() && n.getLastChild().isRest();
-          if (!this.patternNestingStack.isEmpty() && hasRest) {
-            for (PatternNestingLevel level : patternNestingStack) {
-              if (level.hasNestedObjectRest) {
-                break;
-              }
-              level.hasNestedObjectRest = true;
+      case PARAM_LIST -> pullDestructuringOutOfParams(n, parent);
+      case ARRAY_PATTERN, OBJECT_PATTERN -> {
+        boolean hasRest = n.isObjectPattern() && n.hasChildren() && n.getLastChild().isRest();
+        if (!this.patternNestingStack.isEmpty() && hasRest) {
+          for (PatternNestingLevel level : patternNestingStack) {
+            if (level.hasNestedObjectRest) {
+              break;
             }
-            this.patternNestingStack.peekLast().hasNestedObjectRest = true;
+            level.hasNestedObjectRest = true;
           }
-          this.patternNestingStack.addLast(new PatternNestingLevel(n, hasRest));
-          break;
+          this.patternNestingStack.peekLast().hasNestedObjectRest = true;
         }
-      default:
-        break;
+        this.patternNestingStack.addLast(new PatternNestingLevel(n, hasRest));
+      }
+      default -> {}
     }
     return true;
   }
@@ -188,15 +182,13 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case ARRAY_PATTERN:
-      case OBJECT_PATTERN:
+      case ARRAY_PATTERN, OBJECT_PATTERN -> {
         visitPattern(t, n);
         if (n == this.patternNestingStack.getLast().pattern) {
           this.patternNestingStack.removeLast();
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
   }
 
@@ -399,7 +391,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
     Node parent = pattern.getParent();
 
     switch (parent.getToken()) {
-      case DESTRUCTURING_LHS:
+      case DESTRUCTURING_LHS -> {
         {
           Node declaration = parent.getParent();
           Node declarationParent = declaration.getParent();
@@ -411,37 +403,21 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
             replacePattern(t, pattern, pattern.getNext(), declaration, declaration);
           }
         }
-        break;
-
-      case ASSIGN:
+      }
+      case ASSIGN -> {
         if (parent.getParent().isExprResult()) {
           replacePattern(t, pattern, pattern.getNext(), parent, parent.getParent());
         } else {
           wrapAssignOrDestructuringInCallToArrow(t, parent);
         }
-        break;
-
-      case OBJECT_REST:
-      case ITER_REST:
-      case STRING_KEY:
-      case ARRAY_PATTERN:
-      case DEFAULT_VALUE:
-      case COMPUTED_PROP:
+      }
+      case OBJECT_REST, ITER_REST, STRING_KEY, ARRAY_PATTERN, DEFAULT_VALUE, COMPUTED_PROP -> {
         // Nested pattern; do nothing. We will visit it after rewriting the parent.
-        break;
-
-      case FOR_OF:
-      case FOR_IN:
-      case FOR_AWAIT_OF:
-        visitDestructuringPatternInEnhancedForWithOuterVars(pattern);
-        break;
-
-      case CATCH:
-        visitDestructuringPatternInCatch(t, pattern);
-        break;
-
-      default:
-        throw new IllegalStateException("unexpected parent");
+      }
+      case FOR_OF, FOR_IN, FOR_AWAIT_OF ->
+          visitDestructuringPatternInEnhancedForWithOuterVars(pattern);
+      case CATCH -> visitDestructuringPatternInCatch(t, pattern);
+      default -> throw new IllegalStateException("unexpected parent");
     }
   }
 
@@ -455,14 +431,9 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
       NodeTraversal t, Node pattern, Node rhs, Node parent, Node nodeToDetach) {
     checkArgument(NodeUtil.isStatement(nodeToDetach), nodeToDetach);
     switch (pattern.getToken()) {
-      case ARRAY_PATTERN:
-        replaceArrayPattern(t, pattern, rhs, parent, nodeToDetach);
-        break;
-      case OBJECT_PATTERN:
-        replaceObjectPattern(t, pattern, rhs, parent, nodeToDetach);
-        break;
-      default:
-        throw new IllegalStateException("unexpected");
+      case ARRAY_PATTERN -> replaceArrayPattern(t, pattern, rhs, parent, nodeToDetach);
+      case OBJECT_PATTERN -> replaceObjectPattern(t, pattern, rhs, parent, nodeToDetach);
+      default -> throw new IllegalStateException("unexpected");
     }
   }
 

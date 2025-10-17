@@ -83,20 +83,16 @@ final class GatherExternProperties implements NodeTraversal.Callback, CompilerPa
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (this.mode.optimize) {
       switch (n.getToken()) {
-        case GETPROP:
-          // Gathers "name" from (someObject.name).
-          externProperties.add(n.getString());
-          break;
-        case STRING_KEY:
+        case GETPROP ->
+            // Gathers "name" from (someObject.name).
+            externProperties.add(n.getString());
+        case STRING_KEY -> {
           if (parent.isObjectLit()) {
             externProperties.add(n.getString());
           }
-          break;
-        case MEMBER_FUNCTION_DEF:
-          externProperties.add(n.getString());
-          break;
-        default:
-          break;
+        }
+        case MEMBER_FUNCTION_DEF -> externProperties.add(n.getString());
+        default -> {}
       }
     }
 
@@ -114,15 +110,14 @@ final class GatherExternProperties implements NodeTraversal.Callback, CompilerPa
 
   private void gatherPropertiesFromJsTypeExpressionNode(Node jsTypeExpressionNode) {
     switch (jsTypeExpressionNode.getToken()) {
-      case LB:
-        gatherPropertiesFromJsDocRecordType(jsTypeExpressionNode);
-        break;
-      default:
+      case LB -> gatherPropertiesFromJsDocRecordType(jsTypeExpressionNode);
+      default -> {
         for (Node child = jsTypeExpressionNode.getFirstChild();
             child != null;
             child = child.getNext()) {
           gatherPropertiesFromJsTypeExpressionNode(child);
         }
+      }
     }
   }
 

@@ -81,15 +81,13 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case GETTER_DEF:
-      case SETTER_DEF:
+      case GETTER_DEF, SETTER_DEF -> {
         if (FeatureSet.ES3.contains(compiler.getOptions().getOutputFeatureSet())) {
           cannotConvert(compiler, n, "ES5 getters/setters (consider using --language_out=ES5)");
           return false;
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
     return true;
   }

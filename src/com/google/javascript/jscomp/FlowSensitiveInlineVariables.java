@@ -535,20 +535,20 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
             @Override
             public void visit(NodeTraversal t, Node n, Node parent) {
               switch (n.getToken()) {
-                case NAME:
+                case NAME -> {
                   if (n.getString().equals(varName) && n.hasChildren()) {
                     def = n;
                   }
                   return;
-
-                case ASSIGN:
+                }
+                case ASSIGN -> {
                   Node lhs = n.getFirstChild();
                   if (lhs.isName() && lhs.getString().equals(varName)) {
                     def = n;
                   }
                   return;
-                default:
-                  break;
+                }
+                default -> {}
               }
             }
           };
@@ -615,18 +615,19 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
           def.getLastChild(),
           (Node input) -> {
             switch (input.getToken()) {
-              case GETELEM:
-              case GETPROP:
-              case OPTCHAIN_GETPROP:
-              case OPTCHAIN_GETELEM:
-              case CLASS:
-              case ARRAYLIT:
-              case OBJECTLIT:
-              case REGEXP:
-              case NEW:
-                return true; // unsafe to inline.
-              default:
-                break;
+              case GETELEM,
+                  GETPROP,
+                  OPTCHAIN_GETPROP,
+                  OPTCHAIN_GETELEM,
+                  CLASS,
+                  ARRAYLIT,
+                  OBJECTLIT,
+                  REGEXP,
+                  NEW -> {
+                return true;
+                // unsafe to inline.
+              }
+              default -> {}
             }
             return false;
           },

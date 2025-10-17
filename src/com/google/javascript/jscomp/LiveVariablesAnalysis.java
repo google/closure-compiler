@@ -252,42 +252,30 @@ class LiveVariablesAnalysis
   private void computeGenKill(Node n, BitSet gen, BitSet kill, boolean conditional) {
 
     switch (n.getToken()) {
-      case SCRIPT:
-      case ROOT:
-      case FUNCTION:
-      case BLOCK:
+      case SCRIPT, ROOT, FUNCTION, BLOCK -> {
         return;
-
-      case WHILE:
-      case DO:
-      case IF:
-      case FOR:
+      }
+      case WHILE, DO, IF, FOR -> {
         computeGenKill(NodeUtil.getConditionExpression(n), gen, kill, conditional);
         return;
-
-      case FOR_OF:
-      case FOR_AWAIT_OF:
-      case FOR_IN:
-        {
-          // for (x in y) {...}
-          Node lhs = n.getFirstChild();
-          if (NodeUtil.isNameDeclaration(lhs)) {
-            // for (var x in y) {...}
-            lhs = lhs.getLastChild();
-          }
-
-          // Note that the LHS may never be assigned to or evaluated, like in:
-          //   for (x in []) {}
-          // so should not be killed.
-          computeGenKill(lhs, gen, kill, conditional);
-
-          // rhs is executed only once so we don't go into it every loop.
-          return;
+      }
+      case FOR_OF, FOR_AWAIT_OF, FOR_IN -> {
+        // for (x in y) {...}
+        Node lhs = n.getFirstChild();
+        if (NodeUtil.isNameDeclaration(lhs)) {
+          // for (var x in y) {...}
+          lhs = lhs.getLastChild();
         }
 
-      case LET:
-      case CONST:
-      case VAR:
+        // Note that the LHS may never be assigned to or evaluated, like in:
+        //   for (x in []) {}
+        // so should not be killed.
+        computeGenKill(lhs, gen, kill, conditional);
+
+        // rhs is executed only once so we don't go into it every loop.
+        return;
+      }
+      case LET, CONST, VAR -> {
         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
           if (c.isName()) {
             if (c.hasChildren()) {
@@ -306,18 +294,14 @@ class LiveVariablesAnalysis
           }
         }
         return;
-
-      case AND:
-      case OR:
-      case COALESCE:
-      case OPTCHAIN_GETELEM:
-      case OPTCHAIN_GETPROP:
+      }
+      case AND, OR, COALESCE, OPTCHAIN_GETELEM, OPTCHAIN_GETPROP -> {
         computeGenKill(n.getFirstChild(), gen, kill, conditional);
         // May short circuit.
         computeGenKill(n.getLastChild(), gen, kill, true);
         return;
-
-      case OPTCHAIN_CALL:
+      }
+      case OPTCHAIN_CALL -> {
         computeGenKill(n.getFirstChild(), gen, kill, conditional);
         // Unlike OPTCHAIN_GETPROP and OPTCHAIN_GETELEM, the OPTCHAIN_CALLs can have multiple
         // children on rhs which get executed conditionally
@@ -325,15 +309,15 @@ class LiveVariablesAnalysis
           computeGenKill(c, gen, kill, true);
         }
         return;
-
-      case HOOK:
+      }
+      case HOOK -> {
         computeGenKill(n.getFirstChild(), gen, kill, conditional);
         // Assume both sides are conditional.
         computeGenKill(n.getSecondChild(), gen, kill, true);
         computeGenKill(n.getLastChild(), gen, kill, true);
         return;
-
-      case NAME:
+      }
+      case NAME -> {
         if (n.getString().equals("arguments")) {
           markAllParametersEscaped();
         } else if (!NodeUtil.isLhsByDestructuring(n)) {
@@ -342,8 +326,8 @@ class LiveVariablesAnalysis
           addToSetIfLocal(n, gen);
         }
         return;
-
-      default:
+      }
+      default -> {
         if (NodeUtil.isAssignmentOp(n) && n.getFirstChild().isName()) {
           Node lhs = n.getFirstChild();
           if (!conditional) {
@@ -372,6 +356,7 @@ class LiveVariablesAnalysis
           }
         }
         return;
+      }
     }
   }
 

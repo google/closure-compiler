@@ -68,18 +68,17 @@ public final class Es7RewriteExponentialOperator implements NodeTraversal.Callba
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case EXPONENT:
+      case EXPONENT -> {
         if (checkOperatorType(n)) {
           visitExponentiationOperator(n);
         }
-        break;
-      case ASSIGN_EXPONENT:
+      }
+      case ASSIGN_EXPONENT -> {
         if (checkOperatorType(n)) {
           visitExponentiationAssignmentOperator(t, n);
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
   }
 

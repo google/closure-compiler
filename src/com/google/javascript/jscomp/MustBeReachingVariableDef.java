@@ -212,21 +212,14 @@ final class MustBeReachingVariableDef
    */
   private void computeMustDef(Node n, Node cfgNode, MustDef output, boolean conditional) {
     switch (n.getToken()) {
-      case BLOCK:
-      case ROOT:
-      case FUNCTION:
+      case BLOCK, ROOT, FUNCTION -> {
         return;
-
-      case WHILE:
-      case DO:
-      case IF:
-      case FOR:
+      }
+      case WHILE, DO, IF, FOR -> {
         computeMustDef(NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
         return;
-
-      case FOR_IN:
-      case FOR_OF:
-      case FOR_AWAIT_OF:
+      }
+      case FOR_IN, FOR_OF, FOR_AWAIT_OF -> {
         // for(x in y) {...}
         Node lhs = n.getFirstChild();
         Node rhs = lhs.getNext();
@@ -243,35 +236,30 @@ final class MustBeReachingVariableDef
           computeMustDef(lhs, cfgNode, output, true);
         }
         return;
-
-      case OPTCHAIN_GETPROP:
+      }
+      case OPTCHAIN_GETPROP -> {
         computeMustDef(n.getFirstChild(), cfgNode, output, conditional);
         return;
-
-      case AND:
-      case OR:
-      case COALESCE:
-      case OPTCHAIN_GETELEM:
+      }
+      case AND, OR, COALESCE, OPTCHAIN_GETELEM -> {
         computeMustDef(n.getFirstChild(), cfgNode, output, conditional);
         computeMustDef(n.getLastChild(), cfgNode, output, true);
         return;
-
-      case OPTCHAIN_CALL:
+      }
+      case OPTCHAIN_CALL -> {
         computeMustDef(n.getFirstChild(), cfgNode, output, conditional);
         for (Node c = n.getSecondChild(); c != null; c = c.getNext()) {
           computeMustDef(c, cfgNode, output, true);
         }
         return;
-
-      case HOOK:
+      }
+      case HOOK -> {
         computeMustDef(n.getFirstChild(), cfgNode, output, conditional);
         computeMustDef(n.getSecondChild(), cfgNode, output, true);
         computeMustDef(n.getLastChild(), cfgNode, output, true);
         return;
-
-      case LET:
-      case CONST:
-      case VAR:
+      }
+      case LET, CONST, VAR -> {
         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
           if (c.hasChildren()) {
             if (c.isName()) {
@@ -286,8 +274,8 @@ final class MustBeReachingVariableDef
           }
         }
         return;
-
-      case DEFAULT_VALUE:
+      }
+      case DEFAULT_VALUE -> {
         if (n.getFirstChild().isDestructuringPattern()) {
           computeMustDef(n.getSecondChild(), cfgNode, output, true);
           computeMustDef(n.getFirstChild(), cfgNode, output, conditional);
@@ -299,17 +287,16 @@ final class MustBeReachingVariableDef
           computeMustDef(n.getFirstChild(), cfgNode, output, conditional);
           computeMustDef(n.getSecondChild(), cfgNode, output, true);
         }
-        break;
-
-      case NAME:
+      }
+      case NAME -> {
         if (NodeUtil.isLhsByDestructuring(n)) {
           addToDefIfLocal(n.getString(), conditional ? null : cfgNode, null, output);
         } else if ("arguments".equals(n.getString())) {
           escapeParameters(output);
         }
         return;
-
-      default:
+      }
+      default -> {
         if (NodeUtil.isAssignmentOp(n)) {
           if (n.getFirstChild().isName()) {
             Node name = n.getFirstChild();
@@ -346,6 +333,7 @@ final class MustBeReachingVariableDef
         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
           computeMustDef(c, cfgNode, output, conditional);
         }
+      }
     }
   }
 

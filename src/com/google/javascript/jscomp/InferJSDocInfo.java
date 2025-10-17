@@ -113,27 +113,28 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements CompilerPass {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
+      case NAME -> {
         // Infer JSDocInfo on types of all type declarations on variables.
-      case NAME:
         inferJSDocForName(n, parent);
         return;
-
-      case STRING_KEY:
-      case GETTER_DEF:
-      case SETTER_DEF:
-      case MEMBER_FUNCTION_DEF:
-      case MEMBER_FIELD_DEF:
-      case COMPUTED_PROP:
-      case COMPUTED_FIELD_DEF:
+      }
+      case STRING_KEY,
+          GETTER_DEF,
+          SETTER_DEF,
+          MEMBER_FUNCTION_DEF,
+          MEMBER_FIELD_DEF,
+          COMPUTED_PROP,
+          COMPUTED_FIELD_DEF -> {
         inferJSDocForObjectKeyOrClassField(n, parent);
         return;
-
-      case GETPROP:
+      }
+      case GETPROP -> {
         inferJSDocForProperty(n, parent);
         return;
-
-      default:
+      }
+      default -> {
         return;
+      }
     }
   }
 

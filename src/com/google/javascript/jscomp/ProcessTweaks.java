@@ -274,9 +274,7 @@ class ProcessTweaks implements CompilerPass {
       TweakInfo tweakInfo = allTweaks.computeIfAbsent(tweakId, TweakInfo::new);
 
       switch (tweakFunc) {
-        case REGISTER_BOOLEAN:
-        case REGISTER_NUMBER:
-        case REGISTER_STRING:
+        case REGISTER_BOOLEAN, REGISTER_NUMBER, REGISTER_STRING -> {
           // Ensure the ID contains only valid characters.
           if (!ID_MATCHER.matchesAllOf(tweakId)) {
             compiler.report(JSError.make(tweakIdNode, INVALID_TWEAK_ID_ERROR));
@@ -296,12 +294,9 @@ class ProcessTweaks implements CompilerPass {
 
           Node tweakDefaultValueNode = tweakIdNode.getNext().getNext();
           tweakInfo.addRegisterCall(t.getSourceName(), tweakFunc, n, tweakDefaultValueNode);
-          break;
-        case GET_BOOLEAN:
-        case GET_NUMBER:
-        case GET_STRING:
-          tweakInfo.addGetterCall(t.getSourceName(), tweakFunc, n);
-          break;
+        }
+        case GET_BOOLEAN, GET_NUMBER, GET_STRING ->
+            tweakInfo.addGetterCall(t.getSourceName(), tweakFunc, n);
       }
     }
   }

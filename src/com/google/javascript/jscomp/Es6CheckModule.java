@@ -45,13 +45,12 @@ public final class Es6CheckModule extends AbstractPostOrderCallback implements C
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case THIS:
+      case THIS -> {
         if (t.inModuleHoistScope()) {
           t.report(n, ES6_MODULE_REFERENCES_THIS);
         }
-        break;
-      case GETPROP:
-      case GETELEM:
+      }
+      case GETPROP, GETELEM -> {
         if (NodeUtil.isLValue(n)
             && !NodeUtil.isDeclarationLValue(n)
             && n.getFirstChild().isName()) {
@@ -65,8 +64,8 @@ public final class Es6CheckModule extends AbstractPostOrderCallback implements C
             }
           }
         }
-        break;
-      case NAME:
+      }
+      case NAME -> {
         if (NodeUtil.isLValue(n) && !NodeUtil.isDeclarationLValue(n)) {
           Var var = t.getScope().getVar(n.getString());
           if (var != null) {
@@ -80,9 +79,8 @@ public final class Es6CheckModule extends AbstractPostOrderCallback implements C
             }
           }
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
   }
 }

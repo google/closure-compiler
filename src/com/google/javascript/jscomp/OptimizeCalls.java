@@ -233,19 +233,16 @@ class OptimizeCalls implements CompilerPass {
 
       ImmutableList.Builder<Node> fns = ImmutableList.builder();
       switch (parent.getToken()) {
-        case CLASS:
+        case CLASS -> {
           if (definitionSite.isFirstChildOf(parent)) {
             Node constructorFnDef = NodeUtil.getEs6ClassConstructorMemberFunctionDef(parent);
             if (constructorFnDef != null) {
               fns.add(constructorFnDef.getOnlyChild());
             }
           }
-          break;
-        case FUNCTION:
-          fns.add(parent);
-          break;
-
-        case CLASS_MEMBERS:
+        }
+        case FUNCTION -> fns.add(parent);
+        case CLASS_MEMBERS -> {
           if (definitionSite.isMemberFunctionDef()) {
             fns.add(definitionSite.getLastChild());
           } else {
@@ -255,34 +252,27 @@ class OptimizeCalls implements CompilerPass {
               addValueFunctionNodes(fns, value);
             }
           }
-          break;
-
-        case OBJECTLIT:
+        }
+        case OBJECTLIT -> {
           checkArgument(
               definitionSite.isStringKey() || definitionSite.isMemberFunctionDef(), //
               definitionSite);
           addValueFunctionNodes(fns, definitionSite.getLastChild());
-          break;
-
-        case ASSIGN:
+        }
+        case ASSIGN -> {
           // Only a candidate if the assign isn't consumed.
           Node target = parent.getFirstChild();
           Node value = parent.getLastChild();
           if (definitionSite == target) {
             addValueFunctionNodes(fns, value);
           }
-          break;
-
-        case CONST:
-        case LET:
-        case VAR:
+        }
+        case CONST, LET, VAR -> {
           if (definitionSite.isName() && definitionSite.hasChildren()) {
             addValueFunctionNodes(fns, definitionSite.getFirstChild());
           }
-          break;
-
-        default:
-          break;
+        }
+        default -> {}
       }
       return fns.build();
     }
@@ -290,35 +280,27 @@ class OptimizeCalls implements CompilerPass {
     private static void addValueFunctionNodes(ImmutableList.Builder<Node> fns, Node n) {
       // TODO(johnlenz): add member definitions
       switch (n.getToken()) {
-        case CLASS:
+        case CLASS -> {
           {
             Node constructorFnDef = NodeUtil.getEs6ClassConstructorMemberFunctionDef(n);
             if (constructorFnDef != null) {
               fns.add(constructorFnDef.getOnlyChild());
             }
           }
-          break;
-        case FUNCTION:
-          fns.add(n);
-          break;
-        case HOOK:
+        }
+        case FUNCTION -> fns.add(n);
+        case HOOK -> {
           addValueFunctionNodes(fns, n.getSecondChild());
           addValueFunctionNodes(fns, n.getLastChild());
-          break;
-        case OR:
-        case AND:
-        case COALESCE:
+        }
+        case OR, AND, COALESCE -> {
           addValueFunctionNodes(fns, n.getFirstChild());
           addValueFunctionNodes(fns, n.getLastChild());
-          break;
-        case CAST:
-        case COMMA:
-          addValueFunctionNodes(fns, n.getLastChild());
-          break;
-
-        default:
+        }
+        case CAST, COMMA -> addValueFunctionNodes(fns, n.getLastChild());
+        default -> {
           // do nothing.
-          break;
+        }
       }
     }
 
@@ -574,19 +556,14 @@ class OptimizeCalls implements CompilerPass {
   static boolean isAllowedReference(Node n) {
     Node parent = n.getParent();
     switch (parent.getToken()) {
-      case FOR_IN:
-      case FOR_OF:
-      case FOR_AWAIT_OF:
+      case FOR_IN, FOR_OF, FOR_AWAIT_OF -> {
         // inspecting the properties is allowed.
         return parent.getSecondChild() == n;
-      case INSTANCEOF:
-      case TYPEOF:
-      case IN:
+      }
+      case INSTANCEOF, TYPEOF, IN -> {
         return true;
-      case GETELEM:
-      case GETPROP:
-      case OPTCHAIN_GETPROP:
-      case OPTCHAIN_GETELEM:
+      }
+      case GETELEM, GETPROP, OPTCHAIN_GETPROP, OPTCHAIN_GETELEM -> {
         // Calls escape the "this" value. a.foo() aliases "a" as "this" but general
         // property references do not.
         Node grandparent = parent.getParent();
@@ -596,7 +573,8 @@ class OptimizeCalls implements CompilerPass {
           return false; // `a.foo()` or `a?.foo()` or `a?.[foo]()`
         }
         return true;
-      case CLASS:
+      }
+      case CLASS -> {
         if (n.isFirstChildOf(parent)) {
           // class Name {
           // this is a definition, not a read reference
@@ -618,11 +596,13 @@ class OptimizeCalls implements CompilerPass {
           }
         }
         //
-      default:
+      }
+      default -> {
         if (NodeUtil.isNameDeclaration(parent) && !n.hasChildren()) {
           // allow "let x;"
           return true;
         }
+      }
     }
     return false;
   }

@@ -1144,18 +1144,16 @@ public final class ReplaceMessages {
         checkState(valueNode.isStringLit(), valueNode);
         String value = valueNode.getString();
         switch (key) {
-          case "key":
+          case "key" -> {
             jsMessageBuilder.setKey(value);
             msgKey = value;
-            break;
-          case "meaning":
+          }
+          case "meaning" -> {
             jsMessageBuilder.setMeaning(value);
             meaning = value;
-            break;
-          case "alt_id":
-            jsMessageBuilder.setAlternateId(value);
-            break;
-          case "msg_text":
+          }
+          case "alt_id" -> jsMessageBuilder.setAlternateId(value);
+          case "msg_text" -> {
             // This may be an ICU template that also has the `icu_placeholder_names` property, which
             // means we need to append multiple parts of the message to `jsMessageBuilder`. For now,
             // we will save the message text and current node, and we'll parse it once we know if
@@ -1163,20 +1161,15 @@ public final class ReplaceMessages {
             // properties is finished).
             messageText = value;
             messageTextNode = valueNode;
-            break;
-          case "isIcuTemplate":
-            isIcuTemplate = true;
-            break;
-          case "escapeLessThan":
-            // Just being present enables this option
-            escapeLessThanOption = true;
-            break;
-          case "unescapeHtmlEntities":
-            // just being present enables this option
-            unescapeHtmlEntitiesOption = true;
-            break;
-          default:
-            throw new IllegalStateException("unknown protected message key: " + strKey);
+          }
+          case "isIcuTemplate" -> isIcuTemplate = true;
+          case "escapeLessThan" ->
+              // Just being present enables this option
+              escapeLessThanOption = true;
+          case "unescapeHtmlEntities" ->
+              // just being present enables this option
+              unescapeHtmlEntitiesOption = true;
+          default -> throw new IllegalStateException("unknown protected message key: " + strKey);
         }
       }
 

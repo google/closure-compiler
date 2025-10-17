@@ -134,72 +134,58 @@ class MinimizedCondition {
    */
   private static MinimizedCondition computeMinimizedCondition(Node n) {
     switch (n.getToken()) {
-      case NOT: {
+      case NOT -> {
         MinimizedCondition subtree = computeMinimizedCondition(n.getFirstChild());
-        MeasuredNode positive = pickBest(
-            MeasuredNode.addNode(n, subtree.positive),
-            subtree.negative);
-          MeasuredNode negative =
-              pickBest(
-                  subtree.negative
-                      .negate(), // since parent node `n` is a NOT, we need to negate the subtree's
-                  // computed `negative` to obtain the parent `n`'s real negative.
-                  subtree.positive);
+        MeasuredNode positive =
+            pickBest(MeasuredNode.addNode(n, subtree.positive), subtree.negative);
+        MeasuredNode negative =
+            pickBest(
+                subtree.negative
+                    .negate(), // since parent node `n` is a NOT, we need to negate the subtree's
+                // computed `negative` to obtain the parent `n`'s real negative.
+                subtree.positive);
         return new MinimizedCondition(positive, negative);
       }
-      case AND:
-      case OR: {
-          Node complementNode = new Node(n.isAnd() ? Token.OR : Token.AND).srcref(n);
+      case AND, OR -> {
+        Node complementNode = new Node(n.isAnd() ? Token.OR : Token.AND).srcref(n);
         MinimizedCondition leftSubtree = computeMinimizedCondition(n.getFirstChild());
         MinimizedCondition rightSubtree = computeMinimizedCondition(n.getLastChild());
-        MeasuredNode positive = pickBest(
-            MeasuredNode.addNode(n,
-                leftSubtree.positive,
-                rightSubtree.positive),
-            MeasuredNode.addNode(complementNode,
-                leftSubtree.negative,
-                rightSubtree.negative).negate());
-        MeasuredNode negative = pickBest(
-            MeasuredNode.addNode(n,
-                leftSubtree.positive,
-                rightSubtree.positive).negate(),
-            MeasuredNode.addNode(complementNode,
-                leftSubtree.negative,
-                rightSubtree.negative).change());
+        MeasuredNode positive =
+            pickBest(
+                MeasuredNode.addNode(n, leftSubtree.positive, rightSubtree.positive),
+                MeasuredNode.addNode(complementNode, leftSubtree.negative, rightSubtree.negative)
+                    .negate());
+        MeasuredNode negative =
+            pickBest(
+                MeasuredNode.addNode(n, leftSubtree.positive, rightSubtree.positive).negate(),
+                MeasuredNode.addNode(complementNode, leftSubtree.negative, rightSubtree.negative)
+                    .change());
         return new MinimizedCondition(positive, negative);
       }
-      case HOOK: {
+      case HOOK -> {
         Node cond = n.getFirstChild();
         Node thenNode = cond.getNext();
         Node elseNode = thenNode.getNext();
         MinimizedCondition thenSubtree = computeMinimizedCondition(thenNode);
         MinimizedCondition elseSubtree = computeMinimizedCondition(elseNode);
-        MeasuredNode positive = MeasuredNode.addNode(
-            n,
-            MeasuredNode.forNode(cond),
-            thenSubtree.positive,
-            elseSubtree.positive);
-        MeasuredNode negative = MeasuredNode.addNode(
-            n,
-            MeasuredNode.forNode(cond),
-            thenSubtree.negative,
-            elseSubtree.negative);
+        MeasuredNode positive =
+            MeasuredNode.addNode(
+                n, MeasuredNode.forNode(cond), thenSubtree.positive, elseSubtree.positive);
+        MeasuredNode negative =
+            MeasuredNode.addNode(
+                n, MeasuredNode.forNode(cond), thenSubtree.negative, elseSubtree.negative);
         return new MinimizedCondition(positive, negative);
       }
-      case COMMA: {
+      case COMMA -> {
         Node lhs = n.getFirstChild();
         MinimizedCondition rhsSubtree = computeMinimizedCondition(lhs.getNext());
-        MeasuredNode positive = MeasuredNode.addNode(
-            n,
-            MeasuredNode.forNode(lhs),
-            rhsSubtree.positive);
-        MeasuredNode negative = MeasuredNode.addNode(
-            n,
-            MeasuredNode.forNode(lhs),
-            rhsSubtree.negative);
+        MeasuredNode positive =
+            MeasuredNode.addNode(n, MeasuredNode.forNode(lhs), rhsSubtree.positive);
+        MeasuredNode negative =
+            MeasuredNode.addNode(n, MeasuredNode.forNode(lhs), rhsSubtree.negative);
         return new MinimizedCondition(positive, negative);
       }
-      default: {
+      default -> {
         MeasuredNode pos = MeasuredNode.forNode(n);
         MeasuredNode neg = pos.negate();
         return new MinimizedCondition(pos, neg);

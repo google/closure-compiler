@@ -118,17 +118,17 @@ class ReplaceIdGenerators implements CompilerPass {
         RenamingMap map = gen.getValue();
         if (map instanceof RenamingToken renamingToken) {
           switch (renamingToken) {
-            case DISABLE:
+            case DISABLE -> {
               nameGenerators.put(name, null);
-              continue; // don't put an entry in idGeneratorsMap
-            case INCONSISTENT:
-              nameGenerators.put(
-                  name, createNameSupplier(RenameStrategy.INCONSISTENT, previousMap.get(name)));
-              break;
-            case STABLE:
-              nameGenerators.put(
-                  name, createNameSupplier(RenameStrategy.STABLE, previousMap.get(name)));
-              break;
+              continue;
+              // don't put an entry in idGeneratorsMap
+            }
+            case INCONSISTENT ->
+                nameGenerators.put(
+                    name, createNameSupplier(RenameStrategy.INCONSISTENT, previousMap.get(name)));
+            case STABLE ->
+                nameGenerators.put(
+                    name, createNameSupplier(RenameStrategy.STABLE, previousMap.get(name)));
           }
         } else {
           nameGenerators.put(name,

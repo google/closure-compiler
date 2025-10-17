@@ -260,20 +260,13 @@ final class PolymerPassStaticUtils {
     String typeString = typeValue.getString();
     Node typeNode;
     switch (typeString) {
-      case "Boolean":
-      case "String":
-      case "Number":
-        typeNode = IR.string(Ascii.toLowerCase(typeString));
-        break;
-      case "Array":
-      case "Function":
-      case "Object":
-      case "Date":
-        typeNode = new Node(Token.BANG, IR.string(typeString));
-        break;
-      default:
+      case "Boolean", "String", "Number" -> typeNode = IR.string(Ascii.toLowerCase(typeString));
+      case "Array", "Function", "Object", "Date" ->
+          typeNode = new Node(Token.BANG, IR.string(typeString));
+      default -> {
         compiler.report(JSError.make(property.value, PolymerPassErrors.POLYMER_INVALID_PROPERTY));
         typeNode = new Node(Token.QMARK);
+      }
     }
 
     typeNode.srcrefTree(typeValue);
