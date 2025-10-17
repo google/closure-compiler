@@ -297,17 +297,7 @@ public class ConvertToTypedInterface implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case TRY:
-        case LABEL:
-        case DEFAULT_CASE:
-        case CASE:
-        case DO:
-        case WHILE:
-        case FOR:
-        case FOR_IN:
-        case FOR_OF:
-        case FOR_AWAIT_OF:
-        case IF:
+        case TRY, LABEL, DEFAULT_CASE, CASE, DO, WHILE, FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, IF -> {
           if (n.hasParent()) {
             Node children = n.removeChildren();
             parent.addChildrenAfter(children, n);
@@ -321,8 +311,8 @@ public class ConvertToTypedInterface implements CompilerPass {
             n.detach();
             t.reportCodeChange();
           }
-          break;
-        case SWITCH:
+        }
+        case SWITCH -> {
           // shouldTraverse() removed the switch condition already, so we just need to handle the
           // cases.
           if (n.hasParent()) {
@@ -332,21 +322,16 @@ public class ConvertToTypedInterface implements CompilerPass {
             n.detach();
             t.reportCodeChange();
           }
-          break;
-        case VAR:
-        case LET:
-        case CONST:
-          splitNameDeclarationsAndRemoveDestructuring(n, t);
-          break;
-        case BLOCK:
+        }
+        case VAR, LET, CONST -> splitNameDeclarationsAndRemoveDestructuring(n, t);
+        case BLOCK -> {
           if (!parent.isFunction()) {
             parent.addChildrenAfter(n.removeChildren(), n);
             n.detach();
             t.reportCodeChange(parent);
           }
-          break;
-        default:
-          break;
+        }
+        default -> {}
       }
     }
 
@@ -512,33 +497,29 @@ public class ConvertToTypedInterface implements CompilerPass {
       for (Node member = n.getLastChild().getFirstChild(); member != null; ) {
         Node next = member.getNext();
         switch (member.getToken()) {
+          case MEMBER_FIELD_DEF, COMPUTED_FIELD_DEF -> {
             // MEMBER_FIELD_DEF's are handled in ProcessConstJsdocCallback which is called in the
             // traversal by its subclass PropogateConstJsdoc.
             // If no jsdoc is present on the MEMBER_FIELD_DEF, we will be add a Jsdoc in
             // `setUndeclaredToUnusableType()`.
             // No further simplification is needed for MEMBER_FIELD_DEF's when we call
             // `simplifyAll()` so we will break.
-          case MEMBER_FIELD_DEF:
-          case COMPUTED_FIELD_DEF:
-            break;
-          case EMPTY:
-            // a lonely `;` in a class body can just be deleted.
-            NodeUtil.deleteNode(member, compiler);
-            break;
-          case MEMBER_FUNCTION_DEF:
-          case GETTER_DEF:
-          case SETTER_DEF:
-            processFunction(member.getLastChild());
-            break;
-          case COMPUTED_PROP:
+          }
+          case EMPTY ->
+              // a lonely `;` in a class body can just be deleted.
+              NodeUtil.deleteNode(member, compiler);
+          case MEMBER_FUNCTION_DEF, GETTER_DEF, SETTER_DEF ->
+              processFunction(member.getLastChild());
+          case COMPUTED_PROP -> {
             checkState(
                 member.getSecondChild().isFunction(),
                 "Non-function computed class member: %s",
                 member);
             processFunction(member.getSecondChild());
-            break;
-          default:
-            throw new AssertionError(member.getToken() + " should not be handled by processClass");
+          }
+          default ->
+              throw new AssertionError(
+                  member.getToken() + " should not be handled by processClass");
         }
         member = next;
       }

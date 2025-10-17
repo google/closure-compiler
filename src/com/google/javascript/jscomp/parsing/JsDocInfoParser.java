@@ -336,16 +336,15 @@ public final class JsDocInfoParser {
   private boolean parseHelperLoop(JsDocToken token, List<ExtendedTypeInfo> extendedTypes) {
     while (true) {
       switch (token) {
-        case ANNOTATION:
+        case ANNOTATION -> {
           if (state == State.SEARCHING_ANNOTATION) {
             state = State.SEARCHING_NEWLINE;
             token = parseAnnotation(token, extendedTypes);
           } else {
             token = next();
           }
-          break;
-
-        case EOC:
+        }
+        case EOC -> {
           boolean success = true;
           // TODO(johnlenz): It should be a parse error to have an @extends
           // or similiar annotations in a file overview block.
@@ -369,29 +368,28 @@ public final class JsDocInfoParser {
             }
           }
           return success;
-
-        case EOF:
+        }
+        case EOF -> {
           // discard any accumulated information
           jsdocBuilder.build();
           addParserWarning(Msg.UNEXPECTED_EOF);
           checkExtendedTypes(extendedTypes);
           return false;
-
-        case EOL:
+        }
+        case EOL -> {
           if (state == State.SEARCHING_NEWLINE) {
             state = State.SEARCHING_ANNOTATION;
           }
           token = next();
-          break;
-
-        default:
+        }
+        default -> {
           if (token == JsDocToken.STAR && state == State.SEARCHING_ANNOTATION) {
             token = next();
           } else {
             state = State.SEARCHING_NEWLINE;
             token = eatTokensUntilEOL();
           }
-          break;
+        }
       }
     }
   }
@@ -416,22 +414,23 @@ public final class JsDocInfoParser {
       // Mark the beginning of the annotation.
       jsdocBuilder.markAnnotation(annotationName, lineno, charno);
 
+      boolean matchingRc;
       switch (annotation) {
-        case NG_INJECT:
+        case NG_INJECT -> {
           if (jsdocBuilder.isNgInjectRecorded()) {
             addParserWarning(Msg.JSDOC_NGINJECT_EXTRA);
           } else {
             jsdocBuilder.recordNgInject(true);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case ABSTRACT:
+        }
+        case ABSTRACT -> {
           if (!jsdocBuilder.recordAbstract()) {
             addTypeWarning(Msg.JSDOC_INCOMPAT_TYPE);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case AUTHOR:
+        }
+        case AUTHOR -> {
           if (jsdocBuilder.shouldParseDocumentation()) {
             ExtractionInfo authorInfo = extractSingleLineBlock();
             String author = authorInfo.string;
@@ -446,31 +445,32 @@ public final class JsDocInfoParser {
             token = eatUntilEOLIfNotAnnotation();
           }
           return token;
-
-        case UNRESTRICTED:
+        }
+        case UNRESTRICTED -> {
           if (!jsdocBuilder.recordUnrestricted()) {
             addTypeWarning(Msg.JSDOC_INCOMPAT_TYPE);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case STRUCT:
+        }
+        case STRUCT -> {
           if (!jsdocBuilder.recordStruct()) {
             addTypeWarning(Msg.JSDOC_INCOMPAT_TYPE);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case DICT:
+        }
+        case DICT -> {
           if (!jsdocBuilder.recordDict()) {
             addTypeWarning(Msg.JSDOC_INCOMPAT_TYPE);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case COLLAPSIBLE_OR_BREAK_MY_CODE:
+        }
+        case COLLAPSIBLE_OR_BREAK_MY_CODE -> {
           if (!jsdocBuilder.recordCollapsibleOrBreakMyCode()) {
             addParserWarning(Msg.JSDOC_COLLAPSIBLEORBREAKMYCODE);
           }
           return eatUntilEOLIfNotAnnotation();
-        case CONSTRUCTOR:
+        }
+        case CONSTRUCTOR -> {
           if (!jsdocBuilder.recordConstructor()) {
             if (jsdocBuilder.isInterfaceRecorded()) {
               addTypeWarning(Msg.JSDOC_INTERFACE_CONSTRUCTOR);
@@ -479,14 +479,14 @@ public final class JsDocInfoParser {
             }
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case RECORD:
+        }
+        case RECORD -> {
           if (!jsdocBuilder.recordImplicitMatch()) {
             addTypeWarning(Msg.JSDOC_RECORD);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case DEPRECATED:
+        }
+        case DEPRECATED -> {
           if (!jsdocBuilder.recordDeprecated()) {
             addParserWarning(Msg.JSDOC_DEPRECATED);
           }
@@ -502,8 +502,8 @@ public final class JsDocInfoParser {
 
           token = reasonInfo.token;
           return token;
-
-        case INTERFACE:
+        }
+        case INTERFACE -> {
           if (!jsdocBuilder.recordInterface()) {
             if (jsdocBuilder.isConstructorRecorded()) {
               addTypeWarning(Msg.JSDOC_INTERFACE_CONSTRUCTOR);
@@ -512,8 +512,8 @@ public final class JsDocInfoParser {
             }
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case DESC:
+        }
+        case DESC -> {
           if (jsdocBuilder.isDescriptionRecorded()) {
             addParserWarning(Msg.JSDOC_DESC_EXTRA);
             return eatUntilEOLIfNotAnnotation();
@@ -526,23 +526,21 @@ public final class JsDocInfoParser {
             token = descriptionInfo.token;
             return token;
           }
+        }
+        case TS_TYPE -> {
+          ExtractionInfo tsTypeInfo = extractMultilineTextualBlock(token);
 
-        case TS_TYPE:
-          {
-            ExtractionInfo tsTypeInfo = extractMultilineTextualBlock(token);
+          String tsType = tsTypeInfo.string;
 
-            String tsType = tsTypeInfo.string;
-
-            if (recordTsType) {
-              jsdocBuilder.recordTsType(tsType);
-            } else {
-              jsdocBuilder.recordTsType(TS_TYPE_PLACEHOLDER);
-            }
-            token = tsTypeInfo.token;
-            return token;
+          if (recordTsType) {
+            jsdocBuilder.recordTsType(tsType);
+          } else {
+            jsdocBuilder.recordTsType(TS_TYPE_PLACEHOLDER);
           }
-
-        case FILE_OVERVIEW:
+          token = tsTypeInfo.token;
+          return token;
+        }
+        case FILE_OVERVIEW -> {
           String fileOverview = "";
           if (jsdocBuilder.shouldParseDocumentation() && !lookAheadForAnnotation()) {
             ExtractionInfo fileOverviewInfo =
@@ -560,9 +558,8 @@ public final class JsDocInfoParser {
             addParserWarning(Msg.JSDOC_FILEOVERVIEW_EXTRA);
           }
           return token;
-
-        case LICENSE:
-        case PRESERVE:
+        }
+        case LICENSE, PRESERVE -> {
           // Always use PRESERVE for @license and @preserve blocks.
           ExtractionInfo preserveInfo =
               extractMultilineTextualBlock(token, WhitespaceOption.PRESERVE, true);
@@ -575,16 +572,16 @@ public final class JsDocInfoParser {
 
           token = preserveInfo.token;
           return token;
-
-        case ENHANCE:
+        }
+        case ENHANCE -> {
           ExtractionInfo enhanceInfo = extractSingleLineBlock();
           String enhance = enhanceInfo.string;
           token = enhanceInfo.token;
 
           jsdocBuilder.recordEnhance(enhance);
           return token;
-
-        case MODS:
+        }
+        case MODS -> {
           if (jsdocBuilder.isModsRecorded()) {
             addParserWarning(Msg.JSDOC_MODS_EXTRA);
           } else {
@@ -594,8 +591,8 @@ public final class JsDocInfoParser {
             token = eatUntilEOLIfNotAnnotation();
           }
           return token;
-
-        case ENUM:
+        }
+        case ENUM -> {
           token = next();
           lineno = stream.getLineno();
           charno = stream.getCharno();
@@ -621,33 +618,31 @@ public final class JsDocInfoParser {
             addTypeWarning(Msg.JSDOC_INCOMPAT_TYPE, lineno, charno);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case EXTERNS:
+        }
+        case EXTERNS -> {
           if (!jsdocBuilder.recordExterns()) {
             addParserWarning(Msg.JSDOC_EXTERNS);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case NO_COVERAGE:
+        }
+        case NO_COVERAGE -> {
           if (!jsdocBuilder.recordNoCoverage()) {
             addParserWarning(Msg.JSDOC_NOCOVERAGE);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case TYPE_SUMMARY:
+        }
+        case TYPE_SUMMARY -> {
           if (!jsdocBuilder.recordTypeSummary()) {
             addParserWarning(Msg.JSDOC_TYPESUMMARY);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case EXTENDS:
-        case IMPLEMENTS:
+        }
+        case EXTENDS, IMPLEMENTS -> {
           skipEOLs();
           token = next();
           lineno = stream.getLineno();
           charno = stream.getCharno();
-          boolean matchingRc = false;
-
+          matchingRc = false;
           if (token == JsDocToken.LEFT_CURLY) {
             token = next();
             matchingRc = true;
@@ -690,8 +685,8 @@ public final class JsDocInfoParser {
           }
           token = eatUntilEOLIfNotAnnotation(token);
           return token;
-
-        case LENDS:
+        }
+        case LENDS -> {
           skipEOLs();
 
           matchingRc = false;
@@ -713,8 +708,8 @@ public final class JsDocInfoParser {
             addTypeWarning(Msg.JSDOC_MISSING_RC);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case MEANING:
+        }
+        case MEANING -> {
           ExtractionInfo meaningInfo = extractMultilineTextualBlock(token);
           String meaning = meaningInfo.string;
           token = meaningInfo.token;
@@ -722,8 +717,8 @@ public final class JsDocInfoParser {
             addParserWarning(Msg.JSDOC_MEANING_EXTRA);
           }
           return token;
-
-        case ALTERNATE_MESSAGE_ID:
+        }
+        case ALTERNATE_MESSAGE_ID -> {
           ExtractionInfo alternateMessageIdInfo = extractSingleLineBlock();
           String alternateMessageId = alternateMessageIdInfo.string;
           token = alternateMessageIdInfo.token;
@@ -731,30 +726,30 @@ public final class JsDocInfoParser {
             addParserWarning(Msg.JSDOC_ALTERNATEMESSAGEID_EXTRA);
           }
           return token;
-
-        case CLOSURE_PRIMITIVE:
+        }
+        case CLOSURE_PRIMITIVE -> {
           skipEOLs();
           return parseClosurePrimitiveTag(next());
-
-        case NO_COMPILE:
+        }
+        case NO_COMPILE -> {
           if (!jsdocBuilder.recordNoCompile()) {
             addParserWarning(Msg.JSDOC_NOCOMPILE);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case NO_DTS:
+        }
+        case NO_DTS -> {
           if (!jsdocBuilder.recordNoDts()) {
             addParserWarning(Msg.JSDOC_NODTS);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case NO_COLLAPSE:
+        }
+        case NO_COLLAPSE -> {
           if (!jsdocBuilder.recordNoCollapse()) {
             addParserWarning(Msg.JSDOC_NOCOLLAPSE);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case ENCOURAGE_INLINING:
+        }
+        case ENCOURAGE_INLINING -> {
           if (!jsdocBuilder.recordEncourageInlining()) {
             addParserWarning(Msg.JSDOC_ENCOURAGE_INLINING);
           }
@@ -765,8 +760,8 @@ public final class JsDocInfoParser {
             addParserWarning(Msg.JSDOC_INCOMPAT_INLINING);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case REQUIRE_INLINING:
+        }
+        case REQUIRE_INLINING -> {
           if (!jsdocBuilder.recordRequireInlining()) {
             addParserWarning(Msg.JSDOC_REQUIRE_INLINING);
           }
@@ -777,8 +772,8 @@ public final class JsDocInfoParser {
             addParserWarning(Msg.JSDOC_INCOMPAT_INLINING);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case NO_INLINE:
+        }
+        case NO_INLINE -> {
           if (!jsdocBuilder.recordNoInline()) {
             addParserWarning(Msg.JSDOC_NOINLINE);
           }
@@ -789,81 +784,80 @@ public final class JsDocInfoParser {
             addParserWarning(Msg.JSDOC_INCOMPAT_INLINING);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case PROVIDE_GOOG:
+        }
+        case PROVIDE_GOOG -> {
           if (!jsdocBuilder.recordProvideGoog()) {
             addParserWarning(Msg.JSDOC_PROVIDE_GOOG);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case PROVIDE_ALREADY_PROVIDED:
+        }
+        case PROVIDE_ALREADY_PROVIDED -> {
           if (!jsdocBuilder.recordProvideAlreadyProvided()) {
             addParserWarning(Msg.JSDOC_PROVIDE_ALREADY_PROVIDED);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case PURE_OR_BREAK_MY_CODE:
+        }
+        case PURE_OR_BREAK_MY_CODE -> {
           if (!jsdocBuilder.recordPureOrBreakMyCode()) {
             addParserWarning(Msg.JSDOC_PUREORBREAKMYCODE);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case INHERIT_DOC:
-        case OVERRIDE:
+        }
+        case INHERIT_DOC, OVERRIDE -> {
           if (!jsdocBuilder.recordOverride()) {
             addTypeWarning(Msg.JSDOC_OVERRIDE);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case POLYMER:
+        }
+        case POLYMER -> {
           if (jsdocBuilder.isPolymerRecorded()) {
             addParserWarning(Msg.JSDOC_POLYMER_EXTRA);
           } else {
             jsdocBuilder.recordPolymer();
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case POLYMER_BEHAVIOR:
+        }
+        case POLYMER_BEHAVIOR -> {
           if (jsdocBuilder.isPolymerBehaviorRecorded()) {
             addParserWarning(Msg.JSDOC_POLYMERBEHAVIOR_EXTRA);
           } else {
             jsdocBuilder.recordPolymerBehavior();
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case CUSTOM_ELEMENT:
+        }
+        case CUSTOM_ELEMENT -> {
           if (jsdocBuilder.isCustomElementRecorded()) {
             addParserWarning(Msg.JSDOC_CUSTOMELEMENT_EXTRA);
           } else {
             jsdocBuilder.recordCustomElement();
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case MIXIN_CLASS:
+        }
+        case MIXIN_CLASS -> {
           if (jsdocBuilder.isMixinClassRecorded()) {
             addParserWarning(Msg.JSDOC_MIXINCLASS_EXTRA);
           } else {
             jsdocBuilder.recordMixinClass();
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case MIXIN_FUNCTION:
+        }
+        case MIXIN_FUNCTION -> {
           if (jsdocBuilder.isMixinFunctionRecorded()) {
             addParserWarning(Msg.JSDOC_MIXINFUNCTION_EXTRA);
           } else {
             jsdocBuilder.recordMixinFunction();
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case SASS_GENERATED_CSS_TS:
+        }
+        case SASS_GENERATED_CSS_TS -> {
           if (jsdocBuilder.isSassGeneratedCssTsRecorded()) {
             addParserWarning(Msg.JSDOC_SASS_GENERATED_CSS_TS);
           } else {
             jsdocBuilder.recordSassGeneratedCssTs();
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case CLOSURE_UNAWARE_CODE:
+        }
+        case CLOSURE_UNAWARE_CODE -> {
           if (!jsdocBuilder.recordClosureUnawareCode()) {
             addParserWarning(Msg.JSDOC_CLOSURE_UNAWARE_CODE_EXTRA);
           } else {
@@ -873,24 +867,22 @@ public final class JsDocInfoParser {
             addParserWarning(Msg.JSDOC_CLOSURE_UNAWARE_CODE_INVALID);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case THROWS:
-          {
-            lineno = stream.getLineno();
-            charno = stream.getCharno();
-            if (!lookAheadForAnnotation()) {
-              ExtractionInfo throwsInfo = extractMultilineTextualBlock(token);
-              String throwsAnnotation = throwsInfo.string;
-              throwsAnnotation = throwsAnnotation.trim();
-              if (throwsAnnotation.length() > 0) {
-                jsdocBuilder.recordThrowsAnnotation(throwsAnnotation);
-              }
-              token = throwsInfo.token;
+        }
+        case THROWS -> {
+          lineno = stream.getLineno();
+          charno = stream.getCharno();
+          if (!lookAheadForAnnotation()) {
+            ExtractionInfo throwsInfo = extractMultilineTextualBlock(token);
+            String throwsAnnotation = throwsInfo.string;
+            throwsAnnotation = throwsAnnotation.trim();
+            if (throwsAnnotation.length() > 0) {
+              jsdocBuilder.recordThrowsAnnotation(throwsAnnotation);
             }
-            return token;
+            token = throwsInfo.token;
           }
-
-        case PARAM:
+          return token;
+        }
+        case PARAM -> {
           skipEOLs();
           token = next();
           lineno = stream.getLineno();
@@ -989,24 +981,24 @@ public final class JsDocInfoParser {
             token = eatUntilEOLIfNotAnnotation();
           }
           return token;
-
-        case NO_SIDE_EFFECTS:
+        }
+        case NO_SIDE_EFFECTS -> {
           if (!jsdocBuilder.recordNoSideEffects()) {
             addParserWarning(Msg.JSDOC_NOSIDEEFFECTS);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case MODIFIES:
+        }
+        case MODIFIES -> {
           token = parseModifiesTag(next());
           return token;
-
-        case IMPLICIT_CAST:
+        }
+        case IMPLICIT_CAST -> {
           if (!jsdocBuilder.recordImplicitCast()) {
             addTypeWarning(Msg.JSDOC_IMPLICITCAST);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case SEE:
+        }
+        case SEE -> {
           if (jsdocBuilder.shouldParseDocumentation()) {
             ExtractionInfo referenceInfo = extractSingleLineBlock();
             String reference = referenceInfo.string;
@@ -1022,134 +1014,137 @@ public final class JsDocInfoParser {
             token = eatUntilEOLIfNotAnnotation();
           }
           return token;
-
-        case SUPPRESS:
+        }
+        case SUPPRESS -> {
           token = parseSuppressTag(next());
           return token;
+        }
+        case TEMPLATE -> {
+          // Attempt to parse a template bound type.
+          JSTypeExpression boundTypeExpression = null;
+          if (match(JsDocToken.LEFT_CURLY)) {
+            addParserWarning(Msg.JSDOC_TEMPLATE_BOUNDEDGENERICS_USED, lineno, charno);
 
-        case TEMPLATE:
-          {
-            // Attempt to parse a template bound type.
-            JSTypeExpression boundTypeExpression = null;
-            if (match(JsDocToken.LEFT_CURLY)) {
-              addParserWarning(Msg.JSDOC_TEMPLATE_BOUNDEDGENERICS_USED, lineno, charno);
-
-              Node boundTypeNode = parseTypeExpressionAnnotation(next());
-              if (boundTypeNode != null) {
-                boundTypeExpression = createJSTypeExpression(boundTypeNode);
-              }
+            Node boundTypeNode = parseTypeExpressionAnnotation(next());
+            if (boundTypeNode != null) {
+              boundTypeExpression = createJSTypeExpression(boundTypeNode);
             }
-
-            // Collect any names of template types.
-            List<String> templateNames = new ArrayList<>();
-            if (!match(JsDocToken.COLON)) {
-              // Skip colons so as not to consume TTLs accidentally.
-              // Parse a list of comma separated names.
-              do {
-                @Nullable Node nameNode = parseNameExpression(next());
-                @Nullable String templateName = (nameNode == null) ? null : nameNode.getString();
-
-                if (validTemplateTypeName(templateName)) {
-                  templateNames.add(templateName);
-                }
-              } while (eatIfMatch(JsDocToken.COMMA));
-            }
-
-            // Look for some TTL. Always use TRIM for template TTL expressions.
-            @Nullable Node ttlAst = null;
-            if (match(JsDocToken.COLON)) {
-              // TODO(nickreid): Fix `extractMultilineTextualBlock` so the result includes the
-              // current token. At present, it reads the stream directly and bypasses any previously
-              // read tokens.
-              ExtractionInfo ttlExtraction =
-                  extractMultilineTextualBlock(current(), WhitespaceOption.TRIM, false);
-              token = ttlExtraction.token;
-              ttlAst = parseTtlAst(ttlExtraction, lineno, charno);
-            } else {
-              token = eatUntilEOLIfNotAnnotation(current());
-            }
-
-            // Validate the number of declared template names, which depends on bounds and TTL.
-            switch (templateNames.size()) {
-              case 0:
-                addTypeWarning(Msg.JSDOC_TEMPLATE_NAME_MISSING, lineno, charno);
-                return token; // There's nothing we can connect a bound or TTL to.
-              case 1:
-                break;
-              default:
-                if (boundTypeExpression != null || ttlAst != null) {
-                  addTypeWarning(Msg.JSDOC_TEMPLATE_MULTIPLEDECLARATION, lineno, charno);
-                }
-                break;
-            }
-
-            if (boundTypeExpression != null && ttlAst != null) {
-              addTypeWarning(Msg.JSDOC_TEMPLATE_BOUNDSWITHTTL, lineno, charno);
-              return token; // It's undecidable what the user intent was.
-            }
-
-            // Based on the form form of the declaration, record the information in the JsDocInfo.
-            if (ttlAst != null) {
-              if (!jsdocBuilder.recordTypeTransformation(templateNames.get(0), ttlAst)) {
-                addTypeWarning(Msg.JSDOC_TEMPLATE_NAME_REDECLARATION, lineno, charno);
-              }
-            } else if (boundTypeExpression != null) {
-              if (!jsdocBuilder.recordTemplateTypeName(templateNames.get(0), boundTypeExpression)) {
-                addTypeWarning(Msg.JSDOC_TEMPLATE_NAME_REDECLARATION, lineno, charno);
-              }
-            } else {
-              for (String templateName : templateNames) {
-                if (!jsdocBuilder.recordTemplateTypeName(templateName)) {
-                  addTypeWarning(Msg.JSDOC_TEMPLATE_NAME_REDECLARATION, lineno, charno);
-                }
-              }
-            }
-
-            return token;
           }
 
-        case IDGENERATOR:
+          // Collect any names of template types.
+          List<String> templateNames = new ArrayList<>();
+          if (!match(JsDocToken.COLON)) {
+            // Skip colons so as not to consume TTLs accidentally.
+            // Parse a list of comma separated names.
+            do {
+              @Nullable Node nameNode = parseNameExpression(next());
+              @Nullable String templateName = (nameNode == null) ? null : nameNode.getString();
+
+              if (validTemplateTypeName(templateName)) {
+                templateNames.add(templateName);
+              }
+            } while (eatIfMatch(JsDocToken.COMMA));
+          }
+
+          // Look for some TTL. Always use TRIM for template TTL expressions.
+          @Nullable Node ttlAst = null;
+          if (match(JsDocToken.COLON)) {
+            // TODO(nickreid): Fix `extractMultilineTextualBlock` so the result includes the
+            // current token. At present, it reads the stream directly and bypasses any previously
+            // read tokens.
+            ExtractionInfo ttlExtraction =
+                extractMultilineTextualBlock(current(), WhitespaceOption.TRIM, false);
+            token = ttlExtraction.token;
+            ttlAst = parseTtlAst(ttlExtraction, lineno, charno);
+          } else {
+            token = eatUntilEOLIfNotAnnotation(current());
+          }
+
+          // Validate the number of declared template names, which depends on bounds and TTL.
+          switch (templateNames.size()) {
+            case 0:
+              addTypeWarning(Msg.JSDOC_TEMPLATE_NAME_MISSING, lineno, charno);
+              return token; // There's nothing we can connect a bound or TTL to.
+            case 1:
+              break;
+            default:
+              if (boundTypeExpression != null || ttlAst != null) {
+                addTypeWarning(Msg.JSDOC_TEMPLATE_MULTIPLEDECLARATION, lineno, charno);
+              }
+              break;
+          }
+
+          if (boundTypeExpression != null && ttlAst != null) {
+            addTypeWarning(Msg.JSDOC_TEMPLATE_BOUNDSWITHTTL, lineno, charno);
+            return token; // It's undecidable what the user intent was.
+          }
+
+          // Based on the form form of the declaration, record the information in the JsDocInfo.
+          if (ttlAst != null) {
+            if (!jsdocBuilder.recordTypeTransformation(templateNames.get(0), ttlAst)) {
+              addTypeWarning(Msg.JSDOC_TEMPLATE_NAME_REDECLARATION, lineno, charno);
+            }
+          } else if (boundTypeExpression != null) {
+            if (!jsdocBuilder.recordTemplateTypeName(templateNames.get(0), boundTypeExpression)) {
+              addTypeWarning(Msg.JSDOC_TEMPLATE_NAME_REDECLARATION, lineno, charno);
+            }
+          } else {
+            for (String templateName : templateNames) {
+              if (!jsdocBuilder.recordTemplateTypeName(templateName)) {
+                addTypeWarning(Msg.JSDOC_TEMPLATE_NAME_REDECLARATION, lineno, charno);
+              }
+            }
+          }
+
+          return token;
+        }
+        case IDGENERATOR -> {
           token = parseIdGeneratorTag(next());
           return token;
-        case LOG_TYPE_IN_COMPILER:
+        }
+        case LOG_TYPE_IN_COMPILER -> {
           var unused = jsdocBuilder.recordLogTypeInCompiler();
           return eatUntilEOLIfNotAnnotation();
-        case NOT_IMPLEMENTED:
-        case JSX:
-        case JSX_FRAGMENT:
-        case SOY_MODULE:
-        case SOY_TEMPLATE:
-        case WIZ_ANALYZER:
-        case MAY_HAVE_EXTRA_EDGE:
+        }
+        case NOT_IMPLEMENTED,
+            JSX,
+            JSX_FRAGMENT,
+            SOY_MODULE,
+            SOY_TEMPLATE,
+            WIZ_ANALYZER,
+            MAY_HAVE_EXTRA_EDGE -> {
           return eatUntilEOLIfNotAnnotation();
-        case USED_VIA_DOT_CONSTRUCTOR:
+        }
+        case USED_VIA_DOT_CONSTRUCTOR -> {
           if (!jsdocBuilder.recordUsedViaDotConstructor()) {
             addParserWarning(Msg.JSDOC_USEDVIADOTCONSTRUCTOR);
           }
           return eatUntilEOLIfNotAnnotation();
-        case WIZACTION:
+        }
+        case WIZACTION -> {
           if (!jsdocBuilder.recordWizaction()) {
             addParserWarning(Msg.JSDOC_WIZACTION);
           }
           return eatUntilEOLIfNotAnnotation();
-        case WIZCALLBACK:
+        }
+        case WIZCALLBACK -> {
           if (!jsdocBuilder.recordWizcallback()) {
             addParserWarning(Msg.JSDOC_WIZCALLBACK);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case CONSTANT:
-        case FINAL:
-        case DEFINE:
-        case EXPORT:
-        case RETURN:
-        case PACKAGE:
-        case PRIVATE:
-        case PROTECTED:
-        case PUBLIC:
-        case THIS:
-        case TYPE:
-        case TYPEDEF:
+        }
+        case CONSTANT,
+            FINAL,
+            DEFINE,
+            EXPORT,
+            RETURN,
+            PACKAGE,
+            PRIVATE,
+            PROTECTED,
+            PUBLIC,
+            THIS,
+            TYPE,
+            TYPEDEF -> {
           lineno = stream.getLineno();
           charno = stream.getCharno();
 
@@ -1316,6 +1311,7 @@ public final class JsDocInfoParser {
           }
 
           return eatUntilEOLIfNotAnnotation();
+        }
       }
     }
 
@@ -1585,31 +1581,31 @@ public final class JsDocInfoParser {
     }
 
     switch (idgenKind) {
-      case "unique":
+      case "unique" -> {
         if (!jsdocBuilder.recordIdGenerator()) {
           addParserWarning(Msg.JSDOC_IDGEN_DUPLICATE);
         }
-        break;
-      case "consistent":
+      }
+      case "consistent" -> {
         if (!jsdocBuilder.recordConsistentIdGenerator()) {
           addParserWarning(Msg.JSDOC_IDGEN_DUPLICATE);
         }
-        break;
-      case "stable":
+      }
+      case "stable" -> {
         if (!jsdocBuilder.recordStableIdGenerator()) {
           addParserWarning(Msg.JSDOC_IDGEN_DUPLICATE);
         }
-        break;
-      case "xid":
+      }
+      case "xid" -> {
         if (!jsdocBuilder.recordXidGenerator()) {
           addParserWarning(Msg.JSDOC_IDGEN_DUPLICATE);
         }
-        break;
-      case "mapped":
+      }
+      case "mapped" -> {
         if (!jsdocBuilder.recordMappedIdGenerator()) {
           addParserWarning(Msg.JSDOC_IDGEN_DUPLICATE);
         }
-        break;
+      }
     }
 
     return token;
@@ -1879,7 +1875,7 @@ public final class JsDocInfoParser {
 
     do {
       switch (token) {
-        case STAR:
+        case STAR -> {
           if (ignoreStar) {
             // Mark the position after the star as the new start of the line.
             lineStartChar = stream.getCharno() + 1;
@@ -1901,8 +1897,8 @@ public final class JsDocInfoParser {
             token = next();
           }
           continue;
-
-        case EOL:
+        }
+        case EOL -> {
           if (option != WhitespaceOption.SINGLE_LINE) {
             builder.append('\n');
           }
@@ -1911,8 +1907,8 @@ public final class JsDocInfoParser {
           lineStartChar = 0;
           token = next();
           continue;
-
-        default:
+        }
+        default -> {
           ignoreStar = false;
           state = State.SEARCHING_ANNOTATION;
 
@@ -1953,6 +1949,7 @@ public final class JsDocInfoParser {
 
           builder.append(line);
           token = next();
+        }
       }
     } while (true);
   }
@@ -2164,7 +2161,7 @@ public final class JsDocInfoParser {
     int lineno = stream.getLineno();
     int charno = stream.getCharno();
     switch (token) {
-      case QMARK:
+      case QMARK -> {
         // A QMARK could mean that a type is nullable, or that it's unknown.
         // We use look-ahead 1 to determine whether it's unknown. Otherwise,
         // we assume it means nullable. There are 8 cases:
@@ -2194,9 +2191,11 @@ public final class JsDocInfoParser {
         }
 
         return wrapNode(Token.QMARK, parseBasicTypeExpression(token), lineno, charno);
-      case BANG:
+      }
+      case BANG -> {
         return wrapNode(Token.BANG, parseBasicTypeExpression(next()), lineno, charno);
-      default:
+      }
+      default -> {
         Node basicTypeExpr = parseBasicTypeExpression(token);
         lineno = stream.getLineno();
         charno = stream.getCharno();
@@ -2211,6 +2210,7 @@ public final class JsDocInfoParser {
         }
 
         return basicTypeExpr;
+      }
     }
   }
 

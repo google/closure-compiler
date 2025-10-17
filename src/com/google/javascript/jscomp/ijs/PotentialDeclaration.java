@@ -368,18 +368,22 @@ abstract class PotentialDeclaration {
       //   2. ASSIGN: a.b = goog.define('c', 2);
       //   3. NAME: var x = goog.define('d', 3);
       switch (callNode.getParent().getToken()) {
-        case EXPR_RESULT:
+        case EXPR_RESULT -> {
           return new DefineDeclaration(
               callNode.getSecondChild().getString(), callNode, callNode.getLastChild());
-        case ASSIGN:
+        }
+        case ASSIGN -> {
           Node previous = callNode.getPrevious();
           return new DefineDeclaration(
               previous.getQualifiedName(), previous, callNode.getLastChild());
-        case NAME:
+        }
+        case NAME -> {
           Node parent = callNode.getParent();
           return new DefineDeclaration(parent.getString(), parent, callNode.getLastChild());
-        default:
-          throw new IllegalStateException("Unexpected parent: " + callNode.getParent().getToken());
+        }
+        default ->
+            throw new IllegalStateException(
+                "Unexpected parent: " + callNode.getParent().getToken());
       }
     }
 

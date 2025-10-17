@@ -48,25 +48,25 @@ abstract class ProcessConstJsdocCallback extends NodeTraversal.AbstractPostOrder
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case CLASS:
+      case CLASS -> {
         if (NodeUtil.isStatementParent(parent)) {
           currentFile.recordNameDeclaration(n.getFirstChild());
         }
-        break;
-      case MEMBER_FIELD_DEF:
+      }
+      case MEMBER_FIELD_DEF -> {
         if (NodeUtil.getRValueOfLValue(n) != null) {
           processDeclarationWithRhs(t, n);
         }
         currentFile.recordMemberFieldDef(n);
-        break;
-      case FUNCTION:
+      }
+      case FUNCTION -> {
         if (NodeUtil.isStatementParent(parent)) {
           currentFile.recordNameDeclaration(n.getFirstChild());
         } else if (ClassUtil.isClassMethod(n) && ClassUtil.hasNamedClass(n)) {
           currentFile.recordMethod(n);
         }
-        break;
-      case EXPR_RESULT:
+      }
+      case EXPR_RESULT -> {
         Node expr = n.getFirstChild();
         switch (expr.getToken()) {
           case CALL:
@@ -90,21 +90,18 @@ abstract class ProcessConstJsdocCallback extends NodeTraversal.AbstractPostOrder
           default:
             throw new IllegalArgumentException("Unexpected declaration: " + expr);
         }
-        break;
-      case VAR:
-      case CONST:
-      case LET:
+      }
+      case VAR, CONST, LET -> {
         checkState(n.hasOneChild(), n);
         recordDeclaration(t, n.getFirstChild(), n.getFirstChild().getLastChild());
-        break;
-      case STRING_KEY:
+      }
+      case STRING_KEY -> {
         if (parent.isObjectLit() && n.hasOneChild()) {
           processDeclarationWithRhs(t, n);
           currentFile.recordStringKeyDeclaration(n);
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
   }
 

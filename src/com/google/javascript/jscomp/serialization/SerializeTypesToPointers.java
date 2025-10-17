@@ -278,15 +278,16 @@ final class SerializeTypesToPointers {
 
       TypeProto typeProto = typePool.getTypeList().get(trimOffset(poolOffset));
       switch (typeProto.getKindCase()) {
-        case UNION:
+        case UNION -> {
           return ColorId.union(
               typeProto.getUnion().getUnionMemberList().stream()
                   .map(pointer -> typePointerToId(pointer, typePool))
                   .collect(toImmutableSet()));
-        case OBJECT:
+        }
+        case OBJECT -> {
           return ColorId.fromBytes(typeProto.getObject().getUuid());
-        case KIND_NOT_SET:
-          break;
+        }
+        case KIND_NOT_SET -> {}
       }
       throw new AssertionError("Unrecognized TypeProto " + typeProto);
     }

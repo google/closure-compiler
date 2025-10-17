@@ -99,28 +99,34 @@ final class JsdocUtil {
 
   static @Nullable JSDocInfo getJSDocForRhs(Node rhs, JSDocInfo oldJSDoc) {
     switch (NodeUtil.getKnownValueType(rhs)) {
-      case BOOLEAN:
+      case BOOLEAN -> {
         return getConstJSDoc(oldJSDoc, "boolean");
-      case NUMBER:
+      }
+      case NUMBER -> {
         return getConstJSDoc(oldJSDoc, "number");
-      case BIGINT:
+      }
+      case BIGINT -> {
         return getConstJSDoc(oldJSDoc, "bigint");
-      case STRING:
+      }
+      case STRING -> {
         return getConstJSDoc(oldJSDoc, "string");
-      case NULL:
+      }
+      case NULL -> {
         return getConstJSDoc(oldJSDoc, "null");
-      case VOID:
+      }
+      case VOID -> {
         return getConstJSDoc(oldJSDoc, "void");
-      case OBJECT:
+      }
+      case OBJECT -> {
         if (rhs.isRegExp()) {
           return getConstJSDoc(oldJSDoc, new Node(Token.BANG, IR.string("RegExp")));
         }
-        break;
-      case UNDETERMINED:
+      }
+      case UNDETERMINED -> {
         if (oldJSDoc != null && oldJSDoc.getDescription() != null) {
           return getConstJSDoc(oldJSDoc, "string");
         }
-        break;
+      }
     }
     if (rhs.isCast()) {
       return getConstJSDoc(oldJSDoc, rhs.getJSDocInfo().getType().getRoot());
@@ -138,25 +144,22 @@ final class JsdocUtil {
     }
     Node typeAst = expr.getRoot();
     switch (typeAst.getToken()) {
-      case EQUALS:
+      case EQUALS -> {
         Node typeRoot = typeAst.getFirstChild().cloneTree();
         if (!decl.isDefaultParam()) {
           typeRoot = new Node(Token.PIPE, typeRoot, IR.string("undefined"));
         }
         typeAst = typeRoot;
-        break;
-      case ITER_REST:
-        {
-          Node newType = new Node(Token.BANG);
-          Node array = IR.string("Array");
-          newType.addChildToBack(array);
-          Node block = new Node(Token.BLOCK, typeAst.getFirstChild().cloneTree());
-          array.addChildToBack(block);
-          typeAst = newType;
-          break;
-        }
-      default:
-        break;
+      }
+      case ITER_REST -> {
+        Node newType = new Node(Token.BANG);
+        Node array = IR.string("Array");
+        newType.addChildToBack(array);
+        Node block = new Node(Token.BLOCK, typeAst.getFirstChild().cloneTree());
+        array.addChildToBack(block);
+        typeAst = newType;
+      }
+      default -> {}
     }
     return getConstJSDoc(oldJSDoc, typeAst);
   }
