@@ -54,11 +54,6 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
   }
 
   @Override
-  protected int getNumRepetitions() {
-    return 1; // should reach fixed point in a single run
-  }
-
-  @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CompilerPass() {
       @Override

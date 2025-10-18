@@ -78,12 +78,6 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     return options;
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    // The normalize pass is only run once.
-    return 1;
-  }
-
   @Before
   public void customSetUp() throws Exception {
     removeConst = false;

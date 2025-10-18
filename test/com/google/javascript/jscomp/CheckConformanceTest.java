@@ -117,13 +117,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
         reportingMode);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    // This compiler pass is not idempotent and should only be run over a
-    // parse tree once.
-    return 1;
-  }
-
   @Test
   public void testViolation1() {
     configuration =

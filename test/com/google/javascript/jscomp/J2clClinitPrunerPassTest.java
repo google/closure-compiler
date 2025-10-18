@@ -39,12 +39,6 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
   }
 
   @Override
-  protected int getNumRepetitions() {
-    // A single run should be sufficient.
-    return 1;
-  }
-
-  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

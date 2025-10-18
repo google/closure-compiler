@@ -34,12 +34,6 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   }
 
   @Override
-  protected int getNumRepetitions() {
-    // A single run should be sufficient to move all definitions to their final destinations.
-    return 1;
-  }
-
-  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

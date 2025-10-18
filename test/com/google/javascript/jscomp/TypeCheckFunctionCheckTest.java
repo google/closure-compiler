@@ -47,13 +47,6 @@ public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
   }
 
   @Override
-  protected int getNumRepetitions() {
-    // TypeCheck will only run once, regardless of what this returns.
-    // We return 1 so that the framework only expects 1 warning.
-    return 1;
-  }
-
-  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

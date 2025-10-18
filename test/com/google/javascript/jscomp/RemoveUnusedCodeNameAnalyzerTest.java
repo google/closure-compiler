@@ -67,12 +67,6 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   @Override
-  protected int getNumRepetitions() {
-    // pass reaches steady state after 1 iteration.
-    return 1;
-  }
-
-  @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new MarkNoSideEffectCallsAndRemoveUnusedCodeRunner(compiler);
   }

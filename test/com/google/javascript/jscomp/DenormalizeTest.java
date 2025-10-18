@@ -36,12 +36,6 @@ public final class DenormalizeTest extends CompilerTestCase {
     return new NormalizeAndDenormalizePass(compiler, outputFeatureSet);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    // The normalize pass is only run once.
-    return 1;
-  }
-
   @Test
   public void testInlineVarNullishCoalesce() {
     test(

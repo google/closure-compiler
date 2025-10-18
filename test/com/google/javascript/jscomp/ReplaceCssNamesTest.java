@@ -121,13 +121,6 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     renamingMap = getPartialMap();
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    // The first pass strips the goog.getCssName even if a warning is issued,
-    // such that a subsequent pass won't issue a warning.
-    return 1;
-  }
-
   @Test
   public void testSimpleValidMapping() {
     test("function f() { goog.setCssNameMapping({}); }", "function f() {}");

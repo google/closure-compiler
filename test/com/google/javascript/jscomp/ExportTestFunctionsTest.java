@@ -45,12 +45,6 @@ public final class ExportTestFunctionsTest extends CompilerTestCase {
     return new ExportTestFunctions(compiler, "google_exportSymbol", "google_exportProperty");
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    // This pass only runs once.
-    return 1;
-  }
-
   @Test
   public void testFunctionsAreExported() {
     test(

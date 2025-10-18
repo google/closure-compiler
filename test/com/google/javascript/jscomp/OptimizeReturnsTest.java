@@ -49,12 +49,6 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
     enableGatherExternProperties();
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    // run pass once.
-    return 1;
-  }
-
   @Test
   public void nullishCoalesceReturnRemoved() {
     test(

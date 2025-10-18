@@ -44,12 +44,6 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
         compiler, getName(), currentPeepholePasses.toArray(new AbstractPeepholeOptimization[0]));
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    // Our tests do not require multiple passes to reach a fixed-point.
-    return 1;
-  }
-
   /**
    * PeepholeOptimizationsPass should handle the case when no peephole optimizations are turned on.
    */

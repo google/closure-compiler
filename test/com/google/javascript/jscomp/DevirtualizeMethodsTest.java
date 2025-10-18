@@ -43,12 +43,6 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
     super(EXTERNAL_SYMBOLS);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    // run pass once.
-    return 1;
-  }
-
   @Before
   public void customSetUp() throws Exception {
     enableNormalize(); // Required for `OptimizeCalls`.

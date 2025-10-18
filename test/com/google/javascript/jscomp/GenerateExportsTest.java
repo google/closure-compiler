@@ -48,12 +48,6 @@ public final class GenerateExportsTest extends CompilerTestCase {
   }
 
   @Override
-  protected int getNumRepetitions() {
-    // This pass only runs once.
-    return 1;
-  }
-
-  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

@@ -66,13 +66,6 @@ public final class ProcessTweaksTest extends CompilerTestCase {
     };
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    // Only do one repetition, so that we can make sure the first pass keeps
-    // GlobalNamespace up to date.
-    return 1;
-  }
-
   @Test
   public void testBasicTweak1() {
     testSame(

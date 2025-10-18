@@ -57,12 +57,6 @@ public final class NormalizeTest extends CompilerTestCase {
     return options;
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    // The normalize pass is only run once.
-    return 1;
-  }
-
   @Before
   public void customSetUp() throws Exception {
     // Validate that Normalize copies colors onto any nodes it synthesizes
@@ -1611,11 +1605,6 @@ public final class NormalizeTest extends CompilerTestCase {
     // TODO(johnlenz): fix this so it is just another test case.
     CompilerTestCase tester =
         new CompilerTestCase() {
-          @Override
-          protected int getNumRepetitions() {
-            // The normalize pass is only run once.
-            return 1;
-          }
 
           @Override
           protected CompilerPass getProcessor(Compiler compiler) {
