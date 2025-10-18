@@ -29,12 +29,6 @@ public final class RenameLabelsTest extends CompilerTestCase {
     return new RenameLabels(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    // TODO(b/33104006): remove this override.
-    return 2;
-  }
-
   @Test
   public void testRenameInFunction() {
     test("function x(){ Foo:a(); }", "function x(){ a(); }");
@@ -117,8 +111,8 @@ public final class RenameLabelsTest extends CompilerTestCase {
         "Foo:Goo:while(1){a(); continue Goo; break Foo;}",
         "a:b:while(1){a(); continue b;break a;}");
 
-    test("Foo:Bar:X:{ break Bar; }", "a:{ break a; }");
-    test("Foo:Bar:X:{ break Bar; break X; }", "a:b:{ break a; break b;}");
+    test("Foo:Bar:X:{ break Bar; }", "b:{ break b; }");
+    test("Foo:Bar:X:{ break Bar; break X; }", "b:c:{ break b; break c;}");
     test("Foo:Bar:X:{ break Bar; break Foo; }", "a:b:{ break b; break a;}");
 
     test("Foo:while (1){a(); break;}", "while (1){a(); break;}");
