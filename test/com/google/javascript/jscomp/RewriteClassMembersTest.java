@@ -1003,6 +1003,29 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           [2] = this[1];
         }
         """);
+
+    testRewrite(
+        """
+        class Clazz {
+          static {}  // Make RewriteClassMembers transform this class.
+          [Symbol.toPrimitive]() {
+            return 42;
+          }
+        }
+        """,
+        """
+        var COMPFIELD$0 = Symbol.toPrimitive;
+        class Clazz {
+          [COMPFIELD$0]() {
+            return 42;
+          }
+          static STATIC_INIT$1() {
+            {
+            }
+          }
+        }
+        Clazz.STATIC_INIT$1();
+        """);
   }
 
   @Test
@@ -1218,6 +1241,29 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         };
         testcode$classdecl$var0.STATIC_INIT$0();
         foo(testcode$classdecl$var0);
+        """);
+
+    testRewrite(
+        """
+        class Clazz {
+          static {}  // Make RewriteClassMembers transform this class.
+          static [Symbol.hasInstance](x) {
+            return false;
+          }
+        }
+        """,
+        """
+        var COMPFIELD$0 = Symbol.hasInstance;
+        class Clazz {
+          static [COMPFIELD$0](x) {
+            return false;
+          }
+          static STATIC_INIT$1() {
+            {
+            }
+          }
+        }
+        Clazz.STATIC_INIT$1();
         """);
   }
 
