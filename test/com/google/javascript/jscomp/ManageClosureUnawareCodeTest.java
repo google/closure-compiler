@@ -106,9 +106,10 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
               }
             }
           };
-      for (List<Node> changedScopeNodes = compiler.getChangedScopeNodesForPass(passName);
+      for (List<Node> changedScopeNodes =
+              compiler.getChangeTracker().getChangedScopeNodesForPass(passName);
           changedScopeNodes == null || !changedScopeNodes.isEmpty();
-          changedScopeNodes = compiler.getChangedScopeNodesForPass(passName)) {
+          changedScopeNodes = compiler.getChangeTracker().getChangedScopeNodesForPass(passName)) {
         // changedScopeNodes is only null if this is the first run of this pass.
         if (changedScopeNodes != null) {
           NodeTraversal.traverseScopeRoots(

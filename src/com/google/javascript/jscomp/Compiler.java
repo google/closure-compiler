@@ -288,13 +288,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private static final Joiner pathJoiner = Joiner.on(Platform.getFileSeperator());
 
-  // Starts at 0, increases as "interesting" things happen.
-  // Nothing happens at time START_TIME, the first pass starts at time 1.
-  // The correctness of scope-change tracking relies on Node/getIntProp
-  // returning 0 if the custom attribute on a node hasn't been set.
-  private int changeStamp = 1;
-
-  private final Timeline<Node> changeTimeline = new Timeline<>();
+  private final ChangeTracker changeTracker = new ChangeTracker();
 
   /**
    * When mapping symbols from a source map, we must repeatedly combine the path of the original
@@ -322,7 +316,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   /** Creates a Compiler that reports errors and warnings to an output stream. */
   public Compiler(@Nullable PrintStream outStream) {
-    addChangeHandler(recentChange);
+    changeTracker.addChangeHandler(changeTracker.getRecentChange());
     this.outStream = outStream;
     this.moduleTypesByName = new LinkedHashMap<>();
   }
@@ -1691,7 +1685,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   /** Returns a new tracer for the given pass name. */
   Tracer newTracer(String passName) {
-    String comment = passName + (recentChange.hasCodeChanged() ? " on recently changed AST" : "");
+    String comment =
+        passName
+            + (changeTracker.getRecentChange().hasCodeChanged() ? " on recently changed AST" : "");
     if (options.getTracerMode().isOn() && tracker != null) {
       tracker.recordPassStart(passName, true);
     }
@@ -2032,7 +2028,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     tracker = new PerformanceTracker(externsRoot, jsRoot, options.getTracerMode());
-    addChangeHandler(tracker.getCodeChangeHandler());
+    changeTracker.addChangeHandler(tracker.getCodeChangeHandler());
   }
 
   void initializeModuleLoader() {
@@ -3265,18 +3261,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private @Nullable CompilerInput syntheticTypeSummaryInput; // matches syntheticTypeSummaryFile
 
-  protected final RecentChange recentChange = new RecentChange();
-  private final List<CodeChangeHandler> codeChangeHandlers = new ArrayList<>();
   private final Map<Class<?>, IndexProvider<?>> indexProvidersByType = new LinkedHashMap<>();
 
   @Override
-  void addChangeHandler(CodeChangeHandler handler) {
-    codeChangeHandlers.add(handler);
-  }
-
-  @Override
-  void removeChangeHandler(CodeChangeHandler handler) {
-    codeChangeHandlers.remove(handler);
+  ChangeTracker getChangeTracker() {
+    return changeTracker;
   }
 
   @Override
@@ -3308,59 +3297,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  public int getChangeStamp() {
-    return changeStamp;
-  }
-
-  @Override
-  List<Node> getChangedScopeNodesForPass(String passName) {
-    List<Node> changedScopeNodes = changeTimeline.getSince(passName);
-    changeTimeline.mark(passName);
-    return changedScopeNodes;
-  }
-
-  @Override
-  public void incrementChangeStamp() {
-    changeStamp++;
-  }
-
-  private Node getChangeScopeForNode(Node n) {
-    /*
-     * Compiler change reporting usually occurs after the AST change has already occurred. In the
-     * case of node removals those nodes are already removed from the tree and so have no parent
-     * chain to walk. In these situations changes are reported instead against what (used to be)
-     * their parent. If that parent is itself a script node then it's important to be able to
-     * recognize it as the enclosing scope without first stepping to its parent as well.
-     */
-    if (n.isScript()) {
-      return n;
-    }
-
-    Node enclosingScopeNode = NodeUtil.getEnclosingChangeScopeRoot(n.getParent());
-    if (enclosingScopeNode == null) {
-      throw new IllegalStateException(
-          "An enclosing scope is required for change reports but node " + n + " doesn't have one.");
-    }
-    return enclosingScopeNode;
-  }
-
-  private void recordChange(Node n) {
-    if (n.isDeleted()) {
-      // Some complicated passes (like SmartNameRemoval) might both change and delete a scope in
-      // the same pass, and they might even perform the change after the deletion because of
-      // internal queueing. Just ignore the spurious attempt to mark changed after already marking
-      // deleted. There's no danger of deleted nodes persisting in the AST since this is enforced
-      // separately in ChangeVerifier.
-      return;
-    }
-
-    n.setChangeTime(changeStamp);
-    // Every code change happens at a different time
-    changeStamp++;
-    changeTimeline.add(n);
-  }
-
-  @Override
   boolean hasScopeChanged(Node n) {
     if (phaseOptimizer == null) {
       return true;
@@ -3370,16 +3306,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   public void reportChangeToChangeScope(Node changeScopeRoot) {
-    checkState(changeScopeRoot.isScript() || changeScopeRoot.isFunction());
-    recordChange(changeScopeRoot);
-    notifyChangeHandlers();
+    changeTracker.reportChangeToChangeScope(changeScopeRoot);
   }
 
   @Override
   public void reportFunctionDeleted(Node n) {
-    checkState(n.isFunction());
-    n.setDeleted(true);
-    changeTimeline.remove(n);
+    changeTracker.reportFunctionDeleted(n);
   }
 
   @Override
@@ -3398,14 +3330,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   public void reportChangeToEnclosingScope(Node n) {
-    recordChange(getChangeScopeForNode(n));
-    notifyChangeHandlers();
-  }
-
-  private void notifyChangeHandlers() {
-    for (CodeChangeHandler handler : codeChangeHandlers) {
-      handler.reportChange();
-    }
+    changeTracker.reportChangeToEnclosingScope(n);
   }
 
   @Override
@@ -4359,7 +4284,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // We don't save the change stamps that are stored on the AST nodes,
     // so all the AST Nodes we read in effectively have a change stamp of 0,
     // and we can just start the compiler's counter over at 1.
-    changeStamp = 1;
+    changeTracker.resetChangeStamp();
 
     accessorSummary = compilerState.accessorSummary;
     instrumentationMapping = compilerState.instrumentationMappping;

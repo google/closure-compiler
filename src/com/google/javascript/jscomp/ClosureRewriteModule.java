@@ -1844,7 +1844,7 @@ final class ClosureRewriteModule implements CompilerPass {
       n.setOriginalName(originalName);
     }
     // TODO(blickly): It would be better not to be renaming detached nodes
-    Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(n);
+    Node changeScope = ChangeTracker.getEnclosingChangeScopeRoot(n);
     if (changeScope != null) {
       compiler.reportChangeToChangeScope(changeScope);
     }

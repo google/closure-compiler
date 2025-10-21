@@ -1077,7 +1077,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         needsRetraverse = true;
         umdPattern.ifRoot.replaceWith(newNode);
         reportNestedScopesDeleted(umdPattern.ifRoot);
-        changeScope = NodeUtil.getEnclosingChangeScopeRoot(newNode);
+        changeScope = ChangeTracker.getEnclosingChangeScopeRoot(newNode);
         if (changeScope != null) {
           compiler.reportChangeToEnclosingScope(newNode);
         }
@@ -1529,7 +1529,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           exportName.getFirstChild().setJSDocInfo(info.build());
         }
         parent.getParent().replaceWith(exportName.srcrefTree(root.getParent()));
-        changeScope = NodeUtil.getEnclosingChangeScopeRoot(parent);
+        changeScope = ChangeTracker.getEnclosingChangeScopeRoot(parent);
       } else if (root.getNext() != null
           && root.getNext().isName()
           && rValueVar != null
@@ -1547,7 +1547,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           root = updatedExport;
         }
         export.node.replaceWith(updatedExport);
-        changeScope = NodeUtil.getEnclosingChangeScopeRoot(root);
+        changeScope = ChangeTracker.getEnclosingChangeScopeRoot(root);
       } else {
         // Other references to "module.exports" are just replaced with the module name.
         export.node.replaceWith(updatedExport);
@@ -1558,7 +1558,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           updatedExport.getParent().setJSDocInfo(infoBuilder.build());
         }
 
-        changeScope = NodeUtil.getEnclosingChangeScopeRoot(updatedExport);
+        changeScope = ChangeTracker.getEnclosingChangeScopeRoot(updatedExport);
       }
 
       if (changeScope != null) {

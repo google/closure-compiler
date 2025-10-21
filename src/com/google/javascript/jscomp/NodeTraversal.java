@@ -403,7 +403,7 @@ public class NodeTraversal {
 
     @Override
     public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      if (NodeUtil.isChangeScopeRoot(n) && t.getCompiler().hasScopeChanged(n)) {
+      if (ChangeTracker.isChangeScopeRoot(n) && t.getCompiler().hasScopeChanged(n)) {
         this.enterChangedScopeRoot(t.getCompiler(), n);
       }
       return true;
@@ -723,7 +723,7 @@ public class NodeTraversal {
         if (scopeNode == n) {
           insideScopeNode = true;
         }
-        return (traverseNested || scopeNode == n || !NodeUtil.isChangeScopeRoot(n))
+        return (traverseNested || scopeNode == n || !ChangeTracker.isChangeScopeRoot(n))
             && cb.shouldTraverse(t, n, parent);
       }
 
@@ -1355,7 +1355,7 @@ public class NodeTraversal {
   public void reportCodeChange() {
     Node changeScope = this.currentChangeScope;
     checkNotNull(changeScope);
-    checkState(NodeUtil.isChangeScopeRoot(changeScope), changeScope);
+    checkState(ChangeTracker.isChangeScopeRoot(changeScope), changeScope);
     compiler.reportChangeToChangeScope(changeScope);
   }
 
@@ -1403,7 +1403,7 @@ public class NodeTraversal {
     // "null" is the global hoist scope root, but we want the current script if any
     // for the "change scope"
     Node changeScope =
-        NodeUtil.getEnclosingChangeScopeRoot(
+        ChangeTracker.getEnclosingChangeScopeRoot(
             hoistScopeRoot != null ? hoistScopeRoot : traversalRoot);
     setChangeScope(changeScope);
 

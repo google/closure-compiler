@@ -144,7 +144,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
 
       Collection<Node> references = clinitReferences.removeAll(clinitName);
       for (Node reference : references) {
-        Node changedScope = NodeUtil.getEnclosingChangeScopeRoot(reference.getParent());
+        Node changedScope = ChangeTracker.getEnclosingChangeScopeRoot(reference.getParent());
         if (replacement == null) {
           NodeUtil.deleteFunctionCall(reference, compiler);
         } else {

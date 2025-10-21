@@ -5092,25 +5092,6 @@ public final class NodeUtil {
 
   private static final Node NUMBER_NAN = IR.getprop(IR.name("Number"), "NaN");
 
-  /**
-   * A change scope does not directly correspond to a language scope but is an internal grouping of
-   * changes.
-   *
-   * @return Whether the node represents a change scope root.
-   */
-  static boolean isChangeScopeRoot(Node n) {
-    return (n.isScript() || n.isFunction());
-  }
-
-  /**
-   * @return the change scope root
-   */
-  static Node getEnclosingChangeScopeRoot(Node n) {
-    while (n != null && !isChangeScopeRoot(n)) {
-      n = n.getParent();
-    }
-    return n;
-  }
 
   static int countAstSizeUpToLimit(Node n, final int limit) {
     // Java doesn't allow accessing mutable local variables from another class.
@@ -5382,12 +5363,7 @@ public final class NodeUtil {
 
   /** Recurses through a tree, marking all function nodes as changed. */
   static void markNewScopesChanged(Node node, AbstractCompiler compiler) {
-    if (node.isFunction()) {
-      compiler.reportChangeToChangeScope(node);
-    }
-    for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
-      markNewScopesChanged(child, compiler);
-    }
+    compiler.getChangeTracker().markNewScopesChanged(node);
   }
 
   /** Recurses through a tree, marking all function nodes deleted. */
@@ -5410,7 +5386,7 @@ public final class NodeUtil {
   public static List<Node> getParentChangeScopeNodes(List<Node> scopeNodes) {
     Set<Node> parentScopeNodes = new LinkedHashSet<>(scopeNodes);
     for (Node scopeNode : scopeNodes) {
-      parentScopeNodes.add(getEnclosingChangeScopeRoot(scopeNode));
+      parentScopeNodes.add(ChangeTracker.getEnclosingChangeScopeRoot(scopeNode));
     }
     return new ArrayList<>(parentScopeNodes);
   }
@@ -5425,7 +5401,7 @@ public final class NodeUtil {
       for (Node ancestor = scopeNode.getParent();
           ancestor != null;
           ancestor = ancestor.getParent()) {
-        if (isChangeScopeRoot(ancestor) && uniqueScopeNodes.contains(ancestor)) {
+        if (ChangeTracker.isChangeScopeRoot(ancestor) && uniqueScopeNodes.contains(ancestor)) {
           uniqueScopeNodes.remove(scopeNode);
           break;
         }

@@ -2741,7 +2741,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> {
                 List<Node> changedScopeNodes =
-                    compiler.getChangedScopeNodesForPass("j2clClinitPass");
+                    compiler.getChangeTracker().getChangedScopeNodesForPass("j2clClinitPass");
                 return new J2clClinitPrunerPass(compiler, changedScopeNodes);
               })
           .build();

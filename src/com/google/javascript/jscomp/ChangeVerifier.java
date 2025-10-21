@@ -30,19 +30,19 @@ import java.util.Set;
  * before and "checkRecordedChanges" at the desired check point.
  */
 public class ChangeVerifier {
-  private final AbstractCompiler compiler;
+  private final ChangeTracker changeTracker;
   private final BiMap<Node, Node> clonesByCurrent = HashBiMap.create();
   private int snapshotChange;
 
   ChangeVerifier(AbstractCompiler compiler) {
-    this.compiler = compiler;
+    this.changeTracker = compiler.getChangeTracker();
   }
 
   @CanIgnoreReturnValue
   ChangeVerifier snapshot(Node root) {
     // remove any existing snapshot data.
     clonesByCurrent.clear();
-    snapshotChange = compiler.getChangeStamp();
+    snapshotChange = changeTracker.getChangeStamp();
 
     Node snapshot = root.cloneTree();
     associateClones(root, snapshot);
@@ -63,7 +63,7 @@ public class ChangeVerifier {
    */
   private void associateClones(Node n, Node snapshot) {
     // TODO(johnlenz): determine if MODULE_BODY is useful here.
-    if (n.isRoot() || NodeUtil.isChangeScopeRoot(n)) {
+    if (n.isRoot() || ChangeTracker.isChangeScopeRoot(n)) {
       clonesByCurrent.put(n, snapshot);
     }
 
@@ -95,7 +95,7 @@ public class ChangeVerifier {
         new Visitor() {
           @Override
           public void visit(Node oldNode) {
-            if (NodeUtil.isChangeScopeRoot(oldNode)) {
+            if (ChangeTracker.isChangeScopeRoot(oldNode)) {
               snapshotScopeNodes.add(oldNode);
             }
             Node shadow = oldNode.getClosureUnawareShadow();
@@ -112,7 +112,7 @@ public class ChangeVerifier {
           public void visit(Node n) {
             if (n.isRoot()) {
               verifyRoot(n);
-            } else if (NodeUtil.isChangeScopeRoot(n)) {
+            } else if (ChangeTracker.isChangeScopeRoot(n)) {
               Node clone = clonesByCurrent.get(n);
               // Remove any scope nodes that still exist.
               snapshotScopeNodes.remove(clone);

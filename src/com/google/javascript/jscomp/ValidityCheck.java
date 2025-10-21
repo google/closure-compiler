@@ -52,10 +52,12 @@ class ValidityCheck implements CompilerPass {
           "Internal compiler error. Extern properties modified from:\n{0}\nto:\n{1}");
 
   private final AbstractCompiler compiler;
+  private final ChangeTracker changeTracker;
   private final AstValidator astValidator;
 
   ValidityCheck(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.changeTracker = compiler.getChangeTracker();
     this.astValidator = new AstValidator(compiler);
   }
 
@@ -84,7 +86,7 @@ class ValidityCheck implements CompilerPass {
   private void checkNormalization(Node externs, Node root) {
     // Verify nothing has inappropriately denormalize the AST.
     CodeChangeHandler handler = new ForbiddenChange();
-    compiler.addChangeHandler(handler);
+    changeTracker.addChangeHandler(handler);
 
     // TODO(johnlenz): Change these normalization checks Preconditions and
     // Exceptions into Errors so that it is easier to find the root cause
@@ -99,7 +101,7 @@ class ValidityCheck implements CompilerPass {
       }
     }
 
-    compiler.removeChangeHandler(handler);
+    changeTracker.removeChangeHandler(handler);
   }
 
   private void checkExternProperties(Node externs) {

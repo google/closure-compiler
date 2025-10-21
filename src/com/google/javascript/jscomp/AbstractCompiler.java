@@ -331,11 +331,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   abstract boolean hasHaltingErrors();
 
-  /** Register a listener for code change events. */
-  abstract void addChangeHandler(CodeChangeHandler handler);
-
-  /** Remove a listener for code change events. */
-  abstract void removeChangeHandler(CodeChangeHandler handler);
+  abstract ChangeTracker getChangeTracker();
 
   /** Register a provider for some type of index. */
   abstract void addIndexProvider(IndexProvider<?> indexProvider);
@@ -345,19 +341,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    * registered for the given type.
    */
   abstract <T> T getIndex(Class<T> type);
-
-  /** A monotonically increasing value to identify a change */
-  abstract int getChangeStamp();
-
-  /**
-   * An accumulation of changed scope nodes since the last time the given pass was run. A returned
-   * empty list means no scope nodes have changed since the last run and a returned null means this
-   * is the first time the pass has run.
-   */
-  abstract List<Node> getChangedScopeNodesForPass(String passName);
-
-  /** Called to indicate that the current change stamp has been used */
-  abstract void incrementChangeStamp();
 
   /** Returns the root of the source tree, ignoring externs */
   abstract Node getJsRoot();

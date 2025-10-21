@@ -30,7 +30,7 @@ public final class CompilerTestCaseUtils {
     new RemoveCastNodes(compiler).process(compiler.getExternsRoot(), compiler.getJsRoot());
     ErrorManager errorManager = compiler.getErrorManager();
     try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-      compiler.removeChangeHandler(changeHandler);
+      compiler.getChangeTracker().removeChangeHandler(changeHandler);
       compiler.disableThreads();
       compiler.saveState(baos);
 
@@ -40,7 +40,7 @@ public final class CompilerTestCaseUtils {
         compiler.init(externs, inputs, testCase.getOptions());
         compiler.restoreState(bais);
         compiler.setErrorManager(errorManager);
-        compiler.addChangeHandler(changeHandler);
+        compiler.getChangeTracker().addChangeHandler(changeHandler);
       }
     } catch (Exception e) {
       throw new RuntimeException(e);

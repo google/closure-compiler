@@ -1091,7 +1091,7 @@ public abstract class CompilerTestCase {
         "Cannot expect both errors and compiled output.");
     checkState(this.setUpRan, "CompilerTestCase.setUp not run: call super.setUp() from overrides.");
     RecentChange recentChange = new RecentChange();
-    compiler.addChangeHandler(recentChange);
+    compiler.getChangeTracker().addChangeHandler(recentChange);
 
     Node root = compiler.parseInputs();
 
