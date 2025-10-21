@@ -1166,7 +1166,7 @@ public final class NodeUtil {
       }
       // Properties on constant NAMEs can still be side-effected.
       case GETPROP -> {
-        // Well-known symbols are not side-effecting.
+        // Assume well-known symbols will not be modified.
         return !n.getFirstChild().matchesName("Symbol");
       }
       // Properties on constant NAMEs can still be side-effected.
