@@ -427,60 +427,51 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
   public void testEs6RewriteClassExtendsExpression() {
     CompilerOptions options = createCompilerOptions();
 
-    String code =
-"""
-/** @unrestricted */
-class __PRIVATE_WebChannelConnection extends class __PRIVATE_RestConnection {
-  constructor(e) {
-    this.databaseInfo = e, this.databaseId = e.databaseId;
-  }
-} {
-  constructor(e) {
-    super(e), this.forceLongPolling = e.forceLongPolling, this.autoDetectLongPolling = e.autoDetectLongPolling, this.useFetchStreams = e.useFetchStreams, this.longPollingOptions = e.longPollingOptions;
-    console.log('test');
-  }
-}
-""";
-    String expectedCodeNonTraspiled =
-"""
-class __PRIVATE_WebChannelConnection extends class __PRIVATE_RestConnection {
-  constructor(e) {
-    this.databaseInfo = e, this.databaseId = e.databaseId;
-  }
-} {
-  constructor(e) {
-    super(e), this.forceLongPolling = e.forceLongPolling, this.autoDetectLongPolling =
-    e.autoDetectLongPolling, this.useFetchStreams = e.useFetchStreams, this.longPollingOptions =
-    e.longPollingOptions;
-    console.log('test');
-  }
-}
-""";
+    String baseCode =
+        """
+        class __PRIVATE_WebChannelConnection extends class __PRIVATE_RestConnection {
+          constructor(e) {
+            this.databaseInfo = e, this.databaseId = e.databaseId;
+          }
+        }
+        {
+          constructor(e) {
+            super(e), this.forceLongPolling = e.forceLongPolling,
+                      this.autoDetectLongPolling = e.autoDetectLongPolling,
+                      this.useFetchStreams = e.useFetchStreams,
+                      this.longPollingOptions = e.longPollingOptions;
+            console.log('test');
+          }
+        }
+        """;
 
+    String code = "/** @unrestricted */\n" + baseCode;
+    String expectedCodeNonTraspiled = baseCode;
     String expectedCodeTranspiled =
-"""
-const i0$classdecl$var0 = class {
-  constructor(e) {
-    this.databaseInfo = e, this.databaseId = e.databaseId;
-  }
-};
-const i0$classextends$var0 = i0$classdecl$var0;
-class __PRIVATE_WebChannelConnection extends i0$classdecl$var0 {
-  constructor(e) {
-    super(e), this.forceLongPolling = e.forceLongPolling, this.autoDetectLongPolling =
-    e.autoDetectLongPolling, this.useFetchStreams = e.useFetchStreams, this.longPollingOptions =
-    e.longPollingOptions;
-    console.log('test');
-  }
-}
-""";
-
-    options.setLanguageIn(LanguageMode.UNSTABLE);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
-    test(options, code, expectedCodeTranspiled);
+        """
+        const $jscomp$classDecl$98447280$1 = class {
+          constructor(e) {
+            this.databaseInfo = e, this.databaseId = e.databaseId
+          }
+        };
+        const $jscomp$classExtends$98447280$0 = $jscomp$classDecl$98447280$1;
+        class __PRIVATE_WebChannelConnection extends $jscomp$classDecl$98447280$1 {
+          constructor(e) {
+            super(e), this.forceLongPolling = e.forceLongPolling,
+                      this.autoDetectLongPolling = e.autoDetectLongPolling,
+                      this.useFetchStreams = e.useFetchStreams,
+                      this.longPollingOptions = e.longPollingOptions;
+            console.log('test')
+          }
+        }
+        """;
 
     options.setLanguageIn(LanguageMode.UNSTABLE);
     options.setLanguageOut(LanguageMode.UNSTABLE);
     test(options, code, expectedCodeNonTraspiled);
+
+    options.setLanguageIn(LanguageMode.UNSTABLE);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+    test(options, code, expectedCodeTranspiled);
   }
 }

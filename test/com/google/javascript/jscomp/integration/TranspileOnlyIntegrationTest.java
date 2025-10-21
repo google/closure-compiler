@@ -129,18 +129,18 @@ public final class TranspileOnlyIntegrationTest extends IntegrationTestCase {
         """,
         """
         var Bar = function() {};
-        var i0$classextends$var0 = function() {
+        var $jscomp$classExtends$98447280$0 = function() {
           Bar.apply(this, arguments)
         };
-        $jscomp.inherits(i0$classextends$var0, Bar);
+        $jscomp.inherits($jscomp$classExtends$98447280$0, Bar);
         var Foo = function() {
-          i0$classextends$var0.apply(this, arguments)
+          $jscomp$classExtends$98447280$0.apply(this, arguments)
         };
-        $jscomp.inherits(Foo, i0$classextends$var0);
-        Foo.$jscomp$staticInit$98447280$0 = function() {
-          Foo.x;
+        $jscomp.inherits(Foo, $jscomp$classExtends$98447280$0);
+        Foo.$jscomp$staticInit$98447280$1 = function() {
+          Foo.x
         };
-        Foo.$jscomp$staticInit$98447280$0();
+        Foo.$jscomp$staticInit$98447280$1()
         """);
   }
 }

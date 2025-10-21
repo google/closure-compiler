@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Before;
@@ -43,6 +44,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     enableTypeCheck();
     replaceTypesWithColors();
     enableMultistageCompilation();
+    setGenericNameReplacements(ImmutableMap.of("CLASS_DECL", "$jscomp$classDecl$"));
   }
 
   @Test
@@ -50,8 +52,8 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     test(
         "f(class{});",
         """
-        const testcode$classdecl$var0 = class {};
-        f(testcode$classdecl$var0);
+        const CLASS_DECL$0 = class {};
+        f(CLASS_DECL$0);
         """);
   }
 
@@ -60,31 +62,31 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     test(
         "var Outer = class Inner { constructor() { alert(Inner); } };",
         """
-        const testcode$classdecl$var0 = class {
-          constructor() { alert(testcode$classdecl$var0); }
+        const CLASS_DECL$0 = class {
+          constructor() { alert(CLASS_DECL$0); }
         };
         /** @constructor */
-        var Outer=testcode$classdecl$var0
+        var Outer=CLASS_DECL$0
         """);
 
     test(
         "let Outer = class Inner { constructor() { alert(Inner); } };",
         """
-        const testcode$classdecl$var0 = class {
-          constructor() { alert(testcode$classdecl$var0); }
+        const CLASS_DECL$0 = class {
+          constructor() { alert(CLASS_DECL$0); }
         };
         /** @constructor */
-        let Outer=testcode$classdecl$var0
+        let Outer=CLASS_DECL$0
         """);
 
     test(
         "const Outer = class Inner { constructor() { alert(Inner); } };",
         """
-        const testcode$classdecl$var0 = class {
-          constructor() { alert(testcode$classdecl$var0); }
+        const CLASS_DECL$0 = class {
+          constructor() { alert(CLASS_DECL$0); }
         };
         /** @constructor */
-        const Outer=testcode$classdecl$var0
+        const Outer=CLASS_DECL$0
         """);
   }
 
@@ -93,10 +95,10 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     test(
         "alert(class C { constructor() { alert(C); } });",
         """
-        const testcode$classdecl$var0 = class {
-          constructor() { alert(testcode$classdecl$var0); }
+        const CLASS_DECL$0 = class {
+          constructor() { alert(CLASS_DECL$0); }
         };
-        alert(testcode$classdecl$var0)
+        alert(CLASS_DECL$0)
         """);
   }
 
@@ -110,11 +112,11 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
         });
         """,
         """
-        const testcode$classdecl$var0 = class {
+        const CLASS_DECL$0 = class {
           m1() { class C {}; alert(C); }
-          m2() { alert(testcode$classdecl$var0); }
+          m2() { alert(CLASS_DECL$0); }
         };
-        alert(testcode$classdecl$var0)
+        alert(CLASS_DECL$0)
         """);
   }
 
@@ -129,14 +131,14 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             """),
         expected(
             """
-            /** @const */ const testcode$classdecl$var0=class {
-              constructor(){ alert(testcode$classdecl$var0); }
+            /** @const */ const CLASS_DECL$0=class {
+              constructor(){ alert(CLASS_DECL$0); }
             };
             /**
              * @constructor
              * @const
              */
-            var module$exports$example=testcode$classdecl$var0
+            var module$exports$example=CLASS_DECL$0
             """));
   }
 
@@ -151,13 +153,13 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
         """
         const outer = {};
         /** @const */ outer.qual = {};
-        const testcode$classdecl$var0 = class {
+        const CLASS_DECL$0 = class {
           constructor() {
-            alert(testcode$classdecl$var0);
+            alert(CLASS_DECL$0);
           }
         };
         /** @constructor */
-        outer.qual.Name = testcode$classdecl$var0;
+        outer.qual.Name = CLASS_DECL$0;
         """);
   }
 
@@ -166,8 +168,8 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     test(
         "var foo = bar(class {});",
         """
-        const testcode$classdecl$var0 = class {};
-        var foo = bar(testcode$classdecl$var0);
+        const CLASS_DECL$0 = class {};
+        var foo = bar(CLASS_DECL$0);
         """);
   }
 
@@ -176,8 +178,8 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     test(
         "let foo = bar(class {});",
         """
-        const testcode$classdecl$var0 = class {};
-        let foo = bar(testcode$classdecl$var0);
+        const CLASS_DECL$0 = class {};
+        let foo = bar(CLASS_DECL$0);
         """);
   }
 
@@ -186,8 +188,8 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     test(
         "var foo = bar(class {});",
         """
-        const testcode$classdecl$var0 = class {};
-        var foo = bar(testcode$classdecl$var0);
+        const CLASS_DECL$0 = class {};
+        var foo = bar(CLASS_DECL$0);
         """);
   }
 
@@ -196,9 +198,9 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     test(
         "/** @unrestricted */ var foo = class bar {};",
         """
-        const testcode$classdecl$var0 = class {};
+        const CLASS_DECL$0 = class {};
         /** @constructor */
-        var foo = testcode$classdecl$var0;
+        var foo = CLASS_DECL$0;
         """);
   }
 
@@ -210,8 +212,8 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             SourceFile.fromCode(
                 "unusual@name",
                 """
-                const unusual$name$classdecl$var0 = class{};
-                alert(unusual$name$classdecl$var0);
+                const CLASS_DECL$0 = class{};
+                alert(CLASS_DECL$0);
                 """)));
   }
 
@@ -223,8 +225,8 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             SourceFile.fromCode(
                 "+path/file",
                 """
-                const $some$$path$file$classdecl$var0 = class{};
-                alert($some$$path$file$classdecl$var0);
+                const CLASS_DECL$0 = class{};
+                alert(CLASS_DECL$0);
                 """)));
   }
 
@@ -234,8 +236,8 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
         "maybeTrue() && f(class{});",
         """
         maybeTrue() && f((() => {
-          const testcode$classdecl$var0 = class {};
-          return testcode$classdecl$var0;
+          const CLASS_DECL$0 = class {};
+          return CLASS_DECL$0;
         })());
         """);
   }
@@ -245,8 +247,8 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     test(
         "var c = [class C {}];",
         """
-        const testcode$classdecl$var0 = class {};
-        var c = [testcode$classdecl$var0];
+        const CLASS_DECL$0 = class {};
+        var c = [CLASS_DECL$0];
         """);
   }
 
@@ -256,16 +258,16 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
         "var c = maybeTrue() ? class A {} : anotherExpr",
         """
         var c = maybeTrue() ? (() => {
-          const testcode$classdecl$var0 = class {};
-          return testcode$classdecl$var0;
+          const CLASS_DECL$0 = class {};
+          return CLASS_DECL$0;
         })() : anotherExpr;
         """);
     test(
         "var c = maybeTrue() ? anotherExpr : class B {}",
         """
         var c = maybeTrue() ? anotherExpr : (() => {
-          const testcode$classdecl$var0 = class {};
-          return testcode$classdecl$var0;
+          const CLASS_DECL$0 = class {};
+          return CLASS_DECL$0;
         })();
         """);
   }
@@ -274,15 +276,15 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   public void testNormalisedArrowFunction() {
     test(
         "(() => { return class A {};})();",
-        "(() => { const testcode$classdecl$var0 = class {}; return testcode$classdecl$var0;})()");
+        "(() => { const CLASS_DECL$0 = class {}; return CLASS_DECL$0;})()");
 
     test(
         "function foo(x = () => {return class A {}; }) {} use(foo());",
         """
         function foo(
           x = () => {
-            const testcode$classdecl$var0 = class {};
-            return testcode$classdecl$var0;
+            const CLASS_DECL$0 = class {};
+            return CLASS_DECL$0;
           })
          {}
         use(foo());
@@ -300,8 +302,8 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
         """,
         """
         function foo(x =
-          (() => { const testcode$classdecl$var0 = class {};
-                   return testcode$classdecl$var0;
+          (() => { const CLASS_DECL$0 = class {};
+                   return CLASS_DECL$0;
                  }
           )()) {}
         use(foo());
@@ -324,8 +326,8 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             /** @const */ var module$exports$some = {};
             /** @const */ module$exports$some.some = outer => {
             c => {
-              const testcode$classdecl$var0 = class extends c {};
-              return testcode$classdecl$var0;
+              const CLASS_DECL$0 = class extends c {};
+              return CLASS_DECL$0;
               };
             };
             """));
@@ -337,7 +339,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
         "let x; while(x = class A{}) {use(x);}",
 """
 let x;
-while(x = (() => { const testcode$classdecl$var0 = class {}; return testcode$classdecl$var0;})())
+while(x = (() => { const CLASS_DECL$0 = class {}; return CLASS_DECL$0;})())
 {use(x);}
 """);
 
@@ -352,8 +354,8 @@ while(x = (() => { const testcode$classdecl$var0 = class {}; return testcode$cla
         function f(x, y) {}
         while(
           f(x = 2,
-            (() => { const testcode$classdecl$var0 = class { bar() {} };
-                  return testcode$classdecl$var0;
+            (() => { const CLASS_DECL$0 = class { bar() {} };
+                  return CLASS_DECL$0;
                  })()
         )){}
         """);

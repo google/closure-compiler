@@ -1199,27 +1199,24 @@ public final class IntegrationTest extends IntegrationTestCase {
         """,
         """
         var A = function() {
-          this.a = 'aProp'; // unique property name
-        }
-
-        function mixinX(baseType) {
-          var i0$classdecl$var0 = function() {
-            var $jscomp$super$this$98447280$0 = baseType.call(this) || this;
-            $jscomp$super$this$98447280$0.c = 'x'; // unique property name
-            return $jscomp$super$this$98447280$0;
-          };
-          $jscomp.inherits(i0$classdecl$var0,baseType);
-          return i0$classdecl$var0;
-        }
-
-        var BSuper = mixinX(A);
-
-        var B = function() {
-          var $jscomp$super$this$98447280$1 = BSuper.call(this) || this;
-          $jscomp$super$this$98447280$1.b = 'bProp'; // unique property name
-          return $jscomp$super$this$98447280$1;
+          this.a = "aProp"; // unique property name
         };
-        $jscomp.inherits(B,BSuper);
+        function mixinX(baseType) {
+          var $jscomp$classDecl$98447280$0 = function() {
+            var $jscomp$super$this$98447280$1 = baseType.call(this) || this;
+            $jscomp$super$this$98447280$1.c = "x"; // unique property name
+            return $jscomp$super$this$98447280$1;
+          };
+          $jscomp.inherits($jscomp$classDecl$98447280$0, baseType);
+          return $jscomp$classDecl$98447280$0;
+        }
+        var BSuper = mixinX(A);
+        var B = function() {
+          var $jscomp$super$this$98447280$2 = BSuper.call(this) || this;
+          $jscomp$super$this$98447280$2.b = "bProp"; // unique property name
+          return $jscomp$super$this$98447280$2;
+        };
+        $jscomp.inherits(B, BSuper);
         """);
   }
 
@@ -5032,9 +5029,9 @@ async function abc() {
         options,
         "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
         """
-        const i0$classdecl$var0 = function() {};
-        i0$classdecl$var0.prototype.f = async function(p) { await p; return 0 };
-        window['C'] = i0$classdecl$var0
+        const $jscomp$classDecl$98447280$0 = function() {};
+        $jscomp$classDecl$98447280$0.prototype.f = async function(p) { await p; return 0 };
+        window['C'] = $jscomp$classDecl$98447280$0
         """);
   }
 
@@ -5049,9 +5046,9 @@ async function abc() {
         options,
         "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
         """
-        var i0$classdecl$var0 = function() {};
-        i0$classdecl$var0.prototype.f = async function(p) { await p; return 0 };
-        window['C'] = i0$classdecl$var0
+        var $jscomp$classDecl$98447280$0 = function() {};
+        $jscomp$classDecl$98447280$0.prototype.f = async function(p) { await p; return 0 };
+        window['C'] = $jscomp$classDecl$98447280$0
         """);
   }
 
@@ -5066,9 +5063,9 @@ async function abc() {
         options,
         "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
         """
-        const i0$classdecl$var0 = function() {};
-        i0$classdecl$var0.prototype.f = async function(p) { await p; return 0 };
-        window['C'] = i0$classdecl$var0
+        const $jscomp$classDecl$98447280$0 = function() {};
+        $jscomp$classDecl$98447280$0.prototype.f = async function(p) { await p; return 0 };
+        window['C'] = $jscomp$classDecl$98447280$0
         """);
   }
 
@@ -5083,9 +5080,9 @@ async function abc() {
         options,
         "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
         """
-        var i0$classdecl$var0 = function() {};
-        i0$classdecl$var0.prototype.f = async function(p) { await p; return 0 };
-        window['C'] = i0$classdecl$var0
+        var $jscomp$classDecl$98447280$0 = function() {};
+        $jscomp$classDecl$98447280$0.prototype.f = async function(p) { await p; return 0 };
+        window['C'] = $jscomp$classDecl$98447280$0
         """);
   }
 
@@ -5102,9 +5099,9 @@ async function abc() {
         options,
         "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
         """
-        var i0$classdecl$var0 = function() {};
-        i0$classdecl$var0.prototype.f = async function(p) { await p; return 0 };
-        window['C'] = i0$classdecl$var0
+        var $jscomp$classDecl$98447280$0 = function() {};
+        $jscomp$classDecl$98447280$0.prototype.f = async function(p) { await p; return 0 };
+        window['C'] = $jscomp$classDecl$98447280$0
         """);
   }
 
@@ -5152,9 +5149,9 @@ async function abc() {
         options,
         "window['C'] = /** @dict */ class C { f({num}) { return num ** 3; } }",
         """
-        const i0$classdecl$var0 = function() {};
-        i0$classdecl$var0.prototype.f = function({num}) { return Math.pow(num, 3); };
-        window['C'] = i0$classdecl$var0
+        const $jscomp$classDecl$98447280$0 = function() {};
+        $jscomp$classDecl$98447280$0.prototype.f = function({num}) { return Math.pow(num, 3) };
+        window['C'] = $jscomp$classDecl$98447280$0
         """);
   }
 
@@ -5176,13 +5173,13 @@ async function abc() {
         }
         """,
         """
-        var i0$classdecl$var0 = function() {};
-        i0$classdecl$var0.prototype.f = function($jscomp$destructuring$var0) {
+        var $jscomp$classDecl$98447280$0 = function() {};
+        $jscomp$classDecl$98447280$0.prototype.f = function($jscomp$destructuring$var0) {
           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
           var num = $jscomp$destructuring$var1.num;
-          return Math.pow(num,3)
+          return Math.pow(num, 3)
         };
-        window["C"] = i0$classdecl$var0
+        window['C'] = $jscomp$classDecl$98447280$0
         """);
   }
 

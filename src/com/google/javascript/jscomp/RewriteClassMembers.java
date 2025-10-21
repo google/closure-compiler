@@ -38,7 +38,7 @@ public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, 
   private final Deque<ClassRecord> classStack;
   private final boolean transpileClassFields;
 
-  private static final String COMP_FIELD_VAR = "$jscomp$compfield$";
+  private static final String COMP_FIELD_VAR = "$jscomp$compField$";
   private static final String STATIC_INIT_METHOD_NAME = "$jscomp$staticInit$";
 
   public RewriteClassMembers(AbstractCompiler compiler) {

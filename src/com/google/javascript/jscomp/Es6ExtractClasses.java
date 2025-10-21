@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.AstFactory.type;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.jscomp.colors.StandardColors;
-import com.google.javascript.jscomp.deps.ModuleNames;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -59,17 +58,21 @@ import java.util.Deque;
 public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCallback
     implements CompilerPass {
 
-  static final String CLASS_DECL_VAR = "$classdecl$var";
+  private static final String CLASS_DECL_VAR = "$jscomp$classDecl$";
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
   private final ExpressionDecomposer expressionDecomposer;
-  private int classDeclVarCounter = 0;
 
   Es6ExtractClasses(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.expressionDecomposer = compiler.createDefaultExpressionDecomposer();
+  }
+
+  /** Returns $jscomp$classDecl$[FILE_ID]$[number] */
+  private String generateUniqueClassDeclVarName(NodeTraversal t) {
+    return CLASS_DECL_VAR + compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
   }
 
   @Override
@@ -208,9 +211,7 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
     }
     Node parent = classNode.getParent();
 
-    String name = ModuleNames.fileToJsIdentifier(classNode.getStaticSourceFile().getName())
-        + CLASS_DECL_VAR
-        + (classDeclVarCounter++);
+    String name = generateUniqueClassDeclVarName(t);
     JSDocInfo info = NodeUtil.getBestJSDocInfo(classNode);
 
     Node statement = NodeUtil.getEnclosingStatement(parent);

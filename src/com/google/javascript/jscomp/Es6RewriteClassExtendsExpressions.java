@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.javascript.jscomp.colors.StandardColors;
-import com.google.javascript.jscomp.deps.ModuleNames;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -51,11 +50,10 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 public final class Es6RewriteClassExtendsExpressions
     implements NodeTraversal.Callback, CompilerPass {
 
-  static final String CLASS_EXTENDS_VAR = "$classextends$var";
+  private static final String CLASS_EXTENDS_VAR = "$jscomp$classExtends$";
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
-  private int classExtendsVarCounter = 0;
   private static final FeatureSet features = FeatureSet.BARE_MINIMUM.with(Feature.CLASSES);
 
   Es6RewriteClassExtendsExpressions(AbstractCompiler compiler) {
@@ -63,7 +61,11 @@ public final class Es6RewriteClassExtendsExpressions
     this.astFactory = compiler.createAstFactory();
   }
 
-  
+  /** Returns $jscomp$classExtends$[FILE_ID]$[number] */
+  private String generateUniqueClassExtendsVarName(NodeTraversal t) {
+    return CLASS_EXTENDS_VAR + compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
+  }
+
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
@@ -140,10 +142,7 @@ public final class Es6RewriteClassExtendsExpressions
   }
 
   private void extractExtends(NodeTraversal t, Node classNode) {
-    String name =
-        ModuleNames.fileToJsIdentifier(classNode.getStaticSourceFile().getName())
-            + CLASS_EXTENDS_VAR
-            + classExtendsVarCounter++;
+    String name = generateUniqueClassExtendsVarName(t);
 
     Node statement = NodeUtil.getEnclosingStatement(classNode);
     Node originalExtends = classNode.getSecondChild();
