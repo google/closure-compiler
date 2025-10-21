@@ -1014,17 +1014,16 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        var COMPFIELD$0 = Symbol.toPrimitive;
         class Clazz {
-          [COMPFIELD$0]() {
+          [Symbol.toPrimitive]() {
             return 42;
           }
-          static STATIC_INIT$1() {
+          static STATIC_INIT$0() {
             {
             }
           }
         }
-        Clazz.STATIC_INIT$1();
+        Clazz.STATIC_INIT$0();
         """);
   }
 
@@ -1253,17 +1252,16 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        var COMPFIELD$0 = Symbol.hasInstance;
         class Clazz {
-          static [COMPFIELD$0](x) {
+          static [Symbol.hasInstance](x) {
             return false;
           }
-          static STATIC_INIT$1() {
+          static STATIC_INIT$0() {
             {
             }
           }
         }
-        Clazz.STATIC_INIT$1();
+        Clazz.STATIC_INIT$0();
         """);
   }
 

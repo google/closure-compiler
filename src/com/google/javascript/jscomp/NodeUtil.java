@@ -1162,9 +1162,15 @@ public final class NodeUtil {
       case NAME -> {
         // Non-constant names values may have been changed.
         return !isConstantVar(n, scope) && !knownConstants.contains(n.getString());
-        // Properties on constant NAMEs can still be side-effected.
+
       }
-      case GETPROP, GETELEM, OPTCHAIN_GETPROP, OPTCHAIN_GETELEM -> {
+      // Properties on constant NAMEs can still be side-effected.
+      case GETPROP -> {
+        // Well-known symbols are not side-effecting.
+        return !n.getFirstChild().matchesName("Symbol");
+      }
+      // Properties on constant NAMEs can still be side-effected.
+      case GETELEM, OPTCHAIN_GETPROP, OPTCHAIN_GETELEM -> {
         return true;
       }
       case FUNCTION -> {
