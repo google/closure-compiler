@@ -55,8 +55,7 @@ final class SynthesizeExplicitConstructors {
     } else {
       checkState(
           superClass.isQualifiedName(),
-          "Expected Es6RewriteClassExtendsExpressions to make all extends clauses into qualified"
-              + " names, found %s",
+          "Expected Es6NormalizeClasses to make all extends clauses into qualified names, found %s",
           superClass);
       Node body = IR.block();
 

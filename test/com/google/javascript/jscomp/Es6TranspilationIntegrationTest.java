@@ -88,13 +88,10 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     // That logic is really only valid when testing a single, real pass.
     disableValidateAstChangeMarking();
     setGenericNameReplacements(
-        ImmutableMap.of(
-            "KEY",
-            "$jscomp$key$",
-            "CLASS_DECL",
-            "$jscomp$classDecl$",
-            "CLASS_EXTENDS",
-            "$jscomp$classExtends$"));
+        ImmutableMap.<String, String>builder()
+            .putAll(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS)
+            .put("KEY", "$jscomp$key$")
+            .buildOrThrow());
   }
 
   @Override
@@ -257,15 +254,15 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "f(class extends D { f() { super.g() } })",
         """
-        /** @constructor @const
-         * @extends {D}
-         */
+        /** @const @constructor */
         var CLASS_DECL$0 = function() {
-          return D.apply(this,arguments) || this;
+          return D.apply(this, arguments) || this;
         };
         $jscomp.inherits(CLASS_DECL$0, D);
-        CLASS_DECL$0.prototype.f = function() { D.prototype.g.call(this); };
-        f(CLASS_DECL$0)
+        CLASS_DECL$0.prototype.f = function() {
+          D.prototype.g.call(this);
+        };
+        f(CLASS_DECL$0);
         """);
   }
 
@@ -392,8 +389,9 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "var C = class C { }",
         """
-        /** @constructor @const */
-        var CLASS_DECL$0 = function() {};
+        /** @const @constructor */
+        var CLASS_DECL$0 = function() {
+        };
         /** @constructor */
         var C = CLASS_DECL$0;
         """);
@@ -401,10 +399,11 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "var C = class C { foo() {} }",
         """
-        /** @constructor @const */
-        var CLASS_DECL$0 = function() {}
-        CLASS_DECL$0.prototype.foo = function() {};
-
+        /** @const @constructor */
+        var CLASS_DECL$0 = function() {
+        };
+        CLASS_DECL$0.prototype.foo = function() {
+        };
         /** @constructor */
         var C = CLASS_DECL$0;
         """);
@@ -428,9 +427,10 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "window['MediaSource'] = class {};",
         """
-        /** @constructor @const */
-        var CLASS_DECL$0 = function() {};
-        window['MediaSource'] = CLASS_DECL$0;
+        /** @const @constructor */
+        var CLASS_DECL$0 = function() {
+        };
+        window["MediaSource"] = CLASS_DECL$0;
         """);
   }
 
@@ -439,15 +439,17 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "var C = new (class {})();",
         """
-        /** @constructor @const */
-        var CLASS_DECL$0=function(){};
-        var C=new CLASS_DECL$0
+        /** @const @constructor */
+        var CLASS_DECL$0 = function() {
+        };
+        var C = new CLASS_DECL$0();
         """);
     test(
         "(condition ? obj1 : obj2).prop = class C { };",
         """
-        /** @constructor @const */
-        var CLASS_DECL$0 = function(){};
+        /** @const @constructor */
+        var CLASS_DECL$0 = function() {
+        };
         (condition ? obj1 : obj2).prop = CLASS_DECL$0;
         """);
   }
@@ -469,7 +471,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         """
         var C = new (foo || (foo = function() {
           /** @const @constructor */
-          var CLASS_DECL$0 = function() {};
+          var CLASS_DECL$0 = function() {
+          };
           return CLASS_DECL$0;
         }()))();
         """);
@@ -627,8 +630,9 @@ $jscomp.inherits(C, Error);
     test(
         "class C extends foo() {}",
         """
-        /** @const */ var CLASS_EXTENDS$0 = foo();
-        /** @constructor @extends {CLASS_EXTENDS$0} */
+        /** @const */
+        var CLASS_EXTENDS$0 = foo();
+        /** @constructor */
         var C = function() {
           return CLASS_EXTENDS$0.apply(this, arguments) || this;
         };
@@ -638,8 +642,10 @@ $jscomp.inherits(C, Error);
     test(
         "class C extends function(){} {}",
         """
-        /** @const */ var CLASS_EXTENDS$0 = function(){};
-        /** @constructor @extends {CLASS_EXTENDS$0} */
+        /** @const */
+        var CLASS_EXTENDS$0 = function() {
+        };
+        /** @constructor */
         var C = function() {
           CLASS_EXTENDS$0.apply(this, arguments);
         };
@@ -1232,8 +1238,9 @@ $jscomp.inherits(FooPromise, Promise);
     test(
         "var F = class G {}",
         """
-        /** @constructor @const */
-        var CLASS_DECL$0 = function(){};
+        /** @const @constructor */
+        var CLASS_DECL$0 = function() {
+        };
         /** @constructor */
         var F = CLASS_DECL$0;
         """);
@@ -1241,8 +1248,9 @@ $jscomp.inherits(FooPromise, Promise);
     test(
         "F = class G {}",
         """
-        /** @constructor @const */
-        var CLASS_DECL$0 = function(){};
+        /** @const @constructor */
+        var CLASS_DECL$0 = function() {
+        };
         /** @constructor */
         F = CLASS_DECL$0;
         """);
@@ -1679,8 +1687,9 @@ $jscomp.inherits(FooPromise, Promise);
         "function f() { var a = b = class {};}",
         """
         function f() {
-          /** @constructor @const */
-          var CLASS_DECL$0 = function() {};
+          /** @const @constructor */
+          var CLASS_DECL$0 = function() {
+          };
           var a = b = CLASS_DECL$0;
         }
         """);
@@ -1690,9 +1699,10 @@ $jscomp.inherits(FooPromise, Promise);
         """
         var ns = {};
         function f() {
-          /** @constructor @const */
-          var CLASS_DECL$0 = function() {};
-          var self = ns.Child = CLASS_DECL$0
+          /** @const @constructor */
+          var CLASS_DECL$0 = function() {
+          };
+          var self = ns.Child = CLASS_DECL$0;
         }
         """);
   }
@@ -2485,17 +2495,25 @@ function inorder1(t) {
     test(
         "class C { [foo]() { alert(1); } }",
         """
+        var COMP_FIELD$0 = foo;
         /** @constructor */
-        var C = function() {};
-        C.prototype[foo] = function() { alert(1); };
+        var C = function() {
+        };
+        C.prototype[COMP_FIELD$0] = function() {
+          alert(1);
+        };
         """);
 
     test(
         "class C { static [foo]() { alert(2); } }",
         """
+        var COMP_FIELD$0 = foo;
         /** @constructor */
-        var C = function() {};
-        C[foo] = function() { alert(2); };
+        var C = function() {
+        };
+        C[COMP_FIELD$0] = function() {
+          alert(2);
+        };
         """);
   }
 

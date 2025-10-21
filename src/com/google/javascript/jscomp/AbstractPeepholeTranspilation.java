@@ -41,8 +41,8 @@ abstract class AbstractPeepholeTranspilation {
    * SCRIPT which uses the ES3 feature Feature.REGEXP_SYNTAX, but we only transpile away certain
    * unsupported RegExp flags (e.g. REGEXP_LOOKBEHIND) in that pass.
    *
-   * <p>Another example, the {@code Es6ExtractClasses}, although not a peephole transpilation, must
-   * trigger on Feature.CLASS, but it does not transpile it away.
+   * <p>Another example, the {@code Es6NormalizeClasses}, although not a peephole transpilation,
+   * must trigger on Feature.CLASS, but it does not transpile it away.
    *
    * <p>Similarly, the pass {@code Es6ConvertSuper}, although not a peephole transpilation, runs on
    * Feature.SUPER, but does not transpile it away as calls to `super()` are not transpiled by it.

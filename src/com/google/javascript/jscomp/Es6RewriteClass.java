@@ -41,10 +41,7 @@ import org.jspecify.annotations.Nullable;
 public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPass {
   private static final FeatureSet features =
       FeatureSet.BARE_MINIMUM.with(
-          Feature.CLASSES,
-          Feature.CLASS_GETTER_SETTER,
-          Feature.NEW_TARGET,
-          Feature.SUPER);
+          Feature.CLASSES, Feature.CLASS_GETTER_SETTER, Feature.NEW_TARGET, Feature.SUPER);
 
   // This function is defined in js/es6/util/inherits.js
   static final String INHERITS = "$jscomp.inherits";
@@ -122,8 +119,8 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
     if (metadata.hasSuperClass()) {
       checkState(
           metadata.superClassNameNode().isQualifiedName(),
-          "Expected Es6RewriteClassExtendsExpressions to make all extends clauses into qualified"
-              + " names, found %s",
+          "Expected Es6NormalizeClasses to make all extends clauses into qualified  names, found"
+              + " %s",
           metadata.superClassNameNode());
     }
 

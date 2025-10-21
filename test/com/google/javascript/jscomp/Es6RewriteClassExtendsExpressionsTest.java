@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +27,7 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new Es6RewriteClassExtendsExpressions(compiler);
+    return new Es6NormalizeClasses(compiler);
   }
 
   @Override
@@ -42,7 +41,7 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
     enableTypeInfoValidation();
     replaceTypesWithColors();
     enableMultistageCompilation();
-    setGenericNameReplacements(ImmutableMap.of("CLASS_EXTENDS", "$jscomp$classExtends$"));
+    setGenericNameReplacements(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS);
   }
 
   @Test
@@ -82,23 +81,30 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
         """,
         """
         function mixObject(Superclass) {
-          return class extends Superclass {
+          const CLASS_DECL$0 = class extends Superclass {
             bar() { return 'bar'; }
           };
+          return CLASS_DECL$0;
         }
         class Foo {}
-        const CLASS_EXTENDS$0 = mixObject(Foo);
-        class Bar extends CLASS_EXTENDS$0 {}
+        const CLASS_EXTENDS$1 = mixObject(Foo);
+        class Bar extends CLASS_EXTENDS$1 {}
         """);
   }
 
   @Test
   public void testClassExpressions() {
-    testSame(
+    test(
         """
         const foo = { bar: Object};
         function baz(arg) {}
         baz(class extends foo.bar {});
+        """,
+        """
+        const foo = {bar: Object};
+        function baz(arg) {}
+        const CLASS_DECL$0 = class extends foo.bar {};
+        baz(CLASS_DECL$0);
         """);
   }
 
@@ -119,7 +125,7 @@ class __PRIVATE_WebChannelConnection extends class __PRIVATE_RestConnection {
 """;
     String expectedCode =
 """
-const CLASS_EXTENDS$0 = class __PRIVATE_RestConnection {
+const CLASS_EXTENDS$0 = class {
   constructor(e) {
     this.databaseInfo = e, this.databaseId = e.databaseId;
   }
@@ -185,9 +191,10 @@ class __PRIVATE_WebChannelConnection extends CLASS_EXTENDS$0 {
         // use an iife since parent of the let isn't a block where we can add statements
         // TODO(bradfordcsmith): Would it be better (smaller output code) to just declare
         //     the temporary variable in the block containing the for-loop?
-        for (let Foo = (function() {
+        for (let Foo = (() => {
             const CLASS_EXTENDS$0 = foo['bar'];
-            return class extends CLASS_EXTENDS$0 {};
+            const CLASS_DECL$1 = class extends CLASS_EXTENDS$0 {};
+            return CLASS_DECL$1;
           })(), i = 0; i < 1; i++) {}
         """);
   }
@@ -228,9 +235,10 @@ class __PRIVATE_WebChannelConnection extends CLASS_EXTENDS$0 {
         """,
         """
         const foo = {'bar': Object};
-        foo.foo = foo.baz = (function() {
+        foo.foo = foo.baz = (() => {
           const CLASS_EXTENDS$0 = foo['bar'];
-          return class extends CLASS_EXTENDS$0 {};
+          const CLASS_DECL$1 = class extends CLASS_EXTENDS$0 {};
+          return CLASS_DECL$1;
         })();
         """);
 
@@ -243,7 +251,8 @@ class __PRIVATE_WebChannelConnection extends CLASS_EXTENDS$0 {
         """
         const foo = {'bar': Object};
         const CLASS_EXTENDS$0 = foo['bar'];
-        foo['baz'] = class extends CLASS_EXTENDS$0 {};
+        const CLASS_DECL$1 = class extends CLASS_EXTENDS$0 {};
+        foo['baz'] = CLASS_DECL$1;
         """);
 
     test(
@@ -255,7 +264,8 @@ class __PRIVATE_WebChannelConnection extends CLASS_EXTENDS$0 {
         """
         const foo = {'bar': Object, baz: {}};
         const CLASS_EXTENDS$0 = foo['bar'];
-        foo.baz['foo'] = class extends CLASS_EXTENDS$0 {};
+        const CLASS_DECL$1 = class extends CLASS_EXTENDS$0 {};
+        foo.baz['foo'] = CLASS_DECL$1;
         """);
   }
 
@@ -272,9 +282,10 @@ class __PRIVATE_WebChannelConnection extends CLASS_EXTENDS$0 {
         let baz = 1;
         const foo = {'bar': Object};
         // Use an IIFE to preserve execution order when expressions have side effects.
-        foo[baz++] = (function() {
+        foo[baz++] = (() => {
           const CLASS_EXTENDS$0 = foo['bar'];
-          return class extends CLASS_EXTENDS$0 {};
+          const CLASS_DECL$1 = class extends CLASS_EXTENDS$0 {};
+          return CLASS_DECL$1;
         })();
         """);
   }
@@ -291,9 +302,10 @@ class __PRIVATE_WebChannelConnection extends CLASS_EXTENDS$0 {
         """
         const foo = { 'bar': Object};
         function mayHaveSideEffects() {}
-        var baz = mayHaveSideEffects(), Foo = (function() {
+        var baz = mayHaveSideEffects(), Foo = (() => {
           const CLASS_EXTENDS$0 = foo['bar'];
-          return class extends CLASS_EXTENDS$0 {};
+          const CLASS_DECL$1 = class extends CLASS_EXTENDS$0 {};
+          return CLASS_DECL$1;
         })();
         """);
 
@@ -306,6 +318,23 @@ class __PRIVATE_WebChannelConnection extends CLASS_EXTENDS$0 {
         const foo = {'bar': Object};
         const CLASS_EXTENDS$0 = foo['bar'];
         const Foo = class extends CLASS_EXTENDS$0 {}, baz = false;
+        """);
+  }
+
+  @Test
+  public void testDynamicExtends_logicalExpressionWithJSDoc() {
+    test(
+        """
+        class A {}
+        class B {}
+        /** @extends {Object} */
+        class C extends (foo ? A : B) {}
+        """,
+        """
+        class A {}
+        class B {}
+        const CLASS_EXTENDS$0 = foo ? A : B;
+        class C extends CLASS_EXTENDS$0 {}
         """);
   }
 }

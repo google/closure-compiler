@@ -113,8 +113,8 @@ public final class TranspileOnlyIntegrationTest extends IntegrationTestCase {
     test(options, js, transpiled);
   }
 
-  // Added when moving Es6ExtractClasses before RewriteClassMembers and fixing an issue with
-  // not rewriting extends
+  // Added when moving Es6ExtractClasses before RewriteClassMembers (now both merged into
+  // Es6NormalizeClasses) and fixing an issue with not rewriting extends
   @Test
   public void testClassExtendsAnonymousClass() {
     options.setLanguage(LanguageMode.UNSTABLE);

@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import java.util.function.Function;
 import org.junit.Before;
@@ -50,24 +49,12 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     enableTypeCheck();
     replaceTypesWithColors();
     enableMultistageCompilation();
-    setGenericNameReplacements(
-        ImmutableMap.of(
-            "COMP_FIELD",
-            "$jscomp$compField$",
-            "STATIC_INIT",
-            "$jscomp$staticInit$",
-            "CLASS_DECL",
-            "$jscomp$classDecl$",
-            "CLASS_EXTENDS",
-            "$jscomp$classExtends$"));
+    setGenericNameReplacements(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS);
   }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return (externs, root) -> {
-      new Es6ExtractClasses(compiler).process(externs, root);
-      new RewriteClassMembers(compiler).process(externs, root);
-    };
+    return new Es6NormalizeClasses(compiler);
   }
 
   // RewriteClassMembers conditionally compiles away class fields based on the output language.
@@ -82,7 +69,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     String normalizedExpectedEs2021 = removeWhitespace.apply(expectedEs2021);
     String normalizedExpectedEs2022 = removeWhitespace.apply(expectedEs2022);
 
-    if (normalizedExpectedEs2021.equals(normalizedExpectedEs2022)) {
+    if (!normalizedExpectedEs2021.trim().isEmpty()
+        && normalizedExpectedEs2021.equals(normalizedExpectedEs2022)) {
       throw new IllegalArgumentException(
           "Expected ES2021 and ES2022 output are identical. Call testRewrite with 2 params"
               + " instead.");
@@ -1012,26 +1000,13 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """);
 
-    testRewrite(
-        """
-        class Clazz {
-          static {}  // Make RewriteClassMembers transform this class.
-          [Symbol.toPrimitive]() {
-            return 42;
-          }
-        }
-        """,
+    testRewriteSame(
         """
         class Clazz {
           [Symbol.toPrimitive]() {
             return 42;
           }
-          static STATIC_INIT$0() {
-            {
-            }
-          }
         }
-        Clazz.STATIC_INIT$0();
         """);
   }
 
@@ -1250,26 +1225,13 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         foo(CLASS_DECL$0);
         """);
 
-    testRewrite(
-        """
-        class Clazz {
-          static {}  // Make RewriteClassMembers transform this class.
-          static [Symbol.hasInstance](x) {
-            return false;
-          }
-        }
-        """,
+    testRewriteSame(
         """
         class Clazz {
           static [Symbol.hasInstance](x) {
             return false;
           }
-          static STATIC_INIT$0() {
-            {
-            }
-          }
         }
-        Clazz.STATIC_INIT$0();
         """);
   }
 
@@ -2575,43 +2537,43 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class A {
-          static STATIC_INIT$1() {
+          static STATIC_INIT$0() {
             A.b;
           }
         }
-        A.STATIC_INIT$1();
+        A.STATIC_INIT$0();
         foo(A.b.c = (() => {
-          const CLASS_DECL$0 = class {
+          const CLASS_DECL$1 = class {
             static STATIC_INIT$2() {
               {
-                CLASS_DECL$0.y = 2;
-                let x = CLASS_DECL$0.y;
+                CLASS_DECL$1.y = 2;
+                let x = CLASS_DECL$1.y;
               }
             }
           };
-          CLASS_DECL$0.STATIC_INIT$2();
-          return CLASS_DECL$0;
+          CLASS_DECL$1.STATIC_INIT$2();
+          return CLASS_DECL$1;
         })());
         """,
         """
         class A {
           static b;
-          static STATIC_INIT$1() {
+          static STATIC_INIT$0() {
             A.b;
           }
         }
-        A.STATIC_INIT$1();
+        A.STATIC_INIT$0();
         foo(A.b.c = (() => {
-          const CLASS_DECL$0 = class {
+          const CLASS_DECL$1 = class {
             static STATIC_INIT$2() {
               {
-                CLASS_DECL$0.y = 2;
-                let x = CLASS_DECL$0.y;
+                CLASS_DECL$1.y = 2;
+                let x = CLASS_DECL$1.y;
               }
             }
           };
-          CLASS_DECL$0.STATIC_INIT$2();
-          return CLASS_DECL$0;
+          CLASS_DECL$1.STATIC_INIT$2();
+          return CLASS_DECL$1;
         })());
         """);
   }

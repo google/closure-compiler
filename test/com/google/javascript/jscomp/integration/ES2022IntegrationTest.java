@@ -427,8 +427,9 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
   public void testEs6RewriteClassExtendsExpression() {
     CompilerOptions options = createCompilerOptions();
 
-    String baseCode =
+    String src =
         """
+        /** @unrestricted */
         class __PRIVATE_WebChannelConnection extends class __PRIVATE_RestConnection {
           constructor(e) {
             this.databaseInfo = e, this.databaseId = e.databaseId;
@@ -444,18 +445,14 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
           }
         }
         """;
-
-    String code = "/** @unrestricted */\n" + baseCode;
-    String expectedCodeNonTraspiled = baseCode;
-    String expectedCodeTranspiled =
+    String expected =
         """
-        const $jscomp$classDecl$98447280$1 = class {
+        const $jscomp$classExtends$98447280$0 = class {
           constructor(e) {
             this.databaseInfo = e, this.databaseId = e.databaseId
           }
         };
-        const $jscomp$classExtends$98447280$0 = $jscomp$classDecl$98447280$1;
-        class __PRIVATE_WebChannelConnection extends $jscomp$classDecl$98447280$1 {
+        class __PRIVATE_WebChannelConnection extends $jscomp$classExtends$98447280$0 {
           constructor(e) {
             super(e), this.forceLongPolling = e.forceLongPolling,
                       this.autoDetectLongPolling = e.autoDetectLongPolling,
@@ -468,10 +465,10 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
 
     options.setLanguageIn(LanguageMode.UNSTABLE);
     options.setLanguageOut(LanguageMode.UNSTABLE);
-    test(options, code, expectedCodeNonTraspiled);
+    test(options, src, expected);
 
     options.setLanguageIn(LanguageMode.UNSTABLE);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
-    test(options, code, expectedCodeTranspiled);
+    test(options, src, expected);
   }
 }

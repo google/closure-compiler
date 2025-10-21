@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Before;
@@ -29,7 +28,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new Es6ExtractClasses(compiler);
+    return new Es6NormalizeClasses(compiler);
   }
 
   @Override
@@ -44,7 +43,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     enableTypeCheck();
     replaceTypesWithColors();
     enableMultistageCompilation();
-    setGenericNameReplacements(ImmutableMap.of("CLASS_DECL", "$jscomp$classDecl$"));
+    setGenericNameReplacements(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS);
   }
 
   @Test
