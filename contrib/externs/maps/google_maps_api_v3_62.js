@@ -4030,7 +4030,7 @@ google.maps.IconMouseEvent = function() {};
  * about <a
  * href="https://developers.google.com/maps/documentation/places/web-service/place-id">place
  * IDs</a> in the Places API developer guide.
- * @type {?string}
+ * @type {string|null}
  */
 google.maps.IconMouseEvent.prototype.placeId;
 
@@ -7198,7 +7198,7 @@ google.maps.MapsServerError = function() {};
  * Access by calling `const {Marker} = await
  * google.maps.importLibrary("marker")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {google.maps.MarkerOptions=} opts Named optional arguments
+ * @param {!google.maps.MarkerOptions=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  * @deprecated As of February 21st, 2024, google.maps.Marker is deprecated.
@@ -7256,7 +7256,7 @@ google.maps.Marker.prototype.getLabel = function() {};
 
 /**
  * Get the map or panaroama the {@link google.maps.Marker} is rendered on.
- * @return {google.maps.Map|google.maps.StreetViewPanorama}
+ * @return {!google.maps.Map|!google.maps.StreetViewPanorama|null}
  */
 google.maps.Marker.prototype.getMap = function() {};
 
@@ -7351,7 +7351,7 @@ google.maps.Marker.prototype.setLabel = function(label) {};
 /**
  * Renders the {@link google.maps.Marker} on the specified map or panorama. If
  * map is set to <code>null</code>, the marker will be removed.
- * @param {google.maps.Map|google.maps.StreetViewPanorama} map
+ * @param {!google.maps.Map|!google.maps.StreetViewPanorama|null} map
  * @return {undefined}
  */
 google.maps.Marker.prototype.setMap = function(map) {};
@@ -7365,7 +7365,7 @@ google.maps.Marker.prototype.setOpacity = function(opacity) {};
 
 /**
  * Set the options for the {@link google.maps.Marker}.
- * @param {google.maps.MarkerOptions} options
+ * @param {!google.maps.MarkerOptions|null} options
  * @return {undefined}
  */
 google.maps.Marker.prototype.setOptions = function(options) {};
@@ -9207,19 +9207,16 @@ google.maps.RotateControlOptions.prototype.position;
 google.maps.RoutesLibrary = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.ComputeRouteMatrixExtraComputation}
  */
 google.maps.RoutesLibrary.prototype.ComputeRouteMatrixExtraComputation;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.ComputeRoutesExtraComputation}
  */
 google.maps.RoutesLibrary.prototype.ComputeRoutesExtraComputation;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.DirectionalLocation}
  */
 google.maps.RoutesLibrary.prototype.DirectionalLocation;
@@ -9255,187 +9252,156 @@ google.maps.RoutesLibrary.prototype.DistanceMatrixService;
 google.maps.RoutesLibrary.prototype.DistanceMatrixStatus;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.FallbackInfo}
  */
 google.maps.RoutesLibrary.prototype.FallbackInfo;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.FallbackReason}
  */
 google.maps.RoutesLibrary.prototype.FallbackReason;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.FallbackRoutingMode}
  */
 google.maps.RoutesLibrary.prototype.FallbackRoutingMode;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.GeocodedWaypoint}
  */
 google.maps.RoutesLibrary.prototype.GeocodedWaypoint;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.GeocodingResults}
  */
 google.maps.RoutesLibrary.prototype.GeocodingResults;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.MultiModalSegment}
  */
 google.maps.RoutesLibrary.prototype.MultiModalSegment;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.PolylineDetailInfo}
  */
 google.maps.RoutesLibrary.prototype.PolylineDetailInfo;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.PolylineDetails}
  */
 google.maps.RoutesLibrary.prototype.PolylineDetails;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.PolylineQuality}
  */
 google.maps.RoutesLibrary.prototype.PolylineQuality;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.ReferenceRoute}
  */
 google.maps.RoutesLibrary.prototype.ReferenceRoute;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.RoadFeatureState}
  */
 google.maps.RoutesLibrary.prototype.RoadFeatureState;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.Route}
  */
 google.maps.RoutesLibrary.prototype.Route;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.RouteLabel}
  */
 google.maps.RoutesLibrary.prototype.RouteLabel;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.RouteLeg}
  */
 google.maps.RoutesLibrary.prototype.RouteLeg;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.RouteLegLocalizedValues}
  */
 google.maps.RoutesLibrary.prototype.RouteLegLocalizedValues;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.RouteLegStep}
  */
 google.maps.RoutesLibrary.prototype.RouteLegStep;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.RouteLegStepLocalizedValues}
  */
 google.maps.RoutesLibrary.prototype.RouteLegStepLocalizedValues;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.RouteLegTravelAdvisory}
  */
 google.maps.RoutesLibrary.prototype.RouteLegTravelAdvisory;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.RouteLocalizedValues}
  */
 google.maps.RoutesLibrary.prototype.RouteLocalizedValues;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.RouteMatrix}
  */
 google.maps.RoutesLibrary.prototype.RouteMatrix;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.RouteMatrixItem}
  */
 google.maps.RoutesLibrary.prototype.RouteMatrixItem;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.RouteMatrixItemCondition}
  */
 google.maps.RoutesLibrary.prototype.RouteMatrixItemCondition;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.RouteMatrixItemError}
  */
 google.maps.RoutesLibrary.prototype.RouteMatrixItemError;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.RouteMatrixItemLocalizedValues}
  */
 google.maps.RoutesLibrary.prototype.RouteMatrixItemLocalizedValues;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.RouteMatrixRow}
  */
 google.maps.RoutesLibrary.prototype.RouteMatrixRow;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.RouteTravelAdvisory}
  */
 google.maps.RoutesLibrary.prototype.RouteTravelAdvisory;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.RoutingPreference}
  */
 google.maps.RoutesLibrary.prototype.RoutingPreference;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.Speed}
  */
 google.maps.RoutesLibrary.prototype.Speed;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.SpeedReadingInterval}
  */
 google.maps.RoutesLibrary.prototype.SpeedReadingInterval;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.StepsOverview}
  */
 google.maps.RoutesLibrary.prototype.StepsOverview;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.TollInfo}
  */
 google.maps.RoutesLibrary.prototype.TollInfo;
@@ -9446,19 +9412,16 @@ google.maps.RoutesLibrary.prototype.TollInfo;
 google.maps.RoutesLibrary.prototype.TrafficModel;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.TransitAgency}
  */
 google.maps.RoutesLibrary.prototype.TransitAgency;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.TransitDetails}
  */
 google.maps.RoutesLibrary.prototype.TransitDetails;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.TransitLine}
  */
 google.maps.RoutesLibrary.prototype.TransitLine;
@@ -9474,13 +9437,11 @@ google.maps.RoutesLibrary.prototype.TransitMode;
 google.maps.RoutesLibrary.prototype.TransitRoutePreference;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.TransitStop}
  */
 google.maps.RoutesLibrary.prototype.TransitStop;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.TransitVehicle}
  */
 google.maps.RoutesLibrary.prototype.TransitVehicle;
@@ -9491,7 +9452,6 @@ google.maps.RoutesLibrary.prototype.TransitVehicle;
 google.maps.RoutesLibrary.prototype.TravelMode;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.routes.VehicleEmissionType}
  */
 google.maps.RoutesLibrary.prototype.VehicleEmissionType;
@@ -17988,7 +17948,8 @@ google.maps.marker.AdvancedMarkerElement = function(options) {};
  * length-percentage</a> value which is used to offset the anchor point of the
  * marker from the top left corner of the marker. This is useful when using a
  * visual which has an anchor point that is different than the typical bottom
- * center point of the default marker. The default value is &quot;-%50&quot;.
+ * center point of the default marker.
+ * @default &quot;-50%&quot;
  * @type {string|null|undefined}
  */
 google.maps.marker.AdvancedMarkerElement.prototype.anchorLeft;
@@ -17999,7 +17960,8 @@ google.maps.marker.AdvancedMarkerElement.prototype.anchorLeft;
  * length-percentage</a> value which is used to offset the anchor point of the
  * marker from the top left corner of the marker. This is useful when using a
  * visual which has an anchor point that is different than the typical bottom
- * center point of the default marker. The default value is &quot;-%100&quot;.
+ * center point of the default marker.
+ * @default &quot;-100%&quot;
  * @type {string|null|undefined}
  */
 google.maps.marker.AdvancedMarkerElement.prototype.anchorTop;
@@ -18082,6 +18044,30 @@ google.maps.marker.AdvancedMarkerElement.prototype.addListener = function(
  * @record
  */
 google.maps.marker.AdvancedMarkerElementOptions = function() {};
+
+/**
+ * A <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/CSS/length-percentage">CSS
+ * length-percentage</a> value which is used to offset the anchor point of the
+ * marker from the top left corner of the marker. This is useful when using a
+ * visual which has an anchor point that is different than the typical bottom
+ * center point of the default marker.
+ * @default &quot;-50%&quot;
+ * @type {string|null|undefined}
+ */
+google.maps.marker.AdvancedMarkerElementOptions.prototype.anchorLeft;
+
+/**
+ * A <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/CSS/length-percentage">CSS
+ * length-percentage</a> value which is used to offset the anchor point of the
+ * marker from the top left corner of the marker. This is useful when using a
+ * visual which has an anchor point that is different than the typical bottom
+ * center point of the default marker.
+ * @default &quot;-100%&quot;
+ * @type {string|null|undefined}
+ */
+google.maps.marker.AdvancedMarkerElementOptions.prototype.anchorTop;
 
 /**
  * An enumeration specifying how an <code>AdvancedMarkerElement</code> should
@@ -18205,28 +18191,43 @@ google.maps.marker.PinElement.prototype.background;
 google.maps.marker.PinElement.prototype.borderColor;
 
 /**
- * This field is read-only. The DOM Element backing the view.
- * @type {!HTMLElement}
- */
-google.maps.marker.PinElement.prototype.element;
-
-/**
- * See {@link google.maps.marker.PinElementOptions.glyph}.
- * @type {string|!Element|!URL|null|undefined}
- */
-google.maps.marker.PinElement.prototype.glyph;
-
-/**
  * See {@link google.maps.marker.PinElementOptions.glyphColor}.
  * @type {string|null|undefined}
  */
 google.maps.marker.PinElement.prototype.glyphColor;
 
 /**
+ * See {@link google.maps.marker.PinElementOptions.glyphSrc}.
+ * @type {!URL|string|null|undefined}
+ */
+google.maps.marker.PinElement.prototype.glyphSrc;
+
+/**
+ * See {@link google.maps.marker.PinElementOptions.glyphText}.
+ * @type {string|null|undefined}
+ */
+google.maps.marker.PinElement.prototype.glyphText;
+
+/**
  * See {@link google.maps.marker.PinElementOptions.scale}.
  * @type {number|null|undefined}
  */
 google.maps.marker.PinElement.prototype.scale;
+
+/**
+ * This field is read-only. The DOM Element backing the view.
+ * @type {!HTMLElement}
+ * @deprecated Use the PinElement directly.
+ */
+google.maps.marker.PinElement.prototype.element;
+
+/**
+ * See {@link google.maps.marker.PinElementOptions.glyph}.
+ * @type {string|!Element|!URL|null|undefined}
+ * @deprecated Use {@link google.maps.marker.PinElementOptions.glyphText}
+ *     or {@link google.maps.marker.PinElementOptions.glyphSrc} instead.
+ */
+google.maps.marker.PinElement.prototype.glyph;
 
 
 
@@ -18253,12 +18254,6 @@ google.maps.marker.PinElementOptions.prototype.background;
 google.maps.marker.PinElementOptions.prototype.borderColor;
 
 /**
- * The DOM element displayed in the pin.
- * @type {string|!Element|!URL|null|undefined}
- */
-google.maps.marker.PinElementOptions.prototype.glyph;
-
-/**
  * The color of the glyph. Supports any CSS <a
  * href="https://developer.mozilla.org/en-US/docs/Web/CSS/color_value">color
  * value</a>.
@@ -18267,11 +18262,31 @@ google.maps.marker.PinElementOptions.prototype.glyph;
 google.maps.marker.PinElementOptions.prototype.glyphColor;
 
 /**
+ * The source of the glyph image to be displayed in the pin.
+ * @type {!URL|string|null|undefined}
+ */
+google.maps.marker.PinElementOptions.prototype.glyphSrc;
+
+/**
+ * The text displayed in the pin.
+ * @type {string|null|undefined}
+ */
+google.maps.marker.PinElementOptions.prototype.glyphText;
+
+/**
  * The scale of the pin.
  * @default <code>1</code>
  * @type {number|null|undefined}
  */
 google.maps.marker.PinElementOptions.prototype.scale;
+
+/**
+ * The DOM element displayed in the pin.
+ * @type {string|!Element|!URL|null|undefined}
+ * @deprecated Use {@link google.maps.marker.PinElementOptions.glyphText}
+ *     or {@link google.maps.marker.PinElementOptions.glyphSrc} instead.
+ */
+google.maps.marker.PinElementOptions.prototype.glyph;
 
 /**
  * @const
@@ -24096,8 +24111,6 @@ google.maps.places.TextSearchRequest.prototype.type;
 google.maps.routes = {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Extra computations to perform for a {@link
  * google.maps.routes.RouteMatrix.computeRouteMatrix} request.
  *
@@ -24114,8 +24127,6 @@ google.maps.routes.ComputeRouteMatrixExtraComputation = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Request for a route matrix.
  * @record
  */
@@ -24269,8 +24280,6 @@ google.maps.routes.ComputeRouteMatrixRequest.prototype.travelMode;
 google.maps.routes.ComputeRouteMatrixRequest.prototype.units;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Extra computations to perform for a {@link
  * google.maps.routes.Route.computeRoutes} request.
  *
@@ -24318,8 +24327,6 @@ google.maps.routes.ComputeRoutesExtraComputation = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Request for routes.
  * @record
  */
@@ -24514,8 +24521,6 @@ google.maps.routes.ComputeRoutesRequest.prototype.travelMode;
 google.maps.routes.ComputeRoutesRequest.prototype.units;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Encapsulates a geographic point and an optional heading.
  *
  * Access by calling `const {DirectionalLocation} = await
@@ -24544,8 +24549,6 @@ google.maps.routes.DirectionalLocation.prototype.heading;
 google.maps.routes.DirectionalLocation.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Object literals are accepted in place of {@link
  * google.maps.routes.DirectionalLocation} instances as a convenience. These are
  * converted to {@link google.maps.routes.DirectionalLocation} when the Maps JS
@@ -24566,8 +24569,6 @@ google.maps.routes.DirectionalLocationLiteral = function() {};
 google.maps.routes.DirectionalLocationLiteral.prototype.heading;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Information related to how and why a fallback result was used in a {@link
  * google.maps.routes.Route.computeRoutes} response. If this field is set, then
  * it means the server used a different routing mode from your preferred mode as
@@ -24596,8 +24597,12 @@ google.maps.routes.FallbackInfo.prototype.reason;
 google.maps.routes.FallbackInfo.prototype.routingMode;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.FallbackInfo.prototype.toJSON = function() {};
+
+/**
  * The reason that a fallback response was returned in a {@link
  * google.maps.routes.Route.computeRoutes} response.
  *
@@ -24622,8 +24627,6 @@ google.maps.routes.FallbackReason = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The actual routing mode used when a fallback response is returned in a {@link
  * google.maps.routes.Route.computeRoutes} response.
  *
@@ -24646,8 +24649,6 @@ google.maps.routes.FallbackRoutingMode = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Geocoding about the locations used as waypoints. Only populated for address
  * waypoints. Includes details about the geocoding results for the purposes of
  * determining what the address was geocoded to.
@@ -24702,8 +24703,6 @@ google.maps.routes.GeocodedWaypoint.prototype.types;
 google.maps.routes.GeocodedWaypoint.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Contains {@link google.maps.routes.GeocodedWaypoint}s for origin,
  * destination, and intermediate waypoints. Only populated for address
  * waypoints.
@@ -24742,8 +24741,6 @@ google.maps.routes.GeocodingResults.prototype.origin;
 google.maps.routes.GeocodingResults.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Provides summarized information about a multi-modal segment of the {@link
  * google.maps.routes.RouteLeg.steps} of a route. A multi-modal segment is
  * defined as one or more contiguous {@link
@@ -24798,8 +24795,6 @@ google.maps.routes.MultiModalSegment.prototype.travelMode;
 google.maps.routes.MultiModalSegment.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Encapsulates information about a road feature along a stretch of polyline.
  *
  * Access by calling `const {PolylineDetailInfo} = await
@@ -24834,8 +24829,6 @@ google.maps.routes.PolylineDetailInfo.prototype.startIndex;
 google.maps.routes.PolylineDetailInfo.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Details corresponding to a given index or contiguous segment of a polyline.
  * Given a polyline with points P_0, P_1, ... , P_N (zero-based index), the
  * <code>PolylineDetails</code> describes a road feature for a given interval.
@@ -24866,8 +24859,6 @@ google.maps.routes.PolylineDetails.prototype.narrowRoadInfo;
 google.maps.routes.PolylineDetails.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Specifies the quality of the polyline.
  *
  * Access by calling `const {PolylineQuality} = await
@@ -24892,8 +24883,6 @@ google.maps.routes.PolylineQuality = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A supported reference route on a {@link
  * google.maps.routes.ComputeRoutesRequest}.
  *
@@ -24914,8 +24903,6 @@ google.maps.routes.ReferenceRoute = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Encapsulates the states of road features along a stretch of polyline.
  *
  * Access by calling `const {RoadFeatureState} = await
@@ -24935,8 +24922,6 @@ google.maps.routes.RoadFeatureState = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Contains a route, which consists of a series of connected road segments that
  * join beginning, ending, and intermediate waypoints.
  *
@@ -25165,8 +25150,6 @@ google.maps.routes.Route.prototype.createWaypointAdvancedMarkers = function(
 google.maps.routes.Route.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Labels for the route that are useful to identify specific properties to
  * compare against others.
  *
@@ -25199,8 +25182,6 @@ google.maps.routes.RouteLabel = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Contains a segment between non-<code>via</code> waypoints.
  *
  * Access by calling `const {RouteLeg} = await
@@ -25310,8 +25291,6 @@ google.maps.routes.RouteLeg.prototype.travelAdvisory;
 google.maps.routes.RouteLeg.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Text representations of the {@link google.maps.routes.RouteLeg}.
  *
  * Access by calling `const {RouteLegLocalizedValues} = await
@@ -25371,8 +25350,6 @@ google.maps.routes.RouteLegLocalizedValues.prototype.staticDurationLanguage;
 google.maps.routes.RouteLegLocalizedValues.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Contains a segment of a <code>RouteLeg</code>. A step corresponds to a single
  * navigation instruction. Route legs are made up of steps.
  *
@@ -25460,8 +25437,6 @@ google.maps.routes.RouteLegStep.prototype.travelMode;
 google.maps.routes.RouteLegStep.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Text representations of properties of the <code>RouteLegStep</code>.
  *
  * Access by calling `const {RouteLegStepLocalizedValues} = await
@@ -25508,8 +25483,6 @@ google.maps.routes.RouteLegStepLocalizedValues.prototype.staticDurationLanguage;
 google.maps.routes.RouteLegStepLocalizedValues.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Contains additional information that the user should be informed about on
  * a {@link google.maps.routes.RouteLeg}.
  *
@@ -25552,8 +25525,6 @@ google.maps.routes.RouteLegTravelAdvisory.prototype.tollInfo;
 google.maps.routes.RouteLegTravelAdvisory.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Text representations of properties of the <code>Route</code>.
  *
  * Access by calling `const {RouteLocalizedValues} = await
@@ -25628,8 +25599,6 @@ google.maps.routes.RouteLocalizedValues.prototype.transitFareLanguage;
 google.maps.routes.RouteLocalizedValues.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A matrix of routes computed for a set of origin/destination pairs by {@link
  * google.maps.routes.RouteMatrix.computeRouteMatrix}
  *
@@ -25681,8 +25650,6 @@ google.maps.routes.RouteMatrix.computeRouteMatrix = function(request) {};
 google.maps.routes.RouteMatrix.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Contains route information computed for an origin/destination pair passed
  * to {@link google.maps.routes.RouteMatrix.computeRouteMatrix}.
  *
@@ -25757,8 +25724,12 @@ google.maps.routes.RouteMatrixItem.prototype.staticDurationMillis;
 google.maps.routes.RouteMatrixItem.prototype.travelAdvisory;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.RouteMatrixItem.prototype.toJSON = function() {};
+
+/**
  * The condition of a route for a given origin/destination pair.
  *
  * Access by calling `const {RouteMatrixItemCondition} = await
@@ -25778,8 +25749,6 @@ google.maps.routes.RouteMatrixItemCondition = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * An error that occurred during {@link
  * google.maps.routes.RouteMatrix.computeRouteMatrix} for a specific
  * origin/destination pair.
@@ -25799,8 +25768,6 @@ google.maps.routes.RouteMatrixItemError = function() {};
 google.maps.routes.RouteMatrixItemError.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Text representations of the {@link google.maps.routes.RouteMatrixItem}.
  *
  * Access by calling `const {RouteMatrixItemLocalizedValues} = await
@@ -25878,8 +25845,6 @@ google.maps.routes.RouteMatrixItemLocalizedValues.prototype.toJSON =
     function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A single origin for a {@link google.maps.routes.ComputeRouteMatrixRequest}.
  * @record
  */
@@ -25900,8 +25865,6 @@ google.maps.routes.RouteMatrixOrigin.prototype.routeModifiers;
 google.maps.routes.RouteMatrixOrigin.prototype.waypoint;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Corresponds to an origin passed to {@link
  * google.maps.routes.RouteMatrix.computeRouteMatrix}. Contains a list of {@link
  * google.maps.routes.RouteMatrixItem}s, each item representing a route to a
@@ -25927,8 +25890,6 @@ google.maps.routes.RouteMatrixRow.prototype.items;
 google.maps.routes.RouteMatrixRow.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Encapsulates a set of optional conditions to satisfy when calculating routes.
  * @record
  */
@@ -25988,8 +25949,6 @@ google.maps.routes.RouteModifiers.prototype.tollPasses;
 google.maps.routes.RouteModifiers.prototype.vehicleInfo;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Details about a section of a route corresponding to a polyline that can be
  * used to customize the polyline style.
  * @record
@@ -26018,8 +25977,6 @@ google.maps.routes.RoutePolylineDetails.prototype.transitDetails;
 google.maps.routes.RoutePolylineDetails.prototype.travelMode;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for creating route polylines.
  * @record
  */
@@ -26049,8 +26006,6 @@ google.maps.routes.RoutePolylineOptions.prototype.colorScheme;
 google.maps.routes.RoutePolylineOptions.prototype.polylineOptions;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Contains additional information that the user should be informed about on
  * a {@link google.maps.routes.Route}.
  *
@@ -26118,8 +26073,6 @@ google.maps.routes.RouteTravelAdvisory.prototype.transitFare;
 google.maps.routes.RouteTravelAdvisory.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Factors to take into consideration when calculating a route.
  *
  * Access by calling `const {RoutingPreference} = await
@@ -26149,8 +26102,6 @@ google.maps.routes.RoutingPreference = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The classification of polyline speed based on traffic data.
  *
  * Access by calling `const {Speed} = await
@@ -26174,8 +26125,6 @@ google.maps.routes.Speed = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Groups together the {@link google.maps.LatLngAltitude}s of a route interval
  * with the speed reading for the interval.
  * @record
@@ -26195,8 +26144,6 @@ google.maps.routes.SpeedPath.prototype.path;
 google.maps.routes.SpeedPath.prototype.speed;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Traffic density indicator on a contiguous segment of a polyline or path.
  * Given a path with points P_0, P_1, ... , P_N (zero-based index), the
  * <code>SpeedReadingInterval</code> describes the traffic density of an
@@ -26234,8 +26181,6 @@ google.maps.routes.SpeedReadingInterval.prototype.startPolylinePointIndex;
 google.maps.routes.SpeedReadingInterval.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Provides overview information about a list of {@link
  * google.maps.routes.RouteLeg.steps}.
  *
@@ -26260,8 +26205,6 @@ google.maps.routes.StepsOverview.prototype.multiModalSegments;
 google.maps.routes.StepsOverview.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Encapsulates toll information on a {@link google.maps.routes.Route} or {@link
  * google.maps.routes.RouteLeg}.
  *
@@ -26290,8 +26233,6 @@ google.maps.routes.TollInfo.prototype.estimatedPrices;
 google.maps.routes.TollInfo.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Information about a transit agency.
  *
  * Access by calling `const {TransitAgency} = await
@@ -26326,8 +26267,6 @@ google.maps.routes.TransitAgency.prototype.url;
 google.maps.routes.TransitAgency.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Additional information about a transit step in a route.
  *
  * Access by calling `const {TransitDetails} = await
@@ -26410,8 +26349,6 @@ google.maps.routes.TransitDetails.prototype.tripShortText;
 google.maps.routes.TransitDetails.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Information about a transit line.
  *
  * Access by calling `const {TransitLine} = await
@@ -26478,8 +26415,6 @@ google.maps.routes.TransitLine.prototype.vehicle;
 google.maps.routes.TransitLine.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Preferences for <code>TRANSIT</code> based routes that influence the route
  * that is returned.
  * @record
@@ -26501,8 +26436,6 @@ google.maps.routes.TransitPreference.prototype.allowedTransitModes;
 google.maps.routes.TransitPreference.prototype.routingPreference;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Information about a transit stop.
  *
  * Access by calling `const {TransitStop} = await
@@ -26532,8 +26465,6 @@ google.maps.routes.TransitStop.prototype.name;
 google.maps.routes.TransitStop.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Information about a vehicle used in transit routes.
  *
  * Access by calling `const {TransitVehicle} = await
@@ -26585,8 +26516,6 @@ google.maps.routes.TransitVehicle.prototype.vehicleType;
 google.maps.routes.TransitVehicle.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A set of values describing the vehicle&#39;s emission type. Applies only to
  * the <code>DRIVING</code> travel mode.
  *
@@ -26615,8 +26544,6 @@ google.maps.routes.VehicleEmissionType = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Contains the vehicle information, such as the vehicle emission type.
  * @record
  */
@@ -26630,8 +26557,6 @@ google.maps.routes.VehicleInfo = function() {};
 google.maps.routes.VehicleInfo.prototype.emissionType;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Represents a waypoint in a route.
  * @record
  */
@@ -26690,8 +26615,6 @@ google.maps.routes.Waypoint.prototype.vehicleStopover;
 google.maps.routes.Waypoint.prototype.via;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Details about a waypoint that can be used to customize marker style.
  * @record
  */
