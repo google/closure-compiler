@@ -711,7 +711,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
 
   private void maybeUpdateClassSelfRef(NodeTraversal t, Node nameNode) {
     for (ClassRecord klass : classStack) {
-      if (!klass.bindingIdentifier.isPresent()) {
+      if (klass.bindingIdentifier.isEmpty()) {
         continue;
       }
 

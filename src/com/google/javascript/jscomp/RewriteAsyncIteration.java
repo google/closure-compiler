@@ -218,7 +218,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     contextStack.push(LexicalContext.newGlobalContext(root));
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, transpiledFeatures);
-    checkState(contextStack.element().function == null);
+    checkState(contextStack.getFirst().function == null);
     contextStack.remove();
     checkState(contextStack.isEmpty());
   }
@@ -227,17 +227,17 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
   public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
     if (n.isFunction()) {
       contextStack.push(
-          LexicalContext.newContextForFunction(contextStack.element(), n, this.compiler));
+          LexicalContext.newContextForFunction(contextStack.getFirst(), n, this.compiler));
     } else if (n.isParamList()) {
       contextStack.push(
-          LexicalContext.newContextForParamList(contextStack.element(), n, this.compiler));
+          LexicalContext.newContextForParamList(contextStack.getFirst(), n, this.compiler));
     }
     return true;
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    LexicalContext ctx = contextStack.element();
+    LexicalContext ctx = contextStack.getFirst();
     switch (n.getToken()) {
       case PARAM_LIST -> {
         // Async Generators (and popping contexts)
