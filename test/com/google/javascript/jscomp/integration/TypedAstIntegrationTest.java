@@ -76,6 +76,17 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void simpleEmptyCompile() throws IOException {
+    // Test the edge cases around having no source files while using the TypedAST paths.
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setDependencyOptions(DependencyOptions.none());
+
+    Compiler compiler = compileTypedAstShards(options);
+    assertCompiledCodeEquals(compiler, "");
+  }
+
+  @Test
   public void compilerGeneratesErrorReportWithoutCrashing() throws IOException {
     SourceFile lib1 =
         code("\n\n class Lib1 { m() { return 'lib1'; } n() { return 'delete me'; } }");

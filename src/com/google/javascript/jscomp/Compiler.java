@@ -619,7 +619,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     Supplier<Node> ast = this.typedAstFilesystem.remove(file);
     checkState(
-        ast != null || file.getName().startsWith(SYNTHETIC_FILE_NAME_PREFIX),
+        ast != null
+            || file.getName().startsWith(SYNTHETIC_FILE_NAME_PREFIX)
+            || isFillFileName(file.getName()),
         "TypedAST filesystem initialized, but missing requested file: %s",
         file);
     return ast;
