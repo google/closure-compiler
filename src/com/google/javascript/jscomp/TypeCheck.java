@@ -611,7 +611,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     validator.expectWellFormedTemplatizedType(n);
 
     switch (n.getToken()) {
-      case CAST:
+      case CAST -> {
         Node expr = n.getFirstChild();
         JSType exprType = getJSType(expr);
         JSType castType = getJSType(n);
@@ -627,100 +627,51 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         if (castType.restrictByNotNullOrUndefined().isSubtypeOf(exprType) || expr.isObjectLit()) {
           expr.setJSType(castType);
         }
-        break;
-
-      case NAME:
-        typeable = visitName(t, n, parent);
-        break;
-
-      case COMMA:
-        ensureTyped(n, getJSType(n.getLastChild()));
-        break;
-
-      case THIS:
-        ensureTyped(n, t.getTypedScope().getTypeOfThis());
-        break;
-
-      case NULL:
-        ensureTyped(n, NULL_TYPE);
-        break;
-
-      case NUMBER:
-        ensureTyped(n, NUMBER_TYPE);
-        break;
-
-      case BIGINT:
-        ensureTyped(n, BIGINT_TYPE);
-        break;
-
-      case GETTER_DEF:
-      case SETTER_DEF:
+      }
+      case NAME -> typeable = visitName(t, n, parent);
+      case COMMA -> ensureTyped(n, getJSType(n.getLastChild()));
+      case THIS -> ensureTyped(n, t.getTypedScope().getTypeOfThis());
+      case NULL -> ensureTyped(n, NULL_TYPE);
+      case NUMBER -> ensureTyped(n, NUMBER_TYPE);
+      case BIGINT -> ensureTyped(n, BIGINT_TYPE);
+      case GETTER_DEF, SETTER_DEF -> {
         // Object literal keys are handled with OBJECTLIT
-        break;
-
-      case ARRAYLIT:
-        ensureTyped(n, ARRAY_TYPE);
-        break;
-
-      case REGEXP:
-        ensureTyped(n, REGEXP_TYPE);
-        break;
-
-      case GETPROP:
+      }
+      case ARRAYLIT -> ensureTyped(n, ARRAY_TYPE);
+      case REGEXP -> ensureTyped(n, REGEXP_TYPE);
+      case GETPROP -> {
         visitGetProp(t, n);
         typeable = !(parent.isAssign() && parent.getFirstChild() == n);
-        break;
-
-      case OPTCHAIN_GETPROP:
-        visitOptChainGetProp(n);
-        break;
-
-      case OPTCHAIN_GETELEM:
-        visitOptChainGetElem(n);
-        break;
-
-      case GETELEM:
+      }
+      case OPTCHAIN_GETPROP -> visitOptChainGetProp(n);
+      case OPTCHAIN_GETELEM -> visitOptChainGetElem(n);
+      case GETELEM -> {
         visitGetElem(n);
         // The type of GETELEM is always unknown, so no point counting that.
         // If that unknown leaks elsewhere (say by an assignment to another
         // variable), then it will be counted.
         typeable = false;
-        break;
-
-      case VAR:
-      case LET:
-      case CONST:
+      }
+      case VAR, LET, CONST -> {
         visitVar(t, n);
         typeable = false;
-        break;
-
-      case NEW:
-        visitNew(n);
-        break;
-
-      case OPTCHAIN_CALL:
-        // We reuse the `visitCall` functionality for OptChain call nodes because we don't report
-        // an error for regular calls when the callee is null or undefined. However, we make sure
-        // `typeable` isn't explicitly unset as OptChain nodes are always typed during inference.
-        visitCall(t, n);
-        break;
-
-      case CALL:
+      }
+      case NEW -> visitNew(n);
+      case OPTCHAIN_CALL ->
+          // We reuse the `visitCall` functionality for OptChain call nodes because we don't report
+          // an error for regular calls when the callee is null or undefined. However, we make sure
+          // `typeable` isn't explicitly unset as OptChain nodes are always typed during inference.
+          visitCall(t, n);
+      case CALL -> {
         visitCall(t, n);
         typeable = !parent.isExprResult();
-        break;
-
-      case RETURN:
+      }
+      case RETURN -> {
         visitReturn(t, n);
         typeable = false;
-        break;
-
-      case YIELD:
-        visitYield(t, n);
-        break;
-
-      case DEC:
-      case INC:
+      }
+      case YIELD -> visitYield(t, n);
+      case DEC, INC -> {
         left = n.getFirstChild();
         checkPropCreation(left);
         if (getJSType(n).isNumber()) {
@@ -729,96 +680,63 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         } else {
           validator.expectBigIntOrNumber(left, getJSType(left), "increment/decrement");
         }
-        break;
-
-      case VOID:
-        ensureTyped(n, VOID_TYPE);
-        break;
-
-      case STRINGLIT:
-      case TYPEOF:
-      case TEMPLATELIT:
-      case TEMPLATELIT_STRING:
-        ensureTyped(n, STRING_TYPE);
-        break;
-
-      case TAGGED_TEMPLATELIT:
+      }
+      case VOID -> ensureTyped(n, VOID_TYPE);
+      case STRINGLIT, TYPEOF, TEMPLATELIT, TEMPLATELIT_STRING -> ensureTyped(n, STRING_TYPE);
+      case TAGGED_TEMPLATELIT -> {
         visitTaggedTemplateLit(n);
         ensureTyped(n);
-        break;
+      }
+      case BITNOT -> visitBitwiseNOT(n);
+      case POS -> visitUnaryPlus(n);
+      case NEG -> visitUnaryMinus(n);
+      case EQ, NE, SHEQ, SHNE -> {
+        left = n.getFirstChild();
+        right = n.getLastChild();
 
-      case BITNOT:
-        visitBitwiseNOT(n);
-        break;
-
-      case POS:
-        visitUnaryPlus(n);
-        break;
-
-      case NEG:
-        visitUnaryMinus(n);
-        break;
-
-      case EQ:
-      case NE:
-      case SHEQ:
-      case SHNE:
-        {
-          left = n.getFirstChild();
-          right = n.getLastChild();
-
-          if (left.isTypeOf()) {
-            if (right.isStringLit()) {
-              checkTypeofString(right, right.getString());
-            }
-          } else if (right.isTypeOf() && left.isStringLit()) {
-            checkTypeofString(left, left.getString());
+        if (left.isTypeOf()) {
+          if (right.isStringLit()) {
+            checkTypeofString(right, right.getString());
           }
-
-          leftType = getJSType(left);
-          rightType = getJSType(right);
-
-          // We do not want to warn about explicit comparisons to VOID. People
-          // often do this if they think their type annotations screwed up.
-          //
-          // We do want to warn about cases where people compare things like
-          // (Array|null) == (Function|null)
-          // because it probably means they screwed up.
-          //
-          // This heuristic here is not perfect, but should catch cases we
-          // care about without too many false negatives.
-          JSType leftTypeRestricted = leftType.restrictByNotNullOrUndefined();
-          JSType rightTypeRestricted = rightType.restrictByNotNullOrUndefined();
-
-          Tri result = Tri.UNKNOWN;
-          if (n.isEQ() || n.isNE()) {
-            result = leftTypeRestricted.testForEquality(rightTypeRestricted);
-            if (n.isNE()) {
-              result = result.not();
-            }
-          } else {
-            // SHEQ or SHNE
-            if (!leftTypeRestricted.canTestForShallowEqualityWith(rightTypeRestricted)) {
-              result = n.isSHEQ() ? Tri.FALSE : Tri.TRUE;
-            }
-          }
-
-          if (result != Tri.UNKNOWN) {
-            report(
-                n,
-                DETERMINISTIC_TEST,
-                leftType.toString(),
-                rightType.toString(),
-                result.toString());
-          }
-          ensureTyped(n, BOOLEAN_TYPE);
-          break;
+        } else if (right.isTypeOf() && left.isStringLit()) {
+          checkTypeofString(left, left.getString());
         }
 
-      case LT:
-      case LE:
-      case GT:
-      case GE:
+        leftType = getJSType(left);
+        rightType = getJSType(right);
+
+        // We do not want to warn about explicit comparisons to VOID. People
+        // often do this if they think their type annotations screwed up.
+        //
+        // We do want to warn about cases where people compare things like
+        // (Array|null) == (Function|null)
+        // because it probably means they screwed up.
+        //
+        // This heuristic here is not perfect, but should catch cases we
+        // care about without too many false negatives.
+        JSType leftTypeRestricted = leftType.restrictByNotNullOrUndefined();
+        JSType rightTypeRestricted = rightType.restrictByNotNullOrUndefined();
+
+        Tri result = Tri.UNKNOWN;
+        if (n.isEQ() || n.isNE()) {
+          result = leftTypeRestricted.testForEquality(rightTypeRestricted);
+          if (n.isNE()) {
+            result = result.not();
+          }
+        } else {
+          // SHEQ or SHNE
+          if (!leftTypeRestricted.canTestForShallowEqualityWith(rightTypeRestricted)) {
+            result = n.isSHEQ() ? Tri.FALSE : Tri.TRUE;
+          }
+        }
+
+        if (result != Tri.UNKNOWN) {
+          report(
+              n, DETERMINISTIC_TEST, leftType.toString(), rightType.toString(), result.toString());
+        }
+        ensureTyped(n, BOOLEAN_TYPE);
+      }
+      case LT, LE, GT, GE -> {
         Node leftSide = n.getFirstChild();
         Node rightSide = n.getLastChild();
         leftType = getJSType(leftSide);
@@ -853,9 +771,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           }
         }
         ensureTyped(n, BOOLEAN_TYPE);
-        break;
-
-      case IN:
+      }
+      case IN -> {
         left = n.getFirstChild();
         right = n.getLastChild();
         rightType = getJSType(right);
@@ -865,147 +782,100 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           report(right, IN_USED_WITH_STRUCT);
         }
         ensureTyped(n, BOOLEAN_TYPE);
-        break;
-
-      case INSTANCEOF:
+      }
+      case INSTANCEOF -> {
         left = n.getFirstChild();
         right = n.getLastChild();
         rightType = getJSType(right).restrictByNotNullOrUndefined();
         validator.expectAnyObject(left, getJSType(left), "deterministic instanceof yields false");
         validator.expectActualObject(right, rightType, "instanceof requires an object");
         ensureTyped(n, BOOLEAN_TYPE);
-        break;
-
-      case ASSIGN:
-      case ASSIGN_OR:
-      case ASSIGN_AND:
-      case ASSIGN_COALESCE:
+      }
+      case ASSIGN, ASSIGN_OR, ASSIGN_AND, ASSIGN_COALESCE -> {
         visitAssign(t, n);
         typeable = false;
-        break;
-
-      case ASSIGN_LSH:
-      case ASSIGN_RSH:
-      case ASSIGN_URSH:
-      case ASSIGN_DIV:
-      case ASSIGN_MOD:
-      case ASSIGN_BITOR:
-      case ASSIGN_BITXOR:
-      case ASSIGN_BITAND:
-      case ASSIGN_SUB:
-      case ASSIGN_ADD:
-      case ASSIGN_MUL:
-      case ASSIGN_EXPONENT:
+      }
+      case ASSIGN_LSH,
+          ASSIGN_RSH,
+          ASSIGN_URSH,
+          ASSIGN_DIV,
+          ASSIGN_MOD,
+          ASSIGN_BITOR,
+          ASSIGN_BITXOR,
+          ASSIGN_BITAND,
+          ASSIGN_SUB,
+          ASSIGN_ADD,
+          ASSIGN_MUL,
+          ASSIGN_EXPONENT -> {
         checkPropCreation(n.getFirstChild());
-        // fall through
-
-      case LSH:
-      case RSH:
-      case URSH:
-      case DIV:
-      case MOD:
-      case BITOR:
-      case BITXOR:
-      case BITAND:
-      case SUB:
-      case ADD:
-      case MUL:
-      case EXPONENT:
         visitBinaryOperator(n.getToken(), n);
-        break;
-
-      case TRUE:
-      case FALSE:
-      case NOT:
-      case DELPROP:
-        ensureTyped(n, BOOLEAN_TYPE);
-        break;
-
-      case CASE:
+      }
+      case LSH, RSH, URSH, DIV, MOD, BITOR, BITXOR, BITAND, SUB, ADD, MUL, EXPONENT ->
+          visitBinaryOperator(n.getToken(), n);
+      case TRUE, FALSE, NOT, DELPROP -> ensureTyped(n, BOOLEAN_TYPE);
+      case CASE -> {
         JSType switchConditionType = getJSType(parent.getPrevious());
         JSType caseType = getJSType(n.getFirstChild());
         validator.expectSwitchMatchesCase(n, switchConditionType, caseType);
         typeable = false;
-        break;
-
-      case WITH:
-        {
-          Node child = n.getFirstChild();
-          childType = getJSType(child);
-          validator.expectObject(child, childType, "with requires an object");
-          typeable = false;
-          break;
-        }
-
-      case FUNCTION:
-        visitFunction(n);
-        break;
-
-      case CLASS:
-        visitClass(n);
-        break;
-
-      case MODULE_BODY:
-        visitModuleBody(t, n);
-        break;
-
-        // These nodes have no interesting type behavior.
-        // These nodes require data flow analysis.
-      case PARAM_LIST:
-      case STRING_KEY:
-      case MEMBER_FUNCTION_DEF:
-      case COMPUTED_PROP:
-      case MEMBER_FIELD_DEF:
-      case COMPUTED_FIELD_DEF:
-      case LABEL:
-      case LABEL_NAME:
-      case SWITCH:
-      case SWITCH_BODY:
-      case BREAK:
-      case CATCH:
-      case TRY:
-      case SCRIPT:
-      case EXPORT:
-      case EXPORT_SPEC:
-      case EXPORT_SPECS:
-      case IMPORT:
-      case IMPORT_SPEC:
-      case IMPORT_SPECS:
-      case IMPORT_STAR:
-      case EXPR_RESULT:
-      case BLOCK:
-      case ROOT:
-      case EMPTY:
-      case DEFAULT_CASE:
-      case CONTINUE:
-      case DEBUGGER:
-      case THROW:
-      case DO:
-      case IF:
-      case WHILE:
-      case FOR:
-      case TEMPLATELIT_SUB:
-      case ITER_REST:
-      case OBJECT_REST:
-      case DESTRUCTURING_LHS:
+      }
+      case WITH -> {
+        Node child = n.getFirstChild();
+        childType = getJSType(child);
+        validator.expectObject(child, childType, "with requires an object");
         typeable = false;
-        break;
-
-      case DYNAMIC_IMPORT:
-        visitDynamicImport(t, n);
-        break;
-
-      case ARRAY_PATTERN:
+      }
+      case FUNCTION -> visitFunction(n);
+      case CLASS -> visitClass(n);
+      case MODULE_BODY -> visitModuleBody(t, n);
+      // These nodes have no interesting type behavior.
+      // These nodes require data flow analysis.
+      case PARAM_LIST,
+          STRING_KEY,
+          MEMBER_FUNCTION_DEF,
+          COMPUTED_PROP,
+          MEMBER_FIELD_DEF,
+          COMPUTED_FIELD_DEF,
+          LABEL,
+          LABEL_NAME,
+          SWITCH,
+          SWITCH_BODY,
+          BREAK,
+          CATCH,
+          TRY,
+          SCRIPT,
+          EXPORT,
+          EXPORT_SPEC,
+          EXPORT_SPECS,
+          IMPORT,
+          IMPORT_SPEC,
+          IMPORT_SPECS,
+          IMPORT_STAR,
+          EXPR_RESULT,
+          BLOCK,
+          ROOT,
+          EMPTY,
+          DEFAULT_CASE,
+          CONTINUE,
+          DEBUGGER,
+          THROW,
+          DO,
+          IF,
+          WHILE,
+          FOR,
+          TEMPLATELIT_SUB,
+          ITER_REST,
+          OBJECT_REST,
+          DESTRUCTURING_LHS ->
+          typeable = false;
+      case DYNAMIC_IMPORT -> visitDynamicImport(t, n);
+      case ARRAY_PATTERN -> {
         ensureTyped(n);
         validator.expectAutoboxesToIterable(
             n, getJSType(n), "array pattern destructuring requires an Iterable");
-        break;
-
-      case OBJECT_PATTERN:
-        visitObjectPattern(n);
-        break;
-
-      case DEFAULT_VALUE:
+      }
+      case OBJECT_PATTERN -> visitObjectPattern(n);
+      case DEFAULT_VALUE -> {
         checkCanAssignToWithScope(
             t,
             n,
@@ -1029,48 +899,31 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         }
 
         typeable = false;
-        break;
-
-      case CLASS_MEMBERS:
-        {
-          JSType typ = parent.getJSType().toMaybeFunctionType().getInstanceType();
-          for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-            visitObjectOrClassLiteralKey(child, n.getParent(), typ);
-            if (child.isSetterDef() || child.isGetterDef()) {
-              checkGetterOrSetterType(child, parent.getJSType().toMaybeFunctionType());
-            }
+      }
+      case CLASS_MEMBERS -> {
+        JSType typ = parent.getJSType().toMaybeFunctionType().getInstanceType();
+        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+          visitObjectOrClassLiteralKey(child, n.getParent(), typ);
+          if (child.isSetterDef() || child.isGetterDef()) {
+            checkGetterOrSetterType(child, parent.getJSType().toMaybeFunctionType());
           }
-          typeable = false;
-          break;
         }
-
-      case FOR_IN:
+        typeable = false;
+      }
+      case FOR_IN -> {
         Node obj = n.getSecondChild();
         if (getJSType(obj).isStruct()) {
           report(obj, IN_USED_WITH_STRUCT);
         }
         typeable = false;
-        break;
-
-      case FOR_OF:
-      case FOR_AWAIT_OF:
+      }
+      case FOR_OF, FOR_AWAIT_OF -> {
         ensureTyped(n.getSecondChild());
         typeable = false;
-        break;
-
         // These nodes are typed during the type inference.
-      case SUPER:
-      case NEW_TARGET:
-      case IMPORT_META:
-      case AWAIT:
-      case AND:
-      case HOOK:
-      case OR:
-      case COALESCE:
-        ensureTyped(n);
-        break;
-
-      case OBJECTLIT:
+      }
+      case SUPER, NEW_TARGET, IMPORT_META, AWAIT, AND, HOOK, OR, COALESCE -> ensureTyped(n);
+      case OBJECTLIT -> {
         // If this is an enum, then give that type to the objectlit as well.
         if (parent.getJSType() instanceof EnumType) {
           ensureTyped(n, parent.getJSType());
@@ -1081,18 +934,15 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
           visitObjectOrClassLiteralKey(key, n, typ);
         }
-        break;
-
-      case ITER_SPREAD:
-      case OBJECT_SPREAD:
+      }
+      case ITER_SPREAD, OBJECT_SPREAD -> {
         checkSpread(n);
         typeable = false;
-        break;
-
-      default:
+      }
+      default -> {
         report(n, UNEXPECTED_TOKEN, n.getToken().toString());
         ensureTyped(n);
-        break;
+      }
     }
 
     // Visit the body of blockless arrow functions

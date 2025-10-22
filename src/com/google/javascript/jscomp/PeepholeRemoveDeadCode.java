@@ -812,39 +812,36 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       return false;
     }
     switch (lastStm.getToken()) {
-      case BREAK:
+      case BREAK -> {
         if (!lastStm.hasChildren()) {
           return false;
         }
-        // fall through
-      case RETURN:
-      case THROW:
         // Last statement is OK - continue with checking others.
-        break;
-      default:
+      }
+      case RETURN, THROW -> {
+        // Last statement is OK - continue with checking others.
+      }
+      default -> {
         return false;
+      }
     }
 
     // Other statements can be anything except for unlabeled "break". But for simplicity, don't go
     // into inner blocks and complex constructs - instead, allow only the simplest statements.
     for (Node child = n.getFirstChild(); child != lastStm; child = child.getNext()) {
       switch (child.getToken()) {
-        case BREAK:
+        case BREAK -> {
           if (!child.hasChildren()) {
             return false;
           }
-          // fall through
-        case RETURN:
-        case THROW:
-        case FUNCTION:
-        case VAR:
-        case LET:
-        case CONST:
-        case EXPR_RESULT:
+          // This break is OK - continue with checking others.
+        }
+        case RETURN, THROW, FUNCTION, VAR, LET, CONST, EXPR_RESULT -> {
           // This statement is OK - continue with checking others.
-          break;
-        default:
+        }
+        default -> {
           return false;
+        }
       }
     }
 

@@ -426,16 +426,9 @@ class OptimizeCalls implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node unused) {
       switch (n.getToken()) {
-        case NAME:
-          maybeAddNameReference(n.getString(), n);
-          break;
-
-        case OPTCHAIN_GETPROP:
-        case GETPROP:
-          maybeAddPropReference(n.getString(), n);
-          break;
-
-        case CALL:
+        case NAME -> maybeAddNameReference(n.getString(), n);
+        case OPTCHAIN_GETPROP, GETPROP -> maybeAddPropReference(n.getString(), n);
+        case CALL -> {
           // If we are using goog.reflect.objectProperty on this symbol, we will assume that it
           // gets referenced.
           Node fnName = n.getFirstChild();
@@ -445,35 +438,28 @@ class OptimizeCalls implements CompilerPass {
               maybeAddPropReference(propName.getString(), n);
             }
           }
-          break;
+        }
 
-        case STRING_KEY:
-        case GETTER_DEF:
-        case SETTER_DEF:
-        case MEMBER_FUNCTION_DEF:
-        case MEMBER_FIELD_DEF:
+        case STRING_KEY, GETTER_DEF, SETTER_DEF, MEMBER_FUNCTION_DEF, MEMBER_FIELD_DEF -> {
           // ignore quoted keys.
           if (!n.isQuotedStringKey()) {
             maybeAddPropReference(n.getString(), n);
           }
-          break;
+        }
 
-        case SUPER:
-          visitSuper(n);
-          break;
-
-        case COMPUTED_PROP:
-        case COMPUTED_FIELD_DEF:
-        case OPTCHAIN_GETELEM:
-        case GETELEM:
-          // Ignore quoted keys.
-          // TODO(johnlenz): support symbols.
-        case OBJECT_REST:
-        case OBJECT_SPREAD:
-          // Don't worry about invisible accesses using these. To be invoked there would need to be
-          // downstream references that use the actual name. We'd see those.
-        default:
-          break;
+        case SUPER -> visitSuper(n);
+        case
+            // Ignore quoted and computed keys.
+            // TODO(johnlenz): support symbols.
+            COMPUTED_PROP,
+            COMPUTED_FIELD_DEF,
+            OPTCHAIN_GETELEM,
+            GETELEM,
+            // Don't worry about invisible accesses using object rest/spread. To be invoked there
+            // would need to be downstream references that use the actual name. We'd see those.
+            OBJECT_REST,
+            OBJECT_SPREAD -> {}
+        default -> {}
       }
     }
 

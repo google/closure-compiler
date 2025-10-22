@@ -49,74 +49,31 @@ class PeepholeSubstituteAlternateSyntax
     this.late = late;
   }
 
-  /**
-   * Tries apply our various peephole minimizations on the passed in node.
-   */
+  /** Tries apply our various peephole minimizations on the passed in node. */
   @Override
-  @SuppressWarnings("fallthrough")
   public Node optimizeSubtree(Node node) {
-    switch (node.getToken()) {
-      case ASSIGN_SUB:
-        return reduceSubstractionAssignment(node);
-
-      case TRUE:
-      case FALSE:
-        return reduceTrueFalse(node);
-
-      case NEW:
-        node = tryFoldStandardConstructors(node);
-        if (!node.isCall()) {
-          return node;
+    return switch (node.getToken()) {
+      case ASSIGN_SUB -> reduceSubstractionAssignment(node);
+      case TRUE, FALSE -> reduceTrueFalse(node);
+      case NEW -> {
+        Node result = tryFoldStandardConstructors(node);
+        if (!result.isCall()) {
+          yield result;
         }
-        // Fall through on purpose because tryFoldStandardConstructors() may
-        // convert a NEW node into a CALL node
-      case CALL:
-        Node result =  tryFoldLiteralConstructor(node);
-        if (result == node) {
-          result = tryFoldSimpleFunctionCall(node);
-          if (result == node) {
-            result = tryFoldImmediateCallToBoundFunction(node);
-          }
-        }
-        return result;
-
-      case RETURN:
-        return tryReduceReturn(node);
-
-      case EXPR_RESULT:
-        if (node.getFirstChild().isComma()) {
-          return trySplitComma(node);
-        }
-        return node;
-
-      case NAME:
-        return tryReplaceUndefined(node);
-
-      case ARRAYLIT:
-        return tryMinimizeArrayLiteral(node);
-
-      case GETPROP:
-        return tryMinimizeWindowRefs(node);
-
-      case TEMPLATELIT:
-        return tryTurnTemplateStringsToStrings(node);
-        
-      case AND:
-      case OR:
-      case BITOR:
-      case BITXOR:
-      case BITAND:
-      case COALESCE:
-        return tryRotateAssociativeOperator(node);
-
-      case MUL:
-        if (!mayHaveSideEffects(node)) {
-          return tryRotateCommutativeOperator(node);
-        }
-
-      default:
-        return node; //Nothing changed
-    }
+        // tryFoldStandardConstructors() may convert a NEW node into a CALL node
+        yield tryReduceCall(result);
+      }
+      case CALL -> tryReduceCall(node);
+      case RETURN -> tryReduceReturn(node);
+      case EXPR_RESULT -> node.getFirstChild().isComma() ? trySplitComma(node) : node;
+      case NAME -> tryReplaceUndefined(node);
+      case ARRAYLIT -> tryMinimizeArrayLiteral(node);
+      case GETPROP -> tryMinimizeWindowRefs(node);
+      case TEMPLATELIT -> tryTurnTemplateStringsToStrings(node);
+      case AND, OR, BITOR, BITXOR, BITAND, COALESCE -> tryRotateAssociativeOperator(node);
+      case MUL -> mayHaveSideEffects(node) ? node : tryRotateCommutativeOperator(node);
+      default -> node;
+    };
   }
 
   private static final ImmutableSet<String> BUILTIN_EXTERNS = ImmutableSet.of(
@@ -359,6 +316,17 @@ class PeepholeSubstituteAlternateSyntax
       return replacement;
     }
     return n;
+  }
+
+  private Node tryReduceCall(Node node) {
+    Node result = tryFoldLiteralConstructor(node);
+    if (result == node) {
+      result = tryFoldSimpleFunctionCall(node);
+      if (result == node) {
+        result = tryFoldImmediateCallToBoundFunction(node);
+      }
+    }
+    return result;
   }
 
   /**

@@ -127,14 +127,11 @@ public final class JSDocSerializer {
     if (jsdoc.hasModifies()) {
       for (String modifies : jsdoc.getModifies()) {
         switch (modifies) {
-          case "this":
-            builder.addKind(JsdocTag.JSDOC_MODIFIES_THIS);
-            continue;
-          case "arguments":
-            // Currently, anything other than "this" is considered a modification to arguments
-          default:
-            builder.addKind(JsdocTag.JSDOC_MODIFIES_ARGUMENTS);
-            continue;
+          case "this" -> builder.addKind(JsdocTag.JSDOC_MODIFIES_THIS);
+          case "arguments" -> builder.addKind(JsdocTag.JSDOC_MODIFIES_ARGUMENTS);
+          default ->
+              // Currently, anything other than "this" is considered a modification to arguments
+              builder.addKind(JsdocTag.JSDOC_MODIFIES_ARGUMENTS);
         }
       }
     }

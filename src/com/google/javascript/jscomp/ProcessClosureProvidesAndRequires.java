@@ -154,41 +154,8 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
           Node left = n.getFirstChild();
           if (left.isGetProp()) {
             Node name = left.getFirstChild();
-            if (name.isName() && GOOG.equals(name.getString())) {
-              // For the sake of simplicity, we report code changes
-              // when we see a provides/requires, and don't worry about
-              // reporting the change when we actually do the replacement.
-              switch (left.getString()) {
-                case "exportSymbol":
-                  // Note: exportSymbol is allowed in local scope
-                  Node arg = n.getSecondChild();
-                  if (arg.isStringLit()) {
-                    String argString = arg.getString();
-                    int dot = argString.indexOf('.');
-                    if (dot == -1) {
-                      exportedVariables.add(argString);
-                    } else {
-                      exportedVariables.add(argString.substring(0, dot));
-                    }
-                  }
-                  break;
-                case "require":
-                case "requireType":
-                  if (isValidPrimitiveCall(t, n)) {
-                    processRequireCall(n, parent);
-                  }
-                  break;
-                case "provide":
-                  if (isValidPrimitiveCall(t, n)) {
-                    processProvideCall(t, n, parent);
-                  }
-                  break;
-                case "forwardDeclare":
-                  if (isValidPrimitiveCall(t, n)) {
-                    processForwardDeclare(n, parent);
-                  }
-                  break;
-              }
+            if (name.matchesName(GOOG)) {
+              visitGoogMethodCall(t, parent, n, left.getString());
             }
           }
         }
@@ -198,6 +165,43 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
         case EXPR_RESULT -> handleStubDefinition(t, n);
         default -> {}
       }
+    }
+  }
+
+  private void visitGoogMethodCall(NodeTraversal t, Node parent, Node n, String methodName) {
+    // For the sake of simplicity, we report code changes
+    // when we see a provides/requires, and don't worry about
+    // reporting the change when we actually do the replacement.
+    switch (methodName) {
+      case "exportSymbol" -> {
+        // Note: exportSymbol is allowed in local scope
+        Node arg = n.getSecondChild();
+        if (arg.isStringLit()) {
+          String argString = arg.getString();
+          int dot = argString.indexOf('.');
+          if (dot == -1) {
+            exportedVariables.add(argString);
+          } else {
+            exportedVariables.add(argString.substring(0, dot));
+          }
+        }
+      }
+      case "require", "requireType" -> {
+        if (isValidPrimitiveCall(t, n)) {
+          processRequireCall(n, parent);
+        }
+      }
+      case "provide" -> {
+        if (isValidPrimitiveCall(t, n)) {
+          processProvideCall(t, n, parent);
+        }
+      }
+      case "forwardDeclare" -> {
+        if (isValidPrimitiveCall(t, n)) {
+          processForwardDeclare(n, parent);
+        }
+      }
+      default -> {}
     }
   }
 
@@ -346,28 +350,17 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
     if (!t.inGlobalHoistScope()) {
       return;
     }
-    String name = null;
-    switch (n.getParent().getToken()) {
-      case LET:
-      case CONST:
-        if (!t.inGlobalScope()) {
-          // let/const in the global hoist scope but not the global scope are not globals
-          return;
-        }
-        // fall through
-      case VAR:
-        name = n.getString();
-        break;
-      case EXPR_RESULT:
-        if (n.isAssign()) {
-          name = n.getFirstChild().getQualifiedName();
-        }
-        break;
-      case CLASS: // Class and function provides are forbidden; see ProcessClosurePrimitives's
-      case FUNCTION: // CLASS_NAMESPACE_ERROR and FUNCTION_NAMESPACE_ERROR.
-      default:
-        break;
-    }
+    String name =
+        switch (n.getParent().getToken()) {
+          case LET, CONST -> t.inGlobalScope() ? n.getString() : null;
+          case VAR -> n.getString();
+          case EXPR_RESULT -> n.isAssign() ? n.getFirstChild().getQualifiedName() : null;
+          case CLASS, FUNCTION ->
+              // Class and function provides are forbidden; see ProcessClosurePrimitives's
+              // CLASS_NAMESPACE_ERROR and FUNCTION_NAMESPACE_ERROR.
+              null;
+          default -> null;
+        };
 
     if (name == null) {
       return;

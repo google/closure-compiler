@@ -760,11 +760,11 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
 
     // If we are just before a IF/WHILE/DO/FOR:
     switch (parent.getToken()) {
+      case IF -> {
         // The follow() of any of the path from IF would be what follows IF.
-      case IF:
         return computeFollowNode(fromNode, parent, cfa);
-      case CASE:
-      case DEFAULT_CASE:
+      }
+      case CASE, DEFAULT_CASE -> {
         // After the body of a CASE, the control goes to the body of the next
         // case, without having to go to the case condition.
         if (parent.getNext() != null) {
@@ -778,16 +778,14 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
         } else {
           return computeFollowNode(fromNode, parent, cfa);
         }
-      case FOR_IN:
-      case FOR_OF:
-      case FOR_AWAIT_OF:
-        return parent;
-      case FOR:
+      }
+      case FOR -> {
         return parent.getSecondChild().getNext();
-      case WHILE:
-      case DO:
+      }
+      case FOR_IN, FOR_OF, FOR_AWAIT_OF, WHILE, DO -> {
         return parent;
-      case TRY:
+      }
+      case TRY -> {
         // If we are coming out of the TRY block...
         if (parent.getFirstChild() == node) {
           if (NodeUtil.hasFinally(parent)) { // and have FINALLY block.
@@ -811,9 +809,9 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
           }
           return computeFollowNode(fromNode, parent, cfa);
         }
-        // fall through
-      default:
-        break;
+        throw new IllegalStateException("Unexpected TRY child " + node);
+      }
+      default -> {}
     }
 
     // Now that we are done with the special cases follow should be its

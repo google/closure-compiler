@@ -846,17 +846,11 @@ public final class ConformanceRules {
         }
         case STRING_KEY, COMPUTED_PROP -> {
           Node parent = n.getParent();
-          switch (parent.getToken()) {
-            case OBJECT_PATTERN:
-            case OBJECTLIT:
-              return parent.getJSType();
-
-            case CLASS_MEMBERS:
-              return null;
-
-            default:
-              throw new AssertionError();
-          }
+          return switch (parent.getToken()) {
+            case OBJECT_PATTERN, OBJECTLIT -> parent.getJSType();
+            case CLASS_MEMBERS -> null;
+            default -> throw new AssertionError();
+          };
         }
         default -> {
           return null;
