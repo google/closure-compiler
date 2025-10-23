@@ -1,0 +1,77 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.0rg/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+name: Release Project
+
+permissions:
+  contents: read
+
+# Start the release process when a new release tag (v{year}{month}{day}) is pushed.
+on:
+  push:
+    tags:
+      - 'v[0-9]{8}'
+
+jobs:
+  run-tests:
+    uses: ./.github/workflows/run_tests.yaml
+
+  publish-to-sonatype:
+    runs-on: ubuntu-latest
+    needs: run-tests
+
+    steps:
+      - name: Check secrets are provided
+        run: |
+          check_secret() {
+            if [[ -z "${2:-}" ]]; then
+              echo "Error: secret ${1} is required but not provided."
+              exit 1
+            fi
+          }
+          check_secret "SONATYPE_USERNAME_TOKEN" "${{ secrets.SONATYPE_USERNAME_TOKEN }}"
+          check_secret "SONATYPE_PASSWORD_TOKEN" "${{ secrets.SONATYPE_PASSWORD_TOKEN }}"
+          check_secret "MAVEN_GPG_PRIVATE_KEY" "${{ secrets.MAVEN_GPG_PRIVATE_KEY }}"
+          check_secret "MAVEN_GPG_PASSPHRASE" "${{ secrets.MAVEN_GPG_PASSPHRASE }}"
+
+      - name: Checkout the repo at the release tag
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      # Maven and Bazel require Java to be available.
+      - name: Setup Java
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        with:
+          java-version: '21'
+          distribution: 'zulu'
+          java-package: jdk
+          # This will trigger the import of the private key in the GPG secret keyring.
+          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          # This will create the maven settings.xml file needed for deploying to Sonatype.
+          server-id: central
+          # Configure Maven settings to use environment variables. These environment variables are
+          # populated from GitHub secrets in the publication steps.
+          server-username: SONATYPE_USERNAME_TOKEN
+          server-password: SONATYPE_PASSWORD_TOKEN
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+
+      - name: Setup Bazel
+        uses: bazelbuild/setup-bazelisk@v3
+
+      - name: Upload and Publish to Sonatype
+        run: |
+          ./release.sh --sonatype-auto-publish
+        env:
+          RELEASE_NUM: ${{ github.ref_name }}
+          SONATYPE_USERNAME_TOKEN: ${{ secrets.SONATYPE_USERNAME_TOKEN }}
+          SONATYPE_PASSWORD_TOKEN: ${{ secrets.SONATYPE_PASSWORD_TOKEN }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}

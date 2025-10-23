@@ -25,6 +25,8 @@ on:
   schedule:
     # Daily at 12pm UTC
     - cron: '0 12 * * *'
+  # Can be called from other workflow to run the tests
+  workflow_call:
 
 permissions:
   contents: read
