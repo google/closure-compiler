@@ -562,6 +562,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           static STATIC_INIT$0() {
             C.x = 2;
             C.y = () => {
+              // Note: This is the correct behavior.
               return C.x;
             };
           }
@@ -751,6 +752,63 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         Bar.STATIC_INIT$0();
         """);
+
+    testRewrite(
+        """
+        class Parent {
+          static getName() {
+            return 'Parent';
+          }
+          static get greeting() {
+            return 'Hello ' + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return 'Child';
+          }
+          static msg = super.greeting;  // 'Hello Child'
+        }
+        """,
+        """
+        class Parent {
+          static getName() {
+            return "Parent";
+          }
+          static get greeting() {
+            return "Hello " + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
+          static STATIC_INIT$0() {
+            Child.msg = Parent.greeting;  // b/454921132 Incorrectly: 'Hello Parent'
+          }
+        }
+        Child.STATIC_INIT$0();
+        """,
+        """
+        class Parent {
+          static getName() {
+            return "Parent";
+          }
+          static get greeting() {
+            return "Hello " + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
+          static msg;
+          static STATIC_INIT$0() {
+            Child.msg = Parent.greeting;  // b/454921132 Incorrectly: 'Hello Parent'
+          }
+        }
+        Child.STATIC_INIT$0();
+        """);
   }
 
   @Test
@@ -840,6 +898,50 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           }
         }
         Child.STATIC_INIT$1();
+        """);
+  }
+
+  @Test
+  public void testSuperInStaticBlock() {
+    testRewrite(
+        """
+        class Parent {
+          static getName() {
+            return 'Parent';
+          }
+          static getGreeting() {
+            return 'Hello ' + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return 'Child';
+          }
+          static {
+            alert(super.getGreeting());  // Alerts: 'Hello Child'
+          }
+        }
+        """,
+        """
+        class Parent {
+          static getName() {
+            return "Parent";
+          }
+          static getGreeting() {
+            return "Hello " + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
+          static STATIC_INIT$0() {
+            {
+              alert(Parent.getGreeting());  // Incorrectly alerts: 'Hello Parent'
+            }
+          }
+        }
+        Child.STATIC_INIT$0();
         """);
   }
 
