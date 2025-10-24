@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
@@ -193,8 +192,12 @@ class ValidityCheck implements CompilerPass {
           throw new IllegalStateException(
               "The name "
                   + name
-                  + " is not consistently annotated as constant. Expected "
-                  + ImmutableMap.copyOf(constantMap));
+                  + " is not consistently annotated as constant. Current constness: "
+                  + isConst
+                  + ", previous constness: "
+                  + value.booleanValue()
+                  + "\n\nAt node: "
+                  + n);
         }
       }
     }
