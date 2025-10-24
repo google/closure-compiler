@@ -40,6 +40,7 @@ class FunctionArgumentInjector {
   // A string to use to represent "this".  Anything that is not a valid
   // identifier can be used, so we use "this".
   static final String THIS_MARKER = "this";
+  static final Node THIS_MARKER_NODE = IR.name(THIS_MARKER);
 
   static final String REST_MARKER = "rest param";
 
@@ -113,21 +114,22 @@ class FunctionArgumentInjector {
   }
 
   /** Get a mapping for function parameter names to call arguments. */
-  ImmutableMap<String, Node> getFunctionCallParameterMap(
+  ImmutableMap<String, ParamArgPair> getFunctionCallParameterMap(
       final Node fnNode, Node callNode, Supplier<String> safeNameIdSupplier) {
     checkNotNull(fnNode);
     // Create an parameterName -> expression map
-    ImmutableMap.Builder<String, Node> argMap = ImmutableMap.builder();
+    ImmutableMap.Builder<String, ParamArgPair> argMap = ImmutableMap.builder();
 
     // CALL NODE: [ NAME, ARG1, ARG2, ... ]
     Node cArg = callNode.getSecondChild();
     if (cArg != null && NodeUtil.isFunctionObjectCall(callNode)) {
-      argMap.put(THIS_MARKER, cArg);
+      argMap.put(THIS_MARKER, new ParamArgPair(THIS_MARKER_NODE, cArg));
       cArg = cArg.getNext();
     } else {
       // 'apply' isn't supported yet.
       checkState(!NodeUtil.isFunctionObjectApply(callNode), callNode);
-      argMap.put(THIS_MARKER, NodeUtil.newUndefinedNode(callNode));
+      argMap.put(
+          THIS_MARKER, new ParamArgPair(THIS_MARKER_NODE, NodeUtil.newUndefinedNode(callNode)));
     }
 
     for (Node fnParam = NodeUtil.getFunctionParameters(fnNode).getFirstChild();
@@ -142,23 +144,29 @@ class FunctionArgumentInjector {
             array.addChildToBack(cArg.cloneTree());
             cArg = cArg.getNext();
           }
-          argMap.put(fnParam.getOnlyChild().getString(), array);
-          return argMap.buildOrThrow();
+          return argMap
+              .put(
+                  fnParam.getOnlyChild().getString(),
+                  new ParamArgPair(fnParam.getOnlyChild(), array))
+              .buildOrThrow();
         } else {
           checkState(fnParam.isName(), fnParam);
-          argMap.put(fnParam.getString(), cArg);
+          argMap.put(fnParam.getString(), new ParamArgPair(fnParam, cArg));
         }
         cArg = cArg.getNext();
-      } else { // cArg != null
+      } else { // cArg == null
         if (fnParam.isRest()) {
           checkState(fnParam.getOnlyChild().isName(), fnParam);
           // No arguments for REST parameters
           Node array = IR.arraylit().srcref(fnParam);
-          argMap.put(fnParam.getOnlyChild().getString(), array);
+          argMap.put(
+              fnParam.getOnlyChild().getString(), new ParamArgPair(fnParam.getOnlyChild(), array));
         } else {
           checkState(fnParam.isName(), fnParam);
           Node srcLocation = callNode;
-          argMap.put(fnParam.getString(), NodeUtil.newUndefinedNode(srcLocation));
+          argMap.put(
+              fnParam.getString(),
+              new ParamArgPair(fnParam, NodeUtil.newUndefinedNode(srcLocation)));
         }
       }
     }
@@ -167,7 +175,7 @@ class FunctionArgumentInjector {
     // called function.
     while (cArg != null) {
       String uniquePlaceholder = getUniqueAnonymousParameterName(safeNameIdSupplier);
-      argMap.put(uniquePlaceholder, cArg);
+      argMap.put(uniquePlaceholder, new ParamArgPair(IR.name(uniquePlaceholder), cArg));
       cArg = cArg.getNext();
     }
 
@@ -270,7 +278,7 @@ class FunctionArgumentInjector {
   ImmutableSet<String> gatherCallArgumentsNeedingTemps(
       AbstractCompiler compiler,
       Node fnNode,
-      ImmutableMap<String, Node> argMap,
+      ImmutableMap<String, ParamArgPair> argMap,
       ImmutableSet<String> modifiedParameters,
       CodingConvention convention) {
     checkArgument(fnNode.isFunction(), fnNode);
@@ -295,7 +303,8 @@ class FunctionArgumentInjector {
         (!block.hasChildren()
             || (block.hasOneChild() && !bodyMayHaveConditionalCode(block.getLastChild())));
     boolean hasMinimalParameters =
-        NodeUtil.isUndefined(argMap.get(THIS_MARKER)) && argCount <= 2; // this + one parameter
+        NodeUtil.isUndefined(argMap.get(THIS_MARKER).arg())
+            && argCount <= 2; // this + one parameter
 
     // Get the list of parameters that may need temporaries due to side-effects.
     SetContainer parametersThatMayNeedTemps =
@@ -306,9 +315,9 @@ class FunctionArgumentInjector {
         parametersThatMayNeedTemps.parametersWithNamesReferencedBeforeParameter();
 
     // Check for arguments that are evaluated more than once.
-    for (Map.Entry<String, Node> entry : argMap.entrySet()) {
+    for (Map.Entry<String, ParamArgPair> entry : argMap.entrySet()) {
       String parameterName = entry.getKey();
-      Node cArg = entry.getValue();
+      Node cArg = entry.getValue().arg();
       if (namesNeedingTemps.contains(parameterName)) {
         requiresTempsUpToThisParameterName = parameterName;
         continue;
@@ -378,9 +387,10 @@ class FunctionArgumentInjector {
 
     if (!requiresTempsUpToThisParameterName.isEmpty()) {
       // mark all names upto requiresTempsUptoParameterName as namesNeedingTemps
-      for (Map.Entry<String, Node> entry : argMap.entrySet()) {
+      for (Map.Entry<String, ParamArgPair> entry : argMap.entrySet()) {
         String parameterName = entry.getKey();
-        if (parameterName.equals(THIS_MARKER) && NodeUtil.isUndefined(argMap.get(THIS_MARKER))) {
+        if (parameterName.equals(THIS_MARKER)
+            && NodeUtil.isUndefined(argMap.get(THIS_MARKER).arg())) {
           /* When there is no explicit this arg passed into the call, the argMap contains an entry
            * <"this", undefined Node>. See the `getFunctionCallParameterMap` method.
            *
@@ -653,5 +663,21 @@ class FunctionArgumentInjector {
       }
     }
     return builder.build();
+  }
+
+  /**
+   * Stores a pair of function formal parameter + argument value at a specific call site.
+   *
+   * @param paramNode the original formal parameter name, such as {@code x} in {@code function
+   *     foo(x) { ... }} or, when injecting a value for {@code this}, {@link
+   *     FunctionArgumentInjector#THIS_MARKER_NODE}.
+   * @param arg the argument passed as `paramNode` at some call site, such as {@code 500} in {@code
+   *     f(500);}.
+   */
+  record ParamArgPair(Node paramNode, Node arg) {
+    ParamArgPair {
+      checkNotNull(paramNode);
+      checkNotNull(arg);
+    }
   }
 }

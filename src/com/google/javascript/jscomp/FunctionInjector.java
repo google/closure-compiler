@@ -25,12 +25,15 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.javascript.jscomp.FunctionArgumentInjector.ParamArgPair;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
@@ -365,10 +368,14 @@ class FunctionInjector {
     // shadowed and an expression can't introduce new names, there is
     // no need to check for conflicts.
 
-    // Create an argName -> expression map, checking for side effects.
-    ImmutableMap<String, Node> argMap =
+    // Create an paramName -> argument value map, checking for side effects.
+    ImmutableMap<String, ParamArgPair> paramToArgMap =
         functionArgumentInjector.getFunctionCallParameterMap(
             fnNode, callNode, this.safeNameIdSupplier);
+    Map<String, Node> paramReplacements = new LinkedHashMap<>();
+    for (Entry<String, ParamArgPair> entry : paramToArgMap.entrySet()) {
+      paramReplacements.put(entry.getKey(), entry.getValue().arg());
+    }
 
     Node newExpression;
     if (!block.hasChildren()) {
@@ -380,7 +387,8 @@ class FunctionInjector {
 
       // Clone the return node first.
       Node safeReturnNode = returnNode.cloneTree();
-      Node inlineResult = functionArgumentInjector.inject(null, safeReturnNode, null, argMap);
+      Node inlineResult =
+          functionArgumentInjector.inject(null, safeReturnNode, null, paramReplacements);
       checkArgument(safeReturnNode == inlineResult);
       newExpression = safeReturnNode.removeFirstChild();
       NodeUtil.markNewScopesChanged(newExpression, compiler);
@@ -812,7 +820,7 @@ class FunctionInjector {
     // If the caller contains functions or evals, verify we aren't adding any
     // additional VAR declarations because aliasing is needed.
     if (forbidTemps) {
-      ImmutableMap<String, Node> args =
+      ImmutableMap<String, ParamArgPair> args =
           functionArgumentInjector.getFunctionCallParameterMap(
               calleeFn, callRef.callNode, this.safeNameIdSupplier);
       boolean hasArgs = !args.isEmpty();
@@ -871,7 +879,7 @@ class FunctionInjector {
       }
     }
 
-    ImmutableMap<String, Node> args =
+    ImmutableMap<String, ParamArgPair> args =
         functionArgumentInjector.getFunctionCallParameterMap(
             fnNode, callNode, this.throwawayNameSupplier);
     boolean hasArgs = !args.isEmpty();
