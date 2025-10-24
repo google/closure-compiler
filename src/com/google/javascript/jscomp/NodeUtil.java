@@ -5064,9 +5064,11 @@ public final class NodeUtil {
     Node result;
     if (Double.isNaN(value)) {
       result = IR.name("NaN");
+      result.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     } else {
       if (Double.isInfinite(value)) {
         result = IR.name("Infinity");
+        result.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       } else {
         result = IR.number(Math.abs(value));
       }
