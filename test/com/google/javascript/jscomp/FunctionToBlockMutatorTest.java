@@ -129,16 +129,6 @@ public final class FunctionToBlockMutatorTest {
   }
 
   @Test
-  public void testMutate8_withConstVar() {
-    // Parameter has side-effects.
-    helperMutate(
-        "function foo(/** @const */ a){return a+a;}; foo(x++);",
-        "{var a$jscomp$inline_0 = x++; a$jscomp$inline_0 + a$jscomp$inline_0;}",
-        "foo",
-        null);
-  }
-
-  @Test
   public void testMutateInitializeUninitializedVars1() {
     isCallInLoop = true;
     helperMutate(
@@ -276,12 +266,12 @@ public final class FunctionToBlockMutatorTest {
     compiler.parse();
     Node script = compiler.getRoot().getSecondChild().getFirstChild();
 
-    Node externs = compiler.getExternsRoot();
-    Node js = compiler.getJsRoot();
-
-    Normalize.createNormalizeForOptimizations(compiler).process(externs, js);
-    GatherGetterAndSetterProperties.update(compiler, externs, js);
-    new PureFunctionIdentifier.Driver(compiler).process(externs, js);
+    Normalize.createNormalizeForOptimizations(compiler)
+        .process(compiler.getExternsRoot(), compiler.getJsRoot());
+    GatherGetterAndSetterProperties.update(
+        compiler, compiler.getExternsRoot(), compiler.getJsRoot());
+    new PureFunctionIdentifier.Driver(compiler)
+        .process(compiler.getExternsRoot(), compiler.getJsRoot());
 
     final Node fnNode = findFunction(script, fnName);
 
@@ -296,12 +286,6 @@ public final class FunctionToBlockMutatorTest {
               mutator.mutate(fnName, fnNode, n, resultName, needsDefaultResult, isCallInLoop);
           validateSourceInfo(compiler, result);
           assertNode(result).usingSerializer(compiler::toSource).isEqualTo(expected);
-
-          n.replaceWith(result);
-          new ValidityCheck.VerifyConstants(compiler, false).process(externs, js);
-          Normalize.builder(compiler).assertOnChange(true).build().process(externs, js);
-          result.replaceWith(n);
-
           return true;
         };
 

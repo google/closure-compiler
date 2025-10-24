@@ -24,7 +24,6 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.FunctionArgumentInjector.ParamArgPair;
 import com.google.javascript.rhino.Node;
 import java.util.Map.Entry;
 import org.junit.Before;
@@ -695,7 +694,7 @@ public final class FunctionArgumentInjectorTest {
     assertThat(fn).isNotNull();
     Node call = findCall(n, fnName);
     assertThat(call).isNotNull();
-    ImmutableMap<String, ParamArgPair> actualMap = getAndValidateFunctionCallParameterMap(fn, call);
+    ImmutableMap<String, Node> actualMap = getAndValidateFunctionCallParameterMap(fn, call);
     assertThat(actualMap.keySet()).isEqualTo(expectedKeys);
   }
 
@@ -705,7 +704,7 @@ public final class FunctionArgumentInjectorTest {
     assertThat(fn).isNotNull();
     Node call = findCall(n, fnName);
     assertThat(call).isNotNull();
-    ImmutableMap<String, ParamArgPair> args = getAndValidateFunctionCallParameterMap(fn, call);
+    ImmutableMap<String, Node> args = getAndValidateFunctionCallParameterMap(fn, call);
 
     ImmutableSet<String> actualTemps =
         functionArgumentInjector.gatherCallArgumentsNeedingTemps(
@@ -714,14 +713,13 @@ public final class FunctionArgumentInjectorTest {
     assertThat(actualTemps).isEqualTo(expectedTemps);
   }
 
-  private ImmutableMap<String, ParamArgPair> getAndValidateFunctionCallParameterMap(
-      Node fn, Node call) {
-    final ImmutableMap<String, ParamArgPair> map =
+  private ImmutableMap<String, Node> getAndValidateFunctionCallParameterMap(Node fn, Node call) {
+    final ImmutableMap<String, Node> map =
         functionArgumentInjector.getFunctionCallParameterMap(fn, call, getNameSupplier());
     // Verify that all nodes in the map have source info, so they are valid to add to the AST
-    for (Entry<String, ParamArgPair> nameToNodeEntry : map.entrySet()) {
+    for (Entry<String, Node> nameToNodeEntry : map.entrySet()) {
       final String name = nameToNodeEntry.getKey();
-      final Node node = nameToNodeEntry.getValue().arg();
+      final Node node = nameToNodeEntry.getValue();
 
       new SourceInfoCheck(compiler).setCheckSubTree(node);
       assertWithMessage("errors for name: %s", name).that(compiler.getErrors()).isEmpty();

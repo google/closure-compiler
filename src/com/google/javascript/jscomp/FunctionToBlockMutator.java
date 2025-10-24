@@ -24,7 +24,6 @@ import static com.google.javascript.jscomp.FunctionArgumentInjector.THIS_MARKER;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.FunctionArgumentInjector.ParamArgPair;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.InlineRenamer;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -150,7 +149,7 @@ class FunctionToBlockMutator {
     // TODO(johnlenz): Mark NAME nodes constant for parameters that are not modified.
     ImmutableSet<String> modifiedParameters =
         functionArgumentInjector.findModifiedParameters(newFnNode);
-    ImmutableMap<String, ParamArgPair> args =
+    ImmutableMap<String, Node> args =
         functionArgumentInjector.getFunctionCallParameterMap(
             newFnNode, callNode, this.safeNameIdSupplier);
     boolean hasArgs = !args.isEmpty();
@@ -318,79 +317,62 @@ class FunctionToBlockMutator {
    * @return The node or its replacement.
    */
   private Node aliasAndInlineArguments(
-      Node fnTemplateRoot,
-      ImmutableMap<String, ParamArgPair> paramToArgMap,
-      Set<String> namesToAlias) {
+      Node fnTemplateRoot, ImmutableMap<String, Node> argMap, Set<String> namesToAlias) {
 
     if (namesToAlias == null || namesToAlias.isEmpty()) {
-      // There are no names to alias. Just inline the arguments directly.
-      Map<String, Node> replacements = new LinkedHashMap<>();
-      for (Entry<String, ParamArgPair> entry : paramToArgMap.entrySet()) {
-        replacements.put(entry.getKey(), entry.getValue().arg());
-      }
-      Node result = functionArgumentInjector.inject(compiler, fnTemplateRoot, null, replacements);
+      // There are no names to alias, just inline the arguments directly.
+      Node result = functionArgumentInjector.inject(compiler, fnTemplateRoot, null, argMap);
       checkState(result == fnTemplateRoot);
       return result;
     } else {
       // Create local alias of names that can not be safely
       // used directly.
 
-      // A map from function parameter to the value it should be replaced with post-inlining.
-      // This is a subset of paramToArg: we exclude parameters for which we create
-      // an explicit alias.
-      Map<String, Node> paramReplacements = new LinkedHashMap<>();
+      // An arg map that will be updated to contain the
+      // safe aliases.
+      Map<String, Node> newArgMap = new LinkedHashMap<>(argMap);
 
-      // Declare the aliases in the same order as the arguments are defined.
-      List<Node> newAliasesToAdd = new ArrayList<>();
-      // NOTE: paramToArgMap is a linked map so we get the parameters in the order that they were
-      // declared.
-      for (Entry<String, ParamArgPair> entry : paramToArgMap.entrySet()) {
+      // Declare the alias in the same order as they
+      // are declared.
+      List<Node> newVars = new ArrayList<>();
+      // NOTE: argMap is a linked map so we get the parameters in the
+      // order that they were declared.
+      for (Entry<String, Node> entry : argMap.entrySet()) {
         String name = entry.getKey();
-        ParamArgPair arg = entry.getValue();
-        if (!namesToAlias.contains(name)) {
-          // Replace references to the parameter with the argument directly.
-          paramReplacements.put(name, arg.arg());
-          continue;
-        }
-        if (name.equals(THIS_MARKER)) {
-          boolean referencesThis = NodeUtil.referencesEnclosingReceiver(fnTemplateRoot);
-          // Update "this", this is only necessary if "this" is referenced
-          // and the value of "this" is not Token.THIS, or the value of "this"
-          // has side effects.
+        if (namesToAlias.contains(name)) {
+          if (name.equals(THIS_MARKER)) {
+            boolean referencesThis = NodeUtil.referencesEnclosingReceiver(fnTemplateRoot);
+            // Update "this", this is only necessary if "this" is referenced
+            // and the value of "this" is not Token.THIS, or the value of "this"
+            // has side effects.
 
-          Node value = arg.arg();
-          if (!value.isThis()
-              && (referencesThis || compiler.getAstAnalyzer().mayHaveSideEffects(value))) {
-            String newName = getUniqueThisName();
-            Node newValue = value.cloneTree();
-            Node newNode = NodeUtil.newVarNode(newName, newValue).srcrefTreeIfMissing(newValue);
-            newAliasesToAdd.add(0, newNode);
-            paramReplacements.put(THIS_MARKER, IR.name(newName).srcrefTree(newValue));
+            Node value = entry.getValue();
+            if (!value.isThis()
+                && (referencesThis || compiler.getAstAnalyzer().mayHaveSideEffects(value))) {
+              String newName = getUniqueThisName();
+              Node newValue = entry.getValue().cloneTree();
+              Node newNode = NodeUtil.newVarNode(newName, newValue).srcrefTreeIfMissing(newValue);
+              newVars.add(0, newNode);
+              // Remove the parameter from the list to replace.
+              newArgMap.put(THIS_MARKER, IR.name(newName).srcrefTree(newValue));
+            }
+          } else {
+            Node newValue = entry.getValue().cloneTree();
+            Node newNode = NodeUtil.newVarNode(name, newValue).srcrefTreeIfMissing(newValue);
+            newVars.add(0, newNode);
+            // Remove the parameter from the list to replace.
+            newArgMap.remove(name);
           }
-        } else {
-          // Add an alias for a given parameter/argument. For example, if inlining this function:
-          //
-          //  function f(x) { use(x, x); } f(computeValue());
-          //
-          // This code defines
-          //    var x = computeValue();
-          // (as use(computeValue(), computeValue()) would compute the value twice).
-          Node newName = arg.paramNode().cloneNode();
-          Node newValue = arg.arg().cloneTree();
-          newName.srcref(newValue); // source information should point to the argument.
-          Node newNode = IR.var(newName, newValue).srcrefTreeIfMissing(newValue);
-          newAliasesToAdd.add(0, newNode);
         }
       }
 
       // Inline the arguments.
-      Node result =
-          functionArgumentInjector.inject(compiler, fnTemplateRoot, null, paramReplacements);
+      Node result = functionArgumentInjector.inject(compiler, fnTemplateRoot, null, newArgMap);
       checkState(result == fnTemplateRoot);
 
       // Now that the names have been replaced, add the new aliases for
       // the old names.
-      for (Node n : newAliasesToAdd) {
+      for (Node n : newVars) {
         fnTemplateRoot.addChildToFront(n);
       }
 
