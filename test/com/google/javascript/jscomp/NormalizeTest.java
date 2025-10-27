@@ -27,6 +27,7 @@ import com.google.javascript.rhino.Node;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import org.junit.Before;
 import org.junit.Test;
@@ -1606,14 +1607,27 @@ public final class NormalizeTest extends CompilerTestCase {
     CompilerTestCase tester =
         new CompilerTestCase() {
 
+          private static PassFactory makePassFactory(
+              String name, Function<AbstractCompiler, CompilerPass> pass) {
+            return PassFactory.builder().setName(name).setInternalFactory(pass).build();
+          }
+
           @Override
-          protected CompilerPass getProcessor(Compiler compiler) {
-            return InlineAndCollapseProperties.builder(compiler)
-                .setPropertyCollapseLevel(PropertyCollapseLevel.ALL)
-                .setChunkOutputType(ChunkOutputType.GLOBAL_NAMESPACE)
-                .setHaveModulesBeenRewritten(false)
-                .setModuleResolutionMode(ResolutionMode.BROWSER)
-                .build();
+          protected CompilerPass getProcessor(final Compiler compiler) {
+            PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
+            optimizer.addOneTimePass(
+                makePassFactory("es6NormalizeClasses", Es6NormalizeClasses::new));
+            optimizer.addOneTimePass(
+                makePassFactory(
+                    "inlineAndCollapseProperties",
+                    (comp) ->
+                        InlineAndCollapseProperties.builder(compiler)
+                            .setPropertyCollapseLevel(PropertyCollapseLevel.ALL)
+                            .setChunkOutputType(ChunkOutputType.GLOBAL_NAMESPACE)
+                            .setHaveModulesBeenRewritten(false)
+                            .setModuleResolutionMode(ResolutionMode.BROWSER)
+                            .build()));
+            return optimizer;
           }
         };
 

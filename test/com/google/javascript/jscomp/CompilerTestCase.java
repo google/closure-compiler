@@ -207,6 +207,9 @@ public abstract class CompilerTestCase {
   /** How to parse JS Documentation. */
   private JsDocParsing parseJsDocDocumentation;
 
+  /** Compiler option. */
+  private boolean assumeStaticInheritanceIsNotUsed;
+
   /** Whether externs changes should be allowed for this pass. */
   private boolean allowExternsChanges;
 
@@ -330,6 +333,7 @@ public abstract class CompilerTestCase {
     this.rewriteEsModulesEnabled = false;
     this.transpileEnabled = false;
     this.typeCheckEnabled = false;
+    this.assumeStaticInheritanceIsNotUsed = true;
 
     this.setUpRan = true;
   }
@@ -370,6 +374,7 @@ public abstract class CompilerTestCase {
     }
     options.setModuleResolutionMode(moduleResolutionMode);
     options.setParseJsDocDocumentation(parseJsDocDocumentation);
+    options.setAssumeStaticInheritanceIsNotUsed(assumeStaticInheritanceIsNotUsed);
     options.setPreserveTypeAnnotations(true);
     options.setAssumeGettersArePure(false); // Default to the complex case.
 
@@ -481,6 +486,12 @@ public abstract class CompilerTestCase {
   protected final void setJsDocumentation(JsDocParsing parseJsDocDocumentation) {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.parseJsDocDocumentation = parseJsDocDocumentation;
+  }
+
+  protected final void setAssumeStaticInheritanceIsNotUsed(
+      boolean assumeStaticInheritanceIsNotUsed) {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    this.assumeStaticInheritanceIsNotUsed = assumeStaticInheritanceIsNotUsed;
   }
 
   /** Whether to run InferConsts before passes */
@@ -1065,15 +1076,14 @@ public abstract class CompilerTestCase {
       List<Diagnostic> diagnostics,
       List<Postcondition> postconditions) {
     var genericNameMapping = new LinkedHashMap<String, String>();
-    if (!genericNameReplacements.isEmpty() && expectedObj != null) {
-      checkState(inputsObj instanceof FlatSources);
+    if (!genericNameReplacements.isEmpty()
+        && expectedObj != null
+        && expectedObj.expected != null
+        && inputsObj instanceof FlatSources flatSources) {
       expectedObj =
           expected(
               UnitTestUtils.updateGenericVarNamesInExpectedFiles(
-                  (FlatSources) inputsObj,
-                  expectedObj,
-                  genericNameReplacements,
-                  genericNameMapping));
+                  flatSources, expectedObj, genericNameReplacements, genericNameMapping));
     }
 
     List<SourceFile> inputs =

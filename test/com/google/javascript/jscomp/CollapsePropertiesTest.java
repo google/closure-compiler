@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import java.util.ArrayList;
+import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,20 +51,33 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     super(EXTERNS);
   }
 
+  private static PassFactory makePassFactory(
+      String name, Function<AbstractCompiler, CompilerPass> pass) {
+    return PassFactory.builder().setName(name).setInternalFactory(pass).build();
+  }
+
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return InlineAndCollapseProperties.builder(compiler)
-        .setPropertyCollapseLevel(propertyCollapseLevel)
-        .setChunkOutputType(ChunkOutputType.GLOBAL_NAMESPACE)
-        .setHaveModulesBeenRewritten(false)
-        .setModuleResolutionMode(ResolutionMode.BROWSER)
-        .build();
+    PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
+    optimizer.addOneTimePass(makePassFactory("es6NormalizeClasses", Es6NormalizeClasses::new));
+    optimizer.addOneTimePass(
+        makePassFactory(
+            "inlineAndCollapseProperties",
+            (comp) ->
+                InlineAndCollapseProperties.builder(comp)
+                    .setPropertyCollapseLevel(propertyCollapseLevel)
+                    .setChunkOutputType(ChunkOutputType.GLOBAL_NAMESPACE)
+                    .setHaveModulesBeenRewritten(false)
+                    .setModuleResolutionMode(ResolutionMode.BROWSER)
+                    .build()));
+    return optimizer;
   }
 
   @Before
   public void customSetUp() throws Exception {
     enableNormalize();
     disableCompareJsDoc();
+    setGenericNameReplacements(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS);
   }
 
   private void setupModuleExportsOnly() {
@@ -384,10 +398,21 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testObjLitDeclarationDoesntCollapsePropertiesOnGetter() {
-    testSame(
+    test(
         """
         var a = {
           get b() { return class {}; },
+          set b(c) {}
+        };
+        a.b = class {};
+        a.b.c = 4;
+        """,
+        """
+        var a = {
+          get b() {
+            const CLASS_DECL$0 = class {};
+            return CLASS_DECL$0;
+          },
           set b(c) {}
         };
         a.b = class {};
@@ -3807,16 +3832,19 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             """),
         expected(
             """
-            var Bar$baz = function(n) { use(n); }
-            const Bar = class BarInternal {}
-            Bar$baz();
+            var CLASS_DECL$0$baz = function(n) {
+              use(n);
+            };
+            const CLASS_DECL$0 = class {};
+            /** @constructor */
+            const Bar = null;
+            CLASS_DECL$0$baz();
             """));
   }
 
   @Test
   public void testDontCollapseClassStaticMemberReferencingInnerName() {
-    // probably we could do some rewriting to make this work, but for now just back off.
-    testSame(
+    test(
         """
         const Bar = class BarInternal {
           static baz(n) {
@@ -3824,6 +3852,15 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
           }
         }
         Bar.baz();
+        """,
+        """
+        var CLASS_DECL$0$baz = function(n) {
+          use(CLASS_DECL$0);
+        };
+        const CLASS_DECL$0 = class {};
+        /** @constructor */
+        const Bar = null;
+        CLASS_DECL$0$baz();
         """);
   }
 
@@ -3842,19 +3879,20 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             """),
         expected(
             """
-            const Bar = class BarInternal {
+            const CLASS_DECL$0 = class {
               method() {
-                return Bar$Enum$E1;
+                return CLASS_DECL$0$Enum$E1;
               }
             };
-            var Bar$Enum$E1 = 1;
+            /** @constructor */
+            const Bar = null;
+            var CLASS_DECL$0$Enum$E1 = 1;
             """));
   }
 
   @Test
   public void testDontCollapseClassStaticMemberReferencingInnerNameInNestedFunction() {
-    // probably we could do some rewriting to make this work, but for now just back off.
-    testSame(
+    test(
         """
         const Bar = class BarInternal {
           static baz(n) {
@@ -3862,17 +3900,38 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
           }
         }
         Bar.baz();
+        """,
+        """
+        var CLASS_DECL$0$baz = function(n) {
+          return function() {
+            use(CLASS_DECL$0);
+          };
+        };
+        const CLASS_DECL$0 = class {};
+        /** @constructor */
+        const Bar = null;
+        CLASS_DECL$0$baz();
         """);
   }
 
   @Test
   public void testClassStaticMemberUsingSuperNotCollapsed() {
-    testSame(
+    test(
         """
         class Baz extends Bar() {
+          /** @nocollapse */
           static quadruple(n) {
             return 2 * super.double(n);
-         }
+          }
+        }
+        """,
+        """
+        const CLASS_EXTENDS$0 = Bar();
+        class Baz extends CLASS_EXTENDS$0 {
+          /** @nocollapse */
+          static quadruple(n) {
+            return 2 * CLASS_EXTENDS$0.double(n);
+          }
         }
         """);
   }
@@ -3881,12 +3940,24 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testClassStaticMemberUsingSuperInArrowFnNotCollapsed() {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
-    testSame(
+    test(
         """
         class Baz extends Bar() {
+          /** @nocollapse */
           static quadruple(n) {
             return () => 2 * super.double(n);
          }
+        }
+        """,
+        """
+        const CLASS_EXTENDS$0 = Bar();
+        class Baz extends CLASS_EXTENDS$0 {
+          /** @nocollapse */
+          static quadruple(n) {
+            return () => {
+              return 2 * CLASS_EXTENDS$0.double(n);
+            };
+          }
         }
         """);
   }
@@ -3906,12 +3977,16 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             """),
         expected(
             """
+            const CLASS_EXTENDS$0 = fn();
             var Bar$m = function() {
-              class Inner extends fn() {
-                static n() { super.n(); }
+              const CLASS_EXTENDS$1 = fn();
+              class Inner extends CLASS_EXTENDS$1 {
+                static n() {
+                  CLASS_EXTENDS$1.n();
+                }
               }
             };
-            class Bar extends fn() {}
+            class Bar extends CLASS_EXTENDS$0 {}
             """));
   }
 

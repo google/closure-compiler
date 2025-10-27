@@ -19,6 +19,8 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.InlineAndCollapseProperties.ALIAS_CYCLE;
 
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
+import java.util.function.Function;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -27,11 +29,28 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class InlineAliasesTest extends CompilerTestCase {
 
+  private static PassFactory makePassFactory(
+      String name, Function<AbstractCompiler, CompilerPass> pass) {
+    return PassFactory.builder().setName(name).setInternalFactory(pass).build();
+  }
+
   @Override
-  protected CompilerPass getProcessor(Compiler compiler) {
-    return InlineAndCollapseProperties.builder(compiler)
-        .setPropertyCollapseLevel(PropertyCollapseLevel.NONE)
-        .build();
+  protected CompilerPass getProcessor(final Compiler compiler) {
+    PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
+    optimizer.addOneTimePass(makePassFactory("es6NormalizeClasses", Es6NormalizeClasses::new));
+    optimizer.addOneTimePass(
+        makePassFactory(
+            "inlineAndCollapseProperties",
+            (comp) ->
+                InlineAndCollapseProperties.builder(compiler)
+                    .setPropertyCollapseLevel(PropertyCollapseLevel.NONE)
+                    .build()));
+    return optimizer;
+  }
+
+  @Before
+  public void customSetUp() throws Exception {
+    setGenericNameReplacements(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS);
   }
 
   @Override

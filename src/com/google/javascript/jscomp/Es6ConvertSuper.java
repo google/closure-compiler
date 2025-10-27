@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.AstFactory.type;
 import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -155,17 +154,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     }
 
     Node callTarget = parent;
-    if (enclosingMemberDef.isStaticMember()) {
-      Node expandedSuper = superName.cloneTree().srcrefTree(node);
-      expandedSuper.setOriginalName("super");
-      node.replaceWith(expandedSuper);
-      callTarget = astFactory.createGetPropWithUnknownType(callTarget.detach(), "call");
-      grandparent.addChildToFront(callTarget);
-      Node thisNode = astFactory.createThis(type(clazz));
-      thisNode.makeNonIndexable(); // no direct correlation with original source
-      thisNode.insertAfter(callTarget);
-      grandparent.srcrefTreeIfMissing(parent);
-    } else {
+    if (!enclosingMemberDef.isStaticMember()) {
       // Replace super node to give
       // super.method(...) -> SuperClass.prototype.method(...)
       Node expandedSuper = astFactory.createPrototypeAccess(superName.cloneTree()).srcrefTree(node);
@@ -202,12 +191,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       return;
     }
 
-    if (enclosingMemberDef.isStaticMember()) {
-      // super.prop -> SuperClass.prop
-      Node expandedSuper = superName.cloneTree().srcrefTree(node);
-      expandedSuper.setOriginalName("super");
-      node.replaceWith(expandedSuper);
-    } else {
+    if (!enclosingMemberDef.isStaticMember()) {
       // super.prop -> SuperClass.prototype.prop
       Node newprop = astFactory.createPrototypeAccess(superName.cloneTree()).srcrefTree(node);
       newprop.setOriginalName("super");

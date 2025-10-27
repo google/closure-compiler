@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,20 +45,33 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     super(EXTERNS);
   }
 
+  private static PassFactory makePassFactory(
+      String name, Function<AbstractCompiler, CompilerPass> pass) {
+    return PassFactory.builder().setName(name).setInternalFactory(pass).build();
+  }
+
   @Override
-  protected CompilerPass getProcessor(Compiler compiler) {
-    return InlineAndCollapseProperties.builder(compiler)
-        .setPropertyCollapseLevel(PropertyCollapseLevel.ALL)
-        .setChunkOutputType(ChunkOutputType.GLOBAL_NAMESPACE)
-        .setHaveModulesBeenRewritten(false)
-        .setModuleResolutionMode(ResolutionMode.BROWSER)
-        .testAggressiveInliningOnly(this::validateGlobalNamespace)
-        .build();
+  protected CompilerPass getProcessor(final Compiler compiler) {
+    PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
+    optimizer.addOneTimePass(makePassFactory("es6NormalizeClasses", Es6NormalizeClasses::new));
+    optimizer.addOneTimePass(
+        makePassFactory(
+            "inlineAndCollapseProperties",
+            (comp) ->
+                InlineAndCollapseProperties.builder(compiler)
+                    .setPropertyCollapseLevel(PropertyCollapseLevel.ALL)
+                    .setChunkOutputType(ChunkOutputType.GLOBAL_NAMESPACE)
+                    .setHaveModulesBeenRewritten(false)
+                    .setModuleResolutionMode(ResolutionMode.BROWSER)
+                    .testAggressiveInliningOnly(this::validateGlobalNamespace)
+                    .build()));
+    return optimizer;
   }
 
   @Before
   public void customSetUp() throws Exception {
     enableNormalize();
+    setGenericNameReplacements(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS);
   }
 
   @Test
@@ -1298,14 +1312,16 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         };
         """,
         """
-        const GlobalName = class InnerName {
+        const CLASS_DECL$0 = class {
           method() {
-            return GlobalName.staticMethod();
+            return CLASS_DECL$0.staticMethod();
           }
           static staticMethod() {
-            console.log('staticMethod');
+            console.log("staticMethod");
           }
         };
+        /** @constructor */
+        const GlobalName = null;
         """);
   }
 
@@ -1325,20 +1341,22 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         """,
         """
         const GlobalName = {};
-        GlobalName.prop = class InnerName {
+        const CLASS_DECL$0 = class {
           method() {
-            return GlobalName.prop.staticMethod();
+            return CLASS_DECL$0.staticMethod();
           }
           static staticMethod() {
-            console.log('staticMethod');
+            console.log("staticMethod");
           }
         };
+        /** @constructor */
+        GlobalName.prop = null;
         """);
   }
 
   @Test
   public void testGlobalClassVarSetTwiceWithInnerNameDotPropReference() {
-    testSame(
+    test(
         """
         let GlobalName = class InnerName {
           method() {
@@ -1350,23 +1368,42 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         };
         // second assignment prevents inlining
         GlobalName = function SecondValue() {}
+        """,
+        """
+        const CLASS_DECL$0 = class {
+          method() {
+            return CLASS_DECL$0.staticMethod();
+          }
+          static staticMethod() {
+            console.log("staticMethod");
+          }
+        };
+        /** @constructor */
+        let GlobalName = CLASS_DECL$0;
+        GlobalName = function SecondValue() {};
         """);
   }
 
   @Test
   public void testGlobalClassPropWithInnerNameInstanceOfReference() {
-    testSame(
+    test(
         """
         const GlobalName = {};
         GlobalName.prop = class InnerName {
           method() {
-        // We don't want to inline this use of InnerName.
-        // CollapseProperties won't break this code as it is.
-        // Adding a reference to a global here could prevent
-        // this method from being inlined.
             return this instanceof InnerName;
           }
         };
+        """,
+        """
+        const GlobalName = {};
+        const CLASS_DECL$0 = class {
+          method() {
+            return this instanceof CLASS_DECL$0;
+          }
+        };
+        /** @constructor */
+        GlobalName.prop = null;
         """);
   }
 
@@ -2516,7 +2553,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void testClassStaticInheritance_cantDetermineSuperclass() {
     // Currently we only inline inherited properties when the extends clause contains a simple or
     // qualified name.
-    testSame(
+    test(
         """
         class A {}
         A.foo = 5;
@@ -2524,6 +2561,18 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         B.foo = 6;
         function getSuperclass() { return A; }
         class C extends getSuperclass() {}
+        use(C.foo);
+        """,
+        """
+        class A {}
+        A.foo = 5;
+        class B {}
+        B.foo = 6;
+        function getSuperclass() {
+          return A;
+        }
+        const CLASS_EXTENDS$0 = getSuperclass();
+        class C extends CLASS_EXTENDS$0 {}
         use(C.foo);
         """);
   }
@@ -3082,20 +3131,52 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   @Test
   public void testReplaceSuperGetPropInStaticMethod() {
     test(
-        "class Foo { static m() {} } class Bar extends Foo { static m() { super.m(); } }",
-        "class Foo { static m() {} } class Bar extends Foo { static m() {   Foo.m(); } }");
+        """
+        class Foo {
+          static m() {}
+        }
+        class Bar extends Foo {
+          static m() {
+            super.m();
+          }
+        }
+        """,
+        """
+        class Foo {
+          static m() {}
+        }
+        class Bar extends Foo {
+          static m() {
+            Foo.m();
+          }
+        }
+        """);
   }
 
   @Test
   public void testReplaceSuperInArrowInStaticMethod() {
     test(
         """
-        class Foo { static m() {} }
-        class Bar extends Foo { static m() { return () =>       super.m(); } }
+        class Foo {
+          static m() {}
+        }
+        class Bar extends Foo {
+          static m() {
+            return () => super.m();
+          }
+        }
         """,
         """
-        class Foo { static m() {} }
-        class Bar extends Foo { static m() { return () => { return Foo.m(); }; } }
+        class Foo {
+          static m() {}
+        }
+        class Bar extends Foo {
+          static m() {
+            return () => {
+              return Foo.m();
+            };
+          }
+        }
         """);
   }
 
@@ -3103,16 +3184,28 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void testReplaceSuperInStaticMethodWithQualifiedNameSuperclass() {
     test(
         """
-        const a = {b: {}};
+        const a = {b:{}};
         /** @const */
-        a.b.Foo = class { static m() {} };
-        class Bar extends a.b.Foo { static m() {   super.m(); } }
+        a.b.Foo = class {
+          static m() {}
+        };
+        class Bar extends a.b.Foo {
+          static m() {
+            super.m();
+          }
+        }
         """,
         """
-        const a = {b: {}};
+        const a = {b:{}};
         /** @const */
-        a.b.Foo = class { static m() {} };
-        class Bar extends a.b.Foo { static m() { a.b.Foo.m(); } }
+        a.b.Foo = class {
+          static m() {}
+        };
+        class Bar extends a.b.Foo {
+          static m() {
+            a.b.Foo.m();
+          }
+        }
         """);
   }
 
@@ -3154,27 +3247,67 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void testReplaceChainedSuperRefInStaticMethod() {
     test(
         """
-        class Foo { static m() {} }
+        class Foo {
+          static m() {}
+        }
         class Bar extends Foo {}
-        class Baz extends Bar { static m() { super.m(); } }
+        class Baz extends Bar {
+          static m() {
+            super.m();
+          }
+        }
         """,
         """
-        class Foo { static m() {} }
+        class Foo {
+          static m() {}
+        }
         class Bar extends Foo {}
-        class Baz extends Bar { static m() {   Foo.m(); } }
+        class Baz extends Bar {
+          static m() {
+            Foo.m();
+          }
+        }
         """);
   }
 
   @Test
-  public void testDontReplaceSuperInStaticMethodWithNonQnameSuperclass() {
-    // note - if we wanted, we could extract `mysteryFn()` into a tmp variable then use that to
-    // replace `super`.
-    testSame("class Bar extends getClass() { static m() { super.m(); } }");
+  public void testReplaceSuperInStaticMethodWithNonQnameSuperclass() {
+    test(
+        """
+        class Bar extends getClass() {
+          static m() {
+            super.m();
+          }
+        }
+        """,
+        """
+        const CLASS_EXTENDS$0 = getClass();
+        class Bar extends CLASS_EXTENDS$0 {
+          static m() {
+            CLASS_EXTENDS$0.m();
+          }
+        }
+        """);
   }
 
   @Test
-  public void testDontReplaceSuperInStaticMethodWithNonQnameGetPropSuperclass() {
-    testSame("class Bar extends getClasses().Foo { static m() { super.m(); } }");
+  public void testReplaceSuperInStaticMethodWithNonQnameGetPropSuperclass() {
+    test(
+        """
+        class Bar extends getClasses().Foo {
+          static m() {
+            super.m();
+          }
+        }
+        """,
+        """
+        const CLASS_EXTENDS$0 = getClasses().Foo;
+        class Bar extends CLASS_EXTENDS$0 {
+          static m() {
+            CLASS_EXTENDS$0.m();
+          }
+        }
+        """);
   }
 
   @Test
@@ -3182,13 +3315,41 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     // while CollapseProperties won't collapse Foo['m'], replacing `super` enables collapsing Bar.m
     // (since CollapseProperties cannot collapse methods using super) and helps code size.
     test(
-        "class Foo { static 'm'() {} } class Bar extends Foo { static m() { super['m'](); } }",
-        "class Foo { static 'm'() {} } class Bar extends Foo { static m() { Foo['m'](); } }");
+        """
+        class Foo {
+          static 'm'() {}
+        }
+        class Bar extends Foo {
+          static m() {
+            super['m']();
+          }
+        }
+        """,
+        """
+        class Foo {
+          static ["m"]() {}
+        }
+        class Bar extends Foo {
+          static m() {
+            Foo["m"]();
+          }
+        }
+        """);
   }
 
   @Test
   public void testDontReplaceSuperInClassPrototypeMethod() {
-    testSame("class Foo { m() {} } class Bar extends Foo { m() { super.m(); } }");
+    testSame(
+        """
+        class Foo {
+          m() {}
+        }
+        class Bar extends Foo {
+          m() {
+            super.m();
+          }
+        }
+        """);
   }
 
   /**

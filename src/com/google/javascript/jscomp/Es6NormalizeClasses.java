@@ -94,6 +94,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
   private final ExpressionDecomposer expressionDecomposer;
   private final SynthesizeExplicitConstructors ctorCreator;
   private final boolean transpileClassFields;
+  private final boolean rewriteStaticSuperStrictly;
 
   Es6NormalizeClasses(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -101,7 +102,16 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     expressionDecomposer = compiler.createDefaultExpressionDecomposer();
     ctorCreator = new SynthesizeExplicitConstructors(compiler);
     // Note: This covers both public fields as well as static fields (they launched together).
-    transpileClassFields = compiler.getOptions().needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS);
+    var options = compiler.getOptions();
+    transpileClassFields = options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS);
+
+    // Written this way for historical consistency. Before this comment was added, if SUPER needed
+    // transpilation, Es6ConvertSuper would do a strict rewrite. Otherwise if the option says to
+    // assumeStaticInheritanceIsNotUsed, StaticSuperPropReplacer (now deleted) would do a non-strict
+    // rewrite.
+    rewriteStaticSuperStrictly =
+        options.needsTranspilationOf(Feature.SUPER)
+            || !options.getAssumeStaticInheritanceIsNotUsed();
   }
 
   @Override
@@ -172,10 +182,20 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
         // case this would be the same as `bindingIdentifier`).
         Node classNameNode = NodeUtil.getNameNode(n);
         checkState(classNameNode != null, "Class missing a name: %s", n);
+        Optional<Node> superClassNameNode =
+            n.getSecondChild().isQualifiedName()
+                ? Optional.of(n.getSecondChild())
+                : Optional.empty();
         Node classInsertionPoint = getStatementDeclaringClass(n, classNameNode);
         checkState(classInsertionPoint != null, "Class was not extracted: %s", n);
         classStack.addFirst(
-            new ClassRecord(className, bindingIdentifier, n, classNameNode, classInsertionPoint));
+            new ClassRecord(
+                className,
+                bindingIdentifier,
+                n,
+                classNameNode,
+                superClassNameNode,
+                classInsertionPoint));
       }
       case COMPUTED_FIELD_DEF -> {
         checkState(!classStack.isEmpty());
@@ -454,8 +474,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
         rewriteStaticMembers(t, currClassRecord);
       }
       case NAME -> maybeUpdateClassSelfRef(t, n);
-      case THIS -> visitThis(t, n);
-      case SUPER -> visitSuper(t, n);
+      case THIS, SUPER -> visitThisAndSuper(t, n);
       default -> {}
     }
   }
@@ -695,6 +714,16 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     }
     insertionPoint.detach();
 
+    // If the new method has any `this` usages adds @nocollapse.
+    // Note: while all `this` references in static initialization contexts were converted to
+    // `ClassName`, in the case of rewriteStaticSuperStrictly, calls like `super.foo()` were
+    // converted to `ParentClass.foo.call(this)`.
+    if (rewriteStaticSuperStrictly && NodeUtil.referencesOwnReceiver(staticInitMethodFunc)) {
+      JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(staticInitMethod.getJSDocInfo());
+      builder.recordNoCollapse();
+      staticInitMethod.setJSDocInfo(builder.build());
+    }
+
     // Add a call to the static initialization method after the class definition.
     Node staticInitCall =
         astFactory
@@ -746,105 +775,168 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     }
   }
 
-  private void visitThis(NodeTraversal t, Node thisNode) {
+  /**
+   * Visits {@code this} and {@code super} nodes in the class. Only makes changes in static
+   * contexts.
+   *
+   * <p>For static {@code this}, we can only replace with the class name if in a static
+   * initialization context (i.e. in a static field initializer or a static block).
+   *
+   * <p>For static {@code super}, we can always replace with the extended class name.
+   *
+   * <p>Note: This runs before {@link #rewriteStaticMembers} so the static members are still there.
+   */
+  private void visitThisAndSuper(NodeTraversal t, Node n) {
     Node rootNode = t.getClosestScopeRootNodeBindingThisOrSuper();
-    if (rootNode.isStaticMember()
-        && (rootNode.isMemberFieldDef() || rootNode.isComputedFieldDef())) {
-      final Node classNode = rootNode.getGrandparent();
-      final ClassRecord classRecord = classStack.peek();
-      checkState(
-          classRecord.classNode == classNode,
-          "wrong class node: %s != %s",
-          classRecord.classNode,
-          classNode);
-      Node className = classRecord.createNewNameReferenceNode().srcrefTree(thisNode);
-      thisNode.replaceWith(className);
-      t.reportCodeChange(className);
-    } else if (rootNode.isBlock()) {
-      final ClassRecord classRecord = classStack.peek();
-      Node className = classRecord.createNewNameReferenceNode().srcrefTree(thisNode);
-      thisNode.replaceWith(className);
-      t.reportCodeChange(className);
+    Node rootParent = rootNode.getParent();
+    if (rootNode.isFunction()
+        && (rootParent.isMemberFunctionDef()
+            || rootParent.isComputedProp()
+            || rootParent.isGetterDef()
+            || rootParent.isSetterDef())) {
+      rootNode = rootParent;
+    }
+    boolean inStaticBlock = rootNode.isBlock() && rootNode.getParent().isClassMembers();
+    if (!rootNode.isStaticMember() && !inStaticBlock) {
+      return;
+    }
+
+    Node classNode = rootNode.getGrandparent();
+    ClassRecord classRecord = classStack.peek();
+    checkState(
+        classRecord.classNode == classNode,
+        "wrong class node: %s != %s",
+        classRecord.classNode,
+        classNode);
+
+    Node newNameNode = null;
+    if (n.isThis() && isInStaticInitializationContext(rootNode)) {
+      // For static this, we can only universally replace with the class name in a static
+      // initialization context.
+      newNameNode = classRecord.createNewNameReferenceNode().srcrefTree(n);
+    } else if (n.isSuper()) {
+      // For static super, can always replace the super class name.
+      // b/454921132: Technically, for `super.getter`, `getter` in `ParentClass` may have a
+      // polymorphic `this` usage which `ParentClass.getter` would break. The correct fix is to
+      // rewrite property accesses as `Reflect.get(ParentClass, 'getter', ClassName)`.
+      checkState(classRecord.superClassNameNode.isPresent(), classRecord.classNode);
+      newNameNode = classRecord.superClassNameNode.get().cloneTree();
+
+      if (rewriteStaticSuperStrictly
+          && n.getGrandparent().isCall()
+          && NodeUtil.isInvocationTarget(n.getParent())) {
+        // If this is a call, we need to replace `super.m(x)` with `super.m.call(this, x)` (`super`
+        // will be replaced with `ParentClassName` (newNameNode) afterwards).
+        Node call = n.getGrandparent();
+        Node callTarget = n.getParent();
+        callTarget =
+            astFactory
+                .createGetPropWithUnknownType(callTarget.detach(), "call")
+                .srcrefTreeIfMissing(callTarget);
+        call.addChildToFront(callTarget);
+        Node thisNode = astFactory.createThis(type(classNode)).srcrefTreeIfMissing(n);
+        thisNode.makeNonIndexable();
+        thisNode.insertAfter(callTarget);
+      }
+    }
+
+    if (newNameNode != null) {
+      String originalName = checkNotNull(n.getQualifiedName());
+      newNameNode.srcrefTree(n).setOriginalName(originalName);
+      n.replaceWith(newNameNode);
+      t.reportCodeChange(newNameNode);
     }
   }
 
-  /**
-   * Rename super in static context to super class name.
-   *
-   * <p>CASE : rootNode.isMemberFieldDef() && rootNode.isStaticMember()
-   *
-   * <pre><code>
-   *   class C {
-   *     static x = 2;
-   *   }
-   *   class D extends C {
-   *     static y = super.x;
-   *   }
-   * </code></pre>
-   *
-   * <p>CASE : rootNode.isBlock()
-   *
-   * <pre><code>
-   * class B {
-   *   static y = 3;
-   * }
-   * class C extends B {
-   *   static {
-   *     let x = super.y;
-   *   }
-   * }
-   * </code></pre>
-   */
-  private void visitSuper(NodeTraversal t, Node n) {
-    Node rootNode = t.getClosestScopeRootNodeBindingThisOrSuper(); // returns BLOCK if static block
-    if ((rootNode.isMemberFieldDef() && rootNode.isStaticMember()) || rootNode.isBlock()) {
-      Node classNode = rootNode.getGrandparent();
-      checkState(classNode.isClass(), classNode);
-      Node extendsClause = classNode.getSecondChild();
-      checkState(extendsClause.isQualifiedName(), extendsClause);
-      Node superclassName = extendsClause.cloneTree();
-      n.replaceWith(superclassName);
-      t.reportCodeChange(superclassName);
-    }
+  // Note: Assumes that we have already filtered out non-static members and non-static blocks.
+  private static boolean isInStaticInitializationContext(Node rootNode) {
+    return switch (rootNode.getToken()) {
+      case MEMBER_FUNCTION_DEF, COMPUTED_PROP, GETTER_DEF, SETTER_DEF -> {
+        checkState(rootNode.isStaticMember());
+        yield false;
+      }
+      case MEMBER_FIELD_DEF, COMPUTED_FIELD_DEF -> {
+        checkState(rootNode.isStaticMember());
+        yield true;
+      }
+      case BLOCK -> {
+        checkState(rootNode.getParent().isClassMembers());
+        yield true;
+      }
+      default -> throw new IllegalArgumentException("invalid root " + rootNode);
+    };
   }
 
   private static class ClassRecord {
-    // The qualified class name as a string.
-    // "C" as in:
-    // *  class C {}
-    // *  const C = class D {};
-    // *  const C = class {};
-    // "ns.C" as in:
-    // *  const ns = {}; ns.C = class {};
+    /**
+     * The qualified class name as a string.
+     *
+     * <p>{@code "C"} as in:
+     *
+     * <ul>
+     *   <li>{@code class C {}}
+     *   <li>{@code const C = class D {};}
+     *   <li>{@code const C = class {};}
+     * </ul>
+     *
+     * <p>{@code "ns.C"} as in:
+     *
+     * <ul>
+     *   <li>{@code const ns = {}; ns.C = class {};}
+     * </ul>
+     */
     final String className;
 
-    // The binding identifier (a.k.a. name node) of the class itself.
-    // The node for C as in:
-    // *  class C {}
-    // *  const D = class C {};
-    // Absent as in:
-    // *  const C = class {};
+    /**
+     * The binding identifier (a.k.a. name node) of the class itself.
+     *
+     * <p>The node for {@code C} as in:
+     *
+     * <ul>
+     *   <li>{@code class C {}}
+     *   <li>{@code const D = class C {};} // Inner name node in this case.
+     * </ul>
+     *
+     * <p>Absent as in:
+     *
+     * <ul>
+     *   <li>{@code const C = class {};}
+     * </ul>
+     */
     final Optional<Node> bindingIdentifier;
 
-    // The node for `class` in both class declarations and class expressions.
+    /** The node for `class` in both class declarations and class expressions. */
     final Node classNode;
 
-    // The name node of the class. See `className`.
+    /** The name node of the class. See {@link #className}. */
     final Node classNameNode;
 
-    // Insert before or after this node to add stuff outside the class.
+    /**
+     * The name node of the super class, if present.
+     *
+     * <p>The node for {@code E} as in:
+     *
+     * <ul>
+     *   <li>{@code class C extends E {}}
+     *   <li>{@code const D = class C extends E {};}
+     *   <li>{@code const D = class extends E {};}
+     * </ul>
+     */
+    final Optional<Node> superClassNameNode;
+
+    /** Insert before or after this node to add stuff outside the class. */
     final Node insertionPoint;
 
-    // Instance fields in the class.
+    /** Instance fields in the class. */
     final Deque<Node> instanceMembers = new ArrayDeque<>();
 
-    // Static fields + static blocks
+    /** Static fields + static blocks */
     final Deque<Node> staticMembers = new ArrayDeque<>();
 
-    // computed props with side effects
+    /** computed props with side effects */
     final Deque<Node> computedPropsWithSideEffects = new ArrayDeque<>();
 
-    // Set of all the Vars defined in the constructor arguments scope and constructor body scope
+    /** Set of all the Vars defined in the constructor arguments scope and constructor body scope */
     ImmutableSet<Var> constructorVars = ImmutableSet.of();
 
     ClassRecord(
@@ -852,11 +944,13 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
         Optional<Node> bindingIdentifier,
         Node classNode,
         Node classNameNode,
+        Optional<Node> superClassNameNode,
         Node insertionPoint) {
       this.className = className;
       this.bindingIdentifier = bindingIdentifier;
       this.classNode = classNode;
       this.classNameNode = classNameNode;
+      this.superClassNameNode = superClassNameNode;
       this.insertionPoint = insertionPoint;
     }
 

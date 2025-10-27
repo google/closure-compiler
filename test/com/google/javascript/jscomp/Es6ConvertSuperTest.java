@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -63,9 +64,17 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     enableMultistageCompilation();
   }
 
+  private static PassFactory makePassFactory(
+      String name, Function<AbstractCompiler, CompilerPass> pass) {
+    return PassFactory.builder().setName(name).setInternalFactory(pass).build();
+  }
+
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new Es6ConvertSuper(compiler);
+    PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
+    optimizer.addOneTimePass(makePassFactory("es6NormalizeClasses", Es6NormalizeClasses::new));
+    optimizer.addOneTimePass(makePassFactory("es6ConvertSuper", Es6ConvertSuper::new));
+    return optimizer;
   }
 
   // Instance `super` resolution
