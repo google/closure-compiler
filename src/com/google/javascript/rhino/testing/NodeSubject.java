@@ -590,12 +590,17 @@ public final class NodeSubject extends Subject {
 
   private String serializeNode(Node node) {
     if (serializer != null) {
-      return serializer.apply(node);
-    } else if (node == null) {
-      return "<Java null>";
-    } else {
-      return node.toStringTree();
+      return serializer
+          .apply(node)
+          // Collapse empty blocks that span a newline.
+          .replaceAll("\\{\\n\\s*\\}", "{}")
+          // Trim trailing spaces from each line.
+          .replaceAll(" +(\\n|$)", "$1");
     }
+    if (node == null) {
+      return "<Java null>";
+    }
+    return node.toStringTree();
   }
 
   private static String jsdocToStringNullsafe(@Nullable JSDocInfo jsdoc) {
