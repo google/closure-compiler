@@ -847,8 +847,8 @@ public class NodeTraversal {
     pushScope(n);
     currentNode = n;
     if (callback.shouldTraverse(this, n, parent)) {
-      currentNode = n;
       traverseChildren(n);
+      currentNode = n;
       callback.visit(this, n, parent);
     }
     popScope();
