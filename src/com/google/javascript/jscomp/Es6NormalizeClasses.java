@@ -554,7 +554,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
               ? convNonCompFieldToGetProp(thisNode, instanceMember, /* isStatic= */ false)
               : convCompFieldToGetElem(thisNode, instanceMember, /* isStatic= */ false);
 
-      transpiledNode.insertBefore(insertionPoint);
+      transpiledNode.insertBefore(checkNotNull(insertionPoint));
     }
 
     insertionPoint.detach();
@@ -593,7 +593,8 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
    * Creates a node that represents receiver.key = value; where the key and value comes from the
    * non-computed field
    */
-  private Node convNonCompFieldToGetProp(Node receiver, Node noncomputedField, boolean isStatic) {
+  private @Nullable Node convNonCompFieldToGetProp(
+      Node receiver, Node noncomputedField, boolean isStatic) {
     checkArgument(noncomputedField.isMemberFieldDef());
     checkArgument(receiver.getParent() == null, receiver);
 
@@ -605,6 +606,12 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     // We always move out the static field initialization.
     if (isStatic || transpileClassFields) {
       fieldValue = noncomputedField.getFirstChild();
+    }
+
+    // We don't make a copy of the static field declaration if it doesn't have an initializer and
+    // we're not transpiling class fields.
+    if (fieldValue == null && !transpileClassFields) {
+      return null;
     }
 
     Node getProp =
@@ -629,7 +636,8 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
    * Creates a node that represents receiver[key] = value; where the key and value comes from the
    * computed field
    */
-  private Node convCompFieldToGetElem(Node receiver, Node computedField, boolean isStatic) {
+  private @Nullable Node convCompFieldToGetElem(
+      Node receiver, Node computedField, boolean isStatic) {
     checkArgument(computedField.isComputedFieldDef(), computedField);
     checkArgument(receiver.getParent() == null, receiver);
 
@@ -640,6 +648,12 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     Node fieldValue = null;
     if (computedField.getChildCount() == 2 && (isStatic || transpileClassFields)) {
       fieldValue = computedField.getLastChild();
+    }
+
+    // We don't make a copy of the static field declaration if it doesn't have an initializer and
+    // we're not transpiling class fields.
+    if (fieldValue == null && !transpileClassFields) {
+      return null;
     }
 
     Node compFieldNameExpr;
@@ -683,12 +697,6 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     Node staticInitMethod =
         astFactory.createMemberFunctionDef(staticInitMethodName, staticInitMethodFunc);
     staticInitMethod.setStaticMember(true);
-    Node classMembers = NodeUtil.getClassMembers(record.classNode);
-    staticInitMethod.srcrefTree(classMembers);
-    classMembers.addChildToBack(staticInitMethod);
-    compiler.reportChangeToChangeScope(staticInitMethodFunc);
-    // Record the feature corresponding to a static method.
-    NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.MEMBER_DECLARATIONS, compiler);
 
     Node staticInitBlock = staticInitMethod.getFirstChild().getLastChild();
     Node insertionPoint = IR.empty();
@@ -702,17 +710,36 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
 
       Node transpiledNode =
           switch (staticMember.getToken()) {
-            case BLOCK -> staticMember.detach();
+            case BLOCK -> {
+              Node block = staticMember.detach();
+              t.reportCodeChange();
+              // We ignore empty static initialization blocks.
+              yield block.hasChildren() ? block : null;
+            }
             case MEMBER_FIELD_DEF ->
                 convNonCompFieldToGetProp(nameToUse, staticMember, /* isStatic= */ true);
             case COMPUTED_FIELD_DEF ->
                 convCompFieldToGetElem(nameToUse, staticMember, /* isStatic= */ true);
             default -> throw new IllegalStateException(String.valueOf(staticMember));
           };
-      transpiledNode.insertBefore(insertionPoint);
-      t.reportCodeChange();
+      if (transpiledNode != null) {
+        transpiledNode.insertBefore(insertionPoint);
+      }
     }
     insertionPoint.detach();
+
+    // If the static init method is empty, don't add it.
+    if (!staticInitBlock.hasChildren()) {
+      return;
+    }
+
+    Node classMembers = NodeUtil.getClassMembers(record.classNode);
+    staticInitMethod.srcrefTree(classMembers);
+    classMembers.addChildToBack(staticInitMethod);
+    compiler.reportChangeToChangeScope(staticInitMethodFunc);
+    t.reportCodeChange(staticInitMethod);
+    // Record the feature corresponding to a static method.
+    NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.MEMBER_DECLARATIONS, compiler);
 
     // If the new method has any `this` usages adds @nocollapse.
     // Note: while all `this` references in static initialization contexts were converted to

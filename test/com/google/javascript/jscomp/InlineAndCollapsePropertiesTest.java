@@ -3517,7 +3517,6 @@ use(Foo$Bar$baz$A);
         };
         class Bar {}
         var Baz$$0jscomp$0staticInit$0m1146332801$00 = function() {
-          Baz$val1;
           {
             Baz$val1 = Bar$double(5);
           }
@@ -3653,11 +3652,9 @@ use(Foo$Bar$baz$A);
           return 2 * n;
         };
         var Baz$$0jscomp$0staticInit$0m1146332801$00 = function() {
-          Baz$val1;
           {
             Baz$val1 = Baz$double(1);
           }
-          Baz$val2;
           {
             Baz$val2 = Baz$double(2);
           }

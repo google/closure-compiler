@@ -1138,7 +1138,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           static ["x"];
           static ["y"];
           static STATIC_INIT$0() {
-            C["x"];
             C["y"] = 2;
           }
         }
@@ -1422,12 +1421,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class C {
-          static STATIC_INIT$0() {
-            {
-            }
-          }
         }
-        C.STATIC_INIT$0();
         """);
 
     test(
@@ -1671,17 +1665,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         C.STATIC_INIT$0();
         """);
-    testEs2022(
-        src,
-        """
-        class C {
-          static x;
-          static STATIC_INIT$0() {
-            C.x;
-          }
-        }
-        C.STATIC_INIT$0();
-        """);
+    testEs2022(src, src);
 
     src =
         """
@@ -1713,7 +1697,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           static STATIC_INIT$0() {
             C.x = 2;
             C.y = "hi";
-            C.z;
           }
         }
         C.STATIC_INIT$0();
