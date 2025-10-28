@@ -351,7 +351,7 @@ public final class JsFileRegexParser extends JsFileLineParser {
 
     if (!googMatcherBuffer.isEmpty()) {
       // Retry with the previous line.
-      lineHasProvidesOrRequires = applyGoogMatcher(String.join("", googMatcherBuffer, line));
+      lineHasProvidesOrRequires = applyGoogMatcher(googMatcherBuffer + line);
     }
     if (!lineHasProvidesOrRequires && lineHasProvidesOrRequiresWords) {
       // Try without the previous line.
