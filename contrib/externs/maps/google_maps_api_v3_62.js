@@ -6801,8 +6801,6 @@ google.maps.MapTypeStyle.prototype.featureType;
 google.maps.MapTypeStyle.prototype.stylers;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * @record
  */
 google.maps.Maps3DLibrary = function() {};
@@ -6811,6 +6809,11 @@ google.maps.Maps3DLibrary = function() {};
  * @type {typeof google.maps.maps3d.AltitudeMode}
  */
 google.maps.Maps3DLibrary.prototype.AltitudeMode;
+
+/**
+ * @type {typeof google.maps.maps3d.GestureHandling}
+ */
+google.maps.Maps3DLibrary.prototype.GestureHandling;
 
 /**
  * @type {typeof google.maps.maps3d.LocationClickEvent}
@@ -7783,8 +7786,6 @@ google.maps.MotionTrackingControlOptions = function() {};
 google.maps.MotionTrackingControlOptions.prototype.position;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A <code>Orientation3D</code> is a three-dimensional vector used for standard
  * mathematical rotation transformations along heading, tilt, and roll.<br> <ul>
  * <li>heading is an angle in the range [0, 360) degrees.</li> <li>tilt is an
@@ -7849,8 +7850,6 @@ google.maps.Orientation3D.prototype.equals = function(other) {};
 google.maps.Orientation3D.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Object literals are accepted in place of <code>Orientation3D</code> objects,
  * as a convenience, in many places. These are converted to
  * <code>Orientation3D</code> objects when the Maps API encounters them.
@@ -11171,8 +11170,6 @@ google.maps.UnitSystem = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A <code>Vector3D</code> is a three-dimensional vector used for standard
  * mathematical operations such as scaling the bounds of three-dimensional
  * object along local x-, y-, and z-axes.<br> <ul> <li>x is a real number.</li>
@@ -11222,8 +11219,6 @@ google.maps.Vector3D.prototype.equals = function(other) {};
 google.maps.Vector3D.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Object literals are accepted in place of <code>Vector3D</code> objects, as a
  * convenience, in many places. These are converted to <code>Vector3D</code>
  * objects when the Maps API encounters them.
@@ -16548,8 +16543,6 @@ google.maps.journeySharing.WaypointType = {
 google.maps.maps3d = {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Specifies how altitude components in the coordinates are interpreted.
  *
  * Access by calling `const {AltitudeMode} = await
@@ -16588,8 +16581,6 @@ google.maps.maps3d.AltitudeMode = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * CameraOptions object used to define the properties that can be set on a
  * camera object. The camera object can be anything that has a camera position,
  * e.g. a current map state, or a future requested animation state.
@@ -16628,8 +16619,6 @@ google.maps.maps3d.CameraOptions.prototype.roll;
 google.maps.maps3d.CameraOptions.prototype.tilt;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Customization options for the FlyCameraAround Animation.
  * @record
  */
@@ -16668,8 +16657,6 @@ google.maps.maps3d.FlyAroundAnimationOptions.prototype.repeatCount;
 google.maps.maps3d.FlyAroundAnimationOptions.prototype.rounds;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Customization options for the FlyCameraTo Animation.
  * @record
  */
@@ -16689,8 +16676,35 @@ google.maps.maps3d.FlyToAnimationOptions.prototype.durationMillis;
 google.maps.maps3d.FlyToAnimationOptions.prototype.endCamera;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Specifies how gesture events should be handled on the map element.
  *
+ * Access by calling `const {GestureHandling} = await
+ * google.maps.importLibrary("maps3d")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.maps3d.GestureHandling = {
+  /**
+   * This lets the map choose whether to use cooperative or greedy gesture
+   * handling. This is the default behavior if not specified.<br /><br />This
+   * will cause the map to enter cooperative mode if the map is dominating its
+   * scroll parent (usually the host page) to where the user cannot scroll away
+   * from the map to other content.
+   */
+  AUTO: 'AUTO',
+  /**
+   * This forces cooperative mode, where modifier keys or two-finger gestures
+   * are required to scroll the map.
+   */
+  COOPERATIVE: 'COOPERATIVE',
+  /**
+   * This forces greedy mode, where the host page cannot be scrolled from user
+   * events on the map element.
+   */
+  GREEDY: 'GREEDY',
+};
+
+/**
  * This event is created from clicking a Map3DElement.
  *
  * Access by calling `const {LocationClickEvent} = await
@@ -16712,8 +16726,6 @@ google.maps.maps3d.LocationClickEvent = function() {};
 google.maps.maps3d.LocationClickEvent.prototype.position;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Map3DElement is an HTML interface for the 3D Map view. Note that the
  * <code>mode</code> must be set for the 3D Map to start rendering.
  *
@@ -16758,6 +16770,24 @@ google.maps.maps3d.Map3DElement.prototype.center;
 google.maps.maps3d.Map3DElement.prototype.defaultUIHidden;
 
 /**
+ * If provided, an accessibility description (e.g. for use with screen readers)
+ * will be added to the map with the provided value.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.description;
+
+/**
+ * Controls cooperative gesture handling. When set to <code>COOPERATIVE</code>,
+ * modifier keys or two-finger gestures are required to scroll the map. When set
+ * to <code>GREEDY</code>, the host page cannot be scrolled from user events on
+ * the map element. When set to <code>AUTO</code>, the gesture handling is
+ * determined by the scrollability of the host page.
+ * @default {@link google.maps.maps3d.GestureHandling.GREEDY}
+ * @type {!google.maps.maps3d.GestureHandling|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.gestureHandling;
+
+/**
  * The compass heading of the map, in degrees, where due north is zero. When
  * there is no tilt, any roll will be interpreted as heading.
  * @type {number|null|undefined}
@@ -16773,6 +16803,24 @@ google.maps.maps3d.Map3DElement.prototype.heading;
  * @type {!Iterable<string>|null|undefined}
  */
 google.maps.maps3d.Map3DElement.prototype.internalUsageAttributionIds;
+
+/**
+ * Language in which to attempt to render the base map&#39;s language. Will
+ * default to the language requested by the developer when loading the Maps JS
+ * API.<br/><br/> This must be set when the element is created, and cannot be
+ * updated after the map has loaded.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.language;
+
+/**
+ * Specifies a map ID which will be used to fetch cloud-based map style for the
+ * map. This should not be set after the map has been initialized. Therefore we
+ * ensure the mapId is only set during initialization and do not publish this
+ * attribute to public-facing channels.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.mapId;
 
 /**
  * The maximum altitude above the ground which will be displayed on the map. A
@@ -16844,6 +16892,15 @@ google.maps.maps3d.Map3DElement.prototype.mode;
 google.maps.maps3d.Map3DElement.prototype.range;
 
 /**
+ * Region with which to attempt to render the base map&#39;s POIs. Will default
+ * to the region requested by the developer when loading the Maps JS
+ * API.<br/><br/> This must be set when the element is created, and cannot be
+ * updated after the map has loaded.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.region;
+
+/**
  * The roll of the camera around the view vector in degrees. To resolve
  * ambiguities, when there is no tilt, any roll will be interpreted as heading.
  * @type {number|null|undefined}
@@ -16910,8 +16967,6 @@ google.maps.maps3d.Map3DElement.prototype.flyCameraTo = function(options) {};
 google.maps.maps3d.Map3DElement.prototype.stopCameraAnimation = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Map3DElementOptions object used to define the properties that can be set on a
  * Map3DElement.
  * @record
@@ -16937,6 +16992,18 @@ google.maps.maps3d.Map3DElementOptions.prototype.center;
 google.maps.maps3d.Map3DElementOptions.prototype.defaultUIHidden;
 
 /**
+ * See {@link google.maps.maps3d.Map3DElement.description}.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.description;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.gestureHandling}.
+ * @type {!google.maps.maps3d.GestureHandling|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.gestureHandling;
+
+/**
  * See {@link google.maps.maps3d.Map3DElement.heading}.
  * @type {number|null|undefined}
  */
@@ -16947,6 +17014,18 @@ google.maps.maps3d.Map3DElementOptions.prototype.heading;
  * @type {!Iterable<string>|null|undefined}
  */
 google.maps.maps3d.Map3DElementOptions.prototype.internalUsageAttributionIds;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.language}.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.language;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.mapId}.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.mapId;
 
 /**
  * See {@link google.maps.maps3d.Map3DElement.maxAltitude}.
@@ -16997,6 +17076,12 @@ google.maps.maps3d.Map3DElementOptions.prototype.mode;
 google.maps.maps3d.Map3DElementOptions.prototype.range;
 
 /**
+ * See {@link google.maps.maps3d.Map3DElement.region}.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.region;
+
+/**
  * See {@link google.maps.maps3d.Map3DElement.roll}.
  * @type {number|null|undefined}
  */
@@ -17018,8 +17103,6 @@ google.maps.maps3d.Map3DElementOptions.prototype.tilt;
 google.maps.maps3d.Map3DElementOptions.prototype.defaultUIDisabled;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Specifies a mode the map should be rendered in.
  *
  * Access by calling `const {MapMode} = await
@@ -17041,8 +17124,6 @@ google.maps.maps3d.MapMode = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Shows a position on a 3D map. Note that the <code>position</code> must be set
  * for the <code>Marker3DElement</code> to display.
  *
@@ -17119,8 +17200,6 @@ google.maps.maps3d.Marker3DElement.prototype.zIndex;
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Marker3DElementOptions object used to define the properties that can be set
  * on a Marker3DElement.
  * @record
@@ -17176,8 +17255,6 @@ google.maps.maps3d.Marker3DElementOptions.prototype.sizePreserved;
 google.maps.maps3d.Marker3DElementOptions.prototype.zIndex;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Shows a position on a 3D map. Note that the <code>position</code> must be set
  * for the <code>Marker3DInteractiveElement</code> to display. Unlike
  * <code>Marker3DElement</code>, <code>Marker3DInteractiveElement</code>
@@ -17210,8 +17287,6 @@ google.maps.maps3d.Marker3DInteractiveElement.prototype.title;
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Marker3DInteractiveElementOptions object used to define the properties that
  * can be set on a Marker3DInteractiveElement.
  * @extends {google.maps.maps3d.Marker3DElementOptions}
@@ -17234,8 +17309,6 @@ google.maps.maps3d.Marker3DInteractiveElementOptions.prototype
 google.maps.maps3d.Marker3DInteractiveElementOptions.prototype.title;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A 3D model which allows the rendering of gLTF models. Note that the
  * <code>position</code> and the <code>src</code> must be set for the
  * <code>Model3DElement</code> to display. <br /><br /> Core properties of the
@@ -17297,8 +17370,6 @@ google.maps.maps3d.Model3DElement.prototype.src;
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Model3DElementOptions object used to define the properties that can be set on
  * a Model3DElement.
  * @record
@@ -17336,8 +17407,6 @@ google.maps.maps3d.Model3DElementOptions.prototype.scale;
 google.maps.maps3d.Model3DElementOptions.prototype.src;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A 3D model which allows the rendering of gLTF models. Note that the
  * <code>position</code> and the <code>src</code> must be set for the
  * <code>Model3DElement</code> to display. <br /><br /> Core properties of the
@@ -17359,8 +17428,6 @@ google.maps.maps3d.Model3DInteractiveElement = function(options) {};
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Model3DInteractiveElementOptions object used to define the properties that
  * can be set on a Model3DInteractiveElement.
  * @extends {google.maps.maps3d.Model3DElementOptions}
@@ -17369,8 +17436,6 @@ google.maps.maps3d.Model3DInteractiveElement = function(options) {};
 google.maps.maps3d.Model3DInteractiveElementOptions = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * This event is created from clicking on a place icon on a
  * <code>Map3DElement</code>. To prevent the default popover from showing up,
  * call the <code>preventDefault()</code> method on this event to prevent it
@@ -17401,8 +17466,6 @@ google.maps.maps3d.PlaceClickEvent.prototype.placeId;
 google.maps.maps3d.PlaceClickEvent.prototype.fetchPlace = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A 3D polygon (like a 3D polyline) defines a series of connected coordinates
  * in an ordered sequence. Additionally, polygons form a closed loop and define
  * a filled region.
@@ -17511,8 +17574,6 @@ google.maps.maps3d.Polygon3DElement.prototype.innerCoordinates;
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Polygon3DElementOptions object used to define the properties that can be set
  * on a Polygon3DElement.
  * @record
@@ -17580,8 +17641,6 @@ google.maps.maps3d.Polygon3DElementOptions.prototype.strokeWidth;
 google.maps.maps3d.Polygon3DElementOptions.prototype.zIndex;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A 3D polygon (like a 3D polyline) defines a series of connected coordinates
  * in an ordered sequence. Additionally, polygons form a closed loop and define
  * a filled region. Unlike <code>Polygon3DElement</code>,
@@ -17601,8 +17660,6 @@ google.maps.maps3d.Polygon3DInteractiveElement = function(options) {};
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Polygon3DInteractiveElementOptions object used to define the properties that
  * can be set on a Polygon3DInteractiveElement.
  * @extends {google.maps.maps3d.Polygon3DElementOptions}
@@ -17611,8 +17668,6 @@ google.maps.maps3d.Polygon3DInteractiveElement = function(options) {};
 google.maps.maps3d.Polygon3DInteractiveElementOptions = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A 3D polyline is a linear overlay of connected line segments on a 3D map.
  *
  * Access by calling `const {Polyline3DElement} = await
@@ -17708,8 +17763,6 @@ google.maps.maps3d.Polyline3DElement.prototype.coordinates;
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Polyline3DElementOptions object used to define the properties that can be set
  * on a Polyline3DElement.
  * @record
@@ -17777,8 +17830,6 @@ google.maps.maps3d.Polyline3DElementOptions.prototype.strokeWidth;
 google.maps.maps3d.Polyline3DElementOptions.prototype.zIndex;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A 3D polyline is a linear overlay of connected line segments on a 3D map.
  * Unlike <code>Polyline3DElement</code>,
  * <code>Polyline3DInteractiveElement</code> receives a <code>gmp-click</code>
@@ -17797,8 +17848,6 @@ google.maps.maps3d.Polyline3DInteractiveElement = function(options) {};
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Polyline3DInteractiveElementOptions object used to define the properties that
  * can be set on a Polyline3DInteractiveElement.
  * @extends {google.maps.maps3d.Polyline3DElementOptions}
@@ -17807,8 +17856,6 @@ google.maps.maps3d.Polyline3DInteractiveElement = function(options) {};
 google.maps.maps3d.Polyline3DInteractiveElementOptions = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A custom HTML element that renders a popover. It looks like a bubble and is
  * often connected to a marker.
  *
@@ -17858,8 +17905,6 @@ google.maps.maps3d.PopoverElement.prototype.positionAnchor;
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * PopoverElementOptions object used to define the properties that can be set on
  * a PopoverElement.
  * @record
@@ -17891,8 +17936,6 @@ google.maps.maps3d.PopoverElementOptions.prototype.open;
 google.maps.maps3d.PopoverElementOptions.prototype.positionAnchor;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * This event is created from monitoring a steady state of
  * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
  *
@@ -18161,12 +18204,11 @@ google.maps.marker.AdvancedMarkerElementOptions.prototype.zIndex;
 /**
  * A <code>PinElement</code> represents a DOM element that consists of a shape
  * and a glyph. The shape has the same balloon style as seen in the
- * default {@link google.maps.marker.AdvancedMarkerElement}. The glyph is an
- * optional DOM element displayed in the balloon shape. A
- * <code>PinElement</code> may have a different aspect ratio depending on
- * its {@link google.maps.marker.PinElement.scale}.<br> <br>
- * <strong>Note:</strong> Usage as a Web Component (e.g. usage as an HTMLElement
- * subclass, or via HTML) is not yet supported.
+ * default {@link google.maps.marker.AdvancedMarkerElement} or {@link
+ * google.maps.maps3d.Marker3DElement}. The glyph is an optional DOM element
+ * displayed in the balloon shape. A <code>PinElement</code> may have a
+ * different aspect ratio depending on its {@link
+ * google.maps.marker.PinElement.scale}.<br> <br>
  *
  * Access by calling `const {PinElement} = await
  * google.maps.importLibrary("marker")`. See
