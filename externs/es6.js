@@ -2487,6 +2487,15 @@ Atomics.sub = function(typedArray, index, value) {};
 Atomics.wait = function(typedArray, index, value, timeout) {};
 
 /**
+ * @param {!Int32Array|!BigInt64Array} typedArray
+ * @param {number} index
+ * @param {number} value
+ * @param {number=} timeout
+ * @return {!Promise<string>}
+ */
+Atomics.waitAsync = function(typedArray, index, value, timeout) {};
+
+/**
  * @param {!Int32Array} typedArray
  * @param {number} index
  * @param {number=} count
