@@ -1312,16 +1312,14 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         };
         """,
         """
-        const CLASS_DECL$0 = class {
+        const GlobalName = class {
           method() {
-            return CLASS_DECL$0.staticMethod();
+            return GlobalName.staticMethod();
           }
           static staticMethod() {
             console.log("staticMethod");
           }
         };
-        /** @constructor */
-        const GlobalName = null;
         """);
   }
 
@@ -1341,16 +1339,14 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         """,
         """
         const GlobalName = {};
-        const CLASS_DECL$0 = class {
+        GlobalName.prop = class {
           method() {
-            return CLASS_DECL$0.staticMethod();
+            return GlobalName.prop.staticMethod();
           }
           static staticMethod() {
             console.log("staticMethod");
           }
         };
-        /** @constructor */
-        GlobalName.prop = null;
         """);
   }
 
@@ -1370,16 +1366,14 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         GlobalName = function SecondValue() {}
         """,
         """
-        const CLASS_DECL$0 = class {
+        let GlobalName = class {
           method() {
-            return CLASS_DECL$0.staticMethod();
+            return GlobalName.staticMethod();
           }
           static staticMethod() {
             console.log("staticMethod");
           }
         };
-        /** @constructor */
-        let GlobalName = CLASS_DECL$0;
         GlobalName = function SecondValue() {};
         """);
   }
@@ -1397,13 +1391,11 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         """,
         """
         const GlobalName = {};
-        const CLASS_DECL$0 = class {
+        GlobalName.prop = class {
           method() {
-            return this instanceof CLASS_DECL$0;
+            return this instanceof GlobalName.prop;
           }
         };
-        /** @constructor */
-        GlobalName.prop = null;
         """);
   }
 

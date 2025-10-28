@@ -59,43 +59,69 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   @Test
   public void testSelfReference1() {
     test(
-        "var Outer = class Inner { constructor() { alert(Inner); } };",
         """
-        const CLASS_DECL$0 = class {
-          constructor() { alert(CLASS_DECL$0); }
+        var Outer = class Inner {
+          constructor() {
+            alert(Inner);
+          }
         };
-        /** @constructor */
-        var Outer=CLASS_DECL$0
+        """,
+        """
+        var Outer = class {
+          constructor() {
+            alert(Outer);
+          }
+        };
         """);
 
     test(
-        "let Outer = class Inner { constructor() { alert(Inner); } };",
         """
-        const CLASS_DECL$0 = class {
-          constructor() { alert(CLASS_DECL$0); }
+        let Outer = class Inner {
+          constructor() {
+            alert(Inner);
+          }
         };
-        /** @constructor */
-        let Outer=CLASS_DECL$0
+        """,
+        """
+        let Outer = class {
+          constructor() {
+            alert(Outer);
+          }
+        };
         """);
 
     test(
-        "const Outer = class Inner { constructor() { alert(Inner); } };",
         """
-        const CLASS_DECL$0 = class {
-          constructor() { alert(CLASS_DECL$0); }
+        const Outer = class Inner {
+          constructor() {
+            alert(Inner);
+          }
         };
-        /** @constructor */
-        const Outer=CLASS_DECL$0
+        """,
+        """
+        const Outer = class {
+          constructor() {
+            alert(Outer);
+          }
+        };
         """);
   }
 
   @Test
   public void testSelfReference2() {
     test(
-        "alert(class C { constructor() { alert(C); } });",
+        """
+        alert(class C {
+          constructor() {
+            alert(C);
+          }
+        });
+        """,
         """
         const CLASS_DECL$0 = class {
-          constructor() { alert(CLASS_DECL$0); }
+          constructor() {
+            alert(CLASS_DECL$0);
+          }
         };
         alert(CLASS_DECL$0)
         """);
@@ -106,14 +132,24 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     test(
         """
         alert(class C {
-          m1() { class C {}; alert(C); }
-          m2() { alert(C); }
+          m1() {
+            class C {};
+            alert(C);
+          }
+          m2() {
+            alert(C);
+          }
         });
         """,
         """
         const CLASS_DECL$0 = class {
-          m1() { class C {}; alert(C); }
-          m2() { alert(CLASS_DECL$0); }
+          m1() {
+            class C {};
+            alert(C);
+          }
+          m2() {
+            alert(CLASS_DECL$0);
+          }
         };
         alert(CLASS_DECL$0)
         """);
@@ -130,14 +166,12 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             """),
         expected(
             """
-            /** @const */ const CLASS_DECL$0=class {
-              constructor(){ alert(CLASS_DECL$0); }
+            /** @const */
+            var module$exports$example = class {
+              constructor() {
+                alert(module$exports$example);
+              }
             };
-            /**
-             * @constructor
-             * @const
-             */
-            var module$exports$example=CLASS_DECL$0
             """));
   }
 
@@ -146,19 +180,23 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     test(
         """
         const outer = {};
-        /** @const */ outer.qual = {};
-        outer.qual.Name = class Inner { constructor() { alert(Inner); } };
+        /** @const */
+        outer.qual = {};
+        outer.qual.Name = class Inner {
+          constructor() {
+            alert(Inner);
+          }
+        };
         """,
         """
         const outer = {};
-        /** @const */ outer.qual = {};
-        const CLASS_DECL$0 = class {
+        /** @const */
+        outer.qual = {};
+        outer.qual.Name = class {
           constructor() {
-            alert(CLASS_DECL$0);
+            alert(outer.qual.Name);
           }
         };
-        /** @constructor */
-        outer.qual.Name = CLASS_DECL$0;
         """);
   }
 
@@ -197,9 +235,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     test(
         "/** @unrestricted */ var foo = class bar {};",
         """
-        const CLASS_DECL$0 = class {};
-        /** @constructor */
-        var foo = CLASS_DECL$0;
+        var foo = class {};
         """);
   }
 

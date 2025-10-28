@@ -1040,17 +1040,15 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        const CLASS_DECL$0 = class {
+        let c = class {
           constructor() {
-            this[2] = CLASS_DECL$0[1];
+            this[2] = c[1];
           }
-          static STATIC_INIT$1() {
-            CLASS_DECL$0[1] = 2;
+          static STATIC_INIT$0() {
+            c[1] = 2;
           }
         };
-        CLASS_DECL$0.STATIC_INIT$1();
-        /** @constructor */
-        let c = CLASS_DECL$0;
+        c.STATIC_INIT$0();
         """);
 
     test(
@@ -1190,16 +1188,14 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        const CLASS_DECL$0 = class {
-          static STATIC_INIT$1() {
-            CLASS_DECL$0[1] = 1;
-            CLASS_DECL$0[2] = CLASS_DECL$0[1];
-            CLASS_DECL$0[3] = CLASS_DECL$0[2];
+        const C = class {
+          static STATIC_INIT$0() {
+            C[1] = 1;
+            C[2] = C[1];
+            C[3] = C[2];
           }
         };
-        CLASS_DECL$0.STATIC_INIT$1();
-        /** @constructor */
-        const C = CLASS_DECL$0;
+        C.STATIC_INIT$0();
         """);
 
     test(
@@ -1211,15 +1207,13 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        const CLASS_DECL$0 = class {
-          static STATIC_INIT$1() {
-            CLASS_DECL$0[1] = 2;
-            CLASS_DECL$0[2] = CLASS_DECL$0[1];
+        let c = class {
+          static STATIC_INIT$0() {
+            c[1] = 2;
+            c[2] = c[1];
           }
         };
-        CLASS_DECL$0.STATIC_INIT$1();
-        /** @constructor */
-        let c = CLASS_DECL$0;
+        c.STATIC_INIT$0();
         """);
 
     test(
@@ -2341,17 +2335,15 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        const CLASS_DECL$0 = class {
-          static STATIC_INIT$1() {
+        let c = class {
+          static STATIC_INIT$0() {
             {
-              CLASS_DECL$0.y = 2;
-              let x = CLASS_DECL$0.y;
+              c.y = 2;
+              let x = c.y;
             }
           }
         };
-        CLASS_DECL$0.STATIC_INIT$1();
-        /** @constructor */
-        let c = CLASS_DECL$0;
+        c.STATIC_INIT$0();
         """);
 
     test(
@@ -2541,15 +2533,13 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        const CLASS_DECL$0 = class {
-          static STATIC_INIT$1() {
-            CLASS_DECL$0.y = 2;
-            CLASS_DECL$0.x = CLASS_DECL$0.y;
+        let c = class {
+          static STATIC_INIT$0() {
+            c.y = 2;
+            c.x = c.y;
           }
         };
-        CLASS_DECL$0.STATIC_INIT$1();
-        /** @constructor */
-        let c = CLASS_DECL$0;
+        c.STATIC_INIT$0();
         """);
 
     test(
@@ -2614,13 +2604,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        const CLASS_DECL$0 = class {
+        let c = class {
           constructor() {
             this.y = 2;
           }
         };
-        /** @constructor */
-        let c = CLASS_DECL$0;
         """);
 
     test(
@@ -2661,13 +2649,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        const CLASS_DECL$0 = class {
+        let c = class {
           constructor() {
             this.y = 2;
           }
         };
-        /** @constructor */
-        let c = CLASS_DECL$0;
         """);
 
     test(
@@ -2679,13 +2665,12 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class A {}
-        const CLASS_DECL$0 = class {
+        A.c = class {
           constructor() {
             this.y = 2;
           }
         };
-        /** @constructor */
-        A.c = CLASS_DECL$0;
+
         """);
 
     test(

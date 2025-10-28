@@ -389,23 +389,16 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "var C = class C { }",
         """
-        /** @const @constructor */
-        var CLASS_DECL$0 = function() {
-        };
         /** @constructor */
-        var C = CLASS_DECL$0;
+        var C = function() {};
         """);
 
     test(
         "var C = class C { foo() {} }",
         """
-        /** @const @constructor */
-        var CLASS_DECL$0 = function() {
-        };
-        CLASS_DECL$0.prototype.foo = function() {
-        };
         /** @constructor */
-        var C = CLASS_DECL$0;
+        var C = function() {};
+        C.prototype.foo = function() {};
         """);
   }
 
@@ -1238,21 +1231,15 @@ $jscomp.inherits(FooPromise, Promise);
     test(
         "var F = class G {}",
         """
-        /** @const @constructor */
-        var CLASS_DECL$0 = function() {
-        };
         /** @constructor */
-        var F = CLASS_DECL$0;
+        var F = function() {};
         """);
 
     test(
         "F = class G {}",
         """
-        /** @const @constructor */
-        var CLASS_DECL$0 = function() {
-        };
         /** @constructor */
-        F = CLASS_DECL$0;
+        F = function() {};
         """);
   }
 

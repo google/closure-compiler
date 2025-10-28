@@ -487,9 +487,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         "var C = class C { }",
         """
         /** @constructor */
-        const CLASS_DECL$0 = function() {};
-        /** @constructor */
-        var C = CLASS_DECL$0;
+        var C = function() {};
         """);
   }
 
@@ -499,11 +497,8 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         "var C = class C { foo() {} }",
         """
         /** @constructor */
-        const CLASS_DECL$0 = function() {}
-        CLASS_DECL$0.prototype.foo = function() {};
-
-        /** @constructor */
-        var C = CLASS_DECL$0;
+        var C = function() {};
+        C.prototype.foo = function() {};
         """);
   }
 
@@ -1689,9 +1684,7 @@ $jscomp.inherits(FooPromise, Promise);
         "var F = class G {}",
         """
         /** @constructor */
-        const CLASS_DECL$0 = function(){};
-        /** @constructor */
-        var F = CLASS_DECL$0;
+        var F = function() {};
         """);
   }
 
@@ -1701,9 +1694,7 @@ $jscomp.inherits(FooPromise, Promise);
         "F = class G {}",
         """
         /** @constructor */
-        const CLASS_DECL$0 = function(){};
-        /** @constructor */
-        F = CLASS_DECL$0;
+        F = function() {};
         """);
   }
 

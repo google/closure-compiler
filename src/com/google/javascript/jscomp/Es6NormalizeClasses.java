@@ -173,15 +173,13 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
 
         // Finally, create the ClassRecord which will be referenced when we visit the class later.
 
-        // Name of the class as a qualified string.
-        String className = checkNotNull(NodeUtil.getName(n));
-        // The class name for declarations and class expression inner names.
-        Optional<Node> bindingIdentifier =
-            n.getFirstChild().isName() ? Optional.of(n.getFirstChild()) : Optional.empty();
         // Either the assigned name for a class expression or the class declaration name (in which
         // case this would be the same as `bindingIdentifier`).
         Node classNameNode = NodeUtil.getNameNode(n);
         checkState(classNameNode != null, "Class missing a name: %s", n);
+        // The class name for declarations and class expression inner names.
+        Optional<Node> bindingIdentifier =
+            n.getFirstChild().isName() ? Optional.of(n.getFirstChild()) : Optional.empty();
         Optional<Node> superClassNameNode =
             n.getSecondChild().isQualifiedName()
                 ? Optional.of(n.getSecondChild())
@@ -190,10 +188,9 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
         checkState(classInsertionPoint != null, "Class was not extracted: %s", n);
         classStack.addFirst(
             new ClassRecord(
-                className,
-                bindingIdentifier,
-                n,
                 classNameNode,
+                bindingIdentifier,
+                /* classNode= */ n,
                 superClassNameNode,
                 classInsertionPoint));
       }
@@ -328,11 +325,9 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
    */
   private boolean shouldExtractClass(Node classNode) {
     Node parent = classNode.getParent();
-    boolean isAnonymous = classNode.getFirstChild().isEmpty();
     if (NodeUtil.isClassDeclaration(classNode)
-        || (isAnonymous && parent.isName())
-        || (isAnonymous
-            && parent.isAssign()
+        || parent.isName()
+        || (parent.isAssign()
             && parent.getFirstChild().isQualifiedName()
             && parent.getParent().isExprResult())) {
       // No need to extract. Handled directly by Es6ToEs3Converter.ClassDeclarationMetadata#create.
@@ -775,7 +770,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       if (
       // Skip if the inner class name is the same as the class name (either this is a class
       // declaration or the outer and inner class names are the same).
-      bindingIdentifier.getString().equals(klass.className)
+      bindingIdentifier.getString().equals(klass.classNameNode.getQualifiedName())
           // Skip if this IS the inner class name node (removed later when we visit the class).
           || nameNode == bindingIdentifier
           // Skip if this nameNode is not equal to the inner class name.
@@ -790,11 +785,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
         continue;
       }
 
-      Node newNameNode = astFactory.createName(klass.className, type(nameNode)).srcref(nameNode);
-      checkState(klass.className.contains(CLASS_DECL_VAR), klass.className);
-      // Explicitly mark the usage node as constant as the declaration is marked constant
-      // when this pass runs post normalization because of b/322009741
-      newNameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+      Node newNameNode = klass.createNewNameReferenceNode().srcref(nameNode);
       nameNode.replaceWith(newNameNode);
       compiler.reportChangeToEnclosingScope(newNameNode);
 
@@ -896,7 +887,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
 
   private static class ClassRecord {
     /**
-     * The qualified class name as a string.
+     * The node for the qualified name of the class.
      *
      * <p>{@code "C"} as in:
      *
@@ -912,7 +903,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
      *   <li>{@code const ns = {}; ns.C = class {};}
      * </ul>
      */
-    final String className;
+    final Node classNameNode;
 
     /**
      * The binding identifier (a.k.a. name node) of the class itself.
@@ -934,9 +925,6 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
 
     /** The node for `class` in both class declarations and class expressions. */
     final Node classNode;
-
-    /** The name node of the class. See {@link #className}. */
-    final Node classNameNode;
 
     /**
      * The name node of the super class, if present.
@@ -967,16 +955,14 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     ImmutableSet<Var> constructorVars = ImmutableSet.of();
 
     ClassRecord(
-        String className,
+        Node classNameNode,
         Optional<Node> bindingIdentifier,
         Node classNode,
-        Node classNameNode,
         Optional<Node> superClassNameNode,
         Node insertionPoint) {
-      this.className = className;
+      this.classNameNode = classNameNode;
       this.bindingIdentifier = bindingIdentifier;
       this.classNode = classNode;
-      this.classNameNode = classNameNode;
       this.superClassNameNode = superClassNameNode;
       this.insertionPoint = insertionPoint;
     }

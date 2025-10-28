@@ -3832,13 +3832,11 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             """),
         expected(
             """
-            var CLASS_DECL$0$baz = function(n) {
+            var Bar$baz = function(n) {
               use(n);
             };
-            const CLASS_DECL$0 = class {};
-            /** @constructor */
-            const Bar = null;
-            CLASS_DECL$0$baz();
+            const Bar = class {};
+            Bar$baz();
             """));
   }
 
@@ -3854,13 +3852,11 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         Bar.baz();
         """,
         """
-        var CLASS_DECL$0$baz = function(n) {
-          use(CLASS_DECL$0);
+        var Bar$baz = function(n) {
+          use(Bar);
         };
-        const CLASS_DECL$0 = class {};
-        /** @constructor */
-        const Bar = null;
-        CLASS_DECL$0$baz();
+        const Bar = class {};
+        Bar$baz();
         """);
   }
 
@@ -3879,14 +3875,12 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             """),
         expected(
             """
-            const CLASS_DECL$0 = class {
+            const Bar = class {
               method() {
-                return CLASS_DECL$0$Enum$E1;
+                return Bar$Enum$E1;
               }
             };
-            /** @constructor */
-            const Bar = null;
-            var CLASS_DECL$0$Enum$E1 = 1;
+            var Bar$Enum$E1 = 1;
             """));
   }
 
@@ -3902,15 +3896,13 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         Bar.baz();
         """,
         """
-        var CLASS_DECL$0$baz = function(n) {
+        var Bar$baz = function(n) {
           return function() {
-            use(CLASS_DECL$0);
+            use(Bar);
           };
         };
-        const CLASS_DECL$0 = class {};
-        /** @constructor */
-        const Bar = null;
-        CLASS_DECL$0$baz();
+        const Bar = class {};
+        Bar$baz();
         """);
   }
 

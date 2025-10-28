@@ -3693,28 +3693,26 @@ use(Foo$Bar$baz$A);
         alert(OuterName.sf3);
         """,
         """
-        var CLASS_DECL$0$$0jscomp$0staticInit$0m1146332801$01 = function() {
-          CLASS_DECL$0$sf1 = 1;
-          CLASS_DECL$0$sf2 = CLASS_DECL$0$sf1;
-          CLASS_DECL$0$sf3 = CLASS_DECL$0$sf2;
+        var OuterName$$0jscomp$0staticInit$0m1146332801$00 = function() {
+          OuterName$sf1 = 1;
+          OuterName$sf2 = OuterName$sf1;
+          OuterName$sf3 = OuterName$sf2;
           {
-            Object.defineProperties(CLASS_DECL$0.prototype, {bar:{value:1}});
-            CLASS_DECL$0$sf2++;
-            CLASS_DECL$0$sf3++;
+            Object.defineProperties(OuterName.prototype, {bar:{value:1}});
+            OuterName$sf2++;
+            OuterName$sf3++;
           }
         };
-        const CLASS_DECL$0 = class {
+        const OuterName = class {
           static sf1;
           static sf2;
           static sf3;
         };
-        var CLASS_DECL$0$sf1;
-        var CLASS_DECL$0$sf2;
-        var CLASS_DECL$0$sf3;
-        CLASS_DECL$0$$0jscomp$0staticInit$0m1146332801$01();
-        /** @constructor */
-        const OuterName = null;
-        alert(CLASS_DECL$0$sf3);
+        var OuterName$sf1;
+        var OuterName$sf2;
+        var OuterName$sf3;
+        OuterName$$0jscomp$0staticInit$0m1146332801$00();
+        alert(OuterName$sf3);
         """);
   }
 

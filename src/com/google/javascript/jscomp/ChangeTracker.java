@@ -166,7 +166,7 @@ public final class ChangeTracker {
 
     n.setChangeTime(changeStamp);
     // Every code change happens at a different time
-    changeStamp++;
+    incrementChangeStamp();
     changeTimeline.add(n);
   }
 }
