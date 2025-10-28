@@ -723,6 +723,74 @@ public final class GlobalNamespaceTest {
   }
 
   @Test
+  public void testClassStaticField_withInitializer() {
+    GlobalNamespace ns =
+        parse(
+            """
+            class C {
+              static x = 1;
+            }
+            """);
+
+    Name c = ns.getSlot("C");
+    Name cDotX = ns.getSlot("C.x");
+
+    assertThat(c.getGlobalSets()).isEqualTo(1);
+    assertThat(c.props).containsExactly(cDotX);
+
+    assertThat(cDotX.getGlobalSets()).isEqualTo(1);
+    assertThat(cDotX.getParent()).isEqualTo(c);
+    assertThat(cDotX.canCollapse()).isTrue();
+  }
+
+  @Test
+  public void testClassStaticField_withoutInitializer() {
+    GlobalNamespace ns =
+        parse(
+            """
+            class C {
+              /** @type {number} */
+              static x;
+            }
+            """);
+
+    Name c = ns.getSlot("C");
+    Name cDotX = ns.getSlot("C.x");
+
+    assertThat(c.getGlobalSets()).isEqualTo(1);
+    assertThat(c.props).containsExactly(cDotX);
+
+    assertThat(cDotX.getGlobalSets()).isEqualTo(1);
+    assertThat(cDotX.getParent()).isEqualTo(c);
+    assertThat(cDotX.canCollapse()).isTrue();
+
+    JSDocInfo jsDocInfo = cDotX.getJSDocInfo();
+    assertThat(jsDocInfo).isNotNull();
+    JSTypeExpression jsTypeExpression = jsDocInfo.getType();
+    assertThat(jsTypeExpression).isNotNull();
+    JSType jsType = jsTypeExpression.evaluate(/* scope= */ null, lastCompiler.getTypeRegistry());
+    assertType(jsType).isNumber();
+  }
+
+  @Test
+  public void testClassStaticField_withSuper() {
+    this.assumeStaticInheritanceIsNotUsed = false;
+    GlobalNamespace ns =
+        parse(
+            """
+            class A {
+              static y = 1;
+            }
+            class C extends A {
+              static x = super.y;
+            }
+            """);
+
+    Name cDotX = ns.getSlot("C.x");
+    assertThat(cDotX.canCollapse()).isFalse();
+  }
+
+  @Test
   public void testClassStaticAndPrototypePropWithSameName() {
     GlobalNamespace ns = parse("class C { x() {} static x() {} }");
 

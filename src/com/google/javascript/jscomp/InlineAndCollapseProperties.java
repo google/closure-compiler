@@ -371,8 +371,8 @@ class InlineAndCollapseProperties implements CompilerPass {
     }
 
     /**
-     * If the global name is a class or function with an inner-scope name, inline references to that
-     * name with the global name.
+     * If the global name is a function with an inner-scope name, inline references to that name
+     * with the global name. Class inner name rewrites are handled in {@link Es6NormalizeClasses}.
      *
      * <p>e.g.
      *
@@ -381,12 +381,6 @@ class InlineAndCollapseProperties implements CompilerPass {
      *     // change this to globalFunction.someProp
      *     use(innerName.someProp);
      *   }
-     *   var GlobalClass = class InnerName {
-     *     method() {
-     *       // change this to GlobalClass.someProp
-     *       use(InnerName.someProp);
-     *     }
-     *   };
      * </code></pre>
      */
     private void maybeInlineInnerName(Name globalName) {
@@ -1367,7 +1361,7 @@ class InlineAndCollapseProperties implements CompilerPass {
           || propertyCollapseLevel != PropertyCollapseLevel.MODULE_EXPORT) {
         return true;
       }
-      
+
       return false;
     }
 
@@ -1685,7 +1679,7 @@ class InlineAndCollapseProperties implements CompilerPass {
         String alias, Node n, Node parent, String originalName, boolean isConstantName) {
       Preconditions.checkArgument(
           n.isGetProp(), "Expected GETPROP, found %s. Node: %s", n.getToken(), n);
-      
+
       // BEFORE:
       //   getprop
       //     getprop
@@ -1704,7 +1698,7 @@ class InlineAndCollapseProperties implements CompilerPass {
         // the "this" isn't provided by the namespace. Mark it as such:
         parent.putBooleanProp(Node.FREE_CALL, true);
       }
-      
+
       n.replaceWith(ref);
       compiler.reportChangeToEnclosingScope(ref);
     }
@@ -2040,9 +2034,11 @@ class InlineAndCollapseProperties implements CompilerPass {
 
     /**
      * Updates the first initialization (a.k.a "declaration") of a global name that occurs in a
-     * static MEMBER_FUNCTION_DEF in a class. See comment for {@link #updateGlobalNameDeclaration}.
+     * static MEMBER_FUNCTION_DEF or MEMBER_FIELD_DEF in a class. See comment for {@link
+     * #updateGlobalNameDeclaration}.
      *
-     * @param n A static MEMBER_FUNCTION_DEF in a class assigned to a global name (e.g. `a.b`)
+     * @param n A static MEMBER_FUNCTION_DEF or MEMBER_FIELD_DEF in a class assigned to a global
+     *     name (e.g. `a.b`)
      * @param alias The new flattened name for `n` (e.g. "a$b")
      * @param canCollapseChildNames whether properties of `n` are also collapsible, meaning that any
      *     properties only assigned locally need stub declarations
@@ -2060,17 +2056,24 @@ class InlineAndCollapseProperties implements CompilerPass {
       }
 
       // detach `static m() {}` from `class Foo { static m() {} }`
-      Node memberFn = declaration.getNode().detach();
-      Node fnNode = memberFn.getOnlyChild().detach();
-      checkForReceiverAffectedByCollapse(fnNode, memberFn.getJSDocInfo(), n);
+      Node member = declaration.getNode().detach();
+      Node varDecl;
+      if (member.hasChildren()) {
+        Node memberVal = member.getOnlyChild();
+        checkForReceiverAffectedByCollapse(memberVal, member.getJSDocInfo(), n);
+        memberVal = memberVal.detach();
 
-      // add a var declaration, creating `var Foo$m = function() {}; class Foo {}`
-      Node varDecl = IR.var(NodeUtil.newName(compiler, alias, memberFn), fnNode).srcref(memberFn);
+        // add a var declaration, creating `var Foo$m = function() {}; class Foo {}`
+        varDecl = IR.var(NodeUtil.newName(compiler, alias, member), memberVal).srcref(member);
+      } else {
+        // Member field defs may not have initializers.
+        varDecl = IR.var(NodeUtil.newName(compiler, alias, member)).srcref(member);
+      }
       varDecl.insertBefore(enclosingStatement);
       // We would lose optimization-relevant jsdoc tags here because they are stored on the class
       // member node, not the function node. Copy them over to the new declaration statement so
       // later passes can make use of them.
-      varDecl.setJSDocInfo(memberFn.getJSDocInfo());
+      varDecl.setJSDocInfo(member.getJSDocInfo());
       compiler.reportChangeToEnclosingScope(varDecl);
 
       // collapsing this name's properties requires updating this Ref

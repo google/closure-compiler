@@ -461,13 +461,20 @@ class GlobalNamespace
       NameProp type = NameProp.OTHER_OBJECT;
 
       switch (n.getToken()) {
-        case GETTER_DEF, SETTER_DEF, MEMBER_FUNCTION_DEF -> {
+        case GETTER_DEF, SETTER_DEF, MEMBER_FUNCTION_DEF, MEMBER_FIELD_DEF -> {
           if (parent.isClassMembers() && !n.isStaticMember()) {
             return; // Within a class, only static members define global names.
           }
           name = NodeUtil.getBestLValueName(n);
           isSet = true;
-          type = n.isMemberFunctionDef() ? NameProp.FUNCTION : NameProp.GET_SET;
+
+          if (n.isMemberFunctionDef()) {
+            type = NameProp.FUNCTION;
+          } else if (n.isMemberFieldDef()) {
+            type = NameProp.OTHER_OBJECT;
+          } else {
+            type = NameProp.GET_SET;
+          }
         }
         case STRING_KEY -> {
           name = null;
@@ -1957,7 +1964,13 @@ class GlobalNamespace
       if (member == null || !(member.isStaticMember() && member.getParent().isClassMembers())) {
         return false;
       }
-      if (NodeUtil.referencesSuper(NodeUtil.getFunctionBody(member.getFirstChild()))) {
+      // Get either the function body or the member field initializer (which may be null if there is
+      // no initializer).
+      Node body =
+          member.isMemberFieldDef()
+              ? member.getFirstChild()
+              : NodeUtil.getFunctionBody(member.getFirstChild());
+      if (body != null && NodeUtil.referencesSuper(body)) {
         return true;
       }
 

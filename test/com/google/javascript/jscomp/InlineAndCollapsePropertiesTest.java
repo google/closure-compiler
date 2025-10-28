@@ -2874,6 +2874,73 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testEs6ClassStaticProperties_asStaticField() {
+    // Collapsing static properties (A.foo and A.useFoo in this case) is known to be unsafe.
+    test(
+        srcs(
+            """
+            class A {
+              static useFoo() {
+                alert(this.foo);
+              }
+              static foo = 'bar';
+            }
+            const B = A;
+            B.foo = 'baz';
+            B.useFoo();
+            """),
+        expected(
+            """
+            var A$useFoo = function() {
+              alert(this.foo);
+            };
+            var A$foo;
+            var A$$0jscomp$0staticInit$0m1146332801$00 = function() {
+              A$foo = "bar";
+            };
+            class A {}
+            A$$0jscomp$0staticInit$0m1146332801$00();
+            const B = null;
+            A$foo = "baz";
+            A$useFoo();
+            """),
+        warning(RECEIVER_AFFECTED_BY_COLLAPSE));
+
+    // Adding @nocollapse makes this safe.
+    test(
+        """
+        class A {
+          /** @nocollapse */
+          static useFoo() {
+            alert(this.foo);
+          }
+          /** @nocollapse */
+          static foo = 'bar';
+        }
+        const B = A;
+        B.foo = 'baz';
+        B.useFoo();
+        """,
+        """
+        var A$$0jscomp$0staticInit$0m1146332801$00 = function() {
+          A.foo = "bar";
+        };
+        class A {
+          /** @nocollapse */
+          static useFoo() {
+            alert(this.foo);
+          }
+          /** @nocollapse */
+          static foo;
+        }
+        A$$0jscomp$0staticInit$0m1146332801$00();
+        const B = null;
+        A.foo = "baz";
+        A.useFoo();
+        """);
+  }
+
+  @Test
   public void testClassStaticInheritance_method() {
     test(
         "class A { static s() {} } class B extends A {} const C = B;    C.s();", //
@@ -3516,6 +3583,8 @@ use(Foo$Bar$baz$A);
           return n * 2;
         };
         class Bar {}
+        var Baz$val1;
+        var Baz$val2;
         var Baz$$0jscomp$0staticInit$0m1146332801$00 = function() {
           {
             Baz$val1 = Bar$double(5);
@@ -3527,11 +3596,7 @@ use(Foo$Bar$baz$A);
           static quadruple(n$jscomp$1) {
             return 2 * Bar$double(n$jscomp$1);
           }
-          static val1;
-          static val2;
         }
-        var Baz$val1;
-        var Baz$val2;
         Baz$$0jscomp$0staticInit$0m1146332801$00();
         """);
   }
@@ -3651,6 +3716,10 @@ use(Foo$Bar$baz$A);
         var Baz$double = function(n) {
           return 2 * n;
         };
+        var Baz$val1;
+        var Baz$val2;
+        var Baz$val3;
+        var Baz$val4;
         var Baz$$0jscomp$0staticInit$0m1146332801$00 = function() {
           {
             Baz$val1 = Baz$double(1);
@@ -3661,16 +3730,7 @@ use(Foo$Bar$baz$A);
           Baz$val3 = Baz$double(3);
           Baz$val4 = Baz$double(4);
         };
-        class Baz extends Bar {
-          static val1;
-          static val2;
-          static val3;
-          static val4;
-        }
-        var Baz$val1;
-        var Baz$val2;
-        var Baz$val3;
-        var Baz$val4;
+        class Baz extends Bar {}
         Baz$$0jscomp$0staticInit$0m1146332801$00();
         """);
   }
@@ -3693,6 +3753,9 @@ use(Foo$Bar$baz$A);
         alert(OuterName.sf3);
         """,
         """
+        var OuterName$sf1;
+        var OuterName$sf2;
+        var OuterName$sf3;
         var OuterName$$0jscomp$0staticInit$0m1146332801$00 = function() {
           OuterName$sf1 = 1;
           OuterName$sf2 = OuterName$sf1;
@@ -3703,14 +3766,7 @@ use(Foo$Bar$baz$A);
             OuterName$sf3++;
           }
         };
-        const OuterName = class {
-          static sf1;
-          static sf2;
-          static sf3;
-        };
-        var OuterName$sf1;
-        var OuterName$sf2;
-        var OuterName$sf3;
+        const OuterName = class {};
         OuterName$$0jscomp$0staticInit$0m1146332801$00();
         alert(OuterName$sf3);
         """);
