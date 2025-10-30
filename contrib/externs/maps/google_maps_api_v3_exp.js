@@ -9546,7 +9546,7 @@ google.maps.Size.prototype.width;
 
 /**
  * Compares two Sizes.
- * @param {google.maps.Size} other
+ * @param {!google.maps.Size|null} other
  * @return {boolean}
  */
 google.maps.Size.prototype.equals = function(other) {};
@@ -12827,69 +12827,6 @@ google.maps.drawing.OverlayType = {
    */
   RECTANGLE: 'rectangle',
 };
-
-/**
- * @const
- */
-google.maps.elevation = {};
-
-/**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
- * An HTML element that visually displays elevation data. Set the element&#39;s
- * <code>path</code> property to show a graph of elevation along the path. To
- * use the Elevation Element, enable the <a
- * href="https://console.cloud.google.com/marketplace/product/google/placewidgets.googleapis.com"
- * >Places UI Kit API</a> for your project in the Google Cloud console.
- *
- * Access by calling `const {ElevationElement} = await
- * google.maps.importLibrary("elevation")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {!google.maps.elevation.ElevationElementOptions=} options
- * @implements {google.maps.elevation.ElevationElementOptions}
- * @extends {HTMLElement}
- * @constructor
- */
-google.maps.elevation.ElevationElement = function(options) {};
-
-/**
- * The path along which to show elevation data. Line segments will be
- * interpolated in between the points of the array; even a small number of
- * points will still produce a detailed elevation graph. <br> If only one point
- * is provided, the widget will show the elevation number for that point.
- * @type {!Array<!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude>|null|undefined}
- */
-google.maps.elevation.ElevationElement.prototype.path;
-
-/**
- * Determines if elevation will be shown in feet/miles or meters/km. If
- * undefined, the widget will default to the preferred unit system for the
- * region specified in the API loader.
- * @type {!google.maps.UnitSystem|null|undefined}
- */
-google.maps.elevation.ElevationElement.prototype.unitSystem;
-
-
-
-/**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
- * Options for <code>ElevationElement</code>.
- * @record
- */
-google.maps.elevation.ElevationElementOptions = function() {};
-
-/**
- * See {@link google.maps.elevation.ElevationElement.path}
- * @type {!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
- */
-google.maps.elevation.ElevationElementOptions.prototype.path;
-
-/**
- * See {@link google.maps.elevation.ElevationElement.unitSystem}
- * @type {!google.maps.UnitSystem|null|undefined}
- */
-google.maps.elevation.ElevationElementOptions.prototype.unitSystem;
 
 /**
  * @const
