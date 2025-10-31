@@ -51,7 +51,6 @@ const TYPED_ARRAY_CLASSES = [
   'BigUint64Array',
 ];
 // LINT.ThenChange(
-// //depot/google3/third_party/java_src/jscomp/java/com/google/javascript/jscomp/RemoveUnusedCode.java:typed_array_classes,
 // //depot/google3/third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/util/polyfill.js:typed_array_classes
 // )
 

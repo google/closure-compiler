@@ -120,7 +120,6 @@ $jscomp.TYPED_ARRAY_CLASSES = (
         classes.push('BigUint64');
       }
       // LINT.ThenChange(
-      // //depot/google3/third_party/java_src/jscomp/java/com/google/javascript/jscomp/RemoveUnusedCode.java:typed_array_classes,
       // //depot/google3/third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/build_polyfill_table.js:typed_array_classes
       // )
       return classes;
