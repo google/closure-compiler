@@ -132,9 +132,8 @@ public final class CheckProvidesSorted implements NodeTraversal.Callback {
   }
 
   private void checkCanonical(NodeTraversal t) {
-    @Nullable
-    ImmutableList<String> canonicalProvides =
-        originalProvides.stream().distinct().sorted().collect(toImmutableList());
+    @Nullable ImmutableList<String> canonicalProvides =
+        originalProvides.stream().sorted().distinct().collect(toImmutableList());
     if (!originalProvides.equals(canonicalProvides)) {
       needsFix = true;
       replacement =
