@@ -156,6 +156,9 @@ public final class NodeSubject extends Subject {
       return;
     }
 
+    // If there's a text diff, always show the full actual JS. Intended to be machine-readable.
+    var parseableActual = System.getenv("NodeSubject.PARSEABLE_ACTUAL") != null;
+
     ArrayList<Fact> facts = new ArrayList<>();
     final String expectedOutputJs = serializeNode(expected);
     final String actualOutputJs = serializeNode(actual);
@@ -167,12 +170,15 @@ public final class NodeSubject extends Subject {
               .expectedText(mismatch.expected.toStringTree())
               .actualText(mismatch.actual.toStringTree())
               .build());
+    } else if (parseableActual) {
+      facts.add(
+          simpleFact("Actual JS (parseable): <<<" + applyGenericNames(actualOutputJs) + ">>>"));
     } else if (expectedOutputJs.trim().isEmpty()) {
       // Don't use the text diff fact because everything is new. Avoid prefixing the output with +.
       facts.add(
           simpleFact(
-              // Indent by 4 spaces.
               "Empty expected JS. Actual JS is:\n    "
+                  // Indent by 4 spaces.
                   + applyGenericNames(actualOutputJs).replace("\n", "\n    ")));
     } else {
       String expectedJsNormalized = applyGenericNames(expectedOutputJs);
