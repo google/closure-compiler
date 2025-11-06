@@ -97,13 +97,14 @@ public final class FeatureSetTest {
 
   @Test
   public void testEsNextAndNewer() {
-    // ES_NEXT, ES_UNSTABLE, and ES_UNSUPPORTED are moving targets that may or may not have any
-    // unique features.  If any of these `FeatureSet`s are identical to a lower FeatureSet,
-    // `version()` will return the lowest equivalent version that contains features.
-    // This could be es_XXX, es_next, etc. and will change as new features are added and removed
-    // from these `FeatureSet`s.
+    // ES_NEXT and ES_UNSTABLE contain *_RUNTIME features to make these feature sets NOT moving
+    // targets because polyfills can use "es_next" or "es_unstable" as their fromLang and we don't
+    // want to incorrectly prune the polyfills in the case that no features remain in the set.
     assertThat(FeatureSet.ES_NEXT.version()).isEqualTo("es_next");
     assertThat(FeatureSet.ES_UNSTABLE.version()).isEqualTo("es_unstable");
+
+    // ES_UNSUPPORTED is a moving target that may not have any unique features in which case it will
+    // resolve to "es_unstable". This will change as new features are added and removed.
     assertThat(FeatureSet.ES_UNSUPPORTED.version()).isEqualTo("es_unsupported");
   }
 

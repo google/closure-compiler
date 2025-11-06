@@ -588,6 +588,12 @@ public class TranspilationPasses {
             Feature.TRAILING_COMMA // transpiled away during Normalization
             );
 
+    // ES_NEXT_RUNTIME and ES_UNSTABLE_RUNTIME are not "real" features. They only exist to ensure
+    // that FeatureSet.ES_NEXT and FeatureSet.ES_UNSTABLE have distinct version names as some
+    // polyfills target "es_next" and "es_unstable" for their fromLang.
+    featuresToMarkRemoved =
+        featuresToMarkRemoved.with(Feature.ES_NEXT_RUNTIME, Feature.ES_UNSTABLE_RUNTIME);
+
     return createFeatureRemovalPass(passName, featuresToMarkRemoved);
   }
 }

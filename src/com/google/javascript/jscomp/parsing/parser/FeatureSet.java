@@ -263,7 +263,18 @@ public final class FeatureSet implements Serializable {
     // ES_NEXT: Features that are fully supported, but part of a language version that is not yet
     // fully supported
 
+    // Polyfill implementations can target "es_next" as their fromLang so we need to ensure that
+    // the "es_next" version name is distinct from the latest dated version so we don't incorrectly
+    // prune those polyfills.
+    ES_NEXT_RUNTIME("es_next runtime", LangVersion.ES_NEXT),
+
     // ES_UNSTABLE: Features fully supported in checks, but not fully supported everywhere else
+
+    // Polyfill implementations can target "es_unstable" as their fromLang so we need to ensure that
+    // the "es_unstable" version name is distinct from the latest dated version so we don't
+    // incorrectly prune those polyfills.
+    ES_UNSTABLE_RUNTIME("es_unstable runtime", LangVersion.ES_UNSTABLE),
+
     PUBLIC_CLASS_FIELDS("Public class fields", LangVersion.ES_NEXT), // Part of ES2022
 
     // ES 2022 adds https://github.com/tc39/proposal-class-static-block
@@ -275,7 +286,8 @@ public final class FeatureSet implements Serializable {
 
     // TypeScript type syntax that will never be implemented in browsers. Only used as an indicator
     // to the CodeGenerator that it should handle type syntax.
-    TYPE_ANNOTATION("type annotation", LangVersion.TYPESCRIPT);
+    TYPE_ANNOTATION("type annotation", LangVersion.TYPESCRIPT),
+    ; // End of list.
 
     private final String name;
     private final LangVersion version;
