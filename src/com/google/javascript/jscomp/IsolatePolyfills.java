@@ -304,6 +304,7 @@ class IsolatePolyfills implements CompilerPass {
       isTempVarInitialized = true;
       Node decl = IR.var(IR.name(POLYFILL_TEMP)).srcrefTree(srcref);
       compiler.getNodeForCodeInsertion(null).addChildToFront(decl);
+      compiler.reportChangeToEnclosingScope(decl);
     }
     // The same temporary variable is always used for every polyfill invocation. This is believed
     // to be safe and makes the code easier to generate and smaller. There's a change it will make
@@ -354,7 +355,7 @@ class IsolatePolyfills implements CompilerPass {
 
     Scope syntheticCodeScope =
         new SyntacticScopeCreator(compiler)
-            .createScope(compiler.getNodeForCodeInsertion(/* module= */ null), /* parent= */ null);
+            .createScope(compiler.getNodeForCodeInsertion(/* chunk= */ null), /* parent= */ null);
     Var syntheticVar = syntheticCodeScope.getVar(jscompLookupMethod.getString());
     // Don't error if we can't find a definition for jscompLookupMethod. It's possible that we are
     // running in transpileOnly mode and are not injecting runtime libraries.

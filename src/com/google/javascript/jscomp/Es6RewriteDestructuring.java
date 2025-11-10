@@ -889,7 +889,6 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
     }
 
     this.compiler.reportChangeToEnclosingScope(insertionPoint);
-    NodeUtil.markNewScopesChanged(insertionPoint, compiler);
   }
 
   /** for (const [a, b, c] of arr) */

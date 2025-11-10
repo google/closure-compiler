@@ -71,7 +71,7 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
           .getSynthesizedExternsInput()
           .getAstRoot(compiler)
           .addChildToBack(IR.var(IR.name("$jscomp$lookupPolyfilledValue")));
-      addPolyfillInjection(compiler.getNodeForCodeInsertion(/* module= */ null), compiler);
+      addPolyfillInjection(compiler.getNodeForCodeInsertion(/* chunk= */ null), compiler);
       new IsolatePolyfills(compiler, Polyfills.fromTable(Joiner.on("\n").join(polyfillTable)))
           .process(externs, root);
     };
@@ -478,5 +478,27 @@ if (($jscomp$polyfillTmp = a.b(),
             $jscomp$lookupPolyfilledValue($jscomp$polyfillTmp, 'finally'))
           .call($jscomp$polyfillTmp, cb);
         """);
+  }
+
+  @Test
+  public void testPolyfilTemp_multipleFiles_insertedInFirstFile() {
+    // Regression test for failure to report code change when adding "var $jscomp$polyfillTmp;"
+    // Don't call addLibrary() for this test: it reports a code change regardless & make the
+    // test incorrectly pass.
+    polyfillTable.add("String.prototype.endsWith es6 es5 es6/string/endswith");
+    setLanguage(ES6, ES5);
+
+    test(
+        srcs("$jscomp.polyfill('String.prototype.endsWith', 'es6', 'es5');", "x().endsWith(y);"),
+        expected(
+            """
+            var $jscomp$polyfillTmp;
+            $jscomp.polyfill('String.prototype.endsWith', 'es6', 'es5');
+            """,
+            """
+            ($jscomp$polyfillTmp = x(),
+              $jscomp$lookupPolyfilledValue($jscomp$polyfillTmp, 'endsWith'))
+                  .call($jscomp$polyfillTmp, y);
+            """));
   }
 }
