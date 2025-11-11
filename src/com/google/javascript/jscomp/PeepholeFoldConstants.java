@@ -25,6 +25,7 @@ import static com.google.javascript.jscomp.base.JSCompDoubles.isExactInt64;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isMathematicalInteger;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isPositive;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.NodeUtil.ValueType;
 import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.colors.StandardColors;
@@ -32,24 +33,19 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.math.BigInteger;
+import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Peephole optimization to fold constants (e.g. x + 1 + 7 --> x + 8).
- */
+/** Peephole optimization to fold constants (e.g. x + 1 + 7 --> x + 8). */
 class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   // TODO(johnlenz): optimizations should not be emiting errors. Move these to
   // a check pass.
   static final DiagnosticType INVALID_GETELEM_INDEX_ERROR =
-      DiagnosticType.warning(
-          "JSC_INVALID_GETELEM_INDEX_ERROR",
-          "Array index not integer: {0}");
+      DiagnosticType.warning("JSC_INVALID_GETELEM_INDEX_ERROR", "Array index not integer: {0}");
 
   static final DiagnosticType FRACTIONAL_BITWISE_OPERAND =
-      DiagnosticType.warning(
-          "JSC_FRACTIONAL_BITWISE_OPERAND",
-          "Fractional bitwise operand: {0}");
+      DiagnosticType.warning("JSC_FRACTIONAL_BITWISE_OPERAND", "Fractional bitwise operand: {0}");
 
   private static final double MAX_FOLD_NUMBER = Math.pow(2, 53);
 
@@ -58,10 +54,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private final boolean shouldUseTypes;
 
   /**
-   * @param late When late is false, this mean we are currently running before
-   * most of the other optimizations. In this case we would avoid optimizations
-   * that would make the code harder to analyze. When this is true, we would
-   * do anything to minimize for size.
+   * @param late When late is false, this mean we are currently running before most of the other
+   *     optimizations. In this case we would avoid optimizations that would make the code harder to
+   *     analyze. When this is true, we would do anything to minimize for size.
    */
   PeepholeFoldConstants(boolean late, boolean shouldUseTypes) {
     this.late = late;
@@ -158,6 +153,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
   }
 
+  @CanIgnoreReturnValue
   private Node tryReduceVoid(Node n) {
     Node child = n.getFirstChild();
     if ((!child.isNumber() || child.getDouble() != 0.0) && !mayHaveSideEffects(n)) {
@@ -243,9 +239,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /**
-   * Folds 'typeof(foo)' if foo is a literal, e.g.
-   * typeof("bar") --> "string"
-   * typeof(6) --> "number"
+   * Folds 'typeof(foo)' if foo is a literal, e.g. typeof("bar") --> "string" typeof(6) --> "number"
    */
   private Node tryFoldTypeof(Node originalTypeofNode) {
     checkArgument(originalTypeofNode.isTypeOf());
@@ -267,7 +261,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case NAME -> {
         // We assume here that programs don't change the value of the
         // keyword undefined to something other than the value undefined.
-        if ("undefined".equals(argumentNode.getString())) {
+        if (argumentNode.getString().equals("undefined")) {
           typeNameString = "undefined";
         }
       }
@@ -377,25 +371,20 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return x != null && !x.isInfinite() && !x.isNaN();
   }
 
-  /**
-   * Try to fold {@code left instanceof right} into {@code true}
-   * or {@code false}.
-   */
+  /** Try to fold {@code left instanceof right} into {@code true} or {@code false}. */
   private Node tryFoldInstanceof(Node n, Node left, Node right) {
     checkArgument(n.isInstanceOf());
 
     // TODO(johnlenz) Use type information if available to fold
     // instanceof.
-    if (NodeUtil.isLiteralValue(left, true)
-        && !mayHaveSideEffects(right)) {
+    if (NodeUtil.isLiteralValue(left, true) && !mayHaveSideEffects(right)) {
 
       Node replacementNode = null;
 
       if (NodeUtil.isImmutableValue(left)) {
         // Non-object types are never instances.
         replacementNode = IR.falseNode();
-      } else if (right.isName()
-          && "Object".equals(right.getString())) {
+      } else if (right.isName() && Objects.equals(right.getString(), "Object")) {
         replacementNode = IR.trueNode();
       }
 
@@ -504,17 +493,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     // Tries to convert x += y -> x = x + y;
     Token op = NodeUtil.getOpFromAssignmentOp(n);
-    Node replacement = IR.assign(left.detach(),
-        new Node(op, left.cloneTree(), right.detach())
-            .srcref(n));
+    Node replacement =
+        IR.assign(left.detach(), new Node(op, left.cloneTree(), right.detach()).srcref(n));
     n.replaceWith(replacement);
     reportChangeToEnclosingScope(replacement);
     return replacement;
   }
 
-  /**
-   * Try to fold a AND/OR node.
-   */
+  /** Try to fold a AND/OR node. */
   private Node tryFoldAndOr(Node n, Node left, Node right) {
     Node parent = n.getParent();
 
@@ -625,21 +611,25 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    *     child leaf node which must be a string literal and the leftmost right child leaf node if
    *     possible to do so in a type safe way.
    */
+  @CanIgnoreReturnValue
   private Node tryFoldAdjacentLiteralLeaves(Node n, Node left, Node right) {
+
     // Find left child's rightmost leaf
     Node leftParent = n;
-    Node rightParent = n;
     while (left.isAdd()) {
       // This had better be in a chain of '+' operations
       leftParent = left;
       left = left.getSecondChild();
     }
+
     // Find right child's leftmost leaf
+    Node rightParent = n;
     while (right.isAdd()) {
       // This had better be in a chain of '+' operations
       rightParent = right;
       right = right.getFirstChild();
     }
+
     // Try to fold if of the form:
     // ... + <STRINGLITERAL> + <LITERAL>
     // ... + <STRINGLITERAL> + (<LITERAL> + ...)
@@ -700,9 +690,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return n;
   }
 
-  /**
-   * Try to fold arithmetic binary operators
-   */
+  /** Try to fold arithmetic binary operators */
   private Node tryFoldArithmeticOp(Node n, Node left, Node right) {
     Node result = performArithmeticOp(n, left, right);
     if (result != null) {
@@ -941,12 +929,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       double result, double lval, double rval) {
     // TODO(johnlenz): consider removing the result length check.
     // length of the left and right value plus 1 byte for the operator.
-    if ((String.valueOf(result).length() <=
-        String.valueOf(lval).length() + String.valueOf(rval).length() + 1
+    if ((String.valueOf(result).length()
+                <= String.valueOf(lval).length() + String.valueOf(rval).length() + 1
 
-        // Do not try to fold arithmetic for numbers > 2^53. After that
-        // point, fixed-point math starts to break down and become inaccurate.
-        && Math.abs(result) <= MAX_FOLD_NUMBER)
+            // Do not try to fold arithmetic for numbers > 2^53. After that
+            // point, fixed-point math starts to break down and become inaccurate.
+            && Math.abs(result) <= MAX_FOLD_NUMBER)
         || Double.isNaN(result)
         || result == Double.POSITIVE_INFINITY
         || result == Double.NEGATIVE_INFINITY) {
@@ -967,6 +955,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    *   <li>The right child is a BIGINT or NUMBER constant.
    *   <li>The left child's right child is a BIGINT or NUMBER constant.
    */
+  @CanIgnoreReturnValue
   private Node tryFoldLeftChildOp(Node n, Node left, Node right) {
     Token opType = n.getToken();
     checkState((NodeUtil.isAssociative(opType) && NodeUtil.isCommutative(opType)));
@@ -1010,25 +999,21 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       if (NodeUtil.isLiteralValue(left, false) && NodeUtil.isLiteralValue(right, false)) {
         // '6' + 7
         return tryFoldAddConstantString(node, left, right);
+      } else if (left.isStringLit() && left.getString().isEmpty() && isStringTyped(right)) {
+        return replace(node, right.cloneTree(true));
+      } else if (right.isStringLit() && right.getString().isEmpty() && isStringTyped(left)) {
+        return replace(node, left.cloneTree(true));
       } else {
-        if (left.isStringLit() && left.getString().isEmpty() && isStringTyped(right)) {
-          return replace(node, right.cloneTree(true));
-        } else if (right.isStringLit() && right.getString().isEmpty() && isStringTyped(left)) {
-          return replace(node, left.cloneTree(true));
-        }
         // a + 7 or 6 + a
         return tryFoldAdjacentLiteralLeaves(node, left, right);
       }
     } else {
       // Try arithmetic add
-      Node result = tryFoldArithmeticOp(node, left, right);
-      if (result != node) {
-        return result;
-      }
-      return node;
+      return tryFoldArithmeticOp(node, left, right);
     }
   }
 
+  @CanIgnoreReturnValue
   private Node replace(Node oldNode, Node newNode) {
     oldNode.replaceWith(newNode);
     reportChangeToEnclosingScope(newNode);
@@ -1046,9 +1031,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return false;
   }
 
-  /**
-   * Try to fold shift operations
-   */
+  /** Try to fold shift operations */
   private Node tryFoldShift(Node n, Node left, Node right) {
     Double leftVal = this.getSideEffectFreeNumberValue(left);
     Double rightVal = this.getSideEffectFreeNumberValue(right);
@@ -1092,9 +1075,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return newNumber;
   }
 
-  /**
-   * Try to fold comparison nodes, e.g ==
-   */
+  /** Try to fold comparison nodes, e.g == */
   private Node tryFoldComparison(Node n, Node left, Node right) {
     Tri result = evaluateComparison(this, n.getToken(), left, right);
     if (result == Tri.UNKNOWN) {
@@ -1375,8 +1356,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /**
-   * Try to fold away unnecessary object instantiation.
-   * e.g. this[new String('eval')] -> this.eval
+   * Try to fold away unnecessary object instantiation. e.g. this[new String('eval')] -> this.eval
    */
   private Node tryFoldCtorCall(Node n) {
     checkArgument(n.isNew());
@@ -1389,6 +1369,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /** Remove useless calls: Object.defineProperties(o, {}) -> o */
+  @CanIgnoreReturnValue
   private Node tryFoldUselessObjectDotDefinePropertiesCall(Node n) {
     checkArgument(n.isCall() || n.isOptChainCall());
 
@@ -1406,8 +1387,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   /** Returns whether this node must be coerced to a string. */
   private static boolean inForcedStringContext(Node n) {
-    if (n.getParent().isGetElem()
-        && n.getParent().getLastChild() == n) {
+    if (n.getParent().isGetElem() && n.getParent().getLastChild() == n) {
       return true;
     }
 
@@ -1593,6 +1573,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    *
    * <p>Example: `[0, ...[1, 2, 3], 4, ...[5]]` => `[0, 1, 2, 3, 4, 5]`
    */
+  @CanIgnoreReturnValue
   private Node tryFlattenArrayOrObjectLit(Node parentLit) {
     for (Node child = parentLit.getFirstChild(); child != null; ) {
       // We have to store the next element here because nodes may be inserted below.
@@ -1680,6 +1661,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    *   <li>`({a() { return 1; }}).a()` ---> `(function() { return 1; }())`
    * </ul>
    */
+  @CanIgnoreReturnValue
   private Node tryFoldObjectPropAccess(Node n, Node left, String name) {
     checkArgument(NodeUtil.isNormalOrOptChainGet(n));
 
