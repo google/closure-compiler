@@ -1494,33 +1494,34 @@ $jscomp.inherits(FooPromise, Promise);
         """
         /** @constructor */
         var Base = function() {};
-        $jscomp.global.Object.defineProperties(
-            Base.prototype,
-            {
-                g:{
-                    configurable:true,
-                    enumerable:true,
-                    get:function(){return"base"},
-                    set:function(v){alert("base.prototype.g = " + v);}
-                }
-            });
-        /**
-         * @constructor
-         * @extends {Base}
-         */
+        $jscomp.global.Object.defineProperties(Base.prototype, {
+          g: {
+            configurable: true,
+            enumerable: true,
+            get: function() {
+              return 'base';
+            },
+            set: function(v) {
+              alert('base.prototype.g = ' + v);
+            }
+          }
+        });
+        /** @constructor */
         var Sub = function() {
           Base.apply(this, arguments);
         };
         $jscomp.inherits(Sub, Base);
-        $jscomp.global.Object.defineProperties(
-            Sub.prototype,
-            {
-                g:{
-                    configurable:true,
-                    enumerable:true,
-                    get:function(){return Base.prototype.g + "-sub";},
-                }
-            });
+        $jscomp.global.Object.defineProperties(Sub.prototype, {
+          g: {
+            configurable: true,
+            enumerable: true,
+            get: function() {
+              return Reflect.get(
+                         Base.prototype, JSCompiler_renameProperty('g', Base), this) +
+                  '-sub';
+            }
+          }
+        });
         """);
 
     testError(
