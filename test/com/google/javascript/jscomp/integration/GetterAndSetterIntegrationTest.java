@@ -16,12 +16,14 @@
 
 package com.google.javascript.jscomp.integration;
 
-
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.GoogleCodingConvention;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
+import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -1465,6 +1467,416 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
         const usedObj = new C;
         usedObj.usedProp = 2;
         alert(usedObj.usedProp); // property with getter cannot be inlined
+        """);
+  }
+
+  @Test
+  public void testSuperGetter_fromStaticFieldInitializer() {
+    CompilerOptions options = createCompilerOptions();
+
+    // Avoiding diffing the polyfills.
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+
+    // Include externs definitions for the stuff that would have been injected.
+    var externsList =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(
+                SourceFile.fromCode(
+                    "extraExterns",
+                    """
+                    var $jscomp = {};
+                    $jscomp.global = {};
+                    $jscomp.inherits = function(subClass, superClass) {};
+                    """));
+    externs = externsList.build();
+
+    var src =
+        """
+        class Parent {
+          static getName() {
+            return 'Parent';
+          }
+          static get greeting() {
+            return 'Hello ' + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return 'Child';
+          }
+          static msg = super.greeting;  // 'Hello Child'
+        }
+        alert(Child.msg);
+        """;
+
+    // Because we assume static inheritance is not used, we don't expect `Child.msg` to resolve to
+    // the correct value.
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    options.setAssumeStaticInheritanceIsNotUsed(true);
+    test(
+        options,
+        src,
+        """
+        class Parent {
+          static get greeting() {
+            // TODO: b/130682799 - Properties used in getters and setters should not be removed
+            return "Hello " + this.getName();
+          }
+        }
+        var Child$msg;
+        Child$msg = Parent.greeting;
+        alert(Child$msg);
+        """);
+
+    // We expect `Child.msg` to resolve to the correct value.
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    options.setAssumeStaticInheritanceIsNotUsed(false);
+    test(
+        options,
+        src,
+        """
+        class Parent {
+          static getName() {
+            return "Parent";
+          }
+          static get greeting() {
+            return "Hello " + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
+        }
+        // TODO: b/454921132 - Resolves to the wrong value.
+        Child.msg = Parent.greeting;
+        alert(Child.msg);
+        """);
+
+    // Because we assume static inheritance is not used, we don't expect `Child.msg` to resolve to
+    // the correct value.
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setAssumeStaticInheritanceIsNotUsed(true);
+    test(
+        options,
+        src,
+        """
+        function Parent() {}
+        Parent.greeting;
+        $jscomp.global.Object.defineProperties(Parent, {
+          greeting: {
+            configurable: !0,
+            enumerable: !0,
+            get: function() {
+              // TODO: b/130682799 - Properties used in getters and setters should not be removed
+              return 'Hello ' + this.getName();
+            }
+          }
+        });
+        var Child$msg;
+        // Resolves to the wrong value but, because --assume_static_inheritance_is_not_used, it's OK
+        Child$msg = Parent.greeting;
+        alert(Child$msg);
+        """);
+
+    // We expect `Child.msg` to resolve to the correct value.
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setAssumeStaticInheritanceIsNotUsed(false);
+    test(
+        options,
+        src,
+        """
+        function Parent() {}
+        Parent.greeting;
+        Parent.getName = function() {
+          return 'Parent';
+        };
+        $jscomp.global.Object.defineProperties(Parent, {
+          greeting: {
+            configurable: !0,
+            enumerable: !0,
+            get: function() {
+              return 'Hello ' + this.getName();
+            }
+          }
+        });
+        function Child() {}
+        $jscomp.inherits(Child, Parent);
+        Child.getName = function() {
+          return 'Child';
+        };
+        // TODO: b/454921132 - Resolves to the wrong value.
+        Child.msg = Parent.greeting;
+        alert(Child.msg);
+        """);
+
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    test(
+        options,
+        src,
+        """
+        function a() {}
+        a.b;
+        a.a = function() {
+          return 'Parent';
+        };
+        $jscomp.global.Object.defineProperties(a, {
+          b: {
+            configurable: !0,
+            enumerable: !0,
+            get: function() {
+              return 'Hello ' + this.a();
+            }
+          }
+        });
+        function b() {}
+        $jscomp.inherits(b, a);
+        b.a = function() {
+          return 'Child';
+        };
+        // TODO: b/454921132 - Resolves to the wrong value.
+        b.c = a.b;
+        alert(b.c);
+        """);
+  }
+
+  @Test
+  public void testSuperGetter_fromStaticMethod() {
+    CompilerOptions options = createCompilerOptions();
+
+    // Avoiding diffing the polyfills.
+    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+
+    // Include externs definitions for the stuff that would have been injected.
+    var externsList =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(
+                SourceFile.fromCode(
+                    "extraExterns",
+                    """
+                    var $jscomp = {};
+                    $jscomp.global = {};
+                    $jscomp.inherits = function(subClass, superClass) {};
+                    """));
+    externs = externsList.build();
+
+    var src =
+        """
+        class Parent {
+          static getName() {
+            return 'Parent';
+          }
+          static get greeting() {
+            return 'Hello ' + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return 'Child';
+          }
+          static getGreeting() {
+            return super.greeting;
+          }
+        }
+        class GrandChild extends Child {
+          static getName() {
+            return 'GrandChild';
+          }
+        }
+
+        alert(Parent.greeting);
+        alert(Child.greeting);
+        alert(GrandChild.greeting);
+
+        alert(Child.getGreeting());
+        alert(GrandChild.getGreeting());
+        """;
+
+    // Because we assume static inheritance is not used, we don't expect the greeting to be correct.
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    options.setAssumeStaticInheritanceIsNotUsed(true);
+    test(
+        options,
+        src,
+        """
+        class Parent {
+          static get greeting() {
+            // TODO: b/130682799 - Properties used in getters and setters should not be removed
+            return "Hello " + this.getName();
+          }
+        }
+        class Child extends Parent {}
+        class GrandChild extends Child {}
+
+        alert(Parent.greeting);  // Throws as getName is missing
+        alert(Child.greeting);
+        alert(GrandChild.greeting);
+
+        alert(Parent.greeting);
+        alert(Parent.greeting);
+        """);
+
+    // We expect the greeting to be correct.
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    options.setAssumeStaticInheritanceIsNotUsed(false);
+    test(
+        options,
+        src,
+        """
+        class Parent {
+          static getName() {
+            return "Parent";
+          }
+          static get greeting() {
+            return "Hello " + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
+        }
+        class GrandChild extends Child {
+          static getName() {
+            return "GrandChild";
+          }
+        }
+
+        alert(Parent.greeting);  // Alerts, "Hello Parent"
+        alert(Child.greeting);  // Alerts, "Hello Child"
+        alert(GrandChild.greeting);  // Alerts, "Hello Child"
+
+        alert(Parent.greeting);  // Alerts, "Hello Parent"
+        alert(Parent.greeting);  // Alerts, "Hello Parent"
+        """);
+
+    // Because we assume static inheritance is not used, we don't expect the greeting to be correct.
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setAssumeStaticInheritanceIsNotUsed(true);
+    test(
+        options,
+        src,
+        """
+        function Parent() {}
+        Parent.greeting;
+        $jscomp.global.Object.defineProperties(Parent, {
+          greeting: {
+            configurable: !0,
+            enumerable: !0,
+            get: function() {
+              // TODO: b/130682799 - Properties used in getters and setters should not be removed
+              return 'Hello ' + this.getName();
+            }
+          }
+        });
+        function Child() {}
+        Child.greeting;  // Eliminate this getter call that could have side effects?
+        $jscomp.inherits(Child, Parent);
+        function GrandChild() {}
+        GrandChild.greeting;  // Eliminate this getter call that could have side effects?
+        $jscomp.inherits(GrandChild, Child);
+
+        alert(Parent.greeting);  // Throws as getName is missing
+        alert(Child.greeting);  // Throws as getName is missing
+        alert(GrandChild.greeting);  // Throws as getName is missing
+
+        alert(Parent.greeting);
+        alert(Parent.greeting);
+        """);
+
+    // We expect the greeting to be correct.
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setAssumeStaticInheritanceIsNotUsed(false);
+    test(
+        options,
+        src,
+        """
+        function Parent() {}
+        Parent.greeting;
+        Parent.getName = function() {
+          return 'Parent';
+        };
+        $jscomp.global.Object.defineProperties(Parent, {
+          greeting: {
+            configurable: !0,
+            enumerable: !0,
+            get: function() {
+              return 'Hello ' + this.getName();
+            }
+          }
+        });
+        function Child() {}
+        Child.greeting;  // Eliminate this getter call that could have side effects?
+        $jscomp.inherits(Child, Parent);
+        Child.getName = function() {
+          return 'Child';
+        };
+        Child.getGreeting = function() {
+          // Should not be `Parent` here.
+          return Parent.greeting;
+        };
+        function GrandChild() {}
+        GrandChild.greeting;  // Eliminate this getter call that could have side effects?
+        $jscomp.inherits(GrandChild, Child);
+        GrandChild.getGreeting = Child.getGreeting;
+        GrandChild.getName = function() {
+          return 'GrandChild';
+        };
+
+        alert(Parent.greeting);  // Alerts, "Hello Parent"
+        alert(Child.greeting);  // Alerts, "Hello Child"
+        alert(GrandChild.greeting);  // Alerts, "Hello GrandChild"
+
+        alert(Child.getGreeting());  // Alerts, "Hello Parent"
+        alert(GrandChild.getGreeting());  // Alerts, "Hello Parent"
+        """);
+
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    test(
+        options,
+        src,
+        """
+        function a() {}
+        a.a;
+        a.c = function() {
+          return 'Parent';
+        };
+        $jscomp.global.Object.defineProperties(a, {
+          a: {
+            configurable: !0,
+            enumerable: !0,
+            get: function() {
+              return 'Hello ' + this.c();
+            }
+          }
+        });
+        function b() {}
+        b.a;  // Eliminate this getter call that could have side effects?
+        $jscomp.inherits(b, a);
+        b.c = function() {
+          return 'Child';
+        };
+        b.b = function() {
+          return a.a;
+        };
+        function c() {}
+        c.a;  // Eliminate this getter call that could have side effects?
+        $jscomp.inherits(c, b);
+        c.b = b.b;
+        c.c = function() {
+          return 'GrandChild';
+        };
+
+        alert(a.a);  // Alerts, "Hello Parent"
+        alert(b.a);  // Alerts, "Hello Child"
+        alert(c.a);  // Alerts, "Hello GrandChild"
+
+        alert(b.b());  // Alerts, "Hello Parent"
+        alert(c.b());  // Alerts, "Hello Parent"
         """);
   }
 }
