@@ -16,13 +16,10 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.AstFactory.type;
 import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
 
-import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 
@@ -157,20 +154,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     }
 
     Node callTarget = parent;
-    if (enclosingMemberDef.isStaticMember()) {
-      Node expandedSuper = superName.cloneTree().srcrefTree(node);
-      expandedSuper.setOriginalName("super");
-      node.replaceWith(expandedSuper);
-      callTarget = astFactory.createGetPropWithUnknownType(callTarget.detach(), "call");
-      grandparent.addChildToFront(callTarget);
-      Node thisNode = astFactory.createThis(type(clazz));
-      thisNode.makeNonIndexable(); // no direct correlation with original source
-      thisNode.insertAfter(callTarget);
-      grandparent.srcrefTreeIfMissing(parent);
-
-      // We added a `this` reference to the call. We need to make sure this member is not collapsed.
-      ensureNoCollapseOnStaticMemberDef(enclosingMemberDef);
-    } else {
+    if (!enclosingMemberDef.isStaticMember()) {
       // Replace super node to give
       // super.method(...) -> SuperClass.prototype.method(...)
       Node expandedSuper = astFactory.createPrototypeAccess(superName.cloneTree()).srcrefTree(node);
@@ -207,67 +191,14 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       return;
     }
 
-    Node newProp;
-    if (enclosingMemberDef.isStaticMember()) {
-      // super.prop -> SuperClass.prop
-      newProp = superName.cloneTree().srcrefTree(node);
-    } else {
+    if (!enclosingMemberDef.isStaticMember()) {
       // super.prop -> SuperClass.prototype.prop
-      newProp = astFactory.createPrototypeAccess(superName.cloneTree()).srcrefTree(node);
+      Node newprop = astFactory.createPrototypeAccess(superName.cloneTree()).srcrefTree(node);
+      newprop.setOriginalName("super");
+      node.replaceWith(newprop);
     }
-
-    if (parent.isGetProp()
-        && compiler.getAccessorSummary().getKind(parent.getString()).hasGetter()) {
-      // Rewrites
-      //   super.x
-      // as
-      //   Reflect.get(super, JSCompiler_renameProperty('x', ParentClass), this)
-      Node superPlaceholder = IR.name("sp"); // No need for type info as this will be replaced.
-
-      Node reflectGetCall =
-          astFactory
-              .createCall(
-                  astFactory.createGetPropWithUnknownType(
-                      astFactory.createConstantName("Reflect", type(StandardColors.UNKNOWN)),
-                      "get"),
-                  type(parent),
-                  superPlaceholder,
-                  parent.isGetProp()
-                      ? astFactory.createCall(
-                          astFactory.createName(
-                              NodeUtil.JSC_PROPERTY_NAME_FN, type(StandardColors.UNKNOWN)),
-                          type(StandardColors.STRING),
-                          astFactory.createString(parent.getString()),
-                          superName.cloneTree().srcrefTree(node))
-                      :
-                      // For getElem, we just use the accessor value in the Reflect.get call.
-                      node.getNext().detach(),
-                  astFactory.createThis(type(clazz)))
-              .srcrefTreeIfMissing(parent);
-
-      // Replace the getProp/getElem with the Reflect.get call.
-      parent.replaceWith(reflectGetCall);
-      // Swap in the `n` (super) where it goes in the Reflect.get call.
-      superPlaceholder.replaceWith(node.detach());
-
-      // We added a `this` reference to the call. We need to make sure this member is not collapsed.
-      ensureNoCollapseOnStaticMemberDef(enclosingMemberDef);
-    }
-
-    node.replaceWith(newProp);
-    newProp.setOriginalName("super");
 
     compiler.reportChangeToEnclosingScope(grandparent);
-  }
-
-  private void ensureNoCollapseOnStaticMemberDef(Node memberDef) {
-    if (!memberDef.isStaticMember()) {
-      return;
-    }
-    JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(memberDef.getJSDocInfo());
-    if (builder.recordNoCollapse()) {
-      memberDef.setJSDocInfo(builder.build());
-    }
   }
 
   @Override

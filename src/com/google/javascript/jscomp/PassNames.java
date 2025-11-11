@@ -57,7 +57,7 @@ public final class PassNames {
   public static final String DESERIALIZE_COMPILER_STATE = "deserializeCompilerState";
   public static final String DEVIRTUALIZE_METHODS = "devirtualizeMethods";
   public static final String DISAMBIGUATE_PROPERTIES = "disambiguateProperties";
-  public static final String ES6_NORMALIZE_CLASSES = "es6NormalizeClasses";
+  public static final String ES6_NORMALIZE_CLASSES = "ES6_NORMALIZE_CLASSES";
   public static final String EXPLOIT_ASSIGN = "exploitAssign";
   public static final String EXPORT_TEST_FUNCTIONS = "exportTestFunctions";
   public static final String EXTERN_EXPORTS = "externExports";

@@ -478,13 +478,9 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         expected(
             """
             class B extends A {
-              constructor() {
-                super();
-              }
-              /** @nocollapse */
-              static f() {
-                A.g.call(this, 3);
-              }
+              constructor() { super(); }
+
+              static f() { A.g.call(this, 3); }
             }
             """));
 
@@ -576,10 +572,8 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
               constructor() {
                 super();
               }
-              /** @nocollapse */
-              static ["f"]() {
-                A["g"].call(this, 4);
-              }
+
+              static ['f']() { A['g'].call(this, 4); }
             }
             """));
 
@@ -978,105 +972,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .hasCharno(19)
         .isIndexable(false); // there's no direct correlation with text in the original source
     assertNode(thisNode).hasColorThat().isEqualTo(classBInstanceType);
-  }
-
-  @Test
-  public void testAccessingStaticGetterViaSuper() {
-    test(
-        externs(
-            """
-            class Parent {
-              constructor() {}
-              /** @return {string} */
-              static getName() {}
-              /** @return {string} */
-              static get greeting() {}
-            }
-            """),
-        srcs(
-            """
-            class Child extends Parent {
-              constructor() {
-                super();
-              }
-              static getName() {
-                return 'Child';
-              }
-              static getGreeting() {
-                return super.greeting;
-              }
-            }
-            """),
-        expected(
-            """
-            class Child extends Parent {
-              constructor() {
-                super();
-              }
-              static getName() {
-                return 'Child';
-              }
-              /** @nocollapse */
-              static getGreeting() {
-                return Reflect.get(
-                    Parent, JSCompiler_renameProperty('greeting', Parent), this);
-              }
-            }
-            """));
-
-    // get types we need to check
-    Color parentType = findClassDefinition(getLastCompiler(), "Parent").getRootNode().getColor();
-    Color childType = findClassDefinition(getLastCompiler(), "Child").getRootNode().getColor();
-
-    // return Reflect.get(Parent, JSCompiler_renameProperty("greeting", Parent), this);
-    Node returnStmt =
-        findClassDefinition(getLastCompiler(), "Child")
-            .findMethodDefinition("getGreeting")
-            .getRootNode() // MEMBER_FUNCTION_DEF
-            .getOnlyChild() // FUNCTION
-            .getLastChild() // BLOCK
-            .getOnlyChild(); // RETURN
-    assertNode(returnStmt).hasToken(Token.RETURN);
-
-    // Reflect.get(Parent, JSCompiler_renameProperty("greeting", Parent), this)
-    Node reflectGetCall = returnStmt.getOnlyChild();
-    assertNode(reflectGetCall).hasToken(Token.CALL).hasColorThat().isEqualTo(StandardColors.STRING);
-
-    // Reflect.get
-    Node callee = reflectGetCall.getFirstChild();
-    assertNode(callee).matchesQualifiedName("Reflect.get");
-
-    // Parent
-    Node parentName = callee.getNext();
-    assertNode(parentName)
-        .matchesQualifiedName("Parent")
-        .hasOriginalName("super")
-        .hasColorThat()
-        .isEqualTo(parentType);
-
-    // JSCompiler_renameProperty("greeting", Parent)
-    Node renamePropertyCall = parentName.getNext();
-    assertNode(renamePropertyCall)
-        .hasToken(Token.CALL)
-        .hasColorThat()
-        .isEqualTo(StandardColors.STRING);
-
-    {
-      // "greeting"
-      Node greetingString = renamePropertyCall.getSecondChild();
-      assertNode(greetingString)
-          .isString("greeting")
-          .hasColorThat()
-          .isEqualTo(StandardColors.STRING);
-
-      // Parent
-      Node parentNameArg = greetingString.getNext();
-      assertNode(parentNameArg).matchesQualifiedName("Parent").hasColorThat().isEqualTo(parentType);
-    }
-
-    // this
-    Node thisNode = renamePropertyCall.getNext();
-    assertNode(thisNode).hasToken(Token.THIS).hasColorThat().isEqualTo(childType);
   }
 
   // Constructor synthesis

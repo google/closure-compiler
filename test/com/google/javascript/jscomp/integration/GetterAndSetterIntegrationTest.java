@@ -1548,11 +1548,9 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
           static getName() {
             return "Child";
           }
-          static $jscomp$staticInit$98447280$0() {
-            Child.msg = super.greeting;
-          }
         }
-        Child.$jscomp$staticInit$98447280$0();
+        // TODO: b/454921132 - Resolves to the wrong value.
+        Child.msg = Parent.greeting;
         alert(Child.msg);
         """);
 
@@ -1576,10 +1574,9 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             }
           }
         });
-        function Child() {}
         var Child$msg;
-        $jscomp.inherits(Child, Parent);
-        Child$msg = Reflect.get(Parent, 'greeting', Child);
+        // Resolves to the wrong value but, because --assume_static_inheritance_is_not_used, it's OK
+        Child$msg = Parent.greeting;
         alert(Child$msg);
         """);
 
@@ -1609,11 +1606,11 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
         Child.getName = function() {
           return 'Child';
         };
-        Child.msg = Reflect.get(Parent, 'greeting', Child);
+        // TODO: b/454921132 - Resolves to the wrong value.
+        Child.msg = Parent.greeting;
         alert(Child.msg);
         """);
 
-    // Ensure that 'greeting' is properly renamed.
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     test(
@@ -1626,7 +1623,6 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
           return 'Parent';
         };
         $jscomp.global.Object.defineProperties(a, {
-          // b was 'greeting'
           b: {
             configurable: !0,
             enumerable: !0,
@@ -1640,8 +1636,8 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
         b.a = function() {
           return 'Child';
         };
-        // 'b' (in quotes) was 'greeting'
-        b.c = Reflect.get(a, 'b', b);
+        // TODO: b/454921132 - Resolves to the wrong value.
+        b.c = a.b;
         alert(b.c);
         """);
   }
@@ -1726,7 +1722,36 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
     // We expect the greeting to be correct.
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
     options.setAssumeStaticInheritanceIsNotUsed(false);
-    testSame(options, src);
+    test(
+        options,
+        src,
+        """
+        class Parent {
+          static getName() {
+            return "Parent";
+          }
+          static get greeting() {
+            return "Hello " + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
+        }
+        class GrandChild extends Child {
+          static getName() {
+            return "GrandChild";
+          }
+        }
+
+        alert(Parent.greeting);  // Alerts, "Hello Parent"
+        alert(Child.greeting);  // Alerts, "Hello Child"
+        alert(GrandChild.greeting);  // Alerts, "Hello Child"
+
+        alert(Parent.greeting);  // Alerts, "Hello Parent"
+        alert(Parent.greeting);  // Alerts, "Hello Parent"
+        """);
 
     // Because we assume static inheritance is not used, we don't expect the greeting to be correct.
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -1750,20 +1775,16 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
         function Child() {}
         Child.greeting;  // Eliminate this getter call that could have side effects?
         $jscomp.inherits(Child, Parent);
-        Child.getGreeting = function() {
-          return Reflect.get(Parent, 'greeting', this);
-        };
         function GrandChild() {}
         GrandChild.greeting;  // Eliminate this getter call that could have side effects?
         $jscomp.inherits(GrandChild, Child);
-        GrandChild.getGreeting = Child.getGreeting;
+
+        alert(Parent.greeting);  // Throws as getName is missing
+        alert(Child.greeting);  // Throws as getName is missing
+        alert(GrandChild.greeting);  // Throws as getName is missing
 
         alert(Parent.greeting);
-        alert(Child.greeting);
-        alert(GrandChild.greeting);
-
-        alert(Child.getGreeting());
-        alert(GrandChild.getGreeting());
+        alert(Parent.greeting);
         """);
 
     // We expect the greeting to be correct.
@@ -1794,7 +1815,8 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
           return 'Child';
         };
         Child.getGreeting = function() {
-          return Reflect.get(Parent, 'greeting', this);
+          // Should not be `Parent` here.
+          return Parent.greeting;
         };
         function GrandChild() {}
         GrandChild.greeting;  // Eliminate this getter call that could have side effects?
@@ -1808,11 +1830,10 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
         alert(Child.greeting);  // Alerts, "Hello Child"
         alert(GrandChild.greeting);  // Alerts, "Hello GrandChild"
 
-        alert(Child.getGreeting());  // Alerts, "Hello Child"
-        alert(GrandChild.getGreeting());  // Alerts, "Hello GrandChild"
+        alert(Child.getGreeting());  // Alerts, "Hello Parent"
+        alert(GrandChild.getGreeting());  // Alerts, "Hello Parent"
         """);
 
-    // Ensure that 'greeting' is properly renamed.
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     test(
@@ -1825,7 +1846,6 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
           return 'Parent';
         };
         $jscomp.global.Object.defineProperties(a, {
-          // a was greeting
           a: {
             configurable: !0,
             enumerable: !0,
@@ -1841,8 +1861,7 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
           return 'Child';
         };
         b.b = function() {
-          // 'a' (in quotes) was 'greeting'
-          return Reflect.get(a, 'a', this);
+          return a.a;
         };
         function c() {}
         c.a;  // Eliminate this getter call that could have side effects?
@@ -1856,8 +1875,8 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
         alert(b.a);  // Alerts, "Hello Child"
         alert(c.a);  // Alerts, "Hello GrandChild"
 
-        alert(b.b());  // Alerts, "Hello Child"
-        alert(c.b());  // Alerts, "Hello GrandChild"
+        alert(b.b());  // Alerts, "Hello Parent"
+        alert(c.b());  // Alerts, "Hello Parent"
         """);
   }
 }

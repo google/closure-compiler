@@ -590,34 +590,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     test(
         """
         class Parent {
-          static get parentGetter() {
-            return {val: 1};
-          }
-        }
-        class Child extends Parent {
-          static val = super.parentGetter.val;
-        }
-        """,
-        """
-        class Parent {
-          static get parentGetter() {
-            return {val:1};
-          }
-        }
-        class Child extends Parent {
-          static STATIC_INIT$0() {
-            Child.val = Parent.parentGetter.val;
-          }
-        }
-        Child.STATIC_INIT$0();
-        """);
-  }
-
-  @Test
-  public void testSuperReferencesStaticGetter() {
-    var src =
-        """
-        class Parent {
           static getName() {
             return 'Parent';
           }
@@ -631,11 +603,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           }
           static msg = super.greeting;  // 'Hello Child'
         }
-        """;
-
-    // non-strict
-    test(
-        src,
+        """,
         """
         class Parent {
           static getName() {
@@ -650,100 +618,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             return "Child";
           }
           static STATIC_INIT$0() {
-            Child.msg = Parent.greeting;
-          }
-        }
-        Child.STATIC_INIT$0();
-        """);
-
-    // strict
-    setAssumeStaticInheritanceIsNotUsed(false);
-    test(
-        src,
-        """
-        class Parent {
-          static getName() {
-            return "Parent";
-          }
-          static get greeting() {
-            return "Hello " + this.getName();
-          }
-        }
-        class Child extends Parent {
-          static getName() {
-            return "Child";
-          }
-          static STATIC_INIT$0() {
-            Child.msg = super.greeting;
-          }
-        }
-        Child.STATIC_INIT$0();
-        """);
-  }
-
-  @Test
-  public void testSuperReferencesStaticGetter_viaElementAccess() {
-    var src =
-        """
-        /** @unrestricted */
-        class Parent {
-          static getName() {
-            return 'Parent';
-          }
-          static get ['greeting']() {
-            return 'Hello ' + this.getName();
-          }
-        }
-        class Child extends Parent {
-          static getName() {
-            return 'Child';
-          }
-          static msg = super['greeting'];  // 'Hello Child'
-        }
-        """;
-
-    // non-strict
-    test(
-        src,
-        """
-        class Parent {
-          static getName() {
-            return "Parent";
-          }
-          static get ["greeting"]() {
-            return "Hello " + this.getName();
-          }
-        }
-        class Child extends Parent {
-          static getName() {
-            return "Child";
-          }
-          static STATIC_INIT$0() {
-            Child.msg = Parent["greeting"];
-          }
-        }
-        Child.STATIC_INIT$0();
-        """);
-
-    // strict
-    setAssumeStaticInheritanceIsNotUsed(false);
-    test(
-        src,
-        """
-        class Parent {
-          static getName() {
-            return "Parent";
-          }
-          static get ["greeting"]() {
-            return "Hello " + this.getName();
-          }
-        }
-        class Child extends Parent {
-          static getName() {
-            return "Child";
-          }
-          static STATIC_INIT$0() {
-            Child.msg = super["greeting"];
+            Child.msg = Parent.greeting;  // b/454921132 Incorrectly: 'Hello Parent'
           }
         }
         Child.STATIC_INIT$0();
@@ -812,26 +687,38 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     test(
         """
         class Parent {
+          static getName() {
+            return 'Parent';
+          }
           static getGreeting() {
-            return 'Hello';
+            return 'Hello ' + this.getName();
           }
         }
         class Child extends Parent {
+          static getName() {
+            return 'Child';
+          }
           static {
-            alert(super.getGreeting());
+            alert(super.getGreeting());  // Alerts: 'Hello Child'
           }
         }
         """,
         """
         class Parent {
+          static getName() {
+            return "Parent";
+          }
           static getGreeting() {
-            return "Hello";
+            return "Hello " + this.getName();
           }
         }
         class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
           static STATIC_INIT$0() {
             {
-              alert(Parent.getGreeting());
+              alert(Parent.getGreeting());  // Alerts: 'Hello Parent'
             }
           }
         }
@@ -860,59 +747,38 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           }
         }
         """;
+    String expected =
+        """
+        class Parent {
+          static getName() {
+            return "Parent";
+          }
+          static getGreeting() {
+            return "Hello " + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
+          /** @nocollapse */
+          static STATIC_INIT$0() {
+            {
+              alert(Parent.getGreeting.call(this));  // Alerts: 'Hello Child'
+            }
+          }
+        }
+        Child.STATIC_INIT$0();
+        """;
 
     // Test both conditions that trigger strict super rewrite.
 
     setAssumeStaticInheritanceIsNotUsed(false);
-    test(
-        source,
-        """
-        class Parent {
-          static getName() {
-            return "Parent";
-          }
-          static getGreeting() {
-            return "Hello " + this.getName();
-          }
-        }
-        class Child extends Parent {
-          static getName() {
-            return "Child";
-          }
-          static STATIC_INIT$0() {
-            {
-              alert(super.getGreeting());
-            }
-          }
-        }
-        Child.STATIC_INIT$0();
-        """);
+    test(source, expected);
 
     setAssumeStaticInheritanceIsNotUsed(true);
     setLanguageOut(LanguageMode.ECMASCRIPT5);
-    test(
-        source,
-        """
-        class Parent {
-          static getName() {
-            return "Parent";
-          }
-          static getGreeting() {
-            return "Hello " + this.getName();
-          }
-        }
-        class Child extends Parent {
-          static getName() {
-            return "Child";
-          }
-          static STATIC_INIT$0() {
-            {
-              alert(super.getGreeting());
-            }
-          }
-        }
-        Child.STATIC_INIT$0();
-        """);
+    test(source, expected);
   }
 
   @Test
@@ -920,26 +786,38 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     test(
         """
         class Parent {
+          static getName() {
+            return 'Parent';
+          }
           static getGreeting() {
-            return 'Hello';
+            return 'Hello ' + this.getName();
           }
         }
         class Child extends Parent {
+          static getName() {
+            return 'Child';
+          }
           static sayHello() {
-            alert(super.getGreeting());
+            alert(super.getGreeting());  // Alerts: 'Hello Child'
           }
         }
         Child.sayHello();
         """,
         """
         class Parent {
+          static getName() {
+            return "Parent";
+          }
           static getGreeting() {
-            return "Hello";
+            return "Hello " + this.getName();
           }
         }
         class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
           static sayHello() {
-            alert(Parent.getGreeting());
+            alert(Parent.getGreeting());  // Alerts: 'Hello Parent'
           }
         }
         Child.sayHello();
@@ -947,7 +825,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   }
 
   @Test
-  public void testSuperInStaticMethod_strictSuperCallRewrite() {
+  public void testSuperInStaticMethod_strictSuperRewrite() {
     String source =
         """
         class Parent {
@@ -968,55 +846,35 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         Child.sayHello();
         """;
+    String expected =
+        """
+        class Parent {
+          static getName() {
+            return "Parent";
+          }
+          static getGreeting() {
+            return "Hello " + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
+          static sayHello() {
+            alert(Parent.getGreeting.call(this));  // Alerts: 'Hello Child'
+          }
+        }
+        Child.sayHello();
+        """;
 
     // Test both conditions that trigger strict super rewrite.
 
     setAssumeStaticInheritanceIsNotUsed(false);
-    test(
-        source,
-        """
-        class Parent {
-          static getName() {
-            return "Parent";
-          }
-          static getGreeting() {
-            return "Hello " + this.getName();
-          }
-        }
-        class Child extends Parent {
-          static getName() {
-            return "Child";
-          }
-          static sayHello() {
-            alert(super.getGreeting());
-          }
-        }
-        Child.sayHello();
-        """);
+    test(source, expected);
 
     setAssumeStaticInheritanceIsNotUsed(true);
     setLanguageOut(LanguageMode.ECMASCRIPT5);
-    test(
-        source,
-        """
-        class Parent {
-          static getName() {
-            return "Parent";
-          }
-          static getGreeting() {
-            return "Hello " + this.getName();
-          }
-        }
-        class Child extends Parent {
-          static getName() {
-            return "Child";
-          }
-          static sayHello() {
-            alert(super.getGreeting());
-          }
-        }
-        Child.sayHello();
-        """);
+    test(source, expected);
   }
 
   @Test
@@ -1024,27 +882,39 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     test(
         """
         class Parent {
+          static getName() {
+            return 'Parent';
+          }
           static getGreeting() {
-            return 'Hello';
+            return 'Hello ' + this.getName();
           }
         }
         /** @unrestricted */
         class Child extends Parent {
+          static getName() {
+            return 'Child';
+          }
           static ['sayHello']() {
-            alert(super.getGreeting());
+            alert(super.getGreeting());  // Alerts: 'Hello Child'
           }
         }
         Child['sayHello']();
         """,
         """
         class Parent {
+          static getName() {
+            return "Parent";
+          }
           static getGreeting() {
-            return "Hello";
+            return "Hello " + this.getName();
           }
         }
         class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
           static ["sayHello"]() {
-            alert(Parent.getGreeting());
+            alert(Parent.getGreeting());  // Alerts: 'Hello Parent'
           }
         }
         Child["sayHello"]();
