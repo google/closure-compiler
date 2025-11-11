@@ -3603,8 +3603,7 @@ use(Foo$Bar$baz$A);
 
   @Test
   public void testClassStaticMemberAccessedWithSuperAndThis() {
-    setAssumeStaticInheritanceIsNotUsed(false);
-    test(
+    var src =
         """
         class Bar {
           static get name() {
@@ -3623,50 +3622,14 @@ use(Foo$Bar$baz$A);
             return `${super.getClassname()} - is a subclass`;
           }
         }
-        """,
-        """
-        class Bar {
-          static get name() {
-            return "Bar";
-          }
-          static getClassname() {
-            return `${this.name} class`;
-          }
-        }
-        class Baz extends Bar {
-          static get name() {
-            return "Baz";
-          }
-          static get classname() {
-            return `${Bar.getClassname.call(this)} - is a subclass`;
-          }
-        }
-        """);
-  }
+        """;
 
-  @Test
-  public void testClassStaticMemberAccessedWithSuperAndThis2() {
+    setAssumeStaticInheritanceIsNotUsed(false);
+    testSame(src);
+
     setAssumeStaticInheritanceIsNotUsed(true);
     test(
-        """
-        class Bar {
-          static get name() {
-            return 'Bar';
-          }
-          /** @nocollapse */
-          static getClassname() {
-            return `${this.name} class`;
-          }
-        }
-        class Baz extends Bar {
-          static get name() {
-            return 'Baz';
-          }
-          static get classname() {
-            return `${super.getClassname()} - is a subclass`;
-          }
-        }
-        """,
+        src,
         """
         class Bar {
           static get name() {
@@ -3732,6 +3695,85 @@ use(Foo$Bar$baz$A);
         };
         class Baz extends Bar {}
         Baz$$0jscomp$0staticInit$0m1146332801$00();
+        """);
+  }
+
+  @Test
+  public void testClassStaticGetterAccessedWithSuper() {
+    var src =
+        """
+        function JSCompiler_renameProperty(str, strContainerType) {
+          return a;
+        }
+
+        class Parent {
+          static getName() {
+            return 'Parent';
+          }
+          static get greeting() {
+            return 'Hello ' + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return 'Child';
+          }
+          static msg = super.greeting;  // 'Hello Child'
+        }
+        """;
+
+    // non-strict
+    test(
+        src,
+        """
+        function JSCompiler_renameProperty(str, strContainerType) {
+          return a;
+        }
+        var Parent$getName = function() {
+          return "Parent";
+        };
+        class Parent {
+          static get greeting() {
+            return "Hello " + this.getName();
+          }
+        }
+        var Child$getName = function() {
+          return "Child";
+        };
+        var Child$msg;
+        var Child$$0jscomp$0staticInit$0m1146332801$00 = function() {
+          Child$msg = Parent.greeting;
+        };
+        class Child extends Parent {}
+        Child$$0jscomp$0staticInit$0m1146332801$00();
+        """);
+
+    // strict
+    setAssumeStaticInheritanceIsNotUsed(false);
+    test(
+        src,
+        """
+        function JSCompiler_renameProperty(str, strContainerType) {
+          return a;
+        }
+        class Parent {
+          static getName() {
+            return "Parent";
+          }
+          static get greeting() {
+            return "Hello " + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
+          static msg;
+          static STATIC_INIT$0() {
+            Child.msg = super.greeting;
+          }
+        }
+        Child.STATIC_INIT$0();
         """);
   }
 

@@ -162,6 +162,9 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Passes below this point may rely on normalization and must maintain normalization.
     passes.maybeAdd(normalize);
+
+    passes.maybeAdd(gatherGettersAndSetters);
+
     TranspilationPasses.addTranspilationPasses(passes, options);
     // The transpilation passes may rely on normalize making all variables unique,
     // but we're doing only transpilation, so we want to put back the original variable names
@@ -175,6 +178,9 @@ public final class DefaultPassConfig extends PassConfig {
     passes.maybeAdd(invertContextualRenaming);
 
     passes.maybeAdd(unwrapClosureUnawareCode);
+
+    // Es6ConvertSuper may add this so it needs to be removed for transpile-only mode.
+    passes.maybeAdd(removePropertyRenamingCalls);
 
     passes.assertAllOneTimePasses();
     assertValidOrderForChecks(passes);
@@ -904,10 +910,10 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.maybeAdd(normalize);
 
+    passes.maybeAdd(gatherGettersAndSetters);
+
     // TODO(b/329447979): Add an early removeUnusedCode pass here
     TranspilationPasses.addTranspilationPasses(passes, options);
-
-    passes.maybeAdd(gatherGettersAndSetters);
 
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
       passes.maybeAdd(j2clUtilGetDefineRewriterPass);

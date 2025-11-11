@@ -94,7 +94,9 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
   private final ExpressionDecomposer expressionDecomposer;
   private final SynthesizeExplicitConstructors ctorCreator;
   private final boolean transpileClassFields;
-  private final boolean rewriteStaticSuperStrictly;
+
+  private final boolean doStaticInheritanceRewrites;
+  private final boolean doStaticSuperRewrites;
 
   Es6NormalizeClasses(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -105,14 +107,11 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     var options = compiler.getOptions();
     transpileClassFields = options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS);
 
-    // Written this way for historical consistency. Before this comment was added, if SUPER needed
-    // transpilation, Es6ConvertSuper would do a strict rewrite. Otherwise if the options indicate
-    // to not skipNonTranspilationPasses and assumeStaticInheritanceIsNotUsed,
-    // StaticSuperPropReplacer (now deleted) would do a non-strict rewrite.
-    rewriteStaticSuperStrictly =
-        options.needsTranspilationOf(Feature.SUPER)
-            || options.skipNonTranspilationPasses
-            || !options.getAssumeStaticInheritanceIsNotUsed();
+    doStaticInheritanceRewrites =
+        options.getAssumeStaticInheritanceIsNotUsed() && !options.skipNonTranspilationPasses;
+
+    // Es6ConvertSuper handles static super rewrites otherwise.
+    doStaticSuperRewrites = !options.needsTranspilationOf(Feature.SUPER);
   }
 
   @Override
@@ -737,16 +736,6 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     // Record the feature corresponding to a static method.
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.MEMBER_DECLARATIONS, compiler);
 
-    // If the new method has any `this` usages adds @nocollapse.
-    // Note: while all `this` references in static initialization contexts were converted to
-    // `ClassName`, in the case of rewriteStaticSuperStrictly, calls like `super.foo()` were
-    // converted to `ParentClass.foo.call(this)`.
-    if (rewriteStaticSuperStrictly && NodeUtil.referencesOwnReceiver(staticInitMethodFunc)) {
-      JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(staticInitMethod.getJSDocInfo());
-      builder.recordNoCollapse();
-      staticInitMethod.setJSDocInfo(builder.build());
-    }
-
     // Add a call to the static initialization method after the class definition.
     Node staticInitCall =
         astFactory
@@ -806,6 +795,10 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
    * <p>Note: This runs before {@link #rewriteStaticMembers} so the static members are still there.
    */
   private void visitThisAndSuper(NodeTraversal t, Node n) {
+    if (!doStaticInheritanceRewrites) {
+      return;
+    }
+
     Node rootNode = t.getClosestScopeRootNodeBindingThisOrSuper();
     Node rootParent = rootNode.getParent();
     if (rootNode.isFunction()
@@ -833,30 +826,10 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       // For static this, we can only universally replace with the class name in a static
       // initialization context.
       newNameNode = classRecord.createNewNameReferenceNode().srcrefTree(n);
-    } else if (n.isSuper()) {
-      // For static super, can always replace the super class name.
-      // b/454921132: Technically, for `super.getter`, `getter` in `ParentClass` may have a
-      // polymorphic `this` usage which `ParentClass.getter` would break. The correct fix is to
-      // rewrite property accesses as `Reflect.get(ParentClass, 'getter', ClassName)`.
+    } else if (doStaticSuperRewrites && n.isSuper()) {
+      // For a static super, we can always rewrite the super as something else.
       checkState(classRecord.superClassNameNode.isPresent(), classRecord.classNode);
       newNameNode = classRecord.superClassNameNode.get().cloneTree();
-
-      if (rewriteStaticSuperStrictly
-          && n.getGrandparent().isCall()
-          && NodeUtil.isInvocationTarget(n.getParent())) {
-        // If this is a call, we need to replace `super.m(x)` with `super.m.call(this, x)` (`super`
-        // will be replaced with `ParentClassName` (newNameNode) afterwards).
-        Node call = n.getGrandparent();
-        Node callTarget = n.getParent();
-        callTarget =
-            astFactory
-                .createGetPropWithUnknownType(callTarget.detach(), "call")
-                .srcrefTreeIfMissing(callTarget);
-        call.addChildToFront(callTarget);
-        Node thisNode = astFactory.createThis(type(classNode)).srcrefTreeIfMissing(n);
-        thisNode.makeNonIndexable();
-        thisNode.insertAfter(callTarget);
-      }
     }
 
     if (newNameNode != null) {
