@@ -3398,4 +3398,32 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     test(options, "", "");
   }
+
+  @Test
+  public void testObjectDefaultDestructuring_passesValidityChecks() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF);
+    options.setGeneratePseudoNames(true);
+    // Regression test: this code used to cause a ValidityCheck crash because function inlining was
+    // not properly marking "x" from "{x = 2}" as constant.
+    test(
+        options,
+        """
+        function testFunctionDefault1(a) {
+          var x = 1;
+          function f({x = 2}) {
+            assertEquals(2, x);
+          }
+          f({x: a});
+        }
+        window['foo'] = testFunctionDefault1;
+        """,
+        """
+        window.foo = function($a$$) {
+          assertEquals(2, $a$$ === void 0 ? 2 : $a$$);
+        };
+        """);
+  }
 }

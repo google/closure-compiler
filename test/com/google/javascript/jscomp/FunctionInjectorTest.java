@@ -1808,6 +1808,47 @@ public final class FunctionInjectorTest {
   }
 
   @Test
+  public void testInlineReferenceToFunction_passingLiteralThis_andSideEffectfulArg() {
+    helperInlineReferenceToFunction(
+        """
+        function foo(y) { bar(this, y, y); }
+        function x() {foo.call(this, sideEffects());}
+        """,
+        """
+        function foo(y) { bar(this, y, y); }
+        function x() {
+          {
+            var y$jscomp$inline_0 = sideEffects();
+            bar(this, y$jscomp$inline_0, y$jscomp$inline_0);
+          }
+        }
+        """,
+        "foo",
+        INLINE_BLOCK);
+  }
+
+  @Test
+  public void testInlineReferenceToFunction_passingSideEffectfulThis() {
+    assumeStrictThis = true;
+    helperInlineReferenceToFunction(
+        """
+        function foo() { bar.call(this, this); }
+        function x() {foo.call(computeThis());}
+        """,
+        """
+        function foo() { bar.call(this, this); }
+        function x(){
+          {
+            var JSCompiler_inline_this_0 = computeThis();
+            bar.call(JSCompiler_inline_this_0, JSCompiler_inline_this_0);
+          }
+        }
+        """,
+        "foo",
+        INLINE_BLOCK);
+  }
+
+  @Test
   public void testInlineReferenceInExpression17() {
     allowDecomposition = true;
     helperInlineReferenceToFunction(
@@ -2246,10 +2287,9 @@ public final class FunctionInjectorTest {
                 .that(canInline)
                 .isNotEqualTo(CanInlineResult.NO);
             if (allowDecomposition) {
-              assertWithMessage(
-                      "canInlineReferenceToFunction should be CAN_INLINE_AFTER_DECOMPOSITION")
-                  .that(CanInlineResult.AFTER_PREPARATION)
-                  .isSameInstanceAs(canInline);
+              assertWithMessage("canInlineReferenceToFunction should be AFTER_PREPARATION")
+                  .that(canInline)
+                  .isEqualTo(CanInlineResult.AFTER_PREPARATION);
 
               injector.maybePrepareCall(ref);
 
@@ -2378,6 +2418,6 @@ public final class FunctionInjectorTest {
   }
 
   private static String toSource(Node n) {
-    return new CodePrinter.Builder(n).setPrettyPrint(false).setLineBreak(false).build();
+    return new CodePrinter.Builder(n).setPrettyPrint(true).setLineBreak(true).build();
   }
 }
