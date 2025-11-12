@@ -175,6 +175,45 @@ public final class SourceMapTest extends SourceMapTestCase {
         secondCompilation.sourceMapFileContent);
   }
 
+  // Tests that when a generated intermediate file contains a source map, we
+  // only map the source positions that the intermediate map specifies. If a
+  // mapping is sourceless, it is omitted from the final source map.
+  @Test
+  public void testIntermediateFilesOmitUnmappedCode() throws IOException {
+    // This map has been massaged to have a sourceless mapping covering the `alert` identifier.
+    // Pretend it was synthetically generated during transforms.
+    String generatedFile = "generated.tsx.js";
+    String generatedSource = "'use strict';function foo(){}alert(foo());";
+    String generatedSourceMap =
+        """
+        {
+        "version":3,
+        "file":"testcode",
+        "lineCount":1,
+        "mappings":"A,aAAAA,QAASA,IAAG,EAAG,E,KAAG,CAAMA,GAAA,EAAN;",
+        "sources":["foo.js"],
+        "names":["foo"]
+        }
+        """;
+
+    inputMaps.put(
+        generatedFile, new SourceMapInput(SourceFile.fromCode("sourcemap", generatedSourceMap)));
+
+    RunResult compilation = compile(generatedSource, generatedFile);
+    assertThat(compilation.sourceMapFileContent)
+        .isEqualTo(
+            """
+            {
+            "version":3,
+            "file":"testcode",
+            "lineCount":1,
+            "mappings":"A,aAAAA,QAASA,IAAG,EAAG,E,MAASA,GAAAA;",
+            "sources":["foo.js"],
+            "names":["foo"]
+            }
+            """);
+  }
+
   @Override
   protected CompilerOptions getCompilerOptions() {
     CompilerOptions options = super.getCompilerOptions();

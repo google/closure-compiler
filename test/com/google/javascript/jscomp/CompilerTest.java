@@ -422,7 +422,7 @@ public final class CompilerTest {
     assertThat(mapping.getLineNumber()).isEqualTo(18);
     assertThat(mapping.getColumnPosition()).isEqualTo(26);
     assertThat(mapping.getIdentifier()).isEqualTo("testSymbolName");
-    assertThat(consumer.getOriginalSources()).containsExactly("input.js", "input.ts");
+    assertThat(consumer.getOriginalSources()).containsExactly("input.ts");
     assertThat(consumer.getOriginalSourcesContent()).isNull();
     assertThat(consumer.getOriginalNames()).containsExactly("testSymbolName");
   }

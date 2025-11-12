@@ -25,12 +25,12 @@ import org.jspecify.annotations.Nullable;
  */
 public interface SourceFileMapping {
   /**
-   * Returns the original mapping for the file name, line number and column position found
-   * in the source map. Returns {@code null} if none is found.
+   * Returns the original mapping for the file name, line number and column position found in the
+   * source map. Returns {@code null} if the source file does not have a input map, and returns
+   * {@code OriginalMapping.getDefaultInstance()} if the input map does not map the location.
    *
    * @param lineNo The line number, 1-based.
    * @param columnNo The column index, 1-based.
    */
-  @Nullable
-  OriginalMapping getSourceMapping(String fileName, int lineNo, int columnNo);
+  @Nullable OriginalMapping getSourceMapping(String fileName, int lineNo, int columnNo);
 }

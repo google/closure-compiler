@@ -3580,7 +3580,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
     OriginalMapping result = consumer.getMappingForLine(lineNumber, columnNumber + 1);
     if (result == null) {
-      return null;
+      return OriginalMapping.getDefaultInstance();
     }
 
     // First check to see if the original file was loaded from an input source map.
