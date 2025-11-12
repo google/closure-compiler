@@ -179,12 +179,9 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
 
     // Verify that there are no unexpected errors before checking the compiled output
     assertWithMessage(
-            "Expected no warnings or errors\n"
-                + "Errors: \n"
-                + Joiner.on("\n").join(compiler.getErrors())
-                + "\n"
-                + "Warnings: \n"
-                + Joiner.on("\n").join(compiler.getWarnings()))
+            "Expected no warnings or errors\n" + "Errors: \n%s\n" + "Warnings: \n%s",
+            Joiner.on("\n").join(compiler.getErrors()),
+            Joiner.on("\n").join(compiler.getWarnings()))
         .that(compiler.getErrors().size() + compiler.getWarnings().size())
         .isEqualTo(0);
 
@@ -277,12 +274,9 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
 
     // Verify that there are no unexpected errors before checking the compiled output
     assertWithMessage(
-            "Expected no warnings or errors\n"
-                + "Errors: \n"
-                + Joiner.on("\n").join(compiler.getErrors())
-                + "\n"
-                + "Warnings: \n"
-                + Joiner.on("\n").join(compiler.getWarnings()))
+            "Expected no warnings or errors\n" + "Errors: \n%s\n" + "Warnings: \n%s",
+            Joiner.on("\n").join(compiler.getErrors()),
+            Joiner.on("\n").join(compiler.getWarnings()))
         .that(compiler.getErrors().size() + compiler.getWarnings().size())
         .isEqualTo(0);
 

@@ -1475,7 +1475,7 @@ goog.exportSymbol('foo.example.ClassName', module$contents$foo$example$ClassName
     assertThat(compiler.getErrors()).isEmpty();
     assertThat(compiler.getWarnings()).hasSize(1);
 
-    assertWithMessage("Unexpected error " + compiler.getWarnings().get(0))
+    assertWithMessage("Unexpected error %s", compiler.getWarnings().get(0))
         .that(DiagnosticGroups.STRICT_MODULE_DEP_CHECK.matches(compiler.getWarnings().get(0)))
         .isTrue();
   }
@@ -1499,7 +1499,7 @@ goog.exportSymbol('foo.example.ClassName', module$contents$foo$example$ClassName
     assertThat(compiler.getErrors()).isEmpty();
     assertThat(compiler.getWarnings()).hasSize(1);
 
-    assertWithMessage("Unexpected error " + compiler.getWarnings().get(0))
+    assertWithMessage("Unexpected error %s", compiler.getWarnings().get(0))
         .that(DiagnosticGroups.STRICT_MODULE_DEP_CHECK.matches(compiler.getWarnings().get(0)))
         .isTrue();
   }

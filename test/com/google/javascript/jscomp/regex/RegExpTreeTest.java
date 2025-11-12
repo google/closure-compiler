@@ -36,7 +36,7 @@ public class RegExpTreeTest {
   private RuntimeException exceptionFrom(String regex, String flags) {
     try {
       String printed = parseRegExpAndPrintPattern(regex, flags);
-      assertWithMessage("Expected exception, but none was thrown. Instead got back: " + printed)
+      assertWithMessage("Expected exception, but none was thrown. Instead got back: %s", printed)
           .fail();
       throw new AssertionError(); // unreachable
     } catch (RuntimeException thrownException) {

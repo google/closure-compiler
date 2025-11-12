@@ -78,13 +78,12 @@ public final class GoldenFileComparer {
     // Loop through each line to make it convenient to pin-point the faulty one
     for (int i = 0; i < compiledLines.length; i++) {
       assertWithMessage(
-              "Instrumented code does not match expected at line no: "
-                  + (i + 1)
-                  + "\nExpected:\n"
-                  + goldenLines[i]
-                  + "\nFound:\n"
-                  + compiledLines[i]
-                  + "\n")
+              "Instrumented code does not match expected at line no: %s\n"
+                  + "Expected:\n"
+                  + "%s\n"
+                  + "Found:\n"
+                  + "%s\n",
+              (i + 1), goldenLines[i], compiledLines[i])
           .that(compiledLines[i])
           .isEqualTo(goldenLines[i]);
     }
@@ -131,9 +130,8 @@ public final class GoldenFileComparer {
     }
 
     assertWithMessage(
-            "Line "
-                + (identicalLinesBetweenFiles + 1)
-                + " from Golden was not found in compiled version of source file")
+            "Line %s from Golden was not found in compiled version of source file",
+            (identicalLinesBetweenFiles + 1))
         .that(identicalLinesBetweenFiles)
         .isEqualTo(goldenLines.size());
   }

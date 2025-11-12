@@ -186,12 +186,9 @@ abstract class IntegrationTestCase {
 
     // Verify that there are no unexpected errors before checking the compiled output
     assertWithMessage(
-            "Expected no warnings or errors\n"
-                + "Errors: \n"
-                + Joiner.on("\n").join(compiler.getErrors())
-                + "\n"
-                + "Warnings: \n"
-                + Joiner.on("\n").join(compiler.getWarnings()))
+            "Expected no warnings or errors\n" + "Errors: \n%s\n" + "Warnings: \n%s",
+            Joiner.on("\n").join(compiler.getErrors()),
+            Joiner.on("\n").join(compiler.getWarnings()))
         .that(compiler.getErrors().size() + compiler.getWarnings().size())
         .isEqualTo(0);
 
@@ -260,10 +257,8 @@ abstract class IntegrationTestCase {
       diagnostic = compiler.getWarnings().get(0).type();
     }
     assertWithMessage(
-            "Error not in expected diagnostic group. Error: "
-                + diagnostic.key
-                + "\nExpected group: "
-                + warnings)
+            "Error not in expected diagnostic group. Error: %s\nExpected group: %s",
+            diagnostic.key, warnings)
         .that(warnings.matches(diagnostic))
         .isTrue();
   }
@@ -279,10 +274,10 @@ abstract class IntegrationTestCase {
     Compiler compiler = compile(options, original);
     for (JSError error : compiler.getErrors()) {
       if (!DiagnosticGroups.PARSING.matches(error)) {
-        assertWithMessage("Found unexpected error type " + error.type() + ":\n" + error).fail();
+        assertWithMessage("Found unexpected error type %s:\n%s", error.type(), error).fail();
       }
     }
-    assertWithMessage("Unexpected warnings: " + Joiner.on("\n").join(compiler.getWarnings()))
+    assertWithMessage("Unexpected warnings: %s", Joiner.on("\n").join(compiler.getWarnings()))
         .that(compiler.getWarnings().size())
         .isEqualTo(0);
 
@@ -303,7 +298,9 @@ abstract class IntegrationTestCase {
       for (JSError err : compiler.getWarnings()) {
         msg += "Warning:" + err + "\n";
       }
-      assertWithMessage("Unexpected warnings or errors.\n " + msg).that(actual).isEqualTo(expected);
+      assertWithMessage("Unexpected warnings or errors.\n %s", msg)
+          .that(actual)
+          .isEqualTo(expected);
     }
   }
 
