@@ -151,6 +151,12 @@ final class CheckGlobalThis implements NodeTraversal.Callback {
       return false;
     }
 
+    // `this` in class field definitions refers to the instance (for non-static fields) or the class
+    // itself (for static fields), never the global 'this'.
+    if ((n.isMemberFieldDef() || n.isComputedFieldDef()) && n.getParent().isClassMembers()) {
+      return false;
+    }
+
     if (parent != null && parent.isAssign()) {
       Node lhs = parent.getFirstChild();
 
