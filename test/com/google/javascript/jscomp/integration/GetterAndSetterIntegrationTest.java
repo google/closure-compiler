@@ -1748,13 +1748,11 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
           }
         });
         function Child() {}
-        Child.greeting;  // Eliminate this getter call that could have side effects?
         $jscomp.inherits(Child, Parent);
         Child.getGreeting = function() {
           return Reflect.get(Parent, 'greeting', this);
         };
         function GrandChild() {}
-        GrandChild.greeting;  // Eliminate this getter call that could have side effects?
         $jscomp.inherits(GrandChild, Child);
         GrandChild.getGreeting = Child.getGreeting;
 
@@ -1788,7 +1786,6 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
           }
         });
         function Child() {}
-        Child.greeting;  // Eliminate this getter call that could have side effects?
         $jscomp.inherits(Child, Parent);
         Child.getName = function() {
           return 'Child';
@@ -1797,7 +1794,6 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
           return Reflect.get(Parent, 'greeting', this);
         };
         function GrandChild() {}
-        GrandChild.greeting;  // Eliminate this getter call that could have side effects?
         $jscomp.inherits(GrandChild, Child);
         GrandChild.getGreeting = Child.getGreeting;
         GrandChild.getName = function() {
@@ -1835,7 +1831,6 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
           }
         });
         function b() {}
-        b.a;  // Eliminate this getter call that could have side effects?
         $jscomp.inherits(b, a);
         b.c = function() {
           return 'Child';
@@ -1845,7 +1840,6 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
           return Reflect.get(a, 'a', this);
         };
         function c() {}
-        c.a;  // Eliminate this getter call that could have side effects?
         $jscomp.inherits(c, b);
         c.b = b.b;
         c.c = function() {
