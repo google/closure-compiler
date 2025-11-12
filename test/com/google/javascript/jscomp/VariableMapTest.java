@@ -130,7 +130,7 @@ public final class VariableMapTest {
     if (bytes1 != bytes2) {
       assertWithMessage("length differs.").that(bytes2.length).isEqualTo(bytes1.length);
       for (int i = 0; i < bytes1.length; i++) {
-        assertWithMessage("byte " + i + "differs.").that(bytes2[i]).isEqualTo(bytes1[i]);
+        assertWithMessage("byte %sdiffers.", i).that(bytes2[i]).isEqualTo(bytes1[i]);
       }
     }
   }

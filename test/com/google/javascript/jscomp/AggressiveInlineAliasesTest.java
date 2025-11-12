@@ -3387,10 +3387,10 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
       assertWithMessage(fullName)
           .that(actualName.getCallGets())
           .isEqualTo(expectedName.getCallGets());
-      assertWithMessage(fullName + ": canCollapseOrInline()")
+      assertWithMessage("%s: canCollapseOrInline()", fullName)
           .that(actualName.canCollapseOrInline())
           .isEqualTo(expectedName.canCollapseOrInline());
-      assertWithMessage(fullName + ": canCollapseOrInlineChildNames()")
+      assertWithMessage("%s: canCollapseOrInlineChildNames()", fullName)
           .that(actualName.canCollapseOrInlineChildNames())
           .isEqualTo(expectedName.canCollapseOrInlineChildNames());
     }

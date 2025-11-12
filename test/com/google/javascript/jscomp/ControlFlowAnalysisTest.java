@@ -233,7 +233,7 @@ public final class ControlFlowAnalysisTest {
       DiGraphNode<Node, Branch> dest = edge.getDestination();
       if (source.getToken() == startToken) {
         assertWithMessage(
-                "Token " + startToken + " should not have an out going edge to the implicit return")
+                "Token %s should not have an out going edge to the implicit return", startToken)
             .that(cfg.isImplicitReturn(dest))
             .isFalse();
         return;

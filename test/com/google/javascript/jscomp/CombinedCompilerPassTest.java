@@ -148,16 +148,12 @@ public final class CombinedCompilerPassTest {
 
     void checkResults() {
       assertWithMessage(
-              "ConcatTraversal ignoring "
-                  + traversal.getIgnoring()
-                  + " has unexpected visiting order")
+              "ConcatTraversal ignoring %s has unexpected visiting order", traversal.getIgnoring())
           .that(traversal.getVisited())
           .isEqualTo(expectedVisited);
 
       assertWithMessage(
-              "ConcatTraversal ignoring "
-                  + traversal.getIgnoring()
-                  + " has unexpected traversal order")
+              "ConcatTraversal ignoring %s has unexpected traversal order", traversal.getIgnoring())
           .that(traversal.getShouldTraversed())
           .isEqualTo(shouldTraverseExpected);
     }

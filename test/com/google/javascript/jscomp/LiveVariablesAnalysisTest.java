@@ -542,8 +542,8 @@ public final class LiveVariablesAnalysisTest {
 
   private void assertLiveBeforeX(String src, String var, boolean async) {
     LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src, async);
-    assertWithMessage(src + " should contain a label 'X:'").that(state).isNotNull();
-    assertWithMessage("Variable " + var + " should be live before X")
+    assertWithMessage("%s should contain a label 'X:'", src).that(state).isNotNull();
+    assertWithMessage("Variable %s should be live before X", var)
         .that(state.getIn().isLive(liveness.getVarIndex(var)))
         .isTrue();
   }
@@ -555,7 +555,7 @@ public final class LiveVariablesAnalysisTest {
   private void assertLiveAfterX(String src, String var, boolean async) {
     LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src, async);
     assertWithMessage("Label X should be in the input program.").that(state).isNotNull();
-    assertWithMessage("Variable " + var + " should be live after X")
+    assertWithMessage("Variable %s should be live after X", var)
         .that(state.getOut().isLive(liveness.getVarIndex(var)))
         .isTrue();
   }
@@ -563,7 +563,7 @@ public final class LiveVariablesAnalysisTest {
   private void assertNotLiveAfterX(String src, String var) {
     LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src, false);
     assertWithMessage("Label X should be in the input program.").that(state).isNotNull();
-    assertWithMessage("Variable " + var + " should not be live after X")
+    assertWithMessage("Variable %s should not be live after X", var)
         .that(state.getOut().isLive(liveness.getVarIndex(var)))
         .isFalse();
   }
@@ -571,7 +571,7 @@ public final class LiveVariablesAnalysisTest {
   private void assertNotLiveBeforeX(String src, String var) {
     LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src, false);
     assertWithMessage("Label X should be in the input program.").that(state).isNotNull();
-    assertWithMessage("Variable " + var + " should not be live before X")
+    assertWithMessage("Variable %s should not be live before X", var)
         .that(state.getIn().isLive(liveness.getVarIndex(var)))
         .isFalse();
   }
@@ -579,8 +579,8 @@ public final class LiveVariablesAnalysisTest {
   private void assertLiveAfterDecl(String src, String var) {
     LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> state =
         getFlowStateAtDeclaration(src, var);
-    assertWithMessage("Variable " + var + " should be declared").that(state).isNotNull();
-    assertWithMessage("Variable" + var + " should be live after its declaration")
+    assertWithMessage("Variable %s should be declared", var).that(state).isNotNull();
+    assertWithMessage("Variable%s should be live after its declaration", var)
         .that(state.getOut().isLive(liveness.getVarIndex(var)))
         .isTrue();
   }
@@ -588,8 +588,8 @@ public final class LiveVariablesAnalysisTest {
   private void assertNotLiveAfterDecl(String src, String var) {
     LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> state =
         getFlowStateAtDeclaration(src, var);
-    assertWithMessage("Variable " + var + " should be declared").that(state).isNotNull();
-    assertWithMessage("Variable " + var + " should not be live after its declaration")
+    assertWithMessage("Variable %s should be declared", var).that(state).isNotNull();
+    assertWithMessage("Variable %s should not be live after its declaration", var)
         .that(state.getOut().isLive(liveness.getVarIndex(var)))
         .isFalse();
   }
@@ -597,8 +597,8 @@ public final class LiveVariablesAnalysisTest {
   private void assertNotLiveBeforeDecl(String src, String var) {
     LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> state =
         getFlowStateAtDeclaration(src, var);
-    assertWithMessage("Variable " + var + " should be declared").that(state).isNotNull();
-    assertWithMessage("Variable " + var + " should not be live before its declaration")
+    assertWithMessage("Variable %s should be declared", var).that(state).isNotNull();
+    assertWithMessage("Variable %s should not be live before its declaration", var)
         .that(state.getIn().isLive(liveness.getVarIndex(var)))
         .isFalse();
   }
@@ -664,7 +664,7 @@ public final class LiveVariablesAnalysisTest {
         return;
       }
     }
-    assertWithMessage("Variable " + name + " should be in the escaped local list.").fail();
+    assertWithMessage("Variable %s should be in the escaped local list.", name).fail();
   }
 
   private static void assertNotEscaped(String src, String name) {

@@ -43,7 +43,7 @@ public final class MinimizedConditionTest {
     CompilerOptions options = new CompilerOptions();
     compiler.init(externs, input, options);
     Node root = compiler.parseInputs();
-    assertWithMessage("Unexpected parse error(s): " + Joiner.on("\n").join(compiler.getErrors()))
+    assertWithMessage("Unexpected parse error(s): %s", Joiner.on("\n").join(compiler.getErrors()))
         .that(root)
         .isNotNull();
     Node externsRoot = root.getFirstChild();
@@ -79,28 +79,20 @@ public final class MinimizedConditionTest {
         result2.getMinimized(MinimizationStyle.ALLOW_LEADING_NOT).buildReplacement();
     if (!positiveResult.isEquivalentTo(positiveNode)) {
       assertWithMessage(
-              "Not equal:"
-                  + "\nExpected: "
-                  + positive
-                  + "\nBut was : "
-                  + new Compiler().toSource(positiveResult)
-                  + "\nExpected tree:\n"
-                  + positiveNode.toStringTree()
-                  + "\nActual tree:\n"
-                  + positiveResult.toStringTree())
+              "Not equal:" + "\nExpected: %s\nBut was : %s\nExpected tree:\n%s\nActual tree:\n%s",
+              positive,
+              new Compiler().toSource(positiveResult),
+              positiveNode.toStringTree(),
+              positiveResult.toStringTree())
           .fail();
     }
     if (!negativeResult.isEquivalentTo(negativeNode)) {
       assertWithMessage(
-              "Not equal:"
-                  + "\nExpected: "
-                  + negative
-                  + "\nBut was : "
-                  + new Compiler().toSource(negativeResult)
-                  + "\nExpected tree:\n"
-                  + negativeNode.toStringTree()
-                  + "\nActual tree:\n"
-                  + negativeResult.toStringTree())
+              "Not equal:" + "\nExpected: %s\nBut was : %s\nExpected tree:\n%s\nActual tree:\n%s",
+              negative,
+              new Compiler().toSource(negativeResult),
+              negativeNode.toStringTree(),
+              negativeResult.toStringTree())
           .fail();
     }
   }

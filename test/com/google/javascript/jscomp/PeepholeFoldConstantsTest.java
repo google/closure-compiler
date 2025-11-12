@@ -2272,13 +2272,13 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   private void assertSameResults(String exprA, String exprB) {
-    assertWithMessage("Expressions did not fold the same\nexprA: " + exprA + "\nexprB: " + exprB)
+    assertWithMessage("Expressions did not fold the same\nexprA: %s\nexprB: %s", exprA, exprB)
         .that(process(exprB))
         .isEqualTo(process(exprA));
   }
 
   private void assertNotSameResults(String exprA, String exprB) {
-    assertWithMessage("Expressions folded the same\nexprA: " + exprA + "\nexprB: " + exprB)
+    assertWithMessage("Expressions folded the same\nexprA: %s\nexprB: %s", exprA, exprB)
         .that(process(exprA).equals(process(exprB)))
         .isFalse();
   }
@@ -2297,10 +2297,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     Node root = compiler.parseInputs();
     compiler.setAccessorSummary(AccessorSummary.create(ImmutableMap.of()));
     assertWithMessage(
-            "Unexpected parse error(s): "
-                + Joiner.on("\n").join(compiler.getErrors())
-                + "\nEXPR: "
-                + js)
+            "Unexpected parse error(s): %s\nEXPR: %s",
+            Joiner.on("\n").join(compiler.getErrors()), js)
         .that(root)
         .isNotNull();
     Node externsRoot = root.getFirstChild();

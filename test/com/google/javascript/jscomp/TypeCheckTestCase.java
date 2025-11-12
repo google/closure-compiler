@@ -69,7 +69,7 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
 
   protected void checkObjectType(ObjectType objectType, String propertyName, JSType expectedType) {
     assertWithMessage(
-            "Expected " + objectType.getReferenceName() + " to have property " + propertyName)
+            "Expected %s to have property %s", objectType.getReferenceName(), propertyName)
         .that(objectType.hasProperty(propertyName))
         .isTrue();
     assertTypeEquals(

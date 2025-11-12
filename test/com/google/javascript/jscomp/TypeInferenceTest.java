@@ -339,7 +339,7 @@ public final class TypeInferenceTest {
   private JSType getType(String name) {
     assertWithMessage("The return scope should not be null.").that(returnScope).isNotNull();
     StaticTypedSlot var = returnScope.getSlot(name);
-    assertWithMessage("The variable " + name + " is missing from the scope.").that(var).isNotNull();
+    assertWithMessage("The variable %s is missing from the scope.", name).that(var).isNotNull();
     return var.getType();
   }
 
@@ -358,7 +358,7 @@ public final class TypeInferenceTest {
   }
 
   private void verify(String name, JSType type) {
-    assertWithMessage("Mismatch for " + name).about(types()).that(getType(name)).isEqualTo(type);
+    assertWithMessage("Mismatch for %s", name).about(types()).that(getType(name)).isEqualTo(type);
   }
 
   private void verify(String name, JSTypeNative type) {
@@ -366,7 +366,10 @@ public final class TypeInferenceTest {
   }
 
   private void verifyUnequal(String name, JSType type) {
-    assertWithMessage("Mismatch for " + name).about(types()).that(getType(name)).isNotEqualTo(type);
+    assertWithMessage("Mismatch for %s", name)
+        .about(types())
+        .that(getType(name))
+        .isNotEqualTo(type);
   }
 
   private void verifyUnequal(String name, JSTypeNative type) {
@@ -375,9 +378,8 @@ public final class TypeInferenceTest {
 
   private void verifySubtypeOf(String name, JSType type) {
     JSType varType = getType(name);
-    assertWithMessage("The variable " + name + " is missing a type.").that(varType).isNotNull();
-    assertWithMessage(
-            "The type " + varType + " of variable " + name + " is not a subtype of " + type + ".")
+    assertWithMessage("The variable %s is missing a type.", name).that(varType).isNotNull();
+    assertWithMessage("The type %s of variable %s is not a subtype of %s.", varType, name, type)
         .that(varType.isSubtypeOf(type))
         .isTrue();
   }

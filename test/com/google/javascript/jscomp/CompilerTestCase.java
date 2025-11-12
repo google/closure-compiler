@@ -1370,24 +1370,18 @@ public abstract class CompilerTestCase {
       LightweightMessageFormatter formatter = new LightweightMessageFormatter(compiler);
       if (expectedWarnings.isEmpty()) {
         assertWithMessage(
-                "aggregate warnings: "
-                    + aggregateWarnings.stream()
-                        .map(formatter::formatWarning)
-                        .collect(joining("\n")))
+                "aggregate warnings: %s",
+                aggregateWarnings.stream().map(formatter::formatWarning).collect(joining("\n")))
             .that(aggregateWarnings)
             .isEmpty();
       } else {
         assertWithMessage(
-                "There should be "
-                    + expectedWarnings.size()
-                    + " warnings, repeated "
-                    + numRepetitions
-                    + " time(s). Warnings: \n"
-                    + LINE_JOINER.join(aggregateWarnings))
+                "There should be %s warnings, repeated %s time(s). Warnings: \n%s",
+                expectedWarnings.size(), numRepetitions, LINE_JOINER.join(aggregateWarnings))
             .that(aggregateWarningCount)
             .isEqualTo(numRepetitions * expectedWarnings.size());
         for (int i = 0; i < numRepetitions; i++) {
-          assertWithMessage("compile warnings from repetition " + (i + 1))
+          assertWithMessage("compile warnings from repetition %s", (i + 1))
               .that(errorManagers[i].getWarnings())
               .comparingElementsUsing(DIAGNOSTIC_CORRESPONDENCE)
               .containsExactlyElementsIn(expectedWarnings);
@@ -1426,10 +1420,8 @@ public abstract class CompilerTestCase {
         } else {
           assertWithMessage(
                   "compiler.reportCodeChange() should have been called."
-                      + "\nOriginal: "
-                      + mainRootClone.toStringTree()
-                      + "\nNew: "
-                      + mainRoot.toStringTree())
+                      + "\nOriginal: %s\nNew: %s",
+                  mainRootClone.toStringTree(), mainRoot.toStringTree())
               .that(hasCodeChanged)
               .isTrue();
         }
@@ -1572,17 +1564,17 @@ public abstract class CompilerTestCase {
     // Make sure that source information is always provided.
     if (!allowSourcelessWarnings) {
       final String sourceName = jserror.sourceName();
-      assertWithMessage("Missing source file name in warning: " + jserror)
+      assertWithMessage("Missing source file name in warning: %s", jserror)
           .that(sourceName != null && !sourceName.isEmpty())
           .isTrue();
       Node scriptNode = lastCompiler.getScriptNode(sourceName);
-      assertWithMessage("No SCRIPT node found for warning: " + jserror)
+      assertWithMessage("No SCRIPT node found for warning: %s", jserror)
           .that(scriptNode)
           .isNotNull();
-      assertWithMessage("Missing line number in warning: " + jserror)
+      assertWithMessage("Missing line number in warning: %s", jserror)
           .that(jserror.lineno() != -1)
           .isTrue();
-      assertWithMessage("Missing char number in warning: " + jserror)
+      assertWithMessage("Missing char number in warning: %s", jserror)
           .that(jserror.charno() != -1)
           .isTrue();
     }
@@ -1627,7 +1619,7 @@ public abstract class CompilerTestCase {
 
     compiler.init(defaultExternsInputs, inputs, getOptions());
     Node root = compiler.parseInputs();
-    assertWithMessage("Unexpected parse error(s): " + LINE_JOINER.join(compiler.getErrors()))
+    assertWithMessage("Unexpected parse error(s): %s", LINE_JOINER.join(compiler.getErrors()))
         .that(root)
         .isNotNull();
     Node externsRoot = root.getFirstChild();
@@ -1744,7 +1736,7 @@ public abstract class CompilerTestCase {
         warningBuilder.append(actualWarning.description()).append("\n");
       }
       String warningMessage = warningBuilder.toString();
-      assertWithMessage("There should be " + warnings.length + " warnings. " + warningMessage)
+      assertWithMessage("There should be %s warnings. %s", warnings.length, warningMessage)
           .that(compiler.getWarningCount())
           .isEqualTo(warnings.length);
       for (int i = 0; i < warnings.length; i++) {

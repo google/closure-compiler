@@ -2592,7 +2592,7 @@ public final class CommandLineRunnerTest {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     String output = runner.getCompiler().toSource();
     assertThat(output).isEqualTo("alert(\"foo\");");
@@ -2615,7 +2615,7 @@ public final class CommandLineRunnerTest {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
@@ -2648,7 +2648,7 @@ public final class CommandLineRunnerTest {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
@@ -2702,7 +2702,7 @@ public final class CommandLineRunnerTest {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
@@ -2762,7 +2762,7 @@ public final class CommandLineRunnerTest {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
@@ -2800,7 +2800,7 @@ public final class CommandLineRunnerTest {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
@@ -2837,7 +2837,7 @@ public final class CommandLineRunnerTest {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
@@ -3204,7 +3204,7 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
@@ -3275,7 +3275,7 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
 
     assertThat(Files.asCharSource(outputFile1, UTF_8).read()).isEqualTo(inputSource1);
@@ -3656,11 +3656,9 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
 
     if (warning == null) {
       assertWithMessage(
-              "Expected no warnings or errors"
-                  + "\nErrors: \n"
-                  + Joiner.on("\n").join(compiler.getErrors())
-                  + "\nWarnings: \n"
-                  + Joiner.on("\n").join(compiler.getWarnings()))
+              "Expected no warnings or errors" + "\nErrors: \n%s\nWarnings: \n%s",
+              Joiner.on("\n").join(compiler.getErrors()),
+              Joiner.on("\n").join(compiler.getWarnings()))
           .that(compiler.getErrors().size() + compiler.getWarnings().size())
           .isEqualTo(0);
     } else {
@@ -3690,11 +3688,9 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
   private void test(String[] original, DiagnosticType warning) {
     Compiler compiler = compile(original);
     assertWithMessage(
-            "Expected exactly one warning or error "
-                + "\nErrors: \n"
-                + Joiner.on("\n").join(compiler.getErrors())
-                + "\nWarnings: \n"
-                + Joiner.on("\n").join(compiler.getWarnings()))
+            "Expected exactly one warning or error " + "\nErrors: \n%s\nWarnings: \n%s",
+            Joiner.on("\n").join(compiler.getErrors()),
+            Joiner.on("\n").join(compiler.getWarnings()))
         .that(compiler.getErrors().size() + compiler.getWarnings().size())
         .isEqualTo(1);
 
@@ -3704,13 +3700,13 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
     if (!compiler.getErrors().isEmpty()) {
       assertThat(compiler.getErrors()).hasSize(1);
       assertThat(compiler.getErrors().get(0).type()).isEqualTo(warning);
-      assertWithMessage("Expected exit code of 1.  Contents of err printstream:\n" + errReader)
+      assertWithMessage("Expected exit code of 1.  Contents of err printstream:\n%s", errReader)
           .that(lastExitCode)
           .isEqualTo(1);
     } else {
       assertThat(compiler.getWarnings()).hasSize(1);
       assertThat(compiler.getWarnings().get(0).type()).isEqualTo(warning);
-      assertWithMessage("Expected exit code of 0.  Contents of err printstream:\n" + errReader)
+      assertWithMessage("Expected exit code of 0.  Contents of err printstream:\n%s", errReader)
           .that(lastExitCode)
           .isEqualTo(0);
     }
@@ -3810,7 +3806,7 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     Compiler compiler = runner.getCompiler();
     String output = compiler.toSource();
@@ -3840,7 +3836,7 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     return new String(outputStream.toByteArray(), UTF_8);
   }

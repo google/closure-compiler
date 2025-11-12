@@ -35,7 +35,7 @@ public final class DefaultNameGeneratorTest {
     for (int i = 0; i < num; i++) {
       result[i] = ng.generateNextName();
       if (!result[i].startsWith(prefix)) {
-        assertWithMessage("Error: " + result[i]).fail();
+        assertWithMessage("Error: %s", result[i]).fail();
       }
     }
     return result;

@@ -2420,7 +2420,7 @@ a = temp$jscomp$2;
     JSType actualType = rootActual.getJSType();
 
     if (expectedType == null || actualType == null) {
-      assertWithMessage("Expected " + rootExpected + " but got " + rootActual)
+      assertWithMessage("Expected %s but got %s", rootExpected, rootActual)
           .that(actualType)
           .isEqualTo(expectedType);
     } else if (expectedType.isUnknownType() && actualType.isUnknownType()) {
@@ -2428,7 +2428,7 @@ a = temp$jscomp$2;
     } else {
       // we can't compare actual equality because the types are from different runs of the
       // type inference, so we just compare the strings.
-      assertWithMessage("Expected " + rootExpected + " but got " + rootActual)
+      assertWithMessage("Expected %s but got %s", rootExpected, rootActual)
           .that(actualType.toAnnotationString(JSType.Nullability.EXPLICIT))
           .isEqualTo(expectedType.toAnnotationString(JSType.Nullability.EXPLICIT));
     }

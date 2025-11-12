@@ -108,7 +108,9 @@ public abstract class CodePrinterTestBase {
       }
     }
     if (actual != expected) {
-      assertWithMessage("Unexpected warnings or errors.\n " + msg).that(actual).isEqualTo(expected);
+      assertWithMessage("Unexpected warnings or errors.\n %s", msg)
+          .that(actual)
+          .isEqualTo(expected);
     }
   }
 
