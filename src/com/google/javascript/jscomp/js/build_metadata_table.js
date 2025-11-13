@@ -66,7 +66,7 @@ function fail(message) {
 /**
  * Builds up a table of polyfills.
  */
-class PolyfillTable {
+class Library {
   constructor() {
     /** @const {!Map<string, !Array<string>>} */
     this.symbolToFile = new Map();
@@ -75,7 +75,10 @@ class PolyfillTable {
     /** @const {!Map<string, string>} */
     this.versions = new Map();
     /** @const {!Array<!Array<string>>} */
-    this.rows = [];
+    this.polyfills = [];
+    /** @const {!Map<string, string>} */
+    this.jscompProps = new Map();
+    this.jscompProps.set('global', 'util/global');
   }
 
   /**
@@ -95,12 +98,12 @@ class PolyfillTable {
 
       this.symbolToFile.set(polyfill, this.symbolToFile.get(polyfill) || []);
       this.symbolToFile.get(polyfill).push(lib);
-      const row = [polyfill, fromLang, toLang];
+      const polyfillRow = [polyfill, fromLang, toLang];
       if (impl) {
-        row.push(lib);
+        polyfillRow.push(lib);
         this.versions.set(lib, maxVersion(this.versions.get(lib), toLang));
       }
-      this.rows.push(row);
+      this.polyfills.push(polyfillRow);
     };
   }
 
@@ -119,6 +122,27 @@ class PolyfillTable {
     };
   }
 
+  static IGNORE = new Set(['global', 'polyfill', 'polyfillTypedArrayMethod']);
+
+  /**
+   * Returns a shim for $jscomp.polyfillTypedArrayMethod.
+   * @param {string} lib Library currently being scanned.
+   * @return {function(string): void}
+   */
+  addJscompProperty(lib) {
+    return (propertyName) => {
+      if (Library.IGNORE.has(propertyName)) {
+        return;
+      }
+      if (this.jscompProps.has(propertyName)) {
+        throw new Error(
+            `property ${propertyName} found multipile times. existing: ${
+                jscompProps.get(propertyName)}, new: ${lib}`)
+      }
+      this.jscompProps.set(propertyName, lib);
+    };
+  }
+
   /**
    * Reads a JS file and adds it to the table.
    * @param {string} lib Name of the library.
@@ -133,13 +157,22 @@ class PolyfillTable {
     while (match = re.exec(data)) {
       match[1].split(' ').forEach(dep => deps.add(dep));
     }
+    // Inject this code at the end of the library file, to collect all
+    // properties that were defined on "$jscomp".
+    data += `
+    for (const prop of Object.getOwnPropertyNames($jscomp)) {
+      recordProperty(prop);
+    }
+    `;
     // Now run the file.
     try {
-      new Function('$jscomp', data)({
-        global: global,
-        polyfill: this.polyfill(lib),
-        polyfillTypedArrayMethod: this.polyfillTypedArrayMethod(lib),
-      });
+      new Function('$jscomp', 'recordProperty', data)(
+          {
+            global: global,
+            polyfill: this.polyfill(lib),
+            polyfillTypedArrayMethod: this.polyfillTypedArrayMethod(lib),
+          },
+          this.addJscompProperty(lib));
     } catch (err) {
       throw new Error('Failed to parse file: ' + lib + ': ' + err);
     }
@@ -148,9 +181,21 @@ class PolyfillTable {
   /**
    * Concatenates the table into a string.  Throws an error if
    * there are any symbols provided by multiple files.
+   * @param {string} mode
    * @return {string}
    */
-  build() {
+  build(mode) {
+    switch (mode) {
+      case 'POLYFILLS':
+        return this.buildPolyfills();
+      case 'RUNTIME_LIBS':
+        return this.buildRuntimeLibs();
+      default:
+        throw new Error(`Unknown mode: ${mode}`);
+    }
+  }
+
+  buildPolyfills() {
     const errors = new Set();
     try {
       // First check for duplicate provided symbols.
@@ -169,7 +214,13 @@ class PolyfillTable {
     if (errors.size) {
       fail(Array.from(errors).join('\n\n'));
     }
-    return this.rows.sort().map(row => row.join(' ')).join('\n');
+    return this.polyfills.sort(([polyfillName]) => polyfillName)
+        .map(row => row.join(' '))
+        .join('\n');
+  }
+
+  buildRuntimeLibs() {
+    return [...this.jscompProps].sort().join('\n');
   }
 }
 
@@ -220,9 +271,16 @@ function maxVersion(version1, version2) {
   return ORDER[Math.max(ORDER.indexOf(version1), ORDER.indexOf(version2))];
 }
 
-const table = new PolyfillTable();
+const table = new Library();
 
-const reads = process.argv.slice(2).map(
+const modeArg = process.argv[2];
+if (!modeArg || !modeArg.startsWith('--mode=')) {
+  throw new Error(
+      `build_metadata_table should be called as: --mode={POLYFILLS, RUNTIME_LIBS} paths/to/files`);
+}
+const mode = modeArg.substring('--mode='.length);
+
+const reads = process.argv.slice(3).map(
     filename => new Promise(
         (fulfill, reject) => fs.readFile(filename, 'utf8', (err, data) => {
           try {
@@ -239,4 +297,4 @@ const reads = process.argv.slice(2).map(
         })));
 
 Promise.all(reads).then(
-    success => console.log(table.build()), failure => fail(failure.stack));
+    success => console.log(table.build(mode)), failure => fail(failure.stack));
