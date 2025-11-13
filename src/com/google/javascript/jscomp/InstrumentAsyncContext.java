@@ -26,7 +26,9 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
@@ -47,6 +49,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
+  private final UniqueIdSupplier uniqueIdSupplier;
 
   // Whether `await`s should be instrumented.  When we're transpiling them away, we can skip
   // instrumenting them completely (the transpiled `yield`s don't need instrumentation because we
@@ -60,18 +63,20 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   // that both yield _and_ await can be skipped, or just await).
 
   private final Deque<Node> tryFunctionStack = new ArrayDeque<>();
-  private final Set<Node> needsInstrumentation = new LinkedHashSet<>();
+  private final Map<Node, FunctionContext> needsInstrumentation = new LinkedHashMap<>();
   private final Set<Node> alreadyInstrumented = new LinkedHashSet<>();
   private final Set<Node> hasSuper = new LinkedHashSet<>();
 
   public InstrumentAsyncContext(AbstractCompiler compiler, boolean shouldInstrumentAwait) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
+    this.uniqueIdSupplier = compiler.getUniqueIdSupplier();
     this.shouldInstrumentAwait = shouldInstrumentAwait;
   }
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized(), compiler.getLifeCycleStage());
     // Scan through code and find uses of AsyncContext. Look specifically for Variable.run.
     NodeTraversal.traverse(compiler, root, this);
   }
@@ -101,7 +106,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
 
   @Override
   public void visit(NodeTraversal t, Node n, @Nullable Node parent) {
-    if (n.isName() && n.getString().equals(FACTORY)) {
+    if (n.isName() && n.getString().startsWith(FACTORY)) {
       alreadyInstrumented.add(t.getEnclosingFunction());
     } else if (n.isSuper()) {
       hasSuper.add(t.getEnclosingFunction());
@@ -112,15 +117,21 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
       if (alreadyInstrumented.contains(n)) {
         return;
       }
-      if (needsInstrumentation.contains(n) || n.isGeneratorFunction()) {
-        if (n.isTry()) {
-          instrumentTry(n);
-        } else if (n.isGeneratorFunction()) {
-          instrumentGeneratorFunction(t, n);
-        } else {
-          checkState(n.isAsyncFunction());
-          instrumentAsyncFunction(n);
-        }
+      var context =
+          n.isGeneratorFunction()
+              ? needsInstrumentation.computeIfAbsent(
+                  n, (unused) -> createNewFunctionContext(t.getInput()))
+              : needsInstrumentation.get(n);
+      if (context == null) {
+        return;
+      }
+      if (n.isTry()) {
+        instrumentTry(n, context);
+      } else if (n.isGeneratorFunction()) {
+        instrumentGeneratorFunction(t, n, context);
+      } else {
+        checkState(n.isAsyncFunction());
+        instrumentAsyncFunction(n, t.getInput(), context);
       }
     }
   }
@@ -154,13 +165,15 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
 
     // At this point, instrumentation is required, both for the immediate node, as well as for any
     // enclosing function or try block.
-    needsInstrumentation.add(enclosingFunction);
+    FunctionContext functionContext =
+        needsInstrumentation.computeIfAbsent(
+            enclosingFunction, (unused) -> createNewFunctionContext(t.getInput()));
     if (enclosingTry != null) {
-      needsInstrumentation.add(enclosingTry);
+      needsInstrumentation.put(enclosingTry, functionContext);
     }
 
     if (n.isForAwaitOf()) {
-      instrumentForAwaitOf(t, n, parent);
+      instrumentForAwaitOf(t, n, parent, functionContext);
       return;
     }
 
@@ -168,18 +181,18 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     Node placeholder = IR.empty();
     Node arg = n.getFirstChild();
     if (arg == null) {
-      n.addChildToBack(createSuspend().srcrefTreeIfMissing(n));
+      n.addChildToBack(functionContext.suspend().srcrefTreeIfMissing(n));
     } else {
       arg.replaceWith(placeholder);
-      placeholder.replaceWith(createSuspend(arg).srcrefTreeIfMissing(arg));
+      placeholder.replaceWith(functionContext.suspend(arg).srcrefTreeIfMissing(arg));
     }
 
     // Wrap the entire yield/await with a ᵃᶜresume(...) call
     n.replaceWith(placeholder);
-    placeholder.replaceWith(createResume(n).srcrefTreeIfMissing(n));
+    placeholder.replaceWith(functionContext.resume(n).srcrefTreeIfMissing(n));
   }
 
-  void instrumentForAwaitOf(NodeTraversal t, Node n, Node parent) {
+  void instrumentForAwaitOf(NodeTraversal t, Node n, Node parent, FunctionContext functionContext) {
     // for await (const x of expr()) {
     //   use(x);
     // }
@@ -198,17 +211,17 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     Node placeholder = IR.empty();
     Node arg = n.getSecondChild();
     arg.replaceWith(placeholder);
-    placeholder.replaceWith(createSuspend(arg).srcrefTreeIfMissing(arg));
+    placeholder.replaceWith(functionContext.suspend(arg).srcrefTreeIfMissing(arg));
 
     Node body = n.getLastChild();
     checkState(body.isBlock()); // NOTE: IRFactory normalizes non-block `for` bodies
     body.replaceWith(placeholder);
     placeholder.replaceWith(
         IR.block(
-            IR.exprResult(createResume().srcrefTreeIfMissing(arg)),
+            IR.exprResult(functionContext.resume().srcrefTreeIfMissing(arg)),
             IR.tryFinally(
                 body, //
-                IR.block(IR.exprResult(createSuspend().srcrefTreeIfMissing(arg))))));
+                IR.block(IR.exprResult(functionContext.suspend().srcrefTreeIfMissing(arg))))));
 
     // Add resume call after for-await-of
     if (!parent.isBlock()) {
@@ -218,10 +231,10 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
       block.addChildToFront(n);
       n = block;
     }
-    IR.exprResult(createResume().srcrefTreeIfMissing(arg)).insertAfter(n);
+    IR.exprResult(functionContext.resume().srcrefTreeIfMissing(arg)).insertAfter(n);
   }
 
-  void instrumentTry(Node n) {
+  void instrumentTry(Node n, FunctionContext functionContext) {
     // Find either a catch or a finally block (if there is no catch).
     Node block = n.getSecondChild();
     if (block.hasChildren()) {
@@ -233,10 +246,10 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     }
     checkState(block.isBlock());
     // Prepend an empty resume call: ᵃᶜresume()
-    block.addChildToFront(IR.exprResult(createResume().srcrefTreeIfMissing(block)));
+    block.addChildToFront(IR.exprResult(functionContext.resume().srcrefTreeIfMissing(block)));
   }
 
-  void instrumentGeneratorFunction(NodeTraversal t, Node f) {
+  void instrumentGeneratorFunction(NodeTraversal t, Node f, FunctionContext functionContext) {
     // If a function is completely empty then there's no need to instrument it
     // because there's nothing within that can observe the state of any variables.
     if (!f.getLastChild().hasChildren()) {
@@ -254,7 +267,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     // only do when necessary (i.e. `super` is used), which corresponds to a
     // known-safe case (since `super` can't be collapsed).
     if (hasSuper.contains(f)) {
-      instrumentGeneratorMethod(t, f);
+      instrumentGeneratorMethod(t, f, functionContext);
       return;
     }
 
@@ -267,22 +280,22 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
       f.setIsAsyncFunction(false);
       inner.setIsAsyncFunction(true);
     }
-    // inner.getFirstChild().setString(f.getFirstChild().getString());
     inner.getLastChild().replaceWith(generatorBody);
 
-    generatorBody = addFinallySuspend(generatorBody);
-    generatorBody.addChildToFront(IR.exprResult(createResume()));
+    generatorBody = addFinallySuspend(generatorBody, functionContext);
+    generatorBody.addChildToFront(IR.exprResult(functionContext.resume()));
     Node newOuterBody =
         IR.block(
-            createFactorySuspendCall(), IR.returnNode(astFactory.createCallWithUnknownType(inner)));
-    addSuspendResumeVarsAfter(newOuterBody.getFirstChild());
+            createFactorySuspendCall(functionContext.factoryName()),
+            IR.returnNode(astFactory.createCallWithUnknownType(inner)));
+    addSuspendResumeVarsAfter(newOuterBody.getFirstChild(), functionContext);
     f.addChildToBack(newOuterBody.srcrefTreeIfMissing(generatorBody));
 
     // NOTE: if the IIFE generator refers to `this` or `arguments` then we need to extract these
     // references into local variables.
     ThisAndArgumentsContext thisContext =
         new ThisAndArgumentsContext(
-            newOuterBody, false, compiler.getUniqueIdSupplier().getUniqueId(t.getInput()));
+            newOuterBody, false, uniqueIdSupplier.getUniqueId(t.getInput()));
     ThisAndArgumentsReferenceUpdater updater =
         new ThisAndArgumentsReferenceUpdater(compiler, thisContext, astFactory);
     NodeTraversal.traverse(compiler, generatorBody, updater);
@@ -291,9 +304,12 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
 
     compiler.reportChangeToChangeScope(f);
     compiler.reportChangeToChangeScope(inner);
+    // Instrumentation may move functions into a new nested scope.
+    NodeUtil.addFeatureToScript(
+        t.getCurrentScript(), Feature.BLOCK_SCOPED_FUNCTION_DECLARATION, compiler);
   }
 
-  void instrumentGeneratorMethod(NodeTraversal t, Node f) {
+  void instrumentGeneratorMethod(NodeTraversal t, Node f, FunctionContext functionContext) {
     // This requires special handling compared to ordinary generator functions because
     // it may reference `super`, which would break in a vanilla IIFE.  Instead, copy the
     // body to a new method with the same parameters, plus one or two more for the
@@ -318,19 +334,21 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     String innerMethodName =
         (f.getParent().isMemberFunctionDef() ? f.getParent().getString() : "")
             + "$jscomp$"
-            + compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
+            + uniqueIdSupplier.getUniqueId(t.getInput());
     Node outerParams = f.getSecondChild();
     Node innerParams = outerParams.cloneTree();
 
     // Add the ᵃᶜfactory parameter to the front of the inner parameter list
-    Node swapFactoryParam = createFactoryName();
-    innerParams.addChildToFront(swapFactoryParam);
-    AstFactory.Type unknownType = AstFactory.type(swapFactoryParam);
+    Node innerFactoryName = functionContext.factoryName();
+    Node outerFactoryName =
+        astFactory.createNameWithUnknownType(FACTORY + uniqueIdSupplier.getUniqueId(t.getInput()));
+    innerParams.addChildToFront(innerFactoryName);
+    AstFactory.Type unknownType = AstFactory.type(innerFactoryName);
 
     // Add a finally-suspend wrapper and an initial resume call around the original generator body
     // (which has already had its yields/awaits instrumented).
-    Node generatorBody = addFinallySuspend(f.getLastChild());
-    generatorBody.addChildToFront(IR.exprResult(createResume()));
+    Node generatorBody = addFinallySuspend(f.getLastChild(), functionContext);
+    generatorBody.addChildToFront(IR.exprResult(functionContext.resume()));
 
     // Look for references to `arguments`.  If found, add an extra parameter to the inner method.
     // We need to save a reference to the parameter in order to replace it in the function call
@@ -343,7 +361,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
       argumentsReference = astFactory.createArgumentsReference();
       argumentsParam =
           astFactory.createName(renamer.argumentsName, AstFactory.type(argumentsReference));
-      argumentsParam.insertAfter(swapFactoryParam);
+      argumentsParam.insertAfter(innerFactoryName);
     }
 
     // Detach the generator body and replace it with a new empty block.  We'll fill the empty block
@@ -359,7 +377,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
                 astFactory.createThis(unknownType), innerMethodName, AstFactory.type(f)));
     // Copy the context parameter.
     Node innerParam = innerParams.getFirstChild();
-    innerCall.addChildToBack(innerParam.cloneTree());
+    innerCall.addChildToBack(outerFactoryName.cloneTree());
     innerParam = innerParam.getNext();
     // Copy the arguments parameter if it's there.
     if (innerParam != null && innerParam == argumentsParam) {
@@ -404,8 +422,8 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     }
 
     // Populate the outer (non-generator) method body with an start() and call to the inner method.
-    outerBody.addChildToBack(createFactorySuspendCall());
-    addSuspendResumeVarsAtStartOf(generatorBody);
+    outerBody.addChildToBack(createFactorySuspendCall(outerFactoryName));
+    addSuspendResumeVarsAtStartOf(generatorBody, innerFactoryName, functionContext);
     outerBody.addChildToBack(IR.returnNode(innerCall));
 
     // Various cleanups
@@ -415,6 +433,9 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     compiler.reportChangeToChangeScope(f);
     compiler.reportChangeToChangeScope(newInnerMethod);
     compiler.reportChangeToEnclosingScope(f.getParent());
+    // Instrumentation may move functions into a new nested scope.
+    NodeUtil.addFeatureToScript(
+        t.getCurrentScript(), Feature.BLOCK_SCOPED_FUNCTION_DECLARATION, compiler);
   }
 
   private ArgParamPair simplifyParameter(Node param, NodeTraversal t) {
@@ -431,15 +452,22 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
       return simplifyParameter(param.removeFirstChild(), t);
     } else if (param.isArrayPattern() || param.isObjectPattern()) {
       // Replace destructuring patterns with a synthesized name.
-      return simplifyParameter(
+      Node newParam =
           astFactory
               .createName(
-                  "$jscomp$" + compiler.getUniqueIdSupplier().getUniqueId(t.getInput()),
+                  "$jscomp$param$" + uniqueIdSupplier.getUniqueId(t.getInput()),
                   AstFactory.type(param))
-              .srcrefTreeIfMissing(param),
-          t);
+              .srcrefTreeIfMissing(param);
+      return new ArgParamPair(newParam.cloneTree(), newParam);
     } else if (param.isName()) {
-      return new ArgParamPair(param.cloneTree(), param);
+      // Replace destructuring patterns with a synthesized name.
+      Node newParam =
+          astFactory
+              .createName(
+                  param.getString() + "$jscomp$param$" + uniqueIdSupplier.getUniqueId(t.getInput()),
+                  AstFactory.type(param))
+              .srcrefTreeIfMissing(param);
+      return new ArgParamPair(newParam.cloneTree(), newParam);
     }
     throw new IllegalStateException("Unexpected parameter: " + param);
   }
@@ -467,14 +495,14 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     public void visit(NodeTraversal t, Node n, @Nullable Node parent) {
       if (n.isName() && n.getString().equals("arguments")) {
         if (argumentsName == null) {
-          argumentsName =
-              "$jscomp$arguments$" + compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
+          argumentsName = "$jscomp$arguments$" + uniqueIdSupplier.getUniqueId(t.getInput());
         }
         n.setString(argumentsName);
         if (compiler.getOptions().preservesDetailedSourceInfo()) {
           n.setOriginalName("arguments");
         }
         n.makeNonIndexable();
+        n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
     }
   }
@@ -483,12 +511,13 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
    * Given an async function node, instrument it by wrapping the body in a try-finally and adding an
    * "start" call to the front.
    */
-  void instrumentAsyncFunction(Node f) {
+  void instrumentAsyncFunction(Node f, CompilerInput input, FunctionContext functionContext) {
     // Add a variable to the front of the body
     Node block = f.getLastChild();
-    Node newBlock = addFinallySuspend(block);
-    newBlock.addChildToFront(createFactoryCall().srcrefTreeIfMissing(newBlock));
-    addSuspendResumeVarsAfter(newBlock.getFirstChild());
+    Node newBlock = addFinallySuspend(block, functionContext);
+    newBlock.addChildToFront(
+        createFactoryCall(functionContext.factoryName).srcrefTreeIfMissing(newBlock));
+    addSuspendResumeVarsAfter(newBlock.getFirstChild(), functionContext);
     compiler.reportChangeToChangeScope(f);
 
     // TODO(sdh): Need to instrument async functions for unhandled rejections.
@@ -500,99 +529,95 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   /**
    * Replace a function body with a new body containing only try (original body) finally (suspend).
    */
-  Node addFinallySuspend(Node block) {
+  Node addFinallySuspend(Node block, FunctionContext functionContext) {
     Node placeholder = IR.empty();
     block.replaceWith(placeholder);
-    if (!block.isBlock()) {
-      // NOTE: this can happen with a non-block arrow function.
-      block = IR.block(IR.returnNode(block)).srcrefTreeIfMissing(block);
-    }
-    Node newBlock =
-        IR.block(IR.tryFinally(block, IR.block(IR.exprResult(createSuspend()))))
-            .srcrefTreeIfMissing(block);
+    Node finallyBlock = IR.block(IR.exprResult(functionContext.suspend()));
+    Node newBlock = IR.block(IR.tryFinally(block, finallyBlock)).srcrefTreeIfMissing(block);
     placeholder.replaceWith(newBlock);
     return newBlock;
   }
 
-  /** Creates an {@code ᵃᶜsuspend} identifier node. */
-  private Node createSuspendName() {
-    return astFactory.createQNameWithUnknownType(SUSPEND);
-  }
-
-  /** Creates a {@code ᵃᶜresume} identifier node. */
-  private Node createResumeName() {
-    return astFactory.createQNameWithUnknownType(RESUME);
-  }
-
-  /** Creates a {@code ᵃᶜfactory} identifier node. */
-  private Node createFactoryName() {
-    return astFactory.createQNameWithUnknownType(FACTORY);
-  }
-
-  private void addSuspendResumeVarsAfter(Node node) {
+  private void addSuspendResumeVarsAfter(Node node, FunctionContext functionContext) {
     // var ᵃᶜsuspend = ᵃᶜfactory();
     // var ᵃᶜresume = ᵃᶜfactory(1);
     Node resumeCall =
-        astFactory.createCallWithUnknownType(createFactoryName(), astFactory.createNumber(1));
-    IR.var(astFactory.createConstantName(RESUME, AstFactory.type(resumeCall)), resumeCall)
-        .srcrefTreeIfMissing(node)
-        .insertAfter(node);
-    Node suspendCall = astFactory.createCallWithUnknownType(createFactoryName());
-    IR.var(astFactory.createConstantName(SUSPEND, AstFactory.type(suspendCall)), suspendCall)
-        .srcrefTreeIfMissing(node)
-        .insertAfter(node);
-  }
-
-  private void addSuspendResumeVarsAtStartOf(Node node) {
-    // var ᵃᶜsuspend = ᵃᶜfactory();
-    // var ᵃᶜresume = ᵃᶜfactory(1);
-    Node resumeCall =
-        astFactory.createCallWithUnknownType(createFactoryName(), astFactory.createNumber(1));
-    node.addChildToFront(
-        IR.var(astFactory.createConstantName(RESUME, AstFactory.type(resumeCall)), resumeCall)
-            .srcrefTreeIfMissing(node));
-    Node suspendCall = astFactory.createCallWithUnknownType(createFactoryName());
-    node.addChildToFront(
-        IR.var(astFactory.createConstantName(SUSPEND, AstFactory.type(suspendCall)), suspendCall)
-            .srcrefTreeIfMissing(node));
-  }
-
-  /** Creates a statement {@code const ᵃᶜfactory = $jscomp$asyncContextStart();}. */
-  private Node createFactoryCall(Node... arg) {
-    Node call =
         astFactory.createCallWithUnknownType(
-            astFactory.createQNameWithUnknownType(JSCOMP, ImmutableList.of(START)), arg);
-    return createVar(astFactory.createConstantName(FACTORY, AstFactory.type(call)), call);
+            functionContext.factoryName.cloneNode(), astFactory.createNumber(1));
+    IR.var(functionContext.resumeName, resumeCall).srcrefTreeIfMissing(node).insertAfter(node);
+    Node suspendCall =
+        astFactory.createCallWithUnknownType(functionContext.factoryName.cloneNode());
+    IR.var(functionContext.suspendName, suspendCall).srcrefTreeIfMissing(node).insertAfter(node);
   }
 
-  private Node createVar(Node name, Node value) {
+  private void addSuspendResumeVarsAtStartOf(
+      Node node, Node factoryName, FunctionContext functionContext) {
+    // var ᵃᶜsuspend = ᵃᶜfactory();
+    // var ᵃᶜresume = ᵃᶜfactory(1);
+    Node resumeCall =
+        astFactory.createCallWithUnknownType(factoryName.cloneNode(), astFactory.createNumber(1));
+    node.addChildToFront(IR.var(functionContext.resumeName, resumeCall).srcrefTreeIfMissing(node));
+    Node suspendCall = astFactory.createCallWithUnknownType(factoryName.cloneNode());
+    node.addChildToFront(
+        IR.var(functionContext.suspendName, suspendCall).srcrefTreeIfMissing(node));
+  }
+
+  private static Node createVar(Node name, Node value) {
     return IR.var(name, value);
   }
 
+  /** Creates a statement {@code const ᵃᶜfactory = $jscomp$asyncContextStart();}. */
+  private Node createFactoryCall(Node factoryName, Node... arg) {
+    Node call =
+        astFactory.createCallWithUnknownType(
+            astFactory.createQNameWithUnknownType(JSCOMP, ImmutableList.of(START)), arg);
+    return createVar(factoryName, call);
+  }
+
   /** Creates a statement {@code const ᵃᶜfactory = $jscomp$asyncContextStart(1);}. */
-  private Node createFactorySuspendCall() {
-    return createFactoryCall(astFactory.createNumber(1));
+  private Node createFactorySuspendCall(Node factoryName) {
+    return createFactoryCall(factoryName, astFactory.createNumber(1));
   }
 
-  /** Wraps the given node in an suspend call: {@code ᵃᶜsuspend(NODE)}. */
-  private Node createSuspend(Node inner) {
-    return astFactory.createCall(createSuspendName(), AstFactory.type(inner), inner);
+  private record FunctionContext(
+      String uniqueSuffix,
+      Node suspendName,
+      Node resumeName,
+      Node factoryName,
+      AstFactory astFactory) {
+
+    /** Creates an empty suspend call: {@code ᵃᶜsuspend()}. */
+    Node suspend() {
+      return astFactory.createCall(suspendName.cloneNode(), AstFactory.type(suspendName));
+    }
+
+    /** Wraps the given node in a suspend call: {@code ᵃᶜsuspend(NODE)}. */
+    Node suspend(Node inner) {
+      return astFactory.createCall(suspendName.cloneNode(), AstFactory.type(inner), inner);
+    }
+
+    /** Creates an empty resume call: {@code ᵃᶜresume()}. */
+    Node resume() {
+      return astFactory.createCall(resumeName.cloneNode(), AstFactory.type(resumeName));
+    }
+
+    /** Wraps the given node in a resume call: {@code ᵃᶜresume(NODE)}. */
+    Node resume(Node inner) {
+      return astFactory.createCall(resumeName.cloneNode(), AstFactory.type(inner), inner);
+    }
   }
 
-  /** Creates an empty suspend call: {@code ᵃᶜsuspend()}. */
-  private Node createSuspend() {
-    Node suspend = createSuspendName();
-    return astFactory.createCall(suspend, AstFactory.type(suspend));
-  }
+  private FunctionContext createNewFunctionContext(CompilerInput input) {
+    String uniqueSuffix = uniqueIdSupplier.getUniqueId(input);
+    // Creates a unique name, prefixed with `ᵃᶜsuspend`
+    Node suspendNode = astFactory.createNameWithUnknownType(SUSPEND + uniqueSuffix);
 
-  /** Wraps the given node in a resume call: {@code ᵃᶜresume(NODE)}. */
-  private Node createResume(Node inner) {
-    return astFactory.createCall(createResumeName(), AstFactory.type(inner), inner);
-  }
+    // Creates a unique name, prefixed with `ᵃᶜresume`
+    Node resumeNode = astFactory.createNameWithUnknownType(RESUME + uniqueSuffix);
 
-  /** Creates an empty resume call: {@code ᵃᶜresume()}. */
-  private Node createResume() {
-    Node resume = createResumeName();
-    return astFactory.createCall(resume, AstFactory.type(resume));
+    // Creates a unique name, prefixed with `ᵃᶜfactory`
+    Node factoryName = astFactory.createNameWithUnknownType(FACTORY + uniqueSuffix);
+
+    return new FunctionContext(uniqueSuffix, suspendNode, resumeNode, factoryName, astFactory);
   }
 }
