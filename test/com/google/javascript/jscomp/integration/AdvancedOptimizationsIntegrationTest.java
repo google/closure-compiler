@@ -2073,7 +2073,13 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     Compiler compiler = compile(options, sb.toString());
     assertWithMessage(
-            "Expected no warnings or errors\n" + "Errors: \n%s\n" + "Warnings: \n%s",
+            """
+            Expected no warnings or errors
+            Errors:
+            %s
+            Warnings:
+            %s
+            """,
             Joiner.on("\n").join(compiler.getErrors()),
             Joiner.on("\n").join(compiler.getWarnings()))
         .that(compiler.getErrors().size() + compiler.getWarnings().size())

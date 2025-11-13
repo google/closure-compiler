@@ -78,11 +78,13 @@ public final class GoldenFileComparer {
     // Loop through each line to make it convenient to pin-point the faulty one
     for (int i = 0; i < compiledLines.length; i++) {
       assertWithMessage(
-              "Instrumented code does not match expected at line no: %s\n"
-                  + "Expected:\n"
-                  + "%s\n"
-                  + "Found:\n"
-                  + "%s\n",
+              """
+              Instrumented code does not match expected at line no: %s
+              Expected:
+              %s
+              Found:
+              %s
+              """,
               (i + 1), goldenLines[i], compiledLines[i])
           .that(compiledLines[i])
           .isEqualTo(goldenLines[i]);

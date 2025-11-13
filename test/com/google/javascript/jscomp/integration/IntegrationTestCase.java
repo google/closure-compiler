@@ -186,7 +186,13 @@ abstract class IntegrationTestCase {
 
     // Verify that there are no unexpected errors before checking the compiled output
     assertWithMessage(
-            "Expected no warnings or errors\n" + "Errors: \n%s\n" + "Warnings: \n%s",
+            """
+            Expected no warnings or errors
+            Errors:
+            %s
+            Warnings:
+            %s
+            """,
             Joiner.on("\n").join(compiler.getErrors()),
             Joiner.on("\n").join(compiler.getWarnings()))
         .that(compiler.getErrors().size() + compiler.getWarnings().size())
