@@ -2502,6 +2502,33 @@ public class CompilerOptions {
     this.replaceStringsPlaceholderToken = replaceStringsPlaceholderToken;
   }
 
+  /**
+   * How @closureUnaware code blocks should be handled.
+   *
+   * <p>PASS_THROUGH: they are entirely hidden from the compiler, as if they were an evaled string.
+   *
+   * <p>SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION: This is *experimental* - we want to support some
+   * minimal transpilation & safe optimizations. TODO: b/421971366 - implement this flag.
+   */
+  public enum ClosureUnawareMode {
+    PASS_THROUGH,
+    SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION
+  }
+
+  private ClosureUnawareMode closureUnawareMode = ClosureUnawareMode.PASS_THROUGH;
+
+  /**
+   * Opts into experimental support for transpiling/optimizing @closureUnaware code blocks, rather
+   * than just passing them through compilation unchanged.
+   */
+  public void setClosureUnawareMode(ClosureUnawareMode mode) {
+    this.closureUnawareMode = mode;
+  }
+
+  ClosureUnawareMode getClosureUnawareMode() {
+    return this.closureUnawareMode;
+  }
+
   public void setPrettyPrint(boolean prettyPrint) {
     this.prettyPrint = prettyPrint;
   }
