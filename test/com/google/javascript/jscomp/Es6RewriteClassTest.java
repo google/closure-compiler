@@ -2658,7 +2658,7 @@ $jscomp.inherits(FooPromise, Promise);
         let C = function() {};
         C.prototype.foo = function*() { yield 1;};
         """);
-    assertThat(getLastCompiler().getInjectedLibraries()).isEmpty();
+    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries()).isEmpty();
   }
 
   @Test

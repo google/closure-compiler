@@ -40,6 +40,7 @@ import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -62,7 +63,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
     options.setVariableRenaming(VariableRenamingPolicy.OFF);
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -122,7 +123,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testObjectDestructuring_forLoopInitializer_doesNotCrash() {
     CompilerOptions options = createCompilerOptions();
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
@@ -187,7 +188,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testVariableUsedAsArgumentMultipleTimes() {
     CompilerOptions options = createCompilerOptions();
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
     options.setVariableRenaming(VariableRenamingPolicy.OFF);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -220,7 +221,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testTSVariableReassignmentAndAliasingDueToDecoration() {
     CompilerOptions options = createCompilerOptions();
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
@@ -328,7 +329,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testFoldSpread() {
     CompilerOptions options = createCompilerOptions();
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
@@ -346,7 +347,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testBug303058080() {
     // Avoid including the transpilation library
     CompilerOptions options = createCompilerOptions();
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
@@ -395,7 +396,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testBug123583793() {
     // Avoid including the transpilation library
     CompilerOptions options = createCompilerOptions();
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
@@ -424,14 +425,15 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             f = (delete d.a, d);
         b.call(a, {a:e, d:f});
         """);
-    assertThat(lastCompiler.getInjectedLibraries()).contains("es6/object/assign");
+    assertThat(lastCompiler.getRuntimeJsLibManager().getInjectedLibraries())
+        .contains("es6/object/assign");
   }
 
   @Test
   public void testBug173319540() {
     // Avoid including the transpilation library
     CompilerOptions options = createCompilerOptions();
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
@@ -871,7 +873,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setVariableRenaming(VariableRenamingPolicy.OFF);
 
     // we don't want to see injected library code in the output
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     test(
         options,
@@ -1132,13 +1134,14 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setRewritePolyfills(true);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     compile(options, new String[] {"for (const x of [1, 2, 3].values()) { alert(x); }"});
 
     assertThat(lastCompiler.getResult().errors).isEmpty();
     assertThat(lastCompiler.getResult().warnings).isEmpty();
-    assertThat(lastCompiler.getInjectedLibraries()).containsExactly("es6/array/values");
+    assertThat(lastCompiler.getRuntimeJsLibManager().getInjectedLibraries())
+        .containsExactly("es6/array/values");
   }
 
   @Test
@@ -1233,7 +1236,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setExportLocalPropertyDefinitions(true);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setPrettyPrint(true);
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     test(
         options,
@@ -2029,7 +2032,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
     // Avoid comparing all the polyfill code.
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     // include externs definitions for the stuff that would have been injected
     externs =
@@ -2104,7 +2107,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     externs =
         ImmutableList.of(
@@ -2197,7 +2200,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     externs =
         ImmutableList.of(
@@ -2351,7 +2354,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testRestDoesntBlockPropertyDisambiguation() {
     CompilerOptions options = createCompilerOptions();
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
     // TODO(b/116532470): the compiler should compile this down to nothing.

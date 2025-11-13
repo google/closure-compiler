@@ -53,6 +53,7 @@ import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.StrictWarningsGuard;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
@@ -1061,7 +1062,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setAmbiguateProperties(true);
     options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
     // Avoid injecting the polyfills, so we don't have to include them in the expected output.
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     test(
         options,
         """
@@ -1163,7 +1164,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setAmbiguateProperties(true);
     options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
     // Avoid injecting the polyfills, so we don't have to include them in the expected output.
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     test(
         options,
@@ -3045,7 +3046,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setPrettyPrint(true);
 
     // Avoid comparing all the polyfill code.
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     // include externs definitions for the stuff that would have been injected
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
@@ -3101,7 +3102,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setPrettyPrint(true);
 
     // Avoid comparing all the polyfill code.
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     // include externs definitions for the stuff that would have been injected
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
@@ -3149,7 +3150,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testInitSymbolIteratorInjection() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
     externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
@@ -3174,7 +3175,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testInitSymbolIteratorInjectionWithES6Syntax() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
     externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
@@ -4121,7 +4122,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
 
     // Avoid comparing all the polyfill code.
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
@@ -4207,7 +4208,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testDefaultParameterRemoval() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     test(
         options,
@@ -4235,7 +4236,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testAsyncIter() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
@@ -4293,7 +4294,7 @@ async function abc() {
   public void testDestructuringRest() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     test(options, "const {y} = {}", "const {y} = {}");
 

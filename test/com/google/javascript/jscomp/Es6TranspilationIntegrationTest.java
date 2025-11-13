@@ -152,13 +152,13 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   @Test
   public void testObjectLiteralStringKeysWithNoValue() {
     test("var x = {a, b};", "var x = {a: a, b: b};");
-    assertThat(getLastCompiler().getInjectedLibraries()).isEmpty();
+    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries()).isEmpty();
   }
 
   @Test
   public void testSpreadLibInjection() {
     test("var x = [...a];", "var x=[].concat((0, $jscomp.arrayFromIterable)(a))");
-    assertThat(getLastCompiler().getInjectedLibraries())
+    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
         .containsExactly("es6/util/arrayfromiterable");
   }
 
@@ -167,7 +167,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "var x = {/** @return {number} */ a() { return 0; } };",
         "var x = {/** @return {number} */ a: function() { return 0; } };");
-    assertThat(getLastCompiler().getInjectedLibraries()).isEmpty();
+    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries()).isEmpty();
   }
 
   @Test
@@ -484,7 +484,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         var C = function() { D.apply(this, arguments); };
         $jscomp.inherits(C, D);
         """);
-    assertThat(getLastCompiler().getInjectedLibraries())
+    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
         .containsExactly("es6/util/inherits", "es6/util/construct", "es6/util/arrayfromiterable");
 
     test(
@@ -2093,13 +2093,15 @@ $jscomp.inherits(FooPromise, Promise);
         externs(externsFileWithSymbol), //
         srcs("let a = alert(Symbol.thimble);"),
         expected("var a = alert(Symbol.thimble)"));
-    assertThat(getLastCompiler().getInjectedLibraries()).containsExactly("es6/symbol");
+    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
+        .containsExactly("es6/symbol");
 
     test(
         externs(externsFileWithSymbol), //
         srcs("let a = alert(Symbol.iterator);"),
         expected("var a = alert(Symbol.iterator)"));
-    assertThat(getLastCompiler().getInjectedLibraries()).containsExactly("es6/symbol");
+    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
+        .containsExactly("es6/symbol");
 
     test(
         externs(externsFileWithSymbol),

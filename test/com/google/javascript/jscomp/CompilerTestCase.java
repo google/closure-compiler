@@ -39,6 +39,7 @@ import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.AstValidator.TypeInfoValidation;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
@@ -394,7 +395,7 @@ public abstract class CompilerTestCase {
     if (debugLoggingEnabled) {
       CompilerTestCaseUtils.setDebugLogDirectoryOn(options);
     }
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     return options;
   }
@@ -556,8 +557,8 @@ public abstract class CompilerTestCase {
   /**
    * When comparing expected to actual, ignore nodes created through compiler.ensureLibraryInjected
    *
-   * <p>This differs from using {@link CompilerOptions.RuntimeLibraryMode.RECORD_ONLY} in that the
-   * compiler still injects the polyfills when requested.
+   * <p>This differs from using {@link RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY} in that
+   * the compiler still injects the polyfills when requested.
    */
   protected final void disableCompareSyntheticCode() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
@@ -1204,7 +1205,7 @@ public abstract class CompilerTestCase {
         if (!librariesToInject.isEmpty() && i == 0 && !injectLibrariesFromTypedAsts) {
           recentChange.reset();
           for (String resourceName : librariesToInject) {
-            compiler.ensureLibraryInjected(resourceName, true);
+            compiler.getRuntimeJsLibManager().ensureLibraryInjected(resourceName, true);
           }
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
@@ -1260,7 +1261,7 @@ public abstract class CompilerTestCase {
           if (!librariesToInject.isEmpty() && injectLibrariesFromTypedAsts) {
             recentChange.reset();
             for (String resourceName : librariesToInject) {
-              compiler.ensureLibraryInjected(resourceName, true);
+              compiler.getRuntimeJsLibManager().ensureLibraryInjected(resourceName, true);
             }
             hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
           }

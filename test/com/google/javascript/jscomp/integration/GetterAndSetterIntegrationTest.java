@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.GoogleCodingConvention;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -1475,7 +1476,7 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
 
     // Avoiding diffing the polyfills.
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     // Include externs definitions for the stuff that would have been injected.
     var externsList =
@@ -1651,7 +1652,7 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
 
     // Avoiding diffing the polyfills.
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     // Include externs definitions for the stuff that would have been injected.
     var externsList =

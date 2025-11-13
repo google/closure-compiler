@@ -2836,7 +2836,8 @@ public final class DefaultPassConfig extends PassConfig {
                           .setIncludeDebugInfo(
                               compiler.getOptions().shouldSerializeExtraDebugInfo())
                           // set the runtime libraries to serialize in the TypedAST proto
-                          .setRuntimeLibraries(compiler.getInjectedLibraries())
+                          .setRuntimeLibraries(
+                              compiler.getRuntimeJsLibManager().getInjectedLibraries())
                           .build()))
           .build();
 

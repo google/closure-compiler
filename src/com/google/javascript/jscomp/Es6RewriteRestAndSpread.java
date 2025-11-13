@@ -111,7 +111,11 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       functionBody.addChildToBack(let);
     }
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
-    compiler.ensureLibraryInjected("es6/util/restarguments", /* force= */ false);
+    // TODO: b/421971366 - we should instead assert that es6/util/restargument was already injected
+    // before this point, by InjectTranspilationRuntimeLibraries.
+    compiler
+        .getRuntimeJsLibManager()
+        .ensureLibraryInjected("es6/util/restarguments", /* force= */ false);
     t.reportCodeChange();
   }
 

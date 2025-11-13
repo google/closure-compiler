@@ -15,17 +15,18 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
-import com.google.javascript.rhino.Node;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,7 +42,8 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   private static final LanguageMode ES5 = LanguageMode.ECMASCRIPT5_STRICT;
   private static final LanguageMode ES3 = LanguageMode.ECMASCRIPT3;
 
-  private final Map<String, String> injectableLibraries = new HashMap<>();
+  private Map<String, String> injectableLibraries = new LinkedHashMap<>();
+  private Set<String> injectBeforePass = new LinkedHashSet<>();
   private final List<String> polyfillTable = new ArrayList<>();
   private boolean isolatePolyfills = false;
   private boolean injectPolyfills = true;
@@ -61,6 +63,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     injectableLibraries.clear();
+    injectBeforePass.clear();
     polyfillTable.clear();
     injectPolyfillsNewerThan = null;
     setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -70,6 +73,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   protected CompilerPass getProcessor(Compiler compiler) {
     return new RewritePolyfills(
         compiler,
+        createRuntimeJsLibManager(compiler),
         Polyfills.fromTable(Joiner.on("\n").join(polyfillTable)),
         injectPolyfills,
         isolatePolyfills,
@@ -80,42 +84,22 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.MISSING_POLYFILL, CheckLevel.WARNING);
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     return options;
   }
 
-  @Override
-  protected Compiler createCompiler() {
-    // TODO: b/421971366 - stop overriding ensureLibraryInjected
-    return new Compiler() {
-      @Nullable Node lastInjected = null;
-
-      @Override
-      public Node ensureLibraryInjected(String library, boolean force) {
-        if (getInjectedLibraries().contains(library)) {
-          // already injected
-          return lastInjected;
-        } else {
-          // super method just records library in `injected`
-          super.ensureLibraryInjected(library, /* force= */ false);
-          Node parent = getNodeForCodeInsertion(null);
-          checkState(injectableLibraries.containsKey(library), "Missing %s", library);
-          Node ast = parseSyntheticCode(library, injectableLibraries.get(library));
-          Node lastChild = ast.getLastChild();
-          Node firstChild = ast.removeChildren();
-          // Any newly added functions must be marked as changed.
-          for (Node child = firstChild; child != null; child = child.getNext()) {
-            NodeUtil.markNewScopesChanged(child, this);
-          }
-          if (lastInjected == null) {
-            parent.addChildrenToFront(firstChild);
-          } else {
-            parent.addChildrenAfter(firstChild, lastInjected);
-          }
-          return lastInjected = lastChild;
-        }
-      }
-    };
+  private RuntimeJsLibManager createRuntimeJsLibManager(Compiler compiler) {
+    RuntimeJsLibManager runtimeLibs =
+        RuntimeJsLibManager.create(
+            RuntimeJsLibManager.RuntimeLibraryMode.INJECT,
+            // stub out the resource parsing
+            (resource, path) -> compiler.parseTestCode(injectableLibraries.get(resource)),
+            compiler.getChangeTracker(),
+            () -> compiler.getNodeForCodeInsertion(null));
+    for (String toInject : injectBeforePass) {
+      runtimeLibs.ensureLibraryInjected(toInject, /* force= */ false);
+    }
+    return runtimeLibs;
   }
 
   private String addLibraries(String code, String[] libraries) {
@@ -573,7 +557,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     polyfillTable.add("Set es6 es3 es6/set");
 
     // simulate injection of Map by a prior-run pass
-    ensureLibraryInjected("es6/set");
+    injectBeforePass.add("es6/set");
     setLanguage(ES6, ES5);
     test(
         "var set = new Set();",

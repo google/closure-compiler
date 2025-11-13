@@ -471,7 +471,7 @@ final class PolymerClassRewriter {
             .srcrefTreeIfMissing(propertiesLiteral);
     parent.addChildToFront(objReflectCall);
     compiler.reportChangeToEnclosingScope(parent);
-    compiler.ensureLibraryInjected("util/reflectobject", false);
+    compiler.getRuntimeJsLibManager().ensureLibraryInjected("util/reflectobject", false);
   }
 
   /** Adds an @this annotation to all functions in the objLit. */

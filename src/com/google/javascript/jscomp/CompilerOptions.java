@@ -37,6 +37,7 @@ import com.google.javascript.jscomp.annotations.LegacySetFeatureSetCaller;
 import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager.RuntimeLibraryMode;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
@@ -878,21 +879,6 @@ public class CompilerOptions {
 
   /** Runtime libraries to always inject. */
   List<String> forceLibraryInjection = ImmutableList.of();
-
-  /**
-   * What to do with the runtime libraries under the js/ directory: the compiler can ignore them
-   * completely; can validate any attempted library usage is correct but not modify the AST; or both
-   * validate & add to the AST.
-   */
-  public enum RuntimeLibraryMode {
-    INJECT,
-    // mode where the compiler is building a TypedAST for the runtime libraries & can't use them,
-    // or where the compiler is in transpile-only mode and running per-file.
-    NO_OP,
-    // for testing - compiler records that it was asked to inject a runtime library, but does not
-    // modify the AST
-    RECORD_ONLY
-  }
 
   /** Runtime libraries to never inject. */
   private RuntimeLibraryMode runtimeLibraryMode = RuntimeLibraryMode.INJECT;

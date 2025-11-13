@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
@@ -32,10 +33,13 @@ import com.google.javascript.rhino.Node;
  */
 public final class InjectTranspilationRuntimeLibraries implements CompilerPass {
   private final AbstractCompiler compiler;
+
+  private final RuntimeJsLibManager runtimeLibs;
   private boolean injectedClassExtendsLibraries;
 
   public InjectTranspilationRuntimeLibraries(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.runtimeLibs = compiler.getRuntimeJsLibManager();
     this.injectedClassExtendsLibraries = false;
   }
 
@@ -89,31 +93,31 @@ public final class InjectTranspilationRuntimeLibraries implements CompilerPass {
       // We need `Object.assign` to transpile `obj = {a, ...rest};` or `const {a, ...rest} = obj;`,
       // but the output language level doesn't indicate that it is guaranteed to be present, so
       // we'll include our polyfill.
-      compiler.ensureLibraryInjected("es6/object/assign", /* force= */ false);
+      runtimeLibs.ensureLibraryInjected("es6/object/assign", /* force= */ false);
     }
 
     if (mustBeCompiledAway.contains(Feature.CLASS_GETTER_SETTER)) {
-      compiler.ensureLibraryInjected("util/global", /* force= */ false);
+      runtimeLibs.ensureLibraryInjected("util/global", /* force= */ false);
     }
 
     if (mustBeCompiledAway.contains(Feature.GENERATORS)) {
-      compiler.ensureLibraryInjected("es6/generator_engine", /* force= */ false);
+      runtimeLibs.ensureLibraryInjected("es6/generator_engine", /* force= */ false);
     }
 
     if (mustBeCompiledAway.contains(Feature.ASYNC_FUNCTIONS)) {
-      compiler.ensureLibraryInjected("es6/execute_async_generator", /* force= */ false);
+      runtimeLibs.ensureLibraryInjected("es6/execute_async_generator", /* force= */ false);
     }
 
     if (mustBeCompiledAway.contains(Feature.ASYNC_GENERATORS)) {
-      compiler.ensureLibraryInjected("es6/async_generator_wrapper", /* force= */ false);
+      runtimeLibs.ensureLibraryInjected("es6/async_generator_wrapper", /* force= */ false);
     }
 
     if (mustBeCompiledAway.contains(Feature.FOR_AWAIT_OF)) {
-      compiler.ensureLibraryInjected("es6/util/makeasynciterator", /* force= */ false);
+      runtimeLibs.ensureLibraryInjected("es6/util/makeasynciterator", /* force= */ false);
     }
 
     if (mustBeCompiledAway.contains(Feature.REST_PARAMETERS)) {
-      compiler.ensureLibraryInjected("es6/util/restarguments", /* force= */ false);
+      runtimeLibs.ensureLibraryInjected("es6/util/restarguments", /* force= */ false);
     }
 
     if (compiler.getOptions().getInstrumentAsyncContext()
@@ -123,7 +127,7 @@ public final class InjectTranspilationRuntimeLibraries implements CompilerPass {
         && (outputFeatures.contains(Feature.ASYNC_FUNCTIONS)
             || used.contains(Feature.GENERATORS)
             || used.contains(Feature.ASYNC_GENERATORS))) {
-      compiler.ensureLibraryInjected("es6/asynccontext/runtime", /* force= */ false);
+      runtimeLibs.ensureLibraryInjected("es6/asynccontext/runtime", /* force= */ false);
     }
   }
 

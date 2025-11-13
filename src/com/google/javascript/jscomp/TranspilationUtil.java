@@ -46,6 +46,8 @@ public final class TranspilationUtil {
   }
 
   static void preloadTranspilationRuntimeFunction(AbstractCompiler compiler, String function) {
-    compiler.ensureLibraryInjected("es6/util/" + function.toLowerCase(Locale.ROOT), false);
+    compiler
+        .getRuntimeJsLibManager()
+        .ensureLibraryInjected("es6/util/" + function.toLowerCase(Locale.ROOT), false);
   }
 }

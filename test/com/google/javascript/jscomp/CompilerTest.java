@@ -3046,7 +3046,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.ensureLibraryInjected("base", /* force= */ true);
+    compiler.getRuntimeJsLibManager().ensureLibraryInjected("base", /* force= */ true);
 
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     compiler.saveState(byteArrayOutputStream);
@@ -3059,7 +3059,7 @@ public final class CompilerTest {
     Node oldAst = compiler.getJsRoot().cloneTree();
 
     // should not change the AST as 'base' was already injected.
-    compiler.ensureLibraryInjected("base", /* force= */ true);
+    compiler.getRuntimeJsLibManager().ensureLibraryInjected("base", /* force= */ true);
 
     assertNode(compiler.getJsRoot()).isEqualTo(oldAst);
   }
@@ -3076,7 +3076,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.ensureLibraryInjected("base", /* force= */ true);
+    compiler.getRuntimeJsLibManager().ensureLibraryInjected("base", /* force= */ true);
 
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     compiler.saveState(byteArrayOutputStream);
@@ -3089,7 +3089,7 @@ public final class CompilerTest {
 
     Node oldAst = compiler.getJsRoot().cloneTree();
 
-    compiler.ensureLibraryInjected("es6/set", /* force= */ true);
+    compiler.getRuntimeJsLibManager().ensureLibraryInjected("es6/set", /* force= */ true);
 
     assertNode(compiler.getJsRoot()).isNotEqualTo(oldAst);
 

@@ -66,6 +66,7 @@ import com.google.javascript.jscomp.deps.WebpackModuleResolver;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass;
 import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass.CoverageReach;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.parsing.Config;
@@ -181,13 +182,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // Warnings guard for filtering warnings.
   private WarningsGuard warningsGuard;
 
-  // Compile-time injected libraries
-  private final LinkedHashSet<String> injectedLibraries = new LinkedHashSet<>();
-
-  // Node of the final injected library. Future libraries will be injected
-  // after this node.
-  private @Nullable Node lastInjectedLibrary;
-
   // Parse tree root nodes
   private Node externsRoot;
   private Node jsRoot;
@@ -207,6 +201,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private ImmutableMap<String, String> inputPathByWebpackId;
 
   private StaticScope transpilationNamespace;
+
+  private RuntimeJsLibManager runtimeJsLibManager;
 
   /**
    * Subclasses are responsible for loading sources that were not provided as explicit inputs to the
@@ -408,7 +404,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     if (options.skipNonTranspilationPasses) {
-      options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.NO_OP);
+      options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.NO_OP);
     }
 
     moduleLoader = ModuleLoader.EMPTY;
@@ -716,7 +712,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.setTypeCheckingHasRun(deserializeTypes);
 
     for (String library : astData.getRuntimeLibraries()) {
-      this.ensureLibraryInjected(library, false);
+      this.runtimeJsLibManager.ensureLibraryInjected(library, false);
     }
 
     this.getSynthesizedExternsInput(); // Force lazy creation.
@@ -820,6 +816,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     try (LogFile chunkGraphLog = createOrReopenLog(this.getClass(), "chunk_graph.dot")) {
       chunkGraphLog.log(DotFormatter.toDot(chunkGraph.toGraphvizGraph()));
     }
+
+    this.runtimeJsLibManager =
+        RuntimeJsLibManager.create(
+            options.getRuntimeLibraryMode(),
+            this::loadResourceContents,
+            changeTracker,
+            this::getNodeForRuntimeCodeInsertion);
+  }
+
+  @Override
+  public final RuntimeJsLibManager getRuntimeJsLibManager() {
+    return this.runtimeJsLibManager;
   }
 
   /** Do any initialization that is dependent on the compiler options. */
@@ -4020,130 +4028,44 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.accessorSummary = checkNotNull(summary);
   }
 
-  /**
-   * The subdir js/ contains libraries of code that we inject at compile-time only if requested by
-   * this function.
-   *
-   * <p>Notice that these libraries will almost always create global symbols.
-   *
-   * @param resourceName The name of the library. For example, if "base" is is specified, then we
-   *     load js/base.js
-   * @param force Inject the library even if compiler options say not to.
-   * @return The last node of the most-recently-injected runtime library. If new code was injected,
-   *     this will be the last expression node of the library. If the caller needs to add additional
-   *     code, they should add it as the next sibling of this node. If no runtime libraries have
-   *     been injected, then null is returned.
-   */
-  @Override
-  protected Node ensureLibraryInjected(String resourceName, boolean force) {
-    if (injectedLibraries.contains(resourceName)) {
-      return lastInjectedLibrary;
-    }
-    switch (options.getRuntimeLibraryMode()) {
-      case RECORD_ONLY -> {
-        if (!force) {
-          injectedLibraries.add(resourceName);
-          return lastInjectedLibrary;
-        }
-      }
-      case NO_OP -> {
-        if (!force) {
-          return lastInjectedLibrary;
-        }
-      }
-      case INJECT -> {
-        // Keep going.
-      }
-    }
-
-    checkState(!getLifeCycleStage().isNormalized(), "runtime library injected after normalization");
-
-    // Load/parse the code.
-    String path = String.join("", AbstractCompiler.RUNTIME_LIB_DIR, resourceName, ".js");
-    final Node ast;
-    if (this.getLifeCycleStage().hasColorAndSimplifiedJSDoc()) {
+  /** Reads runtime library .js files into memory in AST format */
+  private Node loadResourceContents(String resourceName, String path) {
+    if (getLifeCycleStage().hasColorAndSimplifiedJSDoc()) {
       checkNotNull(
-          this.runtimeLibraryTypedAsts,
+          runtimeLibraryTypedAsts,
           "Must call initRuntimeLibraryTypedAsts before calling ensureLibraryInjected during"
               + " optimizations");
 
       Supplier<Node> typedAstSupplier =
           checkNotNull(
-              this.runtimeLibraryTypedAsts.get(path),
+              runtimeLibraryTypedAsts.get(path),
               String.join(
                   "",
                   "Missing precompiled .typedast for '%s'. If this file is newly added, ",
                   "you may need to regenerate runtime_libs.typedast.textproto",
                   ""),
               path);
-      ast = typedAstSupplier.get();
-    } else {
-      checkState(
-          !this.hasTypeCheckingRun(),
-          "runtime library injected after type checking but before optimization colors");
-      String originalCode =
-          ResourceLoader.loadTextResource(Compiler.class, "js/" + resourceName + ".js");
-
-      SourceFile source = SourceFile.fromCode(path, originalCode);
-      addFilesToSourceMap(ImmutableList.of(source));
-      ast = parseCodeHelper(source);
+      return typedAstSupplier.get();
     }
+    checkState(
+        !hasTypeCheckingRun(),
+        "runtime library injected after type checking but before optimization colors");
+    String originalCode =
+        ResourceLoader.loadTextResource(Compiler.class, "js/" + resourceName + ".js");
 
-    // Look for string literals of the form 'require foo bar'
-    // As we process each one, remove it from its parent.
-    for (Node node = ast.getFirstChild();
-        node != null && node.isExprResult() && node.getFirstChild().isStringLit();
-        node = ast.getFirstChild()) {
-      String directive = node.getFirstChild().getString();
-      List<String> words = Splitter.on(' ').limit(2).splitToList(directive);
-      switch (words.get(0)) {
-        case "use" -> {
-          // 'use strict' is ignored (and deleted).
-        }
-        case "require" ->
-            // 'require lib'; pulls in the named library before this one.
-            ensureLibraryInjected(words.get(1), force);
-        default -> throw new RuntimeException("Bad directive: " + directive);
-      }
-      node.detach();
-    }
+    SourceFile source = SourceFile.fromCode(path, originalCode);
+    addFilesToSourceMap(ImmutableList.of(source));
+    return parseCodeHelper(source);
+  }
 
-    // Insert the code immediately after the last-inserted runtime library.
-    Node lastChild = ast.getLastChild();
-    for (Node child = ast.getFirstChild(); child != null; child = child.getNext()) {
-      NodeUtil.markNewScopesChanged(child, this);
-    }
-    Node firstChild = ast.removeChildren();
-    if (firstChild == null) {
-      // Handle require-only libraries.
-      return lastInjectedLibrary;
-    }
-
+  private Node getNodeForRuntimeCodeInsertion() {
     // For stage 2 optimizing builds, insert runtime libraries as actual code in the AST.
     // For library builds that outputs a TypedAST, the runtime libraries are injected to a synthetic
     // @typeSummary (.i.js) node so that the types are available.
-    Node parent;
     if (options.getTypedAstOutputFile() == null) {
-      parent = getNodeForCodeInsertion(null);
-    } else {
-      parent = getSynthesizedTypeSummaryInput().getAstRoot(this);
+      return getNodeForCodeInsertion(null);
     }
-
-    if (lastInjectedLibrary == null) {
-      parent.addChildrenToFront(firstChild);
-    } else {
-      parent.addChildrenAfter(firstChild, lastInjectedLibrary);
-    }
-    lastInjectedLibrary = lastChild;
-    injectedLibraries.add(resourceName);
-
-    reportChangeToEnclosingScope(parent);
-    return lastChild;
-  }
-
-  @Override
-  public ImmutableList<String> getInjectedLibraries() {
-    return ImmutableList.copyOf(injectedLibraries);
+    return getSynthesizedTypeSummaryInput().getAstRoot(this);
   }
 
   @Override
@@ -4216,7 +4138,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final boolean runJ2clPasses;
     private final ImmutableList<InputId> externs;
     private final ImmutableListMultimap<JSChunk, InputId> moduleToInputList;
-    private final LinkedHashSet<String> injectedLibraries;
+    private final ImmutableList<String> injectedLibraries;
     private final int lastInjectedLibraryIndexInFirstScript;
     private final AccessorSummary accessorSummary;
     private final VariableMap stringMap;
@@ -4240,10 +4162,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.externs =
           compiler.externs.stream().map(CompilerInput::getInputId).collect(toImmutableList());
       this.moduleToInputList = mapJSModulesToInputIds(compiler.chunkGraph.getAllChunks());
-      this.injectedLibraries = compiler.injectedLibraries;
+      this.injectedLibraries = compiler.getRuntimeJsLibManager().getInjectedLibraries();
+      Node lastInjectedLibrary = compiler.getRuntimeJsLibManager().getLastInjectedLibrary();
       this.lastInjectedLibraryIndexInFirstScript =
-          compiler.lastInjectedLibrary != null
-              ? compiler.jsRoot.getFirstChild().getIndexOfChild(compiler.lastInjectedLibrary)
+          lastInjectedLibrary != null
+              ? compiler.jsRoot.getFirstChild().getIndexOfChild(lastInjectedLibrary)
               : -1;
       this.accessorSummary = compiler.accessorSummary;
       this.stringMap = compiler.getStringMap();
@@ -4256,8 +4179,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     allowableFeatures = compilerState.allowableFeatures;
     scriptNodeByFilename.clear();
     typeCheckingHasRun = compilerState.typeCheckingHasRun;
-    injectedLibraries.clear();
-    injectedLibraries.addAll(compilerState.injectedLibraries);
+    for (String library : compilerState.injectedLibraries) {
+      getRuntimeJsLibManager().recordLibraryInjected(library);
+    }
     hasRegExpGlobalReferences = compilerState.hasRegExpGlobalReferences;
     // after restoreState, we're always guaranteed to have colors & simplified JSDoc on the AST.
     // whether the AST is also normalized depends on when saveState was called (after stage 1 or 2)
@@ -4446,17 +4370,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     for (String library : deserializedAst.getRuntimeLibraries()) {
-      this.ensureLibraryInjected(library, false);
+      this.runtimeJsLibManager.ensureLibraryInjected(library, false);
     }
 
     this.typedAstFilesystem = null; // allow garbage collection
 
-    lastInjectedLibrary =
-        compilerState.lastInjectedLibraryIndexInFirstScript != -1
-            ? jsRoot
-                .getFirstChild()
-                .getChildAtIndex(compilerState.lastInjectedLibraryIndexInFirstScript)
-            : null;
+    if (compilerState.lastInjectedLibraryIndexInFirstScript != -1) {
+      Node lastInjectedLibrary =
+          jsRoot
+              .getFirstChild()
+              .getChildAtIndex(compilerState.lastInjectedLibraryIndexInFirstScript);
+      this.runtimeJsLibManager.setLastInjectedLibrary(lastInjectedLibrary);
+    }
   }
 
   /** Returns the module type for the provided namespace. */

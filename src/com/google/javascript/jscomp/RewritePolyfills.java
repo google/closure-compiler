@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfill;
 import com.google.javascript.jscomp.PolyfillUsageFinder.PolyfillUsage;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
@@ -54,6 +55,7 @@ public class RewritePolyfills implements CompilerPass {
   private static final QualifiedName JSCOMP_POLYFILL = QualifiedName.of("$jscomp.polyfill");
 
   private final AbstractCompiler compiler;
+  private final RuntimeJsLibManager runtimeJsLibManager;
   private final Polyfills polyfills;
   private final boolean injectPolyfills;
   private final boolean isolatePolyfills;
@@ -73,6 +75,7 @@ public class RewritePolyfills implements CompilerPass {
       LanguageMode injectPolyfillsNewerThan) {
     this(
         compiler,
+        compiler.getRuntimeJsLibManager(),
         Polyfills.fromTable(
             ResourceLoader.loadTextResource(RewritePolyfills.class, "js/polyfills.txt")),
         injectPolyfills,
@@ -80,14 +83,20 @@ public class RewritePolyfills implements CompilerPass {
         injectPolyfillsNewerThan);
   }
 
+  /**
+   * For unit testing, allows instantiating RewritePolyfills with a different RuntimeJsLibManager
+   * than {@link AbstractCompiler#getRuntimeJsLibManager}
+   */
   @VisibleForTesting
   RewritePolyfills(
       AbstractCompiler compiler,
+      RuntimeJsLibManager runtimeJsLibManager,
       Polyfills polyfills,
       boolean injectPolyfills,
       boolean isolatePolyfills,
       LanguageMode injectPolyfillsNewerThan) {
     this.compiler = compiler;
+    this.runtimeJsLibManager = runtimeJsLibManager;
     this.polyfills = polyfills;
     this.injectPolyfills = injectPolyfills;
     this.isolatePolyfills = isolatePolyfills;
@@ -143,7 +152,7 @@ public class RewritePolyfills implements CompilerPass {
     for (String library : librariesToInject) {
       checkNotNull(library);
       checkState(!library.isEmpty(), "unexpected empty library");
-      lastNode = compiler.ensureLibraryInjected(library, forceInjection);
+      lastNode = runtimeJsLibManager.ensureLibraryInjected(library, forceInjection);
     }
     if (lastNode != null) {
       Node parent = lastNode.getParent();

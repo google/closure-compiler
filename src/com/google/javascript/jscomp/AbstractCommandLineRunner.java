@@ -52,6 +52,7 @@ import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
 import com.google.javascript.jscomp.ijs.IjsErrors;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
@@ -2231,7 +2232,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     if (options.numParallelThreads > 1) {
       new PrebuildAst(compiler, compiler.getOptions().numParallelThreads).prebuild(inputs);
     }
-    if (options.getRuntimeLibraryMode() == CompilerOptions.RuntimeLibraryMode.INJECT) {
+    if (options.getRuntimeLibraryMode() == RuntimeJsLibManager.RuntimeLibraryMode.INJECT) {
       // ES6 modules will need a runtime in a bundle. Skip appending this runtime if there are no
       // ES6 modules to cut down on size.
       for (CompilerInput input : inputs) {

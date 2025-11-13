@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,7 +50,7 @@ public class InjectTranspilationRuntimeLibrariesTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(this.languageOut);
     options.setInstrumentAsyncContext(instrumentAsyncContext);
-    options.setRuntimeLibraryMode(CompilerOptions.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("externs", "")),
@@ -59,7 +60,7 @@ public class InjectTranspilationRuntimeLibrariesTest {
     new InjectTranspilationRuntimeLibraries(compiler)
         .process(compiler.getExternsRoot(), compiler.getJsRoot());
 
-    return ImmutableSet.copyOf(compiler.getInjectedLibraries());
+    return ImmutableSet.copyOf(compiler.getRuntimeJsLibManager().getInjectedLibraries());
   }
 
   @Test
