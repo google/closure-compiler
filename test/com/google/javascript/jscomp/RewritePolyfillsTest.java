@@ -42,8 +42,8 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   private static final LanguageMode ES5 = LanguageMode.ECMASCRIPT5_STRICT;
   private static final LanguageMode ES3 = LanguageMode.ECMASCRIPT3;
 
-  private Map<String, String> injectableLibraries = new LinkedHashMap<>();
-  private Set<String> injectBeforePass = new LinkedHashSet<>();
+  private final Map<String, String> injectableLibraries = new LinkedHashMap<>();
+  private final Set<String> injectBeforePass = new LinkedHashSet<>();
   private final List<String> polyfillTable = new ArrayList<>();
   private boolean isolatePolyfills = false;
   private boolean injectPolyfills = true;
