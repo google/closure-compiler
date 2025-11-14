@@ -2367,6 +2367,86 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testCrossChunkCodeMotion_staticMethod() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.UNSTABLE);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setCrossChunkCodeMotion(true);
+
+    test(
+        options,
+        new String[] {
+          """
+          class Foo {
+            static getY() {
+              return 1;
+            }
+          }
+          """,
+          """
+          alert(Foo.getY());
+          alert(new Foo());
+          """,
+        },
+        new String[] {
+          "",
+          // Note: Foo moved into the same chunk as the alert calls.
+          """
+          class Foo {
+            static getY() {
+              return 1;
+            }
+          }
+          alert(Foo.getY());
+          alert(new Foo());
+          """,
+        });
+  }
+
+  @Test
+  public void testCrossChunkCodeMotion_staticBlock() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.UNSTABLE);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setCrossChunkCodeMotion(true);
+
+    test(
+        options,
+        new String[] {
+          """
+          class Foo {
+            static y;
+            static {
+              Foo.y = 1;
+            }
+          }
+          """,
+          """
+          alert(Foo.y);
+          alert(new Foo());
+          """,
+        },
+        new String[] {
+          // TODO: b/302390124 - Foo should move into the next chunk.
+          """
+          class Foo {
+            static $jscomp$staticInit$98447280$0() {
+              Foo.y;
+              {
+                Foo.y = 1;
+              }
+            }
+          }
+          Foo.$jscomp$staticInit$98447280$0();
+          """,
+          """
+          alert(Foo.y);
+          alert(new Foo());
+          """,
+        });
+  }
+
+  @Test
   public void testCrossChunkDepCheck() {
     CompilerOptions options = createCompilerOptions();
     String[] code =
