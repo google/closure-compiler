@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+'use strict';
 
 /*
  * Copyright 2016 The Closure Compiler Authors.
@@ -15,8 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-'use strict';
 
 const fs = require('fs');
 
@@ -136,7 +135,7 @@ class PolyfillTable {
     // Now run the file.
     try {
       new Function('$jscomp', data)({
-        global: global,
+        global: globalThis,
         polyfill: this.polyfill(lib),
         polyfillTypedArrayMethod: this.polyfillTypedArrayMethod(lib),
       });
@@ -151,13 +150,15 @@ class PolyfillTable {
    * @return {string}
    */
   build() {
+    /** @type {!Set<string>} */
     const errors = new Set();
     try {
       // First check for duplicate provided symbols.
       for (const entry of this.symbolToFile.entries()) {
-        if (entry[1].length != 1) {
+        const definingFiles = /** @type {!Array<string>} */ (entry[1]);
+        if (definingFiles.length !== 1) {
           errors.add(`ERROR - ${entry[0]} provided by multiple files:${
-              entry[1].map(f => '\n    ' + f).join('')}`);
+              definingFiles.map(f => '\n    ' + f).join('')}`);
         }
       }
       // Next ensure all deps have nonincreasing versions.
@@ -184,26 +185,28 @@ class PolyfillTable {
  */
 function checkDeps(errors, deps, versions) {
   for (const file of deps.keys()) {
+    /** @type {!Set<string>} */
     const seen = new Set([file]);
+    /** @type {!Array<string>} */
     const queue = [file];
     const version = versions.get(file);
     while (queue.length) {
       const next = queue.shift();
       for (const dep of deps.get(next) || []) {
-        if (dep == file) errors.add('ERROR - Cyclic dependency:\n    ' + dep);
+        if (dep === file) errors.add('ERROR - Cyclic dependency:\n    ' + dep);
         if (seen.has(dep)) continue;
         seen.add(dep);
         queue.push(dep);
         if (!deps.has(dep)) {
           errors.add(
-              'ERROR - missing dependency:\n    ' + dep +
-              ' required from\n    ' + file);
+              `ERROR - missing dependency:\n    ${dep}` +
+              ` required from\n    ${file}`);
         }
         const depVersion = versions.get(dep);
-        if (version && maxVersion(depVersion, version) != version) {
+        if (version && maxVersion(depVersion, version) !== version) {
           errors.add(
               'ERROR - lower version depends on higher version:\n    ' +
-              version + ': ' + file + '\n    ' + depVersion + ': ' + dep);
+              `${version}: ${file}\n    ${depVersion}: ${dep}`);
         }
       }
     }
@@ -220,8 +223,10 @@ function maxVersion(version1, version2) {
   return ORDER[Math.max(ORDER.indexOf(version1), ORDER.indexOf(version2))];
 }
 
+/** @type {!PolyfillTable} */
 const table = new PolyfillTable();
 
+/** @type {!Array<!Promise<string>>} */
 const reads = process.argv.slice(2).map(
     filename => new Promise(
         (fulfill, reject) => fs.readFile(filename, 'utf8', (err, data) => {
@@ -239,4 +244,5 @@ const reads = process.argv.slice(2).map(
         })));
 
 Promise.all(reads).then(
-    success => console.log(table.build()), failure => fail(failure.stack));
+    success => console.log(table.build()),
+    failure => fail(/** @type {!Error} */ (failure).stack));
