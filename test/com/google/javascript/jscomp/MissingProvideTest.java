@@ -86,7 +86,7 @@ public final class MissingProvideTest extends CompilerTestCase {
         new normal.goog.module.A;
         """;
 
-    testNoWarning(srcs(new String[] {googModule, legacyScript}));
+    testNoWarning(srcs(googModule, legacyScript));
   }
 
   @Test
@@ -103,7 +103,7 @@ public final class MissingProvideTest extends CompilerTestCase {
         goog.require('normal.goog.module.A');
         """;
 
-    testNoWarning(srcs(new String[] {googModule, legacyScript}));
+    testNoWarning(srcs(googModule, legacyScript));
   }
 
   @Test
@@ -136,7 +136,7 @@ public final class MissingProvideTest extends CompilerTestCase {
         });
         """;
 
-    testNoWarning(srcs(new String[] {googModule, legacyScript}));
+    testNoWarning(srcs(googModule, legacyScript));
   }
 
   @Test
@@ -170,7 +170,7 @@ public final class MissingProvideTest extends CompilerTestCase {
         exports = B;
         """;
 
-    testNoWarning(srcs(new String[] {googModule1, googModule2}));
+    testNoWarning(srcs(googModule1, googModule2));
   }
 
   @Test
@@ -210,7 +210,7 @@ public final class MissingProvideTest extends CompilerTestCase {
         exports = B;
         """;
 
-    testNoWarning(srcs(new String[] {googModule1, googModule2}));
+    testNoWarning(srcs(googModule1, googModule2));
   }
 
   @Test
@@ -229,7 +229,7 @@ public final class MissingProvideTest extends CompilerTestCase {
         exports = B;
         """;
 
-    testNoWarning(srcs(new String[] {legacyScript, googModule}));
+    testNoWarning(srcs(legacyScript, googModule));
   }
 
   @Test
@@ -270,7 +270,7 @@ public final class MissingProvideTest extends CompilerTestCase {
         exports = B;
         """;
 
-    testNoWarning(srcs(new String[] {legacyScript, googModule}));
+    testNoWarning(srcs(legacyScript, googModule));
   }
 
   @Test
@@ -315,7 +315,7 @@ public final class MissingProvideTest extends CompilerTestCase {
         exports = B;
         """;
 
-    testNoWarning(srcs(new String[] {googModule}));
+    testNoWarning(srcs(googModule));
   }
 
   @Test
@@ -332,7 +332,7 @@ public final class MissingProvideTest extends CompilerTestCase {
         new legacy.script.A;
         """;
 
-    testNoWarning(srcs(new String[] {legacyScript, legacyScript2}));
+    testNoWarning(srcs(legacyScript, legacyScript2));
   }
 
   @Test
@@ -365,7 +365,7 @@ public final class MissingProvideTest extends CompilerTestCase {
         }
         """;
 
-    testNoWarning(srcs(new String[] {legacyScript, legacyScript2}));
+    testNoWarning(srcs(legacyScript, legacyScript2));
   }
 
   @Test
