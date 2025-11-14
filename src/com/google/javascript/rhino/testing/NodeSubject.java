@@ -44,6 +44,7 @@ import static com.google.common.truth.Truth.assertAbout;
 import static com.google.javascript.jscomp.testing.ColorSubject.colors;
 import static com.google.javascript.rhino.testing.TypeSubject.types;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
@@ -57,6 +58,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.Function;
@@ -151,8 +153,8 @@ public final class NodeSubject extends Subject {
     isNotNull();
     assertNode(expected).isNotNull();
 
-    NodeMismatch mismatch = findFirstMismatch(actual, expected, checkJsdoc);
-    if (mismatch == null) {
+    // Fast exit for the typical TAP case where all tests pass.
+    if (findFirstMismatch(actual, expected, checkJsdoc) == null) {
       return;
     }
 
@@ -160,52 +162,115 @@ public final class NodeSubject extends Subject {
     var parseableActual = System.getenv("NodeSubject.PARSEABLE_ACTUAL") != null;
 
     ArrayList<Fact> facts = new ArrayList<>();
-    final String expectedOutputJs = serializeNode(expected);
-    final String actualOutputJs = serializeNode(actual);
-    if (expectedOutputJs.equals(actualOutputJs)) {
-      // The output code looks identical, so diff the AST instead to show what properties
-      // are different.
-      facts.addAll(
-          new TextDiffFactsBuilder("AST diff")
-              .expectedText(mismatch.expected.toStringTree())
-              .actualText(mismatch.actual.toStringTree())
-              .build());
-    } else if (parseableActual) {
-      facts.add(
-          simpleFact("Actual JS (parseable): <<<" + applyGenericNames(actualOutputJs) + ">>>"));
-    } else if (expectedOutputJs.trim().isEmpty()) {
-      // Don't use the text diff fact because everything is new. Avoid prefixing the output with +.
-      facts.add(
-          simpleFact(
-              "Empty expected JS. Actual JS is:\n    "
-                  // Indent by 4 spaces.
-                  + applyGenericNames(actualOutputJs).replace("\n", "\n    ")));
-    } else {
-      String expectedJsNormalized = applyGenericNames(expectedOutputJs);
-      String actualJsNormalized = applyGenericNames(actualOutputJs);
-      if (expectedJsNormalized.equals(actualJsNormalized)) {
-        // Somehow, the generic name replacement eliminated any diff. Use the original input.
-        expectedJsNormalized = expectedOutputJs;
-        actualJsNormalized = actualOutputJs;
+
+    // If applicable, diff each Script separately.
+    List<NodeDiff> nodeDiffs = maybeExtractScriptsSeparately(expected, actual);
+
+    for (int i = 0; i < nodeDiffs.size(); i++) {
+      NodeDiff nodeDiff = nodeDiffs.get(i);
+      Node expectedNode = nodeDiff.expected();
+      Node actualNode = nodeDiff.actual();
+
+      NodeMismatch mismatch = findFirstMismatch(actualNode, expectedNode, checkJsdoc);
+      if (mismatch == null) {
+        continue;
       }
-      facts.addAll(
-          new TextDiffFactsBuilder("JS diff")
-              .expectedText(expectedJsNormalized)
-              .actualText(actualJsNormalized)
-              .build());
-    }
-    if (checkJsdoc) {
-      final String expectedJSDoc = jsdocToStringNullsafe(mismatch.expected.getJSDocInfo());
-      final String actualJSDoc = jsdocToStringNullsafe(mismatch.actual.getJSDocInfo());
-      if (!Objects.equals(expectedJSDoc, actualJSDoc)) {
+
+      String errorPrefix = maybeGetErrorPrefix(nodeDiffs, i, actualNode);
+
+      final String expectedOutputJs = serializeNode(expectedNode);
+      final String actualOutputJs = serializeNode(actualNode);
+      if (expectedOutputJs.equals(actualOutputJs)) {
+        // The output code looks identical, so diff the AST instead to show what properties
+        // are different.
         facts.addAll(
-            new TextDiffFactsBuilder("JSDoc diff")
-                .expectedText(expectedJSDoc)
-                .actualText(actualJSDoc)
+            new TextDiffFactsBuilder(errorPrefix + "AST diff")
+                .expectedText(mismatch.expected.toStringTree())
+                .actualText(mismatch.actual.toStringTree())
+                .build());
+      } else if (parseableActual) {
+        facts.add(
+            simpleFact(
+                errorPrefix
+                    + "Actual JS (parseable): <<<"
+                    + applyGenericNames(actualOutputJs)
+                    + ">>>"));
+      } else if (expectedOutputJs.trim().isEmpty()) {
+        // Don't use the text diff fact because everything is new. Avoid prefixing the output with
+        // +.
+        facts.add(
+            simpleFact(
+                errorPrefix
+                    + "Empty expected JS. Actual JS is:\n    "
+                    // Indent by 4 spaces.
+                    + applyGenericNames(actualOutputJs).replace("\n", "\n    ")));
+      } else {
+        String expectedJsNormalized = applyGenericNames(expectedOutputJs);
+        String actualJsNormalized = applyGenericNames(actualOutputJs);
+        if (expectedJsNormalized.equals(actualJsNormalized)) {
+          // Somehow, the generic name replacement eliminated any diff. Use the original input.
+          expectedJsNormalized = expectedOutputJs;
+          actualJsNormalized = actualOutputJs;
+        }
+        facts.addAll(
+            new TextDiffFactsBuilder(errorPrefix + "JS diff")
+                .expectedText(expectedJsNormalized)
+                .actualText(actualJsNormalized)
                 .build());
       }
+      if (checkJsdoc) {
+        final String expectedJsDoc = jsdocToStringNullsafe(mismatch.expected.getJSDocInfo());
+        final String actualJsDoc = jsdocToStringNullsafe(mismatch.actual.getJSDocInfo());
+        if (!Objects.equals(expectedJsDoc, actualJsDoc)) {
+          facts.addAll(
+              new TextDiffFactsBuilder(errorPrefix + "JSDoc diff")
+                  .expectedText(expectedJsDoc)
+                  .actualText(actualJsDoc)
+                  .build());
+        }
+      }
     }
-    failWithoutActual(simpleFact("Node tree inequality"), facts.toArray(new Fact[0]));
+
+    if (!facts.isEmpty()) {
+      failWithoutActual(simpleFact("Node tree inequality"), facts.toArray(new Fact[0]));
+    }
+  }
+
+  private record NodeDiff(Node expected, Node actual) {}
+
+  private List<NodeDiff> maybeExtractScriptsSeparately(Node expected, Node actual) {
+    var nodeDiffs = new ArrayList<NodeDiff>();
+    if (isScriptSourceRoot(expected)
+        && isScriptSourceRoot(actual)
+        && expected.getChildCount() == actual.getChildCount()) {
+      // The length is the same so we just check one. N^2 but N should be small.
+      for (int i = 0; i < expected.getChildCount(); i++) {
+        nodeDiffs.add(new NodeDiff(expected.getChildAtIndex(i), actual.getChildAtIndex(i)));
+      }
+    } else {
+      nodeDiffs.add(new NodeDiff(expected, actual));
+    }
+    return nodeDiffs;
+  }
+
+  private static boolean isScriptSourceRoot(Node node) {
+    return node.isRoot()
+        && node.hasParent()
+        && node.getParent().isRoot()
+        && node.getParent().getLastChild() == node;
+  }
+
+  private static String maybeGetErrorPrefix(List<NodeDiff> nodeDiffs, int i, Node actualNode) {
+    if (nodeDiffs.size() <= 1) {
+      return "";
+    }
+
+    String sourceFileName = actualNode.getSourceFileName();
+    if (!Strings.isNullOrEmpty(sourceFileName)) {
+      return String.format("For expected %d, script \"%s\": ", i, sourceFileName);
+    }
+
+    return String.format("For expected %d: ", i);
   }
 
   private String applyGenericNames(String input) {

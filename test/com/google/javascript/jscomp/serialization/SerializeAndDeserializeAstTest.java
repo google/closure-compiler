@@ -838,6 +838,8 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     Node shadowHost = result.sourceRoot.getFirstFirstChild().getFirstFirstChild();
 
     Node shadowedContent = shadowHost.getClosureUnawareShadow();
+    IR.root(shadowedContent); // The script root also needs a top-level root parent.
+
     Node expectedShadowContent =
         this.parseExpectedJs(
             """
@@ -964,6 +966,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
       script.setInputId(new InputId(source.getName()));
       newSourceRoot.addChildToBack(script);
     }
+    Node newRoot = IR.root(newExternsRoot, newSourceRoot);
 
     Node expectedRoot = this.parseExpectedJs(expected);
     if (checkJsDocEquality) {
@@ -971,7 +974,6 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     } else {
       assertNode(newSourceRoot).isEqualTo(expectedRoot);
     }
-    Node newRoot = IR.root(newExternsRoot, newSourceRoot);
 
     new AstValidator(deserializingCompiler, /* validateScriptFeatures= */ true)
         .validateRoot(newRoot);

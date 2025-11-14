@@ -1359,7 +1359,6 @@ public abstract class CompilerTestCase {
       Node expectedRoot = null;
       if (expected != null) {
         expectedRoot = parseExpectedJs(expected);
-        expectedRoot.detach();
       }
 
       ImmutableList<JSError> stErrors = symbolTableErrorManager.getErrors();
