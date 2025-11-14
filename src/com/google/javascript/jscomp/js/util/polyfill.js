@@ -120,7 +120,7 @@ $jscomp.TYPED_ARRAY_CLASSES = (
         classes.push('BigUint64');
       }
       // LINT.ThenChange(
-      // //depot/google3/third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/build_metadata_table.js:typed_array_classes
+      // //depot/google3/third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/build_polyfill_table.js:typed_array_classes
       // )
       return classes;
     })();
@@ -133,7 +133,7 @@ $jscomp.TYPED_ARRAY_CLASSES = (
  *     implementation of the target and returns an optional new polyfill
  *     implementation.  If null is returned, then no polyfill will be added.  A
  *     null argument for this parameter indicates that the function will not be
- *     polyfilled, and is only useful for `build_metadata_table.js` bookkeeping.
+ *     polyfilled, and is only useful for `build_polyfill_table.js` bookkeeping.
  * @param {string} fromLang The language level in which the target is expected
  *     to already be present in the browser.  The compiler requires that
  *     `languageOut < fromLang` before injecting a polyfill (i.e. if the
@@ -142,7 +142,7 @@ $jscomp.TYPED_ARRAY_CLASSES = (
  * @param {string} toLang The language level required by the polyfill
  *     implementation.  The compiler will issue an error if a polyfill is
  *     required, but `languageOut < toLang`.  Additionally, the
- *     `build_metadata_table.js` script audits the polyfill dependency tree to
+ *     `build_polyfill_table.js` script audits the polyfill dependency tree to
  *     ensure that no polyfill with a lower `toLang` depends on one with a
  *     higher `toLang`.
  * @noinline
@@ -172,7 +172,7 @@ $jscomp.polyfillTypedArrayMethod = function(
  *     implementation of the target and returns an optional new polyfill
  *     implementation.  If null is returned, then no polyfill will be added.  A
  *     null argument for this parameter indicates that the function will not be
- *     polyfilled, and is only useful for `build_metadata_table.js` bookkeeping.
+ *     polyfilled, and is only useful for `build_polyfill_table.js` bookkeeping.
  * @param {string} fromLang The language level in which the target is expected
  *     to already be present in the browser.  The compiler requires that
  *     `languageOut < fromLang` before injecting a polyfill (i.e. if the
@@ -181,7 +181,7 @@ $jscomp.polyfillTypedArrayMethod = function(
  * @param {string} toLang The language level required by the polyfill
  *     implementation.  The compiler will issue an error if a polyfill is
  *     required, but `languageOut < toLang`.  Additionally, the
- *     `build_metadata_table.js` script audits the polyfill dependency tree to
+ *     `build_polyfill_table.js` script audits the polyfill dependency tree to
  *     ensure that no polyfill with a lower `toLang` depends on one with a
  *     higher `toLang`.
  * @noinline

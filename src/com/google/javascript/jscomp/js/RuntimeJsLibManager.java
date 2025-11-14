@@ -16,32 +16,18 @@
 
 package com.google.javascript.jscomp.js;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-
 import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.ChangeTracker;
-import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.Node;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Injects runtime libraries from the jscomp/js directory into an AST
- *
- * <p>Supports injecting libraries either based on the library path name, or by the specific
- * `$jscomp.*` field/class name.
- */
+/** Injects runtime libraries from the jscomp/js directory into an AST. */
 public final class RuntimeJsLibManager {
 
   /**
@@ -79,31 +65,8 @@ public final class RuntimeJsLibManager {
   private final ResourceProvider resourceProvider;
   private final Supplier<Node> nodeForCodeInsertion;
   private final Set<String> injectedLibs = new LinkedHashSet<>();
-  private final Map<String, Field> injectedFields = new LinkedHashMap<>();
 
   private @Nullable Node lastInjectedLibrary = null;
-
-  private static final class FieldsTable {
-    // Holds the names of all possible $jscomp fields & the file in which they're defined.
-    // For example, "inherits" -> "es6/inherits".
-    // (This doesn't include nested properties - so no "$jscomp.a.b.c")
-    private static final ImmutableMap<String, String> INSTANCE = loadFields();
-
-    private static ImmutableMap<String, String> loadFields() {
-      String transpilationLibsTxt =
-          ResourceLoader.loadTextResource(RuntimeJsLibManager.class, "transpilation_libs.txt");
-
-      ImmutableMap.Builder<String, String> allFields = ImmutableMap.builder();
-      for (String line : Splitter.on('\n').omitEmptyStrings().split(transpilationLibsTxt)) {
-        List<String> tokens = Splitter.on(',').limit(2).splitToList(line);
-        checkState(tokens.size() == 2, tokens);
-        String fieldName = tokens.get(0);
-        String resourcePath = tokens.get(1);
-        allFields.put(fieldName, resourcePath);
-      }
-      return allFields.buildOrThrow();
-    }
-  }
 
   private RuntimeJsLibManager(
       ChangeTracker changeTracker,
@@ -149,61 +112,6 @@ public final class RuntimeJsLibManager {
    */
   public ImmutableList<String> getInjectedLibraries() {
     return ImmutableList.copyOf(injectedLibs);
-  }
-
-  private Field toField(String fieldName) {
-    checkArgument(!fieldName.isEmpty(), fieldName);
-
-    List<String> parts = Splitter.on('.').splitToList(fieldName);
-    checkArgument(parts.size() >= 2, "Field name must start with $jscomp., found %s", fieldName);
-    checkArgument(
-        parts.get(0).equals("$jscomp"), "Field name must start with $jscomp, found %s", fieldName);
-    String propName = parts.get(1);
-
-    String resourceName =
-        checkNotNull(FieldsTable.INSTANCE.get(propName), "Cannot find definition of %s", fieldName);
-    // TODO: b/421971366 - allow @closureUnaware transpilation to use a different local name for
-    // fields.
-    return new Field(resourceName, fieldName);
-  }
-
-  /**
-   * A $jscomp.* field (could be a method, class, or any arbitrary value) that exists in some
-   * runtime library under the js/ directory.
-   */
-  private static final class Field {
-    /** The file containing this field, e.g. "es6/generator". */
-    private final String resourceName;
-
-    /** The name by which compiler passes should refer to this field. */
-    private final String qualifiedName;
-
-    private Field(String resourceName, String qualifiedName) {
-      this.resourceName = resourceName;
-      this.qualifiedName = qualifiedName;
-    }
-
-    // Don't override .equals/.hashCode and just use reference equality: we already intern Fields
-    // by qualifiedName.
-
-    @Override
-    public String toString() {
-      return Strings.lenientFormat("Field<%s, %s>", qualifiedName, resourceName);
-    }
-  }
-
-  /** Returns a field definition for the given property & ensure its definition is injected. */
-  @CanIgnoreReturnValue
-  public Field injectField(String fieldName) {
-    var field = toField(fieldName);
-    injectedFields.put(fieldName, field);
-    ensureLibraryInjected(field.resourceName, /* force= */ false);
-    return field;
-  }
-
-  /** Returns a list of all the runtime $jscomp.* fields that have been injected. */
-  public ImmutableList<RuntimeJsLibManager.Field> getRequiredRuntimeFields() {
-    return ImmutableList.copyOf(injectedFields.values());
   }
 
   /**
