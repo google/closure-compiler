@@ -6435,7 +6435,7 @@ google.maps.Marker.prototype.setOpacity = function(opacity) {};
 google.maps.Marker.prototype.setOptions = function(options) {};
 
 /**
- * Set the postition for the {@link google.maps.Marker}.
+ * Set the position for the {@link google.maps.Marker}.
  * @param {(?google.maps.LatLng|?google.maps.LatLngLiteral)=} latlng The new
  *     position.
  * @return {undefined}
@@ -14286,7 +14286,7 @@ google.maps.places.Place.prototype.servesBeer;
 google.maps.places.Place.prototype.servesBreakfast;
 
 /**
- * Whether a place serves brunch. Returns &#39;true&#39; or &#39;false&#39; if
+ * Whether a place serves branch. Returns &#39;true&#39; or &#39;false&#39; if
  * the value is known. Returns &#39;null&#39; if the value is unknown. Returns
  * &#39;undefined&#39; if this field has not yet been requested.
  * @type {?boolean|undefined}
@@ -15107,7 +15107,7 @@ google.maps.places.PlaceReview.prototype.author_url;
 google.maps.places.PlaceReview.prototype.language;
 
 /**
- * A URL to the reviwer&#39;s profile image.
+ * A URL to the reviewer&#39;s profile image.
  * @type {string}
  */
 google.maps.places.PlaceReview.prototype.profile_photo_url;
@@ -15606,7 +15606,7 @@ google.maps.places.Review = function() {};
 google.maps.places.Review.prototype.author;
 
 /**
- * A URL to the reviwer&#39;s profile image.
+ * A URL to the reviewer&#39;s profile image.
  * @type {?string}
  */
 google.maps.places.Review.prototype.authorPhotoURI;

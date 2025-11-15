@@ -5908,7 +5908,7 @@ google.maps.Marker.prototype.setOpacity = function(opacity) {};
 google.maps.Marker.prototype.setOptions = function(options) {};
 
 /**
- * Set the postition for the {@link google.maps.Marker}.
+ * Set the position for the {@link google.maps.Marker}.
  * @param {(?google.maps.LatLng|?google.maps.LatLngLiteral)=} latlng The new
  *     position.
  * @return {undefined}
@@ -6406,7 +6406,7 @@ google.maps.PanoProviderOptions = function() {};
 
 /**
  * If set, the renderer will use technologies (like webgl) that only work when
- * cors headers are appropiately set on the provided images. It is the
+ * cors headers are appropriately set on the provided images. It is the
  * developer&#39;s task to serve the images correctly in combination with this
  * flag, which might otherwise lead to SecurityErrors.
  * @type {boolean|undefined}
@@ -12771,7 +12771,7 @@ google.maps.places.PlaceReview.prototype.author_url;
 google.maps.places.PlaceReview.prototype.language;
 
 /**
- * A URL to the reviwer&#39;s profile image.
+ * A URL to the reviewer&#39;s profile image.
  * @type {string}
  */
 google.maps.places.PlaceReview.prototype.profile_photo_url;
