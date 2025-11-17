@@ -2404,14 +2404,14 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testCrossChunkCodeMotion_staticBlock() {
+  public void testCrossChunkCodeMotion_staticBlock_noSideEffects() {
     CompilerOptions options = createCompilerOptions();
+    options.setGeneratePseudoNames(true);
     options.setLanguageIn(LanguageMode.UNSTABLE);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     options.setCrossChunkCodeMotion(true);
 
-    test(
-        options,
+    var srcs =
         new String[] {
           """
           class Foo {
@@ -2425,9 +2425,13 @@ public final class IntegrationTest extends IntegrationTestCase {
           alert(Foo.y);
           alert(new Foo());
           """,
-        },
+        };
+
+    test(
+        options,
+        srcs,
         new String[] {
-          // TODO: b/302390124 - Foo should move into the next chunk.
+          // TODO: b/302390124 - Maybe support code motion for side-effect-free staticInit call.
           """
           class Foo {
             static $jscomp$staticInit$98447280$0() {
@@ -2442,6 +2446,76 @@ public final class IntegrationTest extends IntegrationTestCase {
           """
           alert(Foo.y);
           alert(new Foo());
+          """,
+        });
+
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    test(
+        options,
+        srcs,
+        new String[] {
+          "",
+          // Note: Foo moved into the same chunk as the alert calls.
+          """
+          class $Foo$$ {}
+          alert(1);
+          alert(new $Foo$$());
+          """,
+        });
+  }
+
+  @Test
+  public void testCrossChunkCodeMotion_staticBlock_withSideEffects() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setGeneratePseudoNames(true);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setCrossChunkCodeMotion(true);
+
+    test(
+        options,
+        new String[] {
+          """
+          /** @return {number} */
+          function getRandom() {
+            const v = Math.random();
+            alert('Picked ' + v);
+            return v;
+          }
+          """,
+          """
+          class Foo {
+            static x;
+            static y;
+            static {
+              // Foo.x is never read but its initialization has side effects.
+              Foo.x = getRandom();
+              Foo.y = getRandom();
+            }
+          }
+          """,
+          """
+          alert(Foo.y);
+          alert(new Foo());
+          """,
+        },
+        new String[] {
+          "",
+          """
+          function $getRandom$$() {
+            const $v$$ = Math.random();
+            alert("Picked " + $v$$);
+            return $v$$;
+          }
+          var $Foo$y$$;
+          $getRandom$$();
+          $Foo$y$$ = $getRandom$$();
+          """,
+          """
+          class $Foo$$ {}
+          alert($Foo$y$$);
+          alert(new $Foo$$());
           """,
         });
   }
