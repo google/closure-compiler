@@ -5369,6 +5369,253 @@ async function abc() {
   }
 
   @Test
+  public void test_b454591584_full() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
+    options.setGeneratePseudoNames(true);
+
+    // Showcases the state of the code that led to b/453893252.
+    test(
+        options,
+        new String[] {
+          // i0.js
+          """
+          goog.provide('jspb$e.platypi$duck$parts$Event$Type');
+
+          /** @enum {number} */
+          jspb$e.platypi$duck$parts$Event$Type = {
+            UNKNOWN: 0,
+            TYPE_ONE: 1
+          };
+          """,
+          // i1.js
+          """
+          goog.provide('jspb$platypi$duck$parts$MutableEvent');
+
+          goog.requireType('jspb$e.platypi$duck$parts$Event$Type');
+
+          /** @final */
+          jspb$platypi$duck$parts$MutableEvent = class {
+            /**
+             * @usedViaDotConstructor
+             * @param {!jspb$e.platypi$duck$parts$Event$Type} type
+             */
+            constructor(type) {
+              /** @private {!jspb$e.platypi$duck$parts$Event$Type} */
+              this.type_ = type;
+            }
+
+            /** @return {!jspb$e.platypi$duck$parts$Event$Type} */
+            getType() {
+              return this.type_;
+            }
+          };
+          """,
+          // i2.js
+          """
+          goog.provide('proto.platypi.duck.parts.Event');
+          /** @provideAlreadyProvided */
+          goog.provide('proto.platypi.duck.parts.Event.Type');
+
+          goog.require('jspb$e.platypi$duck$parts$Event$Type');
+          goog.require('jspb$platypi$duck$parts$MutableEvent');
+
+          /** @const */
+          proto.platypi.duck.parts.Event = jspb$platypi$duck$parts$MutableEvent;
+
+          /** @const */
+          jspb$platypi$duck$parts$MutableEvent.Type = jspb$e.platypi$duck$parts$Event$Type;
+          """,
+          // i3.js
+          """
+          /**
+           * @fileoverview added by tsickle
+           * @suppress {checkTypes} added by tsickle
+           * @suppress {extraRequire} added by tsickle
+           * @suppress {missingRequire} added by tsickle
+           * @suppress {uselessCode} added by tsickle
+           * @suppress {suspiciousCode} added by tsickle
+           * @suppress {missingReturn} added by tsickle
+           * @suppress {unusedLocalVariables} added by tsickle
+           * @suppress {missingOverride} added by tsickle
+           * @suppress {const} added by tsickle
+           */
+          goog.module('google3.third_party.javascript.angular2.rc.packages.core.src.render3.definition');
+
+          /**
+           * @record
+           * @template T
+           */
+          function ComponentDefinition() { }
+          /* istanbul ignore if */
+          if (false) {
+            /**
+             * @type {function((T|?)): void}
+             * @public
+             */
+            ComponentDefinition.prototype.template;
+          }
+
+          /**
+           * @template T
+           * @param {!ComponentDefinition<T>} componentDefinition
+           * @return {!ComponentDefinition<T>}
+           */
+          function ɵɵdefineComponent(componentDefinition) {
+            return componentDefinition;
+          }
+
+          exports.ɵɵdefineComponent = ɵɵdefineComponent;
+          """,
+          // i4.js
+          """
+          /**
+           * @fileoverview added by tsickle
+           * @suppress {checkTypes} added by tsickle
+           * @suppress {extraRequire} added by tsickle
+           * @suppress {missingRequire} added by tsickle
+           * @suppress {uselessCode} added by tsickle
+           * @suppress {suspiciousCode} added by tsickle
+           * @suppress {missingReturn} added by tsickle
+           * @suppress {unusedLocalVariables} added by tsickle
+           * @suppress {missingOverride} added by tsickle
+           * @suppress {const} added by tsickle
+           */
+          goog.module('event_component');
+
+          const goog_proto_platypi_duck_parts_Event_1 = goog.require('proto.platypi.duck.parts.Event');
+          const tsickle_Event_41 = goog.requireType("proto.platypi.duck.parts.Event");
+          const i0 = goog.require('google3.third_party.javascript.angular2.rc.packages.core.src.render3.definition');
+
+          const event_proto_1 = {};
+          /** @const */ event_proto_1.Event = goog_proto_platypi_duck_parts_Event_1;
+
+          class EventComponent {
+            constructor() {
+              this.event = function() {
+                return new event_proto_1.Event(/** @type {?} */ (1));
+              };
+              this.Event = event_proto_1.Event;
+            }
+          }
+
+          /** @nocollapse */ EventComponent.ɵcmp =
+              /** @pureOrBreakMyCode */ i0.ɵɵdefineComponent({
+                type: EventComponent,
+                template: function EventComponent_Template(ctx) {
+                  if (ctx.event().getType() === ctx.Event.Type.TYPE_ONE) {
+                    return 'one';
+                  } else {
+                    return 'unknown';
+                  }
+                }
+              });
+
+          /* istanbul ignore if */
+          if (false) {
+            /**
+             * @const {function(): !event_proto_1.Event}
+             * @protected
+             */
+            EventComponent.prototype.event;
+            /**
+             * @const {function(new:tsickle_Event_41, (undefined|null|!Array<?>)=)}
+             * @protected
+             */
+            EventComponent.prototype.Event;
+          }
+
+          // Manual code for retention.
+          alert(EventComponent.ɵcmp.template(new EventComponent()));
+          """
+        },
+        new String[] {
+          "",
+          "",
+          "",
+          "",
+          """
+          // TODO: b/454591584 - Event.Type should not have been collapsed / pruned.
+          var $jspb$platypi$duck$parts$MutableEvent$$ = class {
+            constructor($type$$) {
+              this.$type_$ = $type$$;
+            }
+          };
+          class $module$contents$event_component_EventComponent$$ {
+            constructor() {
+              this.$event$ = function() {
+                return new $jspb$platypi$duck$parts$MutableEvent$$(1);
+              };
+              this.$Event$ = $jspb$platypi$duck$parts$MutableEvent$$;
+            }
+          }
+          $module$contents$event_component_EventComponent$$.$a$ = {
+            $type$: $module$contents$event_component_EventComponent$$,
+            $template$: function($ctx$$) {
+              return $ctx$$.$event$().$type_$ === $ctx$$.$Event$.$Type$.$TYPE_ONE$ ?
+                  'one' :
+                  'unknown';
+            }
+          };
+          alert($module$contents$event_component_EventComponent$$.$a$.$template$(
+              new $module$contents$event_component_EventComponent$$()));
+          """
+        });
+  }
+
+  @Test
+  public void test_b454591584_simplified() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
+    options.setGeneratePseudoNames(true);
+
+    test(
+        options,
+        """
+        /** @enum {number} */
+        var Event$Type = {
+          UNKNOWN: 0,
+          TYPE_ONE: 1
+        };
+
+        class Event {}
+
+        /** @const */
+        Event.Type = Event$Type;
+
+        class EventComponent {
+          constructor() {
+            /** @const */
+            this.Event = Event;
+          }
+        }
+
+        /** @param {?} x */
+        function foo(x) {
+          return x.Event.Type.TYPE_ONE;
+        }
+
+        const obj = new EventComponent();
+        alert(foo(obj));
+        """,
+        """
+        // TODO: b/454591584 - Event.Type should not have been collapsed / pruned.
+        class $Event$$ {}
+
+        class $EventComponent$$ {
+          constructor() {
+            this.$a$ = $Event$$;
+          }
+        }
+        alert((new $EventComponent$$()).$a$.$Type$.$TYPE_ONE$);
+        """);
+  }
+
+  @Test
   public void testDeclareLegacyNamespaceSubModuleCrash() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
