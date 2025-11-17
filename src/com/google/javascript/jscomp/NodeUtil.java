@@ -5132,7 +5132,7 @@ public final class NodeUtil {
     return false;
   }
 
-  static boolean isGoogModuleGetCall(Node callNode) {
+  public static boolean isGoogModuleGetCall(Node callNode) {
     if (!callNode.isCall()) {
       return false;
     }
