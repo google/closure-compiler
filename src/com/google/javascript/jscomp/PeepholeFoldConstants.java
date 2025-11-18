@@ -992,11 +992,46 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return n;
   }
 
+  /**
+   * Folds additions of template literals with placeholders/substitutions like `${foo} and ${bar}` +
+   * `${baz}`.
+   *
+   * <p>This code path is only hit if the left and right are both template literals WITH
+   * placeholders/substitutions. If one of them did not have placeholders/substitutions, it would
+   * have already have been optimized to a string.
+   */
+  private Node foldAddTemplateLiterals(Node oldNode, Node left, Node right) {
+    // All template literal nodes with placeholders/substitutions will have their first child
+    // and last child as a string node.
+    // Merge the last left child string node with the first right child node.
+    Node lastLeft = left.getLastChild();
+    Node firstRight = right.getFirstChild();
+    Node mergeNode =
+        IR.templateLiteralString(
+            lastLeft.getCookedString() + firstRight.getCookedString(),
+            lastLeft.getRawString() + firstRight.getRawString());
+    mergeNode.srcrefTreeIfMissing(lastLeft);
+
+    // Detach the lastLeft and firstRight children and append all right children to the left node.
+    lastLeft.detach();
+    firstRight.detach();
+    left.addChildToBack(mergeNode);
+    left.addChildrenToBack(right.removeChildren());
+
+    // Detach the updated left node and replace the old node with it.
+    left.detach();
+    return replace(oldNode, left);
+  }
+
   private Node tryFoldAdd(Node node, Node left, Node right) {
     checkArgument(node.isAdd());
 
     if (NodeUtil.mayBeString(node, shouldUseTypes)) {
-      if (NodeUtil.isLiteralValue(left, false) && NodeUtil.isLiteralValue(right, false)) {
+      if (left.isTemplateLit() && right.isTemplateLit()) {
+        // TODO: account for cases of template literal + other data type (any order)
+        // (e.g. string + template literal, template literal + number)
+        return foldAddTemplateLiterals(node, left, right);
+      } else if (NodeUtil.isLiteralValue(left, false) && NodeUtil.isLiteralValue(right, false)) {
         // '6' + 7
         return tryFoldAddConstantString(node, left, right);
       } else if (left.isStringLit() && left.getString().isEmpty() && isStringTyped(right)) {

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
@@ -2247,6 +2248,209 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     test("alert(x & 12 & 20);", "alert(x & 4);");
     test("alert(12 & x & 20);", "alert(x & 4);");
+  }
+
+  @Test
+  public void testTemplateLiteralConcat() {
+
+    // join at variables
+    test(
+        """
+        const a = `${x}` + `${x}`;
+        """,
+        """
+        const a = `${x}${x}`;
+        """);
+    test(
+        """
+        const a = `${x}${y}` + `${x}${y}`;
+        """,
+        """
+        const a = `${x}${y}${x}${y}`;
+        """);
+
+    // join at variable and string
+    test(
+        """
+        const a = `${x}` + `a${x}`;
+        """,
+        """
+        const a =`${x}a${x}`;
+        """);
+    test(
+        """
+        const a = `${x}` + ` ${x}`;
+        """,
+        """
+        const a =`${x} ${x}`;
+        """);
+
+    // join at string and variable
+    test(
+        """
+        const a = `a${x}b` + `${x}c`;
+        """,
+        """
+        const a = `a${x}b${x}c`;
+        """);
+    test(
+        """
+        const a = `a${x} ` + `${x}b`;
+        """,
+        """
+        const a = `a${x} ${x}b`;
+        """);
+
+    // join at strings
+    test(
+        """
+        const x = 'X';
+        console.log(`a${x}b` + `c${x}d`);
+        """,
+        """
+        const x = 'X';
+        console.log(`a${x}bc${x}d`);
+        """);
+
+    // complex joins
+    test(
+        """
+        const a = `${foo() + bar()}` + `${baz()}`;
+        """,
+        """
+        const a =`${foo() + bar()}${baz()}`;
+        """);
+    test(
+        """
+        console.log(`<h1>${url}</h1>` + `<p>The URL is ${url}.</p>`);
+        """,
+        """
+        console.log(`<h1>${url}</h1><p>The URL is ${url}.</p>`);
+        """);
+    test(
+        """
+        console.log(`${(() => {return url;})()}</h1>` + `<p>The URL is ${url}.</p>`);
+        """,
+        """
+        console.log(`${(() => {return url;})()}</h1><p>The URL is ${url}.</p>`);
+        """);
+
+    // don't fold tagged template literals
+    testSame(
+        """
+        const a = foo`${b}` + `${b}`;
+        """);
+    testSame(
+        """
+        const a = foo`${b}` + bar`${b}`;
+        """);
+  }
+
+  @Test
+  public void
+      testFoldAddTemplateLiterals_validateRawAndCookedStringForSpecialChars_andValidateChildren() {
+    // This is a bit tricky because there are two layers of escaping.
+    // Java sees "\\n" as "(\\)n" so it becomes "\n" for the javascript compiler.
+    // The compiler then interprets this as the special character "\n"
+    test("var x = `${a}\\n` + `\\t${b}`", "var x = `${a}\\n\\t${b}`");
+
+    // getJsRoot() returns the ROOT node for inputs only.
+    // The first child is the SCRIPT node containing the input code.
+    Node script = getLastCompiler().getJsRoot().getFirstChild();
+    Node var = script.getFirstChild();
+    Node name = var.getFirstChild();
+    Node templateLit = name.getFirstChild();
+    assertThat(templateLit.isTemplateLit()).isTrue();
+
+    // TEMPLATELIT should have 5 total children
+    assertThat(templateLit.getChildCount()).isEqualTo(5);
+
+    // Index 0: TEMPLATELIT_STRING ""
+    @SuppressWarnings({"RhinoNodeGetFirstChild", "Simplification"})
+    Node child0 = templateLit.getChildAtIndex(0);
+    assertThat(child0.isTemplateLitString()).isTrue();
+    assertThat(child0.getCookedString()).isEmpty();
+    assertThat(child0.getRawString()).isEmpty();
+
+    // Index 1: SUB a
+    @SuppressWarnings({"RhinoNodeGetSecondChild", "Simplification"})
+    Node child1 = templateLit.getChildAtIndex(1);
+    assertThat(child1.isTemplateLitSub()).isTrue();
+    assertThat(child1.getOnlyChild().isName()).isTrue();
+    assertThat(child1.getOnlyChild().getString()).isEqualTo("a");
+
+    // Index 2: TEMPLATELIT_STRING "\n\t"
+    Node child2 = templateLit.getChildAtIndex(2);
+    assertThat(child2.isTemplateLitString()).isTrue();
+    assertThat(child2.getCookedString()).isEqualTo("\n\t");
+    assertThat(child2.getRawString()).isEqualTo("\\n\\t");
+
+    // Index 3: SUB b
+    Node child3 = templateLit.getChildAtIndex(3);
+    assertThat(child3.isTemplateLitSub()).isTrue();
+    assertThat(child3.getOnlyChild().isName()).isTrue();
+    assertThat(child3.getOnlyChild().getString()).isEqualTo("b");
+
+    // Index 4: TEMPLATELIT_STRING ""
+    Node child4 = templateLit.getChildAtIndex(4);
+    assertThat(child4.isTemplateLitString()).isTrue();
+    assertThat(child4.getCookedString()).isEmpty();
+    assertThat(child4.getRawString()).isEmpty();
+  }
+
+  @Test
+  public void
+      testFoldAddTemplateLiterals_validateRawAndCookedStringForLiteralBackslash_andValidateChildren() {
+    // This is a bit tricky because there are two layers of escaping.
+    // Java sees "\\\\n" as "(\\)(\\)n" so it becomes "\\n" for the javascript compiler.
+    // The compiler then interprets this as "(\\)n" so it becomes "\" followed by
+    // "n" NOT the special character "\n".
+    test(
+        "var x = `${foo()}\\\\` + `n\\t${()=> {return b;}}`",
+        "var x = `${foo()}\\\\n\\t${()=> {return b;}}`");
+
+    // getJsRoot() returns the ROOT node for inputs only.
+    // The first child is the SCRIPT node containing the input code.
+    Node script = getLastCompiler().getJsRoot().getFirstChild();
+    Node var = script.getFirstChild();
+    Node name = var.getFirstChild();
+    Node templateLit = name.getFirstChild();
+    assertThat(templateLit.isTemplateLit()).isTrue();
+
+    // TEMPLATELIT should have 5 children:
+    assertThat(templateLit.getChildCount()).isEqualTo(5);
+
+    // Index 0: TEMPLATELIT_STRING ""
+    @SuppressWarnings({"RhinoNodeGetFirstChild", "Simplification"})
+    Node child0 = templateLit.getChildAtIndex(0);
+    assertThat(child0.isTemplateLitString()).isTrue();
+    assertThat(child0.getCookedString()).isEmpty();
+    assertThat(child0.getRawString()).isEmpty();
+
+    // Index 1: SUB foo()
+    @SuppressWarnings({"RhinoNodeGetSecondChild", "Simplification"})
+    Node child1 = templateLit.getChildAtIndex(1);
+    assertThat(child1.isTemplateLitSub()).isTrue();
+    assertThat(child1.getOnlyChild().isCall()).isTrue();
+    assertThat(child1.getOnlyChild().getOnlyChild().getString()).isEqualTo("foo");
+
+    // Index 2: TEMPLATELIT_STRING "\n\t"
+    Node child2 = templateLit.getChildAtIndex(2);
+    assertThat(child2.isTemplateLitString()).isTrue();
+    assertThat(child2.getCookedString()).isEqualTo("\\n\t");
+    assertThat(child2.getRawString()).isEqualTo("\\\\n\\t");
+
+    // Index 3: SUB ()=> {return b;}
+    Node child3 = templateLit.getChildAtIndex(3);
+    assertThat(child3.isTemplateLitSub()).isTrue();
+    assertThat(child3.getOnlyChild().isFunction()).isTrue();
+    assertThat(child3.getOnlyChild().getFirstChild().getString()).isEqualTo("");
+
+    // Index 4: TEMPLATELIT_STRING ""
+    Node child4 = templateLit.getChildAtIndex(4);
+    assertThat(child4.isTemplateLitString()).isTrue();
+    assertThat(child4.getCookedString()).isEmpty();
+    assertThat(child4.getRawString()).isEmpty();
   }
 
   private void foldBigIntTypes(String js, String expected) {
