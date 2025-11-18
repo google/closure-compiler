@@ -3565,7 +3565,6 @@ use(Foo$Bar$baz$A);
           }
         }
         class Baz extends Bar {
-          /** @nocollapse */
           static quadruple(n) {
             return 2 * super.double(n);
           }
@@ -3583,6 +3582,9 @@ use(Foo$Bar$baz$A);
           return n * 2;
         };
         class Bar {}
+        var Baz$quadruple = function(n$jscomp$1) {
+          return 2 * Bar$double(n$jscomp$1);
+        };
         var Baz$val1;
         var Baz$val2;
         var Baz$$0jscomp$0staticInit$0m1146332801$00 = function() {
@@ -3591,12 +3593,7 @@ use(Foo$Bar$baz$A);
           }
           Baz$val2 = Bar$double(6);
         };
-        class Baz extends Bar {
-          /** @nocollapse */
-          static quadruple(n$jscomp$1) {
-            return 2 * Bar$double(n$jscomp$1);
-          }
-        }
+        class Baz extends Bar {}
         Baz$$0jscomp$0staticInit$0m1146332801$00();
         """);
   }
