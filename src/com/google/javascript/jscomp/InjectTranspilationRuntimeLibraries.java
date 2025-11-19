@@ -64,8 +64,8 @@ public final class InjectTranspilationRuntimeLibraries implements CompilerPass {
     // functions to be have JSType applied to it by the type inferrence.
 
     if (mustBeCompiledAway.contains(Feature.TEMPLATE_LITERALS)) {
-      runtimeLibs.injectField("$jscomp.createTemplateTagFirstArg");
-      runtimeLibs.injectField("$jscomp.createTemplateTagFirstArgWithRaw");
+      runtimeLibs.injectLibForField("$jscomp.createTemplateTagFirstArg");
+      runtimeLibs.injectLibForField("$jscomp.createTemplateTagFirstArgWithRaw");
     }
 
     if (mustBeCompiledAway.contains(Feature.FOR_OF)
@@ -74,18 +74,18 @@ public final class InjectTranspilationRuntimeLibraries implements CompilerPass {
       // `makeIterator` isn't needed directly for `OBJECT_PATTERN_REST`, but when we transpile
       // a destructuring case that contains it, we transpile the entire destructured assignment,
       // which may also include `ARRAY_DESTRUCTURING`.
-      runtimeLibs.injectField("$jscomp.makeIterator");
+      runtimeLibs.injectLibForField("$jscomp.makeIterator");
     }
 
     if (mustBeCompiledAway.contains(Feature.ARRAY_PATTERN_REST)) {
-      runtimeLibs.injectField("$jscomp.arrayFromIterator");
+      runtimeLibs.injectLibForField("$jscomp.arrayFromIterator");
     }
 
     if (mustBeCompiledAway.contains(Feature.SPREAD_EXPRESSIONS)) {
       // We must automatically generate the default constructor for descendent classes,
       // and those must call super(...arguments), so we end up injecting our own spread
       // expressions for such cases.
-      runtimeLibs.injectField("$jscomp.arrayFromIterable");
+      runtimeLibs.injectLibForField("$jscomp.arrayFromIterable");
     }
 
     if ((mustBeCompiledAway.contains(Feature.OBJECT_LITERALS_WITH_SPREAD)
@@ -94,38 +94,48 @@ public final class InjectTranspilationRuntimeLibraries implements CompilerPass {
       // We need `Object.assign` to transpile `obj = {a, ...rest};` or `const {a, ...rest} = obj;`,
       // but the output language level doesn't indicate that it is guaranteed to be present, so
       // we'll include our polyfill.
-      // Use "ensureLibraryInjected" instead of "import" because we're injecting the polyfill
+      // Use "ensureLibraryInjected" instead of "injectLibForField" because we're injecting the
+      // polyfill
       // for Object.assign, which is thus not an actual $jscomp.* method we can lookup.
       runtimeLibs.ensureLibraryInjected("es6/object/assign", /* force= */ false);
     }
 
     if (mustBeCompiledAway.contains(Feature.CLASS_GETTER_SETTER)) {
-      runtimeLibs.injectField("$jscomp.global");
+      runtimeLibs.injectLibForField("$jscomp.global");
     }
 
     if (mustBeCompiledAway.contains(Feature.GENERATORS)) {
-      runtimeLibs.injectField("$jscomp.generator.createGenerator");
+      runtimeLibs.injectLibForField("$jscomp.generator.createGenerator");
+      runtimeLibs.injectLibForField("$jscomp.generator.Context");
     }
 
     if (mustBeCompiledAway.contains(Feature.ASYNC_FUNCTIONS)) {
-      runtimeLibs.injectField("$jscomp.asyncExecutePromiseGeneratorFunction");
+      runtimeLibs.injectLibForField("$jscomp.asyncExecutePromiseGeneratorFunction");
+      if (!outputFeatures.contains(Feature.GENERATORS)) {
+        runtimeLibs.injectLibForField("$jscomp.asyncExecutePromiseGeneratorProgram");
+        runtimeLibs.injectLibForField("$jscomp.generator.Context");
+      }
     }
 
     if (mustBeCompiledAway.contains(Feature.ASYNC_GENERATORS)) {
-      runtimeLibs.injectField("$jscomp.asyncExecutePromiseGeneratorFunction");
-      runtimeLibs.injectField("$jscomp.AsyncGeneratorWrapper");
-      runtimeLibs.injectField("$jscomp.AsyncGeneratorWrapper$ActionRecord");
-      runtimeLibs.injectField("$jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE");
-      runtimeLibs.injectField("$jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE");
-      runtimeLibs.injectField("$jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_STAR");
+      runtimeLibs.injectLibForField("$jscomp.asyncExecutePromiseGeneratorFunction");
+      runtimeLibs.injectLibForField("$jscomp.AsyncGeneratorWrapper");
+      runtimeLibs.injectLibForField("$jscomp.AsyncGeneratorWrapper$ActionRecord");
+      runtimeLibs.injectLibForField("$jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE");
+      runtimeLibs.injectLibForField("$jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE");
+      runtimeLibs.injectLibForField("$jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_STAR");
+      if (!outputFeatures.contains(Feature.GENERATORS)) {
+        runtimeLibs.injectLibForField("$jscomp.asyncExecutePromiseGeneratorProgram");
+        runtimeLibs.injectLibForField("$jscomp.generator.Context");
+      }
     }
 
     if (mustBeCompiledAway.contains(Feature.FOR_AWAIT_OF)) {
-      runtimeLibs.injectField("$jscomp.makeAsyncIterator");
+      runtimeLibs.injectLibForField("$jscomp.makeAsyncIterator");
     }
 
     if (mustBeCompiledAway.contains(Feature.REST_PARAMETERS)) {
-      runtimeLibs.injectField("$jscomp.getRestArguments");
+      runtimeLibs.injectLibForField("$jscomp.getRestArguments");
     }
 
     if (compiler.getOptions().getInstrumentAsyncContext()
@@ -135,7 +145,7 @@ public final class InjectTranspilationRuntimeLibraries implements CompilerPass {
         && (outputFeatures.contains(Feature.ASYNC_FUNCTIONS)
             || used.contains(Feature.GENERATORS)
             || used.contains(Feature.ASYNC_GENERATORS))) {
-      runtimeLibs.injectField("$jscomp.asyncContextStart");
+      runtimeLibs.injectLibForField("$jscomp.asyncContextStart");
     }
   }
 
@@ -153,12 +163,12 @@ public final class InjectTranspilationRuntimeLibraries implements CompilerPass {
     // harder because more runtime libraries are injected.
     Node superclass = n.getSecondChild();
     if (!injectedClassExtendsLibraries && !superclass.isEmpty()) {
-      runtimeLibs.injectField("$jscomp.construct");
-      runtimeLibs.injectField("$jscomp.inherits");
+      runtimeLibs.injectLibForField("$jscomp.construct");
+      runtimeLibs.injectLibForField("$jscomp.inherits");
       // We must automatically generate the default constructor for descendent classes,
       // and those must call super(...arguments), so we end up injecting our own spread
       // expressions for such cases.
-      runtimeLibs.injectField("$jscomp.arrayFromIterable");
+      runtimeLibs.injectLibForField("$jscomp.arrayFromIterable");
       injectedClassExtendsLibraries = true;
     }
   }

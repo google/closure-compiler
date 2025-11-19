@@ -1241,6 +1241,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     test(
         options,
         """
+        /** @const */
         var $jscomp = { global: window };
 
         class C {

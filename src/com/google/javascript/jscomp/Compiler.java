@@ -1433,14 +1433,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public AstFactory createAstFactory() {
     return hasTypeCheckingRun()
         ? (hasOptimizationColors()
-            ? AstFactory.createFactoryWithColors(stage, getColorRegistry())
-            : AstFactory.createFactoryWithTypes(stage, getTypeRegistry()))
-        : AstFactory.createFactoryWithoutTypes(stage);
+            ? AstFactory.createFactoryWithColors(stage, getColorRegistry(), runtimeJsLibManager)
+            : AstFactory.createFactoryWithTypes(stage, getTypeRegistry(), runtimeJsLibManager))
+        : AstFactory.createFactoryWithoutTypes(stage, runtimeJsLibManager);
   }
 
   @Override
   public AstFactory createAstFactoryWithoutTypes() {
-    return AstFactory.createFactoryWithoutTypes(stage);
+    return AstFactory.createFactoryWithoutTypes(stage, runtimeJsLibManager);
   }
 
   @Override

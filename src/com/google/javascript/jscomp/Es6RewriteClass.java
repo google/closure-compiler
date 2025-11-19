@@ -25,6 +25,7 @@ import com.google.auto.value.AutoBuilder;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.StandardColors;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager.JsLibField;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -43,19 +44,18 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
       FeatureSet.BARE_MINIMUM.with(
           Feature.CLASSES, Feature.CLASS_GETTER_SETTER, Feature.NEW_TARGET, Feature.SUPER);
 
-  // This function is defined in js/es6/util/inherits.js
-  static final String INHERITS = "$jscomp.inherits";
-
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
   private final Es6ConvertSuperConstructorCalls convertSuperConstructorCalls;
   private final StaticScope transpilationNamespace;
+  private final JsLibField jscompInherits;
 
   public Es6RewriteClass(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.transpilationNamespace = compiler.getTranspilationNamespace();
     this.convertSuperConstructorCalls = new Es6ConvertSuperConstructorCalls(compiler);
+    this.jscompInherits = compiler.getRuntimeJsLibManager().getJsLibField("$jscomp.inherits");
   }
 
   @Override
@@ -199,7 +199,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
         Node inheritsCall =
             IR.exprResult(
                     astFactory.createCall(
-                        astFactory.createQName(this.transpilationNamespace, INHERITS),
+                        astFactory.createQName(this.transpilationNamespace, jscompInherits),
                         type(StandardColors.NULL_OR_VOID),
                         metadata.fullClassNameNode().cloneTree(),
                         metadata.superClassNameNode().cloneTree()))

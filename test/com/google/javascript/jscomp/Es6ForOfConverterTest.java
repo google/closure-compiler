@@ -353,6 +353,7 @@ for (;
         // add only minimal runtime library stubs to prevent AstFactory crash
         externs(
             """
+            /** @const */
             var $jscomp = {};
             /**
              * @param {?} iterable

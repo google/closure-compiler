@@ -193,19 +193,20 @@ public class RuntimeJsLibManagerTest {
     //       (base)
     //      /      \
     //  (childA)   (childB)
-    resourcesMap.put("base.js", "print('in BASE');");
-    resourcesMap.put(
-        "childA.js",
-        """
-        'require base.js';
-        print('in CHILD_A');
-        """);
-    resourcesMap.put(
-        "childB.js",
-        """
-        'require base.js';
-        print('in CHILD_B');
-        """);
+    resourcesMap
+        .put("base.js", "print('in BASE');")
+        .put(
+            "childA.js",
+            """
+            'require base.js';
+            print('in CHILD_A');
+            """)
+        .put(
+            "childB.js",
+            """
+            'require base.js';
+            print('in CHILD_B');
+            """);
     var resources = new StubResourceLoader(resourcesMap.buildOrThrow());
     RuntimeJsLibManager manager =
         RuntimeJsLibManager.create(
@@ -264,7 +265,7 @@ public class RuntimeJsLibManagerTest {
   }
 
   @Test
-  public void injectField_addsCorrespondingLibrary() {
+  public void injectLibForField_addsCorrespondingLibrary() {
     RuntimeJsLibManager manager =
         RuntimeJsLibManager.create(
             RuntimeLibraryMode.RECORD_ONLY,
@@ -272,13 +273,13 @@ public class RuntimeJsLibManagerTest {
             new ChangeTracker(),
             () -> IR.script());
 
-    manager.injectField("$jscomp.inherits");
+    manager.injectLibForField("$jscomp.inherits");
 
     assertThat(manager.getInjectedLibraries()).containsExactly("es6/util/inherits");
   }
 
   @Test
-  public void injectField_crashesIfNonQualifiedName() {
+  public void injectLibForField_crashesIfNonQualifiedName() {
     RuntimeJsLibManager manager =
         RuntimeJsLibManager.create(
             RuntimeLibraryMode.RECORD_ONLY,
@@ -286,11 +287,11 @@ public class RuntimeJsLibManagerTest {
             new ChangeTracker(),
             () -> IR.script());
 
-    assertThrows(IllegalArgumentException.class, () -> manager.injectField("3 + 4"));
+    assertThrows(IllegalArgumentException.class, () -> manager.injectLibForField("3 + 4"));
   }
 
   @Test
-  public void injectField_crashesIfPassedNonJscompName() {
+  public void injectLibForField_crashesIfPassedNonJscompName() {
     RuntimeJsLibManager manager =
         RuntimeJsLibManager.create(
             RuntimeLibraryMode.RECORD_ONLY,
@@ -298,11 +299,11 @@ public class RuntimeJsLibManagerTest {
             new ChangeTracker(),
             () -> IR.script());
 
-    assertThrows(IllegalArgumentException.class, () -> manager.injectField("foobar"));
+    assertThrows(IllegalArgumentException.class, () -> manager.injectLibForField("foobar"));
   }
 
   @Test
-  public void injectField_crashesIfPassedJustJscomp() {
+  public void injectLibForField_crashesIfPassedJustJscomp() {
     RuntimeJsLibManager manager =
         RuntimeJsLibManager.create(
             RuntimeLibraryMode.RECORD_ONLY,
@@ -310,11 +311,11 @@ public class RuntimeJsLibManagerTest {
             new ChangeTracker(),
             () -> IR.script());
 
-    assertThrows(IllegalArgumentException.class, () -> manager.injectField("$jscomp"));
+    assertThrows(IllegalArgumentException.class, () -> manager.injectLibForField("$jscomp"));
   }
 
   @Test
-  public void injectField_crashesIfPassedMissingProperty() {
+  public void injectLibForField_crashesIfPassedMissingProperty() {
     RuntimeJsLibManager manager =
         RuntimeJsLibManager.create(
             RuntimeLibraryMode.RECORD_ONLY,
@@ -323,12 +324,101 @@ public class RuntimeJsLibManagerTest {
             () -> IR.script());
 
     var ex =
-        assertThrows(NullPointerException.class, () -> manager.injectField("$jscomp.doesNotExist"));
+        assertThrows(
+            NullPointerException.class, () -> manager.injectLibForField("$jscomp.doesNotExist"));
     assertThat(ex).hasMessageThat().contains("Cannot find definition of $jscomp.doesNotExist");
+  }
+
+  @Test
+  public void injectLibForField_thenAssertInjectedAndGetQualifiedName_passes() {
+    RuntimeJsLibManager manager =
+        RuntimeJsLibManager.create(
+            RuntimeLibraryMode.RECORD_ONLY,
+            new StubResourceLoader(ImmutableMap.of()),
+            new ChangeTracker(),
+            () -> IR.script());
+
+    manager.injectLibForField("$jscomp.inherits");
+    RuntimeJsLibManager.JsLibField field = manager.getJsLibField("$jscomp.inherits");
+
+    assertThat(field.assertInjected().qualifiedName()).isEqualTo("$jscomp.inherits");
+  }
+
+  @Test
+  public void noinjectLibForField_thenAssertInjected_recordAndValidateFieldsMode_fails() {
+    RuntimeJsLibManager manager =
+        RuntimeJsLibManager.create(
+            RuntimeLibraryMode.RECORD_AND_VALIDATE_FIELDS,
+            new StubResourceLoader(ImmutableMap.of()),
+            new ChangeTracker(),
+            () -> IR.script());
+
+    RuntimeJsLibManager.JsLibField field = manager.getJsLibField("$jscomp.inherits");
+
+    assertThrows(IllegalStateException.class, field::assertInjected);
+  }
+
+  @Test
+  public void noinjectLibForField_thenAssertInjected_injectMode_fails() {
+    RuntimeJsLibManager manager =
+        RuntimeJsLibManager.create(
+            RuntimeLibraryMode.RECORD_AND_VALIDATE_FIELDS,
+            new StubResourceLoader(ImmutableMap.of()),
+            new ChangeTracker(),
+            () -> IR.script());
+
+    RuntimeJsLibManager.JsLibField field = manager.getJsLibField("$jscomp.inherits");
+
+    assertThrows(IllegalStateException.class, field::assertInjected);
+  }
+
+  @Test
+  public void noinjectLibForField_thenAssertInjectedAndGetQualifiedName_recordOnlyMode_succeeds() {
+    RuntimeJsLibManager manager =
+        RuntimeJsLibManager.create(
+            RuntimeLibraryMode.RECORD_ONLY,
+            new StubResourceLoader(ImmutableMap.of()),
+            new ChangeTracker(),
+            () -> IR.script());
+
+    RuntimeJsLibManager.JsLibField field = manager.getJsLibField("$jscomp.inherits");
+
+    var unused = field.assertInjected().qualifiedName();
+  }
+
+  @Test
+  public void noinjectLibForField_thenAssertInjectedAndGetQualifiedName_noOpMode_succeeds() {
+    RuntimeJsLibManager manager =
+        RuntimeJsLibManager.create(
+            RuntimeLibraryMode.NO_OP,
+            new StubResourceLoader(ImmutableMap.of()),
+            new ChangeTracker(),
+            () -> IR.script());
+
+    RuntimeJsLibManager.JsLibField field = manager.getJsLibField("$jscomp.inherits");
+
+    var unused = field.assertInjected().qualifiedName();
+  }
+
+  @Test
+  public void field_withoutInjection_allowsCallingMatches() {
+    RuntimeJsLibManager manager =
+        RuntimeJsLibManager.create(
+            RuntimeLibraryMode.RECORD_AND_VALIDATE_FIELDS,
+            new StubResourceLoader(ImmutableMap.of()),
+            new ChangeTracker(),
+            () -> IR.script());
+
+    RuntimeJsLibManager.JsLibField field = manager.getJsLibField("$jscomp.inherits");
+
+    assertThat(field.matches(IR.name("foo"))).isFalse();
+    assertThat(field.matches(JSCOMP_INHERITS)).isTrue();
   }
 
   private static Node js(String code) {
     Compiler compiler = new Compiler();
     return compiler.parseSyntheticCode("lib.js", code);
   }
+
+  private static final Node JSCOMP_INHERITS = IR.getprop(IR.name("$jscomp"), "inherits");
 }

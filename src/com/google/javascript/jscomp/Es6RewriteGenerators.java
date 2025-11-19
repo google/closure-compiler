@@ -24,13 +24,14 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.StandardColors;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager.JsLibField;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,8 +79,10 @@ final class Es6RewriteGenerators implements CompilerPass {
   private static final String GENERATOR_THIS = "$jscomp$generator$this";
   private static final String GENERATOR_FORIN_PREFIX = "$jscomp$generator$forin";
 
-  private static final QualifiedName JSCOMP_ASYNC_EXECUTE =
-      QualifiedName.of("$jscomp.asyncExecutePromiseGeneratorFunction");
+  private final JsLibField jscompAsyncExecuteFunction;
+  private final JsLibField jscompAsyncExecuteProgram;
+  private final JsLibField generatorContext;
+  private final JsLibField jscompCreateGenerator;
 
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(Feature.GENERATORS);
@@ -90,7 +93,7 @@ final class Es6RewriteGenerators implements CompilerPass {
 
   private final @Nullable Color nullableStringType;
   private final Supplier<AstFactory.Type> generatorContextType;
-  private final Supplier<AstFactory.Type> propertyIteratorType;
+  private final AstFactory.Type propertyIteratorType;
   private final UniqueIdSupplier uniqueIdSupplier;
 
   Es6RewriteGenerators(AbstractCompiler compiler) {
@@ -106,19 +109,23 @@ final class Es6RewriteGenerators implements CompilerPass {
     } else {
       nullableStringType = null;
     }
+
+    var runtimeJsLibManager = compiler.getRuntimeJsLibManager();
+    this.generatorContext = runtimeJsLibManager.getJsLibField("$jscomp.generator.Context");
+    this.jscompAsyncExecuteFunction =
+        runtimeJsLibManager.getJsLibField("$jscomp.asyncExecutePromiseGeneratorFunction");
+    this.jscompAsyncExecuteProgram =
+        runtimeJsLibManager.getJsLibField("$jscomp.asyncExecutePromiseGeneratorProgram");
+    this.jscompCreateGenerator =
+        runtimeJsLibManager.getJsLibField("$jscomp.generator.createGenerator");
+
     generatorContextType =
         Suppliers.memoize(
             () ->
                 type(
                     astFactory.createNewNode(
-                        astFactory.createQName(this.namespace, "$jscomp.generator.Context"))));
-    propertyIteratorType =
-        Suppliers.memoize(
-            () ->
-                type(
-                    astFactory.createNewNode(
-                        astFactory.createQName(
-                            this.namespace, "$jscomp.generator.Context.PropertyIterator"))));
+                        astFactory.createQName(this.namespace, generatorContext))));
+    propertyIteratorType = AstFactory.type(JSTypeNative.FUNCTION_TYPE, StandardColors.TOP_OBJECT);
     uniqueIdSupplier = compiler.getUniqueIdSupplier();
   }
 
@@ -292,7 +299,7 @@ final class Es6RewriteGenerators implements CompilerPass {
         Node callTarget = generatorFunction.getParent().getFirstChild();
         if (generatorFunction.getPrevious() == callTarget
             && generatorFunction.getNext() == null
-            && JSCOMP_ASYNC_EXECUTE.matches(callTarget)) {
+            && jscompAsyncExecuteFunction.matches(callTarget)) {
           checkState(generatorFunction.getGrandparent().isReturn());
           checkState(generatorFunction.getGrandparent().getNext() == null);
           return true;
@@ -330,7 +337,8 @@ final class Es6RewriteGenerators implements CompilerPass {
         checkState(changeScopeNode.isFunction(), changeScopeNode);
 
         // asyncExecutePromiseGeneratorFunction   =>   asyncExecutePromiseGeneratorProgram
-        callTarget.setString("asyncExecutePromiseGeneratorProgram");
+        callTarget.replaceWith(
+            astFactory.createQName(namespace, jscompAsyncExecuteProgram).srcrefTree(callTarget));
 
         program = originalGeneratorBody.getParent();
         // function *() {...}   =>   function *(context) {}
@@ -365,8 +373,7 @@ final class Es6RewriteGenerators implements CompilerPass {
                 type(programType));
 
         // $jscomp.generator.createGenerator
-        Node createGenerator =
-            astFactory.createQName(namespace, "$jscomp.generator.createGenerator");
+        Node createGenerator = astFactory.createQName(namespace, jscompCreateGenerator);
         // Replace original generator function body with:
         // return $jscomp.generator.createGenerator(<origGenerator>, <program function>);
         newGeneratorHoistBlock =
@@ -816,8 +823,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       }
 
       // "$for$in"
-      Node child =
-          context.callContextMethod(target, "forIn", propertyIteratorType.get(), detachedExpr);
+      Node child = context.callContextMethod(target, "forIn", propertyIteratorType, detachedExpr);
       Node forIn =
           astFactory
               .createName(

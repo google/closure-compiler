@@ -1486,6 +1486,7 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
                 SourceFile.fromCode(
                     "extraExterns",
                     """
+                    /** @const */
                     var $jscomp = {};
                     $jscomp.global = {};
                     $jscomp.inherits = function(subClass, superClass) {};
@@ -1662,6 +1663,7 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
                 SourceFile.fromCode(
                     "extraExterns",
                     """
+                    /** @const */
                     var $jscomp = {};
                     $jscomp.global = {};
                     $jscomp.inherits = function(subClass, superClass) {};

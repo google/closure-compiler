@@ -25,10 +25,10 @@ import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.StandardColors;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.StaticScope;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -40,7 +40,8 @@ import org.jspecify.annotations.Nullable;
 public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Callback {
   private static final String TMP_ERROR = "$jscomp$tmp$error";
   private static final String SUPER_THIS = "$jscomp$super$this";
-  private static final QualifiedName JSCOMP_INHERITS = QualifiedName.of("$jscomp.inherits");
+  private final RuntimeJsLibManager.JsLibField jscompInherits;
+  private final RuntimeJsLibManager.JsLibField jscompConstruct;
 
   /** Stores superCalls for a constructor. */
   private static final class ConstructorData {
@@ -68,6 +69,10 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
     this.transpilationNamespace = compiler.getTranspilationNamespace();
     this.constructorDataStack = new ArrayDeque<>();
     this.uniqueIdSupplier = compiler.getUniqueIdSupplier();
+
+    var runtimeJsLibManager = compiler.getRuntimeJsLibManager();
+    this.jscompInherits = runtimeJsLibManager.getJsLibField("$jscomp.inherits");
+    this.jscompConstruct = runtimeJsLibManager.getJsLibField("$jscomp.construct");
   }
 
   @Override
@@ -529,7 +534,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
 
     // `$jscomp.construct`
     final Node jscompDotConstruct =
-        astFactory.createQName(this.transpilationNamespace, "$jscomp.construct").srcrefTree(callee);
+        astFactory.createQName(this.transpilationNamespace, jscompConstruct).srcrefTree(callee);
 
     final Node superClassQName = superClassQNameNode.cloneTree();
 
@@ -778,7 +783,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
       return null;
     }
     Node jscompDotInherits = callNode.getFirstChild();
-    if (!JSCOMP_INHERITS.matches(jscompDotInherits)) {
+    if (!jscompInherits.matches(jscompDotInherits)) {
       return null;
     }
     Node classNameNode = checkNotNull(jscompDotInherits.getNext());

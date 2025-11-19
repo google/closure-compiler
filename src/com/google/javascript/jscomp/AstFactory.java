@@ -29,6 +29,8 @@ import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.StandardColors;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager.JsLibField;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticRef;
@@ -96,42 +98,58 @@ final class AstFactory {
 
   private final TypeMode typeMode;
   private final LifeCycleStage lifeCycleStage;
+  private final RuntimeJsLibManager runtimeJsLibManager;
 
-  private AstFactory(LifeCycleStage lifeCycleStage, JSTypeRegistry registry) {
+  private AstFactory(
+      LifeCycleStage lifeCycleStage,
+      JSTypeRegistry registry,
+      RuntimeJsLibManager runtimeJsLibManager) {
     this.lifeCycleStage = lifeCycleStage;
     this.registry = registry;
+    this.runtimeJsLibManager = runtimeJsLibManager;
     this.colorRegistry = null;
     this.unknownType = getNativeType(JSTypeNative.UNKNOWN_TYPE);
     this.typeMode = TypeMode.JSTYPE;
   }
 
-  private AstFactory(LifeCycleStage lifeCycleStage) {
+  private AstFactory(LifeCycleStage lifeCycleStage, RuntimeJsLibManager runtimeJsLibManager) {
     this.lifeCycleStage = lifeCycleStage;
     this.registry = null;
+    this.runtimeJsLibManager = runtimeJsLibManager;
     this.colorRegistry = null;
     this.unknownType = null;
     this.typeMode = TypeMode.NONE;
   }
 
-  private AstFactory(LifeCycleStage lifeCycleStage, ColorRegistry colorRegistry) {
+  private AstFactory(
+      LifeCycleStage lifeCycleStage,
+      ColorRegistry colorRegistry,
+      RuntimeJsLibManager runtimeJsLibManager) {
     this.lifeCycleStage = lifeCycleStage;
     this.registry = null;
+    this.runtimeJsLibManager = runtimeJsLibManager;
     this.colorRegistry = colorRegistry;
     this.unknownType = null;
     this.typeMode = TypeMode.COLOR;
   }
 
-  static AstFactory createFactoryWithoutTypes(LifeCycleStage lifeCycleStage) {
-    return new AstFactory(lifeCycleStage);
+  static AstFactory createFactoryWithoutTypes(
+      LifeCycleStage lifeCycleStage, RuntimeJsLibManager runtimeJsLibManager) {
+    return new AstFactory(lifeCycleStage, runtimeJsLibManager);
   }
 
-  static AstFactory createFactoryWithTypes(LifeCycleStage lifeCycleStage, JSTypeRegistry registry) {
-    return new AstFactory(lifeCycleStage, registry);
+  static AstFactory createFactoryWithTypes(
+      LifeCycleStage lifeCycleStage,
+      JSTypeRegistry registry,
+      RuntimeJsLibManager runtimeJsLibManager) {
+    return new AstFactory(lifeCycleStage, registry, runtimeJsLibManager);
   }
 
   static AstFactory createFactoryWithColors(
-      LifeCycleStage lifeCycleStage, ColorRegistry colorRegistry) {
-    return new AstFactory(lifeCycleStage, colorRegistry);
+      LifeCycleStage lifeCycleStage,
+      ColorRegistry colorRegistry,
+      RuntimeJsLibManager runtimeJsLibManager) {
+    return new AstFactory(lifeCycleStage, colorRegistry, runtimeJsLibManager);
   }
 
   /** Does this class instance add types to the nodes it creates? */
@@ -570,6 +588,10 @@ final class AstFactory {
    * it must be a constant name.
    */
   Node createName(String name, Type type) {
+    checkArgument(
+        !name.equals("$jscomp"),
+        "Use createQName(RuntimeJsLibManager.Field) to reference $jscomp.* methods. Found: %s",
+        name);
     Node result = IR.name(name);
     setJSTypeOrColor(type, result);
     if (lifeCycleStage.isNormalized() && name.startsWith("$jscomp")) {
@@ -585,6 +607,10 @@ final class AstFactory {
 
   /** Use this when you know you need to create a constant name for const declarations */
   Node createConstantName(String name, Type type) {
+    checkArgument(
+        !name.equals("$jscomp"),
+        "Use createQName(RuntimeJsLibManager.Field) to reference $jscomp.* methods. Found: %s",
+        name);
     Node result = IR.name(name);
     setJSTypeOrColor(type, result);
     if (lifeCycleStage.isNormalized()) {
@@ -595,6 +621,10 @@ final class AstFactory {
   }
 
   Node createName(@Nullable StaticScope scope, String name) {
+    checkArgument(
+        !name.equals("$jscomp"),
+        "Use createQName(RuntimeJsLibManager.Field) to reference $jscomp.* methods. Found: %s",
+        name);
     final Node result = IR.name(name);
 
     if (lifeCycleStage.isNormalized() || !typeMode.equals(TypeMode.NONE)) {
@@ -611,11 +641,7 @@ final class AstFactory {
         // library injection somehow didn't happen), but we do perform transpilations which require
         // it to exist. Can we fix that?
         // This only happens when type checking is not being done.
-        checkState(
-            name.equals("$jscomp") && typeMode.equals(TypeMode.NONE),
-            "Missing var %s in scope %s",
-            name,
-            scope);
+        checkState(typeMode.equals(TypeMode.NONE), "Missing var %s in scope %s", name, scope);
       } else {
         final StaticRef declaration =
             checkNotNull(
@@ -651,16 +677,6 @@ final class AstFactory {
   }
 
   /**
-   * Creates a qualfied name in the given scope.
-   *
-   * <p>Only works if {@link StaticScope#getSlot(String)} returns a name. In practice, that means
-   * this throws an exception for instance methods and properties, for example.
-   */
-  Node createQName(StaticScope scope, String qname) {
-    return createQName(scope, DOT_SPLITTER.split(qname));
-  }
-
-  /**
    * Looks up the type of a name from a {@link TypedScope} created from typechecking, using the
    * {@link JSType} API. Will crash if is called on an AstFactory that is created after JSType ->
    * color conversion.
@@ -685,6 +701,16 @@ final class AstFactory {
 
     List<String> otherParts = nameParts.subList(1, nameParts.size());
     return this.createGetPropsWithoutColors(receiver, otherParts);
+  }
+
+  /**
+   * Creates a qualfied name in the given scope.
+   *
+   * <p>Only works if {@link StaticScope#getSlot(String)} returns a name. In practice, that means
+   * this throws an exception for instance methods and properties, for example.
+   */
+  Node createQName(StaticScope scope, String qname) {
+    return createQName(scope, DOT_SPLITTER.split(qname));
   }
 
   /**
@@ -718,6 +744,17 @@ final class AstFactory {
    */
   Node createQName(StaticScope scope, String baseName, Iterable<String> propertyNames) {
     Node baseNameNode = createName(scope, baseName);
+    return createQName(scope, baseName, baseNameNode, propertyNames);
+  }
+
+  /**
+   * Creates a qualfied name in the given scope.
+   *
+   * <p>Only works if {@link StaticScope#getSlot(String)} returns a name. In practice, that means
+   * this does not work for instance methods or properties, for example.
+   */
+  private Node createQName(
+      StaticScope scope, String baseName, Node baseNameNode, Iterable<String> propertyNames) {
     Node qname = baseNameNode;
     String name = baseName;
     for (String propertyName : propertyNames) {
@@ -735,8 +772,36 @@ final class AstFactory {
     return qname;
   }
 
+  /**
+   * Creates a qualfied name in the given scope.
+   *
+   * <p>All $jscomp runtime methods <em>must</em> be created using this method.
+   */
+  Node createQName(StaticScope scope, JsLibField field) {
+    String qname = field.assertInjected().qualifiedName();
+    List<String> parts = DOT_SPLITTER.splitToList(qname);
+    String baseName = checkNotNull(Iterables.getFirst(parts, null));
+    checkState(baseName.equals("$jscomp"), "Unexpected Field name %s", baseName);
+    Node baseNameNode = createJscomp();
+    setJSTypeOrColor(type(unknownType, StandardColors.UNKNOWN), baseNameNode);
+    if (lifeCycleStage.isNormalized()) {
+      baseNameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+    }
+    Iterable<String> propertyNames = Iterables.skip(parts, 1);
+    return createQName(scope, "$jscomp", baseNameNode, propertyNames);
+  }
+
   Node createQNameWithUnknownType(String qname) {
     return createQNameWithUnknownType(DOT_SPLITTER.split(qname));
+  }
+
+  Node createQNameWithUnknownType(JsLibField field) {
+    List<String> parts = DOT_SPLITTER.splitToList(field.assertInjected().qualifiedName());
+    String baseName = checkNotNull(Iterables.getFirst(parts, null));
+    checkState(baseName.equals("$jscomp"), "Unexpected Field name %s", baseName);
+    Node baseNameNode = createJscomp();
+    Iterable<String> propertyNames = Iterables.skip(parts, 1);
+    return createGetPropsWithUnknownType(baseNameNode, propertyNames);
   }
 
   private Node createQNameWithUnknownType(Iterable<String> names) {
@@ -748,6 +813,15 @@ final class AstFactory {
   Node createQNameWithUnknownType(String baseName, Iterable<String> propertyNames) {
     Node baseNameNode = createNameWithUnknownType(baseName);
     return createGetPropsWithUnknownType(baseNameNode, propertyNames);
+  }
+
+  private Node createJscomp() {
+    Node jscomp = IR.name("$jscomp");
+    setJSTypeOrColor(type(unknownType, StandardColors.UNKNOWN), jscomp);
+    if (lifeCycleStage.isNormalized()) {
+      jscomp.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+    }
+    return jscomp;
   }
 
   /**
@@ -782,7 +856,8 @@ final class AstFactory {
    * like Object you're trying to access. The $jscomp global should not be shadowed.
    */
   Node createJSCompDotGlobalAccess(StaticScope scope, String qname) {
-    Node jscompDotGlobal = createQName(scope, "$jscomp.global");
+    var global = runtimeJsLibManager.getJsLibField("$jscomp.global");
+    Node jscompDotGlobal = createQName(scope, global);
     Node result = createQName(scope, qname);
     // Move the fully qualified qname onto the $jscomp.global getprop
     Node qnameRoot = NodeUtil.getRootOfQualifiedName(result);
@@ -1282,7 +1357,8 @@ final class AstFactory {
   }
 
   Node createJSCompMakeIteratorCall(Node iterable, StaticScope scope) {
-    Node makeIteratorName = createQName(scope, "$jscomp.makeIterator");
+    var makeIterator = runtimeJsLibManager.getJsLibField("$jscomp.makeIterator");
+    Node makeIteratorName = createQName(scope, makeIterator);
     final Type type;
     switch (this.typeMode) {
       case JSTYPE -> {
@@ -1314,7 +1390,8 @@ final class AstFactory {
   }
 
   Node createJscompArrayFromIteratorCall(Node iterator, StaticScope scope) {
-    Node makeIteratorName = createQName(scope, "$jscomp.arrayFromIterator");
+    var arrayFromIterator = runtimeJsLibManager.getJsLibField("$jscomp.arrayFromIterator");
+    Node makeIteratorName = createQName(scope, arrayFromIterator);
 
     Type resultType =
         switch (this.typeMode) {
@@ -1345,9 +1422,8 @@ final class AstFactory {
   }
 
   Node createJscompArrayFromIterableCall(Node iterable, StaticScope scope) {
-    // TODO(b/193800507): consider making this verify the arrayFromIterable $jscomp runtime library
-    // is injected.
-    Node makeIterableName = createQName(scope, "$jscomp.arrayFromIterable");
+    var arrayFromIterable = runtimeJsLibManager.getJsLibField("$jscomp.arrayFromIterable");
+    Node makeIterableName = createQName(scope, arrayFromIterable);
 
     Type resultType =
         switch (this.typeMode) {
@@ -1391,7 +1467,8 @@ final class AstFactory {
    * }</pre>
    */
   Node createJSCompMakeAsyncIteratorCall(Node iterable, StaticScope scope) {
-    Node makeIteratorAsyncName = createQName(scope, "$jscomp.makeAsyncIterator");
+    var makeAsyncIterator = runtimeJsLibManager.getJsLibField("$jscomp.makeAsyncIterator");
+    Node makeIteratorAsyncName = createQName(scope, makeAsyncIterator);
     final Type resultType;
     switch (this.typeMode) {
       case JSTYPE -> {
@@ -1466,8 +1543,8 @@ final class AstFactory {
 
   Node createJscompAsyncExecutePromiseGeneratorFunctionCall(
       StaticScope scope, Node generatorFunction) {
-    Node jscompDotAsyncExecutePromiseGeneratorFunction =
-        createQName(scope, "$jscomp.asyncExecutePromiseGeneratorFunction");
+    var method = runtimeJsLibManager.getJsLibField("$jscomp.asyncExecutePromiseGeneratorFunction");
+    Node jscompDotAsyncExecutePromiseGeneratorFunction = createQName(scope, method);
     Type resultType =
         switch (typeMode) {
           case JSTYPE ->

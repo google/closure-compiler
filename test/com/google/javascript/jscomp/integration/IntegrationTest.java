@@ -1046,6 +1046,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         SourceFile.fromCode(
             "extraExterns",
             """
+            /** @const */
             var $jscomp = {};
 
             /**
@@ -1148,6 +1149,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         SourceFile.fromCode(
             "extraExterns",
             """
+            /** @const */
             var $jscomp = {};
 
             /**
@@ -3205,7 +3207,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     // include externs definitions for the stuff that would have been injected
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
-    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
+    externsList.add(SourceFile.fromCode("extraExterns", "/** @const */var $jscomp = {};"));
     externs = externsList.build();
 
     test(
@@ -3261,7 +3263,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     // include externs definitions for the stuff that would have been injected
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
-    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
+    externsList.add(SourceFile.fromCode("extraExterns", "/** @const */ var $jscomp = {};"));
     externs = externsList.build();
 
     test(
@@ -3307,7 +3309,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
-    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
+    externsList.add(SourceFile.fromCode("extraExterns", "/** @const */ var $jscomp = {};"));
     externs = externsList.build();
     test(
         options,
@@ -3332,7 +3334,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
-    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
+    externsList.add(SourceFile.fromCode("extraExterns", "/** @const */ var $jscomp = {};"));
     externs = externsList.build();
     test(
         options,
@@ -4280,7 +4282,8 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
-    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {}; Symbol.iterator;"));
+    externsList.add(
+        SourceFile.fromCode("extraExterns", "/** @const */ var $jscomp = {}; Symbol.iterator;"));
     externs = externsList.build();
 
     test(
@@ -4396,7 +4399,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     externsList.addAll(externs);
     externsList.add(
         SourceFile.fromCode(
-            "extraExterns", "var $jscomp = {}; Symbol.iterator; Symbol.asyncIterator;"));
+            "extraExterns",
+            "/** @const */ var $jscomp = {}; Symbol.iterator; Symbol.asyncIterator;"));
     externs = externsList.build();
 
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);

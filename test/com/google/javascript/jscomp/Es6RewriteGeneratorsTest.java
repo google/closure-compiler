@@ -80,6 +80,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
                 /** @constructor */
                 $jscomp.generator.Context.PropertyIterator = function() {};
                 $jscomp.asyncExecutePromiseGeneratorFunction = function(program) {};
+                $jscomp.asyncExecutePromiseGeneratorProgram = function(program) {};
                 """)
             .build());
   }
@@ -1739,13 +1740,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     Node assign = case1Node.getSecondChild().getFirstFirstChild();
     checkState(assign.isAssign(), assign);
 
-    Color propertyIterator =
-        Iterables.getOnlyElement(
-            CodeSubTree.findFirstNode(
-                    getLastCompiler().getExternsRoot(),
-                    (n) -> n.matchesQualifiedName("$jscomp.generator.Context.PropertyIterator"))
-                .getColor()
-                .getInstanceColors());
+    Color propertyIterator = StandardColors.TOP_OBJECT;
     assertThat(assign.getColor()).isEqualTo(propertyIterator);
     assertThat(assign.getFirstChild().getColor()).isEqualTo(propertyIterator);
     assertThat(assign.getSecondChild().getColor()).isEqualTo(propertyIterator);

@@ -18,8 +18,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.ThisAndArgumentsReferenceUpdater.ThisAndArgumentsContext;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager.JsLibField;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -35,8 +35,7 @@ import org.jspecify.annotations.Nullable;
 /** Instruments {@code await} and {@code yield} for the {@code AsyncContext} polyfill. */
 public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callback {
 
-  private static final String JSCOMP = "$jscomp";
-  private static final String START = "asyncContextStart";
+  private final JsLibField start;
 
   // NOTE: we prefix all internal symbols with a characteristic "ᵃᶜ" (U+1D43, U+1D9C) to
   // significantly reduce the chance of conflicts with existing names in the code.  This isn't
@@ -72,6 +71,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     this.astFactory = compiler.createAstFactory();
     this.uniqueIdSupplier = compiler.getUniqueIdSupplier();
     this.shouldInstrumentAwait = shouldInstrumentAwait;
+    this.start = compiler.getRuntimeJsLibManager().getJsLibField("$jscomp.asyncContextStart");
   }
 
   @Override
@@ -569,8 +569,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   /** Creates a statement {@code const ᵃᶜfactory = $jscomp$asyncContextStart();}. */
   private Node createFactoryCall(Node factoryName, Node... arg) {
     Node call =
-        astFactory.createCallWithUnknownType(
-            astFactory.createQNameWithUnknownType(JSCOMP, ImmutableList.of(START)), arg);
+        astFactory.createCallWithUnknownType(astFactory.createQNameWithUnknownType(start), arg);
     return createVar(factoryName, call);
   }
 

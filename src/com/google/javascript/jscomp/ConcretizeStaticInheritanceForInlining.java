@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -111,6 +112,8 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
   private static final ImmutableSet<String> BANNED_PROP_NAMES =
       ImmutableSet.of("prototype", "getInstance");
 
+  private final RuntimeJsLibManager.JsLibField inherits;
+
   private static class JavascriptClass {
     // All static members to the class including get set properties.
     private final Set<Node> staticMembers = new LinkedHashSet<>();
@@ -131,6 +134,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
 
   public ConcretizeStaticInheritanceForInlining(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.inherits = compiler.getRuntimeJsLibManager().getJsLibField("$jscomp.inherits");
   }
 
   @Override
@@ -242,7 +246,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
         case CALL -> {
-          if (n.getFirstChild().matchesQualifiedName(Es6RewriteClass.INHERITS)) {
+          if (inherits.matches(n.getFirstChild())) {
             inheritsCalls.add(n);
             nodeOrder.put(n, nodeOrder.size());
           }

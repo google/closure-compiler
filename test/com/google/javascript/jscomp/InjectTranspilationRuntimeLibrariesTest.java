@@ -111,7 +111,15 @@ public class InjectTranspilationRuntimeLibrariesTest {
   }
 
   @Test
-  public void testArrayPatternRest_injectsExecuteAsyncFunctionSupport() {
+  public void testInjectsExecuteAsyncFunctionSupport_es5Out_includesGeneratorEngine() {
+    ImmutableSet<String> injected = parseAndRunInjectionPass("async function foo() {}");
+
+    assertThat(injected).containsExactly("es6/execute_async_generator", "es6/generator_engine");
+  }
+
+  @Test
+  public void testInjectsExecuteAsyncFunctionSupport_es6Out_doesNotIncludeGeneratorEngine() {
+    languageOut = LanguageMode.ECMASCRIPT_2015;
     ImmutableSet<String> injected = parseAndRunInjectionPass("async function foo() {}");
 
     assertThat(injected).containsExactly("es6/execute_async_generator");

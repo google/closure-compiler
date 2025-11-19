@@ -56,7 +56,11 @@ public final class RuntimeJsLibManager {
     NO_OP,
     // for testing - compiler records that it was asked to inject a runtime library, but does not
     // modify the AST
-    RECORD_ONLY
+    RECORD_ONLY,
+    // for testing - a stricter version of RECORD_ONLY. The compiler records that it was asked to
+    // inject a runtime library, and will also validate injection in JsLibField::assertInjected, but
+    // does not modify the AST.
+    RECORD_AND_VALIDATE_FIELDS,
   }
 
   /** Loads /js resources into AST format */
@@ -79,7 +83,7 @@ public final class RuntimeJsLibManager {
   private final ResourceProvider resourceProvider;
   private final Supplier<Node> nodeForCodeInsertion;
   private final Set<String> injectedLibs = new LinkedHashSet<>();
-  private final Map<String, Field> injectedFields = new LinkedHashMap<>();
+  private final Map<String, InternalField> internedFields = new LinkedHashMap<>();
 
   private @Nullable Node lastInjectedLibrary = null;
 
@@ -151,7 +155,7 @@ public final class RuntimeJsLibManager {
     return ImmutableList.copyOf(injectedLibs);
   }
 
-  private Field toField(String fieldName) {
+  private InternalField createField(String fieldName) {
     checkArgument(!fieldName.isEmpty(), fieldName);
 
     List<String> parts = Splitter.on('.').splitToList(fieldName);
@@ -164,23 +168,45 @@ public final class RuntimeJsLibManager {
         checkNotNull(FieldsTable.INSTANCE.get(propName), "Cannot find definition of %s", fieldName);
     // TODO: b/421971366 - allow @closureUnaware transpilation to use a different local name for
     // fields.
-    return new Field(resourceName, fieldName);
+    return new InternalField(resourceName, fieldName);
   }
 
   /**
    * A $jscomp.* field (could be a method, class, or any arbitrary value) that exists in some
    * runtime library under the js/ directory.
    */
-  private static final class Field {
+  private final class InternalField implements InjectedJsLibField {
     /** The file containing this field, e.g. "es6/generator". */
     private final String resourceName;
 
     /** The name by which compiler passes should refer to this field. */
     private final String qualifiedName;
 
-    private Field(String resourceName, String qualifiedName) {
+    private boolean injected = false;
+
+    private InternalField(String resourceName, String qualifiedName) {
       this.resourceName = resourceName;
       this.qualifiedName = qualifiedName;
+    }
+
+    private void markInjected() {
+      this.injected = true;
+    }
+
+    @Override
+    @CanIgnoreReturnValue
+    public InternalField assertInjected() {
+      switch (mode) {
+        case NO_OP, RECORD_ONLY -> {}
+        case RECORD_AND_VALIDATE_FIELDS, INJECT ->
+            checkState(this.injected, "Field %s is not injected", this.qualifiedName);
+      }
+      return this;
+    }
+
+    @Override
+    public boolean matches(Node node) {
+      return node.matchesQualifiedName(this.qualifiedName);
     }
 
     // Don't override .equals/.hashCode and just use reference equality: we already intern Fields
@@ -190,20 +216,54 @@ public final class RuntimeJsLibManager {
     public String toString() {
       return Strings.lenientFormat("Field<%s, %s>", qualifiedName, resourceName);
     }
+
+    @Override
+    public String qualifiedName() {
+      return this.qualifiedName;
+    }
   }
 
-  /** Returns a field definition for the given property & ensure its definition is injected. */
-  @CanIgnoreReturnValue
-  public Field injectField(String fieldName) {
-    var field = toField(fieldName);
-    injectedFields.put(fieldName, field);
+  /**
+   * Returns a field definition for the given name, without actually asserting or requiring its
+   * definition to be injected.
+   *
+   * @throws an IllegalArgumentException if passed a nonexistent field name.
+   */
+  public JsLibField getJsLibField(String fieldName) {
+    // wrapper around getJsLibFieldInternal that returns the broader JsLibField interface
+    return getJsLibFieldInternal(fieldName);
+  }
+
+  private InternalField getJsLibFieldInternal(String fieldName) {
+    return internedFields.computeIfAbsent(fieldName, this::createField);
+  }
+
+  /**
+   * A $jscomp.* field (could be a method, class, or any arbitrary value) that exists in some
+   * runtime library under the js/ directory.
+   */
+  public interface JsLibField {
+    boolean matches(Node node);
+
+    InjectedJsLibField assertInjected();
+  }
+
+  /**
+   * A {@link JsLibField} that is statically guaranteed to be available at runtime, i.e. that has
+   * been injected into the AST.
+   *
+   * <p>Only {@link InjectedJsLibField} instances provide direct access to the field name - this is
+   * to prevent code from creating new AST references to a field that's not actually injected (yet).
+   */
+  public interface InjectedJsLibField extends JsLibField {
+    String qualifiedName();
+  }
+
+  /** Injects the runtime library that defines the given $jscomp.* field. */
+  public void injectLibForField(String fieldName) {
+    InternalField field = getJsLibFieldInternal(fieldName);
+    field.markInjected();
     ensureLibraryInjected(field.resourceName, /* force= */ false);
-    return field;
-  }
-
-  /** Returns a list of all the runtime $jscomp.* fields that have been injected. */
-  public ImmutableList<RuntimeJsLibManager.Field> getRequiredRuntimeFields() {
-    return ImmutableList.copyOf(injectedFields.values());
   }
 
   /**
@@ -227,7 +287,7 @@ public final class RuntimeJsLibManager {
         case NO_OP -> {
           return lastInjectedLibrary;
         }
-        case RECORD_ONLY -> {
+        case RECORD_ONLY, RECORD_AND_VALIDATE_FIELDS -> {
           this.recordLibraryInjected(resourceName);
           return lastInjectedLibrary;
         }
