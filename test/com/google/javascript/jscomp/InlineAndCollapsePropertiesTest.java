@@ -3898,6 +3898,38 @@ use(Foo$Bar$baz$A);
   }
 
   @Test
+  public void conditionallyLoadedChunk_withExistenceCheckInEarlierChunk() {
+    JSChunk[] chunks =
+        JSChunkGraphBuilder.forChain()
+            // m1, always loaded
+            .addChunk(
+                """
+                const mods = {};
+
+                function f() {
+                  if (mods.fn) {
+                    mods.fn();
+                  }
+                }
+                """)
+            // m2, conditionally loaded after m1
+            .addChunk("mods.fn = () => {};")
+            .build();
+
+    test(
+        srcs(chunks[0], chunks[1]),
+        expected(
+            """
+            function f() {
+              if (mods$fn) {
+                mods$fn();
+              }
+            }
+            """,
+            "var mods$fn = () => {};"));
+  }
+
+  @Test
   public void conditionallyLoadedChunk_unsafeToInlineVar() {
     JSChunk[] chunks =
         JSChunkGraphBuilder.forChain()
