@@ -8216,6 +8216,16 @@ google.maps.PlacesLibrary.prototype.ConsumerAlert;
 google.maps.PlacesLibrary.prototype.ConsumerAlertDetails;
 
 /**
+ * @type {typeof google.maps.places.ContentBlock}
+ */
+google.maps.PlacesLibrary.prototype.ContentBlock;
+
+/**
+ * @type {typeof google.maps.places.EvChargeAmenitySummary}
+ */
+google.maps.PlacesLibrary.prototype.EvChargeAmenitySummary;
+
+/**
  * @type {typeof google.maps.places.EVChargeOptions}
  */
 google.maps.PlacesLibrary.prototype.EVChargeOptions;
@@ -8246,6 +8256,11 @@ google.maps.PlacesLibrary.prototype.FuelPrice;
 google.maps.PlacesLibrary.prototype.FuelType;
 
 /**
+ * @type {typeof google.maps.places.GenerativeSummary}
+ */
+google.maps.PlacesLibrary.prototype.GenerativeSummary;
+
+/**
  * @type {typeof google.maps.places.GoogleMapsLinks}
  */
 google.maps.PlacesLibrary.prototype.GoogleMapsLinks;
@@ -8254,6 +8269,11 @@ google.maps.PlacesLibrary.prototype.GoogleMapsLinks;
  * @type {typeof google.maps.places.Money}
  */
 google.maps.PlacesLibrary.prototype.Money;
+
+/**
+ * @type {typeof google.maps.places.NeighborhoodSummary}
+ */
+google.maps.PlacesLibrary.prototype.NeighborhoodSummary;
 
 /**
  * @type {typeof google.maps.places.OpeningHours}
@@ -8349,6 +8369,11 @@ google.maps.PlacesLibrary.prototype.RankBy;
  * @type {typeof google.maps.places.Review}
  */
 google.maps.PlacesLibrary.prototype.Review;
+
+/**
+ * @type {typeof google.maps.places.ReviewSummary}
+ */
+google.maps.PlacesLibrary.prototype.ReviewSummary;
 
 /**
  * @type {typeof google.maps.places.SearchBox}
@@ -18074,7 +18099,6 @@ google.maps.marker.AdvancedMarkerElementOptions.prototype.collisionBehavior;
 google.maps.marker.AdvancedMarkerElementOptions.prototype.content;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * If <code>true</code>, the <code>AdvancedMarkerElement</code> will be
  * clickable and trigger the <code>gmp-click</code> event, and will be
  * interactive for accessibility purposes (e.g. allowing keyboard navigation via
@@ -19301,6 +19325,35 @@ google.maps.places.ConsumerAlertDetails.prototype.description;
 google.maps.places.ConsumerAlertDetails.prototype.title;
 
 /**
+ * ContentBlock describes the content of a summary and where it came from.
+ *
+ * Access by calling `const {ContentBlock} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.ContentBlock = function() {};
+
+/**
+ * Content related to the topic.
+ * @type {string|null}
+ */
+google.maps.places.ContentBlock.prototype.content;
+
+/**
+ * Language code of the content.
+ * @type {string|null}
+ */
+google.maps.places.ContentBlock.prototype.contentLanguageCode;
+
+/**
+ * A list of {@link google.maps.places.Place}s referenced. When first retrieved,
+ * each Place only contains a place ID in the <code>id</code> field.
+ * @type {!Array<!google.maps.places.Place>}
+ */
+google.maps.places.ContentBlock.prototype.referencedPlaces;
+
+/**
  * Information about the EV charging station hosted in the place.
  *
  * Access by calling `const {EVChargeOptions} = await
@@ -19401,6 +19454,59 @@ google.maps.places.EVSearchOptions.prototype.connectorTypes;
  * @type {number|undefined}
  */
 google.maps.places.EVSearchOptions.prototype.minimumChargingRateKw;
+
+/**
+ * AI-generated summary of amenities near the EV charging station. This only
+ * applies to places with type <code>electric_vehicle_charging_station</code>.
+ *
+ * Access by calling `const {EvChargeAmenitySummary} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.EvChargeAmenitySummary = function() {};
+
+/**
+ * A summary of the nearby coffee options.
+ * @type {!google.maps.places.ContentBlock|null}
+ */
+google.maps.places.EvChargeAmenitySummary.prototype.coffee;
+
+/**
+ * The text for the disclosure relating to this summary.
+ * @type {string|null}
+ */
+google.maps.places.EvChargeAmenitySummary.prototype.disclosureText;
+
+/**
+ * The language code of the disclosure text.
+ * @type {string|null}
+ */
+google.maps.places.EvChargeAmenitySummary.prototype.disclosureTextLanguageCode;
+
+/**
+ * A URI to report a problem with the summary.
+ * @type {string|null}
+ */
+google.maps.places.EvChargeAmenitySummary.prototype.flagContentURI;
+
+/**
+ * An overview of the available amenities.
+ * @type {!google.maps.places.ContentBlock|null}
+ */
+google.maps.places.EvChargeAmenitySummary.prototype.overview;
+
+/**
+ * A summary of the nearby restaurants.
+ * @type {!google.maps.places.ContentBlock|null}
+ */
+google.maps.places.EvChargeAmenitySummary.prototype.restaurant;
+
+/**
+ * A summary of nearby stores.
+ * @type {!google.maps.places.ContentBlock|null}
+ */
+google.maps.places.EvChargeAmenitySummary.prototype.store;
 
 /**
  * Options for fetching Place fields.
@@ -19666,6 +19772,46 @@ google.maps.places.FuelType = {
 };
 
 /**
+ * AI-generated summary of the place.
+ *
+ * Access by calling `const {GenerativeSummary} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.GenerativeSummary = function() {};
+
+/**
+ * The text for the disclosure relating to this summary.
+ * @type {string|null}
+ */
+google.maps.places.GenerativeSummary.prototype.disclosureText;
+
+/**
+ * The language code of the disclosure text.
+ * @type {string|null}
+ */
+google.maps.places.GenerativeSummary.prototype.disclosureTextLanguageCode;
+
+/**
+ * A URI to report a problem with the summary.
+ * @type {string|null}
+ */
+google.maps.places.GenerativeSummary.prototype.flagContentURI;
+
+/**
+ * The overview of the place.
+ * @type {string|null}
+ */
+google.maps.places.GenerativeSummary.prototype.overview;
+
+/**
+ * The language code of the overview.
+ * @type {string|null}
+ */
+google.maps.places.GenerativeSummary.prototype.overviewLanguageCode;
+
+/**
  * Links to trigger different Google Maps actions.
  *
  * Access by calling `const {GoogleMapsLinks} = await
@@ -19777,6 +19923,46 @@ google.maps.places.Money.prototype.units;
  * @return {string}
  */
 google.maps.places.Money.prototype.toString = function() {};
+
+/**
+ * AI-generated summary of points of interest near the place.
+ *
+ * Access by calling `const {NeighborhoodSummary} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.NeighborhoodSummary = function() {};
+
+/**
+ * A detailed description of the neighborhood.
+ * @type {!google.maps.places.ContentBlock|null}
+ */
+google.maps.places.NeighborhoodSummary.prototype.description;
+
+/**
+ * The text for the disclosure relating to this summary.
+ * @type {string|null}
+ */
+google.maps.places.NeighborhoodSummary.prototype.disclosureText;
+
+/**
+ * The language code of the disclosure text.
+ * @type {string|null}
+ */
+google.maps.places.NeighborhoodSummary.prototype.disclosureTextLanguageCode;
+
+/**
+ * A URI to report a problem with the summary.
+ * @type {string|null}
+ */
+google.maps.places.NeighborhoodSummary.prototype.flagContentURI;
+
+/**
+ * An overview of the neighborhood.
+ * @type {!google.maps.places.ContentBlock|null}
+ */
+google.maps.places.NeighborhoodSummary.prototype.overview;
 
 /**
  * Information about business hours of a Place.
@@ -20119,6 +20305,12 @@ google.maps.places.Place.prototype.editorialSummary;
 google.maps.places.Place.prototype.editorialSummaryLanguageCode;
 
 /**
+ * The EvChargeAmenitySummary for this place.
+ * @type {!google.maps.places.EvChargeAmenitySummary|null|undefined}
+ */
+google.maps.places.Place.prototype.evChargeAmenitySummary;
+
+/**
  * EV Charge options provided by the place. <code>undefined</code> if the EV
  * charge options have not been called for from the server.
  * @type {!google.maps.places.EVChargeOptions|null|undefined}
@@ -20137,6 +20329,12 @@ google.maps.places.Place.prototype.formattedAddress;
  * @type {!google.maps.places.FuelOptions|null|undefined}
  */
 google.maps.places.Place.prototype.fuelOptions;
+
+/**
+ * The GenerativeSummary for this place.
+ * @type {!google.maps.places.GenerativeSummary|null|undefined}
+ */
+google.maps.places.Place.prototype.generativeSummary;
 
 /**
  * Links to trigger different Google Maps actions.
@@ -20261,6 +20459,12 @@ google.maps.places.Place.prototype.location;
 google.maps.places.Place.prototype.nationalPhoneNumber;
 
 /**
+ * The NeighborhoodSummary for this place.
+ * @type {!google.maps.places.NeighborhoodSummary|null|undefined}
+ */
+google.maps.places.Place.prototype.neighborhoodSummary;
+
+/**
  * Options of parking provided by the place. <code>undefined</code> if the
  * parking options data have not been called for from the server.
  * @type {!google.maps.places.ParkingOptions|null|undefined}
@@ -20358,6 +20562,12 @@ google.maps.places.Place.prototype.requestedRegion;
  * @type {!Array<!google.maps.places.Review>|undefined}
  */
 google.maps.places.Place.prototype.reviews;
+
+/**
+ * The ReviewSummary for this place.
+ * @type {!google.maps.places.ReviewSummary|null|undefined}
+ */
+google.maps.places.Place.prototype.reviewSummary;
 
 /**
  * Whether a place serves beer. Returns &#39;true&#39; or &#39;false&#39; if the
@@ -20513,9 +20723,10 @@ google.maps.places.Place.prototype.fetchFields = function(options) {};
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- * Calculates the Date representing the next OpeningHoursTime. Returns undefined
- * if the data is insufficient to calculate the result, or this place is not
- * operational.
+ * Calculates the <code>Date</code> for the next opening time using the
+ * Place&#39;s {@link google.maps.places.Place.regularOpeningHours}. Returns
+ * undefined if the data is insufficient to calculate the result, or this place
+ * is not operational.
  * @param {!Date=} date
  * @return {!Promise<!Date|undefined>}
  */
@@ -20523,7 +20734,7 @@ google.maps.places.Place.prototype.getNextOpeningTime = function(date) {};
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- * Check if the place is open at the given datetime. Resolves with
+ * Check if the place is open at the given <code>Date</code>. Resolves with
  * <code>undefined</code> if the known data for the location is insufficient to
  * calculate this, e.g. if the opening hours are unregistered.
  * @param {!Date=} date Defaults to now.
@@ -23619,6 +23830,52 @@ google.maps.places.Review.prototype.visitDateMonth;
  * @type {number|null}
  */
 google.maps.places.Review.prototype.visitDateYear;
+
+/**
+ * AI-generated summary of the place user reviews.
+ *
+ * Access by calling `const {ReviewSummary} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.ReviewSummary = function() {};
+
+/**
+ * The text for the disclosure relating to this summary.
+ * @type {string|null}
+ */
+google.maps.places.ReviewSummary.prototype.disclosureText;
+
+/**
+ * The language code of the disclosure text.
+ * @type {string|null}
+ */
+google.maps.places.ReviewSummary.prototype.disclosureTextLanguageCode;
+
+/**
+ * A URI to report a problem with the summary.
+ * @type {string|null}
+ */
+google.maps.places.ReviewSummary.prototype.flagContentURI;
+
+/**
+ * A URI to show reviews of this place on Google Maps.
+ * @type {string|null}
+ */
+google.maps.places.ReviewSummary.prototype.reviewsURI;
+
+/**
+ * The summary of user reviews.
+ * @type {string|null}
+ */
+google.maps.places.ReviewSummary.prototype.text;
+
+/**
+ * The language code of the summary of user reviews.
+ * @type {string|null}
+ */
+google.maps.places.ReviewSummary.prototype.textLanguageCode;
 
 /**
  * A widget that provides query predictions based on a user&#39;s text input. It
