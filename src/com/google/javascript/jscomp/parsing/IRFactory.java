@@ -465,122 +465,132 @@ class IRFactory {
   }
 
   private void validateAwait(Node n) {
-    if (n.isAwait()) {
-      Node parent = n;
-      while ((parent = parent.getParent()) != null) {
-        // The await is in a class static block.
-        // e.g. `class C { static { await; } }`
-        if (parent.isClassMembers()) {
-          errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
-          return;
-        }
-        if (parent.isAsyncFunction()) {
-          return;
-        } else if (parent.isFunction()) {
-          // The await is in a non-async function.
-          // e.g. `function f() { return await 5; }`
-          // nested function e.g. `async function f() { function f2() { return await 5; } }`
-          errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
-          return;
-        }
-      }
-      errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
+    if (!n.isAwait()) {
+      return;
     }
+
+    Node parent = n;
+    while ((parent = parent.getParent()) != null) {
+      // The await is in a class static block.
+      // e.g. `class C { static { await; } }`
+      if (parent.isClassMembers()) {
+        errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
+        return;
+      }
+      if (parent.isAsyncFunction()) {
+        return;
+      }
+      if (parent.isFunction()) {
+        // The await is in a non-async function.
+        // e.g. `function f() { return await 5; }`
+        // nested function e.g. `async function f() { function f2() { return await 5; } }`
+        errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
+        return;
+      }
+    }
+    errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
   }
 
   private void validateYield(Node n) {
-    if (n.isYield()) {
-      Node parent = n;
-      while ((parent = parent.getParent()) != null) {
-        // The yield is in a class static block.
-        // e.g. `class C { static { yield; } }`
-        if (parent.isClassMembers()) {
-          errorReporter.error(UNEXPECTED_YIELD, sourceName, n.getLineno(), n.getCharno());
-          return;
-        }
-        if (parent.isGeneratorFunction()) {
-          return;
-        }
+    if (!n.isYield()) {
+      return;
+    }
+
+    Node parent = n;
+    while ((parent = parent.getParent()) != null) {
+      // The yield is in a class static block.
+      // e.g. `class C { static { yield; } }`
+      if (parent.isClassMembers()) {
+        errorReporter.error(UNEXPECTED_YIELD, sourceName, n.getLineno(), n.getCharno());
+        return;
+      }
+      if (parent.isGeneratorFunction()) {
+        return;
       }
     }
   }
 
   private void validateReturn(Node n) {
-    if (n.isReturn()) {
-      Node parent = n;
-      while ((parent = parent.getParent()) != null) {
-        // The return is in a class static block.
-        // e.g. `class C { static { return; } }`
-        if (parent.isClassMembers()) {
-          errorReporter.error(UNEXPECTED_RETURN, sourceName, n.getLineno(), n.getCharno());
-          return;
-        }
-        if (parent.isFunction()) {
-          return;
-        }
-      }
-      errorReporter.error(UNEXPECTED_RETURN, sourceName, n.getLineno(), n.getCharno());
+    if (!n.isReturn()) {
+      return;
     }
+
+    Node parent = n;
+    while ((parent = parent.getParent()) != null) {
+      // The return is in a class static block.
+      // e.g. `class C { static { return; } }`
+      if (parent.isClassMembers()) {
+        errorReporter.error(UNEXPECTED_RETURN, sourceName, n.getLineno(), n.getCharno());
+        return;
+      }
+      if (parent.isFunction()) {
+        return;
+      }
+    }
+    errorReporter.error(UNEXPECTED_RETURN, sourceName, n.getLineno(), n.getCharno());
   }
 
   private void validateNewDotTarget(Node n) {
-    if (n.getToken() == Token.NEW_TARGET) {
-      Node parent = n;
-      while ((parent = parent.getParent()) != null) {
-        if (parent.isFunction()) {
-          return;
-        }
-      }
-      errorReporter.error(UNEXPECTED_NEW_DOT_TARGET, sourceName, n.getLineno(), n.getCharno());
+    if (n.getToken() != Token.NEW_TARGET) {
+      return;
     }
+
+    Node parent = n;
+    while ((parent = parent.getParent()) != null) {
+      if (parent.isFunction()) {
+        return;
+      }
+    }
+    errorReporter.error(UNEXPECTED_NEW_DOT_TARGET, sourceName, n.getLineno(), n.getCharno());
   }
 
   private void validateBreakContinue(Node n) {
-    if (n.isBreak() || n.isContinue()) {
-      Node labelName = n.getFirstChild();
-      if (labelName != null) {
-        Node parent = n.getParent();
-        while (!parent.isLabel() || !labelsMatch(parent, labelName)) {
-          if (parent.isFunction() || parent.isScript() || parent.isClassMembers()) {
-            // report missing label
-            errorReporter.error(
-                String.format(UNDEFINED_LABEL, labelName.getString()),
-                sourceName,
-                n.getLineno(),
-                n.getCharno());
-            break;
-          }
-          parent = parent.getParent();
+    if (!n.isBreak() && !n.isContinue()) {
+      return;
+    }
+
+    Node labelName = n.getFirstChild();
+    if (labelName != null) {
+      Node parent = n.getParent();
+      while (!parent.isLabel() || !labelsMatch(parent, labelName)) {
+        if (parent.isFunction() || parent.isScript() || parent.isClassMembers()) {
+          // report missing label
+          errorReporter.error(
+              String.format(UNDEFINED_LABEL, labelName.getString()),
+              sourceName,
+              n.getLineno(),
+              n.getCharno());
+          break;
         }
-        if (parent.isLabel() && labelsMatch(parent, labelName)) {
-          if (n.isContinue() && !isContinueTarget(parent.getLastChild())) {
-            // report invalid continue target
-            errorReporter.error(
-                UNEXPECTED_LABELLED_CONTINUE, sourceName, n.getLineno(), n.getCharno());
-          }
+        parent = parent.getParent();
+      }
+
+      if (parent.isLabel() && labelsMatch(parent, labelName)) {
+        if (n.isContinue() && !isContinueTarget(parent.getLastChild())) {
+          // report invalid continue target
+          errorReporter.error(
+              UNEXPECTED_LABELLED_CONTINUE, sourceName, n.getLineno(), n.getCharno());
         }
-      } else {
-        if (n.isContinue()) {
-          Node parent = n.getParent();
-          while (!isContinueTarget(parent)) {
-            if (parent.isFunction() || parent.isScript() || parent.isClassMembers()) {
-              // report invalid continue
-              errorReporter.error(UNEXPECTED_CONTINUE, sourceName, n.getLineno(), n.getCharno());
-              break;
-            }
-            parent = parent.getParent();
-          }
-        } else {
-          Node parent = n.getParent();
-          while (!isBreakTarget(parent)) {
-            if (parent.isFunction() || parent.isScript() || parent.isClassMembers()) {
-              // report invalid break
-              errorReporter.error(UNLABELED_BREAK, sourceName, n.getLineno(), n.getCharno());
-              break;
-            }
-            parent = parent.getParent();
-          }
+      }
+    } else if (n.isContinue()) {
+      Node parent = n.getParent();
+      while (!isContinueTarget(parent)) {
+        if (parent.isFunction() || parent.isScript() || parent.isClassMembers()) {
+          // report invalid continue
+          errorReporter.error(UNEXPECTED_CONTINUE, sourceName, n.getLineno(), n.getCharno());
+          break;
         }
+        parent = parent.getParent();
+      }
+    } else {
+      Node parent = n.getParent();
+      while (!isBreakTarget(parent)) {
+        if (parent.isFunction() || parent.isScript() || parent.isClassMembers()) {
+          // report invalid break
+          errorReporter.error(UNLABELED_BREAK, sourceName, n.getLineno(), n.getCharno());
+          break;
+        }
+        parent = parent.getParent();
       }
     }
   }
@@ -604,40 +614,44 @@ class IRFactory {
   }
 
   private void validateLabel(Node n) {
-    if (n.isLabel()) {
-      Node labelName = n.getFirstChild();
-      for (Node parent = n.getParent();
-          parent != null && !parent.isFunction();
-          parent = parent.getParent()) {
-        if (parent.isLabel() && labelsMatch(parent, labelName)) {
-          errorReporter.error(
-              String.format(DUPLICATE_LABEL, labelName.getString()),
-              sourceName,
-              n.getLineno(),
-              n.getCharno());
-          break;
-        }
+    if (!n.isLabel()) {
+      return;
+    }
+
+    Node labelName = n.getFirstChild();
+    for (Node parent = n.getParent();
+        parent != null && !parent.isFunction();
+        parent = parent.getParent()) {
+      if (parent.isLabel() && labelsMatch(parent, labelName)) {
+        errorReporter.error(
+            String.format(DUPLICATE_LABEL, labelName.getString()),
+            sourceName,
+            n.getLineno(),
+            n.getCharno());
+        break;
       }
     }
   }
 
   private void validateParameters(Node n) {
-    if (n.isParamList()) {
-      Set<String> seenNames = new LinkedHashSet<>();
-      for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-        ParsingUtil.getParamOrPatternNames(
-            c,
-            (Node param) -> {
-              String paramName = param.getString();
-              if (!seenNames.add(paramName)) {
-                errorReporter.warning(
-                    String.format(DUPLICATE_PARAMETER, paramName),
-                    sourceName,
-                    param.getLineno(),
-                    param.getCharno());
-              }
-            });
-      }
+    if (!n.isParamList()) {
+      return;
+    }
+
+    Set<String> seenNames = new LinkedHashSet<>();
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+      ParsingUtil.getParamOrPatternNames(
+          c,
+          (Node param) -> {
+            String paramName = param.getString();
+            if (!seenNames.add(paramName)) {
+              errorReporter.warning(
+                  String.format(DUPLICATE_PARAMETER, paramName),
+                  sourceName,
+                  param.getLineno(),
+                  param.getCharno());
+            }
+          });
     }
   }
 
