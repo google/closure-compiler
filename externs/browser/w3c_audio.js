@@ -45,6 +45,12 @@ BaseAudioContext.prototype.listener;
 BaseAudioContext.prototype.audioWorklet;
 
 /**
+ * @type {number}
+ * @see https://www.w3.org/TR/webaudio-1.1/#dom-baseaudiocontext-renderquantumsize
+ */
+BaseAudioContext.prototype.renderQuantumSize;
+
+/**
  * @type {string}
  * See https://www.w3.org/TR/webaudio/#BaseAudioContext for valid values
  */
