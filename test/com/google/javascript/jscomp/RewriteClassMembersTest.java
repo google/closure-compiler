@@ -739,6 +739,58 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSuperInStaticField_superInArrowFunction() {
+    var src =
+        """
+        class Parent {
+          static x = 1;
+        }
+        class Child extends Parent {
+          static y = () => super.x;
+        }
+        """;
+
+    test(
+        src,
+        """
+        class Parent {
+          static STATIC_INIT$0() {
+            Parent.x = 1;
+          }
+        }
+        Parent.STATIC_INIT$0();
+        class Child extends Parent {
+          static STATIC_INIT$1() {
+            Child.y = () => {
+              return Parent.x;
+            };
+          }
+        }
+        Child.STATIC_INIT$1();
+        """);
+
+    test(
+        withOptions().useStaticInheritance(),
+        src,
+        """
+        class Parent {
+          static STATIC_INIT$0() {
+            Parent.x = 1;
+          }
+        }
+        Parent.STATIC_INIT$0();
+        class Child extends Parent {
+          static STATIC_INIT$1() {
+            Child.y = () => {
+              return super.x;
+            };
+          }
+        }
+        Child.STATIC_INIT$1();
+        """);
+  }
+
+  @Test
   public void testSuperReferencesStaticGetter() {
     var src =
         """
