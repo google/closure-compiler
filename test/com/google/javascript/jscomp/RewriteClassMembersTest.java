@@ -64,28 +64,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   }
 
   @Test
-  public void testClassStaticBlock() {
-    test(
-        """
-        class C {
-          static {
-            let x = 2
-            this.y = x
-          }
-        }
-        """,
-        """
-        class C {
-          static STATIC_INIT$0() {
-            {
-              let x = 2;
-              C.y = x;
-            }
-          }
-        }
-        C.STATIC_INIT$0();
-        """); // uses `this` in static block
-
+  public void testClassStaticBlock_superRef() {
     test(
         """
         class B {
@@ -113,8 +92,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           }
         }
         C.STATIC_INIT$1();
-        """); // uses `super`
+        """);
+  }
 
+  @Test
+  public void testClassStaticBlock_superRef_onClassWithNameSpace() {
     test(
         """
         const ns = {};
@@ -143,8 +125,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           }
         }
         C.STATIC_INIT$1();
-        """); // uses `super`
+        """);
+  }
 
+  @Test
+  public void testClassStaticBlock_thisRef() {
     test(
         """
         class C {
@@ -164,8 +149,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           }
         }
         C.STATIC_INIT$0();
-        """); // uses `this` in static block
+        """);
+  }
 
+  @Test
+  public void testClassStaticBlock_varInStaticBlock() {
     test(
         """
         var z = 1
@@ -187,8 +175,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           }
         }
         C.STATIC_INIT$0();
-        """); // `var` in static block
+        """);
+  }
 
+  @Test
+  public void testClassStaticBlock_classExpression() {
     test(
         """
         let C = class {
@@ -216,7 +207,10 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         };
         D.STATIC_INIT$1();
         """);
+  }
 
+  @Test
+  public void testClassStaticBlock_multipleClassesInLet() {
     test(
         """
         let C = class {
@@ -243,8 +237,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           }
         };
         D.STATIC_INIT$1();
-        """); // defines classes in the same let statement
+        """);
+  }
 
+  @Test
+  public void testClassStaticBlock_fieldAndBlock() {
     test(
         """
         class C {
@@ -411,7 +408,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   }
 
   @Test
-  public void testThisInStaticField() {
+  public void testThisInStaticField_thisInArrowFunction() {
     var src =
         """
         class C {
@@ -419,6 +416,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           static y = () => this.x;
         }
         """;
+
     test(
         src,
         """
@@ -433,6 +431,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         C.STATIC_INIT$0();
         """);
+
     testEs2022(
         src,
         """
@@ -448,7 +447,10 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         C.STATIC_INIT$0();
         """);
+  }
 
+  @Test
+  public void testThisInStaticField_staticMethodCall() {
     test(
         """
         class F {
