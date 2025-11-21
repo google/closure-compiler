@@ -49,7 +49,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     replaceTypesWithColors();
     enableMultistageCompilation();
     setGenericNameReplacements(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS);
-    setLanguageOut(LanguageMode.ECMASCRIPT_2021);
   }
 
   @Override
@@ -57,10 +56,43 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     return new Es6NormalizeClasses(compiler);
   }
 
-  private void testEs2022(String input, String expected) {
-    setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
-    test(input, expected);
-    setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+  Options withOptions() {
+    return new Options(true, LanguageMode.ECMASCRIPT_2021);
+  }
+
+  record Options(boolean assumeStaticInheritanceIsNotUsed, LanguageMode languageOut) {
+    Options useStaticInheritance() {
+      return new Options(false, languageOut());
+    }
+
+    Options useEs2022LanguageOut() {
+      return new Options(assumeStaticInheritanceIsNotUsed(), LanguageMode.ECMASCRIPT_NEXT);
+    }
+
+    Options useEs5LanguageOut() {
+      return new Options(assumeStaticInheritanceIsNotUsed(), LanguageMode.ECMASCRIPT5);
+    }
+  }
+
+  @Override
+  protected void test(String input, String expected) {
+    test(withOptions(), input, expected);
+  }
+
+  void test(Options options, String input, String expected) {
+    setAssumeStaticInheritanceIsNotUsed(options.assumeStaticInheritanceIsNotUsed());
+    setLanguageOut(options.languageOut());
+
+    super.test(input, expected);
+  }
+
+  @Override
+  protected void testSame(String src) {
+    test(withOptions(), src, src);
+  }
+
+  void testSame(Options options, String src) {
+    test(options, src, src);
   }
 
   @Test
@@ -323,7 +355,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           }
         }
         """);
-    testEs2022(src, src);
+    testSame(withOptions().useEs2022LanguageOut(), src);
 
     test(
         """
@@ -404,7 +436,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           }
         }
         """);
-    testEs2022(src, src);
+    testSame(withOptions().useEs2022LanguageOut(), src);
   }
 
   @Test
@@ -432,7 +464,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         C.STATIC_INIT$0();
         """);
 
-    testEs2022(
+    test(
+        withOptions().useEs2022LanguageOut(),
         src,
         """
         class C {
@@ -659,8 +692,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """);
 
     // strict
-    setAssumeStaticInheritanceIsNotUsed(false);
     test(
+        withOptions().useStaticInheritance(),
         src,
         """
         class Parent {
@@ -728,8 +761,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """);
 
     // strict
-    setAssumeStaticInheritanceIsNotUsed(false);
     test(
+        withOptions().useStaticInheritance(),
         src,
         """
         class Parent {
@@ -865,8 +898,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
     // Test both conditions that trigger strict super rewrite.
 
-    setAssumeStaticInheritanceIsNotUsed(false);
     test(
+        withOptions().useStaticInheritance(),
         source,
         """
         class Parent {
@@ -890,9 +923,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         Child.STATIC_INIT$0();
         """);
 
-    setAssumeStaticInheritanceIsNotUsed(true);
-    setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
+        withOptions().useEs5LanguageOut(),
         source,
         """
         class Parent {
@@ -973,8 +1005,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
     // Test both conditions that trigger strict super rewrite.
 
-    setAssumeStaticInheritanceIsNotUsed(false);
     test(
+        withOptions().useStaticInheritance(),
         source,
         """
         class Parent {
@@ -996,9 +1028,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         Child.sayHello();
         """);
 
-    setAssumeStaticInheritanceIsNotUsed(true);
-    setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
+        withOptions().useEs5LanguageOut(),
         source,
         """
         class Parent {
@@ -1133,7 +1164,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
            }
         }
         """);
-    testEs2022(
+    test(
+        withOptions().useEs2022LanguageOut(),
         src,
         """
         var COMP_FIELD$0 = x = x + 1;
@@ -1261,7 +1293,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         C.STATIC_INIT$0();
         """);
-    testEs2022(
+    test(
+        withOptions().useEs2022LanguageOut(),
         src,
         """
         class C {
@@ -1791,7 +1824,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         C.STATIC_INIT$0();
         """);
-    testEs2022(src, src);
+    testSame(withOptions().useEs2022LanguageOut(), src);
 
     src =
         """
@@ -1813,7 +1846,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         C.STATIC_INIT$0();
         """);
-    testEs2022(
+    test(
+        withOptions().useEs2022LanguageOut(),
         src,
         """
         class C {
@@ -2086,7 +2120,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           }
         }
         """);
-    testEs2022(
+    test(
+        withOptions().useEs2022LanguageOut(),
         src,
         """
         class A {
