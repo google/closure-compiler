@@ -175,6 +175,7 @@ java_library(
         ":runtime_libs_srcs",
         ":runtime_libs_typedast",
         ":src/java/com/google/javascript/jscomp/js/polyfills.txt",
+        ":src/java/com/google/javascript/jscomp/js/transpilation_libs.txt",
     ],
     exports = [":compiler_lib_no_runtime_libs"],
 )
