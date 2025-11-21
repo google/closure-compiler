@@ -162,7 +162,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testClassStaticBlock_thisRef() {
-    test(
+    var src =
         """
         class C {
           static {
@@ -170,13 +170,33 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             const y = this.x
           }
         }
-        """,
+        """;
+
+    test(
+        src,
         """
         class C {
           static STATIC_INIT$0() {
             {
               C.x = 2;
               const y = C.x;
+            }
+          }
+        }
+        C.STATIC_INIT$0();
+        """);
+
+    test(
+        withOptions().useStaticInheritance(),
+        src,
+        """
+        class C {
+          static STATIC_INIT$0() {
+            {
+              C.x = 2;
+              // Note: `this` in a static initialization context is preserved because we are using
+              // static inheritance.
+              const y = this.x;
             }
           }
         }
@@ -440,6 +460,59 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   }
 
   @Test
+  public void testThisInStaticField_otherFieldRef() {
+    var src =
+        """
+        class C {
+          static x = 1;
+          static y = this.x + 1;
+        }
+        """;
+
+    test(
+        src,
+        """
+        class C {
+          static STATIC_INIT$0() {
+            C.x = 1;
+            C.y = C.x + 1;
+          }
+        }
+        C.STATIC_INIT$0();
+        """);
+
+    test(
+        withOptions().useStaticInheritance(),
+        src,
+        """
+        class C {
+          static STATIC_INIT$0() {
+            C.x = 1;
+            // Note: `this` in a static initialization context is preserved because we are using
+            // static inheritance.
+            C.y = this.x + 1;
+          }
+        }
+        C.STATIC_INIT$0();
+        """);
+
+    test(
+        withOptions().useEs2022LanguageOut(),
+        src,
+        """
+        class C {
+          static x;
+          static y;
+          static STATIC_INIT$0() {
+            C.x = 1;
+            C.y = C.x + 1;
+          }
+        }
+        C.STATIC_INIT$0();
+        """);
+  }
+
+  @Test
   public void testThisInStaticField_thisInArrowFunction() {
     var src =
         """
@@ -458,6 +531,23 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             C.y = () => {
               // Note: This is the correct behavior.
               return C.x;
+            };
+          }
+        }
+        C.STATIC_INIT$0();
+        """);
+
+    test(
+        withOptions().useStaticInheritance(),
+        src,
+        """
+        class C {
+          static STATIC_INIT$0() {
+            C.x = 2;
+            C.y = () => {
+              // Note: `this` in a static initialization context is preserved because we are using
+              // static inheritance.
+              return this.x;
             };
           }
         }
@@ -2539,7 +2629,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
     test(
         """
-        class A { static b; }
+        class A { static b = {}; }
         foo(A.b.c = class C {
           static {
             C.y = 2;
@@ -2550,7 +2640,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """
         class A {
           static STATIC_INIT$0() {
-            A.b;
+            A.b = {};
           }
         }
         A.STATIC_INIT$0();
