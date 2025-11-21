@@ -19,8 +19,8 @@ package com.google.javascript.jscomp.serialization;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.SourceFile;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
+import com.google.javascript.jscomp.parsing.FeatureCollector;
+import com.google.javascript.jscomp.parsing.FeatureCollector.FeatureContext;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -64,7 +64,7 @@ final class ScriptNodeDeserializer {
   }
 
   private final class Runner {
-    private FeatureSet scriptFeatures = FeatureSet.BARE_MINIMUM;
+    private final FeatureCollector featureCollector = new FeatureCollector();
     private int previousLine = 0;
     private int previousColumn = 0;
 
@@ -76,9 +76,9 @@ final class ScriptNodeDeserializer {
         Node scriptNode =
             this.visit(
                 AstNode.parseFrom(astStream, ExtensionRegistry.getEmptyRegistry()),
-                FeatureContext.NONE,
+                FeatureCollector.FeatureContext.NONE,
                 this.owner().createSourceInfoTemplate(this.owner().sourceFile));
-        scriptNode.putProp(Node.FEATURE_SET, this.scriptFeatures);
+        scriptNode.putProp(Node.FEATURE_SET, featureCollector.allFeatures());
         return scriptNode;
       } catch (IOException ex) {
         throw new MalformedTypedAstException(this.owner().sourceFile, ex);
@@ -114,11 +114,8 @@ final class ScriptNodeDeserializer {
       n.setLinenoCharno(currentLine, currentColumn);
       this.previousLine = currentLine;
       this.previousColumn = currentColumn;
-      if (context != null) {
-        this.recordScriptFeatures(context, n);
-      }
+      @Nullable FeatureContext newContext = this.featureCollector.visitSingleNode(context, n);
 
-      @Nullable FeatureContext newContext = contextFor(context, n);
       if (Node.hasBitSet(properties, NodeProperty.CLOSURE_UNAWARE_SHADOW.getNumber())) {
         AstNode serializedShadowChild = astNode.getChild(0);
         Node closureUnawareSubtreeTemplateNode = sourceFileTemplate.cloneTree();
@@ -152,185 +149,6 @@ final class ScriptNodeDeserializer {
       }
 
       return n;
-    }
-
-    private void recordScriptFeatures(FeatureContext context, Node node) {
-      switch (node.getToken()) {
-        case FUNCTION:
-          if (node.isAsyncGeneratorFunction()) {
-            this.addScriptFeature(Feature.ASYNC_GENERATORS);
-          }
-          if (node.isArrowFunction()) {
-            this.addScriptFeature(Feature.ARROW_FUNCTIONS);
-          }
-          if (node.isAsyncFunction()) {
-            this.addScriptFeature(Feature.ASYNC_FUNCTIONS);
-          }
-          if (node.isGeneratorFunction()) {
-            this.addScriptFeature(Feature.GENERATORS);
-          }
-
-          if (context.equals(FeatureContext.BLOCK_SCOPE)) {
-            this.scriptFeatures =
-                this.scriptFeatures.with(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
-          }
-          return;
-
-        case PARAM_LIST:
-        case CALL:
-        case NEW:
-          return;
-
-        case STRING_KEY:
-          if (node.isShorthandProperty() && context.equals(FeatureContext.OBJECT_LITERAL)) {
-            this.addScriptFeature(Feature.SHORTHAND_OBJECT_PROPERTIES);
-          }
-          return;
-
-        case DEFAULT_VALUE:
-          if (context.equals(FeatureContext.PARAM_LIST)) {
-            this.addScriptFeature(Feature.DEFAULT_PARAMETERS);
-          }
-          return;
-
-        case GETTER_DEF:
-          this.addScriptFeature(Feature.GETTER);
-          if (context.equals(FeatureContext.CLASS_MEMBERS)) {
-            this.addScriptFeature(Feature.CLASS_GETTER_SETTER);
-          }
-          return;
-
-        case REGEXP:
-          this.addScriptFeature(Feature.REGEXP_SYNTAX);
-          return;
-
-        case SETTER_DEF:
-          this.addScriptFeature(Feature.SETTER);
-          if (context.equals(FeatureContext.CLASS_MEMBERS)) {
-            this.addScriptFeature(Feature.CLASS_GETTER_SETTER);
-          }
-          return;
-
-        case BLOCK:
-          if (context.equals(FeatureContext.CLASS_MEMBERS)) {
-            this.addScriptFeature(Feature.CLASS_STATIC_BLOCK);
-          }
-          return;
-
-        case EMPTY:
-          if (context.equals(FeatureContext.CATCH)) {
-            this.addScriptFeature(Feature.OPTIONAL_CATCH_BINDING);
-          }
-          return;
-        case ITER_REST:
-          if (context.equals(FeatureContext.PARAM_LIST)) {
-            this.addScriptFeature(Feature.REST_PARAMETERS);
-          } else {
-            this.addScriptFeature(Feature.ARRAY_PATTERN_REST);
-          }
-          return;
-        case ITER_SPREAD:
-          this.addScriptFeature(Feature.SPREAD_EXPRESSIONS);
-          return;
-        case OBJECT_REST:
-          this.addScriptFeature(Feature.OBJECT_PATTERN_REST);
-          return;
-        case OBJECT_SPREAD:
-          this.addScriptFeature(Feature.OBJECT_LITERALS_WITH_SPREAD);
-          return;
-        case BIGINT:
-          this.addScriptFeature(Feature.BIGINT);
-          return;
-        case EXPONENT:
-        case ASSIGN_EXPONENT:
-          this.addScriptFeature(Feature.EXPONENT_OP);
-          return;
-        case TAGGED_TEMPLATELIT:
-        case TEMPLATELIT:
-          this.addScriptFeature(Feature.TEMPLATE_LITERALS);
-          return;
-        case NEW_TARGET:
-          this.addScriptFeature(Feature.NEW_TARGET);
-          return;
-        case COMPUTED_PROP:
-          this.addScriptFeature(Feature.COMPUTED_PROPERTIES);
-          boolean isGetter = node.getBooleanProp(Node.COMPUTED_PROP_GETTER);
-          boolean isSetter = node.getBooleanProp(Node.COMPUTED_PROP_SETTER);
-          boolean isClassMember = context.equals(FeatureContext.CLASS_MEMBERS);
-          if (isGetter) {
-            this.addScriptFeature(Feature.GETTER);
-          } else if (isSetter) {
-            this.addScriptFeature(Feature.SETTER);
-          }
-          if ((isGetter || isSetter) && isClassMember) {
-            this.addScriptFeature(Feature.CLASS_GETTER_SETTER);
-          }
-          return;
-        case OPTCHAIN_GETPROP:
-        case OPTCHAIN_CALL:
-        case OPTCHAIN_GETELEM:
-          this.addScriptFeature(Feature.OPTIONAL_CHAINING);
-          return;
-        case COALESCE:
-          this.addScriptFeature(Feature.NULL_COALESCE_OP);
-          return;
-        case DYNAMIC_IMPORT:
-          this.addScriptFeature(Feature.DYNAMIC_IMPORT);
-          return;
-        case ASSIGN_OR:
-        case ASSIGN_AND:
-          this.addScriptFeature(Feature.LOGICAL_ASSIGNMENT);
-          return;
-        case ASSIGN_COALESCE:
-          this.addScriptFeature(Feature.NULL_COALESCE_OP);
-          this.addScriptFeature(Feature.LOGICAL_ASSIGNMENT);
-          return;
-
-        case FOR_OF:
-          this.addScriptFeature(Feature.FOR_OF);
-          return;
-        case FOR_AWAIT_OF:
-          this.addScriptFeature(Feature.FOR_AWAIT_OF);
-          return;
-
-        case IMPORT:
-        case EXPORT:
-          this.addScriptFeature(Feature.MODULES);
-          return;
-
-        case CONST:
-          this.addScriptFeature(Feature.CONST_DECLARATIONS);
-          return;
-        case LET:
-          this.addScriptFeature(Feature.LET_DECLARATIONS);
-          return;
-        case CLASS:
-          this.addScriptFeature(Feature.CLASSES);
-          return;
-        case MEMBER_FUNCTION_DEF:
-          this.addScriptFeature(Feature.MEMBER_DECLARATIONS);
-          return;
-        case MEMBER_FIELD_DEF:
-        case COMPUTED_FIELD_DEF:
-          this.addScriptFeature(Feature.PUBLIC_CLASS_FIELDS);
-          return;
-        case SUPER:
-          this.addScriptFeature(Feature.SUPER);
-          return;
-        case ARRAY_PATTERN:
-          this.addScriptFeature(Feature.ARRAY_DESTRUCTURING);
-          return;
-        case OBJECT_PATTERN:
-          this.addScriptFeature(Feature.OBJECT_DESTRUCTURING);
-          return;
-
-        default:
-          return;
-      }
-    }
-
-    private void addScriptFeature(Feature x) {
-      this.scriptFeatures = this.scriptFeatures.with(x);
     }
   }
 
@@ -720,57 +538,5 @@ final class ScriptNodeDeserializer {
       return nodeProperties; // we are deserializing colors, so this is fine.
     }
     return nodeProperties & ~(1L << NodeProperty.COLOR_FROM_CAST.getNumber());
-  }
-
-  /**
-   * Parent context of a node while deserializing, specifically for the purpose of tracking {@link
-   * com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature}
-   *
-   * <p>This models only the direct parent of a node. e.g. nested nodes within a function body
-   * should not have the FUNCTION context. Only direct children of the function would. The intent is
-   * to have a way to model the parent Node of a node being visited before the AST is fully built,
-   * as the parent pointer may not have been instantiated yet.
-   */
-  private enum FeatureContext {
-    PARAM_LIST,
-    CLASS_MEMBERS,
-    CLASS,
-    CATCH,
-    // the top of a block scope, e.g. within an if/while/for loop block, or a plain `{ }` block
-    BLOCK_SCOPE,
-    FUNCTION,
-    // includes objects like `return {x, y};` but /not/ object destructuring like `const {x} = o;`
-    OBJECT_LITERAL,
-    NONE;
-  }
-
-  private static @Nullable FeatureContext contextFor(
-      @Nullable FeatureContext parentContext, Node node) {
-    if (parentContext == null) {
-      return null;
-    }
-    switch (node.getToken()) {
-      case PARAM_LIST:
-        return FeatureContext.PARAM_LIST;
-      case CLASS_MEMBERS:
-        return FeatureContext.CLASS_MEMBERS;
-      case CLASS:
-        return FeatureContext.CLASS;
-      case CATCH:
-        return FeatureContext.CATCH;
-      case BLOCK:
-        // a function body is not a block scope - BLOCK is just overloaded. all other references to
-        // BLOCK are block scopes.
-        if (parentContext.equals(FeatureContext.FUNCTION)) {
-          return FeatureContext.NONE;
-        }
-        return FeatureContext.BLOCK_SCOPE;
-      case FUNCTION:
-        return FeatureContext.FUNCTION;
-      case OBJECTLIT:
-        return FeatureContext.OBJECT_LITERAL;
-      default:
-        return FeatureContext.NONE;
-    }
   }
 }
