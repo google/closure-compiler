@@ -34,6 +34,7 @@ import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.GlobalNamespace.SimpleAstChange;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
+import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -1578,6 +1579,43 @@ public final class GlobalNamespaceTest {
     assertThat(x.getDeclaration()).isNotNull();
   }
 
+  @Test
+  public void getCommonAncestorChunk_returnsDeclarationChunk_whenDeclarationLoadedFirst() {
+    JSChunk[] chunks =
+        JSChunkGraphBuilder.forChain()
+            .addChunk("console.log('base');")
+            .addChunk("const parent = {};")
+            .addChunk("parent.child = {};")
+            .build();
+
+    GlobalNamespace namespace = parse(chunks);
+    Name parentName = namespace.getSlot("parent");
+    Name childName = namespace.getSlot("parent.child");
+
+    JSChunkGraph chunkGraph = this.lastCompiler.getChunkGraph();
+    assertThat(parentName.getDeepestCommonAncestorChunk(chunkGraph)).isEqualTo(chunks[1]);
+    assertThat(childName.getDeepestCommonAncestorChunk(chunkGraph)).isEqualTo(chunks[2]);
+  }
+
+  @Test
+  public void getCommonAncestorChunk_findsCommonAncestorOfSiblingChunks() {
+    JSChunk[] chunks =
+        JSChunkGraphBuilder.forBush()
+            .addChunk("console.log('base');")
+            .addChunk("const parent = {};") // parent depends on base
+            .addChunk("parent.crossChunk = {};") // depends on parent
+            .addChunk(
+                "if (parent.crossChunk) { console.log(parent.crossChunk ); }") // depends on parent
+            .build();
+
+    GlobalNamespace namespace = parse(chunks);
+    Name crossChunkName = namespace.getSlot("parent.crossChunk");
+
+    JSChunkGraph chunkGraph = this.lastCompiler.getChunkGraph();
+    assertThat(crossChunkName.getDeepestCommonAncestorChunk(chunkGraph)).isEqualTo(chunks[1]);
+    assertThat(crossChunkName.getDeclaration().getChunk()).isEqualTo(chunks[2]);
+  }
+
   // This method exists for testing module metadata lookups.
   private GlobalNamespace parseAndGatherModuleData(String js) {
     CompilerOptions options = getDefaultOptions();
@@ -1598,6 +1636,16 @@ public final class GlobalNamespaceTest {
   private GlobalNamespace parse(String js) {
     CompilerOptions options = getDefaultOptions();
     compile(js, options);
+    return new GlobalNamespace(this.lastCompiler, this.lastCompiler.getRoot());
+  }
+
+  private GlobalNamespace parse(JSChunk[] chunks) {
+    CompilerOptions options = getDefaultOptions();
+    Compiler compiler = new Compiler();
+    var result = compiler.compileChunks(ImmutableList.of(), ImmutableList.copyOf(chunks), options);
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(result.success).isTrue();
+    this.lastCompiler = compiler;
     return new GlobalNamespace(this.lastCompiler, this.lastCompiler.getRoot());
   }
 

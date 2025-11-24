@@ -1373,6 +1373,22 @@ class GlobalNamespace
       return parent;
     }
 
+    /**
+     * Returns the {@link JSChunk} that is an ancestor (or equal to) all the chunks in which this
+     * name is referenced, inclusive of the actual chunks in the refs.
+     *
+     * <p>Most of the time this is identical to the declaration's chunk, but it's still valid to
+     * conditionally reference names from later child chunks in an earlier chunk.
+     */
+    JSChunk getDeepestCommonAncestorChunk(JSChunkGraph chunkGraph) {
+      JSChunk commonAncestor = getDeclaration().getChunk();
+      for (Ref r : this.getRefs()) {
+        JSChunk rChunk = r.getChunk();
+        commonAncestor = chunkGraph.getDeepestCommonDependencyInclusive(rChunk, commonAncestor);
+      }
+      return commonAncestor;
+    }
+
     @Override
     public StaticScope getScope() {
       throw new UnsupportedOperationException();

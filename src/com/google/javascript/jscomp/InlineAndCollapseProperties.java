@@ -1820,6 +1820,7 @@ class InlineAndCollapseProperties implements CompilerPass {
         return;
       }
 
+      boolean isSimpleName = n.isSimpleName();
       final Node declNode = decl.getNode();
       switch (declNode.getParent().getToken()) {
         case ASSIGN -> {
@@ -1846,10 +1847,44 @@ class InlineAndCollapseProperties implements CompilerPass {
             logDeclarationAction(
                 n, declNode, "not updating an unsupported type of declaration node");
       }
+
+      if (!isSimpleName) {
+        JSChunk commonAncestor = n.getDeepestCommonAncestorChunk(compiler.getChunkGraph());
+        if (commonAncestor != decl.getChunk()) {
+          moveDeclarationIntoHigherChunk(decl, commonAncestor);
+        }
+      }
     }
 
     private void logDeclarationAction(Name name, Node declarationNode, String message) {
       logDecisionForName(name, () -> String.format("%s: %s", declarationNode, message));
+    }
+
+    private void moveDeclarationIntoHigherChunk(Ref decl, JSChunk commonAncestor) {
+      // Var hoisting means that early references are generally ok. E.g. `a$b; var a$b;` is valid.
+      // However, if `var a$b;` were in a different, conditionally loaded chunk, then it might not
+      // be parsed before `a$b;`. So we need to avoid a ReferenceError when referencing `a$b`.
+      Node newNode = decl.getNode();
+      Node varNode = newNode.getParent();
+      Node initializer = newNode.getFirstChild();
+      checkState(varNode.isVar(), "Unexpected declaration %s", varNode);
+
+      Node newRoot = commonAncestor.getInputs().get(0).getAstRoot(compiler);
+      if (initializer == null) {
+        // Already a stub declaration - "var a$b;". Move it to the ancestor chunk.
+        newRoot.addChildToFront(varNode.detach());
+      } else {
+        // Define `var a$b;` in the ancestor chunk.
+        Node newVarNode = IR.var(newNode.cloneNode()).srcref(newNode);
+        newRoot.addChildToFront(newVarNode);
+        // Replace `var a$b = () => {};` with `a$b = () = {};`. Having multiple `var` declarations
+        // of the same name is valid JavaScript but violates Normalize constraints.
+        Node newAssign =
+            IR.exprResult(IR.assign(newNode.detach(), initializer.detach()))
+                .srcrefTreeIfMissing(newNode);
+        varNode.replaceWith(newAssign);
+      }
+      compiler.reportChangeToChangeScope(newRoot);
     }
 
     /**

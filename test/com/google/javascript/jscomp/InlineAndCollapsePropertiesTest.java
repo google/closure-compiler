@@ -3899,6 +3899,7 @@ use(Foo$Bar$baz$A);
 
   @Test
   public void conditionallyLoadedChunk_withExistenceCheckInEarlierChunk() {
+    // Regression test for b/461276859.
     JSChunk[] chunks =
         JSChunkGraphBuilder.forChain()
             // m1, always loaded
@@ -3920,13 +3921,133 @@ use(Foo$Bar$baz$A);
         srcs(chunks[0], chunks[1]),
         expected(
             """
+            var mods$fn;
             function f() {
               if (mods$fn) {
                 mods$fn();
               }
             }
             """,
-            "var mods$fn = () => {};"));
+            "mods$fn = () => {};"));
+  }
+
+  @Test
+  public void conditionallyLoadedChunk_withExistenceCheckInEarlierChunk_constDecl() {
+    // Regression test for b/461276859.
+    JSChunk[] chunks =
+        JSChunkGraphBuilder.forChain()
+            // m1, always loaded
+            .addChunk(
+                """
+                function f() {
+                  if (typeof mods !== 'undefined') {
+                    mods.fn();
+                  }
+                }
+                """)
+            // m2, conditionally loaded after m1
+            .addChunk("const mods = {}; mods.fn = () => {};")
+            .build();
+
+    test(
+        srcs(chunks[0], chunks[1]),
+        expected(
+            // We don't need to add a stub declaration of 'mods' as this pass isn't collapsing it.
+            // The input code is responsible for avoiding unsafe 'mods' cross-chunk accesses.
+            """
+            var mods$fn;
+            function f() {
+              if (typeof mods !== 'undefined') {
+                mods$fn();
+              }
+            }
+            """,
+            """
+            const mods = {};
+            mods$fn = () => {};
+            """));
+  }
+
+  @Test
+  public void conditionallyLoadedChunk_withExistenceCheckInEarlierChunk_usesLeastCommonAncestor() {
+    // Regression test for b/461276859.
+    JSChunk[] chunks =
+        JSChunkGraphBuilder.forTree()
+            // base chunk, always loaded
+            .addChunk(
+                """
+                const mods = {};
+                """)
+            // c1, conditionally loaded. does not depend on c2.
+            .addChunk(
+                """
+                function f() {
+                  if (mods.fn) {
+                    mods.fn();
+                  }
+                }
+                """)
+            // c2, conditionally loaded. depends on c1.
+            .addChunk("mods.fn = () => {};")
+            .build();
+
+    test(
+        srcs(chunks[0], chunks[1], chunks[2]),
+        expected(
+            "var mods$fn;",
+            """
+            function f() {
+              if (mods$fn) {
+                mods$fn();
+              }
+            }
+            """,
+            "mods$fn = () => {};"));
+  }
+
+  @Test
+  public void conditionallyLoadedChunk_withExistenceCheckInEarlierChunk_andChildName() {
+    // Regression test for b/461276859.
+    JSChunk[] chunks =
+        JSChunkGraphBuilder.forChain()
+            // m1, always loaded
+            .addChunk(
+                """
+                const mods = {};
+                function f() {
+                  if (mods.a && mods.a.crossChunk) {
+                    mods.a.crossChunk();
+                  }
+                }
+                """)
+            // m2, conditionally loaded after m1
+            .addChunk(
+                """
+                mods.a = {};
+                mods.a.crossChunk = () => {};
+                mods.a.local = () => {};
+                """)
+            .build();
+
+    test(
+        srcs(chunks[0], chunks[1]),
+        expected(
+            """
+            var mods$a$crossChunk;
+            var mods$a;
+            function f() {
+              if (mods$a && mods$a$crossChunk) {
+                mods$a$crossChunk();
+              }
+            }
+            """,
+            """
+            mods$a = {};
+            mods$a$crossChunk = () => {};
+            // Verify that we wait to declare mods$a$local until this chunk, as it's not referenced
+            // elsewhere.
+            var mods$a$local = () => {};
+            """));
   }
 
   @Test
@@ -3989,6 +4110,7 @@ use(Foo$Bar$baz$A);
         srcs(chunks[0], chunks[1]),
         expected(
             """
+            var registry$mod;
             var factories$one = function() {};
 
             function build() {
@@ -3996,7 +4118,7 @@ use(Foo$Bar$baz$A);
               if (registry$mod) registry$mod();
             }
             """,
-            "var registry$mod = factories$one; factories$one();"));
+            "registry$mod = factories$one; factories$one();"));
   }
 
   @Test
