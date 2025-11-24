@@ -53,7 +53,7 @@ jobs:
         # Clone closure-compiler repo from the commit under test into current directory.
       - name: Checkout Current closure-compiler Commit
         # https://github.com/marketplace/actions/checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       # https://github.com/bazel-contrib/setup-bazel
       - uses: bazel-contrib/setup-bazel@4fd964a13a440a8aeb0be47350db2fc640f19ca8 # v0.15.0
@@ -110,7 +110,7 @@ jobs:
         # Clone closure-compiler-npm repo from master into the current directory.
       - name: Checkout Current closure-compiler-npm Commit
         # https://github.com/marketplace/actions/checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           repository: chadkillingsworth/closure-compiler-npm
           ref: master
@@ -119,7 +119,7 @@ jobs:
         # submodule
       - name: Checkout Current closure-compiler Commit
         # https://github.com/marketplace/actions/checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           path: compiler
 
