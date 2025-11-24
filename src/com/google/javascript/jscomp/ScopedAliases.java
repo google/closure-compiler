@@ -27,6 +27,7 @@ import com.google.common.collect.Multiset;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -80,9 +81,13 @@ class ScopedAliases implements CompilerPass {
   static final String SCOPING_METHOD_NAME = "goog.scope";
 
   private static final String SCOPED_ALIASES_PREFIX = "$jscomp$scope$";
+  // LINT.IfChange
+  private static final String MISSING_ALIASES_PREFIX = "$$jscomp$missingAlias$";
+  // LINT.ThenChange(//depot/google3/third_party/java_src/clutz/src/main/java/com/google/javascript/clutz/imports/ImportRenameMapBuilder.java)
 
   private final AbstractCompiler compiler;
   private final PreprocessorSymbolTable preprocessorSymbolTable;
+  private final ModuleMetadataMap moduleMetadataMap;
   private CompilerInput uniqueIdInput;
 
   // Errors
@@ -140,10 +145,10 @@ class ScopedAliases implements CompilerPass {
   /** What to do with goog.module.get calls importing an inexistent Closure namespace */
   enum InvalidModuleGetHandling {
     PRESERVE,
-    DELETE;
+    GIVE_UNIQUE_NAME;
 
-    boolean shouldDelete() {
-      return this.equals(DELETE);
+    boolean shouldGiveUniqueName() {
+      return this.equals(GIVE_UNIQUE_NAME);
     }
   }
 
@@ -154,6 +159,7 @@ class ScopedAliases implements CompilerPass {
       InvalidModuleGetHandling invalidModuleGetHandling) {
     this.compiler = compiler;
     this.preprocessorSymbolTable = preprocessorSymbolTable;
+    this.moduleMetadataMap = compiler.getModuleMetadataMap();
     this.closureNamespaces = closureNamespaces;
     this.invalidModuleGetHandling = invalidModuleGetHandling;
   }
@@ -599,8 +605,21 @@ class ScopedAliases implements CompilerPass {
       Node initialValue = aliasVar.getInitialValue();
       aliasDefinitionsToDelete.add(aliasVar.getNameNode());
 
-      if (invalidModuleGetHandling.shouldDelete() && containsInvalidGoogModuleGet(initialValue)) {
+      if (invalidModuleGetHandling.shouldGiveUniqueName()
+          && containsInvalidGoogModuleGet(initialValue)) {
+        // Create a new alias with a unique name, to replace the existing one. Needed for
+        // integration with Clutz only: by giving the alias a unique name, Clutz may
+        // then map back from the unique name to the original `const alias = goog.module.get(` call.
+        String name = aliasVar.getName();
+        String fileName = initialValue.getSourceFileName();
+        ModuleMetadata metadata = moduleMetadataMap.getModulesByPath().get(fileName);
+        // LINT.IfChange
+        String suffix = metadata != null ? metadata.path().toModuleName() : "unknownScript";
+        String newName = name + MISSING_ALIASES_PREFIX + suffix;
+        // LINT.ThenChange(//depot/google3/third_party/java_src/clutz/src/main/java/com/google/javascript/clutz/imports/ImportRenameMapBuilder.java)
+        initialValue.replaceWith(IR.name(newName));
         deletedAliasVars.add(aliasVar);
+        aliases.put(name, aliasVar);
         return;
       }
 

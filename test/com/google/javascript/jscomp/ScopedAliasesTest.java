@@ -54,7 +54,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     disableTypeCheck();
     enableRunTypeCheckAfterProcessing();
     enableCreateModuleMap();
-    this.invalidModuleGetHandling = InvalidModuleGetHandling.DELETE;
+    this.invalidModuleGetHandling = InvalidModuleGetHandling.GIVE_UNIQUE_NAME;
   }
 
   private void testScoped(String code, String expected, Postcondition... postconditions) {
@@ -1410,8 +1410,8 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         """
         goog.provide('provided');
 
-        /** @type {!Foo} */
-        provided.f = new Foo();
+        /** @type {!Foo$$jscomp$missingAlias$module$testcode} */
+        provided.f = new Foo$$jscomp$missingAlias$module$testcode();
         """);
   }
 
@@ -1429,7 +1429,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         """
         goog.provide('provided');
 
-        provided.Bar=class extends Foo {}
+        provided.Bar = class extends Foo$$jscomp$missingAlias$module$testcode {};
         """);
   }
 
@@ -1448,8 +1448,8 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         """
         goog.provide('provided');
 
-        /** @type {!Foo.Bar} */
-        provided.f = new Foo.Bar();
+        /** @type {!Foo$$jscomp$missingAlias$module$testcode.Bar} */
+        provided.f = new Foo$$jscomp$missingAlias$module$testcode.Bar();
         """);
   }
 
@@ -1468,8 +1468,8 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         """
         goog.provide('provided');
 
-        /** @type {!Bar} */
-        provided.f = new Bar;
+        /** @type {!Bar$$jscomp$missingAlias$module$testcode} */
+        provided.f = new Bar$$jscomp$missingAlias$module$testcode();
         """);
   }
 
@@ -1489,8 +1489,8 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         """
         goog.provide('provided');
 
-        /** @type {!Foo.Bar} */
-        provided.f = new Foo.Bar();
+        /** @type {!Foo$$jscomp$missingAlias$module$testcode.Bar} */
+        provided.f = new Foo$$jscomp$missingAlias$module$testcode.Bar();
         """);
   }
 

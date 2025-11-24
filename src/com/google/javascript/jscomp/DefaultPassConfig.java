@@ -1570,7 +1570,7 @@ public final class DefaultPassConfig extends PassConfig {
                 return ScopedAliases.builder(compiler)
                     .setPreprocessorSymbolTable(preprocessorSymbolTableFactory.getInstanceOrNull())
                     .setModuleMetadataMap(compiler.getModuleMetadataMap())
-                    .setInvalidModuleGetHandling(InvalidModuleGetHandling.DELETE)
+                    .setInvalidModuleGetHandling(InvalidModuleGetHandling.GIVE_UNIQUE_NAME)
                     .build();
               })
           .build();
