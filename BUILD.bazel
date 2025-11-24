@@ -300,10 +300,15 @@ expand_template_with_defines(
 gen_java_tests(
     name = "compiler_tests",
     srcs = glob(
-        [
+        include = [
             "test/**/*.java",
             "src/**/testing/**/*.java",
         ],
+        exclude = [
+            # Async context transpilation is unsupported. It currently relies on non-open-sourced
+            # Google internal code.
+            "test/com/google/javascript/jscomp/InstrumentAsyncContextTest.java",
+        ]
     ),
     prefix_path = "test/",
     deps = [
