@@ -109,21 +109,13 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class B {
-          static STATIC_INIT$0() {
-            B.y = 3;
-          }
+        class B {}
+        B.y = 3;
+        class C extends B {}
+        {
+          // TODO (tflo): Reflect.get(B, 'y') is the technically correct way.
+          let x = B.y;
         }
-        B.STATIC_INIT$0();
-        class C extends B {
-          static STATIC_INIT$1() {
-            {
-              // TODO (tflo): Reflect.get(B, 'y') is the technically correct way.
-              let x = B.y;
-            }
-          }
-        }
-        C.STATIC_INIT$1();
         """);
   }
 
@@ -143,20 +135,12 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         const ns = {};
-        ns.B = class {
-          static STATIC_INIT$0() {
-            ns.B.y = 3;
-          }
-        };
-        ns.B.STATIC_INIT$0();
-        class C extends ns.B {
-          static STATIC_INIT$1() {
-            {
-              let x = ns.B.y;
-            }
-          }
+        ns.B = class {};
+        ns.B.y = 3;
+        class C extends ns.B {}
+        {
+          let x = ns.B.y;
         }
-        C.STATIC_INIT$1();
         """);
   }
 
@@ -175,30 +159,22 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     test(
         src,
         """
-        class C {
-          static STATIC_INIT$0() {
-            {
-              C.x = 2;
-              const y = C.x;
-            }
-          }
+        class C {}
+        {
+          C.x = 2;
+          const y = C.x;
         }
-        C.STATIC_INIT$0();
         """);
 
     test(
         withOptions().useStaticInheritance(),
         src,
         """
-        class C {
-          static STATIC_INIT$0() {
-            {
-              C.x = 2;
-              const y = C.x;
-            }
-          }
+        class C {}
+        {
+          C.x = 2;
+          const y = C.x;
         }
-        C.STATIC_INIT$0();
         """);
   }
 
@@ -216,15 +192,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         var z = 1;
-        class C {
-          static STATIC_INIT$0() {
-            {
-              let x = 2;
-              var z$jscomp$1 = 3;
-            }
-          }
+        class C {}
+        {
+          let x = 2;
+          var z$jscomp$1 = 3;
         }
-        C.STATIC_INIT$0();
         """);
   }
 
@@ -242,20 +214,12 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         };
         """,
         """
-        let C = class {
-          static STATIC_INIT$0() {
-            C.prop = 5;
-          }
-        };
-        C.STATIC_INIT$0();
-        let D = class extends C {
-          static STATIC_INIT$1() {
-            {
-              D.prop = 10;
-            }
-          }
-        };
-        D.STATIC_INIT$1();
+        let C = class {};
+        C.prop = 5;
+        let D = class extends C {};
+        {
+          D.prop = 10;
+        }
         """);
   }
 
@@ -273,20 +237,12 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        let C = class {
-          static STATIC_INIT$0() {
-            C.prop = 5;
-          }
-        };
-        C.STATIC_INIT$0();
-        let D = class extends C {
-          static STATIC_INIT$1() {
-            {
-              D.prop = 10;
-            }
-          }
-        };
-        D.STATIC_INIT$1();
+        let C = class {};
+        C.prop = 5;
+        let D = class extends C {};
+        {
+          D.prop = 10;
+        }
         """);
   }
 
@@ -302,15 +258,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class C {
-          static STATIC_INIT$0() {
-            C.f = void 0;
-            {
-              C.f = 1;
-            }
-          }
+        class C {}
+        C.f = void 0;
+        {
+          C.f = 1;
         }
-        C.STATIC_INIT$0();
         """);
   }
 
@@ -335,20 +287,16 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """
         var z = 1;
         var COMP_FIELD$0 = z;
-        class C {
-          static STATIC_INIT$1() {
-            C.x = 2;
-            {
-              z = z + C.x;
-            }
-            C[COMP_FIELD$0] = 3;
-            C.w = 5;
-            {
-              z = z + C.w;
-            }
-          }
+        class C {}
+        C.x = 2;
+        {
+          z = z + C.x;
         }
-        C.STATIC_INIT$1();
+        C[COMP_FIELD$0] = 3;
+        C.w = 5;
+        {
+          z = z + C.w;
+        }
         """);
   }
 
@@ -470,26 +418,18 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     test(
         src,
         """
-        class C {
-          static STATIC_INIT$0() {
-            C.x = 1;
-            C.y = C.x + 1;
-          }
-        }
-        C.STATIC_INIT$0();
+        class C {}
+        C.x = 1;
+        C.y = C.x + 1;
         """);
 
     test(
         withOptions().useStaticInheritance(),
         src,
         """
-        class C {
-          static STATIC_INIT$0() {
-            C.x = 1;
-            C.y = C.x + 1;
-          }
-        }
-        C.STATIC_INIT$0();
+        class C {}
+        C.x = 1;
+        C.y = C.x + 1;
         """);
 
     test(
@@ -499,12 +439,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         class C {
           static x;
           static y;
-          static STATIC_INIT$0() {
-            C.x = 1;
-            C.y = C.x + 1;
-          }
         }
-        C.STATIC_INIT$0();
+        C.x = 1;
+        C.y = C.x + 1;
         """);
   }
 
@@ -521,31 +458,23 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     test(
         src,
         """
-        class C {
-          static STATIC_INIT$0() {
-            C.x = 2;
-            C.y = () => {
-              // Note: This is the correct behavior.
-              return C.x;
-            };
-          }
-        }
-        C.STATIC_INIT$0();
+        class C {}
+        C.x = 2;
+        C.y = () => {
+          // Note: This is the correct behavior.
+          return C.x;
+        };
         """);
 
     test(
         withOptions().useStaticInheritance(),
         src,
         """
-        class C {
-          static STATIC_INIT$0() {
-            C.x = 2;
-            C.y = () => {
-              return C.x;
-            };
-          }
-        }
-        C.STATIC_INIT$0();
+        class C {}
+        C.x = 2;
+        C.y = () => {
+          return C.x;
+        };
         """);
 
     test(
@@ -555,14 +484,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         class C {
           static x;
           static y;
-          static STATIC_INIT$0() {
-            C.x = 2;
-            C.y = () => {
-              return C.x;
-            };
-          }
         }
-        C.STATIC_INIT$0();
+        C.x = 2;
+        C.y = () => {
+          return C.x;
+        };
         """);
   }
 
@@ -581,12 +507,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           static c() {
             return "hi";
           }
-          static STATIC_INIT$0() {
-            F.a = "there";
-            F.b = F.c() + F.a;
-          }
         }
-        F.STATIC_INIT$0();
+        F.a = "there";
+        F.b = F.c() + F.a;
         """);
   }
 
@@ -647,14 +570,10 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             return c - d;
           }
         }
-        class Bar extends Foo {
-          static STATIC_INIT$0() {
-            Bar.z = () => {
-              return Foo.x(1, 2) + 12 + Foo.y(3, 4);
-            };
-          }
-        }
-        Bar.STATIC_INIT$0();
+        class Bar extends Foo {}
+        Bar.z = () => {
+          return Foo.x(1, 2) + 12 + Foo.y(3, 4);
+        };
         """);
 
     test(
@@ -676,14 +595,10 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             return 5;
           }
         };
-        class Bar extends ns.Foo {
-          static STATIC_INIT$0() {
-            Bar.z = () => {
-              return ns.Foo.x(1, 2);
-            };
-          }
-        }
-        Bar.STATIC_INIT$0();
+        class Bar extends ns.Foo {}
+        Bar.z = () => {
+          return ns.Foo.x(1, 2);
+        };
         """);
 
     test(
@@ -694,16 +609,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class Bar {
-          static STATIC_INIT$0() {
-            Bar.a = {method1() {
-            }};
-            Bar.b = {method2() {
-              super.method1();
-            }};
-          }
-        }
-        Bar.STATIC_INIT$0();
+        class Bar {}
+        Bar.a = {method1() {}};
+        Bar.b = {method2() {
+          super.method1();
+        }};
         """);
 
     test(
@@ -723,12 +633,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             return {val:1};
           }
         }
-        class Child extends Parent {
-          static STATIC_INIT$0() {
-            Child.val = Parent.parentGetter.val;
-          }
-        }
-        Child.STATIC_INIT$0();
+        class Child extends Parent {}
+        Child.val = Parent.parentGetter.val;
         """);
   }
 
@@ -747,40 +653,29 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     test(
         src,
         """
-        class Parent {
-          static STATIC_INIT$0() {
-            Parent.x = 1;
-          }
-        }
-        Parent.STATIC_INIT$0();
-        class Child extends Parent {
-          static STATIC_INIT$1() {
-            Child.y = () => {
-              return Parent.x;
-            };
-          }
-        }
-        Child.STATIC_INIT$1();
+        class Parent {}
+        Parent.x = 1;
+        class Child extends Parent {}
+        Child.y = () => {
+          return Parent.x;
+        };
         """);
 
     test(
         withOptions().useStaticInheritance(),
         src,
         """
-        class Parent {
-          static STATIC_INIT$0() {
-            Parent.x = 1;
-          }
-        }
-        Parent.STATIC_INIT$0();
+        class Parent {}
+        Parent.x = 1;
         class Child extends Parent {
-          static STATIC_INIT$1() {
+          // static_init method stays because of the super reference.
+          static STATIC_INIT$0() {
             Child.y = () => {
               return super.x;
             };
           }
         }
-        Child.STATIC_INIT$1();
+        Child.STATIC_INIT$0();
         """);
   }
 
@@ -820,11 +715,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           static getName() {
             return "Child";
           }
-          static STATIC_INIT$0() {
-            Child.msg = Parent.greeting;
-          }
         }
-        Child.STATIC_INIT$0();
+        Child.msg = Parent.greeting;
         """);
 
     // strict
@@ -844,6 +736,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           static getName() {
             return "Child";
           }
+          // static_init method stays because of the super reference.
           static STATIC_INIT$0() {
             Child.msg = super.greeting;
           }
@@ -889,11 +782,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           static getName() {
             return "Child";
           }
-          static STATIC_INIT$0() {
-            Child.msg = Parent["greeting"];
-          }
         }
-        Child.STATIC_INIT$0();
+        Child.msg = Parent["greeting"];
         """);
 
     // strict
@@ -913,6 +803,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           static getName() {
             return "Child";
           }
+          // static_init method stays because of the super reference.
           static STATIC_INIT$0() {
             Child.msg = super["greeting"];
           }
@@ -935,18 +826,10 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class Base {
-          static STATIC_INIT$0() {
-            Base.X = {a:1};
-          }
-        }
-        Base.STATIC_INIT$0();
-        class Child extends Base {
-          static STATIC_INIT$1() {
-            Child.Y = {...Base.X, b:2};
-          }
-        }
-        Child.STATIC_INIT$1();
+        class Base {}
+        Base.X = {a:1};
+        class Child extends Base {}
+        Child.Y = {...Base.X, b:2};
         """);
 
     test(
@@ -963,18 +846,10 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         const ns = {};
-        ns.Base = class {
-          static STATIC_INIT$0() {
-            ns.Base.X = {a:1};
-          }
-        };
-        ns.Base.STATIC_INIT$0();
-        class Child extends ns.Base {
-          static STATIC_INIT$1() {
-            Child.Y = {...ns.Base.X, b:2};
-          }
-        }
-        Child.STATIC_INIT$1();
+        ns.Base = class {};
+        ns.Base.X = {a:1};
+        class Child extends ns.Base {}
+        Child.Y = {...ns.Base.X, b:2};
         """);
   }
 
@@ -999,14 +874,10 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             return "Hello";
           }
         }
-        class Child extends Parent {
-          static STATIC_INIT$0() {
-            {
-              alert(Parent.getGreeting());
-            }
-          }
+        class Child extends Parent {}
+        {
+          alert(Parent.getGreeting());
         }
-        Child.STATIC_INIT$0();
         """);
   }
 
@@ -1050,6 +921,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           static getName() {
             return "Child";
           }
+          // static_init method stays because of the super reference.
           static STATIC_INIT$0() {
             {
               alert(super.getGreeting());
@@ -1075,6 +947,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           static getName() {
             return "Child";
           }
+          // static_init method stays because of the super reference.
           static STATIC_INIT$0() {
             {
               alert(super.getGreeting());
@@ -1344,11 +1217,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           constructor() {
             this[2] = c[1];
           }
-          static STATIC_INIT$0() {
-            c[1] = 2;
-          }
         };
-        c.STATIC_INIT$0();
+        c[1] = 2;
         """);
 
     test(
@@ -1363,11 +1233,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           constructor() {
             this[2] = CLASS_DECL$0[1];
           }
-          static STATIC_INIT$1() {
-            CLASS_DECL$0[1] = 2;
-          }
         };
-        CLASS_DECL$0.STATIC_INIT$1();
+        CLASS_DECL$0[1] = 2;
         foo(CLASS_DECL$0);
         """);
 
@@ -1421,13 +1288,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     test(
         src,
         """
-        class C {
-          static STATIC_INIT$0() {
-            C["x"] = void 0;
-            C["y"] = 2;
-          }
-        }
-        C.STATIC_INIT$0();
+        class C {}
+        C["x"] = void 0;
+        C["y"] = 2;
         """);
     test(
         withOptions().useEs2022LanguageOut(),
@@ -1436,11 +1299,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         class C {
           static ["x"];
           static ["y"];
-          static STATIC_INIT$0() {
-            C["y"] = 2;
-          }
         }
-        C.STATIC_INIT$0();
+        C["y"] = 2;
         """);
 
     test(
@@ -1452,13 +1312,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class C {
-          static STATIC_INIT$0() {
-            C[1] = 1;
-            C[2] = C[1];
-          }
-        }
-        C.STATIC_INIT$0();
+        class C {}
+        C[1] = 1;
+        C[2] = C[1];
         """);
 
     test(
@@ -1470,13 +1326,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        const C = class {
-          static STATIC_INIT$0() {
-            C[1] = 1;
-            C[2] = C[1];
-          }
-        };
-        C.STATIC_INIT$0();
+        const C = class {};
+        C[1] = 1;
+        C[2] = C[1];
         """);
 
     test(
@@ -1489,14 +1341,10 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        const C = class {
-          static STATIC_INIT$0() {
-            C[1] = 1;
-            C[2] = C[1];
-            C[3] = C[2];
-          }
-        };
-        C.STATIC_INIT$0();
+        const C = class {};
+        C[1] = 1;
+        C[2] = C[1];
+        C[3] = C[2];
         """);
 
     test(
@@ -1508,13 +1356,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        let c = class {
-          static STATIC_INIT$0() {
-            c[1] = 2;
-            c[2] = c[1];
-          }
-        };
-        c.STATIC_INIT$0();
+        let c = class {};
+        c[1] = 2;
+        c[2] = c[1];
         """);
 
     test(
@@ -1525,13 +1369,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         })
         """,
         """
-        const CLASS_DECL$0 = class {
-          static STATIC_INIT$1() {
-            CLASS_DECL$0[1] = 2;
-            CLASS_DECL$0[2] = CLASS_DECL$0[1];
-          }
-        };
-        CLASS_DECL$0.STATIC_INIT$1();
+        const CLASS_DECL$0 = class {};
+        CLASS_DECL$0[1] = 2;
+        CLASS_DECL$0[2] = CLASS_DECL$0[1];
         foo(CLASS_DECL$0);
         """);
 
@@ -1542,12 +1382,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         })
         """,
         """
-        const CLASS_DECL$0 = class {
-          static STATIC_INIT$1() {
-            CLASS_DECL$0[1] = 1;
-          }
-        };
-        CLASS_DECL$0.STATIC_INIT$1();
+        const CLASS_DECL$0 = class {};
+        CLASS_DECL$0[1] = 1;
         foo(CLASS_DECL$0);
         """);
 
@@ -1630,20 +1466,16 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        function bar(num) {
-        }
+        function bar(num) {}
         var COMP_FIELD$0 = bar(1);
         var COMP_FIELD$1 = bar(2);
         class Foo {
           constructor() {
             this[COMP_FIELD$0] = "a";
           }
-          static STATIC_INIT$2() {
-            Foo.b = bar(3);
-            Foo[COMP_FIELD$1] = bar(4);
-          }
         }
-        Foo.STATIC_INIT$2();
+        Foo.b = bar(3);
+        Foo[COMP_FIELD$1] = bar(4);
         """);
 
     test(
@@ -1657,13 +1489,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """
         let x = "hello";
         var COMP_FIELD$0 = x;
-        class Foo {
-          static STATIC_INIT$1() {
-            Foo.n = x = 5;
-            Foo[COMP_FIELD$0] = "world";
-          }
-        }
-        Foo.STATIC_INIT$1();
+        class Foo {}
+        Foo.n = x = 5;
+        Foo[COMP_FIELD$0] = "world";
         """);
 
     test(
@@ -1693,12 +1521,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           }
           [COMP_FIELD$1]() {}
           get [COMP_FIELD$4]() {}
-          static STATIC_INIT$5() {
-            Baz.x = foo(6);
-            Baz[COMP_FIELD$2] = foo(7);
-          }
         }
-        Baz.STATIC_INIT$5();
+        Baz.x = foo(6);
+        Baz[COMP_FIELD$2] = foo(7);
         """);
   }
 
@@ -1726,15 +1551,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class C {
-          static STATIC_INIT$0() {
-            {
-              let x = 2;
-              const y = x;
-            }
-          }
+        class C {}
+        {
+          let x = 2;
+          const y = x;
         }
-        C.STATIC_INIT$0();
         """);
 
     test(
@@ -1751,27 +1572,23 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class C {
-          static STATIC_INIT$0() {
-            {
-              let x = 2;
-              const y = x;
-              let z;
-              if (x - y == 0) {
-                z = 1;
-              } else {
-                z = 2;
-              }
-              for (; x - z > 10;) {
-                z++;
-              }
-              for (;;) {
-                break;
-              }
-            }
+        class C {}
+        {
+          let x = 2;
+          const y = x;
+          let z;
+          if (x - y == 0) {
+            z = 1;
+          } else {
+            z = 2;
+          }
+          for (; x - z > 10;) {
+            z++;
+          }
+          for (;;) {
+            break;
           }
         }
-        C.STATIC_INIT$0();
         """);
 
     test(
@@ -1786,17 +1603,13 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class C {
-          static STATIC_INIT$0() {
-            {
-              let x = 2;
-            }
-            {
-              const y = x;
-            }
-          }
+        class C {}
+        {
+          let x = 2;
         }
-        C.STATIC_INIT$0();
+        {
+          const y = x;
+        }
         """);
 
     test(
@@ -1816,25 +1629,17 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class C {
-          static STATIC_INIT$0() {
-            {
-              let x = 2;
-            }
-            {
-              const y = x;
-            }
-          }
+        class C {}
+        {
+          let x = 2;
         }
-        C.STATIC_INIT$0();
-        class D {
-          static STATIC_INIT$1() {
-            {
-              let z = 1;
-            }
-          }
+        {
+          const y = x;
         }
-        D.STATIC_INIT$1();
+        class D {}
+        {
+          let z = 1;
+        }
         """);
 
     test(
@@ -1849,25 +1654,21 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class C {
-          static STATIC_INIT$0() {
-            {
-              function a() {
-                return 3;
-              }
-              let x = function() {
-                return 1;
-              };
-              const y = () => {
-                return 2;
-              };
-              let z = (() => {
-                return 4;
-              })();
-            }
+        class C {}
+        {
+          function a() {
+            return 3;
           }
+          let x = function() {
+            return 1;
+          };
+          const y = () => {
+            return 2;
+          };
+          let z = (() => {
+            return 4;
+          })();
         }
-        C.STATIC_INIT$0();
         """);
 
     test(
@@ -1880,15 +1681,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class C {
-          static STATIC_INIT$0() {
-            {
-              C.x = 2;
-              const y = C.x;
-            }
-          }
+        class C {}
+        {
+          C.x = 2;
+          const y = C.x;
         }
-        C.STATIC_INIT$0();
         """);
 
     test(
@@ -1905,22 +1702,14 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class Foo {
-          static STATIC_INIT$1() {
-            {
-              let x = 5;
-              class Bar {
-                static STATIC_INIT$0() {
-                  {
-                    let x$jscomp$1 = "str";
-                  }
-                }
-              }
-              Bar.STATIC_INIT$0();
-            }
+        class Foo {}
+        {
+          let x = 5;
+          class Bar {}
+          {
+            let x$jscomp$1 = "str";
           }
         }
-        Foo.STATIC_INIT$1();
         """);
   }
 
@@ -1933,12 +1722,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class C {
-          static STATIC_INIT$0() {
-            C.x = 2;
-          }
-        }
-        C.STATIC_INIT$0();
+        class C {}
+        C.x = 2;
         """);
 
     var src =
@@ -1950,12 +1735,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     test(
         src,
         """
-        class C {
-          static STATIC_INIT$0() {
-            C.x = void 0;
-          }
-        }
-        C.STATIC_INIT$0();
+        class C {}
+        C.x = void 0;
         """);
     testSame(withOptions().useEs2022LanguageOut(), src);
 
@@ -1970,14 +1751,10 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     test(
         src,
         """
-        class C {
-          static STATIC_INIT$0() {
-            C.x = 2;
-            C.y = "hi";
-            C.z = void 0;
-          }
-        }
-        C.STATIC_INIT$0();
+        class C {}
+        C.x = 2;
+        C.y = "hi";
+        C.z = void 0;
         """);
     test(
         withOptions().useEs2022LanguageOut(),
@@ -1987,12 +1764,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           static x;
           static y;
           static z;
-          static STATIC_INIT$0() {
-            C.x = 2;
-            C.y = "hi";
-          }
         }
-        C.STATIC_INIT$0();
+        C.x = 2;
+        C.y = "hi";
         """);
 
     test(
@@ -2006,19 +1780,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class C {
-          static STATIC_INIT$0() {
-            C.x = 2;
-            C.y = 3;
-          }
-        }
-        C.STATIC_INIT$0();
-        class D {
-          static STATIC_INIT$1() {
-            D.z = 1;
-          }
-        }
-        D.STATIC_INIT$1();
+        class C {}
+        C.x = 2;
+        C.y = 3;
+        class D {}
+        D.z = 1;
         """);
 
     test(
@@ -2031,23 +1797,19 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class C {
-          static STATIC_INIT$0() {
-            C.w = function() {
-              return 1;
-            };
-            C.x = () => {
-              return 2;
-            };
-            C.y = function a() {
-              return 3;
-            }();
-            C.z = (() => {
-              return 4;
-            })();
-          }
-        }
-        C.STATIC_INIT$0();
+        class C {}
+        C.w = function() {
+          return 1;
+        };
+        C.x = () => {
+          return 2;
+        };
+        C.y = function a() {
+          return 3;
+        }();
+        C.z = (() => {
+          return 4;
+        })();
         """);
 
     test(
@@ -2058,13 +1820,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class C {
-          static STATIC_INIT$0() {
-            C.x = 2;
-            C.y = C.x;
-          }
-        }
-        C.STATIC_INIT$0();
+        class C {}
+        C.x = 2;
+        C.y = C.x;
         """);
 
     test(
@@ -2075,15 +1833,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class C {
-          static STATIC_INIT$0() {
-            C.x = 2;
-            {
-              let y = C.x;
-            }
-          }
+        class C {}
+        C.x = 2;
+        {
+          let y = C.x;
         }
-        C.STATIC_INIT$0();
         """);
   }
 
@@ -2484,11 +2238,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           constructor() {
             this.y = C.x;
           }
-          static STATIC_INIT$0() {
-            C.x = 2;
-          }
         }
-        C.STATIC_INIT$0();
+        C.x = 2;
         """);
   }
 
@@ -2563,11 +2314,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           constructor() {
             this.y = C.x;
           }
-          static STATIC_INIT$0() {
-            C.x = 2;
-          }
         }
-        C.STATIC_INIT$0();
+        C.x = 2;
         """);
 
     test(
@@ -2649,15 +2397,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        let c = class {
-          static STATIC_INIT$0() {
-            {
-              c.y = 2;
-              let x = c.y;
-            }
-          }
-        };
-        c.STATIC_INIT$0();
+        let c = class {};
+        {
+          c.y = 2;
+          let x = c.y;
+        }
         """);
 
     test(
@@ -2671,15 +2415,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         foo((() => {
-          const CLASS_DECL$0 = class {
-            static STATIC_INIT$1() {
-              {
-                CLASS_DECL$0.y = 2;
-                let x = CLASS_DECL$0.y;
-              }
-            }
-          };
-          CLASS_DECL$0.STATIC_INIT$1();
+          const CLASS_DECL$0 = class {};
+          {
+            CLASS_DECL$0.y = 2;
+            let x = CLASS_DECL$0.y;
+          }
           return CLASS_DECL$0;
         })());
         """);
@@ -2695,23 +2435,15 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         })
         """,
         """
-        class A {
-          static STATIC_INIT$0() {
-            A.b = {};
-          }
-        }
-        A.STATIC_INIT$0();
+        class A {}
+        A.b = {};
         foo(A.b.c = (() => {
-          const CLASS_DECL$1 = class {
-            static STATIC_INIT$2() {
-              {
-                CLASS_DECL$1.y = 2;
-                let x = CLASS_DECL$1.y;
-              }
-            }
-          };
-          CLASS_DECL$1.STATIC_INIT$2();
-          return CLASS_DECL$1;
+          const CLASS_DECL$0 = class {};
+          {
+            CLASS_DECL$0.y = 2;
+            let x = CLASS_DECL$0.y;
+          }
+          return CLASS_DECL$0;
         })());
         """);
   }
@@ -2727,14 +2459,10 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        let c = class {
-          static STATIC_INIT$0() {
-            {
-              let x = 1;
-            }
-          }
-        };
-        c.STATIC_INIT$0();
+        let c = class {};
+        {
+          let x = 1;
+        }
         """);
 
     test(
@@ -2747,16 +2475,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class A {
+        class A {}
+        A.c = class {};
+        {
+          let x = 1;
         }
-        A.c = class {
-          static STATIC_INIT$0() {
-            {
-              let x = 1;
-            }
-          }
-        };
-        A.c.STATIC_INIT$0();
         """);
 
     test(
@@ -2769,17 +2492,12 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class A {
-        }
+        class A {}
         A[1] = (() => {
-          const CLASS_DECL$0 = class {
-            static STATIC_INIT$1() {
-              {
-                let x = 1;
-              }
-            }
-          };
-          CLASS_DECL$0.STATIC_INIT$1();
+          const CLASS_DECL$0 = class {};
+          {
+            let x = 1;
+          }
           return CLASS_DECL$0;
         })();
         """);
@@ -2794,12 +2512,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        let c = class {
-          static STATIC_INIT$0() {
-            c.x = 1;
-          }
-        };
-        c.STATIC_INIT$0();
+        let c = class {};
+        c.x = 1;
         """);
 
     test(
@@ -2810,14 +2524,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class A {
-        }
-        A.c = class {
-          static STATIC_INIT$0() {
-            A.c.x = 1;
-          }
-        };
-        A.c.STATIC_INIT$0();
+        class A {}
+        A.c = class {};
+        A.c.x = 1;
         """);
 
     test(
@@ -2828,14 +2537,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class A {
-        }
-        const CLASS_DECL$0 = class {
-          static STATIC_INIT$1() {
-            CLASS_DECL$0.x = 1;
-          }
-        };
-        CLASS_DECL$0.STATIC_INIT$1();
+        class A {}
+        const CLASS_DECL$0 = class {};
+        CLASS_DECL$0.x = 1;
         A[1] = CLASS_DECL$0;
         """);
 
@@ -2847,13 +2551,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        let c = class {
-          static STATIC_INIT$0() {
-            c.y = 2;
-            c.x = c.y;
-          }
-        };
-        c.STATIC_INIT$0();
+        let c = class {};
+        c.y = 2;
+        c.x = c.y;
         """);
 
     test(
@@ -2864,13 +2564,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         })
         """,
         """
-        const CLASS_DECL$0 = class {
-          static STATIC_INIT$1() {
-            CLASS_DECL$0.y = 2;
-            CLASS_DECL$0.x = CLASS_DECL$0.y;
-          }
-        };
-        CLASS_DECL$0.STATIC_INIT$1();
+        const CLASS_DECL$0 = class {};
+        CLASS_DECL$0.y = 2;
+        CLASS_DECL$0.x = CLASS_DECL$0.y;
         foo(CLASS_DECL$0);
         """);
 
@@ -2886,11 +2582,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           constructor() {
             this.x = CLASS_DECL$0.y;
           }
-          static STATIC_INIT$1() {
-            CLASS_DECL$0.y = 2;
-          }
         };
-        CLASS_DECL$0.STATIC_INIT$1();
+        CLASS_DECL$0.y = 2;
         foo(CLASS_DECL$0);
         """);
   }
@@ -3031,13 +2724,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """
         let x = 2;
         class C {
-          constructor(x$jscomp$1) {
-          }
-          static STATIC_INIT$0() {
-            C.y = x;
-          }
+          constructor(x$jscomp$1) {}
         }
-        C.STATIC_INIT$0();
+        C.y = x;
         """);
   }
 
@@ -3280,11 +2969,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           constructor() {
             this.x = void 0;
           }
-          static STATIC_INIT$1() {
-            CLASS_DECL$0.y = void 0;
-          }
         };
-        CLASS_DECL$0.STATIC_INIT$1();
+        CLASS_DECL$0.y = void 0;
         let foo = new CLASS_DECL$0();
         """);
   }
@@ -3299,12 +2985,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         A[foo()] = (() => {
-          const CLASS_DECL$0 = class {
-            static STATIC_INIT$1() {
-              CLASS_DECL$0.x = void 0;
-            }
-          };
-          CLASS_DECL$0.STATIC_INIT$1();
+          const CLASS_DECL$0 = class {};
+          CLASS_DECL$0.x = void 0;
           return CLASS_DECL$0;
         })();
         """);
@@ -3316,12 +2998,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         })
         """,
         """
-        const CLASS_DECL$0 = class {
-          static STATIC_INIT$1() {
-            CLASS_DECL$0.x = void 0;
-          }
-        };
-        CLASS_DECL$0.STATIC_INIT$1();
+        const CLASS_DECL$0 = class {};
+        CLASS_DECL$0.x = void 0;
         foo(c = CLASS_DECL$0);
         """);
 
@@ -3333,12 +3011,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         function foo(c = (() => {
-          const CLASS_DECL$0 = class {
-            static STATIC_INIT$1() {
-              CLASS_DECL$0.x = void 0;
-            }
-          };
-          CLASS_DECL$0.STATIC_INIT$1();
+          const CLASS_DECL$0 = class {};
+          CLASS_DECL$0.x = void 0;
           return CLASS_DECL$0;
         })()) {}
         """);
@@ -3361,11 +3035,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             constructor() {
               this.y = void 0;
             }
-            static STATIC_INIT$1() {
-              CLASS_DECL$0.x = void 0;
-            }
           };
-          CLASS_DECL$0.STATIC_INIT$1();
+          CLASS_DECL$0.x = void 0;
           return CLASS_DECL$0;
         }
         """);
@@ -3392,12 +3063,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         })
         """,
         """
-        const CLASS_DECL$0 = class {
-          static STATIC_INIT$1() {
-            CLASS_DECL$0.x = 1;
-          }
-        };
-        CLASS_DECL$0.STATIC_INIT$1();
+        const CLASS_DECL$0 = class {};
+        CLASS_DECL$0.x = 1;
         foo(CLASS_DECL$0);
         """);
   }

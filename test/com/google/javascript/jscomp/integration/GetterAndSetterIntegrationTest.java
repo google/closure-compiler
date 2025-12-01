@@ -1526,8 +1526,7 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             return "Hello " + this.getName();
           }
         }
-        var Child$msg;
-        Child$msg = Parent.greeting;
+        var Child$msg = Parent.greeting;
         alert(Child$msg);
         """);
 

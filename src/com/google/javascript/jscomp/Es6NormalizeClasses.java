@@ -684,21 +684,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       return;
     }
 
-    // Add new static method "$jscomp$staticInit$[FILE_ID]$[number]".
-    // All the static initialization logic goes into this method. We need a static method as opposed
-    // to doing this logic alongside the class because #private members can only be accessed within
-    // the class.
-    String staticInitMethodName = generateUniqueStaticInitMethodName(t);
-    Node staticInitMethodFunc =
-        astFactory.createEmptyFunction(type(JSTypeNative.FUNCTION_TYPE, StandardColors.TOP_OBJECT));
-    Node staticInitMethod =
-        astFactory.createMemberFunctionDef(staticInitMethodName, staticInitMethodFunc);
-    staticInitMethod.setStaticMember(true);
-
-    Node staticInitBlock = staticInitMethod.getFirstChild().getLastChild();
-    Node insertionPoint = IR.empty();
-    staticInitBlock.addChildToFront(insertionPoint);
-
+    Node staticInitTempParent = IR.block();
     while (!staticMembers.isEmpty()) {
       Node staticMember = staticMembers.remove();
       // if the name is a property access, we want the whole chain of accesses, while for other
@@ -720,15 +706,44 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
             default -> throw new IllegalStateException(String.valueOf(staticMember));
           };
       if (transpiledNode != null) {
-        transpiledNode.insertBefore(insertionPoint);
+        staticInitTempParent.addChildToBack(transpiledNode);
       }
     }
-    insertionPoint.detach();
 
-    // If the static init method is empty, don't add it.
-    if (!staticInitBlock.hasChildren()) {
+    // If there is no static initialization logic, we are done.
+    if (!staticInitTempParent.hasChildren()) {
       return;
     }
+
+    // If there are no super references, place all the static initialization code after the class.
+    // TODO: b/236744850 - Also skip if there are private field refs.
+    if (!NodeUtil.has(
+        staticInitTempParent,
+        /* pred= */ Node::isSuper,
+        /* traverseChildrenPred= */ (n) ->
+            !n.isClass() && (!n.isFunction() || n.isArrowFunction()))) {
+      while (staticInitTempParent.hasChildren()) {
+        staticInitTempParent.getLastChild().detach().insertAfter(record.insertionPoint);
+      }
+      t.reportCodeChange(record.insertionPoint.getParent());
+      return;
+    }
+
+    // We will introduce a new static method and a call to it to contain static initialization code.
+
+    // Add new static method "$jscomp$staticInit$[FILE_ID]$[number]".
+    // All the static initialization logic goes into this method. We need a static method as opposed
+    // to doing this logic alongside the class because #private members can only be accessed within
+    // the class.
+    String staticInitMethodName = generateUniqueStaticInitMethodName(t);
+    Node staticInitMethodFunc =
+        astFactory.createEmptyFunction(type(JSTypeNative.FUNCTION_TYPE, StandardColors.TOP_OBJECT));
+    Node staticInitMethod =
+        astFactory.createMemberFunctionDef(staticInitMethodName, staticInitMethodFunc);
+    staticInitMethod.setStaticMember(true);
+
+    Node staticInitBlock = staticInitMethod.getFirstChild().getLastChild();
+    staticInitBlock.addChildrenToFront(staticInitTempParent.removeChildren());
 
     Node classMembers = NodeUtil.getClassMembers(record.classNode);
     staticInitMethod.srcrefTree(classMembers);

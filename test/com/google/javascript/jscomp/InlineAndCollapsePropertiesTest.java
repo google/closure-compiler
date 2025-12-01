@@ -2895,11 +2895,8 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
               alert(this.foo);
             };
             var A$foo;
-            var A$$0jscomp$0staticInit$0m1146332801$00 = function() {
-              A$foo = "bar";
-            };
             class A {}
-            A$$0jscomp$0staticInit$0m1146332801$00();
+            A$foo = "bar";
             const B = null;
             A$foo = "baz";
             A$useFoo();
@@ -2922,9 +2919,6 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         B.useFoo();
         """,
         """
-        var A$$0jscomp$0staticInit$0m1146332801$00 = function() {
-          A.foo = "bar";
-        };
         class A {
           /** @nocollapse */
           static useFoo() {
@@ -2933,7 +2927,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
           /** @nocollapse */
           static foo;
         }
-        A$$0jscomp$0staticInit$0m1146332801$00();
+        A.foo = "bar";
         const B = null;
         A.foo = "baz";
         A.useFoo();
@@ -3587,14 +3581,11 @@ use(Foo$Bar$baz$A);
         };
         var Baz$val1;
         var Baz$val2;
-        var Baz$$0jscomp$0staticInit$0m1146332801$00 = function() {
-          {
-            Baz$val1 = Bar$double(5);
-          }
-          Baz$val2 = Bar$double(6);
-        };
         class Baz extends Bar {}
-        Baz$$0jscomp$0staticInit$0m1146332801$00();
+        {
+          Baz$val1 = Bar$double(5);
+        }
+        Baz$val2 = Bar$double(6);
         """);
   }
 
@@ -3680,18 +3671,15 @@ use(Foo$Bar$baz$A);
         var Baz$val2;
         var Baz$val3;
         var Baz$val4;
-        var Baz$$0jscomp$0staticInit$0m1146332801$00 = function() {
-          {
-            Baz$val1 = Baz$double(1);
-          }
-          {
-            Baz$val2 = Baz$double(2);
-          }
-          Baz$val3 = Baz$double(3);
-          Baz$val4 = Baz$double(4);
-        };
         class Baz extends Bar {}
-        Baz$$0jscomp$0staticInit$0m1146332801$00();
+        {
+          Baz$val1 = Baz$double(1);
+        }
+        {
+          Baz$val2 = Baz$double(2);
+        }
+        Baz$val3 = Baz$double(3);
+        Baz$val4 = Baz$double(4);
         """);
   }
 
@@ -3738,11 +3726,8 @@ use(Foo$Bar$baz$A);
           return "Child";
         };
         var Child$msg;
-        var Child$$0jscomp$0staticInit$0m1146332801$00 = function() {
-          Child$msg = Parent.greeting;
-        };
         class Child extends Parent {}
-        Child$$0jscomp$0staticInit$0m1146332801$00();
+        Child$msg = Parent.greeting;
         """);
 
     // strict
@@ -3795,18 +3780,15 @@ use(Foo$Bar$baz$A);
         var OuterName$sf1;
         var OuterName$sf2;
         var OuterName$sf3;
-        var OuterName$$0jscomp$0staticInit$0m1146332801$00 = function() {
-          OuterName$sf1 = 1;
-          OuterName$sf2 = OuterName$sf1;
-          OuterName$sf3 = OuterName$sf2;
-          {
-            Object.defineProperties(OuterName.prototype, {bar:{value:1}});
-            OuterName$sf2++;
-            OuterName$sf3++;
-          }
-        };
         const OuterName = class {};
-        OuterName$$0jscomp$0staticInit$0m1146332801$00();
+        OuterName$sf1 = 1;
+        OuterName$sf2 = OuterName$sf1;
+        OuterName$sf3 = OuterName$sf2;
+        {
+          Object.defineProperties(OuterName.prototype, {bar:{value:1}});
+          OuterName$sf2++;
+          OuterName$sf3++;
+        }
         alert(OuterName$sf3);
         """);
   }

@@ -2431,16 +2431,11 @@ public final class IntegrationTest extends IntegrationTestCase {
         options,
         srcs,
         new String[] {
-          // TODO: b/302390124 - Maybe support code motion for side-effect-free staticInit call.
+          "",
+          // Note: Foo moved into the same chunk as the alert calls.
           """
-          class Foo {
-            static $jscomp$staticInit$98447280$0() {
-              Foo.y = () => 1;
-            }
-          }
-          Foo.$jscomp$staticInit$98447280$0();
-          """,
-          """
+          class Foo {}
+          Foo.y = () => 1;
           alert(Foo.y);
           alert(Foo.y);
           alert(new Foo());
@@ -2453,11 +2448,9 @@ public final class IntegrationTest extends IntegrationTestCase {
         srcs,
         new String[] {
           "",
-          // Note: Foo moved into the same chunk as the alert calls.
           """
-          var $Foo$y$$;
-          $Foo$y$$ = () => 1;
           class $Foo$$ {}
+          var $Foo$y$$ = () => 1;
           alert($Foo$y$$);
           alert($Foo$y$$);
           alert(new $Foo$$());
@@ -2499,15 +2492,15 @@ public final class IntegrationTest extends IntegrationTestCase {
         },
         new String[] {
           "",
+          // Note: Foo.y stayed in the chunk where it had side effects.
           """
           function $getRandom$$() {
             const $v$$ = Math.random();
             alert("Picked " + $v$$);
             return $v$$;
           }
-          var $Foo$y$$;
           $getRandom$$();
-          $Foo$y$$ = $getRandom$$();
+          var $Foo$y$$ = $getRandom$$();
           """,
           """
           class $Foo$$ {}
@@ -2545,17 +2538,14 @@ public final class IntegrationTest extends IntegrationTestCase {
         options,
         srcs,
         new String[] {
-          // TODO: b/302390124 - Maybe support code motion for side-effect-free staticInit call.
+          // Note: Code motion was not applied because of the reassignment to Foo.y in the static
+          // initialization block.
           """
-          class Foo {
-            static $jscomp$staticInit$98447280$0() {
-              Foo.y = void 0;
-              {
-                Foo.y = 1;
-              }
-            }
+          class Foo {}
+          Foo.y = void 0;
+          {
+            Foo.y = 1;
           }
-          Foo.$jscomp$staticInit$98447280$0();
           """,
           """
           alert(Foo.y);
@@ -2571,10 +2561,9 @@ public final class IntegrationTest extends IntegrationTestCase {
           "",
           // Note: Foo moved into the same chunk as the alert calls.
           """
-          var $Foo$y$$;
-          $Foo$y$$ = void 0;
-          $Foo$y$$ = 1;
           class $Foo$$ {}
+          var $Foo$y$$ = void 0;
+          $Foo$y$$ = 1;
           alert($Foo$y$$);
           alert(new $Foo$$());
           """,
@@ -2625,8 +2614,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             alert("Picked " + $v$$);
             return $v$$;
           }
-          var $Foo$y$$;
-          $Foo$y$$ = void 0;
+          var $Foo$y$$ = void 0;
           $getRandom$$();
           $Foo$y$$ = $getRandom$$();
           """,

@@ -365,20 +365,15 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
           console.log(MyClass.f1);  // prints 1
         };
         """,
-        // TODO(b/189993301): this should be logging '1' instead
         """
-        window.c = function() {
-          var b = 0, d = b = 1;
-          class a {
+        window.b = function() {
+          class a{
             static a;
-            static[d];
-            static b() {
-              a.a = b;
-              a[d] = 1
-            }
+            static [1];
           }
-          a.b();
-          console.log(a.a)
+          a.a = 1;
+          a[1] = 1;
+          console.log(a.a);  // prints 1
         }
         """);
   }
@@ -408,17 +403,14 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
         };
         """,
         """
-        window.c = function() {
-          var b = 0, d = b = 1;
-          class a {
+        window.b = function() {
+          var a = 0, d = a = 1;
+          class c {
             static a;
             static[d]() {}
-            static b() {
-              a.a = b
-            }
           }
-          a.b();
-          console.log(a.a)
+          c.a = a;
+          console.log(c.a)  // prints 1
         }
         """);
   }
