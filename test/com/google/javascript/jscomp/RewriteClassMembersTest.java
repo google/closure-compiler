@@ -194,9 +194,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           static STATIC_INIT$0() {
             {
               C.x = 2;
-              // Note: `this` in a static initialization context is preserved because we are using
-              // static inheritance.
-              const y = this.x;
+              const y = C.x;
             }
           }
         }
@@ -488,9 +486,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         class C {
           static STATIC_INIT$0() {
             C.x = 1;
-            // Note: `this` in a static initialization context is preserved because we are using
-            // static inheritance.
-            C.y = this.x + 1;
+            C.y = C.x + 1;
           }
         }
         C.STATIC_INIT$0();
@@ -545,9 +541,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           static STATIC_INIT$0() {
             C.x = 2;
             C.y = () => {
-              // Note: `this` in a static initialization context is preserved because we are using
-              // static inheritance.
-              return this.x;
+              return C.x;
             };
           }
         }

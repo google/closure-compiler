@@ -797,10 +797,6 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
    * <p>Note: This runs before {@link #rewriteStaticMembers} so the static members are still there.
    */
   private void visitThisAndSuper(NodeTraversal t, Node n) {
-    if (!doStaticInheritanceRewrites) {
-      return;
-    }
-
     Node rootNode = t.getClosestScopeRootNodeBindingThisOrSuper();
     Node rootParent = rootNode.getParent();
     if (rootNode.isFunction()
@@ -815,6 +811,14 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       return;
     }
 
+    // We always rewrite static this to the class name in a static initialization context so that we
+    // can normalize-away static initialization from field initializers and static blocks.
+    boolean forceRewriteStaticThis = n.isThis() && isInStaticInitializationContext(rootNode);
+
+    if (!doStaticInheritanceRewrites && !forceRewriteStaticThis) {
+      return;
+    }
+
     Node classNode = rootNode.getGrandparent();
     ClassRecord classRecord = classStack.peek();
     checkState(
@@ -824,7 +828,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
         classNode);
 
     Node newNameNode = null;
-    if (n.isThis() && isInStaticInitializationContext(rootNode)) {
+    if (forceRewriteStaticThis) {
       // For static this, we can only universally replace with the class name in a static
       // initialization context.
       newNameNode = classRecord.createNewNameReferenceNode().srcrefTree(n);
