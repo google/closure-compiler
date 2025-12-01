@@ -35,6 +35,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -593,38 +594,18 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     checkArgument(noncomputedField.isMemberFieldDef());
     checkArgument(receiver.getParent() == null, receiver);
 
-    if (transpileClassFields) {
-      noncomputedField.detach();
-    }
-
     Node fieldValue = null;
     // We always move out the static field initialization.
     if (isStatic || transpileClassFields) {
       fieldValue = noncomputedField.getFirstChild();
     }
 
-    // We don't make a copy of the static field declaration if it doesn't have an initializer and
-    // we're not transpiling class fields.
-    if (fieldValue == null && !transpileClassFields) {
-      return null;
-    }
-
-    Node getProp =
-        astFactory.createGetProp(receiver, noncomputedField.getString(), type(noncomputedField));
-    Node result =
-        (fieldValue != null)
-            ? astFactory.createAssignStatement(getProp, fieldValue.detach())
-            : astFactory.exprResult(getProp);
-    if (transpileClassFields) {
-      // Move any JSDoc from the field declaration to the child of the EXPR_RESULT, which represents
-      // the new declaration.
-      // noncomputedField is already detached, so there's no benefit to calling
-      // NodeUtil.getBestJSDocInfo(noncomputedField). For now at least, the JSDocInfo we want will
-      // always be directly on noncomputedField in all cases.
-      result.getFirstChild().setJSDocInfo(noncomputedField.getJSDocInfo());
-    }
-    result.srcrefTreeIfMissing(noncomputedField);
-    return result;
+    return createFieldAssignment(
+        noncomputedField,
+        fieldValue,
+        () ->
+            astFactory.createGetProp(
+                receiver, noncomputedField.getString(), type(noncomputedField)));
   }
 
   /**
@@ -636,42 +617,63 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     checkArgument(computedField.isComputedFieldDef(), computedField);
     checkArgument(receiver.getParent() == null, receiver);
 
-    if (transpileClassFields) {
-      computedField.detach();
-    }
-
     Node fieldValue = null;
     if (computedField.getChildCount() == 2 && (isStatic || transpileClassFields)) {
       fieldValue = computedField.getLastChild();
     }
 
+    return createFieldAssignment(
+        computedField,
+        fieldValue,
+        () -> {
+          Node compFieldNameExpr;
+          if (transpileClassFields) {
+            compFieldNameExpr = computedField.removeFirstChild();
+          } else {
+            compFieldNameExpr = computedField.getFirstChild().cloneTree();
+          }
+          return astFactory.createGetElem(receiver, compFieldNameExpr);
+        });
+  }
+
+  /**
+   * Shared helper to create an assignment statement for a class field. Handles logic for creating
+   * undefined values for uninitialized fields during transpilation, as well as JSDoc transfer and
+   * source reference mapping.
+   */
+  private @Nullable Node createFieldAssignment(
+      Node field, @Nullable Node fieldValue, Supplier<Node> createAssignLhs) {
+    if (transpileClassFields) {
+      // We don't need to keep around the field declaration.
+      field.detach();
+    }
+
     // We don't make a copy of the static field declaration if it doesn't have an initializer and
     // we're not transpiling class fields.
-    if (fieldValue == null && !transpileClassFields) {
-      return null;
-    }
+    if (fieldValue == null) {
+      if (!transpileClassFields) {
+        return null;
+      }
 
-    Node compFieldNameExpr;
-    if (transpileClassFields) {
-      compFieldNameExpr = computedField.removeFirstChild();
+      // If we are transpiling class fields, we want an explicit undefined value so we properly
+      // initialize the field.
+      fieldValue = astFactory.createUndefinedValue();
     } else {
-      compFieldNameExpr = computedField.getFirstChild().cloneTree();
+      // We are going to move fieldValue to a new parent, so detach it now.
+      fieldValue.detach();
     }
 
-    Node getElem = astFactory.createGetElem(receiver, compFieldNameExpr);
-    Node result =
-        (fieldValue != null)
-            ? astFactory.createAssignStatement(getElem, fieldValue.detach())
-            : astFactory.exprResult(getElem);
+    Node result = astFactory.createAssignStatement(createAssignLhs.get(), fieldValue);
+
     if (transpileClassFields) {
       // Move any JSDoc from the field declaration to the child of the EXPR_RESULT, which represents
       // the new declaration.
-      // computedField is already detached, so there's no benefit to calling
-      // NodeUtil.getBestJSDocInfo(computedField). For now at least, the JSDocInfo we want will
-      // always be directly on computedField in all cases.
-      result.getFirstChild().setJSDocInfo(computedField.getJSDocInfo());
+      // field is already detached, so there's no benefit to calling
+      // NodeUtil.getBestJSDocInfo(field). For now at least, the JSDocInfo we want will always be
+      // directly on field in all cases.
+      result.getFirstChild().setJSDocInfo(field.getJSDocInfo());
     }
-    result.srcrefTreeIfMissing(computedField);
+    result.srcrefTreeIfMissing(field);
     return result;
   }
 

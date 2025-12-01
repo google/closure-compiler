@@ -2549,7 +2549,7 @@ public final class IntegrationTest extends IntegrationTestCase {
           """
           class Foo {
             static $jscomp$staticInit$98447280$0() {
-              Foo.y;
+              Foo.y = void 0;
               {
                 Foo.y = 1;
               }
@@ -2571,8 +2571,11 @@ public final class IntegrationTest extends IntegrationTestCase {
           "",
           // Note: Foo moved into the same chunk as the alert calls.
           """
+          var $Foo$y$$;
+          $Foo$y$$ = void 0;
+          $Foo$y$$ = 1;
           class $Foo$$ {}
-          alert(1);
+          alert($Foo$y$$);
           alert(new $Foo$$());
           """,
         });
@@ -2623,6 +2626,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             return $v$$;
           }
           var $Foo$y$$;
+          $Foo$y$$ = void 0;
           $getRandom$$();
           $Foo$y$$ = $getRandom$$();
           """,

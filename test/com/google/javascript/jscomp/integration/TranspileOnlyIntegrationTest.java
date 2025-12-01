@@ -138,7 +138,7 @@ public final class TranspileOnlyIntegrationTest extends IntegrationTestCase {
         };
         $jscomp.inherits(Foo, $jscomp$classExtends$98447280$0);
         Foo.$jscomp$staticInit$98447280$1 = function() {
-          Foo.x
+          Foo.x = void 0
         };
         Foo.$jscomp$staticInit$98447280$1()
         """);
