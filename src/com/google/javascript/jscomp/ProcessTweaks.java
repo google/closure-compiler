@@ -294,10 +294,9 @@ class ProcessTweaks implements CompilerPass {
           }
 
           Node tweakDefaultValueNode = tweakIdNode.getNext().getNext();
-          tweakInfo.addRegisterCall(t.getSourceName(), tweakFunc, n, tweakDefaultValueNode);
+          tweakInfo.addRegisterCall(tweakFunc, n, tweakDefaultValueNode);
         }
-        case GET_BOOLEAN, GET_NUMBER, GET_STRING ->
-            tweakInfo.addGetterCall(t.getSourceName(), tweakFunc, n);
+        case GET_BOOLEAN, GET_NUMBER, GET_STRING -> tweakInfo.addGetterCall(tweakFunc, n);
       }
     }
   }
@@ -376,13 +375,12 @@ class ProcessTweaks implements CompilerPass {
       }
     }
 
-    void addRegisterCall(
-        String sourceName, TweakFunction tweakFunc, Node callNode, Node defaultValueNode) {
+    void addRegisterCall(TweakFunction tweakFunc, Node callNode, Node defaultValueNode) {
       registerCall = new TweakFunctionCall(tweakFunc, callNode, defaultValueNode);
       functionCalls.add(registerCall);
     }
 
-    void addGetterCall(String sourceName, TweakFunction tweakFunc, Node callNode) {
+    void addGetterCall(TweakFunction tweakFunc, Node callNode) {
       functionCalls.add(new TweakFunctionCall(tweakFunc, callNode));
     }
 
