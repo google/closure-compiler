@@ -80,13 +80,6 @@ public final class ProcessDefinesTest extends CompilerTestCase {
     return options;
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    // Only do one repetition, so that we can make sure the first pass keeps
-    // GlobalNamespace up to date.
-    return 1;
-  }
-
   /**
    * Helper for tests that expects definitions to remain unchanged, such that {@code definitions+js}
    * is converted to {@code definitions+expected}.

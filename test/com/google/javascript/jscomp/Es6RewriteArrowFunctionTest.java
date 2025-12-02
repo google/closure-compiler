@@ -45,6 +45,9 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
     enableTypeCheck();
     replaceTypesWithColors();
     enableMultistageCompilation();
+    setGenericNameReplacements(
+        ImmutableMap.of(
+            "$jscomp$this$UID", "$jscomp$this$", "$jscomp$arguments$UID", "$jscomp$arguments$"));
   }
 
   @Override
@@ -59,42 +62,19 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
     return new Es6RewriteArrowFunction(compiler);
   }
 
-  // Helper to change the generic name string "$jscomp$this$UID$0" in the expected code with
-  // actual string "$jscomp$this$m123..456$0" that will get produced
-  private Expected getActualExpected(Sources originalSources, Expected originalExpected) {
-    return expected(
-        UnitTestUtils.updateGenericVarNamesInExpectedFiles(
-            (FlatSources) originalSources,
-            originalExpected,
-            ImmutableMap.of("$jscomp$this$UID", "$jscomp$this$")));
-  }
-
-  protected void testArrowRewriting(String source, String expected) {
-    Sources originalSources = srcs(source);
-    Expected originalExpected = expected(expected);
-    Expected actualExpected = getActualExpected(originalSources, originalExpected);
-    test(originalSources, actualExpected);
-  }
-
-  protected void testArrowRewriting(
-      Externs externs, Sources originalSources, Expected originalExpected) {
-    Expected actualExpected = getActualExpected(originalSources, originalExpected);
-    test(externs, originalSources, actualExpected);
-  }
-
   @Test
   public void testAssigningArrowToVariable_BlockBody() {
-    testArrowRewriting("var f = x => { return x+1; };", "var f = function(x) { return x+1; };");
+    test("var f = x => { return x+1; };", "var f = function(x) { return x+1; };");
   }
 
   @Test
   public void testAssigningArrowToVariable_ExpressionBody() {
-    testArrowRewriting("var f = x => x+1;", "var f = function(x) { return x+1; };");
+    test("var f = x => x+1;", "var f = function(x) { return x+1; };");
   }
 
   @Test
   public void testPassingArrowToMethod_ExpressionBody() {
-    testArrowRewriting(
+    test(
         externs(new TestExternsBuilder().addArray().build()),
         srcs("var odds = [1,2,3,4].filter((n) => n%2 == 1);"),
         expected("var odds = [1,2,3,4].filter(function(n) { return n%2 == 1; });"));
@@ -102,14 +82,14 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   @Test
   public void testCapturingThisInArrow_ExpressionBody() {
-    testArrowRewriting(
+    test(
         "var f = () => this;",
         "const $jscomp$this$UID$0 = this; var f = function() { return $jscomp$this$UID$0; };");
   }
 
   @Test
   public void testCapturingThisInArrow_BlockBody() {
-    testArrowRewriting(
+    test(
         externs(
             """
             window.init = function() { };
@@ -138,7 +118,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
   @Test
   public void testCapturingThisInArrowPlacesAliasAboveContainingStatement() {
     // We use `switch` here because it's a very complex kind of statement.
-    testArrowRewriting(
+    test(
         "switch(a) { case b: (() => { this; })(); }",
         """
         const $jscomp$this$UID$0 = this;
@@ -152,7 +132,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
   @Test
   public void testCapturingThisInMultipleArrowsPlacesOneAliasAboveContainingStatement() {
     // We use `switch` here because it's a very complex kind of statement.
-    testArrowRewriting(
+    test(
         """
         switch(a) {
           case b:
@@ -175,7 +155,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
   @Test
   public void testCapturingThisInMultipleArrowsPlacesOneAliasAboveAllContainingStatements() {
     // We use `switch` here because it's a very complex kind of statement.
-    testArrowRewriting(
+    test(
         """
         switch(a) {
           case b:
@@ -201,7 +181,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   @Test
   public void testCapturingEnclosingFunctionArgumentsInArrow() {
-    testArrowRewriting(
+    test(
         """
         function f() {
           var x = () => arguments;
@@ -209,16 +189,15 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
         """,
         """
         function f() {
-          const $jscomp$arguments$m1146332801$1 = arguments;
-          var x = function() { return $jscomp$arguments$m1146332801$1; };
+          const $jscomp$arguments$UID$1 = arguments;
+          var x = function() { return $jscomp$arguments$UID$1; };
         }
         """);
   }
 
   @Test
   public void testAssigningArrowToObjectLiteralField_ExpressionBody() {
-    testArrowRewriting(
-        "var obj = { f: () => 'bar' };", "var obj = { f: function() { return 'bar'; } };");
+    test("var obj = { f: () => 'bar' };", "var obj = { f: function() { return 'bar'; } };");
   }
 
   @Test
@@ -229,7 +208,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
     disableTypeInfoValidation();
     disableTypeCheck();
 
-    testArrowRewriting(
+    test(
         """
         class C {
           constructor() {
@@ -271,7 +250,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
     disableTypeInfoValidation();
     disableTypeCheck();
 
-    testArrowRewriting(
+    test(
         """
         class B {
           constructor(x) {
@@ -315,7 +294,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
     disableTypeInfoValidation();
     disableTypeCheck();
 
-    testArrowRewriting(
+    test(
         """
         class B {
           constructor(x) {
@@ -359,7 +338,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   @Test
   public void testMultipleArrowsInSameFreeScope() {
-    testArrowRewriting(
+    test(
         "var a1 = x => x+1; var a2 = x => x-1;",
         """
         var a1 = function(x) { return x+1; };
@@ -369,7 +348,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   @Test
   public void testMultipleArrowsInSameFunctionScope() {
-    testArrowRewriting(
+    test(
         "function f() { var a1 = x => x+1; var a2 = x => x-1; }",
         """
         function f() {
@@ -381,7 +360,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   @Test
   public void testCapturingThisInMultipleArrowsInSameFunctionScope() {
-    testArrowRewriting(
+    test(
         """
         ({
           x: 0,
@@ -407,7 +386,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   @Test
   public void testGeneratedVariableDeclarations_placedAfterFunctionDeclarations() {
-    testArrowRewriting(
+    test(
         """
         ({
           x: 0,
@@ -435,7 +414,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   @Test
   public void testPassingMultipleArrowsInSameFreeScopeAsMethodParams() {
-    testArrowRewriting(
+    test(
         externs(
             MINIMAL_EXTERNS
                 + """
@@ -456,7 +435,7 @@ var b = a.map(function(x) { return x+1; }).map(function(x$jscomp$1) { return x$j
 
   @Test
   public void testMultipleArrowsInSameFunctionScopeAsMethodParams() {
-    testArrowRewriting(
+    test(
         externs(
             MINIMAL_EXTERNS
                 + """
@@ -485,7 +464,7 @@ function f() {
 
   @Test
   public void testCapturingThisInArrowFromNestedScopes() {
-    testArrowRewriting(
+    test(
         """
         var outer = {
           x: null,
@@ -524,7 +503,7 @@ function f() {
 
   @Test
   public void testCapturingThisInArrowWithNestedConstructor() {
-    testArrowRewriting(
+    test(
         """
         ({
           f: null,
@@ -558,7 +537,7 @@ function f() {
 
   @Test
   public void testNestingArrow() {
-    testArrowRewriting(
+    test(
         externs(""),
         srcs("var f = x =>\n y => x+y;"),
         expected("var f = function(x) {return function(y) { return x+y; }; };"));
@@ -566,7 +545,7 @@ function f() {
 
   @Test
   public void testNestingArrowsCapturingThis() {
-    testArrowRewriting(
+    test(
         externs("window.foo = function() { };"),
         srcs("var f = (x => { var g = (y => { this.foo(); }) });"),
         expected(

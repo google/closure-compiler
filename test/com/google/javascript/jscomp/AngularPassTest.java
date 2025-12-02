@@ -30,12 +30,6 @@ public final class AngularPassTest extends CompilerTestCase {
   }
 
   @Override
-  protected int getNumRepetitions() {
-    // This pass only runs once.
-    return 1;
-  }
-
-  @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);

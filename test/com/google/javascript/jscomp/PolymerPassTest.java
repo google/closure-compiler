@@ -28,12 +28,10 @@ import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_UNQUALIFIED
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
-import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -171,6 +169,18 @@ public class PolymerPassTest extends CompilerTestCase {
     enableRunTypeCheckAfterProcessing();
     enableParseTypeInfo();
     enableCreateModuleMap();
+
+    // Note: we don't have a version of testExternChanges that calls getActualExpected() here and
+    // require test cases to hardcode the
+    // full "Interface$m123..456$0" id instead. This is because "Interface$m123..456$0" gets put
+    // in the synthetic externs, but named based on an input source file path, so getActualExpected
+    // doesn't know what file path to use.
+    // TODO(lharker): it would be a minor readability improvement to add a different helper to
+    // support this case.
+
+    // Helper to change the generic name string "Interface$UID$0" in the expected code with
+    // actual string "Interface$m123..456$0" that will get produced
+    setGenericNameReplacements(ImmutableMap.of("Interface$UID", "Interface$"));
   }
 
   @Test
@@ -5590,52 +5600,5 @@ PtTestComponentElement.prototype._abc = function() {
   }
 };
 """));
-  }
-
-  @Override
-  public void test(String js, String expected) {
-    this.test(srcs(js), expected(expected));
-  }
-
-  @Override
-  public void test(TestPart... testParts) {
-    // Override this method so that we can ensure getActualExpected gets called
-    Sources srcs = null;
-    Expected expected = null;
-    ArrayList<TestPart> modifiedTestParts = new ArrayList<>();
-    for (TestPart testPart : testParts) {
-      if (testPart instanceof Sources sources) {
-        srcs = sources;
-        modifiedTestParts.add(srcs);
-      } else if (testPart instanceof Expected exp) {
-        expected = exp;
-      } else {
-        modifiedTestParts.add(testPart);
-      }
-    }
-    Preconditions.checkNotNull(srcs);
-    if (expected != null) {
-      modifiedTestParts.add(getActualExpected(srcs, expected));
-    }
-    TestPart[] testPartsArray = modifiedTestParts.toArray(new TestPart[0]);
-    super.test(testPartsArray);
-  }
-
-  // Note: we don't have a version of testExternChanges that calls getActualExpected() here and
-  // require test cases to hardcode the
-  // full "Interface$m123..456$0" id instead. This is because "Interface$m123..456$0" gets put
-  // in the synthetic externs, but named based on an input source file path, so getActualExpected
-  // doesn't know what file path to use.
-  // TODO(lharker): it would be a minor readability improvement to add a different helper to
-  // support this case.
-
-  // Helper to change the generic name string "Interface$UID$0" in the expected code with
-  // actual string "Interface$m123..456$0" that will get produced
-  private Expected getActualExpected(Sources originalSources, Expected originalExpected) {
-    return expected(
-        UnitTestUtils.updateGenericVarNamesInExpectedFiles(
-            (FlatSources) originalSources,
-            originalExpected,
-            ImmutableMap.of("Interface$UID", "Interface$")));
   }
 }

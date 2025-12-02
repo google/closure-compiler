@@ -102,12 +102,14 @@ class PeepholeTranspilationsPass implements CompilerPass {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case SCRIPT:
+        case SCRIPT -> {
           // check if the script contains any of the features that we are transpiling.
           FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
           return scriptFeatures.containsAtLeastOneOf(featureSetToRunOn);
-        default:
+        }
+        default -> {
           return true;
+        }
       }
     }
   }

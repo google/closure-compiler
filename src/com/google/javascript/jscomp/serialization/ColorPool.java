@@ -344,23 +344,19 @@ public final class ColorPool {
     for (int i = 0; i < ids.length; i++) {
       TypeProto proto = typePool.getType(i);
       switch (proto.getKindCase()) {
-        case OBJECT:
-          ids[i] = ColorId.fromBytes(proto.getObject().getUuid());
-          break;
-        case UNION:
+        case OBJECT -> ids[i] = ColorId.fromBytes(proto.getObject().getUuid());
+        case UNION -> {
           // Defer generating union IDs until we have the IDs of all the element types.
-          break;
-        default:
-          throw new MalformedTypedAstException(proto);
+        }
+        default -> throw new MalformedTypedAstException(proto);
       }
     }
 
     for (int i = 0; i < ids.length; i++) {
       TypeProto proto = typePool.getType(i);
       switch (proto.getKindCase()) {
-        case OBJECT:
-          break;
-        case UNION:
+        case OBJECT -> {}
+        case UNION -> {
           {
             checkWellFormed(
                 proto.getUnion().getUnionMemberCount() > 1, "Union has too few members", proto);
@@ -375,9 +371,8 @@ public final class ColorPool {
             }
             ids[i] = ColorId.union(members);
           }
-          break;
-        default:
-          throw new AssertionError(proto);
+        }
+        default -> throw new AssertionError(proto);
       }
     }
 

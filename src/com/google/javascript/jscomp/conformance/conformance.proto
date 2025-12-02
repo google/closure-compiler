@@ -46,7 +46,7 @@ message ConformanceConfig {
      * The behavior used by non-global conformance configs (initially only
      * BoqWeb) where any non-allowlisted violation will not break the library
      * level build but only get recorded in its conformance report (i.e.
-     * JsCompilerPerLibraryConformanceReport). This will be used by the "curated
+     * a JsCompilerConformanceReport). This will be used by the "curated
      * set" of non-breaking conformance configs (initially only Boq web) as per
      * go/supporting-library-level-js-conformance-dd.
      */

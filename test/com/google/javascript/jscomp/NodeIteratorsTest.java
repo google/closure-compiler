@@ -212,7 +212,7 @@ public final class NodeIteratorsTest {
       }
     }
 
-    assertWithMessage("Variable X not found! " + root.toStringTree()).that(found).isTrue();
+    assertWithMessage("Variable X not found! %s", root.toStringTree()).that(found).isTrue();
 
     List<Node> currentAncestors = searchIt.currentAncestors();
     assertThat(currentAncestors.size()).isAtLeast(3);

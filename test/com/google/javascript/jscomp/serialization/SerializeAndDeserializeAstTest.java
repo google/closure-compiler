@@ -31,6 +31,7 @@ import com.google.javascript.jscomp.AstValidator;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
+import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.PassFactory;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.colors.ColorRegistry;
@@ -77,9 +78,9 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   private boolean includeTypes;
   private boolean resolveSourceMapAnnotations;
   private boolean parseInlineSourceMaps;
+  private boolean checkJsDocEquality;
   private ImmutableList<String> runtimeLibraries = null;
   private Optional<PassFactory> preSerializePassFactory = Optional.empty();
-  private boolean skipMatchingScriptFeaturesBeforeAndAfterSerialization = false;
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -111,6 +112,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     enableCreateModuleMap();
     enableSourceInformationAnnotator();
     this.includeTypes = true;
+    this.checkJsDocEquality = true;
     this.resolveSourceMapAnnotations = true;
     this.parseInlineSourceMaps = true;
     this.runtimeLibraries = ImmutableList.of();
@@ -167,6 +169,11 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   @Test
+  public void testObjectWithComputedGetter() {
+    testSame("let obj = {get [x]() {}};");
+  }
+
+  @Test
   public void testObjectWithSetter() {
     testSame("let obj = {set x(value) {}};");
   }
@@ -174,6 +181,11 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   @Test
   public void testObjectWithQuotedSetter() {
     testSame("let obj = {set 'x'(value) {}};");
+  }
+
+  @Test
+  public void testObjectWithComputedSetter() {
+    testSame("let obj = {set [x](value) {}};");
   }
 
   @Test
@@ -240,13 +252,11 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testEmptyClassDeclaration() {
-    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame("class Foo {}");
   }
 
   @Test
   public void testEmptyClassDeclarationWithExtends() {
-    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame("class Foo {} class Bar extends Foo {}");
   }
 
@@ -261,11 +271,10 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
         }
         """);
 
-    // Type checking will report computed property accesses as errors for a class,
-    // so disable it for this case which contains several.
-    disableTypeCheck();
+    this.checkJsDocEquality = false; // @unrestricted
     testSame(
         """
+        /** @unrestricted */
         class Foo {
           a() {}
           'b'() {}
@@ -277,8 +286,31 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassDeclarationWithComputedGetter() {
+    this.checkJsDocEquality = false; // @dict
+    testSame(
+        """
+        /** @dict */
+        class Foo {
+          get ['a']() {}
+        }
+        """);
+  }
+
+  @Test
+  public void testClassDeclarationWithComputedSetter() {
+    this.checkJsDocEquality = false; // @dict
+    testSame(
+        """
+        /** @dict */
+        class Foo {
+          set ['a'](val) {}
+        }
+        """);
+  }
+
+  @Test
   public void testClassDeclarationWithFields() {
-    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame(
         """
         class Foo {
@@ -305,7 +337,6 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testEmptyClassStaticBlock() {
-    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame(
         """
         class Foo {
@@ -317,7 +348,6 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testClassStaticBlock_variables() {
-    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame(
         """
         class Foo {
@@ -332,7 +362,6 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testClassStaticBlock_function() {
-    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame(
         """
         class Foo {
@@ -346,7 +375,6 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testMultipleClassStaticBlocks() {
-    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame(
         """
         class Foo {
@@ -402,13 +430,11 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testFunctionCallRestAndSpread() {
-    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame("function f(...x) {} f(...[1, 2, 3]);");
   }
 
   @Test
   public void testFunctionDefaultAndDestructuringParameters() {
-    skipMatchingScriptFeaturesBeforeAndAfterSerialization = true;
     testSame("function f([a, b], x = 0, {y, ...z} = {y: 1}) {}");
   }
 
@@ -812,6 +838,8 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     Node shadowHost = result.sourceRoot.getFirstFirstChild().getFirstFirstChild();
 
     Node shadowedContent = shadowHost.getClosureUnawareShadow();
+    IR.root(shadowedContent); // The script root also needs a top-level root parent.
+
     Node expectedShadowContent =
         this.parseExpectedJs(
             """
@@ -823,6 +851,20 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
     assertThat(result.compiler.toSource(result.sourceRoot))
         .isEqualTo("(function(){window[\"foo\"]=5})()");
+
+    NodeTraversal.Callback cb =
+        new NodeTraversal.AbstractPostOrderCallback() {
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            assertThat(n.getIsInClosureUnawareSubtree()).isTrue();
+            if (parent != null) {
+              assertThat(Node.validateMemorySensitivePropertyGuarantees(n, true, parent, true))
+                  .isTrue();
+            }
+          }
+        };
+
+    NodeTraversal.traverse(result.compiler, shadowedContent, cb);
   }
 
   @Test
@@ -924,19 +966,19 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
       script.setInputId(new InputId(source.getName()));
       newSourceRoot.addChildToBack(script);
     }
+    Node newRoot = IR.root(newExternsRoot, newSourceRoot);
 
     Node expectedRoot = this.parseExpectedJs(expected);
-    assertNode(newSourceRoot).isEqualIncludingJsDocTo(expectedRoot);
-    Node newRoot = IR.root(newExternsRoot, newSourceRoot);
+    if (checkJsDocEquality) {
+      assertNode(newSourceRoot).isEqualIncludingJsDocTo(expectedRoot);
+    } else {
+      assertNode(newSourceRoot).isEqualTo(expectedRoot);
+    }
 
     new AstValidator(deserializingCompiler, /* validateScriptFeatures= */ true)
         .validateRoot(newRoot);
 
-    // TODO(b/394454662): Remove this condition once feature set with deserialization and parser are
-    // in sync.
-    if (!skipMatchingScriptFeaturesBeforeAndAfterSerialization) {
-      assertFeatureSetsOfScriptsMatch(oldRoot, newRoot);
-    }
+    assertFeatureSetsOfScriptsMatch(oldRoot, newRoot);
 
     consumer = null;
     return new Result(ast, registry, newSourceRoot, deserializingCompiler);

@@ -117,13 +117,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
         reportingMode);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    // This compiler pass is not idempotent and should only be run over a
-    // parse tree once.
-    return 1;
-  }
-
   @Test
   public void testViolation1() {
     configuration =
@@ -4696,22 +4689,20 @@ requirement: {
     testNoWarning(
         externs(externs),
         srcs(
-            new String[] {
-              """
-              goog.provide('test.Attribute');
+            """
+            goog.provide('test.Attribute');
 
-              /** @enum {string} */
-              test.Attribute = {SRC: 'src', HREF: 'href', SAFE: 'safe'};
-              """,
-              """
-              goog.module('test.setAttribute');
+            /** @enum {string} */
+            test.Attribute = {SRC: 'src', HREF: 'href', SAFE: 'safe'};
+            """,
+            """
+            goog.module('test.setAttribute');
 
-              const Attribute = goog.require('test.Attribute');
+            const Attribute = goog.require('test.Attribute');
 
-              const attr = Attribute.SAFE;
-              (new HTMLScriptElement).setAttribute(attr, 'xxx');
-              """
-            }));
+            const attr = Attribute.SAFE;
+            (new HTMLScriptElement).setAttribute(attr, 'xxx');
+            """));
 
     testNoWarning(
         externs(externs),
@@ -4802,22 +4793,20 @@ requirement: {
     testNoWarning(
         externs(externs),
         srcs(
-            new String[] {
-              """
-              goog.provide('test.Attribute');
+            """
+            goog.provide('test.Attribute');
 
-              /** @enum {string} */
-              test.Attribute = {SRC: 'src', HREF: 'href', SAFE: 'safe'};
-              """,
-              """
-              goog.module('test.attr');
+            /** @enum {string} */
+            test.Attribute = {SRC: 'src', HREF: 'href', SAFE: 'safe'};
+            """,
+            """
+            goog.module('test.attr');
 
-              const Attribute = goog.require('test.Attribute');
+            const Attribute = goog.require('test.Attribute');
 
-              const attr = Attribute.SAFE;
-              (new HTMLScriptElement).attr(attr, 'xxx');
-              """
-            }));
+            const attr = Attribute.SAFE;
+            (new HTMLScriptElement).attr(attr, 'xxx');
+            """));
 
     testNoWarning(
         externs(externs),

@@ -28,7 +28,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new J2clClinitPrunerPass(
-        compiler, compiler.getChangedScopeNodesForPass("J2clClinitPrunerPass"));
+        compiler, compiler.getChangeTracker().getChangedScopeNodesForPass("J2clClinitPrunerPass"));
   }
 
   @Override
@@ -36,12 +36,6 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
     Compiler compiler = super.createCompiler();
     J2clSourceFileChecker.markToRunJ2clPasses(compiler);
     return compiler;
-  }
-
-  @Override
-  protected int getNumRepetitions() {
-    // A single run should be sufficient.
-    return 1;
   }
 
   @Override

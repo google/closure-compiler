@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.JsMessage.Part;
 import com.google.javascript.jscomp.JsMessage.PlaceholderFormatException;
 import com.google.javascript.jscomp.JsMessage.StringPart;
@@ -63,6 +64,7 @@ public final class ReplaceMessages {
   private final AbstractCompiler compiler;
   private final MessageBundle bundle;
   private final boolean strictReplacement;
+  private final boolean collapsePropertiesHasRun;
   private final AstFactory astFactory;
 
   private final Map<String, String> placeholderMapIds = new LinkedHashMap<>();
@@ -72,6 +74,9 @@ public final class ReplaceMessages {
     this.astFactory = compiler.createAstFactory();
     this.bundle = bundle;
     this.strictReplacement = strictReplacement;
+    this.collapsePropertiesHasRun =
+        compiler.getOptions().getPropertyCollapseLevel() == PropertyCollapseLevel.ALL
+            && compiler.getOptions().doLateLocalization();
   }
 
   /**
@@ -563,7 +568,7 @@ public final class ReplaceMessages {
               ? callNode.getChildAtIndex(2)
               : callNode.getSecondChild();
       callNode.replaceWith(replacementNode.detach());
-      Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(replacementNode);
+      Node changeScope = ChangeTracker.getEnclosingChangeScopeRoot(replacementNode);
       if (changeScope != null) {
         compiler.reportChangeToChangeScope(changeScope);
       }
@@ -669,10 +674,10 @@ public final class ReplaceMessages {
    *
    * <pre>{@code
    * var WELCOME_MSG = function(name) {
-   *    return goog.msgKind.MASCULINE ? "Bienvenido + name" :
-   *           goog.msgKind.FEMININE ? "Bienvenida + name" :
-   *           goog.msgKind.NEUTER ? "Les damos la bienvenida + name" :
-   *           "Les damos la bienvenida + name";
+   *    return goog.msgKind.MASCULINE ? "Bienvenido " + name :
+   *           goog.msgKind.FEMININE ? "Bienvenida " + name :
+   *           goog.msgKind.NEUTER ? "Les damos la bienvenida " + name :
+   *           "Les damos la bienvenida " + name;
    * }(user.getName());
    * }</pre>
    */
@@ -724,6 +729,45 @@ public final class ReplaceMessages {
   }
 
   /**
+   * Creates a node representing the grammatical gender condition.
+   *
+   * <p>For example:
+   *
+   * <pre>{@code
+   * goog.msgKind.MASCULINE ? "Bienvenido + name" :
+   * goog.msgKind.FEMININE ? "Bienvenida + name" :
+   * goog.msgKind.NEUTER ? "Les damos la bienvenida + name" :
+   * "Les damos la bienvenida + name";
+   * }</pre>
+   */
+  private Node createConditionForGrammaticalGender(
+      AstFactory.Type type, JsMessage.GrammaticalGenderCase grammaticalGender, Node nodeToReplace) {
+
+    // NOTE: Collapse properties isn't guarantee to collapse any given property but if
+    // we get a partial collapse of "goog.msgKind" then something has gone very wrong
+    // so this seems reasonable rather than the alternative (traversing the AST to find the values).
+    if (collapsePropertiesHasRun) {
+      String referenceName =
+          switch (grammaticalGender) {
+            case MASCULINE -> "goog$msgKind$MASCULINE";
+            case FEMININE -> "goog$msgKind$FEMININE";
+            case NEUTER -> "goog$msgKind$NEUTER";
+            default -> "goog$msgKind$OTHER";
+          };
+      Node result = astFactory.createName(referenceName, type(nodeToReplace));
+      result.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+      return result;
+    } else {
+      Node googNode = astFactory.createName("goog", type);
+      googNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+      return astFactory.createGetProp(
+          astFactory.createGetProp(googNode, "msgKind", type(nodeToReplace)),
+          grammaticalGender.toString(),
+          type(nodeToReplace));
+    }
+  }
+
+  /**
    * Creates a ternary expression with the gendered message variants.
    *
    * <p>For example:
@@ -750,13 +794,7 @@ public final class ReplaceMessages {
       }
       // Hook condition ex: `goog.msgKind.MASCULINE?` or `goog.msgKind.FEMININE ?` or
       // `goog.msgKind.NEUTER ?`
-      Node googNode = astFactory.createName("goog", type);
-      googNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-      Node condition =
-          astFactory.createGetProp(
-              astFactory.createGetProp(googNode, "msgKind", type(nodeToReplace)),
-              grammaticalGender.toString(),
-              type(nodeToReplace));
+      Node condition = createConditionForGrammaticalGender(type, grammaticalGender, nodeToReplace);
 
       // The last child of the hook expression will be replaced with the next currentHook
       Node currentHook =
@@ -795,31 +833,29 @@ public final class ReplaceMessages {
     for (Part msgPart : msgParts) {
       final Node partNode;
       if (msgPart.isPlaceholder()) {
-        // Icu template placeholders are not replaced at compile time, but rather at runtime.
-        // Therefore, we need to treat them differently.
-        if (options.isIcuTemplate()) {
+        // `placeholderMapIds` contains only the placeholders from traditional goog.getMsg() calls.
+        // If a placeholder name is not found in this map, it is assumed to be an ICU placeholder.
+        String placeholderId = placeholderMapIds.get(msgPart.getJsPlaceholderName());
+        if (placeholderId == null) {
           // Add the ICU placeholder directly to the message ex: 'Hello {NAME}'
           message =
               astFactory.createString(
                   message.getString() + "{" + msgPart.getCanonicalPlaceholderName() + "}");
           continue;
         } else {
-          // Add the placeholder name node to the message ex: 'Hello + {name+uniqueId}'
-          String placeholderId = placeholderMapIds.get(msgPart.getJsPlaceholderName());
           partNode = astFactory.createName(placeholderId, type(nodeToReplace));
         }
       } else {
         // The part is just a string literal.
         partNode = createNodeForMsgString(options, msgPart.getString());
       }
-      // Icu template message should be apart of the string literal
-      if (options.isIcuTemplate()) {
-        message =
-            (message == null)
-                ? partNode
-                : astFactory.createString(message.getString() + partNode.getString());
+
+      if (message == null) {
+        message = partNode;
+      } else if (partNode.isString() && message.isString()) {
+        message = astFactory.createString(message.getString() + partNode.getString());
       } else {
-        message = (message == null) ? partNode : astFactory.createAdd(message, partNode);
+        message = astFactory.createAdd(message, partNode);
       }
     }
     return message;
@@ -1108,18 +1144,16 @@ public final class ReplaceMessages {
         checkState(valueNode.isStringLit(), valueNode);
         String value = valueNode.getString();
         switch (key) {
-          case "key":
+          case "key" -> {
             jsMessageBuilder.setKey(value);
             msgKey = value;
-            break;
-          case "meaning":
+          }
+          case "meaning" -> {
             jsMessageBuilder.setMeaning(value);
             meaning = value;
-            break;
-          case "alt_id":
-            jsMessageBuilder.setAlternateId(value);
-            break;
-          case "msg_text":
+          }
+          case "alt_id" -> jsMessageBuilder.setAlternateId(value);
+          case "msg_text" -> {
             // This may be an ICU template that also has the `icu_placeholder_names` property, which
             // means we need to append multiple parts of the message to `jsMessageBuilder`. For now,
             // we will save the message text and current node, and we'll parse it once we know if
@@ -1127,20 +1161,15 @@ public final class ReplaceMessages {
             // properties is finished).
             messageText = value;
             messageTextNode = valueNode;
-            break;
-          case "isIcuTemplate":
-            isIcuTemplate = true;
-            break;
-          case "escapeLessThan":
-            // Just being present enables this option
-            escapeLessThanOption = true;
-            break;
-          case "unescapeHtmlEntities":
-            // just being present enables this option
-            unescapeHtmlEntitiesOption = true;
-            break;
-          default:
-            throw new IllegalStateException("unknown protected message key: " + strKey);
+          }
+          case "isIcuTemplate" -> isIcuTemplate = true;
+          case "escapeLessThan" ->
+              // Just being present enables this option
+              escapeLessThanOption = true;
+          case "unescapeHtmlEntities" ->
+              // just being present enables this option
+              unescapeHtmlEntitiesOption = true;
+          default -> throw new IllegalStateException("unknown protected message key: " + strKey);
         }
       }
 
@@ -1195,6 +1224,7 @@ public final class ReplaceMessages {
           jsMessageBuilder.setId(meaningForIdGeneration);
         }
       }
+
       return new ProtectedJsMessage(
           jsMessageBuilder.build(),
           node,

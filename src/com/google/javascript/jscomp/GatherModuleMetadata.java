@@ -236,27 +236,17 @@ public final class GatherModuleMetadata implements CompilerPass {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case SCRIPT:
-          enterModule(t, n, t.getInput().getPath());
-          break;
-        case IMPORT:
-        case EXPORT:
-          visitImportOrExport(t, n);
-          break;
-        case CALL:
+        case SCRIPT -> enterModule(t, n, t.getInput().getPath());
+        case IMPORT, EXPORT -> visitImportOrExport(t, n);
+        case CALL -> {
           if (n.isCall() && GOOG_LOADMODULE.matches(n.getFirstChild())) {
             loadModuleCall = n;
             enterModule(t, n, null);
           }
-          break;
-        case MODULE_BODY:
-          currentModule.hasModuleBody = true;
-          break;
-        case DYNAMIC_IMPORT:
-          visitDynamicImport(n);
-          break;
-        default:
-          break;
+        }
+        case MODULE_BODY -> currentModule.hasModuleBody = true;
+        case DYNAMIC_IMPORT -> visitDynamicImport(n);
+        default -> {}
       }
 
       return true;
@@ -323,22 +313,17 @@ public final class GatherModuleMetadata implements CompilerPass {
       }
 
       switch (n.getToken()) {
-        case SCRIPT:
-          leaveModule();
-          break;
-        case NAME:
-          visitName(t, n);
-          break;
-        case CALL:
+        case SCRIPT -> leaveModule();
+        case NAME -> visitName(t, n);
+        case CALL -> {
           if (loadModuleCall == n) {
             leaveModule();
             loadModuleCall = null;
           } else {
             visitGoogCall(t, n);
           }
-          break;
-        default:
-          break;
+        }
+        default -> {}
       }
     }
 
@@ -587,29 +572,23 @@ public final class GatherModuleMetadata implements CompilerPass {
       currentModule.googNamespaces.add(namespace);
       if (existingType != null) {
         switch (existingType) {
-          case ES6_MODULE:
-          case GOOG_MODULE:
-          case LEGACY_GOOG_MODULE:
-            {
-              DiagnosticType diagnostic =
-                  moduleType.equals(ModuleType.GOOG_PROVIDE)
-                      ? ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE
-                      : ClosurePrimitiveErrors.DUPLICATE_MODULE;
-              t.report(n, diagnostic, namespace, existingFileSource);
-              return;
-            }
-          case GOOG_PROVIDE:
-            {
-              DiagnosticType diagnostic =
-                  moduleType.equals(ModuleType.GOOG_PROVIDE)
-                      ? ClosurePrimitiveErrors.DUPLICATE_NAMESPACE
-                      : ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE;
-              t.report(n, diagnostic, namespace, existingFileSource);
-              return;
-            }
-          case COMMON_JS:
-          case SCRIPT:
-            // Fall through, error
+          case ES6_MODULE, GOOG_MODULE, LEGACY_GOOG_MODULE -> {
+            DiagnosticType diagnostic =
+                moduleType.equals(ModuleType.GOOG_PROVIDE)
+                    ? ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE
+                    : ClosurePrimitiveErrors.DUPLICATE_MODULE;
+            t.report(n, diagnostic, namespace, existingFileSource);
+            return;
+          }
+          case GOOG_PROVIDE -> {
+            DiagnosticType diagnostic =
+                moduleType.equals(ModuleType.GOOG_PROVIDE)
+                    ? ClosurePrimitiveErrors.DUPLICATE_NAMESPACE
+                    : ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE;
+            t.report(n, diagnostic, namespace, existingFileSource);
+            return;
+          }
+          case COMMON_JS, SCRIPT -> {}
         }
         throw new IllegalStateException("Unexpected module type: " + existingType);
       }

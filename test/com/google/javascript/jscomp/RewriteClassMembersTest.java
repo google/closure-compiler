@@ -15,7 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,45 +48,55 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     enableTypeCheck();
     replaceTypesWithColors();
     enableMultistageCompilation();
+    setGenericNameReplacements(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS);
   }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return (externs, root) -> {
-      new Es6ExtractClasses(compiler).process(externs, root);
-      new RewriteClassMembers(compiler).process(externs, root);
-    };
+    return new Es6NormalizeClasses(compiler);
   }
 
-  private void computedFieldTest(Sources srcs, Expected originalExpected) {
-    Expected modifiedExpected =
-        expected(
-            UnitTestUtils.updateGenericVarNamesInExpectedFiles(
-                (FlatSources) srcs,
-                originalExpected,
-                ImmutableMap.of("COMPFIELD", "$jscomp$compfield$")));
-    test(srcs, modifiedExpected);
+  Options withOptions() {
+    return new Options(true, LanguageMode.ECMASCRIPT_2021);
+  }
+
+  record Options(boolean assumeStaticInheritanceIsNotUsed, LanguageMode languageOut) {
+    Options useStaticInheritance() {
+      return new Options(false, languageOut());
+    }
+
+    Options useEs2022LanguageOut() {
+      return new Options(assumeStaticInheritanceIsNotUsed(), LanguageMode.ECMASCRIPT_NEXT);
+    }
+
+    Options useEs5LanguageOut() {
+      return new Options(assumeStaticInheritanceIsNotUsed(), LanguageMode.ECMASCRIPT5);
+    }
+  }
+
+  @Override
+  protected void test(String input, String expected) {
+    test(withOptions(), input, expected);
+  }
+
+  void test(Options options, String input, String expected) {
+    setAssumeStaticInheritanceIsNotUsed(options.assumeStaticInheritanceIsNotUsed());
+    setLanguageOut(options.languageOut());
+
+    super.test(input, expected);
+  }
+
+  @Override
+  protected void testSame(String src) {
+    test(withOptions(), src, src);
+  }
+
+  void testSame(Options options, String src) {
+    test(options, src, src);
   }
 
   @Test
-  public void testClassStaticBlock() {
-    test(
-        """
-        class C {
-          static {
-            let x = 2
-            this.y = x
-          }
-        }
-        """,
-        """
-        class C {}
-        {
-          let x = 2;
-          C.y = x
-        }
-        """); // uses `this` in static block
-
+  public void testClassStaticBlock_superRef() {
     test(
         """
         class B {
@@ -103,12 +113,14 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         B.y = 3;
         class C extends B {}
         {
-        // TODO (user): Object.getPrototypeOf(C) is the technically correct way.
-        //  We are not doing this for code size reasons.
-          let x = B.y /* Object.getPrototypeOf(C).y */
+          // TODO (tflo): Reflect.get(B, 'y') is the technically correct way.
+          let x = B.y;
         }
-        """); // uses `super`
+        """);
+  }
 
+  @Test
+  public void testClassStaticBlock_superRef_onClassWithNameSpace() {
     test(
         """
         const ns = {};
@@ -129,9 +141,12 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         {
           let x = ns.B.y;
         }
-        """); // uses `super`
+        """);
+  }
 
-    test(
+  @Test
+  public void testClassStaticBlock_thisRef() {
+    var src =
         """
         class C {
           static {
@@ -139,15 +154,32 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             const y = this.x
           }
         }
-        """,
+        """;
+
+    test(
+        src,
         """
         class C {}
         {
           C.x = 2;
-          const y = C.x
+          const y = C.x;
         }
-        """); // uses `this` in static block
+        """);
 
+    test(
+        withOptions().useStaticInheritance(),
+        src,
+        """
+        class C {}
+        {
+          C.x = 2;
+          const y = C.x;
+        }
+        """);
+  }
+
+  @Test
+  public void testClassStaticBlock_varInStaticBlock() {
     test(
         """
         var z = 1
@@ -159,14 +191,17 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        var z = 1
+        var z = 1;
         class C {}
         {
-          let x = 2
+          let x = 2;
           var z$jscomp$1 = 3;
         }
-        """); // `var` in static block
+        """);
+  }
 
+  @Test
+  public void testClassStaticBlock_classExpression() {
     test(
         """
         let C = class {
@@ -179,17 +214,17 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         };
         """,
         """
-        let C = class {}
+        let C = class {};
         C.prop = 5;
-        let D = class extends C {}
+        let D = class extends C {};
         {
           D.prop = 10;
         }
-        """); //
+        """);
+  }
 
-    // TODO (user): This will be fixed by moving the RewriteClassMembers pass after
-    // normalization, because normalization will split these two declarations into separate let
-    // assignments.
+  @Test
+  public void testClassStaticBlock_multipleClassesInLet() {
     test(
         """
         let C = class {
@@ -202,61 +237,81 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        let C = class {}
+        let C = class {};
         C.prop = 5;
-        let D = class extends C {}
+        let D = class extends C {};
         {
           D.prop = 10;
         }
-        """); // defines classes in the same let statement
+        """);
+  }
+
+  @Test
+  public void testClassStaticBlock_fieldAndBlock() {
+    test(
+        """
+        class C {
+          static f;
+          static {
+            C.f = 1;
+          }
+        }
+        """,
+        """
+        class C {}
+        C.f = void 0;
+        {
+          C.f = 1;
+        }
+        """);
   }
 
   @Test
   public void testMultipleStaticBlocks() {
-    computedFieldTest(
-        srcs(
-            """
-            var z = 1
-            /** @unrestricted */
-            class C {
-              static x = 2;
-              static {
-                z = z + this.x;
-              }
-              static [z] = 3;
-              static w = 5;
-              static {
-                z = z + this.w;
-              }
-            }
-            """),
-        expected(
-            """
-            var z = 1
-            var COMPFIELD$0 = z;
-            class C {}
-            C.x = 2;
-            {
-                z = z + C.x;
-            }
-            C[COMPFIELD$0] = 3;
-            C.w = 5;
-            {
-                z = z + C.w;
-            }
-            """)); //
+    test(
+        """
+        var z = 1
+        /** @unrestricted */
+        class C {
+          static x = 2;
+          static {
+            z = z + this.x;
+          }
+          static [z] = 3;
+          static w = 5;
+          static {
+            z = z + this.w;
+          }
+        }
+        """,
+        """
+        var z = 1;
+        var COMP_FIELD$0 = z;
+        class C {}
+        C.x = 2;
+        {
+          z = z + C.x;
+        }
+        C[COMP_FIELD$0] = 3;
+        C.w = 5;
+        {
+          z = z + C.w;
+        }
+        """);
   }
 
   @Test
   public void testThisInNonStaticPublicField() {
-    test(
+    var src =
         """
         class A {
           /** @suppress {partialAlias} */
           b = 'word';
           c = this.b;
         }
-        """,
+        """;
+    test(
+        src,
         """
         class A {
           constructor() {
@@ -266,6 +321,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           }
         }
         """);
+    testSame(withOptions().useEs2022LanguageOut(), src);
 
     test(
         """
@@ -320,7 +376,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testSuperInNonStaticPublicField() {
-    test(
+    var src =
         """
         class Foo {
           x() {
@@ -330,7 +386,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         class Bar extends Foo {
           y = 1 + super.x();
         }
-        """,
+        """;
+    test(
+        src,
         """
         class Foo {
           x() {
@@ -344,23 +402,98 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           }
         }
         """);
+    testSame(withOptions().useEs2022LanguageOut(), src);
   }
 
   @Test
-  public void testThisInStaticField() {
+  public void testThisInStaticField_otherFieldRef() {
+    var src =
+        """
+        class C {
+          static x = 1;
+          static y = this.x + 1;
+        }
+        """;
+
     test(
+        src,
+        """
+        class C {}
+        C.x = 1;
+        C.y = C.x + 1;
+        """);
+
+    test(
+        withOptions().useStaticInheritance(),
+        src,
+        """
+        class C {}
+        C.x = 1;
+        C.y = C.x + 1;
+        """);
+
+    test(
+        withOptions().useEs2022LanguageOut(),
+        src,
+        """
+        class C {
+          static x;
+          static y;
+        }
+        C.x = 1;
+        C.y = C.x + 1;
+        """);
+  }
+
+  @Test
+  public void testThisInStaticField_thisInArrowFunction() {
+    var src =
         """
         class C {
           static x = 2;
           static y = () => this.x;
         }
-        """,
+        """;
+
+    test(
+        src,
         """
         class C {}
         C.x = 2;
-        C.y = () => { return C.x; }
+        C.y = () => {
+          // Note: This is the correct behavior.
+          return C.x;
+        };
         """);
 
+    test(
+        withOptions().useStaticInheritance(),
+        src,
+        """
+        class C {}
+        C.x = 2;
+        C.y = () => {
+          return C.x;
+        };
+        """);
+
+    test(
+        withOptions().useEs2022LanguageOut(),
+        src,
+        """
+        class C {
+          static x;
+          static y;
+        }
+        C.x = 2;
+        C.y = () => {
+          return C.x;
+        };
+        """);
+  }
+
+  @Test
+  public void testThisInStaticField_staticMethodCall() {
     test(
         """
         class F {
@@ -371,10 +504,44 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class F {
-          static c() { return 'hi'; }
+          static c() {
+            return "hi";
+          }
         }
-        F.a = 'there';
+        F.a = "there";
         F.b = F.c() + F.a;
+        """);
+  }
+
+  @Test
+  public void testThisInStaticGetter() {
+    testSame(
+        """
+        let x = 1;
+        class Child {
+          static getX() {
+            return x;
+          }
+          static get prop() {
+            return this.getX();
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testThisInStaticSetter() {
+    testSame(
+        """
+        let x = 1;
+        class Child {
+          static setX(newX) {
+            x = newX;
+          }
+          static set prop(p) {
+            this.setX(p);
+          }
+        }
         """);
   }
 
@@ -383,52 +550,54 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     test(
         """
         class Foo {
-          static x() {
-            return 5;
+          static x(a, b) {
+            return a + b;
           }
-          static y() {
-            return 20;
+          static y(c, d) {
+            return c - d;
           }
         }
         class Bar extends Foo {
-          static z = () => super.x() + 12 + super.y();
+          static z = () => super.x(1, 2) + 12 + super.y(3, 4);
         }
         """,
         """
         class Foo {
-          static x() {
-            return 5;
+          static x(a, b) {
+            return a + b;
           }
-          static y() {
-            return 20;
+          static y(c, d) {
+            return c - d;
           }
         }
         class Bar extends Foo {}
-        Bar.z = () => { return Foo.x() + 12 + Foo.y(); }
+        Bar.z = () => {
+          return Foo.x(1, 2) + 12 + Foo.y(3, 4);
+        };
         """);
 
     test(
         """
         const ns = {};
         ns.Foo = class {
-          static x() {
+          static x(a, b) {
             return 5;
           }
         }
         class Bar extends ns.Foo {
-          static z = () => super.x();
+          static z = () => super.x(1, 2);
         }
         """,
         """
         const ns = {};
         ns.Foo = class {
-          static x() {
+          static x(a, b) {
             return 5;
           }
         };
         class Bar extends ns.Foo {}
         Bar.z = () => {
-          return ns.Foo.x();
+          return ns.Foo.x(1, 2);
         };
         """);
 
@@ -441,8 +610,205 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class Bar {}
-        Bar.a = { method1() {} };
-        Bar.b = { method2() { super.method1(); } };
+        Bar.a = {method1() {}};
+        Bar.b = {method2() {
+          super.method1();
+        }};
+        """);
+
+    test(
+        """
+        class Parent {
+          static get parentGetter() {
+            return {val: 1};
+          }
+        }
+        class Child extends Parent {
+          static val = super.parentGetter.val;
+        }
+        """,
+        """
+        class Parent {
+          static get parentGetter() {
+            return {val:1};
+          }
+        }
+        class Child extends Parent {}
+        Child.val = Parent.parentGetter.val;
+        """);
+  }
+
+  @Test
+  public void testSuperInStaticField_superInArrowFunction() {
+    var src =
+        """
+        class Parent {
+          static x = 1;
+        }
+        class Child extends Parent {
+          static y = () => super.x;
+        }
+        """;
+
+    test(
+        src,
+        """
+        class Parent {}
+        Parent.x = 1;
+        class Child extends Parent {}
+        Child.y = () => {
+          return Parent.x;
+        };
+        """);
+
+    test(
+        withOptions().useStaticInheritance(),
+        src,
+        """
+        class Parent {}
+        Parent.x = 1;
+        class Child extends Parent {
+          // static_init method stays because of the super reference.
+          static STATIC_INIT$0() {
+            Child.y = () => {
+              return super.x;
+            };
+          }
+        }
+        Child.STATIC_INIT$0();
+        """);
+  }
+
+  @Test
+  public void testSuperReferencesStaticGetter() {
+    var src =
+        """
+        class Parent {
+          static getName() {
+            return 'Parent';
+          }
+          static get greeting() {
+            return 'Hello ' + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return 'Child';
+          }
+          static msg = super.greeting;  // 'Hello Child'
+        }
+        """;
+
+    // non-strict
+    test(
+        src,
+        """
+        class Parent {
+          static getName() {
+            return "Parent";
+          }
+          static get greeting() {
+            return "Hello " + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
+        }
+        Child.msg = Parent.greeting;
+        """);
+
+    // strict
+    test(
+        withOptions().useStaticInheritance(),
+        src,
+        """
+        class Parent {
+          static getName() {
+            return "Parent";
+          }
+          static get greeting() {
+            return "Hello " + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
+          // static_init method stays because of the super reference.
+          static STATIC_INIT$0() {
+            Child.msg = super.greeting;
+          }
+        }
+        Child.STATIC_INIT$0();
+        """);
+  }
+
+  @Test
+  public void testSuperReferencesStaticGetter_viaElementAccess() {
+    var src =
+        """
+        /** @unrestricted */
+        class Parent {
+          static getName() {
+            return 'Parent';
+          }
+          static get ['greeting']() {
+            return 'Hello ' + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return 'Child';
+          }
+          static msg = super['greeting'];  // 'Hello Child'
+        }
+        """;
+
+    // non-strict
+    test(
+        src,
+        """
+        class Parent {
+          static getName() {
+            return "Parent";
+          }
+          static get ["greeting"]() {
+            return "Hello " + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
+        }
+        Child.msg = Parent["greeting"];
+        """);
+
+    // strict
+    test(
+        withOptions().useStaticInheritance(),
+        src,
+        """
+        class Parent {
+          static getName() {
+            return "Parent";
+          }
+          static get ["greeting"]() {
+            return "Hello " + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
+          // static_init method stays because of the super reference.
+          static STATIC_INIT$0() {
+            Child.msg = super["greeting"];
+          }
+        }
+        Child.STATIC_INIT$0();
         """);
   }
 
@@ -461,10 +827,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class Base {}
-        Base.X = {a: 1};
-
+        Base.X = {a:1};
         class Child extends Base {}
-        Child.Y = {...Base.X, b: 2};
+        Child.Y = {...Base.X, b:2};
         """);
 
     test(
@@ -482,41 +847,350 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """
         const ns = {};
         ns.Base = class {};
-        ns.Base.X = {a: 1};
-
+        ns.Base.X = {a:1};
         class Child extends ns.Base {}
-        Child.Y = {...ns.Base.X, b: 2};
+        Child.Y = {...ns.Base.X, b:2};
+        """);
+  }
+
+  @Test
+  public void testSuperInStaticBlock() {
+    test(
+        """
+        class Parent {
+          static getGreeting() {
+            return 'Hello';
+          }
+        }
+        class Child extends Parent {
+          static {
+            alert(super.getGreeting());
+          }
+        }
+        """,
+        """
+        class Parent {
+          static getGreeting() {
+            return "Hello";
+          }
+        }
+        class Child extends Parent {}
+        {
+          alert(Parent.getGreeting());
+        }
+        """);
+  }
+
+  @Test
+  public void testSuperInStaticBlock_strictSuperRewrite() {
+    String source =
+        """
+        class Parent {
+          static getName() {
+            return 'Parent';
+          }
+          static getGreeting() {
+            return 'Hello ' + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return 'Child';
+          }
+          static {
+            alert(super.getGreeting());  // Alerts: 'Hello Child'
+          }
+        }
+        """;
+
+    // Test both conditions that trigger strict super rewrite.
+
+    test(
+        withOptions().useStaticInheritance(),
+        source,
+        """
+        class Parent {
+          static getName() {
+            return "Parent";
+          }
+          static getGreeting() {
+            return "Hello " + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
+          // static_init method stays because of the super reference.
+          static STATIC_INIT$0() {
+            {
+              alert(super.getGreeting());
+            }
+          }
+        }
+        Child.STATIC_INIT$0();
+        """);
+
+    test(
+        withOptions().useEs5LanguageOut(),
+        source,
+        """
+        class Parent {
+          static getName() {
+            return "Parent";
+          }
+          static getGreeting() {
+            return "Hello " + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
+          // static_init method stays because of the super reference.
+          static STATIC_INIT$0() {
+            {
+              alert(super.getGreeting());
+            }
+          }
+        }
+        Child.STATIC_INIT$0();
+        """);
+  }
+
+  @Test
+  public void testSuperInStaticMethod() {
+    test(
+        """
+        class Parent {
+          static getGreeting() {
+            return 'Hello';
+          }
+        }
+        class Child extends Parent {
+          static sayHello() {
+            alert(super.getGreeting());
+          }
+        }
+        Child.sayHello();
+        """,
+        """
+        class Parent {
+          static getGreeting() {
+            return "Hello";
+          }
+        }
+        class Child extends Parent {
+          static sayHello() {
+            alert(Parent.getGreeting());
+          }
+        }
+        Child.sayHello();
+        """);
+  }
+
+  @Test
+  public void testSuperInStaticMethod_strictSuperCallRewrite() {
+    String source =
+        """
+        class Parent {
+          static getName() {
+            return 'Parent';
+          }
+          static getGreeting() {
+            return 'Hello ' + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return 'Child';
+          }
+          static sayHello() {
+            alert(super.getGreeting());  // Alerts: 'Hello Child'
+          }
+        }
+        Child.sayHello();
+        """;
+
+    // Test both conditions that trigger strict super rewrite.
+
+    test(
+        withOptions().useStaticInheritance(),
+        source,
+        """
+        class Parent {
+          static getName() {
+            return "Parent";
+          }
+          static getGreeting() {
+            return "Hello " + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
+          static sayHello() {
+            alert(super.getGreeting());
+          }
+        }
+        Child.sayHello();
+        """);
+
+    test(
+        withOptions().useEs5LanguageOut(),
+        source,
+        """
+        class Parent {
+          static getName() {
+            return "Parent";
+          }
+          static getGreeting() {
+            return "Hello " + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
+          static sayHello() {
+            alert(super.getGreeting());
+          }
+        }
+        Child.sayHello();
+        """);
+  }
+
+  @Test
+  public void testSuperInComputedStaticMethod() {
+    test(
+        """
+        class Parent {
+          static getGreeting() {
+            return 'Hello';
+          }
+        }
+        /** @unrestricted */
+        class Child extends Parent {
+          static ['sayHello']() {
+            alert(super.getGreeting());
+          }
+        }
+        Child['sayHello']();
+        """,
+        """
+        class Parent {
+          static getGreeting() {
+            return "Hello";
+          }
+        }
+        class Child extends Parent {
+          static ["sayHello"]() {
+            alert(Parent.getGreeting());
+          }
+        }
+        Child["sayHello"]();
+        """);
+  }
+
+  @Test
+  public void testSuperInStaticGetter() {
+    test(
+        """
+        class Parent {
+          static getVal() {
+            return 1;
+          }
+        }
+        class Child extends Parent {
+          static get childProp() {
+            return super.getVal();
+          }
+        }
+        """,
+        """
+        class Parent {
+          static getVal() {
+            return 1;
+          }
+        }
+        class Child extends Parent {
+          static get childProp() {
+            return Parent.getVal();
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testSuperInStaticSetter() {
+    test(
+        """
+        class Parent {
+          static getVal() {
+            return 1;
+          }
+        }
+        class Child extends Parent {
+          static set childProp(x) {
+            alert(super.getVal());
+          }
+        }
+        """,
+        """
+        class Parent {
+          static getVal() {
+            return 1;
+          }
+        }
+        class Child extends Parent {
+          static set childProp(x) {
+            alert(Parent.getVal());
+          }
+        }
         """);
   }
 
   @Test
   public void testComputedPropInNonStaticField() {
-    computedFieldTest(
-        srcs(
-            """
-            /** @unrestricted */
-            class C {
-              [x+=1];
-              [x+=2] = 3;
-            }
-            """),
-        expected(
-            """
-            var $jscomp$compfield$m1146332801$0 = x = x + 1;
-            var $jscomp$compfield$m1146332801$1 = x = x + 2;
-            class C {
-              constructor() {
-                this[$jscomp$compfield$m1146332801$0];
-                this[$jscomp$compfield$m1146332801$1] = 3;
-               }
-            }
-            """));
+    var src =
+        """
+        /** @unrestricted */
+        class C {
+          [x+=1];
+          [x+=2] = 3;
+        }
+        """;
+    test(
+        src,
+        """
+        var COMP_FIELD$0 = x = x + 1;
+        var COMP_FIELD$1 = x = x + 2;
+        class C {
+          constructor() {
+            this[COMP_FIELD$0] = void 0;
+            this[COMP_FIELD$1] = 3;
+          }
+        }
+        """);
+    test(
+        withOptions().useEs2022LanguageOut(),
+        src,
+        """
+        var COMP_FIELD$0 = x = x + 1;
+        var COMP_FIELD$1 = x = x + 2;
+        class C {
+          [COMP_FIELD$0];
+          [COMP_FIELD$1] = 3;
+        }
+        """);
 
     test(
         """
         /** @unrestricted */
         class C {
           [1] = 1;
+          /** @suppress {partialAlias} */
           [2] = this[1];
         }
         """,
@@ -524,6 +1198,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         class C {
           constructor() {
             this[1] = 1;
+            /** @suppress {partialAlias} */
             this[2] = this[1];
           }
         }
@@ -538,14 +1213,12 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        const testcode$classdecl$var0 = class {
+        let c = class {
           constructor() {
-            this[2] = testcode$classdecl$var0[1];
+            this[2] = c[1];
           }
         };
-        testcode$classdecl$var0[1] = 2;
-        /** @constructor */
-        let c = testcode$classdecl$var0;
+        c[1] = 2;
         """);
 
     test(
@@ -556,13 +1229,13 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         })
         """,
         """
-        const testcode$classdecl$var0 = class {
+        const CLASS_DECL$0 = class {
           constructor() {
-            this[2] = testcode$classdecl$var0[1];
+            this[2] = CLASS_DECL$0[1];
           }
         };
-        testcode$classdecl$var0[1] = 2;
-        foo(testcode$classdecl$var0);
+        CLASS_DECL$0[1] = 2;
+        foo(CLASS_DECL$0);
         """);
 
     test(
@@ -591,22 +1264,43 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           }
         }
         """);
+
+    testSame(
+        """
+        class Clazz {
+          [Symbol.toPrimitive]() {
+            return 42;
+          }
+        }
+        """);
   }
 
   @Test
   public void testComputedPropInStaticField() {
-    test(
+    var src =
         """
         /** @unrestricted */
         class C {
           static ['x'];
           static ['y'] = 2;
         }
-        """,
+        """;
+    test(
+        src,
         """
         class C {}
-        C['x'];
-        C['y'] = 2;
+        C["x"] = void 0;
+        C["y"] = 2;
+        """);
+    test(
+        withOptions().useEs2022LanguageOut(),
+        src,
+        """
+        class C {
+          static ["x"];
+          static ["y"];
+        }
+        C["y"] = 2;
         """);
 
     test(
@@ -632,7 +1326,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        const C = class {}
+        const C = class {};
         C[1] = 1;
         C[2] = C[1];
         """);
@@ -643,14 +1337,14 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         const C = class InnerC {
           static [1] = 1;
           static [2] = this[1];
+          static [3] = InnerC[2];
         }
         """,
         """
-        const testcode$classdecl$var0 = class {}
-        testcode$classdecl$var0[1] = 1;
-        testcode$classdecl$var0[2] = testcode$classdecl$var0[1];
-        /** @constructor */
-        const C = testcode$classdecl$var0;
+        const C = class {};
+        C[1] = 1;
+        C[2] = C[1];
+        C[3] = C[2];
         """);
 
     test(
@@ -662,11 +1356,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        const testcode$classdecl$var0 = class {};
-        testcode$classdecl$var0[1] = 2;
-        testcode$classdecl$var0[2] = testcode$classdecl$var0[1];
-        /** @constructor */
-        let c = testcode$classdecl$var0;
+        let c = class {};
+        c[1] = 2;
+        c[2] = c[1];
         """);
 
     test(
@@ -677,10 +1369,10 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         })
         """,
         """
-        const testcode$classdecl$var0 = class {};
-        testcode$classdecl$var0[1] = 2;
-        testcode$classdecl$var0[2] = testcode$classdecl$var0[1];
-        foo(testcode$classdecl$var0);
+        const CLASS_DECL$0 = class {};
+        CLASS_DECL$0[1] = 2;
+        CLASS_DECL$0[2] = CLASS_DECL$0[1];
+        foo(CLASS_DECL$0);
         """);
 
     test(
@@ -690,148 +1382,149 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         })
         """,
         """
-        const testcode$classdecl$var0 = class {};
-        testcode$classdecl$var0[1] = 1;
-        foo(testcode$classdecl$var0);
+        const CLASS_DECL$0 = class {};
+        CLASS_DECL$0[1] = 1;
+        foo(CLASS_DECL$0);
+        """);
+
+    testSame(
+        """
+        class Clazz {
+          static [Symbol.hasInstance](x) {
+            return false;
+          }
+        }
         """);
   }
 
   @Test
   public void testSideEffectsInComputedField() {
-    computedFieldTest(
-        srcs(
-            """
-            function bar() {
-              this.x = 3;
-              /** @unrestricted */
-              class Foo {
-                y;
-                [this.x] = 2;
-              }
+    test(
+        """
+        function bar() {
+          this.x = 3;
+          /** @unrestricted */
+          class Foo {
+            y;
+            [this.x] = 2;
+          }
+        }
+        """,
+        """
+        function bar() {
+          this.x = 3;
+          var COMP_FIELD$0 = this.x;
+          class Foo {
+            constructor() {
+              this.y = void 0;
+              this[COMP_FIELD$0] = 2;
             }
-            """),
-        expected(
-            """
-            function bar() {
-              this.x = 3;
-              var COMPFIELD$0 = this.x;
-              class Foo {
-                constructor() {
-                  this.y;
-                  this[COMPFIELD$0] = 2;
-                }
-              }
-            }
-            """));
+          }
+        }
+        """);
 
-    computedFieldTest(
-        srcs(
-            """
-            class E {
-              y() { return 1; }
+    test(
+        """
+        class E {
+          y() { return 1; }
+        }
+        class F extends E {
+          x() {
+            return /** @unrestricted */ class {
+              [super.y()] = 4;
             }
-            class F extends E {
-              x() {
-                return /** @unrestricted */ class {
-                  [super.y()] = 4;
-                }
-              }
-            }
-            """),
-        expected(
-            """
-            class E {
-              y() { return 1; }
-            }
-            class F extends E {
-              x() {
-                var COMPFIELD$0 = super.y();
-                const testcode$classdecl$var0 = class {
-                  constructor() {
-                    this[COMPFIELD$0] = 4;
-                  }
-                };
-                return testcode$classdecl$var0;
-              }
-            }
-            """));
-
-    computedFieldTest(
-        srcs(
-            """
-            function bar(num) {}
-            /** @unrestricted */
-            class Foo {
-              [bar(1)] = 'a';
-              static b = bar(3);
-              static [bar(2)] = bar(4);
-            }
-            """),
-        expected(
-            """
-            function bar(num) {}
-            var COMPFIELD$0 = bar(1);
-            var COMPFIELD$1 = bar(2);
-            class Foo {
+          }
+        }
+        """,
+        """
+        class E {
+          y() {
+            return 1;
+          }
+        }
+        class F extends E {
+          x() {
+            var COMP_FIELD$1 = super.y();
+            const CLASS_DECL$0 = class {
               constructor() {
-                this[COMPFIELD$0] = 'a'
+                this[COMP_FIELD$1] = 4;
               }
-            }
-            Foo.b = bar(3);
-            Foo[COMPFIELD$1] = bar(4);
-            """));
+            };
+            return CLASS_DECL$0;
+          }
+        }
+        """);
 
-    computedFieldTest(
-        srcs(
-            """
-            let x = 'hello';
-            /** @unrestricted */ class Foo {
-              static n = (x=5);
-              static [x] = 'world';
-            }
-            """),
-        expected(
-            """
-            let x = 'hello';
-            var COMPFIELD$0 = x;
-            class Foo {}
-            Foo.n = x = 5;
-            Foo[COMPFIELD$0] = 'world';
-            """));
+    test(
+        """
+        function bar(num) {}
+        /** @unrestricted */
+        class Foo {
+          [bar(1)] = 'a';
+          static b = bar(3);
+          static [bar(2)] = bar(4);
+        }
+        """,
+        """
+        function bar(num) {}
+        var COMP_FIELD$0 = bar(1);
+        var COMP_FIELD$1 = bar(2);
+        class Foo {
+          constructor() {
+            this[COMP_FIELD$0] = "a";
+          }
+        }
+        Foo.b = bar(3);
+        Foo[COMP_FIELD$1] = bar(4);
+        """);
 
-    computedFieldTest(
-        srcs(
-            """
-            function foo(num) {}
-            /** @unrestricted */
-            class Baz {
-              ['f' + foo(1)];
-              static x = foo(6);
-              ['m' + foo(2)]() {};
-              static [foo(3)] = foo(7);
-              [foo(4)] = 2;
-              get [foo(5)]() {}
-            }
-            """),
-        expected(
-            """
-            function foo(num) {}
-            var COMPFIELD$0 = 'f' + foo(1);
-            var COMPFIELD$1 = 'm' + foo(2);
-            var COMPFIELD$2 = foo(3);
-            var COMPFIELD$3 = foo(4);
-            var COMPFIELD$4 = foo(5);
-            class Baz {
-              constructor() {
-                this[COMPFIELD$0];
-                this[COMPFIELD$3] = 2;
-              }
-              [COMPFIELD$1]() {}
-              get [COMPFIELD$4]() {}
-            }
-            Baz.x = foo(6);
-            Baz[COMPFIELD$2] = foo(7);
-            """));
+    test(
+        """
+        let x = 'hello';
+        /** @unrestricted */ class Foo {
+          static n = (x=5);
+          static [x] = 'world';
+        }
+        """,
+        """
+        let x = "hello";
+        var COMP_FIELD$0 = x;
+        class Foo {}
+        Foo.n = x = 5;
+        Foo[COMP_FIELD$0] = "world";
+        """);
+
+    test(
+        """
+        function foo(num) {}
+        /** @unrestricted */
+        class Baz {
+          ['f' + foo(1)];
+          static x = foo(6);
+          ['m' + foo(2)]() {};
+          static [foo(3)] = foo(7);
+          [foo(4)] = 2;
+          get [foo(5)]() {}
+        }
+        """,
+        """
+        function foo(num) {}
+        var COMP_FIELD$0 = "f" + foo(1);
+        var COMP_FIELD$1 = "m" + foo(2);
+        var COMP_FIELD$2 = foo(3);
+        var COMP_FIELD$3 = foo(4);
+        var COMP_FIELD$4 = foo(5);
+        class Baz {
+          constructor() {
+            this[COMP_FIELD$0] = void 0;
+            this[COMP_FIELD$3] = 2;
+          }
+          [COMP_FIELD$1]() {}
+          get [COMP_FIELD$4]() {}
+        }
+        Baz.x = foo(6);
+        Baz[COMP_FIELD$2] = foo(7);
+        """);
   }
 
   @Test
@@ -846,7 +1539,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """
         class C {
         }
-        {}
         """);
 
     test(
@@ -862,7 +1554,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         class C {}
         {
           let x = 2;
-          const y = x
+          const y = x;
         }
         """);
 
@@ -883,17 +1575,19 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         class C {}
         {
           let x = 2;
-          const y = x
+          const y = x;
           let z;
-            if (x - y == 0) {
-              z = 1;
-            } else {
-              z = 2;
-            }
-            for (; x - z > 10;) {
-              z++;
-            }
-          for (;;) {break;}
+          if (x - y == 0) {
+            z = 1;
+          } else {
+            z = 2;
+          }
+          for (; x - z > 10;) {
+            z++;
+          }
+          for (;;) {
+            break;
+          }
         }
         """);
 
@@ -914,7 +1608,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           let x = 2;
         }
         {
-          const y = x
+          const y = x;
         }
         """);
 
@@ -940,7 +1634,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           let x = 2;
         }
         {
-          const y = x
+          const y = x;
         }
         class D {}
         {
@@ -962,10 +1656,18 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """
         class C {}
         {
-          function a() {return 3;}
-          let x = function () {return 1;}
-          const y = () => {return 2;}
-          let z = (() => {return 4;})();
+          function a() {
+            return 3;
+          }
+          let x = function() {
+            return 1;
+          };
+          const y = () => {
+            return 2;
+          };
+          let z = (() => {
+            return 4;
+          })();
         }
         """);
 
@@ -974,8 +1676,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         class C {
           static {
             C.x = 2
-        // "    const y = C.x", //TODO(b/235871861) blocked on typechecking, gets
-        // JSC_INEXISTENT_PROPERTY
+            const y = C.x;
           }
         }
         """,
@@ -983,7 +1684,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         class C {}
         {
           C.x = 2;
-        // "  const y = C.x",
+          const y = C.x;
         }
         """);
 
@@ -1005,7 +1706,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         {
           let x = 5;
           class Bar {}
-          {let x$jscomp$1 = 'str';}
+          {
+            let x$jscomp$1 = "str";
+          }
         }
         """);
   }
@@ -1023,30 +1726,47 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         C.x = 2;
         """);
 
-    test(
+    var src =
         """
         class C {
           static x;
         }
-        """,
+        """;
+    test(
+        src,
         """
         class C {}
-        C.x;
+        C.x = void 0;
         """);
+    testSame(withOptions().useEs2022LanguageOut(), src);
 
-    test(
+    src =
         """
         class C {
           static x = 2
           static y = 'hi'
           static z;
         }
-        """,
+        """;
+    test(
+        src,
         """
         class C {}
         C.x = 2;
-        C.y = 'hi'
-        C.z;
+        C.y = "hi";
+        C.z = void 0;
+        """);
+    test(
+        withOptions().useEs2022LanguageOut(),
+        src,
+        """
+        class C {
+          static x;
+          static y;
+          static z;
+        }
+        C.x = 2;
+        C.y = "hi";
         """);
 
     test(
@@ -1062,7 +1782,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """
         class C {}
         C.x = 2;
-        C.y = 3
+        C.y = 3;
         class D {}
         D.z = 1;
         """);
@@ -1078,10 +1798,18 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class C {}
-        C.w = function () {return 1;};
-        C.x = () => {return 2;};
-        C.y = (function a() {return 3;})();
-        C.z = (() => {return 4;})();
+        C.w = function() {
+          return 1;
+        };
+        C.x = () => {
+          return 2;
+        };
+        C.y = function a() {
+          return 3;
+        }();
+        C.z = (() => {
+          return 4;
+        })();
         """);
 
     test(
@@ -1094,7 +1822,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """
         class C {}
         C.x = 2;
-        C.y = C.x
+        C.y = C.x;
         """);
 
     test(
@@ -1107,7 +1835,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """
         class C {}
         C.x = 2;
-        {let y = C.x}
+        {
+          let y = C.x;
+        }
         """);
   }
 
@@ -1147,7 +1877,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """
         class C {
           constructor() {
-            this.x;
+            this.x = void 0;
             this.y = 2;
           }
         }
@@ -1252,32 +1982,49 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testInstanceComputedWithNonemptyConstructorAndSuper() {
-
-    computedFieldTest(
-        srcs(
-            """
-            class A { constructor() { alert(1); } }
-            /** @unrestricted */ class C extends A {
-              ['x'] = 1;
-              constructor() {
-                super();
-                this['y'] = 2;
-                this['z'] = 3;
-              }
-            }
-            """),
-        expected(
-            """
-            class A { constructor() { alert(1); } }
-            class C extends A {
-              constructor() {
-                super()
-                this['x'] = 1
-                this['y'] = 2;
-                this['z'] = 3;
-              }
-            }
-            """));
+    var src =
+        """
+        class A { constructor() { alert(1); } }
+        /** @unrestricted */ class C extends A {
+          ['x'] = 1;
+          constructor() {
+            super();
+            this['y'] = 2;
+            this['z'] = 3;
+          }
+        }
+        """;
+    test(
+        src,
+        """
+        class A { constructor() { alert(1); } }
+        class C extends A {
+          constructor() {
+            super()
+            this['x'] = 1
+            this['y'] = 2;
+            this['z'] = 3;
+          }
+        }
+        """);
+    test(
+        withOptions().useEs2022LanguageOut(),
+        src,
+        """
+        class A {
+          constructor() {
+            alert(1);
+          }
+        }
+        class C extends A {
+          ["x"] = 1;
+          constructor() {
+            super();
+            this["y"] = 2;
+            this["z"] = 3;
+          }
+        }
+        """);
   }
 
   @Test
@@ -1317,11 +2064,15 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class A { constructor() { this.x = 1; } }
+        class A {
+          constructor() {
+            this.x = 1;
+          }
+        }
         class C extends A {
           constructor() {
-            super()
-            this.y;
+            super();
+            this.y = void 0;
             alert(3);
             this.z = 4;
           }
@@ -1341,12 +2092,16 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class A { constructor() { this.x = 1; } }
+        class A {
+          constructor() {
+            this.x = 1;
+          }
+        }
         class C extends A {
           constructor() {
             alert(3);
-            super()
-            this.y;
+            super();
+            this.y = void 0;
             this.z = 4;
           }
         }
@@ -1380,7 +2135,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """
         class C {
           constructor() {
-            this.x;
+            this.x = void 0;
           }
         }
         """);
@@ -1397,9 +2152,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """
         class C {
           constructor() {
-            this.x = 2
-            this.y = 'hi'
-            this.z;
+            this.x = 2;
+            this.y = "hi";
+            this.z = void 0;
           }
         }
         """);
@@ -1480,7 +2235,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class C {
-          constructor() { this.y = C.x; }
+          constructor() {
+            this.y = C.x;
+          }
         }
         C.x = 2;
         """);
@@ -1508,7 +2265,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class C {
-          constructor() {this.x;}
+          constructor() {
+            this.x = void 0;
+          }
         }
         """);
 
@@ -1522,7 +2281,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class C {
-          constructor() {this.x=2; this.y='hi'; this.z;}
+          constructor() {
+            this.x = 2;
+            this.y = "hi";
+            this.z = void 0;
+          }
         }
         """);
     test(
@@ -1547,9 +2310,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        class C {constructor() {
-        this.y = C.x
-        }}
+        class C {
+          constructor() {
+            this.y = C.x;
+          }
+        }
         C.x = 2;
         """);
 
@@ -1632,13 +2397,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        const testcode$classdecl$var0 = class {};
+        let c = class {};
         {
-          testcode$classdecl$var0.y = 2;
-          let x = testcode$classdecl$var0.y;
+          c.y = 2;
+          let x = c.y;
         }
-        /** @constructor */
-        let c = testcode$classdecl$var0;
         """);
 
     test(
@@ -1652,18 +2415,18 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         foo((() => {
-          const testcode$classdecl$var0 = class {};
+          const CLASS_DECL$0 = class {};
           {
-            testcode$classdecl$var0.y = 2;
-            let x = testcode$classdecl$var0.y;
+            CLASS_DECL$0.y = 2;
+            let x = CLASS_DECL$0.y;
           }
-          return testcode$classdecl$var0;
+          return CLASS_DECL$0;
         })());
         """);
 
     test(
         """
-        class A { static b; }
+        class A { static b = {}; }
         foo(A.b.c = class C {
           static {
             C.y = 2;
@@ -1673,14 +2436,14 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class A {}
-        A.b;
+        A.b = {};
         foo(A.b.c = (() => {
-          const testcode$classdecl$var0 = class {};
+          const CLASS_DECL$0 = class {};
           {
-            testcode$classdecl$var0.y = 2;
-            let x = testcode$classdecl$var0.y;
+            CLASS_DECL$0.y = 2;
+            let x = CLASS_DECL$0.y;
           }
-          return testcode$classdecl$var0;
+          return CLASS_DECL$0;
         })());
         """);
   }
@@ -1696,9 +2459,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        let c = class {}
+        let c = class {};
         {
-          let x = 1
+          let x = 1;
         }
         """);
 
@@ -1713,9 +2476,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class A {}
-        A.c = class {}
+        A.c = class {};
         {
-          let x = 1
+          let x = 1;
         }
         """);
 
@@ -1731,11 +2494,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """
         class A {}
         A[1] = (() => {
-          const testcode$classdecl$var0 = class {};
+          const CLASS_DECL$0 = class {};
           {
             let x = 1;
           }
-          return testcode$classdecl$var0;
+          return CLASS_DECL$0;
         })();
         """);
   }
@@ -1749,8 +2512,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        let c = class {}
-        c.x = 1
+        let c = class {};
+        c.x = 1;
         """);
 
     test(
@@ -1762,8 +2525,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class A {}
-        A.c = class {}
-        A.c.x = 1
+        A.c = class {};
+        A.c.x = 1;
         """);
 
     test(
@@ -1775,9 +2538,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class A {}
-        const testcode$classdecl$var0 = class {};
-        testcode$classdecl$var0.x = 1;
-        A[1] = testcode$classdecl$var0;
+        const CLASS_DECL$0 = class {};
+        CLASS_DECL$0.x = 1;
+        A[1] = CLASS_DECL$0;
         """);
 
     test(
@@ -1788,11 +2551,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        const testcode$classdecl$var0 = class {};
-        testcode$classdecl$var0.y = 2;
-        testcode$classdecl$var0.x = testcode$classdecl$var0.y;
-        /** @constructor */
-        let c = testcode$classdecl$var0;
+        let c = class {};
+        c.y = 2;
+        c.x = c.y;
         """);
 
     test(
@@ -1803,10 +2564,10 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         })
         """,
         """
-        const testcode$classdecl$var0 = class {};
-        testcode$classdecl$var0.y = 2;
-        testcode$classdecl$var0.x = testcode$classdecl$var0.y;
-        foo(testcode$classdecl$var0);
+        const CLASS_DECL$0 = class {};
+        CLASS_DECL$0.y = 2;
+        CLASS_DECL$0.x = CLASS_DECL$0.y;
+        foo(CLASS_DECL$0);
         """);
 
     test(
@@ -1817,13 +2578,13 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         })
         """,
         """
-        const testcode$classdecl$var0 = class {
+        const CLASS_DECL$0 = class {
           constructor() {
-            this.x = testcode$classdecl$var0.y;
+            this.x = CLASS_DECL$0.y;
           }
         };
-        testcode$classdecl$var0.y = 2;
-        foo(testcode$classdecl$var0);
+        CLASS_DECL$0.y = 2;
+        foo(CLASS_DECL$0);
         """);
   }
 
@@ -1850,13 +2611,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        const testcode$classdecl$var0 = class {
+        let c = class {
           constructor() {
             this.y = 2;
           }
         };
-        /** @constructor */
-        let c = testcode$classdecl$var0;
         """);
 
     test(
@@ -1882,12 +2641,12 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        const testcode$classdecl$var0 = class {
+        const CLASS_DECL$0 = class {
           constructor() {
             this.y = 2;
           }
         };
-        A[1] = testcode$classdecl$var0;
+        A[1] = CLASS_DECL$0;
         """);
 
     test(
@@ -1897,13 +2656,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        const testcode$classdecl$var0 = class {
+        let c = class {
           constructor() {
             this.y = 2;
           }
         };
-        /** @constructor */
-        let c = testcode$classdecl$var0;
         """);
 
     test(
@@ -1915,13 +2672,12 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class A {}
-        const testcode$classdecl$var0 = class {
+        A.c = class {
           constructor() {
             this.y = 2;
           }
         };
-        /** @constructor */
-        A.c = testcode$classdecl$var0;
+
         """);
 
     test(
@@ -1931,12 +2687,12 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """,
         """
-        const testcode$classdecl$var0 = class {
+        const CLASS_DECL$0 = class {
           constructor() {
             this.y = 2;
           }
         };
-        A[1] = testcode$classdecl$var0;
+        A[1] = CLASS_DECL$0;
         """);
 
     test(
@@ -1946,12 +2702,12 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         })
         """,
         """
-        const testcode$classdecl$var0 = class {
+        const CLASS_DECL$0 = class {
           constructor() {
             this.y = 2;
           }
         };
-        foo(testcode$classdecl$var0);
+        foo(CLASS_DECL$0);
         """);
   }
 
@@ -1970,7 +2726,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         class C {
           constructor(x$jscomp$1) {}
         }
-        C.y = x
+        C.y = x;
         """);
   }
 
@@ -1980,7 +2736,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """
         let x = 2;
         class C {
-          y = x
+          y = x;
           constructor(x) {}
         }
         """,
@@ -2209,43 +2965,55 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         )();
         """,
         """
-        const testcode$classdecl$var0 = class {
+        const CLASS_DECL$0 = class {
           constructor() {
-            this.x;
+            this.x = void 0;
           }
         };
-        testcode$classdecl$var0.y;
-        let foo = new testcode$classdecl$var0();
+        CLASS_DECL$0.y = void 0;
+        let foo = new CLASS_DECL$0();
         """);
   }
 
   @Test
   public void testNonClassDeclarationsFunctionArgs() {
     test(
-        "A[foo()] = class {static x;}",
+        """
+        A[foo()] = class {
+          static x;
+        }
+        """,
         """
         A[foo()] = (() => {
-          const testcode$classdecl$var0 = class {};
-          testcode$classdecl$var0.x;
-          return testcode$classdecl$var0;
+          const CLASS_DECL$0 = class {};
+          CLASS_DECL$0.x = void 0;
+          return CLASS_DECL$0;
         })();
         """);
 
     test(
-        "foo(c = class {static x;})",
         """
-        const testcode$classdecl$var0 = class {};
-        testcode$classdecl$var0.x;
-        foo(c = testcode$classdecl$var0);
+        foo(c = class {
+          static x;
+        })
+        """,
+        """
+        const CLASS_DECL$0 = class {};
+        CLASS_DECL$0.x = void 0;
+        foo(c = CLASS_DECL$0);
         """);
 
     test(
-        "function foo(c = class {static x;}) {}",
+        """
+        function foo(c = class {
+          static x;
+        }) {}
+        """,
         """
         function foo(c = (() => {
-          const testcode$classdecl$var0 = class {};
-          testcode$classdecl$var0.x;
-          return testcode$classdecl$var0;
+          const CLASS_DECL$0 = class {};
+          CLASS_DECL$0.x = void 0;
+          return CLASS_DECL$0;
         })()) {}
         """);
   }
@@ -2263,13 +3031,13 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         function foo() {
-          const testcode$classdecl$var0 = class {
+          const CLASS_DECL$0 = class {
             constructor() {
-              this.y;
+              this.y = void 0;
             }
           };
-          testcode$classdecl$var0.x;
-          return testcode$classdecl$var0;
+          CLASS_DECL$0.x = void 0;
+          return CLASS_DECL$0;
         }
         """);
 
@@ -2280,12 +3048,12 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         })
         """,
         """
-        const testcode$classdecl$var0 = class {
+        const CLASS_DECL$0 = class {
           constructor() {
             this.y = 2;
           }
         };
-        foo(testcode$classdecl$var0);
+        foo(CLASS_DECL$0);
         """);
 
     test(
@@ -2295,9 +3063,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         })
         """,
         """
-        const testcode$classdecl$var0 = class {};
-        testcode$classdecl$var0.x = 1;
-        foo(testcode$classdecl$var0);
+        const CLASS_DECL$0 = class {};
+        CLASS_DECL$0.x = 1;
+        foo(CLASS_DECL$0);
         """);
   }
 }

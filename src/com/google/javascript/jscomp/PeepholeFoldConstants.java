@@ -25,6 +25,7 @@ import static com.google.javascript.jscomp.base.JSCompDoubles.isExactInt64;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isMathematicalInteger;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isPositive;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.NodeUtil.ValueType;
 import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.colors.StandardColors;
@@ -32,24 +33,19 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.math.BigInteger;
+import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Peephole optimization to fold constants (e.g. x + 1 + 7 --> x + 8).
- */
+/** Peephole optimization to fold constants (e.g. x + 1 + 7 --> x + 8). */
 class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   // TODO(johnlenz): optimizations should not be emiting errors. Move these to
   // a check pass.
   static final DiagnosticType INVALID_GETELEM_INDEX_ERROR =
-      DiagnosticType.warning(
-          "JSC_INVALID_GETELEM_INDEX_ERROR",
-          "Array index not integer: {0}");
+      DiagnosticType.warning("JSC_INVALID_GETELEM_INDEX_ERROR", "Array index not integer: {0}");
 
   static final DiagnosticType FRACTIONAL_BITWISE_OPERAND =
-      DiagnosticType.warning(
-          "JSC_FRACTIONAL_BITWISE_OPERAND",
-          "Fractional bitwise operand: {0}");
+      DiagnosticType.warning("JSC_FRACTIONAL_BITWISE_OPERAND", "Fractional bitwise operand: {0}");
 
   private static final double MAX_FOLD_NUMBER = Math.pow(2, 53);
 
@@ -58,10 +54,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private final boolean shouldUseTypes;
 
   /**
-   * @param late When late is false, this mean we are currently running before
-   * most of the other optimizations. In this case we would avoid optimizations
-   * that would make the code harder to analyze. When this is true, we would
-   * do anything to minimize for size.
+   * @param late When late is false, this mean we are currently running before most of the other
+   *     optimizations. In this case we would avoid optimizations that would make the code harder to
+   *     analyze. When this is true, we would do anything to minimize for size.
    */
   PeepholeFoldConstants(boolean late, boolean shouldUseTypes) {
     this.late = late;
@@ -104,78 +99,61 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     // If we've reached here, node is truly a binary operator.
     switch (subtree.getToken()) {
-
-
-      case GETELEM:
-      case OPTCHAIN_GETELEM:
+      case GETELEM, OPTCHAIN_GETELEM -> {
         return tryFoldGetElem(subtree, left, right);
-
-      case INSTANCEOF:
+      }
+      case INSTANCEOF -> {
         return tryFoldInstanceof(subtree, left, right);
-
-      case AND:
-      case OR:
+      }
+      case AND, OR -> {
         return tryFoldAndOr(subtree, left, right);
-
-      case COALESCE:
+      }
+      case COALESCE -> {
         return tryFoldCoalesce(subtree, left, right);
-
-      case LSH:
-      case RSH:
-      case URSH:
+      }
+      case LSH, RSH, URSH -> {
         return tryFoldShift(subtree, left, right);
-
-      case ASSIGN:
+      }
+      case ASSIGN -> {
         return tryFoldAssign(subtree, left, right);
-
-      case ASSIGN_BITOR:
-      case ASSIGN_BITXOR:
-      case ASSIGN_BITAND:
-      case ASSIGN_LSH:
-      case ASSIGN_RSH:
-      case ASSIGN_URSH:
-      case ASSIGN_ADD:
-      case ASSIGN_SUB:
-      case ASSIGN_MUL:
-      case ASSIGN_DIV:
-      case ASSIGN_MOD:
-      case ASSIGN_EXPONENT:
+      }
+      case ASSIGN_BITOR,
+          ASSIGN_BITXOR,
+          ASSIGN_BITAND,
+          ASSIGN_LSH,
+          ASSIGN_RSH,
+          ASSIGN_URSH,
+          ASSIGN_ADD,
+          ASSIGN_SUB,
+          ASSIGN_MUL,
+          ASSIGN_DIV,
+          ASSIGN_MOD,
+          ASSIGN_EXPONENT -> {
         return tryUnfoldAssignOp(subtree, left, right);
-
-      case ADD:
+      }
+      case ADD -> {
         return tryFoldAdd(subtree, left, right);
-
-      case SUB:
-      case DIV:
-      case MOD:
-      case MUL:
-      case EXPONENT:
+      }
+      case SUB, DIV, MOD, MUL, EXPONENT -> {
         return tryFoldArithmeticOp(subtree, left, right);
-
-      case BITAND:
-      case BITOR:
-      case BITXOR:
+      }
+      case BITAND, BITOR, BITXOR -> {
         Node result = tryFoldArithmeticOp(subtree, left, right);
         if (result != subtree) {
           return result;
         }
         return tryFoldLeftChildOp(subtree, left, right);
-
-      case LT:
-      case GT:
-      case LE:
-      case GE:
-      case EQ:
-      case NE:
-      case SHEQ:
-      case SHNE:
+      }
+      case LT, GT, LE, GE, EQ, NE, SHEQ, SHNE -> {
         return tryFoldComparison(subtree, left, right);
-
-      default:
+      }
+      default -> {
         return subtree;
+      }
     }
   }
 
+  @CanIgnoreReturnValue
   private Node tryReduceVoid(Node n) {
     Node child = n.getFirstChild();
     if ((!child.isNumber() || child.getDouble() != 0.0) && !mayHaveSideEffects(n)) {
@@ -187,45 +165,29 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   private void tryReduceOperandsForOp(Node n) {
     switch (n.getToken()) {
-      case ADD:
+      case ADD -> {
         Node left = n.getFirstChild();
         Node right = n.getLastChild();
         if (!NodeUtil.mayBeString(left, shouldUseTypes)
             && !NodeUtil.mayBeString(right, shouldUseTypes)) {
           tryConvertOperandsToNumber(n);
         }
-        break;
-      case ASSIGN_BITOR:
-      case ASSIGN_BITXOR:
-      case ASSIGN_BITAND:
-        // TODO(johnlenz): convert these to integers.
-      case ASSIGN_LSH:
-      case ASSIGN_RSH:
-      case ASSIGN_URSH:
-      case ASSIGN_SUB:
-      case ASSIGN_MUL:
-      case ASSIGN_MOD:
-      case ASSIGN_DIV:
-        tryConvertToNumber(n.getLastChild());
-        break;
-      case BITNOT:
-      case BITOR:
-      case BITXOR:
-      case BITAND:
-      case LSH:
-      case RSH:
-      case URSH:
-      case SUB:
-      case MUL:
-      case MOD:
-      case DIV:
-      case POS:
-      case NEG:
-      case EXPONENT:
-        tryConvertOperandsToNumber(n);
-        break;
-      default:
-        break;
+      }
+      case ASSIGN_BITOR,
+          ASSIGN_BITXOR,
+          ASSIGN_BITAND,
+          ASSIGN_LSH,
+          ASSIGN_RSH,
+          ASSIGN_URSH,
+          ASSIGN_SUB,
+          ASSIGN_MUL,
+          ASSIGN_MOD,
+          ASSIGN_DIV ->
+          // TODO(johnlenz): convert these to integers.
+          tryConvertToNumber(n.getLastChild());
+      case BITNOT, BITOR, BITXOR, BITAND, LSH, RSH, URSH, SUB, MUL, MOD, DIV, POS, NEG, EXPONENT ->
+          tryConvertOperandsToNumber(n);
+      default -> {}
     }
   }
 
@@ -239,26 +201,25 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   private void tryConvertToNumber(Node n) {
     switch (n.getToken()) {
-      case NUMBER:
+      case NUMBER -> {
         // Nothing to do
         return;
-      case AND:
-      case OR:
-      case COMMA:
-      case COALESCE:
+      }
+      case AND, OR, COMMA, COALESCE -> {
         tryConvertToNumber(n.getLastChild());
         return;
-      case HOOK:
+      }
+      case HOOK -> {
         tryConvertToNumber(n.getSecondChild());
         tryConvertToNumber(n.getLastChild());
         return;
-      case NAME:
+      }
+      case NAME -> {
         if (!NodeUtil.isUndefined(n)) {
           return;
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
 
     Double result = getSideEffectFreeNumberValue(n);
@@ -278,9 +239,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /**
-   * Folds 'typeof(foo)' if foo is a literal, e.g.
-   * typeof("bar") --> "string"
-   * typeof(6) --> "number"
+   * Folds 'typeof(foo)' if foo is a literal, e.g. typeof("bar") --> "string" typeof(6) --> "number"
    */
   private Node tryFoldTypeof(Node originalTypeofNode) {
     checkArgument(originalTypeofNode.isTypeOf());
@@ -293,36 +252,20 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     String typeNameString = null;
 
     switch (argumentNode.getToken()) {
-      case FUNCTION:
-        typeNameString = "function";
-        break;
-      case STRINGLIT:
-        typeNameString = "string";
-        break;
-      case NUMBER:
-        typeNameString = "number";
-        break;
-      case TRUE:
-      case FALSE:
-        typeNameString = "boolean";
-        break;
-      case NULL:
-      case OBJECTLIT:
-      case ARRAYLIT:
-        typeNameString = "object";
-        break;
-      case VOID:
-        typeNameString = "undefined";
-        break;
-      case NAME:
+      case FUNCTION -> typeNameString = "function";
+      case STRINGLIT -> typeNameString = "string";
+      case NUMBER -> typeNameString = "number";
+      case TRUE, FALSE -> typeNameString = "boolean";
+      case NULL, OBJECTLIT, ARRAYLIT -> typeNameString = "object";
+      case VOID -> typeNameString = "undefined";
+      case NAME -> {
         // We assume here that programs don't change the value of the
         // keyword undefined to something other than the value undefined.
-        if ("undefined".equals(argumentNode.getString())) {
+        if (argumentNode.getString().equals("undefined")) {
           typeNameString = "undefined";
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
 
     if (typeNameString != null) {
@@ -353,7 +296,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     switch (n.getToken()) {
-      case NOT:
+      case NOT -> {
         // Don't fold !0 and !1 back to false.
         if (late && left.isNumber()) {
           double numValue = left.getDouble();
@@ -365,8 +308,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         n.replaceWith(replacementNode);
         reportChangeToEnclosingScope(parent);
         return replacementNode;
-
-      case POS:
+      }
+      case POS -> {
         if (NodeUtil.isNumericResult(left)) {
           // POS does nothing to numeric values.
           n.replaceWith(left.detach());
@@ -374,56 +317,53 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           return left;
         }
         return n;
-
-      case NEG:
-        {
-          Node result = null;
-          if (left.isName() && left.getString().equals("NaN")) {
-            result = left.detach(); // "-NaN" is "NaN".
-          } else if (left.isNeg()) {
-            Node leftLeft = left.getOnlyChild();
-            if (leftLeft.isBigInt() || leftLeft.isNumber()) {
-              result = leftLeft.detach(); // `-(-4)` is `4`
-            }
+      }
+      case NEG -> {
+        Node result = null;
+        if (left.isName() && left.getString().equals("NaN")) {
+          result = left.detach(); // "-NaN" is "NaN".
+        } else if (left.isNeg()) {
+          Node leftLeft = left.getOnlyChild();
+          if (leftLeft.isBigInt() || leftLeft.isNumber()) {
+            result = leftLeft.detach(); // `-(-4)` is `4`
           }
-
-          if (result != null) {
-            n.replaceWith(result);
-            reportChangeToEnclosingScope(parent);
-            return result;
-          }
-          return n;
         }
 
-      case BITNOT:
-        {
-          Double doubleVal = this.getSideEffectFreeNumberValue(left);
-          if (doubleVal != null) {
-            if (isMathematicalInteger(doubleVal)) {
-              int intVal = ecmascriptToInt32(doubleVal);
-              Node notIntValNode = NodeUtil.numberNode(~intVal, left);
-              n.replaceWith(notIntValNode);
-              reportChangeToEnclosingScope(parent);
-              return notIntValNode;
-            } else {
-              report(FRACTIONAL_BITWISE_OPERAND, left);
-              return n;
-            }
-          }
-
-          BigInteger bigintVal = this.getSideEffectFreeBigIntValue(n);
-          if (bigintVal != null) {
-            Node bigintNotNode = bigintNode(bigintVal, n);
-            n.replaceWith(bigintNotNode);
+        if (result != null) {
+          n.replaceWith(result);
+          reportChangeToEnclosingScope(parent);
+          return result;
+        }
+        return n;
+      }
+      case BITNOT -> {
+        Double doubleVal = this.getSideEffectFreeNumberValue(left);
+        if (doubleVal != null) {
+          if (isMathematicalInteger(doubleVal)) {
+            int intVal = ecmascriptToInt32(doubleVal);
+            Node notIntValNode = NodeUtil.numberNode(~intVal, left);
+            n.replaceWith(notIntValNode);
             reportChangeToEnclosingScope(parent);
-            return bigintNotNode;
+            return notIntValNode;
+          } else {
+            report(FRACTIONAL_BITWISE_OPERAND, left);
+            return n;
           }
-
-          return n;
         }
 
-        default:
-          return n;
+        BigInteger bigintVal = this.getSideEffectFreeBigIntValue(n);
+        if (bigintVal != null) {
+          Node bigintNotNode = bigintNode(bigintVal, n);
+          n.replaceWith(bigintNotNode);
+          reportChangeToEnclosingScope(parent);
+          return bigintNotNode;
+        }
+
+        return n;
+      }
+      default -> {
+        return n;
+      }
     }
   }
 
@@ -431,25 +371,20 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return x != null && !x.isInfinite() && !x.isNaN();
   }
 
-  /**
-   * Try to fold {@code left instanceof right} into {@code true}
-   * or {@code false}.
-   */
+  /** Try to fold {@code left instanceof right} into {@code true} or {@code false}. */
   private Node tryFoldInstanceof(Node n, Node left, Node right) {
     checkArgument(n.isInstanceOf());
 
     // TODO(johnlenz) Use type information if available to fold
     // instanceof.
-    if (NodeUtil.isLiteralValue(left, true)
-        && !mayHaveSideEffects(right)) {
+    if (NodeUtil.isLiteralValue(left, true) && !mayHaveSideEffects(right)) {
 
       Node replacementNode = null;
 
       if (NodeUtil.isImmutableValue(left)) {
         // Non-object types are never instances.
         replacementNode = IR.falseNode();
-      } else if (right.isName()
-          && "Object".equals(right.getString())) {
+      } else if (right.isName() && Objects.equals(right.getString(), "Object")) {
         replacementNode = IR.trueNode();
       }
 
@@ -558,17 +493,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     // Tries to convert x += y -> x = x + y;
     Token op = NodeUtil.getOpFromAssignmentOp(n);
-    Node replacement = IR.assign(left.detach(),
-        new Node(op, left.cloneTree(), right.detach())
-            .srcref(n));
+    Node replacement =
+        IR.assign(left.detach(), new Node(op, left.cloneTree(), right.detach()).srcref(n));
     n.replaceWith(replacement);
     reportChangeToEnclosingScope(replacement);
     return replacement;
   }
 
-  /**
-   * Try to fold a AND/OR node.
-   */
+  /** Try to fold a AND/OR node. */
   private Node tryFoldAndOr(Node n, Node left, Node right) {
     Node parent = n.getParent();
 
@@ -638,8 +570,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     ValueType leftVal = NodeUtil.getKnownValueType(left);
 
     switch (leftVal) {
-      case NULL:
-      case VOID:
+      case NULL, VOID -> {
         // nullish condition => this expression evaluates to the right side.
         if (!mayHaveSideEffects(left)) {
           result = right;
@@ -649,18 +580,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           n.detachChildren();
           result = IR.comma(left, right);
         }
-        break;
-      case NUMBER:
-      case BIGINT:
-      case STRING:
-      case BOOLEAN:
-      case OBJECT:
+      }
+      case NUMBER, BIGINT, STRING, BOOLEAN, OBJECT -> {
         // non-nullish condition => this expression evaluates to the left side.
         result = left;
         markFunctionsDeleted(right);
-        break;
-      case UNDETERMINED:
-        break;
+      }
+      case UNDETERMINED -> {}
     }
 
     if (result != null) {
@@ -685,21 +611,25 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    *     child leaf node which must be a string literal and the leftmost right child leaf node if
    *     possible to do so in a type safe way.
    */
+  @CanIgnoreReturnValue
   private Node tryFoldAdjacentLiteralLeaves(Node n, Node left, Node right) {
+
     // Find left child's rightmost leaf
     Node leftParent = n;
-    Node rightParent = n;
     while (left.isAdd()) {
       // This had better be in a chain of '+' operations
       leftParent = left;
       left = left.getSecondChild();
     }
+
     // Find right child's leftmost leaf
+    Node rightParent = n;
     while (right.isAdd()) {
       // This had better be in a chain of '+' operations
       rightParent = right;
       right = right.getFirstChild();
     }
+
     // Try to fold if of the form:
     // ... + <STRINGLITERAL> + <LITERAL>
     // ... + <STRINGLITERAL> + (<LITERAL> + ...)
@@ -760,9 +690,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return n;
   }
 
-  /**
-   * Try to fold arithmetic binary operators
-   */
+  /** Try to fold arithmetic binary operators */
   private Node tryFoldArithmeticOp(Node n, Node left, Node right) {
     Node result = performArithmeticOp(n, left, right);
     if (result != null) {
@@ -802,7 +730,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // handle the operations that have algebraic identities, since we can simplify the tree without
     // actually knowing the value statically.
     switch (n.getToken()) {
-      case ADD:
+      case ADD -> {
         if (lValObj != null && rValObj != null) {
           return maybeReplaceBinaryOpWithNumericResult(lValObj + rValObj, lValObj, rValObj);
         }
@@ -812,7 +740,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           return left.cloneTree(true);
         }
         return null;
-      case SUB:
+      }
+      case SUB -> {
         if (lValObj != null && rValObj != null) {
           return maybeReplaceBinaryOpWithNumericResult(lValObj - rValObj, lValObj, rValObj);
         }
@@ -826,7 +755,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           return left.cloneTree(true);
         }
         return null;
-      case MUL:
+      }
+      case MUL -> {
         if (lValObj != null && rValObj != null) {
           return maybeReplaceBinaryOpWithNumericResult(lValObj * rValObj, lValObj, rValObj);
         }
@@ -842,7 +772,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           }
         }
         return null;
-      case DIV:
+      }
+      case DIV -> {
         if (lValObj != null && rValObj != null) {
           if (rValObj == 0) {
             return null;
@@ -857,14 +788,15 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           }
         }
         return null;
-      case EXPONENT:
+      }
+      case EXPONENT -> {
         if (lValObj != null && rValObj != null) {
           return maybeReplaceBinaryOpWithNumericResult(
               Math.pow(lValObj, rValObj), lValObj, rValObj);
         }
         return null;
-      default:
-        // fall-through
+      }
+      default -> {}
     }
     if (lValObj == null || rValObj == null) {
       return null;
@@ -872,23 +804,16 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     double lval = lValObj;
     double rval = rValObj;
     switch (n.getToken()) {
-      case BITAND:
-        result = ecmascriptToInt32(lval) & ecmascriptToInt32(rval);
-        break;
-      case BITOR:
-        result = ecmascriptToInt32(lval) | ecmascriptToInt32(rval);
-        break;
-      case BITXOR:
-        result = ecmascriptToInt32(lval) ^ ecmascriptToInt32(rval);
-        break;
-      case MOD:
+      case BITAND -> result = ecmascriptToInt32(lval) & ecmascriptToInt32(rval);
+      case BITOR -> result = ecmascriptToInt32(lval) | ecmascriptToInt32(rval);
+      case BITXOR -> result = ecmascriptToInt32(lval) ^ ecmascriptToInt32(rval);
+      case MOD -> {
         if (rval == 0) {
           return null;
         }
         result = lval % rval;
-        break;
-      default:
-        throw new IllegalStateException("Unexpected arithmetic operator: " + n.getToken());
+      }
+      default -> throw new IllegalStateException("Unexpected arithmetic operator: " + n.getToken());
     }
     return maybeReplaceBinaryOpWithNumericResult(result, lval, rval);
   }
@@ -898,48 +823,59 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     BigInteger rVal = getSideEffectFreeBigIntValue(right);
     if (lVal != null && rVal != null) {
       switch (n.getToken()) {
-        case ADD:
+        case ADD -> {
           return bigintNode(lVal.add(rVal), n);
-        case SUB:
+        }
+        case SUB -> {
           return bigintNode(lVal.subtract(rVal), n);
-        case MUL:
+        }
+        case MUL -> {
           return bigintNode(lVal.multiply(rVal), n);
-        case DIV:
+        }
+        case DIV -> {
           if (!rVal.equals(BigInteger.ZERO)) {
             return bigintNode(lVal.divide(rVal), n);
           } else {
             return null;
           }
-        case EXPONENT:
+        }
+        case EXPONENT -> {
           try {
             return bigintNode(lVal.pow(rVal.intValueExact()), n);
           } catch (ArithmeticException exception) {
             return null;
           }
-        case MOD:
+        }
+        case MOD -> {
           return bigintNode(lVal.mod(rVal), n);
-        case BITAND:
+        }
+        case BITAND -> {
           return bigintNode(lVal.and(rVal), n);
-        case BITOR:
+        }
+        case BITOR -> {
           return bigintNode(lVal.or(rVal), n);
-        case BITXOR:
+        }
+        case BITXOR -> {
           return bigintNode(lVal.xor(rVal), n);
-        default:
+        }
+        default -> {
           return null;
+        }
       }
     }
 
     // handle the operations that have algebraic identities, since we can simplify the tree without
     // actually knowing the value statically.
     switch (n.getToken()) {
-      case ADD:
+      case ADD -> {
         if (lVal != null && lVal.equals(BigInteger.ZERO)) {
           return right.cloneTree(/* cloneTypeExprs= */ true);
         } else if (rVal != null && rVal.equals(BigInteger.ZERO)) {
           return left.cloneTree(/* cloneTypeExprs= */ true);
         }
         return null;
-      case SUB:
+      }
+      case SUB -> {
         if (lVal != null && lVal.equals(BigInteger.ZERO)) {
           // 0n - x -> -x
           return IR.neg(right.cloneTree(/* cloneTypeExprs= */ true));
@@ -948,20 +884,24 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           return left.cloneTree(/* cloneTypeExprs= */ true);
         }
         return null;
-      case MUL:
+      }
+      case MUL -> {
         if (lVal != null && lVal.equals(BigInteger.ONE)) {
           return right.cloneTree(/* cloneTypeExprs= */ true);
         } else if (rVal != null && rVal.equals(BigInteger.ONE)) {
           return left.cloneTree(/* cloneTypeExprs= */ true);
         }
         return null;
-      case DIV:
+      }
+      case DIV -> {
         if (rVal != null && rVal.equals(BigInteger.ONE)) {
           return left.cloneTree(/* cloneTypeExprs= */ true);
         }
         return null;
-      default:
+      }
+      default -> {
         return null;
+      }
     }
   }
 
@@ -989,12 +929,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       double result, double lval, double rval) {
     // TODO(johnlenz): consider removing the result length check.
     // length of the left and right value plus 1 byte for the operator.
-    if ((String.valueOf(result).length() <=
-        String.valueOf(lval).length() + String.valueOf(rval).length() + 1
+    if ((String.valueOf(result).length()
+                <= String.valueOf(lval).length() + String.valueOf(rval).length() + 1
 
-        // Do not try to fold arithmetic for numbers > 2^53. After that
-        // point, fixed-point math starts to break down and become inaccurate.
-        && Math.abs(result) <= MAX_FOLD_NUMBER)
+            // Do not try to fold arithmetic for numbers > 2^53. After that
+            // point, fixed-point math starts to break down and become inaccurate.
+            && Math.abs(result) <= MAX_FOLD_NUMBER)
         || Double.isNaN(result)
         || result == Double.POSITIVE_INFINITY
         || result == Double.NEGATIVE_INFINITY) {
@@ -1015,6 +955,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    *   <li>The right child is a BIGINT or NUMBER constant.
    *   <li>The left child's right child is a BIGINT or NUMBER constant.
    */
+  @CanIgnoreReturnValue
   private Node tryFoldLeftChildOp(Node n, Node left, Node right) {
     Token opType = n.getToken();
     checkState((NodeUtil.isAssociative(opType) && NodeUtil.isCommutative(opType)));
@@ -1051,32 +992,63 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return n;
   }
 
+  /**
+   * Folds additions of template literals with placeholders/substitutions like `${foo} and ${bar}` +
+   * `${baz}`.
+   *
+   * <p>This code path is only hit if the left and right are both template literals WITH
+   * placeholders/substitutions. If one of them did not have placeholders/substitutions, it would
+   * have already have been optimized to a string.
+   */
+  private Node foldAddTemplateLiterals(Node oldNode, Node left, Node right) {
+    // All template literal nodes with placeholders/substitutions will have their first child
+    // and last child as a string node.
+    // Merge the last left child string node with the first right child node.
+    Node lastLeft = left.getLastChild();
+    Node firstRight = right.getFirstChild();
+    Node mergeNode =
+        IR.templateLiteralString(
+            lastLeft.getCookedString() + firstRight.getCookedString(),
+            lastLeft.getRawString() + firstRight.getRawString());
+    mergeNode.srcrefTreeIfMissing(lastLeft);
+
+    // Detach the lastLeft and firstRight children and append all right children to the left node.
+    lastLeft.detach();
+    firstRight.detach();
+    left.addChildToBack(mergeNode);
+    left.addChildrenToBack(right.removeChildren());
+
+    // Detach the updated left node and replace the old node with it.
+    left.detach();
+    return replace(oldNode, left);
+  }
+
   private Node tryFoldAdd(Node node, Node left, Node right) {
     checkArgument(node.isAdd());
 
     if (NodeUtil.mayBeString(node, shouldUseTypes)) {
-      if (NodeUtil.isLiteralValue(left, false) && NodeUtil.isLiteralValue(right, false)) {
+      if (left.isTemplateLit() && right.isTemplateLit()) {
+        // TODO: account for cases of template literal + other data type (any order)
+        // (e.g. string + template literal, template literal + number)
+        return foldAddTemplateLiterals(node, left, right);
+      } else if (NodeUtil.isLiteralValue(left, false) && NodeUtil.isLiteralValue(right, false)) {
         // '6' + 7
         return tryFoldAddConstantString(node, left, right);
+      } else if (left.isStringLit() && left.getString().isEmpty() && isStringTyped(right)) {
+        return replace(node, right.cloneTree(true));
+      } else if (right.isStringLit() && right.getString().isEmpty() && isStringTyped(left)) {
+        return replace(node, left.cloneTree(true));
       } else {
-        if (left.isStringLit() && left.getString().isEmpty() && isStringTyped(right)) {
-          return replace(node, right.cloneTree(true));
-        } else if (right.isStringLit() && right.getString().isEmpty() && isStringTyped(left)) {
-          return replace(node, left.cloneTree(true));
-        }
         // a + 7 or 6 + a
         return tryFoldAdjacentLiteralLeaves(node, left, right);
       }
     } else {
       // Try arithmetic add
-      Node result = tryFoldArithmeticOp(node, left, right);
-      if (result != node) {
-        return result;
-      }
-      return node;
+      return tryFoldArithmeticOp(node, left, right);
     }
   }
 
+  @CanIgnoreReturnValue
   private Node replace(Node oldNode, Node newNode) {
     oldNode.replaceWith(newNode);
     reportChangeToEnclosingScope(newNode);
@@ -1094,9 +1066,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return false;
   }
 
-  /**
-   * Try to fold shift operations
-   */
+  /** Try to fold shift operations */
   private Node tryFoldShift(Node n, Node left, Node right) {
     Double leftVal = this.getSideEffectFreeNumberValue(left);
     Double rightVal = this.getSideEffectFreeNumberValue(right);
@@ -1140,9 +1110,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return newNumber;
   }
 
-  /**
-   * Try to fold comparison nodes, e.g ==
-   */
+  /** Try to fold comparison nodes, e.g == */
   private Node tryFoldComparison(Node n, Node left, Node right) {
     Tri result = evaluateComparison(this, n.getToken(), left, right);
     if (result == Tri.UNKNOWN) {
@@ -1321,63 +1289,58 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         return Tri.FALSE;
       }
       switch (leftValueType) {
-        case VOID:
-        case NULL:
+        case VOID, NULL -> {
           return Tri.TRUE;
-        case NUMBER:
-          {
-            if (NodeUtil.isNaN(left)) {
-              return Tri.FALSE;
-            }
-            if (NodeUtil.isNaN(right)) {
-              return Tri.FALSE;
-            }
-            Double lv = peepholeOptimization.getSideEffectFreeNumberValue(left);
-            Double rv = peepholeOptimization.getSideEffectFreeNumberValue(right);
-            if (lv != null && rv != null) {
-              return Tri.forBoolean(lv.doubleValue() == rv.doubleValue());
-            }
-            break;
+        }
+        case NUMBER -> {
+          if (NodeUtil.isNaN(left)) {
+            return Tri.FALSE;
           }
-        case STRING:
-          {
-            String lv = peepholeOptimization.getSideEffectFreeStringValue(left);
-            String rv = peepholeOptimization.getSideEffectFreeStringValue(right);
-            if (lv != null && rv != null) {
-              // In JS, browsers parse \v differently. So do not consider strings
-              // equal if one contains \v.
-              if (lv.indexOf('\u000B') != -1 || rv.indexOf('\u000B') != -1) {
-                return Tri.UNKNOWN;
-              } else {
-                return lv.equals(rv) ? Tri.TRUE : Tri.FALSE;
-              }
-            } else if (left.isTypeOf()
-                && right.isTypeOf()
-                && left.getFirstChild().isName()
-                && right.getFirstChild().isName()
-                && left.getFirstChild().getString().equals(right.getFirstChild().getString())) {
-              // Special case, typeof a == typeof a is always true.
-              return Tri.TRUE;
+          if (NodeUtil.isNaN(right)) {
+            return Tri.FALSE;
+          }
+          Double lv = peepholeOptimization.getSideEffectFreeNumberValue(left);
+          Double rv = peepholeOptimization.getSideEffectFreeNumberValue(right);
+          if (lv != null && rv != null) {
+            return Tri.forBoolean(lv.doubleValue() == rv.doubleValue());
+          }
+        }
+        case STRING -> {
+          String lv = peepholeOptimization.getSideEffectFreeStringValue(left);
+          String rv = peepholeOptimization.getSideEffectFreeStringValue(right);
+          if (lv != null && rv != null) {
+            // In JS, browsers parse \v differently. So do not consider strings
+            // equal if one contains \v.
+            if (lv.indexOf('\u000B') != -1 || rv.indexOf('\u000B') != -1) {
+              return Tri.UNKNOWN;
+            } else {
+              return lv.equals(rv) ? Tri.TRUE : Tri.FALSE;
             }
-            break;
+          } else if (left.isTypeOf()
+              && right.isTypeOf()
+              && left.getFirstChild().isName()
+              && right.getFirstChild().isName()
+              && left.getFirstChild().getString().equals(right.getFirstChild().getString())) {
+            // Special case, typeof a == typeof a is always true.
+            return Tri.TRUE;
           }
-        case BOOLEAN:
-          {
-            Tri lv = peepholeOptimization.getSideEffectFreeBooleanValue(left);
-            Tri rv = peepholeOptimization.getSideEffectFreeBooleanValue(right);
-            return lv.and(rv).or(lv.not().and(rv.not()));
+        }
+        case BOOLEAN -> {
+          Tri lv = peepholeOptimization.getSideEffectFreeBooleanValue(left);
+          Tri rv = peepholeOptimization.getSideEffectFreeBooleanValue(right);
+          return lv.and(rv).or(lv.not().and(rv.not()));
+        }
+        case BIGINT -> {
+          BigInteger lv = peepholeOptimization.getSideEffectFreeBigIntValue(left);
+          BigInteger rv = peepholeOptimization.getSideEffectFreeBigIntValue(right);
+          if (lv != null && rv != null) {
+            return Tri.forBoolean(lv.equals(rv));
           }
-        case BIGINT:
-          {
-            BigInteger lv = peepholeOptimization.getSideEffectFreeBigIntValue(left);
-            BigInteger rv = peepholeOptimization.getSideEffectFreeBigIntValue(right);
-            if (lv != null && rv != null) {
-              return Tri.forBoolean(lv.equals(rv));
-            }
-            break;
-          }
-        default: // Symbol and Object cannot be folded in the general case.
+        }
+        default -> {
+          // Symbol and Object cannot be folded in the general case.
           return Tri.UNKNOWN;
+        }
       }
     }
 
@@ -1398,31 +1361,37 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     switch (op) {
-      case EQ:
+      case EQ -> {
         return tryAbstractEqualityComparison(peepholeOptimization, left, right);
-      case NE:
+      }
+      case NE -> {
         return tryAbstractEqualityComparison(peepholeOptimization, left, right).not();
-      case SHEQ:
+      }
+      case SHEQ -> {
         return tryStrictEqualityComparison(peepholeOptimization, left, right);
-      case SHNE:
+      }
+      case SHNE -> {
         return tryStrictEqualityComparison(peepholeOptimization, left, right).not();
-      case LT:
+      }
+      case LT -> {
         return tryAbstractRelationalComparison(peepholeOptimization, left, right, false);
-      case GT:
+      }
+      case GT -> {
         return tryAbstractRelationalComparison(peepholeOptimization, right, left, false);
-      case LE:
+      }
+      case LE -> {
         return tryAbstractRelationalComparison(peepholeOptimization, right, left, true).not();
-      case GE:
+      }
+      case GE -> {
         return tryAbstractRelationalComparison(peepholeOptimization, left, right, true).not();
-      default:
-        break;
+      }
+      default -> {}
     }
     throw new IllegalStateException("Unexpected operator for comparison");
   }
 
   /**
-   * Try to fold away unnecessary object instantiation.
-   * e.g. this[new String('eval')] -> this.eval
+   * Try to fold away unnecessary object instantiation. e.g. this[new String('eval')] -> this.eval
    */
   private Node tryFoldCtorCall(Node n) {
     checkArgument(n.isNew());
@@ -1435,6 +1404,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /** Remove useless calls: Object.defineProperties(o, {}) -> o */
+  @CanIgnoreReturnValue
   private Node tryFoldUselessObjectDotDefinePropertiesCall(Node n) {
     checkArgument(n.isCall() || n.isOptChainCall());
 
@@ -1452,8 +1422,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   /** Returns whether this node must be coerced to a string. */
   private static boolean inForcedStringContext(Node n) {
-    if (n.getParent().isGetElem()
-        && n.getParent().getLastChild() == n) {
+    if (n.getParent().isGetElem() && n.getParent().getLastChild() == n) {
       return true;
     }
 
@@ -1531,19 +1500,18 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     if (name.equals("length")) {
       int knownLength = -1;
       switch (left.getToken()) {
-        case ARRAYLIT:
+        case ARRAYLIT -> {
           if (mayHaveSideEffects(left)) {
             // Nope, can't fold this, without handling the side-effects.
             return n;
           }
           knownLength = left.getChildCount();
-          break;
-        case STRINGLIT:
-          knownLength = left.getString().length();
-          break;
-        default:
+        }
+        case STRINGLIT -> knownLength = left.getString().length();
+        default -> {
           // Not a foldable case, forget it.
           return n;
+        }
       }
 
       checkState(knownLength != -1);
@@ -1640,6 +1608,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    *
    * <p>Example: `[0, ...[1, 2, 3], 4, ...[5]]` => `[0, 1, 2, 3, 4, 5]`
    */
+  @CanIgnoreReturnValue
   private Node tryFlattenArrayOrObjectLit(Node parentLit) {
     for (Node child = parentLit.getFirstChild(); child != null; ) {
       // We have to store the next element here because nodes may be inserted below.
@@ -1727,6 +1696,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    *   <li>`({a() { return 1; }}).a()` ---> `(function() { return 1; }())`
    * </ul>
    */
+  @CanIgnoreReturnValue
   private Node tryFoldObjectPropAccess(Node n, Node left, String name) {
     checkArgument(NodeUtil.isNormalOrOptChainGet(n));
 
@@ -1747,16 +1717,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node value = null;
     for (Node c = left.getFirstChild(); c != null; c = c.getNext()) {
       switch (c.getToken()) {
-        case SETTER_DEF:
-          break;
-
-        case OBJECT_SPREAD:
+        case SETTER_DEF -> {}
+        case OBJECT_SPREAD -> {
           // Reset the search because spread could overwrite any previous result.
           key = null;
           value = null;
-          break;
-
-        case COMPUTED_PROP:
+        }
+        case COMPUTED_PROP -> {
           // don't handle computed properties unless the input is a simple string
           Node prop = c.getFirstChild();
           if (!prop.isStringLit()) {
@@ -1766,19 +1733,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
             key = c;
             value = c.getSecondChild();
           }
-          break;
-
-        case GETTER_DEF:
-        case STRING_KEY:
-        case MEMBER_FUNCTION_DEF:
+        }
+        case GETTER_DEF, STRING_KEY, MEMBER_FUNCTION_DEF -> {
           if (c.getString().equals(name)) {
             key = c;
             value = key.getFirstChild();
           }
-          break;
-
-        default:
-          throw new IllegalStateException();
+        }
+        default -> throw new IllegalStateException();
       }
     }
 

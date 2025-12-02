@@ -378,16 +378,12 @@ public final class UnionType extends JSType {
         continue;
       }
       switch (alternate.getPropertyKind(pname, autobox)) {
-        case KNOWN_PRESENT:
-          found = true;
-          break;
-        case ABSENT:
-          always = false;
-          break;
-        case MAYBE_PRESENT:
+        case KNOWN_PRESENT -> found = true;
+        case ABSENT -> always = false;
+        case MAYBE_PRESENT -> {
           found = true;
           always = false;
-          break;
+        }
       }
       if (found && !always) {
         break;

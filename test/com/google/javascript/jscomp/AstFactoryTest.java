@@ -112,7 +112,8 @@ public class AstFactoryTest {
   }
 
   private AstFactory createTestAstFactory() {
-    return AstFactory.createFactoryWithTypes(compiler.getLifeCycleStage(), getRegistry());
+    return AstFactory.createFactoryWithTypes(
+        compiler.getLifeCycleStage(), getRegistry(), compiler.getRuntimeJsLibManager());
   }
 
   private AstFactory createTestAstFactoryWithColors() {
@@ -121,11 +122,13 @@ public class AstFactoryTest {
         // the built-in color registry is available only if we've run parseAndAddColors()
         compiler.hasOptimizationColors()
             ? compiler.getColorRegistry()
-            : ColorRegistry.builder().setDefaultNativeColorsForTesting().build());
+            : ColorRegistry.builder().setDefaultNativeColorsForTesting().build(),
+        compiler.getRuntimeJsLibManager());
   }
 
   private AstFactory createTestAstFactoryWithoutTypes() {
-    return AstFactory.createFactoryWithoutTypes(compiler.getLifeCycleStage());
+    return AstFactory.createFactoryWithoutTypes(
+        compiler.getLifeCycleStage(), compiler.getRuntimeJsLibManager());
   }
 
   private Scope getScope(Node root) {

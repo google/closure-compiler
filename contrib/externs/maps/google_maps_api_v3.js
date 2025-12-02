@@ -4030,7 +4030,7 @@ google.maps.IconMouseEvent = function() {};
  * about <a
  * href="https://developers.google.com/maps/documentation/places/web-service/place-id">place
  * IDs</a> in the Places API developer guide.
- * @type {?string}
+ * @type {string|null}
  */
 google.maps.IconMouseEvent.prototype.placeId;
 
@@ -6801,8 +6801,6 @@ google.maps.MapTypeStyle.prototype.featureType;
 google.maps.MapTypeStyle.prototype.stylers;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * @record
  */
 google.maps.Maps3DLibrary = function() {};
@@ -6811,6 +6809,11 @@ google.maps.Maps3DLibrary = function() {};
  * @type {typeof google.maps.maps3d.AltitudeMode}
  */
 google.maps.Maps3DLibrary.prototype.AltitudeMode;
+
+/**
+ * @type {typeof google.maps.maps3d.GestureHandling}
+ */
+google.maps.Maps3DLibrary.prototype.GestureHandling;
 
 /**
  * @type {typeof google.maps.maps3d.LocationClickEvent}
@@ -7198,7 +7201,7 @@ google.maps.MapsServerError = function() {};
  * Access by calling `const {Marker} = await
  * google.maps.importLibrary("marker")`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {google.maps.MarkerOptions=} opts Named optional arguments
+ * @param {!google.maps.MarkerOptions=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  * @deprecated As of February 21st, 2024, google.maps.Marker is deprecated.
@@ -7256,7 +7259,7 @@ google.maps.Marker.prototype.getLabel = function() {};
 
 /**
  * Get the map or panaroama the {@link google.maps.Marker} is rendered on.
- * @return {google.maps.Map|google.maps.StreetViewPanorama}
+ * @return {!google.maps.Map|!google.maps.StreetViewPanorama|null}
  */
 google.maps.Marker.prototype.getMap = function() {};
 
@@ -7351,7 +7354,7 @@ google.maps.Marker.prototype.setLabel = function(label) {};
 /**
  * Renders the {@link google.maps.Marker} on the specified map or panorama. If
  * map is set to <code>null</code>, the marker will be removed.
- * @param {google.maps.Map|google.maps.StreetViewPanorama} map
+ * @param {!google.maps.Map|!google.maps.StreetViewPanorama|null} map
  * @return {undefined}
  */
 google.maps.Marker.prototype.setMap = function(map) {};
@@ -7365,7 +7368,7 @@ google.maps.Marker.prototype.setOpacity = function(opacity) {};
 
 /**
  * Set the options for the {@link google.maps.Marker}.
- * @param {google.maps.MarkerOptions} options
+ * @param {!google.maps.MarkerOptions|null} options
  * @return {undefined}
  */
 google.maps.Marker.prototype.setOptions = function(options) {};
@@ -7783,8 +7786,6 @@ google.maps.MotionTrackingControlOptions = function() {};
 google.maps.MotionTrackingControlOptions.prototype.position;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A <code>Orientation3D</code> is a three-dimensional vector used for standard
  * mathematical rotation transformations along heading, tilt, and roll.<br> <ul>
  * <li>heading is an angle in the range [0, 360) degrees.</li> <li>tilt is an
@@ -7849,8 +7850,6 @@ google.maps.Orientation3D.prototype.equals = function(other) {};
 google.maps.Orientation3D.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Object literals are accepted in place of <code>Orientation3D</code> objects,
  * as a convenience, in many places. These are converted to
  * <code>Orientation3D</code> objects when the Maps API encounters them.
@@ -8207,6 +8206,16 @@ google.maps.PlacesLibrary.prototype.BusinessStatus;
 google.maps.PlacesLibrary.prototype.ConnectorAggregation;
 
 /**
+ * @type {typeof google.maps.places.ConsumerAlert}
+ */
+google.maps.PlacesLibrary.prototype.ConsumerAlert;
+
+/**
+ * @type {typeof google.maps.places.ConsumerAlertDetails}
+ */
+google.maps.PlacesLibrary.prototype.ConsumerAlertDetails;
+
+/**
  * @type {typeof google.maps.places.EVChargeOptions}
  */
 google.maps.PlacesLibrary.prototype.EVChargeOptions;
@@ -8295,11 +8304,6 @@ google.maps.PlacesLibrary.prototype.PlaceContextualListConfigElement;
  * @type {typeof google.maps.places.PlaceContextualListLayout}
  */
 google.maps.PlacesLibrary.prototype.PlaceContextualListLayout;
-
-/**
- * @type {typeof google.maps.places.PlaceContextualListMapMode}
- */
-google.maps.PlacesLibrary.prototype.PlaceContextualListMapMode;
 
 /**
  * @type {typeof google.maps.places.PlacePrediction}
@@ -8844,6 +8848,7 @@ google.maps.PolylineOptions.prototype.visible;
 google.maps.PolylineOptions.prototype.zIndex;
 
 /**
+ * Projection interface.
  * @record
  */
 google.maps.Projection = function() {};
@@ -8857,7 +8862,7 @@ google.maps.Projection = function() {};
  * <code>null</code> if the projection cannot calculate the <code>Point</code>.
  * @param {!google.maps.LatLng|!google.maps.LatLngLiteral} latLng
  * @param {!google.maps.Point=} point
- * @return {?google.maps.Point}
+ * @return {!google.maps.Point|null}
  */
 google.maps.Projection.prototype.fromLatLngToPoint = function(latLng, point) {};
 
@@ -8870,7 +8875,7 @@ google.maps.Projection.prototype.fromLatLngToPoint = function(latLng, point) {};
  * <code>LatLng</code>.
  * @param {!google.maps.Point} pixel
  * @param {boolean=} noClampNoWrap
- * @return {?google.maps.LatLng}
+ * @return {!google.maps.LatLng|null}
  */
 google.maps.Projection.prototype.fromPointToLatLng = function(
     pixel, noClampNoWrap) {};
@@ -9201,6 +9206,21 @@ google.maps.RotateControlOptions.prototype.position;
 google.maps.RoutesLibrary = function() {};
 
 /**
+ * @type {typeof google.maps.routes.ComputeRouteMatrixExtraComputation}
+ */
+google.maps.RoutesLibrary.prototype.ComputeRouteMatrixExtraComputation;
+
+/**
+ * @type {typeof google.maps.routes.ComputeRoutesExtraComputation}
+ */
+google.maps.RoutesLibrary.prototype.ComputeRoutesExtraComputation;
+
+/**
+ * @type {typeof google.maps.routes.DirectionalLocation}
+ */
+google.maps.RoutesLibrary.prototype.DirectionalLocation;
+
+/**
  * @type {typeof google.maps.DirectionsRenderer}
  */
 google.maps.RoutesLibrary.prototype.DirectionsRenderer;
@@ -9231,9 +9251,179 @@ google.maps.RoutesLibrary.prototype.DistanceMatrixService;
 google.maps.RoutesLibrary.prototype.DistanceMatrixStatus;
 
 /**
+ * @type {typeof google.maps.routes.FallbackInfo}
+ */
+google.maps.RoutesLibrary.prototype.FallbackInfo;
+
+/**
+ * @type {typeof google.maps.routes.FallbackReason}
+ */
+google.maps.RoutesLibrary.prototype.FallbackReason;
+
+/**
+ * @type {typeof google.maps.routes.FallbackRoutingMode}
+ */
+google.maps.RoutesLibrary.prototype.FallbackRoutingMode;
+
+/**
+ * @type {typeof google.maps.routes.GeocodedWaypoint}
+ */
+google.maps.RoutesLibrary.prototype.GeocodedWaypoint;
+
+/**
+ * @type {typeof google.maps.routes.GeocodingResults}
+ */
+google.maps.RoutesLibrary.prototype.GeocodingResults;
+
+/**
+ * @type {typeof google.maps.routes.MultiModalSegment}
+ */
+google.maps.RoutesLibrary.prototype.MultiModalSegment;
+
+/**
+ * @type {typeof google.maps.routes.PolylineDetailInfo}
+ */
+google.maps.RoutesLibrary.prototype.PolylineDetailInfo;
+
+/**
+ * @type {typeof google.maps.routes.PolylineDetails}
+ */
+google.maps.RoutesLibrary.prototype.PolylineDetails;
+
+/**
+ * @type {typeof google.maps.routes.PolylineQuality}
+ */
+google.maps.RoutesLibrary.prototype.PolylineQuality;
+
+/**
+ * @type {typeof google.maps.routes.ReferenceRoute}
+ */
+google.maps.RoutesLibrary.prototype.ReferenceRoute;
+
+/**
+ * @type {typeof google.maps.routes.RoadFeatureState}
+ */
+google.maps.RoutesLibrary.prototype.RoadFeatureState;
+
+/**
+ * @type {typeof google.maps.routes.Route}
+ */
+google.maps.RoutesLibrary.prototype.Route;
+
+/**
+ * @type {typeof google.maps.routes.RouteLabel}
+ */
+google.maps.RoutesLibrary.prototype.RouteLabel;
+
+/**
+ * @type {typeof google.maps.routes.RouteLeg}
+ */
+google.maps.RoutesLibrary.prototype.RouteLeg;
+
+/**
+ * @type {typeof google.maps.routes.RouteLegLocalizedValues}
+ */
+google.maps.RoutesLibrary.prototype.RouteLegLocalizedValues;
+
+/**
+ * @type {typeof google.maps.routes.RouteLegStep}
+ */
+google.maps.RoutesLibrary.prototype.RouteLegStep;
+
+/**
+ * @type {typeof google.maps.routes.RouteLegStepLocalizedValues}
+ */
+google.maps.RoutesLibrary.prototype.RouteLegStepLocalizedValues;
+
+/**
+ * @type {typeof google.maps.routes.RouteLegTravelAdvisory}
+ */
+google.maps.RoutesLibrary.prototype.RouteLegTravelAdvisory;
+
+/**
+ * @type {typeof google.maps.routes.RouteLocalizedValues}
+ */
+google.maps.RoutesLibrary.prototype.RouteLocalizedValues;
+
+/**
+ * @type {typeof google.maps.routes.RouteMatrix}
+ */
+google.maps.RoutesLibrary.prototype.RouteMatrix;
+
+/**
+ * @type {typeof google.maps.routes.RouteMatrixItem}
+ */
+google.maps.RoutesLibrary.prototype.RouteMatrixItem;
+
+/**
+ * @type {typeof google.maps.routes.RouteMatrixItemCondition}
+ */
+google.maps.RoutesLibrary.prototype.RouteMatrixItemCondition;
+
+/**
+ * @type {typeof google.maps.routes.RouteMatrixItemError}
+ */
+google.maps.RoutesLibrary.prototype.RouteMatrixItemError;
+
+/**
+ * @type {typeof google.maps.routes.RouteMatrixItemLocalizedValues}
+ */
+google.maps.RoutesLibrary.prototype.RouteMatrixItemLocalizedValues;
+
+/**
+ * @type {typeof google.maps.routes.RouteMatrixRow}
+ */
+google.maps.RoutesLibrary.prototype.RouteMatrixRow;
+
+/**
+ * @type {typeof google.maps.routes.RouteTravelAdvisory}
+ */
+google.maps.RoutesLibrary.prototype.RouteTravelAdvisory;
+
+/**
+ * @type {typeof google.maps.routes.RoutingPreference}
+ */
+google.maps.RoutesLibrary.prototype.RoutingPreference;
+
+/**
+ * @type {typeof google.maps.routes.Speed}
+ */
+google.maps.RoutesLibrary.prototype.Speed;
+
+/**
+ * @type {typeof google.maps.routes.SpeedReadingInterval}
+ */
+google.maps.RoutesLibrary.prototype.SpeedReadingInterval;
+
+/**
+ * @type {typeof google.maps.routes.StepsOverview}
+ */
+google.maps.RoutesLibrary.prototype.StepsOverview;
+
+/**
+ * @type {typeof google.maps.routes.TollInfo}
+ */
+google.maps.RoutesLibrary.prototype.TollInfo;
+
+/**
  * @type {typeof google.maps.TrafficModel}
  */
 google.maps.RoutesLibrary.prototype.TrafficModel;
+
+/**
+ * @type {typeof google.maps.routes.TransitAgency}
+ */
+google.maps.RoutesLibrary.prototype.TransitAgency;
+
+/**
+ * @type {typeof google.maps.routes.TransitDetails}
+ */
+google.maps.RoutesLibrary.prototype.TransitDetails;
+
+/**
+ * @type {typeof google.maps.routes.TransitLine}
+ */
+google.maps.RoutesLibrary.prototype.TransitLine;
 
 /**
  * @type {typeof google.maps.TransitMode}
@@ -9246,9 +9436,24 @@ google.maps.RoutesLibrary.prototype.TransitMode;
 google.maps.RoutesLibrary.prototype.TransitRoutePreference;
 
 /**
+ * @type {typeof google.maps.routes.TransitStop}
+ */
+google.maps.RoutesLibrary.prototype.TransitStop;
+
+/**
+ * @type {typeof google.maps.routes.TransitVehicle}
+ */
+google.maps.RoutesLibrary.prototype.TransitVehicle;
+
+/**
  * @type {typeof google.maps.TravelMode}
  */
 google.maps.RoutesLibrary.prototype.TravelMode;
+
+/**
+ * @type {typeof google.maps.routes.VehicleEmissionType}
+ */
+google.maps.RoutesLibrary.prototype.VehicleEmissionType;
 
 /**
  * @type {typeof google.maps.VehicleType}
@@ -9341,7 +9546,7 @@ google.maps.Size.prototype.width;
 
 /**
  * Compares two Sizes.
- * @param {google.maps.Size} other
+ * @param {!google.maps.Size|null} other
  * @return {boolean}
  */
 google.maps.Size.prototype.equals = function(other) {};
@@ -10773,6 +10978,10 @@ google.maps.TransitMode = {
    */
   BUS: 'BUS',
   /**
+   * Specifies light rail as a preferred mode of transit.
+   */
+  LIGHT_RAIL: 'LIGHT_RAIL',
+  /**
    * Specifies rail as a preferred mode of transit.
    */
   RAIL: 'RAIL',
@@ -10929,6 +11138,10 @@ google.maps.TravelMode = {
    */
   TRANSIT: 'TRANSIT',
   /**
+   * Specifies a two-wheeler directions request.
+   */
+  TWO_WHEELER: 'TWO_WHEELER',
+  /**
    * Specifies a walking directions request.
    */
   WALKING: 'WALKING',
@@ -10957,8 +11170,6 @@ google.maps.UnitSystem = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A <code>Vector3D</code> is a three-dimensional vector used for standard
  * mathematical operations such as scaling the bounds of three-dimensional
  * object along local x-, y-, and z-axes.<br> <ul> <li>x is a real number.</li>
@@ -11008,8 +11219,6 @@ google.maps.Vector3D.prototype.equals = function(other) {};
 google.maps.Vector3D.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Object literals are accepted in place of <code>Vector3D</code> objects, as a
  * convenience, in many places. These are converted to <code>Vector3D</code>
  * objects when the Maps API encounters them.
@@ -11701,6 +11910,14 @@ google.maps.addressValidation.AddressValidationRequest = function() {};
 google.maps.addressValidation.AddressValidationRequest.prototype.address;
 
 /**
+ * If using a PlaceAutocompleteElement, include it here to link the
+ * AddressValidation API calls with the autocomplete session token.
+ * @type {!google.maps.places.PlaceAutocompleteElement|undefined}
+ */
+google.maps.addressValidation.AddressValidationRequest.prototype
+    .placeAutocompleteElement;
+
+/**
  * This field must not be set for the first address validation request. If more
  * requests are necessary to fully validate a single address (for example if the
  * changes the user makes after the initial validation need to be re-validated),
@@ -11711,6 +11928,12 @@ google.maps.addressValidation.AddressValidationRequest.prototype.address;
  */
 google.maps.addressValidation.AddressValidationRequest.prototype
     .previousResponseId;
+
+/**
+ * A token which identifies an Autocomplete session for billing purposes.
+ * @type {!google.maps.places.AutocompleteSessionToken|undefined}
+ */
+google.maps.addressValidation.AddressValidationRequest.prototype.sessionToken;
 
 /**
  * Enables USPS CASS compatible mode. This affects <em>only</em> the {@link
@@ -12416,6 +12639,11 @@ google.maps.drawing.DrawingControlOptions.prototype.position;
  * @param {google.maps.drawing.DrawingManagerOptions=} options
  * @extends {google.maps.MVCObject}
  * @constructor
+ * @deprecated Drawing library functionality in the Maps JavaScript API is
+ *     deprecated. This API was deprecated in August 2025 and will be made
+ *     unavailable in a later version of the Maps JavaScript API, releasing in
+ *     May 2026. For more info, see <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>
  */
 google.maps.drawing.DrawingManager = function(options) {};
 
@@ -12599,69 +12827,6 @@ google.maps.drawing.OverlayType = {
    */
   RECTANGLE: 'rectangle',
 };
-
-/**
- * @const
- */
-google.maps.elevation = {};
-
-/**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
- * An HTML element that visually displays elevation data. Set the element&#39;s
- * <code>path</code> property to show a graph of elevation along the path. To
- * use the Elevation Element, enable the <a
- * href="https://console.cloud.google.com/marketplace/product/google/placewidgets.googleapis.com"
- * >Places UI Kit API</a> for your project in the Google Cloud console.
- *
- * Access by calling `const {ElevationElement} = await
- * google.maps.importLibrary("elevation")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {!google.maps.elevation.ElevationElementOptions=} options
- * @implements {google.maps.elevation.ElevationElementOptions}
- * @extends {HTMLElement}
- * @constructor
- */
-google.maps.elevation.ElevationElement = function(options) {};
-
-/**
- * The path along which to show elevation data. Line segments will be
- * interpolated in between the points of the array; even a small number of
- * points will still produce a detailed elevation graph. <br> If only one point
- * is provided, the widget will show the elevation number for that point.
- * @type {!Array<!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude>|null|undefined}
- */
-google.maps.elevation.ElevationElement.prototype.path;
-
-/**
- * Determines if elevation will be shown in feet/miles or meters/km. If
- * undefined, the widget will default to the preferred unit system for the
- * region specified in the API loader.
- * @type {!google.maps.UnitSystem|null|undefined}
- */
-google.maps.elevation.ElevationElement.prototype.unitSystem;
-
-
-
-/**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
- * Options for <code>ElevationElement</code>.
- * @record
- */
-google.maps.elevation.ElevationElementOptions = function() {};
-
-/**
- * See {@link google.maps.elevation.ElevationElement.path}
- * @type {!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
- */
-google.maps.elevation.ElevationElementOptions.prototype.path;
-
-/**
- * See {@link google.maps.elevation.ElevationElement.unitSystem}
- * @type {!google.maps.UnitSystem|null|undefined}
- */
-google.maps.elevation.ElevationElementOptions.prototype.unitSystem;
 
 /**
  * @const
@@ -16315,8 +16480,6 @@ google.maps.journeySharing.WaypointType = {
 google.maps.maps3d = {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Specifies how altitude components in the coordinates are interpreted.
  *
  * Access by calling `const {AltitudeMode} = await
@@ -16355,8 +16518,6 @@ google.maps.maps3d.AltitudeMode = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * CameraOptions object used to define the properties that can be set on a
  * camera object. The camera object can be anything that has a camera position,
  * e.g. a current map state, or a future requested animation state.
@@ -16395,8 +16556,6 @@ google.maps.maps3d.CameraOptions.prototype.roll;
 google.maps.maps3d.CameraOptions.prototype.tilt;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Customization options for the FlyCameraAround Animation.
  * @record
  */
@@ -16411,11 +16570,17 @@ google.maps.maps3d.FlyAroundAnimationOptions = function() {};
 google.maps.maps3d.FlyAroundAnimationOptions.prototype.camera;
 
 /**
- * The duration of the animation in milliseconds. This is the total duration of
- * the animation, not the duration of a single rotation.
+ * The duration of one animation cycle in milliseconds.
  * @type {number|undefined}
  */
 google.maps.maps3d.FlyAroundAnimationOptions.prototype.durationMillis;
+
+/**
+ * Specifies the number of times an animation should repeat. If the number is
+ * zero, the animation will complete immediately after it starts.
+ * @type {number|undefined}
+ */
+google.maps.maps3d.FlyAroundAnimationOptions.prototype.repeatCount;
 
 /**
  * The number of rounds to rotate around the center in the given duration. This
@@ -16423,12 +16588,12 @@ google.maps.maps3d.FlyAroundAnimationOptions.prototype.durationMillis;
  * will cause the camera to rotate in a counter-clockwise direction instead of
  * the default clockwise direction.
  * @type {number|undefined}
+ * @deprecated Please use {@link
+ *     google.maps.maps3d.FlyAroundAnimationOptions.repeatCount} instead.
  */
 google.maps.maps3d.FlyAroundAnimationOptions.prototype.rounds;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Customization options for the FlyCameraTo Animation.
  * @record
  */
@@ -16448,8 +16613,35 @@ google.maps.maps3d.FlyToAnimationOptions.prototype.durationMillis;
 google.maps.maps3d.FlyToAnimationOptions.prototype.endCamera;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Specifies how gesture events should be handled on the map element.
  *
+ * Access by calling `const {GestureHandling} = await
+ * google.maps.importLibrary("maps3d")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.maps3d.GestureHandling = {
+  /**
+   * This lets the map choose whether to use cooperative or greedy gesture
+   * handling. This is the default behavior if not specified.<br /><br />This
+   * will cause the map to enter cooperative mode if the map is dominating its
+   * scroll parent (usually the host page) to where the user cannot scroll away
+   * from the map to other content.
+   */
+  AUTO: 'AUTO',
+  /**
+   * This forces cooperative mode, where modifier keys or two-finger gestures
+   * are required to scroll the map.
+   */
+  COOPERATIVE: 'COOPERATIVE',
+  /**
+   * This forces greedy mode, where the host page cannot be scrolled from user
+   * events on the map element.
+   */
+  GREEDY: 'GREEDY',
+};
+
+/**
  * This event is created from clicking a Map3DElement.
  *
  * Access by calling `const {LocationClickEvent} = await
@@ -16471,8 +16663,6 @@ google.maps.maps3d.LocationClickEvent = function() {};
 google.maps.maps3d.LocationClickEvent.prototype.position;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Map3DElement is an HTML interface for the 3D Map view. Note that the
  * <code>mode</code> must be set for the 3D Map to start rendering.
  *
@@ -16510,12 +16700,29 @@ google.maps.maps3d.Map3DElement.prototype.bounds;
 google.maps.maps3d.Map3DElement.prototype.center;
 
 /**
- * When <code>true</code>, all default UI buttons are disabled. Does not disable
- * the keyboard and gesture controls.
+ * When <code>true</code>, all default UI buttons are hidden.
  * @default <code>false</code>
  * @type {boolean|null|undefined}
  */
-google.maps.maps3d.Map3DElement.prototype.defaultUIDisabled;
+google.maps.maps3d.Map3DElement.prototype.defaultUIHidden;
+
+/**
+ * If provided, an accessibility description (e.g. for use with screen readers)
+ * will be added to the map with the provided value.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.description;
+
+/**
+ * Controls cooperative gesture handling. When set to <code>COOPERATIVE</code>,
+ * modifier keys or two-finger gestures are required to scroll the map. When set
+ * to <code>GREEDY</code>, the host page cannot be scrolled from user events on
+ * the map element. When set to <code>AUTO</code>, the gesture handling is
+ * determined by the scrollability of the host page.
+ * @default {@link google.maps.maps3d.GestureHandling.GREEDY}
+ * @type {!google.maps.maps3d.GestureHandling|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.gestureHandling;
 
 /**
  * The compass heading of the map, in degrees, where due north is zero. When
@@ -16533,6 +16740,24 @@ google.maps.maps3d.Map3DElement.prototype.heading;
  * @type {!Iterable<string>|null|undefined}
  */
 google.maps.maps3d.Map3DElement.prototype.internalUsageAttributionIds;
+
+/**
+ * Language in which to attempt to render the base map&#39;s language. Will
+ * default to the language requested by the developer when loading the Maps JS
+ * API.<br/><br/> This must be set when the element is created, and cannot be
+ * updated after the map has loaded.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.language;
+
+/**
+ * Specifies a map ID which will be used to fetch cloud-based map style for the
+ * map. This should not be set after the map has been initialized. Therefore we
+ * ensure the mapId is only set during initialization and do not publish this
+ * attribute to public-facing channels.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.mapId;
 
 /**
  * The maximum altitude above the ground which will be displayed on the map. A
@@ -16604,6 +16829,15 @@ google.maps.maps3d.Map3DElement.prototype.mode;
 google.maps.maps3d.Map3DElement.prototype.range;
 
 /**
+ * Region with which to attempt to render the base map&#39;s POIs. Will default
+ * to the region requested by the developer when loading the Maps JS
+ * API.<br/><br/> This must be set when the element is created, and cannot be
+ * updated after the map has loaded.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.region;
+
+/**
  * The roll of the camera around the view vector in degrees. To resolve
  * ambiguities, when there is no tilt, any roll will be interpreted as heading.
  * @type {number|null|undefined}
@@ -16618,17 +16852,29 @@ google.maps.maps3d.Map3DElement.prototype.roll;
  */
 google.maps.maps3d.Map3DElement.prototype.tilt;
 
+/**
+ * When <code>true</code>, all default UI buttons are disabled. Does not disable
+ * the keyboard and gesture controls.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ * @deprecated Please use {@link
+ *     google.maps.maps3d.Map3DElement.defaultUIHidden} instead. This property
+ *     will be removed in a future release.
+ */
+google.maps.maps3d.Map3DElement.prototype.defaultUIDisabled;
+
 
 
 /**
- * This method orbits the camera around a given location for a given duration,
- * making the given number of rounds in that time. <br /><br /> By default, the
- * camera orbits clockwise. If given a negative number for rounds, the camera
- * will orbit in a counter-clockwise direction instead. <br /><br /> The method
- * is asynchronous because animations can only start after the map has loaded a
+ * This method orbits the camera around a given location for a given duration.
+ * The animation can be repeated by the given number of {@link
+ * google.maps.maps3d.FlyAroundAnimationOptions.repeatCount} times. <br /><br />
+ * The camera will move in a clockwise direction. <br /><br /> The method is
+ * asynchronous because animations can only start after the map has loaded a
  * minimum amount. The method returns once the animation has been started. <br
- * /><br /> If the number of rounds is zero, no spin will occur, and the
- * animation will complete immediately after it starts.
+ * /><br /> If the number of {@link
+ * google.maps.maps3d.FlyAroundAnimationOptions.repeatCount} times is zero, no
+ * spin will occur, and the animation will complete immediately after it starts.
  * @param {!google.maps.maps3d.FlyAroundAnimationOptions} options
  * @return {undefined}
  */
@@ -16658,8 +16904,6 @@ google.maps.maps3d.Map3DElement.prototype.flyCameraTo = function(options) {};
 google.maps.maps3d.Map3DElement.prototype.stopCameraAnimation = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Map3DElementOptions object used to define the properties that can be set on a
  * Map3DElement.
  * @record
@@ -16679,10 +16923,22 @@ google.maps.maps3d.Map3DElementOptions.prototype.bounds;
 google.maps.maps3d.Map3DElementOptions.prototype.center;
 
 /**
- * See {@link google.maps.maps3d.Map3DElement.defaultUIDisabled}.
+ * See {@link google.maps.maps3d.Map3DElement.defaultUIHidden}.
  * @type {boolean|null|undefined}
  */
-google.maps.maps3d.Map3DElementOptions.prototype.defaultUIDisabled;
+google.maps.maps3d.Map3DElementOptions.prototype.defaultUIHidden;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.description}.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.description;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.gestureHandling}.
+ * @type {!google.maps.maps3d.GestureHandling|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.gestureHandling;
 
 /**
  * See {@link google.maps.maps3d.Map3DElement.heading}.
@@ -16695,6 +16951,18 @@ google.maps.maps3d.Map3DElementOptions.prototype.heading;
  * @type {!Iterable<string>|null|undefined}
  */
 google.maps.maps3d.Map3DElementOptions.prototype.internalUsageAttributionIds;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.language}.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.language;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.mapId}.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.mapId;
 
 /**
  * See {@link google.maps.maps3d.Map3DElement.maxAltitude}.
@@ -16745,6 +17013,12 @@ google.maps.maps3d.Map3DElementOptions.prototype.mode;
 google.maps.maps3d.Map3DElementOptions.prototype.range;
 
 /**
+ * See {@link google.maps.maps3d.Map3DElement.region}.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.region;
+
+/**
  * See {@link google.maps.maps3d.Map3DElement.roll}.
  * @type {number|null|undefined}
  */
@@ -16757,8 +17031,15 @@ google.maps.maps3d.Map3DElementOptions.prototype.roll;
 google.maps.maps3d.Map3DElementOptions.prototype.tilt;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
+ * See {@link google.maps.maps3d.Map3DElement.defaultUIDisabled}.
+ * @type {boolean|null|undefined}
+ * @deprecated Please use {@link
+ *     google.maps.maps3d.Map3DElement.defaultUIHidden} instead. This property
+ *     will be removed in a future release.
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.defaultUIDisabled;
+
+/**
  * Specifies a mode the map should be rendered in.
  *
  * Access by calling `const {MapMode} = await
@@ -16780,8 +17061,6 @@ google.maps.maps3d.MapMode = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Shows a position on a 3D map. Note that the <code>position</code> must be set
  * for the <code>Marker3DElement</code> to display.
  *
@@ -16858,8 +17137,6 @@ google.maps.maps3d.Marker3DElement.prototype.zIndex;
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Marker3DElementOptions object used to define the properties that can be set
  * on a Marker3DElement.
  * @record
@@ -16915,8 +17192,6 @@ google.maps.maps3d.Marker3DElementOptions.prototype.sizePreserved;
 google.maps.maps3d.Marker3DElementOptions.prototype.zIndex;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Shows a position on a 3D map. Note that the <code>position</code> must be set
  * for the <code>Marker3DInteractiveElement</code> to display. Unlike
  * <code>Marker3DElement</code>, <code>Marker3DInteractiveElement</code>
@@ -16949,8 +17224,6 @@ google.maps.maps3d.Marker3DInteractiveElement.prototype.title;
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Marker3DInteractiveElementOptions object used to define the properties that
  * can be set on a Marker3DInteractiveElement.
  * @extends {google.maps.maps3d.Marker3DElementOptions}
@@ -16973,8 +17246,6 @@ google.maps.maps3d.Marker3DInteractiveElementOptions.prototype
 google.maps.maps3d.Marker3DInteractiveElementOptions.prototype.title;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A 3D model which allows the rendering of gLTF models. Note that the
  * <code>position</code> and the <code>src</code> must be set for the
  * <code>Model3DElement</code> to display. <br /><br /> Core properties of the
@@ -17036,8 +17307,6 @@ google.maps.maps3d.Model3DElement.prototype.src;
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Model3DElementOptions object used to define the properties that can be set on
  * a Model3DElement.
  * @record
@@ -17075,8 +17344,6 @@ google.maps.maps3d.Model3DElementOptions.prototype.scale;
 google.maps.maps3d.Model3DElementOptions.prototype.src;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A 3D model which allows the rendering of gLTF models. Note that the
  * <code>position</code> and the <code>src</code> must be set for the
  * <code>Model3DElement</code> to display. <br /><br /> Core properties of the
@@ -17098,8 +17365,6 @@ google.maps.maps3d.Model3DInteractiveElement = function(options) {};
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Model3DInteractiveElementOptions object used to define the properties that
  * can be set on a Model3DInteractiveElement.
  * @extends {google.maps.maps3d.Model3DElementOptions}
@@ -17108,8 +17373,6 @@ google.maps.maps3d.Model3DInteractiveElement = function(options) {};
 google.maps.maps3d.Model3DInteractiveElementOptions = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * This event is created from clicking on a place icon on a
  * <code>Map3DElement</code>. To prevent the default popover from showing up,
  * call the <code>preventDefault()</code> method on this event to prevent it
@@ -17140,8 +17403,6 @@ google.maps.maps3d.PlaceClickEvent.prototype.placeId;
 google.maps.maps3d.PlaceClickEvent.prototype.fetchPlace = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A 3D polygon (like a 3D polyline) defines a series of connected coordinates
  * in an ordered sequence. Additionally, polygons form a closed loop and define
  * a filled region.
@@ -17201,14 +17462,14 @@ google.maps.maps3d.Polygon3DElement.prototype.geodesic;
  * cut-outs inside the polygon.
  * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>>|null|undefined}
  */
-google.maps.maps3d.Polygon3DElement.prototype.innerCoordinates;
+google.maps.maps3d.Polygon3DElement.prototype.innerPaths;
 
 /**
  * The ordered sequence of coordinates that designates a closed loop. Altitude
  * is ignored in certain modes and thus optional.
  * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
  */
-google.maps.maps3d.Polygon3DElement.prototype.outerCoordinates;
+google.maps.maps3d.Polygon3DElement.prototype.path;
 
 /**
  * The stroke color. All CSS3 colors are supported.
@@ -17228,11 +17489,28 @@ google.maps.maps3d.Polygon3DElement.prototype.strokeWidth;
  */
 google.maps.maps3d.Polygon3DElement.prototype.zIndex;
 
+/**
+ * The ordered sequence of coordinates that designates a closed loop. Altitude
+ * is ignored in certain modes and thus optional.
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @deprecated Use <code>path</code> instead. This property will be removed in a
+ *     future release.
+ */
+google.maps.maps3d.Polygon3DElement.prototype.outerCoordinates;
+
+/**
+ * The ordered sequence of coordinates that designates a closed loop. Unlike
+ * polylines, a polygon may consist of one or more paths, which create multiple
+ * cut-outs inside the polygon.
+ * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>>|null|undefined}
+ * @deprecated Use <code>innerPaths</code> instead. This property will be
+ *     removed in a future release.
+ */
+google.maps.maps3d.Polygon3DElement.prototype.innerCoordinates;
+
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Polygon3DElementOptions object used to define the properties that can be set
  * on a Polygon3DElement.
  * @record
@@ -17300,8 +17578,6 @@ google.maps.maps3d.Polygon3DElementOptions.prototype.strokeWidth;
 google.maps.maps3d.Polygon3DElementOptions.prototype.zIndex;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A 3D polygon (like a 3D polyline) defines a series of connected coordinates
  * in an ordered sequence. Additionally, polygons form a closed loop and define
  * a filled region. Unlike <code>Polygon3DElement</code>,
@@ -17321,8 +17597,6 @@ google.maps.maps3d.Polygon3DInteractiveElement = function(options) {};
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Polygon3DInteractiveElementOptions object used to define the properties that
  * can be set on a Polygon3DInteractiveElement.
  * @extends {google.maps.maps3d.Polygon3DElementOptions}
@@ -17331,8 +17605,6 @@ google.maps.maps3d.Polygon3DInteractiveElement = function(options) {};
 google.maps.maps3d.Polygon3DInteractiveElementOptions = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A 3D polyline is a linear overlay of connected line segments on a 3D map.
  *
  * Access by calling `const {Polyline3DElement} = await
@@ -17351,13 +17623,6 @@ google.maps.maps3d.Polyline3DElement = function(options) {};
  * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
  */
 google.maps.maps3d.Polyline3DElement.prototype.altitudeMode;
-
-/**
- * The ordered sequence of coordinates of the Polyline. Altitude is ignored in
- * certain modes and thus optional.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
- */
-google.maps.maps3d.Polyline3DElement.prototype.coordinates;
 
 /**
  * Specifies whether parts of the polyline which could be occluded are drawn or
@@ -17399,6 +17664,13 @@ google.maps.maps3d.Polyline3DElement.prototype.outerColor;
 google.maps.maps3d.Polyline3DElement.prototype.outerWidth;
 
 /**
+ * The ordered sequence of coordinates of the Polyline. Altitude is ignored in
+ * certain modes and thus optional.
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElement.prototype.path;
+
+/**
  * The stroke color. All CSS3 colors are supported.
  * @type {string|null|undefined}
  */
@@ -17416,11 +17688,18 @@ google.maps.maps3d.Polyline3DElement.prototype.strokeWidth;
  */
 google.maps.maps3d.Polyline3DElement.prototype.zIndex;
 
+/**
+ * The ordered sequence of coordinates of the Polyline. Altitude is ignored in
+ * certain modes and thus optional.
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @deprecated Use <code>path</code> instead. This property will be removed in a
+ *     future release.
+ */
+google.maps.maps3d.Polyline3DElement.prototype.coordinates;
+
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Polyline3DElementOptions object used to define the properties that can be set
  * on a Polyline3DElement.
  * @record
@@ -17488,8 +17767,6 @@ google.maps.maps3d.Polyline3DElementOptions.prototype.strokeWidth;
 google.maps.maps3d.Polyline3DElementOptions.prototype.zIndex;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A 3D polyline is a linear overlay of connected line segments on a 3D map.
  * Unlike <code>Polyline3DElement</code>,
  * <code>Polyline3DInteractiveElement</code> receives a <code>gmp-click</code>
@@ -17508,8 +17785,6 @@ google.maps.maps3d.Polyline3DInteractiveElement = function(options) {};
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Polyline3DInteractiveElementOptions object used to define the properties that
  * can be set on a Polyline3DInteractiveElement.
  * @extends {google.maps.maps3d.Polyline3DElementOptions}
@@ -17518,8 +17793,6 @@ google.maps.maps3d.Polyline3DInteractiveElement = function(options) {};
 google.maps.maps3d.Polyline3DInteractiveElementOptions = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * A custom HTML element that renders a popover. It looks like a bubble and is
  * often connected to a marker.
  *
@@ -17569,8 +17842,6 @@ google.maps.maps3d.PopoverElement.prototype.positionAnchor;
 
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * PopoverElementOptions object used to define the properties that can be set on
  * a PopoverElement.
  * @record
@@ -17602,8 +17873,6 @@ google.maps.maps3d.PopoverElementOptions.prototype.open;
 google.maps.maps3d.PopoverElementOptions.prototype.positionAnchor;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * This event is created from monitoring a steady state of
  * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
  *
@@ -17652,6 +17921,30 @@ google.maps.marker.AdvancedMarkerClickEvent = function() {};
  * @constructor
  */
 google.maps.marker.AdvancedMarkerElement = function(options) {};
+
+/**
+ * A <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/CSS/length-percentage">CSS
+ * length-percentage</a> value which is used to offset the anchor point of the
+ * marker from the top left corner of the marker. This is useful when using a
+ * visual which has an anchor point that is different than the typical bottom
+ * center point of the default marker.
+ * @default &quot;-50%&quot;
+ * @type {string|null|undefined}
+ */
+google.maps.marker.AdvancedMarkerElement.prototype.anchorLeft;
+
+/**
+ * A <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/CSS/length-percentage">CSS
+ * length-percentage</a> value which is used to offset the anchor point of the
+ * marker from the top left corner of the marker. This is useful when using a
+ * visual which has an anchor point that is different than the typical bottom
+ * center point of the default marker.
+ * @default &quot;-100%&quot;
+ * @type {string|null|undefined}
+ */
+google.maps.marker.AdvancedMarkerElement.prototype.anchorTop;
 
 /**
  * See {@link
@@ -17731,6 +18024,30 @@ google.maps.marker.AdvancedMarkerElement.prototype.addListener = function(
  * @record
  */
 google.maps.marker.AdvancedMarkerElementOptions = function() {};
+
+/**
+ * A <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/CSS/length-percentage">CSS
+ * length-percentage</a> value which is used to offset the anchor point of the
+ * marker from the top left corner of the marker. This is useful when using a
+ * visual which has an anchor point that is different than the typical bottom
+ * center point of the default marker.
+ * @default &quot;-50%&quot;
+ * @type {string|null|undefined}
+ */
+google.maps.marker.AdvancedMarkerElementOptions.prototype.anchorLeft;
+
+/**
+ * A <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/CSS/length-percentage">CSS
+ * length-percentage</a> value which is used to offset the anchor point of the
+ * marker from the top left corner of the marker. This is useful when using a
+ * visual which has an anchor point that is different than the typical bottom
+ * center point of the default marker.
+ * @default &quot;-100%&quot;
+ * @type {string|null|undefined}
+ */
+google.maps.marker.AdvancedMarkerElementOptions.prototype.anchorTop;
 
 /**
  * An enumeration specifying how an <code>AdvancedMarkerElement</code> should
@@ -17824,12 +18141,11 @@ google.maps.marker.AdvancedMarkerElementOptions.prototype.zIndex;
 /**
  * A <code>PinElement</code> represents a DOM element that consists of a shape
  * and a glyph. The shape has the same balloon style as seen in the
- * default {@link google.maps.marker.AdvancedMarkerElement}. The glyph is an
- * optional DOM element displayed in the balloon shape. A
- * <code>PinElement</code> may have a different aspect ratio depending on
- * its {@link google.maps.marker.PinElement.scale}.<br> <br>
- * <strong>Note:</strong> Usage as a Web Component (e.g. usage as an HTMLElement
- * subclass, or via HTML) is not yet supported.
+ * default {@link google.maps.marker.AdvancedMarkerElement} or {@link
+ * google.maps.maps3d.Marker3DElement}. The glyph is an optional DOM element
+ * displayed in the balloon shape. A <code>PinElement</code> may have a
+ * different aspect ratio depending on its {@link
+ * google.maps.marker.PinElement.scale}.<br> <br>
  *
  * Access by calling `const {PinElement} = await
  * google.maps.importLibrary("marker")`. See
@@ -17854,28 +18170,43 @@ google.maps.marker.PinElement.prototype.background;
 google.maps.marker.PinElement.prototype.borderColor;
 
 /**
- * This field is read-only. The DOM Element backing the view.
- * @type {!HTMLElement}
- */
-google.maps.marker.PinElement.prototype.element;
-
-/**
- * See {@link google.maps.marker.PinElementOptions.glyph}.
- * @type {string|!Element|!URL|null|undefined}
- */
-google.maps.marker.PinElement.prototype.glyph;
-
-/**
  * See {@link google.maps.marker.PinElementOptions.glyphColor}.
  * @type {string|null|undefined}
  */
 google.maps.marker.PinElement.prototype.glyphColor;
 
 /**
+ * See {@link google.maps.marker.PinElementOptions.glyphSrc}.
+ * @type {!URL|string|null|undefined}
+ */
+google.maps.marker.PinElement.prototype.glyphSrc;
+
+/**
+ * See {@link google.maps.marker.PinElementOptions.glyphText}.
+ * @type {string|null|undefined}
+ */
+google.maps.marker.PinElement.prototype.glyphText;
+
+/**
  * See {@link google.maps.marker.PinElementOptions.scale}.
  * @type {number|null|undefined}
  */
 google.maps.marker.PinElement.prototype.scale;
+
+/**
+ * This field is read-only. The DOM Element backing the view.
+ * @type {!HTMLElement}
+ * @deprecated Use the PinElement directly.
+ */
+google.maps.marker.PinElement.prototype.element;
+
+/**
+ * See {@link google.maps.marker.PinElementOptions.glyph}.
+ * @type {string|!Element|!URL|null|undefined}
+ * @deprecated Use {@link google.maps.marker.PinElementOptions.glyphText}
+ *     or {@link google.maps.marker.PinElementOptions.glyphSrc} instead.
+ */
+google.maps.marker.PinElement.prototype.glyph;
 
 
 
@@ -17902,12 +18233,6 @@ google.maps.marker.PinElementOptions.prototype.background;
 google.maps.marker.PinElementOptions.prototype.borderColor;
 
 /**
- * The DOM element displayed in the pin.
- * @type {string|!Element|!URL|null|undefined}
- */
-google.maps.marker.PinElementOptions.prototype.glyph;
-
-/**
  * The color of the glyph. Supports any CSS <a
  * href="https://developer.mozilla.org/en-US/docs/Web/CSS/color_value">color
  * value</a>.
@@ -17916,11 +18241,31 @@ google.maps.marker.PinElementOptions.prototype.glyph;
 google.maps.marker.PinElementOptions.prototype.glyphColor;
 
 /**
+ * The source of the glyph image to be displayed in the pin.
+ * @type {!URL|string|null|undefined}
+ */
+google.maps.marker.PinElementOptions.prototype.glyphSrc;
+
+/**
+ * The text displayed in the pin.
+ * @type {string|null|undefined}
+ */
+google.maps.marker.PinElementOptions.prototype.glyphText;
+
+/**
  * The scale of the pin.
  * @default <code>1</code>
  * @type {number|null|undefined}
  */
 google.maps.marker.PinElementOptions.prototype.scale;
+
+/**
+ * The DOM element displayed in the pin.
+ * @type {string|!Element|!URL|null|undefined}
+ * @deprecated Use {@link google.maps.marker.PinElementOptions.glyphText}
+ *     or {@link google.maps.marker.PinElementOptions.glyphSrc} instead.
+ */
+google.maps.marker.PinElementOptions.prototype.glyph;
 
 /**
  * @const
@@ -18893,6 +19238,69 @@ google.maps.places.ConnectorAggregation.prototype.outOfServiceCount;
 google.maps.places.ConnectorAggregation.prototype.type;
 
 /**
+ * The consumer alert message. All text are rendered in the language specified
+ * by the <code>languageCode</code> field.
+ *
+ * Access by calling `const {ConsumerAlert} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.ConsumerAlert = function() {};
+
+/**
+ * The details of the consumer alert message.
+ * @type {!google.maps.places.ConsumerAlertDetails|null}
+ */
+google.maps.places.ConsumerAlert.prototype.details;
+
+/**
+ * The language code of the consumer alert message.
+ * @type {string|null}
+ */
+google.maps.places.ConsumerAlert.prototype.languageCode;
+
+/**
+ * The overview of the consumer alert message.
+ * @type {string|null}
+ */
+google.maps.places.ConsumerAlert.prototype.overview;
+
+/**
+ * Details of the consumer alert message.
+ *
+ * Access by calling `const {ConsumerAlertDetails} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.ConsumerAlertDetails = function() {};
+
+/**
+ * The title to show for a link to provide more information.
+ * @type {string|null}
+ */
+google.maps.places.ConsumerAlertDetails.prototype.aboutLinkTitle;
+
+/**
+ * The URI for a link to provide more information.
+ * @type {string|null}
+ */
+google.maps.places.ConsumerAlertDetails.prototype.aboutLinkURI;
+
+/**
+ * The description of the consumer alert message.
+ * @type {string|null}
+ */
+google.maps.places.ConsumerAlertDetails.prototype.description;
+
+/**
+ * The title to show together with the detailed description.
+ * @type {string|null}
+ */
+google.maps.places.ConsumerAlertDetails.prototype.title;
+
+/**
  * Information about the EV charging station hosted in the place.
  *
  * Access by calling `const {EVChargeOptions} = await
@@ -19674,6 +20082,12 @@ google.maps.places.Place.prototype.attributions;
 google.maps.places.Place.prototype.businessStatus;
 
 /**
+ * The consumer alert for this place.
+ * @type {!google.maps.places.ConsumerAlert|null|undefined}
+ */
+google.maps.places.Place.prototype.consumerAlert;
+
+/**
  * The location&#39;s display name. <code>null</code> if there is no name.
  * <code>undefined</code> if the name data has not been loaded from the server.
  * @type {string|null|undefined}
@@ -20449,26 +20863,6 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedRegion;
 google.maps.places.PlaceAutocompleteElementOptions.prototype.unitSystem;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
- * This event is emitted by the PlaceAutocompleteElement when there is an issue
- * with the network request.
- *
- * Access by calling `const {PlaceAutocompleteRequestErrorEvent} = await
- * google.maps.importLibrary("places")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @extends {Event}
- * @constructor
- * @deprecated The <code>gmp-requesterror</code> event will continue to trigger
- *     in the beta channel, but will not trigger in alpha or at release. For
- *     migration purposes, continue to listen to the
- *     <code>gmp-requesterror</code> event, but also add an event listener for
- *     the <code>gmp-error</code> event, which returns an <code>Event</code>
- *     object.
- */
-google.maps.places.PlaceAutocompleteRequestErrorEvent = function() {};
-
-/**
  * Configures a {@link google.maps.places.PlaceDetailsCompactElement}, {@link
  * google.maps.places.PlaceDetailsElement} or {@link
  * google.maps.places.PlaceSearchElement} to show a custom set of content.
@@ -20589,12 +20983,6 @@ google.maps.places.PlaceContextualListConfigElement.prototype.layout;
  */
 google.maps.places.PlaceContextualListConfigElement.prototype.mapHidden;
 
-/**
- * The map mode used in Place Contextual Element for a list of places.
- * @type {!google.maps.places.PlaceContextualListMapMode|null|undefined}
- */
-google.maps.places.PlaceContextualListConfigElement.prototype.mapMode;
-
 
 
 /**
@@ -20620,13 +21008,6 @@ google.maps.places.PlaceContextualListConfigElementOptions.prototype.layout;
 google.maps.places.PlaceContextualListConfigElementOptions.prototype.mapHidden;
 
 /**
- * The map mode used in Place Contextual Element for a list of places.
- * @default {@link google.maps.places.PlaceContextualListMapMode.ROADMAP}
- * @type {!google.maps.places.PlaceContextualListMapMode|null|undefined}
- */
-google.maps.places.PlaceContextualListConfigElementOptions.prototype.mapMode;
-
-/**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  *
  * The list of layouts that the Place Contextual Element supports for the list
@@ -20647,32 +21028,6 @@ google.maps.places.PlaceContextualListLayout = {
    * Vertical list layout: list items are rendered as cards in a vertical list.
    */
   VERTICAL: 'VERTICAL',
-};
-
-/**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
- * The map mode used in Place Contextual Element for a list of places.
- *
- * Access by calling `const {PlaceContextualListMapMode} = await
- * google.maps.importLibrary("places")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @enum {string}
- */
-google.maps.places.PlaceContextualListMapMode = {
-  /**
-   * A transparent layer of major streets on satellite, or photorealistic
-   * imagery in 3D.
-   */
-  HYBRID: 'HYBRID',
-  /**
-   * No map.
-   */
-  NONE: 'NONE',
-  /**
-   * A normal 2D street map.
-   */
-  ROADMAP: 'ROADMAP',
 };
 
 /**
@@ -21093,6 +21448,7 @@ google.maps.places.PlaceMediaElementOptions.prototype.preferredSize;
 google.maps.places.PlaceNearbySearchRequestElement = function(options) {};
 
 /**
+ * Excluded primary place types.
  * @default <code>null</code>
  * @type {!Array<string>|null|undefined}
  */
@@ -21100,12 +21456,14 @@ google.maps.places.PlaceNearbySearchRequestElement.prototype
     .excludedPrimaryTypes;
 
 /**
+ * Excluded place types.
  * @default <code>null</code>
  * @type {!Array<string>|null|undefined}
  */
 google.maps.places.PlaceNearbySearchRequestElement.prototype.excludedTypes;
 
 /**
+ * Included primary place type.
  * @default <code>null</code>
  * @type {!Array<string>|null|undefined}
  */
@@ -21113,12 +21471,14 @@ google.maps.places.PlaceNearbySearchRequestElement.prototype
     .includedPrimaryTypes;
 
 /**
+ * Included place type.
  * @default <code>null</code>
  * @type {!Array<string>|null|undefined}
  */
 google.maps.places.PlaceNearbySearchRequestElement.prototype.includedTypes;
 
 /**
+ * The region to search. Normalizes to a <code>Circle</code>.
  * @default <code>null</code>
  * @type {!google.maps.Circle|!google.maps.CircleLiteral|null|undefined}
  */
@@ -21126,12 +21486,14 @@ google.maps.places.PlaceNearbySearchRequestElement.prototype
     .locationRestriction;
 
 /**
+ * Maximum number of results to return.
  * @default <code>null</code>
  * @type {number|null|undefined}
  */
 google.maps.places.PlaceNearbySearchRequestElement.prototype.maxResultCount;
 
 /**
+ * How results will be ranked in the response.
  * @default <code>null</code>
  * @type {!google.maps.places.SearchNearbyRankPreference|null|undefined}
  */
@@ -22378,12 +22740,14 @@ google.maps.places.PlaceSummaryElementOptions = function() {};
 google.maps.places.PlaceTextSearchRequestElement = function(options) {};
 
 /**
+ * The list of preferred EV connector types.
  * @default <code>null</code>
  * @type {!Array<!google.maps.places.EVConnectorType>|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.evConnectorTypes;
 
 /**
+ * Minimum required charging rate in kilowatts.
  * @default <code>null</code>
  * @type {number|null|undefined}
  */
@@ -22391,60 +22755,74 @@ google.maps.places.PlaceTextSearchRequestElement.prototype
     .evMinimumChargingRateKw;
 
 /**
+ * The requested place type.
  * @default <code>null</code>
  * @type {string|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.includedType;
 
 /**
+ * Used to restrict the search to places that are currently open.
  * @default <code>null</code>
  * @type {boolean|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.isOpenNow;
 
 /**
+ * Location bias for the search. Normalizes to a <code>LatLngAltitude |
+ * LatLngBounds | Circle | string</code>.
  * @default <code>null</code>
- * @type {string|!google.maps.LatLngAltitude|!google.maps.LatLngBounds|!google.maps.Circle|!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngBoundsLiteral|!google.maps.CircleLiteral|null|undefined}
+ * @type {!google.maps.places.LocationBias|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.locationBias;
 
 /**
+ * Location restriction for the search. Normalizes to a
+ * <code>LatLngBounds</code>.
  * @default <code>null</code>
  * @type {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.locationRestriction;
 
 /**
+ * Maximum number of results to return.
  * @default <code>null</code>
  * @type {number|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.maxResultCount;
 
 /**
+ * Filter out results whose average user rating is strictly less than this
+ * limit.
  * @default <code>null</code>
  * @type {number|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.minRating;
 
 /**
+ * Used to restrict the search to places that are marked as certain price
+ * levels.
  * @default <code>null</code>
  * @type {!Array<!google.maps.places.PriceLevel>|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.priceLevels;
 
 /**
+ * How results will be ranked in the response.
  * @default <code>null</code>
  * @type {!google.maps.places.SearchByTextRankPreference|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.rankPreference;
 
 /**
+ * The text query for textual search.
  * @default <code>null</code>
  * @type {string|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype.textQuery;
 
 /**
+ * Used to set strict type filtering for &#39;includedType&#39;.
  * @default <code>null</code>
  * @type {boolean|null|undefined}
  */
@@ -22501,7 +22879,7 @@ google.maps.places.PlaceTextSearchRequestElementOptions.prototype.isOpenNow;
  * google.maps.places.SearchByTextRequest.locationBias} and {@link
  * google.maps.places.PlaceTextSearchRequestElement.locationBias} for more
  * details.
- * @type {string|!google.maps.LatLngAltitude|!google.maps.LatLngBounds|!google.maps.Circle|!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngBoundsLiteral|!google.maps.CircleLiteral|null|undefined}
+ * @type {!google.maps.places.LocationBias|null|undefined}
  */
 google.maps.places.PlaceTextSearchRequestElementOptions.prototype.locationBias;
 
@@ -22660,6 +23038,19 @@ google.maps.places.PlaceWebsiteElementOptions = function() {};
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!HTMLDivElement|!google.maps.Map} attrContainer
  * @constructor
+ * @deprecated As of March 1st, 2025, google.maps.places.PlacesService is not
+ *     available to new customers. Please use {@link google.maps.places.Place}
+ *     instead. At this time, google.maps.places.PlacesService is not scheduled
+ *     to be discontinued, but {@link google.maps.places.Place} is recommended
+ *     over google.maps.places.PlacesService. While
+ *     google.maps.places.PlacesService will continue to receive bug fixes for
+ *     any major regressions, existing bugs in google.maps.places.PlacesService
+ *     will not be addressed. At least 12 months notice will be given before
+ *     support is discontinued. Please see <a
+ *     href="https://developers.google.com/maps/legacy">https://developers.google.com/maps/legacy</a>
+ *     for additional details and <a
+ *     href="https://developers.google.com/maps/documentation/javascript/places-migration-overview">https://developers.google.com/maps/documentation/javascript/places-migration-overview</a>
+ *     for the migration guide.
  */
 google.maps.places.PlacesService = function(attrContainer) {};
 
@@ -23217,6 +23608,19 @@ google.maps.places.Review.prototype.text;
 google.maps.places.Review.prototype.textLanguageCode;
 
 /**
+ * The month of the date when the review author visited the place. This field is
+ * 0-based; 0 is January, and 11 is December.
+ * @type {number|null}
+ */
+google.maps.places.Review.prototype.visitDateMonth;
+
+/**
+ * The year of the date when the review author visited the place.
+ * @type {number|null}
+ */
+google.maps.places.Review.prototype.visitDateYear;
+
+/**
  * A widget that provides query predictions based on a user&#39;s text input. It
  * attaches to an input element of type <code>text</code>, and listens for text
  * entry in that field. The list of predictions is presented as a drop-down
@@ -23306,15 +23710,13 @@ google.maps.places.SearchByTextRequest = function() {};
 google.maps.places.SearchByTextRequest.prototype.evSearchOptions;
 
 /**
- * Required when you use this request with {@link
- * google.maps.places.Place.searchByText}. Fields to be included in the
- * response, <a
+ * Fields to be included in the response, <a
  * href="https://developers.google.com/maps/billing/understanding-cost-of-use#places-product">which
  * will be billed for</a>. If <code>[&#39;*&#39;]</code> is passed in, all
  * available fields will be returned and billed for (this is not recommended for
  * production deployments). You can request any property in the {@link
  * google.maps.places.Place} class as a field.
- * @type {!Array<string>|undefined}
+ * @type {!Array<string>}
  */
 google.maps.places.SearchByTextRequest.prototype.fields;
 
@@ -23483,15 +23885,13 @@ google.maps.places.SearchNearbyRequest.prototype.excludedPrimaryTypes;
 google.maps.places.SearchNearbyRequest.prototype.excludedTypes;
 
 /**
- * Required when you use this request with {@link
- * google.maps.places.Place.searchNearby}. Fields to be included in the
- * response, <a
+ * Fields to be included in the response, <a
  * href="https://developers.google.com/maps/billing/understanding-cost-of-use#places-product">which
  * will be billed for</a>. If <code>[&#39;*&#39;]</code> is passed in, all
  * available fields will be returned and billed for (this is not recommended for
  * production deployments). You can request any property in the {@link
  * google.maps.places.Place} class as a field.
- * @type {!Array<string>|undefined}
+ * @type {!Array<string>}
  */
 google.maps.places.SearchNearbyRequest.prototype.fields;
 
@@ -23683,6 +24083,2539 @@ google.maps.places.TextSearchRequest.prototype.region;
  * @type {string|undefined}
  */
 google.maps.places.TextSearchRequest.prototype.type;
+
+/**
+ * @const
+ */
+google.maps.routes = {};
+
+/**
+ * Extra computations to perform for a {@link
+ * google.maps.routes.RouteMatrix.computeRouteMatrix} request.
+ *
+ * Access by calling `const {ComputeRouteMatrixExtraComputation} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.routes.ComputeRouteMatrixExtraComputation = {
+  /**
+   * Toll information for the matrix item(s).
+   */
+  TOLLS: 'TOLLS',
+};
+
+/**
+ * Request for a route matrix.
+ * @record
+ */
+google.maps.routes.ComputeRouteMatrixRequest = function() {};
+
+/**
+ * The arrival time. <br><br> Note: Can only be set when {@link
+ * google.maps.routes.ComputeRouteMatrixRequest.travelMode} is set to
+ * <code>TRANSIT</code>. You can specify either {@link
+ * google.maps.routes.ComputeRouteMatrixRequest.departureTime} or {@link
+ * google.maps.routes.ComputeRouteMatrixRequest.arrivalTime}, but not both.
+ * Transit trips are available for up to 7 days in the past or 100 days in the
+ * future.
+ * @type {!Date|undefined}
+ */
+google.maps.routes.ComputeRouteMatrixRequest.prototype.arrivalTime;
+
+/**
+ * The departure time. If you don&#39;t set this value, then this value defaults
+ * to the time that you made the request. <br><br> Note: You can only specify a
+ * time in the past when {@link
+ * google.maps.routes.ComputeRouteMatrixRequest.travelMode} is set to
+ * <code>TRANSIT</code>. Transit trips are available for up to 7 days in the
+ * past or 100 days in the future.
+ * @type {!Date|undefined}
+ */
+google.maps.routes.ComputeRouteMatrixRequest.prototype.departureTime;
+
+/**
+ * Array of destinations, which determines the columns of the response matrix. A
+ * value passed as a string may be an address, a <a
+ * href="https://plus.codes">plus code</a>, or a Place resource name. Altitude
+ * values are not taken into consideration.
+ * @type {!Iterable<string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitudeLiteral|google.maps.routes.DirectionalLocationLiteral|google.maps.places.Place|google.maps.routes.Waypoint>}
+ */
+google.maps.routes.ComputeRouteMatrixRequest.prototype.destinations;
+
+/**
+ * A list of extra computations which may be used to complete the request.
+ * <br><br> Note: These extra computations may return extra fields on the
+ * response. These extra fields must also be specified in {@link
+ * google.maps.routes.ComputeRouteMatrixRequest.fields} to be returned in the
+ * response.
+ * @type {!Iterable<!google.maps.routes.ComputeRouteMatrixExtraComputation>|undefined}
+ */
+google.maps.routes.ComputeRouteMatrixRequest.prototype.extraComputations;
+
+/**
+ * Collection of fields to be fetched. Specify <code>[&quot;*&quot;]</code> for
+ * all fields.
+ * @type {!Iterable<string>}
+ */
+google.maps.routes.ComputeRouteMatrixRequest.prototype.fields;
+
+/**
+ * The BCP-47 language code, such as &quot;en-US&quot; or &quot;sr-Latn&quot;.
+ * For more information, see <a
+ * href="http://www.unicode.org/reports/tr35/#Unicode_locale_identifier">Unicode
+ * Locale Identifier</a>. See <a
+ * href="https://developers.google.com/maps/faq#languagesupport">Language
+ * Support</a> for the list of supported languages. When you don&#39;t provide
+ * this value, the language is inferred from your Google Maps JavaScript API <a
+ * href="https://developers.google.com/maps/documentation/javascript/localization#Language">localization
+ * settings</a>. Otherwise, the language is inferred from the location of the
+ * first origin.
+ * @type {string|undefined}
+ */
+google.maps.routes.ComputeRouteMatrixRequest.prototype.language;
+
+/**
+ * Array of origins, which determines the rows of the response matrix. A value
+ * passed as a string may be an address, a <a href="https://plus.codes">plus
+ * code</a>, or a Place resource name. Altitude values are not taken into
+ * consideration. <br><br> Several size restrictions apply to the cardinality of
+ * origins and destinations: <ul> <li> The total number of origins and
+ * destinations specified as <code>string</code>s or {@link
+ * google.maps.places.Place}s must be no greater than 50. </li> <li> The product
+ * of the number of origins and the number of destinations must be no greater
+ * than 625. </li> <li> The product of the number of origins and destinations
+ * must be no greater than 100 if {@link
+ * google.maps.routes.ComputeRouteMatrixRequest.routingPreference} is set to
+ * <code>TRAFFIC_AWARE_OPTIMAL</code>. </li> <li> The product of the number of
+ * origins and destinations must be no greater than 100 if {@link
+ * google.maps.routes.ComputeRouteMatrixRequest.travelMode} is set to
+ * <code>TRANSIT</code>. </li> </ul>
+ * @type {!Iterable<string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitudeLiteral|google.maps.routes.DirectionalLocationLiteral|google.maps.places.Place|google.maps.routes.RouteMatrixOrigin|google.maps.routes.Waypoint>}
+ */
+google.maps.routes.ComputeRouteMatrixRequest.prototype.origins;
+
+/**
+ * The region code, specified as a ccTLD (&quot;top-level domain&quot;)
+ * two-character value. For more information see <a
+ * href="https://en.wikipedia.org/wiki/List_of_Internet_top-level_domains#Country_code_top-level_domains">Country
+ * code top-level domains</a>. When you don&#39;t provide this value, the region
+ * is inferred from your Google Maps JavaScript API <a
+ * href="https://developers.google.com/maps/documentation/javascript/localization#Region">localization
+ * settings</a>. Otherwise, the region is inferred from the location of the
+ * first origin.
+ * @type {string|undefined}
+ */
+google.maps.routes.ComputeRouteMatrixRequest.prototype.region;
+
+/**
+ * Specifies how to compute the route matrix. The server attempts to use the
+ * selected routing preference to compute the route matrix. If the routing
+ * preference results in an error or an extra long latency, an error is
+ * returned. You can specify this option only when {@link
+ * google.maps.routes.ComputeRouteMatrixRequest.travelMode} is
+ * <code>DRIVING</code> or <code>TWO_WHEELER</code>, otherwise the request
+ * fails.
+ * @type {!google.maps.routes.RoutingPreference|undefined}
+ */
+google.maps.routes.ComputeRouteMatrixRequest.prototype.routingPreference;
+
+/**
+ * Specifies the assumptions to use when calculating time in traffic. This
+ * setting affects the value returned in {@link
+ * google.maps.routes.RouteMatrixItem.durationMillis} which contains the
+ * predicted time in traffic based on historical averages. {@link
+ * google.maps.routes.ComputeRouteMatrixRequest.trafficModel} is only available
+ * for requests that have set {@link
+ * google.maps.routes.ComputeRouteMatrixRequest.routingPreference} to
+ * <code>TRAFFIC_AWARE_OPTIMAL</code> and {@link
+ * google.maps.routes.ComputeRouteMatrixRequest.travelMode} to
+ * <code>DRIVING</code>. Defaults to <code>BEST_GUESS</code>.
+ * @type {!google.maps.TrafficModel|undefined}
+ */
+google.maps.routes.ComputeRouteMatrixRequest.prototype.trafficModel;
+
+/**
+ * Specifies preferences that influence the route returned for
+ * <code>TRANSIT</code> routes. <br><br> Note: Can only be specified when {@link
+ * google.maps.routes.ComputeRouteMatrixRequest.travelMode} is set to
+ * <code>TRANSIT</code>.
+ * @type {!google.maps.routes.TransitPreference|undefined}
+ */
+google.maps.routes.ComputeRouteMatrixRequest.prototype.transitPreference;
+
+/**
+ * Specifies the mode of transportation.
+ * @type {!google.maps.TravelMode|undefined}
+ */
+google.maps.routes.ComputeRouteMatrixRequest.prototype.travelMode;
+
+/**
+ * Specifies the units of measure for the display fields. If you don&#39;t
+ * provide this value, then the display units are inferred from the location of
+ * the first origin.
+ * @type {!google.maps.UnitSystem|undefined}
+ */
+google.maps.routes.ComputeRouteMatrixRequest.prototype.units;
+
+/**
+ * Extra computations to perform for a {@link
+ * google.maps.routes.Route.computeRoutes} request.
+ *
+ * Access by calling `const {ComputeRoutesExtraComputation} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.routes.ComputeRoutesExtraComputation = {
+  /**
+   * Flyover information for the route(s). The
+   * <code>&quot;polylineDetails&quot;</code> field must be specified in {@link
+   * google.maps.routes.ComputeRoutesRequest.fields} to return this information.
+   * This data will only currently be populated for certain metros in India.
+   * This feature is experimental, and the SKU/charge is subject to change.
+   */
+  FLYOVER_INFO_ON_POLYLINE: 'FLYOVER_INFO_ON_POLYLINE',
+  /**
+   * Estimated fuel consumption for the route(s).
+   */
+  FUEL_CONSUMPTION: 'FUEL_CONSUMPTION',
+  /**
+   * Navigation instructions presented as a formatted HTML text string. This
+   * content is meant to be read as-is and is for display only. Do not
+   * programmatically parse it.
+   */
+  HTML_FORMATTED_NAVIGATION_INSTRUCTIONS:
+      'HTML_FORMATTED_NAVIGATION_INSTRUCTIONS',
+  /**
+   * Narrow road information for the route(s). The
+   * <code>&quot;polylineDetails&quot;</code> field must be specified in {@link
+   * google.maps.routes.ComputeRoutesRequest.fields} to return this information.
+   * This data will only currently be populated for certain metros in India.
+   * This feature is experimental, and the SKU/charge is subject to change.
+   */
+  NARROW_ROAD_INFO_ON_POLYLINE: 'NARROW_ROAD_INFO_ON_POLYLINE',
+  /**
+   * Toll information for the route(s).
+   */
+  TOLLS: 'TOLLS',
+  /**
+   * Traffic aware polylines for the route(s).
+   */
+  TRAFFIC_ON_POLYLINE: 'TRAFFIC_ON_POLYLINE',
+};
+
+/**
+ * Request for routes.
+ * @record
+ */
+google.maps.routes.ComputeRoutesRequest = function() {};
+
+/**
+ * The arrival time. <br><br> Note: Can only be set when {@link
+ * google.maps.routes.ComputeRoutesRequest.travelMode} is set to
+ * <code>TRANSIT</code>. You can specify either {@link
+ * google.maps.routes.ComputeRoutesRequest.departureTime} or {@link
+ * google.maps.routes.ComputeRoutesRequest.arrivalTime}, but not both. Transit
+ * trips are available for up to 7 days in the past or 100 days in the future.
+ * @type {!Date|undefined}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.arrivalTime;
+
+/**
+ * Specifies whether to calculate alternate routes in addition to the route. No
+ * alternative routes are returned for requests that have intermediate
+ * waypoints.
+ * @type {boolean|undefined}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.computeAlternativeRoutes;
+
+/**
+ * The departure time. If you don&#39;t set this value, then this value defaults
+ * to the time that you made the request. <br><br> Note: You can only specify a
+ * time in the past when {@link
+ * google.maps.routes.ComputeRoutesRequest.travelMode} is set to
+ * <code>TRANSIT</code>. Transit trips are available for up to 7 days in the
+ * past or 100 days in the future.
+ * @type {!Date|undefined}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.departureTime;
+
+/**
+ * The destination of the route. A value passed as a string may be an address,
+ * <a href="https://plus.codes">plus code</a>, or a Place resource name.
+ * Altitude values are not taken into consideration for computing routes.
+ * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitudeLiteral|google.maps.routes.DirectionalLocationLiteral|google.maps.places.Place|google.maps.routes.Waypoint}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.destination;
+
+/**
+ * A list of extra computations which may be used to complete the request.
+ * <br><br> Note: These extra computations may return extra fields on the
+ * response. These extra fields must also be specified in {@link
+ * google.maps.routes.ComputeRoutesRequest.fields} to be returned in the
+ * response.
+ * @type {!Iterable<!google.maps.routes.ComputeRoutesExtraComputation>|undefined}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.extraComputations;
+
+/**
+ * Collection of fields to be fetched. Specify <code>[&quot;*&quot;]</code> for
+ * all fields.
+ * @type {!Iterable<string>}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.fields;
+
+/**
+ * A set of waypoints along the route (excluding terminal points), for either
+ * stopping at or passing by. Up to 25 intermediate waypoints are supported.
+ * @type {!Iterable<!google.maps.routes.Waypoint>|undefined}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.intermediates;
+
+/**
+ * The BCP-47 language code, such as &quot;en-US&quot; or &quot;sr-Latn&quot;.
+ * For more information, see <a
+ * href="http://www.unicode.org/reports/tr35/#Unicode_locale_identifier">Unicode
+ * Locale Identifier</a>. See <a
+ * href="https://developers.google.com/maps/faq#languagesupport">Language
+ * Support</a> for the list of supported languages. When you don&#39;t provide
+ * this value, the language is inferred from your Google Maps JavaScript API <a
+ * href="https://developers.google.com/maps/documentation/javascript/localization#Language">localization
+ * settings</a>. Otherwise, the language is inferred from the location of the
+ * origin.
+ * @type {string|undefined}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.language;
+
+/**
+ * If set to true, the service attempts to minimize the overall cost of the
+ * route by re-ordering the specified intermediate waypoints. The request fails
+ * if any of the intermediate waypoints is a via waypoint. Use {@link
+ * google.maps.routes.Route.optimizedIntermediateWaypointIndices} in the
+ * response to find the new ordering. If
+ * <code>&quot;optimizedIntermediateWaypointIndices&quot;</code> is not
+ * requested in {@link google.maps.routes.ComputeRoutesRequest.fields}, the
+ * request fails. If set to false, {@link
+ * google.maps.routes.Route.optimizedIntermediateWaypointIndices} in the
+ * response will be empty.
+ * @type {boolean|undefined}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.optimizeWaypointOrder;
+
+/**
+ * The origin of the route. A value passed as a string may be an address, <a
+ * href="https://plus.codes">plus code</a>, or a Place resource name. Altitude
+ * values are not taken into consideration for computing routes.
+ * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitudeLiteral|google.maps.routes.DirectionalLocationLiteral|google.maps.places.Place|google.maps.routes.Waypoint}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.origin;
+
+/**
+ * Specifies the preference for the quality of the polyline.
+ * @type {!google.maps.routes.PolylineQuality|undefined}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.polylineQuality;
+
+/**
+ * The region code, specified as a ccTLD (&quot;top-level domain&quot;)
+ * two-character value. For more information see <a
+ * href="https://en.wikipedia.org/wiki/List_of_Internet_top-level_domains#Country_code_top-level_domains">Country
+ * code top-level domains</a>. When you don&#39;t provide this value, the region
+ * is inferred from your Google Maps JavaScript API <a
+ * href="https://developers.google.com/maps/documentation/javascript/localization#Language">localization
+ * settings</a>. Otherwise, the region is inferred from the location of the
+ * origin.
+ * @type {string|undefined}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.region;
+
+/**
+ * Specifies what reference routes to calculate as part of the request in
+ * addition to the default route. A reference route is a route with a different
+ * route calculation objective than the default route. For example a
+ * <code>FUEL_EFFICIENT</code> reference route calculation takes into account
+ * various parameters that would generate an optimal fuel efficient route. When
+ * using this feature, look for {@link google.maps.routes.Route.routeLabels} on
+ * the resulting routes.
+ * @type {!Iterable<!google.maps.routes.ReferenceRoute>|undefined}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.requestedReferenceRoutes;
+
+/**
+ * A set of conditions to satisfy that affect the way routes are calculated. For
+ * example you can specify features to avoid such as toll roads or highways.
+ * @type {!google.maps.routes.RouteModifiers|undefined}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.routeModifiers;
+
+/**
+ * Specifies how to compute the route. The server attempts to use the selected
+ * routing preference to compute the route. If the routing preference results in
+ * an error or an extra long latency, an error is returned. You can specify this
+ * option only when {@link google.maps.routes.ComputeRoutesRequest.travelMode}
+ * is <code>DRIVING</code> or <code>TWO_WHEELER</code>, otherwise the request
+ * fails.
+ * @type {!google.maps.routes.RoutingPreference|undefined}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.routingPreference;
+
+/**
+ * Specifies the assumptions to use when calculating time in traffic. This
+ * setting affects the value of {@link google.maps.routes.Route.durationMillis}
+ * and {@link google.maps.routes.RouteLeg.durationMillis} which contain the
+ * predicted time in traffic based on historical averages. {@link
+ * google.maps.routes.ComputeRoutesRequest.trafficModel} is only available for
+ * requests that have set {@link
+ * google.maps.routes.ComputeRoutesRequest.routingPreference} to
+ * <code>TRAFFIC_AWARE_OPTIMAL</code> and {@link
+ * google.maps.routes.ComputeRoutesRequest.travelMode} to <code>DRIVING</code>.
+ * Defaults to <code>BEST_GUESS</code>.
+ * @type {!google.maps.TrafficModel|undefined}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.trafficModel;
+
+/**
+ * Specifies preferences that influence the route returned for
+ * <code>TRANSIT</code> routes. <br><br> Note: Can only be specified when {@link
+ * google.maps.routes.ComputeRoutesRequest.travelMode} is set to
+ * <code>TRANSIT</code>.
+ * @type {!google.maps.routes.TransitPreference|undefined}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.transitPreference;
+
+/**
+ * Specifies the mode of transportation.
+ * @type {!google.maps.TravelMode|undefined}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.travelMode;
+
+/**
+ * Specifies the units of measure for the display fields, such as navigation
+ * instructions. The units of measure used for the route, leg, step distance,
+ * and duration are not affected by this value. If you don&#39;t provide this
+ * value, then the display units are inferred from the location of the origin.
+ * @type {!google.maps.UnitSystem|undefined}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.units;
+
+/**
+ * Encapsulates a geographic point and an optional heading.
+ *
+ * Access by calling `const {DirectionalLocation} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.routes.DirectionalLocationLiteral}
+ * @extends {google.maps.LatLngAltitude}
+ * @constructor
+ */
+google.maps.routes.DirectionalLocation = function() {};
+
+/**
+ * The compass heading associated with the direction of the flow of traffic.
+ * Heading values can be numbers from 0 to 360, where 0 specifies a heading of
+ * due North, 90 specifies a heading of due East, and so on. You can use this
+ * field only for <code>DRIVING</code> and <code>TWO_WHEELER</code> {@link
+ * google.maps.routes.ComputeRoutesRequest.travelMode}.
+ * @type {number|null|undefined}
+ */
+google.maps.routes.DirectionalLocation.prototype.heading;
+
+/**
+ * Converts to an object.
+ * @return {!google.maps.routes.DirectionalLocationLiteral}
+ */
+google.maps.routes.DirectionalLocation.prototype.toJSON = function() {};
+
+/**
+ * Object literals are accepted in place of {@link
+ * google.maps.routes.DirectionalLocation} instances as a convenience. These are
+ * converted to {@link google.maps.routes.DirectionalLocation} when the Maps JS
+ * API encounters them.
+ * @extends {google.maps.LatLngAltitudeLiteral}
+ * @record
+ */
+google.maps.routes.DirectionalLocationLiteral = function() {};
+
+/**
+ * The compass heading associated with the direction of the flow of traffic.
+ * Heading values can be numbers from 0 to 360, where 0 specifies a heading of
+ * due North, 90 specifies a heading of due East, and so on. You can use this
+ * field only for <code>DRIVING</code> and <code>TWO_WHEELER</code> {@link
+ * google.maps.routes.ComputeRoutesRequest.travelMode}.
+ * @type {number|null|undefined}
+ */
+google.maps.routes.DirectionalLocationLiteral.prototype.heading;
+
+/**
+ * Information related to how and why a fallback result was used in a {@link
+ * google.maps.routes.Route.computeRoutes} response. If this field is set, then
+ * it means the server used a different routing mode from your preferred mode as
+ * fallback.
+ *
+ * Access by calling `const {FallbackInfo} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.FallbackInfo = function() {};
+
+/**
+ * The reason why fallback response was used instead of the original response.
+ * This field is only populated when the fallback mode is triggered and the
+ * fallback response is returned.
+ * @type {!google.maps.routes.FallbackReason|null|undefined}
+ */
+google.maps.routes.FallbackInfo.prototype.reason;
+
+/**
+ * Routing mode used for the response. If fallback was triggered, the mode may
+ * be different from routing preference set in the original client request.
+ * @type {!google.maps.routes.FallbackRoutingMode|null|undefined}
+ */
+google.maps.routes.FallbackInfo.prototype.routingMode;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.FallbackInfo.prototype.toJSON = function() {};
+
+/**
+ * The reason that a fallback response was returned in a {@link
+ * google.maps.routes.Route.computeRoutes} response.
+ *
+ * Access by calling `const {FallbackReason} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.routes.FallbackReason = {
+  /**
+   * We were not able to finish the calculation with your preferred routing mode
+   * on time, but we were able to return a result calculated by an alternative
+   * mode.
+   */
+  LATENCY_EXCEEDED: 'LATENCY_EXCEEDED',
+  /**
+   * A server error happened while calculating routes with your preferred
+   * routing mode, but we were able to return a result calculated by an
+   * alternative mode.
+   */
+  SERVER_ERROR: 'SERVER_ERROR',
+};
+
+/**
+ * The actual routing mode used when a fallback response is returned in a {@link
+ * google.maps.routes.Route.computeRoutes} response.
+ *
+ * Access by calling `const {FallbackRoutingMode} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.routes.FallbackRoutingMode = {
+  /**
+   * Indicates the <code>TRAFFIC_AWARE</code> {@link
+   * google.maps.routes.RoutingPreference} was used to compute the response.
+   */
+  TRAFFIC_AWARE: 'TRAFFIC_AWARE',
+  /**
+   * Indicates the <code>TRAFFIC_UNAWARE</code> {@link
+   * google.maps.routes.RoutingPreference} was used to compute the response.
+   */
+  TRAFFIC_UNAWARE: 'TRAFFIC_UNAWARE',
+};
+
+/**
+ * Geocoding about the locations used as waypoints. Only populated for address
+ * waypoints. Includes details about the geocoding results for the purposes of
+ * determining what the address was geocoded to.
+ *
+ * Access by calling `const {GeocodedWaypoint} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.GeocodedWaypoint = function() {};
+
+/**
+ * Indicates the status code resulting from the geocoding operation.
+ * @type {!google.maps.RPCStatus|null}
+ */
+google.maps.routes.GeocodedWaypoint.prototype.geocoderStatus;
+
+/**
+ * The index of the corresponding intermediate waypoint in the request. Only
+ * populated if the corresponding waypoint is an intermediate waypoint.
+ * @type {number|null}
+ */
+google.maps.routes.GeocodedWaypoint.prototype.intermediateWaypointRequestIndex;
+
+/**
+ * Indicates that the geocoder did not return an exact match for the original
+ * request, though it was able to match part of the requested address. You may
+ * wish to examine the original request for misspellings and/or an incomplete
+ * address.
+ * @type {boolean}
+ */
+google.maps.routes.GeocodedWaypoint.prototype.partialMatch;
+
+/**
+ * The place ID for this result.
+ * @type {string}
+ */
+google.maps.routes.GeocodedWaypoint.prototype.placeId;
+
+/**
+ * The type(s) of the result, in the form of zero or more type tags. See <a
+ * href="https://developers.google.com/maps/documentation/geocoding/requests-geocoding#Types">https://developers.google.com/maps/documentation/geocoding/requests-geocoding#Types</a>
+ * for supported types.
+ * @type {!Array<string>}
+ */
+google.maps.routes.GeocodedWaypoint.prototype.types;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.GeocodedWaypoint.prototype.toJSON = function() {};
+
+/**
+ * Contains {@link google.maps.routes.GeocodedWaypoint}s for origin,
+ * destination, and intermediate waypoints. Only populated for address
+ * waypoints.
+ *
+ * Access by calling `const {GeocodingResults} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.GeocodingResults = function() {};
+
+/**
+ * The geocoded waypoint for the destination.
+ * @type {!google.maps.routes.GeocodedWaypoint|null|undefined}
+ */
+google.maps.routes.GeocodingResults.prototype.destination;
+
+/**
+ * A list of intermediate geocoded waypoints each containing an index field that
+ * corresponds to the zero-based position of the waypoint in the order they were
+ * specified in the request.
+ * @type {!Array<!google.maps.routes.GeocodedWaypoint>|undefined}
+ */
+google.maps.routes.GeocodingResults.prototype.intermediates;
+
+/**
+ * The geocoded waypoint for the origin.
+ * @type {!google.maps.routes.GeocodedWaypoint|null|undefined}
+ */
+google.maps.routes.GeocodingResults.prototype.origin;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.GeocodingResults.prototype.toJSON = function() {};
+
+/**
+ * Provides summarized information about a multi-modal segment of the {@link
+ * google.maps.routes.RouteLeg.steps} of a route. A multi-modal segment is
+ * defined as one or more contiguous {@link
+ * google.maps.routes.RouteLegStep}&#39;s that have the same {@link
+ * google.maps.TravelMode}.
+ *
+ * Access by calling `const {MultiModalSegment} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.MultiModalSegment = function() {};
+
+/**
+ * Instructions for navigating this multi-modal segment.
+ * @type {string|null}
+ */
+google.maps.routes.MultiModalSegment.prototype.instructions;
+
+/**
+ * The navigation maneuver to perform at this step. See <a
+ * href="https://developers.google.com/maps/documentation/routes/reference/rest/v2/TopLevel/computeRoutes#maneuver">Maneuver</a>
+ * for a list of possible values.
+ * @type {string|null}
+ */
+google.maps.routes.MultiModalSegment.prototype.maneuver;
+
+/**
+ * The corresponding {@link google.maps.routes.RouteLegStep} index that is the
+ * end of a multi-modal segment.
+ * @type {number}
+ */
+google.maps.routes.MultiModalSegment.prototype.stepEndIndex;
+
+/**
+ * The corresponding {@link google.maps.routes.RouteLegStep} index that is the
+ * start of a multi-modal segment.
+ * @type {number}
+ */
+google.maps.routes.MultiModalSegment.prototype.stepStartIndex;
+
+/**
+ * The travel mode used for this multi-modal segment.
+ * @type {!google.maps.TravelMode|null}
+ */
+google.maps.routes.MultiModalSegment.prototype.travelMode;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.MultiModalSegment.prototype.toJSON = function() {};
+
+/**
+ * Encapsulates information about a road feature along a stretch of polyline.
+ *
+ * Access by calling `const {PolylineDetailInfo} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.PolylineDetailInfo = function() {};
+
+/**
+ * The end index of this road feature in the polyline.
+ * @type {number|null}
+ */
+google.maps.routes.PolylineDetailInfo.prototype.endIndex;
+
+/**
+ * Denotes whether the road feature exists along the polyline.
+ * @type {!google.maps.routes.RoadFeatureState|null}
+ */
+google.maps.routes.PolylineDetailInfo.prototype.presence;
+
+/**
+ * The start index of this road feature in the polyline.
+ * @type {number|null}
+ */
+google.maps.routes.PolylineDetailInfo.prototype.startIndex;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.PolylineDetailInfo.prototype.toJSON = function() {};
+
+/**
+ * Details corresponding to a given index or contiguous segment of a polyline.
+ * Given a polyline with points P_0, P_1, ... , P_N (zero-based index), the
+ * <code>PolylineDetails</code> describes a road feature for a given interval.
+ *
+ * Access by calling `const {PolylineDetails} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.PolylineDetails = function() {};
+
+/**
+ * Flyover details along the polyline.
+ * @type {!Array<!google.maps.routes.PolylineDetailInfo>}
+ */
+google.maps.routes.PolylineDetails.prototype.flyoverInfo;
+
+/**
+ * Narrow road details along the polyline.
+ * @type {!Array<!google.maps.routes.PolylineDetailInfo>}
+ */
+google.maps.routes.PolylineDetails.prototype.narrowRoadInfo;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.PolylineDetails.prototype.toJSON = function() {};
+
+/**
+ * Specifies the quality of the polyline.
+ *
+ * Access by calling `const {PolylineQuality} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.routes.PolylineQuality = {
+  /**
+   * Specifies a high-quality polyline that is composed using more points than
+   * <code>OVERVIEW</code> at the cost of increased response size. Use this
+   * value when you need more precision.
+   */
+  HIGH_QUALITY: 'HIGH_QUALITY',
+  /**
+   * Specifies an overview polyline that is composed using a small number of
+   * points. Using this option has a lower request latency compared to
+   * <code>HIGH_QUALITY</code>. Use this value when displaying an overview of
+   * the route.
+   */
+  OVERVIEW: 'OVERVIEW',
+};
+
+/**
+ * A supported reference route on a {@link
+ * google.maps.routes.ComputeRoutesRequest}.
+ *
+ * Access by calling `const {ReferenceRoute} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.routes.ReferenceRoute = {
+  /**
+   * Fuel efficient route.
+   */
+  FUEL_EFFICIENT: 'FUEL_EFFICIENT',
+  /**
+   * Route with shorter travel distance.
+   */
+  SHORTER_DISTANCE: 'SHORTER_DISTANCE',
+};
+
+/**
+ * Encapsulates the states of road features along a stretch of polyline.
+ *
+ * Access by calling `const {RoadFeatureState} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.routes.RoadFeatureState = {
+  /**
+   * The road feature does not exist.
+   */
+  DOES_NOT_EXIST: 'DOES_NOT_EXIST',
+  /**
+   * The road feature exists.
+   */
+  EXISTS: 'EXISTS',
+};
+
+/**
+ * Contains a route, which consists of a series of connected road segments that
+ * join beginning, ending, and intermediate waypoints.
+ *
+ * Access by calling `const {Route} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.Route = function() {};
+
+/**
+ * A description of the route.
+ * @type {string|null|undefined}
+ */
+google.maps.routes.Route.prototype.description;
+
+/**
+ * The travel distance of the route, in meters.
+ * @type {number|undefined}
+ */
+google.maps.routes.Route.prototype.distanceMeters;
+
+/**
+ * The length of time needed to navigate the route in milliseconds. If you
+ * set {@link google.maps.routes.ComputeRoutesRequest.routingPreference} to
+ * <code>TRAFFIC_UNAWARE</code>, then this value is the same as {@link
+ * google.maps.routes.Route.staticDurationMillis}. If you set {@link
+ * google.maps.routes.ComputeRoutesRequest.routingPreference} to either
+ * <code>TRAFFIC_AWARE</code> or <code>TRAFFIC_AWARE_OPTIMAL</code>, then this
+ * value is calculated taking traffic conditions into account. <br><br> Note: If
+ * the duration exceeds 2^53 milliseconds, then this value is
+ * <code>Number.POSITIVE_INFINITY</code>.
+ * @type {number|null|undefined}
+ */
+google.maps.routes.Route.prototype.durationMillis;
+
+/**
+ * A collection of legs (path segments between waypoints) that make up the
+ * route. Each leg corresponds to the trip between two non-<code>via</code>
+ * waypoints. <br><br> For example: <ul> <li>A route with no intermediate
+ * waypoints has only one leg.</li> <li> A route that includes one
+ * non-<code>via</code> intermediate waypoint has two legs. </li> <li> A route
+ * that includes one <code>via</code> intermediate waypoint has one leg. </li>
+ * </ul> The order of the legs matches the order of waypoints from
+ * <code>origin</code> to <code>intermediates</code> to
+ * <code>destination</code>.
+ * @type {!Array<!google.maps.routes.RouteLeg>|undefined}
+ */
+google.maps.routes.Route.prototype.legs;
+
+/**
+ * Text representations of properties of the {@link google.maps.routes.Route}.
+ * @type {!google.maps.routes.RouteLocalizedValues|null|undefined}
+ */
+google.maps.routes.Route.prototype.localizedValues;
+
+/**
+ * If you set {@link
+ * google.maps.routes.ComputeRoutesRequest.optimizeWaypointOrder} to
+ * <code>true</code>, this field contains the optimized ordering of intermediate
+ * waypoints. Otherwise, this field is empty. The index starts with 0 for the
+ * first intermediate waypoint provided in the input. <br><br> For example, if
+ * you give an input of: <ul> <li>Origin: LA</li> <li>Intermediate waypoints:
+ * Dallas, Bangor, Phoenix</li> <li>Destination: New York</li> </ul> and the
+ * optimized intermediate waypoint order is Phoenix, Dallas, Bangor, then this
+ * field will be <code>[2, 0, 1]</code>.
+ * @type {!Array<number>|undefined}
+ */
+google.maps.routes.Route.prototype.optimizedIntermediateWaypointIndices;
+
+/**
+ * The list of {@link google.maps.LatLngAltitude}s of the route, which can be
+ * used to draw a route polyline. Granularity of the path can be controlled by
+ * setting {@link google.maps.routes.ComputeRoutesRequest.polylineQuality}.
+ * @type {!Array<!google.maps.LatLngAltitude>|undefined}
+ */
+google.maps.routes.Route.prototype.path;
+
+/**
+ * Contains information about details along the path.
+ * @type {!google.maps.routes.PolylineDetails|null|undefined}
+ */
+google.maps.routes.Route.prototype.polylineDetails;
+
+/**
+ * Labels for the route that are useful to identify specific properties of to
+ * compare against others.
+ * @type {!Array<!google.maps.routes.RouteLabel>|undefined}
+ */
+google.maps.routes.Route.prototype.routeLabels;
+
+/**
+ * An opaque token that can be passed to Navigation SDK to reconstruct the route
+ * during navigation, and, in the event of rerouting, honor the original
+ * intention when the route was created. Treat this token as an opaque blob.
+ * Don&#39;t compare its value across requests as its value may change even if
+ * the service returns the exact same route. <br><br> Note:
+ * <code>routeToken</code> is only available for requests that have set {@link
+ * google.maps.routes.ComputeRoutesRequest.routingPreference} to
+ * <code>TRAFFIC_AWARE</code> or <code>TRAFFIC_AWARE_OPTIMAL</code>. It is not
+ * supported for requests that have <code>via</code> waypoints.
+ * @type {string|null|undefined}
+ */
+google.maps.routes.Route.prototype.routeToken;
+
+/**
+ * Groupings of sections of the route path with their corresponding speed
+ * reading. For this field to be populated, {@link
+ * google.maps.routes.ComputeRoutesRequest.routingPreference} must be set to
+ * <code>TRAFFIC_AWARE</code> or <code>TRAFFIC_AWARE_OPTIMAL</code> and {@link
+ * google.maps.routes.ComputeRoutesRequest.extraComputations} must include
+ * <code>TRAFFIC_ON_POLYLINE</code>.
+ * @type {!Array<!google.maps.routes.SpeedPath>|undefined}
+ */
+google.maps.routes.Route.prototype.speedPaths;
+
+/**
+ * The duration of traveling through the route without taking traffic conditions
+ * into consideration. <br><br> Note: If the duration exceeds 2^53 milliseconds,
+ * then this value is <code>Number.POSITIVE_INFINITY</code>.
+ * @type {number|null|undefined}
+ */
+google.maps.routes.Route.prototype.staticDurationMillis;
+
+/**
+ * Additional information about the route.
+ * @type {!google.maps.routes.RouteTravelAdvisory|null|undefined}
+ */
+google.maps.routes.Route.prototype.travelAdvisory;
+
+/**
+ * The viewport bounding box of the route.
+ * @type {!google.maps.LatLngBounds|null|undefined}
+ */
+google.maps.routes.Route.prototype.viewport;
+
+/**
+ * An array of warnings to show when displaying the route.
+ * @type {!Array<string>|undefined}
+ */
+google.maps.routes.Route.prototype.warnings;
+
+/**
+ * Returns the primary route along with optional alternate routes, given a set
+ * of terminal and intermediate waypoints. <br><br> Note: This method requires
+ * that you specify a response field mask in the request by setting the {@link
+ * google.maps.routes.ComputeRoutesRequest.fields} property. The value is a list
+ * of field paths. <br><br> For example: <ul> <li> Field mask of all available
+ * fields: <code>fields: [&#39;*&#39;]</code></li> <li> Field mask of
+ * Route-level duration, distance, and path: <code>fields:
+ * [&#39;durationMillis&#39;, &#39;distanceMeters&#39;,
+ * &#39;path&#39;]</code></li> </ul> <br> Use of the wildcard response field
+ * mask <code>fields: [&#39;*&#39;]</code> is discouraged because: <ul>
+ * <li>Selecting only the fields that you need helps our server save computation
+ * cycles, allowing us to return the result to you with a lower latency.</li>
+ * <li>Selecting only the fields that you need in your production job ensures
+ * stable latency performance. We might add more response fields in the future,
+ * and those new fields might require extra computation time. If you select all
+ * fields, or if you select all fields at the top level, then you might
+ * experience performance degradation because any new field we add will be
+ * automatically included in the response.</li> <li>Selecting only the fields
+ * that you need results in a smaller response size, and thus a faster load over
+ * the network.</li> </ul>
+ * @param {!google.maps.routes.ComputeRoutesRequest} request
+ * @return {!Promise<!{routes:(!Array<!google.maps.routes.Route>|undefined),
+ *     fallbackInfo:(!google.maps.routes.FallbackInfo|null),
+ *     geocodingResults:(!google.maps.routes.GeocodingResults|null)}>}
+ */
+google.maps.routes.Route.computeRoutes = function(request) {};
+
+/**
+ * Creates polylines for the route based on the data available. <br><br>
+ * Multi-modal polylines: <ul> <li> Requirements: <ul> <li> The
+ * <code>&quot;path&quot;</code> and <code>&quot;legs&quot;</code> fields must
+ * be requested in {@link google.maps.routes.ComputeRoutesRequest.fields} </li>
+ * <li> {@link google.maps.routes.ComputeRoutesRequest.travelMode} must be set
+ * to <code>TRANSIT</code>. </li> </ul> </li> <li> Creates a polyline for each
+ * multi-modal route segment. Polylines are styled according to the segment
+ * travel mode and transit line data when available. Options can be passed in to
+ * alter the polyline style based on travel mode and transit line. </li> </ul>
+ * <br> Traffic polylines: <ul> <li> Requirements: <ul> <li>The
+ * <code>&quot;path&quot;</code> and <code>&quot;travelAdvisory&quot;</code>
+ * fields (or just <code>&quot;speedPaths&quot;</code> as a shorthand) must be
+ * requested in {@link google.maps.routes.ComputeRoutesRequest.fields}. </li>
+ * <li> {@link google.maps.routes.ComputeRoutesRequest.routingPreference} must
+ * be set to <code>TRAFFIC_AWARE</code> or <code>TRAFFIC_AWARE_OPTIMAL</code>.
+ * </li> <li> {@link google.maps.routes.ComputeRoutesRequest.extraComputations}
+ * must include <code>TRAFFIC_ON_POLYLINE</code>. </li> </ul> </li> <li> Creates
+ * a polyline for each route interval when the speed reading differs from the
+ * preceding interval. Polylines have default speed-based styling applied.
+ * Options can be passed in to alter the polyline style based on speed. </li>
+ * </ul> <br> Overall polyline: <ul> <li> Requirements: <ul> <li> The
+ * <code>&quot;path&quot;</code> or <code>&quot;legs&quot;</code> field must be
+ * requested in {@link google.maps.routes.ComputeRoutesRequest.fields}. </li>
+ * </ul> </li> <li> Creates a single polyline for the entire route with default
+ * styling applied. Options can be passed in to alter the polyline style based
+ * on the route travel mode. For further customization, create polylines
+ * directly using {@link google.maps.routes.Route.path} or {@link
+ * google.maps.routes.RouteLeg.path}. </li> </ul>
+ * @param {!google.maps.routes.RoutePolylineOptions=} options
+ * @return {!Array<!google.maps.Polyline>}
+ */
+google.maps.routes.Route.prototype.createPolylines = function(options) {};
+
+/**
+ * Creates markers for the route labeled &#39;A&#39;, &#39;B&#39;, &#39;C&#39;,
+ * etc. for each waypoint. Markers have default styling applied. Options can be
+ * passed in to alter the marker style based on the marker index or properties
+ * of the corresponding {@link google.maps.routes.RouteLeg}. The {@link
+ * google.maps.routes.WaypointMarkerDetails.leg} parameter will be undefined if
+ * the route has no legs. <br><br> The <code>&quot;legs&quot;</code> field must
+ * be requested in {@link google.maps.routes.ComputeRoutesRequest.fields} in
+ * order for intermediate waypoints to be included.
+ * @param {(!google.maps.marker.AdvancedMarkerElementOptions|(function(!google.maps.marker.AdvancedMarkerElementOptions,
+ *     !google.maps.routes.WaypointMarkerDetails):
+ *     !google.maps.marker.AdvancedMarkerElementOptions))=} options
+ * @return {!Promise<!Array<!google.maps.marker.AdvancedMarkerElement>>}
+ */
+google.maps.routes.Route.prototype.createWaypointAdvancedMarkers = function(
+    options) {};
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.Route.prototype.toJSON = function() {};
+
+/**
+ * Labels for the route that are useful to identify specific properties to
+ * compare against others.
+ *
+ * Access by calling `const {RouteLabel} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.routes.RouteLabel = {
+  /**
+   * The default &quot;best&quot; route returned for the route computation.
+   */
+  DEFAULT_ROUTE: 'DEFAULT_ROUTE',
+  /**
+   * An alternative to the default &quot;best&quot; route. Routes like this will
+   * be returned when {@link
+   * google.maps.routes.ComputeRoutesRequest.computeAlternativeRoutes} is
+   * specified.
+   */
+  DEFAULT_ROUTE_ALTERNATE: 'DEFAULT_ROUTE_ALTERNATE',
+  /**
+   * Fuel efficient route. Routes labeled with this value are determined to be
+   * optimized for eco parameters such as fuel consumption.
+   */
+  FUEL_EFFICIENT: 'FUEL_EFFICIENT',
+  /**
+   * Shorter travel distance route. This is an experimental feature.
+   */
+  SHORTER_DISTANCE: 'SHORTER_DISTANCE',
+};
+
+/**
+ * Contains a segment between non-<code>via</code> waypoints.
+ *
+ * Access by calling `const {RouteLeg} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.RouteLeg = function() {};
+
+/**
+ * The travel distance of the route leg, in meters.
+ * @type {number}
+ */
+google.maps.routes.RouteLeg.prototype.distanceMeters;
+
+/**
+ * The length of time needed to navigate the route leg in milliseconds. If you
+ * set {@link google.maps.routes.ComputeRoutesRequest.routingPreference} to
+ * <code>TRAFFIC_UNAWARE</code>, then this value is the same as
+ * <code>staticDurationMillis</code>. If you set {@link
+ * google.maps.routes.ComputeRoutesRequest.routingPreference} to either
+ * <code>TRAFFIC_AWARE</code> or <code>TRAFFIC_AWARE_OPTIMAL</code>, then this
+ * value is calculated taking traffic conditions into account. <br><br> Note: If
+ * the duration exceeds 2^53 milliseconds, then this value is
+ * <code>Number.POSITIVE_INFINITY</code>.
+ * @type {number|null}
+ */
+google.maps.routes.RouteLeg.prototype.durationMillis;
+
+/**
+ * The end location of this leg. This location might be different from {@link
+ * google.maps.routes.ComputeRoutesRequest.destination}. For example,
+ * when {@link google.maps.routes.ComputeRoutesRequest.destination} is not near
+ * a road, this is a point on the road.
+ * @type {!google.maps.routes.DirectionalLocation|null}
+ */
+google.maps.routes.RouteLeg.prototype.endLocation;
+
+/**
+ * Text representations of properties of the <code>RouteLeg</code>.
+ * @type {!google.maps.routes.RouteLegLocalizedValues|null}
+ */
+google.maps.routes.RouteLeg.prototype.localizedValues;
+
+/**
+ * The list of {@link google.maps.LatLngAltitude}s of the route leg, which can
+ * be used to draw a route leg polyline. Granularity of the path can be
+ * controlled by setting {@link
+ * google.maps.routes.ComputeRoutesRequest.polylineQuality}.
+ * @type {!Array<!google.maps.LatLngAltitude>}
+ */
+google.maps.routes.RouteLeg.prototype.path;
+
+/**
+ * Groupings of sections of the route leg path with their corresponding speed
+ * reading. For this field to be populated, {@link
+ * google.maps.routes.ComputeRoutesRequest.routingPreference} must be set to
+ * <code>TRAFFIC_AWARE</code> or <code>TRAFFIC_AWARE_OPTIMAL</code> and {@link
+ * google.maps.routes.ComputeRoutesRequest.extraComputations} must include
+ * <code>TRAFFIC_ON_POLYLINE</code>.
+ * @type {!Array<!google.maps.routes.SpeedPath>}
+ */
+google.maps.routes.RouteLeg.prototype.speedPaths;
+
+/**
+ * The start location of this leg. This location might be different from {@link
+ * google.maps.routes.ComputeRoutesRequest.origin}. For example, when {@link
+ * google.maps.routes.ComputeRoutesRequest.origin} is not near a road, this is a
+ * point on the road.
+ * @type {!google.maps.routes.DirectionalLocation|null}
+ */
+google.maps.routes.RouteLeg.prototype.startLocation;
+
+/**
+ * The duration of traveling through the leg without taking traffic conditions
+ * into consideration. <br><br> Note: If the duration exceeds 2^53 milliseconds,
+ * then this value is <code>Number.POSITIVE_INFINITY</code>.
+ * @type {number|null}
+ */
+google.maps.routes.RouteLeg.prototype.staticDurationMillis;
+
+/**
+ * An array of steps denoting segments within this leg. Each step represents one
+ * navigation instruction.
+ * @type {!Array<!google.maps.routes.RouteLegStep>}
+ */
+google.maps.routes.RouteLeg.prototype.steps;
+
+/**
+ * Overview information about the steps in this <code>RouteLeg</code>. This
+ * field is only populated for <code>TRANSIT</code> routes.
+ * @type {!google.maps.routes.StepsOverview|null}
+ */
+google.maps.routes.RouteLeg.prototype.stepsOverview;
+
+/**
+ * Contains the additional information that the user should be informed about,
+ * such as possible traffic zone restrictions, on a route leg.
+ * @type {!google.maps.routes.RouteLegTravelAdvisory|null}
+ */
+google.maps.routes.RouteLeg.prototype.travelAdvisory;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.RouteLeg.prototype.toJSON = function() {};
+
+/**
+ * Text representations of the {@link google.maps.routes.RouteLeg}.
+ *
+ * Access by calling `const {RouteLegLocalizedValues} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.RouteLegLocalizedValues = function() {};
+
+/**
+ * Travel distance of the route leg in text form.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLegLocalizedValues.prototype.distance;
+
+/**
+ * The distance text&#39;s BCP-47 language code, such as &quot;en-US&quot; or
+ * &quot;sr-Latn&quot;. <br><br> For more information, see <a
+ * href="http://www.unicode.org/reports/tr35/#Unicode_locale_identifier">http://www.unicode.org/reports/tr35/#Unicode_locale_identifier</a>.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLegLocalizedValues.prototype.distanceLanguage;
+
+/**
+ * Duration, represented in text form and localized to the region of the query.
+ * Takes traffic conditions into consideration.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLegLocalizedValues.prototype.duration;
+
+/**
+ * The duration text&#39;s BCP-47 language code, such as &quot;en-US&quot; or
+ * &quot;sr-Latn&quot;. <br><br> For more information, see <a
+ * href="http://www.unicode.org/reports/tr35/#Unicode_locale_identifier">http://www.unicode.org/reports/tr35/#Unicode_locale_identifier</a>.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLegLocalizedValues.prototype.durationLanguage;
+
+/**
+ * Duration without taking traffic conditions into consideration, represented in
+ * text form.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLegLocalizedValues.prototype.staticDuration;
+
+/**
+ * The static duration text&#39;s BCP-47 language code, such as
+ * &quot;en-US&quot; or &quot;sr-Latn&quot;.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLegLocalizedValues.prototype.staticDurationLanguage;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.RouteLegLocalizedValues.prototype.toJSON = function() {};
+
+/**
+ * Contains a segment of a <code>RouteLeg</code>. A step corresponds to a single
+ * navigation instruction. Route legs are made up of steps.
+ *
+ * Access by calling `const {RouteLegStep} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.RouteLegStep = function() {};
+
+/**
+ * The travel distance of this step, in meters.
+ * @type {number}
+ */
+google.maps.routes.RouteLegStep.prototype.distanceMeters;
+
+/**
+ * The end location of this step.
+ * @type {!google.maps.routes.DirectionalLocation|null}
+ */
+google.maps.routes.RouteLegStep.prototype.endLocation;
+
+/**
+ * Instructions for navigating this step.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLegStep.prototype.instructions;
+
+/**
+ * Text representations of properties of the <code>RouteLegStep</code>.
+ * @type {!google.maps.routes.RouteLegStepLocalizedValues|null}
+ */
+google.maps.routes.RouteLegStep.prototype.localizedValues;
+
+/**
+ * The navigation maneuver to perform at this step. See <a
+ * href="https://developers.google.com/maps/documentation/routes/reference/rest/v2/TopLevel/computeRoutes#maneuver">Maneuver</a>
+ * for a list of possible values.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLegStep.prototype.maneuver;
+
+/**
+ * The list of {@link google.maps.LatLngAltitude}s of the route leg step, which
+ * can be used to draw a route leg step polyline. Granularity of the path can be
+ * controlled by setting {@link
+ * google.maps.routes.ComputeRoutesRequest.polylineQuality}. The
+ * <code>&quot;path&quot;</code> field must be requested in {@link
+ * google.maps.routes.ComputeRoutesRequest.fields} in order for this field to be
+ * populated.
+ * @type {!Array<!google.maps.LatLngAltitude>}
+ */
+google.maps.routes.RouteLegStep.prototype.path;
+
+/**
+ * The start location of this step.
+ * @type {!google.maps.routes.DirectionalLocation|null}
+ */
+google.maps.routes.RouteLegStep.prototype.startLocation;
+
+/**
+ * The duration of traveling through this step without taking traffic conditions
+ * into consideration. <br><br> Note: If the duration exceeds 2^53 milliseconds,
+ * then this value is <code>Number.POSITIVE_INFINITY</code>.
+ * @type {number|null}
+ */
+google.maps.routes.RouteLegStep.prototype.staticDurationMillis;
+
+/**
+ * Details pertaining to this step if the travel mode is <code>TRANSIT</code>.
+ * @type {!google.maps.routes.TransitDetails|null}
+ */
+google.maps.routes.RouteLegStep.prototype.transitDetails;
+
+/**
+ * The travel mode used for this step.
+ * @type {!google.maps.TravelMode|null}
+ */
+google.maps.routes.RouteLegStep.prototype.travelMode;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.RouteLegStep.prototype.toJSON = function() {};
+
+/**
+ * Text representations of properties of the <code>RouteLegStep</code>.
+ *
+ * Access by calling `const {RouteLegStepLocalizedValues} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.RouteLegStepLocalizedValues = function() {};
+
+/**
+ * Travel distance of the route leg step in text form.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLegStepLocalizedValues.prototype.distance;
+
+/**
+ * The distance text&#39;s BCP-47 language code, such as &quot;en-US&quot; or
+ * &quot;sr-Latn&quot;. <br><br> For more information, see <a
+ * href="http://www.unicode.org/reports/tr35/#Unicode_locale_identifier">http://www.unicode.org/reports/tr35/#Unicode_locale_identifier</a>.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLegStepLocalizedValues.prototype.distanceLanguage;
+
+/**
+ * Duration without taking traffic conditions into consideration, represented in
+ * text form.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLegStepLocalizedValues.prototype.staticDuration;
+
+/**
+ * The static duration text&#39;s BCP-47 language code, such as
+ * &quot;en-US&quot; or &quot;sr-Latn&quot;. <br><br> For more information, see
+ * <a
+ * href="http://www.unicode.org/reports/tr35/#Unicode_locale_identifier">http://www.unicode.org/reports/tr35/#Unicode_locale_identifier</a>.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLegStepLocalizedValues.prototype.staticDurationLanguage;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.RouteLegStepLocalizedValues.prototype.toJSON = function() {};
+
+/**
+ * Contains additional information that the user should be informed about on
+ * a {@link google.maps.routes.RouteLeg}.
+ *
+ * Access by calling `const {RouteLegTravelAdvisory} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.RouteLegTravelAdvisory = function() {};
+
+/**
+ * Speed reading intervals detailing traffic density. Applicable in case of
+ * <code>TRAFFIC_AWARE</code> and <code>TRAFFIC_AWARE_OPTIMAL</code> {@link
+ * google.maps.routes.ComputeRoutesRequest.routingPreference}. The intervals
+ * cover the entire polyline of the {@link google.maps.routes.RouteLeg} without
+ * overlap. The start point of a specified interval is the same as the end point
+ * of the preceding interval. <br><br> Example: <br> <pre> <code> polyline: A
+ * ---- B ---- C ---- D ---- E ---- F ---- G <br> speedReadingIntervals: [A,C),
+ * [C,D), [D,G) </code> </pre>
+ * @type {!Array<!google.maps.routes.SpeedReadingInterval>|undefined}
+ */
+google.maps.routes.RouteLegTravelAdvisory.prototype.speedReadingIntervals;
+
+/**
+ * Contains information about tolls on the specific {@link
+ * google.maps.routes.RouteLeg}. This field is only populated if tolls are
+ * expected on the {@link google.maps.routes.RouteLeg}. If this field is set
+ * but {@link google.maps.routes.TollInfo.estimatedPrices} is not populated,then
+ * the route leg contains tolls but the estimated price is unknown. If this
+ * field is empty, then there are no tolls on the {@link
+ * google.maps.routes.RouteLeg}.
+ * @type {google.maps.routes.TollInfo|null}
+ */
+google.maps.routes.RouteLegTravelAdvisory.prototype.tollInfo;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.RouteLegTravelAdvisory.prototype.toJSON = function() {};
+
+/**
+ * Text representations of properties of the <code>Route</code>.
+ *
+ * Access by calling `const {RouteLocalizedValues} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.RouteLocalizedValues = function() {};
+
+/**
+ * Travel distance of the route represented in text form.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLocalizedValues.prototype.distance;
+
+/**
+ * The distance text&#39;s BCP-47 language code, such as &quot;en-US&quot; or
+ * &quot;sr-Latn&quot;. <br><br> For more information, see <a
+ * href="http://www.unicode.org/reports/tr35/#Unicode_locale_identifier">http://www.unicode.org/reports/tr35/#Unicode_locale_identifier</a>.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLocalizedValues.prototype.distanceLanguage;
+
+/**
+ * Duration, represented in text form and localized to the region of the query.
+ * Takes traffic conditions into consideration. Note: If you did not request
+ * traffic information, this value is the same value as
+ * <code>staticDuration</code>.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLocalizedValues.prototype.duration;
+
+/**
+ * The duration text&#39;s BCP-47 language code, such as &quot;en-US&quot; or
+ * &quot;sr-Latn&quot;. <br><br> For more information, see <a
+ * href="http://www.unicode.org/reports/tr35/#Unicode_locale_identifier">http://www.unicode.org/reports/tr35/#Unicode_locale_identifier</a>.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLocalizedValues.prototype.durationLanguage;
+
+/**
+ * Duration without taking traffic conditions into consideration, represented in
+ * text form.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLocalizedValues.prototype.staticDuration;
+
+/**
+ * The static duration text&#39;s BCP-47 language code, such as
+ * &quot;en-US&quot; or &quot;sr-Latn&quot;.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLocalizedValues.prototype.staticDurationLanguage;
+
+/**
+ * Transit fare represented in text form.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLocalizedValues.prototype.transitFare;
+
+/**
+ * The transit fare text&#39;s BCP-47 language code, such as &quot;en-US&quot;
+ * or &quot;sr-Latn&quot;.
+ * @type {string|null}
+ */
+google.maps.routes.RouteLocalizedValues.prototype.transitFareLanguage;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.RouteLocalizedValues.prototype.toJSON = function() {};
+
+/**
+ * A matrix of routes computed for a set of origin/destination pairs by {@link
+ * google.maps.routes.RouteMatrix.computeRouteMatrix}
+ *
+ * Access by calling `const {RouteMatrix} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.RouteMatrix = function() {};
+
+/**
+ * The rows of the matrix. Each row corresponds to an origin and contains an
+ * array of {@link google.maps.routes.RouteMatrixItem}s, each representing a
+ * route to a destination.
+ * @type {!Array<!google.maps.routes.RouteMatrixRow>}
+ */
+google.maps.routes.RouteMatrix.prototype.rows;
+
+/**
+ * Takes in a list of origins and destinations and returns a matrix containing
+ * route information for each combination of origin and destination. <br><br>
+ * Note: This method requires that you specify a response field mask in the
+ * request by setting the {@link
+ * google.maps.routes.ComputeRouteMatrixRequest.fields} property. The value is a
+ * list of field paths. <br><br> For example: <ul> <li> Field mask of all
+ * available fields: <code>fields: [&#39;*&#39;]</code></li> <li> Field mask of
+ * Route-level duration and distance: <code>fields: [&#39;durationMillis&#39;,
+ * &#39;distanceMeters&#39;]</code></li> </ul> <br> Use of the wildcard response
+ * field mask <code>fields: [&#39;*&#39;]</code> is discouraged because: <ul>
+ * <li>Selecting only the fields that you need helps our server save computation
+ * cycles, allowing us to return the result to you with a lower latency.</li>
+ * <li>Selecting only the fields that you need in your production job ensures
+ * stable latency performance. We might add more response fields in the future,
+ * and those new fields might require extra computation time. If you select all
+ * fields, or if you select all fields at the top level, then you might
+ * experience performance degradation because any new field we add will be
+ * automatically included in the response.</li> <li>Selecting only the fields
+ * that you need results in a smaller response size, and thus a faster load over
+ * the network.</li> </ul>
+ * @param {!google.maps.routes.ComputeRouteMatrixRequest} request
+ * @return {!Promise<!{matrix:!google.maps.routes.RouteMatrix}>}
+ */
+google.maps.routes.RouteMatrix.computeRouteMatrix = function(request) {};
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.RouteMatrix.prototype.toJSON = function() {};
+
+/**
+ * Contains route information computed for an origin/destination pair passed
+ * to {@link google.maps.routes.RouteMatrix.computeRouteMatrix}.
+ *
+ * Access by calling `const {RouteMatrixItem} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.RouteMatrixItem = function() {};
+
+/**
+ * Indicates whether the route was found or not.
+ * @type {!google.maps.routes.RouteMatrixItemCondition|null|undefined}
+ */
+google.maps.routes.RouteMatrixItem.prototype.condition;
+
+/**
+ * The travel distance of the route in meters.
+ * @type {number|undefined}
+ */
+google.maps.routes.RouteMatrixItem.prototype.distanceMeters;
+
+/**
+ * The length of time needed to navigate the route in milliseconds. If you
+ * set {@link google.maps.routes.ComputeRouteMatrixRequest.routingPreference} to
+ * <code>TRAFFIC_UNAWARE</code>, then this value is the same as {@link
+ * google.maps.routes.RouteMatrixItem.staticDurationMillis}. If you set {@link
+ * google.maps.routes.ComputeRouteMatrixRequest.routingPreference} to either
+ * <code>TRAFFIC_AWARE</code> or <code>TRAFFIC_AWARE_OPTIMAL</code>, then this
+ * value is calculated taking traffic conditions into account. <br><br> Note: If
+ * the duration exceeds 2^53 milliseconds, then this value is
+ * <code>Number.POSITIVE_INFINITY</code>.
+ * @type {number|null|undefined}
+ */
+google.maps.routes.RouteMatrixItem.prototype.durationMillis;
+
+/**
+ * Error that occurred during the computation of the route.
+ * @type {!google.maps.routes.RouteMatrixItemError|null|undefined}
+ */
+google.maps.routes.RouteMatrixItem.prototype.error;
+
+/**
+ * In some cases when the server is not able to compute the route with the given
+ * preferences for this particular origin/destination pair, it may fall back to
+ * using a different mode of computation. When a fallback is used, this field
+ * contains detailed information about the fallback response. Otherwise this
+ * field is unset.
+ * @type {!google.maps.routes.FallbackInfo|null|undefined}
+ */
+google.maps.routes.RouteMatrixItem.prototype.fallbackInfo;
+
+/**
+ * Text representations of properties of the {@link
+ * google.maps.routes.RouteMatrixItem}.
+ * @type {!google.maps.routes.RouteMatrixItemLocalizedValues|null|undefined}
+ */
+google.maps.routes.RouteMatrixItem.prototype.localizedValues;
+
+/**
+ * The duration of traveling through the route without taking traffic conditions
+ * into consideration. <br><br> Note: If the duration exceeds 2^53 milliseconds,
+ * then this value is <code>Number.POSITIVE_INFINITY</code>.
+ * @type {number|null|undefined}
+ */
+google.maps.routes.RouteMatrixItem.prototype.staticDurationMillis;
+
+/**
+ * Additional information about the route.
+ * @type {!google.maps.routes.RouteTravelAdvisory|null|undefined}
+ */
+google.maps.routes.RouteMatrixItem.prototype.travelAdvisory;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.RouteMatrixItem.prototype.toJSON = function() {};
+
+/**
+ * The condition of a route for a given origin/destination pair.
+ *
+ * Access by calling `const {RouteMatrixItemCondition} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.routes.RouteMatrixItemCondition = {
+  /**
+   * A route was found.
+   */
+  ROUTE_EXISTS: 'ROUTE_EXISTS',
+  /**
+   * No route could be found.
+   */
+  ROUTE_NOT_FOUND: 'ROUTE_NOT_FOUND',
+};
+
+/**
+ * An error that occurred during {@link
+ * google.maps.routes.RouteMatrix.computeRouteMatrix} for a specific
+ * origin/destination pair.
+ *
+ * Access by calling `const {RouteMatrixItemError} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {Error}
+ * @constructor
+ */
+google.maps.routes.RouteMatrixItemError = function() {};
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.RouteMatrixItemError.prototype.toJSON = function() {};
+
+/**
+ * Text representations of the {@link google.maps.routes.RouteMatrixItem}.
+ *
+ * Access by calling `const {RouteMatrixItemLocalizedValues} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.RouteMatrixItemLocalizedValues = function() {};
+
+/**
+ * Travel distance of the route matrix item in text form.
+ * @type {string|null|undefined}
+ */
+google.maps.routes.RouteMatrixItemLocalizedValues.prototype.distance;
+
+/**
+ * The distance text&#39;s BCP-47 language code, such as &quot;en-US&quot; or
+ * &quot;sr-Latn&quot;. <br><br> For more information, see <a
+ * href="http://www.unicode.org/reports/tr35/#Unicode_locale_identifier">http://www.unicode.org/reports/tr35/#Unicode_locale_identifier</a>.
+ * @type {string|null|undefined}
+ */
+google.maps.routes.RouteMatrixItemLocalizedValues.prototype.distanceLanguage;
+
+/**
+ * Duration, represented in text form and localized to the region of the query.
+ * Takes traffic conditions into consideration. <br><br> Note: If you did not
+ * request traffic information, this value is the same value as {@link
+ * google.maps.routes.RouteMatrixItemLocalizedValues.staticDuration}.
+ * @type {string|null|undefined}
+ */
+google.maps.routes.RouteMatrixItemLocalizedValues.prototype.duration;
+
+/**
+ * The duration text&#39;s BCP-47 language code, such as &quot;en-US&quot; or
+ * &quot;sr-Latn&quot;. <br><br> For more information, see <a
+ * href="http://www.unicode.org/reports/tr35/#Unicode_locale_identifier">http://www.unicode.org/reports/tr35/#Unicode_locale_identifier</a>.
+ * @type {string|null|undefined}
+ */
+google.maps.routes.RouteMatrixItemLocalizedValues.prototype.durationLanguage;
+
+/**
+ * Duration without taking traffic conditions into consideration, represented in
+ * text form.
+ * @type {string|null|undefined}
+ */
+google.maps.routes.RouteMatrixItemLocalizedValues.prototype.staticDuration;
+
+/**
+ * The static duration text&#39;s BCP-47 language code, such as
+ * &quot;en-US&quot; or &quot;sr-Latn&quot;.
+ * @type {string|null|undefined}
+ */
+google.maps.routes.RouteMatrixItemLocalizedValues.prototype
+    .staticDurationLanguage;
+
+/**
+ * Transit fare, represented in text form.
+ * @type {string|null|undefined}
+ */
+google.maps.routes.RouteMatrixItemLocalizedValues.prototype.transitFare;
+
+/**
+ * The transit fare text&#39;s BCP-47 language code, such as &quot;en-US&quot;
+ * or &quot;sr-Latn&quot;. <br><br> For more information, see <a
+ * href="http://www.unicode.org/reports/tr35/#Unicode_locale_identifier">http://www.unicode.org/reports/tr35/#Unicode_locale_identifier</a>.
+ * @type {string|null|undefined}
+ */
+google.maps.routes.RouteMatrixItemLocalizedValues.prototype.transitFareLanguage;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.RouteMatrixItemLocalizedValues.prototype.toJSON =
+    function() {};
+
+/**
+ * A single origin for a {@link google.maps.routes.ComputeRouteMatrixRequest}.
+ * @record
+ */
+google.maps.routes.RouteMatrixOrigin = function() {};
+
+/**
+ * Modifiers for every route that takes this as the origin.
+ * @type {!google.maps.routes.RouteModifiers|null|undefined}
+ */
+google.maps.routes.RouteMatrixOrigin.prototype.routeModifiers;
+
+/**
+ * The location of the origin. A value passed as a string may be an address or
+ * <a href="https://plus.codes">plus code</a>. Altitude values for are not taken
+ * into consideration.
+ * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitudeLiteral|google.maps.routes.DirectionalLocationLiteral|google.maps.places.Place|google.maps.routes.Waypoint}
+ */
+google.maps.routes.RouteMatrixOrigin.prototype.waypoint;
+
+/**
+ * Corresponds to an origin passed to {@link
+ * google.maps.routes.RouteMatrix.computeRouteMatrix}. Contains a list of {@link
+ * google.maps.routes.RouteMatrixItem}s, each item representing a route to a
+ * destination.
+ *
+ * Access by calling `const {RouteMatrixRow} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.RouteMatrixRow = function() {};
+
+/**
+ * The route information for each destination.
+ * @type {!Array<!google.maps.routes.RouteMatrixItem>}
+ */
+google.maps.routes.RouteMatrixRow.prototype.items;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.RouteMatrixRow.prototype.toJSON = function() {};
+
+/**
+ * Encapsulates a set of optional conditions to satisfy when calculating routes.
+ * @record
+ */
+google.maps.routes.RouteModifiers = function() {};
+
+/**
+ * When set to <code>true</code>, avoids ferries where reasonable, giving
+ * preference to routes not containing ferries. Applies only to
+ * <code>DRIVING</code> or <code>TWO_WHEELER</code> {@link
+ * google.maps.TravelMode}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.routes.RouteModifiers.prototype.avoidFerries;
+
+/**
+ * When set to <code>true</code>, avoids highways where reasonable, giving
+ * preference to routes not containing highways. Applies only to
+ * <code>DRIVING</code> or <code>TWO_WHEELER</code> {@link
+ * google.maps.TravelMode}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.routes.RouteModifiers.prototype.avoidHighways;
+
+/**
+ * When set to <code>true</code>, avoids navigating indoors where reasonable,
+ * giving preference to routes not containing indoor navigation. Applies only to
+ * <code>WALKING</code> {@link google.maps.TravelMode}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.routes.RouteModifiers.prototype.avoidIndoor;
+
+/**
+ * When set to <code>true</code>, avoids toll roads where reasonable, giving
+ * preference to routes not containing toll roads. Applies only to
+ * <code>DRIVING</code> or <code>TWO_WHEELER</code> {@link
+ * google.maps.TravelMode}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.routes.RouteModifiers.prototype.avoidTolls;
+
+/**
+ * Encapsulates information about toll passes. If toll passes are provided, the
+ * API tries to return the pass price. If toll passes are not provided, the API
+ * treats the toll pass as unknown and tries to return the cash price. Applies
+ * only to <code>DRIVING</code> or <code>TWO_WHEELER</code> {@link
+ * google.maps.TravelMode}. See <a
+ * href="https://developers.google.com/maps/documentation/routes/reference/rest/v2/RouteModifiers#tollpass">TollPass</a>
+ * for a list of valid values.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.routes.RouteModifiers.prototype.tollPasses;
+
+/**
+ * Specifies the vehicle information.
+ * @type {!google.maps.routes.VehicleInfo|null|undefined}
+ */
+google.maps.routes.RouteModifiers.prototype.vehicleInfo;
+
+/**
+ * Details about a section of a route corresponding to a polyline that can be
+ * used to customize the polyline style.
+ * @record
+ */
+google.maps.routes.RoutePolylineDetails = function() {};
+
+/**
+ * The speed reading of the section of the route corresponding to this polyline.
+ * Only populated for routes with traffic information.
+ * @type {!google.maps.routes.Speed|null|undefined|undefined}
+ */
+google.maps.routes.RoutePolylineDetails.prototype.speed;
+
+/**
+ * The transit details of the section of the route corresponding to this
+ * polyline. Only populated for routes with transit information.
+ * @type {!google.maps.routes.TransitDetails|null|undefined|undefined}
+ */
+google.maps.routes.RoutePolylineDetails.prototype.transitDetails;
+
+/**
+ * The travel mode of the section of the route corresponding to this polyline.
+ * Empty for traffic polylines.
+ * @type {!google.maps.TravelMode|null|undefined|undefined}
+ */
+google.maps.routes.RoutePolylineDetails.prototype.travelMode;
+
+/**
+ * Options for creating route polylines.
+ * @record
+ */
+google.maps.routes.RoutePolylineOptions = function() {};
+
+/**
+ * The color scheme to use for the polyline. When specified as
+ * <code>FOLLOW_SYSTEM</code> while the map <code>colorScheme</code> is also
+ * <code>FOLLOW_SYSTEM</code>, the polylines will be drawn in the same
+ * dark/light mode as the map. When not specified, {@link
+ * google.maps.routes.Route.createPolylines} attempts to use the
+ * <code>colorScheme</code> of the map or falls back to the system default.
+ * @type {!google.maps.ColorScheme|undefined}
+ */
+google.maps.routes.RoutePolylineOptions.prototype.colorScheme;
+
+/**
+ * Options for customizing the style of a polyline. Can either be a {@link
+ * google.maps.PolylineOptions} object that is applied to all polylines for the
+ * route or a function that takes default {@link google.maps.PolylineOptions}
+ * and {@link google.maps.routes.RoutePolylineDetails} and returns the {@link
+ * google.maps.PolylineOptions} to be applied to that polyline.
+ * @type {!google.maps.PolylineOptions|(function(!google.maps.PolylineOptions,
+ *     !google.maps.routes.RoutePolylineDetails):
+ *     !google.maps.PolylineOptions)|undefined}
+ */
+google.maps.routes.RoutePolylineOptions.prototype.polylineOptions;
+
+/**
+ * Contains additional information that the user should be informed about on
+ * a {@link google.maps.routes.Route}.
+ *
+ * Access by calling `const {RouteTravelAdvisory} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.RouteTravelAdvisory = function() {};
+
+/**
+ * The predicted fuel consumption in microliters. <br><br> Note: If the fuel
+ * consumption exceeds 2^53 microliters, then this value is
+ * <code>Number.POSITIVE_INFINITY</code>.
+ * @type {number|undefined}
+ */
+google.maps.routes.RouteTravelAdvisory.prototype.fuelConsumptionMicroliters;
+
+/**
+ * The {@link google.maps.routes.Route} may have restrictions that are not
+ * suitable for the requested travel mode or route modifiers.
+ * @type {boolean|null|undefined}
+ */
+google.maps.routes.RouteTravelAdvisory.prototype
+    .routeRestrictionsPartiallyIgnored;
+
+/**
+ * Speed reading intervals detailing traffic density. Applicable in case of
+ * <code>TRAFFIC_AWARE</code> and <code>TRAFFIC_AWARE_OPTIMAL</code> {@link
+ * google.maps.routes.ComputeRoutesRequest.routingPreference}. The intervals
+ * cover the entire polyline of the {@link google.maps.routes.Route} without
+ * overlap. The start point of a specified interval is the same as the end point
+ * of the preceding interval. <br><br> Example: <br> <pre> <code> polyline: A
+ * ---- B ---- C ---- D ---- E ---- F ---- G <br> speedReadingIntervals: [A,C),
+ * [C,D), [D,G) </code> </pre>
+ * @type {!Array<!google.maps.routes.SpeedReadingInterval>|undefined}
+ */
+google.maps.routes.RouteTravelAdvisory.prototype.speedReadingIntervals;
+
+/**
+ * Contains information about tolls on the {@link google.maps.routes.Route}.
+ * This field is only populated if tolls are expected on the {@link
+ * google.maps.routes.Route}. If this field is set but {@link
+ * google.maps.routes.TollInfo.estimatedPrices} is not populated,then the route
+ * contains tolls but the estimated price is unknown. If this field is empty,
+ * then there are no tolls on the {@link google.maps.routes.Route}.
+ * @type {!google.maps.routes.TollInfo|null|undefined}
+ */
+google.maps.routes.RouteTravelAdvisory.prototype.tollInfo;
+
+/**
+ * If present, contains the total fare or ticket costs of this {@link
+ * google.maps.routes.Route}. This property is only returned for
+ * <code>TRANSIT</code> {@link
+ * google.maps.routes.ComputeRoutesRequest.travelMode} and only for routes where
+ * fare information is available for all transit steps.
+ * @type {!google.maps.places.Money|null|undefined}
+ */
+google.maps.routes.RouteTravelAdvisory.prototype.transitFare;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.RouteTravelAdvisory.prototype.toJSON = function() {};
+
+/**
+ * Factors to take into consideration when calculating a route.
+ *
+ * Access by calling `const {RoutingPreference} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.routes.RoutingPreference = {
+  /**
+   * Calculates routes taking live traffic conditions into consideration. In
+   * contrast to <code>TRAFFIC_AWARE_OPTIMAL</code>, some optimizations are
+   * applied to significantly reduce latency.
+   */
+  TRAFFIC_AWARE: 'TRAFFIC_AWARE',
+  /**
+   * Calculates the routes taking live traffic conditions into consideration,
+   * without applying most performance optimizations. Using this value produces
+   * the highest latency.
+   */
+  TRAFFIC_AWARE_OPTIMAL: 'TRAFFIC_AWARE_OPTIMAL',
+  /**
+   * Computes routes without taking live traffic conditions into consideration.
+   * Suitable when traffic conditions don&#39;t matter or are not applicable.
+   * Using this value produces the lowest latency.
+   */
+  TRAFFIC_UNAWARE: 'TRAFFIC_UNAWARE',
+};
+
+/**
+ * The classification of polyline speed based on traffic data.
+ *
+ * Access by calling `const {Speed} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.routes.Speed = {
+  /**
+   * Normal speed, no traffic delays.
+   */
+  NORMAL: 'NORMAL',
+  /**
+   * Slowdown detected, medium amount of traffic.
+   */
+  SLOW: 'SLOW',
+  /**
+   * Traffic delays.
+   */
+  TRAFFIC_JAM: 'TRAFFIC_JAM',
+};
+
+/**
+ * Groups together the {@link google.maps.LatLngAltitude}s of a route interval
+ * with the speed reading for the interval.
+ * @record
+ */
+google.maps.routes.SpeedPath = function() {};
+
+/**
+ * The path covered by this speed path.
+ * @type {!Array<!google.maps.LatLngAltitude>}
+ */
+google.maps.routes.SpeedPath.prototype.path;
+
+/**
+ * The speed reading of the path.
+ * @type {!google.maps.routes.Speed|null|undefined}
+ */
+google.maps.routes.SpeedPath.prototype.speed;
+
+/**
+ * Traffic density indicator on a contiguous segment of a polyline or path.
+ * Given a path with points P_0, P_1, ... , P_N (zero-based index), the
+ * <code>SpeedReadingInterval</code> describes the traffic density of an
+ * interval.
+ *
+ * Access by calling `const {SpeedReadingInterval} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.SpeedReadingInterval = function() {};
+
+/**
+ * The ending index of this interval in the polyline.
+ * @type {number|null|undefined}
+ */
+google.maps.routes.SpeedReadingInterval.prototype.endPolylinePointIndex;
+
+/**
+ * Traffic speed in this interval.
+ * @type {!google.maps.routes.Speed|null|undefined}
+ */
+google.maps.routes.SpeedReadingInterval.prototype.speed;
+
+/**
+ * The starting index of this interval in the polyline.
+ * @type {number|null|undefined}
+ */
+google.maps.routes.SpeedReadingInterval.prototype.startPolylinePointIndex;
+
+/**
+ * Converts to an object.
+ * @return {undefined}
+ */
+google.maps.routes.SpeedReadingInterval.prototype.toJSON = function() {};
+
+/**
+ * Provides overview information about a list of {@link
+ * google.maps.routes.RouteLeg.steps}.
+ *
+ * Access by calling `const {StepsOverview} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.StepsOverview = function() {};
+
+/**
+ * Summarized information about different multi-modal segments of the {@link
+ * google.maps.routes.RouteLeg.steps}.
+ * @type {!Array<!google.maps.routes.MultiModalSegment>}
+ */
+google.maps.routes.StepsOverview.prototype.multiModalSegments;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.StepsOverview.prototype.toJSON = function() {};
+
+/**
+ * Encapsulates toll information on a {@link google.maps.routes.Route} or {@link
+ * google.maps.routes.RouteLeg}.
+ *
+ * Access by calling `const {TollInfo} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.TollInfo = function() {};
+
+/**
+ * The monetary amount of tolls for the corresponding {@link
+ * google.maps.routes.Route} or {@link google.maps.routes.RouteLeg}. This list
+ * contains an amount for each currency that is expected to be charged by toll
+ * stations. Typically this list will contain only one item for routes with
+ * tolls in one currency. For international trips, this list may contain
+ * multiple items to reflect tolls in different currencies.
+ * @type {!Array<!google.maps.places.Money>|null|undefined}
+ */
+google.maps.routes.TollInfo.prototype.estimatedPrices;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.TollInfo.prototype.toJSON = function() {};
+
+/**
+ * Information about a transit agency.
+ *
+ * Access by calling `const {TransitAgency} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.TransitAgency = function() {};
+
+/**
+ * The name of this transit agency.
+ * @type {string|null}
+ */
+google.maps.routes.TransitAgency.prototype.name;
+
+/**
+ * The transit agency&#39;s locale-specific formatted phone number.
+ * @type {string|null}
+ */
+google.maps.routes.TransitAgency.prototype.phoneNumber;
+
+/**
+ * The transit agency&#39;s URL.
+ * @type {!URL|null}
+ */
+google.maps.routes.TransitAgency.prototype.url;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.TransitAgency.prototype.toJSON = function() {};
+
+/**
+ * Additional information about a transit step in a route.
+ *
+ * Access by calling `const {TransitDetails} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.TransitDetails = function() {};
+
+/**
+ * Information about the arrival stop for the step.
+ * @type {!google.maps.routes.TransitStop|null}
+ */
+google.maps.routes.TransitDetails.prototype.arrivalStop;
+
+/**
+ * The estimated time of arrival for the step.
+ * @type {!Date|null}
+ */
+google.maps.routes.TransitDetails.prototype.arrivalTime;
+
+/**
+ * Information about the departure stop for the step.
+ * @type {!google.maps.routes.TransitStop|null}
+ */
+google.maps.routes.TransitDetails.prototype.departureStop;
+
+/**
+ * The estimated time of departure for the step.
+ * @type {!Date|null}
+ */
+google.maps.routes.TransitDetails.prototype.departureTime;
+
+/**
+ * Specifies the direction in which to travel on this line as marked on the
+ * vehicle or at the departure stop. The direction is often the terminus
+ * station.
+ * @type {string|null}
+ */
+google.maps.routes.TransitDetails.prototype.headsign;
+
+/**
+ * Specifies the expected time in milliseconds between departures from the same
+ * stop at this time. For example, with a headway value of 600,000, you would
+ * expect a ten minute wait if you should miss your bus. <br><br> Note: If the
+ * headway exceeds 2^53 milliseconds, then this value is
+ * <code>Number.POSITIVE_INFINITY</code>.
+ * @type {number|null}
+ */
+google.maps.routes.TransitDetails.prototype.headwayMillis;
+
+/**
+ * The number of stops from the departure to the arrival stop. This count
+ * includes the arrival stop, but excludes the departure stop. For example, if
+ * your route leaves from Stop A, passes through stops B and C, and arrives at
+ * stop D, <code>stopCount</code> will be 3.
+ * @type {number}
+ */
+google.maps.routes.TransitDetails.prototype.stopCount;
+
+/**
+ * Information about the transit line used in the step.
+ * @type {!google.maps.routes.TransitLine|null}
+ */
+google.maps.routes.TransitDetails.prototype.transitLine;
+
+/**
+ * The text that appears in schedules and sign boards to identify a transit trip
+ * to passengers. The text uniquely identifies a trip within a service day. For
+ * example, &quot;538&quot; is the <code>tripShortText</code> of the Amtrak
+ * train that leaves San Jose, CA at 15:10 on weekdays to Sacramento, CA.
+ * @type {string|null}
+ */
+google.maps.routes.TransitDetails.prototype.tripShortText;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.TransitDetails.prototype.toJSON = function() {};
+
+/**
+ * Information about a transit line.
+ *
+ * Access by calling `const {TransitLine} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.TransitLine = function() {};
+
+/**
+ * The transit agency (or agencies) that operates this transit line.
+ * @type {!Array<!google.maps.routes.TransitAgency>}
+ */
+google.maps.routes.TransitLine.prototype.agencies;
+
+/**
+ * The color commonly used in signage for this line. Represented in hexadecimal.
+ * @type {string|null}
+ */
+google.maps.routes.TransitLine.prototype.color;
+
+/**
+ * The URL for the icon associated with this line.
+ * @type {!URL|null}
+ */
+google.maps.routes.TransitLine.prototype.iconURL;
+
+/**
+ * The full name of this transit line, For example, &quot;8 Avenue Local&quot;.
+ * @type {string|null}
+ */
+google.maps.routes.TransitLine.prototype.name;
+
+/**
+ * The short name of this transit line. This name will normally be a line
+ * number, such as &quot;M7&quot; or &quot;355&quot;.
+ * @type {string|null}
+ */
+google.maps.routes.TransitLine.prototype.shortName;
+
+/**
+ * The color commonly used in text on signage for this line. Represented in
+ * hexadecimal.
+ * @type {string|null}
+ */
+google.maps.routes.TransitLine.prototype.textColor;
+
+/**
+ * The URL for this transit line as provided by the transit agency.
+ * @type {!URL|null}
+ */
+google.maps.routes.TransitLine.prototype.url;
+
+/**
+ * The type of vehicle that operates on this transit line.
+ * @type {!google.maps.routes.TransitVehicle|null}
+ */
+google.maps.routes.TransitLine.prototype.vehicle;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.TransitLine.prototype.toJSON = function() {};
+
+/**
+ * Preferences for <code>TRANSIT</code> based routes that influence the route
+ * that is returned.
+ * @record
+ */
+google.maps.routes.TransitPreference = function() {};
+
+/**
+ * A set of travel modes to use when getting a <code>TRANSIT</code> route.
+ * Defaults to all supported modes of travel.
+ * @type {!Iterable<!google.maps.TransitMode>|undefined}
+ */
+google.maps.routes.TransitPreference.prototype.allowedTransitModes;
+
+/**
+ * A routing preference that, when specified, influences the
+ * <code>TRANSIT</code> route returned.
+ * @type {!google.maps.TransitRoutePreference|undefined}
+ */
+google.maps.routes.TransitPreference.prototype.routingPreference;
+
+/**
+ * Information about a transit stop.
+ *
+ * Access by calling `const {TransitStop} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.TransitStop = function() {};
+
+/**
+ * The location of the stop expressed in latitude/longitude coordinates and an
+ * optional heading.
+ * @type {!google.maps.routes.DirectionalLocation|null}
+ */
+google.maps.routes.TransitStop.prototype.location;
+
+/**
+ * The name of the transit stop.
+ * @type {string|null}
+ */
+google.maps.routes.TransitStop.prototype.name;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.TransitStop.prototype.toJSON = function() {};
+
+/**
+ * Information about a vehicle used in transit routes.
+ *
+ * Access by calling `const {TransitVehicle} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.routes.TransitVehicle = function() {};
+
+/**
+ * The URL for an icon associated with this vehicle type.
+ * @type {!URL|null}
+ */
+google.maps.routes.TransitVehicle.prototype.iconURL;
+
+/**
+ * The URL for the icon associated with this vehicle type, based on the local
+ * transport signage.
+ * @type {!URL|null}
+ */
+google.maps.routes.TransitVehicle.prototype.localIconURL;
+
+/**
+ * The name of this vehicle, capitalized.
+ * @type {string|null}
+ */
+google.maps.routes.TransitVehicle.prototype.name;
+
+/**
+ * The vehicle name text&#39;s BCP-47 language code, such as &quot;en-US&quot;
+ * or &quot;sr-Latn&quot;. <br><br> For more information see: <a
+ * href="https://www.unicode.org/reports/tr35/#Unicode_locale_identifier">https://www.unicode.org/reports/tr35/#Unicode_locale_identifier</a>.
+ * @type {string|null}
+ */
+google.maps.routes.TransitVehicle.prototype.nameLanguage;
+
+/**
+ * The type of vehicle used. <br><br> See <a
+ * href="https://developers.google.com/maps/documentation/routes/reference/rpc/google.maps.routing.v2#transitvehicletype">https://developers.google.com/maps/documentation/routes/reference/rpc/google.maps.routing.v2#transitvehicletype</a>
+ * for a list of possible values.
+ * @type {string|null}
+ */
+google.maps.routes.TransitVehicle.prototype.vehicleType;
+
+/**
+ * Converts to an object.
+ * @return {!Object}
+ */
+google.maps.routes.TransitVehicle.prototype.toJSON = function() {};
+
+/**
+ * A set of values describing the vehicle&#39;s emission type. Applies only to
+ * the <code>DRIVING</code> travel mode.
+ *
+ * Access by calling `const {VehicleEmissionType} = await
+ * google.maps.importLibrary("routes")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.routes.VehicleEmissionType = {
+  /**
+   * Diesel fueled vehicle.
+   */
+  DIESEL: 'DIESEL',
+  /**
+   * Electricity powered vehicle.
+   */
+  ELECTRIC: 'ELECTRIC',
+  /**
+   * Gasoline/petrol fueled vehicle.
+   */
+  GASOLINE: 'GASOLINE',
+  /**
+   * Hybrid fuel (such as gasoline + electric) vehicle.
+   */
+  HYBRID: 'HYBRID',
+};
+
+/**
+ * Contains the vehicle information, such as the vehicle emission type.
+ * @record
+ */
+google.maps.routes.VehicleInfo = function() {};
+
+/**
+ * Describes the vehicle&#39;s emission type. Applies only to the
+ * <code>DRIVING</code> travel mode.
+ * @type {!google.maps.routes.VehicleEmissionType|null|undefined}
+ */
+google.maps.routes.VehicleInfo.prototype.emissionType;
+
+/**
+ * Represents a waypoint in a route.
+ * @record
+ */
+google.maps.routes.Waypoint = function() {};
+
+/**
+ * The location of the waypoint. A string may be an address, a <a
+ * href="https://plus.codes">plus code</a>, or a Place resource name.
+ * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitudeLiteral|google.maps.routes.DirectionalLocationLiteral|google.maps.places.Place}
+ */
+google.maps.routes.Waypoint.prototype.location;
+
+/**
+ * Indicates that the location of this waypoint is meant to have a preference
+ * for the vehicle to stop at a particular side of road. When you set this
+ * value, the route will pass through the location so that the vehicle can stop
+ * at the side of road that the location is biased towards from the center of
+ * the road. This option works only for <code>DRIVING</code> and
+ * <code>TWO_WHEELER</code> {@link
+ * google.maps.routes.ComputeRoutesRequest.travelMode}
+ * @type {boolean|null|undefined}
+ */
+google.maps.routes.Waypoint.prototype.sideOfRoad;
+
+/**
+ * Indicates that the waypoint is meant for vehicles to stop at, where the
+ * intention is to either pickup or drop-off. When you set this value, the
+ * calculated route won&#39;t include non-<code>via</code> waypoints on roads
+ * that are unsuitable for pickup and drop-off. This option works only for
+ * <code>DRIVING</code> and <code>TWO_WHEELER</code> {@link
+ * google.maps.routes.ComputeRoutesRequest.travelMode} and when the {@link
+ * google.maps.routes.Waypoint.location} is not a <code>string</code> or
+ * a {@link google.maps.places.Place}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.routes.Waypoint.prototype.vehicleStopover;
+
+/**
+ * Marks this waypoint as a milestone rather a stopping point. For each
+ * non-<code>via</code> waypoint in the {@link
+ * google.maps.routes.ComputeRoutesRequest}, {@link
+ * google.maps.routes.Route.computeRoutes} appends an entry to the {@link
+ * google.maps.routes.Route.legs} array to provide the details for stopovers on
+ * that leg of the trip. <br><br> Set this value to <code>true</code> when you
+ * want the route to pass through this waypoint without stopping over. Via
+ * waypoints don&#39;t cause an entry to be added to the {@link
+ * google.maps.routes.Route.legs} array, but they do route the journey through
+ * the waypoint. <br><br> Notes: <ul> <li> You can only set this value on
+ * waypoints that are intermediates. The request fails if you set this field on
+ * terminal waypoints. </li> <li> If {@link
+ * google.maps.routes.ComputeRoutesRequest.optimizeWaypointOrder} is set to
+ * <code>true</code>, this field cannot be set to true; otherwise, the request
+ * fails. </li> </ul>
+ * @type {boolean|null|undefined}
+ */
+google.maps.routes.Waypoint.prototype.via;
+
+/**
+ * Details about a waypoint that can be used to customize marker style.
+ * @record
+ */
+google.maps.routes.WaypointMarkerDetails = function() {};
+
+/**
+ * The index of the marker.
+ * @type {number}
+ */
+google.maps.routes.WaypointMarkerDetails.prototype.index;
+
+/**
+ * The leg that the marker belongs to. Empty if the route has no legs.
+ * @type {!google.maps.routes.RouteLeg|undefined}
+ */
+google.maps.routes.WaypointMarkerDetails.prototype.leg;
+
+/**
+ * The total number of markers in the route.
+ * @type {number}
+ */
+google.maps.routes.WaypointMarkerDetails.prototype.totalMarkers;
 
 /**
  * @const

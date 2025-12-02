@@ -91,20 +91,20 @@ final class PolymerClassRewriter {
   private void insertGeneratedDeclarationCodeToGlobalScope(
       Node enclosingNode, Node declarationCode) {
     switch (enclosingNode.getToken()) {
-      case MODULE_BODY:
+      case MODULE_BODY -> {
         {
           Node insertionPoint = getNodeForInsertion(enclosingNode.getParent());
           insertionPoint.addChildToFront(declarationCode);
           compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(insertionPoint));
         }
-        break;
-      case SCRIPT:
+      }
+      case SCRIPT -> {
         {
           enclosingNode.addChildToFront(declarationCode);
           compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(enclosingNode));
         }
-        break;
-      case CALL:
+      }
+      case CALL -> {
         {
           // This case represents only the Polymer calls which are enclosed inside an IIFE
           checkState(isIIFE(enclosingNode));
@@ -121,8 +121,8 @@ final class PolymerClassRewriter {
             compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(insertionPoint));
           }
         }
-        break;
-      case FUNCTION:
+      }
+      case FUNCTION -> {
         {
           // This case represents only the Polymer calls that are inside a function which is an arg
           // to goog.loadModule
@@ -132,9 +132,8 @@ final class PolymerClassRewriter {
           insertionPoint.addChildToFront(declarationCode);
           compiler.reportChangeToChangeScope(insertionPoint);
         }
-        break;
-      default:
-        throw new RuntimeException("Enclosing node for Polymer is incorrect");
+      }
+      default -> throw new RuntimeException("Enclosing node for Polymer is incorrect");
     }
   }
 
@@ -161,7 +160,7 @@ final class PolymerClassRewriter {
    */
   private void insertGeneratedPropsAndBehaviorCode(Node enclosingNode, Node statements) {
     switch (enclosingNode.getToken()) {
-      case MODULE_BODY:
+      case MODULE_BODY -> {
         {
           if (enclosingNode.getParent().getBooleanProp(Node.GOOG_MODULE)) {
             // The goog.module('ns'); call must remain the first statement in the module.
@@ -171,15 +170,15 @@ final class PolymerClassRewriter {
             enclosingNode.addChildrenToFront(statements);
           }
         }
-        break;
-      case SCRIPT:
+      }
+      case SCRIPT -> {
         // If children are added to front, it will cause runtime error in the code because Polymer's
         // properties will be accessed before the Polymer object is defined. The Polymer object gets
         // defined in `insertGeneratedDeclarationCodeToGlobalScope`.
         enclosingNode.addChildrenToBack(statements);
         compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(enclosingNode));
-        break;
-      case CALL:
+      }
+      case CALL -> {
         {
           // This case represents only the Polymer calls which are enclosed inside an IIFE
           checkState(isIIFE(enclosingNode));
@@ -187,8 +186,8 @@ final class PolymerClassRewriter {
           Node functionBlock = functionNode.getLastChild();
           functionBlock.addChildrenToFront(statements);
         }
-        break;
-      case FUNCTION:
+      }
+      case FUNCTION -> {
         // This case represents only the Polymer calls that are inside a function which is an arg
         // to goog.loadModule
         checkState(isFunctionArgInGoogLoadModule(enclosingNode));
@@ -200,9 +199,8 @@ final class PolymerClassRewriter {
         if (insertionPoint != null) {
           functionBlock.addChildrenAfter(statements, insertionPoint);
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
   }
 
@@ -473,7 +471,7 @@ final class PolymerClassRewriter {
             .srcrefTreeIfMissing(propertiesLiteral);
     parent.addChildToFront(objReflectCall);
     compiler.reportChangeToEnclosingScope(parent);
-    compiler.ensureLibraryInjected("util/reflectobject", false);
+    compiler.getRuntimeJsLibManager().ensureLibraryInjected("util/reflectobject", false);
   }
 
   /** Adds an @this annotation to all functions in the objLit. */

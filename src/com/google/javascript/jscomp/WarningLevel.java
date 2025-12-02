@@ -28,15 +28,9 @@ public enum WarningLevel {
 
   public void setOptionsForWarningLevel(CompilerOptions options) {
     switch (this) {
-      case QUIET:
-        silenceAllWarnings(options);
-        break;
-      case DEFAULT:
-        addDefaultWarnings(options);
-        break;
-      case VERBOSE:
-        addVerboseWarnings(options);
-        break;
+      case QUIET -> silenceAllWarnings(options);
+      case DEFAULT -> addDefaultWarnings(options);
+      case VERBOSE -> addVerboseWarnings(options);
     }
   }
 

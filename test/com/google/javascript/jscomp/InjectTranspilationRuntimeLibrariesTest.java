@@ -16,12 +16,11 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.testing.NoninjectingCompiler;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,13 +29,13 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class InjectTranspilationRuntimeLibrariesTest {
 
-  private NoninjectingCompiler compiler;
+  private Compiler compiler;
   private LanguageMode languageOut;
   private boolean instrumentAsyncContext;
 
   @Before
   public void setup() {
-    compiler = new NoninjectingCompiler();
+    compiler = new Compiler();
     languageOut = LanguageMode.ECMASCRIPT5;
     instrumentAsyncContext = false;
   }
@@ -51,6 +50,7 @@ public class InjectTranspilationRuntimeLibrariesTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(this.languageOut);
     options.setInstrumentAsyncContext(instrumentAsyncContext);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("externs", "")),
@@ -60,7 +60,7 @@ public class InjectTranspilationRuntimeLibrariesTest {
     new InjectTranspilationRuntimeLibraries(compiler)
         .process(compiler.getExternsRoot(), compiler.getJsRoot());
 
-    return compiler.getInjected();
+    return ImmutableSet.copyOf(compiler.getRuntimeJsLibManager().getInjectedLibraries());
   }
 
   @Test
@@ -111,7 +111,15 @@ public class InjectTranspilationRuntimeLibrariesTest {
   }
 
   @Test
-  public void testArrayPatternRest_injectsExecuteAsyncFunctionSupport() {
+  public void testInjectsExecuteAsyncFunctionSupport_es5Out_includesGeneratorEngine() {
+    ImmutableSet<String> injected = parseAndRunInjectionPass("async function foo() {}");
+
+    assertThat(injected).containsExactly("es6/execute_async_generator", "es6/generator_engine");
+  }
+
+  @Test
+  public void testInjectsExecuteAsyncFunctionSupport_es6Out_doesNotIncludeGeneratorEngine() {
+    languageOut = LanguageMode.ECMASCRIPT_2015;
     ImmutableSet<String> injected = parseAndRunInjectionPass("async function foo() {}");
 
     assertThat(injected).containsExactly("es6/execute_async_generator");
@@ -125,37 +133,15 @@ public class InjectTranspilationRuntimeLibrariesTest {
   }
 
   @Test
-  public void testAllowsEs5GetterSetterWithEs5Out() {
-    this.languageOut = LanguageMode.ECMASCRIPT5;
-    parseAndRunInjectionPass(
-        """
-        var o = {
-          get x() {},
-          set x(val) {}
-        };
-        """);
-
-    assertThat(compiler.getErrors()).isEmpty();
-    assertThat(compiler.getInjected()).isEmpty();
+  public void testClassInheritance_injectsInheritsAndConstruct() {
+    ImmutableSet<String> injected = parseAndRunInjectionPass("class A {} class B extends A {}");
+    assertThat(injected)
+        .containsExactly("es6/util/inherits", "es6/util/construct", "es6/util/arrayfromiterable");
   }
 
   @Test
-  public void testCannotConvertEs5GetterToEs3() {
-    this.languageOut = LanguageMode.ECMASCRIPT3;
-    parseAndRunInjectionPass("var o = {get x() {}};");
-
-    assertThat(compiler.getErrors())
-        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
-        .containsExactly(TranspilationUtil.CANNOT_CONVERT);
-  }
-
-  @Test
-  public void testCannotConvertEs5SetterToEs3() {
-    this.languageOut = LanguageMode.ECMASCRIPT3;
-    parseAndRunInjectionPass("var o = {set x(val) {}};");
-
-    assertThat(compiler.getErrors())
-        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
-        .containsExactly(TranspilationUtil.CANNOT_CONVERT);
+  public void testClass_noInheritances_doesNotInject() {
+    ImmutableSet<String> injected = parseAndRunInjectionPass("class A {}");
+    assertThat(injected).isEmpty();
   }
 }

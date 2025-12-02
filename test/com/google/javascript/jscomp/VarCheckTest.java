@@ -93,12 +93,6 @@ public final class VarCheckTest extends CompilerTestCase {
     };
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    // Because we synthesize externs, the second pass won't emit a warning.
-    return 1;
-  }
-
   @Test
   public void testShorthandObjLit() {
     testError("var x = {y};", VarCheck.UNDEFINED_VAR_ERROR);

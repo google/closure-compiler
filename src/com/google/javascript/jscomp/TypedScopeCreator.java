@@ -711,17 +711,14 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     @Override
     public void visit(NodeTraversal t, Node node, Node parent) {
       switch (node.getToken()) {
-        case LET:
-        case CONST:
-        case VAR:
+        case LET, CONST, VAR -> {
           for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
             // TODO(b/116853368): make this work for destructuring aliases as well.
             identifyEnumOrTypedefDeclaration(
                 t, child, child.getFirstChild(), NodeUtil.getBestJSDocInfo(child));
           }
-
-          break;
-        case EXPR_RESULT:
+        }
+        case EXPR_RESULT -> {
           Node firstChild = node.getFirstChild();
           if (firstChild.isAssign()) {
             Node assign = firstChild;
@@ -731,9 +728,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             identifyEnumOrTypedefDeclaration(
                 t, firstChild, /* rvalue= */ null, firstChild.getJSDocInfo());
           }
-          break;
-        default:
-          break;
+        }
+        default -> {}
       }
     }
 
@@ -814,12 +810,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
       ModuleType moduleType = this.getModule().metadata().moduleType();
       switch (moduleType) {
-        case LEGACY_GOOG_MODULE:
-        case GOOG_MODULE:
+        case LEGACY_GOOG_MODULE, GOOG_MODULE -> {
           declareExportsInGoogModuleScope(this.getModule(), moduleBody);
           markGoogModuleExportsAsConst(moduleBody);
-          break;
-        case ES6_MODULE:
+        }
+        case ES6_MODULE -> {
           ImmutableMap<Node, ScopedName> unresolvedImports =
               moduleImportResolver.declareEsModuleImports(
                   this.getModule(),
@@ -828,13 +823,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           unresolvedImports.entrySet().stream()
               .map(entry -> new WeakModuleImport(entry.getKey(), entry.getValue(), currentScope))
               .forEachOrdered(weakImports::add);
-          break;
-        default:
-          // This should have been a build-breaking DUPLICATE_NAMESPACE_AND_MODULE error in
-          // GatherModuleMetadata
-          throw new IllegalStateException(
-              String.format(
-                  "Unexpected module type %s in module %s", moduleType, this.getModule()));
+        }
+        default ->
+            // This should have been a build-breaking DUPLICATE_NAMESPACE_AND_MODULE error in
+            // GatherModuleMetadata
+            throw new IllegalStateException(
+                String.format(
+                    "Unexpected module type %s in module %s", moduleType, this.getModule()));
       }
     }
 
@@ -991,37 +986,14 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
     void attachLiteralTypes(Node n) {
       switch (n.getToken()) {
-        case NULL:
-          n.setJSType(getNativeType(NULL_TYPE));
-          break;
-
-        case VOID:
-          n.setJSType(getNativeType(VOID_TYPE));
-          break;
-
-        case STRINGLIT:
-        case TEMPLATELIT_STRING:
-          n.setJSType(getNativeType(STRING_TYPE));
-          break;
-
-        case NUMBER:
-          n.setJSType(getNativeType(NUMBER_TYPE));
-          break;
-
-        case BIGINT:
-          n.setJSType(getNativeType(BIGINT_TYPE));
-          break;
-
-        case TRUE:
-        case FALSE:
-          n.setJSType(getNativeType(BOOLEAN_TYPE));
-          break;
-
-        case REGEXP:
-          n.setJSType(getNativeType(REGEXP_TYPE));
-          break;
-
-        case OBJECTLIT:
+        case NULL -> n.setJSType(getNativeType(NULL_TYPE));
+        case VOID -> n.setJSType(getNativeType(VOID_TYPE));
+        case STRINGLIT, TEMPLATELIT_STRING -> n.setJSType(getNativeType(STRING_TYPE));
+        case NUMBER -> n.setJSType(getNativeType(NUMBER_TYPE));
+        case BIGINT -> n.setJSType(getNativeType(BIGINT_TYPE));
+        case TRUE, FALSE -> n.setJSType(getNativeType(BOOLEAN_TYPE));
+        case REGEXP -> n.setJSType(getNativeType(REGEXP_TYPE));
+        case OBJECTLIT -> {
           JSDocInfo info = n.getJSDocInfo();
           if (info != null && info.hasLendsName()) {
             // Defer analyzing object literals with a @lends annotation until we
@@ -1035,25 +1007,19 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           } else {
             defineObjectLiteral(n);
           }
-          break;
-
-        case CLASS:
-          // NOTE(sdh): We can't handle function nodes here because they need special behavior to
-          // deal with hoisting.  But since classes aren't hoisted, and may need to be handled in
-          // such places as default method initializers (i.e. in a FunctionScope) or class extends
-          // clauses (technically part of the ClassScope, but visited instead by the NormalScope),
-          // they can be handled consistently in all scopes.
-          defineClassLiteral(n);
-          break;
-
-          // NOTE(johnlenz): If we ever support Array tuples,
-          // we will need to handle them here as we do object literals
-          // above.
-        case ARRAYLIT:
-          n.setJSType(getNativeType(ARRAY_TYPE));
-          break;
-        default:
-          break;
+        }
+        case CLASS ->
+            // NOTE(sdh): We can't handle function nodes here because they need special behavior to
+            // deal with hoisting.  But since classes aren't hoisted, and may need to be handled in
+            // such places as default method initializers (i.e. in a FunctionScope) or class extends
+            // clauses (technically part of the ClassScope, but visited instead by the NormalScope),
+            // they can be handled consistently in all scopes.
+            defineClassLiteral(n);
+        // NOTE(johnlenz): If we ever support Array tuples,
+        // we will need to handle them here as we do object literals
+        // above.
+        case ARRAYLIT -> n.setJSType(getNativeType(ARRAY_TYPE));
+        default -> {}
       }
     }
 
@@ -1161,33 +1127,42 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     /**
-     * Returns the type specified in a JSDoc annotation near a GETPROP, NAME, member function, or
-     * object literal key.
+     * Returns the type specified in a JSDoc annotation near a GETPROP, NAME, object literal member,
+     * or class field.
      *
      * <p>Extracts type information from the {@code @type} tag.
      */
     private JSType getDeclaredTypeInAnnotation(Node node, JSDocInfo info) {
-      checkArgument(info.hasType());
-
-      ImmutableList<TemplateType> ownerTypeKeys = ImmutableList.of();
-      Node ownerNode = NodeUtil.getBestLValueOwner(node);
-      String ownerName = NodeUtil.getBestLValueName(ownerNode);
-      ObjectType ownerType = null;
-      if (ownerName != null) {
-        TypedVar ownerVar = currentScope.getVar(ownerName);
-        if (ownerVar != null) {
-          ownerType = getPrototypeOwnerType(ObjectType.cast(ownerVar.getType()));
-          if (ownerType != null) {
-            ownerTypeKeys = ownerType.getTemplateTypeMap().getTemplateKeys();
-          }
-        }
-      }
+      checkArgument(info.hasType(), info);
+      ImmutableList<TemplateType> ownerTypeKeys = findOwnerTypeKeys(node);
 
       StaticTypedScope templateScope =
           !ownerTypeKeys.isEmpty()
               ? typeRegistry.createScopeWithTemplates(currentScope, ownerTypeKeys)
               : currentScope;
       return info.getType().evaluate(templateScope, typeRegistry);
+    }
+
+    ImmutableList<TemplateType> findOwnerTypeKeys(Node node) {
+      if (node != null && !node.isStaticMember() && node.getParent().isClassMembers()) {
+        JSType classType = node.getGrandparent().getJSType();
+        if (classType != null) {
+          return classType.toMaybeFunctionType().getTemplateTypeMap().getTemplateKeys();
+        }
+        return ImmutableList.of();
+      }
+      Node ownerNode = NodeUtil.getBestLValueOwner(node);
+      String ownerName = NodeUtil.getBestLValueName(ownerNode);
+      if (ownerName != null) {
+        TypedVar ownerVar = currentScope.getVar(ownerName);
+        if (ownerVar != null) {
+          JSType ownerType = getPrototypeOwnerType(ObjectType.cast(ownerVar.getType()));
+          if (ownerType != null) {
+            return ownerType.getTemplateTypeMap().getTemplateKeys();
+          }
+        }
+      }
+      return ImmutableList.of();
     }
 
     /**
@@ -2327,23 +2302,18 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         if (root.isName()) {
           Node nameParent = root.getParent();
           switch (nameParent.getToken()) {
-            case VAR:
+            case VAR -> {
               return currentHoistScope;
-            case LET:
-            case CONST:
-            case CLASS:
-            case FUNCTION:
-            case PARAM_LIST:
-            case CATCH:
+            }
+            case LET, CONST, CLASS, FUNCTION, PARAM_LIST, CATCH -> {
               return currentScope;
-
-            case ITER_REST:
-            case OBJECT_REST:
+            }
+            case ITER_REST, OBJECT_REST -> {
               // TODO(bradfordcsmith): Handle array destructuring REST
               checkState(nameParent.getParent().isParamList(), nameParent);
               return currentScope;
-
-            default:
+            }
+            default -> {
               if (isGoogModuleExports(root)) {
                 // Ensure that 'exports = class {}' in a goog.module returns the module scope.
                 return currentScope;
@@ -2352,6 +2322,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
               if (var != null) {
                 return var.getScope();
               }
+            }
           }
         } else if (root.isThis() || root.isSuper()) {
           // We want the enclosing function scope, or the global scope if not in a function.
@@ -3185,11 +3156,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     @Override
     void visitPostorder(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case CALL:
-          checkForClassDefiningCalls(n);
-          break;
-
-        case ASSIGN:
+        case CALL -> checkForClassDefiningCalls(n);
+        case ASSIGN -> {
           // Handle initialization of properties.
           // We only allow qualified name declarations of the form
           //   /** @type {number} */ a.b.c = rhs;
@@ -3206,49 +3174,35 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           } else if (undeclaredNamesForClosure.contains(firstChild)) {
             defineAssignAsIfVarDeclaration(n);
           }
-          break;
-
-        case CATCH:
-          defineCatch(n);
-          break;
-
-        case VAR:
-        case LET:
-        case CONST:
-          defineVars(n);
-          break;
-
-        case GETPROP:
+        }
+        case CATCH -> defineCatch(n);
+        case VAR, LET, CONST -> defineVars(n);
+        case GETPROP -> {
           // Handle stubbed properties.
           if (parent.isExprResult() && n.isQualifiedName()) {
             maybeDeclareQualifiedName(t, n.getJSDocInfo(), n, parent, null);
           }
-          break;
-
-        case GETELEM:
+        }
+        case GETELEM -> {
           // Handle stubbed properties.
           if (parent.isExprResult() && n.getFirstChild().isQualifiedName()) {
             maybeDeclareGetElem(n.getJSDocInfo(), n, null);
           }
-          break;
-
-        case CLASS:
-          // Analyse CLASS child-scopes now because later code in this scope may assign
-          // properties to these class-types. We want to ensure declarations within the CLASS have
-          // priority.
-          createScope(n, currentScope);
-          break;
-
-        case EXPR_RESULT:
+        }
+        case CLASS ->
+            // Analyse CLASS child-scopes now because later code in this scope may assign
+            // properties to these class-types. We want to ensure declarations within the CLASS have
+            // priority.
+            createScope(n, currentScope);
+        case EXPR_RESULT -> {
           Collection<ProvidedName> names = providedNamesFromCall.get(n);
           if (names != null) {
             for (ProvidedName name : names) {
               declareProvidedNs(n, name);
             }
           }
-          break;
-
-        case EXPORT:
+        }
+        case EXPORT -> {
           if (n.getBooleanProp(Node.EXPORT_DEFAULT)) {
             // Define a dummy var for "export default <someExpr>" so that other utilities have
             // access to the type.
@@ -3264,10 +3218,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
                 .allowLaterTypeInference(declaredType == null)
                 .defineSlot();
           }
-          break;
-
-        default:
-          break;
+        }
+        default -> {}
       }
     }
   } // end NormalScopeBuilder
@@ -3351,36 +3303,64 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           }
         }
 
-        // Also add template params to the scope so that JSTypeRegistry can find them (they
-        // were already registered by FunctionTypeBuilder).
-        JSDocInfo info = NodeUtil.getBestJSDocInfo(functionNode);
-        if (info != null) {
-          Iterable<String> templateNames =
-              Iterables.concat(info.getTemplateTypeNames(), info.getTypeTransformations().keySet());
-          if (!Iterables.isEmpty(templateNames)) {
-            CompilerInput input = getCompilerInput();
-            JSType voidType = typeRegistry.getNativeType(VOID_TYPE);
-            // Declare any template names in the function scope. This means that if someone shadows
-            // an outer variable FOO with a @template FOO and refers to FOO inside the method, we
-            // will treat it as undefined, rather than the correct type, which could lead to weird
-            // errors. Ideally we'd have a "don't use me" type that gives an error at use.
-            for (String name : templateNames) {
-              if (!currentScope.canDeclare(name)) {
-                validator.expectUndeclaredVariable(
-                    NodeUtil.getSourceName(functionNode),
-                    input,
-                    functionNode,
-                    functionNode.getParent(),
-                    currentScope.getVar(name),
-                    name,
-                    voidType);
-              }
-              currentScope.declare(name, functionNode, voidType, input, /* inferred= */ false);
-            }
-          }
-        }
+        declareTemplatesInFunctionBody(functionNode, functionType);
       }
     } // end declareParameters
+
+    private void declareTemplatesInFunctionBody(Node functionNode, FunctionType functionType) {
+      // Add template params to the scope.
+      // This lets JSTypeRegistry resolve references to template types within the function body
+      // scope. (they were already registered as types by FunctionTypeBuilder, but they need to be
+      // in a TypedScope to let JSTypeRegistry correctly handle scoping).
+      JSDocInfo info = NodeUtil.getBestJSDocInfo(functionNode);
+      Set<String> templateNames = new LinkedHashSet<>();
+
+      boolean isPossiblePrototypeMethod =
+          !functionType.hasInstanceType() && (info == null || !info.hasThisType());
+      if (isPossiblePrototypeMethod) {
+        // If this is a prototype method, add any @template types from the prototype owner.
+        // e.g. given
+        //   /** @template T */
+        //   class Foo {
+        //     bar() {}
+        //   }
+        // We want to declare 'T' in the scope of 'bar'
+        Node ownerNode = NodeUtil.getBestLValue(functionNode);
+        for (TemplateType templateKey : findOwnerTypeKeys(ownerNode)) {
+          templateNames.add(templateKey.getReferenceName());
+        }
+      }
+      if (info != null) {
+        // Add @template parameters from the JSDoc on this function directly. For example, given
+        //   /** @template U */
+        //   function foo() {}
+        // This declares 'U'.
+        templateNames.addAll(info.getTemplateTypeNames());
+        templateNames.addAll(info.getTypeTransformations().keySet());
+      }
+      if (templateNames.isEmpty()) {
+        return;
+      }
+      CompilerInput input = getCompilerInput();
+      JSType voidType = getNativeType(VOID_TYPE);
+      // Declare any template names in the function scope. This means that if someone shadows
+      // an outer variable FOO with a @template FOO and refers to FOO inside the method, we
+      // will treat it as undefined, rather than the correct type, which could lead to weird
+      // errors. Ideally we'd have a "don't use me" type that gives an error at use.
+      for (String name : templateNames) {
+        if (!currentScope.canDeclare(name)) {
+          validator.expectUndeclaredVariable(
+              NodeUtil.getSourceName(functionNode),
+              input,
+              functionNode,
+              functionNode.getParent(),
+              currentScope.getVar(name),
+              name,
+              voidType);
+        }
+        currentScope.declare(name, functionNode, voidType, input, /* inferred= */ false);
+      }
+    }
 
     /**
      * Declares the name(s) in a positional AST parameter in the scope.
@@ -3412,11 +3392,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
 
       switch (astParameter.getToken()) {
-        case NAME: // function f(x) {}
-          declareSingleParameterName(isInferred, astParameter, paramType);
-          break;
-
-        case ITER_REST: // function f(...x) {}
+        case NAME ->
+            // function f(x) {}
+            declareSingleParameterName(isInferred, astParameter, paramType);
+        case ITER_REST -> {
+          // function f(...x) {}
           // rest parameter is actually an array of the type specified in the JSDoc
           Node param = astParameter.getFirstChild();
           ObjectType arrayType = typeRegistry.getNativeObjectType(ARRAY_TYPE);
@@ -3427,24 +3407,22 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             // function f(...{length}) {}
             declareDestructuringParameter(isInferred, param, restParamType);
           }
-          break;
-
-        case DEFAULT_VALUE: // function f(x = 3) {} or function f([x] = []) {}
+        }
+        case DEFAULT_VALUE -> {
+          // function f(x = 3) {} or function f([x] = []) {}
           Node actualParam = astParameter.getFirstChild();
           if (actualParam.isName()) {
             declareSingleParameterName(isInferred, actualParam, paramType);
           } else {
             declareDestructuringParameter(isInferred, actualParam, paramType);
           }
-          break;
-
-        case ARRAY_PATTERN: // function f([x]) {}
-        case OBJECT_PATTERN: // function f({x}) {}
-          declareDestructuringParameter(isInferred, astParameter, paramType);
-          break;
-
-        default:
-          throw new IllegalStateException("Unexpected function parameter node " + astParameter);
+        }
+        case ARRAY_PATTERN, OBJECT_PATTERN ->
+            // function f([x]) {}
+            // function f({x}) {}
+            declareDestructuringParameter(isInferred, astParameter, paramType);
+        default ->
+            throw new IllegalStateException("Unexpected function parameter node " + astParameter);
       }
     }
 

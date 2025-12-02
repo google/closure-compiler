@@ -20,7 +20,6 @@ import com.google.javascript.jscomp.BasicErrorManager;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.MessageFormatter;
-
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 
@@ -41,14 +40,9 @@ public final class AntErrorManager
   @Override
   public void println(CheckLevel level, JSError error) {
     switch (level) {
-      case ERROR:
-        this.task.log(error.format(level, this.formatter), Project.MSG_ERR);
-        break;
-      case WARNING:
-        this.task.log(error.format(level, this.formatter), Project.MSG_WARN);
-        break;
-      case OFF:
-        break;
+      case ERROR -> this.task.log(error.format(level, this.formatter), Project.MSG_ERR);
+      case WARNING -> this.task.log(error.format(level, this.formatter), Project.MSG_WARN);
+      case OFF -> {}
     }
   }
 

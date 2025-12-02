@@ -66,6 +66,7 @@ import com.google.javascript.jscomp.deps.WebpackModuleResolver;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass;
 import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass.CoverageReach;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.parsing.Config;
@@ -181,13 +182,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // Warnings guard for filtering warnings.
   private WarningsGuard warningsGuard;
 
-  // Compile-time injected libraries
-  private final LinkedHashSet<String> injectedLibraries = new LinkedHashSet<>();
-
-  // Node of the final injected library. Future libraries will be injected
-  // after this node.
-  private @Nullable Node lastInjectedLibrary;
-
   // Parse tree root nodes
   private Node externsRoot;
   private Node jsRoot;
@@ -207,6 +201,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private ImmutableMap<String, String> inputPathByWebpackId;
 
   private StaticScope transpilationNamespace;
+
+  private RuntimeJsLibManager runtimeJsLibManager;
 
   /**
    * Subclasses are responsible for loading sources that were not provided as explicit inputs to the
@@ -288,13 +284,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private static final Joiner pathJoiner = Joiner.on(Platform.getFileSeperator());
 
-  // Starts at 0, increases as "interesting" things happen.
-  // Nothing happens at time START_TIME, the first pass starts at time 1.
-  // The correctness of scope-change tracking relies on Node/getIntProp
-  // returning 0 if the custom attribute on a node hasn't been set.
-  private int changeStamp = 1;
-
-  private final Timeline<Node> changeTimeline = new Timeline<>();
+  private final ChangeTracker changeTracker = new ChangeTracker();
 
   /**
    * When mapping symbols from a source map, we must repeatedly combine the path of the original
@@ -322,7 +312,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   /** Creates a Compiler that reports errors and warnings to an output stream. */
   public Compiler(@Nullable PrintStream outStream) {
-    addChangeHandler(recentChange);
+    changeTracker.addChangeHandler(changeTracker.getRecentChange());
     this.outStream = outStream;
     this.moduleTypesByName = new LinkedHashMap<>();
   }
@@ -413,9 +403,31 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
     }
 
+    if (options.skipNonTranspilationPasses) {
+      options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.NO_OP);
+    }
+
     moduleLoader = ModuleLoader.EMPTY;
 
     reconcileOptionsWithGuards();
+    switch (options.getShouldValidateRequiredInlinings()) {
+      case TRUE -> {
+        var sufficientOptimizations =
+            InlineFunctions.checkOptimizationLevelSupportsRequireInlining(options);
+        checkState(
+            sufficientOptimizations.shouldValidate(),
+            "shouldValidateRequiredInlinings cannot be set unless CompilerOptions enables"
+                + " sufficient optimization, but found: %s",
+            sufficientOptimizations.optMessage());
+      }
+      case FALSE -> {
+        // do nothing.
+      }
+      case UNKNOWN ->
+          options.setValidateRequiredInlinings(
+              InlineFunctions.checkOptimizationLevelSupportsRequireInlining(options)
+                  .shouldValidate());
+    }
 
     // TODO(johnlenz): generally, the compiler should not be changing the options object
     // provided by the user.  This should be handled a different way.
@@ -603,7 +615,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     Supplier<Node> ast = this.typedAstFilesystem.remove(file);
     checkState(
-        ast != null || file.getName().startsWith(SYNTHETIC_FILE_NAME_PREFIX),
+        ast != null
+            || file.getName().startsWith(SYNTHETIC_FILE_NAME_PREFIX)
+            || isFillFileName(file.getName()),
         "TypedAST filesystem initialized, but missing requested file: %s",
         file);
     return ast;
@@ -698,7 +712,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.setTypeCheckingHasRun(deserializeTypes);
 
     for (String library : astData.getRuntimeLibraries()) {
-      this.ensureLibraryInjected(library, false);
+      this.runtimeJsLibManager.ensureLibraryInjected(library, false);
     }
 
     this.getSynthesizedExternsInput(); // Force lazy creation.
@@ -802,6 +816,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     try (LogFile chunkGraphLog = createOrReopenLog(this.getClass(), "chunk_graph.dot")) {
       chunkGraphLog.log(DotFormatter.toDot(chunkGraph.toGraphvizGraph()));
     }
+
+    this.runtimeJsLibManager =
+        RuntimeJsLibManager.create(
+            options.getRuntimeLibraryMode(),
+            this::loadResourceContents,
+            changeTracker,
+            this::getNodeForRuntimeCodeInsertion);
+  }
+
+  @Override
+  public final RuntimeJsLibManager getRuntimeJsLibManager() {
+    return this.runtimeJsLibManager;
   }
 
   /** Do any initialization that is dependent on the compiler options. */
@@ -1407,19 +1433,26 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public AstFactory createAstFactory() {
     return hasTypeCheckingRun()
         ? (hasOptimizationColors()
-            ? AstFactory.createFactoryWithColors(stage, getColorRegistry())
-            : AstFactory.createFactoryWithTypes(stage, getTypeRegistry()))
-        : AstFactory.createFactoryWithoutTypes(stage);
+            ? AstFactory.createFactoryWithColors(stage, getColorRegistry(), runtimeJsLibManager)
+            : AstFactory.createFactoryWithTypes(stage, getTypeRegistry(), runtimeJsLibManager))
+        : AstFactory.createFactoryWithoutTypes(stage, runtimeJsLibManager);
   }
 
   @Override
   public AstFactory createAstFactoryWithoutTypes() {
-    return AstFactory.createFactoryWithoutTypes(stage);
+    return AstFactory.createFactoryWithoutTypes(stage, runtimeJsLibManager);
   }
 
   @Override
   public AstAnalyzer getAstAnalyzer() {
-    return new AstAnalyzer(this, getOptions().getAssumeGettersArePure());
+    CompilerOptions options = getOptions();
+    var analysisSettings =
+        AstAnalyzer.Options.builder()
+            .setUseTypesForLocalOptimization(options.shouldUseTypesForLocalOptimization())
+            .setAssumeGettersArePure(options.getAssumeGettersArePure())
+            .setHasRegexpGlobalReferences(this.hasRegExpGlobalReferences())
+            .build();
+    return new AstAnalyzer(analysisSettings, typeRegistry, getAccessorSummary());
   }
 
   @Override
@@ -1662,7 +1695,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   /** Returns a new tracer for the given pass name. */
   Tracer newTracer(String passName) {
-    String comment = passName + (recentChange.hasCodeChanged() ? " on recently changed AST" : "");
+    String comment =
+        passName
+            + (changeTracker.getRecentChange().hasCodeChanged() ? " on recently changed AST" : "");
     if (options.getTracerMode().isOn() && tracker != null) {
       tracker.recordPassStart(passName, true);
     }
@@ -1737,13 +1772,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Deprecated
   private int nextUniqueNameId() {
     return uniqueNameId++;
-  }
-
-  /** Resets the unique name id counter */
-  @Deprecated
-  @VisibleForTesting
-  void resetUniqueNameId() {
-    uniqueNameId = 0;
   }
 
   /**
@@ -2010,7 +2038,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     tracker = new PerformanceTracker(externsRoot, jsRoot, options.getTracerMode());
-    addChangeHandler(tracker.getCodeChangeHandler());
+    changeTracker.addChangeHandler(tracker.getCodeChangeHandler());
   }
 
   void initializeModuleLoader() {
@@ -3176,21 +3204,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       List<PassFactory> allOptimizationPassesToRun) {
 
     // Create a list of passes based on which segment of optimizations we are running.
-    List<PassFactory> optimizationPassList = new ArrayList<>();
-
-    optimizationPassList =
-        switch (segmentOfCompilationToRun) {
-          case OPTIMIZATIONS -> allOptimizationPassesToRun;
-          case OPTIMIZATIONS_FIRST_HALF ->
-              passListUntil(allOptimizationPassesToRun, PassNames.OPTIMIZATIONS_HALFWAY_POINT);
-          case OPTIMIZATIONS_SECOND_HALF ->
-              passListAfter(allOptimizationPassesToRun, PassNames.OPTIMIZATIONS_HALFWAY_POINT);
-          default ->
-              throw new IllegalArgumentException(
-                  "Unsupported segment of optimizations to run: " + segmentOfCompilationToRun);
-        };
-
-    return optimizationPassList;
+    return switch (segmentOfCompilationToRun) {
+      case OPTIMIZATIONS -> allOptimizationPassesToRun;
+      case OPTIMIZATIONS_FIRST_HALF ->
+          passListUntil(allOptimizationPassesToRun, PassNames.OPTIMIZATIONS_HALFWAY_POINT);
+      case OPTIMIZATIONS_SECOND_HALF ->
+          passListAfter(allOptimizationPassesToRun, PassNames.OPTIMIZATIONS_HALFWAY_POINT);
+      default ->
+          throw new IllegalArgumentException(
+              "Unsupported segment of optimizations to run: " + segmentOfCompilationToRun);
+    };
   }
 
   /**
@@ -3248,18 +3271,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private @Nullable CompilerInput syntheticTypeSummaryInput; // matches syntheticTypeSummaryFile
 
-  protected final RecentChange recentChange = new RecentChange();
-  private final List<CodeChangeHandler> codeChangeHandlers = new ArrayList<>();
   private final Map<Class<?>, IndexProvider<?>> indexProvidersByType = new LinkedHashMap<>();
 
   @Override
-  void addChangeHandler(CodeChangeHandler handler) {
-    codeChangeHandlers.add(handler);
-  }
-
-  @Override
-  void removeChangeHandler(CodeChangeHandler handler) {
-    codeChangeHandlers.remove(handler);
+  ChangeTracker getChangeTracker() {
+    return changeTracker;
   }
 
   @Override
@@ -3290,68 +3306,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return jsRoot;
   }
 
-  /**
-   * Some tests don't want to call the compiler "wholesale," they may not want to call check and/or
-   * optimize. With this method, tests can execute custom optimization loops.
-   */
-  @VisibleForTesting
-  void setPhaseOptimizer(PhaseOptimizer po) {
-    this.phaseOptimizer = po;
-  }
-
-  @Override
-  public int getChangeStamp() {
-    return changeStamp;
-  }
-
-  @Override
-  List<Node> getChangedScopeNodesForPass(String passName) {
-    List<Node> changedScopeNodes = changeTimeline.getSince(passName);
-    changeTimeline.mark(passName);
-    return changedScopeNodes;
-  }
-
-  @Override
-  public void incrementChangeStamp() {
-    changeStamp++;
-  }
-
-  private Node getChangeScopeForNode(Node n) {
-    /*
-     * Compiler change reporting usually occurs after the AST change has already occurred. In the
-     * case of node removals those nodes are already removed from the tree and so have no parent
-     * chain to walk. In these situations changes are reported instead against what (used to be)
-     * their parent. If that parent is itself a script node then it's important to be able to
-     * recognize it as the enclosing scope without first stepping to its parent as well.
-     */
-    if (n.isScript()) {
-      return n;
-    }
-
-    Node enclosingScopeNode = NodeUtil.getEnclosingChangeScopeRoot(n.getParent());
-    if (enclosingScopeNode == null) {
-      throw new IllegalStateException(
-          "An enclosing scope is required for change reports but node " + n + " doesn't have one.");
-    }
-    return enclosingScopeNode;
-  }
-
-  private void recordChange(Node n) {
-    if (n.isDeleted()) {
-      // Some complicated passes (like SmartNameRemoval) might both change and delete a scope in
-      // the same pass, and they might even perform the change after the deletion because of
-      // internal queueing. Just ignore the spurious attempt to mark changed after already marking
-      // deleted. There's no danger of deleted nodes persisting in the AST since this is enforced
-      // separately in ChangeVerifier.
-      return;
-    }
-
-    n.setChangeTime(changeStamp);
-    // Every code change happens at a different time
-    changeStamp++;
-    changeTimeline.add(n);
-  }
-
   @Override
   boolean hasScopeChanged(Node n) {
     if (phaseOptimizer == null) {
@@ -3362,16 +3316,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   public void reportChangeToChangeScope(Node changeScopeRoot) {
-    checkState(changeScopeRoot.isScript() || changeScopeRoot.isFunction());
-    recordChange(changeScopeRoot);
-    notifyChangeHandlers();
+    changeTracker.reportChangeToChangeScope(changeScopeRoot);
   }
 
   @Override
   public void reportFunctionDeleted(Node n) {
-    checkState(n.isFunction());
-    n.setDeleted(true);
-    changeTimeline.remove(n);
+    changeTracker.reportFunctionDeleted(n);
   }
 
   @Override
@@ -3390,14 +3340,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   public void reportChangeToEnclosingScope(Node n) {
-    recordChange(getChangeScopeForNode(n));
-    notifyChangeHandlers();
-  }
-
-  private void notifyChangeHandlers() {
-    for (CodeChangeHandler handler : codeChangeHandlers) {
-      handler.reportChange();
-    }
+    changeTracker.reportChangeToEnclosingScope(n);
   }
 
   @Override
@@ -3645,7 +3588,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
     OriginalMapping result = consumer.getMappingForLine(lineNumber, columnNumber + 1);
     if (result == null) {
-      return null;
+      return OriginalMapping.getDefaultInstance();
     }
 
     // First check to see if the original file was loaded from an input source map.
@@ -4085,104 +4028,44 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.accessorSummary = checkNotNull(summary);
   }
 
-  @Override
-  protected Node ensureLibraryInjected(String resourceName, boolean force) {
-    boolean shouldInject =
-        force || (!options.skipNonTranspilationPasses && !options.preventLibraryInjection);
-    if (injectedLibraries.contains(resourceName) || !shouldInject) {
-      return lastInjectedLibrary;
-    }
-
-    checkState(!getLifeCycleStage().isNormalized(), "runtime library injected after normalization");
-
-    // Load/parse the code.
-    String path = String.join("", AbstractCompiler.RUNTIME_LIB_DIR, resourceName, ".js");
-    final Node ast;
-    if (this.getLifeCycleStage().hasColorAndSimplifiedJSDoc()) {
+  /** Reads runtime library .js files into memory in AST format */
+  private Node loadResourceContents(String resourceName, String path) {
+    if (getLifeCycleStage().hasColorAndSimplifiedJSDoc()) {
       checkNotNull(
-          this.runtimeLibraryTypedAsts,
+          runtimeLibraryTypedAsts,
           "Must call initRuntimeLibraryTypedAsts before calling ensureLibraryInjected during"
               + " optimizations");
 
       Supplier<Node> typedAstSupplier =
           checkNotNull(
-              this.runtimeLibraryTypedAsts.get(path),
+              runtimeLibraryTypedAsts.get(path),
               String.join(
                   "",
                   "Missing precompiled .typedast for '%s'. If this file is newly added, ",
                   "you may need to regenerate runtime_libs.typedast.textproto",
                   ""),
               path);
-      ast = typedAstSupplier.get();
-    } else {
-      checkState(
-          !this.hasTypeCheckingRun(),
-          "runtime library injected after type checking but before optimization colors");
-      String originalCode =
-          ResourceLoader.loadTextResource(Compiler.class, "js/" + resourceName + ".js");
-
-      SourceFile source = SourceFile.fromCode(path, originalCode);
-      addFilesToSourceMap(ImmutableList.of(source));
-      ast = parseCodeHelper(source);
+      return typedAstSupplier.get();
     }
+    checkState(
+        !hasTypeCheckingRun(),
+        "runtime library injected after type checking but before optimization colors");
+    String originalCode =
+        ResourceLoader.loadTextResource(Compiler.class, "js/" + resourceName + ".js");
 
-    // Look for string literals of the form 'require foo bar'
-    // As we process each one, remove it from its parent.
-    for (Node node = ast.getFirstChild();
-        node != null && node.isExprResult() && node.getFirstChild().isStringLit();
-        node = ast.getFirstChild()) {
-      String directive = node.getFirstChild().getString();
-      List<String> words = Splitter.on(' ').limit(2).splitToList(directive);
-      switch (words.get(0)) {
-        case "use":
-          // 'use strict' is ignored (and deleted).
-          break;
-        case "require":
-          // 'require lib'; pulls in the named library before this one.
-          ensureLibraryInjected(words.get(1), force);
-          break;
-        default:
-          throw new RuntimeException("Bad directive: " + directive);
-      }
-      node.detach();
-    }
+    SourceFile source = SourceFile.fromCode(path, originalCode);
+    addFilesToSourceMap(ImmutableList.of(source));
+    return parseCodeHelper(source);
+  }
 
-    // Insert the code immediately after the last-inserted runtime library.
-    Node lastChild = ast.getLastChild();
-    for (Node child = ast.getFirstChild(); child != null; child = child.getNext()) {
-      NodeUtil.markNewScopesChanged(child, this);
-    }
-    Node firstChild = ast.removeChildren();
-    if (firstChild == null) {
-      // Handle require-only libraries.
-      return lastInjectedLibrary;
-    }
-
+  private Node getNodeForRuntimeCodeInsertion() {
     // For stage 2 optimizing builds, insert runtime libraries as actual code in the AST.
     // For library builds that outputs a TypedAST, the runtime libraries are injected to a synthetic
     // @typeSummary (.i.js) node so that the types are available.
-    Node parent;
     if (options.getTypedAstOutputFile() == null) {
-      parent = getNodeForCodeInsertion(null);
-    } else {
-      parent = getSynthesizedTypeSummaryInput().getAstRoot(this);
+      return getNodeForCodeInsertion(null);
     }
-
-    if (lastInjectedLibrary == null) {
-      parent.addChildrenToFront(firstChild);
-    } else {
-      parent.addChildrenAfter(firstChild, lastInjectedLibrary);
-    }
-    lastInjectedLibrary = lastChild;
-    injectedLibraries.add(resourceName);
-
-    reportChangeToEnclosingScope(parent);
-    return lastChild;
-  }
-
-  @Override
-  ImmutableList<String> getInjectedLibraries() {
-    return ImmutableList.copyOf(injectedLibraries);
+    return getSynthesizedTypeSummaryInput().getAstRoot(this);
   }
 
   @Override
@@ -4255,7 +4138,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final boolean runJ2clPasses;
     private final ImmutableList<InputId> externs;
     private final ImmutableListMultimap<JSChunk, InputId> moduleToInputList;
-    private final LinkedHashSet<String> injectedLibraries;
+    private final ImmutableList<String> injectedLibraries;
     private final int lastInjectedLibraryIndexInFirstScript;
     private final AccessorSummary accessorSummary;
     private final VariableMap stringMap;
@@ -4279,10 +4162,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.externs =
           compiler.externs.stream().map(CompilerInput::getInputId).collect(toImmutableList());
       this.moduleToInputList = mapJSModulesToInputIds(compiler.chunkGraph.getAllChunks());
-      this.injectedLibraries = compiler.injectedLibraries;
+      this.injectedLibraries = compiler.getRuntimeJsLibManager().getInjectedLibraries();
+      Node lastInjectedLibrary = compiler.getRuntimeJsLibManager().getLastInjectedLibrary();
       this.lastInjectedLibraryIndexInFirstScript =
-          compiler.lastInjectedLibrary != null
-              ? compiler.jsRoot.getFirstChild().getIndexOfChild(compiler.lastInjectedLibrary)
+          lastInjectedLibrary != null
+              ? compiler.jsRoot.getFirstChild().getIndexOfChild(lastInjectedLibrary)
               : -1;
       this.accessorSummary = compiler.accessorSummary;
       this.stringMap = compiler.getStringMap();
@@ -4295,8 +4179,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     allowableFeatures = compilerState.allowableFeatures;
     scriptNodeByFilename.clear();
     typeCheckingHasRun = compilerState.typeCheckingHasRun;
-    injectedLibraries.clear();
-    injectedLibraries.addAll(compilerState.injectedLibraries);
+    for (String library : compilerState.injectedLibraries) {
+      getRuntimeJsLibManager().recordLibraryInjected(library);
+    }
     hasRegExpGlobalReferences = compilerState.hasRegExpGlobalReferences;
     // after restoreState, we're always guaranteed to have colors & simplified JSDoc on the AST.
     // whether the AST is also normalized depends on when saveState was called (after stage 1 or 2)
@@ -4325,7 +4210,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // We don't save the change stamps that are stored on the AST nodes,
     // so all the AST Nodes we read in effectively have a change stamp of 0,
     // and we can just start the compiler's counter over at 1.
-    changeStamp = 1;
+    changeTracker.resetChangeStamp();
 
     accessorSummary = compilerState.accessorSummary;
     instrumentationMapping = compilerState.instrumentationMappping;
@@ -4485,17 +4370,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     for (String library : deserializedAst.getRuntimeLibraries()) {
-      this.ensureLibraryInjected(library, false);
+      this.runtimeJsLibManager.ensureLibraryInjected(library, false);
     }
 
     this.typedAstFilesystem = null; // allow garbage collection
 
-    lastInjectedLibrary =
-        compilerState.lastInjectedLibraryIndexInFirstScript != -1
-            ? jsRoot
-                .getFirstChild()
-                .getChildAtIndex(compilerState.lastInjectedLibraryIndexInFirstScript)
-            : null;
+    if (compilerState.lastInjectedLibraryIndexInFirstScript != -1) {
+      Node lastInjectedLibrary =
+          jsRoot
+              .getFirstChild()
+              .getChildAtIndex(compilerState.lastInjectedLibraryIndexInFirstScript);
+      this.runtimeJsLibManager.setLastInjectedLibrary(lastInjectedLibrary);
+    }
   }
 
   /** Returns the module type for the provided namespace. */

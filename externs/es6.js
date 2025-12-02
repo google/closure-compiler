@@ -710,6 +710,39 @@ TypedArray.prototype.subarray = function(begin, opt_end) {};
 TypedArray.prototype.values = function() {};
 
 /**
+ * NOTE: this is an ES2023 extern.
+ * @return {THIS}
+ * @this {THIS}
+ * @template THIS
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toReversed
+ */
+TypedArray.prototype.toReversed = function() {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {function(number, number): number=} compareFn
+ * @return {THIS}
+ * @this {THIS}
+ * @template THIS
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toSorted
+ */
+TypedArray.prototype.toSorted = function(compareFn) {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {number} index
+ * @param {number} value
+ * @return {THIS}
+ * @this {THIS}
+ * @template THIS
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/with
+ */
+TypedArray.prototype.with = function(index, value) {};
+
+/**
  * @return {string}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toLocaleString
@@ -1116,6 +1149,39 @@ BigInt64Array.from = function(source, mapFn, thisArg) {};
  */
 BigInt64Array.of = function(var_args) {};
 
+/**
+ * @param {(function(bigint, bigint) : number)=} opt_compareFunction
+ * @return {THIS}
+ * @this {THIS}
+ * @template THIS
+ * @override
+ * @suppress {checkTypes} The types are specialized in this override.
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/sort
+ */
+BigInt64Array.prototype.sort = function(opt_compareFunction) {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {function(bigint, bigint): number=} compareFn
+ * @return {!BigInt64Array}
+ * @nosideeffects
+ * @override
+ * @suppress {checkTypes} The types are specialized in this override.
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toSorted
+ */
+BigInt64Array.prototype.toSorted = function(compareFn) {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {number} index
+ * @param {bigint} value
+ * @return {!BigInt64Array}
+ * @nosideeffects
+ * @override
+ * @suppress {checkTypes} The types are specialized in this override.
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/with
+ */
+BigInt64Array.prototype.with = function(index, value) {};
 
 /**
  * @param {number|ArrayBufferView|Array<bigint>|ArrayBuffer|SharedArrayBuffer}
@@ -1152,6 +1218,40 @@ BigUint64Array.from = function(source, mapFn, thisArg) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/of
  */
 BigUint64Array.of = function(var_args) {};
+
+/**
+ * @param {(function(bigint, bigint) : number)=} opt_compareFunction
+ * @return {THIS}
+ * @this {THIS}
+ * @template THIS
+ * @override
+ * @suppress {checkTypes} The types are specialized in this override.
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/sort
+ */
+BigUint64Array.prototype.sort = function(opt_compareFunction) {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {function(bigint, bigint): number=} compareFn
+ * @return {!BigUint64Array}
+ * @nosideeffects
+ * @override
+ * @suppress {checkTypes} The types are specialized in this override.
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toSorted
+ */
+BigUint64Array.prototype.toSorted = function(compareFn) {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {number} index
+ * @param {bigint} value
+ * @return {!BigUint64Array}
+ * @nosideeffects
+ * @override
+ * @suppress {checkTypes} The types are specialized in this override.
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/with
+ */
+BigUint64Array.prototype.with = function(index, value) {};
 
 /**
  * @param {ArrayBuffer|SharedArrayBuffer} buffer
@@ -1775,6 +1875,57 @@ Array.prototype.flatMap = function(callback, thisArg) {};
  */
 Array.prototype.flat = function(depth) {};
 
+/**
+ * NOTE: this is an ES2023 extern.
+ * @override
+ * @return {!Array<T>}
+ * @this {!IArrayLike<T>}
+ * @template T
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toReversed
+ */
+Array.prototype.toReversed = function() {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @override
+ * @param {function(T, T): number=} compareFn A function that defines the sort
+ *     order.
+ * @return {!Array<T>}
+ * @this {!IArrayLike<T>}
+ * @template VALUE
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSorted
+ */
+Array.prototype.toSorted = function(compareFn) {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @override
+ * @param {number} start
+ * @param {number=} skipCount
+ * @param {...T} var_toAdd
+ * @return {!Array<T>}
+ * @this {!IArrayLike<T>}
+ * @template T
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSpliced
+ */
+Array.prototype.toSpliced = function(start, skipCount, var_toAdd) {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @override
+ * @param {number} index
+ * @param {T} value
+ * @return {!Array<T>}
+ * @this {!IArrayLike<T>}
+ * @template T
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/with
+ */
+Array.prototype.with = function(index, value) {};
+
 /** @return {!IteratorIterable<number>} */
 ReadonlyArray.prototype.keys;
 
@@ -1896,6 +2047,53 @@ ReadonlyArray.prototype.flatMap = function(callback, thisArg) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flat
  */
 ReadonlyArray.prototype.flat = function(depth) {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @return {!Array<T>}
+ * @this {!IArrayLike<T>}
+ * @template T
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toReversed
+ */
+ReadonlyArray.prototype.toReversed = function() {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {function(T, T): number=} compareFn A function that defines the sort
+ *     order.
+ * @return {!Array<T>}
+ * @this {!IArrayLike<T>}
+ * @template T
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSorted
+ */
+ReadonlyArray.prototype.toSorted = function(compareFn) {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {number} start
+ * @param {number=} skipCount
+ * @param {...T} var_toAdd
+ * @return {!Array<T>}
+ * @this {!IArrayLike<T>}
+ * @template T
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSpliced
+ */
+ReadonlyArray.prototype.toSpliced = function(start, skipCount, var_toAdd) {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {number} index
+ * @param {T} value
+ * @return {!Array<T>}
+ * @this {!IArrayLike<T>}
+ * @template T
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/with
+ */
+ReadonlyArray.prototype.with = function(index, value) {};
 
 /**
  * @param {!Iterable<*>} errors
@@ -2287,6 +2485,15 @@ Atomics.sub = function(typedArray, index, value) {};
  * @return {string}
  */
 Atomics.wait = function(typedArray, index, value, timeout) {};
+
+/**
+ * @param {!Int32Array|!BigInt64Array} typedArray
+ * @param {number} index
+ * @param {number} value
+ * @param {number=} timeout
+ * @return {!Promise<string>}
+ */
+Atomics.waitAsync = function(typedArray, index, value, timeout) {};
 
 /**
  * @param {!Int32Array} typedArray

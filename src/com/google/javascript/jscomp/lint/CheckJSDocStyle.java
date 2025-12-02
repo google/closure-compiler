@@ -126,34 +126,19 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   @Override
   public void visit(NodeTraversal t, Node n, Node unused) {
     switch (n.getToken()) {
-      case FUNCTION:
-        visitFunction(t, n);
-        break;
-      case CLASS:
-        visitClass(t, n);
-        break;
-      case ASSIGN:
-        checkStyleForPrivateProperties(t, n);
-        break;
-      case VAR:
-      case LET:
-      case CONST:
-      case STRING_KEY:
-        break;
-      case MEMBER_FUNCTION_DEF:
-      case GETTER_DEF:
-      case SETTER_DEF:
+      case FUNCTION -> visitFunction(t, n);
+      case CLASS -> visitClass(t, n);
+      case ASSIGN -> checkStyleForPrivateProperties(t, n);
+      case VAR, LET, CONST, STRING_KEY -> {}
+      case MEMBER_FUNCTION_DEF, GETTER_DEF, SETTER_DEF -> {
         // Don't need to call visitFunction because this JSDoc will be visited when the function is
         // visited.
         if (NodeUtil.getEnclosingClass(n) != null) {
           checkStyleForPrivateProperties(t, n);
         }
-        break;
-      case SCRIPT:
-        checkLicenseComment(t, n);
-        break;
-      default:
-        visitNonFunction(t, n);
+      }
+      case SCRIPT -> checkLicenseComment(t, n);
+      default -> visitNonFunction(t, n);
     }
   }
 

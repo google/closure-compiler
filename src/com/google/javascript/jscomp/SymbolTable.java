@@ -1290,19 +1290,17 @@ public final class SymbolTable {
       // This import might be for a constant like `const constant = goog.require('some.constant');`.
       // Try to find it in the corresponding definition in module.
       switch (moduleType) {
-        case GOOG_MODULE:
-        case LEGACY_GOOG_MODULE:
-          // For goog.module search for 'exports' node and use that it as declaration. It would be
-          // better to use right-handside of exports: `exports = constant;` but it's difficult to
-          // get symbol for the right-handside. So do a more limited approach.
-          declaration = moduleScope.getOwnSlot("exports");
-          break;
-        case GOOG_PROVIDE:
-          // For goog.provide `some.constant` should be defined in global namespace.
-          declaration = getSymbolForName(null, moduleName);
-          break;
-        default:
+        case GOOG_MODULE, LEGACY_GOOG_MODULE ->
+            // For goog.module search for 'exports' node and use that it as declaration. It would be
+            // better to use right-handside of exports: `exports = constant;` but it's difficult to
+            // get symbol for the right-handside. So do a more limited approach.
+            declaration = moduleScope.getOwnSlot("exports");
+        case GOOG_PROVIDE ->
+            // For goog.provide `some.constant` should be defined in global namespace.
+            declaration = getSymbolForName(null, moduleName);
+        default -> {
           // skip
+        }
       }
       if (declaration != null) {
         declaration.defineReferenceAt(n);
@@ -1320,15 +1318,11 @@ public final class SymbolTable {
         // AST of goog.module and goog.provide differs significantly so we need to lookup variables
         // differently.
         switch (moduleType) {
-          case GOOG_MODULE:
-          case LEGACY_GOOG_MODULE:
-            varDeclaration = moduleScope.getOwnSlot(varName);
-            break;
-          case GOOG_PROVIDE:
-            varDeclaration = getSymbolForName(null, moduleName + "." + varName);
-            break;
-          default:
+          case GOOG_MODULE, LEGACY_GOOG_MODULE -> varDeclaration = moduleScope.getOwnSlot(varName);
+          case GOOG_PROVIDE -> varDeclaration = getSymbolForName(null, moduleName + "." + varName);
+          default -> {
             // skip
+          }
         }
         if (varDeclaration != null) {
           varDeclaration.defineReferenceAt(stringKey);
@@ -1376,8 +1370,7 @@ public final class SymbolTable {
             Node arg = n.getSecondChild();
             String namespaceName = "ns$" + arg.getString();
             switch (n.getFirstChild().getString()) {
-              case "module":
-              case "provide":
+              case "module", "provide" -> {
                 Symbol ns =
                     declareSymbol(
                         namespaceName,
@@ -1390,9 +1383,10 @@ public final class SymbolTable {
                 if (n.getGrandparent().isModuleBody()) {
                   moduleScopes.put(arg.getString(), scopes.get(n.getGrandparent()));
                 }
-                break;
-              default:
+              }
+              default -> {
                 // do nothing. Some other goog.xyz call.
+              }
             }
           }
         };
@@ -1406,9 +1400,7 @@ public final class SymbolTable {
             Node arg = n.getSecondChild();
             String namespaceName = "ns$" + arg.getString();
             switch (n.getFirstChild().getString()) {
-              case "require":
-              case "requireType":
-              case "forwardDeclare":
+              case "require", "requireType", "forwardDeclare" -> {
                 addRefsInGoogRequireStatement(n.getParent(), moduleScopes);
                 Symbol symbol = declaredNamespaces.get(namespaceName);
                 // We expect that namespace was already processed by that point, but in some broken
@@ -1416,9 +1408,10 @@ public final class SymbolTable {
                 if (symbol != null) {
                   symbol.defineReferenceAt(arg);
                 }
-                break;
-              default:
+              }
+              default -> {
                 // do nothing. Some other goog.xyz call.
+              }
             }
           }
         };

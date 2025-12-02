@@ -53,14 +53,10 @@ public final class RewriteLogicalAssignmentOperatorsPass
   @Override
   public void visit(NodeTraversal t, Node logicalAssignment, Node parent) {
     switch (logicalAssignment.getToken()) {
-      case ASSIGN_OR:
-      case ASSIGN_AND:
-      case ASSIGN_COALESCE:
-        rewriteLogicalAssignmentOperatorsHelper.visitLogicalAssignmentOperator(
-            t, logicalAssignment);
-        break;
-      default:
-        break;
+      case ASSIGN_OR, ASSIGN_AND, ASSIGN_COALESCE ->
+          rewriteLogicalAssignmentOperatorsHelper.visitLogicalAssignmentOperator(
+              t, logicalAssignment);
+      default -> {}
     }
   }
 }

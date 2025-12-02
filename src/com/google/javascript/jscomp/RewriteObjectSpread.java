@@ -61,11 +61,8 @@ public final class RewriteObjectSpread implements NodeTraversal.Callback, Compil
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case OBJECTLIT:
-        visitObject(n);
-        break;
-      default:
-        break;
+      case OBJECTLIT -> visitObject(n);
+      default -> {}
     }
   }
 

@@ -294,29 +294,30 @@ final class SubtypeChecker {
       }
       bivarantMatch = true;
     }
+    @Nullable TemplateType covariantKey =
+        bivarantMatch ? null : getTemplateKeyIfCovariantType(supertype);
 
     if (!subAndSuperAreSameBaseType
         && this.isUsingStructuralTyping
         && supertype.isStructuralType()) {
-      /*
-       * Do this before considering templatization in general.
-       *
-       * <p>If the super type is a structural type, then we can't safely unwrap any templatized
-       * types. The templates might affect the types of the properties.
-       */
-      return this.isStructuralSubtypeHelper(
-          subtype, supertype, PropertyOptionality.VOIDABLE_PROPS_ARE_OPTIONAL);
-    } else if (!subAndSuperAreSameBaseType
-        && supertype.isRecordType()
-        && this.isUsingStructuralTyping) {
-      /*
-       * Anonymous record types are always considered structurally when supertypes.
-       *
-       * <p>Structural typing is the only kind of typing they support. However, we limit to the case
-       * where the supertype is the record, because records shouldn't be subtypes of nominal types.
-       */
-      return this.isStructuralSubtypeHelper(
-          subtype, supertype, PropertyOptionality.ALL_PROPS_ARE_REQUIRED);
+        /*
+         * Do this before considering templatization in general.
+         *
+         * <p>If the super type is a structural type, then we can't safely unwrap any templatized
+         * types. The templates might affect the types of the properties.
+         */
+        if (identical(covariantKey, registry.getReadonlyArrayElementKey())
+            && isNativeArrayType(subtype)) {
+          // patch for covariant subtyping of Array and ReadonlyArray.
+          // structural subtyping generally doesn't really support covariance of generics, but
+          // Array and ReadonlyArray are a special case we want to support as it has been a problem
+          // in practice.
+          JSType thisElement = subtypeParams.getResolvedTemplateType(covariantKey);
+          JSType thatElement = supertypeParams.getResolvedTemplateType(covariantKey);
+          return this.meetVarianceConstraint(Variance.COVARIANT, thisElement, thatElement);
+        }
+        return this.isStructuralSubtypeHelper(
+            subtype, supertype, PropertyOptionality.VOIDABLE_PROPS_ARE_OPTIONAL);
     }
 
     /*
@@ -327,7 +328,6 @@ final class SubtypeChecker {
      * had properties with the right types.
      */
     if (!bivarantMatch) {
-      TemplateType covariantKey = getTemplateKeyIfCovariantType(supertype);
       if (covariantKey != null) {
         JSType thisElement = subtypeParams.getResolvedTemplateType(covariantKey);
         JSType thatElement = supertypeParams.getResolvedTemplateType(covariantKey);
@@ -413,6 +413,11 @@ final class SubtypeChecker {
       return false;
     }
     return true;
+  }
+
+  private boolean isNativeArrayType(ObjectType type) {
+    ObjectType unwrapped = getObjectTypeIfNative(type);
+    return unwrapped != null && unwrapped.equals(registry.getNativeType(JSTypeNative.ARRAY_TYPE));
   }
 
   private boolean isFunctionSubtype(FunctionType subtype, JSType nonFunctionSupertype) {

@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
+import com.google.javascript.jscomp.Normalize.NormalizeStatements;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -2259,7 +2260,6 @@ a = temp$jscomp$2;
 
     Node expresionNode = nodeFinderFn.apply(compiler).apply(tree);
 
-    compiler.resetUniqueNameId();
     DecompositionType result = decomposer.canExposeExpression(expresionNode);
     assertThat(result).isEqualTo(expectedResult);
   }
@@ -2327,7 +2327,6 @@ a = temp$jscomp$2;
 
     Node expr = nodeFinder.apply(tree);
 
-    compiler.resetUniqueNameId();
     decomposer.maybeExposeExpression(expr);
     processForTypecheck(compiler, tree);
 
@@ -2359,7 +2358,6 @@ a = temp$jscomp$2;
     DecompositionType result = decomposer.canExposeExpression(expr);
     assertThat(result).isEqualTo(DecompositionType.DECOMPOSABLE);
 
-    compiler.resetUniqueNameId();
     decomposer.maybeExposeExpression(expr);
     validateSourceInfo(compiler, tree);
     assertNode(tree).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
@@ -2398,7 +2396,6 @@ a = temp$jscomp$2;
     Node expr = nodeFinder.apply(tree);
     assertWithMessage("Expected node was not found.").that(expr).isNotNull();
 
-    compiler.resetUniqueNameId();
     decomposer.moveExpression(expr);
     validateSourceInfo(compiler, tree);
     assertNode(tree).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
@@ -2407,7 +2404,6 @@ a = temp$jscomp$2;
       // find a basis for comparison:
       Node originalExpr = nodeFinder.apply(originalTree);
 
-      compiler.resetUniqueNameId();
       decomposer.moveExpression(originalExpr);
       processForTypecheck(compiler, originalTree);
 
@@ -2424,7 +2420,7 @@ a = temp$jscomp$2;
     JSType actualType = rootActual.getJSType();
 
     if (expectedType == null || actualType == null) {
-      assertWithMessage("Expected " + rootExpected + " but got " + rootActual)
+      assertWithMessage("Expected %s but got %s", rootExpected, rootActual)
           .that(actualType)
           .isEqualTo(expectedType);
     } else if (expectedType.isUnknownType() && actualType.isUnknownType()) {
@@ -2432,7 +2428,7 @@ a = temp$jscomp$2;
     } else {
       // we can't compare actual equality because the types are from different runs of the
       // type inference, so we just compare the strings.
-      assertWithMessage("Expected " + rootExpected + " but got " + rootActual)
+      assertWithMessage("Expected %s but got %s", rootExpected, rootActual)
           .that(actualType.toAnnotationString(JSType.Nullability.EXPLICIT))
           .isEqualTo(expectedType.toAnnotationString(JSType.Nullability.EXPLICIT));
     }
@@ -2493,7 +2489,8 @@ a = temp$jscomp$2;
   }
 
   private static Node parse(Compiler compiler, String js) {
-    Node n = Normalize.parseAndNormalizeTestCode(compiler, js);
+    Node n = compiler.parseTestCode(js);
+    NodeTraversal.traverse(compiler, n, new NormalizeStatements(compiler, false, null));
     assertThat(compiler.getErrors()).isEmpty();
     return n;
   }

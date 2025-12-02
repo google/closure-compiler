@@ -145,12 +145,6 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Override
-  protected int getNumRepetitions() {
-    // run pass once.
-    return 1;
-  }
-
-  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

@@ -46,6 +46,7 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
+import java.util.EnumSet;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -2962,15 +2963,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testExtendedObjectLiteral() {
-    expectFeatures(Feature.EXTENDED_OBJECT_LITERALS);
-    testExtendedObjectLiteral("var a = {b};");
-    testExtendedObjectLiteral("var a = {b, c};");
-    testExtendedObjectLiteral("var a = {b, c: d, e};");
-    testExtendedObjectLiteral("var a = {type};");
-    testExtendedObjectLiteral("var a = {declare};");
-    testExtendedObjectLiteral("var a = {namespace};");
-    testExtendedObjectLiteral("var a = {module};");
+  public void testShorthandObjectProperty() {
+    expectFeatures(Feature.SHORTHAND_OBJECT_PROPERTIES);
+    testShorthandObjectProperty("var a = {b};");
+    testShorthandObjectProperty("var a = {b, c};");
+    testShorthandObjectProperty("var a = {b, c: d, e};");
+    testShorthandObjectProperty("var a = {type};");
+    testShorthandObjectProperty("var a = {declare};");
+    testShorthandObjectProperty("var a = {namespace};");
+    testShorthandObjectProperty("var a = {module};");
 
     expectFeatures();
     parseError("var a = { '!@#$%' };", "':' expected");
@@ -2979,13 +2980,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("var a = { else };", "Cannot use keyword in short object literal");
   }
 
-  private void testExtendedObjectLiteral(String js) {
+  private void testShorthandObjectProperty(String js) {
     mode = LanguageMode.ECMASCRIPT_2015;
     strictMode = SLOPPY;
     parse(js);
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning(js, requiresLanguageModeMessage(Feature.EXTENDED_OBJECT_LITERALS));
+    parseWarning(js, requiresLanguageModeMessage(Feature.SHORTHAND_OBJECT_PROPERTIES));
   }
 
   @Test
@@ -7240,7 +7241,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     String asyncFunctionDeclarationSource = "async function f() {}";
     expectFeatures(Feature.ASYNC_FUNCTIONS);
 
-    for (LanguageMode m : LanguageMode.values()) {
+    for (LanguageMode m : EnumSet.allOf(LanguageMode.class)) {
       mode = m;
       strictMode = (m == LanguageMode.ECMASCRIPT3) ? SLOPPY : STRICT;
       if (m.featureSet.has(Feature.ASYNC_FUNCTIONS)) {
@@ -7291,7 +7292,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   private void doAsyncArrowFunctionTest(String arrowFunctionSource) {
     expectFeatures(Feature.ASYNC_FUNCTIONS, Feature.ARROW_FUNCTIONS);
 
-    for (LanguageMode m : LanguageMode.values()) {
+    for (LanguageMode m : EnumSet.allOf(LanguageMode.class)) {
       mode = m;
       strictMode = (m == LanguageMode.ECMASCRIPT3) ? SLOPPY : STRICT;
       if (m.featureSet.has(Feature.ASYNC_FUNCTIONS)) {
@@ -7971,7 +7972,7 @@ console.log(new X(1));
             "function foo() { foo(); import('foo'); } foo();");
     expectFeatures(Feature.DYNAMIC_IMPORT);
 
-    for (LanguageMode m : LanguageMode.values()) {
+    for (LanguageMode m : EnumSet.allOf(LanguageMode.class)) {
       mode = m;
       strictMode = (m == LanguageMode.ECMASCRIPT3) ? SLOPPY : STRICT;
       if (m.featureSet.has(Feature.DYNAMIC_IMPORT)) {
@@ -8410,5 +8411,77 @@ console.log(new X(1));
       this.code = code;
       this.node = node;
     }
+  }
+
+  @Test
+  public void testIsInClosureUnawareSubtreeProperty_isCorrectlySet() {
+    Node script =
+        parseWarning(
+            """
+            /**
+             * @fileoverview
+             * @closureUnaware
+             */
+            goog.module('a.b');
+            /** @closureUnaware */
+            (function() {
+              const x = 5;
+            }).call(globalThis);
+            let string1 = "ClosureAwareString";
+            /** @closureUnaware */
+            (function() {
+              const y = 5;
+            }).call(globalThis);
+            """,
+            "@closureUnaware annotation is not allowed in this compilation",
+            "@closureUnaware annotation is not allowed in this compilation",
+            "@closureUnaware annotation is not allowed in this compilation");
+
+    Node moduleBody = script.getFirstChild();
+
+    Node firstUnawareFunctionExprResult = moduleBody.getSecondChild();
+    Node awareLet = firstUnawareFunctionExprResult.getNext();
+    Node secondUnawareFunctionExprResult = awareLet.getNext();
+    Node firstUnawareFunctionFunctionNode =
+        firstUnawareFunctionExprResult.getFirstChild().getFirstChild().getFirstChild();
+    Node secondUnawareFunctionFunctionNode =
+        secondUnawareFunctionExprResult.getFirstChild().getFirstChild().getFirstChild();
+
+    assertThat(firstUnawareFunctionFunctionNode.getIsInClosureUnawareSubtree()).isTrue();
+    assertThat(secondUnawareFunctionFunctionNode.getIsInClosureUnawareSubtree()).isTrue();
+
+    assertThat(awareLet.getIsInClosureUnawareSubtree()).isFalse();
+
+    assertThat(
+            Node.validateMemorySensitivePropertyGuarantees(
+                firstUnawareFunctionFunctionNode,
+                true,
+                firstUnawareFunctionFunctionNode.getFirstChild(),
+                true))
+        .isTrue();
+    assertThat(
+            Node.validateMemorySensitivePropertyGuarantees(
+                secondUnawareFunctionFunctionNode,
+                true,
+                secondUnawareFunctionFunctionNode.getFirstChild(),
+                true))
+        .isTrue();
+    assertThat(
+            Node.validateMemorySensitivePropertyGuarantees(
+                firstUnawareFunctionFunctionNode, true, secondUnawareFunctionFunctionNode, true))
+        .isTrue();
+
+    assertThat(
+            Node.validateMemorySensitivePropertyGuarantees(
+                firstUnawareFunctionFunctionNode, true, awareLet, false))
+        .isTrue();
+    assertThat(
+            Node.validateMemorySensitivePropertyGuarantees(
+                secondUnawareFunctionFunctionNode, true, awareLet, false))
+        .isTrue();
+    assertThat(
+            Node.validateMemorySensitivePropertyGuarantees(
+                firstUnawareFunctionFunctionNode, true, awareLet, false))
+        .isTrue();
   }
 }

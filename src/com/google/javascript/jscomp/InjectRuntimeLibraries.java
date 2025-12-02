@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -25,11 +26,11 @@ import com.google.javascript.rhino.Node;
  * <p>TODO(b/120486392): merge this pass with {@link InjectTranspilationRuntimeLibraries}.
  */
 final class InjectRuntimeLibraries implements CompilerPass {
-  private final AbstractCompiler compiler;
+  private final RuntimeJsLibManager runtimeLibs;
   private final ImmutableSet<String> forceInjectedLibraries;
 
   InjectRuntimeLibraries(AbstractCompiler compiler, ImmutableSet<String> forceInjectedLibraries) {
-    this.compiler = compiler;
+    this.runtimeLibs = compiler.getRuntimeJsLibManager();
     this.forceInjectedLibraries = forceInjectedLibraries;
   }
 
@@ -40,7 +41,7 @@ final class InjectRuntimeLibraries implements CompilerPass {
 
   private void injectLibraries() {
     for (String forced : this.forceInjectedLibraries) {
-      compiler.ensureLibraryInjected(forced, true);
+      runtimeLibs.ensureLibraryInjected(forced, true);
     }
   }
 }

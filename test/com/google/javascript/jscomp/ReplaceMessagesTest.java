@@ -204,12 +204,6 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   @Override
-  protected int getNumRepetitions() {
-    // No longer valid on the second run.
-    return 1;
-  }
-
-  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();

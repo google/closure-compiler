@@ -54,7 +54,6 @@ message JsCompilerConformanceReportWrapper {
    * The report contains all the Boq Web violations seen in the library,
    * including the non-allowlisted ones, to be produced by the CheckJS action as
    * per go/supporting-library-level-js-conformance-dd.
-   * TODO(b/332922526): This is currently not being populated.
    */
   JsCompilerConformanceReport library_level_boq_web_report = 2;
 

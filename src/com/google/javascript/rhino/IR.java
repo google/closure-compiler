@@ -81,7 +81,7 @@ public class IR {
   public static Node function(Node name, Node params, Node body) {
     checkState(name.isName());
     checkState(params.isParamList());
-    checkState(body.isBlock());
+    checkState(body.isBlock() || body.isEmpty());
     return new Node(Token.FUNCTION, name, params, body);
   }
 
@@ -602,16 +602,13 @@ public class IR {
     Node objectlit = new Node(Token.OBJECTLIT);
     for (Node propdef : propdefs) {
       switch (propdef.getToken()) {
-        case STRING_KEY:
-        case MEMBER_FUNCTION_DEF:
-        case GETTER_DEF:
-        case SETTER_DEF:
-
-        case OBJECT_SPREAD:
-        case COMPUTED_PROP:
-          break;
-        default:
-          throw new IllegalStateException("Unexpected OBJECTLIT child: " + propdef);
+        case STRING_KEY,
+            MEMBER_FUNCTION_DEF,
+            GETTER_DEF,
+            SETTER_DEF,
+            OBJECT_SPREAD,
+            COMPUTED_PROP -> {}
+        default -> throw new IllegalStateException("Unexpected OBJECTLIT child: " + propdef);
       }
 
       objectlit.addChildToBack(propdef);
@@ -835,12 +832,14 @@ public class IR {
           CONTINUE,
           DEBUGGER,
           DO,
+          ENUM,
           EXPR_RESULT,
           FOR,
           FOR_IN,
           FOR_OF,
           FOR_AWAIT_OF,
           IF,
+          INTERFACE,
           LABEL,
           LET,
           SWITCH,

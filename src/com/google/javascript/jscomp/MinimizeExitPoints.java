@@ -32,20 +32,10 @@ class MinimizeExitPoints extends AbstractPeepholeOptimization {
   @Override
   Node optimizeSubtree(Node n) {
     switch (n.getToken()) {
-      case LABEL:
-        tryMinimizeExits(
-            n.getLastChild(), Token.BREAK, n.getFirstChild().getString());
-        break;
-
-      case FOR:
-      case FOR_IN:
-      case FOR_OF:
-      case FOR_AWAIT_OF:
-      case WHILE:
-        tryMinimizeExits(NodeUtil.getLoopCodeBlock(n), Token.CONTINUE, null);
-        break;
-
-      case DO:
+      case LABEL -> tryMinimizeExits(n.getLastChild(), Token.BREAK, n.getFirstChild().getString());
+      case FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, WHILE ->
+          tryMinimizeExits(NodeUtil.getLoopCodeBlock(n), Token.CONTINUE, null);
+      case DO -> {
         tryMinimizeExits(NodeUtil.getLoopCodeBlock(n), Token.CONTINUE, null);
 
         Node cond = NodeUtil.getConditionExpression(n);
@@ -55,22 +45,16 @@ class MinimizeExitPoints extends AbstractPeepholeOptimization {
           // as we would a CONTINUE.
           tryMinimizeExits(n.getFirstChild(), Token.BREAK, null);
         }
-        break;
-
-      case BLOCK:
+      }
+      case BLOCK -> {
         if (n.hasParent() && n.getParent().isFunction()) {
           tryMinimizeExits(n, Token.RETURN, null);
         }
-        break;
-
-      case SWITCH:
-        tryMinimizeSwitchExits(n, Token.BREAK, null);
-        break;
-
-        // TODO(johnlenz): Minimize any block that ends in a optimizable statements:
-        //   break, continue, return
-      default:
-        break;
+      }
+      case SWITCH -> tryMinimizeSwitchExits(n, Token.BREAK, null);
+      // TODO(johnlenz): Minimize any block that ends in a optimizable statements:
+      //   break, continue, return
+      default -> {}
     }
     return n;
   }

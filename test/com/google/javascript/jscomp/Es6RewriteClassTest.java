@@ -23,7 +23,6 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.StandardColors;
-import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -62,6 +61,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     enableScriptFeatureValidation();
     replaceTypesWithColors();
     enableMultistageCompilation();
+    setGenericNameReplacements(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS);
   }
 
   private static PassFactory makePassFactory(
@@ -72,11 +72,8 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
-    optimizer.addOneTimePass(
-        makePassFactory(
-            "es6RewriteClassExtendsExpressions", Es6RewriteClassExtendsExpressions::new));
+    optimizer.addOneTimePass(makePassFactory("es6NormalizeClasses", Es6NormalizeClasses::new));
     optimizer.addOneTimePass(makePassFactory("es6ConvertSuper", Es6ConvertSuper::new));
-    optimizer.addOneTimePass(makePassFactory("es6ExtractClasses", Es6ExtractClasses::new));
     optimizer.addOneTimePass(makePassFactory("es6RewriteClass", Es6RewriteClass::new));
     return optimizer;
   }
@@ -239,12 +236,12 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         goog.forwardDeclare('D')
         /** @constructor
          */
-        const testcode$classdecl$var0 = function() {
+        const CLASS_DECL$0 = function() {
           return D.apply(this, arguments) || this;
         };
-        $jscomp.inherits(testcode$classdecl$var0, D);
-        testcode$classdecl$var0.prototype.f = function() { D.prototype.g.call(this); };
-        f(testcode$classdecl$var0)
+        $jscomp.inherits(CLASS_DECL$0, D);
+        CLASS_DECL$0.prototype.f = function() { D.prototype.g.call(this); };
+        f(CLASS_DECL$0)
         """);
   }
 
@@ -490,9 +487,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         "var C = class C { }",
         """
         /** @constructor */
-        const testcode$classdecl$var0 = function() {};
-        /** @constructor */
-        var C = testcode$classdecl$var0;
+        var C = function() {};
         """);
   }
 
@@ -502,11 +497,8 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         "var C = class C { foo() {} }",
         """
         /** @constructor */
-        const testcode$classdecl$var0 = function() {}
-        testcode$classdecl$var0.prototype.foo = function() {};
-
-        /** @constructor */
-        var C = testcode$classdecl$var0;
+        var C = function() {};
+        C.prototype.foo = function() {};
         """);
   }
 
@@ -544,8 +536,8 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         "window['MediaSource'] = class {};",
         """
         /** @constructor */
-        const testcode$classdecl$var0 = function() {};
-        window['MediaSource'] = testcode$classdecl$var0;
+        const CLASS_DECL$0 = function() {};
+        window['MediaSource'] = CLASS_DECL$0;
         """);
   }
 
@@ -555,8 +547,8 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         "var C = new (class {})();",
         """
         /** @constructor */
-        const testcode$classdecl$var0=function(){};
-        var C=new testcode$classdecl$var0
+        const CLASS_DECL$0=function(){};
+        var C=new CLASS_DECL$0
         """);
   }
 
@@ -566,8 +558,8 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         "(condition ? obj1 : obj2).prop = class C { };",
         """
         /** @constructor */
-        const testcode$classdecl$var0 = function(){};
-        (condition ? obj1 : obj2).prop = testcode$classdecl$var0;
+        const CLASS_DECL$0 = function(){};
+        (condition ? obj1 : obj2).prop = CLASS_DECL$0;
         """);
   }
 
@@ -578,8 +570,8 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         """
         var C = new (foo || (foo = (() => {
           /** @constructor */
-          const testcode$classdecl$var0 = function() {};
-          return testcode$classdecl$var0;
+          const CLASS_DECL$0 = function() {};
+          return CLASS_DECL$0;
         })()))();
         """);
   }
@@ -590,8 +582,8 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         "function bar(foo = class { }) {};",
         """
         function bar(foo = (() => {
-          /** @constructor */ const testcode$classdecl$var0 = function() {};
-          return testcode$classdecl$var0; })()) {};
+          /** @constructor */ const CLASS_DECL$0 = function() {};
+          return CLASS_DECL$0; })()) {};
         """);
   }
 
@@ -908,12 +900,12 @@ $jscomp.inherits(C, AggregateError);
     test(
         "/** @extends {Object} */ class C extends foo() {}",
         """
-        const testcode$classextends$var0 = foo();
+        const CLASS_EXTENDS$0 = foo();
         /** @constructor */
         let C = function() {
-          return testcode$classextends$var0.apply(this, arguments) || this;
+          return CLASS_EXTENDS$0.apply(this, arguments) || this;
         };
-        $jscomp.inherits(C, testcode$classextends$var0);
+        $jscomp.inherits(C, CLASS_EXTENDS$0);
         """);
   }
 
@@ -922,12 +914,12 @@ $jscomp.inherits(C, AggregateError);
     test(
         "/** @suppress {checkTypes} */ class C extends function(){} {}",
         """
-        const testcode$classextends$var0 = function() {};
+        const CLASS_EXTENDS$0 = function() {};
         /** @constructor */
         let C = function() {
-          testcode$classextends$var0.apply(this, arguments);
+          CLASS_EXTENDS$0.apply(this, arguments);
         };
-        $jscomp.inherits(C, testcode$classextends$var0);
+        $jscomp.inherits(C, CLASS_EXTENDS$0);
         """);
   }
 
@@ -940,13 +932,13 @@ $jscomp.inherits(C, AggregateError);
         let A = function() {};
         /** @constructor */
         let B = function() {};
-        const testcode$classextends$var0 = foo ? A : B;
+        const CLASS_EXTENDS$0 = foo ? A : B;
 
         /** @constructor */
         let C = function() {
-          testcode$classextends$var0.apply(this, arguments);
+          CLASS_EXTENDS$0.apply(this, arguments);
         };
-        $jscomp.inherits(C, testcode$classextends$var0);
+        $jscomp.inherits(C, CLASS_EXTENDS$0);
         """);
   }
 
@@ -1692,9 +1684,7 @@ $jscomp.inherits(FooPromise, Promise);
         "var F = class G {}",
         """
         /** @constructor */
-        const testcode$classdecl$var0 = function(){};
-        /** @constructor */
-        var F = testcode$classdecl$var0;
+        var F = function() {};
         """);
   }
 
@@ -1704,9 +1694,7 @@ $jscomp.inherits(FooPromise, Promise);
         "F = class G {}",
         """
         /** @constructor */
-        const testcode$classdecl$var0 = function(){};
-        /** @constructor */
-        F = testcode$classdecl$var0;
+        F = function() {};
         """);
   }
 
@@ -2067,8 +2055,8 @@ $jscomp.inherits(FooPromise, Promise);
         """
         function f() {
           /** @constructor */
-          const testcode$classdecl$var0 = function() {};
-          var a = b = testcode$classdecl$var0;
+          const CLASS_DECL$0 = function() {};
+          var a = b = CLASS_DECL$0;
         }
         """);
   }
@@ -2081,8 +2069,8 @@ $jscomp.inherits(FooPromise, Promise);
         var ns = {};
         function f() {
           /** @constructor */
-          const testcode$classdecl$var0 = function() {};
-          var self = ns.Child = testcode$classdecl$var0
+          const CLASS_DECL$0 = function() {};
+          var self = ns.Child = CLASS_DECL$0
         }
         """);
   }
@@ -2359,9 +2347,7 @@ $jscomp.inherits(FooPromise, Promise);
         """);
   }
 
-  /**
-   * @bug 20536614
-   */
+  /** b/20536614 */
   @Test
   public void testStaticGetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -2437,9 +2423,10 @@ $jscomp.inherits(FooPromise, Promise);
     test(
         "/** @unrestricted */ class C { static set [se()](val) {}}",
         """
+        var COMP_FIELD$0 = se();
         /** @constructor */
         let C = function() {};
-        $jscomp.global.Object.defineProperty(C, se(), {
+        $jscomp.global.Object.defineProperty(C, COMP_FIELD$0, {
           configurable: true,
           enumerable: true,
           set: function(val) {},
@@ -2453,9 +2440,10 @@ $jscomp.inherits(FooPromise, Promise);
     test(
         "/** @unrestricted */ class C { static get [se()]() {}}",
         """
+        var COMP_FIELD$0 = se();
         /** @constructor */
         let C = function() {};
-        $jscomp.global.Object.defineProperty(C, se(), {
+        $jscomp.global.Object.defineProperty(C, COMP_FIELD$0, {
           configurable: true,
           enumerable: true,
           get: function() {},
@@ -2469,19 +2457,16 @@ $jscomp.inherits(FooPromise, Promise);
     test(
         "/** @unrestricted */ class C { static get [se()]() {} static set [se()](val) {}}",
         """
+        var COMP_FIELD$0 = se();
+        var COMP_FIELD$1 = se();
         /** @constructor */
         let C = function() {};
-
-        $jscomp.global.Object.defineProperty(
-          C,
-          se(), {
-            configurable: true,
-            enumerable: true,
-            get: function() {},
-          }
-        );
-
-        $jscomp.global.Object.defineProperty(C, se(), {
+        $jscomp.global.Object.defineProperty(C, COMP_FIELD$0, {
+          configurable: true,
+          enumerable: true,
+          get: function() {},
+        });
+        $jscomp.global.Object.defineProperty(C, COMP_FIELD$1, {
           configurable: true,
           enumerable: true,
           set: function(val) {},
@@ -2514,18 +2499,18 @@ $jscomp.inherits(FooPromise, Promise);
         }
         """,
         """
+        var COMP_FIELD$0 = foo;
+        var COMP_FIELD$1 = foo;
         /** @constructor */
         let C = function() {};
-
-        $jscomp.global.Object.defineProperty(C.prototype, foo, {
-          configurable:true,
-          enumerable:true,
+        $jscomp.global.Object.defineProperty(C.prototype, COMP_FIELD$0, {
+          configurable: true,
+          enumerable: true,
           get: function() {},
         });
-
-        $jscomp.global.Object.defineProperty(C.prototype, foo, {
-          configurable:true,
-          enumerable:true,
+        $jscomp.global.Object.defineProperty(C.prototype, COMP_FIELD$1, {
+          configurable: true,
+          enumerable: true,
           set: function(val) {},
         });
         """);
@@ -2576,35 +2561,30 @@ $jscomp.inherits(FooPromise, Promise);
             """),
         expected(
             """
+            var COMP_FIELD$0 = one();
+            var COMP_FIELD$1 = two();
+            var COMP_FIELD$2 = three();
             /** @constructor */
             let C = function() {};
-            $jscomp.global.Object.defineProperty(C.prototype, one(), {
+            $jscomp.global.Object.defineProperty(C.prototype, COMP_FIELD$0, {
               configurable: true,
               enumerable: true,
               get: function() {
-                return true
+                return true;
               },
             });
-            C.prototype[two()] = function() {};
+            C.prototype[COMP_FIELD$1] = function() {};
             C.prototype.c = function() {};
-            $jscomp.global.Object.defineProperty(C.prototype, three(), {
+            $jscomp.global.Object.defineProperty(C.prototype, COMP_FIELD$2, {
               configurable: true,
               enumerable: true,
               set: function(val) {
-                return true
+                return true;
               },
             });
             $jscomp.global.Object.defineProperties(C.prototype, {
-              a: {
-                configurable: true,
-                enumerable: true,
-                get: function() {},
-              },
-              b: {
-                configurable: true,
-                enumerable: true,
-                get: function() {},
-              }
+              a: {configurable: true, enumerable: true, get: function() {}},
+              b: {configurable: true, enumerable: true, get: function() {}},
             });
             """));
   }
@@ -2614,9 +2594,13 @@ $jscomp.inherits(FooPromise, Promise);
     test(
         "/** @unrestricted */ class C { [foo]() { alert(1); } }",
         """
+        var COMP_FIELD$0 = foo;
         /** @constructor */
-        let C = function() {};
-        C.prototype[foo] = function() { alert(1); };
+        let C = function() {
+        };
+        C.prototype[COMP_FIELD$0] = function() {
+          alert(1);
+        };
         """);
   }
 
@@ -2625,9 +2609,13 @@ $jscomp.inherits(FooPromise, Promise);
     test(
         "/** @unrestricted */ class C { static [foo]() { alert(2); } }",
         """
+        var COMP_FIELD$0 = foo;
         /** @constructor */
-        let C = function() {};
-        C[foo] = function() { alert(2); };
+        let C = function() {
+        };
+        C[COMP_FIELD$0] = function() {
+          alert(2);
+        };
         """);
   }
 
@@ -2636,9 +2624,13 @@ $jscomp.inherits(FooPromise, Promise);
     test(
         "/** @unrestricted */ class C { *[foo]() { yield 1; } }",
         """
+        var COMP_FIELD$0 = foo;
         /** @constructor */
-        let C = function() {};
-        C.prototype[foo] = function*() { yield 1; };
+        let C = function() {
+        };
+        C.prototype[COMP_FIELD$0] = function*() {
+          yield 1;
+        };
         """);
   }
 
@@ -2647,9 +2639,13 @@ $jscomp.inherits(FooPromise, Promise);
     test(
         "/** @unrestricted */ class C { static *[foo]() { yield 2; } }",
         """
+        var COMP_FIELD$0 = foo;
         /** @constructor */
-        let C = function() {};
-        C[foo] = function*() { yield 2; };
+        let C = function() {
+        };
+        C[COMP_FIELD$0] = function*() {
+          yield 2;
+        };
         """);
   }
 
@@ -2662,7 +2658,7 @@ $jscomp.inherits(FooPromise, Promise);
         let C = function() {};
         C.prototype.foo = function*() { yield 1;};
         """);
-    assertThat(getLastCompiler().getInjected()).isEmpty();
+    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries()).isEmpty();
   }
 
   @Test
@@ -2689,11 +2685,11 @@ $jscomp.inherits(FooPromise, Promise);
           /**
            * @constructor
            */
-          const testcode$classdecl$var0 = function(){
+          const CLASS_DECL$0 = function(){
             return baseClass.call(this) || this
           };
-          $jscomp.inherits(testcode$classdecl$var0, baseClass);
-          return testcode$classdecl$var0;
+          $jscomp.inherits(CLASS_DECL$0, baseClass);
+          return CLASS_DECL$0;
         }
         """);
   }
@@ -3027,24 +3023,12 @@ $jscomp.inherits(FooPromise, Promise);
   /** Returns the first node (preorder) in the given AST that matches the given qualified name */
   private Node getNodeWithName(Node root, String name) {
     switch (root.getToken()) {
-      case GETPROP:
-      case OPTCHAIN_GETPROP:
+      case GETPROP, OPTCHAIN_GETPROP, NAME, STRINGLIT, MEMBER_FUNCTION_DEF, STRING_KEY -> {
         if (root.getString().equals(name)) {
           return root;
         }
-        break;
-
-      case NAME:
-      case STRINGLIT:
-      case MEMBER_FUNCTION_DEF:
-      case STRING_KEY:
-        if (root.getString().equals(name)) {
-          return root;
-        }
-        break;
-
-      default:
-        break;
+      }
+      default -> {}
     }
 
     for (Node child = root.getFirstChild(); child != null; child = child.getNext()) {
@@ -3054,16 +3038,6 @@ $jscomp.inherits(FooPromise, Promise);
       }
     }
     return null;
-  }
-
-  @Override
-  protected Compiler createCompiler() {
-    return new NoninjectingCompiler();
-  }
-
-  @Override
-  protected NoninjectingCompiler getLastCompiler() {
-    return (NoninjectingCompiler) super.getLastCompiler();
   }
 
   /**

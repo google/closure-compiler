@@ -46,21 +46,21 @@ public final class TestErrorManager extends BasicErrorManager {
     super.report(level, error);
 
     switch (level) {
-      case ERROR:
+      case ERROR -> {
         if (errorIndex >= errors.length) {
           throw new AssertionError("Unexpected error: " + error);
         }
         assertEquals(errors[errorIndex++], error.description());
-        break;
-      case WARNING:
+      }
+      case WARNING -> {
         if (errorIndex >= warnings.length) {
           throw new AssertionError("Unexpected warning: " + error);
         }
         assertEquals(warnings[warningIndex++], error.description());
-        break;
-      case OFF:
+      }
+      case OFF -> {
         // no-op
-        break;
+      }
     }
   }
 

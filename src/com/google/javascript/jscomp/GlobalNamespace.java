@@ -461,17 +461,22 @@ class GlobalNamespace
       NameProp type = NameProp.OTHER_OBJECT;
 
       switch (n.getToken()) {
-        case GETTER_DEF:
-        case SETTER_DEF:
-        case MEMBER_FUNCTION_DEF:
+        case GETTER_DEF, SETTER_DEF, MEMBER_FUNCTION_DEF, MEMBER_FIELD_DEF -> {
           if (parent.isClassMembers() && !n.isStaticMember()) {
             return; // Within a class, only static members define global names.
           }
           name = NodeUtil.getBestLValueName(n);
           isSet = true;
-          type = n.isMemberFunctionDef() ? NameProp.FUNCTION : NameProp.GET_SET;
-          break;
-        case STRING_KEY:
+
+          if (n.isMemberFunctionDef()) {
+            type = NameProp.FUNCTION;
+          } else if (n.isMemberFieldDef()) {
+            type = NameProp.OTHER_OBJECT;
+          } else {
+            type = NameProp.GET_SET;
+          }
+        }
+        case STRING_KEY -> {
           name = null;
           if (parent.isObjectLit()) {
             ObjLitStringKeyAnalysis analysis = createObjLitStringKeyAnalysis(n);
@@ -482,10 +487,10 @@ class GlobalNamespace
             name = getNameForObjectPatternKey(n);
             type = getValueType(n.getFirstChild());
             // not a set
-          } // else not a reference we should record
-          break;
-        case NAME:
-        case GETPROP:
+          }
+          // else not a reference we should record
+        }
+        case NAME, GETPROP -> {
           // OPTCHAIN_GETPROP is intentionally not included in this case.
           // "a.b?.c" is not a reference to the global name "a.b.c" for the
           // purposes of GlobalNamespace.
@@ -564,9 +569,8 @@ class GlobalNamespace
             return;
           }
           name = n.getQualifiedName();
-          break;
-
-        case CALL:
+        }
+        case CALL -> {
           if (parent.isExprResult()
               && GOOG_PROVIDE.matches(n.getFirstChild())
               && n.getSecondChild().isStringLit()) {
@@ -577,8 +581,10 @@ class GlobalNamespace
             return;
           }
           return;
-        default:
+        }
+        default -> {
           return;
+        }
       }
 
       if (name == null) {
@@ -709,20 +715,24 @@ class GlobalNamespace
      */
     NameProp getValueType(Node n) {
       switch (n.getToken()) {
-        case CLASS:
+        case CLASS -> {
           return NameProp.CLASS;
-        case OBJECTLIT:
+        }
+        case OBJECTLIT -> {
           return NameProp.OBJECTLIT;
-        case FUNCTION:
+        }
+        case FUNCTION -> {
           return NameProp.FUNCTION;
-        case OR:
+        }
+        case OR -> {
           // Recurse on the second value. If the first value were an object
           // literal or function, then the OR would be meaningless and the
           // second value would be dead code. Assume that if the second value
           // is an object literal or function, then the first value will also
           // evaluate to one when it doesn't evaluate to false.
           return getValueType(n.getLastChild());
-        case HOOK:
+        }
+        case HOOK -> {
           // The same line of reasoning used for the OR case applies here.
           Node second = n.getSecondChild();
           NameProp t = getValueType(second);
@@ -731,8 +741,8 @@ class GlobalNamespace
           }
           Node third = second.getNext();
           return getValueType(third);
-        default:
-          break;
+        }
+        default -> {}
       }
       return NameProp.OTHER_OBJECT;
     }
@@ -1363,6 +1373,22 @@ class GlobalNamespace
       return parent;
     }
 
+    /**
+     * Returns the {@link JSChunk} that is an ancestor (or equal to) all the chunks in which this
+     * name is referenced, inclusive of the actual chunks in the refs.
+     *
+     * <p>Most of the time this is identical to the declaration's chunk, but it's still valid to
+     * conditionally reference names from later child chunks in an earlier chunk.
+     */
+    JSChunk getDeepestCommonAncestorChunk(JSChunkGraph chunkGraph) {
+      JSChunk commonAncestor = getDeclaration().getChunk();
+      for (Ref r : this.getRefs()) {
+        JSChunk rChunk = r.getChunk();
+        commonAncestor = chunkGraph.getDeepestCommonDependencyInclusive(rChunk, commonAncestor);
+      }
+      return commonAncestor;
+    }
+
     @Override
     public StaticScope getScope() {
       throw new UnsupportedOperationException();
@@ -1454,8 +1480,7 @@ class GlobalNamespace
      */
     private void updateStateForAddedRef(Ref ref) {
       switch (ref.type) {
-        case GET_AND_SET_FROM_GLOBAL:
-        case SET_FROM_GLOBAL:
+        case GET_AND_SET_FROM_GLOBAL, SET_FROM_GLOBAL -> {
           if (declaration == null) {
             declaration = ref;
           }
@@ -1476,9 +1501,8 @@ class GlobalNamespace
             aliasingGets++;
             totalGets++;
           }
-          break;
-        case GET_AND_SET_FROM_LOCAL:
-        case SET_FROM_LOCAL:
+        }
+        case GET_AND_SET_FROM_LOCAL, SET_FROM_LOCAL -> {
           localSets++;
           JSDocInfo info = ref.getNode() == null ? null : NodeUtil.getBestJSDocInfo(ref.getNode());
           if (info != null && info.isNoCollapse()) {
@@ -1488,9 +1512,8 @@ class GlobalNamespace
             aliasingGets++;
             totalGets++;
           }
-          break;
-        case PROTOTYPE_GET:
-        case DIRECT_GET:
+        }
+        case PROTOTYPE_GET, DIRECT_GET -> {
           Node node = ref.getNode();
           if (firstQnameDeclarationWithoutAssignmentJsDocInfo == null
               && isQnameDeclarationWithoutAssignment(node)) {
@@ -1499,22 +1522,20 @@ class GlobalNamespace
             firstQnameDeclarationWithoutAssignmentJsDocInfo = node.getJSDocInfo();
           }
           totalGets++;
-          break;
-        case ALIASING_GET:
+        }
+        case ALIASING_GET -> {
           aliasingGets++;
           totalGets++;
-          break;
-        case CALL_GET:
+        }
+        case CALL_GET -> {
           callGets++;
           totalGets++;
-          break;
-        case DELETE_PROP:
-          deleteProps++;
-          break;
-        case SUBCLASSING_GET:
+        }
+        case DELETE_PROP -> deleteProps++;
+        case SUBCLASSING_GET -> {
           subclassingGets++;
           totalGets++;
-          break;
+        }
       }
     }
 
@@ -1590,16 +1611,13 @@ class GlobalNamespace
 
       JSDocInfo info;
       switch (ref.type) {
-        case SET_FROM_GLOBAL:
-          globalSets--;
-          break;
-        case GET_AND_SET_FROM_GLOBAL:
+        case SET_FROM_GLOBAL -> globalSets--;
+        case GET_AND_SET_FROM_GLOBAL -> {
           aliasingGets--;
           totalGets--;
           globalSets--;
-          break;
-        case SET_FROM_LOCAL:
-        case GET_AND_SET_FROM_LOCAL:
+        }
+        case SET_FROM_LOCAL, GET_AND_SET_FROM_LOCAL -> {
           localSets--;
           info = ref.getNode() == null ? null : NodeUtil.getBestJSDocInfo(ref.getNode());
           if (info != null && info.isNoCollapse()) {
@@ -1609,27 +1627,22 @@ class GlobalNamespace
             aliasingGets--;
             totalGets--;
           }
-          break;
-        case PROTOTYPE_GET:
-        case DIRECT_GET:
-          totalGets--;
-          break;
-        case ALIASING_GET:
+        }
+        case PROTOTYPE_GET, DIRECT_GET -> totalGets--;
+        case ALIASING_GET -> {
           aliasingGets--;
           totalGets--;
-          break;
-        case CALL_GET:
+        }
+        case CALL_GET -> {
           callGets--;
           totalGets--;
-          break;
-        case DELETE_PROP:
-          deleteProps--;
-          break;
-        case SUBCLASSING_GET:
+        }
+        case DELETE_PROP -> deleteProps--;
+        case SUBCLASSING_GET -> {
           subclassingGets--;
           totalGets--;
-          break;
           // Leaving off default: allows compile-time enforcement that all values are covered
+        }
       }
     }
 
@@ -1754,20 +1767,14 @@ class GlobalNamespace
       // Only allow inlining of simple references.
       for (Ref ref : getRefs()) {
         switch (ref.type) {
-          case SET_FROM_GLOBAL:
-          case GET_AND_SET_FROM_GLOBAL:
+          case SET_FROM_GLOBAL, GET_AND_SET_FROM_GLOBAL -> {
             // Expect one global set
             checkState(
                 ref.isUninitializedDeclaration() || ref.getChunk().equals(initialChunk), ref);
             continue;
-          case SET_FROM_LOCAL:
-          case GET_AND_SET_FROM_LOCAL:
-            throw new IllegalStateException();
-          case ALIASING_GET:
-          case DIRECT_GET:
-          case PROTOTYPE_GET:
-          case CALL_GET:
-          case SUBCLASSING_GET:
+          }
+          case SET_FROM_LOCAL, GET_AND_SET_FROM_LOCAL -> throw new IllegalStateException();
+          case ALIASING_GET, DIRECT_GET, PROTOTYPE_GET, CALL_GET, SUBCLASSING_GET -> {
             // This name has a reference in a different chunk that is not guaranteed to be loaded
             // before the alias is initialized. In an ideal world, we might just back off inlining
             // this alias entirely. Unfortunately, that causes new runtime errors in practice,
@@ -1781,8 +1788,10 @@ class GlobalNamespace
               inlinability = Inlinability.INLINE_UNLESS_INVALID_CROSS_CHUNK_DEPENDENCY;
             }
             continue;
-          case DELETE_PROP:
+          }
+          case DELETE_PROP -> {
             return Inlinability.DO_NOT_INLINE;
+          }
         }
         throw new AssertionError();
       }
@@ -1888,7 +1897,7 @@ class GlobalNamespace
       // if condition (a) or condition (b) is not true, but this is a declared name, we may need
       // to allow inlining usages of a variable but keep the declaration.
       switch (parentInlinability) {
-        case INLINE_COMPLETELY:
+        case INLINE_COMPLETELY -> {
           if (isUnchangedThroughFullName) {
             logDecision(
                 Inlinability.INLINE_COMPLETELY, "parent inlineable: unchanged through full name");
@@ -1901,9 +1910,8 @@ class GlobalNamespace
             logDecision(unsafeInlinablility, "parent inlineable: changed through full name");
             return unsafeInlinablility;
           }
-
-        case INLINE_BUT_KEEP_DECLARATION:
-        case INLINE_UNLESS_INVALID_CROSS_CHUNK_DEPENDENCY:
+        }
+        case INLINE_BUT_KEEP_DECLARATION, INLINE_UNLESS_INVALID_CROSS_CHUNK_DEPENDENCY -> {
           // this is definitely not safe to completely inline/collapse of its parent
           // if it's a declared type, we should still partially inline it and completely collapse it
           // if not a declared type we should partially inline it iff the other conditions hold
@@ -1923,16 +1931,15 @@ class GlobalNamespace
                 "parent unsafely inlineable & changed through full name");
             return Inlinability.DO_NOT_INLINE;
           }
-
-        case DO_NOT_INLINE:
-          {
-            // If the parent is unsafely to collapse/inline, we will still inline it if it's on
-            // a declaredType (i.e. @constructor or @enum), but we propagate the information that
-            // the parent is unsafe. If this is not a declared type, return DO_NOT_INLINE.
-            final Inlinability unsafeInlinability = getUnsafeInlinabilityBasedOnDeclaredType();
-            logDecision(unsafeInlinability, "parent cannot be inlined");
-            return unsafeInlinability;
-          }
+        }
+        case DO_NOT_INLINE -> {
+          // If the parent is unsafely to collapse/inline, we will still inline it if it's on
+          // a declaredType (i.e. @constructor or @enum), but we propagate the information that
+          // the parent is unsafe. If this is not a declared type, return DO_NOT_INLINE.
+          final Inlinability unsafeInlinability = getUnsafeInlinabilityBasedOnDeclaredType();
+          logDecision(unsafeInlinability, "parent cannot be inlined");
+          return unsafeInlinability;
+        }
       }
       throw new IllegalStateException("unknown enum value " + parentInlinability);
     }
@@ -1973,7 +1980,13 @@ class GlobalNamespace
       if (member == null || !(member.isStaticMember() && member.getParent().isClassMembers())) {
         return false;
       }
-      if (NodeUtil.referencesSuper(NodeUtil.getFunctionBody(member.getFirstChild()))) {
+      // Get either the function body or the member field initializer (which may be null if there is
+      // no initializer).
+      Node body =
+          member.isMemberFieldDef()
+              ? member.getFirstChild()
+              : NodeUtil.getFunctionBody(member.getFirstChild());
+      if (body != null && NodeUtil.referencesSuper(body)) {
         return true;
       }
 
@@ -2285,21 +2298,18 @@ class GlobalNamespace
           return null;
         }
         switch (refParent.getToken()) {
-          case FUNCTION:
-          case ASSIGN:
-          case CLASS:
+          case FUNCTION, ASSIGN, CLASS -> {
             return refParent.getJSDocInfo();
-          case VAR:
-          case LET:
-          case CONST:
+          }
+          case VAR, LET, CONST -> {
             return ref.node == refParent.getFirstChild()
                 ? refParent.getJSDocInfo()
                 : ref.node.getJSDocInfo();
-          case OBJECTLIT:
-          case CLASS_MEMBERS:
+          }
+          case OBJECTLIT, CLASS_MEMBERS -> {
             return ref.node.getJSDocInfo();
-          default:
-            break;
+          }
+          default -> {}
         }
       }
 

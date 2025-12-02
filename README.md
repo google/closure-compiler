@@ -144,6 +144,10 @@ To achieve these goals closure compiler places many restrictions on its input:
 
 ## Getting Started
 
+IMPORTANT: The NPM packages are not built and distributed by Google. They are an
+Open Source contribution from ChadKillingsworth, who manages and builds them
+from a separate repository at https://github.com/ChadKillingsworth/closure-compiler-npm.
+
 The easiest way to install the compiler is with [NPM](https://npmjs.com) or
 [Yarn](https://yarnpkg.com):
 
@@ -308,7 +312,7 @@ new compiler({
 This package will provide programmatic access to the native Graal binary in most
 cases, and will fall back to the Java version otherwise.
 
-#### Please see the [closure-compiler-npm](https://github.com/google/closure-compiler-npm/tree/master/packages/google-closure-compiler) repository for documentation on accessing the compiler in JS.
+#### Please see the [closure-compiler-npm](https://github.com/chadkillingsworth/closure-compiler-npm/tree/master/packages/google-closure-compiler) repository for documentation on accessing the compiler in JS.
 
 ## Compiling Multiple Scripts
 

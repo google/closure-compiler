@@ -145,20 +145,11 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case IMPORT:
-          visitImport(t.getInput().getPath(), n);
-          break;
-        case EXPORT:
-          visitExport(t, n, parent);
-          break;
-        case SCRIPT:
-          visitScript(t, n);
-          break;
-        case NAME:
-          maybeRenameImportedValue(t, n);
-          break;
-        default:
-          break;
+        case IMPORT -> visitImport(t.getInput().getPath(), n);
+        case EXPORT -> visitExport(t, n, parent);
+        case SCRIPT -> visitScript(t, n);
+        case NAME -> maybeRenameImportedValue(t, n);
+        default -> {}
       }
     }
 

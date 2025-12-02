@@ -38,7 +38,6 @@ def _typedast_impl(ctx):
     args.add_all([
         "--checks_only",
         "--strict_mode_input",
-        "--env=CUSTOM",
         "--language_out=ES_NEXT",
         "--inject_libraries=false",
         "--jscomp_error=checkTypes",

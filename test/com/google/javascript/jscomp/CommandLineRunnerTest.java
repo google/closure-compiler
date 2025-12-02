@@ -2592,7 +2592,7 @@ public final class CommandLineRunnerTest {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     String output = runner.getCompiler().toSource();
     assertThat(output).isEqualTo("alert(\"foo\");");
@@ -2615,7 +2615,7 @@ public final class CommandLineRunnerTest {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
@@ -2648,7 +2648,7 @@ public final class CommandLineRunnerTest {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
@@ -2702,7 +2702,7 @@ public final class CommandLineRunnerTest {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
@@ -2762,7 +2762,7 @@ public final class CommandLineRunnerTest {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
@@ -2800,7 +2800,7 @@ public final class CommandLineRunnerTest {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
@@ -2837,7 +2837,7 @@ public final class CommandLineRunnerTest {
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
@@ -3204,7 +3204,7 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     String output = new String(outReader.toByteArray(), UTF_8);
     assertThat(output)
@@ -3275,7 +3275,7 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
 
     assertThat(Files.asCharSource(outputFile1, UTF_8).read()).isEqualTo(inputSource1);
@@ -3470,6 +3470,29 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
           var polyfill = target[obfuscatedName];
           return polyfill !== undefined ? polyfill : target[property]
         };
+        $jscomp.TYPED_ARRAY_CLASSES = function() {
+          var classes = [
+            'Int8', 'Uint8', 'Uint8Clamped', 'Int16', 'Uint16', 'Int32', 'Uint32',
+            'Float32', 'Float64'
+          ];
+          if ($jscomp.global.BigInt64Array) {
+            classes.push('BigInt64');
+            classes.push('BigUint64')
+          }
+          return classes
+        }();
+        $jscomp.polyfillTypedArrayMethod = function(
+            methodName, polyfill, fromLang, toLang) {
+          if (!polyfill) return;
+          for (var i = 0; i < $jscomp.TYPED_ARRAY_CLASSES.length; i++) {
+            var target =
+                $jscomp.TYPED_ARRAY_CLASSES[i] + 'Array.prototype.' + methodName;
+            if ($jscomp.ISOLATE_POLYFILLS)
+              $jscomp.polyfillIsolated(target, polyfill, fromLang, toLang);
+            else
+              $jscomp.polyfillUnisolated(target, polyfill, fromLang, toLang)
+          }
+        };
         $jscomp.polyfill = function(target, polyfill, fromLang, toLang) {
           if (!polyfill) return;
           if ($jscomp.ISOLATE_POLYFILLS)
@@ -3633,11 +3656,9 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
 
     if (warning == null) {
       assertWithMessage(
-              "Expected no warnings or errors"
-                  + "\nErrors: \n"
-                  + Joiner.on("\n").join(compiler.getErrors())
-                  + "\nWarnings: \n"
-                  + Joiner.on("\n").join(compiler.getWarnings()))
+              "Expected no warnings or errors" + "\nErrors: \n%s\nWarnings: \n%s",
+              Joiner.on("\n").join(compiler.getErrors()),
+              Joiner.on("\n").join(compiler.getWarnings()))
           .that(compiler.getErrors().size() + compiler.getWarnings().size())
           .isEqualTo(0);
     } else {
@@ -3667,11 +3688,9 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
   private void test(String[] original, DiagnosticType warning) {
     Compiler compiler = compile(original);
     assertWithMessage(
-            "Expected exactly one warning or error "
-                + "\nErrors: \n"
-                + Joiner.on("\n").join(compiler.getErrors())
-                + "\nWarnings: \n"
-                + Joiner.on("\n").join(compiler.getWarnings()))
+            "Expected exactly one warning or error " + "\nErrors: \n%s\nWarnings: \n%s",
+            Joiner.on("\n").join(compiler.getErrors()),
+            Joiner.on("\n").join(compiler.getWarnings()))
         .that(compiler.getErrors().size() + compiler.getWarnings().size())
         .isEqualTo(1);
 
@@ -3681,13 +3700,13 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
     if (!compiler.getErrors().isEmpty()) {
       assertThat(compiler.getErrors()).hasSize(1);
       assertThat(compiler.getErrors().get(0).type()).isEqualTo(warning);
-      assertWithMessage("Expected exit code of 1.  Contents of err printstream:\n" + errReader)
+      assertWithMessage("Expected exit code of 1.  Contents of err printstream:\n%s", errReader)
           .that(lastExitCode)
           .isEqualTo(1);
     } else {
       assertThat(compiler.getWarnings()).hasSize(1);
       assertThat(compiler.getWarnings().get(0).type()).isEqualTo(warning);
-      assertWithMessage("Expected exit code of 0.  Contents of err printstream:\n" + errReader)
+      assertWithMessage("Expected exit code of 0.  Contents of err printstream:\n%s", errReader)
           .that(lastExitCode)
           .isEqualTo(0);
     }
@@ -3787,7 +3806,7 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     Compiler compiler = runner.getCompiler();
     String output = compiler.toSource();
@@ -3817,7 +3836,7 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
       runner.doRun();
     } catch (IOException e) {
       e.printStackTrace();
-      assertWithMessage("Unexpected exception " + e).fail();
+      assertWithMessage("Unexpected exception %s", e).fail();
     }
     return new String(outputStream.toByteArray(), UTF_8);
   }
@@ -3832,23 +3851,21 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
     Supplier<List<JSChunk>> modulesSupplier = null;
 
     switch (useModules) {
-      case NONE:
+      case NONE -> {
         List<SourceFile> inputs = new ArrayList<>();
         for (int i = 0; i < original.length; i++) {
           inputs.add(SourceFile.fromCode(getFilename(i), original[i]));
         }
         inputsSupplier = Suppliers.ofInstance(inputs);
-        break;
-      case STAR:
-        modulesSupplier =
-            Suppliers.<List<JSChunk>>ofInstance(
-                ImmutableList.copyOf(JSChunkGraphBuilder.forStar().addChunks(original).build()));
-        break;
-      case CHAIN:
-        modulesSupplier =
-            Suppliers.<List<JSChunk>>ofInstance(
-                ImmutableList.copyOf(JSChunkGraphBuilder.forChain().addChunks(original).build()));
-        break;
+      }
+      case STAR ->
+          modulesSupplier =
+              Suppliers.<List<JSChunk>>ofInstance(
+                  ImmutableList.copyOf(JSChunkGraphBuilder.forStar().addChunks(original).build()));
+      case CHAIN ->
+          modulesSupplier =
+              Suppliers.<List<JSChunk>>ofInstance(
+                  ImmutableList.copyOf(JSChunkGraphBuilder.forChain().addChunks(original).build()));
     }
 
     runner.enableTestMode(

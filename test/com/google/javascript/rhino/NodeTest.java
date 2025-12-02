@@ -100,7 +100,7 @@ public class NodeTest {
     original.setSideEffectFlags(testFlags);
     final long serializedProperties = original.serializeProperties();
 
-    restored.deserializeProperties(serializedProperties);
+    restored.deserializeProperties(serializedProperties, false);
     assertThat(restored.getSideEffectFlags()).isEqualTo(testFlags);
   }
 
@@ -960,5 +960,19 @@ public class NodeTest {
 
   private static Node getCall(String name1) {
     return new Node(Token.CALL, getVarRef(name1));
+  }
+
+  @Test
+  public void testValidateMemoryGuarantees_checksForDifferentSourceFileInstances() {
+    Node b1 = IR.block();
+    Node b2 = IR.block();
+    Node other = IR.block();
+
+    b1.setSourceFileForTesting("file.js");
+    b2.setStaticSourceFileFrom(b1);
+    other.setStaticSourceFile(b1.getStaticSourceFile());
+
+    assertThat(Node.validateMemorySensitivePropertyGuarantees(b1, false, b2, false)).isTrue();
+    assertThat(Node.validateMemorySensitivePropertyGuarantees(b1, false, other, false)).isFalse();
   }
 }

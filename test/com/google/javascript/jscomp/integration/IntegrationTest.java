@@ -53,6 +53,7 @@ import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.StrictWarningsGuard;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
@@ -1038,9 +1039,6 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   @Test
   public void ambiguatePropertiesWithAliases() {
-    // Avoid injecting the polyfills, so we don't have to include them in the expected output.
-    useNoninjectingCompiler = true;
-
     // include externs definitions for the stuff that would have been injected
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
@@ -1048,6 +1046,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         SourceFile.fromCode(
             "extraExterns",
             """
+            /** @const */
             var $jscomp = {};
 
             /**
@@ -1063,6 +1062,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     options.setAmbiguateProperties(true);
     options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    // Avoid injecting the polyfills, so we don't have to include them in the expected output.
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     test(
         options,
         """
@@ -1140,8 +1141,6 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   @Test
   public void ambiguatePropertiesWithMixins() {
-    // Avoid injecting the polyfills, so we don't have to include them in the expected output.
-    useNoninjectingCompiler = true;
 
     // include externs definitions for the stuff that would have been injected
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
@@ -1150,6 +1149,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         SourceFile.fromCode(
             "extraExterns",
             """
+            /** @const */
             var $jscomp = {};
 
             /**
@@ -1165,6 +1165,9 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     options.setAmbiguateProperties(true);
     options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    // Avoid injecting the polyfills, so we don't have to include them in the expected output.
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
+
     test(
         options,
         """
@@ -1199,27 +1202,24 @@ public final class IntegrationTest extends IntegrationTestCase {
         """,
         """
         var A = function() {
-          this.a = 'aProp'; // unique property name
-        }
-
-        function mixinX(baseType) {
-          var i0$classdecl$var0 = function() {
-            var $jscomp$super$this$98447280$0 = baseType.call(this) || this;
-            $jscomp$super$this$98447280$0.c = 'x'; // unique property name
-            return $jscomp$super$this$98447280$0;
-          };
-          $jscomp.inherits(i0$classdecl$var0,baseType);
-          return i0$classdecl$var0;
-        }
-
-        var BSuper = mixinX(A);
-
-        var B = function() {
-          var $jscomp$super$this$98447280$1 = BSuper.call(this) || this;
-          $jscomp$super$this$98447280$1.b = 'bProp'; // unique property name
-          return $jscomp$super$this$98447280$1;
+          this.a = "aProp"; // unique property name
         };
-        $jscomp.inherits(B,BSuper);
+        function mixinX(baseType) {
+          var $jscomp$classDecl$98447280$0 = function() {
+            var $jscomp$super$this$98447280$1 = baseType.call(this) || this;
+            $jscomp$super$this$98447280$1.c = "x"; // unique property name
+            return $jscomp$super$this$98447280$1;
+          };
+          $jscomp.inherits($jscomp$classDecl$98447280$0, baseType);
+          return $jscomp$classDecl$98447280$0;
+        }
+        var BSuper = mixinX(A);
+        var B = function() {
+          var $jscomp$super$this$98447280$2 = BSuper.call(this) || this;
+          $jscomp$super$this$98447280$2.b = "bProp"; // unique property name
+          return $jscomp$super$this$98447280$2;
+        };
+        $jscomp.inherits(B, BSuper);
         """);
   }
 
@@ -2369,6 +2369,264 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testCrossChunkCodeMotion_staticMethod() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.UNSTABLE);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setCrossChunkCodeMotion(true);
+
+    test(
+        options,
+        new String[] {
+          """
+          class Foo {
+            static getY() {
+              return 1;
+            }
+          }
+          """,
+          """
+          alert(Foo.getY());
+          alert(new Foo());
+          """,
+        },
+        new String[] {
+          "",
+          // Note: Foo moved into the same chunk as the alert calls.
+          """
+          class Foo {
+            static getY() {
+              return 1;
+            }
+          }
+          alert(Foo.getY());
+          alert(new Foo());
+          """,
+        });
+  }
+
+  @Test
+  public void testCrossChunkCodeMotion_staticField_noSideEffects() {
+    CompilerOptions options = createCompilerOptions();
+    options.setGeneratePseudoNames(true);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setCrossChunkCodeMotion(true);
+
+    var srcs =
+        new String[] {
+          """
+          class Foo {
+            static y = () => 1;
+          }
+          """,
+          """
+          alert(Foo.y);
+          alert(Foo.y);
+          alert(new Foo());
+          """,
+        };
+
+    test(
+        options,
+        srcs,
+        new String[] {
+          "",
+          // Note: Foo moved into the same chunk as the alert calls.
+          """
+          class Foo {}
+          Foo.y = () => 1;
+          alert(Foo.y);
+          alert(Foo.y);
+          alert(new Foo());
+          """,
+        });
+
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    test(
+        options,
+        srcs,
+        new String[] {
+          "",
+          """
+          class $Foo$$ {}
+          var $Foo$y$$ = () => 1;
+          alert($Foo$y$$);
+          alert($Foo$y$$);
+          alert(new $Foo$$());
+          """,
+        });
+  }
+
+  @Test
+  public void testCrossChunkCodeMotion_staticField_withSideEffects() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setGeneratePseudoNames(true);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setCrossChunkCodeMotion(true);
+
+    test(
+        options,
+        new String[] {
+          """
+          /** @return {number} */
+          function getRandom() {
+            const v = Math.random();
+            alert('Picked ' + v);
+            return v;
+          }
+          """,
+          """
+          class Foo {
+            // Foo.x is never read but its initialization has side effects.
+            static x = getRandom();
+            static y = getRandom();
+          }
+          """,
+          """
+          alert(Foo.y);
+          alert(new Foo());
+          """,
+        },
+        new String[] {
+          "",
+          // Note: Foo.y stayed in the chunk where it had side effects.
+          """
+          function $getRandom$$() {
+            const $v$$ = Math.random();
+            alert("Picked " + $v$$);
+            return $v$$;
+          }
+          $getRandom$$();
+          var $Foo$y$$ = $getRandom$$();
+          """,
+          """
+          class $Foo$$ {}
+          alert($Foo$y$$);
+          alert(new $Foo$$());
+          """,
+        });
+  }
+
+  @Test
+  public void testCrossChunkCodeMotion_staticBlock_noSideEffects() {
+    CompilerOptions options = createCompilerOptions();
+    options.setGeneratePseudoNames(true);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setCrossChunkCodeMotion(true);
+
+    var srcs =
+        new String[] {
+          """
+          class Foo {
+            static y;
+            static {
+              Foo.y = 1;
+            }
+          }
+          """,
+          """
+          alert(Foo.y);
+          alert(new Foo());
+          """,
+        };
+
+    test(
+        options,
+        srcs,
+        new String[] {
+          // Note: Code motion was not applied because of the reassignment to Foo.y in the static
+          // initialization block.
+          """
+          class Foo {}
+          Foo.y = void 0;
+          {
+            Foo.y = 1;
+          }
+          """,
+          """
+          alert(Foo.y);
+          alert(new Foo());
+          """,
+        });
+
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    test(
+        options,
+        srcs,
+        new String[] {
+          "",
+          // Note: Foo moved into the same chunk as the alert calls.
+          """
+          class $Foo$$ {}
+          var $Foo$y$$ = void 0;
+          $Foo$y$$ = 1;
+          alert($Foo$y$$);
+          alert(new $Foo$$());
+          """,
+        });
+  }
+
+  @Test
+  public void testCrossChunkCodeMotion_staticBlock_withSideEffects() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setGeneratePseudoNames(true);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setCrossChunkCodeMotion(true);
+
+    test(
+        options,
+        new String[] {
+          """
+          /** @return {number} */
+          function getRandom() {
+            const v = Math.random();
+            alert('Picked ' + v);
+            return v;
+          }
+          """,
+          """
+          class Foo {
+            static x;
+            static y;
+            static {
+              // Foo.x is never read but its initialization has side effects.
+              Foo.x = getRandom();
+              Foo.y = getRandom();
+            }
+          }
+          """,
+          """
+          alert(Foo.y);
+          alert(new Foo());
+          """,
+        },
+        new String[] {
+          "",
+          """
+          function $getRandom$$() {
+            const $v$$ = Math.random();
+            alert("Picked " + $v$$);
+            return $v$$;
+          }
+          var $Foo$y$$ = void 0;
+          $getRandom$$();
+          $Foo$y$$ = $getRandom$$();
+          """,
+          """
+          class $Foo$$ {}
+          alert($Foo$y$$);
+          alert(new $Foo$$());
+          """,
+        });
+  }
+
+  @Test
   public void testCrossChunkDepCheck() {
     CompilerOptions options = createCompilerOptions();
     String[] code =
@@ -3047,13 +3305,13 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setVariableRenaming(VariableRenamingPolicy.OFF);
     options.setPrettyPrint(true);
 
-    // Create a noninjecting compiler avoid comparing all the polyfill code.
-    useNoninjectingCompiler = true;
+    // Avoid comparing all the polyfill code.
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     // include externs definitions for the stuff that would have been injected
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
-    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
+    externsList.add(SourceFile.fromCode("extraExterns", "/** @const */var $jscomp = {};"));
     externs = externsList.build();
 
     test(
@@ -3103,13 +3361,13 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setVariableRenaming(VariableRenamingPolicy.OFF);
     options.setPrettyPrint(true);
 
-    // Create a noninjecting compiler avoid comparing all the polyfill code.
-    useNoninjectingCompiler = true;
+    // Avoid comparing all the polyfill code.
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     // include externs definitions for the stuff that would have been injected
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
-    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
+    externsList.add(SourceFile.fromCode("extraExterns", "/** @const */ var $jscomp = {};"));
     externs = externsList.build();
 
     test(
@@ -3152,10 +3410,10 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testInitSymbolIteratorInjection() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    useNoninjectingCompiler = true;
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
-    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
+    externsList.add(SourceFile.fromCode("extraExterns", "/** @const */ var $jscomp = {};"));
     externs = externsList.build();
     test(
         options,
@@ -3177,10 +3435,10 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testInitSymbolIteratorInjectionWithES6Syntax() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    useNoninjectingCompiler = true;
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
-    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
+    externsList.add(SourceFile.fromCode("extraExterns", "/** @const */ var $jscomp = {};"));
     externs = externsList.build();
     test(
         options,
@@ -4123,12 +4381,13 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setOptimizeCalls(false);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
 
-    // Create a noninjecting compiler avoid comparing all the polyfill code.
-    useNoninjectingCompiler = true;
+    // Avoid comparing all the polyfill code.
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
-    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {}; Symbol.iterator;"));
+    externsList.add(
+        SourceFile.fromCode("extraExterns", "/** @const */ var $jscomp = {}; Symbol.iterator;"));
     externs = externsList.build();
 
     test(
@@ -4208,9 +4467,10 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   @Test
   public void testDefaultParameterRemoval() {
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
+
     test(
         options,
         "foo = { func: (params = {}) => { console.log(params); } }",
@@ -4237,13 +4497,14 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testAsyncIter() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
-    useNoninjectingCompiler = true;
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
     externsList.add(
         SourceFile.fromCode(
-            "extraExterns", "var $jscomp = {}; Symbol.iterator; Symbol.asyncIterator;"));
+            "extraExterns",
+            "/** @const */ var $jscomp = {}; Symbol.iterator; Symbol.asyncIterator;"));
     externs = externsList.build();
 
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
@@ -4293,9 +4554,9 @@ async function abc() {
 
   @Test
   public void testDestructuringRest() {
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     test(options, "const {y} = {}", "const {y} = {}");
 
@@ -5031,9 +5292,9 @@ async function abc() {
         options,
         "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
         """
-        const i0$classdecl$var0 = function() {};
-        i0$classdecl$var0.prototype.f = async function(p) { await p; return 0 };
-        window['C'] = i0$classdecl$var0
+        const $jscomp$classDecl$98447280$0 = function() {};
+        $jscomp$classDecl$98447280$0.prototype.f = async function(p) { await p; return 0 };
+        window['C'] = $jscomp$classDecl$98447280$0
         """);
   }
 
@@ -5048,9 +5309,9 @@ async function abc() {
         options,
         "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
         """
-        var i0$classdecl$var0 = function() {};
-        i0$classdecl$var0.prototype.f = async function(p) { await p; return 0 };
-        window['C'] = i0$classdecl$var0
+        var $jscomp$classDecl$98447280$0 = function() {};
+        $jscomp$classDecl$98447280$0.prototype.f = async function(p) { await p; return 0 };
+        window['C'] = $jscomp$classDecl$98447280$0
         """);
   }
 
@@ -5065,9 +5326,9 @@ async function abc() {
         options,
         "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
         """
-        const i0$classdecl$var0 = function() {};
-        i0$classdecl$var0.prototype.f = async function(p) { await p; return 0 };
-        window['C'] = i0$classdecl$var0
+        const $jscomp$classDecl$98447280$0 = function() {};
+        $jscomp$classDecl$98447280$0.prototype.f = async function(p) { await p; return 0 };
+        window['C'] = $jscomp$classDecl$98447280$0
         """);
   }
 
@@ -5082,9 +5343,9 @@ async function abc() {
         options,
         "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
         """
-        var i0$classdecl$var0 = function() {};
-        i0$classdecl$var0.prototype.f = async function(p) { await p; return 0 };
-        window['C'] = i0$classdecl$var0
+        var $jscomp$classDecl$98447280$0 = function() {};
+        $jscomp$classDecl$98447280$0.prototype.f = async function(p) { await p; return 0 };
+        window['C'] = $jscomp$classDecl$98447280$0
         """);
   }
 
@@ -5101,9 +5362,9 @@ async function abc() {
         options,
         "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
         """
-        var i0$classdecl$var0 = function() {};
-        i0$classdecl$var0.prototype.f = async function(p) { await p; return 0 };
-        window['C'] = i0$classdecl$var0
+        var $jscomp$classDecl$98447280$0 = function() {};
+        $jscomp$classDecl$98447280$0.prototype.f = async function(p) { await p; return 0 };
+        window['C'] = $jscomp$classDecl$98447280$0
         """);
   }
 
@@ -5151,9 +5412,9 @@ async function abc() {
         options,
         "window['C'] = /** @dict */ class C { f({num}) { return num ** 3; } }",
         """
-        const i0$classdecl$var0 = function() {};
-        i0$classdecl$var0.prototype.f = function({num}) { return Math.pow(num, 3); };
-        window['C'] = i0$classdecl$var0
+        const $jscomp$classDecl$98447280$0 = function() {};
+        $jscomp$classDecl$98447280$0.prototype.f = function({num}) { return Math.pow(num, 3) };
+        window['C'] = $jscomp$classDecl$98447280$0
         """);
   }
 
@@ -5175,13 +5436,13 @@ async function abc() {
         }
         """,
         """
-        var i0$classdecl$var0 = function() {};
-        i0$classdecl$var0.prototype.f = function($jscomp$destructuring$var0) {
+        var $jscomp$classDecl$98447280$0 = function() {};
+        $jscomp$classDecl$98447280$0.prototype.f = function($jscomp$destructuring$var0) {
           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
           var num = $jscomp$destructuring$var1.num;
-          return Math.pow(num,3)
+          return Math.pow(num, 3)
         };
-        window["C"] = i0$classdecl$var0
+        window['C'] = $jscomp$classDecl$98447280$0
         """);
   }
 
@@ -5213,6 +5474,253 @@ async function abc() {
         // This should optimize to nothing, because the two variables are unused and we are trying
         // to hide side-effects.
         "");
+  }
+
+  @Test
+  public void test_b454591584_full() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
+    options.setGeneratePseudoNames(true);
+
+    // Showcases the state of the code that led to b/453893252.
+    test(
+        options,
+        new String[] {
+          // i0.js
+          """
+          goog.provide('jspb$e.platypi$duck$parts$Event$Type');
+
+          /** @enum {number} */
+          jspb$e.platypi$duck$parts$Event$Type = {
+            UNKNOWN: 0,
+            TYPE_ONE: 1
+          };
+          """,
+          // i1.js
+          """
+          goog.provide('jspb$platypi$duck$parts$MutableEvent');
+
+          goog.requireType('jspb$e.platypi$duck$parts$Event$Type');
+
+          /** @final */
+          jspb$platypi$duck$parts$MutableEvent = class {
+            /**
+             * @usedViaDotConstructor
+             * @param {!jspb$e.platypi$duck$parts$Event$Type} type
+             */
+            constructor(type) {
+              /** @private {!jspb$e.platypi$duck$parts$Event$Type} */
+              this.type_ = type;
+            }
+
+            /** @return {!jspb$e.platypi$duck$parts$Event$Type} */
+            getType() {
+              return this.type_;
+            }
+          };
+          """,
+          // i2.js
+          """
+          goog.provide('proto.platypi.duck.parts.Event');
+          /** @provideAlreadyProvided */
+          goog.provide('proto.platypi.duck.parts.Event.Type');
+
+          goog.require('jspb$e.platypi$duck$parts$Event$Type');
+          goog.require('jspb$platypi$duck$parts$MutableEvent');
+
+          /** @const */
+          proto.platypi.duck.parts.Event = jspb$platypi$duck$parts$MutableEvent;
+
+          /** @const */
+          jspb$platypi$duck$parts$MutableEvent.Type = jspb$e.platypi$duck$parts$Event$Type;
+          """,
+          // i3.js
+          """
+          /**
+           * @fileoverview added by tsickle
+           * @suppress {checkTypes} added by tsickle
+           * @suppress {extraRequire} added by tsickle
+           * @suppress {missingRequire} added by tsickle
+           * @suppress {uselessCode} added by tsickle
+           * @suppress {suspiciousCode} added by tsickle
+           * @suppress {missingReturn} added by tsickle
+           * @suppress {unusedLocalVariables} added by tsickle
+           * @suppress {missingOverride} added by tsickle
+           * @suppress {const} added by tsickle
+           */
+          goog.module('google3.third_party.javascript.angular2.rc.packages.core.src.render3.definition');
+
+          /**
+           * @record
+           * @template T
+           */
+          function ComponentDefinition() { }
+          /* istanbul ignore if */
+          if (false) {
+            /**
+             * @type {function((T|?)): void}
+             * @public
+             */
+            ComponentDefinition.prototype.template;
+          }
+
+          /**
+           * @template T
+           * @param {!ComponentDefinition<T>} componentDefinition
+           * @return {!ComponentDefinition<T>}
+           */
+          function ɵɵdefineComponent(componentDefinition) {
+            return componentDefinition;
+          }
+
+          exports.ɵɵdefineComponent = ɵɵdefineComponent;
+          """,
+          // i4.js
+          """
+          /**
+           * @fileoverview added by tsickle
+           * @suppress {checkTypes} added by tsickle
+           * @suppress {extraRequire} added by tsickle
+           * @suppress {missingRequire} added by tsickle
+           * @suppress {uselessCode} added by tsickle
+           * @suppress {suspiciousCode} added by tsickle
+           * @suppress {missingReturn} added by tsickle
+           * @suppress {unusedLocalVariables} added by tsickle
+           * @suppress {missingOverride} added by tsickle
+           * @suppress {const} added by tsickle
+           */
+          goog.module('event_component');
+
+          const goog_proto_platypi_duck_parts_Event_1 = goog.require('proto.platypi.duck.parts.Event');
+          const tsickle_Event_41 = goog.requireType("proto.platypi.duck.parts.Event");
+          const i0 = goog.require('google3.third_party.javascript.angular2.rc.packages.core.src.render3.definition');
+
+          const event_proto_1 = {};
+          /** @const */ event_proto_1.Event = goog_proto_platypi_duck_parts_Event_1;
+
+          class EventComponent {
+            constructor() {
+              this.event = function() {
+                return new event_proto_1.Event(/** @type {?} */ (1));
+              };
+              this.Event = event_proto_1.Event;
+            }
+          }
+
+          /** @nocollapse */ EventComponent.ɵcmp =
+              /** @pureOrBreakMyCode */ i0.ɵɵdefineComponent({
+                type: EventComponent,
+                template: function EventComponent_Template(ctx) {
+                  if (ctx.event().getType() === ctx.Event.Type.TYPE_ONE) {
+                    return 'one';
+                  } else {
+                    return 'unknown';
+                  }
+                }
+              });
+
+          /* istanbul ignore if */
+          if (false) {
+            /**
+             * @const {function(): !event_proto_1.Event}
+             * @protected
+             */
+            EventComponent.prototype.event;
+            /**
+             * @const {function(new:tsickle_Event_41, (undefined|null|!Array<?>)=)}
+             * @protected
+             */
+            EventComponent.prototype.Event;
+          }
+
+          // Manual code for retention.
+          alert(EventComponent.ɵcmp.template(new EventComponent()));
+          """
+        },
+        new String[] {
+          "",
+          "",
+          "",
+          "",
+          """
+          // TODO: b/454591584 - Event.Type should not have been collapsed / pruned.
+          var $jspb$platypi$duck$parts$MutableEvent$$ = class {
+            constructor($type$$) {
+              this.$type_$ = $type$$;
+            }
+          };
+          class $module$contents$event_component_EventComponent$$ {
+            constructor() {
+              this.$event$ = function() {
+                return new $jspb$platypi$duck$parts$MutableEvent$$(1);
+              };
+              this.$Event$ = $jspb$platypi$duck$parts$MutableEvent$$;
+            }
+          }
+          $module$contents$event_component_EventComponent$$.$a$ = {
+            $type$: $module$contents$event_component_EventComponent$$,
+            $template$: function($ctx$$) {
+              return $ctx$$.$event$().$type_$ === $ctx$$.$Event$.$Type$.$TYPE_ONE$ ?
+                  'one' :
+                  'unknown';
+            }
+          };
+          alert($module$contents$event_component_EventComponent$$.$a$.$template$(
+              new $module$contents$event_component_EventComponent$$()));
+          """
+        });
+  }
+
+  @Test
+  public void test_b454591584_simplified() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
+    options.setGeneratePseudoNames(true);
+
+    test(
+        options,
+        """
+        /** @enum {number} */
+        var Event$Type = {
+          UNKNOWN: 0,
+          TYPE_ONE: 1
+        };
+
+        class Event {}
+
+        /** @const */
+        Event.Type = Event$Type;
+
+        class EventComponent {
+          constructor() {
+            /** @const */
+            this.Event = Event;
+          }
+        }
+
+        /** @param {?} x */
+        function foo(x) {
+          return x.Event.Type.TYPE_ONE;
+        }
+
+        const obj = new EventComponent();
+        alert(foo(obj));
+        """,
+        """
+        // TODO: b/454591584 - Event.Type should not have been collapsed / pruned.
+        class $Event$$ {}
+
+        class $EventComponent$$ {
+          constructor() {
+            this.$a$ = $Event$$;
+          }
+        }
+        alert((new $EventComponent$$()).$a$.$Type$.$TYPE_ONE$);
+        """);
   }
 
   @Test

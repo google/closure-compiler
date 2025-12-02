@@ -49,74 +49,31 @@ class PeepholeSubstituteAlternateSyntax
     this.late = late;
   }
 
-  /**
-   * Tries apply our various peephole minimizations on the passed in node.
-   */
+  /** Tries apply our various peephole minimizations on the passed in node. */
   @Override
-  @SuppressWarnings("fallthrough")
   public Node optimizeSubtree(Node node) {
-    switch (node.getToken()) {
-      case ASSIGN_SUB:
-        return reduceSubstractionAssignment(node);
-
-      case TRUE:
-      case FALSE:
-        return reduceTrueFalse(node);
-
-      case NEW:
-        node = tryFoldStandardConstructors(node);
-        if (!node.isCall()) {
-          return node;
+    return switch (node.getToken()) {
+      case ASSIGN_SUB -> reduceSubstractionAssignment(node);
+      case TRUE, FALSE -> reduceTrueFalse(node);
+      case NEW -> {
+        Node result = tryFoldStandardConstructors(node);
+        if (!result.isCall()) {
+          yield result;
         }
-        // Fall through on purpose because tryFoldStandardConstructors() may
-        // convert a NEW node into a CALL node
-      case CALL:
-        Node result =  tryFoldLiteralConstructor(node);
-        if (result == node) {
-          result = tryFoldSimpleFunctionCall(node);
-          if (result == node) {
-            result = tryFoldImmediateCallToBoundFunction(node);
-          }
-        }
-        return result;
-
-      case RETURN:
-        return tryReduceReturn(node);
-
-      case EXPR_RESULT:
-        if (node.getFirstChild().isComma()) {
-          return trySplitComma(node);
-        }
-        return node;
-
-      case NAME:
-        return tryReplaceUndefined(node);
-
-      case ARRAYLIT:
-        return tryMinimizeArrayLiteral(node);
-
-      case GETPROP:
-        return tryMinimizeWindowRefs(node);
-
-      case TEMPLATELIT:
-        return tryTurnTemplateStringsToStrings(node);
-        
-      case AND:
-      case OR:
-      case BITOR:
-      case BITXOR:
-      case BITAND:
-      case COALESCE:
-        return tryRotateAssociativeOperator(node);
-
-      case MUL:
-        if (!mayHaveSideEffects(node)) {
-          return tryRotateCommutativeOperator(node);
-        }
-
-      default:
-        return node; //Nothing changed
-    }
+        // tryFoldStandardConstructors() may convert a NEW node into a CALL node
+        yield tryReduceCall(result);
+      }
+      case CALL -> tryReduceCall(node);
+      case RETURN -> tryReduceReturn(node);
+      case EXPR_RESULT -> node.getFirstChild().isComma() ? trySplitComma(node) : node;
+      case NAME -> tryReplaceUndefined(node);
+      case ARRAYLIT -> tryMinimizeArrayLiteral(node);
+      case GETPROP -> tryMinimizeWindowRefs(node);
+      case TEMPLATELIT -> tryTurnTemplateStringsToStrings(node);
+      case AND, OR, BITOR, BITXOR, BITAND, COALESCE -> tryRotateAssociativeOperator(node);
+      case MUL -> mayHaveSideEffects(node) ? node : tryRotateCommutativeOperator(node);
+      default -> node;
+    };
   }
 
   private static final ImmutableSet<String> BUILTIN_EXTERNS = ImmutableSet.of(
@@ -212,51 +169,45 @@ class PeepholeSubstituteAlternateSyntax
     }
     String targetName = callTarget.getString();
     switch (targetName) {
-      case "Boolean":
-        {
-          // Fold Boolean(a) to !!a
-          // http://www.ecma-international.org/ecma-262/6.0/index.html#sec-boolean-constructor-boolean-value
-          // and
-          // http://www.ecma-international.org/ecma-262/6.0/index.html#sec-logical-not-operator-runtime-semantics-evaluation
-          int paramCount = n.getChildCount() - 1;
-          // only handle the single known parameter case
-          if (paramCount == 1) {
-            Node value = n.getLastChild().detach();
-            Node replacement;
-            if (NodeUtil.isBooleanResult(value)) {
-              // If it is already a boolean do nothing.
-              replacement = value;
-            } else {
-              // Replace it with a "!!value"
-              replacement = IR.not(IR.not(value).srcref(n));
-            }
-            n.replaceWith(replacement);
-            reportChangeToEnclosingScope(replacement);
+      case "Boolean" -> {
+        // Fold Boolean(a) to !!a
+        // http://www.ecma-international.org/ecma-262/6.0/index.html#sec-boolean-constructor-boolean-value
+        // and
+        // http://www.ecma-international.org/ecma-262/6.0/index.html#sec-logical-not-operator-runtime-semantics-evaluation
+        int paramCount = n.getChildCount() - 1;
+        // only handle the single known parameter case
+        if (paramCount == 1) {
+          Node value = n.getLastChild().detach();
+          Node replacement;
+          if (NodeUtil.isBooleanResult(value)) {
+            // If it is already a boolean do nothing.
+            replacement = value;
+          } else {
+            // Replace it with a "!!value"
+            replacement = IR.not(IR.not(value).srcref(n));
           }
-          break;
+          n.replaceWith(replacement);
+          reportChangeToEnclosingScope(replacement);
         }
-
-      case "String":
-        {
-          // Fold String(a) to '' + (a) on immutable literals,
-          // which allows further optimizations
-          //
-          // We can't do this in the general case, because String(a) has
-          // slightly different semantics than '' + (a). See
-          // https://blickly.github.io/closure-compiler-issues/#759
-          Node value = callTarget.getNext();
-          if (value != null && value.getNext() == null && NodeUtil.isImmutableValue(value)) {
-            Node addition = IR.add(IR.string("").srcref(callTarget), value.detach());
-            n.replaceWith(addition);
-            reportChangeToEnclosingScope(addition);
-            return addition;
-          }
-          break;
+      }
+      case "String" -> {
+        // Fold String(a) to '' + (a) on immutable literals,
+        // which allows further optimizations
+        //
+        // We can't do this in the general case, because String(a) has
+        // slightly different semantics than '' + (a). See
+        // https://blickly.github.io/closure-compiler-issues/#759
+        Node value = callTarget.getNext();
+        if (value != null && value.getNext() == null && NodeUtil.isImmutableValue(value)) {
+          Node addition = IR.add(IR.string("").srcref(callTarget), value.detach());
+          n.replaceWith(addition);
+          reportChangeToEnclosingScope(addition);
+          return addition;
         }
-
-      default:
+      }
+      default -> {
         // nothing.
-        break;
+      }
     }
     return n;
   }
@@ -367,6 +318,17 @@ class PeepholeSubstituteAlternateSyntax
     return n;
   }
 
+  private Node tryReduceCall(Node node) {
+    Node result = tryFoldLiteralConstructor(node);
+    if (result == node) {
+      result = tryFoldSimpleFunctionCall(node);
+      if (result == node) {
+        result = tryFoldImmediateCallToBoundFunction(node);
+      }
+    }
+    return result;
+  }
+
   /**
    * Reduce "return undefined" or "return void 0" to simply "return".
    *
@@ -377,22 +339,21 @@ class PeepholeSubstituteAlternateSyntax
 
     if (result != null) {
       switch (result.getToken()) {
-        case VOID:
+        case VOID -> {
           Node operand = result.getFirstChild();
           if (!mayHaveSideEffects(operand)) {
             n.removeFirstChild();
             reportChangeToEnclosingScope(n);
           }
-          break;
-        case NAME:
+        }
+        case NAME -> {
           String name = result.getString();
           if (name.equals("undefined")) {
             n.removeFirstChild();
             reportChangeToEnclosingScope(n);
           }
-          break;
-        default:
-          break;
+        }
+        default -> {}
       }
     }
 
@@ -515,21 +476,19 @@ class PeepholeSubstituteAlternateSyntax
       action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
     } else {
       switch (arg.getToken()) {
-        case STRINGLIT:
-          // "Array('a')" --> "['a']"
-          action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
-          break;
-        case NUMBER:
+        case STRINGLIT ->
+            // "Array('a')" --> "['a']"
+            action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
+        case NUMBER -> {
           // "Array(0)" --> "[]"
           if (arg.getDouble() == 0) {
             action = FoldArrayAction.SAFE_TO_FOLD_WITHOUT_ARGS;
           }
-          break;
-        case ARRAYLIT:
-          // "Array([args])" --> "[[args]]"
-          action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
-          break;
-        default:
+        }
+        case ARRAYLIT ->
+            // "Array([args])" --> "[[args]]"
+            action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
+        default -> {}
       }
     }
     return action;
@@ -557,18 +516,13 @@ class PeepholeSubstituteAlternateSyntax
   private Node reduceTrueFalse(Node n) {
     if (late) {
       switch (n.getParent().getToken()) {
-        case EQ:
-        case GT:
-        case GE:
-        case LE:
-        case LT:
-        case NE:
+        case EQ, GT, GE, LE, LT, NE -> {
           Node number = IR.number(n.isTrue() ? 1 : 0);
           n.replaceWith(number);
           reportChangeToEnclosingScope(number);
           return number;
-        default:
-          break;
+        }
+        default -> {}
       }
 
       Node not = IR.not(IR.number(n.isTrue() ? 0 : 1));

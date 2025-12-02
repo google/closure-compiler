@@ -242,59 +242,56 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
 
     // All the remaining cases can be isolated based on `parent`.
     switch (parent.getToken()) {
-      case NAME:
+      case NAME -> {
         return instanceTypeFor(n.getJSType());
-
-      case ASSIGN:
-        {
-          Node lValue = parent.getFirstChild();
-          if (NodeUtil.isNormalGet(lValue)) {
-            // We have an assignment of the form `a.b = ...`.
-            JSType lValueType = lValue.getJSType();
-            if (lValueType != null && (lValueType.isConstructor() || lValueType.isInterface())) {
-              // Case `a.B = ...`
-              return instanceTypeFor(lValueType);
-            } else if (NodeUtil.isPrototypeProperty(lValue)) {
-              // Case `a.B.prototype = ...`
-              return instanceTypeFor(NodeUtil.getPrototypeClassName(lValue).getJSType());
-            } else {
-              // Case `a.b = ...`
-              return instanceTypeFor(lValue.getFirstChild().getJSType());
-            }
+      }
+      case ASSIGN -> {
+        Node lValue = parent.getFirstChild();
+        if (NodeUtil.isNormalGet(lValue)) {
+          // We have an assignment of the form `a.b = ...`.
+          JSType lValueType = lValue.getJSType();
+          if (lValueType != null && (lValueType.isConstructor() || lValueType.isInterface())) {
+            // Case `a.B = ...`
+            return instanceTypeFor(lValueType);
+          } else if (NodeUtil.isPrototypeProperty(lValue)) {
+            // Case `a.B.prototype = ...`
+            return instanceTypeFor(NodeUtil.getPrototypeClassName(lValue).getJSType());
           } else {
-            // We have an assignment of the form "a = ...", so pull the type off the "a".
-            return instanceTypeFor(lValue.getJSType());
+            // Case `a.b = ...`
+            return instanceTypeFor(lValue.getFirstChild().getJSType());
           }
+        } else {
+          // We have an assignment of the form "a = ...", so pull the type off the "a".
+          return instanceTypeFor(lValue.getJSType());
         }
+      }
+      case STRING_KEY,
+          GETTER_DEF,
+          SETTER_DEF,
+          MEMBER_FUNCTION_DEF,
+          MEMBER_FIELD_DEF,
+          COMPUTED_PROP -> {
+        Node grandparent = parent.getParent();
+        Node greatGrandparent = grandparent.getParent();
 
-      case STRING_KEY:
-      case GETTER_DEF:
-      case SETTER_DEF:
-      case MEMBER_FUNCTION_DEF:
-      case MEMBER_FIELD_DEF:
-      case COMPUTED_PROP:
-        {
-          Node grandparent = parent.getParent();
-          Node greatGrandparent = grandparent.getParent();
-
-          if (grandparent.isObjectLit()) {
-            return grandparent.getJSType().isFunctionPrototypeType()
-                // Case: `grandparent` is an object-literal prototype.
-                // Example: `Foo.prototype = { a: function() {} };` where `parent` is "a".
-                ? instanceTypeFor(grandparent.getJSType())
-                : null;
-          } else if (greatGrandparent.isClass()) {
-            // Case: `n` is a class member definition.
-            // Example: `class Foo { a() {} }` where `parent` is "a".
-            return instanceTypeFor(greatGrandparent.getJSType());
-          } else {
-            // This would indicate the AST is malformed.
-            throw new AssertionError(greatGrandparent);
-          }
+        if (grandparent.isObjectLit()) {
+          return grandparent.getJSType().isFunctionPrototypeType()
+              // Case: `grandparent` is an object-literal prototype.
+              // Example: `Foo.prototype = { a: function() {} };` where `parent` is "a".
+              ? instanceTypeFor(grandparent.getJSType())
+              : null;
+        } else if (greatGrandparent.isClass()) {
+          // Case: `n` is a class member definition.
+          // Example: `class Foo { a() {} }` where `parent` is "a".
+          return instanceTypeFor(greatGrandparent.getJSType());
+        } else {
+          // This would indicate the AST is malformed.
+          throw new AssertionError(greatGrandparent);
         }
-
-      default:
+      }
+      default -> {
         return null;
+      }
     }
   }
 
@@ -361,22 +358,16 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
       NodeTraversal traversal) {
 
     switch (identifierBehaviour) {
-      case ES5_CLASS_INVOCATION:
-      case ES6_CLASS_INVOCATION:
-      case ES6_CLASS_NAMESPACE:
-        // At these usages, treat the deprecation applied to type-declaration as referring to the
-        // type, not the identifier (e.g. "the use of class `Foo` is deprecated").
-        checkTypeDeprecation(traversal, node);
-        break;
-
-      case NON_CONSTRUCTOR:
-        // For all identifiers that are not constructors, deprecation refers to the identifier (e.g.
-        // "the use of variable `x` is deprecated").
-        checkNameDeprecation(traversal, node);
-        break;
-
-      default:
-        break;
+      case ES5_CLASS_INVOCATION, ES6_CLASS_INVOCATION, ES6_CLASS_NAMESPACE ->
+          // At these usages, treat the deprecation applied to type-declaration as referring to the
+          // type, not the identifier (e.g. "the use of class `Foo` is deprecated").
+          checkTypeDeprecation(traversal, node);
+      case NON_CONSTRUCTOR ->
+          // For all identifiers that are not constructors, deprecation refers to the identifier
+          // (e.g.
+          // "the use of variable `x` is deprecated").
+          checkNameDeprecation(traversal, node);
+      default -> {}
     }
 
     if (propRef != null && !identifierBehaviour.equals(IdentifierBehaviour.ES5_CLASS_NAMESPACE)) {
@@ -503,7 +494,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
         AccessControlUtils.getEffectiveNameVisibility(name, var, defaultVisibilityForFiles);
 
     switch (v) {
-      case PACKAGE:
+      case PACKAGE -> {
         if (!isPackageAccessAllowed(var, name)) {
           compiler.report(
               JSError.make(
@@ -512,8 +503,8 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
                   name.getString(),
                   var.getSourceFile().getName()));
         }
-        break;
-      case PRIVATE:
+      }
+      case PRIVATE -> {
         if (!isPrivateAccessAllowed(var, name)) {
           compiler.report(
               JSError.make(
@@ -522,11 +513,11 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
                   name.getString(),
                   var.getSourceFile().getName()));
         }
-        break;
-      default:
+      }
+      default -> {
         // Nothing to do for PUBLIC and PROTECTED
         // (which is irrelevant for names).
-        break;
+      }
     }
   }
 
@@ -915,17 +906,10 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
     @Nullable ObjectType ownerType = instanceTypeFor(objectType);
 
     switch (visibility) {
-      case PACKAGE:
-        checkPackagePropertyVisibility(propRef, referenceSource, definingSource);
-        break;
-      case PRIVATE:
-        checkPrivatePropertyVisibility(propRef, ownerType);
-        break;
-      case PROTECTED:
-        checkProtectedPropertyVisibility(propRef, ownerType);
-        break;
-      default:
-        break;
+      case PACKAGE -> checkPackagePropertyVisibility(propRef, referenceSource, definingSource);
+      case PRIVATE -> checkPrivatePropertyVisibility(propRef, ownerType);
+      case PROTECTED -> checkProtectedPropertyVisibility(propRef, ownerType);
+      default -> {}
     }
   }
 
@@ -1314,7 +1298,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
     PropertyReference.Builder builder = PropertyReference.builder();
 
     switch (sourceNode.getToken()) {
-      case GETPROP:
+      case GETPROP -> {
         {
           boolean isLValue = NodeUtil.isLValue(sourceNode);
 
@@ -1331,13 +1315,8 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
               .setReadableTypeName(
                   () -> typeRegistry.getReadableTypeName(sourceNode.getFirstChild()));
         }
-        break;
-
-      case STRING_KEY:
-      case GETTER_DEF:
-      case SETTER_DEF:
-      case MEMBER_FUNCTION_DEF:
-      case MEMBER_FIELD_DEF:
+      }
+      case STRING_KEY, GETTER_DEF, SETTER_DEF, MEMBER_FUNCTION_DEF, MEMBER_FIELD_DEF -> {
         {
           switch (parent.getToken()) {
             case OBJECTLIT:
@@ -1399,10 +1378,10 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
               throw new AssertionError();
           }
         }
-        break;
-
-      default:
+      }
+      default -> {
         return null;
+      }
     }
     return builder.setSourceNode(sourceNode).build();
   }

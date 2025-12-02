@@ -39,6 +39,7 @@ import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.AstValidator.TypeInfoValidation;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
@@ -207,6 +208,9 @@ public abstract class CompilerTestCase {
   /** How to parse JS Documentation. */
   private JsDocParsing parseJsDocDocumentation;
 
+  /** Compiler option. */
+  private boolean assumeStaticInheritanceIsNotUsed;
+
   /** Whether externs changes should be allowed for this pass. */
   private boolean allowExternsChanges;
 
@@ -228,6 +232,8 @@ public abstract class CompilerTestCase {
   private final Set<DiagnosticType> ignoredWarnings = new LinkedHashSet<>();
 
   private final Map<String, String> webpackModulesById = new LinkedHashMap<>();
+
+  private ImmutableMap<String, String> genericNameReplacements = ImmutableMap.of();
 
   /** Whether {@link #setUp} has run. */
   private boolean setUpRan = false;
@@ -328,6 +334,7 @@ public abstract class CompilerTestCase {
     this.rewriteEsModulesEnabled = false;
     this.transpileEnabled = false;
     this.typeCheckEnabled = false;
+    this.assumeStaticInheritanceIsNotUsed = true;
 
     this.setUpRan = true;
   }
@@ -368,6 +375,7 @@ public abstract class CompilerTestCase {
     }
     options.setModuleResolutionMode(moduleResolutionMode);
     options.setParseJsDocDocumentation(parseJsDocDocumentation);
+    options.setAssumeStaticInheritanceIsNotUsed(assumeStaticInheritanceIsNotUsed);
     options.setPreserveTypeAnnotations(true);
     options.setAssumeGettersArePure(false); // Default to the complex case.
 
@@ -387,6 +395,7 @@ public abstract class CompilerTestCase {
     if (debugLoggingEnabled) {
       CompilerTestCaseUtils.setDebugLogDirectoryOn(options);
     }
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     return options;
   }
@@ -480,6 +489,12 @@ public abstract class CompilerTestCase {
     this.parseJsDocDocumentation = parseJsDocDocumentation;
   }
 
+  protected final void setAssumeStaticInheritanceIsNotUsed(
+      boolean assumeStaticInheritanceIsNotUsed) {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    this.assumeStaticInheritanceIsNotUsed = assumeStaticInheritanceIsNotUsed;
+  }
+
   /** Whether to run InferConsts before passes */
   protected final void enableInferConsts() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
@@ -542,8 +557,8 @@ public abstract class CompilerTestCase {
   /**
    * When comparing expected to actual, ignore nodes created through compiler.ensureLibraryInjected
    *
-   * <p>This differs from using a {@link com.google.javascript.jscomp.testing.NoninjectingCompiler}
-   * in that the compiler still injects the polyfills when requested.
+   * <p>This differs from using {@link RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY} in that
+   * the compiler still injects the polyfills when requested.
    */
   protected final void disableCompareSyntheticCode() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
@@ -789,6 +804,22 @@ public abstract class CompilerTestCase {
   protected final void setWebpackModulesById(Map<String, String> webpackModulesById) {
     this.webpackModulesById.clear();
     this.webpackModulesById.putAll(webpackModulesById);
+  }
+
+  /**
+   * A map of replacement generic names to the prefix of the original generated one.
+   *
+   * <p>If set, used in conjunction with {@link UnitTestUtils#updateGenericVarNamesInExpectedFiles}
+   * on expected output.
+   *
+   * <p>Note: Requires that sources are a {@link FlatSources}.
+   */
+  protected final void setGenericNameReplacements(Map<String, String> genericNameReplacements) {
+    this.genericNameReplacements = ImmutableMap.copyOf(genericNameReplacements);
+  }
+
+  protected final void disableGenericNameReplacements() {
+    genericNameReplacements = ImmutableMap.of();
   }
 
   /** Returns a newly created TypeCheck. */
@@ -1045,6 +1076,17 @@ public abstract class CompilerTestCase {
       Expected expectedObj,
       List<Diagnostic> diagnostics,
       List<Postcondition> postconditions) {
+    var genericNameMapping = new LinkedHashMap<String, String>();
+    if (!genericNameReplacements.isEmpty()
+        && expectedObj != null
+        && expectedObj.expected != null
+        && inputsObj instanceof FlatSources flatSources) {
+      expectedObj =
+          expected(
+              UnitTestUtils.updateGenericVarNamesInExpectedFiles(
+                  flatSources, expectedObj, genericNameReplacements, genericNameMapping));
+    }
+
     List<SourceFile> inputs =
         (inputsObj instanceof FlatSources flatSources) ? flatSources.sources : null;
     List<SourceFile> expected = expectedObj != null ? expectedObj.expected : null;
@@ -1060,7 +1102,7 @@ public abstract class CompilerTestCase {
         "Cannot expect both errors and compiled output.");
     checkState(this.setUpRan, "CompilerTestCase.setUp not run: call super.setUp() from overrides.");
     RecentChange recentChange = new RecentChange();
-    compiler.addChangeHandler(recentChange);
+    compiler.getChangeTracker().addChangeHandler(recentChange);
 
     Node root = compiler.parseInputs();
 
@@ -1163,7 +1205,7 @@ public abstract class CompilerTestCase {
         if (!librariesToInject.isEmpty() && i == 0 && !injectLibrariesFromTypedAsts) {
           recentChange.reset();
           for (String resourceName : librariesToInject) {
-            compiler.ensureLibraryInjected(resourceName, true);
+            compiler.getRuntimeJsLibManager().ensureLibraryInjected(resourceName, true);
           }
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
@@ -1219,7 +1261,7 @@ public abstract class CompilerTestCase {
           if (!librariesToInject.isEmpty() && injectLibrariesFromTypedAsts) {
             recentChange.reset();
             for (String resourceName : librariesToInject) {
-              compiler.ensureLibraryInjected(resourceName, true);
+              compiler.getRuntimeJsLibManager().ensureLibraryInjected(resourceName, true);
             }
             hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
           }
@@ -1302,7 +1344,7 @@ public abstract class CompilerTestCase {
 
         if (normalizeEnabled) {
           boolean verifyDeclaredConstants = true;
-          new Normalize.VerifyConstants(compiler, verifyDeclaredConstants)
+          new ValidityCheck.VerifyConstants(compiler, verifyDeclaredConstants)
               .process(externsRoot, mainRoot);
         }
       }
@@ -1317,7 +1359,6 @@ public abstract class CompilerTestCase {
       Node expectedRoot = null;
       if (expected != null) {
         expectedRoot = parseExpectedJs(expected);
-        expectedRoot.detach();
       }
 
       ImmutableList<JSError> stErrors = symbolTableErrorManager.getErrors();
@@ -1329,24 +1370,18 @@ public abstract class CompilerTestCase {
       LightweightMessageFormatter formatter = new LightweightMessageFormatter(compiler);
       if (expectedWarnings.isEmpty()) {
         assertWithMessage(
-                "aggregate warnings: "
-                    + aggregateWarnings.stream()
-                        .map(formatter::formatWarning)
-                        .collect(joining("\n")))
+                "aggregate warnings: %s",
+                aggregateWarnings.stream().map(formatter::formatWarning).collect(joining("\n")))
             .that(aggregateWarnings)
             .isEmpty();
       } else {
         assertWithMessage(
-                "There should be "
-                    + expectedWarnings.size()
-                    + " warnings, repeated "
-                    + numRepetitions
-                    + " time(s). Warnings: \n"
-                    + LINE_JOINER.join(aggregateWarnings))
+                "There should be %s warnings, repeated %s time(s). Warnings: \n%s",
+                expectedWarnings.size(), numRepetitions, LINE_JOINER.join(aggregateWarnings))
             .that(aggregateWarningCount)
             .isEqualTo(numRepetitions * expectedWarnings.size());
         for (int i = 0; i < numRepetitions; i++) {
-          assertWithMessage("compile warnings from repetition " + (i + 1))
+          assertWithMessage("compile warnings from repetition %s", (i + 1))
               .that(errorManagers[i].getWarnings())
               .comparingElementsUsing(DIAGNOSTIC_CORRESPONDENCE)
               .containsExactlyElementsIn(expectedWarnings);
@@ -1385,10 +1420,8 @@ public abstract class CompilerTestCase {
         } else {
           assertWithMessage(
                   "compiler.reportCodeChange() should have been called."
-                      + "\nOriginal: "
-                      + mainRootClone.toStringTree()
-                      + "\nNew: "
-                      + mainRoot.toStringTree())
+                      + "\nOriginal: %s\nNew: %s",
+                  mainRootClone.toStringTree(), mainRoot.toStringTree())
               .that(hasCodeChanged)
               .isTrue();
         }
@@ -1409,10 +1442,12 @@ public abstract class CompilerTestCase {
           if (compareJsDoc) {
             assertNode(mainRoot)
                 .usingSerializer(createPrettyPrinter(compiler))
+                .withGenericNameReplacements(ImmutableMap.copyOf(genericNameMapping))
                 .isEqualIncludingJsDocTo(expectedRoot);
           } else {
             assertNode(mainRoot)
                 .usingSerializer(createPrettyPrinter(compiler))
+                .withGenericNameReplacements(ImmutableMap.copyOf(genericNameMapping))
                 .isEqualTo(expectedRoot);
           }
         } else {
@@ -1529,17 +1564,17 @@ public abstract class CompilerTestCase {
     // Make sure that source information is always provided.
     if (!allowSourcelessWarnings) {
       final String sourceName = jserror.sourceName();
-      assertWithMessage("Missing source file name in warning: " + jserror)
+      assertWithMessage("Missing source file name in warning: %s", jserror)
           .that(sourceName != null && !sourceName.isEmpty())
           .isTrue();
       Node scriptNode = lastCompiler.getScriptNode(sourceName);
-      assertWithMessage("No SCRIPT node found for warning: " + jserror)
+      assertWithMessage("No SCRIPT node found for warning: %s", jserror)
           .that(scriptNode)
           .isNotNull();
-      assertWithMessage("Missing line number in warning: " + jserror)
+      assertWithMessage("Missing line number in warning: %s", jserror)
           .that(jserror.lineno() != -1)
           .isTrue();
-      assertWithMessage("Missing char number in warning: " + jserror)
+      assertWithMessage("Missing char number in warning: %s", jserror)
           .that(jserror.charno() != -1)
           .isTrue();
     }
@@ -1584,7 +1619,7 @@ public abstract class CompilerTestCase {
 
     compiler.init(defaultExternsInputs, inputs, getOptions());
     Node root = compiler.parseInputs();
-    assertWithMessage("Unexpected parse error(s): " + LINE_JOINER.join(compiler.getErrors()))
+    assertWithMessage("Unexpected parse error(s): %s", LINE_JOINER.join(compiler.getErrors()))
         .that(root)
         .isNotNull();
     Node externsRoot = root.getFirstChild();
@@ -1701,7 +1736,7 @@ public abstract class CompilerTestCase {
         warningBuilder.append(actualWarning.description()).append("\n");
       }
       String warningMessage = warningBuilder.toString();
-      assertWithMessage("There should be " + warnings.length + " warnings. " + warningMessage)
+      assertWithMessage("There should be %s warnings. %s", warnings.length, warningMessage)
           .that(compiler.getWarningCount())
           .isEqualTo(warnings.length);
       for (int i = 0; i < warnings.length; i++) {
@@ -1755,26 +1790,23 @@ public abstract class CompilerTestCase {
         node != null;
         node = node.getNext()) {
       switch (node.getToken()) {
-        case FUNCTION:
+        case FUNCTION -> {
           if (name.equals(node.getFirstChild().getString())) {
             return node;
           }
-          break;
-        case VAR:
-        case CONST:
-        case LET:
+        }
+        case VAR, CONST, LET -> {
           if (name.equals(node.getFirstChild().getString())) {
             return node.getFirstChild();
           }
-          break;
-        case EXPR_RESULT:
+        }
+        case EXPR_RESULT -> {
           if (node.getFirstChild().isAssign()
               && node.getFirstFirstChild().matchesQualifiedName(name)) {
             return node.getFirstFirstChild();
           }
-          break;
-        default:
-          break;
+        }
+        default -> {}
       }
     }
     return null;

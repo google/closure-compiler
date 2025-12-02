@@ -335,6 +335,7 @@ public class JSDocInfo implements Serializable {
     COLLAPSIBLE_OR_BREAK_MY_CODE,
     NOCOVERAGE,
     REQUIRE_INLINING,
+    ENCOURAGE_INLINING,
 
     NG_INJECT,
     WIZ_ACTION,
@@ -870,6 +871,13 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
+   * Returns whether the {@code @encourageInlining} annotation is present on this {@link JSDocInfo}.
+   */
+  public boolean isEncourageInlining() {
+    return checkBit(Bit.ENCOURAGE_INLINING);
+  }
+
+  /**
    * Returns whether the {@code @collapsibleOrBreakMyCode} annotation is present on this {@link
    * JSDocInfo}.
    */
@@ -1236,7 +1244,12 @@ public class JSDocInfo implements Serializable {
     return checkBit(Bit.SASS_GENERATED_CSS_TS);
   }
 
-  /** Returns whether JSDoc is annotated with the {@code @closureUnawareCode} annotation. */
+  /**
+   * Returns whether JSDoc is annotated with the {@code @closureUnawareCode} annotation. Generally,
+   * prefer calling {@link Node#isClosureUnawareCode() instead of referencing this jsdoc, as this
+   * annotation is NOT serialized to TypedAST (because an equivalent bit is instead set in the
+   * SourceFile's TypedAST representation).
+   */
   public boolean isClosureUnawareCode() {
     return checkBit(Bit.CLOSURE_UNAWARE_CODE);
   }
@@ -1687,6 +1700,14 @@ public class JSDocInfo implements Serializable {
      */
     public boolean isRequireInlining() {
       return checkBit(Bit.REQUIRE_INLINING);
+    }
+
+    /**
+     * Returns whether the {@code @encourageInlining} annotation is present on this {@link
+     * JSDocInfo}.
+     */
+    public boolean isEncourageInlining() {
+      return checkBit(Bit.ENCOURAGE_INLINING);
     }
 
     /**
@@ -2338,6 +2359,18 @@ public class JSDocInfo implements Serializable {
      */
     public boolean recordNoInline() {
       return populateBit(Bit.NOINLINE, true);
+    }
+
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isEncourageInlining()} flag set to {@code true}.
+     *
+     * @return {@code true} if the encourageInlining flag was recorded and {@code false} if it was
+     *     already recorded
+     */
+    @CanIgnoreReturnValue
+    public boolean recordEncourageInlining() {
+      return populateBit(Bit.ENCOURAGE_INLINING, true);
     }
 
     /**

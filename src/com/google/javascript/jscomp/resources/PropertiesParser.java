@@ -78,11 +78,10 @@ final class PropertiesParser {
   private static int findDelimiter(String line) {
     for (int i = 0; i < line.length(); i++) {
       switch (line.charAt(i)) {
-        case ':':
-        case '=':
+        case ':', '=' -> {
           return i;
-        default:
-          break;
+        }
+        default -> {}
       }
     }
 

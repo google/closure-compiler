@@ -74,6 +74,10 @@ public final class JSDocSerializer {
       builder.addKind(JsdocTag.JSDOC_NO_INLINE);
     }
 
+    if (jsdoc.isEncourageInlining()) {
+      builder.addKind(JsdocTag.JSDOC_ENCOURAGE_INLINING);
+    }
+
     if (jsdoc.isRequireInlining()) {
       builder.addKind(JsdocTag.JSDOC_REQUIRE_INLINING);
     }
@@ -123,14 +127,11 @@ public final class JSDocSerializer {
     if (jsdoc.hasModifies()) {
       for (String modifies : jsdoc.getModifies()) {
         switch (modifies) {
-          case "this":
-            builder.addKind(JsdocTag.JSDOC_MODIFIES_THIS);
-            continue;
-          case "arguments":
-            // Currently, anything other than "this" is considered a modification to arguments
-          default:
-            builder.addKind(JsdocTag.JSDOC_MODIFIES_ARGUMENTS);
-            continue;
+          case "this" -> builder.addKind(JsdocTag.JSDOC_MODIFIES_THIS);
+          case "arguments" -> builder.addKind(JsdocTag.JSDOC_MODIFIES_ARGUMENTS);
+          default ->
+              // Currently, anything other than "this" is considered a modification to arguments
+              builder.addKind(JsdocTag.JSDOC_MODIFIES_ARGUMENTS);
         }
       }
     }
@@ -242,125 +243,148 @@ public final class JSDocSerializer {
     for (int i = 0; i < serializedJsdoc.getKindCount(); i++) {
       JsdocTag tag = serializedJsdoc.getKindList().get(i);
       switch (tag) {
-        case JSDOC_CONST:
+        case JSDOC_CONST -> {
           builder.recordConstancy();
           continue;
-        case JSDOC_ENUM:
+        }
+        case JSDOC_ENUM -> {
           builder.recordEnumParameterType(placeholderType);
           continue;
-        case JSDOC_THIS:
+        }
+        case JSDOC_THIS -> {
           builder.recordThisType(placeholderType);
           continue;
-        case JSDOC_NO_COLLAPSE:
+        }
+        case JSDOC_NO_COLLAPSE -> {
           builder.recordNoCollapse();
           continue;
-        case JSDOC_NO_INLINE:
+        }
+        case JSDOC_NO_INLINE -> {
           builder.recordNoInline();
           continue;
-        case JSDOC_REQUIRE_INLINING:
+        }
+        case JSDOC_REQUIRE_INLINING -> {
           builder.recordRequireInlining();
           continue;
-        case JSDOC_PROVIDE_GOOG:
+        }
+        case JSDOC_ENCOURAGE_INLINING -> {
+          builder.recordEncourageInlining();
+          continue;
+        }
+        case JSDOC_PROVIDE_GOOG -> {
           builder.recordProvideGoog();
           continue;
-        case JSDOC_PROVIDE_ALREADY_PROVIDED:
+        }
+        case JSDOC_PROVIDE_ALREADY_PROVIDED -> {
           builder.recordProvideAlreadyProvided();
           continue;
-
-        case JSDOC_TYPE_SUMMARY_FILE:
+        }
+        case JSDOC_TYPE_SUMMARY_FILE -> {
           builder.recordTypeSummary();
           continue;
-
-        case JSDOC_PURE_OR_BREAK_MY_CODE:
+        }
+        case JSDOC_PURE_OR_BREAK_MY_CODE -> {
           builder.recordPureOrBreakMyCode();
           continue;
-        case JSDOC_COLLAPSIBLE_OR_BREAK_MY_CODE:
+        }
+        case JSDOC_COLLAPSIBLE_OR_BREAK_MY_CODE -> {
           builder.recordCollapsibleOrBreakMyCode();
           continue;
-        case JSDOC_DEFINE:
+        }
+        case JSDOC_DEFINE -> {
           builder.recordDefineType(placeholderType);
           continue;
-        case JSDOC_NO_SIDE_EFFECTS:
+        }
+        case JSDOC_NO_SIDE_EFFECTS -> {
           builder.recordNoSideEffects();
           continue;
-        case JSDOC_MODIFIES_THIS:
+        }
+        case JSDOC_MODIFIES_THIS -> {
           modifies = (modifies != null ? modifies : new TreeSet<>());
           modifies.add("this");
           continue;
-        case JSDOC_MODIFIES_ARGUMENTS:
+        }
+        case JSDOC_MODIFIES_ARGUMENTS -> {
           modifies = (modifies != null ? modifies : new TreeSet<>());
           modifies.add("arguments");
           continue;
-        case JSDOC_THROWS:
+        }
+        case JSDOC_THROWS -> {
           builder.recordThrowsAnnotation("{!" + PLACEHOLDER_TYPE_NAME + "}");
           continue;
-        case JSDOC_CONSTRUCTOR:
+        }
+        case JSDOC_CONSTRUCTOR -> {
           builder.recordConstructor();
           continue;
-        case JSDOC_INTERFACE:
+        }
+        case JSDOC_INTERFACE -> {
           builder.recordInterface();
           continue;
-        case JSDOC_SUPPRESS_PARTIAL_ALIAS:
+        }
+        case JSDOC_SUPPRESS_PARTIAL_ALIAS -> {
           suppressions = (suppressions != null ? suppressions : new TreeSet<>());
           suppressions.add("partialAlias");
           continue;
-
-        case JSDOC_ID_GENERATOR_CONSISTENT:
+        }
+        case JSDOC_ID_GENERATOR_CONSISTENT -> {
           builder.recordConsistentIdGenerator();
           continue;
-        case JSDOC_ID_GENERATOR_STABLE:
+        }
+        case JSDOC_ID_GENERATOR_STABLE -> {
           builder.recordStableIdGenerator();
           continue;
-        case JSDOC_ID_GENERATOR_MAPPED:
+        }
+        case JSDOC_ID_GENERATOR_MAPPED -> {
           builder.recordMappedIdGenerator();
           continue;
-        case JSDOC_ID_GENERATOR_XID:
+        }
+        case JSDOC_ID_GENERATOR_XID -> {
           builder.recordXidGenerator();
           continue;
-        case JSDOC_ID_GENERATOR_INCONSISTENT:
+        }
+        case JSDOC_ID_GENERATOR_INCONSISTENT -> {
           builder.recordIdGenerator();
           continue;
-
-        case JSDOC_ABSTRACT:
+        }
+        case JSDOC_ABSTRACT -> {
           builder.recordAbstract();
           continue;
-
           // TODO(lharker): stage 2 passes ideally shouldn't report diagnostics, so this could be
           // moved to stage 1.
-        case JSDOC_SUPPRESS_MESSAGE_CONVENTION:
+        }
+        case JSDOC_SUPPRESS_MESSAGE_CONVENTION -> {
           suppressions = (suppressions != null ? suppressions : new TreeSet<>());
           suppressions.add("messageConventions");
           continue;
-
           // ReportUntranspilableFeatures pass will run in stage2 since it uses languageOut
           // information. It reports diagnostic {@code UNTRANSPILABLE_FEATURE_PRESENT} that can be
           // supppressed using `untranspilableFeatures` suppression tag.
           // Hence we must propagate it.
-        case JSDOC_SUPPRESS_UNTRANSPILABLE_FEATURES:
+        }
+        case JSDOC_SUPPRESS_UNTRANSPILABLE_FEATURES -> {
           suppressions = (suppressions != null ? suppressions : new TreeSet<>());
           suppressions.add("untranspilableFeatures");
           continue;
-
-        case JSDOC_FILEOVERVIEW:
+        }
+        case JSDOC_FILEOVERVIEW -> {
           builder.recordFileOverview("");
           continue;
-
-        case JSDOC_NO_COVERAGE:
+        }
+        case JSDOC_NO_COVERAGE -> {
           builder.recordNoCoverage();
           continue;
-
-        case JSDOC_SASS_GENERATED_CSS_TS:
+        }
+        case JSDOC_SASS_GENERATED_CSS_TS -> {
           builder.recordSassGeneratedCssTs();
           continue;
-        case JSDOC_USED_VIA_DOT_CONSTRUCTOR:
-          {
-            var unused = builder.recordUsedViaDotConstructor();
-            continue;
-          }
-        case JSDOC_UNSPECIFIED:
-        case UNRECOGNIZED:
-          throw new MalformedTypedAstException(
-              "Unsupported JSDoc tag can't be deserialized: " + tag);
+        }
+        case JSDOC_USED_VIA_DOT_CONSTRUCTOR -> {
+          var unused = builder.recordUsedViaDotConstructor();
+          continue;
+        }
+        case JSDOC_UNSPECIFIED, UNRECOGNIZED ->
+            throw new MalformedTypedAstException(
+                "Unsupported JSDoc tag can't be deserialized: " + tag);
       }
     }
     if (modifies != null) {

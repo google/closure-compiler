@@ -61,12 +61,6 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     enableGatherExternProperties();
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    // The RenameProperties pass should only be run once over a parse tree.
-    return 1;
-  }
-
   @Test
   public void testPrototypeProperties() {
     test(

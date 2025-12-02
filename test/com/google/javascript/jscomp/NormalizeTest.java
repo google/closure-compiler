@@ -24,10 +24,10 @@ import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,12 +56,6 @@ public final class NormalizeTest extends CompilerTestCase {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     return options;
-  }
-
-  @Override
-  protected int getNumRepetitions() {
-    // The normalize pass is only run once.
-    return 1;
   }
 
   @Before
@@ -1070,6 +1064,28 @@ public final class NormalizeTest extends CompilerTestCase {
     test(
         srcs("var a;", "import {a as a} from './foo.js'; let b = a;"),
         expected("var a;", "import {a as a$jscomp$1} from './foo.js'; let b = a$jscomp$1;"));
+
+    test(
+        """
+        function one() {
+          var index = 1;
+          return index;
+        }
+        function two() {
+          var index = 2;
+          var id = (index += 3).toString();
+        }
+        """,
+        """
+        function one() {
+          var index = 1;
+          return index;
+        }
+        function two() {
+          var index$jscomp$1 = 2;
+          var id = (index$jscomp$1 = index$jscomp$1 + 3).toString();
+        }
+        """);
   }
 
   @Test
@@ -1371,19 +1387,6 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNormalizeSyntheticCode() {
-    Compiler compiler = new Compiler();
-    CompilerOptions options = new CompilerOptions();
-    options.setEmitUseStrict(false);
-    compiler.init(new ArrayList<SourceFile>(), new ArrayList<SourceFile>(), options);
-    String code = "function f(x) {} function g(x) {}";
-    Node ast = compiler.parseSyntheticCode("testNormalizeSyntheticCode", code);
-    Normalize.normalizeSyntheticCode(compiler, ast, "prefix_");
-    assertThat(compiler.toSource(ast))
-        .isEqualTo("function f(x$jscomp$prefix_0){}function g(x$jscomp$prefix_1){}");
-  }
-
-  @Test
   public void testIsConstant() {
     testSame("var CONST = 3; var b = CONST;");
     Node n = getLastCompiler().getRoot();
@@ -1603,20 +1606,28 @@ public final class NormalizeTest extends CompilerTestCase {
     // TODO(johnlenz): fix this so it is just another test case.
     CompilerTestCase tester =
         new CompilerTestCase() {
-          @Override
-          protected int getNumRepetitions() {
-            // The normalize pass is only run once.
-            return 1;
+
+          private static PassFactory makePassFactory(
+              String name, Function<AbstractCompiler, CompilerPass> pass) {
+            return PassFactory.builder().setName(name).setInternalFactory(pass).build();
           }
 
           @Override
-          protected CompilerPass getProcessor(Compiler compiler) {
-            return InlineAndCollapseProperties.builder(compiler)
-                .setPropertyCollapseLevel(PropertyCollapseLevel.ALL)
-                .setChunkOutputType(ChunkOutputType.GLOBAL_NAMESPACE)
-                .setHaveModulesBeenRewritten(false)
-                .setModuleResolutionMode(ResolutionMode.BROWSER)
-                .build();
+          protected CompilerPass getProcessor(final Compiler compiler) {
+            PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
+            optimizer.addOneTimePass(
+                makePassFactory("es6NormalizeClasses", Es6NormalizeClasses::new));
+            optimizer.addOneTimePass(
+                makePassFactory(
+                    "inlineAndCollapseProperties",
+                    (comp) ->
+                        InlineAndCollapseProperties.builder(compiler)
+                            .setPropertyCollapseLevel(PropertyCollapseLevel.ALL)
+                            .setChunkOutputType(ChunkOutputType.GLOBAL_NAMESPACE)
+                            .setHaveModulesBeenRewritten(false)
+                            .setModuleResolutionMode(ResolutionMode.BROWSER)
+                            .build()));
+            return optimizer;
           }
         };
 

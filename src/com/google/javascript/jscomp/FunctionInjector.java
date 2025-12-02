@@ -25,12 +25,15 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.javascript.jscomp.FunctionArgumentInjector.ParamArgPair;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
@@ -365,10 +368,14 @@ class FunctionInjector {
     // shadowed and an expression can't introduce new names, there is
     // no need to check for conflicts.
 
-    // Create an argName -> expression map, checking for side effects.
-    ImmutableMap<String, Node> argMap =
+    // Create an paramName -> argument value map, checking for side effects.
+    ImmutableMap<String, ParamArgPair> paramToArgMap =
         functionArgumentInjector.getFunctionCallParameterMap(
             fnNode, callNode, this.safeNameIdSupplier);
+    Map<String, Node> paramReplacements = new LinkedHashMap<>();
+    for (Entry<String, ParamArgPair> entry : paramToArgMap.entrySet()) {
+      paramReplacements.put(entry.getKey(), entry.getValue().arg());
+    }
 
     Node newExpression;
     if (!block.hasChildren()) {
@@ -380,7 +387,8 @@ class FunctionInjector {
 
       // Clone the return node first.
       Node safeReturnNode = returnNode.cloneTree();
-      Node inlineResult = functionArgumentInjector.inject(null, safeReturnNode, null, argMap);
+      Node inlineResult =
+          functionArgumentInjector.inject(null, safeReturnNode, null, paramReplacements);
       checkArgument(safeReturnNode == inlineResult);
       newExpression = safeReturnNode.removeFirstChild();
       NodeUtil.markNewScopesChanged(newExpression, compiler);
@@ -522,12 +530,13 @@ class FunctionInjector {
     } else {
       ExpressionDecomposer decomposer = getDecomposer(ref.scope);
       switch (decomposer.canExposeExpression(callNode)) {
-        case MOVABLE:
+        case MOVABLE -> {
           return CallSiteType.EXPRESSION;
-        case DECOMPOSABLE:
+        }
+        case DECOMPOSABLE -> {
           return CallSiteType.DECOMPOSABLE_EXPRESSION;
-        case UNDECOMPOSABLE:
-          break;
+        }
+        case UNDECOMPOSABLE -> {}
       }
     }
 
@@ -568,30 +577,24 @@ class FunctionInjector {
     String resultName = null;
     boolean needsDefaultReturnResult = true;
     switch (callSiteType) {
-      case SIMPLE_ASSIGNMENT:
+      case SIMPLE_ASSIGNMENT -> {
         resultName = parent.getFirstChild().getString();
         removeConstantVarAnnotation(ref.scope, resultName);
-        break;
-
-      case VAR_DECL_SIMPLE_ASSIGNMENT:
+      }
+      case VAR_DECL_SIMPLE_ASSIGNMENT -> {
         resultName = parent.getString();
         removeConstantVarAnnotation(ref.scope, resultName);
-        break;
-
-      case SIMPLE_CALL:
+      }
+      case SIMPLE_CALL -> {
         resultName = null; // "foo()" doesn't need a result.
         needsDefaultReturnResult = false;
-        break;
-
-      case EXPRESSION:
-        throw new IllegalStateException("Movable expressions must be moved before inlining.");
-
-      case DECOMPOSABLE_EXPRESSION:
-        throw new IllegalStateException(
-            "Decomposable expressions must be decomposed before inlining.");
-
-      default:
-        throw new IllegalStateException("Unexpected call site type.");
+      }
+      case EXPRESSION ->
+          throw new IllegalStateException("Movable expressions must be moved before inlining.");
+      case DECOMPOSABLE_EXPRESSION ->
+          throw new IllegalStateException(
+              "Decomposable expressions must be decomposed before inlining.");
+      default -> throw new IllegalStateException("Unexpected call site type.");
     }
 
     FunctionToBlockMutator mutator = new FunctionToBlockMutator(compiler, this.safeNameIdSupplier);
@@ -606,32 +609,28 @@ class FunctionInjector {
     // can replace either a VAR name assignment, assignment expression or
     // a EXPR_RESULT.
     switch (callSiteType) {
-      case VAR_DECL_SIMPLE_ASSIGNMENT:
+      case VAR_DECL_SIMPLE_ASSIGNMENT -> {
         // Remove the call from the name node.
         Node firstChild = parent.removeFirstChild();
         NodeUtil.markFunctionsDeleted(firstChild, compiler);
         Preconditions.checkState(!parent.hasChildren());
         // Add the call, after the VAR.
         newBlock.insertAfter(grandParent);
-        break;
-
-      case SIMPLE_ASSIGNMENT:
+      }
+      case SIMPLE_ASSIGNMENT -> {
         // The assignment is now part of the inline function so
         // replace it completely.
         Preconditions.checkState(grandParent.isExprResult());
         grandParent.replaceWith(newBlock);
         NodeUtil.markFunctionsDeleted(grandParent, compiler);
-        break;
-
-      case SIMPLE_CALL:
+      }
+      case SIMPLE_CALL -> {
         // If nothing is looking at the result just replace the call.
         Preconditions.checkState(parent.isExprResult());
         parent.replaceWith(newBlock);
         NodeUtil.markFunctionsDeleted(parent, compiler);
-        break;
-
-      default:
-        throw new IllegalStateException("Unexpected call site type.");
+      }
+      default -> throw new IllegalStateException("Unexpected call site type.");
     }
 
     return newBlock;
@@ -821,7 +820,7 @@ class FunctionInjector {
     // If the caller contains functions or evals, verify we aren't adding any
     // additional VAR declarations because aliasing is needed.
     if (forbidTemps) {
-      ImmutableMap<String, Node> args =
+      ImmutableMap<String, ParamArgPair> args =
           functionArgumentInjector.getFunctionCallParameterMap(
               calleeFn, callRef.callNode, this.safeNameIdSupplier);
       boolean hasArgs = !args.isEmpty();
@@ -880,7 +879,7 @@ class FunctionInjector {
       }
     }
 
-    ImmutableMap<String, Node> args =
+    ImmutableMap<String, ParamArgPair> args =
         functionArgumentInjector.getFunctionCallParameterMap(
             fnNode, callNode, this.throwawayNameSupplier);
     boolean hasArgs = !args.isEmpty();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 The Closure Compiler Authors
+ * Copyright 2025 The Closure Compiler Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -877,6 +877,7 @@ CSSStyleDeclaration.prototype.setExpression = function(
 /** @type {string} */ CSSStyleDeclaration.prototype.gridRowGap;
 /** @type {string} */ CSSStyleDeclaration.prototype.hyphenateCharacter;
 /** @type {string} */ CSSStyleDeclaration.prototype.hyphens;
+/** @type {string} */ CSSStyleDeclaration.prototype.hyphenateLimitChars;
 /** @type {string} */ CSSStyleDeclaration.prototype.imageRendering;
 /** @type {string} */ CSSStyleDeclaration.prototype.justifyItems;
 /** @type {string} */ CSSStyleDeclaration.prototype.justifySelf;
@@ -913,7 +914,9 @@ CSSStyleDeclaration.prototype.setExpression = function(
 /** @type {string} */ CSSStyleDeclaration.prototype.offsetPosition;
 /** @type {string} */ CSSStyleDeclaration.prototype.offsetRotate;
 /** @type {string} */ CSSStyleDeclaration.prototype.overflowAnchor;
+/** @type {string} */ CSSStyleDeclaration.prototype.overflowBlock;
 /** @type {string} */ CSSStyleDeclaration.prototype.overflowClipMargin;
+/** @type {string} */ CSSStyleDeclaration.prototype.overflowInline;
 /** @type {string} */ CSSStyleDeclaration.prototype.overscrollBehaviorBlock;
 /** @type {string} */ CSSStyleDeclaration.prototype.overscrollBehaviorInline;
 /** @type {string} */ CSSStyleDeclaration.prototype.overscrollBehaviorX;

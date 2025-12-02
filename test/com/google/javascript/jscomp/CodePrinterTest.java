@@ -3390,35 +3390,35 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrettyPrintSame(
         """
         class C {
-          x=2;
+          x = 2;
         }
         """);
     assertPrettyPrintSame(
         """
         class C {
-          x=2;
-          y=3;
+          x = 2;
+          y = 3;
         }
         """);
     assertPrettyPrint(
         """
         class C {
-          x=2
-          y=3
+          x = 2
+          y = 3
         }
         """,
         """
         class C {
-          x=2;
-          y=3;
+          x = 2;
+          y = 3;
         }
         """);
     assertPrettyPrint(
         "class C {x=2;y=3}",
         """
         class C {
-          x=2;
-          y=3;
+          x = 2;
+          y = 3;
         }
         """);
   }
@@ -3452,14 +3452,14 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrettyPrintSame(
         """
         class C {
-          static x=2;
+          static x = 2;
         }
         """);
     assertPrettyPrintSame(
         """
         class C {
-          static x=2;
-          static y=3;
+          static x = 2;
+          static y = 3;
         }
         """);
     assertPrettyPrintSame(
@@ -3484,14 +3484,14 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         "class C { 'str' = 2;}",
         """
         class C {
-          ["str"]=2;
+          ["str"] = 2;
         }
         """);
     assertPrettyPrint(
         "class C { 1 = 2;}",
         """
         class C {
-          [1]=2;
+          [1] = 2;
         }
         """);
   }
@@ -3507,21 +3507,21 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrettyPrintSame(
         """
         class C {
-          [x]=2;
+          [x] = 2;
         }
         """);
     assertPrettyPrintSame(
         """
         class C {
-          [x]=2;
-          y=3;
+          [x] = 2;
+          y = 3;
         }
         """);
     assertPrettyPrintSame(
         """
         class C {
-          [x]=2;
-          [y]=3;
+          [x] = 2;
+          [y] = 3;
         }
         """);
   }
@@ -3537,21 +3537,21 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrettyPrintSame(
         """
         class C {
-          static [x]=2;
+          static [x] = 2;
         }
         """);
     assertPrettyPrintSame(
         """
         class C {
-          static [x]=2;
-          static y=3;
+          static [x] = 2;
+          static y = 3;
         }
         """);
     assertPrettyPrintSame(
         """
         class C {
-          static [x]=2;
-          static [y]=3;
+          static [x] = 2;
+          static [y] = 3;
         }
         """);
   }
@@ -3944,8 +3944,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrettyPrintSame(
         """
         class C {
-          static field1=1;
-          static field2=2;
+          static field1 = 1;
+          static field2 = 2;
           static {
             let x = this.field1;
             let y = this.field2;
@@ -3964,8 +3964,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrettyPrintSame(
         """
         let a = class {
-          static field1=1;
-          static field2=2;
+          static field1 = 1;
+          static field2 = 2;
           static {
             let x = this.field1;
             let y = this.field2;
@@ -3992,8 +3992,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrettyPrintSame(
         """
         class C {
-          static field1=1;
-          static field2=2;
+          static field1 = 1;
+          static field2 = 2;
           static {
             let x = this.field1;
           }
@@ -4016,8 +4016,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrettyPrintSame(
         """
         let a = class {
-          static field1=1;
-          static field2=2;
+          static field1 = 1;
+          static field2 = 2;
           static {
             let x = this.field1;
           }

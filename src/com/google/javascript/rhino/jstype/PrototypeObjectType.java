@@ -288,14 +288,12 @@ public class PrototypeObjectType extends ObjectType {
   private record PropertyForPrettyPrinting(Property.Key key, JSType type) {
     private void appendTo(TypeStringBuilder sb) {
       switch (key.kind()) {
-        case STRING:
-          sb.append(key.humanReadableName());
-          break;
-        case SYMBOL:
+        case STRING -> sb.append(key.humanReadableName());
+        case SYMBOL -> {
           sb.append("[");
           sb.append(key.humanReadableName());
           sb.append("]");
-          break;
+        }
       }
       sb.append(": ").appendNonNull(type);
     }

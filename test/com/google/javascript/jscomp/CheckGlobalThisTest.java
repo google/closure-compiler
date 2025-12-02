@@ -447,6 +447,161 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
         """);
   }
 
+  // Note: No static initializer block tests because they are always removed by Es6NormalizeClasses.
+
+  @Test
+  public void testES6ClassField() {
+    testSame(
+        """
+        class Clazz {
+          x = 1;
+          y = this.x;
+        }
+        """);
+
+    testSame(
+        """
+        class Clazz {
+          static x = 1;
+          static y = this.x;
+        }
+        """);
+  }
+
+  @Test
+  public void testES6ClassComputedProperty_thisInComputed() {
+    testFailure(
+        """
+        class Clazz {
+          [this.val] = 1;
+        }
+        """);
+    testFailure(
+        """
+        class Clazz {
+          static [this.val] = 1;
+        }
+        """);
+
+    testFailure(
+        """
+        class Clazz {
+          [this.val]() {}
+        }
+        """);
+    testFailure(
+        """
+        class Clazz {
+          static [this.val]() {}
+        }
+        """);
+
+    testFailure(
+        """
+        class Clazz {
+          get [this.val]() {
+            return 1;
+          }
+        }
+        """);
+    testFailure(
+        """
+        class Clazz {
+          static get [this.val]() {
+            return 1;
+          }
+        }
+        """);
+
+    testFailure(
+        """
+        class Clazz {
+          set [this.val](x) {}
+        }
+        """);
+    testFailure(
+        """
+        class Clazz {
+          static set [this.val](x) {}
+        }
+        """);
+  }
+
+  @Test
+  public void testES6ClassComputedProperty_thisInBody() {
+    testSame(
+        """
+        class Clazz {
+          x = 1;
+          ['prop'] = this.x;
+        }
+        """);
+    testSame(
+        """
+        class Clazz {
+          static x = 1;
+          static ['prop'] = this.x;
+        }
+        """);
+
+    testSame(
+        """
+        class Clazz {
+          x = 1;
+          ['prop']() {
+            this.x = 2;
+          }
+        }
+        """);
+    testSame(
+        """
+        class Clazz {
+          static x = 1;
+          static ['prop']() {
+            this.x = 2;
+          }
+        }
+        """);
+
+    testSame(
+        """
+        class Clazz {
+          x = 1
+          get ['prop']() {
+            return this.x;
+          }
+        }
+        """);
+    testSame(
+        """
+        class Clazz {
+          static x = 1;
+          static get ['prop']() {
+            return this.x;
+          }
+        }
+        """);
+
+    testSame(
+        """
+        class Clazz {
+          x = 1;
+          set ['prop'](x) {
+            this.x = x;
+          }
+        }
+        """);
+    testSame(
+        """
+        class Clazz {
+          static x = 1;
+          static set ['prop'](x) {
+            this.x = x;
+          }
+        }
+        """);
+  }
+
   @Test
   public void testFunctionWithThisTypeAnnotated() throws Exception {
     testSame(

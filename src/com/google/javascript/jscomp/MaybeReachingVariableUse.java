@@ -260,12 +260,10 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
    */
   private void computeMayUse(Node n, Node cfgNode, ReachingUses output, boolean conditional) {
     switch (n.getToken()) {
-      case BLOCK:
-      case ROOT:
-      case FUNCTION:
+      case BLOCK, ROOT, FUNCTION -> {
         return;
-
-      case NAME:
+      }
+      case NAME -> {
         if (NodeUtil.isLhsByDestructuring(n)) {
           if (!conditional) {
             removeFromUseIfLocal(n.getString(), output);
@@ -274,18 +272,13 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
           addToUseIfLocal(n.getString(), cfgNode, output);
         }
         return;
-
-      case WHILE:
-      case DO:
-      case IF:
-      case FOR:
+      }
+      case WHILE, DO, IF, FOR -> {
         Node condExpr = NodeUtil.getConditionExpression(n);
         computeMayUse(condExpr, cfgNode, output, conditional);
         return;
-
-      case FOR_IN:
-      case FOR_OF:
-      case FOR_AWAIT_OF:
+      }
+      case FOR_IN, FOR_OF, FOR_AWAIT_OF -> {
         // for(x in y) {...}
         Node lhs = n.getFirstChild();
         Node rhs = lhs.getNext();
@@ -302,17 +295,13 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
         }
         computeMayUse(rhs, cfgNode, output, conditional);
         return;
-
-      case AND:
-      case OR:
-      case COALESCE:
-      case OPTCHAIN_GETPROP:
-      case OPTCHAIN_GETELEM:
+      }
+      case AND, OR, COALESCE, OPTCHAIN_GETPROP, OPTCHAIN_GETELEM -> {
         computeMayUse(n.getLastChild(), cfgNode, output, /* conditional= */ true);
         computeMayUse(n.getFirstChild(), cfgNode, output, conditional);
         return;
-
-      case OPTCHAIN_CALL:
+      }
+      case OPTCHAIN_CALL -> {
         // As args are evaluated in AST order, we traverse in reverse AST order for backward
         // dataflow analysis.
         for (Node c = n.getLastChild(); c != n.getFirstChild(); c = c.getPrevious()) {
@@ -320,16 +309,14 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
         }
         computeMayUse(n.getFirstChild(), cfgNode, output, conditional);
         return;
-
-      case HOOK:
+      }
+      case HOOK -> {
         computeMayUse(n.getLastChild(), cfgNode, output, /* conditional= */ true);
         computeMayUse(n.getSecondChild(), cfgNode, output, /* conditional= */ true);
         computeMayUse(n.getFirstChild(), cfgNode, output, conditional);
         return;
-
-      case VAR:
-      case LET:
-      case CONST:
+      }
+      case VAR, LET, CONST -> {
         Node varName = n.getFirstChild();
         checkState(n.hasChildren(), "AST should be normalized (%s)", n);
 
@@ -345,8 +332,8 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
           }
         } // else var name declaration with no initial value
         return;
-
-      case DEFAULT_VALUE:
+      }
+      case DEFAULT_VALUE -> {
         if (n.getFirstChild().isDestructuringPattern()) {
           computeMayUse(n.getFirstChild(), cfgNode, output, conditional);
           computeMayUse(n.getSecondChild(), cfgNode, output, true);
@@ -360,9 +347,8 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
           computeMayUse(n.getSecondChild(), cfgNode, output, true);
           computeMayUse(n.getFirstChild(), cfgNode, output, conditional);
         }
-        break;
-
-      default:
+      }
+      default -> {
         if (NodeUtil.isAssignmentOp(n) && n.getFirstChild().isName()) {
           checkState(!NodeUtil.isLogicalAssignmentOp(n));
           Node name = n.getFirstChild();
@@ -389,6 +375,7 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
             computeMayUse(c, cfgNode, output, conditional);
           }
         }
+      }
     }
   }
 

@@ -210,23 +210,23 @@ final class ModuleRenaming {
         @Nullable TypedScope globalTypedScope) {
       checkState(googNamespace == null || moduleMetadata.googNamespaces().contains(googNamespace));
       switch (moduleMetadata.moduleType()) {
-        case GOOG_MODULE:
+        case GOOG_MODULE -> {
           // The exported type is stored on the MODULE_BODY node.
           Node moduleBody = moduleMetadata.rootNode().getFirstChild();
           return new GlobalizedModuleName(
               QualifiedName.of(ClosureRewriteModule.getBinaryModuleNamespace(googNamespace)),
               moduleBody.getJSType());
-        case GOOG_PROVIDE:
-        case LEGACY_GOOG_MODULE:
+        }
+        case GOOG_PROVIDE, LEGACY_GOOG_MODULE -> {
           return new GlobalizedModuleName(
               QualifiedName.of(googNamespace), getNameRootType(googNamespace, globalTypedScope));
-        case ES6_MODULE:
-        case COMMON_JS:
+        }
+        case ES6_MODULE, COMMON_JS -> {
           return new GlobalizedModuleName(
               QualifiedName.of(moduleMetadata.path().toModuleName()),
               getNameRootType(moduleMetadata.path().toModuleName(), globalTypedScope));
-        case SCRIPT:
-          // fall through, throw an error
+        }
+        case SCRIPT -> {}
       }
       throw new IllegalStateException("Unexpected module type: " + moduleMetadata.moduleType());
     }

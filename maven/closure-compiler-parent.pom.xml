@@ -92,19 +92,18 @@
 
   <properties>
     <classesDirectory>${project.artifactId}-classes</classesDirectory>
-    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
   </properties>
 
   <build>
       <plugins>
         <plugin>
-          <groupId>org.sonatype.plugins</groupId>
-          <artifactId>nexus-staging-maven-plugin</artifactId>
-          <version>1.7.0</version>
+          <groupId>org.sonatype.central</groupId>
+          <artifactId>central-publishing-maven-plugin</artifactId>
+          <version>0.8.0</version>
           <extensions>true</extensions>
           <configuration>
-            <serverId>ossrh</serverId>
-            <nexusUrl>${nexusUrl}</nexusUrl>
+            <publishingServerId>central</publishingServerId>
+            <autoPublish>${autoPublish}</autoPublish>
           </configuration>
         </plugin>
         <plugin>

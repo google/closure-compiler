@@ -32,4 +32,8 @@
 'require es6/array/includes';
 'require es6/array/keys';
 'require es6/array/of';
+'require es6/array/toreversed';
+'require es6/array/tosorted';
+'require es6/array/tospliced';
+'require es6/array/with';
 'require es6/array/values';

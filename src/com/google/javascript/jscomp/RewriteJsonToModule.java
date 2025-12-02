@@ -69,38 +69,26 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case SCRIPT:
+      case SCRIPT -> {
         if (!n.hasOneChild()) {
           compiler.report(JSError.make(n, JSON_UNEXPECTED_TOKEN));
         } else {
           visitScript(t, n);
         }
         return;
-
-      case OBJECTLIT:
-      case ARRAYLIT:
-      case NUMBER:
-      case TRUE:
-      case FALSE:
-      case NULL:
-      case STRINGLIT:
-        break;
-
-      case STRING_KEY:
+      }
+      case OBJECTLIT, ARRAYLIT, NUMBER, TRUE, FALSE, NULL, STRINGLIT -> {}
+      case STRING_KEY -> {
         if (!n.isQuotedStringKey() || !n.hasOneChild()) {
           compiler.report(JSError.make(n, JSON_UNEXPECTED_TOKEN));
         }
-        break;
-
-      case EXPR_RESULT:
+      }
+      case EXPR_RESULT -> {
         if (!parent.isScript()) {
           compiler.report(JSError.make(n, JSON_UNEXPECTED_TOKEN));
         }
-        break;
-
-      default:
-        compiler.report(JSError.make(n, JSON_UNEXPECTED_TOKEN));
-        break;
+      }
+      default -> compiler.report(JSError.make(n, JSON_UNEXPECTED_TOKEN));
     }
 
     if (n.getLineno() == 1) {

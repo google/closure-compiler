@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import java.util.function.Consumer;
 import org.jspecify.annotations.Nullable;
 import org.junit.Before;
@@ -35,13 +34,6 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
-  }
-
-  @Override
-  protected Compiler createCompiler() {
-    // For those test cases that perform transpilation, we don't want any of the runtime code
-    // to be injected, since that will just make the test cases harder to read and write.
-    return new NoninjectingCompiler();
   }
 
   @Override

@@ -135,18 +135,13 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.getLanguageIn().toFeatureSet().has(Feature.MODULES)) {
       passes.maybeAdd(rewriteGoogJsImports);
       switch (options.getEs6ModuleTranspilation()) {
-        case COMPILE:
-          TranspilationPasses.addEs6ModulePass(passes, preprocessorSymbolTableFactory);
-          break;
-        case TO_COMMON_JS_LIKE_MODULES:
-          TranspilationPasses.addEs6ModuleToCjsPass(passes);
-          break;
-        case RELATIVIZE_IMPORT_PATHS:
-          TranspilationPasses.addEs6RewriteImportPathPass(passes);
-          break;
-        case NONE:
+        case COMPILE ->
+            TranspilationPasses.addEs6ModulePass(passes, preprocessorSymbolTableFactory);
+        case TO_COMMON_JS_LIKE_MODULES -> TranspilationPasses.addEs6ModuleToCjsPass(passes);
+        case RELATIVIZE_IMPORT_PATHS -> TranspilationPasses.addEs6RewriteImportPathPass(passes);
+        case NONE -> {
           // nothing
-          break;
+        }
       }
     }
 
@@ -167,6 +162,9 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Passes below this point may rely on normalization and must maintain normalization.
     passes.maybeAdd(normalize);
+
+    passes.maybeAdd(gatherGettersAndSetters);
+
     TranspilationPasses.addTranspilationPasses(passes, options);
     // The transpilation passes may rely on normalize making all variables unique,
     // but we're doing only transpilation, so we want to put back the original variable names
@@ -180,6 +178,9 @@ public final class DefaultPassConfig extends PassConfig {
     passes.maybeAdd(invertContextualRenaming);
 
     passes.maybeAdd(unwrapClosureUnawareCode);
+
+    // Es6ConvertSuper may add this so it needs to be removed for transpile-only mode.
+    passes.maybeAdd(removePropertyRenamingCalls);
 
     passes.assertAllOneTimePasses();
     assertValidOrderForChecks(passes);
@@ -490,6 +491,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(closureProvidesRequires);
       passes.maybeAdd(processDefinesOptimize);
       passes.maybeAdd(normalize);
+      passes.maybeAdd(gatherGettersAndSetters);
       TranspilationPasses.addTranspilationPasses(passes, options);
       passes.maybeAdd(gatherExternPropertiesOptimize);
       passes.maybeAdd(createEmptyPass(PassNames.BEFORE_STANDARD_OPTIMIZATIONS));
@@ -909,10 +911,10 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.maybeAdd(normalize);
 
+    passes.maybeAdd(gatherGettersAndSetters);
+
     // TODO(b/329447979): Add an early removeUnusedCode pass here
     TranspilationPasses.addTranspilationPasses(passes, options);
-
-    passes.maybeAdd(gatherGettersAndSetters);
 
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
       passes.maybeAdd(j2clUtilGetDefineRewriterPass);
@@ -1567,9 +1569,8 @@ public final class DefaultPassConfig extends PassConfig {
                 preprocessorSymbolTableFactory.maybeInitialize(compiler);
                 return ScopedAliases.builder(compiler)
                     .setPreprocessorSymbolTable(preprocessorSymbolTableFactory.getInstanceOrNull())
-                    .setAliasTransformationHandler(options.getAliasTransformationHandler())
                     .setModuleMetadataMap(compiler.getModuleMetadataMap())
-                    .setInvalidModuleGetHandling(InvalidModuleGetHandling.DELETE)
+                    .setInvalidModuleGetHandling(InvalidModuleGetHandling.GIVE_UNIQUE_NAME)
                     .build();
               })
           .build();
@@ -1734,6 +1735,7 @@ public final class DefaultPassConfig extends PassConfig {
     if (compiler.getOptions().j2clPassMode.shouldAddJ2clPasses()) {
       optimizations.add(new J2clEqualitySameRewriterPass(useTypesForOptimization));
       optimizations.add(new J2clStringValueOfRewriterPass());
+      optimizations.add(new J2clUndefinedChecksRewriterPass());
     }
     optimizations.add(new PeepholeFoldConstants(late, useTypesForOptimization));
     optimizations.add(new PeepholeCollectPropertyAssignments());
@@ -2199,8 +2201,6 @@ public final class DefaultPassConfig extends PassConfig {
                       .setChunkOutputType(options.getChunkOutputType())
                       .setHaveModulesBeenRewritten(options.getProcessCommonJSModules())
                       .setModuleResolutionMode(options.getModuleResolutionMode())
-                      .setAssumeStaticInheritanceIsNotUsed(
-                          options.getAssumeStaticInheritanceIsNotUsed())
                       .build())
           .build();
 
@@ -2746,7 +2746,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> {
                 List<Node> changedScopeNodes =
-                    compiler.getChangedScopeNodesForPass("j2clClinitPass");
+                    compiler.getChangeTracker().getChangedScopeNodesForPass("j2clClinitPass");
                 return new J2clClinitPrunerPass(compiler, changedScopeNodes);
               })
           .build();
@@ -2836,7 +2836,8 @@ public final class DefaultPassConfig extends PassConfig {
                           .setIncludeDebugInfo(
                               compiler.getOptions().shouldSerializeExtraDebugInfo())
                           // set the runtime libraries to serialize in the TypedAST proto
-                          .setRuntimeLibraries(compiler.getInjectedLibraries())
+                          .setRuntimeLibraries(
+                              compiler.getRuntimeJsLibManager().getInjectedLibraries())
                           .build()))
           .build();
 

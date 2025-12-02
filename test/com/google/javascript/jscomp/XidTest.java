@@ -45,7 +45,7 @@ public class XidTest {
     for (int i = lo; i <= hi; ++i) {
       String key = Xid.toString(i);
       Integer dup = map.get(key);
-      assertWithMessage("Both " + dup + " and " + i + " map to: " + key).that(dup).isNull();
+      assertWithMessage("Both %s and %s map to: %s", dup, i, key).that(dup).isNull();
       map.put(key, i);
     }
   }

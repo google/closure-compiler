@@ -15,14 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeNative;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Locale;
-import org.jspecify.annotations.Nullable;
 
 /** Util functions for transpilation passes */
 public final class TranspilationUtil {
@@ -52,29 +46,8 @@ public final class TranspilationUtil {
   }
 
   static void preloadTranspilationRuntimeFunction(AbstractCompiler compiler, String function) {
-    compiler.ensureLibraryInjected("es6/util/" + function.toLowerCase(Locale.ROOT), false);
-  }
-
-  /** Returns the JSType as specified by the typeName. Returns null if shouldCreate is false. */
-  static @Nullable JSType createType(
-      boolean shouldCreate, JSTypeRegistry registry, JSTypeNative typeName) {
-    if (!shouldCreate) {
-      return null;
-    }
-    return registry.getNativeType(typeName);
-  }
-
-  /**
-   * Returns the JSType as specified by the typeName and instantiated by the typeArg. Returns null
-   * if shouldCreate is false.
-   */
-  static @Nullable JSType createGenericType(
-      boolean shouldCreate, JSTypeRegistry registry, JSTypeNative typeName, JSType typeArg) {
-    if (!shouldCreate) {
-      return null;
-    }
-    ObjectType genericType = (ObjectType) (registry.getNativeType(typeName));
-    ObjectType uninstantiated = genericType.getRawType();
-    return registry.createTemplatizedType(uninstantiated, ImmutableList.of(typeArg));
+    compiler
+        .getRuntimeJsLibManager()
+        .ensureLibraryInjected("es6/util/" + function.toLowerCase(Locale.ROOT), false);
   }
 }

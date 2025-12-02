@@ -121,6 +121,10 @@ final class PropTranslator {
       case SYNTHESIZED_UNFULFILLED_NAME_DECLARATION ->
           NodeProperty.SYNTHESIZED_UNFULFILLED_NAME_DECLARATION;
       case CLOSURE_UNAWARE_SHADOW,
+          // This property is intentionally not included in the serialized TypedAST because it can
+          // be re-synthesized when we deserialize nodes later, as it is inferrable from the AST
+          // shape.
+          IS_IN_CLOSURE_UNAWARE_SUBTREE,
           SIDE_EFFECT_FLAGS,
           DECLARED_TYPE_EXPR,
           FEATURE_SET,
@@ -150,32 +154,27 @@ final class PropTranslator {
   private static final void checkUnexpectedNullProtoProps() {
     for (NodeProperty protoProp : NodeProperty.values()) {
       switch (protoProp) {
-        case NODE_PROPERTY_UNSPECIFIED:
+        case NODE_PROPERTY_UNSPECIFIED -> {
           // this is the "no properties are set" value
-          break;
-        case IS_DECLARED_CONSTANT:
-        case IS_INFERRED_CONSTANT:
+        }
+        case IS_DECLARED_CONSTANT, IS_INFERRED_CONSTANT -> {
           // These are used for the CONSTANT_VAR_FLAGS bit field property
-          break;
-        case UNRECOGNIZED:
-        case UNUSED_11:
+        }
+        case UNRECOGNIZED, UNUSED_11 -> {
           // unused
-          break;
-        case MUTATES_GLOBAL_STATE:
-        case MUTATES_THIS:
-        case MUTATES_ARGUMENTS:
-        case THROWS:
+        }
+        case MUTATES_GLOBAL_STATE, MUTATES_THIS, MUTATES_ARGUMENTS, THROWS -> {
           // these are used for the SIDE_EFFECT_FLAGS bit field property
-          break;
-        case CLOSURE_UNAWARE_SHADOW:
+        }
+        case CLOSURE_UNAWARE_SHADOW -> {
           // this is a special case where the property is a Node pointer, not a boolean
-          break;
-        default:
-          // everything else should be a 1-to-1 match with a boolean property
-          checkState(
-              protoToRhinoProp[protoProp.ordinal()] != null,
-              "Hit unhandled node property: %s",
-              protoProp);
+        }
+        default ->
+            // everything else should be a 1-to-1 match with a boolean property
+            checkState(
+                protoToRhinoProp[protoProp.ordinal()] != null,
+                "Hit unhandled node property: %s",
+                protoProp);
       }
     }
   }

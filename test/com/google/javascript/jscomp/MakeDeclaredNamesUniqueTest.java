@@ -50,7 +50,6 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
       return new CompilerPass() {
         @Override
         public void process(Node externs, Node root) {
-          compiler.resetUniqueNameId();
           MakeDeclaredNamesUnique.Builder renamer =
               MakeDeclaredNamesUnique.builder().withAssertOnChange(assertOnChange);
           if (!useDefaultRenamer) {
@@ -77,12 +76,6 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     return options;
-  }
-
-  @Override
-  protected int getNumRepetitions() {
-    // The normalize pass is only run once.
-    return 1;
   }
 
   @Before

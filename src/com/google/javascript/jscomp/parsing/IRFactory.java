@@ -242,7 +242,17 @@ class IRFactory {
 
   // Use a template node for properties set on all nodes to minimize the
   // memory footprint associated with these.
-  private final Node templateNode;
+  // templateNode acts as the current template node for the IRFactory. The template node is updated
+  // from defaultTemplateNode to closureUnawareTemplateNode whenever a new closure-unaware code
+  // range is entered in the transform method and swapped back to the defaultTemplateNode when the
+  // closure-unaware code range is exited.
+  // This is safe because while on a closure unaware code range, only nodes that should have the
+  // IS_IN_CLOSURE_UNAWARE_SUBTREE property are created.
+  // An alternative was to directly update the templateNode's propListHead, but we don't want to
+  // expose the propListHead outside of the Node class.
+  private Node templateNode;
+  private final Node defaultTemplateNode;
+  private final Node closureUnawareTemplateNode;
 
   private final CommentTracker jsdocTracker;
   private final CommentTracker nonJsdocTracker;
@@ -282,7 +292,9 @@ class IRFactory {
     this.sourceFile = sourceFile;
     this.fileWithContent = fileWithContent;
     // The template node properties are applied to all nodes in this transform.
-    this.templateNode = createTemplateNode();
+    this.defaultTemplateNode = createTemplateNode();
+    this.templateNode = defaultTemplateNode;
+    this.closureUnawareTemplateNode = createClosureUnawareTemplateNode();
 
     // Sometimes this will be null in tests.
     this.sourceName = sourceFile == null ? null : sourceFile.getName();
@@ -349,6 +361,16 @@ class IRFactory {
     Node templateNode = new Node(Token.SCRIPT);
     templateNode.setStaticSourceFile(sourceFile);
     return templateNode;
+  }
+
+  private Node createClosureUnawareTemplateNode() {
+    // We clone the default template node, so that the source file property, and other potential
+    // properties are shared
+    Node closureUnawareTemplateNode = defaultTemplateNode.cloneNode();
+
+    // We add the IS_IN_CLOSURE_UNAWARE_SUBTREE property to the head of the property list.
+    closureUnawareTemplateNode.setIsInClosureUnawareSubtree(true);
+    return closureUnawareTemplateNode;
   }
 
   public static IRFactory transformTree(
@@ -443,122 +465,132 @@ class IRFactory {
   }
 
   private void validateAwait(Node n) {
-    if (n.isAwait()) {
-      Node parent = n;
-      while ((parent = parent.getParent()) != null) {
-        // The await is in a class static block.
-        // e.g. `class C { static { await; } }`
-        if (parent.isClassMembers()) {
-          errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
-          return;
-        }
-        if (parent.isAsyncFunction()) {
-          return;
-        } else if (parent.isFunction()) {
-          // The await is in a non-async function.
-          // e.g. `function f() { return await 5; }`
-          // nested function e.g. `async function f() { function f2() { return await 5; } }`
-          errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
-          return;
-        }
-      }
-      errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
+    if (!n.isAwait()) {
+      return;
     }
+
+    Node parent = n;
+    while ((parent = parent.getParent()) != null) {
+      // The await is in a class static block.
+      // e.g. `class C { static { await; } }`
+      if (parent.isClassMembers()) {
+        errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
+        return;
+      }
+      if (parent.isAsyncFunction()) {
+        return;
+      }
+      if (parent.isFunction()) {
+        // The await is in a non-async function.
+        // e.g. `function f() { return await 5; }`
+        // nested function e.g. `async function f() { function f2() { return await 5; } }`
+        errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
+        return;
+      }
+    }
+    errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
   }
 
   private void validateYield(Node n) {
-    if (n.isYield()) {
-      Node parent = n;
-      while ((parent = parent.getParent()) != null) {
-        // The yield is in a class static block.
-        // e.g. `class C { static { yield; } }`
-        if (parent.isClassMembers()) {
-          errorReporter.error(UNEXPECTED_YIELD, sourceName, n.getLineno(), n.getCharno());
-          return;
-        }
-        if (parent.isGeneratorFunction()) {
-          return;
-        }
+    if (!n.isYield()) {
+      return;
+    }
+
+    Node parent = n;
+    while ((parent = parent.getParent()) != null) {
+      // The yield is in a class static block.
+      // e.g. `class C { static { yield; } }`
+      if (parent.isClassMembers()) {
+        errorReporter.error(UNEXPECTED_YIELD, sourceName, n.getLineno(), n.getCharno());
+        return;
+      }
+      if (parent.isGeneratorFunction()) {
+        return;
       }
     }
   }
 
   private void validateReturn(Node n) {
-    if (n.isReturn()) {
-      Node parent = n;
-      while ((parent = parent.getParent()) != null) {
-        // The return is in a class static block.
-        // e.g. `class C { static { return; } }`
-        if (parent.isClassMembers()) {
-          errorReporter.error(UNEXPECTED_RETURN, sourceName, n.getLineno(), n.getCharno());
-          return;
-        }
-        if (parent.isFunction()) {
-          return;
-        }
-      }
-      errorReporter.error(UNEXPECTED_RETURN, sourceName, n.getLineno(), n.getCharno());
+    if (!n.isReturn()) {
+      return;
     }
+
+    Node parent = n;
+    while ((parent = parent.getParent()) != null) {
+      // The return is in a class static block.
+      // e.g. `class C { static { return; } }`
+      if (parent.isClassMembers()) {
+        errorReporter.error(UNEXPECTED_RETURN, sourceName, n.getLineno(), n.getCharno());
+        return;
+      }
+      if (parent.isFunction()) {
+        return;
+      }
+    }
+    errorReporter.error(UNEXPECTED_RETURN, sourceName, n.getLineno(), n.getCharno());
   }
 
   private void validateNewDotTarget(Node n) {
-    if (n.getToken() == Token.NEW_TARGET) {
-      Node parent = n;
-      while ((parent = parent.getParent()) != null) {
-        if (parent.isFunction()) {
-          return;
-        }
-      }
-      errorReporter.error(UNEXPECTED_NEW_DOT_TARGET, sourceName, n.getLineno(), n.getCharno());
+    if (n.getToken() != Token.NEW_TARGET) {
+      return;
     }
+
+    Node parent = n;
+    while ((parent = parent.getParent()) != null) {
+      if (parent.isFunction()) {
+        return;
+      }
+    }
+    errorReporter.error(UNEXPECTED_NEW_DOT_TARGET, sourceName, n.getLineno(), n.getCharno());
   }
 
   private void validateBreakContinue(Node n) {
-    if (n.isBreak() || n.isContinue()) {
-      Node labelName = n.getFirstChild();
-      if (labelName != null) {
-        Node parent = n.getParent();
-        while (!parent.isLabel() || !labelsMatch(parent, labelName)) {
-          if (parent.isFunction() || parent.isScript() || parent.isClassMembers()) {
-            // report missing label
-            errorReporter.error(
-                String.format(UNDEFINED_LABEL, labelName.getString()),
-                sourceName,
-                n.getLineno(),
-                n.getCharno());
-            break;
-          }
-          parent = parent.getParent();
+    if (!n.isBreak() && !n.isContinue()) {
+      return;
+    }
+
+    Node labelName = n.getFirstChild();
+    if (labelName != null) {
+      Node parent = n.getParent();
+      while (!parent.isLabel() || !labelsMatch(parent, labelName)) {
+        if (parent.isFunction() || parent.isScript() || parent.isClassMembers()) {
+          // report missing label
+          errorReporter.error(
+              String.format(UNDEFINED_LABEL, labelName.getString()),
+              sourceName,
+              n.getLineno(),
+              n.getCharno());
+          break;
         }
-        if (parent.isLabel() && labelsMatch(parent, labelName)) {
-          if (n.isContinue() && !isContinueTarget(parent.getLastChild())) {
-            // report invalid continue target
-            errorReporter.error(
-                UNEXPECTED_LABELLED_CONTINUE, sourceName, n.getLineno(), n.getCharno());
-          }
+        parent = parent.getParent();
+      }
+
+      if (parent.isLabel() && labelsMatch(parent, labelName)) {
+        if (n.isContinue() && !isContinueTarget(parent.getLastChild())) {
+          // report invalid continue target
+          errorReporter.error(
+              UNEXPECTED_LABELLED_CONTINUE, sourceName, n.getLineno(), n.getCharno());
         }
-      } else {
-        if (n.isContinue()) {
-          Node parent = n.getParent();
-          while (!isContinueTarget(parent)) {
-            if (parent.isFunction() || parent.isScript() || parent.isClassMembers()) {
-              // report invalid continue
-              errorReporter.error(UNEXPECTED_CONTINUE, sourceName, n.getLineno(), n.getCharno());
-              break;
-            }
-            parent = parent.getParent();
-          }
-        } else {
-          Node parent = n.getParent();
-          while (!isBreakTarget(parent)) {
-            if (parent.isFunction() || parent.isScript() || parent.isClassMembers()) {
-              // report invalid break
-              errorReporter.error(UNLABELED_BREAK, sourceName, n.getLineno(), n.getCharno());
-              break;
-            }
-            parent = parent.getParent();
-          }
+      }
+    } else if (n.isContinue()) {
+      Node parent = n.getParent();
+      while (!isContinueTarget(parent)) {
+        if (parent.isFunction() || parent.isScript() || parent.isClassMembers()) {
+          // report invalid continue
+          errorReporter.error(UNEXPECTED_CONTINUE, sourceName, n.getLineno(), n.getCharno());
+          break;
         }
+        parent = parent.getParent();
+      }
+    } else {
+      Node parent = n.getParent();
+      while (!isBreakTarget(parent)) {
+        if (parent.isFunction() || parent.isScript() || parent.isClassMembers()) {
+          // report invalid break
+          errorReporter.error(UNLABELED_BREAK, sourceName, n.getLineno(), n.getCharno());
+          break;
+        }
+        parent = parent.getParent();
       }
     }
   }
@@ -582,40 +614,44 @@ class IRFactory {
   }
 
   private void validateLabel(Node n) {
-    if (n.isLabel()) {
-      Node labelName = n.getFirstChild();
-      for (Node parent = n.getParent();
-          parent != null && !parent.isFunction();
-          parent = parent.getParent()) {
-        if (parent.isLabel() && labelsMatch(parent, labelName)) {
-          errorReporter.error(
-              String.format(DUPLICATE_LABEL, labelName.getString()),
-              sourceName,
-              n.getLineno(),
-              n.getCharno());
-          break;
-        }
+    if (!n.isLabel()) {
+      return;
+    }
+
+    Node labelName = n.getFirstChild();
+    for (Node parent = n.getParent();
+        parent != null && !parent.isFunction();
+        parent = parent.getParent()) {
+      if (parent.isLabel() && labelsMatch(parent, labelName)) {
+        errorReporter.error(
+            String.format(DUPLICATE_LABEL, labelName.getString()),
+            sourceName,
+            n.getLineno(),
+            n.getCharno());
+        break;
       }
     }
   }
 
   private void validateParameters(Node n) {
-    if (n.isParamList()) {
-      Set<String> seenNames = new LinkedHashSet<>();
-      for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-        ParsingUtil.getParamOrPatternNames(
-            c,
-            (Node param) -> {
-              String paramName = param.getString();
-              if (!seenNames.add(paramName)) {
-                errorReporter.warning(
-                    String.format(DUPLICATE_PARAMETER, paramName),
-                    sourceName,
-                    param.getLineno(),
-                    param.getCharno());
-              }
-            });
-      }
+    if (!n.isParamList()) {
+      return;
+    }
+
+    Set<String> seenNames = new LinkedHashSet<>();
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+      ParsingUtil.getParamOrPatternNames(
+          c,
+          (Node param) -> {
+            String paramName = param.getString();
+            if (!seenNames.add(paramName)) {
+              errorReporter.warning(
+                  String.format(DUPLICATE_PARAMETER, paramName),
+                  sourceName,
+                  param.getLineno(),
+                  param.getCharno());
+            }
+          });
     }
   }
 
@@ -726,29 +762,24 @@ class IRFactory {
 
   private @Nullable JSDocInfo parseJSDocInfoOnTree(ParseTree tree) {
     switch (tree.type) {
-      case EXPRESSION_STATEMENT:
-      case LABELLED_STATEMENT:
-      case EXPORT_DECLARATION:
-      case TEMPLATE_SUBSTITUTION:
+      case EXPRESSION_STATEMENT, LABELLED_STATEMENT, EXPORT_DECLARATION, TEMPLATE_SUBSTITUTION -> {
         return null;
-
-      case CALL_EXPRESSION:
-      case CONDITIONAL_EXPRESSION:
-      case COMMA_EXPRESSION:
-      case BINARY_OPERATOR:
-      case MEMBER_EXPRESSION:
-      case MEMBER_LOOKUP_EXPRESSION:
-      case UPDATE_EXPRESSION:
+      }
+      case CALL_EXPRESSION,
+          CONDITIONAL_EXPRESSION,
+          COMMA_EXPRESSION,
+          BINARY_OPERATOR,
+          MEMBER_EXPRESSION,
+          MEMBER_LOOKUP_EXPRESSION,
+          UPDATE_EXPRESSION -> {
         {
           ParseTree nearest = findNearestNode(tree);
           if (nearest.type == ParseTreeType.PAREN_EXPRESSION) {
             return null;
           }
         }
-        break;
-
-      default:
-        break;
+      }
+      default -> {}
     }
 
     return parseJSDocInfoFrom(getJSDocCommentAt(tree.getStart()));
@@ -913,32 +944,41 @@ class IRFactory {
   private static ParseTree findNearestNode(ParseTree tree) {
     while (true) {
       switch (tree.type) {
-        case EXPRESSION_STATEMENT:
+        case EXPRESSION_STATEMENT -> {
           tree = tree.asExpressionStatement().expression;
           continue;
-        case CALL_EXPRESSION:
+        }
+        case CALL_EXPRESSION -> {
           tree = tree.asCallExpression().operand;
           continue;
-        case BINARY_OPERATOR:
+        }
+        case BINARY_OPERATOR -> {
           tree = tree.asBinaryOperator().left;
           continue;
-        case CONDITIONAL_EXPRESSION:
+        }
+        case CONDITIONAL_EXPRESSION -> {
           tree = tree.asConditionalExpression().condition;
           continue;
-        case MEMBER_EXPRESSION:
+        }
+        case MEMBER_EXPRESSION -> {
           tree = tree.asMemberExpression().operand;
           continue;
-        case MEMBER_LOOKUP_EXPRESSION:
+        }
+        case MEMBER_LOOKUP_EXPRESSION -> {
           tree = tree.asMemberLookupExpression().operand;
           continue;
-        case UPDATE_EXPRESSION:
+        }
+        case UPDATE_EXPRESSION -> {
           tree = tree.asUpdateExpression().operand;
           continue;
-        case COMMA_EXPRESSION:
+        }
+        case COMMA_EXPRESSION -> {
           tree = tree.asCommaExpression().expressions.get(0);
           continue;
-        default:
+        }
+        default -> {
           return tree;
+        }
       }
     }
   }
@@ -946,8 +986,10 @@ class IRFactory {
   Node transform(ParseTree tree) {
     JSDocInfo info = parseJSDocInfoOnTree(tree);
     NonJSDocComment comment = parseNonJSDocCommentAt(tree.getStart(), false);
+    boolean isRootOfClosureUnawareSubTree = (info != null && info.isClosureUnawareCode());
 
-    if (info != null && info.isClosureUnawareCode()) {
+    if (isRootOfClosureUnawareSubTree) {
+      templateNode = closureUnawareTemplateNode;
       SourceRange nextClosureUnawareRange = tree.location;
       LineAndColumn nextClosureUnawareRangeStart =
           LineAndColumn.fromSourcePosition(nextClosureUnawareRange.start);
@@ -965,6 +1007,9 @@ class IRFactory {
     }
     if (comment != null) {
       node.setNonJSDocComment(comment);
+    }
+    if (isRootOfClosureUnawareSubTree) {
+      templateNode = defaultTemplateNode;
     }
     setSourceInfo(node, tree);
     return node;
@@ -1361,17 +1406,15 @@ class IRFactory {
       for (ParseTree child : tree.elements) {
         final Node elementNode;
         switch (child.type) {
-          case DEFAULT_PARAMETER:
-            // processDefaultParameter() knows how to find and apply inline JSDoc to the right node
-            elementNode = processDefaultParameter(child.asDefaultParameter());
-            break;
-          case ITER_REST:
+          case DEFAULT_PARAMETER ->
+              // processDefaultParameter() knows how to find and apply inline JSDoc to the right
+              // node
+              elementNode = processDefaultParameter(child.asDefaultParameter());
+          case ITER_REST -> {
             maybeWarnForFeature(child, Feature.ARRAY_PATTERN_REST);
             elementNode = transformNodeWithInlineComments(child);
-            break;
-          default:
-            elementNode = transformNodeWithInlineComments(child);
-            break;
+          }
+          default -> elementNode = transformNodeWithInlineComments(child);
         }
         node.addChildToBack(elementNode);
       }
@@ -1391,26 +1434,29 @@ class IRFactory {
 
     private Node processObjectPatternElement(ParseTree child) {
       switch (child.type) {
-        case DEFAULT_PARAMETER:
+        case DEFAULT_PARAMETER -> {
           // shorthand with a default value
           // let { /** inlineType */ name = default } = something;
           return processObjectPatternShorthandWithDefault(child.asDefaultParameter());
-        case PROPERTY_NAME_ASSIGNMENT:
+        }
+        case PROPERTY_NAME_ASSIGNMENT -> {
           return processObjectPatternPropertyNameAssignment(child.asPropertyNameAssignment());
-        case COMPUTED_PROPERTY_DEFINITION:
+        }
+        case COMPUTED_PROPERTY_DEFINITION -> {
           // let {[expression]: /** inlineType */ name} = something;
           ComputedPropertyDefinitionTree computedPropertyDefinition =
               child.asComputedPropertyDefinition();
           return processObjectPatternComputedPropertyDefinition(computedPropertyDefinition);
-        case OBJECT_REST:
+        }
+        case OBJECT_REST -> {
           // let {...restObject} = someObject;
           maybeWarnForFeature(child, Feature.OBJECT_PATTERN_REST);
           Node target = transformNodeWithInlineComments(child.asObjectRest().assignmentTarget);
           Node rest = newNode(Token.OBJECT_REST, target);
           setSourceInfo(rest, child);
           return rest;
-        default:
-          throw new IllegalStateException("Unexpected object pattern element: " + child);
+        }
+        default -> throw new IllegalStateException("Unexpected object pattern element: " + child);
       }
     }
 
@@ -2069,19 +2115,19 @@ class IRFactory {
       for (ParseTree param : tree.parameters) {
         final Node paramNode;
         switch (param.type) {
-          case DEFAULT_PARAMETER:
-            // processDefaultParameter() knows how to find and apply inline JSDoc to the right node
-            paramNode = processDefaultParameter(param.asDefaultParameter());
-            break;
-          case ITER_REST:
+          case DEFAULT_PARAMETER ->
+              // processDefaultParameter() knows how to find and apply inline JSDoc to the right
+              // node
+              paramNode = processDefaultParameter(param.asDefaultParameter());
+          case ITER_REST -> {
             maybeWarnForFeature(param, Feature.REST_PARAMETERS);
             paramNode = transformNodeWithInlineComments(param);
-            break;
-          default:
+          }
+          default -> {
             paramNode = transformNodeWithInlineComments(param);
             // Reusing the logic to attach trailing comments used from call-site argsList
             attachPossibleTrailingCommentsForArg(paramNode, zones.get(argCount));
-            break;
+          }
         }
 
         // Children must be simple names, default parameters, rest
@@ -2437,7 +2483,7 @@ class IRFactory {
         node.addChildToBack(key);
       }
       if (maybeWarn) {
-        maybeWarnForFeature(objTree, Feature.EXTENDED_OBJECT_LITERALS);
+        maybeWarnForFeature(objTree, Feature.SHORTHAND_OBJECT_PROPERTIES);
       }
       return node;
     }
@@ -2633,24 +2679,16 @@ class IRFactory {
     private void validateRegExpFlags(LiteralExpressionTree tree, String flags) {
       for (char flag : Lists.charactersOf(flags)) {
         switch (flag) {
-          case 'g':
-          case 'i':
-          case 'm':
-            break;
-          case 'u':
-          case 'y':
+          case 'g', 'i', 'm' -> {}
+          case 'u', 'y' -> {
             Feature feature = flag == 'u' ? Feature.REGEXP_FLAG_U : Feature.REGEXP_FLAG_Y;
             maybeWarnForFeature(tree, feature);
-            break;
-          case 's':
-            maybeWarnForFeature(tree, Feature.REGEXP_FLAG_S);
-            break;
-          case 'd':
-            maybeWarnForFeature(tree, Feature.REGEXP_FLAG_D);
-            break;
-          default:
-            errorReporter.error(
-                "Invalid RegExp flag '" + flag + "'", sourceName, lineno(tree), charno(tree));
+          }
+          case 's' -> maybeWarnForFeature(tree, Feature.REGEXP_FLAG_S);
+          case 'd' -> maybeWarnForFeature(tree, Feature.REGEXP_FLAG_D);
+          default ->
+              errorReporter.error(
+                  "Invalid RegExp flag '" + flag + "'", sourceName, lineno(tree), charno(tree));
         }
       }
     }
@@ -2786,7 +2824,7 @@ class IRFactory {
       Node operand = transform(exprNode.operand);
 
       switch (type) {
-        case DELPROP:
+        case DELPROP -> {
           if (!(operand.isGetProp()
               || operand.isGetElem()
               || operand.isName()
@@ -2795,17 +2833,14 @@ class IRFactory {
             String msg = "Invalid delete operand. Only properties can be deleted.";
             errorReporter.error(msg, sourceName, operand.getLineno(), 0);
           }
-          break;
-
-        case POS:
+        }
+        case POS -> {
           if (operand.isBigInt()) {
             errorReporter.error(
                 "Cannot convert a BigInt value to a number", sourceName, operand.getLineno(), 0);
           }
-          break;
-
-        default:
-          break;
+        }
+        default -> {}
       }
 
       return newNode(type, operand);
@@ -2842,19 +2877,16 @@ class IRFactory {
     Node processVariableDeclarationList(VariableDeclarationListTree decl) {
       Token declType;
       switch (decl.declarationType) {
-        case CONST:
+        case CONST -> {
           maybeWarnForFeature(decl, Feature.CONST_DECLARATIONS);
           declType = Token.CONST;
-          break;
-        case LET:
+        }
+        case LET -> {
           maybeWarnForFeature(decl, Feature.LET_DECLARATIONS);
           declType = Token.LET;
-          break;
-        case VAR:
-          declType = Token.VAR;
-          break;
-        default:
-          throw new IllegalStateException();
+        }
+        case VAR -> declType = Token.VAR;
+        default -> throw new IllegalStateException();
       }
 
       Node node = newNode(declType);
@@ -2973,17 +3005,10 @@ class IRFactory {
         boolean hasConstructor = false;
         for (ParseTree child : tree.elements) {
           switch (child.type) {
-            case COMPUTED_PROPERTY_GETTER:
-            case COMPUTED_PROPERTY_SETTER:
-            case GET_ACCESSOR:
-            case SET_ACCESSOR:
-              features = features.with(Feature.CLASS_GETTER_SETTER);
-              break;
-            case BLOCK:
-              features = features.with(Feature.CLASS_STATIC_BLOCK);
-              break;
-            default:
-              break;
+            case COMPUTED_PROPERTY_GETTER, COMPUTED_PROPERTY_SETTER, GET_ACCESSOR, SET_ACCESSOR ->
+                features = features.with(Feature.CLASS_GETTER_SETTER);
+            case BLOCK -> features = features.with(Feature.CLASS_STATIC_BLOCK);
+            default -> {}
           }
 
           boolean childIsCtor = validateClassConstructorMember(child); // Has side-effects.
@@ -3121,7 +3146,7 @@ class IRFactory {
         boolean isStatic = curNode.isStaticMember();
         boolean alreadyDeclared = privatePropNames.contains(propName);
         switch (curNode.getToken()) {
-          case GETTER_DEF:
+          case GETTER_DEF -> {
             if (alreadyDeclared) {
               boolean alreadyDeclaredIsOtherThanItsSetter =
                   privateFieldAndMethodNames.contains(propName)
@@ -3143,8 +3168,8 @@ class IRFactory {
             } else {
               privateGetterNames.add(propName);
             }
-            break;
-          case SETTER_DEF:
+          }
+          case SETTER_DEF -> {
             if (alreadyDeclared) {
               boolean alreadyDeclaredIsOtherThanItsGetter =
                   privateFieldAndMethodNames.contains(propName)
@@ -3166,13 +3191,9 @@ class IRFactory {
             } else {
               privateSetterNames.add(propName);
             }
-            break;
-          case MEMBER_FIELD_DEF:
-          case MEMBER_FUNCTION_DEF:
-            privateFieldAndMethodNames.add(propName);
-            break;
-          default:
-            break;
+          }
+          case MEMBER_FIELD_DEF, MEMBER_FUNCTION_DEF -> privateFieldAndMethodNames.add(propName);
+          default -> {}
         }
         if (alreadyDeclared) {
           errorReporter.error(
@@ -3193,31 +3214,29 @@ class IRFactory {
       final boolean isStatic;
       final boolean hasIllegalModifier;
       switch (member.type) {
-        case GET_ACCESSOR:
+        case GET_ACCESSOR -> {
           GetAccessorTree getter = member.asGetAccessor();
           memberName = getter.propertyName;
           isStatic = getter.isStatic;
           hasIllegalModifier = true;
-          break;
-
-        case SET_ACCESSOR:
+        }
+        case SET_ACCESSOR -> {
           SetAccessorTree setter = member.asSetAccessor();
           memberName = setter.propertyName;
           isStatic = setter.isStatic;
           hasIllegalModifier = true;
-          break;
-
-        case FUNCTION_DECLARATION:
+        }
+        case FUNCTION_DECLARATION -> {
           FunctionDeclarationTree method = member.asFunctionDeclaration();
           memberName = method.name;
           isStatic = method.isStatic;
           hasIllegalModifier = method.isGenerator || method.isAsync;
-          break;
-
-        default:
+        }
+        default -> {
           // Computed properties aren't an issue here because they aren't used as the class
           // constructor, regardless of their name.
           return false;
+        }
       }
 
       if (isStatic) {
@@ -3423,193 +3442,265 @@ class IRFactory {
 
     public Node process(ParseTree node) {
       switch (node.type) {
-        case BINARY_OPERATOR:
+        case BINARY_OPERATOR -> {
           return processBinaryExpression(node.asBinaryOperator());
-        case ARRAY_LITERAL_EXPRESSION:
+        }
+        case ARRAY_LITERAL_EXPRESSION -> {
           return processArrayLiteral(node.asArrayLiteralExpression());
-        case TEMPLATE_LITERAL_EXPRESSION:
+        }
+        case TEMPLATE_LITERAL_EXPRESSION -> {
           return processTemplateLiteral(node.asTemplateLiteralExpression());
-        case TEMPLATE_LITERAL_PORTION:
+        }
+        case TEMPLATE_LITERAL_PORTION -> {
           return processTemplateLiteralPortion(node.asTemplateLiteralPortion());
-        case TEMPLATE_SUBSTITUTION:
+        }
+        case TEMPLATE_SUBSTITUTION -> {
           return processTemplateSubstitution(node.asTemplateSubstitution());
-        case UNARY_EXPRESSION:
+        }
+        case UNARY_EXPRESSION -> {
           return processUnaryExpression(node.asUnaryExpression());
-        case BLOCK:
+        }
+        case BLOCK -> {
           return processBlock(node.asBlock());
-        case BREAK_STATEMENT:
+        }
+        case BREAK_STATEMENT -> {
           return processBreakStatement(node.asBreakStatement());
-        case CALL_EXPRESSION:
+        }
+        case CALL_EXPRESSION -> {
           return processFunctionCall(node.asCallExpression());
-        case OPT_CHAIN_CALL_EXPRESSION:
+        }
+        case OPT_CHAIN_CALL_EXPRESSION -> {
           return processOptChainFunctionCall(node.asOptChainCallExpression());
-        case CASE_CLAUSE:
+        }
+        case CASE_CLAUSE -> {
           return processSwitchCase(node.asCaseClause());
-        case DEFAULT_CLAUSE:
+        }
+        case DEFAULT_CLAUSE -> {
           return processSwitchDefault(node.asDefaultClause());
-        case CATCH:
+        }
+        case CATCH -> {
           return processCatchClause(node.asCatch());
-        case CONTINUE_STATEMENT:
+        }
+        case CONTINUE_STATEMENT -> {
           return processContinueStatement(node.asContinueStatement());
-        case DO_WHILE_STATEMENT:
+        }
+        case DO_WHILE_STATEMENT -> {
           return processDoLoop(node.asDoWhileStatement());
-        case EMPTY_STATEMENT:
+        }
+        case EMPTY_STATEMENT -> {
           return processEmptyStatement(node.asEmptyStatement());
-        case EXPRESSION_STATEMENT:
+        }
+        case EXPRESSION_STATEMENT -> {
           return processExpressionStatement(node.asExpressionStatement());
-        case DEBUGGER_STATEMENT:
+        }
+        case DEBUGGER_STATEMENT -> {
           return processDebuggerStatement(node.asDebuggerStatement());
-        case THIS_EXPRESSION:
+        }
+        case THIS_EXPRESSION -> {
           return processThisExpression(node.asThisExpression());
-        case FOR_STATEMENT:
+        }
+        case FOR_STATEMENT -> {
           return processForLoop(node.asForStatement());
-        case FOR_IN_STATEMENT:
+        }
+        case FOR_IN_STATEMENT -> {
           return processForInLoop(node.asForInStatement());
-        case FUNCTION_DECLARATION:
+        }
+        case FUNCTION_DECLARATION -> {
           return processFunction(node.asFunctionDeclaration());
-        case MEMBER_LOOKUP_EXPRESSION:
+        }
+        case MEMBER_LOOKUP_EXPRESSION -> {
           return processElementGet(node.asMemberLookupExpression());
-        case OPT_CHAIN_MEMBER_LOOKUP_EXPRESSION:
+        }
+        case OPT_CHAIN_MEMBER_LOOKUP_EXPRESSION -> {
           return processOptChainElementGet(node.asOptionalMemberLookupExpression());
-        case MEMBER_EXPRESSION:
+        }
+        case MEMBER_EXPRESSION -> {
           return processPropertyGet(node.asMemberExpression());
-        case OPT_CHAIN_MEMBER_EXPRESSION:
+        }
+        case OPT_CHAIN_MEMBER_EXPRESSION -> {
           return processOptChainPropertyGet(node.asOptionalMemberExpression());
-        case CONDITIONAL_EXPRESSION:
+        }
+        case CONDITIONAL_EXPRESSION -> {
           return processConditionalExpression(node.asConditionalExpression());
-        case IF_STATEMENT:
+        }
+        case IF_STATEMENT -> {
           return processIfStatement(node.asIfStatement());
-        case LABELLED_STATEMENT:
+        }
+        case LABELLED_STATEMENT -> {
           return processLabeledStatement(node.asLabelledStatement());
-        case PAREN_EXPRESSION:
+        }
+        case PAREN_EXPRESSION -> {
           return processParenthesizedExpression(node.asParenExpression());
-        case IDENTIFIER_EXPRESSION:
+        }
+        case IDENTIFIER_EXPRESSION -> {
           return processName(
               node.asIdentifierExpression(),
               privateIdLhsOfInScope.inScope()
                   ? IdentifierType.CAN_BE_PRIVATE
                   : IdentifierType.STANDARD);
-        case NEW_EXPRESSION:
+        }
+        case NEW_EXPRESSION -> {
           return processNewExpression(node.asNewExpression());
-        case OBJECT_LITERAL_EXPRESSION:
+        }
+        case OBJECT_LITERAL_EXPRESSION -> {
           return processObjectLiteral(node.asObjectLiteralExpression());
-        case COMPUTED_PROPERTY_DEFINITION:
+        }
+        case COMPUTED_PROPERTY_DEFINITION -> {
           return processComputedPropertyDefinition(node.asComputedPropertyDefinition());
-        case COMPUTED_PROPERTY_GETTER:
+        }
+        case COMPUTED_PROPERTY_GETTER -> {
           return processComputedPropertyGetter(node.asComputedPropertyGetter());
-        case COMPUTED_PROPERTY_METHOD:
+        }
+        case COMPUTED_PROPERTY_METHOD -> {
           return processComputedPropertyMethod(node.asComputedPropertyMethod());
-        case COMPUTED_PROPERTY_SETTER:
+        }
+        case COMPUTED_PROPERTY_SETTER -> {
           return processComputedPropertySetter(node.asComputedPropertySetter());
-        case RETURN_STATEMENT:
+        }
+        case RETURN_STATEMENT -> {
           return processReturnStatement(node.asReturnStatement());
-        case UPDATE_EXPRESSION:
+        }
+        case UPDATE_EXPRESSION -> {
           return processUpdateExpression(node.asUpdateExpression());
-        case PROGRAM:
+        }
+        case PROGRAM -> {
           return processAstRoot(node.asProgram());
-        case LITERAL_EXPRESSION: // STRING, NUMBER, TRUE, FALSE, NULL, REGEXP
+        }
+        case LITERAL_EXPRESSION -> {
+          // STRING, NUMBER, TRUE, FALSE, NULL, REGEXP
           return processLiteralExpression(node.asLiteralExpression());
-        case SWITCH_STATEMENT:
+        }
+        case SWITCH_STATEMENT -> {
           return processSwitchStatement(node.asSwitchStatement());
-        case THROW_STATEMENT:
+        }
+        case THROW_STATEMENT -> {
           return processThrowStatement(node.asThrowStatement());
-        case TRY_STATEMENT:
+        }
+        case TRY_STATEMENT -> {
           return processTryStatement(node.asTryStatement());
-        case VARIABLE_STATEMENT: // var const let
+        }
+        case VARIABLE_STATEMENT -> {
+          // var const let
           return processVariableStatement(node.asVariableStatement());
-        case VARIABLE_DECLARATION_LIST:
+        }
+        case VARIABLE_DECLARATION_LIST -> {
           return processVariableDeclarationList(node.asVariableDeclarationList());
-        case VARIABLE_DECLARATION:
+        }
+        case VARIABLE_DECLARATION -> {
           return processVariableDeclaration(node.asVariableDeclaration());
-        case WHILE_STATEMENT:
+        }
+        case WHILE_STATEMENT -> {
           return processWhileLoop(node.asWhileStatement());
-        case WITH_STATEMENT:
+        }
+        case WITH_STATEMENT -> {
           return processWithStatement(node.asWithStatement());
-
-        case COMMA_EXPRESSION:
+        }
+        case COMMA_EXPRESSION -> {
           return processCommaExpression(node.asCommaExpression());
-        case NULL: // this is not the null literal
+        }
+        case NULL -> {
+          // this is not the null literal
           return processNull(node.asNull());
-        case FINALLY:
+        }
+        case FINALLY -> {
           return processFinally(node.asFinally());
-
-        case MISSING_PRIMARY_EXPRESSION:
+        }
+        case MISSING_PRIMARY_EXPRESSION -> {
           return processMissingExpression(node.asMissingPrimaryExpression());
-
-        case PROPERTY_NAME_ASSIGNMENT:
+        }
+        case PROPERTY_NAME_ASSIGNMENT -> {
           return processPropertyNameAssignment(node.asPropertyNameAssignment());
-        case GET_ACCESSOR:
+        }
+        case GET_ACCESSOR -> {
           return processGetAccessor(node.asGetAccessor());
-        case SET_ACCESSOR:
+        }
+        case SET_ACCESSOR -> {
           return processSetAccessor(node.asSetAccessor());
-        case FORMAL_PARAMETER_LIST:
+        }
+        case FORMAL_PARAMETER_LIST -> {
           return processFormalParameterList(node.asFormalParameterList());
-
-        case CLASS_DECLARATION:
+        }
+        case CLASS_DECLARATION -> {
           return processClassDeclaration(node.asClassDeclaration());
-        case SUPER_EXPRESSION:
+        }
+        case SUPER_EXPRESSION -> {
           return processSuper(node.asSuperExpression());
-        case NEW_TARGET_EXPRESSION:
+        }
+        case NEW_TARGET_EXPRESSION -> {
           return processNewTarget(node.asNewTargetExpression());
-        case YIELD_EXPRESSION:
+        }
+        case YIELD_EXPRESSION -> {
           return processYield(node.asYieldStatement());
-        case AWAIT_EXPRESSION:
+        }
+        case AWAIT_EXPRESSION -> {
           return processAwait(node.asAwaitExpression());
-        case FOR_OF_STATEMENT:
+        }
+        case FOR_OF_STATEMENT -> {
           return processForOf(node.asForOfStatement());
-        case FOR_AWAIT_OF_STATEMENT:
+        }
+        case FOR_AWAIT_OF_STATEMENT -> {
           return processForAwaitOf(node.asForAwaitOfStatement());
-
-        case EXPORT_DECLARATION:
+        }
+        case EXPORT_DECLARATION -> {
           return processExportDecl(node.asExportDeclaration());
-        case EXPORT_SPECIFIER:
+        }
+        case EXPORT_SPECIFIER -> {
           return processExportSpec(node.asExportSpecifier());
-        case IMPORT_DECLARATION:
+        }
+        case IMPORT_DECLARATION -> {
           return processImportDecl(node.asImportDeclaration());
-        case IMPORT_SPECIFIER:
+        }
+        case IMPORT_SPECIFIER -> {
           return processImportSpec(node.asImportSpecifier());
-        case DYNAMIC_IMPORT_EXPRESSION:
+        }
+        case DYNAMIC_IMPORT_EXPRESSION -> {
           return processDynamicImport(node.asDynamicImportExpression());
-        case IMPORT_META_EXPRESSION:
+        }
+        case IMPORT_META_EXPRESSION -> {
           return processImportMeta(node.asImportMetaExpression());
-
-        case ARRAY_PATTERN:
+        }
+        case ARRAY_PATTERN -> {
           return processArrayPattern(node.asArrayPattern());
-        case OBJECT_PATTERN:
+        }
+        case OBJECT_PATTERN -> {
           return processObjectPattern(node.asObjectPattern());
-
-        case COMPREHENSION:
+        }
+        case COMPREHENSION -> {
           return processComprehension(node.asComprehension());
-        case COMPREHENSION_FOR:
+        }
+        case COMPREHENSION_FOR -> {
           return processComprehensionFor(node.asComprehensionFor());
-        case COMPREHENSION_IF:
+        }
+        case COMPREHENSION_IF -> {
           return processComprehensionIf(node.asComprehensionIf());
-
-        case DEFAULT_PARAMETER:
+        }
+        case DEFAULT_PARAMETER -> {
           return processDefaultParameter(node.asDefaultParameter());
-        case ITER_REST:
+        }
+        case ITER_REST -> {
           return processIterRest(node.asIterRest());
-        case ITER_SPREAD:
+        }
+        case ITER_SPREAD -> {
           return processIterSpread(node.asIterSpread());
-
-        // ES2019
-        case OBJECT_REST:
+          // ES2019
+        }
+        case OBJECT_REST -> {
           return processObjectPatternElement(node.asObjectRest());
-        case OBJECT_SPREAD:
+        }
+        case OBJECT_SPREAD -> {
           return processObjectSpread(node.asObjectSpread());
-
-        // ES2022
-        case FIELD_DECLARATION:
+          // ES2022
+        }
+        case FIELD_DECLARATION -> {
           return processField(node.asFieldDeclaration());
-        case COMPUTED_PROPERTY_FIELD:
+        }
+        case COMPUTED_PROPERTY_FIELD -> {
           return processComputedPropertyField(node.asComputedPropertyField());
-
-        case ARGUMENT_LIST:
+        }
+        case ARGUMENT_LIST -> {
           // TODO(johnlenz): handle these or remove parser support
-          break;
-
-        default:
-          break;
+        }
+        default -> {}
       }
       return processIllegalToken(node);
     }
@@ -3894,50 +3985,36 @@ class IRFactory {
       return Double.parseDouble('0' + value);
     } else if (value.charAt(0) == '0' && length > 1) {
       switch (value.charAt(1)) {
-        case '.':
-        case 'e':
-        case 'E':
+        case '.', 'e', 'E' -> {
           return Double.parseDouble(value);
-        case 'b':
-        case 'B':
-          {
-            maybeWarnForFeature(token, Feature.BINARY_LITERALS);
-            double v = 0;
-            int c = 1;
-            while (++c < length) {
-              v = (v * 2) + binarydigit(value.charAt(c));
-            }
-            return v;
+        }
+        case 'b', 'B' -> {
+          maybeWarnForFeature(token, Feature.BINARY_LITERALS);
+          double v = 0;
+          int c = 1;
+          while (++c < length) {
+            v = (v * 2) + binarydigit(value.charAt(c));
           }
-        case 'o':
-        case 'O':
-          {
-            maybeWarnForFeature(token, Feature.OCTAL_LITERALS);
-            double v = 0;
-            int c = 1;
-            while (++c < length) {
-              v = (v * 8) + octaldigit(value.charAt(c));
-            }
-            return v;
+          return v;
+        }
+        case 'o', 'O' -> {
+          maybeWarnForFeature(token, Feature.OCTAL_LITERALS);
+          double v = 0;
+          int c = 1;
+          while (++c < length) {
+            v = (v * 8) + octaldigit(value.charAt(c));
           }
-        case 'x':
-        case 'X':
-          {
-            double v = 0;
-            int c = 1;
-            while (++c < length) {
-              v = (v * 0x10) + hexdigit(value.charAt(c));
-            }
-            return v;
+          return v;
+        }
+        case 'x', 'X' -> {
+          double v = 0;
+          int c = 1;
+          while (++c < length) {
+            v = (v * 0x10) + hexdigit(value.charAt(c));
           }
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
+          return v;
+        }
+        case '0', '1', '2', '3', '4', '5', '6', '7' -> {
           double v = 0;
           int c = 0;
           while (++c < length) {
@@ -3964,14 +4041,15 @@ class IRFactory {
                 charno(location.start));
           }
           return v;
-        case '8':
-        case '9':
+        }
+        case '8', '9' -> {
           errorReporter.error(
               INVALID_OCTAL_DIGIT, sourceName, lineno(location.start), charno(location.start));
           return 0;
-        default:
-          throw new IllegalStateException(
-              "Unexpected character in number literal: " + value.charAt(1));
+        }
+        default ->
+            throw new IllegalStateException(
+                "Unexpected character in number literal: " + value.charAt(1));
       }
     } else {
       return Double.parseDouble(value);

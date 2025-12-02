@@ -372,15 +372,11 @@ class ReplaceCssNames implements CompilerPass {
       checkNotNull(callNode.getParent(), "already replaced: %s", callNode);
       final int childCount = callNode.getChildCount();
       switch (childCount) {
-        case 2:
-          replaceWithConvertedSingleArg();
-          break;
-        case 3:
-          replaceWithConcatenatedArgs();
-          break;
-        default:
-          throw new IllegalStateException(
-              String.format("invalid number of children: %s for: %s", childCount, callNode));
+        case 2 -> replaceWithConvertedSingleArg();
+        case 3 -> replaceWithConcatenatedArgs();
+        default ->
+            throw new IllegalStateException(
+                String.format("invalid number of children: %s for: %s", childCount, callNode));
       }
     }
 
@@ -430,16 +426,18 @@ class ReplaceCssNames implements CompilerPass {
       final int childCount = callNode.getChildCount();
       final Node firstArg = checkNotNull(callNode.getSecondChild(), callNode);
       switch (childCount) {
-        case 2:
+        case 2 -> {
           checkState(firstArg.isStringLit(), "not a string literal: %s", firstArg);
           return firstArg.getString();
-        case 3:
+        }
+        case 3 -> {
           final Node secondArg = checkNotNull(firstArg.getNext(), firstArg);
           checkState(secondArg.isStringLit(), "not a string literal: %s", secondArg);
           return secondArg.getString();
-        default:
-          throw new IllegalStateException(
-              String.format("invalid number of children: %s for: %s", childCount, callNode));
+        }
+        default ->
+            throw new IllegalStateException(
+                String.format("invalid number of children: %s for: %s", childCount, callNode));
       }
     }
   }
@@ -518,14 +516,14 @@ class ReplaceCssNames implements CompilerPass {
         }
       } else {
         switch (symbolMap.getStyle()) {
-          case BY_WHOLE:
+          case BY_WHOLE -> {
             replacement = symbolMap.get(name);
             if (replacement == null) {
               compiler.report(JSError.make(n, UNKNOWN_SYMBOL_WARNING, name, name));
               return;
             }
-            break;
-          case BY_PART:
+          }
+          case BY_PART -> {
             String[] replaced = new String[parts.length];
             for (int i = 0; i < parts.length; i++) {
               String part = symbolMap.get(parts[i]);
@@ -537,7 +535,7 @@ class ReplaceCssNames implements CompilerPass {
               replaced[i] = part;
             }
             replacement = Joiner.on("-").join(replaced);
-            break;
+          }
         }
       }
       n.setString(replacement);

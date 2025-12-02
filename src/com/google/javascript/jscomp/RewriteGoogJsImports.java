@@ -192,11 +192,8 @@ public class RewriteGoogJsImports implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case NAME:
-          maybeRewriteBadGoogJsImportRef(t, n, parent);
-          break;
-        default:
-          break;
+        case NAME -> maybeRewriteBadGoogJsImportRef(t, n, parent);
+        default -> {}
       }
     }
   }

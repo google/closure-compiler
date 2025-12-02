@@ -477,8 +477,8 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
               .filter(ImportStatement::isDestructuring)
               .flatMap(i -> i.destructures().stream())
               .map(DestructuringBinding::canonicalizeShorthandProperties)
-              .distinct()
               .sorted()
+              .distinct()
               .collect(toImmutableList());
       if (!destructures.isEmpty()) {
         canonicalImports.add(

@@ -49,7 +49,6 @@ import com.google.javascript.jscomp.serialization.SourceFilePool;
 import com.google.javascript.jscomp.serialization.StringPool;
 import com.google.javascript.jscomp.serialization.TypedAst;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
@@ -423,7 +422,7 @@ public final class CompilerTest {
     assertThat(mapping.getLineNumber()).isEqualTo(18);
     assertThat(mapping.getColumnPosition()).isEqualTo(26);
     assertThat(mapping.getIdentifier()).isEqualTo("testSymbolName");
-    assertThat(consumer.getOriginalSources()).containsExactly("input.js", "input.ts");
+    assertThat(consumer.getOriginalSources()).containsExactly("input.ts");
     assertThat(consumer.getOriginalSourcesContent()).isNull();
     assertThat(consumer.getOriginalNames()).containsExactly("testSymbolName");
   }
@@ -2147,127 +2146,6 @@ public final class CompilerTest {
   }
 
   @Test
-  public void testReportChangeNoScopeFails() {
-    Compiler compiler = new Compiler();
-
-    Node detachedNode = IR.var(IR.name("foo"));
-
-    try {
-      compiler.reportChangeToEnclosingScope(detachedNode);
-      assertWithMessage("Reporting a change on a node with no scope should have failed.").fail();
-    } catch (IllegalStateException e) {
-      return;
-    }
-  }
-
-  @Test
-  public void testReportChangeWithScopeSucceeds() {
-    Compiler compiler = new Compiler();
-
-    Node attachedNode = IR.var(IR.name("foo"));
-    IR.function(IR.name("bar"), IR.paramList(), IR.block(attachedNode));
-
-    // Succeeds without throwing an exception.
-    compiler.reportChangeToEnclosingScope(attachedNode);
-  }
-
-  /**
-   * See TimelineTest.java for the many timeline behavior tests that don't make sense to duplicate
-   * here.
-   */
-  @Test
-  public void testGetChangesAndDeletions_baseline() {
-    Compiler compiler = new Compiler();
-
-    // In the initial state nothing has been marked changed or deleted.
-    assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).isNull();
-  }
-
-  @Test
-  public void testGetChangesAndDeletions_changeReportsVisible() {
-    Compiler compiler = new Compiler();
-    Node function1 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
-    Node function2 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
-    IR.root(IR.script(function1, function2));
-
-    // Mark original baseline.
-    compiler.getChangedScopeNodesForPass("FunctionInliner");
-
-    // Mark both functions changed.
-    compiler.reportChangeToChangeScope(function1);
-    compiler.reportChangeToChangeScope(function2);
-
-    // Both function1 and function2 are seen as changed and nothing is seen as deleted.
-    assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner"))
-        .containsExactly(function1, function2);
-  }
-
-  @Test
-  public void testGetChangesAndDeletions_deleteOverridesChange() {
-    Compiler compiler = new Compiler();
-    Node function1 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
-    Node function2 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
-    IR.root(IR.script(function1, function2));
-
-    // Mark original baseline.
-    compiler.getChangedScopeNodesForPass("FunctionInliner");
-
-    // Mark both functions changed, then delete function2 and mark it deleted.
-    compiler.reportChangeToChangeScope(function1);
-    compiler.reportChangeToChangeScope(function2);
-    function2.detach();
-    compiler.reportFunctionDeleted(function2);
-
-    // Now function1 will be seen as changed and function2 will be seen as deleted, since delete
-    // overrides change.
-    assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).containsExactly(function1);
-  }
-
-  @Test
-  public void testGetChangesAndDeletions_changeDoesntOverrideDelete() {
-    Compiler compiler = new Compiler();
-    Node function1 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
-    Node function2 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
-    IR.root(IR.script(function1, function2));
-
-    // Mark original baseline.
-    compiler.getChangedScopeNodesForPass("FunctionInliner");
-
-    // Mark function1 changed and function2 deleted, then try to mark function2 changed.
-    compiler.reportChangeToChangeScope(function1);
-    function2.detach();
-    compiler.reportFunctionDeleted(function2);
-    compiler.reportChangeToChangeScope(function2);
-
-    // Now function1 will be seen as changed and function2 will be seen as deleted, since change
-    // does not override delete.
-    assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).containsExactly(function1);
-  }
-
-  @Test
-  public void testGetChangesAndDeletions_onlySeesChangesSinceLastRequest() {
-    Compiler compiler = new Compiler();
-    Node function1 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
-    Node function2 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
-    IR.root(IR.script(function1, function2));
-
-    // Mark original baseline.
-    compiler.getChangedScopeNodesForPass("FunctionInliner");
-
-    // Mark function1 changed and function2 deleted.
-    compiler.reportChangeToChangeScope(function1);
-    function2.detach();
-    compiler.reportFunctionDeleted(function2);
-
-    // Verify their respective states are seen.
-    assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).containsExactly(function1);
-
-    // Check states again. Should find nothing since nothing has changed since the last
-    // 'FunctionInliner' request.
-    assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).isEmpty();
-  }
-
-  @Test
   public void testAddIndexProvider_ThenGetIndex() {
     Compiler compiler = new Compiler();
 
@@ -3168,7 +3046,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.ensureLibraryInjected("base", /* force= */ true);
+    compiler.getRuntimeJsLibManager().ensureLibraryInjected("base", /* force= */ true);
 
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     compiler.saveState(byteArrayOutputStream);
@@ -3181,7 +3059,7 @@ public final class CompilerTest {
     Node oldAst = compiler.getJsRoot().cloneTree();
 
     // should not change the AST as 'base' was already injected.
-    compiler.ensureLibraryInjected("base", /* force= */ true);
+    compiler.getRuntimeJsLibManager().ensureLibraryInjected("base", /* force= */ true);
 
     assertNode(compiler.getJsRoot()).isEqualTo(oldAst);
   }
@@ -3198,7 +3076,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.ensureLibraryInjected("base", /* force= */ true);
+    compiler.getRuntimeJsLibManager().ensureLibraryInjected("base", /* force= */ true);
 
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     compiler.saveState(byteArrayOutputStream);
@@ -3211,7 +3089,7 @@ public final class CompilerTest {
 
     Node oldAst = compiler.getJsRoot().cloneTree();
 
-    compiler.ensureLibraryInjected("es6/set", /* force= */ true);
+    compiler.getRuntimeJsLibManager().ensureLibraryInjected("es6/set", /* force= */ true);
 
     assertNode(compiler.getJsRoot()).isNotEqualTo(oldAst);
 

@@ -93,13 +93,47 @@ var $jscomp$lookupPolyfilledValue = function(
 };
 
 /**
- * @param {string} target Qualified name of the class or method to polyfill,
- *     e.g. 'Array.prototype.includes' or 'Map'.
+ * TypeArray classes that are polyfilled with $jscomp.polyfillTypedArrayMethod.
+ * @const {!Array<string>}
+ */
+$jscomp.TYPED_ARRAY_CLASSES = (
+    /**
+     * @return {!Array<string>}
+     * @nosideeffects
+     */
+    function() {
+      // LINT.IfChange(typed_array_classes)
+      var classes = [
+        'Int8',
+        'Uint8',
+        'Uint8Clamped',
+        'Int16',
+        'Uint16',
+        'Int32',
+        'Uint32',
+        'Float32',
+        'Float64',
+      ];
+      // These both launched together so we only check for the existence of one.
+      if ($jscomp.global.BigInt64Array) {
+        classes.push('BigInt64');
+        classes.push('BigUint64');
+      }
+      // LINT.ThenChange(
+      // //depot/google3/third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/build_metadata_table.js:typed_array_classes
+      // )
+      return classes;
+    })();
+
+/**
+ * Installs a polyfill for a method on all TypedArray subclasses.
+ * @param {string} methodName Name of the TypedArray subclass method to
+ *     polyfill, e.g. 'findLast'.
  * @param {?function(*): *} polyfill A function that takes the current browser
  *     implementation of the target and returns an optional new polyfill
  *     implementation.  If null is returned, then no polyfill will be added.  A
  *     null argument for this parameter indicates that the function will not be
- *     polyfilled, and is only useful for `build_polyfill_table.js` bookkeeping.
+ *     polyfilled, and is only useful for `build_metadata_table.js` bookkeeping.
  * @param {string} fromLang The language level in which the target is expected
  *     to already be present in the browser.  The compiler requires that
  *     `languageOut < fromLang` before injecting a polyfill (i.e. if the
@@ -108,7 +142,46 @@ var $jscomp$lookupPolyfilledValue = function(
  * @param {string} toLang The language level required by the polyfill
  *     implementation.  The compiler will issue an error if a polyfill is
  *     required, but `languageOut < toLang`.  Additionally, the
- *     `build_polyfill_table.js` script audits the polyfill dependency tree to
+ *     `build_metadata_table.js` script audits the polyfill dependency tree to
+ *     ensure that no polyfill with a lower `toLang` depends on one with a
+ *     higher `toLang`.
+ * @noinline
+ * NOTE: We prevent inlining so RemoveUnusedPolyfills can always recognize this
+ * call.
+ */
+$jscomp.polyfillTypedArrayMethod = function(
+    methodName, polyfill, fromLang, toLang) {
+  if (!polyfill) return;
+
+  for (var i = 0; i < $jscomp.TYPED_ARRAY_CLASSES.length; i++) {
+    var target =
+        $jscomp.TYPED_ARRAY_CLASSES[i] + 'Array.prototype.' + methodName;
+
+    if ($jscomp.ISOLATE_POLYFILLS) {
+      $jscomp.polyfillIsolated(target, polyfill, fromLang, toLang);
+    } else {
+      $jscomp.polyfillUnisolated(target, polyfill, fromLang, toLang);
+    }
+  }
+};
+
+/**
+ * @param {string} target Qualified name of the class or method to polyfill,
+ *     e.g. 'Array.prototype.includes' or 'Map'.
+ * @param {?function(*): *} polyfill A function that takes the current browser
+ *     implementation of the target and returns an optional new polyfill
+ *     implementation.  If null is returned, then no polyfill will be added.  A
+ *     null argument for this parameter indicates that the function will not be
+ *     polyfilled, and is only useful for `build_metadata_table.js` bookkeeping.
+ * @param {string} fromLang The language level in which the target is expected
+ *     to already be present in the browser.  The compiler requires that
+ *     `languageOut < fromLang` before injecting a polyfill (i.e. if the
+ *     specified output language already includes the feature then there's no
+ *     need to polyfill it).
+ * @param {string} toLang The language level required by the polyfill
+ *     implementation.  The compiler will issue an error if a polyfill is
+ *     required, but `languageOut < toLang`.  Additionally, the
+ *     `build_metadata_table.js` script audits the polyfill dependency tree to
  *     ensure that no polyfill with a lower `toLang` depends on one with a
  *     higher `toLang`.
  * @noinline

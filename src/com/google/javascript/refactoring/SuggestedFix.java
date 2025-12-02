@@ -319,25 +319,18 @@ public final class SuggestedFix {
     public Builder rename(Node n, String name, boolean replaceNameSubtree) {
       final Node range;
       switch (n.getToken()) {
-        case CALL:
-        case TAGGED_TEMPLATELIT:
+        case CALL, TAGGED_TEMPLATELIT -> {
           return this.rename(n.getFirstChild(), name, replaceNameSubtree);
-
-        case GETPROP:
-          range = replaceNameSubtree ? subtreeRangeOfIdentifier(n) : n;
-          break;
-
-        case STRINGLIT:
+        }
+        case GETPROP -> range = replaceNameSubtree ? subtreeRangeOfIdentifier(n) : n;
+        case STRINGLIT -> {
           checkState(n.getParent().isGetProp(), n);
-          // Fall through
-        case STRING_KEY:
-        case NAME:
           range = n;
-          break;
-
-        default:
-          throw new UnsupportedOperationException(
-              "Rename is not implemented for this node type: " + n);
+        }
+        case STRING_KEY, NAME -> range = n;
+        default ->
+            throw new UnsupportedOperationException(
+                "Rename is not implemented for this node type: " + n);
       }
 
       replacements.put(

@@ -88,6 +88,7 @@ PerformanceResourceTiming.prototype.decodedBodySize;
 PerformanceResourceTiming.prototype.workerStart;
 /** @type {string} */ PerformanceResourceTiming.prototype.nextHopProtocol;
 /** @type {!Array<!PerformanceServerTiming>} */ PerformanceResourceTiming.prototype.serverTiming;
+/** @type {string} */ PerformanceResourceTiming.prototype.deliveryType;
 
 /**
  * https://w3c.github.io/server-timing/#dom-performanceservertiming

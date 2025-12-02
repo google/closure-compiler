@@ -28,12 +28,6 @@ public class ChromePassTest extends CompilerTestCase {
     return new ChromePass(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    // This pass isn't idempotent and only runs once.
-    return 1;
-  }
-
   @Test
   public void testCrDefineCreatesObjectsForQualifiedName() {
     test(

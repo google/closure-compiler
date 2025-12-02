@@ -310,9 +310,8 @@ class InlineSimpleMethods implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
+        case GETPROP, GETELEM -> {
           // TODO(b/251573710): Handle ES2015+ language features that can reference properties
-        case GETPROP:
-        case GETELEM:
           String name = getPropName(n);
           if (name == null) {
             return;
@@ -333,10 +332,8 @@ class InlineSimpleMethods implements CompilerPass {
               addPossibleSignature(name, n.getNext());
             }
           }
-          break;
-
-        case OBJECTLIT:
-        case CLASS_MEMBERS:
+        }
+        case OBJECTLIT, CLASS_MEMBERS -> {
           for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
             switch (key.getToken()) {
               case MEMBER_FUNCTION_DEF:
@@ -357,17 +354,16 @@ class InlineSimpleMethods implements CompilerPass {
                 throw new IllegalStateException("Unexpected " + n.getToken() + " key: " + key);
             }
           }
-          break;
-        case CALL:
+        }
+        case CALL -> {
           // If a goog.reflect.objectProperty is used for a method's name, we can't assume that the
           // method can be safely inlined.
           if (compiler.getCodingConvention().isPropertyRenameFunction(n.getFirstChild())) {
             // Other code guarantees that getSecondChild() is a STRINGLIT
             nonInlineableProperties.add(n.getSecondChild().getString());
           }
-          break;
-        default:
-          break;
+        }
+        default -> {}
       }
     }
 
@@ -377,6 +373,7 @@ class InlineSimpleMethods implements CompilerPass {
      */
     private void processPrototypeParent(Node n) {
       switch (n.getToken()) {
+        case GETPROP, GETELEM -> {
           // Foo.prototype.getBar = function() { ... } or
           // Foo.prototype.getBar = getBaz (where getBaz is a function)
           // parse tree looks like:
@@ -387,17 +384,14 @@ class InlineSimpleMethods implements CompilerPass {
           //             string prototype
           //         string getBar
           //     function or name            <- assignee
-        case GETPROP:
-        case GETELEM:
           Node grandparent = n.getGrandparent();
           String name = getPropName(n);
           if (name != null && grandparent.isAssign()) {
             Node assignee = grandparent.getSecondChild();
             addPossibleSignature(name, assignee);
           }
-          break;
-        default:
-          break;
+        }
+        default -> {}
       }
     }
   }

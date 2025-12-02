@@ -88,24 +88,17 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
 
   private void checkMissingSemicolon(NodeTraversal t, Node n) {
     switch (n.getToken()) {
-      case IF:
+      case IF -> {
         Node trueCase = n.getSecondChild();
         reportIfWasEmpty(t, trueCase);
         Node elseCase = trueCase.getNext();
         if (elseCase != null) {
           reportIfWasEmpty(t, elseCase);
         }
-        break;
-
-      case WHILE:
-      case FOR:
-      case FOR_IN:
-      case FOR_OF:
-      case FOR_AWAIT_OF:
-        reportIfWasEmpty(t, NodeUtil.getLoopCodeBlock(n));
-        break;
-      default:
-        break;
+      }
+      case WHILE, FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF ->
+          reportIfWasEmpty(t, NodeUtil.getLoopCodeBlock(n));
+      default -> {}
     }
   }
 
@@ -122,19 +115,11 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
 
   private void checkNaN(NodeTraversal t, Node n) {
     switch (n.getToken()) {
-      case EQ:
-      case GE:
-      case GT:
-      case LE:
-      case LT:
-      case NE:
-      case SHEQ:
-      case SHNE:
+      case EQ, GE, GT, LE, LT, NE, SHEQ, SHNE -> {
         reportIfNaN(t, n.getFirstChild());
         reportIfNaN(t, n.getLastChild());
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
   }
 
@@ -231,43 +216,41 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
    */
   private Tri getBooleanValueWithTypes(Node n) {
     switch (n.getToken()) {
-      case ASSIGN:
-      case COMMA:
+      case ASSIGN, COMMA -> {
         return getBooleanValueWithTypes(n.getLastChild());
-      case NOT:
+      }
+      case NOT -> {
         return getBooleanValueWithTypes(n.getLastChild()).not();
-      case AND:
+      }
+      case AND -> {
         // Assume the left-hand side is unknown. If it's not then we'll report it elsewhere. This
         // prevents revisiting deeper nodes repeatedly, which would result in O(n^2) performance.
         return Tri.UNKNOWN.and(getBooleanValueWithTypes(n.getLastChild()));
-      case OR:
+      }
+      case OR -> {
         // Assume the left-hand side is unknown. If it's not then we'll report it elsewhere. This
         // prevents revisiting deeper nodes repeatedly, which would result in O(n^2) performance.
         return Tri.UNKNOWN.or(getBooleanValueWithTypes(n.getLastChild()));
-      case HOOK:
-        {
-          Tri trueValue = getBooleanValueWithTypes(n.getSecondChild());
-          Tri falseValue = getBooleanValueWithTypes(n.getLastChild());
-          return trueValue.equals(falseValue) ? trueValue : Tri.UNKNOWN;
-        }
-      case FUNCTION:
-      case CLASS:
-      case NEW:
-      case ARRAYLIT:
-      case OBJECTLIT:
+      }
+      case HOOK -> {
+        Tri trueValue = getBooleanValueWithTypes(n.getSecondChild());
+        Tri falseValue = getBooleanValueWithTypes(n.getLastChild());
+        return trueValue.equals(falseValue) ? trueValue : Tri.UNKNOWN;
+      }
+      case FUNCTION, CLASS, NEW, ARRAYLIT, OBJECTLIT -> {
         return Tri.TRUE;
-      case VOID:
+      }
+      case VOID -> {
         return Tri.FALSE;
-      case GETPROP:
-      case GETELEM:
-      case OPTCHAIN_GETELEM:
-      case OPTCHAIN_GETPROP:
+      }
+      case GETPROP, GETELEM, OPTCHAIN_GETELEM, OPTCHAIN_GETPROP -> {
         // Assume that type information on getprops and getelems are likely to be wrong.  This
         // prevents spurious warnings from not including undefined in getelem's return value,
         // from existence checks of symbols the externs define as certainly true, or from default
         // initialization of globals ({@code x.y = x.y || {}}).
         return Tri.UNKNOWN;
-      default:
+      }
+      default -> {}
     }
     // If we reach this point then all the composite structures that we can decompose have
     // already been handled, leaving only qualified names and type-aware checks to handle below.

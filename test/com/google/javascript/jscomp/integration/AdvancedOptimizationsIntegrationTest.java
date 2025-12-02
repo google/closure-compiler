@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.integration;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -39,7 +40,7 @@ import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
-import com.google.javascript.jscomp.testing.NoninjectingCompiler;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -57,12 +58,12 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
   @Test
   public void testGoogProvideAndRequire_used() {
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
     options.setVariableRenaming(VariableRenamingPolicy.OFF);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -121,8 +122,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
   @Test
   public void testObjectDestructuring_forLoopInitializer_doesNotCrash() {
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
@@ -186,8 +187,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
   @Test
   public void testVariableUsedAsArgumentMultipleTimes() {
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
     options.setVariableRenaming(VariableRenamingPolicy.OFF);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -219,8 +220,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
   @Test
   public void testTSVariableReassignmentAndAliasingDueToDecoration() {
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
@@ -327,8 +328,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
   @Test
   public void testFoldSpread() {
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
@@ -345,8 +346,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testBug303058080() {
     // Avoid including the transpilation library
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
@@ -394,8 +395,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testBug123583793() {
     // Avoid including the transpilation library
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
@@ -424,14 +425,15 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             f = (delete d.a, d);
         b.call(a, {a:e, d:f});
         """);
-    assertThat(((NoninjectingCompiler) lastCompiler).getInjected()).contains("es6/object/assign");
+    assertThat(lastCompiler.getRuntimeJsLibManager().getInjectedLibraries())
+        .contains("es6/object/assign");
   }
 
   @Test
   public void testBug173319540() {
     // Avoid including the transpilation library
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
@@ -871,7 +873,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setVariableRenaming(VariableRenamingPolicy.OFF);
 
     // we don't want to see injected library code in the output
-    useNoninjectingCompiler = true;
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
+
     test(
         options,
         """
@@ -1131,13 +1134,13 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setRewritePolyfills(true);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
-    useNoninjectingCompiler = true;
     compile(options, new String[] {"for (const x of [1, 2, 3].values()) { alert(x); }"});
 
     assertThat(lastCompiler.getResult().errors).isEmpty();
     assertThat(lastCompiler.getResult().warnings).isEmpty();
-    assertThat(((NoninjectingCompiler) lastCompiler).getInjected())
+    assertThat(lastCompiler.getRuntimeJsLibManager().getInjectedLibraries())
         .containsExactly("es6/array/values");
   }
 
@@ -1233,11 +1236,12 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setExportLocalPropertyDefinitions(true);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setPrettyPrint(true);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
-    useNoninjectingCompiler = true;
     test(
         options,
         """
+        /** @const */
         var $jscomp = { global: window };
 
         class C {
@@ -2028,8 +2032,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
-    // Create a noninjecting compiler avoid comparing all the polyfill code.
-    useNoninjectingCompiler = true;
+    // Avoid comparing all the polyfill code.
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     // include externs definitions for the stuff that would have been injected
     externs =
@@ -2070,12 +2074,15 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     Compiler compiler = compile(options, sb.toString());
     assertWithMessage(
-            "Expected no warnings or errors\n"
-                + "Errors: \n"
-                + Joiner.on("\n").join(compiler.getErrors())
-                + "\n"
-                + "Warnings: \n"
-                + Joiner.on("\n").join(compiler.getWarnings()))
+            """
+            Expected no warnings or errors
+            Errors:
+            %s
+            Warnings:
+            %s
+            """,
+            Joiner.on("\n").join(compiler.getErrors()),
+            Joiner.on("\n").join(compiler.getWarnings()))
         .that(compiler.getErrors().size() + compiler.getWarnings().size())
         .isEqualTo(0);
 
@@ -2107,8 +2114,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
-    useNoninjectingCompiler = true;
     externs =
         ImmutableList.of(
             new TestExternsBuilder()
@@ -2200,8 +2207,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
-    useNoninjectingCompiler = true;
     externs =
         ImmutableList.of(
             new TestExternsBuilder()
@@ -2353,8 +2360,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
   @Test
   public void testRestDoesntBlockPropertyDisambiguation() {
-    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
     // TODO(b/116532470): the compiler should compile this down to nothing.
@@ -3264,5 +3271,166 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         Selector.create().build();
         """,
         "retrieveElementRef(); class a { constructor() { retrieveElementRef(); } } new a();");
+  }
+
+  @Test
+  public void testRequireAndEncourageInlining_complexCase() {
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addConsole()
+                .addClosureExterns()
+                .buildExternsFile("externs.js"));
+    CompilerOptions options = createCompilerOptions();
+    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2020);
+    options.setCollapseProperties(true);
+    options.setInlineConstantVars(true);
+    options.setInlineFunctions(CompilerOptions.Reach.ALL);
+    options.setInlineProperties(true);
+    options.setMaxOptimizationLoopIterations(2);
+    options.setRemoveClosureAsserts(true);
+    options.setSmartNameRemoval(true);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    // @requireInlining should inline through multiple references and aliases.
+    test(
+        options,
+        """
+        /** @requireInlining */ function foo() {console.log('hi');console.log('bye');}
+        const bar = foo;
+        /** @requireInlining */ function baz() {bar();bar();}
+        /** @requireInlining */ function qux() {baz();}
+        qux();qux();qux();
+        """,
+        """
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        """);
+
+    // @encourageInlining should do the same.
+    test(
+        options,
+        """
+        /** @encourageInlining */ function foo() {console.log('hi');console.log('bye');}
+        const bar = foo;
+        /** @encourageInlining */ function baz() {bar();bar();}
+        /** @encourageInlining */ function qux() {baz();}
+        qux();qux();qux();
+        """,
+        """
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        console.log("hi");
+        console.log("bye");
+        """);
+
+    // but failures are okay for @encourageInlining
+    test(
+        options,
+        """
+        /** @encourageInlining */ function foo(q) { console.log(q); console.log('bye'); }
+        console.log(/** @type {?} */ (foo).name);
+        """,
+        """
+        console.log(function(a) {
+          console.log(a);
+          console.log("bye");
+        }.a)
+        """);
+
+    // and not for @requireInlining
+    var thrown =
+        assertThrows(
+            RuntimeException.class,
+            () -> {
+              test(
+                  options,
+                  """
+                  /** @requireInlining */ function foo(q) { console.log(q); console.log('bye'); }
+                  console.log(/** @type {?} */ (foo).name);
+                  """,
+                  "");
+            });
+    assertThat(thrown).hasMessageThat().contains("Validity check failed for earlyInlineVariables");
+    assertThat(thrown).hasCauseThat().isInstanceOf(IllegalStateException.class);
+    assertThat(thrown)
+        .hasCauseThat()
+        .hasCauseThat()
+        .hasMessageThat()
+        .contains("@requireInlining node failed to be inlined");
+  }
+
+  @Test
+  public void
+      testShouldValidateRequiredInlings_throwsIfSetWithoutSufficientlyAdvancedOptimizations() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setValidateRequiredInlinings(true);
+
+    var thrown =
+        assertThrows(
+            IllegalStateException.class,
+            () -> {
+              test(options, "", "");
+            });
+    assertThat(thrown).hasMessageThat().contains("shouldValidateRequiredInlinings");
+    assertThat(thrown).hasMessageThat().contains("missing property collapsing");
+  }
+
+  @Test
+  public void testShouldValidateRequiredInlings_okIfUsingAdvancedOptimizations() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setValidateRequiredInlinings(true);
+
+    test(options, "", "");
+  }
+
+  @Test
+  public void testObjectDefaultDestructuring_passesValidityChecks() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF);
+    options.setGeneratePseudoNames(true);
+    // Regression test: this code used to cause a ValidityCheck crash because function inlining was
+    // not properly marking "x" from "{x = 2}" as constant.
+    test(
+        options,
+        """
+        function testFunctionDefault1(a) {
+          var x = 1;
+          function f({x = 2}) {
+            assertEquals(2, x);
+          }
+          f({x: a});
+        }
+        window['foo'] = testFunctionDefault1;
+        """,
+        """
+        window.foo = function($a$$) {
+          assertEquals(2, $a$$ === void 0 ? 2 : $a$$);
+        };
+        """);
   }
 }

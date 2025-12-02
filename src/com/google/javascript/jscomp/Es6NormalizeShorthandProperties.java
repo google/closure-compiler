@@ -39,6 +39,6 @@ public final class Es6NormalizeShorthandProperties extends AbstractPeepholeTrans
 
   @Override
   FeatureSet getTranspiledAwayFeatures() {
-    return FeatureSet.BARE_MINIMUM.with(Feature.EXTENDED_OBJECT_LITERALS);
+    return FeatureSet.BARE_MINIMUM.with(Feature.SHORTHAND_OBJECT_PROPERTIES);
   }
 }

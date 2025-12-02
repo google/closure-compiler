@@ -640,7 +640,7 @@ function FetchEvent(type, opt_eventInitDict) {}
 FetchEvent.prototype.request;
 
 /**
- * @type {!Promise<Response>}
+ * @type {!Promise<!Response|undefined>}
  */
 FetchEvent.prototype.preloadResponse;
 
@@ -681,7 +681,7 @@ FetchEvent.prototype.default = function() {};
  *   bubbles: (boolean|undefined),
  *   cancelable: (boolean|undefined),
  *   request: (!Request|undefined),
- *   preloadResponse: (!Promise<Response>),
+ *   preloadResponse: (!Promise<!Response|undefined>),
  *   client: (!ServiceWorkerClient|undefined),
  *   isReload: (boolean|undefined)
  * }}

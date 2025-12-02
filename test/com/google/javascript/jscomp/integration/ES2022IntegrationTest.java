@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.integration;
 
-
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -338,14 +337,7 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
         }
         """,
         """
-        /** @unrestricted */
-        class a {
-          static a = alert(2);
-          f2 = 'hi';
-          f3 = 5;
-          4 = 4;
-          f6 = alert(1);
-        }
+        alert(2);
         """);
   }
 
@@ -364,17 +356,26 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
         options,
         """
         window.test = function() {
-        var x = 0;
-        /** @unrestricted */
-        class MyClass {
-          static f1 = x;
-          static [(x = 1)] = 1; // (x = 1) executes before assigning 'static f1 = x'
-        }
-        console.log(MyClass.f1); // prints 1
+          var x = 0;
+          /** @unrestricted */
+          class MyClass {
+            static f1 = x;
+            static[(x = 1)] = 1;  // (x = 1) executes before assigning 'static f1 = x'
+          }
+          console.log(MyClass.f1);  // prints 1
         };
         """,
-        // TODO(b/189993301): this should be logging '1' instead
-        "window.a = function() { console.log(0); };");
+        """
+        window.b = function() {
+          class a{
+            static a;
+            static [1];
+          }
+          a.a = 1;
+          a[1] = 1;
+          console.log(a.a);  // prints 1
+        }
+        """);
   }
 
   @Test
@@ -392,24 +393,25 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
         options,
         """
         window.test = function() {
-        var x = 0;
-        /** @unrestricted */
-        class MyClass {
-          static f1 = x;
-          static [(x = 1)]() {}; // (x = 1) executes before assigning 'static f1 = x'
-        }
-        console.log(MyClass.f1); // prints 1
+          var x = 0;
+          /** @unrestricted */
+          class MyClass {
+            static f1 = x;
+            static[(x = 1)]() {};  // (x = 1) executes before assigning 'static f1 = x'
+          }
+          console.log(MyClass.f1);  // prints 1
         };
         """,
         """
-        window.b=function(){
-          var a=0;
+        window.b = function() {
+          var a = 0, d = a = 1;
           class c {
-            static a=a;
-            static [a=1](){}
+            static a;
+            static[d]() {}
           }
-          console.log(c.a)
-        };
+          c.a = a;
+          console.log(c.a)  // prints 1
+        }
         """);
   }
 
@@ -417,60 +419,48 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
   public void testEs6RewriteClassExtendsExpression() {
     CompilerOptions options = createCompilerOptions();
 
-    String code =
-"""
-/** @unrestricted */
-class __PRIVATE_WebChannelConnection extends class __PRIVATE_RestConnection {
-  constructor(e) {
-    this.databaseInfo = e, this.databaseId = e.databaseId;
-  }
-} {
-  constructor(e) {
-    super(e), this.forceLongPolling = e.forceLongPolling, this.autoDetectLongPolling = e.autoDetectLongPolling, this.useFetchStreams = e.useFetchStreams, this.longPollingOptions = e.longPollingOptions;
-    console.log('test');
-  }
-}
-""";
-    String expectedCodeNonTraspiled =
-"""
-class __PRIVATE_WebChannelConnection extends class __PRIVATE_RestConnection {
-  constructor(e) {
-    this.databaseInfo = e, this.databaseId = e.databaseId;
-  }
-} {
-  constructor(e) {
-    super(e), this.forceLongPolling = e.forceLongPolling, this.autoDetectLongPolling =
-    e.autoDetectLongPolling, this.useFetchStreams = e.useFetchStreams, this.longPollingOptions =
-    e.longPollingOptions;
-    console.log('test');
-  }
-}
-""";
-
-    String expectedCodeTranspiled =
-"""
-const i0$classdecl$var0 = class {
-  constructor(e) {
-    this.databaseInfo = e, this.databaseId = e.databaseId;
-  }
-};
-const i0$classextends$var0 = i0$classdecl$var0;
-class __PRIVATE_WebChannelConnection extends i0$classdecl$var0 {
-  constructor(e) {
-    super(e), this.forceLongPolling = e.forceLongPolling, this.autoDetectLongPolling =
-    e.autoDetectLongPolling, this.useFetchStreams = e.useFetchStreams, this.longPollingOptions =
-    e.longPollingOptions;
-    console.log('test');
-  }
-}
-""";
-
-    options.setLanguageIn(LanguageMode.UNSTABLE);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
-    test(options, code, expectedCodeTranspiled);
+    String src =
+        """
+        /** @unrestricted */
+        class __PRIVATE_WebChannelConnection extends class __PRIVATE_RestConnection {
+          constructor(e) {
+            this.databaseInfo = e, this.databaseId = e.databaseId;
+          }
+        }
+        {
+          constructor(e) {
+            super(e), this.forceLongPolling = e.forceLongPolling,
+                      this.autoDetectLongPolling = e.autoDetectLongPolling,
+                      this.useFetchStreams = e.useFetchStreams,
+                      this.longPollingOptions = e.longPollingOptions;
+            console.log('test');
+          }
+        }
+        """;
+    String expected =
+        """
+        const $jscomp$classExtends$98447280$0 = class {
+          constructor(e) {
+            this.databaseInfo = e, this.databaseId = e.databaseId
+          }
+        };
+        class __PRIVATE_WebChannelConnection extends $jscomp$classExtends$98447280$0 {
+          constructor(e) {
+            super(e), this.forceLongPolling = e.forceLongPolling,
+                      this.autoDetectLongPolling = e.autoDetectLongPolling,
+                      this.useFetchStreams = e.useFetchStreams,
+                      this.longPollingOptions = e.longPollingOptions;
+            console.log('test')
+          }
+        }
+        """;
 
     options.setLanguageIn(LanguageMode.UNSTABLE);
     options.setLanguageOut(LanguageMode.UNSTABLE);
-    test(options, code, expectedCodeNonTraspiled);
+    test(options, src, expected);
+
+    options.setLanguageIn(LanguageMode.UNSTABLE);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+    test(options, src, expected);
   }
 }

@@ -48,10 +48,8 @@ public final class DiagnosticGroupsTest {
         continue;
       }
       assertWithMessage(
-              "DiagnosticTypes common to DiagnosticGroups "
-                  + lintChecks.getName()
-                  + " and "
-                  + group.getName())
+              "DiagnosticTypes common to DiagnosticGroups %s and %s",
+              lintChecks.getName(), group.getName())
           .that(Sets.intersection(lintChecks.getTypes(), group.getTypes()))
           .isEmpty();
     }
@@ -60,7 +58,7 @@ public final class DiagnosticGroupsTest {
   @Test
   public void conformanceErrorsCannotBeDowngraded() {
     for (DiagnosticGroup group : DiagnosticGroups.getRegisteredGroups().values()) {
-      assertWithMessage("Group '" + group.getName() + "' should not include JSC_CONFORMANCE_ERROR")
+      assertWithMessage("Group '%s' should not include JSC_CONFORMANCE_ERROR", group.getName())
           .that(group.getTypes())
           .doesNotContain(CheckConformance.CONFORMANCE_ERROR);
     }

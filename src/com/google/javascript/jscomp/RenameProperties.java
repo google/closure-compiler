@@ -343,13 +343,8 @@ class RenameProperties implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case GETPROP:
-        case OPTCHAIN_GETPROP:
-        case MEMBER_FIELD_DEF:
-          maybeMarkCandidate(n);
-          break;
-        case GETELEM:
-        case OPTCHAIN_GETELEM:
+        case GETPROP, OPTCHAIN_GETPROP, MEMBER_FIELD_DEF -> maybeMarkCandidate(n);
+        case GETELEM, OPTCHAIN_GETELEM -> {
           // If this is a quoted property access (e.g. x['myprop']), we need to
           // ensure that we never rename some other property in a way that
           // could conflict with this quoted name.
@@ -357,36 +352,32 @@ class RenameProperties implements CompilerPass {
           if (child != null && child.isStringLit()) {
             quotedNames.add(child.getString());
           }
-          break;
-        case CALL:
-          {
-            // We replace property renaming function calls with a string
-            // containing the renamed property.
-            Node fnName = n.getFirstChild();
+        }
+        case CALL -> {
+          // We replace property renaming function calls with a string
+          // containing the renamed property.
+          Node fnName = n.getFirstChild();
 
-            if (compiler.getCodingConvention().isPropertyRenameFunction(fnName)) {
-              callNodeToParentMap.put(n, parent);
-              countCallCandidates(t, n);
-              Node stringArgument = n.getSecondChild();
-              if (!propertyRenameEligibilityFilter.test(n)) {
-                for (String name : DOT_SPLITTER.split(stringArgument.getString())) {
-                  filteredOutNames.add(name);
-                }
+          if (compiler.getCodingConvention().isPropertyRenameFunction(fnName)) {
+            callNodeToParentMap.put(n, parent);
+            countCallCandidates(t, n);
+            Node stringArgument = n.getSecondChild();
+            if (!propertyRenameEligibilityFilter.test(n)) {
+              for (String name : DOT_SPLITTER.split(stringArgument.getString())) {
+                filteredOutNames.add(name);
               }
             }
-            break;
           }
-        case MEMBER_FUNCTION_DEF:
+        }
+        case MEMBER_FUNCTION_DEF -> {
           checkState(!n.isQuotedStringKey());
           if (NodeUtil.isEs6ConstructorMemberFunctionDef(n)) {
             externedNames.add(n.getString());
           } else {
             maybeMarkCandidate(n);
           }
-          break;
-        case GETTER_DEF:
-        case SETTER_DEF:
-        case STRING_KEY:
+        }
+        case GETTER_DEF, SETTER_DEF, STRING_KEY -> {
           if (n.isQuotedStringKey()) {
             // Ensure that we never rename some other property in a way
             // that could conflict with this quoted key.
@@ -394,42 +385,36 @@ class RenameProperties implements CompilerPass {
           } else {
             maybeMarkCandidate(n);
           }
-          break;
-        case FUNCTION:
-          {
-            // We eliminate any stub implementations of JSCompiler_renameProperty
-            // that we encounter.
-            if (NodeUtil.isFunctionDeclaration(n)) {
-              String name = n.getFirstChild().getString();
-              if (NodeUtil.JSC_PROPERTY_NAME_FN.equals(name)) {
-                toRemove.add(n);
-              }
-            } else if (parent.isName()
-                && NodeUtil.JSC_PROPERTY_NAME_FN.equals(parent.getString())) {
-              Node varNode = parent.getParent();
-              if (varNode.isVar()) {
-                toRemove.add(parent);
-              }
-            } else if (NodeUtil.isFunctionExpression(n)
-                && parent.isAssign()
-                && parent
-                    .getFirstChild()
-                    .isGetProp() // JSCompiler does not handle optional calls to property rename
-                // function
-                && compiler
-                    .getCodingConvention()
-                    .isPropertyRenameFunction(parent.getFirstChild())) {
-              Node exprResult = parent.getParent();
-              if (exprResult.isExprResult()
-                  && NodeUtil.isStatementBlock(exprResult.getParent())
-                  && exprResult.getFirstChild().isAssign()) {
-                toRemove.add(exprResult);
-              }
+        }
+        case FUNCTION -> {
+          // We eliminate any stub implementations of JSCompiler_renameProperty
+          // that we encounter.
+          if (NodeUtil.isFunctionDeclaration(n)) {
+            String name = n.getFirstChild().getString();
+            if (NodeUtil.JSC_PROPERTY_NAME_FN.equals(name)) {
+              toRemove.add(n);
             }
-            break;
+          } else if (parent.isName() && NodeUtil.JSC_PROPERTY_NAME_FN.equals(parent.getString())) {
+            Node varNode = parent.getParent();
+            if (varNode.isVar()) {
+              toRemove.add(parent);
+            }
+          } else if (NodeUtil.isFunctionExpression(n)
+              && parent.isAssign()
+              && parent
+                  .getFirstChild()
+                  .isGetProp() // JSCompiler does not handle optional calls to property rename
+              // function
+              && compiler.getCodingConvention().isPropertyRenameFunction(parent.getFirstChild())) {
+            Node exprResult = parent.getParent();
+            if (exprResult.isExprResult()
+                && NodeUtil.isStatementBlock(exprResult.getParent())
+                && exprResult.getFirstChild().isAssign()) {
+              toRemove.add(exprResult);
+            }
           }
-        default:
-          break;
+        }
+        default -> {}
       }
     }
 

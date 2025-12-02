@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.ReplaceIdGenerators.INVALID_GENERATOR
 import static com.google.javascript.jscomp.ReplaceIdGenerators.INVALID_TEMPLATE_LITERAL_PARAMETER;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import org.jspecify.annotations.Nullable;
 import org.junit.Before;
@@ -75,6 +76,13 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
     super.setUp();
     generatePseudoNames = false;
     previousMappings = null;
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.INJECT);
+    return options;
   }
 
   @Test

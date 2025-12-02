@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 The Closure Compiler Authors
+ * Copyright 2025 The Closure Compiler Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -583,6 +583,11 @@ function InputEventInit() {}
 
 /** @type {undefined|?string} */
 InputEventInit.prototype.data;
+
+/**
+ * @return {!Array<!StaticRange>}
+ */
+InputEvent.prototype.getComposedRanges = function() {};
 
 /** @type {undefined|boolean} */
 InputEventInit.prototype.isComposing;

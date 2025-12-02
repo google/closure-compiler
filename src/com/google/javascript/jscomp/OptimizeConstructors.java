@@ -57,12 +57,14 @@ import org.jspecify.annotations.Nullable;
  */
 class OptimizeConstructors implements CompilerPass, OptimizeCalls.CallGraphCompilerPass {
   private final AbstractCompiler compiler;
+  private final AstAnalyzer astAnalyzer;
 
   // All constructor definition nodes that are to be removed.
   final ArrayList<Node> removableConstructors = new ArrayList<>();
 
   OptimizeConstructors(AbstractCompiler compiler) {
     this.compiler = checkNotNull(compiler);
+    this.astAnalyzer = compiler.getAstAnalyzer();
   }
 
   @Override
@@ -267,18 +269,21 @@ class OptimizeConstructors implements CompilerPass, OptimizeCalls.CallGraphCompi
 
   private static boolean isDefinitionClassLiteralOrFunction(Node n) {
     switch (n.getToken()) {
-      case FUNCTION:
+      case FUNCTION -> {
         // TODO(b/176208718): ideally this is only return true for normal functions, but it is
         // harmless to include other function types and checking for "normal" function is currently
         // non-trivial.
         return true;
-      case CLASS:
+      }
+      case CLASS -> {
         // `class NameNode {`
         // find the constructor
         Node constructorMemberFunctionDef = NodeUtil.getEs6ClassConstructorMemberFunctionDef(n);
         return constructorMemberFunctionDef != null;
-      default:
+      }
+      default -> {
         return false;
+      }
     }
   }
 
@@ -406,7 +411,7 @@ class OptimizeConstructors implements CompilerPass, OptimizeCalls.CallGraphCompi
 
       if (param.isDefaultValue()
           && param.getFirstChild().isName()
-          && !new AstAnalyzer(compiler, true).mayHaveSideEffects(param.getLastChild())) {
+          && !astAnalyzer.mayHaveSideEffects(param.getLastChild())) {
         // a default parameter whose value is determined to be side-effect free
         continue;
       }

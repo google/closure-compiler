@@ -717,6 +717,26 @@ public class TestExternsBuilder {
       var undefined;
       """;
 
+  private static final String INFINITY_EXTERNS =
+      """
+      /**
+       * @type {number}
+       * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Infinity
+       * @const
+       */
+      var Infinity;
+      """;
+
+  private static final String NAN_EXTERNS =
+      """
+      /**
+       * @type {number}
+       * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NaN
+       * @const
+       */
+      var NaN;
+      """;
+
   private static final String PROMISE_EXTERNS =
       """
 
@@ -1048,6 +1068,8 @@ public class TestExternsBuilder {
   private boolean includeMapExterns = false;
   private boolean includeArgumentsExterns = false;
   private boolean includeUndefinedExterns = false;
+  private boolean includeInfinityExterns = false;
+  private boolean includeNaNExterns = false;
   private boolean includeITemplateArrayExterns = false;
   private boolean includeConsoleExterns = false;
   private boolean includeAlertExterns = false;
@@ -1120,6 +1142,18 @@ public class TestExternsBuilder {
   @CanIgnoreReturnValue
   public TestExternsBuilder addUndefined() {
     includeUndefinedExterns = true;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public TestExternsBuilder addInfinity() {
+    includeInfinityExterns = true;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public TestExternsBuilder addNaN() {
+    includeNaNExterns = true;
     return this;
   }
 
@@ -1265,6 +1299,12 @@ public class TestExternsBuilder {
     }
     if (includeUndefinedExterns) {
       externSections.add(UNDEFINED_EXTERNS);
+    }
+    if (includeInfinityExterns) {
+      externSections.add(INFINITY_EXTERNS);
+    }
+    if (includeNaNExterns) {
+      externSections.add(NAN_EXTERNS);
     }
     if (includeITemplateArrayExterns) {
       externSections.add(I_TEMPLATE_ARRAY_EXTERNS);

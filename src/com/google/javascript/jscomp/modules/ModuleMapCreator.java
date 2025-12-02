@@ -250,11 +250,8 @@ public class ModuleMapCreator implements CompilerPass {
   private void process(ModuleMetadata moduleMetadata) {
     final ModuleProcessor processor;
     switch (moduleMetadata.moduleType()) {
-      case ES6_MODULE:
-        processor = esModuleProcessor;
-        break;
-      case GOOG_MODULE:
-      case LEGACY_GOOG_MODULE:
+      case ES6_MODULE -> processor = esModuleProcessor;
+      case GOOG_MODULE, LEGACY_GOOG_MODULE -> {
         if (moduleMetadata.googNamespaces().size() == 1) {
           processor = closureModuleProcessor;
         } else {
@@ -262,10 +259,8 @@ public class ModuleMapCreator implements CompilerPass {
           // error.
           processor = nonEsModuleProcessor;
         }
-        break;
-      default:
-        processor = nonEsModuleProcessor;
-        break;
+      }
+      default -> processor = nonEsModuleProcessor;
     }
     UnresolvedModule module =
         processor.process(moduleMetadata, moduleMetadata.path(), moduleMetadata.rootNode());

@@ -72,28 +72,30 @@ final class StatementFusion extends AbstractPeepholeOptimization {
 
   private boolean isFusableControlStatement(Node n) {
     switch (n.getToken()) {
-      case IF:
-      case THROW:
-      case SWITCH:
-      case EXPR_RESULT:
+      case IF, THROW, SWITCH, EXPR_RESULT -> {
         return true;
-      case RETURN:
+      }
+      case RETURN -> {
         // We don't want to add a new return value.
         return n.hasChildren();
-      case FOR:
+      }
+      case FOR -> {
         // Avoid cases where we have for(var x;_;_) { ....
         return !NodeUtil.isNameDeclaration(n.getFirstChild());
-      case FOR_IN:
+      }
+      case FOR_IN -> {
         // Avoid cases where we have for(var x = foo() in a) { ....
         return !mayHaveSideEffects(n.getFirstChild());
-      case LABEL:
+      }
+      case LABEL -> {
         return isFusableControlStatement(n.getLastChild());
-      case BLOCK:
+      }
+      case BLOCK -> {
         return (isASTNormalized() || NodeUtil.canMergeBlock(n))
             && !n.isSyntheticBlock()
             && isFusableControlStatement(n.getFirstChild());
-      default:
-        break;
+      }
+      default -> {}
     }
     return false;
   }
@@ -135,27 +137,17 @@ final class StatementFusion extends AbstractPeepholeOptimization {
     // n - 1 statements (which can be used in an expression) and the last
     // statement. We perform specific fusion based on the last statement's type.
     switch (control.getToken()) {
-      case IF:
-      case RETURN:
-      case THROW:
-      case SWITCH:
-      case EXPR_RESULT:
-      case FOR:
+      case IF, RETURN, THROW, SWITCH, EXPR_RESULT, FOR -> {
         before.detach();
         fuseExpressionIntoFirstChild(before.removeFirstChild(), control);
-        return;
-      case FOR_IN:
+      }
+      case FOR_IN -> {
         before.detach();
         fuseExpressionIntoSecondChild(before.removeFirstChild(), control);
-        return;
-      case LABEL:
-        fuseExpressionIntoControlFlowStatement(before, control.getLastChild());
-        return;
-      case BLOCK:
-        fuseExpressionIntoControlFlowStatement(before, control.getFirstChild());
-        return;
-      default:
-        throw new IllegalStateException("Statement fusion missing.");
+      }
+      case LABEL -> fuseExpressionIntoControlFlowStatement(before, control.getLastChild());
+      case BLOCK -> fuseExpressionIntoControlFlowStatement(before, control.getFirstChild());
+      default -> throw new IllegalStateException("Statement fusion missing.");
     }
   }
 

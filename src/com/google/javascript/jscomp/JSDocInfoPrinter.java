@@ -151,6 +151,10 @@ public final class JSDocInfoPrinter {
       parts.add("@requireInlining");
     }
 
+    if (info.isEncourageInlining()) {
+      parts.add("@encourageInlining");
+    }
+
     if (info.isProvideAlreadyProvided()) {
       parts.add("@provideAlreadyProvided");
     }
@@ -461,15 +465,15 @@ public final class JSDocInfoPrinter {
       return;
     }
     switch (typeNode.getToken()) {
-      case BANG:
+      case BANG -> {
         sb.append("!");
         appendTypeNode(sb, typeNode.getFirstChild());
-        break;
-      case EQUALS:
+      }
+      case EQUALS -> {
         appendTypeNode(sb, typeNode.getFirstChild());
         sb.append("=");
-        break;
-      case PIPE:
+      }
+      case PIPE -> {
         sb.append("(");
         Node lastChild = typeNode.getLastChild();
         for (Node child = typeNode.getFirstChild(); child != null; child = child.getNext()) {
@@ -479,26 +483,22 @@ public final class JSDocInfoPrinter {
           }
         }
         sb.append(")");
-        break;
-      case ITER_REST:
+      }
+      case ITER_REST -> {
         sb.append("...");
         if (typeNode.hasChildren() && !typeNode.getFirstChild().isEmpty()) {
           appendTypeNode(sb, typeNode.getFirstChild());
         }
-        break;
-      case STAR:
-        sb.append("*");
-        break;
-      case QMARK:
+      }
+      case STAR -> sb.append("*");
+      case QMARK -> {
         sb.append("?");
         if (typeNode.hasChildren()) {
           appendTypeNode(sb, typeNode.getFirstChild());
         }
-        break;
-      case FUNCTION:
-        appendFunctionNode(sb, typeNode);
-        break;
-      case LC:
+      }
+      case FUNCTION -> appendFunctionNode(sb, typeNode);
+      case LC -> {
         sb.append("{");
         Node lb = typeNode.getFirstChild();
         Node lastColon = lb.getLastChild();
@@ -514,15 +514,13 @@ public final class JSDocInfoPrinter {
           }
         }
         sb.append("}");
-        break;
-      case VOID:
-        sb.append("void");
-        break;
-      case TYPEOF:
+      }
+      case VOID -> sb.append("void");
+      case TYPEOF -> {
         sb.append("typeof ");
         appendTypeNode(sb, typeNode.getFirstChild());
-        break;
-      case BLOCK:
+      }
+      case BLOCK -> {
         sb.append("<");
         Node last = typeNode.getLastChild();
         for (Node type = typeNode.getFirstChild(); type != null; type = type.getNext()) {
@@ -532,15 +530,14 @@ public final class JSDocInfoPrinter {
           }
         }
         sb.append(">");
-        break;
-      case STRINGLIT:
+      }
+      case STRINGLIT -> {
         sb.append(typeNode.getString());
         if (typeNode.hasChildren()) {
           appendTypeNode(sb, typeNode.getOnlyChild());
         }
-        break;
-      default:
-        throw new IllegalStateException("Unexpected typeNode: " + typeNode);
+      }
+      default -> throw new IllegalStateException("Unexpected typeNode: " + typeNode);
     }
   }
 

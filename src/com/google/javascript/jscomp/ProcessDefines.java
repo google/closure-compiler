@@ -516,17 +516,13 @@ class ProcessDefines implements CompilerPass {
       for (Name name : namesToCheck) {
         Node declValue = getConstantDeclValue(name.getDeclaration().getNode());
         switch (isValidDefineValue(declValue)) {
-          case TRUE:
+          case TRUE -> {
             for (Ref ref : name.getRefs()) {
               this.validDefineValueExpressions.add(ref.getNode());
             }
-            break;
-
-          case UNKNOWN:
-            namesToCheckAgain.add(name);
-            break;
-
-          default:
+          }
+          case UNKNOWN -> namesToCheckAgain.add(name);
+          default -> {}
         }
       }
 
@@ -695,60 +691,53 @@ class ProcessDefines implements CompilerPass {
     }
 
     switch (val.getToken()) {
-      case STRINGLIT:
-      case NUMBER:
-      case TRUE:
-      case FALSE:
+      case STRINGLIT, NUMBER, TRUE, FALSE -> {
         return Tri.TRUE;
-
         // Binary operators are only valid if both children are valid.
-      case AND:
-      case OR:
-      case COALESCE:
-      case ADD:
-      case BITAND:
-      case BITNOT:
-      case BITOR:
-      case BITXOR:
-      case DIV:
-      case EQ:
-      case EXPONENT:
-      case GE:
-      case GT:
-      case LE:
-      case LSH:
-      case LT:
-      case MOD:
-      case MUL:
-      case NE:
-      case RSH:
-      case SHEQ:
-      case SHNE:
-      case SUB:
-      case URSH:
+      }
+      case AND,
+          OR,
+          COALESCE,
+          ADD,
+          BITAND,
+          BITNOT,
+          BITOR,
+          BITXOR,
+          DIV,
+          EQ,
+          EXPONENT,
+          GE,
+          GT,
+          LE,
+          LSH,
+          LT,
+          MOD,
+          MUL,
+          NE,
+          RSH,
+          SHEQ,
+          SHNE,
+          SUB,
+          URSH -> {
         return isValidDefineValue(val.getFirstChild()).and(isValidDefineValue(val.getLastChild()));
-
-      case HOOK:
+      }
+      case HOOK -> {
         return isValidDefineValue(val.getFirstChild())
             .and(isValidDefineValue(val.getSecondChild()))
             .and(isValidDefineValue(val.getLastChild()));
-
         // Unary operators are valid if the child is valid.
-      case NOT:
-      case NEG:
-      case POS:
+      }
+      case NOT, NEG, POS -> {
         return isValidDefineValue(val.getFirstChild());
-
         // Names are valid if and only if they are defines themselves.
-      case NAME:
-      case GETPROP:
+      }
+      case NAME, GETPROP -> {
         if (val.isQualifiedName()) {
           return this.validDefineValueExpressions.contains(val) ? Tri.TRUE : Tri.UNKNOWN;
         }
-        break;
-
         // Allow goog.define('XYZ', <val>) calls if and only if <val> is valid.
-      case CALL:
+      }
+      case CALL -> {
         if (!isGoogDefineCall(val)) {
           return Tri.FALSE;
         }
@@ -757,8 +746,8 @@ class ProcessDefines implements CompilerPass {
           return Tri.TRUE;
         }
         return isValidDefineValue(val.getChildAtIndex(2));
-      default:
-        break;
+      }
+      default -> {}
     }
 
     return Tri.FALSE;

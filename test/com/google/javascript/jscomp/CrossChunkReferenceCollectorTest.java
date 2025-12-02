@@ -40,15 +40,6 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
   }
 
   @Override
-  protected int getNumRepetitions() {
-    // Default behavior for CompilerTestCase.test*() methods is to do the whole test twice,
-    // because passes that modify the AST need to be idempotent.
-    // Since CrossChunkReferenceCollector() just gathers information, it doesn't make sense to
-    // run it twice, and doing so just complicates debugging test cases.
-    return 1;
-  }
-
-  @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     ScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
     testedCollector = new CrossChunkReferenceCollector(compiler, scopeCreator);

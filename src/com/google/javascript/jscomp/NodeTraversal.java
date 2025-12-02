@@ -306,20 +306,20 @@ public class NodeTraversal {
     @Override
     public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case SCRIPT:
+        case SCRIPT -> {
           currentModule =
               moduleMetadataMap.getModulesByPath().get(t.getInput().getPath().toString());
           checkNotNull(currentModule);
           scopeRoot = n.hasChildren() && n.getFirstChild().isModuleBody() ? n.getFirstChild() : n;
           enterModule(currentModule, scopeRoot);
-          break;
-        case BLOCK:
+        }
+        case BLOCK -> {
           if (NodeUtil.isBundledGoogModuleScopeRoot(n)) {
             scopeRoot = n;
             inLoadModule = true;
           }
-          break;
-        case CALL:
+        }
+        case CALL -> {
           if (inLoadModule && GOOG_MODULE.matches(n.getFirstChild())) {
             ModuleMetadata newModule =
                 moduleMetadataMap.getModulesByGoogNamespace().get(n.getLastChild().getString());
@@ -331,9 +331,8 @@ public class NodeTraversal {
               enterModule(currentModule, scopeRoot);
             }
           }
-          break;
-        default:
-          break;
+        }
+        default -> {}
       }
       return shouldTraverse(t, n, currentModule, scopeRoot);
     }
@@ -359,13 +358,13 @@ public class NodeTraversal {
     @Override
     public final void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case SCRIPT:
+        case SCRIPT -> {
           checkNotNull(currentModule);
           exitModule(currentModule, scopeRoot);
           currentModule = null;
           scopeRoot = null;
-          break;
-        case BLOCK:
+        }
+        case BLOCK -> {
           if (NodeUtil.isBundledGoogModuleScopeRoot(n)) {
             checkNotNull(currentModule);
             exitModule(currentModule, scopeRoot);
@@ -375,9 +374,8 @@ public class NodeTraversal {
                 moduleMetadataMap.getModulesByPath().get(t.getInput().getPath().toString());
             checkNotNull(currentModule);
           }
-          break;
-        default:
-          break;
+        }
+        default -> {}
       }
 
       visit(t, n, currentModule, scopeRoot);
@@ -405,7 +403,7 @@ public class NodeTraversal {
 
     @Override
     public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      if (NodeUtil.isChangeScopeRoot(n) && t.getCompiler().hasScopeChanged(n)) {
+      if (ChangeTracker.isChangeScopeRoot(n) && t.getCompiler().hasScopeChanged(n)) {
         this.enterChangedScopeRoot(t.getCompiler(), n);
       }
       return true;
@@ -617,7 +615,7 @@ public class NodeTraversal {
     }
 
     switch (n.getToken()) {
-      case FUNCTION:
+      case FUNCTION -> {
         if (callback.shouldTraverse(this, n, null)) {
           pushScope(s);
 
@@ -634,8 +632,8 @@ public class NodeTraversal {
           popScope();
           callback.visit(this, n, null);
         }
-        break;
-      case CLASS:
+      }
+      case CLASS -> {
         if (callback.shouldTraverse(this, n, null)) {
           pushScope(s);
 
@@ -653,9 +651,8 @@ public class NodeTraversal {
           popScope();
           callback.visit(this, n, null);
         }
-        break;
-      case BLOCK:
-      case SWITCH_BODY:
+      }
+      case BLOCK, SWITCH_BODY -> {
         if (callback.shouldTraverse(this, n, null)) {
           pushScope(s);
 
@@ -665,8 +662,8 @@ public class NodeTraversal {
           popScope();
           callback.visit(this, n, null);
         }
-        break;
-      case MEMBER_FIELD_DEF:
+      }
+      case MEMBER_FIELD_DEF -> {
         pushScope(s);
         if (callback.shouldTraverse(this, n, null)) {
 
@@ -676,8 +673,8 @@ public class NodeTraversal {
           callback.visit(this, n, null);
         }
         popScope();
-        break;
-      case COMPUTED_FIELD_DEF:
+      }
+      case COMPUTED_FIELD_DEF -> {
         pushScope(s);
         if (callback.shouldTraverse(this, n, null)) {
 
@@ -686,11 +683,8 @@ public class NodeTraversal {
           callback.visit(this, n, null);
         }
         popScope();
-        break;
-      case FOR_IN:
-      case FOR_OF:
-      case FOR_AWAIT_OF:
-      case FOR:
+      }
+      case FOR_IN, FOR_OF, FOR_AWAIT_OF, FOR -> {
         if (callback.shouldTraverse(this, n, null)) {
           pushScope(s);
 
@@ -704,32 +698,21 @@ public class NodeTraversal {
           popScope();
           callback.visit(this, n, null);
         }
-        break;
-      default:
+      }
+      default -> {
         checkState(
             s.isGlobal() || s.isModuleScope(), "Expected global or module scope. Got: (%s)", s);
         traverseWithScope(n, s);
+      }
     }
   }
 
   /**
    * Traverses *just* the contents of provided scope nodes (and optionally scopes nested within
-   * them) but will fall back on traversing the entire AST from root if a null scope nodes list is
-   * provided.
-   *
-   * @param root If scopeNodes is null, this method will just traverse 'root' instead. If scopeNodes
-   *     is not null, this parameter is ignored.
+   * them)
    */
   public static void traverseScopeRoots(
-      AbstractCompiler compiler,
-      @Nullable Node root,
-      @Nullable List<Node> scopeNodes,
-      Callback cb,
-      boolean traverseNested) {
-    if (scopeNodes == null) {
-      NodeTraversal.traverse(compiler, root, cb);
-      return;
-    }
+      AbstractCompiler compiler, List<Node> scopeNodes, Callback cb, boolean traverseNested) {
 
     class TraverseScopeRootsCallback implements ScopedCallback {
       boolean insideScopeNode = false;
@@ -740,7 +723,7 @@ public class NodeTraversal {
         if (scopeNode == n) {
           insideScopeNode = true;
         }
-        return (traverseNested || scopeNode == n || !NodeUtil.isChangeScopeRoot(n))
+        return (traverseNested || scopeNode == n || !ChangeTracker.isChangeScopeRoot(n))
             && cb.shouldTraverse(t, n, parent);
       }
 
@@ -864,8 +847,8 @@ public class NodeTraversal {
     pushScope(n);
     currentNode = n;
     if (callback.shouldTraverse(this, n, parent)) {
-      currentNode = n;
       traverseChildren(n);
+      currentNode = n;
       callback.visit(this, n, parent);
     }
     popScope();
@@ -893,31 +876,34 @@ public class NodeTraversal {
   /** Traverses a branch. */
   private void traverseBranch(Node n, @Nullable Node parent) {
     switch (n.getToken()) {
-      case SCRIPT:
+      case SCRIPT -> {
         handleScript(n, parent);
         return;
-      case FUNCTION:
+      }
+      case FUNCTION -> {
         handleFunction(n, parent);
         return;
-      case MODULE_BODY:
+      }
+      case MODULE_BODY -> {
         handleModule(n, parent);
         return;
-      case CLASS:
+      }
+      case CLASS -> {
         handleClass(n, parent);
         return;
-      case CLASS_MEMBERS:
+      }
+      case CLASS_MEMBERS -> {
         handleClassMembers(n, parent);
         return;
-      case DEFAULT_VALUE:
-      case DESTRUCTURING_LHS:
+      }
+      case DEFAULT_VALUE, DESTRUCTURING_LHS -> {
         // TODO(nickreid): Handle ASSIGN with destructuring target.
         if (this.obeyDestructuringAndDefaultValueExecutionOrder) {
           handleDestructuringOrDefaultValue(n, parent);
           return;
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
 
     currentNode = n;
@@ -1071,7 +1057,7 @@ public class NodeTraversal {
       Node next = child.getNext(); // see traverseChildren
 
       switch (child.getToken()) {
-        case COMPUTED_PROP:
+        case COMPUTED_PROP -> {
           currentNode = n;
 
           if (callback.shouldTraverse(this, child, n)) {
@@ -1079,8 +1065,8 @@ public class NodeTraversal {
             currentNode = n;
             callback.visit(this, child, n);
           }
-          break;
-        case COMPUTED_FIELD_DEF:
+        }
+        case COMPUTED_FIELD_DEF -> {
           currentNode = n;
 
           Node previousHoistScopeRoot = currentHoistScopeRoot;
@@ -1097,19 +1083,11 @@ public class NodeTraversal {
 
           popScope();
           currentHoistScopeRoot = previousHoistScopeRoot;
-          break;
-        case MEMBER_FIELD_DEF:
-          handleMemberFieldDef(n, child);
-          break;
-        case BLOCK:
-        case MEMBER_FUNCTION_DEF:
-        case MEMBER_VARIABLE_DEF:
-        case GETTER_DEF:
-        case SETTER_DEF:
-          traverseBranch(child, n);
-          break;
-        default:
-          throw new IllegalStateException("Invalid class member: " + child.getToken());
+        }
+        case MEMBER_FIELD_DEF -> handleMemberFieldDef(n, child);
+        case BLOCK, MEMBER_FUNCTION_DEF, MEMBER_VARIABLE_DEF, GETTER_DEF, SETTER_DEF ->
+            traverseBranch(child, n);
+        default -> throw new IllegalStateException("Invalid class member: " + child.getToken());
       }
       child = next;
     }
@@ -1291,24 +1269,24 @@ public class NodeTraversal {
     for (int i = scopes.size() - 1; i >= 0; i--) {
       Node rootNode = getNodeRootFromScopeObj(scopes.get(i));
       switch (rootNode.getToken()) {
-        case FUNCTION:
+        case FUNCTION -> {
           if (rootNode.isArrowFunction()) {
             continue;
           }
           return rootNode;
-        case MEMBER_FIELD_DEF:
-        case COMPUTED_FIELD_DEF:
-        case CLASS:
-        case MODULE_BODY:
-        case ROOT:
+        }
+        case MEMBER_FIELD_DEF, COMPUTED_FIELD_DEF, CLASS, MODULE_BODY, ROOT -> {
           return rootNode;
-        case BLOCK:
+        }
+        case BLOCK -> {
           if (NodeUtil.isClassStaticBlock(rootNode)) {
             return rootNode;
           }
           continue;
-        default:
+        }
+        default -> {
           continue;
+        }
       }
     }
     return null;
@@ -1377,7 +1355,7 @@ public class NodeTraversal {
   public void reportCodeChange() {
     Node changeScope = this.currentChangeScope;
     checkNotNull(changeScope);
-    checkState(NodeUtil.isChangeScopeRoot(changeScope), changeScope);
+    checkState(ChangeTracker.isChangeScopeRoot(changeScope), changeScope);
     compiler.reportChangeToChangeScope(changeScope);
   }
 
@@ -1425,7 +1403,7 @@ public class NodeTraversal {
     // "null" is the global hoist scope root, but we want the current script if any
     // for the "change scope"
     Node changeScope =
-        NodeUtil.getEnclosingChangeScopeRoot(
+        ChangeTracker.getEnclosingChangeScopeRoot(
             hoistScopeRoot != null ? hoistScopeRoot : traversalRoot);
     setChangeScope(changeScope);
 

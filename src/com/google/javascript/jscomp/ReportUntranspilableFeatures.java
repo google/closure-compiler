@@ -46,6 +46,9 @@ public final class ReportUntranspilableFeatures extends AbstractPeepholeTranspil
           "Cannot convert feature \"{0}\" to targeted output language. Feature requires at minimum"
               + " {1}.{2}");
 
+  private static final FeatureSet UNTRANSPILABLE_ES5_FEATURES =
+      FeatureSet.BARE_MINIMUM.with(Feature.GETTER, Feature.SETTER);
+
   private static final FeatureSet UNTRANSPILABLE_2018_FEATURES =
       FeatureSet.BARE_MINIMUM.with(
           Feature.REGEXP_FLAG_S,
@@ -69,6 +72,7 @@ public final class ReportUntranspilableFeatures extends AbstractPeepholeTranspil
 
   private static final FeatureSet ALL_UNTRANSPILABLE_FEATURES =
       FeatureSet.BARE_MINIMUM
+          .union(UNTRANSPILABLE_ES5_FEATURES)
           .union(UNTRANSPILABLE_2018_FEATURES)
           .union(UNTRANSPILABLE_2019_FEATURES)
           .union(UNTRANSPILABLE_2022_FEATURES)
@@ -149,6 +153,18 @@ public final class ReportUntranspilableFeatures extends AbstractPeepholeTranspil
           }
           break;
         }
+
+      case GETTER_DEF:
+        if (untranspilableFeaturesToRemove.contains(Feature.GETTER)) {
+          reportUntranspilable(Feature.GETTER, root);
+        }
+        break;
+
+      case SETTER_DEF:
+        if (untranspilableFeaturesToRemove.contains(Feature.SETTER)) {
+          reportUntranspilable(Feature.SETTER, root);
+        }
+        break;
       default:
         break;
     }

@@ -15,7 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
@@ -28,24 +28,18 @@ import com.google.javascript.rhino.Node;
  * type checking so the type checking code can add type information to the injected JavaScript for
  * checking and optimization purposes.
  *
- * <p>This class also reports an error if it finds getters or setters are used and the language
- * output level is too low to support them. TODO(bradfordcsmith): The getter/setter check should
- * probably be done separately in an earlier pass that only runs when the output language level is
- * ES3 and the input language level is ES5 or greater.
- *
  * <p>TODO(b/120486392): consider merging this pass with {@link InjectRuntimeLibraries} and {@link
  * RewritePolyfills}.
  */
-public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrderCallback
-    implements CompilerPass {
+public final class InjectTranspilationRuntimeLibraries implements CompilerPass {
   private final AbstractCompiler compiler;
-  private final boolean getterSetterSupported;
+
+  private final RuntimeJsLibManager runtimeLibs;
   private boolean injectedClassExtendsLibraries;
 
   public InjectTranspilationRuntimeLibraries(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.getterSetterSupported =
-        !FeatureSet.ES3.contains(compiler.getOptions().getOutputFeatureSet());
+    this.runtimeLibs = compiler.getRuntimeJsLibManager();
     this.injectedClassExtendsLibraries = false;
   }
 
@@ -58,9 +52,10 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
 
     FeatureSet outputFeatures = compiler.getOptions().getOutputFeatureSet();
 
-    // Check for references to global `Symbol`, getters/setters, and class `extends` clauses
+    // Check for references to class `extends` clauses
     if (!outputFeatures.contains(used)) {
-      NodeTraversal.traverse(compiler, root, this);
+      NodeUtil.visitPostOrder(
+          root, this::checkForClassExtends, (unused) -> !this.injectedClassExtendsLibraries);
     }
 
     FeatureSet mustBeCompiledAway = used.without(outputFeatures);
@@ -69,7 +64,8 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
     // functions to be have JSType applied to it by the type inferrence.
 
     if (mustBeCompiledAway.contains(Feature.TEMPLATE_LITERALS)) {
-      TranspilationUtil.preloadTranspilationRuntimeFunction(compiler, "createtemplatetagfirstarg");
+      runtimeLibs.injectLibForField("$jscomp.createTemplateTagFirstArg");
+      runtimeLibs.injectLibForField("$jscomp.createTemplateTagFirstArgWithRaw");
     }
 
     if (mustBeCompiledAway.contains(Feature.FOR_OF)
@@ -78,18 +74,18 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
       // `makeIterator` isn't needed directly for `OBJECT_PATTERN_REST`, but when we transpile
       // a destructuring case that contains it, we transpile the entire destructured assignment,
       // which may also include `ARRAY_DESTRUCTURING`.
-      TranspilationUtil.preloadTranspilationRuntimeFunction(compiler, "makeIterator");
+      runtimeLibs.injectLibForField("$jscomp.makeIterator");
     }
 
     if (mustBeCompiledAway.contains(Feature.ARRAY_PATTERN_REST)) {
-      TranspilationUtil.preloadTranspilationRuntimeFunction(compiler, "arrayFromIterator");
+      runtimeLibs.injectLibForField("$jscomp.arrayFromIterator");
     }
 
     if (mustBeCompiledAway.contains(Feature.SPREAD_EXPRESSIONS)) {
       // We must automatically generate the default constructor for descendent classes,
       // and those must call super(...arguments), so we end up injecting our own spread
       // expressions for such cases.
-      TranspilationUtil.preloadTranspilationRuntimeFunction(compiler, "arrayFromIterable");
+      runtimeLibs.injectLibForField("$jscomp.arrayFromIterable");
     }
 
     if ((mustBeCompiledAway.contains(Feature.OBJECT_LITERALS_WITH_SPREAD)
@@ -98,31 +94,48 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
       // We need `Object.assign` to transpile `obj = {a, ...rest};` or `const {a, ...rest} = obj;`,
       // but the output language level doesn't indicate that it is guaranteed to be present, so
       // we'll include our polyfill.
-      compiler.ensureLibraryInjected("es6/object/assign", /* force= */ false);
+      // Use "ensureLibraryInjected" instead of "injectLibForField" because we're injecting the
+      // polyfill
+      // for Object.assign, which is thus not an actual $jscomp.* method we can lookup.
+      runtimeLibs.ensureLibraryInjected("es6/object/assign", /* force= */ false);
     }
 
     if (mustBeCompiledAway.contains(Feature.CLASS_GETTER_SETTER)) {
-      compiler.ensureLibraryInjected("util/global", /* force= */ false);
+      runtimeLibs.injectLibForField("$jscomp.global");
     }
 
     if (mustBeCompiledAway.contains(Feature.GENERATORS)) {
-      compiler.ensureLibraryInjected("es6/generator_engine", /* force= */ false);
+      runtimeLibs.injectLibForField("$jscomp.generator.createGenerator");
+      runtimeLibs.injectLibForField("$jscomp.generator.Context");
     }
 
     if (mustBeCompiledAway.contains(Feature.ASYNC_FUNCTIONS)) {
-      compiler.ensureLibraryInjected("es6/execute_async_generator", /* force= */ false);
+      runtimeLibs.injectLibForField("$jscomp.asyncExecutePromiseGeneratorFunction");
+      if (!outputFeatures.contains(Feature.GENERATORS)) {
+        runtimeLibs.injectLibForField("$jscomp.asyncExecutePromiseGeneratorProgram");
+        runtimeLibs.injectLibForField("$jscomp.generator.Context");
+      }
     }
 
     if (mustBeCompiledAway.contains(Feature.ASYNC_GENERATORS)) {
-      compiler.ensureLibraryInjected("es6/async_generator_wrapper", /* force= */ false);
+      runtimeLibs.injectLibForField("$jscomp.asyncExecutePromiseGeneratorFunction");
+      runtimeLibs.injectLibForField("$jscomp.AsyncGeneratorWrapper");
+      runtimeLibs.injectLibForField("$jscomp.AsyncGeneratorWrapper$ActionRecord");
+      runtimeLibs.injectLibForField("$jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE");
+      runtimeLibs.injectLibForField("$jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE");
+      runtimeLibs.injectLibForField("$jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_STAR");
+      if (!outputFeatures.contains(Feature.GENERATORS)) {
+        runtimeLibs.injectLibForField("$jscomp.asyncExecutePromiseGeneratorProgram");
+        runtimeLibs.injectLibForField("$jscomp.generator.Context");
+      }
     }
 
     if (mustBeCompiledAway.contains(Feature.FOR_AWAIT_OF)) {
-      compiler.ensureLibraryInjected("es6/util/makeasynciterator", /* force= */ false);
+      runtimeLibs.injectLibForField("$jscomp.makeAsyncIterator");
     }
 
     if (mustBeCompiledAway.contains(Feature.REST_PARAMETERS)) {
-      compiler.ensureLibraryInjected("es6/util/restarguments", /* force= */ false);
+      runtimeLibs.injectLibForField("$jscomp.getRestArguments");
     }
 
     if (compiler.getOptions().getInstrumentAsyncContext()
@@ -132,7 +145,7 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
         && (outputFeatures.contains(Feature.ASYNC_FUNCTIONS)
             || used.contains(Feature.GENERATORS)
             || used.contains(Feature.ASYNC_GENERATORS))) {
-      compiler.ensureLibraryInjected("es6/asynccontext/runtime", /* force= */ false);
+      runtimeLibs.injectLibForField("$jscomp.asyncContextStart");
     }
   }
 
@@ -141,57 +154,22 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
     return features != null ? features : FeatureSet.ES3;
   }
 
-  @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getToken()) {
-      case GETPROP:
-        if (!n.isFromExterns()) {
-          visitGetprop(t, n);
-        }
-        break;
-
-        // TODO(johnlenz): this check doesn't belong here.
-      case GETTER_DEF:
-      case SETTER_DEF:
-        if (!getterSetterSupported) {
-          TranspilationUtil.cannotConvert(
-              compiler, n, "ES5 getters/setters (consider using --language_out=ES5)");
-        }
-        break;
-
-      case CLASS:
-        // This is technically an optimization - we could just always inject these when we see
-        // Feature.CLASSES. That's fine for real code, but just makes some unit testing
-        // harder because more runtime libraries are injected.
-        Node superclass = n.getSecondChild();
-        if (!injectedClassExtendsLibraries && !superclass.isEmpty()) {
-          TranspilationUtil.preloadTranspilationRuntimeFunction(compiler, "construct");
-          TranspilationUtil.preloadTranspilationRuntimeFunction(compiler, "inherits");
-          // We must automatically generate the default constructor for descendent classes,
-          // and those must call super(...arguments), so we end up injecting our own spread
-          // expressions for such cases.
-          TranspilationUtil.preloadTranspilationRuntimeFunction(compiler, "arrayFromIterable");
-          injectedClassExtendsLibraries = true;
-        }
-        break;
-      default:
-        break;
+  private void checkForClassExtends(Node n) {
+    if (!n.isClass()) {
+      return;
     }
-  }
-
-  /** @return Whether {@code n} is a reference to the global "Symbol" function. */
-  private boolean isGlobalSymbol(NodeTraversal t, Node n) {
-    if (!n.matchesName("Symbol")) {
-      return false;
-    }
-    Var var = t.getScope().getVar("Symbol");
-    return var == null || var.isGlobal();
-  }
-
-  private void visitGetprop(NodeTraversal t, Node n) {
-    Node receiverNode = n.getFirstChild();
-    if (isGlobalSymbol(t, receiverNode)) {
-      compiler.ensureLibraryInjected("es6/symbol", false);
+    // This is technically an optimization - we could just always inject these when we see
+    // Feature.CLASSES. That's fine for real code, but just makes some unit testing
+    // harder because more runtime libraries are injected.
+    Node superclass = n.getSecondChild();
+    if (!injectedClassExtendsLibraries && !superclass.isEmpty()) {
+      runtimeLibs.injectLibForField("$jscomp.construct");
+      runtimeLibs.injectLibForField("$jscomp.inherits");
+      // We must automatically generate the default constructor for descendent classes,
+      // and those must call super(...arguments), so we end up injecting our own spread
+      // expressions for such cases.
+      runtimeLibs.injectLibForField("$jscomp.arrayFromIterable");
+      injectedClassExtendsLibraries = true;
     }
   }
 }

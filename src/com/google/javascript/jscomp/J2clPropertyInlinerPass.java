@@ -322,18 +322,18 @@ public class J2clPropertyInlinerPass implements CompilerPass {
               continue;
             }
             switch (innerKey.getString()) {
-              case "get":
+              case "get" -> {
                 if (matchesJ2clGetKeySignature(classNameString, innerKey)) {
                   getKey = innerKey;
                 }
-                break;
-              case "set":
+              }
+              case "set" -> {
                 hasSetter = true;
                 if (matchesJ2clSetKeySignature(classNameString, innerKey)) {
                   setKey = innerKey;
                 }
-                break;
-              default: // fall out
+              }
+              default -> {}
             }
           }
           if (getKey != null && (!hasSetter || setKey != null)) {
@@ -359,13 +359,9 @@ public class J2clPropertyInlinerPass implements CompilerPass {
             continue;
           }
           switch (memberFunction.getToken()) {
-            case GETTER_DEF:
-              getterDefByName.put(memberFunction.getString(), memberFunction);
-              break;
-            case SETTER_DEF:
-              setterDefByName.put(memberFunction.getString(), memberFunction);
-              break;
-            default: // fall out
+            case GETTER_DEF -> getterDefByName.put(memberFunction.getString(), memberFunction);
+            case SETTER_DEF -> setterDefByName.put(memberFunction.getString(), memberFunction);
+            default -> {}
           }
         }
 

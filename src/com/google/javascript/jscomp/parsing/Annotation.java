@@ -33,7 +33,7 @@ enum Annotation {
   DEPRECATED,
   DESC,
   DICT,
-  REQUIRE_INLINING,
+  ENCOURAGE_INLINING,
   ENHANCE,
   ENUM,
   EXTENDS,
@@ -86,6 +86,7 @@ enum Annotation {
   PROVIDE_ALREADY_PROVIDED,
   PUBLIC,
   PURE_OR_BREAK_MY_CODE,
+  REQUIRE_INLINING,
   RETURN,
   SASS_GENERATED_CSS_TS,
   SEE,
@@ -127,6 +128,7 @@ enum Annotation {
           .put("desc", Annotation.DESC)
           .put("dict", Annotation.DICT)
           .put("requireInlining", Annotation.REQUIRE_INLINING)
+          .put("encourageInlining", Annotation.ENCOURAGE_INLINING)
           .put("enum", Annotation.ENUM)
           .put("enhance", Annotation.ENHANCE)
           .put("export", Annotation.EXPORT)

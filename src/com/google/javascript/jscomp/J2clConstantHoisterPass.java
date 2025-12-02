@@ -120,7 +120,7 @@ public class J2clConstantHoisterPass implements CompilerPass {
     Node declarationInClass = topLevelDeclaration.getFirstChild();
     Node declarationAssignedValue = declarationInClass.getFirstChild();
 
-    Node clinitChangeScope = NodeUtil.getEnclosingChangeScopeRoot(clinitAssignment);
+    Node clinitChangeScope = ChangeTracker.getEnclosingChangeScopeRoot(clinitAssignment);
     // Remove the clinit initialization
     NodeUtil.removeChild(clinitAssignment.getParent(), clinitAssignment);
 

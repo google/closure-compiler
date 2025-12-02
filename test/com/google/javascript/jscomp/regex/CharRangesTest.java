@@ -53,7 +53,7 @@ public final class CharRangesTest {
       // Check all bits including past the min/max bit
       for (int i = 0; i < 0x5000; ++i) {
         if (bs.get(i) != sbs.contains(i)) {
-          assertWithMessage("sbs=" + sbs + ", bs=" + bs + ", difference at bit " + i).fail();
+          assertWithMessage("sbs=%s, bs=%s, difference at bit %s", sbs, bs, i).fail();
         }
       }
     }
@@ -127,7 +127,7 @@ public final class CharRangesTest {
     new EqualsTester().addEqualityGroup(sbs1, sbs2).testEquals();
 
     for (int i = -10; i < 20; ++i) {
-      assertWithMessage("" + i).that(sbs2.contains(i)).isEqualTo(sbs1.contains(i));
+      assertWithMessage("%s", i).that(sbs2.contains(i)).isEqualTo(sbs1.contains(i));
     }
   }
 

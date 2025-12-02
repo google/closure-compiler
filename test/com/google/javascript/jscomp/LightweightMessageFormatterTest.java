@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertThrows;
 
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.LightweightMessageFormatter.LineNumberingFormatter;
@@ -228,8 +227,12 @@ public final class LightweightMessageFormatterTest {
     n.setSourceFileForTesting("javascript/complex.js");
     JSError error = JSError.make(n, FOO_TYPE);
     LightweightMessageFormatter formatter = formatter("    if (foobar) {", SourceExcerpt.FULL, 5);
-    Exception ex = assertThrows(Exception.class, () -> formatter.formatError(error));
-    assertThat(ex).hasMessageThat().contains("unexpected start character for error");
+    assertThat(formatter.formatError(error))
+        .contains(
+            """
+            javascript/complex.js:5:800: ERROR - [TEST_FOO] error description here
+            Source excerpt could not be formatted. This may indicate a bug in the compiler.\
+            """);
   }
 
   @Test
@@ -248,8 +251,12 @@ public final class LightweightMessageFormatterTest {
             SourceExcerpt.FULL,
             5);
 
-    Exception ex = assertThrows(Exception.class, () -> formatter.formatError(error));
-    assertThat(ex).hasMessageThat().contains("unexpected start character for error");
+    assertThat(formatter.formatError(error))
+        .contains(
+            """
+            javascript/complex.js: ERROR - [TEST_FOO] error description here
+            Source excerpt could not be formatted. This may indicate a bug in the compiler.\
+            """);
   }
 
   @Test

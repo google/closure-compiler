@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.BiMap;
@@ -22,27 +23,30 @@ import com.google.common.collect.HashBiMap;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.rhino.Node;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * A Class to assist in AST change tracking verification.  To validate a "snapshot" is taken
  * before and "checkRecordedChanges" at the desired check point.
  */
 public class ChangeVerifier {
-  private final AbstractCompiler compiler;
+  private final ChangeTracker changeTracker;
   private final BiMap<Node, Node> clonesByCurrent = HashBiMap.create();
   private int snapshotChange;
 
   ChangeVerifier(AbstractCompiler compiler) {
-    this.compiler = compiler;
+    this.changeTracker = compiler.getChangeTracker();
   }
 
   @CanIgnoreReturnValue
   ChangeVerifier snapshot(Node root) {
     // remove any existing snapshot data.
     clonesByCurrent.clear();
-    snapshotChange = compiler.getChangeStamp();
+    snapshotChange = changeTracker.getChangeStamp();
 
     Node snapshot = root.cloneTree();
     associateClones(root, snapshot);
@@ -63,7 +67,7 @@ public class ChangeVerifier {
    */
   private void associateClones(Node n, Node snapshot) {
     // TODO(johnlenz): determine if MODULE_BODY is useful here.
-    if (n.isRoot() || NodeUtil.isChangeScopeRoot(n)) {
+    if (n.isRoot() || ChangeTracker.isChangeScopeRoot(n)) {
       clonesByCurrent.put(n, snapshot);
     }
 
@@ -95,7 +99,7 @@ public class ChangeVerifier {
         new Visitor() {
           @Override
           public void visit(Node oldNode) {
-            if (NodeUtil.isChangeScopeRoot(oldNode)) {
+            if (ChangeTracker.isChangeScopeRoot(oldNode)) {
               snapshotScopeNodes.add(oldNode);
             }
             Node shadow = oldNode.getClosureUnawareShadow();
@@ -112,7 +116,7 @@ public class ChangeVerifier {
           public void visit(Node n) {
             if (n.isRoot()) {
               verifyRoot(n);
-            } else if (NodeUtil.isChangeScopeRoot(n)) {
+            } else if (ChangeTracker.isChangeScopeRoot(n)) {
               Node clone = clonesByCurrent.get(n);
               // Remove any scope nodes that still exist.
               snapshotScopeNodes.remove(clone);
@@ -180,15 +184,30 @@ public class ChangeVerifier {
     if (n.isRoot()) {
       return;
     }
+    EqualsResult result = getInequivalenceReasonExcludingFunctions(n, snapshot);
     if (n.getChangeTime() > snapshot.getChangeTime()) {
-      if (equalsExcludingFunctions(n, snapshot)) {
+      // If the current node is marked as changed (changeTime > snapshot.getChangeTime)
+      // but is actually equal to the snapshot, that's an error.
+      if (result.equals()) {
         throw new IllegalStateException(
             passNameMsg + "unchanged scope marked as changed: " + getNameForNode(n));
       }
     } else {
-      if (!equalsExcludingFunctions(n, snapshot)) {
+      // If the current node is NOT marked as changed (changeTime <= snapshot.getChangeTime)
+      // but is actually different from the snapshot, that's an error.
+      if (!result.equals()) {
         throw new IllegalStateException(
-            passNameMsg + "changed scope not marked as changed: " + getNameForNode(n));
+            String.format(
+                """
+                "%schanged scope not marked as changed: %s.
+                %s
+                Ancestor nodes:
+                %s
+                """,
+                passNameMsg,
+                getNameForNode(n),
+                result.errorMessage.get(),
+                path(n, result.errorNode())));
       }
     }
   }
@@ -196,43 +215,79 @@ public class ChangeVerifier {
   String getNameForNode(Node n) {
     String sourceName = NodeUtil.getSourceName(n);
     switch (n.getToken()) {
-      case SCRIPT:
+      case SCRIPT -> {
         return "SCRIPT: " + sourceName;
-      case FUNCTION:
+      }
+      case FUNCTION -> {
         String fnName = NodeUtil.getNearestFunctionName(n);
         if (fnName == null) {
           fnName = "anonymous@" + n.getLineno() + ":" + n.getCharno();
         }
         return "FUNCTION: " + fnName + " in " + sourceName;
-      default:
-        throw new IllegalStateException("unexpected Node type");
+      }
+      default -> throw new IllegalStateException("unexpected Node type");
+    }
+  }
+
+  /** Returns the path from the ancestor to the child node. */
+  private String path(Node ancestor, Node child) {
+    ArrayList<String> childToAncestor = new ArrayList<>();
+    for (Node current = child; current != ancestor; current = current.getParent()) {
+      childToAncestor.add(current.toString());
+    }
+    childToAncestor.add(ancestor.toString());
+    Collections.reverse(childToAncestor);
+    StringBuilder result = new StringBuilder();
+    for (int i = 0; i < childToAncestor.size(); i++) {
+      result.repeat(' ', i * 2); // indent
+      result.append(childToAncestor.get(i));
+      result.append("\n");
+    }
+    return result.toString();
+  }
+
+  private record EqualsResult(boolean equals, Node errorNode, Supplier<String> errorMessage) {
+    static EqualsResult equal() {
+      return new EqualsResult(true, null, () -> null);
+    }
+
+    static EqualsResult notEqual(Node errorNode, String error, Object after, Object before) {
+      return new EqualsResult(
+          false,
+          errorNode,
+          () ->
+              String.format(
+                  """
+                  %s
+                  Before: %s
+                  After:  %s
+                  """,
+                  error, before, after));
     }
   }
 
   /**
-   * @return Whether the two node are equivalent while ignoring differences any descendant functions
-   *     differences.
+   * Checks whether the two given nodes are equivalent, while ignoring differences in descendant
+   * functions.
    */
-  private static boolean equalsExcludingFunctions(Node thisNode, Node thatNode) {
-    if (thisNode == null || thatNode == null) {
-      return thisNode == null && thatNode == null;
+  private static EqualsResult getInequivalenceReasonExcludingFunctions(
+      Node thisNode, Node thatNode) {
+    checkNotNull(thisNode);
+    checkNotNull(thatNode);
+    if (thisNode.getChildCount() != thatNode.getChildCount()) {
+      return EqualsResult.notEqual(
+          thisNode,
+          "differing child count",
+          thisNode + ": " + thisNode.getChildCount(),
+          thatNode + ": " + thatNode.getChildCount());
     }
     if (!thisNode.isEquivalentWithSideEffectsToShallow(thatNode)) {
-      return false;
+      return EqualsResult.notEqual(thisNode, "shallow inequivalence", thisNode, thatNode);
     }
-    if (thisNode.getChildCount() != thatNode.getChildCount()) {
-      return false;
-    }
-
     if (thisNode.isFunction() && thatNode.isFunction()) {
       if (NodeUtil.isFunctionDeclaration(thisNode) != NodeUtil.isFunctionDeclaration(thatNode)) {
-        return false;
-      }
-    }
-
-    if (thisNode.hasParent() && thisNode.getParent().isParamList()) {
-      if (thisNode.isUnusedParameter() != thatNode.isUnusedParameter()) {
-        return false;
+        return EqualsResult.notEqual(
+            thisNode, "mismatched isFunctionDeclaration", thisNode, thatNode);
       }
     }
 
@@ -243,7 +298,7 @@ public class ChangeVerifier {
         // Don't compare function expression name, parameters or bodies.
         // But do check that that the node is there.
         if (thatChild.getToken() != thisChild.getToken()) {
-          return false;
+          return EqualsResult.notEqual(thisNode, "different tokens", thisChild, thatChild);
         }
         // Only compare function names for function declarations (not function expressions)
         // as they change the outer scope definition.
@@ -251,17 +306,19 @@ public class ChangeVerifier {
           String thisName = thisChild.getFirstChild().getString();
           String thatName = thatChild.getFirstChild().getString();
           if (!thisName.equals(thatName)) {
-            return false;
+            return EqualsResult.notEqual(thisNode, "function name changed", thisName, thatName);
           }
         }
-      } else if (!equalsExcludingFunctions(thisChild, thatChild)) {
-        return false;
+      } else {
+        EqualsResult result = getInequivalenceReasonExcludingFunctions(thisChild, thatChild);
+        if (!result.equals()) {
+          return result;
+        }
       }
       thisChild = thisChild.getNext();
       thatChild = thatChild.getNext();
     }
 
-    return true;
+    return EqualsResult.equal();
   }
 }
-

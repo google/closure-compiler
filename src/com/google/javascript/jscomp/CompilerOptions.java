@@ -37,11 +37,11 @@ import com.google.javascript.jscomp.annotations.LegacySetFeatureSetCaller;
 import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager.RuntimeLibraryMode;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.SourcePosition;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -321,12 +321,11 @@ public class CompilerOptions {
   public void setIncrementalChecks(IncrementalCheckMode value) {
     incrementalCheckMode = value;
     switch (value) {
-      case OFF:
-        break;
-      case GENERATE_IJS:
+      case OFF -> {}
+      case GENERATE_IJS -> {
         setPreserveTypeAnnotations(true);
         setOutputJs(OutputJs.NORMAL);
-        break;
+      }
     }
   }
 
@@ -838,6 +837,9 @@ public class CompilerOptions {
   /** List of properties that we report invalidation errors for. */
   private ImmutableSet<String> propertiesThatMustDisambiguate;
 
+  /** Whether to enforce that the @requireInlining annotation works. */
+  private Tri validateRequireInliningAnnotation;
+
   /** Rewrite CommonJS modules so that they can be concatenated together. */
   private boolean processCommonJSModules = false;
 
@@ -879,7 +881,7 @@ public class CompilerOptions {
   List<String> forceLibraryInjection = ImmutableList.of();
 
   /** Runtime libraries to never inject. */
-  boolean preventLibraryInjection = false;
+  private RuntimeLibraryMode runtimeLibraryMode = RuntimeLibraryMode.INJECT;
 
   boolean assumeForwardDeclaredForMissingTypes = false;
 
@@ -1163,9 +1165,6 @@ public class CompilerOptions {
     return assumeStaticInheritanceIsNotUsed;
   }
 
-  /** Data holder Alias Transformation information accumulated during a compile. */
-  private transient AliasTransformationHandler aliasHandler;
-
   /** Handler for compiler warnings and errors. */
   transient @Nullable ErrorHandler errorHandler;
 
@@ -1388,6 +1387,7 @@ public class CompilerOptions {
     outputJsStringUsage = false;
     convertToDottedProperties = false;
     rewriteFunctionExpressions = false;
+    validateRequireInliningAnnotation = Tri.UNKNOWN;
 
     // Renaming
     variableRenaming = VariableRenamingPolicy.OFF;
@@ -1454,7 +1454,6 @@ public class CompilerOptions {
     chunkOutputType = ChunkOutputType.GLOBAL_NAMESPACE;
 
     // Debugging
-    aliasHandler = NULL_ALIAS_TRANSFORMATION_HANDLER;
     errorHandler = null;
     printSourceAfterEachPass = false;
     strictMessageReplacement = false;
@@ -1515,7 +1514,7 @@ public class CompilerOptions {
 
   /** Skip all possible passes, to make the compiler as fast as possible. */
   public void skipAllCompilerPasses() {
-    skipNonTranspilationPasses = true;
+    setSkipNonTranspilationPasses(true);
   }
 
   /** Whether the warnings guard in this Options object enables the given group of warnings. */
@@ -1638,18 +1637,18 @@ public class CompilerOptions {
   /** Set the variable inlining policy for the compiler. */
   public void setInlineVariables(Reach reach) {
     switch (reach) {
-      case ALL:
+      case ALL -> {
         this.inlineVariables = true;
         this.inlineLocalVariables = true;
-        break;
-      case LOCAL_ONLY:
+      }
+      case LOCAL_ONLY -> {
         this.inlineVariables = false;
         this.inlineLocalVariables = true;
-        break;
-      case NONE:
+      }
+      case NONE -> {
         this.inlineVariables = false;
         this.inlineLocalVariables = false;
-        break;
+      }
     }
   }
 
@@ -1665,18 +1664,18 @@ public class CompilerOptions {
   /** Set the variable removal policy for the compiler. */
   public void setRemoveUnusedVariables(Reach reach) {
     switch (reach) {
-      case ALL:
+      case ALL -> {
         this.removeUnusedVars = true;
         this.removeUnusedLocalVars = true;
-        break;
-      case LOCAL_ONLY:
+      }
+      case LOCAL_ONLY -> {
         this.removeUnusedVars = false;
         this.removeUnusedLocalVars = true;
-        break;
-      case NONE:
+      }
+      case NONE -> {
         this.removeUnusedVars = false;
         this.removeUnusedLocalVars = false;
-        break;
+      }
     }
   }
 
@@ -1945,14 +1944,6 @@ public class CompilerOptions {
     return environment;
   }
 
-  public void setAliasTransformationHandler(AliasTransformationHandler changes) {
-    this.aliasHandler = changes;
-  }
-
-  public AliasTransformationHandler getAliasTransformationHandler() {
-    return this.aliasHandler;
-  }
-
   /**
    * Set a custom handler for warnings and errors.
    *
@@ -2028,6 +2019,22 @@ public class CompilerOptions {
 
   public ImmutableSet<String> getPropertiesThatMustDisambiguate() {
     return this.propertiesThatMustDisambiguate;
+  }
+
+  /**
+   * Ensures that functions labelled with `@requireInlining` JSDoc are, in fact, actually inlined by
+   * the optimizer.
+   *
+   * <p>This may only be set when using advanced optimizations, as otherwise the compiler is unable
+   * to do most inlining. The compiler will throw an exception during initialization if this is set
+   * to true, but advanced optimizations are not being used.
+   */
+  public void setValidateRequiredInlinings(boolean validateRequireInliningAnnotation) {
+    this.validateRequireInliningAnnotation = Tri.forBoolean(validateRequireInliningAnnotation);
+  }
+
+  Tri getShouldValidateRequiredInlinings() {
+    return validateRequireInliningAnnotation;
   }
 
   public void setPreserveDetailedSourceInfo(boolean preserveDetailedSourceInfo) {
@@ -2495,6 +2502,33 @@ public class CompilerOptions {
     this.replaceStringsPlaceholderToken = replaceStringsPlaceholderToken;
   }
 
+  /**
+   * How @closureUnaware code blocks should be handled.
+   *
+   * <p>PASS_THROUGH: they are entirely hidden from the compiler, as if they were an evaled string.
+   *
+   * <p>SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION: This is *experimental* - we want to support some
+   * minimal transpilation & safe optimizations. TODO: b/421971366 - implement this flag.
+   */
+  public enum ClosureUnawareMode {
+    PASS_THROUGH,
+    SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION
+  }
+
+  private ClosureUnawareMode closureUnawareMode = ClosureUnawareMode.PASS_THROUGH;
+
+  /**
+   * Opts into experimental support for transpiling/optimizing @closureUnaware code blocks, rather
+   * than just passing them through compilation unchanged.
+   */
+  public void setClosureUnawareMode(ClosureUnawareMode mode) {
+    this.closureUnawareMode = mode;
+  }
+
+  ClosureUnawareMode getClosureUnawareMode() {
+    return this.closureUnawareMode;
+  }
+
   public void setPrettyPrint(boolean prettyPrint) {
     this.prettyPrint = prettyPrint;
   }
@@ -2715,7 +2749,16 @@ public class CompilerOptions {
 
   /** Sets the set of libraries to never inject, even if required. */
   public void setPreventLibraryInjection(boolean preventLibraryInjection) {
-    this.preventLibraryInjection = preventLibraryInjection;
+    this.runtimeLibraryMode =
+        preventLibraryInjection ? RuntimeLibraryMode.NO_OP : RuntimeLibraryMode.INJECT;
+  }
+
+  public void setRuntimeLibraryMode(RuntimeLibraryMode runtimeLibraryMode) {
+    this.runtimeLibraryMode = runtimeLibraryMode;
+  }
+
+  RuntimeLibraryMode getRuntimeLibraryMode() {
+    return this.runtimeLibraryMode;
   }
 
   public void setUnusedImportsToRemove(@Nullable ImmutableSet<String> unusedImportsToRemove) {
@@ -2848,7 +2891,6 @@ public class CompilerOptions {
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .omitNullValues()
-        .add("aliasHandler", getAliasTransformationHandler())
         .add("aliasStringsMode", getAliasStringsMode())
         .add("ambiguateProperties", ambiguateProperties)
         .add("angularPass", angularPass)
@@ -2960,7 +3002,6 @@ public class CompilerOptions {
         .add("preserveNonJSDocComments", getPreserveNonJSDocComments())
         .add("preserveTypeAnnotations", preserveTypeAnnotations)
         .add("prettyPrint", prettyPrint)
-        .add("preventLibraryInjection", preventLibraryInjection)
         .add("printConfig", printConfig)
         .add("printInputDelimiter", printInputDelimiter)
         .add("printSourceAfterEachPass", printSourceAfterEachPass)
@@ -2996,6 +3037,7 @@ public class CompilerOptions {
             rewriteGlobalDeclarationsForTryCatchWrapping)
         .add("rewriteModulesBeforeTypechecking", rewriteModulesBeforeTypechecking)
         .add("rewritePolyfills", rewritePolyfills)
+        .add("runtimeLibraryMode", runtimeLibraryMode)
         .add("skipNonTranspilationPasses", skipNonTranspilationPasses)
         .add("smartNameRemoval", smartNameRemoval)
         .add("sourceMapDetailLevel", sourceMapDetailLevel)
@@ -3250,78 +3292,6 @@ public class CompilerOptions {
     LARGE, // Alias all string literals with a length greater than 100 characters.
     ALL, // Alias all string literals where it may improve code size
     ALL_AGGRESSIVE // Alias all string regardless of code size
-  }
-
-  /**
-   * A Role Specific Interface for JS Compiler that represents a data holder object which is used to
-   * store goog.scope alias code changes to code made during a compile. There is no guarantee that
-   * individual alias changes are invoked in the order they occur during compilation, so
-   * implementations should not assume any relevance to the order changes arrive.
-   *
-   * <p>Calls to the mutators are expected to resolve very quickly, so implementations should not
-   * perform expensive operations in the mutator methods.
-   */
-  public interface AliasTransformationHandler {
-
-    /**
-     * Builds an AliasTransformation implementation and returns it to the caller.
-     *
-     * <p>Callers are allowed to request multiple AliasTransformation instances for the same file,
-     * though it is expected that the first and last char values for multiple instances will not
-     * overlap.
-     *
-     * <p>This method is expected to have a side-effect of storing off the created
-     * AliasTransformation, which guarantees that invokers of this interface cannot leak
-     * AliasTransformation to this implementation that the implementor did not create
-     *
-     * @param sourceFile the source file the aliases re contained in.
-     * @param position the region of the source file associated with the goog.scope call. The item
-     *     of the SourcePosition is the returned AliasTransformation
-     */
-    public AliasTransformation logAliasTransformation(
-        String sourceFile, SourcePosition<AliasTransformation> position);
-  }
-
-  /**
-   * A Role Specific Interface for the JS Compiler to report aliases used to change the code during
-   * a compile.
-   *
-   * <p>While aliases defined by goog.scope are expected to by only 1 per file, and the only
-   * top-level structure in the file, this is not enforced.
-   */
-  public interface AliasTransformation {
-
-    /**
-     * Adds an alias definition to the AliasTransformation instance.
-     *
-     * <p>Last definition for a given alias is kept if an alias is inserted multiple times (since
-     * this is generally the behavior in JavaScript code).
-     *
-     * @param alias the name of the alias.
-     * @param definition the definition of the alias.
-     */
-    void addAlias(String alias, String definition);
-  }
-
-  /** A Null implementation of the CodeChanges interface which performs all operations as a No-Op */
-  static final AliasTransformationHandler NULL_ALIAS_TRANSFORMATION_HANDLER =
-      new NullAliasTransformationHandler();
-
-  private static class NullAliasTransformationHandler implements AliasTransformationHandler {
-    private static final AliasTransformation NULL_ALIAS_TRANSFORMATION =
-        new NullAliasTransformation();
-
-    @Override
-    public AliasTransformation logAliasTransformation(
-        String sourceFile, SourcePosition<AliasTransformation> position) {
-      position.setItem(NULL_ALIAS_TRANSFORMATION);
-      return NULL_ALIAS_TRANSFORMATION;
-    }
-
-    private static class NullAliasTransformation implements AliasTransformation {
-      @Override
-      public void addAlias(String alias, String definition) {}
-    }
   }
 
   /** An environment specifies the built-in externs that are loaded for a given compilation. */

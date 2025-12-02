@@ -129,19 +129,17 @@ public final class ScriptMetadata {
 
     private void updateSupportsRequireAlias(Node n) {
       switch (n.getToken()) {
-        case MODULE_BODY:
-          break;
-
-        case CALL:
+        case MODULE_BODY -> {}
+        case CALL -> {
           if (n.getChildCount() != 2
               || !GOOG_MODULE.matches(n.getFirstChild())
               || !n.getSecondChild().isStringLit()) {
             return;
           }
-          break;
-
-        default:
+        }
+        default -> {
           return;
+        }
       }
 
       this.toFill.supportsRequireAliases = true;

@@ -30,21 +30,4 @@ $jscomp.typedArrayAt = function(orig) {
   return $jscomp.atMethod;
 };
 
-$jscomp.polyfill(
-    'Int8Array.prototype.at', $jscomp.typedArrayAt, 'es_next', 'es5');
-$jscomp.polyfill(
-    'Uint8Array.prototype.at', $jscomp.typedArrayAt, 'es_next', 'es5');
-$jscomp.polyfill(
-    'Uint8ClampedArray.prototype.at', $jscomp.typedArrayAt, 'es_next', 'es5');
-$jscomp.polyfill(
-    'Int16Array.prototype.at', $jscomp.typedArrayAt, 'es_next', 'es5');
-$jscomp.polyfill(
-    'Uint16Array.prototype.at', $jscomp.typedArrayAt, 'es_next', 'es5');
-$jscomp.polyfill(
-    'Int32Array.prototype.at', $jscomp.typedArrayAt, 'es_next', 'es5');
-$jscomp.polyfill(
-    'Uint32Array.prototype.at', $jscomp.typedArrayAt, 'es_next', 'es5');
-$jscomp.polyfill(
-    'Float32Array.prototype.at', $jscomp.typedArrayAt, 'es_next', 'es5');
-$jscomp.polyfill(
-    'Float64Array.prototype.at', $jscomp.typedArrayAt, 'es_next', 'es5');
+$jscomp.polyfillTypedArrayMethod('at', $jscomp.typedArrayAt, 'es_next', 'es5');

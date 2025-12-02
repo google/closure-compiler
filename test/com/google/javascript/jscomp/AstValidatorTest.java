@@ -78,7 +78,8 @@ public final class AstValidatorTest extends CompilerTestCase {
                 lastCheckViolationMessages.add(message);
               }
             },
-            /* validateScriptFeatures= */ true);
+            /* validateScriptFeatures= */ true,
+            /* shouldValidateRequiredInlinings= */ true);
     astValidator.setTypeValidationMode(typeInfoValidationMode);
     return astValidator;
   }
@@ -1371,7 +1372,7 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testFeatureValidation_extendedObjectLiterals() {
-    testFeatureValidation("var obj = { x };", Feature.EXTENDED_OBJECT_LITERALS);
+    testFeatureValidation("var obj = { x };", Feature.SHORTHAND_OBJECT_PROPERTIES);
   }
 
   @Test
@@ -1634,15 +1635,9 @@ public final class AstValidatorTest extends CompilerTestCase {
   private List<String> doCheck(Node n, Check level) {
     AstValidator validator = createValidator(createCompiler());
     switch (level) {
-      case SCRIPT:
-        validator.validateScript(n);
-        break;
-      case STATEMENT:
-        validator.validateStatement(n);
-        break;
-      case EXPRESSION:
-        validator.validateExpression(n);
-        break;
+      case SCRIPT -> validator.validateScript(n);
+      case STATEMENT -> validator.validateStatement(n);
+      case EXPRESSION -> validator.validateExpression(n);
     }
     return lastCheckViolationMessages;
   }
@@ -1719,5 +1714,26 @@ public final class AstValidatorTest extends CompilerTestCase {
 
     shadowHost.setClosureUnawareShadow(IR.root(this.parseValidScript("(function(){})").detach()));
     expectValid(f, Check.STATEMENT);
+  }
+
+  @Test
+  public void checkRequiredInlinings_failsWithRemainingRequiredInlinings() {
+    // Write a reference to a function that required inlining. We need an enclosing statement
+    // because the expression checker will look for a parent.
+    Node myFunction = IR.name("myFunction");
+    IR.root(IR.script(IR.exprResult(myFunction)));
+
+    // Add the requireInlining annotation.
+    var jsDocInfo = JSDocInfo.builder();
+    jsDocInfo.recordRequireInlining();
+    myFunction.setJSDocInfo(jsDocInfo.build());
+
+    // A surviving requireInlining annotation should cause a validation failure.
+    expectInvalid(
+        myFunction,
+        Check.EXPRESSION,
+        "Type information missing\nmyFunction",
+        "@requireInlining node failed to be inlined.",
+        "Type information missing\nmyFunction");
   }
 }

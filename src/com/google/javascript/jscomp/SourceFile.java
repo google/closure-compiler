@@ -594,10 +594,11 @@ public final class SourceFile implements StaticSourceFile {
 
   private static SourceFile fromProto(SourceFileProto protoSourceFile, SourceKind sourceKind) {
     switch (protoSourceFile.getLoaderCase()) {
-      case PRELOADED_CONTENTS:
+      case PRELOADED_CONTENTS -> {
         return SourceFile.fromCode(
             protoSourceFile.getFilename(), protoSourceFile.getPreloadedContents(), sourceKind);
-      case FILE_ON_DISK:
+      }
+      case FILE_ON_DISK -> {
         String pathOnDisk =
             protoSourceFile.getFileOnDisk().getActualPath().isEmpty()
                 ? protoSourceFile.getFilename()
@@ -608,39 +609,35 @@ public final class SourceFile implements StaticSourceFile {
             .withKind(sourceKind)
             .withPath(pathOnDisk)
             .build();
-      case ZIP_ENTRY:
-        {
-          SourceFileProto.ZipEntryOnDisk zipEntry = protoSourceFile.getZipEntry();
-          return SourceFile.builder()
-              .withKind(sourceKind)
-              .withOriginalPath(protoSourceFile.getFilename())
-              .withCharset(toCharset(zipEntry.getCharset()))
-              .withZipEntryPath(zipEntry.getZipPath(), zipEntry.getEntryName())
-              .build();
-        }
-      case STUB_FILE:
+      }
+      case ZIP_ENTRY -> {
+        SourceFileProto.ZipEntryOnDisk zipEntry = protoSourceFile.getZipEntry();
+        return SourceFile.builder()
+            .withKind(sourceKind)
+            .withOriginalPath(protoSourceFile.getFilename())
+            .withCharset(toCharset(zipEntry.getCharset()))
+            .withZipEntryPath(zipEntry.getZipPath(), zipEntry.getEntryName())
+            .build();
+      }
+      case STUB_FILE -> {
         return SourceFile.builder()
             .withKind(sourceKind)
             .withOriginalPath(protoSourceFile.getFilename())
             .setIsStubSourceFileForAlreadyProvidedInput()
             .build();
-      case LOADER_NOT_SET:
-        break;
+      }
+      case LOADER_NOT_SET -> {}
     }
     throw new AssertionError();
   }
 
   private static SourceKind getSourceKindFromProto(SourceFileProto protoSourceFile) {
-    switch (protoSourceFile.getSourceKind()) {
-      case EXTERN:
-        return SourceKind.EXTERN;
-      case CODE:
-        return SourceKind.STRONG;
-      case NOT_SPECIFIED:
-      case UNRECOGNIZED:
-        break;
-    }
-    throw new AssertionError();
+    return switch (protoSourceFile.getSourceKind()) {
+      case EXTERN -> SourceKind.EXTERN;
+      case CODE -> SourceKind.STRONG;
+      case NOT_SPECIFIED, UNRECOGNIZED ->
+          throw new AssertionError(protoSourceFile.getSourceKind().toString());
+    };
   }
 
   private static Charset toCharset(String protoCharset) {
@@ -974,15 +971,10 @@ public final class SourceFile implements StaticSourceFile {
   }
 
   private static SourceFileProto.SourceKind sourceKindToProto(SourceKind sourceKind) {
-    switch (sourceKind) {
-      case EXTERN:
-        return SourceFileProto.SourceKind.EXTERN;
-      case STRONG:
-      case WEAK:
-        return SourceFileProto.SourceKind.CODE;
-      case NON_CODE:
-        break;
-    }
-    throw new AssertionError();
+    return switch (sourceKind) {
+      case EXTERN -> SourceFileProto.SourceKind.EXTERN;
+      case STRONG, WEAK -> SourceFileProto.SourceKind.CODE;
+      case NON_CODE -> throw new AssertionError(sourceKind.toString());
+    };
   }
 }

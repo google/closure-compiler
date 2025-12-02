@@ -158,51 +158,48 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
     }
 
     switch (node.getToken()) {
-      case MEMBER_FUNCTION_DEF:
+      case MEMBER_FUNCTION_DEF -> {
         if (NodeUtil.isEs6ConstructorMemberFunctionDef(node)) {
           return false; // Constructors aren't methods.
         }
 
         return true;
-
-      case GETPROP:
-        {
-          // Case: `Foo.prototype.bar = function() { };
-          if (!node.isFirstChildOf(parent)
-              || !NodeUtil.isExprAssign(grandparent)
-              || !parent.getLastChild().isFunction()) {
-            return false;
-          }
-
-          if (NodeUtil.isPrototypeProperty(node)) {
-            return true;
-          }
-
-          if (isDefinitelyCtorOrInterface(node.getFirstChild())) {
-            return true;
-          }
-
+      }
+      case GETPROP -> {
+        // Case: `Foo.prototype.bar = function() { };
+        if (!node.isFirstChildOf(parent)
+            || !NodeUtil.isExprAssign(grandparent)
+            || !parent.getLastChild().isFunction()) {
           return false;
         }
 
-      case STRING_KEY:
-        {
-          // Case: `Foo.prototype = {
-          //          bar: function() { },
-          //        }`
-          checkArgument(parent.isObjectLit(), parent);
-
-          if (!parent.isSecondChildOf(grandparent)
-              || !NodeUtil.isPrototypeAssignment(grandparent.getFirstChild())
-              || !node.getFirstChild().isFunction()) {
-            return false;
-          }
-
+        if (NodeUtil.isPrototypeProperty(node)) {
           return true;
         }
 
-      default:
+        if (isDefinitelyCtorOrInterface(node.getFirstChild())) {
+          return true;
+        }
+
         return false;
+      }
+      case STRING_KEY -> {
+        // Case: `Foo.prototype = {
+        //          bar: function() { },
+        //        }`
+        checkArgument(parent.isObjectLit(), parent);
+
+        if (!parent.isSecondChildOf(grandparent)
+            || !NodeUtil.isPrototypeAssignment(grandparent.getFirstChild())
+            || !node.getFirstChild().isFunction()) {
+          return false;
+        }
+
+        return true;
+      }
+      default -> {
+        return false;
+      }
     }
   }
 
@@ -245,15 +242,10 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
    */
   private boolean isEligibleDefinitionSite(String name, Node definitionSite) {
     switch (definitionSite.getToken()) {
-      case GETPROP:
-      case MEMBER_FUNCTION_DEF:
-      case STRING_KEY:
-      case MEMBER_FIELD_DEF:
-        break;
-
-      default:
-        // No other node types are supported.
-        throw new IllegalArgumentException(definitionSite.toString());
+      case GETPROP, MEMBER_FUNCTION_DEF, STRING_KEY, MEMBER_FIELD_DEF -> {}
+      default ->
+          // No other node types are supported.
+          throw new IllegalArgumentException(definitionSite.toString());
     }
 
     // Exporting a method prevents rewrite.
@@ -439,21 +431,17 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
     final Node nameSource;
 
     switch (definitionSite.getToken()) {
-      case GETPROP:
+      case GETPROP -> {
         function = definitionSite.getParent().getLastChild();
         nameSource = definitionSite;
         subtreeToRemove = NodeUtil.getEnclosingStatement(definitionSite);
-        break;
-
-      case STRING_KEY:
-      case MEMBER_FUNCTION_DEF:
+      }
+      case STRING_KEY, MEMBER_FUNCTION_DEF -> {
         function = definitionSite.getLastChild();
         nameSource = definitionSite;
         subtreeToRemove = definitionSite;
-        break;
-
-      default:
-        throw new IllegalArgumentException(definitionSite.toString());
+      }
+      default -> throw new IllegalArgumentException(definitionSite.toString());
     }
 
     // Define a new variable after the original declaration.

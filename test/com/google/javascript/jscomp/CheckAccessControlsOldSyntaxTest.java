@@ -580,25 +580,23 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testPrivateAccessForProperties5() {
     testError(
         srcs(
-            new String[] {
-              """
-              /** @constructor */
-              function Parent () {
-                /** @private */
-                this.prop = 'foo';
-              };
-              """,
-              """
-              /**
-               * @constructor
-               * @extends {Parent}
-               */
-              function Child() {
-                this.prop = 'asdf';
-              }
-              Child.prototype = new Parent();
-              """
-            }),
+            """
+            /** @constructor */
+            function Parent () {
+              /** @private */
+              this.prop = 'foo';
+            };
+            """,
+            """
+            /**
+             * @constructor
+             * @extends {Parent}
+             */
+            function Child() {
+              this.prop = 'asdf';
+            }
+            Child.prototype = new Parent();
+            """),
         error(BAD_PRIVATE_PROPERTY_ACCESS)
             .withMessage("Access to private property prop of Parent not allowed here."));
   }
@@ -663,52 +661,46 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testPrivateAccessForProperties6() {
     testError(
         srcs(
-            new String[] {
-              """
-              goog.provide('x.y.z.Parent');
+            """
+            goog.provide('x.y.z.Parent');
 
-              /** @constructor */
-              x.y.z.Parent = function() {
-                /** @private */
-                this.prop = 'foo';
-              };
-              """,
-              """
-              goog.require('x.y.z.Parent');
+            /** @constructor */
+            x.y.z.Parent = function() {
+              /** @private */
+              this.prop = 'foo';
+            };
+            """,
+            """
+            goog.require('x.y.z.Parent');
 
-              /**
-               * @constructor
-               * @extends {x.y.z.Parent}
-               */
-              function Child() {
-                this.prop = 'asdf';
-              }
-              Child.prototype = new x.y.z.Parent();
-              """
-            }),
+            /**
+             * @constructor
+             * @extends {x.y.z.Parent}
+             */
+            function Child() {
+              this.prop = 'asdf';
+            }
+            Child.prototype = new x.y.z.Parent();
+            """),
         error(BAD_PRIVATE_PROPERTY_ACCESS)
             .withMessage("Access to private property prop of x.y.z.Parent not allowed here."));
   }
 
   @Test
   public void testPrivateAccess_googModule() {
-    String[] js =
-        new String[] {
-          """
-          goog.module('example.One');
-          /** @constructor */ function One() {}
-          /** @private */ One.prototype.m = function() {};
-          exports = One;
-          """,
-          """
-          goog.module('example.two');
-          var One = goog.require('example.One');
-          (new One()).m();
-          """,
-        };
-
     testError(
-        srcs(js),
+        srcs(
+            """
+            goog.module('example.One');
+            /** @constructor */ function One() {}
+            /** @private */ One.prototype.m = function() {};
+            exports = One;
+            """,
+            """
+            goog.module('example.two');
+            var One = goog.require('example.One');
+            (new One()).m();
+            """),
         error(BAD_PRIVATE_PROPERTY_ACCESS)
             .withMessage("Access to private property m of One not allowed here."));
   }

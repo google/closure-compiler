@@ -18,6 +18,9 @@
 'require util/polyfill';
 
 /**
+ * Technically shipped with the initial version of TypedArray, but Cobalt 9 does
+ * not support it at all and Cobalt 11 only supports it in 4 of the 9 TypedArray
+ * subclasses.
  * @param {*} orig
  * @return {*}
  */
@@ -26,30 +29,5 @@ $jscomp.typedArrayCopyWithin = function(orig) {
   return Array.prototype.copyWithin;
 };
 
-$jscomp.polyfill(
-    'Int8Array.prototype.copyWithin', $jscomp.typedArrayCopyWithin, 'es6',
-    'es5');
-$jscomp.polyfill(
-    'Uint8Array.prototype.copyWithin', $jscomp.typedArrayCopyWithin, 'es6',
-    'es5');
-$jscomp.polyfill(
-    'Uint8ClampedArray.prototype.copyWithin', $jscomp.typedArrayCopyWithin,
-    'es6', 'es5');
-$jscomp.polyfill(
-    'Int16Array.prototype.copyWithin', $jscomp.typedArrayCopyWithin, 'es6',
-    'es5');
-$jscomp.polyfill(
-    'Uint16Array.prototype.copyWithin', $jscomp.typedArrayCopyWithin, 'es6',
-    'es5');
-$jscomp.polyfill(
-    'Int32Array.prototype.copyWithin', $jscomp.typedArrayCopyWithin, 'es6',
-    'es5');
-$jscomp.polyfill(
-    'Uint32Array.prototype.copyWithin', $jscomp.typedArrayCopyWithin, 'es6',
-    'es5');
-$jscomp.polyfill(
-    'Float32Array.prototype.copyWithin', $jscomp.typedArrayCopyWithin, 'es6',
-    'es5');
-$jscomp.polyfill(
-    'Float64Array.prototype.copyWithin', $jscomp.typedArrayCopyWithin, 'es6',
-    'es5');
+$jscomp.polyfillTypedArrayMethod(
+    'copyWithin', $jscomp.typedArrayCopyWithin, 'es6', 'es5');

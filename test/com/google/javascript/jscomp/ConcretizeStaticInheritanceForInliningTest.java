@@ -221,7 +221,6 @@ public class ConcretizeStaticInheritanceForInliningTest extends CompilerTestCase
         /** @constructor @extends {Example} */
         function Subclass() {}
 
-        Subclass.property;
         $jscomp.inherits(Subclass, Example);
         """);
   }
@@ -257,7 +256,6 @@ public class ConcretizeStaticInheritanceForInliningTest extends CompilerTestCase
 
         /** @constructor @extends {TestCase.A} */
         function Subclass() {}
-        Subclass.property;
         $jscomp.inherits(Subclass, TestCase.A);
         """);
   }
@@ -331,12 +329,10 @@ public class ConcretizeStaticInheritanceForInliningTest extends CompilerTestCase
 
         /** @constructor @extends {A} */
         function B() {}
-        B.property;
         $jscomp.inherits(B, A);
 
         /** @constructor @extends {B} */
         function C() {}
-        C.property;
         $jscomp.inherits(C, B);
         """);
   }
@@ -417,7 +413,6 @@ public class ConcretizeStaticInheritanceForInliningTest extends CompilerTestCase
         /** @constructor @extends {Example} */
         function Subclass() {}
 
-        Subclass.property;
         $jscomp.inherits(Subclass, Example);
         """);
   }

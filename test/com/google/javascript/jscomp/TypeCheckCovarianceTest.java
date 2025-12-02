@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_PROPERTY;
 import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_UNION_PROPERTY;
 import static com.google.javascript.jscomp.TypeCheckTestCase.TypeTestBuilder.newTest;
 
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -1353,6 +1354,162 @@ public final class TypeCheckCovarianceTest {
             export {};
             """)
         .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
+  public void testReadonlyArrayCovariant_withArraySubtype() {
+    newTest()
+        .addExterns(
+            new TestExternsBuilder()
+                .addArray()
+                .addExtra(
+                    """
+                    /**
+                     * @param {...T} args
+                     * @return {!Array<T>}
+                     * @this {!IArrayLike<T>}
+                     * @template T
+                     */
+                    ReadonlyArray.prototype.foo = function(args) {};
+                    /**
+                     * @param {...T} args
+                     * @return {!Array<T>}
+                     * @this {!IArrayLike<T>}
+                     * @override
+                     * @template T
+                     */
+                    Array.prototype.foo = function(args) {};
+                    """)
+                .build())
+        .addSource(
+            """
+            /**
+             * @param {!Array<number>} a
+             * @return {!ReadonlyArray<*>}
+             */
+            var good = function(a) { return a; };
+            /**
+             * @param {!Array<*>} a
+             * @return {!ReadonlyArray<number>}
+             */
+            var bad = function(a) { return a; };
+            """)
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : Array<*>
+            required: ReadonlyArray<number>
+            missing : []
+            mismatch: [filter,forEach,values]
+            """)
+        .run();
+  }
+
+  @Test
+  public void testReadonlyArrayCovariant_withCustomArray_bug() {
+    newTest()
+        .addExterns(
+            new TestExternsBuilder()
+                .addArray()
+                .addExtra(
+                    """
+                    /**
+                     * @constructor
+                     * @extends {Array<T>}
+                     * @template T, U
+                     */
+                    function MyArray() {}
+
+                    /** @param {T} p */
+                    ReadonlyArray.prototype.takes = function(p) {};
+                    /** @override @param {T} p */
+                    Array.prototype.takes = function(p) {};
+                    /** @override @param {T} p */
+                    MyArray.prototype.takes = function(p) {};
+
+                    /** @return {T} */
+                    ReadonlyArray.prototype.returns = function() {};
+                    /** @override @return {T} */
+                    Array.prototype.returns = function() {};
+                    /** @override @return {U} */
+                    MyArray.prototype.returns = function() {};
+                    """)
+                .build())
+        .addSource(
+            """
+            /**
+             * @param {!MyArray<number, number>} a
+             * @return {!ReadonlyArray<*>}
+             */
+            var good = function(a) { return a; };
+            /**
+             * @param {!MyArray<number, *>} a
+             * @return {!ReadonlyArray<number>}
+             */
+            var bad = function(a) { return a; };
+            """)
+        .addDiagnostic(
+            // TODO: b/807854446 - this should not error.
+            // this diagnostic is not expected - we would expect the override of takes(*) with
+            // takes(number) to be valid because ReadonlyArray is covariant and the T=number
+            // template
+            // is the same template as in * in readonly array.
+            // however - this doesn't work in practice without more complicated subtyping logic for
+            // covariant structural types; so just accept it for now.
+            """
+            inconsistent return type
+            found   : MyArray<number,number>
+            required: ReadonlyArray<*>
+            missing : []
+            mismatch: [includes,takes]
+            """)
+        .addDiagnostic(
+            // this diagnostic is correct - ReadonlyArray<number>.returns() returns a number, while
+            // MyArray<number, string>.returns() returns the top type `*`.
+            """
+            inconsistent return type
+            found   : MyArray<number,*>
+            required: ReadonlyArray<number>
+            missing : []
+            mismatch: [returns]
+            """)
+        .run();
+  }
+
+  @Test
+  public void testIThenableSubtypes() {
+    newTest()
+        .addExterns(
+            new TestExternsBuilder()
+                .addPromise()
+                .addExtra(
+                    """
+                    /**
+                     * @record
+                     * @struct
+                     * @template TYPE
+                     * @extends {IThenable<TYPE>}
+                     */
+                    function PromiseLike() {}
+                    /**
+                     * Copy of Closure library's Thenable
+                     *
+                     * @interface
+                     * @extends {IThenable<TYPE>}
+                     * @template TYPE
+                     */
+                    function GoogThenable() {}
+                    """)
+                .build())
+        .addSource(
+            """
+            /**
+             * @param {!GoogThenable<undefined>} t
+             * @return {!PromiseLike}
+             */
+            function f(t) { return t; };
+            """)
         .run();
   }
 }

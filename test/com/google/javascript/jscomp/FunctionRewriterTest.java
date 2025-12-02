@@ -72,12 +72,6 @@ public final class FunctionRewriterTest extends CompilerTestCase {
     return new FunctionRewriter(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    // Pass reaches steady state after just 1 iteration
-    return 1;
-  }
-
   @Test
   public void testEs6Class() {
     // There is never any benefit to replacing ES6 class methods

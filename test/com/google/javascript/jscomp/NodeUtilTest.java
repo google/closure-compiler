@@ -31,6 +31,7 @@ import static com.google.javascript.rhino.Token.DESTRUCTURING_LHS;
 import static com.google.javascript.rhino.Token.FOR_AWAIT_OF;
 import static com.google.javascript.rhino.Token.FOR_OF;
 import static com.google.javascript.rhino.Token.FUNCTION;
+import static com.google.javascript.rhino.Token.GETPROP;
 import static com.google.javascript.rhino.Token.GETTER_DEF;
 import static com.google.javascript.rhino.Token.ITER_REST;
 import static com.google.javascript.rhino.Token.ITER_SPREAD;
@@ -5079,6 +5080,10 @@ public final class NodeUtilTest {
             {OPTCHAIN_CALL, "x?.()", true},
             {OPTCHAIN_GETPROP, "x?.y", true},
             {OPTCHAIN_GETELEM, "x?.[y]", true},
+
+            // Well-known Symbols
+            {GETPROP, "Symbol.iterator", false},
+            {GETPROP, "Fake.Symbol.iterator", true},
           });
     }
 

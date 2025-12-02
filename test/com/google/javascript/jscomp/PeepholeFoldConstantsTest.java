@@ -16,12 +16,14 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +38,17 @@ import org.junit.runners.JUnit4;
 public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   public PeepholeFoldConstantsTest() {
-    super(DEFAULT_EXTERNS);
+    super(
+        new TestExternsBuilder()
+            .addArray()
+            .addIterable()
+            .addObject()
+            .addUndefined()
+            .addFunction()
+            .addString()
+            .addInfinity()
+            .addNaN()
+            .build());
   }
 
   private boolean late;
@@ -53,6 +65,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     useTypes = true;
     // Reduce this to 1 if we get better expression evaluators.
     numRepetitions = 2;
+    enableNormalize();
+    disableCompareJsDoc();
   }
 
   @Override
@@ -851,6 +865,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Test
   public void testFoldingMixTypesLate() {
     late = true;
+    disableNormalize();
     test("x = x + '2'", "x+='2'");
     test("x = +x + +'2'", "x = +x + 2");
     test("x = x - '2'", "x-=2");
@@ -1569,6 +1584,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Test
   public void testAssignOpsLate() {
     late = true;
+    disableNormalize();
     test("x=x+y", "x+=y");
     testSame("x=y+x");
     test("x=x*y", "x*=y");
@@ -1619,6 +1635,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Test
   public void testUnfoldAssignOpsLate() {
     late = true;
+    disableNormalize();
     testSame("x+=y");
     testSame("x*=y");
     testSame("x.y+=z");
@@ -1759,6 +1776,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("!3", "false");
 
     late = true;
+    disableNormalize();
     testSame("!0");
     testSame("!1");
     test("!3", "false");
@@ -1912,6 +1930,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     late = false;
     test("({a:x}).a += 1", "({a:x}).a = x + 1");
     late = true;
+    disableNormalize();
     testSame("({a:x}).a += 1");
   }
 
@@ -1936,7 +1955,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testFoldObjectLiteral_freeArrowCall_usingEnclosingThis() {
+  public void testFoldObjectLiteral_freeArrowCall_usingEnclosingThis_late() {
+    late = true;
+    disableNormalize();
     test("({a: () => this }).a()", "(() => this)()");
     test("({a: () => this })?.a()", "(() => this)()");
   }
@@ -2017,8 +2038,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("var x = {[undefined != true] : 1};", "var x = {[true] : 1};");
     test("let x = false && y;", "let x = false;");
     test("const x = null == undefined", "const x = true");
-    test("var [a, , b] = [false+1, true+1, ![]]", "var [a, , b] = [1, 2, false]");
-    test("var x = () =>  true || x;", "var x = () => true;");
+    test("var [a, , b] = [false+1, true+1, ![]]", "var a; var b; [a, , b] = [1, 2, false]");
+    test("var x = () =>  true || x;", "var x = () => { return true; }");
     test(
         "function foo(x = (1 !== void 0), y) {return x+y;}",
         "function foo(x = true, y) {return x+y;}");
@@ -2034,6 +2055,15 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
         }
         """);
     test("function foo() {return `${false && y}`}", "function foo() {return `${false}`}");
+  }
+
+  @Test
+  public void testES6Features_late() {
+    late = true;
+    disableNormalize();
+
+    test("var [a, , b] = [false+1, true+1, ![]]", "var [a, , b] = [1, 2, false]");
+    test("var x = () =>  true || x;", "var x = () => true;");
   }
 
   @Test
@@ -2128,6 +2158,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Test
   public void testCommutativeOperators() {
     late = true;
+    disableNormalize();
     ImmutableList<String> operators =
         ImmutableList.of("==", "!=", "===", "!==", "*", "|", "&", "^");
     for (String a : LITERAL_OPERANDS) {
@@ -2160,7 +2191,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     // 'x-0' is numeric even if x isn't
     test("var x='a'; x-0-0", "var x='a';x-0");
     foldNumericTypes("0-x", "-x");
-    test("for (var i = 0; i < 5; i++) var x = 0 + i * 1", "for(var i=0; i < 5; i++) var x=i");
+    test("for (var i = 0; i < 5; i++) var x = 0 + i * 1", "var i = 0; for(; i < 5; i++) var x=i");
 
     foldNumericTypes("x*1", "x");
     foldNumericTypes("1*x", "x");
@@ -2193,10 +2224,12 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     foldBigIntTypes("x/1n", "x");
     foldBigIntTypes("x/0n", "x/0n");
 
-    test("for (var i = 0n; i < 5n; i++) var x = 0n + i * 1n", "for(var i=0n; i < 5n; i++) var x=i");
+    test(
+        "for (var i = 0n; i < 5n; i++) var x = 0n + i * 1n",
+        "var i = 0n; for(; i < 5n; i++) var x=i");
     test(
         "for (var i = 0n; i % 2n === 0n; i++) var x = i % 2n",
-        "for (var i = 0n; i % 2n === 0n; i++) var x = i % 2n");
+        "var i = 0n; for (; i % 2n === 0n; i++) var x = i % 2n");
 
     test("(doSomething(),0n)*1n", "(doSomething(),0n)");
     test("1n*(doSomething(),0n)", "(doSomething(),0n)");
@@ -2217,34 +2250,208 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("alert(12 & x & 20);", "alert(x & 4);");
   }
 
-
   @Test
   public void testTemplateLiteralConcat() {
-      // --- Issue #4148 core case: template + template should merge
 
-//    string + template literal (with any order)
-//    string + string (already working)
-//    template literal + template literal (template literal can include referenced variable
-//    or valid HTML)
+    // join at variables
+    test(
+        """
+        const a = `${x}` + `${x}`;
+        """,
+        """
+        const a = `${x}${x}`;
+        """);
+    test(
+        """
+        const a = `${x}${y}` + `${x}${y}`;
+        """,
+        """
+        const a = `${x}${y}${x}${y}`;
+        """);
 
-      test(
-              "const x = 'X'; console.log('pre' + `${x}`);",
-              "const x = 'X'; console.log(`pre${x}`);");
+    // join at variable and string
+    test(
+        """
+        const a = `${x}` + `a${x}`;
+        """,
+        """
+        const a =`${x}a${x}`;
+        """);
+    test(
+        """
+        const a = `${x}` + ` ${x}`;
+        """,
+        """
+        const a =`${x} ${x}`;
+        """);
 
-      test(
-              """
-              var a = document.location.href;
-              console.log(`<h1>${a}</h1>` + `<p>The URL is ${a}.</p>`);
-              """,
-              """
-              var a = document.location.href;
-              console.log(`<h1>${a}</h1><p>The URL is ${a}.</p>`);
-              """
-      );
+    // join at string and variable
+    test(
+        """
+        const a = `a${x}b` + `${x}c`;
+        """,
+        """
+        const a = `a${x}b${x}c`;
+        """);
+    test(
+        """
+        const a = `a${x} ` + `${x}b`;
+        """,
+        """
+        const a = `a${x} ${x}b`;
+        """);
 
+    // join at strings
+    test(
+        """
+        const x = 'X';
+        console.log(`a${x}b` + `c${x}d`);
+        """,
+        """
+        const x = 'X';
+        console.log(`a${x}bc${x}d`);
+        """);
+
+    // complex joins
+    test(
+        """
+        const a = `${foo() + bar()}` + `${baz()}`;
+        """,
+        """
+        const a =`${foo() + bar()}${baz()}`;
+        """);
+    test(
+        """
+        console.log(`<h1>${url}</h1>` + `<p>The URL is ${url}.</p>`);
+        """,
+        """
+        console.log(`<h1>${url}</h1><p>The URL is ${url}.</p>`);
+        """);
+    test(
+        """
+        console.log(`${(() => {return url;})()}</h1>` + `<p>The URL is ${url}.</p>`);
+        """,
+        """
+        console.log(`${(() => {return url;})()}</h1><p>The URL is ${url}.</p>`);
+        """);
+
+    // don't fold tagged template literals
+    testSame(
+        """
+        const a = foo`${b}` + `${b}`;
+        """);
+    testSame(
+        """
+        const a = foo`${b}` + bar`${b}`;
+        """);
   }
 
+  @Test
+  public void
+      testFoldAddTemplateLiterals_validateRawAndCookedStringForSpecialChars_andValidateChildren() {
+    // This is a bit tricky because there are two layers of escaping.
+    // Java sees "\\n" as "(\\)n" so it becomes "\n" for the javascript compiler.
+    // The compiler then interprets this as the special character "\n"
+    test("var x = `${a}\\n` + `\\t${b}`", "var x = `${a}\\n\\t${b}`");
 
+    // getJsRoot() returns the ROOT node for inputs only.
+    // The first child is the SCRIPT node containing the input code.
+    Node script = getLastCompiler().getJsRoot().getFirstChild();
+    Node var = script.getFirstChild();
+    Node name = var.getFirstChild();
+    Node templateLit = name.getFirstChild();
+    assertThat(templateLit.isTemplateLit()).isTrue();
+
+    // TEMPLATELIT should have 5 total children
+    assertThat(templateLit.getChildCount()).isEqualTo(5);
+
+    // Index 0: TEMPLATELIT_STRING ""
+    @SuppressWarnings({"RhinoNodeGetFirstChild", "Simplification"})
+    Node child0 = templateLit.getChildAtIndex(0);
+    assertThat(child0.isTemplateLitString()).isTrue();
+    assertThat(child0.getCookedString()).isEmpty();
+    assertThat(child0.getRawString()).isEmpty();
+
+    // Index 1: SUB a
+    @SuppressWarnings({"RhinoNodeGetSecondChild", "Simplification"})
+    Node child1 = templateLit.getChildAtIndex(1);
+    assertThat(child1.isTemplateLitSub()).isTrue();
+    assertThat(child1.getOnlyChild().isName()).isTrue();
+    assertThat(child1.getOnlyChild().getString()).isEqualTo("a");
+
+    // Index 2: TEMPLATELIT_STRING "\n\t"
+    Node child2 = templateLit.getChildAtIndex(2);
+    assertThat(child2.isTemplateLitString()).isTrue();
+    assertThat(child2.getCookedString()).isEqualTo("\n\t");
+    assertThat(child2.getRawString()).isEqualTo("\\n\\t");
+
+    // Index 3: SUB b
+    Node child3 = templateLit.getChildAtIndex(3);
+    assertThat(child3.isTemplateLitSub()).isTrue();
+    assertThat(child3.getOnlyChild().isName()).isTrue();
+    assertThat(child3.getOnlyChild().getString()).isEqualTo("b");
+
+    // Index 4: TEMPLATELIT_STRING ""
+    Node child4 = templateLit.getChildAtIndex(4);
+    assertThat(child4.isTemplateLitString()).isTrue();
+    assertThat(child4.getCookedString()).isEmpty();
+    assertThat(child4.getRawString()).isEmpty();
+  }
+
+  @Test
+  public void
+      testFoldAddTemplateLiterals_validateRawAndCookedStringForLiteralBackslash_andValidateChildren() {
+    // This is a bit tricky because there are two layers of escaping.
+    // Java sees "\\\\n" as "(\\)(\\)n" so it becomes "\\n" for the javascript compiler.
+    // The compiler then interprets this as "(\\)n" so it becomes "\" followed by
+    // "n" NOT the special character "\n".
+    test(
+        "var x = `${foo()}\\\\` + `n\\t${()=> {return b;}}`",
+        "var x = `${foo()}\\\\n\\t${()=> {return b;}}`");
+
+    // getJsRoot() returns the ROOT node for inputs only.
+    // The first child is the SCRIPT node containing the input code.
+    Node script = getLastCompiler().getJsRoot().getFirstChild();
+    Node var = script.getFirstChild();
+    Node name = var.getFirstChild();
+    Node templateLit = name.getFirstChild();
+    assertThat(templateLit.isTemplateLit()).isTrue();
+
+    // TEMPLATELIT should have 5 children:
+    assertThat(templateLit.getChildCount()).isEqualTo(5);
+
+    // Index 0: TEMPLATELIT_STRING ""
+    @SuppressWarnings({"RhinoNodeGetFirstChild", "Simplification"})
+    Node child0 = templateLit.getChildAtIndex(0);
+    assertThat(child0.isTemplateLitString()).isTrue();
+    assertThat(child0.getCookedString()).isEmpty();
+    assertThat(child0.getRawString()).isEmpty();
+
+    // Index 1: SUB foo()
+    @SuppressWarnings({"RhinoNodeGetSecondChild", "Simplification"})
+    Node child1 = templateLit.getChildAtIndex(1);
+    assertThat(child1.isTemplateLitSub()).isTrue();
+    assertThat(child1.getOnlyChild().isCall()).isTrue();
+    assertThat(child1.getOnlyChild().getOnlyChild().getString()).isEqualTo("foo");
+
+    // Index 2: TEMPLATELIT_STRING "\n\t"
+    Node child2 = templateLit.getChildAtIndex(2);
+    assertThat(child2.isTemplateLitString()).isTrue();
+    assertThat(child2.getCookedString()).isEqualTo("\\n\t");
+    assertThat(child2.getRawString()).isEqualTo("\\\\n\\t");
+
+    // Index 3: SUB ()=> {return b;}
+    Node child3 = templateLit.getChildAtIndex(3);
+    assertThat(child3.isTemplateLitSub()).isTrue();
+    assertThat(child3.getOnlyChild().isFunction()).isTrue();
+    assertThat(child3.getOnlyChild().getFirstChild().getString()).isEmpty();
+
+    // Index 4: TEMPLATELIT_STRING ""
+    Node child4 = templateLit.getChildAtIndex(4);
+    assertThat(child4.isTemplateLitString()).isTrue();
+    assertThat(child4.getCookedString()).isEmpty();
+    assertThat(child4.getRawString()).isEmpty();
+  }
 
   private void foldBigIntTypes(String js, String expected) {
     test(
@@ -2269,13 +2476,13 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   private void assertSameResults(String exprA, String exprB) {
-    assertWithMessage("Expressions did not fold the same\nexprA: " + exprA + "\nexprB: " + exprB)
+    assertWithMessage("Expressions did not fold the same\nexprA: %s\nexprB: %s", exprA, exprB)
         .that(process(exprB))
         .isEqualTo(process(exprA));
   }
 
   private void assertNotSameResults(String exprA, String exprB) {
-    assertWithMessage("Expressions folded the same\nexprA: " + exprA + "\nexprB: " + exprB)
+    assertWithMessage("Expressions folded the same\nexprA: %s\nexprB: %s", exprA, exprB)
         .that(process(exprA).equals(process(exprB)))
         .isFalse();
   }
@@ -2292,11 +2499,10 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
         ImmutableList.of(SourceFile.fromCode("testcode", js)),
         options);
     Node root = compiler.parseInputs();
+    compiler.setAccessorSummary(AccessorSummary.create(ImmutableMap.of()));
     assertWithMessage(
-            "Unexpected parse error(s): "
-                + Joiner.on("\n").join(compiler.getErrors())
-                + "\nEXPR: "
-                + js)
+            "Unexpected parse error(s): %s\nEXPR: %s",
+            Joiner.on("\n").join(compiler.getErrors()), js)
         .that(root)
         .isNotNull();
     Node externsRoot = root.getFirstChild();

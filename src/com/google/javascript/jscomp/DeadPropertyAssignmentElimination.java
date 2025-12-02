@@ -347,7 +347,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
 
     private boolean visitNode(Node n, Node parent) {
       switch (n.getToken()) {
-        case GETPROP:
+        case GETPROP -> {
           // Handle potential getters/setters.
           if (n.isGetProp() && skiplistedPropNames.contains(n.getString())) {
             // We treat getters/setters as if they were a call, thus we mark all properties as read.
@@ -375,33 +375,32 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
             }
           }
           return true;
-
-        case THIS:
-        case NAME:
+        }
+        case THIS, NAME -> {
           Property nameProp = checkNotNull(getOrCreateProperty(n));
           nameProp.markLastWriteRead();
           if (!parent.isGetProp()) {
             nameProp.markChildrenRead();
           }
           return true;
-
-        case THROW:
-        case FOR:
-        case FOR_IN:
-        case SWITCH:
+        }
+        case THROW, FOR, FOR_IN, SWITCH -> {
           // TODO(kevinoconnor): Switch/for statements need special consideration since they may
           // execute out of order.
           markAllPropsRead();
           return false;
-        case BLOCK:
+        }
+        case BLOCK -> {
           visitBlock(n);
           return true;
-        default:
+        }
+        default -> {
           if (isConditionalExpression(n)) {
             markAllPropsRead();
             return false;
           }
           return true;
+        }
       }
     }
 

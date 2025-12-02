@@ -280,17 +280,14 @@ public class DepsGenerator {
           boolean providerIsEs6Module = provider.isEs6Module();
 
           switch (require.getType()) {
-            case ES6_IMPORT:
+            case ES6_IMPORT -> {
               if (!providerIsEs6Module) {
                 reportEs6ImportForNonEs6Module(provider, depInfo);
               }
-              break;
-            case GOOG_REQUIRE_SYMBOL:
-            case PARSED_FROM_DEPS:
-              break;
-            case COMMON_JS:
-            case COMPILER_MODULE:
-              throw new IllegalStateException("Unexpected import type: " + require.getType());
+            }
+            case GOOG_REQUIRE_SYMBOL, PARSED_FROM_DEPS -> {}
+            case COMMON_JS, COMPILER_MODULE ->
+                throw new IllegalStateException("Unexpected import type: " + require.getType());
           }
         }
       }

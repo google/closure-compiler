@@ -212,10 +212,10 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
     String name = null;
 
     switch (n.getToken()) {
-      // handles assignment cases like:
-      // a = function() {}
-      // a = b = c = function() {}
-      case ASSIGN:
+      case ASSIGN -> {
+        // handles assignment cases like:
+        // a = function() {}
+        // a = b = c = function() {}
         if (!n.getFirstChild().isQualifiedName()) {
           compiler.report(JSError.make(n, INJECTED_FUNCTION_ON_NON_QNAME));
           return;
@@ -227,43 +227,37 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
           fn = fn.getLastChild();
         }
         injectAfter = n.getParent();
-        break;
-
-      // handles function case:
-      // function fnName() {}
-      case FUNCTION:
+      }
+      case FUNCTION -> {
+        // handles function case:
+        // function fnName() {}
         name = NodeUtil.getName(n);
         fn = n;
         injectAfter = n;
-        if (n.getParent().isAssign()
-            && n.getParent().getJSDocInfo().isNgInject()) {
+        if (n.getParent().isAssign() && n.getParent().getJSDocInfo().isNgInject()) {
           // This is a function assigned into a symbol, e.g. a regular function
           // declaration in a goog.module or goog.scope.
           // Skip in this traversal, it is handled when visiting the assign.
           return;
         }
-        break;
-
-      // handles var declaration cases like:
-      // var a = function() {}
-      // var a = b = function() {}
-      case VAR:
-      case LET:
-      case CONST:
+      }
+      case VAR, LET, CONST -> {
+        // handles var declaration cases like:
+        // var a = function() {}
+        // var a = b = function() {}
         name = n.getFirstChild().getString();
         // looks for a function node.
         fn = getDeclarationRValue(n);
         injectAfter = n;
-        break;
-
-      // handles class method case:
-      // class clName(){
-      //   constructor(){}
-      //   someMethod(){} <===
-      // }
-      case MEMBER_FUNCTION_DEF:
+      }
+      case MEMBER_FUNCTION_DEF -> {
+        // handles class method case:
+        // class clName(){
+        //   constructor(){}
+        //   someMethod(){} <===
+        // }
         Node parent = n.getParent();
-        if (parent.isClassMembers()){
+        if (parent.isClassMembers()) {
           Node classNode = parent.getParent();
           String midPart = n.isStaticMember() ? "." : ".prototype.";
           name = NodeUtil.getName(classNode) + midPart + n.getString();
@@ -273,9 +267,8 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
           fn = n.getFirstChild();
           injectAfter = NodeUtil.getEnclosingStatement(classNode);
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
 
     if (fn == null || !fn.isFunction()) {

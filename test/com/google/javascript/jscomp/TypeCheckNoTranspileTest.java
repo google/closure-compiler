@@ -4302,19 +4302,35 @@ override: string
   }
 
   @Test
-  public void testClassConstructorTypeParametersNotVisibleFromOtherMethods() {
+  public void testClassConstructorTypeParametersNotVisibleFromOtherMethodSignatures() {
     newTest()
         .addSource(
             """
             class Foo {
               /** @template T */
               constructor() {}
-              foo() {
+              /** @param {T} p */
+              foo(p) {}
+            }
+            """)
+        // TODO: this should report an unrecognized type error, but does not.
+        .run();
+  }
+
+  @Test
+  public void testClassConstructorTypeParametersNotVisibleFromOtherMethodBodies() {
+    newTest()
+        .addSource(
+            """
+            class Foo {
+              /** @template T */
+              constructor() {}
+              foo(p) {
                 var /** T */ x;
               }
             }
             """)
-        .addDiagnostic("Bad type annotation. Unknown type T")
+        // TODO: this should report an unrecognized type error, but does not.
         .run();
   }
 

@@ -35,6 +35,7 @@ class PhaseOptimizer implements CompilerPass {
 
   private static final Logger logger = Logger.getLogger(PhaseOptimizer.class.getName());
   private final AbstractCompiler compiler;
+  private final ChangeTracker changeTracker;
   private final PerformanceTracker tracker;
   private final List<CompilerPass> passes;
   private boolean inLoop;
@@ -88,6 +89,7 @@ class PhaseOptimizer implements CompilerPass {
     this.compiler = comp;
     this.jsRoot = comp.getJsRoot();
     this.tracker = tracker;
+    this.changeTracker = comp.getChangeTracker();
     this.passes = new ArrayList<>();
     this.inLoop = false;
     this.lastChange = START_TIME;
@@ -279,19 +281,19 @@ class PhaseOptimizer implements CompilerPass {
     private int lastCodeChangeQuery;
 
     ScopedChangeHandler() {
-      this.lastCodeChangeQuery = compiler.getChangeStamp();
+      this.lastCodeChangeQuery = changeTracker.getChangeStamp();
     }
 
     @Override
     public void reportChange() {
-      lastChange = compiler.getChangeStamp();
+      lastChange = changeTracker.getChangeStamp();
     }
 
     private boolean hasCodeChangedSinceLastCall() {
       boolean result = lastChange > lastCodeChangeQuery;
-      lastCodeChangeQuery = compiler.getChangeStamp();
+      lastCodeChangeQuery = changeTracker.getChangeStamp();
       // The next call to the method will happen at a different time
-      compiler.incrementChangeStamp();
+      changeTracker.incrementChangeStamp();
       return result;
     }
   }
@@ -325,7 +327,7 @@ class PhaseOptimizer implements CompilerPass {
 
       // Set up function-change tracking
       scopeHandler = new ScopedChangeHandler();
-      compiler.addChangeHandler(scopeHandler);
+      changeTracker.addChangeHandler(scopeHandler);
 
       // lastRuns is initialized before each loop. This way, when a pass is run
       // in the 2nd loop for the 1st time, it looks at all scopes.
@@ -373,11 +375,11 @@ class PhaseOptimizer implements CompilerPass {
                     && !didNotMakeChanges.contains(pass))
                 || (state == State.RUN_PASSES_THAT_CHANGED_STH_IN_PREV_ITER
                     && madeChanges.contains(pass))) {
-              compiler.incrementChangeStamp();
+              changeTracker.incrementChangeStamp();
               currentPass = pass;
               pass.process(externs, root);
               runInPrevIter.add(pass);
-              lastRuns.put(pass, compiler.getChangeStamp());
+              lastRuns.put(pass, changeTracker.getChangeStamp());
               if (hasHaltingErrors()) {
                 return;
               } else if (scopeHandler.hasCodeChangedSinceLastCall()) {
@@ -410,7 +412,7 @@ class PhaseOptimizer implements CompilerPass {
         }
       } finally {
         inLoop = false;
-        compiler.removeChangeHandler(scopeHandler);
+        changeTracker.removeChangeHandler(scopeHandler);
       }
     }
 

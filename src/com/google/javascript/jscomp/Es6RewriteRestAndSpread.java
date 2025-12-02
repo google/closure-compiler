@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.javascript.jscomp.colors.StandardColors;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager.JsLibField;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -39,6 +40,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
   private final StaticScope namespace;
+  private final JsLibField getRestArguments;
 
   private static final AstFactory.Type arrayType = type(StandardColors.ARRAY_ID);
   private static final AstFactory.Type concatFnType = type(StandardColors.TOP_OBJECT);
@@ -47,6 +49,8 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.namespace = compiler.getTranspilationNamespace();
+    this.getRestArguments =
+        compiler.getRuntimeJsLibManager().getJsLibField("$jscomp.getRestArguments");
   }
 
   @Override
@@ -58,21 +62,16 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
   @Override
   public void visit(NodeTraversal traversal, Node current, Node parent) {
     switch (current.getToken()) {
-      case ITER_REST:
-        visitRestParam(traversal, current, parent);
-        break;
-      case ARRAYLIT:
-      case NEW:
-      case CALL:
+      case ITER_REST -> visitRestParam(traversal, current, parent);
+      case ARRAYLIT, NEW, CALL -> {
         for (Node child = current.getFirstChild(); child != null; child = child.getNext()) {
           if (child.isSpread()) {
             visitArrayLitOrCallWithSpread(current);
             break;
           }
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
   }
 
@@ -101,8 +100,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
                 paramName, // creates a new NAME node with name `paramName`
                 astFactory.createCall(
                     astFactory.createGetPropWithUnknownType(
-                        astFactory.createQName(this.namespace, "$jscomp.getRestArguments"),
-                        "apply"),
+                        astFactory.createQName(this.namespace, getRestArguments), "apply"),
                     type(nameNode),
                     astFactory.createNumber(restIndex),
                     astFactory.createArgumentsReference()))
@@ -116,7 +114,11 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       functionBody.addChildToBack(let);
     }
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
-    compiler.ensureLibraryInjected("es6/util/restarguments", /* force= */ false);
+    // TODO: b/421971366 - we should instead assert that es6/util/restargument was already injected
+    // before this point, by InjectTranspilationRuntimeLibraries.
+    compiler
+        .getRuntimeJsLibManager()
+        .ensureLibraryInjected("es6/util/restarguments", /* force= */ false);
     t.reportCodeChange();
   }
 
@@ -194,7 +196,6 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
             currGroup = null;
           }
 
-          TranspilationUtil.preloadTranspilationRuntimeFunction(compiler, "arrayFromIterable");
           groups.add(
               astFactory.createJscompArrayFromIterableCall(spreadExpression, this.namespace));
         }

@@ -47,6 +47,7 @@ import static com.google.javascript.jscomp.base.JSCompDoubles.isPositive;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -58,9 +59,11 @@ import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.jstype.JSType;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -205,6 +208,9 @@ public class Node {
     CLOSURE_UNAWARE_SHADOW,
     // Indicates that a string node is a private identifier (e.g. `class { #privateProp }`).
     PRIVATE_IDENTIFIER,
+    // Indicates that this node is part of a subtree detached because it originated
+    // from a Closure-unaware file.
+    IS_IN_CLOSURE_UNAWARE_SUBTREE,
   }
 
   // Avoid cloning "values" repeatedly in hot code, we save it off now.
@@ -651,6 +657,23 @@ public class Node {
     return (Node) this.getProp(Prop.CLOSURE_UNAWARE_SHADOW);
   }
 
+  public final void setIsInClosureUnawareSubtree(boolean value) {
+    if (propListHead == null
+        || propListHead.propType != Prop.SOURCE_FILE.ordinal()
+        || propListHead.next != null) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Cannot set IS_IN_CLOSURE_UNAWARE_SUBTREE property on a node which proplist is not a"
+                  + " single SOURCE_FILE prop: %s %s",
+              this, getPropListDebugString()));
+    }
+    this.putBooleanProp(Prop.IS_IN_CLOSURE_UNAWARE_SUBTREE, value);
+  }
+
+  public final boolean getIsInClosureUnawareSubtree() {
+    return this.getBooleanProp(Prop.IS_IN_CLOSURE_UNAWARE_SUBTREE);
+  }
+
   /**
    * Gets the ith child, note that this is O(N) where N is the number of children.
    *
@@ -1042,42 +1065,42 @@ public class Node {
       // property that was discovered by a check in `deserializeProperties()`, so initially
       // this method was created to cover the checks previously done there.
       switch (prop) {
-        case IS_PARENTHESIZED:
+        case IS_PARENTHESIZED -> {
           if (!IR.mayBeExpression(this)) {
             violationMessageConsumer.accept("non-expression is parenthesized");
           }
-          break;
-        case ARROW_FN:
+        }
+        case ARROW_FN -> {
           if (!isFunction()) {
             violationMessageConsumer.accept("invalid ARROW_FN prop");
           }
-          break;
-        case ASYNC_FN:
+        }
+        case ASYNC_FN -> {
           if (!isFunction()) {
             violationMessageConsumer.accept("invalid ASYNC_FN prop");
           }
-          break;
-        case SYNTHETIC:
+        }
+        case SYNTHETIC -> {
           if (!isBlock()) {
             violationMessageConsumer.accept("invalid SYNTHETIC prop");
           }
-          break;
-        case COLOR_FROM_CAST:
+        }
+        case COLOR_FROM_CAST -> {
           if (getColor() == null) {
             violationMessageConsumer.accept("COLOR_FROM_CAST with no Color");
           }
-          break;
-        case START_OF_OPT_CHAIN:
+        }
+        case START_OF_OPT_CHAIN -> {
           if (!(isOptChainCall() || isOptChainGetElem() || isOptChainGetProp())) {
             violationMessageConsumer.accept("START_OF_OPT_CHAIN on non-optional Node");
           }
-          break;
-        case CONSTANT_VAR_FLAGS:
+        }
+        case CONSTANT_VAR_FLAGS -> {
           if (!(isName() || isImportStar())) {
             violationMessageConsumer.accept("invalid CONST_VAR_FLAGS");
           }
-          break;
-        case SYNTHESIZED_UNFULFILLED_NAME_DECLARATION:
+        }
+        case SYNTHESIZED_UNFULFILLED_NAME_DECLARATION -> {
           // note: we could relax this restriction if VarCheck needed to generate other forms of
           // synthetic externs
           if (!isVar()) {
@@ -1088,17 +1111,17 @@ public class Node {
             violationMessageConsumer.accept(
                 "Expected all synthetic unfulfilled declarations to be `var <name>`");
           }
-          break;
-        case CLOSURE_UNAWARE_SHADOW:
+        }
+        case CLOSURE_UNAWARE_SHADOW -> {
           PropListItem shadowProp = lookupProperty(Prop.CLOSURE_UNAWARE_SHADOW);
           if (!(shadowProp instanceof Node.ObjectPropListItem)
               || !(shadowProp.getObjectValue() instanceof Node)) {
             violationMessageConsumer.accept("CLOSURE_UNAWARE_SHADOW property must point to a Node");
           }
-          break;
-        default:
+        }
+        default -> {
           // No validation is currently done for other properties
-          break;
+        }
       }
     }
   }
@@ -1190,10 +1213,9 @@ public class Node {
       Prop prop = propValues[propListItem.propType];
 
       switch (prop) {
-        case TYPE_BEFORE_CAST:
-          propSet = setNodePropertyBit(propSet, NodeProperty.COLOR_FROM_CAST);
-          break;
-        case CONSTANT_VAR_FLAGS:
+        case TYPE_BEFORE_CAST ->
+            propSet = setNodePropertyBit(propSet, NodeProperty.COLOR_FROM_CAST);
+        case CONSTANT_VAR_FLAGS -> {
           int intVal = propListItem.getIntValue();
           if (anyBitSet(intVal, ConstantVarFlags.INFERRED)) {
             propSet = setNodePropertyBit(propSet, NodeProperty.IS_INFERRED_CONSTANT);
@@ -1201,26 +1223,25 @@ public class Node {
           if (anyBitSet(intVal, ConstantVarFlags.DECLARED)) {
             propSet = setNodePropertyBit(propSet, NodeProperty.IS_DECLARED_CONSTANT);
           }
-          break;
-        case SIDE_EFFECT_FLAGS:
-          propSet = setNodePropertySideEffectFlags(propSet, propListItem.getIntValue());
-          break;
-        case CLOSURE_UNAWARE_SHADOW:
-          // This is a bit of an unusual case, because the CLOSURE_UNAWARE_SHADOW Prop is a Node
-          // pointer, not a boolean.
-          // However, it is treated as a boolean property in the TypedAST representation as a signal
-          // that the child ASTNode is shadowed code and not a normal child node.
-          // We check for this bit when building in ScriptNodeDeserializer.
-          propSet = setNodePropertyBit(propSet, NodeProperty.CLOSURE_UNAWARE_SHADOW);
-          break;
-        default:
+        }
+        case SIDE_EFFECT_FLAGS ->
+            propSet = setNodePropertySideEffectFlags(propSet, propListItem.getIntValue());
+        case CLOSURE_UNAWARE_SHADOW ->
+            // This is a bit of an unusual case, because the CLOSURE_UNAWARE_SHADOW Prop is a Node
+            // pointer, not a boolean.
+            // However, it is treated as a boolean property in the TypedAST representation as a
+            // signal
+            // that the child ASTNode is shadowed code and not a normal child node.
+            // We check for this bit when building in ScriptNodeDeserializer.
+            propSet = setNodePropertyBit(propSet, NodeProperty.CLOSURE_UNAWARE_SHADOW);
+        default -> {
           if (propListItem instanceof Node.IntPropListItem) {
             NodeProperty nodeProperty = PropTranslator.serialize(prop);
             if (nodeProperty != null) {
               propSet = setNodePropertyBit(propSet, nodeProperty);
             }
           }
-          break;
+        }
       }
     }
     return propSet;
@@ -1250,12 +1271,26 @@ public class Node {
     return propSet;
   }
 
+  /** Returns a string representation of the properties on this node, for debugging. */
+  public final String getPropListDebugString() {
+    PropListItem propListItem = this.propListHead;
+    List<String> propListStrRepr = new ArrayList<>();
+    while (propListItem != null) {
+      propListStrRepr.add(Prop.values()[propListItem.propType].name());
+      propListItem = propListItem.next;
+    }
+    Joiner joiner = Joiner.on("->");
+    return joiner.join(propListStrRepr);
+  }
+
   @SuppressWarnings("EnumOrdinal") // performance tuning
-  public final void deserializeProperties(long propSet) {
+  public final void deserializeProperties(long propSet, boolean isInClosureUnawareSubtree) {
     if (this.isRoot()) {
       checkState(this.propListHead == null, this.propListHead);
     } else {
-      checkState(this.propListHead.propType == Prop.SOURCE_FILE.ordinal(), this.propListHead);
+      checkState(
+          this.validatePropListTailOrdering(isInClosureUnawareSubtree),
+          "Node not ready to receive properties");
     }
 
     // We'll gather the bits for CONST_VAR_FLAGS and SIDE_EFFECT_FLAGS into these variables.
@@ -1268,39 +1303,27 @@ public class Node {
       }
       NodeProperty nodeProperty = NodeProperty.forNumber(i);
       switch (nodeProperty) {
-        case IS_DECLARED_CONSTANT:
-          constantVarFlags |= ConstantVarFlags.DECLARED;
-          break;
-        case IS_INFERRED_CONSTANT:
-          constantVarFlags |= ConstantVarFlags.INFERRED;
-          break;
-        case MUTATES_GLOBAL_STATE:
-          sideEffectFlags |= SideEffectFlags.MUTATES_GLOBAL_STATE;
-          break;
-        case MUTATES_THIS:
-          sideEffectFlags |= SideEffectFlags.MUTATES_THIS;
-          break;
-        case MUTATES_ARGUMENTS:
-          sideEffectFlags |= SideEffectFlags.MUTATES_ARGUMENTS;
-          break;
-        case THROWS:
-          sideEffectFlags |= SideEffectFlags.THROWS;
-          break;
-        case CLOSURE_UNAWARE_SHADOW:
+        case IS_DECLARED_CONSTANT -> constantVarFlags |= ConstantVarFlags.DECLARED;
+        case IS_INFERRED_CONSTANT -> constantVarFlags |= ConstantVarFlags.INFERRED;
+        case MUTATES_GLOBAL_STATE -> sideEffectFlags |= SideEffectFlags.MUTATES_GLOBAL_STATE;
+        case MUTATES_THIS -> sideEffectFlags |= SideEffectFlags.MUTATES_THIS;
+        case MUTATES_ARGUMENTS -> sideEffectFlags |= SideEffectFlags.MUTATES_ARGUMENTS;
+        case THROWS -> sideEffectFlags |= SideEffectFlags.THROWS;
+        case CLOSURE_UNAWARE_SHADOW -> {
           // Ignore this - we need the deserialized child to actually set the shadow.
           // We'll check for this higher up in the call stack.
           // If we don't ignore this, then a boolean prop is created (and then later clobbered)
           // representing this property, which seems silly at best and potentially dangerous at
           // worst.
-          break;
-        default:
+        }
+        default -> {
           // All other properties are booleans that are 1-to-1 equivalent with Node properties.
           Prop prop = PropTranslator.deserialize(nodeProperty);
           if (prop == null) {
             throw new IllegalStateException("Can not translate " + nodeProperty + " to AST Prop");
           }
           this.propListHead = new IntPropListItem((byte) prop.ordinal(), 1, this.propListHead);
-          break;
+        }
       }
     }
 
@@ -2138,6 +2161,94 @@ public class Node {
   }
 
   /**
+   * Returns the second to last item in the property list, for nodes in a closure-unaware subtree
+   * this will return IS_IN_CLOSURE_UNAWARE_SUBTREE -> SOURCE_FILE. For nodes int the main AST this
+   * will return [ANY_OTHER_PROPERTY] -> SOURCE_FILE. This method is only intended to temporarily
+   * test the IS_IN_CLOSURE_UNAWARE_SUBTREE -> SOURCE_FILE part of the property list is correctly
+   * shared between two subtrees of the same @closureUnaware annotated source file.
+   */
+  // TODO(user): these getters and the following two validation methods are a bit redundant.
+  // We should consider simplifying them in a follow up CL.
+  private final @Nullable PropListItem getSecondToLastPropListItem() {
+    PropListItem propListItem = propListHead;
+    if (propListItem == null || propListItem.next == null) {
+      return null;
+    }
+    while (propListItem.next.next != null) {
+      propListItem = propListItem.next;
+    }
+    return propListItem;
+  }
+
+  private final @Nullable PropListItem getLastPropListItem() {
+    PropListItem propListItem = propListHead;
+    if (propListItem == null) {
+      return null;
+    }
+    while (propListItem.next != null) {
+      propListItem = propListItem.next;
+    }
+    return propListItem;
+  }
+
+  private final boolean validatePropListTailOrdering(boolean shouldNodeBeClosureUnaware) {
+
+    PropListItem prev = null;
+    PropListItem curr = this.propListHead;
+    if (curr == null) {
+      return false;
+    }
+    while (curr.next != null) {
+      prev = curr;
+      curr = curr.next;
+    }
+    if (curr.propType != Prop.SOURCE_FILE.ordinal()) {
+      return false;
+    }
+
+    if (shouldNodeBeClosureUnaware) {
+      if (prev == null || prev.propType != Prop.IS_IN_CLOSURE_UNAWARE_SUBTREE.ordinal()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @VisibleForTesting
+  public static final boolean validateMemorySensitivePropertyGuarantees(
+      Node node1,
+      boolean shouldNode1BeClosureUnaware,
+      Node node2,
+      boolean shouldNode2BeClosureUnaware) {
+    // checks to do here:
+    // 1. there should be only one sourcefile proplist item and it should be the last item
+    // 2. if there is a proplist item that is IS_INCLOSURE_UNAWARE_SUBTREE it should be followed by
+    // a SOURCE_FILE proplist item
+    // 3. if there is another node, check that the actual proplist items are the same for the
+    // sourcefile and the IS_IN_CLOSURE_UNAWARE_SUBTREE
+    // validate that the last two elements of the property list are IS_IN_CLOSURE_UNAWARE_SUBTREE
+    // and SOURCE_FILE, also validate that these propelist items are the same actual item and not
+    // only the same values.
+
+    if (!node1.validatePropListTailOrdering(shouldNode1BeClosureUnaware)) {
+      return false;
+    }
+    if (!node2.validatePropListTailOrdering(shouldNode2BeClosureUnaware)) {
+      return false;
+    }
+    if (node1.getLastPropListItem() != node2.getLastPropListItem()) {
+      return false;
+    }
+    if (shouldNode1BeClosureUnaware && shouldNode2BeClosureUnaware) {
+      if (node1.getSecondToLastPropListItem() != node2.getSecondToLastPropListItem()) {
+        return false;
+      }
+    }
+    // return true if all of the property list items are what we expect.
+    return true;
+  }
+
+  /**
    * Returns whether this node is equivalent semantically to the provided node.
    *
    * @param compareType Whether to compare the JSTypes of the nodes.
@@ -2271,18 +2382,23 @@ public class Node {
    */
   public final @Nullable String getQualifiedName() {
     switch (token) {
-      case NAME:
+      case NAME -> {
         String name = getString();
         return name.isEmpty() ? null : name;
-      case GETPROP:
+      }
+      case GETPROP -> {
         StringBuilder builder = getQualifiedNameForGetProp(0);
         return builder != null ? builder.toString() : null;
-      case THIS:
+      }
+      case THIS -> {
         return "this";
-      case SUPER:
+      }
+      case SUPER -> {
         return "super";
-      default:
+      }
+      default -> {
         return null;
+      }
     }
   }
 

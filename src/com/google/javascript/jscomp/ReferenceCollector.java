@@ -284,16 +284,7 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
   private static boolean isBlockBoundary(Node n, Node parent) {
     if (parent != null) {
       switch (parent.getToken()) {
-        case DO:
-        case FOR:
-        case FOR_IN:
-        case FOR_OF:
-        case FOR_AWAIT_OF:
-        case TRY:
-        case WHILE:
-        case WITH:
-        case CLASS:
-        case SWITCH_BODY:
+        case DO, FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, TRY, WHILE, WITH, CLASS, SWITCH_BODY -> {
           // NOTE: TRY has up to 3 child blocks:
           // TRY
           //   BLOCK
@@ -304,21 +295,21 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
           // FINALLY token. For simplicity, we consider each BLOCK
           // a separate basic BLOCK.
           return true;
-        case AND:
-        case HOOK:
-        case IF:
-        case OR:
-        case COALESCE:
-        case OPTCHAIN_GETPROP:
-        case OPTCHAIN_GETELEM:
-        case OPTCHAIN_CALL:
-        case DEFAULT_VALUE:
+        }
+        case AND,
+            HOOK,
+            IF,
+            OR,
+            COALESCE,
+            OPTCHAIN_GETPROP,
+            OPTCHAIN_GETELEM,
+            OPTCHAIN_CALL,
+            DEFAULT_VALUE -> {
           // The first child of a conditional is not a boundary,
           // but all the rest of the children are.
           return n != parent.getFirstChild();
-
-        default:
-          break;
+        }
+        default -> {}
       }
     }
 

@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.StandardColors;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager.JsLibField;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
@@ -33,11 +34,19 @@ class Es6TemplateLiterals {
   private final AstFactory astFactory;
   private final AbstractCompiler compiler;
   private final StaticScope namespace;
+  private final JsLibField createTemplateTagFirstArg;
+  private final JsLibField createTemplateTagFirstArgWithRaw;
 
   Es6TemplateLiterals(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.namespace = this.compiler.getTranspilationNamespace();
+
+    var runtimeJsLibManager = compiler.getRuntimeJsLibManager();
+    this.createTemplateTagFirstArg =
+        runtimeJsLibManager.getJsLibField("$jscomp.createTemplateTagFirstArg");
+    this.createTemplateTagFirstArgWithRaw =
+        runtimeJsLibManager.getJsLibField("$jscomp.createTemplateTagFirstArgWithRaw");
   }
 
   /**
@@ -122,7 +131,7 @@ class Es6TemplateLiterals {
       // cooked array at runtime to make the raw array a copy of the cooked array.
       callTemplateTagArgCreator =
           astFactory.createCall(
-              astFactory.createQName(this.namespace, "$jscomp.createTemplateTagFirstArg"),
+              astFactory.createQName(this.namespace, createTemplateTagFirstArg),
               type(siteObject),
               siteObject.cloneTree());
     } else {
@@ -130,7 +139,7 @@ class Es6TemplateLiterals {
       Node raw = createRawStringArray(templateLit);
       callTemplateTagArgCreator =
           astFactory.createCall(
-              astFactory.createQName(this.namespace, "$jscomp.createTemplateTagFirstArgWithRaw"),
+              astFactory.createQName(this.namespace, createTemplateTagFirstArgWithRaw),
               type(siteObject),
               siteObject.cloneTree(),
               raw);

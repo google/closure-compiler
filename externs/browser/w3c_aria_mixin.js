@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 The Closure Compiler Authors.
+ * Copyright 2025 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,12 @@ ARIAMixin.prototype.ariaAtomic;
 ARIAMixin.prototype.ariaAutoComplete;
 
 /**
+ * @type {?Element}
+ * @see https://www.w3.org/TR/wai-aria-1.2/#aria-activedescendant
+ */
+ARIAMixin.prototype.ariaActiveDescendantElement;
+
+/**
  * @type {string|undefined}
  */
 ARIAMixin.prototype.ariaBrailleLabel;
@@ -95,6 +101,12 @@ ARIAMixin.prototype.ariaColIndexText;
 ARIAMixin.prototype.ariaColSpan;
 
 /**
+ * @type {?Array<!Element>}
+ * @see https://www.w3.org/TR/wai-aria-1.2/#aria-controls
+ */
+ARIAMixin.prototype.ariaControlsElements;
+
+/**
  * @type {string|undefined}
  * @see https://www.w3.org/TR/wai-aria-1.2/#aria-current
  */
@@ -106,10 +118,28 @@ ARIAMixin.prototype.ariaCurrent;
 ARIAMixin.prototype.ariaDescription;
 
 /**
+ * @type {?Array<!Element>}
+ * @see https://www.w3.org/TR/wai-aria-1.2/#aria-describedby
+ */
+ARIAMixin.prototype.ariaDescribedByElements;
+
+/**
+ * @type {?Array<!Element>}
+ * @see https://www.w3.org/TR/wai-aria-1.2/#aria-details
+ */
+ARIAMixin.prototype.ariaDetailsElements;
+
+/**
  * @type {string|undefined}
  * @see https://www.w3.org/TR/wai-aria-1.2/#aria-disabled
  */
 ARIAMixin.prototype.ariaDisabled;
+
+/**
+ * @type {?Array<!Element>}
+ * @see https://www.w3.org/TR/wai-aria-1.2/#aria-flowto
+ */
+ARIAMixin.prototype.ariaFlowToElements;
 
 /**
  * @type {string|undefined}
@@ -149,6 +179,12 @@ ARIAMixin.prototype.ariaKeyShortcuts;
 ARIAMixin.prototype.ariaLabel;
 
 /**
+ * @type {?Array<!Element>}
+ * @see https://www.w3.org/TR/wai-aria-1.2/#aria-labelledby
+ */
+ARIAMixin.prototype.ariaLabelledByElements;
+
+/**
  * @type {string|undefined}
  * @see https://www.w3.org/TR/wai-aria-1.2/#aria-level
  */
@@ -183,6 +219,12 @@ ARIAMixin.prototype.ariaMultiSelectable;
  * @see https://www.w3.org/TR/wai-aria-1.2/#aria-orientation
  */
 ARIAMixin.prototype.ariaOrientation;
+
+/**
+ * @type {?Array<!Element>}
+ * @see https://www.w3.org/TR/wai-aria-1.2/#aria-owns
+ */
+ARIAMixin.prototype.ariaOwnsElements;
 
 /**
  * @type {string|undefined}

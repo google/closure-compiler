@@ -25,6 +25,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -169,7 +170,7 @@ class ProcessTweaks implements CompilerPass {
 
   static {
     TWEAK_FUNCTIONS_MAP = new LinkedHashMap<>();
-    for (TweakFunction func : TweakFunction.values()) {
+    for (TweakFunction func : EnumSet.allOf(TweakFunction.class)) {
       TWEAK_FUNCTIONS_MAP.put(func.getName(), func);
     }
   }
@@ -274,9 +275,7 @@ class ProcessTweaks implements CompilerPass {
       TweakInfo tweakInfo = allTweaks.computeIfAbsent(tweakId, TweakInfo::new);
 
       switch (tweakFunc) {
-        case REGISTER_BOOLEAN:
-        case REGISTER_NUMBER:
-        case REGISTER_STRING:
+        case REGISTER_BOOLEAN, REGISTER_NUMBER, REGISTER_STRING -> {
           // Ensure the ID contains only valid characters.
           if (!ID_MATCHER.matchesAllOf(tweakId)) {
             compiler.report(JSError.make(tweakIdNode, INVALID_TWEAK_ID_ERROR));
@@ -295,13 +294,9 @@ class ProcessTweaks implements CompilerPass {
           }
 
           Node tweakDefaultValueNode = tweakIdNode.getNext().getNext();
-          tweakInfo.addRegisterCall(t.getSourceName(), tweakFunc, n, tweakDefaultValueNode);
-          break;
-        case GET_BOOLEAN:
-        case GET_NUMBER:
-        case GET_STRING:
-          tweakInfo.addGetterCall(t.getSourceName(), tweakFunc, n);
-          break;
+          tweakInfo.addRegisterCall(tweakFunc, n, tweakDefaultValueNode);
+        }
+        case GET_BOOLEAN, GET_NUMBER, GET_STRING -> tweakInfo.addGetterCall(tweakFunc, n);
       }
     }
   }
@@ -380,13 +375,12 @@ class ProcessTweaks implements CompilerPass {
       }
     }
 
-    void addRegisterCall(
-        String sourceName, TweakFunction tweakFunc, Node callNode, Node defaultValueNode) {
+    void addRegisterCall(TweakFunction tweakFunc, Node callNode, Node defaultValueNode) {
       registerCall = new TweakFunctionCall(tweakFunc, callNode, defaultValueNode);
       functionCalls.add(registerCall);
     }
 
-    void addGetterCall(String sourceName, TweakFunction tweakFunc, Node callNode) {
+    void addGetterCall(TweakFunction tweakFunc, Node callNode) {
       functionCalls.add(new TweakFunctionCall(tweakFunc, callNode));
     }
 

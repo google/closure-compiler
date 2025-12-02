@@ -80,6 +80,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
                 /** @constructor */
                 $jscomp.generator.Context.PropertyIterator = function() {};
                 $jscomp.asyncExecutePromiseGeneratorFunction = function(program) {};
+                $jscomp.asyncExecutePromiseGeneratorProgram = function(program) {};
                 """)
             .build());
   }
@@ -94,6 +95,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     enableTypeInfoValidation();
     replaceTypesWithColors();
     enableMultistageCompilation();
+    setGenericNameReplacements(SPECIAL_VARIABLES_MAP);
   }
 
   @Override
@@ -143,15 +145,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             """
                 .replace("VAR_DECLS", varDecls)
                 .replace("AFTER_BODY", afterBody));
-    rewriteGeneratorsTest(srcs, originalExpected);
-  }
-
-  private void rewriteGeneratorsTest(Sources srcs, Expected originalExpected) {
-    Expected modifiedExpected =
-        expected(
-            UnitTestUtils.updateGenericVarNamesInExpectedFiles(
-                (FlatSources) srcs, originalExpected, SPECIAL_VARIABLES_MAP));
-    test(srcs, modifiedExpected);
+    test(srcs, originalExpected);
   }
 
   private void rewriteGeneratorSwitchBody(String beforeBody, String afterBody) {
@@ -180,249 +174,236 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
   @Test
   public void testGeneratorForAsyncFunction() {
-    rewriteGeneratorsTest(
-        srcs(
-            """
-            f = function() {
-              return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
-                  function *() {
-                    var x = 6;
-                    yield x;
-                  });
-            }
-            """),
-        expected(
-            """
-            f = function () {
-              var x;
-              return (0, $jscomp.asyncExecutePromiseGeneratorProgram)(
-                  function (GEN_CONTEXT$0) {
-                     x = 6;
-                     return GEN_CONTEXT$0.yield(x, 0);
-                  });
-            }
-            """));
+    test(
+        """
+        f = function() {
+          return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+              function *() {
+                var x = 6;
+                yield x;
+              });
+        }
+        """,
+        """
+        f = function () {
+          var x;
+          return (0, $jscomp.asyncExecutePromiseGeneratorProgram)(
+              function (GEN_CONTEXT$0) {
+                 x = 6;
+                 return GEN_CONTEXT$0.yield(x, 0);
+              });
+        }
+        """);
 
-    rewriteGeneratorsTest(
-        srcs(
-            """
-            f = function(x) {
-              var $jscomp$restParams = [];
-              for (var $jscomp$restIndex = 0;
-                  $jscomp$restIndex < arguments.length;
-                  ++$jscomp$restIndex) {
-                $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];
-              }
-              {
-                var bla$0 = $jscomp$restParams;
-                return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
-                    function *() {
-                      var y = bla$0[0];
-                      yield y;
-                    });
-              }
-            }
-            """),
-        expected(
-            """
-            f = function (x) {
-              var $jscomp$restParams = [];
-              var $jscomp$restIndex = 0;
-              for (;
-                  $jscomp$restIndex < arguments.length;
-                  ++$jscomp$restIndex) {
-                $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];
-              }
-              {
-                var bla$0 = $jscomp$restParams;
-                var y;
-                return (0, $jscomp.asyncExecutePromiseGeneratorProgram)(
-                    function (GEN_CONTEXT$0) {
-                      y = bla$0[0];
-                      return GEN_CONTEXT$0.yield(y, 0);
-                    });
-              }
-            }
-            """));
+    test(
+        """
+        f = function(x) {
+          var $jscomp$restParams = [];
+          for (var $jscomp$restIndex = 0;
+              $jscomp$restIndex < arguments.length;
+              ++$jscomp$restIndex) {
+            $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];
+          }
+          {
+            var bla$0 = $jscomp$restParams;
+            return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                function *() {
+                  var y = bla$0[0];
+                  yield y;
+                });
+          }
+        }
+        """,
+        """
+        f = function (x) {
+          var $jscomp$restParams = [];
+          var $jscomp$restIndex = 0;
+          for (;
+              $jscomp$restIndex < arguments.length;
+              ++$jscomp$restIndex) {
+            $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];
+          }
+          {
+            var bla$0 = $jscomp$restParams;
+            var y;
+            return (0, $jscomp.asyncExecutePromiseGeneratorProgram)(
+                function (GEN_CONTEXT$0) {
+                  y = bla$0[0];
+                  return GEN_CONTEXT$0.yield(y, 0);
+                });
+          }
+        }
+        """);
   }
 
   @Test
   public void testUnnamed() {
-    rewriteGeneratorsTest(
-        srcs("f = function *() {};"),
-        expected(
-            """
-            f = function GEN_FUNC$0() {
-              return $jscomp.generator.createGenerator(
-                  GEN_FUNC$0,
-                  function (GEN_CONTEXT$0) {
-                     GEN_CONTEXT$0.jumpToEnd();
-                  });
-            }
-            """));
+    test(
+        "f = function *() {};",
+        """
+        f = function GEN_FUNC$0() {
+          return $jscomp.generator.createGenerator(
+              GEN_FUNC$0,
+              function (GEN_CONTEXT$0) {
+                 GEN_CONTEXT$0.jumpToEnd();
+              });
+        }
+        """);
   }
 
   @Test
   public void testConst() {
-    rewriteGeneratorsTest(
-        srcs(
-            """
-            /** @const */
-            var f = function *() {};
-            """),
-        expected(
-            """
-            /** @const */
-            var f = function GEN_FUNC$0() {
-              return $jscomp.generator.createGenerator(
-                  GEN_FUNC$0,
-                  function (GEN_CONTEXT$0) {
-                     GEN_CONTEXT$0.jumpToEnd();
-                  });
-            }
-            """));
+    test(
+        """
+        /** @const */
+        var f = function *() {};
+        """,
+        """
+        /** @const */
+        var f = function GEN_FUNC$0() {
+          return $jscomp.generator.createGenerator(
+              GEN_FUNC$0,
+              function (GEN_CONTEXT$0) {
+                 GEN_CONTEXT$0.jumpToEnd();
+              });
+        }
+        """);
   }
 
   @Test
   public void testContainsClosure() {
-    rewriteGeneratorsTest(
-        srcs(
-            """
-            function *f(o) {
-              var i = 0
-              var pp;
-              function msg(p) {
-                return i++ + ' ' + p + '\\n';
-              }
-              for (pp in obj) {
-                yield msg(pp);
-              }
-            }
-            """),
-        expected(
-            """
-            function f(o) {
-              function msg(p) {
-                return i++ + ' ' + p + '\\n';
-              }
-              var i
-              var pp;
-              var GEN_FORIN$0$0;
-              return $jscomp.generator.createGenerator(
-                  f,
-                  function (GEN_CONTEXT$0) {
-                     if (GEN_CONTEXT$0.nextAddress == 1) {
-                       i = 0;
-                       GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(obj);
-                     }
-                     if (!((pp = GEN_FORIN$0$0.getNext()) != null)) {
-                       return GEN_CONTEXT$0.jumpTo(0);
-                     }
-                     return GEN_CONTEXT$0.yield(msg(pp), 2);
-                  });
-            }
-            """));
+    test(
+        """
+        function *f(o) {
+          var i = 0
+          var pp;
+          function msg(p) {
+            return i++ + ' ' + p + '\\n';
+          }
+          for (pp in obj) {
+            yield msg(pp);
+          }
+        }
+        """,
+        """
+        function f(o) {
+          function msg(p) {
+            return i++ + ' ' + p + '\\n';
+          }
+          var i
+          var pp;
+          var GEN_FORIN$0$0;
+          return $jscomp.generator.createGenerator(
+              f,
+              function (GEN_CONTEXT$0) {
+                 if (GEN_CONTEXT$0.nextAddress == 1) {
+                   i = 0;
+                   GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(obj);
+                 }
+                 if (!((pp = GEN_FORIN$0$0.getNext()) != null)) {
+                   return GEN_CONTEXT$0.jumpTo(0);
+                 }
+                 return GEN_CONTEXT$0.yield(msg(pp), 2);
+              });
+        }
+        """);
   }
 
   @Test
   public void testContainsClosureAssignedToVariable() {
-    rewriteGeneratorsTest(
-        srcs(
-            """
-            function *f(o) {
-              var i = 0
-              var pp;
-              var msg = function(p) {
-                return i++ + ' ' + p + '\\n';
-              }
-              for (pp in obj) {
-                yield msg(pp);
-              }
-            }
-            """),
-        expected(
-            """
-            function f(o) {
-              var i
-              var pp;
-              var msg;
-              var GEN_FORIN$0$0;
-              return $jscomp.generator.createGenerator(
-                  f,
-                  function (GEN_CONTEXT$0) {
-                     if (GEN_CONTEXT$0.nextAddress == 1) {
-                       i = 0;
-            // TODO(bradfordcsmith): Maybe it would be better if we hoisted this function
-            // expression out so it doesn't create a new closure every time we enter this
-            // callback function?
-                       msg = function(p) {
-                         return i++ + ' ' + p + '\\n';
-                       };
-                       GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(obj);
-                     }
-                     if (!((pp = GEN_FORIN$0$0.getNext()) != null)) {
-                       return GEN_CONTEXT$0.jumpTo(0);
-                     }
-                     return GEN_CONTEXT$0.yield(msg(pp), 2);
-                  });
-            }
-            """));
+    test(
+        """
+        function *f(o) {
+          var i = 0
+          var pp;
+          var msg = function(p) {
+            return i++ + ' ' + p + '\\n';
+          }
+          for (pp in obj) {
+            yield msg(pp);
+          }
+        }
+        """,
+        """
+        function f(o) {
+          var i
+          var pp;
+          var msg;
+          var GEN_FORIN$0$0;
+          return $jscomp.generator.createGenerator(
+              f,
+              function (GEN_CONTEXT$0) {
+                 if (GEN_CONTEXT$0.nextAddress == 1) {
+                   i = 0;
+        // TODO(bradfordcsmith): Maybe it would be better if we hoisted this function
+        // expression out so it doesn't create a new closure every time we enter this
+        // callback function?
+                   msg = function(p) {
+                     return i++ + ' ' + p + '\\n';
+                   };
+                   GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(obj);
+                 }
+                 if (!((pp = GEN_FORIN$0$0.getNext()) != null)) {
+                   return GEN_CONTEXT$0.jumpTo(0);
+                 }
+                 return GEN_CONTEXT$0.yield(msg(pp), 2);
+              });
+        }
+        """);
   }
 
   @Test
   public void testContainsClosureAndTranspiledFromAsync() {
-    rewriteGeneratorsTest(
-        srcs(
-            """
-            function f(o) {
-              use(o);
-              return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
-                  function *() {
-                    var i = 0
-                    var pp;
-                    function msg(p) {
-                      return i++ + ' ' + p + '\\n';
-                    }
-                    for (pp in obj) {
-                      yield msg(pp);
-                    }
-                  });
-            }
-            """),
-        expected(
-            """
-            function f(o) {
-            // When Es6RewriteGenerators recognizes that it is transpiling code that was
-            // originally an async function, it will use the body of that function as the
-            // place to move variable declarations instead of putting them in the generator
-            // function body itself.
-            // To maintain normalization, all function declarations must go to the top
-              function msg(p) {
-                return i++ + ' ' + p + '\\n';
-              }
-            // In a real situation the only thing that is likely to be here is code that
-            // was generated by transpilations that occurred after async function transpilation
-            // and before generator transpilation. For example code for handling parameter
-            // destructuring.
-              use(o);
-            // Regular var declarations just go in the order they originally appeared
-            // immediately before the executor call.
-              var i
-              var pp;
-              var GEN_FORIN$0$0;
-              return (0, $jscomp.asyncExecutePromiseGeneratorProgram)(
-                  function (GEN_CONTEXT$0) {
-                     if (GEN_CONTEXT$0.nextAddress == 1) {
-                       i = 0;
-                       GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(obj);
-                     }
-                     if (!((pp = GEN_FORIN$0$0.getNext()) != null)) {
-                       return GEN_CONTEXT$0.jumpTo(0);
-                     }
-                     return GEN_CONTEXT$0.yield(msg(pp), 2);
-                  });
-            }
-            """));
+    test(
+        """
+        function f(o) {
+          use(o);
+          return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+              function *() {
+                var i = 0
+                var pp;
+                function msg(p) {
+                  return i++ + ' ' + p + '\\n';
+                }
+                for (pp in obj) {
+                  yield msg(pp);
+                }
+              });
+        }
+        """,
+        """
+        function f(o) {
+        // When Es6RewriteGenerators recognizes that it is transpiling code that was
+        // originally an async function, it will use the body of that function as the
+        // place to move variable declarations instead of putting them in the generator
+        // function body itself.
+        // To maintain normalization, all function declarations must go to the top
+          function msg(p) {
+            return i++ + ' ' + p + '\\n';
+          }
+        // In a real situation the only thing that is likely to be here is code that
+        // was generated by transpilations that occurred after async function transpilation
+        // and before generator transpilation. For example code for handling parameter
+        // destructuring.
+          use(o);
+        // Regular var declarations just go in the order they originally appeared
+        // immediately before the executor call.
+          var i
+          var pp;
+          var GEN_FORIN$0$0;
+          return (0, $jscomp.asyncExecutePromiseGeneratorProgram)(
+              function (GEN_CONTEXT$0) {
+                 if (GEN_CONTEXT$0.nextAddress == 1) {
+                   i = 0;
+                   GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(obj);
+                 }
+                 if (!((pp = GEN_FORIN$0$0.getNext()) != null)) {
+                   return GEN_CONTEXT$0.jumpTo(0);
+                 }
+                 return GEN_CONTEXT$0.yield(msg(pp), 2);
+              });
+        }
+        """);
   }
 
   @Test
@@ -433,19 +414,17 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
     rewriteGeneratorBody("yield 1;", "  return GEN_CONTEXT$0.yield(1, 0);");
 
-    Sources srcs = srcs("/** @param {*} x */ function *f(x, y) {}");
-    Expected originalExpected =
-        expected(
-            """
-            function f(x, y) {
-              return $jscomp.generator.createGenerator(
-                  f,
-                  function(GEN_CONTEXT$0) {
-                    GEN_CONTEXT$0.jumpToEnd();
-                  });
-            }
-            """);
-    rewriteGeneratorsTest(srcs, originalExpected);
+    test(
+        "/** @param {*} x */ function *f(x, y) {}",
+        """
+        function f(x, y) {
+          return $jscomp.generator.createGenerator(
+              f,
+              function(GEN_CONTEXT$0) {
+                GEN_CONTEXT$0.jumpToEnd();
+              });
+        }
+        """);
 
     rewriteGeneratorBodyWithVars(
         "var i = 0, j = 2;",
@@ -478,36 +457,34 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
   @Test
   public void testForLoopWithExtraVarDeclaration() {
-    rewriteGeneratorsTest(
-        srcs(
-            """
-            function *gen() {
-              var i = 2;
-              yield i;
-              use(i);
-              for (var i = 0; i < 3; i++) {
+    test(
+        """
+        function *gen() {
+          var i = 2;
+          yield i;
+          use(i);
+          for (var i = 0; i < 3; i++) {
+            use(i);
+          }
+        }
+        """,
+        """
+        function gen(){
+          var i;
+          return $jscomp.generator.createGenerator(
+              gen,
+              function(GEN_CONTEXT$0) {
+                if (GEN_CONTEXT$0.nextAddress==1) {
+                  i=2;
+                  return GEN_CONTEXT$0.yield(i,2);
+                }
                 use(i);
-              }
-            }
-            """),
-        expected(
-            """
-            function gen(){
-              var i;
-              return $jscomp.generator.createGenerator(
-                  gen,
-                  function(GEN_CONTEXT$0) {
-                    if (GEN_CONTEXT$0.nextAddress==1) {
-                      i=2;
-                      return GEN_CONTEXT$0.yield(i,2);
-                    }
-                    use(i);
-                    i = 0;
-                    for (; i < 3 ; i++) use(i);
-                    GEN_CONTEXT$0.jumpToEnd();
-                  })
-            }
-            """));
+                i = 0;
+                for (; i < 3 ; i++) use(i);
+                GEN_CONTEXT$0.jumpToEnd();
+              })
+        }
+        """);
   }
 
   @Test
@@ -527,43 +504,41 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
   @Test
   public void testReturnGenerator() {
-    rewriteGeneratorsTest(
-        srcs("function f() { return function *g() {yield 1;} }"),
-        expected(
-            """
-            function f() {
-              return function g() {
-                return $jscomp.generator.createGenerator(
-                    g,
-                    function(GEN_CONTEXT$0) {
-                      return GEN_CONTEXT$0.yield(1, 0);
-                    });
-              }
-            }
-            """));
+    test(
+        "function f() { return function *g() {yield 1;} }",
+        """
+        function f() {
+          return function g() {
+            return $jscomp.generator.createGenerator(
+                g,
+                function(GEN_CONTEXT$0) {
+                  return GEN_CONTEXT$0.yield(1, 0);
+                });
+          }
+        }
+        """);
   }
 
   @Test
   public void testNestedGenerator() {
-    rewriteGeneratorsTest(
-        srcs("function *f() { function *g() {yield 2;} yield 1; }"),
-        expected(
-            """
-            function f() {
-              function g() {
-                return $jscomp.generator.createGenerator(
-                    g,
-                    function(GEN_CONTEXT$0) {
-                      return GEN_CONTEXT$0.yield(2, 0);
-                    });
-              }
-              return $jscomp.generator.createGenerator(
-                  f,
-                  function(GEN_CONTEXT$1) {
-                    return GEN_CONTEXT$1.yield(1, 0);
-                  });
-            }
-            """));
+    test(
+        "function *f() { function *g() {yield 2;} yield 1; }",
+        """
+        function f() {
+          function g() {
+            return $jscomp.generator.createGenerator(
+                g,
+                function(GEN_CONTEXT$0) {
+                  return GEN_CONTEXT$0.yield(2, 0);
+                });
+          }
+          return $jscomp.generator.createGenerator(
+              f,
+              function(GEN_CONTEXT$1) {
+                return GEN_CONTEXT$1.yield(1, 0);
+              });
+        }
+        """);
   }
 
   @Test
@@ -714,48 +689,46 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
   @Test
   public void testDecomposeComplexYieldExpression() {
-    rewriteGeneratorsTest(
-        srcs(
-            """
-            /* @return {?} */ function *f() {
-              var o = {bar: function(x) {}};
-              (yield 5) && o.bar(yield 5);
-            }
-            """),
-        expected(
-            """
-            function f(){
-              var o;
-              var JSCompiler_temp$jscomp$0;
-              var JSCompiler_temp_const$jscomp$2;
-              var JSCompiler_temp_const$jscomp$1;
-              var JSCompiler_temp_const$jscomp$3;
-              return $jscomp.generator.createGenerator(f, function(GEN_CONTEXT$0) {
-                switch(GEN_CONTEXT$0.nextAddress) {
-                  case 1:
-                    o = {bar:function(x) {}};
-                    return GEN_CONTEXT$0.yield(5, 2);
-                  case 2:
-                    if (!(JSCompiler_temp$jscomp$0 = GEN_CONTEXT$0.yieldResult)) {
-                      GEN_CONTEXT$0.jumpTo(3);
-                      break;
-                    }
-                    JSCompiler_temp_const$jscomp$2 = o;
-                    JSCompiler_temp_const$jscomp$1 = JSCompiler_temp_const$jscomp$2.bar;
-                    JSCompiler_temp_const$jscomp$3 = JSCompiler_temp_const$jscomp$2;
-                    return GEN_CONTEXT$0.yield(5, 4);
-                  case 4:
-                    JSCompiler_temp$jscomp$0 =
-                        JSCompiler_temp_const$jscomp$1.call(
-                            JSCompiler_temp_const$jscomp$3,
-                            GEN_CONTEXT$0.yieldResult);
-                  case 3:
-                    JSCompiler_temp$jscomp$0;
-                    GEN_CONTEXT$0.jumpToEnd();
+    test(
+        """
+        /* @return {?} */ function *f() {
+          var o = {bar: function(x) {}};
+          (yield 5) && o.bar(yield 5);
+        }
+        """,
+        """
+        function f(){
+          var o;
+          var JSCompiler_temp$jscomp$0;
+          var JSCompiler_temp_const$jscomp$2;
+          var JSCompiler_temp_const$jscomp$1;
+          var JSCompiler_temp_const$jscomp$3;
+          return $jscomp.generator.createGenerator(f, function(GEN_CONTEXT$0) {
+            switch(GEN_CONTEXT$0.nextAddress) {
+              case 1:
+                o = {bar:function(x) {}};
+                return GEN_CONTEXT$0.yield(5, 2);
+              case 2:
+                if (!(JSCompiler_temp$jscomp$0 = GEN_CONTEXT$0.yieldResult)) {
+                  GEN_CONTEXT$0.jumpTo(3);
+                  break;
                 }
-              });
+                JSCompiler_temp_const$jscomp$2 = o;
+                JSCompiler_temp_const$jscomp$1 = JSCompiler_temp_const$jscomp$2.bar;
+                JSCompiler_temp_const$jscomp$3 = JSCompiler_temp_const$jscomp$2;
+                return GEN_CONTEXT$0.yield(5, 4);
+              case 4:
+                JSCompiler_temp$jscomp$0 =
+                    JSCompiler_temp_const$jscomp$1.call(
+                        JSCompiler_temp_const$jscomp$3,
+                        GEN_CONTEXT$0.yieldResult);
+              case 3:
+                JSCompiler_temp$jscomp$0;
+                GEN_CONTEXT$0.jumpToEnd();
             }
-            """));
+          });
+        }
+        """);
   }
 
   @Test
@@ -1767,13 +1740,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     Node assign = case1Node.getSecondChild().getFirstFirstChild();
     checkState(assign.isAssign(), assign);
 
-    Color propertyIterator =
-        Iterables.getOnlyElement(
-            CodeSubTree.findFirstNode(
-                    getLastCompiler().getExternsRoot(),
-                    (n) -> n.matchesQualifiedName("$jscomp.generator.Context.PropertyIterator"))
-                .getColor()
-                .getInstanceColors());
+    Color propertyIterator = StandardColors.TOP_OBJECT;
     assertThat(assign.getColor()).isEqualTo(propertyIterator);
     assertThat(assign.getFirstChild().getColor()).isEqualTo(propertyIterator);
     assertThat(assign.getSecondChild().getColor()).isEqualTo(propertyIterator);

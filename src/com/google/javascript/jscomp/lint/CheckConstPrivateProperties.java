@@ -69,13 +69,10 @@ public class CheckConstPrivateProperties extends AbstractPostOrderCallback imple
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case SCRIPT:
-        // Exiting the script, report any non-const privates not modified in the file.
-        reportMissingConst(t);
-        break;
-
-      case GETELEM:
-      case GETPROP:
+      case SCRIPT ->
+          // Exiting the script, report any non-const privates not modified in the file.
+          reportMissingConst(t);
+      case GETELEM, GETPROP -> {
         final Node propNode;
         if (n.isGetProp()) {
           propNode = n;
@@ -92,21 +89,15 @@ public class CheckConstPrivateProperties extends AbstractPostOrderCallback imple
           // Mark any other modification operation as a modified property, to deal with lambdas, etc
           modified.add(propNode.getString());
         }
-        break;
-
-      case FUNCTION:
+      }
+      case FUNCTION -> {
         JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
         if (info != null && (info.isConstructor() || info.isInterface())) {
           recordConstructorOrInterface(n);
         }
-        break;
-
-      case CLASS:
-        recordConstructorOrInterface(n);
-        break;
-
-      default:
-        break;
+      }
+      case CLASS -> recordConstructorOrInterface(n);
+      default -> {}
     }
   }
 

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -64,12 +65,6 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
 
   public RemoveUnusedCodeNameAnalyzerTest() {
     super(EXTERNS);
-  }
-
-  @Override
-  protected int getNumRepetitions() {
-    // pass reaches steady state after 1 iteration.
-    return 1;
   }
 
   @Override
@@ -285,6 +280,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): enable or remove
+  @Test
+  @Ignore
   public void disabledTestRemoveDeclaration3() {
     test("var a,b,c; c = a = b = {}; a.x = 1;", "");
   }
@@ -327,6 +324,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): enable or remove this test
+  @Test
+  @Ignore
   public void disabledTestRemoveFunction4() {
     test("var a = {}; a.b = {}; a.b.c = function() {};", "");
   }
@@ -628,6 +627,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): enable or remove this
+  @Test
+  @Ignore
   public void disabledTestNamespacedClass3() {
     test("var a = {}; a.b = function() {}; a.b.prototype = {x: function() {}};", "");
   }
@@ -1612,6 +1613,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): Enable or remove this test.
+  @Test
+  @Ignore
   public void disabledTestShortCircuit1() {
     test("var a = doThing1() || 1", "doThing1()");
   }
@@ -1632,6 +1635,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): Enable or remove this test.
+  @Test
+  @Ignore
   public void disabledTestShortCircuit5() {
     test("var a = doThing1() && 1", "doThing1()");
   }
@@ -1870,6 +1875,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): enable or remove this test
+  @Test
+  @Ignore
   public void disabledTestAssignWithHook8() {
     test(
         "function Foo(){} var foo = null; var f = window.a  ? new Foo() : foo;",
@@ -1877,6 +1884,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): enable or remove this test
+  @Test
+  @Ignore
   public void disabledTestAssignWithHook9() {
     test(
         "function Foo(){} var foo = null; var f = {};f.b = window.a  ? new Foo() : foo;",
@@ -2015,6 +2024,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): Enable or remove
+  @Test
+  @Ignore
   public void disabledTestRefChain3() {
     test(
         "var a = 1; var b = a; var c = b; var d = c + doThing1()",
@@ -2022,6 +2033,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): Enable or remove
+  @Test
+  @Ignore
   public void disabledTestRefChain4() {
     test(
         "var a = 1; var b = a; var c = b; var d = doThing1() || c",
@@ -2029,6 +2042,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): Enable or remove
+  @Test
+  @Ignore
   public void disabledTestRefChain5() {
     test(
         "var a = 1; var b = a; var c = b; var d = doThing1() ?  doThing2() : c",
@@ -2043,6 +2058,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): Enable or remove
+  @Test
+  @Ignore
   public void disabledTestRefChain7() {
     test(
         "var a = 1; var b = a; var c = b; var d = (b + doThing1())  ? doThing2() : c",
@@ -2050,6 +2067,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): Enable or remove
+  @Test
+  @Ignore
   public void disabledTestRefChain8() {
     test(
         "var a = 1; var b = a; var c = b; var d = doThing1()[b]  ? doThing2() : 0",
@@ -2057,6 +2076,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): Enable or remove
+  @Test
+  @Ignore
   public void disabledTestRefChain9() {
     test(
         "var a = 1; var b = a; var c = 5; var d = doThing1()[b+c]  ? doThing2() : 0",
@@ -2064,6 +2085,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): Enable or remove
+  @Test
+  @Ignore
   public void disabledTestRefChain10() {
     test(
         "var a = 1; var b = a; var c = b; var d = doThing1()[b]  ? doThing2() : 0",
@@ -2071,6 +2094,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): Enable or remove
+  @Test
+  @Ignore
   public void disabledTestRefChain11() {
     test(
         "var a = 1; var b = a; var d = doThing1()[b]  ? doThing2() : 0",
@@ -2083,6 +2108,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): Enable or remove
+  @Test
+  @Ignore
   public void disabledTestRefChain13() {
     test(
         "function f(){} var a = 1; var b = a; var d = f()[b]  ? doThing1() : 0",
@@ -2095,6 +2122,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): Enable or remove
+  @Test
+  @Ignore
   public void disabledTestRefChain15() {
     test(
         "function f(){} var a = 1, b = a; var c = f(); var d = c[b]  ? doThing1() : 0",
@@ -2126,6 +2155,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): enable or remove this case
+  @Test
+  @Ignore
   public void disabledTestRefChain20() {
     test(
         "var a = 1; var b = [a]; var c = b; var d = b[doThing1()]  ? doThing2() : 0",
@@ -2273,6 +2304,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): enable or remove this
+  @Test
+  @Ignore
   public void disabledTestRemoveLabeledStatement2() {
     test(
         "var x; LBL: x = doThing1() + doThing2()  ", // preserve newline
@@ -2720,6 +2753,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): enable or remove this
+  @Test
+  @Ignore
   public void disabledTestClassDefinedInObjectLit1() {
     test(
         """
@@ -2730,6 +2765,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): enable or remove this
+  @Test
+  @Ignore
   public void disabledTestClassDefinedInObjectLit2() {
     test(
         """
@@ -2740,6 +2777,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): enable or remove this
+  @Test
+  @Ignore
   public void disabledTestClassDefinedInObjectLit3() {
     test(
         """
@@ -2750,6 +2789,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): enable or remove this
+  @Test
+  @Ignore
   public void disabledTestClassDefinedInObjectLit4() {
     test(
         """
@@ -2864,6 +2905,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): Enable or remove this test.
+  @Test
+  @Ignore
   public void disabledTestIssue284() {
     test(
         """
@@ -3053,6 +3096,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   // TODO(b/66971163): enable or remove this test
+  @Test
+  @Ignore
   public void disabledTestObjectDestructuring() {
     test(
         "var {a: a, x: y} = {a:1, x:2} ", // preserve newline

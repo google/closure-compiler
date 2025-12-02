@@ -59,9 +59,8 @@ import org.jspecify.annotations.Nullable;
  */
 final class CheckGlobalThis implements NodeTraversal.Callback {
 
-  static final DiagnosticType GLOBAL_THIS = DiagnosticType.warning(
-      "JSC_USED_GLOBAL_THIS",
-      "dangerous use of the global 'this' object");
+  static final DiagnosticType GLOBAL_THIS =
+      DiagnosticType.warning("JSC_USED_GLOBAL_THIS", "dangerous use of the global 'this' object");
 
   private final AbstractCompiler compiler;
 
@@ -76,8 +75,8 @@ final class CheckGlobalThis implements NodeTraversal.Callback {
   }
 
   /**
-   * Since this pass reports errors only when a global {@code this} keyword
-   * is encountered, there is no reason to traverse non global contexts.
+   * Since this pass reports errors only when a global {@code this} keyword is encountered, there is
+   * no reason to traverse non global contexts.
    */
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -94,11 +93,11 @@ final class CheckGlobalThis implements NodeTraversal.Callback {
       // Don't traverse functions that are constructors or have the @this
       // or @override annotation.
       JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
-      if (jsDoc != null &&
-          (jsDoc.isConstructor() ||
-           jsDoc.isInterface() ||
-           jsDoc.hasThisType() ||
-           jsDoc.isOverride())) {
+      if (jsDoc != null
+          && (jsDoc.isConstructor()
+              || jsDoc.isInterface()
+              || jsDoc.hasThisType()
+              || jsDoc.isOverride())) {
         return false;
       }
 
@@ -126,13 +125,12 @@ final class CheckGlobalThis implements NodeTraversal.Callback {
       // a.x = function() {}; // or
       // var a = {x: function() {}};
       Token pType = parent.getToken();
-      if (!(pType == Token.BLOCK ||
-            pType == Token.SCRIPT ||
-            pType == Token.NAME ||
-            pType == Token.ASSIGN ||
-
-            // object literal keys
-            pType == Token.STRING_KEY)) {
+      if (!(pType == Token.BLOCK
+          || pType == Token.SCRIPT
+          || pType == Token.NAME
+          || pType == Token.ASSIGN
+          // object literal keys
+          || pType == Token.STRING_KEY)) {
         return false;
       }
 
@@ -150,6 +148,12 @@ final class CheckGlobalThis implements NodeTraversal.Callback {
 
     // Don't traverse class static blocks, 'this' is never the global 'this'
     if (NodeUtil.isClassStaticBlock(n)) {
+      return false;
+    }
+
+    // `this` in class field definitions refers to the instance (for non-static fields) or the class
+    // itself (for static fields), never the global 'this'.
+    if ((n.isMemberFieldDef() || n.isComputedFieldDef()) && n.getParent().isClassMembers()) {
       return false;
     }
 

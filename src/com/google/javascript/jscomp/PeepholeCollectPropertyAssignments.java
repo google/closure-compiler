@@ -147,18 +147,17 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
     }
 
     switch (value.getToken()) {
-      case ARRAYLIT:
+      case ARRAYLIT -> {
         if (!collectArrayProperty(value, propertyCandidate)) {
           return false;
         }
-        break;
-      case OBJECTLIT:
+      }
+      case OBJECTLIT -> {
         if (!collectObjectProperty(value, propertyCandidate)) {
           return false;
         }
-        break;
-      default:
-        throw new IllegalStateException();
+      }
+      default -> throw new IllegalStateException();
     }
     return true;
   }

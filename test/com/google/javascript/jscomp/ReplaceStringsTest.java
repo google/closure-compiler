@@ -95,6 +95,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     enableParseTypeInfo();
+    setGenericNameReplacements(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS);
     functionsToInspect = DEFAULT_FUNCTIONS_TO_INSPECT;
     runDisambiguateProperties = false;
     rename = false;
@@ -122,6 +123,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         if (rename) {
           NodeTraversal.traverse(compiler, js, new Renamer());
         }
+        new Es6NormalizeClasses(compiler).process(externs, js);
         InlineAndCollapseProperties.builder(compiler)
             .setPropertyCollapseLevel(PropertyCollapseLevel.ALL)
             .setChunkOutputType(ChunkOutputType.GLOBAL_NAMESPACE)
@@ -138,13 +140,6 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         pass.process(externs, js);
       }
     };
-  }
-
-  @Override
-  protected int getNumRepetitions() {
-    // This compiler pass is not idempotent and should only be run over a
-    // parse tree once.
-    return 1;
   }
 
   @Test

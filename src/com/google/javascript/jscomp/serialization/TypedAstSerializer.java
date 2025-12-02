@@ -214,20 +214,21 @@ final class TypedAstSerializer {
 
   private void valueTranslator(AstNode.Builder builder, Node n) {
     switch (n.getToken()) {
-      case GETPROP:
-      case OPTCHAIN_GETPROP:
-      case MEMBER_FUNCTION_DEF:
-      case MEMBER_FIELD_DEF:
-      case NAME:
-      case STRINGLIT:
-      case STRING_KEY:
-      case GETTER_DEF:
-      case SETTER_DEF:
-      case LABEL_NAME:
-      case IMPORT_STAR:
+      case GETPROP,
+          OPTCHAIN_GETPROP,
+          MEMBER_FUNCTION_DEF,
+          MEMBER_FIELD_DEF,
+          NAME,
+          STRINGLIT,
+          STRING_KEY,
+          GETTER_DEF,
+          SETTER_DEF,
+          LABEL_NAME,
+          IMPORT_STAR -> {
         builder.setStringValuePointer(this.stringPool.put(n.getString()));
         return;
-      case TEMPLATELIT_STRING:
+      }
+      case TEMPLATELIT_STRING -> {
         builder.setTemplateStringValue(
             TemplateStringValue.newBuilder()
                 .setRawStringPointer(this.stringPool.put(n.getRawString()))
@@ -235,15 +236,19 @@ final class TypedAstSerializer {
                     n.getCookedString() == null ? -1 : this.stringPool.put(n.getCookedString()))
                 .build());
         return;
-      case NUMBER:
+      }
+      case NUMBER -> {
         builder.setDoubleValue(n.getDouble());
         return;
-      case BIGINT:
+      }
+      case BIGINT -> {
         builder.setStringValuePointer(this.stringPool.put(n.getBigInt().toString()));
         return;
-      default:
+      }
+      default -> {
         // No value
         return;
+      }
     }
   }
 
@@ -259,343 +264,465 @@ final class TypedAstSerializer {
 
   private NodeKind kindTranslator(Node n) {
     switch (n.getToken()) {
-      case SCRIPT:
+      case SCRIPT -> {
         return NodeKind.SOURCE_FILE;
-
-      case NUMBER:
+      }
+      case NUMBER -> {
         return NodeKind.NUMBER_LITERAL;
-      case STRINGLIT:
+      }
+      case STRINGLIT -> {
         return NodeKind.STRING_LITERAL;
-      case BIGINT:
+      }
+      case BIGINT -> {
         return NodeKind.BIGINT_LITERAL;
-      case REGEXP:
+      }
+      case REGEXP -> {
         return NodeKind.REGEX_LITERAL;
-      case FALSE:
+      }
+      case FALSE -> {
         return NodeKind.FALSE;
-      case TRUE:
+      }
+      case TRUE -> {
         return NodeKind.TRUE;
-      case NULL:
+      }
+      case NULL -> {
         return NodeKind.NULL;
-      case THIS:
+      }
+      case THIS -> {
         return NodeKind.THIS;
-      case VOID:
+      }
+      case VOID -> {
         return NodeKind.VOID;
-      case ARRAYLIT:
+      }
+      case ARRAYLIT -> {
         return NodeKind.ARRAY_LITERAL;
-      case OBJECTLIT:
+      }
+      case OBJECTLIT -> {
         return NodeKind.OBJECT_LITERAL;
-      case NAME:
+      }
+      case NAME -> {
         return NodeKind.IDENTIFIER;
-
-      case ASSIGN:
+      }
+      case ASSIGN -> {
         return NodeKind.ASSIGNMENT;
-      case CALL:
+      }
+      case CALL -> {
         return NodeKind.CALL;
-      case NEW:
+      }
+      case NEW -> {
         return NodeKind.NEW;
-      case GETPROP:
+      }
+      case GETPROP -> {
         return NodeKind.PROPERTY_ACCESS;
-      case GETELEM:
+      }
+      case GETELEM -> {
         return NodeKind.ELEMENT_ACCESS;
-
-      case COMMA:
+      }
+      case COMMA -> {
         return NodeKind.COMMA;
-      case OR:
+      }
+      case OR -> {
         return NodeKind.BOOLEAN_OR;
-      case AND:
+      }
+      case AND -> {
         return NodeKind.BOOLEAN_AND;
-      case HOOK:
+      }
+      case HOOK -> {
         return NodeKind.HOOK;
-      case EQ:
+      }
+      case EQ -> {
         return NodeKind.EQUAL;
-      case NE:
+      }
+      case NE -> {
         return NodeKind.NOT_EQUAL;
-      case LT:
+      }
+      case LT -> {
         return NodeKind.LESS_THAN;
-      case LE:
+      }
+      case LE -> {
         return NodeKind.LESS_THAN_EQUAL;
-      case GT:
+      }
+      case GT -> {
         return NodeKind.GREATER_THAN;
-      case GE:
+      }
+      case GE -> {
         return NodeKind.GREATER_THAN_EQUAL;
-      case SHEQ:
+      }
+      case SHEQ -> {
         return NodeKind.TRIPLE_EQUAL;
-      case SHNE:
+      }
+      case SHNE -> {
         return NodeKind.NOT_TRIPLE_EQUAL;
-      case NOT:
+      }
+      case NOT -> {
         return NodeKind.NOT;
-      case POS:
+      }
+      case POS -> {
         return NodeKind.POSITIVE;
-      case NEG:
+      }
+      case NEG -> {
         return NodeKind.NEGATIVE;
-      case TYPEOF:
+      }
+      case TYPEOF -> {
         return NodeKind.TYPEOF;
-      case INSTANCEOF:
+      }
+      case INSTANCEOF -> {
         return NodeKind.INSTANCEOF;
-      case IN:
+      }
+      case IN -> {
         return NodeKind.IN;
-
-      case ADD:
+      }
+      case ADD -> {
         return NodeKind.ADD;
-      case SUB:
+      }
+      case SUB -> {
         return NodeKind.SUBTRACT;
-      case MUL:
+      }
+      case MUL -> {
         return NodeKind.MULTIPLY;
-      case DIV:
+      }
+      case DIV -> {
         return NodeKind.DIVIDE;
-      case MOD:
+      }
+      case MOD -> {
         return NodeKind.MODULO;
-      case EXPONENT:
+      }
+      case EXPONENT -> {
         return NodeKind.EXPONENT;
-      case BITNOT:
+      }
+      case BITNOT -> {
         return NodeKind.BITWISE_NOT;
-      case BITOR:
+      }
+      case BITOR -> {
         return NodeKind.BITWISE_OR;
-      case BITAND:
+      }
+      case BITAND -> {
         return NodeKind.BITWISE_AND;
-      case BITXOR:
+      }
+      case BITXOR -> {
         return NodeKind.BITWISE_XOR;
-      case LSH:
+      }
+      case LSH -> {
         return NodeKind.LEFT_SHIFT;
-      case RSH:
+      }
+      case RSH -> {
         return NodeKind.RIGHT_SHIFT;
-      case URSH:
+      }
+      case URSH -> {
         return NodeKind.UNSIGNED_RIGHT_SHIFT;
-      case INC:
+      }
+      case INC -> {
         return n.getBooleanProp(Node.INCRDECR_PROP)
             ? NodeKind.POST_INCREMENT
             : NodeKind.PRE_INCREMENT;
-      case DEC:
+      }
+      case DEC -> {
         return n.getBooleanProp(Node.INCRDECR_PROP)
             ? NodeKind.POST_DECREMENT
             : NodeKind.PRE_DECREMENT;
-
-      case ASSIGN_ADD:
+      }
+      case ASSIGN_ADD -> {
         return NodeKind.ASSIGN_ADD;
-      case ASSIGN_SUB:
+      }
+      case ASSIGN_SUB -> {
         return NodeKind.ASSIGN_SUBTRACT;
-      case ASSIGN_MUL:
+      }
+      case ASSIGN_MUL -> {
         return NodeKind.ASSIGN_MULTIPLY;
-      case ASSIGN_DIV:
+      }
+      case ASSIGN_DIV -> {
         return NodeKind.ASSIGN_DIVIDE;
-      case ASSIGN_MOD:
+      }
+      case ASSIGN_MOD -> {
         return NodeKind.ASSIGN_MODULO;
-      case ASSIGN_EXPONENT:
+      }
+      case ASSIGN_EXPONENT -> {
         return NodeKind.ASSIGN_EXPONENT;
-      case ASSIGN_BITOR:
+      }
+      case ASSIGN_BITOR -> {
         return NodeKind.ASSIGN_BITWISE_OR;
-      case ASSIGN_BITAND:
+      }
+      case ASSIGN_BITAND -> {
         return NodeKind.ASSIGN_BITWISE_AND;
-      case ASSIGN_BITXOR:
+      }
+      case ASSIGN_BITXOR -> {
         return NodeKind.ASSIGN_BITWISE_XOR;
-      case ASSIGN_LSH:
+      }
+      case ASSIGN_LSH -> {
         return NodeKind.ASSIGN_LEFT_SHIFT;
-      case ASSIGN_RSH:
+      }
+      case ASSIGN_RSH -> {
         return NodeKind.ASSIGN_RIGHT_SHIFT;
-      case ASSIGN_URSH:
+      }
+      case ASSIGN_URSH -> {
         return NodeKind.ASSIGN_UNSIGNED_RIGHT_SHIFT;
-
-      case YIELD:
+      }
+      case YIELD -> {
         return NodeKind.YIELD;
-      case AWAIT:
+      }
+      case AWAIT -> {
         return NodeKind.AWAIT;
-      case DELPROP:
+      }
+      case DELPROP -> {
         return NodeKind.DELETE;
-      case TAGGED_TEMPLATELIT:
+      }
+      case TAGGED_TEMPLATELIT -> {
         return NodeKind.TAGGED_TEMPLATELIT;
-      case TEMPLATELIT:
+      }
+      case TEMPLATELIT -> {
         return NodeKind.TEMPLATELIT;
-      case TEMPLATELIT_SUB:
+      }
+      case TEMPLATELIT_SUB -> {
         return NodeKind.TEMPLATELIT_SUB;
-      case TEMPLATELIT_STRING:
+      }
+      case TEMPLATELIT_STRING -> {
         return NodeKind.TEMPLATELIT_STRING;
-      case NEW_TARGET:
+      }
+      case NEW_TARGET -> {
         return NodeKind.NEW_TARGET;
-      case COMPUTED_PROP:
+      }
+      case COMPUTED_PROP -> {
         return NodeKind.COMPUTED_PROP;
-      case IMPORT_META:
+      }
+      case IMPORT_META -> {
         return NodeKind.IMPORT_META;
-      case OPTCHAIN_GETPROP:
+      }
+      case OPTCHAIN_GETPROP -> {
         return NodeKind.OPTCHAIN_PROPERTY_ACCESS;
-      case OPTCHAIN_CALL:
+      }
+      case OPTCHAIN_CALL -> {
         return NodeKind.OPTCHAIN_CALL;
-      case OPTCHAIN_GETELEM:
+      }
+      case OPTCHAIN_GETELEM -> {
         return NodeKind.OPTCHAIN_ELEMENT_ACCESS;
-      case COALESCE:
+      }
+      case COALESCE -> {
         return NodeKind.COALESCE;
-      case DYNAMIC_IMPORT:
+      }
+      case DYNAMIC_IMPORT -> {
         return NodeKind.DYNAMIC_IMPORT;
-
-      case ASSIGN_OR:
+      }
+      case ASSIGN_OR -> {
         return NodeKind.ASSIGN_OR;
-      case ASSIGN_AND:
+      }
+      case ASSIGN_AND -> {
         return NodeKind.ASSIGN_AND;
-      case ASSIGN_COALESCE:
+      }
+      case ASSIGN_COALESCE -> {
         return NodeKind.ASSIGN_COALESCE;
-
-      case EXPR_RESULT:
+      }
+      case EXPR_RESULT -> {
         return NodeKind.EXPRESSION_STATEMENT;
-      case BREAK:
+      }
+      case BREAK -> {
         return NodeKind.BREAK_STATEMENT;
-      case CONTINUE:
+      }
+      case CONTINUE -> {
         return NodeKind.CONTINUE_STATEMENT;
-      case DEBUGGER:
+      }
+      case DEBUGGER -> {
         return NodeKind.DEBUGGER_STATEMENT;
-      case DO:
+      }
+      case DO -> {
         return NodeKind.DO_STATEMENT;
-      case FOR:
+      }
+      case FOR -> {
         return NodeKind.FOR_STATEMENT;
-      case FOR_IN:
+      }
+      case FOR_IN -> {
         return NodeKind.FOR_IN_STATEMENT;
-      case FOR_OF:
+      }
+      case FOR_OF -> {
         return NodeKind.FOR_OF_STATEMENT;
-      case FOR_AWAIT_OF:
+      }
+      case FOR_AWAIT_OF -> {
         return NodeKind.FOR_AWAIT_OF_STATEMENT;
-      case IF:
+      }
+      case IF -> {
         return NodeKind.IF_STATEMENT;
-      case RETURN:
+      }
+      case RETURN -> {
         return NodeKind.RETURN_STATEMENT;
-      case SWITCH:
+      }
+      case SWITCH -> {
         return NodeKind.SWITCH_STATEMENT;
-      case THROW:
+      }
+      case THROW -> {
         return NodeKind.THROW_STATEMENT;
-      case TRY:
+      }
+      case TRY -> {
         return NodeKind.TRY_STATEMENT;
-      case WHILE:
+      }
+      case WHILE -> {
         return NodeKind.WHILE_STATEMENT;
-      case EMPTY:
+      }
+      case EMPTY -> {
         return NodeKind.EMPTY;
-      case WITH:
+      }
+      case WITH -> {
         return NodeKind.WITH;
-      case IMPORT:
+      }
+      case IMPORT -> {
         return NodeKind.IMPORT;
-      case EXPORT:
+      }
+      case EXPORT -> {
         return NodeKind.EXPORT;
-
-      case VAR:
+      }
+      case VAR -> {
         return NodeKind.VAR_DECLARATION;
-      case CONST:
+      }
+      case CONST -> {
         return NodeKind.CONST_DECLARATION;
-      case LET:
+      }
+      case LET -> {
         return NodeKind.LET_DECLARATION;
-      case FUNCTION:
+      }
+      case FUNCTION -> {
         return NodeKind.FUNCTION_LITERAL;
-      case CLASS:
+      }
+      case CLASS -> {
         return NodeKind.CLASS_LITERAL;
-
-      case BLOCK:
+      }
+      case BLOCK -> {
         return NodeKind.BLOCK;
-      case LABEL:
+      }
+      case LABEL -> {
         return NodeKind.LABELED_STATEMENT;
-      case LABEL_NAME:
+      }
+      case LABEL_NAME -> {
         return NodeKind.LABELED_NAME;
-      case CLASS_MEMBERS:
+      }
+      case CLASS_MEMBERS -> {
         return NodeKind.CLASS_MEMBERS;
-      case MEMBER_FUNCTION_DEF:
+      }
+      case MEMBER_FUNCTION_DEF -> {
         return NodeKind.METHOD_DECLARATION;
-      case MEMBER_FIELD_DEF:
+      }
+      case MEMBER_FIELD_DEF -> {
         return NodeKind.FIELD_DECLARATION;
-      case COMPUTED_FIELD_DEF:
+      }
+      case COMPUTED_FIELD_DEF -> {
         return NodeKind.COMPUTED_PROP_FIELD;
-      case PARAM_LIST:
+      }
+      case PARAM_LIST -> {
         return NodeKind.PARAMETER_LIST;
-      case STRING_KEY:
+      }
+      case STRING_KEY -> {
         return n.isQuotedStringKey() ? NodeKind.QUOTED_STRING_KEY : NodeKind.RENAMABLE_STRING_KEY;
-      case CASE:
+      }
+      case CASE -> {
         return NodeKind.CASE;
-      case DEFAULT_CASE:
+      }
+      case DEFAULT_CASE -> {
         return NodeKind.DEFAULT_CASE;
-      case CATCH:
+      }
+      case CATCH -> {
         return NodeKind.CATCH;
-      case SUPER:
+      }
+      case SUPER -> {
         return NodeKind.SUPER;
-      case ARRAY_PATTERN:
+      }
+      case ARRAY_PATTERN -> {
         return NodeKind.ARRAY_PATTERN;
-      case OBJECT_PATTERN:
+      }
+      case OBJECT_PATTERN -> {
         return NodeKind.OBJECT_PATTERN;
-      case DESTRUCTURING_LHS:
+      }
+      case DESTRUCTURING_LHS -> {
         return NodeKind.DESTRUCTURING_LHS;
-      case DEFAULT_VALUE:
+      }
+      case DEFAULT_VALUE -> {
         return NodeKind.DEFAULT_VALUE;
-      case GETTER_DEF:
+      }
+      case GETTER_DEF -> {
         return n.isQuotedStringKey() ? NodeKind.QUOTED_GETTER_DEF : NodeKind.RENAMABLE_GETTER_DEF;
-      case SETTER_DEF:
+      }
+      case SETTER_DEF -> {
         return n.isQuotedStringKey() ? NodeKind.QUOTED_SETTER_DEF : NodeKind.RENAMABLE_SETTER_DEF;
-
-      case IMPORT_SPECS:
+      }
+      case IMPORT_SPECS -> {
         return NodeKind.IMPORT_SPECS;
-      case IMPORT_SPEC:
+      }
+      case IMPORT_SPEC -> {
         return NodeKind.IMPORT_SPEC;
-      case IMPORT_STAR:
+      }
+      case IMPORT_STAR -> {
         return NodeKind.IMPORT_STAR;
-      case EXPORT_SPECS:
+      }
+      case EXPORT_SPECS -> {
         return NodeKind.EXPORT_SPECS;
-      case EXPORT_SPEC:
+      }
+      case EXPORT_SPEC -> {
         return NodeKind.EXPORT_SPEC;
-      case MODULE_BODY:
+      }
+      case MODULE_BODY -> {
         return NodeKind.MODULE_BODY;
-      case ITER_REST:
+      }
+      case ITER_REST -> {
         return NodeKind.ITER_REST;
-      case ITER_SPREAD:
+      }
+      case ITER_SPREAD -> {
         return NodeKind.ITER_SPREAD;
-      case OBJECT_REST:
+      }
+      case OBJECT_REST -> {
         return NodeKind.OBJECT_REST;
-      case OBJECT_SPREAD:
+      }
+      case OBJECT_SPREAD -> {
         return NodeKind.OBJECT_SPREAD;
-      case SWITCH_BODY:
+      }
+      case SWITCH_BODY -> {
         return NodeKind.SWITCH_BODY;
-
-        // Explicitly unsupported token types. Not serialized.
-      case ROOT:
-        // TS type tokens
-      case STRING_TYPE:
-      case BOOLEAN_TYPE:
-      case NUMBER_TYPE:
-      case FUNCTION_TYPE:
-      case PARAMETERIZED_TYPE:
-      case UNION_TYPE:
-      case ANY_TYPE:
-      case NULLABLE_TYPE:
-      case VOID_TYPE:
-      case REST_PARAMETER_TYPE:
-      case NAMED_TYPE:
-      case RECORD_TYPE:
-      case UNDEFINED_TYPE:
-      case OPTIONAL_PARAMETER:
-      case ARRAY_TYPE:
-      case GENERIC_TYPE:
-      case GENERIC_TYPE_LIST:
-      case INTERFACE:
-      case INTERFACE_EXTENDS:
-      case INTERFACE_MEMBERS:
-      case MEMBER_VARIABLE_DEF:
-      case ENUM:
-      case ENUM_MEMBERS:
-      case IMPLEMENTS:
-      case TYPE_ALIAS:
-      case DECLARE:
-      case INDEX_SIGNATURE:
-      case CALL_SIGNATURE:
-      case NAMESPACE:
-      case NAMESPACE_ELEMENTS:
-        // JSDoc tokens
-      case ANNOTATION:
-      case PIPE:
-      case STAR:
-      case EOC:
-      case QMARK:
-      case BANG:
-      case EQUALS:
-      case LB:
-      case LC:
-      case COLON:
-        // Closure-type-system-specific token
-      case CAST:
-        // Unused tokens
-      case PLACEHOLDER1:
-      case PLACEHOLDER2:
-      case PLACEHOLDER3:
-        break;
+      }
+      // Explicitly unsupported token types. Not serialized.
+      case ROOT,
+          // TS type tokens
+          STRING_TYPE,
+          BOOLEAN_TYPE,
+          NUMBER_TYPE,
+          FUNCTION_TYPE,
+          PARAMETERIZED_TYPE,
+          UNION_TYPE,
+          ANY_TYPE,
+          NULLABLE_TYPE,
+          VOID_TYPE,
+          REST_PARAMETER_TYPE,
+          NAMED_TYPE,
+          RECORD_TYPE,
+          UNDEFINED_TYPE,
+          OPTIONAL_PARAMETER,
+          ARRAY_TYPE,
+          GENERIC_TYPE,
+          GENERIC_TYPE_LIST,
+          INTERFACE,
+          INTERFACE_EXTENDS,
+          INTERFACE_MEMBERS,
+          MEMBER_VARIABLE_DEF,
+          ENUM,
+          ENUM_MEMBERS,
+          IMPLEMENTS,
+          TYPE_ALIAS,
+          DECLARE,
+          INDEX_SIGNATURE,
+          CALL_SIGNATURE,
+          NAMESPACE,
+          NAMESPACE_ELEMENTS,
+          // JSDoc tokens
+          ANNOTATION,
+          PIPE,
+          STAR,
+          EOC,
+          QMARK,
+          BANG,
+          EQUALS,
+          LB,
+          LC,
+          COLON,
+          // Closure-type-system-specific token
+          CAST,
+          // Unused tokens
+          PLACEHOLDER1,
+          PLACEHOLDER2,
+          PLACEHOLDER3 -> {}
     }
     throw new IllegalStateException("Unserializable token for node: " + n);
   }

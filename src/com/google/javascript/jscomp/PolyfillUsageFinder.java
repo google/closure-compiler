@@ -284,15 +284,11 @@ final class PolyfillUsageFinder {
     @Override
     public void visitGuarded(NodeTraversal traversal, Node node, Node parent) {
       switch (node.getToken()) {
-        case NAME:
-          visitName(traversal, node);
-          break;
-        case GETPROP:
-        case OPTCHAIN_GETPROP:
-          visitGetPropChain(traversal, node);
-          break;
-        default:
+        case NAME -> visitName(traversal, node);
+        case GETPROP, OPTCHAIN_GETPROP -> visitGetPropChain(traversal, node);
+        default -> {
           // nothing to do
+        }
       }
     }
 

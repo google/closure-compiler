@@ -2781,7 +2781,7 @@ const {anotherVeryLongSymbolThatMapsTo: veryLongLocalNameForItAlso, veryLongSymb
     for (int i = 0; i < fixes.length; i++) {
       ExpectedFix expectedFix = expectedFixes[i];
       SuggestedFix actualFix = fixes[i];
-      assertWithMessage("Actual fix[" + i + "]: " + actualFix)
+      assertWithMessage("Actual fix[%s]: %s", i, actualFix)
           .that(actualFix.getDescription())
           .isEqualTo(expectedFix.description());
       assertThat(

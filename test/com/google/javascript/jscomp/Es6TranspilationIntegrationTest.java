@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 
@@ -26,7 +25,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.jscomp.serialization.SerializationOptions;
-import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Before;
 import org.junit.Test;
@@ -89,6 +87,11 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     // this confuses the logic for validating AST change marking.
     // That logic is really only valid when testing a single, real pass.
     disableValidateAstChangeMarking();
+    setGenericNameReplacements(
+        ImmutableMap.<String, String>builder()
+            .putAll(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS)
+            .put("KEY", "$jscomp$key$")
+            .buildOrThrow());
   }
 
   @Override
@@ -102,6 +105,15 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         PassFactory.builder()
             .setName("es6InjectRuntimeLibraries")
             .setInternalFactory(InjectTranspilationRuntimeLibraries::new)
+            .build());
+
+    passes.maybeAdd(
+        PassFactory.builder()
+            .setName("rewritePolyfills")
+            .setInternalFactory(
+                c ->
+                    new RewritePolyfills(
+                        c, /* injectPolyfills= */ true, /* isolatePolyfills= */ false, null))
             .build());
 
     passes.maybeAdd(
@@ -137,29 +149,17 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(externs, srcs, originalExpected);
   }
 
-  private void testForOf(Sources srcs, Expected originalExpected) {
-    testForOf(externs(""), srcs, originalExpected);
-  }
-
-  private void testForOf(Externs externs, Sources srcs, Expected originalExpected) {
-    // change the UID in expected with "$jscomp$key$m123..456" name
-    Expected modifiedExpected =
-        expected(
-            UnitTestUtils.updateGenericVarNamesInExpectedFiles(
-                (FlatSources) srcs, originalExpected, ImmutableMap.of("KEY", "$jscomp$key$")));
-    test(externs, srcs, modifiedExpected);
-  }
-
   @Test
   public void testObjectLiteralStringKeysWithNoValue() {
     test("var x = {a, b};", "var x = {a: a, b: b};");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
+    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries()).isEmpty();
   }
 
   @Test
   public void testSpreadLibInjection() {
     test("var x = [...a];", "var x=[].concat((0, $jscomp.arrayFromIterable)(a))");
-    assertThat(getLastCompiler().getInjected()).containsExactly("es6/util/arrayfromiterable");
+    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
+        .containsExactly("es6/util/arrayfromiterable");
   }
 
   @Test
@@ -167,7 +167,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "var x = {/** @return {number} */ a() { return 0; } };",
         "var x = {/** @return {number} */ a: function() { return 0; } };");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
+    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries()).isEmpty();
   }
 
   @Test
@@ -254,15 +254,15 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "f(class extends D { f() { super.g() } })",
         """
-        /** @constructor @const
-         * @extends {D}
-         */
-        var testcode$classdecl$var0 = function() {
-          return D.apply(this,arguments) || this;
+        /** @const @constructor */
+        var CLASS_DECL$0 = function() {
+          return D.apply(this, arguments) || this;
         };
-        $jscomp.inherits(testcode$classdecl$var0, D);
-        testcode$classdecl$var0.prototype.f = function() { D.prototype.g.call(this); };
-        f(testcode$classdecl$var0)
+        $jscomp.inherits(CLASS_DECL$0, D);
+        CLASS_DECL$0.prototype.f = function() {
+          D.prototype.g.call(this);
+        };
+        f(CLASS_DECL$0);
         """);
   }
 
@@ -389,21 +389,16 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "var C = class C { }",
         """
-        /** @constructor @const */
-        var testcode$classdecl$var0 = function() {};
         /** @constructor */
-        var C = testcode$classdecl$var0;
+        var C = function() {};
         """);
 
     test(
         "var C = class C { foo() {} }",
         """
-        /** @constructor @const */
-        var testcode$classdecl$var0 = function() {}
-        testcode$classdecl$var0.prototype.foo = function() {};
-
         /** @constructor */
-        var C = testcode$classdecl$var0;
+        var C = function() {};
+        C.prototype.foo = function() {};
         """);
   }
 
@@ -425,9 +420,10 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "window['MediaSource'] = class {};",
         """
-        /** @constructor @const */
-        var testcode$classdecl$var0 = function() {};
-        window['MediaSource'] = testcode$classdecl$var0;
+        /** @const @constructor */
+        var CLASS_DECL$0 = function() {
+        };
+        window["MediaSource"] = CLASS_DECL$0;
         """);
   }
 
@@ -436,16 +432,18 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "var C = new (class {})();",
         """
-        /** @constructor @const */
-        var testcode$classdecl$var0=function(){};
-        var C=new testcode$classdecl$var0
+        /** @const @constructor */
+        var CLASS_DECL$0 = function() {
+        };
+        var C = new CLASS_DECL$0();
         """);
     test(
         "(condition ? obj1 : obj2).prop = class C { };",
         """
-        /** @constructor @const */
-        var testcode$classdecl$var0 = function(){};
-        (condition ? obj1 : obj2).prop = testcode$classdecl$var0;
+        /** @const @constructor */
+        var CLASS_DECL$0 = function() {
+        };
+        (condition ? obj1 : obj2).prop = CLASS_DECL$0;
         """);
   }
 
@@ -466,8 +464,9 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         """
         var C = new (foo || (foo = function() {
           /** @const @constructor */
-          var testcode$classdecl$var0 = function() {};
-          return testcode$classdecl$var0;
+          var CLASS_DECL$0 = function() {
+          };
+          return CLASS_DECL$0;
         }()))();
         """);
   }
@@ -485,7 +484,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         var C = function() { D.apply(this, arguments); };
         $jscomp.inherits(C, D);
         """);
-    assertThat(getLastCompiler().getInjected())
+    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
         .containsExactly("es6/util/inherits", "es6/util/construct", "es6/util/arrayfromiterable");
 
     test(
@@ -624,23 +623,26 @@ $jscomp.inherits(C, Error);
     test(
         "class C extends foo() {}",
         """
-        /** @const */ var testcode$classextends$var0 = foo();
-        /** @constructor @extends {testcode$classextends$var0} */
+        /** @const */
+        var CLASS_EXTENDS$0 = foo();
+        /** @constructor */
         var C = function() {
-          return testcode$classextends$var0.apply(this, arguments) || this;
+          return CLASS_EXTENDS$0.apply(this, arguments) || this;
         };
-        $jscomp.inherits(C, testcode$classextends$var0);
+        $jscomp.inherits(C, CLASS_EXTENDS$0);
         """);
 
     test(
         "class C extends function(){} {}",
         """
-        /** @const */ var testcode$classextends$var0 = function(){};
-        /** @constructor @extends {testcode$classextends$var0} */
-        var C = function() {
-          testcode$classextends$var0.apply(this, arguments);
+        /** @const */
+        var CLASS_EXTENDS$0 = function() {
         };
-        $jscomp.inherits(C, testcode$classextends$var0);
+        /** @constructor */
+        var C = function() {
+          CLASS_EXTENDS$0.apply(this, arguments);
+        };
+        $jscomp.inherits(C, CLASS_EXTENDS$0);
         """);
   }
 
@@ -1229,19 +1231,15 @@ $jscomp.inherits(FooPromise, Promise);
     test(
         "var F = class G {}",
         """
-        /** @constructor @const */
-        var testcode$classdecl$var0 = function(){};
         /** @constructor */
-        var F = testcode$classdecl$var0;
+        var F = function() {};
         """);
 
     test(
         "F = class G {}",
         """
-        /** @constructor @const */
-        var testcode$classdecl$var0 = function(){};
         /** @constructor */
-        F = testcode$classdecl$var0;
+        F = function() {};
         """);
   }
 
@@ -1263,10 +1261,13 @@ $jscomp.inherits(FooPromise, Promise);
   }
 
   @Test
-  public void testOutputLevelES3_gettersSettersAreReported() {
+  public void testOutputLevelES3_classGettersSettersAreReported() {
     setLanguageOut(LanguageMode.ECMASCRIPT3);
-    testError("class C { get x() { return 1; }}", TranspilationUtil.CANNOT_CONVERT);
-    testError("class C { set x(value) {}}", TranspilationUtil.CANNOT_CONVERT);
+    testError(
+        "class C { get x() { return 1; }}",
+        ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT);
+    testError(
+        "class C { set x(value) {}}", ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT);
   }
 
   @Test
@@ -1493,33 +1494,34 @@ $jscomp.inherits(FooPromise, Promise);
         """
         /** @constructor */
         var Base = function() {};
-        $jscomp.global.Object.defineProperties(
-            Base.prototype,
-            {
-                g:{
-                    configurable:true,
-                    enumerable:true,
-                    get:function(){return"base"},
-                    set:function(v){alert("base.prototype.g = " + v);}
-                }
-            });
-        /**
-         * @constructor
-         * @extends {Base}
-         */
+        $jscomp.global.Object.defineProperties(Base.prototype, {
+          g: {
+            configurable: true,
+            enumerable: true,
+            get: function() {
+              return 'base';
+            },
+            set: function(v) {
+              alert('base.prototype.g = ' + v);
+            }
+          }
+        });
+        /** @constructor */
         var Sub = function() {
           Base.apply(this, arguments);
         };
         $jscomp.inherits(Sub, Base);
-        $jscomp.global.Object.defineProperties(
-            Sub.prototype,
-            {
-                g:{
-                    configurable:true,
-                    enumerable:true,
-                    get:function(){return Base.prototype.g + "-sub";},
-                }
-            });
+        $jscomp.global.Object.defineProperties(Sub.prototype, {
+          g: {
+            configurable: true,
+            enumerable: true,
+            get: function() {
+              return Reflect.get(
+                         Base.prototype, JSCompiler_renameProperty('g', Base), this) +
+                  '-sub';
+            }
+          }
+        });
         """);
 
     testError(
@@ -1673,9 +1675,10 @@ $jscomp.inherits(FooPromise, Promise);
         "function f() { var a = b = class {};}",
         """
         function f() {
-          /** @constructor @const */
-          var testcode$classdecl$var0 = function() {};
-          var a = b = testcode$classdecl$var0;
+          /** @const @constructor */
+          var CLASS_DECL$0 = function() {
+          };
+          var a = b = CLASS_DECL$0;
         }
         """);
 
@@ -1684,9 +1687,10 @@ $jscomp.inherits(FooPromise, Promise);
         """
         var ns = {};
         function f() {
-          /** @constructor @const */
-          var testcode$classdecl$var0 = function() {};
-          var self = ns.Child = testcode$classdecl$var0
+          /** @const @constructor */
+          var CLASS_DECL$0 = function() {
+          };
+          var self = ns.Child = CLASS_DECL$0;
         }
         """);
   }
@@ -2089,13 +2093,15 @@ $jscomp.inherits(FooPromise, Promise);
         externs(externsFileWithSymbol), //
         srcs("let a = alert(Symbol.thimble);"),
         expected("var a = alert(Symbol.thimble)"));
-    assertThat(getLastCompiler().getInjected()).containsExactly("es6/symbol");
+    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
+        .containsExactly("es6/symbol");
 
     test(
         externs(externsFileWithSymbol), //
         srcs("let a = alert(Symbol.iterator);"),
         expected("var a = alert(Symbol.iterator)"));
-    assertThat(getLastCompiler().getInjected()).containsExactly("es6/symbol");
+    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
+        .containsExactly("es6/symbol");
 
     test(
         externs(externsFileWithSymbol),
@@ -2165,8 +2171,7 @@ $jscomp.inherits(FooPromise, Promise);
             """);
     test(externs, srcs, expected);
     // No $jscomp.initSymbol in externs
-    testExternChanges(
-        externs("alert(Symbol.thimble);"), srcs(""), expected("alert(Symbol.thimble)"));
+    testSame(externs("alert(Symbol.thimble);"), srcs(""));
   }
 
   @Test
@@ -2183,8 +2188,11 @@ $jscomp.inherits(FooPromise, Promise);
   /** ES5 getters and setters should report an error if the languageOut is ES3. */
   @Test
   public void testEs5GettersAndSetters_es3() {
-    testError("let x = { get y() {} };", CANNOT_CONVERT);
-    testError("let x = { set y(value) {} };", CANNOT_CONVERT);
+    testError(
+        "let x = { get y() {} };", ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT);
+    testError(
+        "let x = { set y(value) {} };",
+        ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT);
   }
 
   /** ES5 getters and setters on object literals should be left alone if the languageOut is ES5. */
@@ -2198,70 +2206,63 @@ $jscomp.inherits(FooPromise, Promise);
   @Test
   public void testForOfLoop() {
     // Iteration var shadows an outer var ()
-    Sources srcs = srcs("var i = 'outer'; for (let i of [1, 2, 3]) { alert(i); } alert(i);");
-    Expected expected =
-        expected(
-            """
-            var i = 'outer';
-            var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1, 2, 3]);
-            // Normalize runs before for-of rewriting. Therefore, first Normalize renames the
-            // `let i` to `let i$jscomp$1` to avoid conficting it with outer `i`. Then, the
-            // for-of rewriting prepends the unique ID `$jscomp$key$m123..456$0` to its declared
-            // name as it does to all for-of loop keys.
-            var KEY$0$i$jscomp$1 = $jscomp$iter$0.next();
-            for (; !KEY$0$i$jscomp$1.done; KEY$0$i$jscomp$1 = $jscomp$iter$0.next()) {
-              var i$jscomp$1 = KEY$0$i$jscomp$1.value;
-              {
-                alert(i$jscomp$1);
-              }
-            }
-            alert(i);
-            """);
-    testForOf(srcs, expected);
+    test(
+        "var i = 'outer'; for (let i of [1, 2, 3]) { alert(i); } alert(i);",
+        """
+        var i = 'outer';
+        var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1, 2, 3]);
+        // Normalize runs before for-of rewriting. Therefore, first Normalize renames the
+        // `let i` to `let i$jscomp$1` to avoid conficting it with outer `i`. Then, the
+        // for-of rewriting prepends the unique ID `$jscomp$key$m123..456$0` to its declared
+        // name as it does to all for-of loop keys.
+        var KEY$0$i$jscomp$1 = $jscomp$iter$0.next();
+        for (; !KEY$0$i$jscomp$1.done; KEY$0$i$jscomp$1 = $jscomp$iter$0.next()) {
+          var i$jscomp$1 = KEY$0$i$jscomp$1.value;
+          {
+            alert(i$jscomp$1);
+          }
+        }
+        alert(i);
+        """);
   }
 
   @Test
   public void testForOfWithConstInitiliazer() {
     enableNormalize();
 
-    Sources srcs = srcs("for(const i of [1,2]) {i;}");
-    Expected expected =
-        expected(
-            """
-            var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1, 2]);
-            // Normalize runs before for-of rewriting. Normalize does not rename the `const i`
-            // if there is no other conflicting `i` declaration. Then, the  for-of rewriting
-            // prepends `$jscomp$key$m123..456$0` to its declared name as it does to all for-of
-            // loop keys.
-            var KEY$0$i = $jscomp$iter$0.next();
-            for (; !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {
-              /** @const */
-              var i = KEY$0$i.value; // marked as const name
-              {
-                i; // marked as const name
-              }
-            }
-            """);
-    testForOf(srcs, expected);
+    test(
+        "for(const i of [1,2]) {i;}",
+        """
+        var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1, 2]);
+        // Normalize runs before for-of rewriting. Normalize does not rename the `const i`
+        // if there is no other conflicting `i` declaration. Then, the  for-of rewriting
+        // prepends `$jscomp$key$m123..456$0` to its declared name as it does to all for-of
+        // loop keys.
+        var KEY$0$i = $jscomp$iter$0.next();
+        for (; !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {
+          /** @const */
+          var i = KEY$0$i.value; // marked as const name
+          {
+            i; // marked as const name
+          }
+        }
+        """);
   }
 
   @Test
   public void testMultipleForOfWithSameInitializerName() {
     enableNormalize();
-    Sources srcs =
-        srcs(
-            """
-            function* inorder1(t) {
-                for (var x of []) {
-                  yield x;
-                }
-                for (var x of []) {
-                  yield x;
-                }
+    test(
+        """
+        function* inorder1(t) {
+            for (var x of []) {
+              yield x;
             }
-            """);
-    Expected expected =
-        expected(
+            for (var x of []) {
+              yield x;
+            }
+        }
+        """,
 """
 function inorder1(t) {
   var x;
@@ -2302,29 +2303,26 @@ function inorder1(t) {
     }
   });}
 """);
-    testForOf(srcs, expected);
   }
 
   @Test
   public void testForOfRedeclaredVar() {
-    testForOf(
-        srcs(
-            """
-            for (let x of []) {
-              let x = 0;
-            }
-            """),
-        expected(
-            """
-            var $jscomp$iter$0 = (0, $jscomp.makeIterator)([]);
-            var KEY$0$x = $jscomp$iter$0.next();
-            for (; !KEY$0$x.done; KEY$0$x = $jscomp$iter$0.next()) {
-              var x = KEY$0$x.value;
-              {
-                var x$jscomp$1 = 0;
-              }
-            }
-            """));
+    test(
+        """
+        for (let x of []) {
+          let x = 0;
+        }
+        """,
+        """
+        var $jscomp$iter$0 = (0, $jscomp.makeIterator)([]);
+        var KEY$0$x = $jscomp$iter$0.next();
+        for (; !KEY$0$x.done; KEY$0$x = $jscomp$iter$0.next()) {
+          var x = KEY$0$x.value;
+          {
+            var x$jscomp$1 = 0;
+          }
+        }
+        """);
   }
 
   @Test
@@ -2487,17 +2485,25 @@ function inorder1(t) {
     test(
         "class C { [foo]() { alert(1); } }",
         """
+        var COMP_FIELD$0 = foo;
         /** @constructor */
-        var C = function() {};
-        C.prototype[foo] = function() { alert(1); };
+        var C = function() {
+        };
+        C.prototype[COMP_FIELD$0] = function() {
+          alert(1);
+        };
         """);
 
     test(
         "class C { static [foo]() { alert(2); } }",
         """
+        var COMP_FIELD$0 = foo;
         /** @constructor */
-        var C = function() {};
-        C[foo] = function() { alert(2); };
+        var C = function() {
+        };
+        C[COMP_FIELD$0] = function() {
+          alert(2);
+        };
         """);
   }
 
@@ -2610,15 +2616,5 @@ function inorder1(t) {
     // then the test would fail because Es6RewriteBlockScopeDeclaration does not even
     // look at destructuring declarations, expecting them to already have been
     // rewritten, and this test does not include that pass.
-  }
-
-  @Override
-  protected Compiler createCompiler() {
-    return new NoninjectingCompiler();
-  }
-
-  @Override
-  protected NoninjectingCompiler getLastCompiler() {
-    return (NoninjectingCompiler) super.getLastCompiler();
   }
 }

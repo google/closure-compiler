@@ -81,6 +81,37 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   }
 
   @Test
+  public void testForLoopInitializer_let_accessedInClosure() {
+    test(
+        """
+        const aClosures = [];
+        const bClosures = [];
+        for (let a = 0, [b, c] = [a, 3]; b < c; a--, b++) {
+          aClosures.push(() => a);
+          bClosures.push(() => b);
+        }
+        """,
+        """
+        const aClosures = [];
+        const bClosures = [];
+        for (let a = 0, b, c, $jscomp$destructuring$var0$unused = (() => {
+          let $jscomp$destructuring$var1 = [a, 3];
+          var $jscomp$destructuring$var2 = (0,$jscomp.makeIterator)($jscomp$destructuring$var1);
+          b = $jscomp$destructuring$var2.next().value;
+          c = $jscomp$destructuring$var2.next().value;
+          return $jscomp$destructuring$var1;
+        })(); b < c; a--, b++) {
+          aClosures.push(() => {
+            return a;
+          });
+          bClosures.push(() => {
+            return b;
+          });
+        }
+        """);
+  }
+
+  @Test
   public void testObjectDestructuring_forLoopInitializer_doesNotCrash() {
     test(
         """

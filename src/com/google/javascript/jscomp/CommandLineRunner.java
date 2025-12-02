@@ -1447,15 +1447,9 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
     private void applyToOptions(CompilerOptions options) {
       switch (this) {
-        case PRETTY_PRINT:
-          options.setPrettyPrint(true);
-          break;
-        case PRINT_INPUT_DELIMITER:
-          options.printInputDelimiter = true;
-          break;
-        case SINGLE_QUOTES:
-          options.setPreferSingleQuotes(true);
-          break;
+        case PRETTY_PRINT -> options.setPrettyPrint(true);
+        case PRINT_INPUT_DELIMITER -> options.printInputDelimiter = true;
+        case SINGLE_QUOTES -> options.setPreferSingleQuotes(true);
       }
     }
   }
@@ -1777,27 +1771,26 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
       SegmentOfCompilationToRun segmentOfCompilationToRun = flags.segmentOfCompilationToRun;
       switch (segmentOfCompilationToRun) {
-        case CHECKS:
+        case CHECKS -> {
           checkState(
               flags.filenameToRestoreFrom == null,
               "Cannot restore and run CHECKS segment of compilation");
           config.setSaveCompilationStateToFilename(flags.filenameToSaveTo, 1);
-          break;
-        case OPTIMIZATIONS:
+        }
+        case OPTIMIZATIONS -> {
           config.setContinueSavedCompilationFileName(flags.filenameToRestoreFrom, 1);
           config.setSaveCompilationStateToFilename(flags.filenameToSaveTo, 2);
-          break;
-        case FINALIZATIONS:
+        }
+        case FINALIZATIONS -> {
           checkState(
               flags.filenameToSaveTo == null,
               "Cannot run FINALIZATIONS segment of compilation and then save the result");
           config.setContinueSavedCompilationFileName(flags.filenameToRestoreFrom, 2);
-          break;
-        case ENTIRE_COMPILATION:
-          break;
-        default:
-          throw new IllegalStateException(
-              "Cannot run %s segment of compilation: " + flags.segmentOfCompilationToRun);
+        }
+        case ENTIRE_COMPILATION -> {}
+        default ->
+            throw new IllegalStateException(
+                "Cannot run %s segment of compilation: " + flags.segmentOfCompilationToRun);
       }
     }
 

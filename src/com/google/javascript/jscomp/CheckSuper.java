@@ -151,7 +151,7 @@ final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
     Context currentContext = checkNotNull(contextStack.peek());
 
     switch (n.getToken()) {
-      case SUPER:
+      case SUPER -> {
         if (isSuperConstructorCall(n)) {
           // Note: defer recording the call in `currentContext.visitSuperConstructorCall` until
           // visitng the parent CALL node. This ensures any this/super references in the
@@ -162,29 +162,17 @@ final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
           // super used some way other than `super()`, `super.prop`, or `super[expr]`.
           t.report(n, INVALID_SUPER_USAGE);
         }
-        break;
-
-      case CALL:
+      }
+      case CALL -> {
         Node callee = n.getFirstChild();
         if (callee.isSuper()) {
           currentContext.visitSuperConstructorCall(t, callee);
         }
-        break;
-
-      case THIS:
-        currentContext.visitThis(t, n);
-        break;
-
-      case RETURN:
-        currentContext.visitReturn(t, n);
-        break;
-
-      case ROOT:
-        checkState(this.contextStack.size() == 1);
-        break;
-
-      default:
-        break;
+      }
+      case THIS -> currentContext.visitThis(t, n);
+      case RETURN -> currentContext.visitReturn(t, n);
+      case ROOT -> checkState(this.contextStack.size() == 1);
+      default -> {}
     }
 
     if (n == currentContext.getContextNode()) {

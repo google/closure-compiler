@@ -28,6 +28,7 @@ import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.testing.NodeSubject;
+import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,21 +47,30 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
       var arguments
       """;
 
-  private boolean assumeStaticInheritanceIsNotUsed = true;
-
   public InlineAndCollapsePropertiesTest() {
     super(EXTERNS);
   }
 
+  private static PassFactory makePassFactory(
+      String name, Function<AbstractCompiler, CompilerPass> pass) {
+    return PassFactory.builder().setName(name).setInternalFactory(pass).build();
+  }
+
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return InlineAndCollapseProperties.builder(compiler)
-        .setPropertyCollapseLevel(PropertyCollapseLevel.ALL)
-        .setChunkOutputType(ChunkOutputType.GLOBAL_NAMESPACE)
-        .setHaveModulesBeenRewritten(false)
-        .setModuleResolutionMode(ResolutionMode.BROWSER)
-        .setAssumeStaticInheritanceIsNotUsed(this.assumeStaticInheritanceIsNotUsed)
-        .build();
+    PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
+    optimizer.addOneTimePass(makePassFactory("es6NormalizeClasses", Es6NormalizeClasses::new));
+    optimizer.addOneTimePass(
+        makePassFactory(
+            "inlineAndCollapseProperties",
+            (comp) ->
+                InlineAndCollapseProperties.builder(comp)
+                    .setPropertyCollapseLevel(PropertyCollapseLevel.ALL)
+                    .setChunkOutputType(ChunkOutputType.GLOBAL_NAMESPACE)
+                    .setHaveModulesBeenRewritten(false)
+                    .setModuleResolutionMode(ResolutionMode.BROWSER)
+                    .build()));
+    return optimizer;
   }
 
   @Override
@@ -71,6 +81,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     disableCompareJsDoc();
+    setGenericNameReplacements(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS);
   }
 
   @Test
@@ -2163,25 +2174,23 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         };
         """,
         """
-        var module$exports$path$lateload_ts$LateLoadTs =
-          class LateLoadTs {
-              render() {}
-          };
-
+        const CLASS_DECL$0 = class {
+          render() {
+          }
+        };
+        var module$exports$path$lateload_ts$LateLoadTs = CLASS_DECL$0;
         var func = function() {
           var $jscomp$destructuring$var22;
           var LateLoadTs$jscomp$1;
-          return $jscomp$asyncExecutePromiseGeneratorProgram(
-            function($jscomp$generator$context){
-              if ($jscomp$generator$context.nextAddress == 1) {
-                return $jscomp$generator$context.yield(goog.importHandler_('WS8L6d'), 2);
-              }
-              $jscomp$destructuring$var22 = null
-              LateLoadTs$jscomp$1 = module$exports$path$lateload_ts$LateLoadTs;
-              (new LateLoadTs$jscomp$1()).render();
-              $jscomp$generator$context.jumpToEnd();
+          return $jscomp$asyncExecutePromiseGeneratorProgram(function($jscomp$generator$context) {
+            if ($jscomp$generator$context.nextAddress == 1) {
+              return $jscomp$generator$context.yield(goog.importHandler_("WS8L6d"), 2);
             }
-          );
+            $jscomp$destructuring$var22 = null;
+            LateLoadTs$jscomp$1 = module$exports$path$lateload_ts$LateLoadTs;
+            (new LateLoadTs$jscomp$1()).render();
+            $jscomp$generator$context.jumpToEnd();
+          });
         };
         """);
 
@@ -2218,23 +2227,20 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         };
         """,
         """
-        var module$exports$path$lateload_ts$LateLoadTs =
-          class LateLoadTs { };
-
-        var module$exports$path$lateload_ts$LateLoadTs$num;
+        const CLASS_DECL$0 = class {
+        };
+        var module$exports$path$lateload_ts$LateLoadTs = CLASS_DECL$0;
         var func = function() {
           var x;
-          return $jscomp$asyncExecutePromiseGeneratorProgram(
-            function($jscomp$generator$context){
-              if ($jscomp$generator$context.nextAddress == 1) {
-                return $jscomp$generator$context.yield(goog.importHandler_('WS8L6d'), 2);
-              }
-              x = null
-              module$exports$path$lateload_ts$LateLoadTs$num = 0;
-              console.log(module$exports$path$lateload_ts$LateLoadTs);
-              $jscomp$generator$context.jumpToEnd();
+          return $jscomp$asyncExecutePromiseGeneratorProgram(function($jscomp$generator$context) {
+            if ($jscomp$generator$context.nextAddress == 1) {
+              return $jscomp$generator$context.yield(goog.importHandler_("WS8L6d"), 2);
             }
-          );
+            x = null;
+            module$exports$path$lateload_ts$LateLoadTs.num = 0;
+            console.log(module$exports$path$lateload_ts$LateLoadTs);
+            $jscomp$generator$context.jumpToEnd();
+          });
         };
         """);
     // Case 3
@@ -2247,7 +2253,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
     //
     // This case is for testing non-exported module, i.e., the global name is not prefixed with
     // 'module$exports$'. Test should fail.
-    testSame(
+    test(
         """
         var not_module$exports$path$lateload_ts =
           {
@@ -2272,14 +2278,33 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
           );
         };
         """,
-        PARTIAL_NAMESPACE_WARNING);
+        """
+        const CLASS_DECL$0 = class {
+          render() {
+          }
+        };
+        var not_module$exports$path$lateload_ts = {LateLoadTs:CLASS_DECL$0};
+        var func = function() {
+          var $jscomp$destructuring$var22;
+          var LateLoadTs$jscomp$1;
+          return $jscomp$asyncExecutePromiseGeneratorProgram(function($jscomp$generator$context) {
+            if ($jscomp$generator$context.nextAddress == 1) {
+              return $jscomp$generator$context.yield(goog.importHandler_("WS8L6d"), 2);
+            }
+            $jscomp$destructuring$var22 = not_module$exports$path$lateload_ts;
+            LateLoadTs$jscomp$1 = $jscomp$destructuring$var22.LateLoadTs;
+            (new LateLoadTs$jscomp$1()).render();
+            $jscomp$generator$context.jumpToEnd();
+          });
+        };
+        """);
 
     // Case 4
     // This is a manually configured example for this test.
     //
     // This case is for testing the case where the alias is not only used in property access/
     // destructuring.
-    testSame(
+    test(
         """
         var _module$exports$path$lateload_ts =
           {
@@ -2305,14 +2330,34 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
           );
         };
         """,
-        PARTIAL_NAMESPACE_WARNING);
+        """
+        const CLASS_DECL$0 = class {
+          render() {
+          }
+        };
+        var _module$exports$path$lateload_ts = {LateLoadTs:CLASS_DECL$0};
+        var func = function() {
+          var $jscomp$destructuring$var22;
+          var LateLoadTs$jscomp$1;
+          return $jscomp$asyncExecutePromiseGeneratorProgram(function($jscomp$generator$context) {
+            if ($jscomp$generator$context.nextAddress == 1) {
+              return $jscomp$generator$context.yield(goog.importHandler_("WS8L6d"), 2);
+            }
+            $jscomp$destructuring$var22 = _module$exports$path$lateload_ts;
+            $jscomp$destructuring$var22 = "foo";
+            LateLoadTs$jscomp$1 = $jscomp$destructuring$var22.LateLoadTs;
+            (new LateLoadTs$jscomp$1()).render();
+            $jscomp$generator$context.jumpToEnd();
+          });
+        };
+        """);
 
     // Case 5
     // This is a manually configured example for this test.
     //
     // This case is for testing the case where the alias is initialized in declaration and then
     // reassigned a value.
-    testSame(
+    test(
         """
         var module$exports$path$lateload_ts =
           {
@@ -2337,7 +2382,26 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
           );
         };
         """,
-        PARTIAL_NAMESPACE_WARNING);
+        """
+        const CLASS_DECL$0 = class {
+          render() {
+          }
+        };
+        var module$exports$path$lateload_ts = {LateLoadTs:CLASS_DECL$0};
+        var func = function() {
+          var $jscomp$destructuring$var22 = "foo";
+          var LateLoadTs$jscomp$1;
+          return $jscomp$asyncExecutePromiseGeneratorProgram(function($jscomp$generator$context) {
+            if ($jscomp$generator$context.nextAddress == 1) {
+              return $jscomp$generator$context.yield(goog.importHandler_("WS8L6d"), 2);
+            }
+            $jscomp$destructuring$var22 = module$exports$path$lateload_ts;
+            LateLoadTs$jscomp$1 = $jscomp$destructuring$var22.LateLoadTs;
+            (new LateLoadTs$jscomp$1()).render();
+            $jscomp$generator$context.jumpToEnd();
+          });
+        };
+        """);
   }
 
   @Test
@@ -2810,6 +2874,67 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testEs6ClassStaticProperties_asStaticField() {
+    // Collapsing static properties (A.foo and A.useFoo in this case) is known to be unsafe.
+    test(
+        srcs(
+            """
+            class A {
+              static useFoo() {
+                alert(this.foo);
+              }
+              static foo = 'bar';
+            }
+            const B = A;
+            B.foo = 'baz';
+            B.useFoo();
+            """),
+        expected(
+            """
+            var A$useFoo = function() {
+              alert(this.foo);
+            };
+            var A$foo;
+            class A {}
+            A$foo = "bar";
+            const B = null;
+            A$foo = "baz";
+            A$useFoo();
+            """),
+        warning(RECEIVER_AFFECTED_BY_COLLAPSE));
+
+    // Adding @nocollapse makes this safe.
+    test(
+        """
+        class A {
+          /** @nocollapse */
+          static useFoo() {
+            alert(this.foo);
+          }
+          /** @nocollapse */
+          static foo = 'bar';
+        }
+        const B = A;
+        B.foo = 'baz';
+        B.useFoo();
+        """,
+        """
+        class A {
+          /** @nocollapse */
+          static useFoo() {
+            alert(this.foo);
+          }
+          /** @nocollapse */
+          static foo;
+        }
+        A.foo = "bar";
+        const B = null;
+        A.foo = "baz";
+        A.useFoo();
+        """);
+  }
+
+  @Test
   public void testClassStaticInheritance_method() {
     test(
         "class A { static s() {} } class B extends A {} const C = B;    C.s();", //
@@ -2888,64 +3013,51 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         use(C.foo);
         """,
         """
-        class A {}
+        class A {
+        }
         var A$foo = 5;
-        class B {}
+        class B {
+        }
         var B$foo = 6;
-        function getSuperclass() { return 1 < 2 ? A : B; }
-        class C extends getSuperclass() {}
+        function getSuperclass() {
+          return 1 < 2 ? A : B;
+        }
+        const CLASS_EXTENDS$0 = getSuperclass();
+        class C extends CLASS_EXTENDS$0 {
+        }
         use(C.foo);
         """);
   }
 
   @Test
   public void testTypeScriptDecoratedClass() {
-    // TypeScript 5.1 emits this for decorated classes.
+    // TypeScript 5.8 emits this for decorated classes.
     test(
         """
-        let A = class A { static getId() { return A.ID; } };
-        A.ID = "a";
-        A = tslib.__decorate([], A);
+        class A {
+          static getId() {
+            return A.ID;
+          }
+        }
+        A.ID = 'a';
+        tslib.__decorate([], A);
         if (false) {
           /** @const {string} */ A.ID;
         }
         console.log(A.getId());
         """,
         """
-        let A = class A$jscomp$1 { static getId() { return A$jscomp$1.ID; } };
-        A.ID = "a";
-        A = tslib.__decorate([], A);
-        if (false) {
-          /** @const */ A.ID;
+        var A$getId = function() {
+          return A$ID;
+        };
+        class A {
         }
-        console.log(A.getId());
-        """);
-  }
-
-  @Test
-  public void testTypeScriptDecoratedClass_withExtraVarAssignment() {
-    // TypeScript 5.2 emits this for decorated classes, which reference static properties on
-    // themselves.
-    test(
-        """
-        var A_1;
-        let A = A_1 = class A { static getId() { return A_1.ID; } };
-        A.ID = "a";
-        A = A_1 = tslib.__decorate([], A);
+        var A$ID = "a";
+        tslib.__decorate([], A);
         if (false) {
-          /** @const {string} */ A.ID;
+          A$ID;
         }
-        console.log(A.getId());
-        """,
-        """
-        var A_1;
-        let A = A_1 = class A$jscomp$1 { static getId() { return A_1.ID; } };
-        A.ID = "a";
-        A = A_1 = tslib.__decorate([], A);
-        if (false) {
-          /** @const */ A.ID;
-        }
-        console.log(A.getId());
+        console.log(A$getId());
         """);
   }
 
@@ -3011,12 +3123,16 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         use(Bar?.baz);
         """,
         """
-        class Foo {}
-        var Foo$Builder = class {}
+        class Foo {
+        }
+        var Foo$Builder = class {
+        };
         var Foo$Builder$baz = 3;
         var ns$clazz = null;
         // TODO(b/148237979): Collapse above breaks this reference.
-        var Bar = class extends Foo?.Builder {}
+        const CLASS_EXTENDS$0 = Foo?.Builder;
+        var Bar = class extends CLASS_EXTENDS$0 {
+        };
         // TODO(b/148237979): Collapse above breaks this reference.
         use(Bar?.baz);
         """);
@@ -3215,13 +3331,34 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   @Test
   public void testClassInObjectLiteral() {
     test(
-        "var obj = {foo: class {}};", //
-        "var obj$foo = class {};");
+        """
+        var obj = {
+          foo: class {}
+        };
+        """,
+        """
+        const CLASS_DECL$0 = class {
+        };
+        var obj$foo = CLASS_DECL$0;
+        """);
 
     // TODO(lharker): this is unsafe, obj$foo.foo is undefined now that A$foo is collapsed
     test(
-        "class A {}     A.foo = 3; var obj = {foo: class extends A {}}; use(obj.foo.foo);", //
-        "class A {} var A$foo = 3; var obj$foo =   class extends A{};   use(obj$foo.foo)");
+        """
+        class A {}
+        A.foo = 3;
+        var obj = {foo: class extends A {}};
+        use(obj.foo.foo);
+        """,
+        """
+        class A {
+        }
+        var A$foo = 3;
+        const CLASS_DECL$0 = class extends A {
+        };
+        var obj$foo = CLASS_DECL$0;
+        use(obj$foo.foo);
+        """);
   }
 
   @Test
@@ -3426,41 +3563,42 @@ use(Foo$Bar$baz$A);
             return 2 * super.double(n);
           }
 
-          // TODO: b/416070022 - Add back once this does not throw an error.
-          // static val1;
-          // static {
-          //   Baz.val1 = super.double(5);
-          // }
-          //
-          // static val2 = super.double(6);
+          static val1;
+          static {
+            Baz.val1 = super.double(5);
+          }
+
+          static val2 = super.double(6);
         }
         """,
         """
         var Bar$double = function(n) {
           return n * 2;
         };
-        class Bar {
-        }
-        // Note: These tests call `enableNormalizeExpectedOutput()`. So while using "n" as the param
-        // name here would work. We want to avoid relying on normalization when possible.
+        class Bar {}
         var Baz$quadruple = function(n$jscomp$1) {
           return 2 * Bar$double(n$jscomp$1);
         };
-        class Baz extends Bar {
+        var Baz$val1;
+        var Baz$val2;
+        class Baz extends Bar {}
+        {
+          Baz$val1 = Bar$double(5);
         }
+        Baz$val2 = Bar$double(6);
         """);
   }
 
   @Test
   public void testClassStaticMemberAccessedWithSuperAndThis() {
-    assumeStaticInheritanceIsNotUsed = false;
-    testSame(
+    var src =
         """
         class Bar {
           static get name() {
             return 'Bar';
           }
-          static get classname() {
+          /** @nocollapse */
+          static getClassname() {
             return `${this.name} class`;
           }
         }
@@ -3469,49 +3607,33 @@ use(Foo$Bar$baz$A);
             return 'Baz';
           }
           static get classname() {
-            return `${super.classname} - is a subclass`;
+            return `${super.getClassname()} - is a subclass`;
           }
         }
-        """);
-  }
+        """;
 
-  @Test
-  public void testClassStaticMemberAccessedWithSuperAndThis2() {
-    assumeStaticInheritanceIsNotUsed = true;
+    setAssumeStaticInheritanceIsNotUsed(false);
+    testSame(src);
+
+    setAssumeStaticInheritanceIsNotUsed(true);
     test(
+        src,
         """
         class Bar {
           static get name() {
-            return 'Bar';
+            return "Bar";
           }
-          static get classname() {
+          /** @nocollapse */
+          static getClassname() {
             return `${this.name} class`;
           }
         }
         class Baz extends Bar {
           static get name() {
-            return 'Baz';
+            return "Baz";
           }
           static get classname() {
-            return `${super.classname} - is a subclass`;
-          }
-        }
-        """,
-        """
-        class Bar {
-          static get name() {
-            return 'Bar';
-          }
-          static get classname() {
-            return `${this.name} class`;
-          }
-        }
-        class Baz extends Bar {
-          static get name() {
-            return 'Baz';
-          }
-          static get classname() {
-            return `${Bar.classname} - is a subclass`;
+            return `${Bar.getClassname()} - is a subclass`;
           }
         }
         """);
@@ -3545,21 +3667,95 @@ use(Foo$Bar$baz$A);
         var Baz$double = function(n) {
           return 2 * n;
         };
-        class Baz extends Bar {
-          static val1;
-          static {
-                        // TODO: b/416093361 - Should be renamed
-            this.val1 = this.double(1);
-          }
-          static val2;
-          static {
-            Baz$val2 = Baz$double(2);
-          }
-                      // TODO: b/416093361 - Should be renamed
-          static val3=this.double(3);
-          static val4=Baz$double(4);
-        }
+        var Baz$val1;
         var Baz$val2;
+        var Baz$val3;
+        var Baz$val4;
+        class Baz extends Bar {}
+        {
+          Baz$val1 = Baz$double(1);
+        }
+        {
+          Baz$val2 = Baz$double(2);
+        }
+        Baz$val3 = Baz$double(3);
+        Baz$val4 = Baz$double(4);
+        """);
+  }
+
+  @Test
+  public void testClassStaticGetterAccessedWithSuper() {
+    var src =
+        """
+        function JSCompiler_renameProperty(str, strContainerType) {
+          return a;
+        }
+
+        class Parent {
+          static getName() {
+            return 'Parent';
+          }
+          static get greeting() {
+            return 'Hello ' + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return 'Child';
+          }
+          static msg = super.greeting;  // 'Hello Child'
+        }
+        """;
+
+    // non-strict
+    test(
+        src,
+        """
+        function JSCompiler_renameProperty(str, strContainerType) {
+          return a;
+        }
+        var Parent$getName = function() {
+          return "Parent";
+        };
+        class Parent {
+          static get greeting() {
+            return "Hello " + this.getName();
+          }
+        }
+        var Child$getName = function() {
+          return "Child";
+        };
+        var Child$msg;
+        class Child extends Parent {}
+        Child$msg = Parent.greeting;
+        """);
+
+    // strict
+    setAssumeStaticInheritanceIsNotUsed(false);
+    test(
+        src,
+        """
+        function JSCompiler_renameProperty(str, strContainerType) {
+          return a;
+        }
+        class Parent {
+          static getName() {
+            return "Parent";
+          }
+          static get greeting() {
+            return "Hello " + this.getName();
+          }
+        }
+        class Child extends Parent {
+          static getName() {
+            return "Child";
+          }
+          static msg;
+          static STATIC_INIT$0() {
+            Child.msg = super.greeting;
+          }
+        }
+        Child.STATIC_INIT$0();
         """);
   }
 
@@ -3578,22 +3774,22 @@ use(Foo$Bar$baz$A);
             this.sf3++;
           }
         };
+        alert(OuterName.sf3);
         """,
-        // TODO: b/435685153 - Resolve the incorrect InnerName rewrite to OuterName.
-        // Incorrectly replaces InnerName with OuterName. OuterName will not yet be defined when
-        // referenced from the static field initializer and static initialization block.
         """
-        const OuterName = class InnerName {
-          static sf1 = 1;
-          static sf2 = OuterName.sf1;
-          static sf3 = this.sf2;
-
-          static {
-            Object.defineProperties(OuterName.prototype, {bar:{value:1}});
-            OuterName.sf2++;
-            this.sf3++;
-          }
-        };
+        var OuterName$sf1;
+        var OuterName$sf2;
+        var OuterName$sf3;
+        const OuterName = class {};
+        OuterName$sf1 = 1;
+        OuterName$sf2 = OuterName$sf1;
+        OuterName$sf3 = OuterName$sf2;
+        {
+          Object.defineProperties(OuterName.prototype, {bar:{value:1}});
+          OuterName$sf2++;
+          OuterName$sf3++;
+        }
+        alert(OuterName$sf3);
         """);
   }
 
@@ -3684,6 +3880,159 @@ use(Foo$Bar$baz$A);
   }
 
   @Test
+  public void conditionallyLoadedChunk_withExistenceCheckInEarlierChunk() {
+    // Regression test for b/461276859.
+    JSChunk[] chunks =
+        JSChunkGraphBuilder.forChain()
+            // m1, always loaded
+            .addChunk(
+                """
+                const mods = {};
+
+                function f() {
+                  if (mods.fn) {
+                    mods.fn();
+                  }
+                }
+                """)
+            // m2, conditionally loaded after m1
+            .addChunk("mods.fn = () => {};")
+            .build();
+
+    test(
+        srcs(chunks[0], chunks[1]),
+        expected(
+            """
+            var mods$fn;
+            function f() {
+              if (mods$fn) {
+                mods$fn();
+              }
+            }
+            """,
+            "mods$fn = () => {};"));
+  }
+
+  @Test
+  public void conditionallyLoadedChunk_withExistenceCheckInEarlierChunk_constDecl() {
+    // Regression test for b/461276859.
+    JSChunk[] chunks =
+        JSChunkGraphBuilder.forChain()
+            // m1, always loaded
+            .addChunk(
+                """
+                function f() {
+                  if (typeof mods !== 'undefined') {
+                    mods.fn();
+                  }
+                }
+                """)
+            // m2, conditionally loaded after m1
+            .addChunk("const mods = {}; mods.fn = () => {};")
+            .build();
+
+    test(
+        srcs(chunks[0], chunks[1]),
+        expected(
+            // We don't need to add a stub declaration of 'mods' as this pass isn't collapsing it.
+            // The input code is responsible for avoiding unsafe 'mods' cross-chunk accesses.
+            """
+            var mods$fn;
+            function f() {
+              if (typeof mods !== 'undefined') {
+                mods$fn();
+              }
+            }
+            """,
+            """
+            const mods = {};
+            mods$fn = () => {};
+            """));
+  }
+
+  @Test
+  public void conditionallyLoadedChunk_withExistenceCheckInEarlierChunk_usesLeastCommonAncestor() {
+    // Regression test for b/461276859.
+    JSChunk[] chunks =
+        JSChunkGraphBuilder.forTree()
+            // base chunk, always loaded
+            .addChunk(
+                """
+                const mods = {};
+                """)
+            // c1, conditionally loaded. does not depend on c2.
+            .addChunk(
+                """
+                function f() {
+                  if (mods.fn) {
+                    mods.fn();
+                  }
+                }
+                """)
+            // c2, conditionally loaded. depends on c1.
+            .addChunk("mods.fn = () => {};")
+            .build();
+
+    test(
+        srcs(chunks[0], chunks[1], chunks[2]),
+        expected(
+            "var mods$fn;",
+            """
+            function f() {
+              if (mods$fn) {
+                mods$fn();
+              }
+            }
+            """,
+            "mods$fn = () => {};"));
+  }
+
+  @Test
+  public void conditionallyLoadedChunk_withExistenceCheckInEarlierChunk_andChildName() {
+    // Regression test for b/461276859.
+    JSChunk[] chunks =
+        JSChunkGraphBuilder.forChain()
+            // m1, always loaded
+            .addChunk(
+                """
+                const mods = {};
+                function f() {
+                  if (mods.a && mods.a.crossChunk) {
+                    mods.a.crossChunk();
+                  }
+                }
+                """)
+            // m2, conditionally loaded after m1
+            .addChunk(
+                """
+                mods.a = {};
+                mods.a.crossChunk = () => {};
+                mods.a.local = () => {};
+                """)
+            .build();
+
+    test(
+        srcs(chunks[0], chunks[1]),
+        expected(
+            """
+            var mods$a$crossChunk;
+            var mods$a;
+            function f() {
+              if (mods$a && mods$a$crossChunk) {
+                mods$a$crossChunk();
+              }
+            }
+            """,
+            """
+            mods$a = {};
+            mods$a$crossChunk = () => {};
+            // Verify that we wait to declare mods$a$local until this chunk, as it's not referenced
+            // elsewhere.
+            var mods$a$local = () => {};
+            """));
+  }
+
+  @Test
   public void conditionallyLoadedChunk_unsafeToInlineVar() {
     JSChunk[] chunks =
         JSChunkGraphBuilder.forChain()
@@ -3743,6 +4092,7 @@ use(Foo$Bar$baz$A);
         srcs(chunks[0], chunks[1]),
         expected(
             """
+            var registry$mod;
             var factories$one = function() {};
 
             function build() {
@@ -3750,7 +4100,7 @@ use(Foo$Bar$baz$A);
               if (registry$mod) registry$mod();
             }
             """,
-            "var registry$mod = factories$one; factories$one();"));
+            "registry$mod = factories$one; factories$one();"));
   }
 
   @Test

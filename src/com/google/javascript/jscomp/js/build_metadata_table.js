@@ -1,0 +1,317 @@
+#!/usr/bin/env node
+'use strict';
+
+/*
+ * Copyright 2016 The Closure Compiler Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+const fs = require('fs');
+
+/**
+ * Provides an ordering to ensure lower-versioned polyfills don't
+ * depend on higher versions.
+ *
+ * @type {!Array<string>}
+ */
+const ORDER = [
+  'es3', 'es5', 'es6', 'es7', 'es8', 'es9', 'es_2019', 'es_2020', 'es_2021',
+  'es_next', 'es_unstable'
+];
+
+/**
+ * Supported TypedArray subclasses.
+ *
+ * @const {!Array<string>}
+ */
+// LINT.IfChange(typed_array_classes)
+const TYPED_ARRAY_CLASSES = [
+  'Int8Array',
+  'Uint8Array',
+  'Uint8ClampedArray',
+  'Int16Array',
+  'Uint16Array',
+  'Int32Array',
+  'Uint32Array',
+  'Float32Array',
+  'Float64Array',
+  'BigInt64Array',
+  'BigUint64Array',
+];
+// LINT.ThenChange(
+// //depot/google3/third_party/java_src/jscomp/java/com/google/javascript/jscomp/js/util/polyfill.js:typed_array_classes
+// )
+
+/**
+ * Prints to stderr and exits.
+ * @param {string} message
+ */
+function fail(message) {
+  console.error(message);
+  process.exit(1);
+}
+
+/**
+ * Builds up a table of polyfills.
+ */
+class Library {
+  constructor() {
+    /** @const {!Map<string, !Array<string>>} */
+    this.symbolToFile = new Map();
+    /** @const {!Map<string, !Set<string>>} */
+    this.deps = new Map();
+    /** @const {!Map<string, string>} */
+    this.versions = new Map();
+    /** @const {!Array<!Array<string>>} */
+    this.polyfillRows = [];
+    /** @const {!Map<string, string>} */
+    this.jscompProps = new Map();
+    this.jscompProps.set('global', 'util/global');
+  }
+
+  /**
+   * Returns a shim for $jscomp.polyfill.
+   * @param {string} lib Library currently being scanned.
+   * @return {function(string, ?Function, string, string)}
+   */
+  polyfill(lib) {
+    return (polyfill, impl, fromLang, toLang) => {
+      if (!ORDER.includes(fromLang)) {
+        throw new Error(`Unknown language version ${fromLang} for ${polyfill}`);
+      }
+
+      if (!ORDER.includes(toLang)) {
+        throw new Error(`Unknown language version ${toLang} for ${polyfill}`);
+      }
+
+      this.symbolToFile.set(polyfill, this.symbolToFile.get(polyfill) || []);
+      this.symbolToFile.get(polyfill).push(lib);
+      const polyfillRow = [polyfill, fromLang, toLang];
+      if (impl) {
+        polyfillRow.push(lib);
+        this.versions.set(lib, maxVersion(this.versions.get(lib), toLang));
+      }
+      this.polyfillRows.push(polyfillRow);
+    };
+  }
+
+  /**
+   * Returns a shim for $jscomp.polyfillTypedArrayMethod.
+   * @param {string} lib Library currently being scanned.
+   * @return {function(string, ?Function, string, string)}
+   */
+  polyfillTypedArrayMethod(lib) {
+    return (methodName, impl, fromLang, toLang) => {
+      for (let i = 0; i < TYPED_ARRAY_CLASSES.length; i++) {
+        const className = TYPED_ARRAY_CLASSES[i];
+        const target = className + '.prototype.' + methodName;
+        this.polyfill(lib)(target, impl, fromLang, toLang);
+      }
+    };
+  }
+
+  static IGNORE = new Set(['global', 'polyfill', 'polyfillTypedArrayMethod']);
+
+  /**
+   * Returns a shim for $jscomp.polyfillTypedArrayMethod.
+   * @param {string} lib Library currently being scanned.
+   * @return {function(string): void}
+   */
+  addJscompProperty(lib) {
+    return (/** string */ propertyName) => {
+      if (Library.IGNORE.has(propertyName)) {
+        return;
+      }
+      if (this.jscompProps.has(propertyName)) {
+        throw new Error(
+            `property ${propertyName} found multipile times. existing: ${
+                this.jscompProps.get(propertyName)}, new: ${lib}`)
+      }
+      this.jscompProps.set(propertyName, lib);
+    };
+  }
+
+  /**
+   * Reads a JS file and adds it to the table.
+   * @param {string} lib Name of the library.
+   * @param {string} data Contents of the file.
+   */
+  readFile(lib, data) {
+    // Look for 'require' directives and add it to the dependency map.
+    const deps = new Set();
+    this.deps.set(lib, deps);
+    const re = /'require ([^']+)'/g;
+    let match;
+    while (match = re.exec(data)) {
+      match[1].split(' ').forEach(dep => deps.add(dep));
+    }
+    // Inject this code at the end of the library file, to collect all
+    // properties that were defined on "$jscomp".
+    data += `
+    for (const prop of Object.getOwnPropertyNames($jscomp)) {
+      recordProperty(prop);
+    }
+    `;
+    // Now run the file.
+    try {
+      new Function('$jscomp', 'recordProperty', data)(
+          {
+            global: globalThis,
+            polyfill: this.polyfill(lib),
+            polyfillTypedArrayMethod: this.polyfillTypedArrayMethod(lib),
+          },
+          this.addJscompProperty(lib));
+    } catch (err) {
+      throw new Error('Failed to parse file: ' + lib + ': ' + err);
+    }
+  }
+
+  /**
+   * Concatenates the table into a string.  Throws an error if
+   * there are any symbols provided by multiple files.
+   * @param {string} mode
+   * @return {string}
+   */
+  build(mode) {
+    switch (mode) {
+      case 'POLYFILLS':
+        return this.buildPolyfills();
+      case 'RUNTIME_LIBS':
+        return this.buildRuntimeLibs();
+      default:
+        throw new Error(`Unknown mode: ${mode}`);
+    }
+  }
+
+  buildPolyfills() {
+    /** @type {!Set<string>} */
+    const errors = new Set();
+    try {
+      // First check for duplicate provided symbols.
+      for (const entry of this.symbolToFile.entries()) {
+        const definingFiles = /** @type {!Array<string>} */ (entry[1]);
+        if (definingFiles.length !== 1) {
+          errors.add(`ERROR - ${entry[0]} provided by multiple files:${
+              definingFiles.map(f => '\n    ' + f).join('')}`);
+        }
+      }
+      // Next ensure all deps have nonincreasing versions.
+      checkDeps(errors, this.deps, this.versions);
+      // If there are any errors, we should fail; otherwise concatenate.
+    } catch (err) {
+      errors.add('ERROR - uncaught exception: ' + err.stack);
+    }
+    if (errors.size) {
+      fail(Array.from(errors).join('\n\n'));
+    }
+    return this.polyfillRows.sort((p1, p2) => p1[0].localeCompare(p2[0]))
+        .map(row => row.join(' '))
+        .join('\n');
+  }
+
+  buildRuntimeLibs() {
+    return [...this.jscompProps].sort().join('\n');
+  }
+}
+
+/**
+ * Checks dependencies for the following issues:
+ *   (1) cyclic dependencies
+ *   (2) missing dependencies
+ *   (3) version mismatches
+ * @param {!Set<string>} errors
+ * @param {!Map<string, !Set<string>>} deps
+ * @param {!Map<string, string>} versions
+ */
+function checkDeps(errors, deps, versions) {
+  for (const file of deps.keys()) {
+    /** @type {!Set<string>} */
+    const seen = new Set([file]);
+    /** @type {!Array<string>} */
+    const queue = [file];
+    const version = versions.get(file);
+    while (queue.length) {
+      const next = queue.shift();
+      for (const dep of deps.get(next) || []) {
+        if (dep === file) errors.add('ERROR - Cyclic dependency:\n    ' + dep);
+        if (seen.has(dep)) continue;
+        seen.add(dep);
+        queue.push(dep);
+        if (!deps.has(dep)) {
+          errors.add(
+              `ERROR - missing dependency:\n    ${dep}` +
+              ` required from\n    ${file}`);
+        }
+        const depVersion = versions.get(dep);
+        if (version && maxVersion(depVersion, version) !== version) {
+          errors.add(
+              'ERROR - lower version depends on higher version:\n    ' +
+              `${version}: ${file}\n    ${depVersion}: ${dep}`);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Returns the higher order of the given versions.
+ * @param {string} version1
+ * @param {string} version2
+ * @return {string} The max version.
+ */
+function maxVersion(version1, version2) {
+  return ORDER[Math.max(ORDER.indexOf(version1), ORDER.indexOf(version2))];
+}
+
+function parseMode() {
+  /** @type {string} */
+  const modeArg = process.argv[2];
+  if (!modeArg || !modeArg.startsWith('--mode=')) {
+    throw new Error(
+        `build_metadata_table should be called as: --mode={POLYFILLS, RUNTIME_LIBS} paths/to/files`);
+  }
+  /** @type {string} */
+  const mode = modeArg.substring('--mode='.length);
+
+  return mode;
+}
+
+/** @type {!Library} */
+const table = new Library();
+/** @type {string} */
+const mode = parseMode();
+/** @type {!Array<string>} */
+const files = process.argv.slice(3);
+
+/** @type {!Array<!Promise<string>>} */
+const reads = files.map(
+    filename => new Promise(
+        (fulfill, reject) => fs.readFile(filename, 'utf8', (err, data) => {
+          try {
+            if (err) {
+              reject(err);
+            } else {
+              const lib = filename.replace(/^.*?\/js\/|\.js$/g, '');
+              table.readFile(lib, data);
+              fulfill('');
+            }
+          } catch (err) {
+            reject(err);
+          }
+        })));
+
+Promise.all(reads).then(
+    success => console.log(table.build(mode)),
+    failure => fail(/** @type {!Error} */ (failure).stack));

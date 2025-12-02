@@ -79,20 +79,18 @@ public class TranspilationPasses {
 
     passes.maybeAdd(createUnifiedFeatureRemovalPass("featureRemovalPasses", options));
 
-    if (options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS)
-        || options.needsTranspilationOf(Feature.CLASS_STATIC_BLOCK)
-        || options.needsTranspilationOf(Feature.CLASSES)) {
-      // Make sure that a variable is created to hold every class definition.
-      // This allows us to add static properties and methods by adding properties
-      // to that variable.
-      passes.maybeAdd(es6RewriteClassExtends);
-      passes.maybeAdd(es6ExtractClasses);
-    }
-
-    if (options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS)
-        || options.needsTranspilationOf(Feature.CLASS_STATIC_BLOCK)) {
-      passes.maybeAdd(rewriteClassMembers);
-    }
+    // Es6NormalizeClasses is always run so that future passes can make assumptions about classes.
+    // Always does the following:
+    // -  Extracts classes defined in expression contexts (e.g. `foo(class {})` and
+    //    `class C extends class {} {}`).
+    // -  Removes all static initialization (i.e. removes static initialization blocks and moves
+    //    static field initializers into a generated static method).
+    // -  Provides a single name for classes (i.e. removes the inner class name).
+    // -  Moves computed field expressions into named variables.
+    // If transpilation is needed for Feature.PUBLIC_CLASS_FIELDS:
+    // -  Rewrites public fields as assignments in the constructor.
+    // -  Removes all field declarations (public and static).
+    passes.maybeAdd(es6NormalizeClasses);
 
     if (options.needsTranspilationOf(Feature.LOGICAL_ASSIGNMENT)) {
       passes.maybeAdd(rewriteLogicalAssignmentOperatorsPass);
@@ -203,7 +201,9 @@ public class TranspilationPasses {
                 if (compiler.getOptions().needsTranspilationOf(Feature.OPTIONAL_CATCH_BINDING)) {
                   peepholeTranspilations.add(new RewriteCatchWithNoBinding(compiler));
                 }
-                if (compiler.getOptions().needsTranspilationOf(Feature.EXTENDED_OBJECT_LITERALS)) {
+                if (compiler
+                    .getOptions()
+                    .needsTranspilationOf(Feature.SHORTHAND_OBJECT_PROPERTIES)) {
                   peepholeTranspilations.add(new Es6NormalizeShorthandProperties(compiler));
                 }
                 if (compiler.getOptions().needsTranspilationOf(Feature.NEW_TARGET)) {
@@ -256,22 +256,10 @@ public class TranspilationPasses {
           .setInternalFactory(Es7RewriteExponentialOperator::new)
           .build();
 
-  static final PassFactory es6RewriteClassExtends =
+  static final PassFactory es6NormalizeClasses =
       PassFactory.builder()
-          .setName(PassNames.ES6_REWRITE_CLASS_EXTENDS)
-          .setInternalFactory(Es6RewriteClassExtendsExpressions::new)
-          .build();
-
-  static final PassFactory es6ExtractClasses =
-      PassFactory.builder()
-          .setName(PassNames.ES6_EXTRACT_CLASSES)
-          .setInternalFactory(Es6ExtractClasses::new)
-          .build();
-
-  static final PassFactory rewriteClassMembers =
-      PassFactory.builder()
-          .setName("RewriteClassMembers")
-          .setInternalFactory(RewriteClassMembers::new)
+          .setName(PassNames.ES6_NORMALIZE_CLASSES)
+          .setInternalFactory(Es6NormalizeClasses::new)
           .build();
 
   static final PassFactory es6RewriteClass =
@@ -599,6 +587,12 @@ public class TranspilationPasses {
             Feature.STRING_CONTINUATION, // transpiled away during parsing
             Feature.TRAILING_COMMA // transpiled away during Normalization
             );
+
+    // ES_NEXT_RUNTIME and ES_UNSTABLE_RUNTIME are not "real" features. They only exist to ensure
+    // that FeatureSet.ES_NEXT and FeatureSet.ES_UNSTABLE have distinct version names as some
+    // polyfills target "es_next" and "es_unstable" for their fromLang.
+    featuresToMarkRemoved =
+        featuresToMarkRemoved.with(Feature.ES_NEXT_RUNTIME, Feature.ES_UNSTABLE_RUNTIME);
 
     return createFeatureRemovalPass(passName, featuresToMarkRemoved);
   }

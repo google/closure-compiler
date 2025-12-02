@@ -77,27 +77,14 @@ final class ColorFindPropertyReferences extends AbstractPostOrderCallback {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case GETPROP:
-      case OPTCHAIN_GETPROP:
-        this.registerPropertyUse(t, n, n.getFirstChild().getColor());
-        break;
-      case OBJECTLIT:
-        this.handleObjectLit(t, n);
-        break;
-      case CALL:
-        this.handleCall(t, n);
-        break;
-      case CLASS:
-        this.handleClass(t, n);
-        break;
-      case OBJECT_PATTERN:
-        this.handleObjectPattern(t, n);
-        break;
-      case FUNCTION:
-        this.handleFunction(n);
-        break;
-      default:
-        break;
+      case GETPROP, OPTCHAIN_GETPROP ->
+          this.registerPropertyUse(t, n, n.getFirstChild().getColor());
+      case OBJECTLIT -> this.handleObjectLit(t, n);
+      case CALL -> this.handleCall(t, n);
+      case CLASS -> this.handleClass(t, n);
+      case OBJECT_PATTERN -> this.handleObjectPattern(t, n);
+      case FUNCTION -> this.handleFunction(n);
+      default -> {}
     }
   }
 
@@ -193,28 +180,19 @@ final class ColorFindPropertyReferences extends AbstractPostOrderCallback {
 
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       switch (child.getToken()) {
-        case BLOCK:
-        case COMPUTED_PROP:
-        case COMPUTED_FIELD_DEF:
-        case OBJECT_REST:
-        case OBJECT_SPREAD:
+        case BLOCK, COMPUTED_PROP, COMPUTED_FIELD_DEF, OBJECT_REST, OBJECT_SPREAD -> {
           continue;
-
-        case STRING_KEY:
-        case MEMBER_FUNCTION_DEF:
-        case MEMBER_FIELD_DEF:
-        case GETTER_DEF:
-        case SETTER_DEF:
+        }
+        case STRING_KEY, MEMBER_FUNCTION_DEF, MEMBER_FIELD_DEF, GETTER_DEF, SETTER_DEF -> {
           if (child.isQuotedStringKey()) {
             continue; // These won't be renamed due to our assumptions. Ignore them.
           }
 
           this.registerPropertyUse(t, child, memberOwnerFn.apply(child));
-          break;
-
-        default:
-          throw new IllegalStateException(
-              "Unexpected child of " + n.getToken() + ": " + child.toStringTree());
+        }
+        default ->
+            throw new IllegalStateException(
+                "Unexpected child of " + n.getToken() + ": " + child.toStringTree());
       }
     }
   }

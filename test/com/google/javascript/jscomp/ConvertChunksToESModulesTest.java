@@ -257,7 +257,9 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
                 .addChunk("a = 2;")
                 .build()),
         error(ASSIGNMENT_TO_IMPORT)
-            .withMessage("Imported symbol \"a\" in chunk \"m1.js\" cannot be assigned"));
+            .withMessage(
+                "Imported symbol \"a\" in chunk \"m1.js\" cannot be assigned (defined in"
+                    + " \"m0.js\")"));
   }
 
   @Test

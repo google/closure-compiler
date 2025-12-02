@@ -54,12 +54,6 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
   }
 
   @Override
-  protected int getNumRepetitions() {
-    // No longer valid on the second run.
-    return 1;
-  }
-
-  @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setLocale(this.locale);

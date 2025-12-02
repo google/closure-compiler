@@ -954,4 +954,65 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
             """)
         .run();
   }
+
+  @Test
+  public void testTemplateTypeOnEnclosingClass_usedInLet_es5() {
+    newTest()
+        .addSource(
+            """
+            /**
+             * @template T
+             * @constructor
+             */
+            function GenericClass() {}
+            GenericClass.prototype.foo = function() {
+              let anonymousFunction = function () {
+                let /** ?T */ tRef = null;
+              };
+            };
+            """)
+        .run();
+  }
+
+  @Test
+  public void testTemplateTypeOnEnclosingClass_usedInLet() {
+    newTest()
+        .addSource(
+            """
+            /** @template T */
+            class GenericClass {
+              /** @template V */
+              foo(/** V */ param) {
+                let anonymousFunction = function () {
+                  let /** ?T */ tRef = null;
+                  let another = function() {
+                    function andYetAnother() {
+                      let /** ?T */ tRefNested = null;
+                    }
+                  };
+                };
+              }
+            }
+            """)
+        .run();
+  }
+
+  @Test
+  public void testTemplateTypeOnEnclosingClass_usedInNestedFunction() {
+    newTest()
+        .addSource(
+            """
+            /** @template T */
+            class GenericClass {
+              foo() {
+                let anonymousFunction = function () {
+                  /** @param {T} p */
+                  let another = function(p) {
+                  };
+                };
+              }
+            }
+            """)
+        .run();
+  }
 }

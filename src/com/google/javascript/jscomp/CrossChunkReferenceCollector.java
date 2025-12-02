@@ -257,15 +257,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
   private static boolean isBlockBoundary(Node n, Node parent) {
     if (parent != null) {
       switch (parent.getToken()) {
-        case DO:
-        case FOR:
-        case FOR_IN:
-        case FOR_OF:
-        case FOR_AWAIT_OF:
-        case TRY:
-        case WHILE:
-        case WITH:
-        case CLASS:
+        case DO, FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, TRY, WHILE, WITH, CLASS -> {
           // NOTE: TRY has up to 3 child blocks:
           // TRY
           //   BLOCK
@@ -276,18 +268,13 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
           // FINALLY token. For simplicity, we consider each BLOCK
           // a separate basic BLOCK.
           return true;
-        case AND:
-        case HOOK:
-        case IF:
-        case OR:
-        case SWITCH:
-        case COALESCE:
+        }
+        case AND, HOOK, IF, OR, SWITCH, COALESCE -> {
           // The first child of a conditional is not a boundary,
           // but all the rest of the children are.
           return n != parent.getFirstChild();
-
-        default:
-          break;
+        }
+        default -> {}
       }
     }
 
@@ -329,7 +316,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
     }
 
     switch (valueNode.getToken()) {
-      case CLASS:
+      case CLASS -> {
         // NOTE: Why aren't class extends expressions checked here?
         Node classMembers = valueNode.getLastChild();
         for (Node member = classMembers.getFirstChild();
@@ -361,16 +348,16 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
           }
         }
         return true;
-
-      case CALL:
+      }
+      case CALL -> {
         // In general it is not safe to move function calls, but we carve out an exception
         // for the special stub method calls used for CrossChunkMethodMotion.
         // Case: `JSCompiler_stubMethod(x)`
         Node functionName = checkNotNull(valueNode.getFirstChild());
         return functionName.isName()
             && functionName.getString().equals(CrossChunkMethodMotion.STUB_METHOD_NAME);
-
-      case ARRAYLIT:
+      }
+      case ARRAYLIT -> {
         // Movable if all of the array values are movable.
         for (Node child = valueNode.getFirstChild(); child != null; child = child.getNext()) {
           if (!canMoveValue(scope, child)) {
@@ -379,8 +366,8 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
         }
 
         return true;
-
-      case OBJECTLIT:
+      }
+      case OBJECTLIT -> {
         // Movable if all of the keys and values are movable.
         for (Node child = valueNode.getFirstChild(); child != null; child = child.getNext()) {
           switch (child.getToken()) {
@@ -410,8 +397,8 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
         }
 
         return true;
-
-      case NAME:
+      }
+      case NAME -> {
         // If the value is guaranteed to never be changed after
         // this reference, then we can move it.
         Var v = scope.getVar(valueNode.getString());
@@ -423,9 +410,8 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
             return true;
           }
         }
-        break;
-
-      case TEMPLATELIT:
+      }
+      case TEMPLATELIT -> {
         // A template literal is movable if all of the substitutions it contains are movable.
         for (Node child = valueNode.getFirstChild(); child != null; child = child.getNext()) {
           if (child.isTemplateLitSub()) {
@@ -437,9 +423,8 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
           }
         }
         return true;
-
-      default:
-        break;
+      }
+      default -> {}
     }
 
     return false;

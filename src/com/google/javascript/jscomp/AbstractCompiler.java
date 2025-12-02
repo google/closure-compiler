@@ -24,6 +24,7 @@ import com.google.errorprone.annotations.MustBeClosed;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.diagnostic.LogFile;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.parsing.Config;
@@ -331,11 +332,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   abstract boolean hasHaltingErrors();
 
-  /** Register a listener for code change events. */
-  abstract void addChangeHandler(CodeChangeHandler handler);
-
-  /** Remove a listener for code change events. */
-  abstract void removeChangeHandler(CodeChangeHandler handler);
+  abstract ChangeTracker getChangeTracker();
 
   /** Register a provider for some type of index. */
   abstract void addIndexProvider(IndexProvider<?> indexProvider);
@@ -345,19 +342,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    * registered for the given type.
    */
   abstract <T> T getIndex(Class<T> type);
-
-  /** A monotonically increasing value to identify a change */
-  abstract int getChangeStamp();
-
-  /**
-   * An accumulation of changed scope nodes since the last time the given pass was run. A returned
-   * empty list means no scope nodes have changed since the last run and a returned null means this
-   * is the first time the pass has run.
-   */
-  abstract List<Node> getChangedScopeNodesForPass(String passName);
-
-  /** Called to indicate that the current change stamp has been used */
-  abstract void incrementChangeStamp();
 
   /** Returns the root of the source tree, ignoring externs */
   abstract Node getJsRoot();
@@ -496,26 +480,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   /** Gets the last pass name set by setProgress. */
   abstract String getLastPassName();
 
-  static final String RUNTIME_LIB_DIR =
-  "src/com/google/javascript/jscomp/js/";
+  static final String RUNTIME_LIB_DIR = RuntimeJsLibManager.RUNTIME_LIB_DIR;
 
   /**
-   * The subdir js/ contains libraries of code that we inject at compile-time only if requested by
-   * this function.
-   *
-   * <p>Notice that these libraries will almost always create global symbols.
-   *
-   * @param resourceName The name of the library. For example, if "base" is is specified, then we
-   *     load js/base.js
-   * @param force Inject the library even if compiler options say not to.
-   * @return The last node of the most-recently-injected runtime library. If new code was injected,
-   *     this will be the last expression node of the library. If the caller needs to add additional
-   *     code, they should add it as the next sibling of this node. If no runtime libraries have
-   *     been injected, then null is returned.
+   * Returns a class responsible for managing injection of runtime libraries under the js/
+   * subdirectory.
    */
-  abstract Node ensureLibraryInjected(String resourceName, boolean force);
-
-  abstract ImmutableList<String> getInjectedLibraries();
+  abstract RuntimeJsLibManager getRuntimeJsLibManager();
 
   /**
    * Sets the names of the properties defined in externs.

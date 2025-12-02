@@ -48,23 +48,20 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case SCRIPT:
-        contextStack.push(contextForScript(n, t.getInput()));
-        break;
-      case FUNCTION:
+      case SCRIPT -> contextStack.push(contextForScript(n, t.getInput()));
+      case FUNCTION -> {
         if (!n.isArrowFunction()) {
           contextStack.push(contextForFunction(n, t.getInput()));
         }
-        break;
-      case SUPER:
+      }
+      case SUPER -> {
         ThisAndArgumentsContext context = checkNotNull(contextStack.peek());
         // super(...) within a constructor.
         if (context.isConstructor && parent.isCall() && parent.getFirstChild() == n) {
           context.lastSuperStatement = getEnclosingStatement(parent, context.scopeBody);
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
     return true;
   }

@@ -74,25 +74,13 @@ public class Util {
     for (int i = 0; i < length; i++) {
       char c = s.charAt(i);
       switch (c) {
-        case '\n':
-          region.appendForEscapedChar("\\n");
-          break;
-        case '\r':
-          region.appendForEscapedChar("\\r");
-          break;
-        case '\t':
-          region.appendForEscapedChar("\\t");
-          break;
-        case '\\':
-          region.appendForEscapedChar(backslashEscape);
-          break;
-        case '\"':
-          region.appendForEscapedChar(doublequoteEscape);
-          break;
-        case '\'':
-          region.appendForEscapedChar(singlequoteEscape);
-          break;
-        case '>':
+        case '\n' -> region.appendForEscapedChar("\\n");
+        case '\r' -> region.appendForEscapedChar("\\r");
+        case '\t' -> region.appendForEscapedChar("\\t");
+        case '\\' -> region.appendForEscapedChar(backslashEscape);
+        case '\"' -> region.appendForEscapedChar(doublequoteEscape);
+        case '\'' -> region.appendForEscapedChar(singlequoteEscape);
+        case '>' -> {
           // Unicode-escape the '>' in '-->' and ']]>'
           if (i >= 2
               && ((s.charAt(i - 1) == '-' && s.charAt(i - 2) == '-')
@@ -101,23 +89,21 @@ public class Util {
           } else {
             region.incrementForNormalChar();
           }
-          break;
-        case '<':
+        }
+        case '<' -> {
           // Unicode-escape the '<' in '</script' and '<!--'
           final String END_SCRIPT = "/script";
           final String START_COMMENT = "!--";
 
-          if (s.regionMatches(true, i + 1, END_SCRIPT, 0,
-                              END_SCRIPT.length())) {
+          if (s.regionMatches(true, i + 1, END_SCRIPT, 0, END_SCRIPT.length())) {
             region.appendForEscapedChar("\\u003c");
-          } else if (s.regionMatches(false, i + 1, START_COMMENT, 0,
-                                     START_COMMENT.length())) {
+          } else if (s.regionMatches(false, i + 1, START_COMMENT, 0, START_COMMENT.length())) {
             region.appendForEscapedChar("\\u003c");
           } else {
             region.incrementForNormalChar();
           }
-          break;
-        default:
+        }
+        default -> {
           // No charsetEncoder provided - pass straight Latin characters
           // through, and escape the rest.  Doing the explicit character
           // check is measurably faster than using the CharsetEncoder.
@@ -131,6 +117,7 @@ public class Util {
             region.incrementForEscapedChar();
             appendHexJavaScriptRepresentation(sb, c);
           }
+        }
       }
     }
     region.appendUnescaped();

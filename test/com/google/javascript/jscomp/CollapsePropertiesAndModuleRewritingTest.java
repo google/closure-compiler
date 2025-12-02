@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -69,6 +70,11 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
                 .build());
         factories.maybeAdd(
             PassFactory.builder()
+                .setName(PassNames.ES6_NORMALIZE_CLASSES)
+                .setInternalFactory(Es6NormalizeClasses::new)
+                .build());
+        factories.maybeAdd(
+            PassFactory.builder()
                 .setName(PassNames.COLLAPSE_PROPERTIES)
                 .setRunInFixedPointLoop(true)
                 .setInternalFactory(
@@ -86,6 +92,11 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
         }
       }
     };
+  }
+
+  @Before
+  public void customSetUp() throws Exception {
+    setGenericNameReplacements(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS);
   }
 
   @Test

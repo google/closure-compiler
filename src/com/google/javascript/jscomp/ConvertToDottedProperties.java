@@ -43,8 +43,7 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback implements Com
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case COMPUTED_PROP:
-      case COMPUTED_FIELD_DEF:
+      case COMPUTED_PROP, COMPUTED_FIELD_DEF -> {
         Node leftElem = n.getFirstChild();
         Node rightElem = leftElem.getNext();
 
@@ -87,19 +86,16 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback implements Com
           n.replaceWith(temp);
           compiler.reportChangeToEnclosingScope(temp);
         }
-        break;
-      case GETTER_DEF:
-      case SETTER_DEF:
-      case STRING_KEY:
+      }
+      case GETTER_DEF, SETTER_DEF, STRING_KEY -> {
         if (NodeUtil.isValidPropertyName(FeatureSet.ES3, n.getString())) {
           if (n.getBooleanProp(Node.QUOTED_PROP)) {
             n.putBooleanProp(Node.QUOTED_PROP, false);
             compiler.reportChangeToEnclosingScope(n);
           }
         }
-        break;
-      case OPTCHAIN_GETELEM:
-      case GETELEM:
+      }
+      case OPTCHAIN_GETELEM, GETELEM -> {
         Node left = n.getFirstChild();
         Node right = left.getNext();
         if (right.isStringLit()
@@ -115,9 +111,8 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback implements Com
           n.replaceWith(newGetProp);
           compiler.reportChangeToEnclosingScope(newGetProp);
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
   }
 }

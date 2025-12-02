@@ -48,14 +48,14 @@ public final class SourceMapConsumerFactory {
 
       // Check basic assertions about the format.
       switch (sourceMapObject.getVersion()) {
-        case 3: {
-          SourceMapConsumerV3 consumer =  new SourceMapConsumerV3();
+        case 3 -> {
+          SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
           consumer.parse(sourceMapObject, supplier);
           return consumer;
         }
-        default:
-          throw new SourceMapParseException(
-              "Unknown source map version:" + sourceMapObject.getVersion());
+        default ->
+            throw new SourceMapParseException(
+                "Unknown source map version:" + sourceMapObject.getVersion());
       }
     }
 

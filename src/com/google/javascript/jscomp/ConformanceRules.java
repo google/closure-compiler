@@ -841,53 +841,40 @@ public final class ConformanceRules {
 
     private @Nullable JSType extractType(Node n) {
       switch (n.getToken()) {
-        case GETELEM:
-        case GETPROP:
+        case GETELEM, GETPROP -> {
           return n.getFirstChild().getJSType();
-
-        case STRING_KEY:
-        case COMPUTED_PROP:
-          {
-            Node parent = n.getParent();
-            switch (parent.getToken()) {
-              case OBJECT_PATTERN:
-              case OBJECTLIT:
-                return parent.getJSType();
-
-              case CLASS_MEMBERS:
-                return null;
-
-              default:
-                throw new AssertionError();
-            }
-          }
-
-        default:
+        }
+        case STRING_KEY, COMPUTED_PROP -> {
+          Node parent = n.getParent();
+          return switch (parent.getToken()) {
+            case OBJECT_PATTERN, OBJECTLIT -> parent.getJSType();
+            case CLASS_MEMBERS -> null;
+            default -> throw new AssertionError();
+          };
+        }
+        default -> {
           return null;
+        }
       }
     }
 
     private @Nullable String extractName(Node n) {
 
       switch (n.getToken()) {
-        case GETPROP:
-        case STRING_KEY:
+        case GETPROP, STRING_KEY -> {
           return n.getString();
-
-        case GETELEM:
-          {
-            Node string = n.getSecondChild();
-            return string.isStringLit() ? string.getString() : null;
-          }
-
-        case COMPUTED_PROP:
-          {
-            Node string = n.getFirstChild();
-            return string.isStringLit() ? string.getString() : null;
-          }
-
-        default:
+        }
+        case GETELEM -> {
+          Node string = n.getSecondChild();
+          return string.isStringLit() ? string.getString() : null;
+        }
+        case COMPUTED_PROP -> {
+          Node string = n.getFirstChild();
+          return string.isStringLit() ? string.getString() : null;
+        }
+        default -> {
           return null;
+        }
       }
     }
   }
@@ -1095,12 +1082,10 @@ public final class ConformanceRules {
       }
 
       switch (node.getToken()) {
-        case STRING_KEY:
-        case STRINGLIT:
-        case TEMPLATELIT:
-        case TEMPLATELIT_STRING:
+        case STRING_KEY, STRINGLIT, TEMPLATELIT, TEMPLATELIT_STRING -> {
           return NodeUtil.getStringValue(node);
-        case NAME:
+        }
+        case NAME -> {
           if (scope == null) {
             return null;
           }
@@ -1114,7 +1099,8 @@ public final class ConformanceRules {
           }
           Node initialValue = var.getInitialValue();
           return inferStringValue(var.getScope(), initialValue, globalNamespaceSupplier);
-        case GETPROP:
+        }
+        case GETPROP -> {
           JSType type = node.getJSType();
           if (type == null) {
             return null;
@@ -1142,8 +1128,10 @@ public final class ConformanceRules {
             return getValueFromGlobalName(scope, gns, node.getQualifiedName());
           }
           return null;
-        default:
+        }
+        default -> {
           // Do nothing
+        }
       }
       return null;
     }

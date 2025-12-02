@@ -64,27 +64,32 @@ public final class CheckEs6ModuleFileStructure extends AbstractPreOrderCallback
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case ROOT:
+      case ROOT -> {
         return true;
-      case SCRIPT:
+      }
+      case SCRIPT -> {
         return n.getBooleanProp(Node.ES6_MODULE);
-      case MODULE_BODY:
+      }
+      case MODULE_BODY -> {
         orderedStatements.clear();
         return true;
-      case IMPORT:
+      }
+      case IMPORT -> {
         visitImport(t, n);
         return false;
-      case EXPR_RESULT:
+      }
+      case EXPR_RESULT -> {
         return visitExprResult(t, n, parent);
-      case VAR:
-      case LET:
-      case CONST:
+      }
+      case VAR, LET, CONST -> {
         return visitDeclaration(t, n, parent);
-      default:
+      }
+      default -> {
         if (parent != null && parent.isModuleBody()) {
           checkOrder(t, n, OrderedStatement.OTHER);
         }
         return false;
+      }
     }
   }
 

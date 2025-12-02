@@ -175,6 +175,7 @@ java_library(
         ":runtime_libs_srcs",
         ":runtime_libs_typedast",
         ":src/java/com/google/javascript/jscomp/js/polyfills.txt",
+        ":src/java/com/google/javascript/jscomp/js/transpilation_libs.txt",
     ],
     exports = [":compiler_lib_no_runtime_libs"],
 )
@@ -189,9 +190,19 @@ genrule(
     name = "gen_polyfill_table",
     srcs = [":runtime_libs_srcs"],
     outs = ["src/java/com/google/javascript/jscomp/js/polyfills.txt"],
-    cmd = "node $(location src/com/google/javascript/jscomp/js/build_polyfill_table.js) $(SRCS) | sed 's,[^ ]*jscomp/js/,,g' > $@",
+    cmd = "node $(location src/com/google/javascript/jscomp/js/build_metadata_table.js) --mode=POLYFILLS $(SRCS) | sed 's,[^ ]*jscomp/js/,,g' > $@",
     tools = [
-        "src/com/google/javascript/jscomp/js/build_polyfill_table.js",
+        "src/com/google/javascript/jscomp/js/build_metadata_table.js",
+    ],
+)
+
+genrule(
+    name = "gen_transpilation_lib_table",
+    srcs = [":runtime_libs_srcs"],
+    outs = ["src/java/com/google/javascript/jscomp/js/transpilation_libs.txt"],
+    cmd = "node $(location src/com/google/javascript/jscomp/js/build_metadata_table.js) --mode=RUNTIME_LIBS $(SRCS) | sed 's,[^ ]*jscomp/js/,,g' > $@",
+    tools = [
+        "src/com/google/javascript/jscomp/js/build_metadata_table.js",
     ],
 )
 
@@ -200,7 +211,7 @@ filegroup(
     srcs = glob(
         ["src/com/google/javascript/jscomp/js/**/*.js"],
         exclude = [
-            "src/com/google/javascript/jscomp/js/build_polyfill_table.js",
+            "src/com/google/javascript/jscomp/js/build_metadata_table.js",
         ],
     ),
 )
@@ -227,8 +238,7 @@ oss_java_library(
             "src/**/*.properties",
         ]),
     ),
-    javadoc_attrs = dict(
-    ),
+    javadoc_attrs = dict(),
     shared_attrs = dict(
         srcs = [
             ":CommandLineRunnerVersion",
@@ -290,10 +300,15 @@ expand_template_with_defines(
 gen_java_tests(
     name = "compiler_tests",
     srcs = glob(
-        [
+        include = [
             "test/**/*.java",
             "src/**/testing/**/*.java",
         ],
+        exclude = [
+            # Async context transpilation is unsupported. It currently relies on non-open-sourced
+            # Google internal code.
+            "test/com/google/javascript/jscomp/InstrumentAsyncContextTest.java",
+        ]
     ),
     prefix_path = "test/",
     deps = [

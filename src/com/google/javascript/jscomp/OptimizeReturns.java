@@ -222,32 +222,23 @@ class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPa
   // So we don't need to update the graph.
   private boolean isRemovableValue(Node n) {
     switch (n.getToken()) {
-      case TEMPLATELIT:
-      case ARRAYLIT:
+      case TEMPLATELIT, ARRAYLIT -> {
         for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
           if ((!child.isEmpty()) && !isRemovableValue(child)) {
             return false;
           }
         }
         return true;
-
-      case REGEXP:
-      case STRINGLIT:
-      case NUMBER:
-      case NULL:
-      case TRUE:
-      case FALSE:
-      case TEMPLATELIT_STRING:
+      }
+      case REGEXP, STRINGLIT, NUMBER, NULL, TRUE, FALSE, TEMPLATELIT_STRING -> {
         return true;
-      case TEMPLATELIT_SUB:
-      case CAST:
-      case NOT:
-      case VOID:
-      case NEG:
+      }
+      case TEMPLATELIT_SUB, CAST, NOT, VOID, NEG -> {
         return isRemovableValue(n.getFirstChild());
-
-      default:
+      }
+      default -> {
         return false;
+      }
     }
   }
 }

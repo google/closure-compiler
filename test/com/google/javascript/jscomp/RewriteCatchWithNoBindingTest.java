@@ -43,6 +43,7 @@ public class RewriteCatchWithNoBindingTest extends CompilerTestCase {
     enableTypeInfoValidation();
     replaceTypesWithColors();
     enableMultistageCompilation();
+    setGenericNameReplacements(SPECIAL_VARIABLE_MAP);
   }
 
   @Override
@@ -58,91 +59,71 @@ public class RewriteCatchWithNoBindingTest extends CompilerTestCase {
     return options;
   }
 
-  private void rewriteCatchTest(Sources srcs, Expected originalExpected) {
-    Expected modifiedExpected =
-        expected(
-            UnitTestUtils.updateGenericVarNamesInExpectedFiles(
-                (FlatSources) srcs, originalExpected, SPECIAL_VARIABLE_MAP));
-    test(srcs, modifiedExpected);
-  }
-
   @Test
   public void transpileCatchWithoutBinding() {
-    Sources srcs =
-        srcs(
-            """
-            try {
-              stuff();
-            } catch {
-              onError();
-            }
-            """);
-    Expected originalExpected =
-        expected(
-            """
-            try {
-              stuff();
-            } catch (UNUSED_CATCH$0) {
-              onError();
-            }
-            """);
-    rewriteCatchTest(srcs, originalExpected);
+    test(
+        """
+        try {
+          stuff();
+        } catch {
+          onError();
+        }
+        """,
+        """
+        try {
+          stuff();
+        } catch (UNUSED_CATCH$0) {
+          onError();
+        }
+        """);
     assertThat(getLastCompiler().getAllowableFeatures().contains(Feature.OPTIONAL_CATCH_BINDING))
         .isFalse();
   }
 
   @Test
   public void transpileCatchWithNoBindingNested() {
-    Sources srcs =
-        srcs(
-            """
-            try {
-              stuff();
-            } catch {
-              try {
-                onError();
-              } catch {
-                shruggie();
-              }
-            }
-            """);
-    Expected originalExpected =
-        expected(
-            """
-            try {
-              stuff();
-            } catch (UNUSED_CATCH$1) {
-              try {
-                onError();
-              } catch (UNUSED_CATCH$0) {
-                shruggie();
-              }
-            }
-            """);
-    rewriteCatchTest(srcs, originalExpected);
+    test(
+        """
+        try {
+          stuff();
+        } catch {
+          try {
+            onError();
+          } catch {
+            shruggie();
+          }
+        }
+        """,
+        """
+        try {
+          stuff();
+        } catch (UNUSED_CATCH$1) {
+          try {
+            onError();
+          } catch (UNUSED_CATCH$0) {
+            shruggie();
+          }
+        }
+        """);
   }
 
   @Test
   public void typeOfAddedBindingIsUnknown() {
-    Sources srcs =
-        srcs(
-            """
-            try {
-              stuff();
-            } catch {
-              onError();
-            }
-            """);
-    Expected originalExpected =
-        expected(
-            """
-            try {
-              stuff();
-            } catch (UNUSED_CATCH$0) {
-              onError();
-            }
-            """);
-    rewriteCatchTest(srcs, originalExpected);
+    test(
+        """
+        try {
+          stuff();
+        } catch {
+          onError();
+        }
+        """,
+        """
+        try {
+          stuff();
+        } catch (UNUSED_CATCH$0) {
+          onError();
+        }
+        """);
 
     Node binding =
         getLastCompiler()

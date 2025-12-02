@@ -69,7 +69,7 @@ public final class ChangeVerifierTest {
   }
 
   @Test
-  public void testChangeToScriptNotReported() {
+  public void testChangeToScriptNotReported_newChild() {
     Node script = parse("function A() {} if (0) { A(); }");
     checkState(script.isScript());
 
@@ -85,6 +85,70 @@ public final class ChangeVerifierTest {
         assertThrows(
             IllegalStateException.class, () -> verifier.checkRecordedChanges("test2", script));
     assertThat(e).hasMessageThat().contains("changed scope not marked as changed");
+    assertThat(e).hasMessageThat().contains("differing child count");
+  }
+
+  @Test
+  public void testChangeToScriptNotReported_changeToChild() {
+    Node script = parse("function A() {} if (0) { A(); }");
+    checkState(script.isScript());
+
+    ChangeVerifier verifier = new ChangeVerifier(compiler).snapshot(script);
+
+    // no change, no problem
+    verifier.checkRecordedChanges("test1", script);
+
+    // modify the if condition, but don't report the change.
+    Node ifStatement = script.getLastChild();
+    Node condition = NodeUtil.getConditionExpression(ifStatement);
+    condition.replaceWith(IR.number(1));
+
+    IllegalStateException e =
+        assertThrows(
+            IllegalStateException.class, () -> verifier.checkRecordedChanges("test2", script));
+    assertThat(e)
+        .hasMessageThat()
+        .contains(
+            """
+            test2: changed scope not marked as changed: SCRIPT: testcode.
+            shallow inequivalence
+            Before: NUMBER 0.0 1:20  [length: 1] [source_file: testcode]
+            After:  NUMBER 1.0 1:20  [length: 1] [source_file: testcode]
+
+            Ancestor nodes:
+            SCRIPT 1:0  [length: 31] [source_file: testcode] [input_id: InputId: testcode] [feature_set: []]
+              IF 1:16  [length: 15] [source_file: testcode]
+                NUMBER 1.0 1:20  [length: 1] [source_file: testcode]
+            """);
+  }
+
+  @Test
+  public void testChangeToScriptNotReported_changeToFunctionName() {
+    Node script = parse("function A() {} if (0) { A(); }");
+    checkState(script.isScript());
+
+    ChangeVerifier verifier = new ChangeVerifier(compiler).snapshot(script);
+
+    // no change, no problem
+    verifier.checkRecordedChanges("test1", script);
+
+    // modify the if condition, but don't report the change.
+    Node functionNode = script.getFirstChild();
+    Node functionNameNode = NodeUtil.getNameNode(functionNode);
+    functionNameNode.replaceWith(IR.name("B"));
+
+    IllegalStateException e =
+        assertThrows(
+            IllegalStateException.class, () -> verifier.checkRecordedChanges("test2", script));
+    assertThat(e).hasMessageThat().contains("changed scope not marked as changed");
+    assertThat(e)
+        .hasMessageThat()
+        .contains(
+            """
+            function name changed
+            Before: A
+            After:  B
+            """);
   }
 
   @Test
@@ -106,6 +170,42 @@ public final class ChangeVerifierTest {
         assertThrows(
             IllegalStateException.class, () -> verifier.checkRecordedChanges("test2", script));
     assertThat(e).hasMessageThat().contains("changed scope not marked as changed");
+  }
+
+  @Test
+  public void testChangeToFunction_newlyUnusedParameter() {
+    Node script = parse("function f(x) {}");
+    checkState(script.isScript(), script);
+    Node function = script.getFirstChild();
+    checkState(function.isFunction(), function);
+    Node xParam = NodeUtil.getFunctionParameters(function).getOnlyChild();
+    checkState(xParam.matchesName("x"), xParam);
+
+    ChangeVerifier verifier = new ChangeVerifier(compiler).snapshot(script);
+
+    // no change, no problem.
+    verifier.checkRecordedChanges("test1", script);
+
+    // mark parameter x as unused
+    xParam.setUnusedParameter(true);
+
+    IllegalStateException e =
+        assertThrows(
+            IllegalStateException.class, () -> verifier.checkRecordedChanges("test2", script));
+    assertThat(e).hasMessageThat().contains("changed scope not marked as changed");
+    assertThat(e)
+        .hasMessageThat()
+        .contains(
+            """
+            shallow inequivalence
+            Before: NAME x 1:11  [length: 1] [source_file: testcode]
+            After:  NAME x 1:11  [length: 1] [source_file: testcode] [is_unused_parameter: 1]
+
+            Ancestor nodes:
+            FUNCTION f 1:0  [length: 16] [source_file: testcode]
+              PARAM_LIST 1:10  [length: 3] [source_file: testcode]
+                NAME x 1:11  [length: 1] [source_file: testcode] [is_unused_parameter: 1]
+            """);
   }
 
   @Test
