@@ -177,6 +177,23 @@ public final class JsFileRegexParserTest {
   }
 
   @Test
+  public void testUnicodeCharacters() {
+    String contents =
+        """
+        const FɵɵΔBar = goog.require('imaginary.test.namespace');
+        """;
+
+    DependencyInfo expected =
+        SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
+            .setRequires(ImmutableList.of(googRequireSymbol("imaginary.test.namespace")))
+            .build();
+
+    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
+
+    assertDeps(expected, result);
+  }
+
+  @Test
   public void testParseGoogModuleWithRequireType() {
     String contents =
         """

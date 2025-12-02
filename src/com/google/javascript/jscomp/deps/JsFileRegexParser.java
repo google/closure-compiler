@@ -48,7 +48,7 @@ public final class JsFileRegexParser extends JsFileLineParser {
       // TODO(sdh): this handles goog.loadModule(function(){"use strict";goog.module
       // but fails to match without "use strict"; since we look for semicolon, not open brace.
       Pattern.compile(
-          "(?:^|;)(?:[a-zA-Z0-9$_,:{}\\s]+=)?\\s*"
+          "(?:^|;)(?:[\\p{L}\\p{Nl}\\p{Nd}$_,:{}\\s]+=)?\\s*"
               + "goog\\.(?<func>provide|module|require|requireType|addDependency|declareModuleId)"
               // TODO(johnplaisted): Remove declareNamespace.
               + "\\s*\\(\\s*(?<args>.*?)\\s*\\)");
