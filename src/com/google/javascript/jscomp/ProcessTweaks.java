@@ -25,6 +25,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -169,7 +170,7 @@ class ProcessTweaks implements CompilerPass {
 
   static {
     TWEAK_FUNCTIONS_MAP = new LinkedHashMap<>();
-    for (TweakFunction func : TweakFunction.values()) {
+    for (TweakFunction func : EnumSet.allOf(TweakFunction.class)) {
       TWEAK_FUNCTIONS_MAP.put(func.getName(), func);
     }
   }

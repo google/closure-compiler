@@ -161,7 +161,7 @@ public final class FeatureSet implements Serializable {
 
     private EnumSet<Feature> features() {
       EnumSet<Feature> set = EnumSet.noneOf(Feature.class);
-      for (Feature feature : Feature.values()) {
+      for (Feature feature : EnumSet.allOf(Feature.class)) {
         if (feature.version == this) {
           set.add(feature);
         }

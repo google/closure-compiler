@@ -46,6 +46,7 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
+import java.util.EnumSet;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -7240,7 +7241,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     String asyncFunctionDeclarationSource = "async function f() {}";
     expectFeatures(Feature.ASYNC_FUNCTIONS);
 
-    for (LanguageMode m : LanguageMode.values()) {
+    for (LanguageMode m : EnumSet.allOf(LanguageMode.class)) {
       mode = m;
       strictMode = (m == LanguageMode.ECMASCRIPT3) ? SLOPPY : STRICT;
       if (m.featureSet.has(Feature.ASYNC_FUNCTIONS)) {
@@ -7291,7 +7292,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   private void doAsyncArrowFunctionTest(String arrowFunctionSource) {
     expectFeatures(Feature.ASYNC_FUNCTIONS, Feature.ARROW_FUNCTIONS);
 
-    for (LanguageMode m : LanguageMode.values()) {
+    for (LanguageMode m : EnumSet.allOf(LanguageMode.class)) {
       mode = m;
       strictMode = (m == LanguageMode.ECMASCRIPT3) ? SLOPPY : STRICT;
       if (m.featureSet.has(Feature.ASYNC_FUNCTIONS)) {
@@ -7971,7 +7972,7 @@ console.log(new X(1));
             "function foo() { foo(); import('foo'); } foo();");
     expectFeatures(Feature.DYNAMIC_IMPORT);
 
-    for (LanguageMode m : LanguageMode.values()) {
+    for (LanguageMode m : EnumSet.allOf(LanguageMode.class)) {
       mode = m;
       strictMode = (m == LanguageMode.ECMASCRIPT3) ? SLOPPY : STRICT;
       if (m.featureSet.has(Feature.DYNAMIC_IMPORT)) {

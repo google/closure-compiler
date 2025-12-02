@@ -2444,7 +2444,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     Node child3 = templateLit.getChildAtIndex(3);
     assertThat(child3.isTemplateLitSub()).isTrue();
     assertThat(child3.getOnlyChild().isFunction()).isTrue();
-    assertThat(child3.getOnlyChild().getFirstChild().getString()).isEqualTo("");
+    assertThat(child3.getOnlyChild().getFirstChild().getString()).isEmpty();
 
     // Index 4: TEMPLATELIT_STRING ""
     Node child4 = templateLit.getChildAtIndex(4);

@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.base.Tri.FALSE;
 import static com.google.javascript.jscomp.base.Tri.TRUE;
 import static com.google.javascript.jscomp.base.Tri.UNKNOWN;
 
+import java.util.EnumSet;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -37,8 +38,8 @@ public final class TriTest {
           {TRUE, TRUE, TRUE},
         };
 
-    for (Tri row : Tri.values()) {
-      for (Tri col : Tri.values()) {
+    for (Tri row : EnumSet.allOf(Tri.class)) {
+      for (Tri col : EnumSet.allOf(Tri.class)) {
         Tri expected = allExpected[row.ordinal()][col.ordinal()];
         assertThat(row.or(col)).isEqualTo(expected);
         assertThat(col.or(row)).isEqualTo(expected);
@@ -55,8 +56,8 @@ public final class TriTest {
           {FALSE, UNKNOWN, TRUE},
         };
 
-    for (Tri row : Tri.values()) {
-      for (Tri col : Tri.values()) {
+    for (Tri row : EnumSet.allOf(Tri.class)) {
+      for (Tri col : EnumSet.allOf(Tri.class)) {
         Tri expected = allExpected[row.ordinal()][col.ordinal()];
         assertThat(row.and(col)).isEqualTo(expected);
         assertThat(col.and(row)).isEqualTo(expected);
@@ -73,8 +74,8 @@ public final class TriTest {
           {TRUE, UNKNOWN, FALSE},
         };
 
-    for (Tri row : Tri.values()) {
-      for (Tri col : Tri.values()) {
+    for (Tri row : EnumSet.allOf(Tri.class)) {
+      for (Tri col : EnumSet.allOf(Tri.class)) {
         Tri expected = allExpected[row.ordinal()][col.ordinal()];
         assertThat(row.xor(col)).isEqualTo(expected);
         assertThat(col.xor(row)).isEqualTo(expected);
@@ -98,7 +99,7 @@ public final class TriTest {
           {true, true},
         };
 
-    for (Tri row : Tri.values()) {
+    for (Tri row : EnumSet.allOf(Tri.class)) {
       assertThat(row.toBoolean(false)).isEqualTo(allExpected[row.ordinal()][0]);
       assertThat(row.toBoolean(true)).isEqualTo(allExpected[row.ordinal()][1]);
     }
