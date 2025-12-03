@@ -98,47 +98,76 @@ public final class FeatureSet implements Serializable {
   public static final FeatureSet ES_UNSUPPORTED =
       ES_UNSTABLE.with(LangVersion.ES_UNSUPPORTED.features());
 
+  // NOTE: The BROWSER_20XX FeatureSets are the set of features supported by major browsers as of
+  // January 1st of the given year. So, typically, take the year of the BFSY, subtract 1 to get
+  // the correct ES20XX_MODULES FeatureSet as the base, then exclude any features as needed.
+  //
+  // Features and their supported browser versions can be found at
+  // https://compat-table.github.io/compat-table/es2016plus/ or https://caniuse.com/
+  //
+  // The format for excluded features is: [Browser name] [version] (version release year)
+  // Or, if a browser has no support yet: [Browser name] (unsupported)
+  //
+  // All excluded features should have a (year) this is greater than or equal to the BFSY.
+
+  public static final FeatureSet BROWSER_2019 =
+      ES2018_MODULES.without(
+          // NOTE: These 4 are excluded because, historically, we defined BROWSER_2019 as ES2017.
+          // See cl/266708942 and cl/328623467 for context.
+          // Chrome 60 (2017). Firefox 55 (2017). Safari 11.1 (2018).
+          Feature.OBJECT_LITERALS_WITH_SPREAD,
+          // Chrome 60 (2017). Firefox 55 (2017). Safari 11.1 (2018).
+          Feature.OBJECT_PATTERN_REST,
+          // Chrome 63 (2017). Firefox 57 (2017). Safari 12 (2018).
+          Feature.ASYNC_GENERATORS,
+          // Chrome 63 (2017). Firefox 57 (2017). Safari 12 (2018).
+          Feature.FOR_AWAIT_OF,
+
+          // Chrome 62 (2017). Firefox 78 (2020). Safari 11.1 (2018).
+          Feature.REGEXP_FLAG_S,
+          // Chrome 62 (2017). Firefox 78 (2020). Safari 16.4 (2023).
+          Feature.REGEXP_LOOKBEHIND,
+          // Chrome 64 (2018). Firefox 78 (2020). Safari 11.1 (2018).
+          Feature.REGEXP_NAMED_GROUPS,
+          // Chrome 64 (2018). Firefox 78 (2020). Safari 11.1 (2018).
+          Feature.REGEXP_UNICODE_PROPERTY_ESCAPE);
+
   public static final FeatureSet BROWSER_2020 =
       ES2019_MODULES.without(
-          // https://kangax.github.io/compat-table/es2016plus/
-          // All four of these are missing in Firefox 71 and lookbehind is missing in Safari 13.
+          // Chrome 62 (2017). Firefox 78 (2020). Safari 11.1 (2018).
           Feature.REGEXP_FLAG_S,
-          Feature.REGEXP_LOOKBEHIND,
+          // Chrome 64 (2018). Firefox 78 (2020). Safari 11.1 (2018).
           Feature.REGEXP_NAMED_GROUPS,
-          Feature.REGEXP_UNICODE_PROPERTY_ESCAPE);
+          // Chrome 64 (2018). Firefox 78 (2020). Safari 11.1 (2018).
+          Feature.REGEXP_UNICODE_PROPERTY_ESCAPE,
+          // Chrome 62 (2017). Firefox 78 (2020). Safari 16.4 (2023).
+          Feature.REGEXP_LOOKBEHIND);
 
   public static final FeatureSet BROWSER_2021 =
       ES2020_MODULES.without(
-          // https://kangax.github.io/compat-table/es2016plus/
-          // Regexp lookbehind is missing in Safari 14.
+          // Chrome 62 (2017). Firefox 78 (2020). Safari 16.4 (2023).
           Feature.REGEXP_LOOKBEHIND);
 
   public static final FeatureSet BROWSER_2022 =
       ES2021_MODULES.without(
-          // https://kangax.github.io/compat-table/es2016plus/
-          // Regexp lookbehind is still missing in Safari 15.
+          // Chrome 62 (2017). Firefox 78 (2020). Safari 16.4 (2023).
           Feature.REGEXP_LOOKBEHIND);
 
   public static final FeatureSet BROWSER_2023 =
       ES2021_MODULES.without(
-          // https://kangax.github.io/compat-table/es2016plus/
-          // Regexp lookbehind is still missing in Safari 16.2! It's in Safari TP though so
-          // 2024 shouldn't need this awkward hack. We can't bump up to ES2022 here because
-          // Safari 16.2 doesn't support class static blocks.
           // IMPORTANT: There is special casing for this feature and the ones excluded for
           // BROWSER_2020 above in RewritePolyfills.
           // If future Browser FeatureSet Year definitions have to remove any other features, then
           // we need to change the way that is done to avoid incorrect inclusion of polyfills.
+          // Chrome 62 (2017). Firefox 78 (2020). Safari 16.4 (2023).
           Feature.REGEXP_LOOKBEHIND);
 
-  // According to https://compat-table.github.io/compat-table/es2016plus/ this should include all
-  // features through ES2023. So once LangVersion.ES2023 is added, this should be updated to
-  // include it.
+  // Note: Only "Hashbang Grammar" is an ES2023 syntax feature. Its versions are:
+  // Chrome 74 (2019). Firefox 67 (2019). Safari 13.1 (2020).
   public static final FeatureSet BROWSER_2024 = ES2021_MODULES;
 
-  // According to https://compat-table.github.io/compat-table/es2016plus/ this should include all
-  // features through ES2024, except for the latest unicode versions for the /v regexp flag, which
-  // isn't disqualifying. So once LangVersion.ES2024 is added, this should be updated to include it.
+  // Note: Only "RegExp `v` flag" is an ES2024 syntax feature. Its versions are:
+  // Chrome 112 (2023). Firefox 116 (2023). Safari 17 (2023).
   public static final FeatureSet BROWSER_2025 = ES2021_MODULES;
 
   public static final FeatureSet ALL = ES_UNSUPPORTED.with(LangVersion.TYPESCRIPT.features());
@@ -230,15 +259,20 @@ public final class FeatureSet implements Serializable {
 
     // ES 2018 adds Regex Features:
     // https://github.com/tc39/proposal-regexp-dotall-flag
+    // Note: Untranspilable.
     REGEXP_FLAG_S("RegExp flag 's'", LangVersion.ES2018),
-    // https://github.com/tc39/proposal-regexp-lookbehind
-    REGEXP_LOOKBEHIND("RegExp Lookbehind", LangVersion.ES2018),
     // https://github.com/tc39/proposal-regexp-named-groups
+    // Note: Untranspilable.
     REGEXP_NAMED_GROUPS("RegExp named groups", LangVersion.ES2018),
     // https://github.com/tc39/proposal-regexp-unicode-property-escapes
+    // Note: Untranspilable.
     REGEXP_UNICODE_PROPERTY_ESCAPE("RegExp unicode property escape", LangVersion.ES2018),
+    // https://github.com/tc39/proposal-regexp-lookbehind
+    // Note: Untranspilable.
+    REGEXP_LOOKBEHIND("RegExp Lookbehind", LangVersion.ES2018),
 
     // ES 2019 adds https://github.com/tc39/proposal-json-superset
+    // Note: Untranspilable.
     UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP(
         "Unescaped unicode line or paragraph separator", LangVersion.ES2019),
 
@@ -248,6 +282,7 @@ public final class FeatureSet implements Serializable {
 
     // ES 2020 Stage 4
     DYNAMIC_IMPORT("Dynamic module import", LangVersion.ES2020),
+    // Note: Untranspilable.
     BIGINT("bigint", LangVersion.ES2020),
     IMPORT_META("import.meta", LangVersion.ES2020),
     NULL_COALESCE_OP("Nullish coalescing", LangVersion.ES2020),
@@ -258,6 +293,7 @@ public final class FeatureSet implements Serializable {
     LOGICAL_ASSIGNMENT("Logical assignments", LangVersion.ES2021),
 
     // ES 2022 adds https://github.com/tc39/proposal-regexp-match-indices
+    // Note: Untranspilable.
     REGEXP_FLAG_D("RegExp flag 'd'", LangVersion.ES_NEXT),
 
     // ES_NEXT: Features that are fully supported, but part of a language version that is not yet
@@ -281,7 +317,8 @@ public final class FeatureSet implements Serializable {
     CLASS_STATIC_BLOCK("Class static block", LangVersion.ES_UNSTABLE),
 
     // ES_UNSUPPORTED: Features that we can parse, but not yet supported in all checks
-    // Part of ES2022. Support will improve as implementation progresses.
+
+    // ES 2022 adds https://github.com/tc39/proposal-class-fields
     PRIVATE_CLASS_PROPERTIES("Private class properties", LangVersion.ES_UNSUPPORTED),
 
     // TypeScript type syntax that will never be implemented in browsers. Only used as an indicator

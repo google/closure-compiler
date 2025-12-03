@@ -141,7 +141,7 @@ public class CompilerOptions {
   enum BrowserFeaturesetYear {
     YEAR_2012(2012, LanguageMode.ECMASCRIPT5_STRICT.toFeatureSet()),
     YEAR_2018(2018, LanguageMode.ECMASCRIPT_2016.toFeatureSet()),
-    YEAR_2019(2019, LanguageMode.ECMASCRIPT_2017.toFeatureSet()),
+    YEAR_2019(2019, FeatureSet.BROWSER_2019),
     YEAR_2020(2020, FeatureSet.BROWSER_2020),
     YEAR_2021(2021, FeatureSet.BROWSER_2021),
     YEAR_2022(2022, FeatureSet.BROWSER_2022),
