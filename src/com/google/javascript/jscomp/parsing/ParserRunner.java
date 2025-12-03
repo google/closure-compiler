@@ -163,6 +163,7 @@ public final class ParserRunner {
               ECMASCRIPT_2019,
               ECMASCRIPT_2020,
               ECMASCRIPT_2021,
+              ECMASCRIPT_2022,
               ES_NEXT,
               UNSTABLE,
               UNSUPPORTED ->

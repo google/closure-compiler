@@ -3132,6 +3132,9 @@ public class CompilerOptions {
     /** ECMAScript standard approved in 2021. */
     ECMASCRIPT_2021,
 
+    /** ECMAScript standard approved in 2022. */
+    ECMASCRIPT_2022,
+
     /** ECMAScript features from the upcoming standard. */
     ECMASCRIPT_NEXT,
 
@@ -3215,6 +3218,7 @@ public class CompilerOptions {
         case ECMASCRIPT_2019 -> FeatureSet.ES2019_MODULES;
         case ECMASCRIPT_2020 -> FeatureSet.ES2020_MODULES;
         case ECMASCRIPT_2021 -> FeatureSet.ES2021_MODULES;
+        case ECMASCRIPT_2022 -> FeatureSet.ES2022_MODULES;
         case ECMASCRIPT_NEXT -> FeatureSet.ES_NEXT;
         case NO_TRANSPILE, UNSTABLE -> FeatureSet.ES_UNSTABLE;
         case UNSUPPORTED -> FeatureSet.ES_UNSUPPORTED;

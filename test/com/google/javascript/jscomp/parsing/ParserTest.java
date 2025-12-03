@@ -6127,8 +6127,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
         // This warning is expected - it is used to halt compilation during parsing when
         // closure-unaware code is present when it should not be.
         "@closureUnaware annotation is not allowed in this compilation",
-        "This language feature is only supported for ES_NEXT mode or better: Public class"
-            + " fields");
+        """
+        This language feature is only supported for ECMASCRIPT_2022 mode or better: \
+        Public class fields\
+        """);
 
     expectFeatures(Feature.CLASSES, Feature.PUBLIC_CLASS_FIELDS);
   }

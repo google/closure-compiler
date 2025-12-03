@@ -248,20 +248,21 @@ public class ReportUntranspilableFeaturesTest extends CompilerTestCase {
         "const a = /^(?<half>.*).\\k<half>$/d;",
         UNTRANSPILABLE_FEATURE_PRESENT,
         """
-        Cannot convert feature "RegExp flag 'd'" to targeted output language. Feature requires\
-         at minimum ES_NEXT. Consider targeting a more modern output.\
+        Cannot convert feature "RegExp flag 'd'" to targeted output language. Feature requires at \
+        minimum ECMASCRIPT_2022. Consider targeting a more modern output.\
         """);
   }
 
   @Test
   public void testEs2022RegexFlagD_usingBrowserFeaturesetYear() {
-    browserFeaturesetYear = BrowserFeaturesetYear.YEAR_2024;
+    browserFeaturesetYear = BrowserFeaturesetYear.YEAR_2022;
     testError(
         "const a = /^(?<half>.*).\\k<half>$/d;",
         UNTRANSPILABLE_FEATURE_PRESENT,
         """
-        Cannot convert feature "RegExp flag 'd'" to targeted output language. Feature requires\
-         at minimum ES_NEXT, which is not yet supported by any browser featureset year.\
+        Cannot convert feature "RegExp flag 'd'" to targeted output language. Feature requires at \
+        minimum browser featureset year 2023. Consider targeting a more modern output.
+        Current browser featureset year: 2022\
         """);
   }
 

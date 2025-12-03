@@ -54,6 +54,7 @@ public abstract class Config {
     ECMASCRIPT_2019(FeatureSet.ES2019_MODULES),
     ECMASCRIPT_2020(FeatureSet.ES2020_MODULES),
     ECMASCRIPT_2021(FeatureSet.ES2021_MODULES),
+    ECMASCRIPT_2022(FeatureSet.ES2022_MODULES),
     // NOTE: When adding a new language level here, also update latestEcmaScript() below to return
     // it.
     ES_NEXT(FeatureSet.ES_NEXT),

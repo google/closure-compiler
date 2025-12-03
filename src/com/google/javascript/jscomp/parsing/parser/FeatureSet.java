@@ -85,11 +85,16 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet ES2021 = ES2021_MODULES.without(Feature.MODULES);
 
-  // NOTE: when ES2022 / ES2023 are added, the BROWSER_2024 FeatureSet defined below should be
-  // updated to include them.
+  public static final FeatureSet ES2022_MODULES =
+      ES2021_MODULES.with(LangVersion.ES2022.features());
+
+  public static final FeatureSet ES2022 = ES2022_MODULES.without(Feature.MODULES);
+
+  // NOTE: when ES2023 is added, the BROWSER_2024 and BROWSER_2025 FeatureSets defined below should
+  // be updated to include it.
 
   // Set of all fully supported features, even those part of language versions not fully supported
-  public static final FeatureSet ES_NEXT = ES2021_MODULES.with(LangVersion.ES_NEXT.features());
+  public static final FeatureSet ES_NEXT = ES2022_MODULES.with(LangVersion.ES_NEXT.features());
 
   // Set of features fully supported in checks, even those not fully supported in optimizations
   public static final FeatureSet ES_UNSTABLE = ES_NEXT.with(LangVersion.ES_UNSTABLE.features());
@@ -154,21 +159,23 @@ public final class FeatureSet implements Serializable {
           Feature.REGEXP_LOOKBEHIND);
 
   public static final FeatureSet BROWSER_2023 =
-      ES2021_MODULES.without(
+      ES2022_MODULES.without(
           // IMPORTANT: There is special casing for this feature and the ones excluded for
           // BROWSER_2020 above in RewritePolyfills.
           // If future Browser FeatureSet Year definitions have to remove any other features, then
           // we need to change the way that is done to avoid incorrect inclusion of polyfills.
           // Chrome 62 (2017). Firefox 78 (2020). Safari 16.4 (2023).
-          Feature.REGEXP_LOOKBEHIND);
+          Feature.REGEXP_LOOKBEHIND,
+          // Chrome 94 (2021). Firefox 93 (2021). Safari 16.4 (2023).
+          Feature.CLASS_STATIC_BLOCK);
 
   // Note: Only "Hashbang Grammar" is an ES2023 syntax feature. Its versions are:
   // Chrome 74 (2019). Firefox 67 (2019). Safari 13.1 (2020).
-  public static final FeatureSet BROWSER_2024 = ES2021_MODULES;
+  public static final FeatureSet BROWSER_2024 = ES2022_MODULES;
 
   // Note: Only "RegExp `v` flag" is an ES2024 syntax feature. Its versions are:
   // Chrome 112 (2023). Firefox 116 (2023). Safari 17 (2023).
-  public static final FeatureSet BROWSER_2025 = ES2021_MODULES;
+  public static final FeatureSet BROWSER_2025 = ES2022_MODULES;
 
   public static final FeatureSet ALL = ES_UNSUPPORTED.with(LangVersion.TYPESCRIPT.features());
 
@@ -182,6 +189,7 @@ public final class FeatureSet implements Serializable {
     ES2019,
     ES2020,
     ES2021,
+    ES2022,
     ES_NEXT,
     ES_UNSTABLE,
     ES_UNSUPPORTED,
@@ -292,9 +300,15 @@ public final class FeatureSet implements Serializable {
     NUMERIC_SEPARATOR("numeric separator", LangVersion.ES2021),
     LOGICAL_ASSIGNMENT("Logical assignments", LangVersion.ES2021),
 
+    // ES 2022 adds https://github.com/tc39/proposal-class-fields
+    PUBLIC_CLASS_FIELDS("Public class fields", LangVersion.ES2022),
+
+    // ES 2022 adds https://github.com/tc39/proposal-class-static-block
+    CLASS_STATIC_BLOCK("Class static block", LangVersion.ES2022),
+
     // ES 2022 adds https://github.com/tc39/proposal-regexp-match-indices
     // Note: Untranspilable.
-    REGEXP_FLAG_D("RegExp flag 'd'", LangVersion.ES_NEXT),
+    REGEXP_FLAG_D("RegExp flag 'd'", LangVersion.ES2022),
 
     // ES_NEXT: Features that are fully supported, but part of a language version that is not yet
     // fully supported
@@ -310,11 +324,6 @@ public final class FeatureSet implements Serializable {
     // the "es_unstable" version name is distinct from the latest dated version so we don't
     // incorrectly prune those polyfills.
     ES_UNSTABLE_RUNTIME("es_unstable runtime", LangVersion.ES_UNSTABLE),
-
-    PUBLIC_CLASS_FIELDS("Public class fields", LangVersion.ES_NEXT), // Part of ES2022
-
-    // ES 2022 adds https://github.com/tc39/proposal-class-static-block
-    CLASS_STATIC_BLOCK("Class static block", LangVersion.ES_UNSTABLE),
 
     // ES_UNSUPPORTED: Features that we can parse, but not yet supported in all checks
 
@@ -376,6 +385,9 @@ public final class FeatureSet implements Serializable {
     }
     if (ES2021_MODULES.contains(this)) {
       return "es_2021";
+    }
+    if (ES2022_MODULES.contains(this)) {
+      return "es_2022";
     }
     if (ES_NEXT.contains(this)) {
       return "es_next";
@@ -530,6 +542,7 @@ public final class FeatureSet implements Serializable {
       case "es_2019" -> ES2019;
       case "es_2020" -> ES2020;
       case "es_2021" -> ES2021;
+      case "es_2022" -> ES2022;
       case "es_next" -> ES_NEXT;
       case "es_unstable" -> ES_UNSTABLE;
       case "es_unsupported" -> ES_UNSUPPORTED;
