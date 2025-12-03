@@ -160,10 +160,6 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet BROWSER_2023 =
       ES2022_MODULES.without(
-          // IMPORTANT: There is special casing for this feature and the ones excluded for
-          // BROWSER_2020 above in RewritePolyfills.
-          // If future Browser FeatureSet Year definitions have to remove any other features, then
-          // we need to change the way that is done to avoid incorrect inclusion of polyfills.
           // Chrome 62 (2017). Firefox 78 (2020). Safari 16.4 (2023).
           Feature.REGEXP_LOOKBEHIND,
           // Chrome 94 (2021). Firefox 93 (2021). Safari 16.4 (2023).
@@ -549,6 +545,39 @@ public final class FeatureSet implements Serializable {
       case "all" -> ALL;
       default -> throw new IllegalArgumentException("No such FeatureSet: " + name);
     };
+  }
+
+  /**
+   * Variant of {@link #valueOf} that outputs a {@code BROWSER_20XX} feature set equivalent. This
+   * will generally exclude some not-yet-implemented features from a given {@code ES20XX} while also
+   * including {@link Feature#MODULES}.
+   *
+   * <p>Note: The returned feature set will include the {@link Feature#MODULES} feature which you
+   * may want to exclude manually.
+   */
+  public static FeatureSet browserFeatureSetValueOf(String name) {
+    FeatureSet featureSet = valueOf(name);
+    if (featureSet.contains(ES_NEXT)) {
+      // For ES_NEXT and ES_UNSTABLE, we need to return the raw featureSet to retain the RUNTIME
+      // features which pin polyfills to future versions.
+      return featureSet;
+    }
+    if (featureSet.contains(ES2022)) {
+      return BROWSER_2023;
+    }
+    if (featureSet.contains(ES2021)) {
+      return BROWSER_2022;
+    }
+    if (featureSet.contains(ES2020)) {
+      return BROWSER_2021;
+    }
+    if (featureSet.contains(ES2019)) {
+      return BROWSER_2020;
+    }
+    if (featureSet.contains(ES2018)) {
+      return BROWSER_2019;
+    }
+    return featureSet;
   }
 
   /**

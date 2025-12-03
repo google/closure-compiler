@@ -177,22 +177,11 @@ final class PolyfillUsageFinder {
    * FeatureSet.
    */
   static FeatureSet getPolyfillSupportedFeatureSet(String nativeVersionStr) {
-    FeatureSet polyfillSupportFeatureSet = FeatureSet.valueOf(nativeVersionStr);
-    // Safari has been really slow to implement these regex features, even though it has
-    // kept on top of the features we polyfill, so we want to ignore the regex features
-    // when deciding whether the polyfill should be considered "already supported" in the
-    // target environment.
-    // NOTE: This special case seems reasonable for now, but if further divergence occurs
-    // we should consider doing a more direct solution by having the polyfill definitions
-    // report names of `FeatureSet` values representing browser `FeatureSet` year instead of
-    // spec release year.
-    polyfillSupportFeatureSet =
-        polyfillSupportFeatureSet.without(
-            Feature.REGEXP_FLAG_S,
-            Feature.REGEXP_LOOKBEHIND,
-            Feature.REGEXP_NAMED_GROUPS,
-            Feature.REGEXP_UNICODE_PROPERTY_ESCAPE);
-    return polyfillSupportFeatureSet;
+    // When calculating whether a polyfill should be included for a given language_out associated
+    // with a BFSY, we want to also compare using a BFSY FeatureSet. Needed because BFSY FeatureSets
+    // often exclude features but the ES20XX FeatureSets do not meaning we could unnecessarily
+    // include polyfills that, in reality, could be excluded.
+    return FeatureSet.browserFeatureSetValueOf(nativeVersionStr).without(Feature.MODULES);
   }
 
   record PolyfillUsage(Polyfill polyfill, Node node, String name, boolean isExplicitGlobal) {
