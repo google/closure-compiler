@@ -828,9 +828,6 @@ WebGLRenderingContext.RGB565;
 WebGLRenderingContext.DEPTH_COMPONENT16;
 
 /** @const {number} */
-WebGLRenderingContext.STENCIL_INDEX;
-
-/** @const {number} */
 WebGLRenderingContext.STENCIL_INDEX8;
 
 /** @const {number} */
