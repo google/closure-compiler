@@ -4879,8 +4879,8 @@ Document.prototype.fullscreen;
 Document.prototype.fullscreenElement;
 
 /**
- * @see http://www.w3.org/TR/2012/WD-fullscreen-20120703/#dom-document-exitfullscreen
- * @return {undefined}
+ * @see https://fullscreen.spec.whatwg.org/#dom-document-exitfullscreen
+ * @return {!Promise<undefined>}
  */
 Document.prototype.exitFullscreen = function() {};
 
