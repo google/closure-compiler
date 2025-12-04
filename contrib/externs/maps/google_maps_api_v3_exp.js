@@ -2532,8 +2532,8 @@ google.maps.DirectionsService = function() {};
 /**
  * Issue a directions search request.
  * @param {!google.maps.DirectionsRequest} request
- * @param {(function(?google.maps.DirectionsResult,
- *     !google.maps.DirectionsStatus): void)=} callback
+ * @param {((function((!google.maps.DirectionsResult|null),
+ *     !google.maps.DirectionsStatus): void)|undefined)=} callback
  * @return {!Promise<!google.maps.DirectionsResult>}
  */
 google.maps.DirectionsService.prototype.route = function(request, callback) {};
@@ -16769,8 +16769,7 @@ google.maps.maps3d.Map3DElement.prototype.internalUsageAttributionIds;
 /**
  * Language in which to attempt to render the base map&#39;s language. Will
  * default to the language requested by the developer when loading the Maps JS
- * API.<br/><br/> This must be set when the element is created, and cannot be
- * updated after the map has loaded.
+ * API.
  * @type {string|null|undefined}
  */
 google.maps.maps3d.Map3DElement.prototype.language;
@@ -16855,9 +16854,7 @@ google.maps.maps3d.Map3DElement.prototype.range;
 
 /**
  * Region with which to attempt to render the base map&#39;s POIs. Will default
- * to the region requested by the developer when loading the Maps JS
- * API.<br/><br/> This must be set when the element is created, and cannot be
- * updated after the map has loaded.
+ * to the region requested by the developer when loading the Maps JS API.
  * @type {string|null|undefined}
  */
 google.maps.maps3d.Map3DElement.prototype.region;
@@ -17839,6 +17836,14 @@ google.maps.maps3d.PopoverElement = function(options) {};
 google.maps.maps3d.PopoverElement.prototype.altitudeMode;
 
 /**
+ * If set to true, disables panning the map to make the popover fully visible
+ * when it opens.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.PopoverElement.prototype.autoPanDisabled;
+
+/**
  * Specifies whether this popover should be &quot;light dismissed&quot; or not.
  * The &quot;light dismiss&quot; behavior is similar to setting the
  * <code>popover=&quot;auto&quot;</code> attribute which is part of the browser
@@ -17878,6 +17883,12 @@ google.maps.maps3d.PopoverElementOptions = function() {};
  * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
  */
 google.maps.maps3d.PopoverElementOptions.prototype.altitudeMode;
+
+/**
+ * See {@link google.maps.maps3d.PopoverElement.autoPanDisabled}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.PopoverElementOptions.prototype.autoPanDisabled;
 
 /**
  * See {@link google.maps.maps3d.PopoverElement.lightDismissDisabled}.
