@@ -168,7 +168,7 @@ class VarCheck implements ScopedCallback, CompilerPass {
     // move VarCheck before AST Validity checking. Instead, we will just teach VarCheck to skip
     // closure-unaware code.
     // TODO: b/421971366 - remove this exception.
-    return !n.getIsInClosureUnawareSubtree();
+    return !(validityCheck && n.getIsInClosureUnawareSubtree());
   }
 
   @Override

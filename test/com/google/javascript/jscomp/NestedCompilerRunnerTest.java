@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
-import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -118,6 +117,7 @@ public class NestedCompilerRunnerTest {
   public void canDeleteUnusedVariables() {
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     original.init(ImmutableList.of(), ImmutableList.of(), options);
+    options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF);
     options.setRemoveUnusedVariables(CompilerOptions.Reach.ALL);
 
     Node script =
@@ -128,16 +128,12 @@ public class NestedCompilerRunnerTest {
             console.log(used);
             """);
 
-    var runner =
-        NestedCompilerRunner.create(original, options, Mode.TRANSPILE_AND_OPTIMIZE)
-            .addScript(script, "test");
+    NestedCompilerRunner.create(original, options, Mode.TRANSPILE_AND_OPTIMIZE)
+        .addScript(script, "test")
+        .compile();
 
-    // TODO: b/421971366 - fix this crash.
-    var ex = assertThrows(RuntimeException.class, runner::compile);
-    assertThat(ex)
-        .hasMessageThat()
-        .contains("Exception during compilation: <shadow AST compilation>");
-    assertThat(ex).hasCauseThat().hasMessageThat().contains("NAME console");
+    verifyCompilationSucceeded();
+    assertNode(script).isEqualTo(parse("const used = 0; console.log(used);"));
   }
 
   @Test

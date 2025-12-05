@@ -124,6 +124,18 @@ final class NestedCompilerRunner {
   private void runCompilation() {
     switch (mode) {
       case TRANSPILE_AND_OPTIMIZE -> {
+        // Run VarCheck to comply with a compiler invariant: when running optimizations, all NAME
+        // nodes in the AST must have a corresponding declaration in source or externs. The
+        // optimizer will either crash or silently misoptimize code otherwise.
+        // (VarCheck not only reports errors for referencing undefined variables, but also adds
+        // "synthetic extern declarations" of undefined variables, in case the errors are suppressed
+        // and we want to continue compilation)
+        new VarCheck(shadowCompiler)
+            .process(shadowCompiler.getExternsRoot(), shadowCompiler.getJsRoot());
+        delegateDiagnosticsToOriginal();
+        if (shadowCompiler.hasHaltingErrors()) {
+          return;
+        }
         shadowCompiler.stage2Passes(CompilerOptions.SegmentOfCompilationToRun.OPTIMIZATIONS);
         delegateDiagnosticsToOriginal();
         if (shadowCompiler.hasHaltingErrors()) {
