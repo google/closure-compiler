@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -64,8 +65,10 @@ final class ManageClosureUnawareCode implements CompilerPass {
               + " @closureUnaware.");
 
   private final AbstractCompiler compiler;
-  private static final String JSCOMP_CLOSURE_UNAWARE_CODE_SHADOW_HOST_NAME =
+  static final String JSCOMP_CLOSURE_UNAWARE_CODE_SHADOW_HOST_NAME =
       "$jscomp_wrap_closure_unaware_code";
+  private static final String JSCOMP_CLOSURE_UNAWARE_SINK_VALUE =
+      "$jscomp_sink_closure_unaware_impl";
 
   private final boolean isUnwrapping;
 
@@ -107,10 +110,10 @@ final class ManageClosureUnawareCode implements CompilerPass {
 
     @Override
     public void process(Node externs, Node root) {
-
       for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
-        if (script.isClosureUnawareCode()) {
-
+        if (script.getIsInClosureUnawareSubtree()) {
+          // do nothing. we are within a shadow AST compilation.
+        } else if (script.isClosureUnawareCode()) {
           ValidateAndWrapClosureUnawareScript validateAndWrapClosureUnawareScript =
               new ValidateAndWrapClosureUnawareScript(compiler);
           NodeTraversal.traverse(compiler, script, validateAndWrapClosureUnawareScript);
@@ -119,7 +122,8 @@ final class ManageClosureUnawareCode implements CompilerPass {
           boolean hasWrappedSomething =
               validateAndWrapClosureUnawareScript.hasSeenClosureUnawareAnnotation();
           if (!hasWrappedSomething) {
-            reportUnexpectedClosureUnawareCode(compiler, script);
+            reportUnexpectedClosureUnawareCode(
+                compiler, script, "@closureUnaware script without @closureUnaware function");
           }
         } else {
           // This would occur if the annotation was present in a non-fileoverview comment and the
@@ -131,7 +135,8 @@ final class ManageClosureUnawareCode implements CompilerPass {
                 public void visit(Node n) {
                   JSDocInfo jsDocInfo = n.getJSDocInfo();
                   if (jsDocInfo != null && jsDocInfo.isClosureUnawareCode()) {
-                    reportUnexpectedClosureUnawareCode(compiler, n);
+                    reportUnexpectedClosureUnawareCode(
+                        compiler, n, "@closureUnaware function not in @closureUnaware script");
                   }
                 }
               });
@@ -140,8 +145,9 @@ final class ManageClosureUnawareCode implements CompilerPass {
     }
   }
 
-  private static final void reportUnexpectedClosureUnawareCode(AbstractCompiler compiler, Node n) {
-    compiler.report(JSError.make(n, UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_CODE));
+  private static final void reportUnexpectedClosureUnawareCode(
+      AbstractCompiler compiler, Node n, String msg) {
+    compiler.report(JSError.make(n, UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_CODE, msg));
   }
 
   /**
@@ -200,7 +206,7 @@ final class ManageClosureUnawareCode implements CompilerPass {
       seenClosureUnawareAnnotation = true;
 
       if (!isValidClosureUnawareAnnotatedNode(n)) {
-        reportUnexpectedClosureUnawareCode(compiler, n);
+        reportUnexpectedClosureUnawareCode(compiler, n, "Invalid @closureUnaware structure");
         return;
       }
 
@@ -242,19 +248,25 @@ final class ManageClosureUnawareCode implements CompilerPass {
       return false;
     }
 
-    private final void hideClosureUnawareCodeRoot(NodeTraversal t, Node n) {
+    private final void hideClosureUnawareCodeRoot(NodeTraversal t, Node fn) {
       if (!shadowHostNameExternInjected) {
         NodeUtil.createSynthesizedExternsSymbol(
             compiler, JSCOMP_CLOSURE_UNAWARE_CODE_SHADOW_HOST_NAME);
+        NodeUtil.createSynthesizedExternsSymbol(compiler, JSCOMP_CLOSURE_UNAWARE_SINK_VALUE);
         shadowHostNameExternInjected = true;
       }
 
       Node shadowNameNode =
           astFactory.createNameWithUnknownType(JSCOMP_CLOSURE_UNAWARE_CODE_SHADOW_HOST_NAME);
       shadowNameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-      n.replaceWith(shadowNameNode);
+      fn.replaceWith(shadowNameNode);
 
-      Node shadowJsRoot = IR.root(IR.script(astFactory.exprResult(n)));
+      Node sinkCall = IR.call(IR.name(JSCOMP_CLOSURE_UNAWARE_SINK_VALUE).srcref(fn), fn).srcref(fn);
+      sinkCall.putBooleanProp(Node.FREE_CALL, true);
+      Node script = IR.script(astFactory.exprResult(sinkCall));
+      Node shadowJsRoot = IR.root(script);
+      script.setStaticSourceFileFrom(fn);
+      script.setIsInClosureUnawareSubtree(true);
 
       shadowNameNode.setClosureUnawareShadow(shadowJsRoot);
       t.reportCodeChange(shadowNameNode);
@@ -283,18 +295,31 @@ final class ManageClosureUnawareCode implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, @Nullable Node parent) {
-      tryUnwrapClosureUnawareShadowedCode(t, n, parent);
+      tryUnwrapClosureUnawareShadowedCode(t, n);
     }
 
-    private void tryUnwrapClosureUnawareShadowedCode(
-        NodeTraversal t, Node n, @Nullable Node parent) {
+    private void tryUnwrapClosureUnawareShadowedCode(NodeTraversal t, Node n) {
       Node shadowAstRoot = n.getClosureUnawareShadow();
       if (shadowAstRoot == null) {
         return;
       }
 
+      // ROOT -> SCRIPT -> EXPR_RESULT -> CALL -> FUNCTION
+      //  or, until cl/830654412 is fully released:
       // ROOT -> SCRIPT -> EXPR_RESULT -> FUNCTION
-      Node originalCodeFunction = shadowAstRoot.getFirstFirstChild().getFirstChild();
+      Node shadowScript = shadowAstRoot.getOnlyChild();
+      checkState(shadowScript.isScript(), shadowScript);
+      checkState(shadowScript.hasOneChild(), shadowScript);
+      Node exprResult = shadowScript.getOnlyChild();
+      checkState(exprResult.isExprResult(), exprResult);
+      Node originalCodeFunction;
+      if (exprResult.getFirstChild().isCall()) {
+        originalCodeFunction = exprResult.getFirstChild().getLastChild();
+      } else {
+        // TODO: b/421971366 - delete this branch once cl/830654412 is released.
+        originalCodeFunction = exprResult.getFirstChild();
+      }
+      checkState(originalCodeFunction.isFunction(), originalCodeFunction);
       originalCodeFunction.detach();
       n.replaceWith(originalCodeFunction);
       t.reportCodeChange(originalCodeFunction);
