@@ -44,6 +44,8 @@ class CompilerExecutor {
 
   private int timeout = 0;
 
+  private String debugMessage = null;
+
   /**
    * Under JRE 1.6, the JS Compiler overflows the stack when running on some large or complex JS
    * code. When threads are available, we run all compile jobs on a separate thread with a larger
@@ -73,6 +75,10 @@ class CompilerExecutor {
 
   void setTimeout(int timeout) {
     this.timeout = timeout;
+  }
+
+  void setDebugMessage(String debugMessage) {
+    this.debugMessage = debugMessage;
   }
 
   <T> T runInCompilerThread(final Callable<T> callable, final boolean dumpTraceReport) {
@@ -128,6 +134,9 @@ class CompilerExecutor {
 
     // Pass on any exception caught by the runnable object.
     if (exception[0] != null) {
+      if (debugMessage != null) {
+        throw new RuntimeException("Exception during compilation: " + debugMessage, exception[0]);
+      }
       throwIfUnchecked(exception[0]);
       throw new RuntimeException(exception[0]);
     }

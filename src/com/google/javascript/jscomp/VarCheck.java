@@ -167,9 +167,8 @@ class VarCheck implements ScopedCallback, CompilerPass {
     // We could adjust the pass order so that unwrapping happens after this pass, but that would
     // move VarCheck before AST Validity checking. Instead, we will just teach VarCheck to skip
     // closure-unaware code.
-    // TODO: b/321233583 - once NodeTraversal supports skipping closure unaware code as a feature,
-    // replace this check with that.
-    return !n.isClosureUnawareCode();
+    // TODO: b/421971366 - remove this exception.
+    return !n.getIsInClosureUnawareSubtree();
   }
 
   @Override

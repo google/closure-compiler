@@ -227,6 +227,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** The source code map */
   private SourceMap sourceMap;
 
+  /** Extra context appended to the "print source after each pass" output. */
+  private String debugMessage;
+
   /** The externs created from the exports. */
   private @Nullable String externExports = null;
 
@@ -1097,7 +1100,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   public void stage3Passes() {
     checkState(chunkGraph != null, "No inputs. Did you call init() or initChunks()?");
-    checkState(!hasErrors());
+    checkState(!hasErrors(), "Cannot run stage3Passes with errors present: %s", getErrors());
     checkState(!options.getInstrumentForCoverageOnly());
     runInCompilerThread(
         () -> {
@@ -1552,6 +1555,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
     } else {
       System.err.println();
+      if (debugMessage != null) {
+        System.err.println("// DEBUG: " + debugMessage);
+      }
       System.err.println("// " + passName + " yields:");
       System.err.println("// ************************************");
       System.err.println(currentJsSource);
@@ -4104,6 +4110,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   public void initWebpackMap(ImmutableMap<String, String> inputPathByWebpackId) {
     this.inputPathByWebpackId = inputPathByWebpackId;
+  }
+
+  /**
+   * Sets an additional human-readable message appended to debugging contexts, like crash reports &
+   * source-after-each-pass logging.
+   *
+   * <p>This is used by {@link NestedCompilerRunner} to distinguish between the main compiler &
+   * nested compiler.
+   */
+  void setDebugMessage(String debugMessage) {
+    this.compilerExecutor.setDebugMessage(debugMessage);
+    this.debugMessage = debugMessage;
   }
 
   protected CompilerExecutor createCompilerExecutor() {

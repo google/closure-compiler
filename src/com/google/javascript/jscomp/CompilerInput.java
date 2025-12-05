@@ -164,6 +164,12 @@ public class CompilerInput implements DependencyInfo {
     ast.clearAst();
   }
 
+  void initShadowAst(Node shadowScript) {
+    checkArgument(shadowScript.isScript(), shadowScript);
+    checkState(shadowScript.getIsInClosureUnawareSubtree(), shadowScript);
+    this.ast.root = shadowScript;
+  }
+
   public SourceFile getSourceFile() {
     return sourceFile;
   }
