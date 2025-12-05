@@ -2411,7 +2411,34 @@ CSSProperties.prototype.unicodeBidi;
  */
 CSSProperties.prototype.verticalAlign;
 
-/** @type {string} */
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/scroll-animations-1/#view-timeline-shorthand
+ */
+CSSProperties.prototype.viewTimeline;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/scroll-animations-1/#view-timeline-axis
+ */
+CSSProperties.prototype.viewTimelineAxis;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/scroll-animations-1/#view-timeline-inset
+ */
+CSSProperties.prototype.viewTimelineInset;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/scroll-animations-1/#view-timeline-name
+ */
+CSSProperties.prototype.viewTimelineName;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-view-transitions-2/#view-transition-class-prop
+ */
 CSSProperties.prototype.viewTransitionClass;
 
 /**
