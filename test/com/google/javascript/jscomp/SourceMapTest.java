@@ -214,6 +214,43 @@ public final class SourceMapTest extends SourceMapTestCase {
             """);
   }
 
+  // Tests that empty "default" source maps, like those provided by Gulp, are
+  // ignored and do not cause the compiler to treat the file as an intermediate
+  // source file.
+  @Test
+  public void testEmptySourceMapsAreIgnored() throws IOException {
+    // https://github.com/gulp-sourcemaps/gulp-sourcemaps/blob/91b94954/src/init/index.js#L116-L124
+    String file = "input.js";
+    String code = "inputCode";
+    String emptySourceMap =
+        """
+        {
+        "version":3,
+        "names":[]
+        "mappings":"",
+        "sources":["foo/bar/baz.js"],
+        "sourcesContent":["inputCode"],
+        "file":"foo/bar/baz.js",
+        }
+        """;
+
+    inputMaps.put(file, new SourceMapInput(SourceFile.fromCode("sourcemap", emptySourceMap)));
+
+    RunResult compilation = compile(code, file);
+    assertThat(compilation.sourceMapFileContent)
+        .isEqualTo(
+            """
+            {
+            "version":3,
+            "file":"testcode",
+            "lineCount":1,
+            "mappings":"A,aAAAA;",
+            "sources":["input.js"],
+            "names":["inputCode"]
+            }
+            """);
+  }
+
   @Override
   protected CompilerOptions getCompilerOptions() {
     CompilerOptions options = super.getCompilerOptions();

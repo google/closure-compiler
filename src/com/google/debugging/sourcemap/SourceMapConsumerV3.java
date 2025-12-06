@@ -44,6 +44,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
   private String[] sourcesContent;
   private String[] names;
   private int lineCount;
+  private @Nullable String file;
   // Slots in the lines list will be null if the line does not have any entries.
   private @Nullable ArrayList<ArrayList<Entry>> lines = null;
   /** originalFile path ==> original line ==> target mappings */
@@ -75,7 +76,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
       throw new SourceMapParseException("Unknown version: " + sourceMapObject.getVersion());
     }
 
-    String file = sourceMapObject.getFile();
+    file = sourceMapObject.getFile();
     if (file != null && file.isEmpty()) {
       throw new SourceMapParseException("File entry is empty");
     }
@@ -183,6 +184,14 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
 
   public List<String> getOriginalNames() {
     return Arrays.asList(names);
+  }
+
+  public @Nullable String getFile() {
+    return file;
+  }
+
+  public int getLineCount() {
+    return lineCount;
   }
 
   @Override

@@ -51,6 +51,21 @@ public final class SourceMapInput {
         String sourceMapContents = sourceFile.getCode();
         SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
         consumer.parse(sourceMapContents);
+
+        // Detect an empty "default" source map provided by Gulp. We do not want
+        // to treat this file as having a real source map (implying this is an
+        // intermediate source file). Rather, this is the original source file.
+        // https://github.com/gulp-sourcemaps/gulp-sourcemaps/blob/91b94954/src/init/index.js#L116-L124
+        if (consumer.getFile() != null
+            && !consumer.getFile().isEmpty()
+            && consumer.getOriginalSources().size() == 1
+            && consumer.getOriginalSources().contains(consumer.getFile())
+            && consumer.getOriginalSourcesContent().size() == 1
+            && consumer.getOriginalNames().isEmpty()
+            && consumer.getLineCount() == 0) {
+          consumer = null;
+        }
+
         parsedSourceMap = consumer;
       } catch (IOException e) {
         JSError error =
@@ -65,9 +80,7 @@ public final class SourceMapInput {
     return parsedSourceMap;
   }
 
-  /**
-   * Gets the original location of this sourcemap file on disk.
-   */
+  /** Gets the original location of this sourcemap file on disk. */
   public String getOriginalPath() {
     return sourceFile.getName();
   }
