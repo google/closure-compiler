@@ -15,8 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
@@ -138,13 +136,11 @@ public final class ClosureUnawarePhaseOptimizerTest extends CompilerTestCase {
                               if (shadow != null) {
                                 /*
                                  * shadow is a ROOT node that follows the pattern:
-                                 * ROOT -> SCRIPT -> EXPR_RESULT -> CALL -> FUNCTION.
+                                 * ROOT -> SCRIPT -> EXPR_RESULT -> FUNCTION
+                                 * so we need to get the 3rd child to get to the function node.
                                  */
-                                Node exprResult = shadow.getFirstFirstChild();
-                                checkState(exprResult.isExprResult(), exprResult);
-                                Node shadowFunction = exprResult.getFirstChild().getSecondChild();
-                                checkState(shadowFunction.isFunction(), shadowFunction);
-                                shadowNodes.add(shadowFunction);
+                                shadowNodes.add(
+                                    shadow.getFirstChild().getFirstChild().getFirstChild());
                               }
                             });
                       }

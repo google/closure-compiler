@@ -814,14 +814,9 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
                             Node name = IR.name("SHADOW");
                             functionToBeShadowed.replaceWith(name);
-                            Node sinkCall =
-                                IR.call(
-                                        IR.name("sink").srcref(functionToBeShadowed),
-                                        functionToBeShadowed)
-                                    .srcref(functionToBeShadowed);
-                            sinkCall.putBooleanProp(Node.FREE_CALL, true);
 
-                            Node shadowRoot = IR.root(IR.script(IR.exprResult(sinkCall)));
+                            Node shadowRoot =
+                                IR.root(IR.script(IR.exprResult(functionToBeShadowed)));
                             name.setClosureUnawareShadow(shadowRoot);
 
                             c.reportChangeToEnclosingScope(name);
@@ -848,7 +843,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     Node expectedShadowContent =
         this.parseExpectedJs(
             """
-            sink(function() {
+            (function() {
               window['foo'] = 5;
             })
             """);

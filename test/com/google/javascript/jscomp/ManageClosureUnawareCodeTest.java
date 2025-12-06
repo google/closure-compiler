@@ -153,8 +153,8 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         goog.module('foo.bar.baz_raw');
         /** @closureUnaware */
         (function() {
-            window['foo'] = 5;
-          }).call(globalThis);
+          window['foo'] = 5;
+        }).call(globalThis);
         """,
         """
         /** @fileoverview @closureUnaware */
@@ -163,11 +163,10 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         """,
         ImmutableList.of(
             """
-            $jscomp_sink_closure_unaware_impl(
             /** @closureUnaware */
-            function() {
+            (function() {
               window['foo'] = 5;
-            });
+            })
             """));
   }
 
@@ -201,11 +200,10 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         """,
         ImmutableList.of(
             """
-            $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
-              function() {
-                window['foo'] = 5;
-              });
+            /** @closureUnaware */
+            (function() {
+              window['foo'] = 5;
+            })
             """));
   }
 
@@ -237,11 +235,10 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         """,
         ImmutableList.of(
             """
-            $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
-              function() {
-                window['foo'] = 5;
-              });
+            /** @closureUnaware */
+            (function() {
+              window['foo'] = 5;
+            })
             """));
   }
 
@@ -280,18 +277,16 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         """,
         ImmutableList.of(
             """
-            $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
-              function() {
-                window['foo'] = 5;
-              });
+            /** @closureUnaware */
+            (function() {
+              window['foo'] = 5;
+            })
             """,
             """
-            $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
-              function() {
-                window['foo'] = 10;
-              });
+            /** @closureUnaware */
+            (function() {
+              window['foo'] = 10;
+            })
             """));
   }
 
@@ -334,18 +329,16 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         """,
         ImmutableList.of(
             """
-            $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
-              function() {
-                window['foo'] = 5;
-              });
+            /** @closureUnaware */
+            (function() {
+              window['foo'] = 5;
+            })
             """,
             """
-            $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
-              function() {
-                window['foo'] = 10;
-              });
+            /** @closureUnaware */
+            (function() {
+              window['foo'] = 10;
+            })
             """));
   }
 
@@ -380,11 +373,10 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         """,
         ImmutableList.of(
             """
-            $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
-              function() {
-                function bar() { window['foo'] = 5;} bar();
-              });
+            /** @closureUnaware */
+            (function() {
+              function bar() { window['foo'] = 5;} bar();
+            })
             """));
   }
 
@@ -418,13 +410,12 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         """,
         ImmutableList.of(
             """
-            $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
-              function() {
-               (function() {
-                  window['foo'] = 10;
-                }).call(globalThis);
-              });
+            /** @closureUnaware */
+            (function() {
+             (function() {
+                window['foo'] = 10;
+              }).call(globalThis);
+            })
             """));
   }
 
@@ -519,15 +510,14 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         """,
         ImmutableList.of(
             """
-            $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
-              function() {
-                // Note that there isn't a JSDoc closureUnaware annotation on the inner function, as
-                // it was never created during parsing of the AST.
-                (function() {
-                  window['foo'] = 10;
-                }).call(globalThis);
-              });
+            /** @closureUnaware */
+            (function() {
+            // Note that there isn't a JSDoc closureUnaware annotation on the inner function, as
+            // it was never created during parsing of the AST.
+              (function() {
+                window['foo'] = 10;
+              }).call(globalThis);
+            })
             """));
   }
 
@@ -555,11 +545,10 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         """,
         ImmutableList.of(
             """
-            $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
-              function() {
-                window['foo'] = 5;
-              });
+            /** @closureUnaware */
+            (function() {
+              window['foo'] = 5;
+            })
             """));
   }
 
@@ -590,11 +579,10 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         """,
         ImmutableList.of(
             """
-            $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
-              function() {
-                window['foo'] = 5;
-              });
+            /** @closureUnaware */
+            (function() {
+              window['foo'] = 5;
+            })
             """));
   }
 }

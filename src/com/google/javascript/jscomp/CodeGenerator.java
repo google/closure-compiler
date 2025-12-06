@@ -205,10 +205,7 @@ public class CodeGenerator {
     // If this node is actually a shadow host node, then print the shadow content instead.
     Node shadow = node.getClosureUnawareShadow();
     if (shadow != null) {
-      Node script = shadow.getOnlyChild();
-      Node sinkCall = script.getOnlyChild().getOnlyChild();
-      checkState(sinkCall.isCall());
-      add(sinkCall.getLastChild(), context, printComments);
+      add(shadow.getFirstFirstChild().getFirstChild(), context, printComments);
       return;
     }
     if (printComments) {
