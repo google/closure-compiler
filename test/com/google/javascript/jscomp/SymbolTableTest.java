@@ -2020,7 +2020,21 @@ public final class SymbolTableTest {
     }
     assertThat(refsPerFile).containsExactly("in1", 2, "externs1", 1);
   }
-  
+
+  @Test
+  public void testTypedefWithProperties() {
+    SymbolTable table =
+        createSymbolTable(
+            """
+            /** @typedef {{prop: string}} */ let TypedefWithProperties;
+            let /** ?TypedefWithProperties */ obj;
+            obj.prop;
+            """);
+
+    Symbol prop = getGlobalVar(table, "TypedefWithProperties.prop");
+    assertThat(table.getReferences(prop)).hasSize(2);
+  }
+
   private void assertSymmetricOrdering(Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertThat(ordering.compare(first, first)).isEqualTo(0);
     assertThat(ordering.compare(second, second)).isEqualTo(0);

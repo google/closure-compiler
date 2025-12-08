@@ -126,6 +126,10 @@ public final class SymbolTable {
 
   private final JSTypeRegistry registry;
 
+  /** Map from a JSType to the symbol that declares it. */
+  private final LinkedIdentityHashMap<JSType, Symbol> symbolThatDeclaresType =
+      new LinkedIdentityHashMap<>();
+
   /** Clients should get a symbol table by asking the compiler at the end of a compilation job. */
   SymbolTable(AbstractCompiler compiler, JSTypeRegistry registry) {
     this.compiler = compiler;
@@ -411,9 +415,10 @@ public final class SymbolTable {
       return getSymbolForTypeHelper(type.autoboxesTo(), linkToCtor);
     } else if (type.isEnumType()) {
       return getSymbolDeclaredBy((EnumType) type);
-    } else {
-      return null;
+    } else if (type.isRecordType()) {
+      return symbolThatDeclaresType.get(type);
     }
+    return null;
   }
 
   /**
@@ -904,12 +909,12 @@ public final class SymbolTable {
     // NOTE: we are using LinkedIdentityHashMap to compare types using == because we need to find
     // symbols
     // that point to the exact same type instance.
-    LinkedIdentityHashMap<JSType, Symbol> symbolThatDeclaresType = new LinkedIdentityHashMap<>();
     for (Symbol s : allTypes) {
       // Symbols are sorted in reverse order so that those with more outer scope will come later in
       // the list, and therefore override those set by aliases in more inner scope. The sorting
       // happens few lines above.
-      JSType type = s.getType();
+      JSType type = getType(s);
+
       Symbol symbolForType = getSymbolForTypeHelper(type, /* linkToCtor= */ false);
       if ((type.isNominalConstructorOrInterface()
               || type.isFunctionPrototypeType()
@@ -930,27 +935,36 @@ public final class SymbolTable {
         // alias.
         continue;
       }
-      symbolThatDeclaresType.put(s.getType(), s);
+      symbolThatDeclaresType.put(type, s);
     }
 
     for (Symbol s : allTypes) {
+      JSType type = getType(s);
+
       // Create property scopes only based on "root" symbols for each type to handle aliases.
-      if (s.getType() == null || s.equals(symbolThatDeclaresType.get(s.getType()))) {
+      if (type == null || s.equals(symbolThatDeclaresType.get(type))) {
         createPropertyScopeFor(s);
       }
     }
 
     // Now we need to set the new property scope symbol to all aliases.
     for (Symbol s : allTypes) {
-      if (s.getType() != null && symbolThatDeclaresType.get(s.getType()) != null) {
-        s.propertyScope = symbolThatDeclaresType.get(s.getType()).getPropertyScope();
+      JSType type = getType(s);
+
+      if (type != null && symbolThatDeclaresType.get(type) != null) {
+        s.propertyScope = symbolThatDeclaresType.get(type).getPropertyScope();
       }
     }
 
     pruneOrphanedNames();
   }
 
+
   private boolean needsPropertyScope(Symbol sym) {
+    JSType jsType = getType(sym);
+    if (jsType != null && jsType.isRecordType()) {
+      return true;
+    }
     ObjectType type = ObjectType.cast(getType(sym));
     if (type == null) {
       return false;
@@ -1106,7 +1120,8 @@ public final class SymbolTable {
       return;
     }
 
-    ObjectType type = getType(s) == null ? null : getType(s).toObjectType();
+    JSType jsType = getType(s);
+    ObjectType type = jsType == null ? null : jsType.toObjectType();
     if (type == null) {
       return;
     }
@@ -1946,6 +1961,14 @@ public final class SymbolTable {
       } else {
         boolean defined = false;
         for (Symbol ctor : getAllSymbolsForType(owner)) {
+          if (ctor.getPropertyScope() != null) {
+            JSType ctorType = ctor.getType();
+            boolean isConstructor =
+                ctorType != null && (ctorType.isConstructor() || ctorType.isInterface());
+            if (!isConstructor && maybeDefineReference(n, propName, ctor)) {
+              defined = true;
+            }
+          }
           if (maybeDefineReference(n, propName, getSymbolForInstancesOf(ctor))) {
             defined = true;
           }
@@ -2354,6 +2377,13 @@ public final class SymbolTable {
   }
 
   private @Nullable JSType getType(StaticSlot sym) {
+    if (sym.getJSDocInfo() != null && sym.getJSDocInfo().hasTypedefType()) {
+      JSType type = registry.getGlobalType(sym.getName());
+      if (type != null) {
+        return type;
+      }
+      return sym.getJSDocInfo().getTypedefType().evaluate(compiler.getTopScope(), registry);
+    }
     if (sym instanceof StaticTypedSlot staticTypedSlot) {
       return staticTypedSlot.getType();
     }
