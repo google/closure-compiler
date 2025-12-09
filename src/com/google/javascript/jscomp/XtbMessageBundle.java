@@ -129,8 +129,6 @@ public final class XtbMessageBundle implements MessageBundle {
     private static final String FEMALE_GENDER_CASE = "FEMININE";
     private static final String NEUTER_GENDER_CASE = "NEUTER";
     private static final String OTHER_GENDER_CASE = "OTHER";
-    private static final String GENDER_CASE_ERROR_MESSAGE =
-        "Gender case must be one of the following: MASCULINE, FEMININE, NEUTER, or OTHER.";
 
     private static final String GENDER_VARIANT_PATTERN = "grammatical_gender_case:\\s*(\\w+)";
     private static final Pattern GET_STRING_PATTERN = Pattern.compile(GENDER_VARIANT_PATTERN);
@@ -192,7 +190,7 @@ public final class XtbMessageBundle implements MessageBundle {
                     || genderCase.equals(FEMALE_GENDER_CASE)
                     || genderCase.equals(NEUTER_GENDER_CASE)
                     || genderCase.equals(OTHER_GENDER_CASE),
-                GENDER_CASE_ERROR_MESSAGE);
+                "Gender case must be one of the following: MASCULINE, FEMININE, NEUTER, or OTHER.");
             msgBuilder.addGenderedMessageKey(JsMessage.GrammaticalGenderCase.valueOf(genderCase));
           }
         }
