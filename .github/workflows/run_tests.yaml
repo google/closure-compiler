@@ -27,6 +27,11 @@ on:
     - cron: '0 12 * * *'
   # Can be called from other workflow to run the tests
   workflow_call:
+    inputs:
+      ref:
+        description: 'Tag or commit to checkout'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -54,6 +59,8 @@ jobs:
       - name: Checkout Current closure-compiler Commit
         # https://github.com/marketplace/actions/checkout
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       # https://github.com/bazel-contrib/setup-bazel
       - uses: bazel-contrib/setup-bazel@4fd964a13a440a8aeb0be47350db2fc640f19ca8 # v0.15.0
@@ -122,6 +129,7 @@ jobs:
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           path: compiler
+          ref: ${{ inputs.ref || github.sha }}
 
         # Grab the compiler binary that was shared from `build-and-test` and put the file into
         # ./compiler/bazel-bin.

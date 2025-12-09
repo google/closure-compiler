@@ -35,6 +35,7 @@ jobs:
       contents: write
     outputs:
       foundNewRelease: ${{ steps.detect_changes.outputs.foundNewRelease }}
+      tag: ${{ fromJson(steps.set_piper_json_vars.outputs.piperJson).version_id }}
     steps:
     # Checkout the piper-cut-cl.json from the most recent two commits
     - name: Checkout Current closure-compiler Commit
@@ -93,11 +94,13 @@ jobs:
     needs: tag_release_version_id
     # Only run tests if a new release is being cut.
     if: ${{ needs.tag_release_version_id.outputs.foundNewRelease == 'true' }}
+    with:
+      ref: ${{ needs.tag_release_version_id.outputs.tag }}
 
   publish-to-sonatype:
     runs-on: ubuntu-latest
     # Only publish if tests passed.
-    needs: run-tests
+    needs: [tag_release_version_id, run-tests]
 
     steps:
       - name: Check secrets are provided
@@ -115,6 +118,8 @@ jobs:
 
       - name: Checkout the repo at the release tag
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          ref: ${{ needs.tag_release_version_id.outputs.tag }}
 
       # Maven and Bazel require Java to be available.
       - name: Setup Java
@@ -140,7 +145,7 @@ jobs:
         run: |
           ./release.sh --sonatype-auto-publish
         env:
-          RELEASE_NUM: ${{ github.ref_name }}
+          RELEASE_NUM: ${{ needs.tag_release_version_id.outputs.tag }}
           SONATYPE_USERNAME_TOKEN: ${{ secrets.SONATYPE_USERNAME_TOKEN }}
           SONATYPE_PASSWORD_TOKEN: ${{ secrets.SONATYPE_PASSWORD_TOKEN }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
