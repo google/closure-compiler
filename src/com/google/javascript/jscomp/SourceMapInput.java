@@ -62,7 +62,7 @@ public final class SourceMapInput {
             && consumer.getOriginalSources().contains(consumer.getFile())
             && consumer.getOriginalSourcesContent().size() == 1
             && consumer.getOriginalNames().isEmpty()
-            && consumer.getLineCount() == 0) {
+            && consumer.getLineCount() == -1) {
           consumer = null;
         }
 

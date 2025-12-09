@@ -226,11 +226,11 @@ public final class SourceMapTest extends SourceMapTestCase {
         """
         {
         "version":3,
-        "names":[]
+        "names":[],
         "mappings":"",
         "sources":["foo/bar/baz.js"],
         "sourcesContent":["inputCode"],
-        "file":"foo/bar/baz.js",
+        "file":"foo/bar/baz.js"
         }
         """;
 
