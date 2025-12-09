@@ -45,6 +45,7 @@ import com.google.javascript.rhino.Node;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -3173,7 +3174,7 @@ public class CompilerOptions {
     /** Returns a list of valid names used to select a `LanguageMode` on the command line. */
     public static List<String> validCommandLineNames() {
       List<String> names = new ArrayList<>();
-      for (LanguageMode mode : LanguageMode.values()) {
+      for (LanguageMode mode : EnumSet.allOf(LanguageMode.class)) {
         if (mode != UNSUPPORTED) {
           names.add(mode.name());
           if (mode.name().startsWith("ECMASCRIPT")) {
