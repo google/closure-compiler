@@ -2626,4 +2626,61 @@ var MSG_E = function(namem1146332801$0, devicem1146332801$0) {
       return useTestIdGenerator ? TEST_ID_GENERATOR : null;
     }
   }
+
+  @Test
+  public void testLeakingPlaceholderRegression() {
+    // Message A: Gendered, has placeholder "name".
+    JsMessage.Builder builderA = new JsMessage.Builder().setKey("MSG_A").setId("MSG_A");
+    builderA.addGenderedMessageKey(JsMessage.GrammaticalGenderCase.MASCULINE);
+    builderA.appendStringPart(JsMessage.GrammaticalGenderCase.MASCULINE, "A male ");
+    builderA.appendJsPlaceholderReference(JsMessage.GrammaticalGenderCase.MASCULINE, "name");
+    builderA.addGenderedMessageKey(JsMessage.GrammaticalGenderCase.OTHER);
+    builderA.appendStringPart(JsMessage.GrammaticalGenderCase.OTHER, "A other ");
+    builderA.appendJsPlaceholderReference(JsMessage.GrammaticalGenderCase.OTHER, "name");
+    registerMessage(builderA.build());
+
+    // Message B: Gendered, has placeholder "name" in the translation parts (simulating ICU mixed),
+    // but will NOT have it in the goog.getMsg placeholders map.
+    JsMessage.Builder builderB = new JsMessage.Builder().setKey("MSG_B").setId("MSG_B");
+    builderB.addGenderedMessageKey(JsMessage.GrammaticalGenderCase.MASCULINE);
+    builderB.appendStringPart(JsMessage.GrammaticalGenderCase.MASCULINE, "B male {name}");
+    // This part is a placeholder, but since it's not in the goog.getMsg args, it should be treated
+    // as literal
+    builderB.appendJsPlaceholderReference(JsMessage.GrammaticalGenderCase.MASCULINE, "name");
+
+    builderB.addGenderedMessageKey(JsMessage.GrammaticalGenderCase.OTHER);
+    builderB.appendStringPart(JsMessage.GrammaticalGenderCase.OTHER, "B other {name}");
+    builderB.appendJsPlaceholderReference(JsMessage.GrammaticalGenderCase.OTHER, "name");
+
+    registerMessage(builderB.build());
+
+    // Note: We use test() directly instead of multiPhaseTest because we want to test interaction
+    // between two messages in the same pass run, and we are specifically targeting the bug in
+    // ReplacementCompletionPass logic where state leaked.
+    // However, multiPhaseTest does separate compilations for each phase.
+    // If we use FULL_REPLACE mode (default), it runs getFullReplacementPass() which does it all in
+    // one go (for legacy reasons).
+    // The bug was in ReplaceMessages class structure (field vs local), which is shared if the same
+    // instance is used.
+    // getProcessor() creates a new instance.
+    // But getFullReplacementPass() returns an inner class instance.
+    // So if we run FULL_REPLACE, we exercise the logic.
+
+    testMode = TestMode.FULL_REPLACE;
+    test(
+        """
+        /** @desc d */
+        var MSG_A = goog.getMsg('A {$name}', {name: 'User'});
+        /** @desc d */
+        var MSG_B = goog.getMsg('B {name}');
+        """,
+        """
+        /** @desc d */
+        var MSG_A = function(namem1146332801$0) {
+          return goog.msgKind.MASCULINE ? "A male " + namem1146332801$0 : "A other " + namem1146332801$0;
+        }("User");
+        /** @desc d */
+        var MSG_B = goog.msgKind.MASCULINE ? 'B male {name}{NAME}' : 'B other {name}{NAME}';
+        """);
+  }
 }

@@ -67,8 +67,6 @@ public final class ReplaceMessages {
   private final boolean collapsePropertiesHasRun;
   private final AstFactory astFactory;
 
-  private final Map<String, String> placeholderMapIds = new LinkedHashMap<>();
-
   ReplaceMessages(AbstractCompiler compiler, MessageBundle bundle, boolean strictReplacement) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
@@ -694,14 +692,16 @@ public final class ReplaceMessages {
         compiler
             .getUniqueIdSupplier()
             .getUniqueId(compiler.getInput(NodeUtil.getInputId(nodeToReplace)));
+    Map<String, String> placeholderMapIds = new LinkedHashMap<>();
     for (String placeholderName : placeholderMap.keySet()) {
       String placeholderId = placeholderName + uniqueId;
       paramList.addChildToBack(astFactory.createName(placeholderId, type));
-      this.placeholderMapIds.put(placeholderName, placeholderId);
+      placeholderMapIds.put(placeholderName, placeholderId);
     }
 
     Node hookExpression =
-        createHookExpressionForGenderedMsg(type, msgToUse, options, nodeToReplace);
+        createHookExpressionForGenderedMsg(
+            type, msgToUse, options, nodeToReplace, placeholderMapIds);
 
     if (placeholderMap.isEmpty()) {
       // The translated message read from the bundle is one of the following:
@@ -780,7 +780,11 @@ public final class ReplaceMessages {
    * }</pre>
    */
   private Node createHookExpressionForGenderedMsg(
-      AstFactory.Type type, JsMessage msg, MsgOptions options, Node nodeToReplace) {
+      AstFactory.Type type,
+      JsMessage msg,
+      MsgOptions options,
+      Node nodeToReplace,
+      Map<String, String> placeholderMapIds) {
 
     Node hookHead = IR.hook(IR.name(""), IR.string(""), IR.string(""));
     hookHead.setColor(nodeToReplace.getColor());
@@ -801,7 +805,10 @@ public final class ReplaceMessages {
           IR.hook(
               condition,
               getMsgPartsNode(
-                  msg.getGenderedMessageParts(grammaticalGender), options, nodeToReplace),
+                  msg.getGenderedMessageParts(grammaticalGender),
+                  options,
+                  nodeToReplace,
+                  placeholderMapIds),
               astFactory.createString(""));
       currentHook.setColor(nodeToReplace.getColor());
 
@@ -823,12 +830,17 @@ public final class ReplaceMessages {
             getMsgPartsNode(
                 msg.getGenderedMessageParts(JsMessage.GrammaticalGenderCase.OTHER),
                 options,
-                nodeToReplace));
+                nodeToReplace,
+                placeholderMapIds));
     return hookHead;
   }
 
   /** Returns a node representing the message parts for a corresponding gender. */
-  private Node getMsgPartsNode(List<Part> msgParts, MsgOptions options, Node nodeToReplace) {
+  private Node getMsgPartsNode(
+      List<Part> msgParts,
+      MsgOptions options,
+      Node nodeToReplace,
+      Map<String, String> placeholderMapIds) {
     Node message = null;
     for (Part msgPart : msgParts) {
       final Node partNode;
