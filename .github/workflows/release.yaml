@@ -56,7 +56,6 @@ jobs:
         echo "foundNewRelease: $FOUND_NEW_RELEASE"
 
     - id: set_piper_json_vars
-      if: ${{ steps.detect_changes.outputs.foundNewRelease == 'true' }}
       # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs#steps-context
       run: |
         {
