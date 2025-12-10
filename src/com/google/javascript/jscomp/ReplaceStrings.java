@@ -151,9 +151,9 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
   public void visit(NodeTraversal t, Node n, Node parent) {
     // TODO(johnlenz): Determine if it is necessary to support ".call" or ".apply".
     switch (n.getToken()) {
-      case NEW: // e.g. new Error('msg');
-      case CALL: // e.g. Error('msg');
-      case TAGGED_TEMPLATELIT: // e.g. Error`msg` - not supported!
+      case NEW, // e.g. new Error('msg');
+          CALL, // e.g. Error('msg');
+          TAGGED_TEMPLATELIT -> { // e.g. Error`msg` - not supported!
         Node calledFn = n.getFirstChild();
 
         // Look for calls to static functions.
@@ -165,9 +165,8 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
             return;
           }
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
   }
 
@@ -234,14 +233,12 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
     String key = null;
     String replacementString;
     switch (expr.getToken()) {
-      case STRINGLIT:
+      case STRINGLIT -> {
         key = expr.getString();
         replacementString = getReplacement(key);
         replacement = IR.string(replacementString);
-        break;
-      case TEMPLATELIT:
-      case ADD:
-      case NAME:
+      }
+      case TEMPLATELIT, ADD, NAME -> {
         StringBuilder keyBuilder = new StringBuilder();
         Node keyNode = IR.string("");
         replacement = buildReplacement(t, expr, keyNode, keyBuilder);
@@ -253,11 +250,12 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
         }
         replacementString = getReplacement(key);
         keyNode.setString(replacementString);
-        break;
-      default:
+      }
+      default -> {
         // This may be a function call or a variable reference. We don't
         // replace these.
         return expr;
+      }
     }
 
     checkNotNull(key);

@@ -825,20 +825,19 @@ final class TypedAstSerializer {
           @Override
           public void visit(NodeTraversal t, Node n, Node parent) {
             switch (n.getToken()) {
-              case GETPROP: // "name" from (someObject.name)
-              case OPTCHAIN_GETPROP: // "name" from (someObject?.name)
-                propertyNamesBuilder.add(n.getString());
-                break;
-              case STRING_KEY: // "name" from obj = {name: 0}
-              case MEMBER_FUNCTION_DEF: // "name" from class C { name() {} }
-              case MEMBER_FIELD_DEF: // "name" from class C { name = 0; }
-              case GETTER_DEF: // "name" from class C { get name() {} }
-              case SETTER_DEF: // "name" from class C { set name(n) {} }
+              case GETPROP, // "name" from (someObject.name)
+                  OPTCHAIN_GETPROP -> // "name" from (someObject?.name)
+                  propertyNamesBuilder.add(n.getString());
+              case STRING_KEY, // "name" from obj = {name: 0}
+                  MEMBER_FUNCTION_DEF, // "name" from class C { name() {} }
+                  MEMBER_FIELD_DEF, // "name" from class C { name = 0; }
+                  GETTER_DEF, // "name" from class C { get name() {} }
+                  SETTER_DEF -> { // "name" from class C { set name(n) {} }
                 if (!n.isQuotedStringKey()) {
                   propertyNamesBuilder.add(n.getString());
                 }
-                break;
-              default:
+              }
+              default -> {}
             }
           }
         });

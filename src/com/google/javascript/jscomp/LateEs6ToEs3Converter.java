@@ -85,7 +85,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case ASSIGN:
+      case ASSIGN -> {
         // Find whether this script contains the `$jscomp.createTemplateTagFirstArgWithRaw =
         // function(..) {..}` node. If yes, update the templateLitInsertionPoint.
         Node lhs = n.getFirstChild();
@@ -98,25 +98,21 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
             templateLitInsertionPoint = n.getParent().getNext();
           }
         }
-        break;
-      case OBJECTLIT:
-        visitObject(n);
-        break;
-      case MEMBER_FUNCTION_DEF:
+      }
+      case OBJECTLIT -> visitObject(n);
+      case MEMBER_FUNCTION_DEF -> {
         if (parent.isObjectLit()) {
           visitMemberFunctionDefInObjectLit(n);
         }
-        break;
-      case TAGGED_TEMPLATELIT:
-        templateLiteralConverter.visitTaggedTemplateLiteral(t, n, templateLitInsertionPoint);
-        break;
-      case TEMPLATELIT:
+      }
+      case TAGGED_TEMPLATELIT ->
+          templateLiteralConverter.visitTaggedTemplateLiteral(t, n, templateLitInsertionPoint);
+      case TEMPLATELIT -> {
         if (!parent.isTaggedTemplateLit()) {
           templateLiteralConverter.visitTemplateLiteral(t, n);
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
   }
 

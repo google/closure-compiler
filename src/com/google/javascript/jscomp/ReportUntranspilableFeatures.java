@@ -117,56 +117,49 @@ public final class ReportUntranspilableFeatures extends AbstractPeepholeTranspil
   private void checkForUntranspilable(Node root) {
     // Non-flag RegExp features are not attached to nodes, so we must force traversal.
     switch (root.getToken()) {
-      case REGEXP:
-        {
-          String pattern = root.getFirstChild().getString();
-          String flags = root.hasTwoChildren() ? root.getLastChild().getString() : "";
-          RegExpTree reg;
-          try {
-            reg = RegExpTree.parseRegExp(pattern, flags);
-          } catch (IllegalArgumentException | IndexOutOfBoundsException ex) {
-            compiler.report(JSError.make(root, MALFORMED_REGEXP, ex.getMessage()));
-            break;
-          }
-          if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_FLAG_S)) {
-            checkForRegExpSFlag(root);
-          }
-          if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_LOOKBEHIND)) {
-            checkForLookbehind(root, reg);
-          }
-          if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_NAMED_GROUPS)) {
-            checkForNamedGroups(root, reg);
-          }
-          if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_UNICODE_PROPERTY_ESCAPE)) {
-            checkForUnicodePropertyEscape(root, reg);
-          }
-          if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_FLAG_D)) {
-            checkForRegExpDFlag(root);
-          }
+      case REGEXP -> {
+        String pattern = root.getFirstChild().getString();
+        String flags = root.hasTwoChildren() ? root.getLastChild().getString() : "";
+        RegExpTree reg;
+        try {
+          reg = RegExpTree.parseRegExp(pattern, flags);
+        } catch (IllegalArgumentException | IndexOutOfBoundsException ex) {
+          compiler.report(JSError.make(root, MALFORMED_REGEXP, ex.getMessage()));
           break;
         }
-      case BIGINT:
-        {
-          // Transpilation of BigInt is not supported
-          if (untranspilableFeaturesToRemove.contains(Feature.BIGINT)) {
-            reportUntranspilable(Feature.BIGINT, root);
-          }
-          break;
+        if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_FLAG_S)) {
+          checkForRegExpSFlag(root);
         }
-
-      case GETTER_DEF:
+        if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_LOOKBEHIND)) {
+          checkForLookbehind(root, reg);
+        }
+        if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_NAMED_GROUPS)) {
+          checkForNamedGroups(root, reg);
+        }
+        if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_UNICODE_PROPERTY_ESCAPE)) {
+          checkForUnicodePropertyEscape(root, reg);
+        }
+        if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_FLAG_D)) {
+          checkForRegExpDFlag(root);
+        }
+      }
+      case BIGINT -> {
+        // Transpilation of BigInt is not supported
+        if (untranspilableFeaturesToRemove.contains(Feature.BIGINT)) {
+          reportUntranspilable(Feature.BIGINT, root);
+        }
+      }
+      case GETTER_DEF -> {
         if (untranspilableFeaturesToRemove.contains(Feature.GETTER)) {
           reportUntranspilable(Feature.GETTER, root);
         }
-        break;
-
-      case SETTER_DEF:
+      }
+      case SETTER_DEF -> {
         if (untranspilableFeaturesToRemove.contains(Feature.SETTER)) {
           reportUntranspilable(Feature.SETTER, root);
         }
-        break;
-      default:
-        break;
+      }
+      default -> {}
     }
   }
 

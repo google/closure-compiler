@@ -174,20 +174,20 @@ public final class DestructuredTarget {
 
     Builder builder =
         new Builder(registry, destructuringChild.getParent(), destructuringPatternType);
+    Node value;
     switch (destructuringChild.getToken()) {
-      case STRING_KEY:
+      case STRING_KEY -> {
         // const {objectLiteralKey: x} = ...
         builder.setObjectPatternKey(destructuringChild);
-        Node value = destructuringChild.getFirstChild();
+        value = destructuringChild.getFirstChild();
         if (value.isDefaultValue()) {
           builder.setNode(value.getFirstChild());
           builder.setDefaultValue(value.getSecondChild());
         } else {
           builder.setNode(value);
         }
-        break;
-
-      case COMPUTED_PROP:
+      }
+      case COMPUTED_PROP -> {
         // const {['objectLiteralKey']: x} = ...
         builder.setObjectPatternKey(destructuringChild);
         value = destructuringChild.getSecondChild();
@@ -197,32 +197,27 @@ public final class DestructuredTarget {
         } else {
           builder.setNode(value);
         }
-        break;
-
-      case OBJECT_PATTERN: // const [{x}] = ...
-      case ARRAY_PATTERN: // const [[x]] = ...
-      case NAME: // const [x] = ...
-      case GETELEM: // [obj[3]] = ...
-      case GETPROP: // [this.x] = ...
-        builder.setNode(destructuringChild);
-        break;
-
-      case DEFAULT_VALUE: // const [x = 3] = ...
+      }
+      case OBJECT_PATTERN, // const [{x}] = ...
+          ARRAY_PATTERN, // const [[x]] = ...
+          NAME, // const [x] = ...
+          GETELEM, // [obj[3]] = ...
+          GETPROP -> // [this.x] = ...
+          builder.setNode(destructuringChild);
+      case DEFAULT_VALUE -> {
+        // const [x = 3] = ...
         builder.setNode(destructuringChild.getFirstChild());
         builder.setDefaultValue(destructuringChild.getSecondChild());
-        break;
-
-      case ITER_REST:
-      case OBJECT_REST:
+      }
+      case ITER_REST, OBJECT_REST -> {
         // const [...x] = ...
         // const {...x} = ...
         builder.setNode(destructuringChild.getFirstChild());
         builder.setIsRest(true);
-        break;
-
-      default:
-        throw new IllegalArgumentException(
-            "Unexpected child of destructuring pattern " + destructuringChild);
+      }
+      default ->
+          throw new IllegalArgumentException(
+              "Unexpected child of destructuring pattern " + destructuringChild);
     }
     return builder.build();
   }
@@ -300,21 +295,20 @@ public final class DestructuredTarget {
       return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     }
     switch (objectPatternKey.getToken()) {
-      case STRING_KEY:
+      case STRING_KEY -> {
         JSType propertyType = patternType.findPropertyType(objectPatternKey.getString());
         return propertyType != null
             ? propertyType
             : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
-
-      case COMPUTED_PROP:
+      }
+      case COMPUTED_PROP -> {
         return patternType != null
             ? patternType
                 .getTemplateTypeMap()
                 .getResolvedTemplateType(registry.getObjectElementKey())
             : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
-
-      default:
-        throw new IllegalStateException("Unexpected key " + objectPatternKey);
+      }
+      default -> throw new IllegalStateException("Unexpected key " + objectPatternKey);
     }
   }
 

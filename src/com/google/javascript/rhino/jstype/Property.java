@@ -202,14 +202,11 @@ public final class Property implements StaticTypedSlot, StaticTypedRef {
 
   @Override
   public String getName() {
-    switch (name) {
-      case String s:
-        return s;
-      case KnownSymbolType s:
-        return s.getDisplayName();
-      default:
-        throw new AssertionError();
-    }
+    return switch (name) {
+      case String s -> s;
+      case KnownSymbolType s -> s.getDisplayName();
+      default -> throw new AssertionError();
+    };
   }
 
   @Override

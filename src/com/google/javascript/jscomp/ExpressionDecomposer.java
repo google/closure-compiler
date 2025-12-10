@@ -235,21 +235,17 @@ class ExpressionDecomposer {
 
           Node left = expressionParent.getFirstChild();
           switch (left.getToken()) {
-            case ARRAY_PATTERN:
-            // e.g. backoff from exposing expression `getObj()` in `[getObj().propName] = ...` as
-            // the RHS must execute first
-            case OBJECT_PATTERN:
-              // e.g. backoff from exposing expression`getObj()` in `{a: getObj().propName} = ...`
-              // as the RHS must execute first
-              break;
-            case GETELEM:
-            case GETPROP:
-              exposedSomething =
-                  decomposeSubExpressions(left.getFirstChild(), null, state) || exposedSomething;
-              break;
-            default:
-              throw new IllegalStateException(
-                  "Expected a property access or destructuring pattern: " + left.toStringTree());
+            case ARRAY_PATTERN, // e.g. backoff from exposing expression `getObj()` in
+                // `[getObj().propName] = ...` as the RHS must execute first
+                OBJECT_PATTERN -> { // e.g. backoff from exposing expression`getObj()` in `{a:
+              // getObj().propName} = ...` as the RHS must execute first
+            }
+            case GETELEM, GETPROP ->
+                exposedSomething =
+                    decomposeSubExpressions(left.getFirstChild(), null, state) || exposedSomething;
+            default ->
+                throw new IllegalStateException(
+                    "Expected a property access or destructuring pattern: " + left.toStringTree());
           }
         }
       } else if (expressionParent.isCall()
@@ -542,27 +538,27 @@ class ExpressionDecomposer {
     Node trueExpr = astFactory.createBlock().srcref(expr);
     Node falseExpr = astFactory.createBlock().srcref(expr);
     switch (expr.getToken()) {
-      case HOOK:
+      case HOOK -> {
         // a = x?y:z --> if (x) {a=y} else {a=z}
         cond = first;
         trueExpr.addChildToFront(
             astFactory.exprResult(buildResultExpression(second, needResult, tempName)));
         falseExpr.addChildToFront(
             astFactory.exprResult(buildResultExpression(last, needResult, tempName)));
-        break;
-      case AND:
+      }
+      case AND -> {
         // a = x&&y --> if (a=x) {a=y} else {}
         cond = buildResultExpression(first, needResult, tempName);
         trueExpr.addChildToFront(
             astFactory.exprResult(buildResultExpression(last, needResult, tempName)));
-        break;
-      case OR:
+      }
+      case OR -> {
         // a = x||y --> if (a=x) {} else {a=y}
         cond = buildResultExpression(first, needResult, tempName);
         falseExpr.addChildToFront(
             astFactory.exprResult(buildResultExpression(last, needResult, tempName)));
-        break;
-      case COALESCE:
+      }
+      case COALESCE -> {
         // a = x ?? y --> if ((temp=x)!=null) {a=temp} else {a=y}
         String tempNameAssign = getTempValueName();
         Node tempVarNodeAssign =
@@ -580,10 +576,10 @@ class ExpressionDecomposer {
                     tempName)));
         falseExpr.addChildToFront(
             astFactory.exprResult(buildResultExpression(last, needResult, tempName)));
-        break;
-      default:
-        // With a valid tree we should never get here.
-        throw new IllegalStateException("Unexpected expression: " + expr);
+      }
+      default ->
+          // With a valid tree we should never get here.
+          throw new IllegalStateException("Unexpected expression: " + expr);
     }
 
     Node ifNode;
@@ -1180,15 +1176,17 @@ class ExpressionDecomposer {
     if (n.isAssign()) {
       Node lhs = n.getFirstChild();
       switch (lhs.getToken()) {
-        case NAME:
+        case NAME -> {
           return true;
-        case GETPROP:
+        }
+        case GETPROP -> {
           return !isExpressionTreeUnsafe(lhs.getFirstChild(), seenSideEffects);
-        case GETELEM:
+        }
+        case GETELEM -> {
           return !isExpressionTreeUnsafe(lhs.getFirstChild(), seenSideEffects)
               && !isExpressionTreeUnsafe(lhs.getLastChild(), seenSideEffects);
-        default:
-          break;
+        }
+        default -> {}
       }
     }
     return false;
