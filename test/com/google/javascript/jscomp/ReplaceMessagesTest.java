@@ -2571,6 +2571,41 @@ var MSG_E = function(namem1146332801$0, devicem1146332801$0) {
         """);
   }
 
+  @Test
+  public void testReplaceGenderedMessageWithIcuPlaceholderAtStart() {
+    registerMessage(
+        getTestMessageBuilder("MSG_StartWithPlaceholder")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.MASCULINE)
+            .appendCanonicalPlaceholderReference(JsMessage.GrammaticalGenderCase.MASCULINE, "PH")
+            .appendStringPart(JsMessage.GrammaticalGenderCase.MASCULINE, " suffix")
+            .addGenderedMessageKey(JsMessage.GrammaticalGenderCase.OTHER)
+            .appendCanonicalPlaceholderReference(JsMessage.GrammaticalGenderCase.OTHER, "PH")
+            .appendStringPart(JsMessage.GrammaticalGenderCase.OTHER, " suffix")
+            .build());
+
+    // We expect this to fail with NPE before the fix
+    multiPhaseTest(
+        """
+        /** @desc d */
+        var MSG_StartWithPlaceholder = goog.getMsg('{PH} suffix');
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_StartWithPlaceholder =
+            __jscomp_define_msg__(
+                {
+                  "key": "MSG_StartWithPlaceholder",
+                  "msg_text": "{PH} suffix"
+                });
+        """,
+        """
+        /** @desc d */
+        var MSG_StartWithPlaceholder = goog.msgKind.MASCULINE ? '{PH} suffix' : '{PH} suffix';
+        """);
+  }
+
   private void registerMessage(JsMessage message) {
     messages.put(message.getId(), message);
   }

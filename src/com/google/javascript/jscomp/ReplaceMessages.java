@@ -838,10 +838,7 @@ public final class ReplaceMessages {
         String placeholderId = placeholderMapIds.get(msgPart.getJsPlaceholderName());
         if (placeholderId == null) {
           // Add the ICU placeholder directly to the message ex: 'Hello {NAME}'
-          message =
-              astFactory.createString(
-                  message.getString() + "{" + msgPart.getCanonicalPlaceholderName() + "}");
-          continue;
+          partNode = astFactory.createString("{" + msgPart.getCanonicalPlaceholderName() + "}");
         } else {
           partNode = astFactory.createName(placeholderId, type(nodeToReplace));
         }
