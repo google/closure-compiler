@@ -4188,7 +4188,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.GENERATORS);
     // TODO(johnlenz): validate "yield" parsing. Firefox rejects this
     // use of "yield".
-    parseError("function * f() { yield , yield; }");
+    parse("function * f() { yield , yield; }");
   }
 
   private static final String STRING_CONTINUATIONS_WARNING =
@@ -8311,6 +8311,8 @@ console.log(new X(1));
    * @return If in IDE mode, returns a partial tree.
    */
   private Node parseError(String source, String... errors) {
+    assertThat(errors).isNotEmpty();
+
     TestErrorReporter testErrorReporter = new TestErrorReporter().expectAllErrors(errors);
     ParseResult result =
         ParserRunner.parse(
