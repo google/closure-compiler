@@ -471,9 +471,9 @@ class IRFactory {
 
     Node parent = n;
     while ((parent = parent.getParent()) != null) {
-      // The await is in a class static block.
-      // e.g. `class C { static { await; } }`
-      if (parent.isClassMembers()) {
+      // The await is in a class static block or a field initializer.
+      // e.g. `class C { static { await y; } }` or `class C { x = await y; }`
+      if ((parent.isBlock() || parent.isMemberFieldDef()) && parent.getParent().isClassMembers()) {
         errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
         return;
       }

@@ -7361,16 +7361,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testAwait_inClassComputedPropertyName() {
-    // TODO: b/467766138 - await within computed property names should be valid.
-    parseError("async function f() { return class { [await 1] = 1 }; }", UNEXPECTED_AWAIT);
-    parseError("async function f() { return class { [await 2]() {} }; }", UNEXPECTED_AWAIT);
-    parseError("async function f() { return class { *[await 3]() {} }; }", UNEXPECTED_AWAIT);
-    parseError("async function f() { return class { async [await 4]() {} }; }", UNEXPECTED_AWAIT);
-    parseError("async function f() { return class { async *[await 5]() {} }; }", UNEXPECTED_AWAIT);
-    parseError("async function f() { return class { get [await 6]() {} }; }", UNEXPECTED_AWAIT);
-    parseError("async function f() { return class { set [await 7](x) {} }; }", UNEXPECTED_AWAIT);
+    parse("async function f() { return class { [await 1] = 1 }; }");
+    parse("async function f() { return class { [await 2]() {} }; }");
+    parse("async function f() { return class { *[await 3]() {} }; }");
+    parse("async function f() { return class { async [await 4]() {} }; }");
+    parse("async function f() { return class { async *[await 5]() {} }; }");
+    parse("async function f() { return class { get [await 6]() {} }; }");
+    parse("async function f() { return class { set [await 7](x) {} }; }");
 
-    parseError("const f = async () => class { [await 8] = 1 };", UNEXPECTED_AWAIT);
+    parse("const f = async () => class { [await 8] = 1 };");
   }
 
   @Test
@@ -7447,7 +7446,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testAwait_invalid_topLevelAwaitInClassComputedPropertyName() {
-    // TODO: b/467766138 - await within computed property names should be valid.
     // TODO: b/461869370 - Support top-level await in computed property name.
     parseError("export class C { [await 1] = 1 };", UNEXPECTED_AWAIT);
     parseError("export class C { [await 2]() {} };", UNEXPECTED_AWAIT);

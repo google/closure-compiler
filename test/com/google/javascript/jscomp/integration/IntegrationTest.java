@@ -5762,4 +5762,45 @@ async function abc() {
           "", "alert(\"4\");",
         });
   }
+
+  @Test
+  public void testComputedClassPropertyWithAwait() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    options.setBrowserFeaturesetYear(2023);
+    test(
+        options,
+        """
+        /** @define {number} */
+        goog.FEATURESET_YEAR = 2023;
+
+        async function getVal() {
+          return 1;
+        }
+
+        async function asyncFunc() {
+          /** @unrestricted */
+          class C {
+            [await getVal()] = 1;
+          }
+          return new C()[1];
+        }
+
+        asyncFunc().then(alert);
+        """,
+        """
+        goog.a = 2023;
+        async function a() {
+          return 1;
+        }
+        (async function() {
+          var b = await a();
+          class c {
+            [b] = 1;
+          }
+          return (new c())[1];
+        })().then(alert);
+        """);
+  }
 }
