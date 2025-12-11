@@ -7427,35 +7427,104 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testAwait_invalid_topLevel() {
-    // TODO: b/461869370 - Support top-level await in ES module.
-    parseError("export const x = await 15;", UNEXPECTED_AWAIT);
+  public void testAwait_topLevelInEsModule() {
+    expectFeatures(Feature.TOP_LEVEL_AWAIT);
+    parse("export const x = await 15;");
+    parse("export const x = 1; await 15;");
   }
 
   @Test
-  public void testAwait_invalid_topLevelInObjectLiteralComputedPropertyName() {
-    // TODO: b/461869370 - Support top-level await in computed property name.
-    parseError("export const x = { [await 1]: 1 };", UNEXPECTED_AWAIT);
-    parseError("export const x = { [await 2]() {} };", UNEXPECTED_AWAIT);
-    parseError("export const x = { *[await 3]() {} };", UNEXPECTED_AWAIT);
-    parseError("export const x = { async [await 4]() {} };", UNEXPECTED_AWAIT);
-    parseError("export const x = { async *[await 5]() {} };", UNEXPECTED_AWAIT);
-    parseError("export const x = { get [await 6]() {} };", UNEXPECTED_AWAIT);
-    parseError("export const x = { set [await 7](x) {} };", UNEXPECTED_AWAIT);
+  public void testAwait_topLevelInObjectLiteral() {
+    expectFeatures(Feature.TOP_LEVEL_AWAIT);
+    parse("export const x = 1; const obj = { key: await x };");
   }
 
   @Test
-  public void testAwait_invalid_topLevelAwaitInClassComputedPropertyName() {
-    // TODO: b/461869370 - Support top-level await in computed property name.
-    parseError("export class C { [await 1] = 1 };", UNEXPECTED_AWAIT);
-    parseError("export class C { [await 2]() {} };", UNEXPECTED_AWAIT);
-    parseError("export class C { *[await 3]() {} };", UNEXPECTED_AWAIT);
-    parseError("export class C { async [await 4]() {} };", UNEXPECTED_AWAIT);
-    parseError("export class C { async *[await 5]() {} };", UNEXPECTED_AWAIT);
-    parseError("export class C { get [await 6]() {} };", UNEXPECTED_AWAIT);
-    parseError("export class C { set [await 7](x) {} };", UNEXPECTED_AWAIT);
+  public void testAwait_topLevelInBlock() {
+    expectFeatures(Feature.TOP_LEVEL_AWAIT);
+    parse("export const x = 1; { await x; }");
+  }
 
-    parseError("export class C { [await 8] = 1 };", UNEXPECTED_AWAIT);
+  @Test
+  public void testAwait_topLevelInLoops() {
+    expectFeatures(Feature.TOP_LEVEL_AWAIT);
+    parse("export const x = 1; for (;;) { await x; }");
+    parse("export const x = 1; while (true) { await x; }");
+    parse("export const x = 1; do { await x; } while (true);");
+  }
+
+  @Test
+  public void testAwait_topLevelInTryCatch() {
+    expectFeatures(Feature.TOP_LEVEL_AWAIT);
+    parse("export const x = 1; try { await x; } catch (e) {}");
+    parse("export const x = 1; try {} catch (e) { await x; }");
+    parse("export const x = 1; try {} finally { await x; }");
+  }
+
+  @Test
+  public void testAwait_topLevelInClassExtends() {
+    expectFeatures(Feature.TOP_LEVEL_AWAIT);
+    parse("export const x = class {}; class C extends (await x) {}");
+  }
+
+  @Test
+  public void testAwait_invalid_topLevelInScript() {
+    parseError("const x = await 15;", UNEXPECTED_AWAIT);
+    parseError("await 15;", UNEXPECTED_AWAIT);
+  }
+
+  @Test
+  public void testAwait_invalid_topLevelInClassExtends() {
+    // Await is not allowed in extends clause without parentheses
+    // Use export to ensure module context where await is a keyword
+    parseError("export const x = 1; class C extends await x {}", "'{' expected");
+  }
+
+  @Test
+  public void testAwait_invalid_topLevelInGoogModule() {
+    // Await is not allowed in goog.module
+    parseError("goog.module('m'); await 1;", UNEXPECTED_AWAIT);
+  }
+
+  @Test
+  public void testAwait_invalid_topLevelInGoogProvide() {
+    // Await is not allowed in goog.provide
+    parseError("goog.provide('m'); await 1;", UNEXPECTED_AWAIT);
+  }
+
+  @Test
+  public void testAwait_topLevelInObjectLiteralComputedPropertyName() {
+    expectFeatures(Feature.TOP_LEVEL_AWAIT);
+    parse("export const x = { [await 1]: 1 };");
+    parse("export const x = { [await 2]() {} };");
+    parse("export const x = { *[await 3]() {} };");
+    parse("export const x = { async [await 4]() {} };");
+    parse("export const x = { async *[await 5]() {} };");
+    parse("export const x = { get [await 6]() {} };");
+    parse("export const x = { set [await 7](x) {} };");
+
+    parse("export const x = 1; const y = { [await 8]: 8 };");
+  }
+
+  @Test
+  public void testAwait_topLevelAwaitInClassComputedPropertyName() {
+    expectFeatures(Feature.TOP_LEVEL_AWAIT);
+    parse("export class C { [await 1] = 1 };");
+    parse("export class C { [await 2]() {} };");
+    parse("export class C { *[await 3]() {} };");
+    parse("export class C { async [await 4]() {} };");
+    parse("export class C { async *[await 5]() {} };");
+    parse("export class C { get [await 6]() {} };");
+    parse("export class C { set [await 7](x) {} };");
+
+    parse("export class C { [await 8] = 1 };");
+
+    parse("export const x = 1; class C { [await 9] = 1 };");
+  }
+
+  @Test
+  public void testAwait_invalid_topLevelAwaitInClassComputedPropertyNameInScript() {
+    parseError("class C { [await 1] = 1 };", UNEXPECTED_AWAIT);
   }
 
   @Test
@@ -7499,9 +7568,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testForAwaitOf_invalid_topLevel() {
-    // TODO: b/461869370 - Support top-level await in ES module.
-    parseError("export const x = 1; for await (let a of b) foo();", UNEXPECTED_FOR_AWAIT_OF);
+  public void testForAwaitOf_topLevelInEsModule() {
+    expectFeatures(Feature.TOP_LEVEL_AWAIT);
+    parse("export const x = 1; for await (let a of b) foo();");
+  }
+
+  @Test
+  public void testForAwaitOf_invalid_topLevelInScript() {
+    parseError("for await (let a of b) foo();", UNEXPECTED_FOR_AWAIT_OF);
   }
 
   @Test

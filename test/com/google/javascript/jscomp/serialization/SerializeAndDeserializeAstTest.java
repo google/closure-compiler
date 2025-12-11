@@ -210,6 +210,19 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   @Test
+  public void testAwait() {
+    testSame("async function f() { await 1; }");
+  }
+
+  @Test
+  public void testAwait_topLevel() {
+    testSame("export const x = await 1;");
+
+    this.checkJsDocEquality = false; // @unrestricted
+    testSame("export const x = 1; /** @unrestricted */ class C { [await 1] = 2; }");
+  }
+
+  @Test
   public void testVanillaForLoop() {
     testSame("for (let x = 0; x < 10; ++x);");
   }
@@ -221,7 +234,12 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testForAwaitOfLoop() {
-    testSame("async function f() { for await (let elem of []); }");
+    testSame("async function f() { for await (let elem of []) {} }");
+  }
+
+  @Test
+  public void testForAwaitOfLoop_topLevel() {
+    testSame("export const x = 1; for await (let elem of []) {}");
   }
 
   @Test

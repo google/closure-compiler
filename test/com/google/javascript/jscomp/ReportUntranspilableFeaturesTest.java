@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CheckRegExp.MALFORMED_REGEXP;
+import static com.google.javascript.jscomp.ReportUntranspilableFeatures.UNSUPPORTED_FEATURE_PRESENT;
 import static com.google.javascript.jscomp.ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT;
 
 import com.google.common.collect.ImmutableList;
@@ -264,6 +265,64 @@ public class ReportUntranspilableFeaturesTest extends CompilerTestCase {
         minimum browser featureset year 2023. Consider targeting a more modern output.
         Current browser featureset year: 2022\
         """);
+  }
+
+  @Test
+  public void testEs2022TopLevelAwait() {
+    Runnable testTopLevelAwaitUnsupported =
+        () ->
+            testError(
+                "export const x = await 5;",
+                UNSUPPORTED_FEATURE_PRESENT,
+                """
+                The feature "Top-level await" is currently unsupported for transpilation.
+                """);
+
+    languageOut = LanguageMode.ECMASCRIPT_NEXT;
+    testTopLevelAwaitUnsupported.run();
+
+    languageOut = LanguageMode.ECMASCRIPT_2022;
+    testTopLevelAwaitUnsupported.run();
+
+    languageOut = LanguageMode.ECMASCRIPT_2021;
+    testTopLevelAwaitUnsupported.run();
+
+    languageOut = LanguageMode.ECMASCRIPT3; // Reset
+
+    browserFeaturesetYear = BrowserFeaturesetYear.YEAR_2023;
+    testTopLevelAwaitUnsupported.run();
+
+    browserFeaturesetYear = BrowserFeaturesetYear.YEAR_2022;
+    testTopLevelAwaitUnsupported.run();
+  }
+
+  @Test
+  public void testEs2022TopLevelForAwaitOf() {
+    Runnable testTopLevelAwaitUnsupported =
+        () ->
+            testError(
+                "export const x = 1; for await (let a of b) foo();",
+                UNSUPPORTED_FEATURE_PRESENT,
+                """
+                The feature "Top-level await" is currently unsupported for transpilation.
+                """);
+
+    languageOut = LanguageMode.ECMASCRIPT_NEXT;
+    testTopLevelAwaitUnsupported.run();
+
+    languageOut = LanguageMode.ECMASCRIPT_2022;
+    testTopLevelAwaitUnsupported.run();
+
+    languageOut = LanguageMode.ECMASCRIPT_2021;
+    testTopLevelAwaitUnsupported.run();
+
+    languageOut = LanguageMode.ECMASCRIPT3; // Reset
+
+    browserFeaturesetYear = BrowserFeaturesetYear.YEAR_2023;
+    testTopLevelAwaitUnsupported.run();
+
+    browserFeaturesetYear = BrowserFeaturesetYear.YEAR_2022;
+    testTopLevelAwaitUnsupported.run();
   }
 
   @Test

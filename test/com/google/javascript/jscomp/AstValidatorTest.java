@@ -41,6 +41,7 @@ import com.google.javascript.rhino.jstype.JSTypeResolver;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -441,20 +442,55 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("async () => { for await(a of []); }");
     valid("async () => { for await(a of /** @type {!Iterable<?>} */ ({})); }");
 
-    // Test that initializers are banned
+    // For tests, we permit top-level await and just verify that the initializer is banned.
     typeInfoValidationMode = TypeInfoValidation.NONE;
+
+    Function<Node, Node> wrapInEs6Script =
+        n -> {
+          Node script = IR.script(n);
+          script.putBooleanProp(Node.ES6_MODULE, true);
+          setTestSourceLocationForTree(script);
+          return n;
+        };
+
     expectInvalid(
-        new Node(Token.FOR_AWAIT_OF, IR.var(IR.name("a"), IR.number(1)), IR.name("b")),
+        wrapInEs6Script.apply(
+            new Node(Token.FOR_AWAIT_OF, IR.var(IR.name("a"), IR.number(1)), IR.name("b"))),
         Check.STATEMENT);
     expectInvalid(
-        new Node(Token.FOR_AWAIT_OF, IR.constNode(IR.name("a"), IR.number(1)), IR.name("b")),
+        wrapInEs6Script.apply(
+            new Node(Token.FOR_AWAIT_OF, IR.constNode(IR.name("a"), IR.number(1)), IR.name("b"))),
         Check.STATEMENT);
     expectInvalid(
-        new Node(
-            Token.FOR_AWAIT_OF,
-            IR.var(new Node(Token.DESTRUCTURING_LHS, IR.objectPattern(), IR.objectlit())),
-            IR.name("b")),
+        wrapInEs6Script.apply(
+            new Node(
+                Token.FOR_AWAIT_OF,
+                IR.var(new Node(Token.DESTRUCTURING_LHS, IR.objectPattern(), IR.objectlit())),
+                IR.name("b"))),
         Check.STATEMENT);
+  }
+
+  @Test
+  public void testTopLevelForAwaitOf() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    typeInfoValidationMode = TypeInfoValidation.NONE;
+
+    setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
+
+    Node forAwaitOfNode = new Node(Token.FOR_AWAIT_OF);
+    forAwaitOfNode.addChildToBack(IR.name("x"));
+    forAwaitOfNode.addChildToBack(IR.name("y"));
+    forAwaitOfNode.addChildToBack(IR.block());
+
+    Node script = IR.script(forAwaitOfNode);
+    setTestSourceLocationForTree(script);
+
+    expectInvalid(
+        forAwaitOfNode, Check.STATEMENT, "'await' expression is not within an async function");
+
+    // Top-level await is only allowed in modules.
+    script.putBooleanProp(Node.ES6_MODULE, true);
+    expectValid(forAwaitOfNode, Check.STATEMENT);
   }
 
   @Test
@@ -685,10 +721,17 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testAwaitExpression() {
+    setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
+
+    valid("async () => { await 1; }");
+    valid("async function f() { await 1; }");
+    valid("async function f() { return await 1; }");
+    valid("async function f() { await await 1; }");
+    valid("class C { async m() { await 1; } }");
+
     // Since we're building the AST by hand, there won't be any types on it.
     typeInfoValidationMode = TypeInfoValidation.NONE;
 
-    setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
     Node awaitNode = new Node(Token.AWAIT);
     awaitNode.addChildToBack(IR.number(1));
     Node parentFunction =
@@ -776,14 +819,22 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testAwaitExpressionNoFunction() {
+  public void testTopLevelAwait() {
     // Since we're building the AST by hand, there won't be any types on it.
     typeInfoValidationMode = TypeInfoValidation.NONE;
 
     setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
-    Node n = new Node(Token.AWAIT);
-    n.addChildToBack(IR.number(1));
-    expectInvalid(n, Check.EXPRESSION);
+    Node awaitNode = new Node(Token.AWAIT);
+    awaitNode.addChildToBack(IR.number(1));
+    Node script = IR.script(IR.exprResult(awaitNode));
+    setTestSourceLocationForTree(script);
+
+    expectInvalid(
+        awaitNode, Check.EXPRESSION, "'await' expression is not within an async function");
+
+    // Top-level await is only allowed in modules.
+    script.putBooleanProp(Node.ES6_MODULE, true);
+    expectValid(awaitNode, Check.EXPRESSION);
   }
 
   @Test

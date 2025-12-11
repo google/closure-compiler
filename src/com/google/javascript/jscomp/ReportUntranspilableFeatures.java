@@ -46,6 +46,11 @@ public final class ReportUntranspilableFeatures extends AbstractPeepholeTranspil
           "Cannot convert feature \"{0}\" to targeted output language. Feature requires at minimum"
               + " {1}.{2}");
 
+  @VisibleForTesting
+  public static final DiagnosticType UNSUPPORTED_FEATURE_PRESENT =
+      DiagnosticType.error(
+          "JSC_UNSUPPORTED", "The feature \"{0}\" is currently unsupported for transpilation.");
+
   private static final FeatureSet UNTRANSPILABLE_ES5_FEATURES =
       FeatureSet.BARE_MINIMUM.with(Feature.GETTER, Feature.SETTER);
 
@@ -64,11 +69,11 @@ public final class ReportUntranspilableFeatures extends AbstractPeepholeTranspil
           // transpiled below.
           Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
 
-  private static final FeatureSet UNTRANSPILABLE_2022_FEATURES =
-      FeatureSet.BARE_MINIMUM.with(Feature.REGEXP_FLAG_D);
-
   private static final FeatureSet UNTRANSPILABLE_2020_FEATURES =
       FeatureSet.BARE_MINIMUM.with(Feature.BIGINT);
+
+  private static final FeatureSet UNTRANSPILABLE_2022_FEATURES =
+      FeatureSet.BARE_MINIMUM.with(Feature.REGEXP_FLAG_D, Feature.TOP_LEVEL_AWAIT);
 
   private static final FeatureSet ALL_UNTRANSPILABLE_FEATURES =
       FeatureSet.BARE_MINIMUM
@@ -159,11 +164,22 @@ public final class ReportUntranspilableFeatures extends AbstractPeepholeTranspil
           reportUntranspilable(Feature.SETTER, root);
         }
       }
+      case AWAIT, FOR_AWAIT_OF -> {
+        if (untranspilableFeaturesToRemove.contains(Feature.TOP_LEVEL_AWAIT)) {
+          checkForTopLevelAwait(root);
+        }
+      }
       default -> {}
     }
   }
 
   private void reportUntranspilable(Feature feature, Node node) {
+    LanguageMode minimumLanguageMode = LanguageMode.minimumRequiredFor(feature);
+    if (minimumLanguageMode == LanguageMode.UNSUPPORTED) {
+      compiler.report(JSError.make(node, UNSUPPORTED_FEATURE_PRESENT, feature.toString()));
+      return;
+    }
+
     // The compiler always has an output featureset configured. Sometimes this is configured
     // directly or via a LanguageMode, and in this case browserFeatureSetYear is null. Otherwise if
     // browserFeatureSetYear is not null, the user configured a browserFeatureSetYear specifically.
@@ -175,8 +191,7 @@ public final class ReportUntranspilableFeatures extends AbstractPeepholeTranspil
       BrowserFeaturesetYear minimumYear = BrowserFeaturesetYear.minimumRequiredFor(feature);
       if (minimumYear == null) {
         minimum =
-            LanguageMode.minimumRequiredFor(feature)
-                + ", which is not yet supported by any browser featureset year";
+            minimumLanguageMode + ", which is not yet supported by any browser featureset year";
         suggestion = "";
       } else {
         minimum = "browser featureset year " + minimumYear.getYear();
@@ -184,7 +199,7 @@ public final class ReportUntranspilableFeatures extends AbstractPeepholeTranspil
             suggestion + "\nCurrent browser featureset year: " + browserFeatureSetYear.getYear();
       }
     } else {
-      minimum = LanguageMode.minimumRequiredFor(feature).toString();
+      minimum = minimumLanguageMode.toString();
     }
     compiler.report(
         JSError.make(
@@ -225,6 +240,17 @@ public final class ReportUntranspilableFeatures extends AbstractPeepholeTranspil
     String flags = regexpNode.hasTwoChildren() ? regexpNode.getLastChild().getString() : "";
     if (flags.contains("d")) {
       reportUntranspilable(Feature.REGEXP_FLAG_D, regexpNode);
+    }
+  }
+
+  private void checkForTopLevelAwait(Node awaitNode) {
+    checkArgument(awaitNode.isAwait() || awaitNode.isForAwaitOf());
+
+    if (NodeUtil.getEnclosingFunction(awaitNode) == null) {
+      checkArgument(
+          NodeUtil.getEnclosingScript(awaitNode).getBooleanProp(Node.ES6_MODULE),
+          "Top-level await is only allowed in ES module sources");
+      reportUntranspilable(Feature.TOP_LEVEL_AWAIT, awaitNode);
     }
   }
 

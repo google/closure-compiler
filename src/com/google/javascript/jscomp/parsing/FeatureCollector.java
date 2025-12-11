@@ -145,7 +145,10 @@ public final class FeatureCollector {
         addScriptFeature(Feature.LOGICAL_ASSIGNMENT);
       }
       case FOR_OF -> addScriptFeature(Feature.FOR_OF);
-      case FOR_AWAIT_OF -> addScriptFeature(Feature.FOR_AWAIT_OF);
+      case FOR_AWAIT_OF -> {
+        addScriptFeature(Feature.FOR_AWAIT_OF);
+        maybeAddTopLevelAwait(contextStack);
+      }
       case IMPORT, EXPORT -> addScriptFeature(Feature.MODULES);
       case CONST -> addScriptFeature(Feature.CONST_DECLARATIONS);
       case LET -> addScriptFeature(Feature.LET_DECLARATIONS);
@@ -155,7 +158,18 @@ public final class FeatureCollector {
       case SUPER -> addScriptFeature(Feature.SUPER);
       case ARRAY_PATTERN -> addScriptFeature(Feature.ARRAY_DESTRUCTURING);
       case OBJECT_PATTERN -> addScriptFeature(Feature.OBJECT_DESTRUCTURING);
+      // We need to track this separately from FUNCTION in the case of top-level await.
+      case AWAIT -> {
+        addScriptFeature(Feature.ASYNC_FUNCTIONS);
+        maybeAddTopLevelAwait(contextStack);
+      }
       default -> {}
+    }
+  }
+
+  private void maybeAddTopLevelAwait(List<FeatureContext> contextStack) {
+    if (!contextStack.contains(FeatureContext.FUNCTION)) {
+      addScriptFeature(Feature.TOP_LEVEL_AWAIT);
     }
   }
 

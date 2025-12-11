@@ -581,12 +581,26 @@ public final class AstValidator implements CompilerPass {
     validateAwaitWithinAsyncFunction(n);
   }
 
+  private static final String AWAIT_NOT_WITHIN_ASYNC_FUNCTION =
+      "'await' expression is not within an async function";
+  private static final String AWAIT_NOT_ALLOWED_IN_PARAMETER_LIST =
+      "'await' expression is not allowed in a parameter list";
+
   private void validateAwaitWithinAsyncFunction(Node n) {
     Node parentFunction = NodeUtil.getEnclosingFunction(n);
-    if (parentFunction == null || !parentFunction.isAsyncFunction()) {
-      violation("'await' expression is not within an async function", n);
+
+    if (parentFunction == null) {
+      // Top-level await is only allowed in modules.
+      if (!NodeUtil.getEnclosingScript(n).getBooleanProp(Node.ES6_MODULE)) {
+        violation(AWAIT_NOT_WITHIN_ASYNC_FUNCTION, n);
+      }
+      return;
+    }
+
+    if (!parentFunction.isAsyncFunction()) {
+      violation(AWAIT_NOT_WITHIN_ASYNC_FUNCTION, n);
     } else if (isInParameterListOfFunction(n, parentFunction)) {
-      violation("'await' expression is not allowed in a parameter list", n);
+      violation(AWAIT_NOT_ALLOWED_IN_PARAMETER_LIST, n);
     }
   }
 
@@ -1437,6 +1451,7 @@ public final class AstValidator implements CompilerPass {
     validateEnhancedForVarOrAssignmentTarget(n, n.getFirstChild());
     validateExpression(n.getSecondChild());
     validateBlock(n.getLastChild());
+    validateAwaitWithinAsyncFunction(n);
   }
 
   private void validateEnhancedForVarOrAssignmentTarget(Node forNode, Node n) {

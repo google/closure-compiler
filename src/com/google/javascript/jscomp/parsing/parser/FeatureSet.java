@@ -306,6 +306,11 @@ public final class FeatureSet implements Serializable {
     // Note: Untranspilable.
     REGEXP_FLAG_D("RegExp flag 'd'", LangVersion.ES2022),
 
+    // ES 2022 adds https://github.com/tc39/proposal-top-level-await
+    // Note: Untranspilable. Needs to stay UNSUPPORTED because pass-through of top-level await does
+    // not make sense as we don't emit ES6 modules so top-level await cannot be used in the output.
+    TOP_LEVEL_AWAIT("Top-level await", LangVersion.ES_UNSUPPORTED),
+
     // ES_NEXT: Features that are fully supported, but part of a language version that is not yet
     // fully supported
 

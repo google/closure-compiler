@@ -159,17 +159,15 @@ import org.jspecify.annotations.Nullable;
 public class Parser {
   /** Indicates the type of function currently being parsed. */
   private enum FunctionFlavor {
-    NORMAL(false, false),
-    GENERATOR(true, false),
-    ASYNCHRONOUS(false, true),
-    ASYNCHRONOUS_GENERATOR(true, true);
+    NORMAL(false),
+    GENERATOR(true),
+    ASYNCHRONOUS(false),
+    ASYNCHRONOUS_GENERATOR(true);
 
     final boolean isGenerator;
-    final boolean isAsynchronous;
 
-    FunctionFlavor(boolean isGenerator, boolean isAsynchronous) {
+    FunctionFlavor(boolean isGenerator) {
       this.isGenerator = isGenerator;
-      this.isAsynchronous = isAsynchronous;
     }
   }
 
@@ -1398,10 +1396,6 @@ public class Parser {
   }
 
   private ParseTree parseForAwaitOfStatement(SourcePosition start, ParseTree initializer) {
-    // TODO(b/128938049): when top-level await is supported, this shouldn't be a parse error.
-    if (functionContextStack.isEmpty() || !functionContextStack.peekLast().isAsynchronous) {
-      reportError("'for-await-of' used in a non-async function context");
-    }
     eatPredefinedString(PredefinedName.OF);
     ParseTree collection = parseExpression();
     eat(TokenType.CLOSE_PAREN);

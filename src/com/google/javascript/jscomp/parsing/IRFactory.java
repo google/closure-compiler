@@ -195,6 +195,8 @@ class IRFactory {
   static final String UNEXPECTED_RETURN = "return must be inside function";
   static final String UNEXPECTED_YIELD = "yield must be inside generator function";
   static final String UNEXPECTED_AWAIT = "await must be inside asynchronous function";
+  static final String UNEXPECTED_FOR_AWAIT_OF =
+      "'for-await-of' used in a non-async function context";
   static final String UNEXPECTED_NEW_DOT_TARGET = "new.target must be inside a function";
   static final String UNDEFINED_LABEL = "undefined label \"%s\"";
 
@@ -465,7 +467,12 @@ class IRFactory {
   }
 
   private void validateAwait(Node n) {
-    if (!n.isAwait()) {
+    String errorMsg;
+    if (n.isAwait()) {
+      errorMsg = UNEXPECTED_AWAIT;
+    } else if (n.isForAwaitOf()) {
+      errorMsg = UNEXPECTED_FOR_AWAIT_OF;
+    } else {
       return;
     }
 
@@ -474,7 +481,7 @@ class IRFactory {
       // The await is in a class static block or a field initializer.
       // e.g. `class C { static { await y; } }` or `class C { x = await y; }`
       if ((parent.isBlock() || parent.isMemberFieldDef()) && parent.getParent().isClassMembers()) {
-        errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
+        errorReporter.error(errorMsg, sourceName, n.getLineno(), n.getCharno());
         return;
       }
       if (parent.isAsyncFunction()) {
@@ -484,11 +491,16 @@ class IRFactory {
         // The await is in a non-async function.
         // e.g. `function f() { return await 5; }`
         // nested function e.g. `async function f() { function f2() { return await 5; } }`
-        errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
+        errorReporter.error(errorMsg, sourceName, n.getLineno(), n.getCharno());
+        return;
+      }
+      if (parent.isScript() && parent.getBooleanProp(Node.ES6_MODULE)) {
+        // This is a valid top-level await in an ES module.
+        maybeWarnForFeature(n, Feature.TOP_LEVEL_AWAIT);
         return;
       }
     }
-    errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
+    errorReporter.error(errorMsg, sourceName, n.getLineno(), n.getCharno());
   }
 
   private void validateYield(Node n) {
