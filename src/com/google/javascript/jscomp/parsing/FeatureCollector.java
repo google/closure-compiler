@@ -42,13 +42,6 @@ public final class FeatureCollector {
     return contextFor(context, node);
   }
 
-  private void visitRecursive(FeatureContext context, Node n) {
-    @Nullable FeatureContext newContext = this.visitSingleNode(context, n);
-    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-      this.visitRecursive(newContext, child);
-    }
-  }
-
   private void recordScriptFeatures(FeatureContext context, Node node) {
     switch (node.getToken()) {
       case FUNCTION -> {
