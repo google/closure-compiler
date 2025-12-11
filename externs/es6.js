@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 The Closure Compiler Authors
+ * Copyright 2025 The Closure Compiler Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1041,6 +1041,39 @@ Uint32Array.of = function(var_args) {};
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
+ *     length
+ * @param {number=} opt_byteOffset
+ * @param {number=} opt_length
+ * @constructor
+ * @extends {TypedArray}
+ * @throws {Error}
+ * @modifies {arguments}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float16Array
+ */
+function Float16Array(length, opt_byteOffset, opt_length) {}
+
+/** @const {number} */
+Float16Array.BYTES_PER_ELEMENT;
+
+/**
+ * @param {string|!IArrayLike<number>|!Iterable<number>} source
+ * @param {function(this:S, ?, number): number=} mapFn
+ * @param {S=} thisArg
+ * @return {!Float16Array}
+ * @template S
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
+ */
+Float16Array.from = function(source, mapFn, thisArg) {};
+
+/**
+ * @param {...number} var_args
+ * @return {!Float16Array}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/of
+ */
+Float16Array.of = function(var_args) {};
+
+/**
+ * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
  *     length or array or buffer
  *     NOTE: We require that at least this first argument be present even though
  *         the ECMAScript spec allows it to be absent, because this is better
@@ -1315,6 +1348,15 @@ DataView.prototype.getUint32 = function(byteOffset, opt_littleEndian) {};
  * @param {boolean=} opt_littleEndian
  * @return {number}
  * @throws {Error}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getFloat16
+ */
+DataView.prototype.getFloat16 = function(byteOffset, opt_littleEndian) {};
+
+/**
+ * @param {number} byteOffset
+ * @param {boolean=} opt_littleEndian
+ * @return {number}
+ * @throws {Error}
  */
 DataView.prototype.getFloat32 = function(byteOffset, opt_littleEndian) {};
 
@@ -1393,6 +1435,16 @@ DataView.prototype.setInt32 = function(byteOffset, value, opt_littleEndian) {};
  * @return {undefined}
  */
 DataView.prototype.setUint32 = function(byteOffset, value, opt_littleEndian) {};
+
+/**
+ * @param {number} byteOffset
+ * @param {number} value
+ * @param {boolean=} opt_littleEndian
+ * @throws {Error}
+ * @return {undefined}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setFloat16
+ */
+DataView.prototype.setFloat16 = function(byteOffset, value, opt_littleEndian) {};
 
 /**
  * @param {number} byteOffset
