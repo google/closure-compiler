@@ -79,6 +79,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
   private static final String UNEXPECTED_YIELD = "yield must be inside generator function";
 
   private static final String UNEXPECTED_AWAIT = "await must be inside asynchronous function";
+  private static final String UNEXPECTED_FOR_AWAIT_OF =
+      "'for-await-of' used in a non-async function context";
 
   private static final String UNDEFINED_LABEL = "undefined label";
 
@@ -88,6 +90,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
       Removing this from your code is safe for all browsers currently in use.\
       """;
   private static final String INVALID_ASSIGNMENT_TARGET = "invalid assignment target";
+  private static final String INVALID_FOR_AWAIT_INIT =
+      "for-await-of statement may not have initializer";
+  private static final String INVALID_FOR_AWAIT_MULT_DECLS =
+      "for-await-of statement may not have more than one variable declaration";
 
   private static final String SEMICOLON_EXPECTED = "Semi-colon expected";
 
@@ -6721,15 +6727,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testAwaitInClassStaticBlock() {
-    parseError("class C {static {await 1;}}", UNEXPECTED_AWAIT);
-    parseError("async function f() {class C{ static {await 1;}}}", UNEXPECTED_AWAIT);
-    parse("class C{ static {async function f() {await 1;}}}");
-    parseError("async () => {class C{ static {await 1;}}}", UNEXPECTED_AWAIT);
-    parse("class C{ static {async ()=>{await 1;}}}");
-  }
-
-  @Test
   public void testClassStaticBlock_this() {
     // multiple fields
     parse(
@@ -7223,21 +7220,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testInvalidAwait() {
-    parseError("await 15;", UNEXPECTED_AWAIT);
-    parseError("function f() { return await 5; }", UNEXPECTED_AWAIT);
-    parseError(
-        "async function f(x = await 15) { return x; }",
-        "`await` is illegal in parameter default value.");
-  }
-
-  @Test
-  public void testInvalidAwaitInsideNestedFunction() {
-    parse("async function f() { async function f2() { return await 5; } }");
-    parseError("async function f() { function f2() { return await 5; } }", UNEXPECTED_AWAIT);
-  }
-
-  @Test
   public void testAsyncFunction() {
     String asyncFunctionExpressionSource = "f = async function() {};";
     String asyncFunctionDeclarationSource = "async function f() {}";
@@ -7348,18 +7330,180 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testAwaitExpression() {
+  public void testAwait_inFunctions() {
     expectFeatures(Feature.ASYNC_FUNCTIONS);
-    parse("async function f(p){await p}");
-    parse("f = async function(p){await p}");
-    parse("f = async(p)=>await p");
-    parse("class C{async m(p){await p}}");
-    parse("class C{static async m(p){await p}}");
+    parse("async function f(p) { await p }");
+    parse("async function f(p) { async function f2() { await p; } }");
+    parse("f = async function(p) { await p }");
+    parse("f = async(p) => await p");
+    parse("class C{ async m(p) { await p }}");
+    parse("class C{ static async m(p) { await p }}");
   }
 
   @Test
-  public void testAwaitExpressionInvalid() {
+  public void testAwait_inMethods() {
+    parse("class C { async method() { await 2; } }");
+    parse("const x = { async method() { await 2; } }");
+  }
+
+  @Test
+  public void testAwait_inObjectLiteralComputedPropertyName() {
+    parse("async function f() { return { [await 1]: 1 }; }");
+    parse("async function f() { return { [await 2]() {} }; }");
+    parse("async function f() { return { *[await 3]() {} }; }");
+    parse("async function f() { return { async [await 4]() {} }; }");
+    parse("async function f() { return { async *[await 5]() {} }; }");
+    parse("async function f() { return { get [await 6]() {} }; }");
+    parse("async function f() { return { set [await 7](x) {} }; }");
+
+    parse("const f = async () => ({ [await 8]: 1 });");
+  }
+
+  @Test
+  public void testAwait_inClassComputedPropertyName() {
+    // TODO: b/467766138 - await within computed property names should be valid.
+    parseError("async function f() { return class { [await 1] = 1 }; }", UNEXPECTED_AWAIT);
+    parseError("async function f() { return class { [await 2]() {} }; }", UNEXPECTED_AWAIT);
+    parseError("async function f() { return class { *[await 3]() {} }; }", UNEXPECTED_AWAIT);
+    parseError("async function f() { return class { async [await 4]() {} }; }", UNEXPECTED_AWAIT);
+    parseError("async function f() { return class { async *[await 5]() {} }; }", UNEXPECTED_AWAIT);
+    parseError("async function f() { return class { get [await 6]() {} }; }", UNEXPECTED_AWAIT);
+    parseError("async function f() { return class { set [await 7](x) {} }; }", UNEXPECTED_AWAIT);
+
+    parseError("const f = async () => class { [await 8] = 1 };", UNEXPECTED_AWAIT);
+  }
+
+  @Test
+  public void testAwait_invalid_missingExpression() {
     parseError("async function f() { await; }", "primary expression expected");
+  }
+
+  @Test
+  public void testAwait_invalid_nonAsyncFunction() {
+    parseError("function f() { return await 5; }", UNEXPECTED_AWAIT);
+    parseError("async function f() { function f2() { return await 5; } }", UNEXPECTED_AWAIT);
+  }
+
+  @Test
+  public void testAwait_invalid_nonAsyncMethod() {
+    parseError("class C { method() { await 1; } }", UNEXPECTED_AWAIT);
+    parseError("const x = { method() { await 2; } }", UNEXPECTED_AWAIT);
+  }
+
+  @Test
+  public void testAwait_invalid_defaultParameter() {
+    parseError(
+        "async function f(x = await 15) { return x; }",
+        "`await` is illegal in parameter default value.");
+  }
+
+  @Test
+  public void testAwait_invalid_inClassStaticBlock() {
+    parseError("class C { static { await 1; } }", UNEXPECTED_AWAIT);
+    parseError("async function f() { class C { static { await 1; } } }", UNEXPECTED_AWAIT);
+    parseError("async () => { class C { static { await 1; } } }", UNEXPECTED_AWAIT);
+
+    // Double check that await in this position nested within an async function is valid.
+    parse("class C { static { async function f() { await 1; } } }");
+    parse("class C { static { async () => { await 1; } } }");
+  }
+
+  @Test
+  public void testAwait_invalid_inClassFieldInitializer() {
+    parseError("class C { f = await 1; }", UNEXPECTED_AWAIT);
+    parseError("class C { static f = await 1; }", UNEXPECTED_AWAIT);
+    parseError("async function f() { class C { static f = await 1; } }", UNEXPECTED_AWAIT);
+    parseError("async () => { class C { static f = await 1; } }", UNEXPECTED_AWAIT);
+
+    // Double check that await in this position nested within an async function is valid.
+    parse("class C { static f = async function f() { await 1; } }");
+    parse("class C { static f = async () => { await 1; } }");
+  }
+
+  @Test
+  public void testAwait_inClassMethods() {
+    parseError("class C { method() { await 1; } }", UNEXPECTED_AWAIT);
+
+    parse("class C { async method() { await 2; } }");
+  }
+
+  @Test
+  public void testAwait_invalid_topLevel() {
+    // TODO: b/461869370 - Support top-level await in ES module.
+    parseError("export const x = await 15;", UNEXPECTED_AWAIT);
+  }
+
+  @Test
+  public void testAwait_invalid_topLevelInObjectLiteralComputedPropertyName() {
+    // TODO: b/461869370 - Support top-level await in computed property name.
+    parseError("export const x = { [await 1]: 1 };", UNEXPECTED_AWAIT);
+    parseError("export const x = { [await 2]() {} };", UNEXPECTED_AWAIT);
+    parseError("export const x = { *[await 3]() {} };", UNEXPECTED_AWAIT);
+    parseError("export const x = { async [await 4]() {} };", UNEXPECTED_AWAIT);
+    parseError("export const x = { async *[await 5]() {} };", UNEXPECTED_AWAIT);
+    parseError("export const x = { get [await 6]() {} };", UNEXPECTED_AWAIT);
+    parseError("export const x = { set [await 7](x) {} };", UNEXPECTED_AWAIT);
+  }
+
+  @Test
+  public void testAwait_invalid_topLevelAwaitInClassComputedPropertyName() {
+    // TODO: b/467766138 - await within computed property names should be valid.
+    // TODO: b/461869370 - Support top-level await in computed property name.
+    parseError("export class C { [await 1] = 1 };", UNEXPECTED_AWAIT);
+    parseError("export class C { [await 2]() {} };", UNEXPECTED_AWAIT);
+    parseError("export class C { *[await 3]() {} };", UNEXPECTED_AWAIT);
+    parseError("export class C { async [await 4]() {} };", UNEXPECTED_AWAIT);
+    parseError("export class C { async *[await 5]() {} };", UNEXPECTED_AWAIT);
+    parseError("export class C { get [await 6]() {} };", UNEXPECTED_AWAIT);
+    parseError("export class C { set [await 7](x) {} };", UNEXPECTED_AWAIT);
+
+    parseError("export class C { [await 8] = 1 };", UNEXPECTED_AWAIT);
+  }
+
+  @Test
+  public void testForAwaitOf_inFunctions() {
+    strictMode = SLOPPY;
+
+    expectFeatures(Feature.FOR_AWAIT_OF);
+    parse("async () => { for await (a of b) c;}");
+    parse("async () => { for await (var a of b) c;}");
+    parse("async () => { for await (a.x of b) c;}");
+    parse("async () => { for await ([a1, a2, a3] of b) c;}");
+    parse("async () => { for await (const {x, y, z} of b) c;}");
+    // default value inside a pattern isn't an initializer
+    parse("async () => { for await (const {x, y = 2, z} of b) c;}");
+    expectFeatures(Feature.FOR_AWAIT_OF, Feature.LET_DECLARATIONS);
+    parse("async () => { for await (let a of b) c;}");
+    expectFeatures(Feature.FOR_AWAIT_OF, Feature.CONST_DECLARATIONS);
+    parse("async () => { for await (const a of b) c;}");
+  }
+
+  @Test
+  public void testForAwaitOf_invalid_declWithInitializer() {
+    strictMode = SLOPPY;
+
+    parseError("async () => { for await (a = 1 of b) c;}", INVALID_ASSIGNMENT_TARGET);
+    parseError("async () => { for await (var a = 1 of b) c;}", INVALID_FOR_AWAIT_INIT);
+    parseError("async () => { for await (let a = 1 of b) c;}", INVALID_FOR_AWAIT_INIT);
+    parseError("async () => { for await (const a = 1 of b) c;}", INVALID_FOR_AWAIT_INIT);
+    parseError("async () => { for await (let {a} = {} of b) c;}", INVALID_FOR_AWAIT_INIT);
+  }
+
+  @Test
+  public void testForAwaitOf_invalid_multipleDecls() {
+    strictMode = SLOPPY;
+
+    parseError("async () => { for await (a, b of c) d;}", INVALID_ASSIGNMENT_TARGET);
+
+    parseError("async () => { for await (var a, b of c) d;}", INVALID_FOR_AWAIT_MULT_DECLS);
+    parseError("async () => { for await (let a, b of c) d;}", INVALID_FOR_AWAIT_MULT_DECLS);
+    parseError("async () => { for await (const a, b of c) d;}", INVALID_FOR_AWAIT_MULT_DECLS);
+  }
+
+  @Test
+  public void testForAwaitOf_invalid_topLevel() {
+    // TODO: b/461869370 - Support top-level await in ES module.
+    parseError("export const x = 1; for await (let a of b) foo();", UNEXPECTED_FOR_AWAIT_OF);
   }
 
   @Test
@@ -7529,65 +7673,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
     strictMode = SLOPPY;
 
     parseError("for(a, b of c) d;", INVALID_ASSIGNMENT_TARGET);
-  }
-
-  @Test
-  public void testValidForAwaitOf() {
-    strictMode = SLOPPY;
-
-    expectFeatures(Feature.FOR_AWAIT_OF);
-    parse("async () => { for await(a of b) c;}");
-    parse("async () => { for await(var a of b) c;}");
-    parse("async () => { for await (a.x of b) c;}");
-    parse("async () => { for await ([a1, a2, a3] of b) c;}");
-    parse("async () => { for await (const {x, y, z} of b) c;}");
-    // default value inside a pattern isn't an initializer
-    parse("async () => { for await (const {x, y = 2, z} of b) c;}");
-    expectFeatures(Feature.FOR_AWAIT_OF, Feature.LET_DECLARATIONS);
-    parse("async () => { for await(let a of b) c;}");
-    expectFeatures(Feature.FOR_AWAIT_OF, Feature.CONST_DECLARATIONS);
-    parse("async () => { for await(const a of b) c;}");
-  }
-
-  @Test
-  public void testInvalidForAwaitOfInitializers() {
-    strictMode = SLOPPY;
-
-    parseError("async () => { for await (a=1 of b) c;}", INVALID_ASSIGNMENT_TARGET);
-    parseError(
-        "async () => { for await (var a=1 of b) c;}",
-        "for-await-of statement may not have initializer");
-    parseError(
-        "async () => { for await (let a=1 of b) c;}",
-        "for-await-of statement may not have initializer");
-    parseError(
-        "async () => { for await (const a=1 of b) c;}",
-        "for-await-of statement may not have initializer");
-    parseError(
-        "async () => { for await (let {a} = {} of b) c;}",
-        "for-await-of statement may not have initializer");
-  }
-
-  @Test
-  public void testInvalidForAwaitOfMultipleInitializerTargets() {
-    strictMode = SLOPPY;
-
-    parseError("async () => { for await (a, b of c) d;}", INVALID_ASSIGNMENT_TARGET);
-
-    parseError(
-        "async () => { for await (var a, b of c) d;}",
-        "for-await-of statement may not have more than one variable declaration");
-    parseError(
-        "async () => { for await (let a, b of c) d;}",
-        "for-await-of statement may not have more than one variable declaration");
-    parseError(
-        "async () => { for await (const a, b of c) d;}",
-        "for-await-of statement may not have more than one variable declaration");
-  }
-
-  @Test
-  public void testInvalidForAwaitOf() {
-    parseError("for await (a of b) foo();", "'for-await-of' used in a non-async function context");
   }
 
   @Test
