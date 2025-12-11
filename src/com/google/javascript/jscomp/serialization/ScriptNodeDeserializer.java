@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.serialization;
 
+import static java.util.Collections.unmodifiableList;
+
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.SourceFile;
@@ -29,6 +31,8 @@ import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.ExtensionRegistry;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -73,10 +77,13 @@ final class ScriptNodeDeserializer {
         CodedInputStream astStream = this.owner().scriptBytes.newCodedInput();
         astStream.setRecursionLimit(Integer.MAX_VALUE); // The real limit is stack space.
 
+        ArrayList<FeatureContext> contextStack = new ArrayList<>();
+        contextStack.addLast(FeatureContext.NONE);
+
         Node scriptNode =
             this.visit(
                 AstNode.parseFrom(astStream, ExtensionRegistry.getEmptyRegistry()),
-                FeatureCollector.FeatureContext.NONE,
+                contextStack,
                 this.owner().createSourceInfoTemplate(this.owner().sourceFile));
         scriptNode.putProp(Node.FEATURE_SET, featureCollector.allFeatures());
         return scriptNode;
@@ -89,8 +96,18 @@ final class ScriptNodeDeserializer {
       return ScriptNodeDeserializer.this;
     }
 
+    /**
+     * Visits a single AST node and returns the corresponding Node.
+     *
+     * @param astNode The AST node to visit.
+     * @param contextStack The context stack to use for the node. If feature collection should not
+     *     occur, this should be null.
+     * @param sourceFileTemplate A template node to use for the node.
+     */
     private Node visit(
-        AstNode astNode, @Nullable FeatureContext context, @Nullable Node sourceFileTemplate) {
+        AstNode astNode,
+        @Nullable List<FeatureContext> contextStack,
+        @Nullable Node sourceFileTemplate) {
       if (sourceFileTemplate == null || astNode.getSourceFile() != 0) {
         // 0 == 'not set'
         sourceFileTemplate =
@@ -114,7 +131,11 @@ final class ScriptNodeDeserializer {
       n.setLinenoCharno(currentLine, currentColumn);
       this.previousLine = currentLine;
       this.previousColumn = currentColumn;
-      @Nullable FeatureContext newContext = this.featureCollector.visitSingleNode(context, n);
+      if (contextStack != null) {
+        // Note: We use unmodifiableList() instead of ImmutableList for performance reasons.
+        contextStack.addLast(
+            this.featureCollector.visitSingleNode(unmodifiableList(contextStack), n));
+      }
 
       if (Node.hasBitSet(properties, NodeProperty.CLOSURE_UNAWARE_SHADOW.getNumber())) {
         AstNode serializedShadowChild = astNode.getChild(0);
@@ -143,9 +164,13 @@ final class ScriptNodeDeserializer {
 
       for (int i = 0; i < children; i++) {
         AstNode child = astNode.getChild(i);
-        Node deserializedChild = this.visit(child, newContext, sourceFileTemplate);
+        Node deserializedChild = this.visit(child, contextStack, sourceFileTemplate);
         n.addChildToBack(deserializedChild);
         this.owner().setOriginalNameIfPresent(child, deserializedChild);
+      }
+
+      if (contextStack != null) {
+        contextStack.removeLast();
       }
 
       return n;

@@ -16,10 +16,12 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
-import org.jspecify.annotations.Nullable;
+import java.util.List;
 
 /**
  * Class that deserializes an AstNode-tree representing a SCRIPT into a Node-tree.
@@ -35,14 +37,23 @@ public final class FeatureCollector {
     return scriptFeatures;
   }
 
-  public @Nullable FeatureContext visitSingleNode(@Nullable FeatureContext context, Node node) {
-    if (context != null) {
-      recordScriptFeatures(context, node);
-    }
-    return contextFor(context, node);
+  /**
+   * Records features for a single node.
+   *
+   * @param contextStack Ancestor node contexts. Last is the parent of node.
+   * @param node The node to visit.
+   */
+  public FeatureContext visitSingleNode(List<FeatureContext> contextStack, Node node) {
+    checkState(
+        contextStack.size() >= 1,
+        "The provided feature context stack was empty. It must have at least one element.");
+
+    recordScriptFeatures(contextStack, node);
+    return contextFor(contextStack, node);
   }
 
-  private void recordScriptFeatures(FeatureContext context, Node node) {
+  private void recordScriptFeatures(List<FeatureContext> contextStack, Node node) {
+    FeatureContext parentContext = contextStack.getLast();
     switch (node.getToken()) {
       case FUNCTION -> {
         if (node.isAsyncGeneratorFunction()) {
@@ -58,46 +69,46 @@ public final class FeatureCollector {
           addScriptFeature(Feature.GENERATORS);
         }
 
-        if (context.equals(FeatureContext.BLOCK_SCOPE)) {
+        if (parentContext.equals(FeatureContext.BLOCK_SCOPE)) {
           scriptFeatures = scriptFeatures.with(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
         }
       }
       case PARAM_LIST, CALL, NEW -> {}
       case STRING_KEY -> {
-        if (node.isShorthandProperty() && context.equals(FeatureContext.OBJECT_LITERAL)) {
+        if (node.isShorthandProperty() && parentContext.equals(FeatureContext.OBJECT_LITERAL)) {
           addScriptFeature(Feature.SHORTHAND_OBJECT_PROPERTIES);
         }
       }
       case DEFAULT_VALUE -> {
-        if (context.equals(FeatureContext.PARAM_LIST)) {
+        if (parentContext.equals(FeatureContext.PARAM_LIST)) {
           addScriptFeature(Feature.DEFAULT_PARAMETERS);
         }
       }
       case GETTER_DEF -> {
         addScriptFeature(Feature.GETTER);
-        if (context.equals(FeatureContext.CLASS_MEMBERS)) {
+        if (parentContext.equals(FeatureContext.CLASS_MEMBERS)) {
           addScriptFeature(Feature.CLASS_GETTER_SETTER);
         }
       }
       case REGEXP -> addScriptFeature(Feature.REGEXP_SYNTAX);
       case SETTER_DEF -> {
         addScriptFeature(Feature.SETTER);
-        if (context.equals(FeatureContext.CLASS_MEMBERS)) {
+        if (parentContext.equals(FeatureContext.CLASS_MEMBERS)) {
           addScriptFeature(Feature.CLASS_GETTER_SETTER);
         }
       }
       case BLOCK -> {
-        if (context.equals(FeatureContext.CLASS_MEMBERS)) {
+        if (parentContext.equals(FeatureContext.CLASS_MEMBERS)) {
           addScriptFeature(Feature.CLASS_STATIC_BLOCK);
         }
       }
       case EMPTY -> {
-        if (context.equals(FeatureContext.CATCH)) {
+        if (parentContext.equals(FeatureContext.CATCH)) {
           addScriptFeature(Feature.OPTIONAL_CATCH_BINDING);
         }
       }
       case ITER_REST -> {
-        if (context.equals(FeatureContext.PARAM_LIST)) {
+        if (parentContext.equals(FeatureContext.PARAM_LIST)) {
           addScriptFeature(Feature.REST_PARAMETERS);
         } else {
           addScriptFeature(Feature.ARRAY_PATTERN_REST);
@@ -114,7 +125,7 @@ public final class FeatureCollector {
         addScriptFeature(Feature.COMPUTED_PROPERTIES);
         boolean isGetter = node.getBooleanProp(Node.COMPUTED_PROP_GETTER);
         boolean isSetter = node.getBooleanProp(Node.COMPUTED_PROP_SETTER);
-        boolean isClassMember = context.equals(FeatureContext.CLASS_MEMBERS);
+        boolean isClassMember = parentContext.equals(FeatureContext.CLASS_MEMBERS);
         if (isGetter) {
           addScriptFeature(Feature.GETTER);
         } else if (isSetter) {
@@ -153,13 +164,12 @@ public final class FeatureCollector {
   }
 
   /**
-   * Parent context of a node while deserializing, specifically for the purpose of tracking {@link
+   * Context of a node while deserializing, specifically for the purpose of tracking {@link
    * com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature}
    *
-   * <p>This models only the direct parent of a node. e.g. nested nodes within a function body
-   * should not have the FUNCTION context. Only direct children of the function would. The intent is
-   * to have a way to model the parent Node of a node being visited before the AST is fully built,
-   * as the parent pointer may not have been instantiated yet.
+   * <p>These contexts are pushed onto a stack as the AST is traversed. The intent is to have a way
+   * to model the ancestry of a node being visited before the AST is fully built, as parent pointers
+   * may not have been instantiated yet.
    */
   public static enum FeatureContext {
     PARAM_LIST,
@@ -174,11 +184,7 @@ public final class FeatureCollector {
     NONE;
   }
 
-  private static @Nullable FeatureContext contextFor(
-      @Nullable FeatureContext parentContext, Node node) {
-    if (parentContext == null) {
-      return null;
-    }
+  private static FeatureContext contextFor(List<FeatureContext> contextStack, Node node) {
     return switch (node.getToken()) {
       case PARAM_LIST -> FeatureContext.PARAM_LIST;
       case CLASS_MEMBERS -> FeatureContext.CLASS_MEMBERS;
@@ -187,7 +193,7 @@ public final class FeatureCollector {
       case BLOCK ->
           // a function body is not a block scope - BLOCK is just overloaded. all other references
           // to BLOCK are block scopes.
-          parentContext.equals(FeatureContext.FUNCTION)
+          contextStack.getLast().equals(FeatureContext.FUNCTION)
               ? FeatureContext.NONE
               : FeatureContext.BLOCK_SCOPE;
       case FUNCTION -> FeatureContext.FUNCTION;
