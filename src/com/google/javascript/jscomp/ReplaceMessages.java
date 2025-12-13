@@ -87,17 +87,12 @@ public final class ReplaceMessages {
     return new MsgProtectionPass();
   }
 
-  interface MsgProtectionData {
-    JsMessage getMessage();
-
-    Node getMessageNode();
-
-    Node getTemplateTextNode();
-
-    @Nullable Node getPlaceholderValuesNode();
-
-    MsgOptions getMessageOptions();
-  }
+  record MsgProtectionData(
+      JsMessage message,
+      Node messageNode,
+      Node templateTextNode,
+      @Nullable Node placeholderValuesNode,
+      MsgOptions messageOptions) {}
 
   class MsgProtectionPass extends JsMessageVisitor {
 
@@ -119,33 +114,13 @@ public final class ReplaceMessages {
     @Override
     protected void processIcuTemplateDefinition(IcuTemplateDefinition definition) {
       performMessageProtection(
-          new MsgProtectionData() {
-            @Override
-            public JsMessage getMessage() {
-              return definition.getMessage();
-            }
-
-            @Override
-            public Node getMessageNode() {
-              return definition.getMessageNode();
-            }
-
-            @Override
-            public Node getTemplateTextNode() {
-              return definition.getTemplateTextNode();
-            }
-
-            @Override
-            public @Nullable Node getPlaceholderValuesNode() {
+          new MsgProtectionData(
+              /* message= */ definition.getMessage(),
+              /* messageNode= */ definition.getMessageNode(),
+              /* templateTextNode= */ definition.getTemplateTextNode(),
               // There are no compile-time placeholder replacements for ICU templates
-              return null;
-            }
-
-            @Override
-            public MsgOptions getMessageOptions() {
-              return ICU_MSG_OPTIONS;
-            }
-          });
+              /* placeholderValuesNode= */ null,
+              /* messageOptions= */ ICU_MSG_OPTIONS));
     }
 
     @Override
@@ -153,40 +128,20 @@ public final class ReplaceMessages {
       // This is the currently preferred form.
       // `MSG_A = goog.getMsg('hello, {$name}', {name: getName()}, {html: true})`
       performMessageProtection(
-          new MsgProtectionData() {
-            @Override
-            public JsMessage getMessage() {
-              return definition.getMessage();
-            }
-
-            @Override
-            public Node getMessageNode() {
-              return definition.getMessageNode();
-            }
-
-            @Override
-            public Node getTemplateTextNode() {
-              return definition.getTemplateTextNode();
-            }
-
-            @Override
-            public @Nullable Node getPlaceholderValuesNode() {
-              return definition.getPlaceholderValuesNode();
-            }
-
-            @Override
-            public MsgOptions getMessageOptions() {
-              return getMsgOptionsFromDefinition(definition);
-            }
-          });
+          new MsgProtectionData(
+              /* message= */ definition.getMessage(),
+              /* messageNode= */ definition.getMessageNode(),
+              /* templateTextNode= */ definition.getTemplateTextNode(),
+              /* placeholderValuesNode= */ definition.getPlaceholderValuesNode(),
+              /* messageOptions= */ getMsgOptionsFromDefinition(definition)));
     }
 
     private void performMessageProtection(MsgProtectionData msgProtectionData) {
-      final JsMessage message = msgProtectionData.getMessage();
-      final Node callNode = msgProtectionData.getMessageNode();
-      final Node originalMessageString = msgProtectionData.getTemplateTextNode();
-      final Node placeholdersNode = msgProtectionData.getPlaceholderValuesNode();
-      final MsgOptions msgOptions = msgProtectionData.getMessageOptions();
+      final JsMessage message = msgProtectionData.message();
+      final Node callNode = msgProtectionData.messageNode();
+      final Node originalMessageString = msgProtectionData.templateTextNode();
+      final Node placeholdersNode = msgProtectionData.placeholderValuesNode();
+      final MsgOptions msgOptions = msgProtectionData.messageOptions();
 
       checkState(callNode.isCall(), callNode);
       // `goog.getMsg('message string', {<substitutions>}, {<options>})`
@@ -261,22 +216,10 @@ public final class ReplaceMessages {
   }
 
   private MsgOptions getMsgOptionsFromDefinition(JsMessageDefinition definition) {
-    return new MsgOptions() {
-      @Override
-      public boolean isIcuTemplate() {
-        return false;
-      }
-
-      @Override
-      public boolean escapeLessThan() {
-        return definition.shouldEscapeLessThan();
-      }
-
-      @Override
-      public boolean unescapeHtmlEntities() {
-        return definition.shouldUnescapeHtmlEntities();
-      }
-    };
+    return new MsgOptions(
+        /* isIcuTemplate= */ false,
+        /* escapeLessThan= */ definition.shouldEscapeLessThan(),
+        /* unescapeHtmlEntities= */ definition.shouldUnescapeHtmlEntities());
   }
 
   private Node createMsgPropertiesNode(JsMessage message, MsgOptions msgOptions) {
@@ -541,15 +484,11 @@ public final class ReplaceMessages {
     return new FullReplacementPass();
   }
 
-  interface FullReplacementMsgData {
-    JsMessage getMessage();
-
-    Node getMessageNode();
-
-    MsgOptions getMessageOptions();
-
-    ImmutableMap<String, Node> getPlaceholderValueMap();
-  }
+  record FullReplacementMsgData(
+      JsMessage message,
+      Node messageNode,
+      MsgOptions messageOptions,
+      ImmutableMap<String, Node> placeholderValueMap) {}
 
   class FullReplacementPass extends JsMessageVisitor {
 
@@ -575,62 +514,30 @@ public final class ReplaceMessages {
     @Override
     protected void processIcuTemplateDefinition(IcuTemplateDefinition definition) {
       processFullReplacement(
-          new FullReplacementMsgData() {
-            @Override
-            public JsMessage getMessage() {
-              return definition.getMessage();
-            }
-
-            @Override
-            public Node getMessageNode() {
-              return definition.getMessageNode();
-            }
-
-            @Override
-            public MsgOptions getMessageOptions() {
-              return ICU_MSG_OPTIONS;
-            }
-
-            @Override
-            public ImmutableMap<String, Node> getPlaceholderValueMap() {
+          new FullReplacementMsgData(
+              /* message= */ definition.getMessage(),
+              /* messageNode= */ definition.getMessageNode(),
+              /* messageOptions= */ ICU_MSG_OPTIONS,
               // There are no compile-time placeholder replacements for an ICU template message.
-              return ImmutableMap.of();
-            }
-          });
+              /* placeholderValueMap= */ ImmutableMap.of()));
     }
 
     @Override
     protected void processJsMessageDefinition(JsMessageDefinition definition) {
       processFullReplacement(
-          new FullReplacementMsgData() {
-            @Override
-            public JsMessage getMessage() {
-              return definition.getMessage();
-            }
-
-            @Override
-            public Node getMessageNode() {
-              return definition.getMessageNode();
-            }
-
-            @Override
-            public MsgOptions getMessageOptions() {
-              return getMsgOptionsFromDefinition(definition);
-            }
-
-            @Override
-            public ImmutableMap<String, Node> getPlaceholderValueMap() {
-              return definition.getPlaceholderValueMap();
-            }
-          });
+          new FullReplacementMsgData(
+              /* message= */ definition.getMessage(),
+              /* messageNode= */ definition.getMessageNode(),
+              /* messageOptions= */ getMsgOptionsFromDefinition(definition),
+              /* placeholderValueMap= */ definition.getPlaceholderValueMap()));
     }
 
     private void processFullReplacement(FullReplacementMsgData fullReplacementMsgData) {
-      final JsMessage message = fullReplacementMsgData.getMessage();
-      final Node msgNode = fullReplacementMsgData.getMessageNode();
-      final MsgOptions options = fullReplacementMsgData.getMessageOptions();
+      final JsMessage message = fullReplacementMsgData.message();
+      final Node msgNode = fullReplacementMsgData.messageNode();
+      final MsgOptions options = fullReplacementMsgData.messageOptions();
       final ImmutableMap<String, Node> placeholderValueMap =
-          fullReplacementMsgData.getPlaceholderValueMap();
+          fullReplacementMsgData.placeholderValueMap();
 
       // Get the replacement.
       JsMessage replacement = lookupMessage(msgNode, bundle, message);
@@ -680,10 +587,8 @@ public final class ReplaceMessages {
    * }</pre>
    */
   private Node createNodeForGenderedMsgString(
-      Node nodeToReplace,
-      JsMessage msgToUse,
-      Map<String, Node> placeholderMap,
-      MsgOptions options) {
+      JsMessage message, Map<String, Node> placeholderMap, MsgOptions options, Node nodeToReplace)
+      throws MalformedException {
 
     // Dynamically build parameter list with unique ids for each placeholder
     Node paramList = astFactory.createParamList();
@@ -701,7 +606,7 @@ public final class ReplaceMessages {
 
     Node hookExpression =
         createHookExpressionForGenderedMsg(
-            type, msgToUse, options, nodeToReplace, placeholderMapIds);
+            type, message, options, nodeToReplace, placeholderMapIds);
 
     if (placeholderMap.isEmpty()) {
       // The translated message read from the bundle is one of the following:
@@ -784,12 +689,21 @@ public final class ReplaceMessages {
       JsMessage msg,
       MsgOptions options,
       Node nodeToReplace,
-      Map<String, String> placeholderMapIds) {
+      Map<String, String> placeholderMapIds)
+      throws MalformedException {
 
     Node hookHead = IR.hook(IR.name(""), IR.string(""), IR.string(""));
     hookHead.setColor(nodeToReplace.getColor());
     // The previous hook condition needing to be replaced
     Node placeholderHook = hookHead;
+
+    PlaceholderNodeProvider placeholderNodeProvider =
+        (placeholderName) -> {
+          String placeholderId = placeholderMapIds.get(placeholderName);
+          return placeholderId != null
+              ? astFactory.createName(placeholderId, type(nodeToReplace))
+              : null;
+        };
 
     for (JsMessage.GrammaticalGenderCase grammaticalGender : msg.getGenderedMessageVariants()) {
       // Skip the OTHER case as it should be the last case in the hook expression
@@ -804,11 +718,12 @@ public final class ReplaceMessages {
       Node currentHook =
           IR.hook(
               condition,
-              getMsgPartsNode(
+              buildMessageNode(
                   msg.getGenderedMessageParts(grammaticalGender),
                   options,
                   nodeToReplace,
-                  placeholderMapIds),
+                  placeholderNodeProvider,
+                  /* isGenderedMsg= */ true),
               astFactory.createString(""));
       currentHook.setColor(nodeToReplace.getColor());
 
@@ -827,32 +742,63 @@ public final class ReplaceMessages {
         .getParent()
         .getLastChild()
         .replaceWith(
-            getMsgPartsNode(
+            buildMessageNode(
                 msg.getGenderedMessageParts(JsMessage.GrammaticalGenderCase.OTHER),
                 options,
                 nodeToReplace,
-                placeholderMapIds));
+                placeholderNodeProvider,
+                /* isGenderedMsg= */ true));
     return hookHead;
   }
 
-  /** Returns a node representing the message parts for a corresponding gender. */
-  private Node getMsgPartsNode(
+  interface PlaceholderNodeProvider {
+    @Nullable Node get(String placeholderName);
+  }
+
+  /**
+   * Creates a parse tree corresponding to a list of message parts. The result consists of one or
+   * more STRING nodes, placeholder replacement value nodes (which can be arbitrary expressions),
+   * and ADD nodes.
+   *
+   * @param msgParts the parts of the message to build
+   * @param options message escaping options
+   * @param nodeToReplace the original node being replaced (for context)
+   * @param placeholderNodeProvider a function that provides the value Node for a given placeholder
+   *     name
+   * @param isGenderedMsg whether this message is part of a gendered message structure
+   * @return the root of the constructed parse tree
+   */
+  private Node buildMessageNode(
       List<Part> msgParts,
       MsgOptions options,
       Node nodeToReplace,
-      Map<String, String> placeholderMapIds) {
+      PlaceholderNodeProvider placeholderNodeProvider,
+      boolean isGenderedMsg)
+      throws MalformedException {
+
+    // A message might have normal string parts that are consecutive.
+    // Join them together before processing them further. This allows split HTML entities
+    // to be escaped.
+    List<Part> parts = mergeStringParts(msgParts);
+    if (parts.isEmpty()) {
+      return astFactory.createString("");
+    }
     Node message = null;
-    for (Part msgPart : msgParts) {
+    for (Part msgPart : parts) {
       final Node partNode;
       if (msgPart.isPlaceholder()) {
-        // `placeholderMapIds` contains only the placeholders from traditional goog.getMsg() calls.
-        // If a placeholder name is not found in this map, it is assumed to be an ICU placeholder.
-        String placeholderId = placeholderMapIds.get(msgPart.getJsPlaceholderName());
-        if (placeholderId == null) {
-          // Add the ICU placeholder directly to the message ex: 'Hello {NAME}'
-          partNode = astFactory.createString("{" + msgPart.getCanonicalPlaceholderName() + "}");
+        String jsPlaceholderName = msgPart.getJsPlaceholderName();
+        Node valueNode = placeholderNodeProvider.get(jsPlaceholderName);
+        if (valueNode == null) {
+          if (isGenderedMsg) {
+            // Add the ICU placeholder directly to the message ex: 'Hello {NAME}'
+            partNode = astFactory.createString("{" + msgPart.getCanonicalPlaceholderName() + "}");
+          } else {
+            throw new MalformedException(
+                "Unrecognized message placeholder referenced: " + jsPlaceholderName, nodeToReplace);
+          }
         } else {
-          partNode = astFactory.createName(placeholderId, type(nodeToReplace));
+          partNode = valueNode.cloneTree();
         }
       } else {
         // The part is just a string literal.
@@ -879,15 +825,21 @@ public final class ReplaceMessages {
    * @return the root of the constructed parse tree
    */
   private Node constructStringExprNode(
-      JsMessage msgToUse, Map<String, Node> placeholderMap, MsgOptions options, Node nodeToReplace)
+      JsMessage message, Map<String, Node> placeholderMap, MsgOptions options, Node nodeToReplace)
       throws MalformedException {
 
     // If the message has gendered variants, create a hook expression containing the gendered
     // variants.
-    if (!msgToUse.getGenderedMessageVariants().isEmpty()) {
-      return createNodeForGenderedMsgString(nodeToReplace, msgToUse, placeholderMap, options);
+    if (!message.getGenderedMessageVariants().isEmpty()) {
+      return createNodeForGenderedMsgString(message, placeholderMap, options, nodeToReplace);
+    } else {
+      return constructNonGenderedMsgNode(message, placeholderMap, options, nodeToReplace);
     }
+  }
 
+  private Node constructNonGenderedMsgNode(
+      JsMessage message, Map<String, Node> placeholderMap, MsgOptions options, Node nodeToReplace)
+      throws MalformedException {
     if (placeholderMap.isEmpty()) {
       // The compiler does not expect to do any placeholder substitution, because the message
       // definition in the JS code doesn't have any placeholders.
@@ -896,12 +848,12 @@ public final class ReplaceMessages {
         // replaced during compilation, but rather at runtime by a special localization method.
         // We just need to put the string back together again, if it was broken up to include
         // placeholders.
-        return createNodeForMsgString(options, msgToUse.asIcuMessageString());
-      } else if (msgToUse.jsPlaceholderNames().isEmpty()) {
+        return createNodeForMsgString(options, message.asIcuMessageString());
+      } else if (message.jsPlaceholderNames().isEmpty()) {
         // The translated message read from the bundle also has no placeholders.
         // It doesn't really matter which asXMessageString() call we make, since they return
         // the same thing when there are no placeholders.
-        return createNodeForMsgString(options, msgToUse.asJsMessageString());
+        return createNodeForMsgString(options, message.asJsMessageString());
       } else {
         // The JS code definition has no placeholders, but the message we got from the translation
         // bundle does have placeholders.
@@ -917,7 +869,7 @@ public final class ReplaceMessages {
         // Messages with this form always start with a particular formula, which we can test for
         // here to make sure this isn't actually a case of something being broken in the translation
         // pipeline.
-        final String icuMsgString = msgToUse.asIcuMessageString();
+        final String icuMsgString = message.asIcuMessageString();
         if (isStartOfIcuMessage(icuMsgString)) {
           return createNodeForMsgString(options, icuMsgString);
         } else {
@@ -928,36 +880,13 @@ public final class ReplaceMessages {
         }
       }
     }
-    // In some edge cases a message might have normal string parts that are consecutive.
-    // Join them together before processing them further.
-    // TODO(bradfordcsmith): There's a test case with an "&amp;" escape broken across 2 string
-    // parts. It fails if we stop doing this merging in advance, but I suspect there's no real
-    // life case where this merging is really necessary. I think it's a left-over from when the
-    // bundle-reading code would automatically convert ICU message placeholders into string parts
-    // without actually merging them with the neighboring string parts.
-    List<Part> msgParts = mergeStringParts(msgToUse.getParts());
-    if (msgParts.isEmpty()) {
-      return astFactory.createString("");
-    } else {
-      Node resultNode = null;
-      for (Part msgPart : msgParts) {
-        final Node partNode;
-        if (msgPart.isPlaceholder()) {
-          final String jsPlaceholderName = msgPart.getJsPlaceholderName();
-          final Node valueNode = placeholderMap.get(jsPlaceholderName);
-          if (valueNode == null) {
-            throw new MalformedException(
-                "Unrecognized message placeholder referenced: " + jsPlaceholderName, nodeToReplace);
-          }
-          partNode = valueNode.cloneTree();
-        } else {
-          // The part is just a string literal.
-          partNode = createNodeForMsgString(options, msgPart.getString());
-        }
-        resultNode = (resultNode == null) ? partNode : astFactory.createAdd(resultNode, partNode);
-      }
-      return resultNode;
-    }
+
+    return buildMessageNode(
+        message.getParts(),
+        options,
+        nodeToReplace,
+        placeholderMap::get,
+        /* isGenderedMsg= */ false);
   }
 
   private Node createNodeForMsgString(MsgOptions options, String s) {
@@ -981,48 +910,30 @@ public final class ReplaceMessages {
   }
 
   /** Options for escaping characters in translated messages. */
-  interface MsgOptions {
-
-    /** True if the message is defined using the ICU template declaration method. */
-    boolean isIcuTemplate();
-
-    /** Replace `'<'` with `'&lt;'` in the message. */
-    boolean escapeLessThan();
-
-    /**
-     * Replace these escaped entities with their literal characters in the message (Overrides
-     * escapeLessThan)
-     *
-     * <pre>
-     * '&lt;' -> '<'
-     * '&gt;' -> '>'
-     * '&apos;' -> "'"
-     * '&quot;' -> '"'
-     * '&amp;' -> '&'
-     * </pre>
-     */
-    boolean unescapeHtmlEntities();
-  }
+  record MsgOptions(
+      /** True if the message is defined using the ICU template declaration method. */
+      boolean isIcuTemplate,
+      /** Replace `'<'` with `'&lt;'` in the message. */
+      boolean escapeLessThan,
+      /**
+       * Replace these escaped entities with their literal characters in the message (Overrides
+       * escapeLessThan)
+       *
+       * <pre>
+       * '&lt;' -> '<'
+       * '&gt;' -> '>'
+       * '&apos;' -> "'"
+       * '&quot;' -> '"'
+       * '&amp;' -> '&'
+       * </pre>
+       */
+      boolean unescapeHtmlEntities) {}
 
   private static final MsgOptions ICU_MSG_OPTIONS =
-      new MsgOptions() {
-        @Override
-        public boolean isIcuTemplate() {
-          return true;
-        }
-
-        @Override
-        public boolean escapeLessThan() {
-          // The compiler doesn't do escaping for ICU messages.
-          return false;
-        }
-
-        @Override
-        public boolean unescapeHtmlEntities() {
-          // The compiler doesn't do unescaping for ICU messages.
-          return false;
-        }
-      };
+      new MsgOptions(
+          /* isIcuTemplate= */ true,
+          /* escapeLessThan= */ false,
+          /* unescapeHtmlEntities= */ false);
 
   /** Merges consecutive string parts in the list of message parts. */
   private static List<Part> mergeStringParts(List<Part> parts) {
@@ -1235,31 +1146,19 @@ public final class ReplaceMessages {
       }
 
       return new ProtectedJsMessage(
-          jsMessageBuilder.build(),
-          node,
-          substitutionsNode,
-          isIcuTemplate,
-          escapeLessThanOption,
-          unescapeHtmlEntitiesOption);
+          /* jsMessage= */ jsMessageBuilder.build(),
+          /* definitionNode= */ node,
+          /* substitutionsNode= */ substitutionsNode,
+          /* isIcuTemplate= */ isIcuTemplate,
+          /* escapeLessThan= */ escapeLessThanOption,
+          /* unescapeHtmlEntities= */ unescapeHtmlEntitiesOption);
     }
 
     MsgOptions getMsgOptions() {
-      return new MsgOptions() {
-        @Override
-        public boolean isIcuTemplate() {
-          return isIcuTemplate;
-        }
-
-        @Override
-        public boolean escapeLessThan() {
-          return escapeLessThan;
-        }
-
-        @Override
-        public boolean unescapeHtmlEntities() {
-          return unescapeHtmlEntities;
-        }
-      };
+      return new MsgOptions(
+          /* isIcuTemplate= */ isIcuTemplate,
+          /* escapeLessThan= */ escapeLessThan,
+          /* unescapeHtmlEntities= */ unescapeHtmlEntities);
     }
   }
 

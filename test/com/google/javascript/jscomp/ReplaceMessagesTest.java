@@ -1364,7 +1364,7 @@ const MSG_ICU_SELECT =
         """,
         """
         /** @desc d */
-        var MSG_L = '{$b}' + ' has ' + 1;
+        var MSG_L = '{$b} has ' + 1;
         """);
   }
 
@@ -2111,7 +2111,7 @@ var MSG_A = goog.getMsg('&lt; {$startSpan}email &amp; address{$endSpan} &gt;', {
         """
         /** @desc d */
         var MSG_A =
-            '< ' + '<span title="&lt;info&gt;">' + 'email & address' + '</span>' + ' >';
+            '< <span title="&lt;info&gt;">email & address</span> >';
         """);
     multiPhaseTest(
 """
@@ -2237,7 +2237,7 @@ var MSG_C = goog.getMsg('{$br}{$x}{$y}{$z}', {'br': '<br>', 'x': 'X', 'y': 'Y', 
         """,
         """
         /** @desc d */
-        var MSG_C = '<br>' + '&' + 'X' + 'Y' + '&ap' + 'Z' + 'os;';
+        var MSG_C = '<br>&XY&apZos;';
         """);
   }
 
@@ -2267,7 +2267,7 @@ var MSG_C = goog.getMsg('{$br}{$x}{$y}{$z}', {'br': '<br>', 'x': 'X', 'y': 'Y', 
         """,
         """
         /** @desc d */
-        var MSG_A = 'Hello &lt;' + '<br>' + '&gt;';
+        var MSG_A = 'Hello &lt;<br>&gt;';
         """);
 
     // Confirm that the default behavior is to leave `<` unchanged
@@ -2287,7 +2287,7 @@ var MSG_C = goog.getMsg('{$br}{$x}{$y}{$z}', {'br': '<br>', 'x': 'X', 'y': 'Y', 
         """,
         """
         /** @desc d */
-        var MSG_A = 'Hello <' + '<br>' + '&gt;';
+        var MSG_A = 'Hello <<br>&gt;';
         """);
   }
 
