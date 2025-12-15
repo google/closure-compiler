@@ -24,11 +24,13 @@ import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.StandardColors;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.jscomp.serialization.SerializationOptions;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
@@ -41,6 +43,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.testing.MapBasedScope;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,10 +54,29 @@ import org.junit.runners.JUnit4;
 public class AstFactoryTest {
 
   private Compiler compiler;
+  private RuntimeJsLibManager runtimeJsLibManager;
 
   @Before
   public void setUp() throws Exception {
     compiler = new Compiler();
+    runtimeJsLibManager =
+        RuntimeJsLibManager.create(
+            RuntimeJsLibManager.RuntimeLibraryMode.RECORD_AND_VALIDATE_FIELDS,
+            new TestResourceProvider(),
+            compiler.getChangeTracker(),
+            AstFactoryTest::alwaysThrowNodeSupplier);
+  }
+
+  private static Node alwaysThrowNodeSupplier() {
+    throw new UnsupportedOperationException();
+  }
+
+  private static final class TestResourceProvider implements RuntimeJsLibManager.ResourceProvider {
+
+    @Override
+    public Node parse(String unused1, String unused2) {
+      throw new UnsupportedOperationException();
+    }
   }
 
   private JSTypeRegistry getRegistry() {
@@ -113,7 +135,7 @@ public class AstFactoryTest {
 
   private AstFactory createTestAstFactory() {
     return AstFactory.createFactoryWithTypes(
-        compiler.getLifeCycleStage(), getRegistry(), compiler.getRuntimeJsLibManager());
+        compiler.getLifeCycleStage(), getRegistry(), runtimeJsLibManager);
   }
 
   private AstFactory createTestAstFactoryWithColors() {
@@ -123,12 +145,11 @@ public class AstFactoryTest {
         compiler.hasOptimizationColors()
             ? compiler.getColorRegistry()
             : ColorRegistry.builder().setDefaultNativeColorsForTesting().build(),
-        compiler.getRuntimeJsLibManager());
+        runtimeJsLibManager);
   }
 
   private AstFactory createTestAstFactoryWithoutTypes() {
-    return AstFactory.createFactoryWithoutTypes(
-        compiler.getLifeCycleStage(), compiler.getRuntimeJsLibManager());
+    return AstFactory.createFactoryWithoutTypes(compiler.getLifeCycleStage(), runtimeJsLibManager);
   }
 
   private Scope getScope(Node root) {
@@ -2027,6 +2048,61 @@ public class AstFactoryTest {
     // Then
     assertNode(newExpr).isEquivalentTo(expected);
     assertNode(newExpr).hasColorThat().isEqualTo(expected.getColor());
+  }
+
+  @Test
+  public void testCreateRuntimeField_throwsIfFieldNotInjected() {
+    // Given
+    AstFactory astFactory = createTestAstFactoryWithoutTypes();
+    StaticScope scope = new MapBasedScope(ImmutableMap.of());
+    RuntimeJsLibManager.JsLibField field = runtimeJsLibManager.getJsLibField("$jscomp.global");
+
+    // When
+    assertThrows(IllegalStateException.class, () -> astFactory.createQName(scope, field));
+  }
+
+  @Test
+  public void testCreateRuntimeField_succeeds() {
+    // Given
+    AstFactory astFactory = createTestAstFactoryWithoutTypes();
+    StaticScope scope = new MapBasedScope(ImmutableMap.of());
+    RuntimeJsLibManager.JsLibField field = runtimeJsLibManager.getJsLibField("$jscomp.global");
+    runtimeJsLibManager.injectLibForField("$jscomp.global");
+
+    // When
+    var result = astFactory.createQName(scope, field);
+
+    // Then
+    assertNode(result).matchesQualifiedName("$jscomp.global");
+  }
+
+  @Test
+  public void testCreateJscompMakeIteratorCall_throwsIfJscompMakeIteratorNotInjected() {
+    // Given
+    AstFactory astFactory = createTestAstFactoryWithoutTypes();
+    Node iterable = IR.name("arr");
+    StaticScope scope = new MapBasedScope(ImmutableMap.of());
+
+    // When
+    assertThrows(
+        IllegalStateException.class,
+        () -> astFactory.createJSCompMakeIteratorCall(iterable, scope));
+  }
+
+  @Test
+  public void testCreateJscompMakeIteratorCall_succeeds() {
+    // Given
+    AstFactory astFactory = createTestAstFactoryWithoutTypes();
+    Node iterable = IR.name("arr");
+    runtimeJsLibManager.injectLibForField("$jscomp.makeIterator");
+
+    // When
+    Node result = astFactory.createJSCompMakeIteratorCall(iterable, MapBasedScope.emptyScope());
+
+    // Then
+    assertNode(result).isCall();
+    assertNode(result).hasFirstChildThat().matchesQualifiedName("$jscomp.makeIterator");
+    assertNode(result).hasLastChildThat().isEqualTo(iterable);
   }
 
   private static ImmutableList<Node> childList(Node parent) {
