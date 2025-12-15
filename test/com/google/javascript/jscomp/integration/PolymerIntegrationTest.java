@@ -912,4 +912,25 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
           ""
         });
   }
+
+  @Test
+  public void testDeadPropertyAssignmentElimination_defaultsToOffWhenPolymerEnabled() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPolymerVersion(2);
+    options.setRemoveUnusedVariables(Reach.ALL);
+    options.setDeadAssignmentElimination(true);
+
+    assertThat(options.shouldRunDeadPropertyAssignmentElimination()).isFalse();
+
+    testSame(
+        options,
+        """
+        window['fn'] = function(obj) {
+          // Verify the compiler does not remove the `obj.x = 1` assignment.
+          obj.x = 1;
+          obj.x = 2;
+          use(obj);
+        };
+        """);
+  }
 }

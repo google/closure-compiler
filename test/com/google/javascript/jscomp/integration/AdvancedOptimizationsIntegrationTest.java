@@ -3433,4 +3433,60 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         };
         """);
   }
+
+  @Test
+  public void testDeadAssignmentEliminationForLocalVariables() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setGeneratePseudoNames(true);
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(
+                new TestExternsBuilder()
+                    .addExtra("var foo; var bar; var baz;")
+                    .buildExternsFile("extra_externs.js"))
+            .build();
+
+    test(
+        options,
+        """
+        window['fn'] = function () {
+          let x = foo();
+          x = bar();
+          x = baz();
+          return x;
+        }
+        """,
+        """
+        window.fn = function () {
+          foo();
+          bar();
+          return baz();
+        }
+        """);
+  }
+
+  @Test
+  public void testDeadAssignmentEliminationForPropertiesOnLocalNames() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setGeneratePseudoNames(true);
+
+    test(
+        options,
+        """
+        window['fn'] = function (o) {
+          o.x = 1;
+          o.x = 2;
+          return o;
+        }
+        """,
+        """
+        window.fn = function ($o$$) {
+          $o$$.$x$ = 2;
+          return $o$$;
+        }
+        """);
+  }
 }

@@ -1092,16 +1092,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(inlineProperties);
     }
 
-    // The Polymer source is usually not included in the compilation, but it creates
-    // getters/setters for many properties in compiled code. Dead property property assignment
-    // elimination is only safe when it knows about getters/setters. Therefore, we skip
-    // it if the polymer pass is enabled.
-    final boolean shouldRunDeadAssignmentElimination =
-        (options.removeUnusedVars || options.removeUnusedLocalVars)
-            && options.deadAssignmentElimination;
-    final boolean shouldRunDeadPropertyAssignmentElimination =
-        shouldRunDeadAssignmentElimination && !options.polymerPass;
-    if (shouldRunDeadPropertyAssignmentElimination) {
+    if (options.shouldRunDeadPropertyAssignmentElimination()) {
       passes.maybeAdd(deadPropertyAssignmentElimination);
     }
 
@@ -1127,7 +1118,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(inlineConstants);
     }
 
-    if (shouldRunDeadAssignmentElimination) {
+    if (options.shouldRunDeadAssignmentElimination()) {
       passes.maybeAdd(deadAssignmentsElimination);
     }
 

@@ -2096,7 +2096,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(options, code);
 
     options.setDeadAssignmentElimination(true);
-    testSame(options, code);
+    assertThrows(IllegalArgumentException.class, () -> testSame(options, code));
 
     options.setRemoveUnusedVariables(Reach.ALL);
     test(options, code, "function f() { 3; 4; var x = 5; return x; } f();");
@@ -5731,6 +5731,7 @@ async function abc() {
 
     options.setRemoveUnusedVariables(Reach.NONE);
     options.setRemoveUnusedClassProperties(false);
+    options.setDeadAssignmentElimination(false);
 
     // Ensures that references to aliases that occur within member function defs do not crash the
     // compiler (see b/293184904). In this example, the name 'method' in 'static method() {...}'

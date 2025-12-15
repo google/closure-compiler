@@ -427,7 +427,10 @@ public class CompilerOptions {
   public boolean foldConstants;
 
   /** Remove assignments to values that can not be referenced */
-  public boolean deadAssignmentElimination;
+  private boolean deadAssignmentElimination;
+
+  /** Remove assignments to properties that cannot be referenced */
+  private Tri deadPropertyAssignmentElimination;
 
   /** Inlines constants (symbols that are all CAPS) */
   public boolean inlineConstantVars;
@@ -1364,6 +1367,7 @@ public class CompilerOptions {
     foldConstants = false;
     coalesceVariableNames = false;
     deadAssignmentElimination = false;
+    deadPropertyAssignmentElimination = Tri.UNKNOWN;
     inlineConstantVars = false;
     inlineFunctionsLevel = Reach.NONE;
     maxFunctionSizeAfterInlining = UNLIMITED_FUN_SIZE_AFTER_INLINING;
@@ -2123,6 +2127,24 @@ public class CompilerOptions {
 
   public void setDeadAssignmentElimination(boolean deadAssignmentElimination) {
     this.deadAssignmentElimination = deadAssignmentElimination;
+  }
+
+  public boolean shouldRunDeadAssignmentElimination() {
+    return deadAssignmentElimination;
+  }
+
+  public void setDeadPropertyAssignmentElimination(boolean deadPropertyAssignmentElimination) {
+    this.deadPropertyAssignmentElimination = Tri.forBoolean(deadPropertyAssignmentElimination);
+  }
+
+  public boolean shouldRunDeadPropertyAssignmentElimination() {
+    // By default, run dead property assignment elimination when both
+    //   1. regular dead assignment elimiantion is enabled.
+    //   2. the polymer pass is disabled.
+    // This is because Polymer relies heavily on getters and setters. Those are very incompatible
+    // eliminating seemingly "dead" property assignments. See b/28912819.
+    return deadPropertyAssignmentElimination.toBoolean(
+        this.deadAssignmentElimination && !this.polymerPass);
   }
 
   public void setInlineConstantVars(boolean inlineConstantVars) {

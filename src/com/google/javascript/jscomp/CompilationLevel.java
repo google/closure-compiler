@@ -150,6 +150,7 @@ public enum CompilationLevel {
     options.setFoldConstants(true);
     options.setCoalesceVariableNames(true);
     options.setDeadAssignmentElimination(true);
+    options.setDeadPropertyAssignmentElimination(false);
     options.setCollapseVariableDeclarations(true);
     options.convertToDottedProperties = true;
     options.labelRenaming = true;

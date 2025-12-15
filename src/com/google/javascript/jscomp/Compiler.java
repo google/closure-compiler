@@ -498,6 +498,22 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
               + "Unsupported conformance configs: "
               + conformanceConfigFiles.build());
     }
+
+    if (options.shouldRunDeadAssignmentElimination()
+        && !(options.removeUnusedVars || options.removeUnusedLocalVars)) {
+      throw new IllegalArgumentException(
+          "Invalid flag combination: enabling dead assignment elimination also requires unused"
+              + " variable removal. Either disable dead assignment elimination or enable unused"
+              + " variable removal.");
+    }
+    if (options.shouldRunDeadPropertyAssignmentElimination() && options.polymerPass) {
+      // The Polymer source is usually not included in the compilation, but it creates
+      // getters/setters for many properties in compiled code. Dead property property assignment
+      // elimination is only safe when it knows about getters/setters.
+      throw new IllegalArgumentException(
+          "Invalid flag combination: dead assignment elimination is incompatible with"
+              + " setPolymerPass(true).");
+    }
   }
 
   public void printConfig() {

@@ -3578,4 +3578,26 @@ public final class CompilerTest {
     source = compiler.toSource();
     assertThat(source).isEqualTo(finalOutputAfterOptimizations); // output is the same as before
   }
+
+  @Test
+  public void testDeadPropertyAssignmentElimination_defaultsToOffIfPolymerEnabled() {
+    CompilerOptions options = new CompilerOptions();
+    options.setDeadAssignmentElimination(true);
+    assertThat(options.shouldRunDeadAssignmentElimination()).isTrue();
+    assertThat(options.shouldRunDeadPropertyAssignmentElimination()).isTrue();
+
+    options.setPolymerVersion(1);
+    assertThat(options.shouldRunDeadAssignmentElimination()).isTrue();
+    assertThat(options.shouldRunDeadPropertyAssignmentElimination()).isFalse();
+  }
+
+  @Test
+  public void testDeadPropertyAssignmentElimination_canBeExplicitlyDisabled() {
+    CompilerOptions options = new CompilerOptions();
+    options.setDeadAssignmentElimination(true);
+    assertThat(options.shouldRunDeadAssignmentElimination()).isTrue();
+
+    options.setDeadPropertyAssignmentElimination(false);
+    assertThat(options.shouldRunDeadPropertyAssignmentElimination()).isFalse();
+  }
 }
