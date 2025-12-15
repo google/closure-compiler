@@ -205,7 +205,15 @@ public class CodeGenerator {
     // If this node is actually a shadow host node, then print the shadow content instead.
     Node shadow = node.getClosureUnawareShadow();
     if (shadow != null) {
-      add(shadow.getFirstFirstChild().getFirstChild(), context, printComments);
+      Node script = shadow.getOnlyChild();
+      Node sinkCall = script.getOnlyChild().getOnlyChild();
+      if (sinkCall.isCall()) {
+        add(sinkCall.getLastChild(), context, printComments);
+      } else {
+        // TODO: b/421971366 - delete this branch once cl/830654412 is in the release.
+        checkState(sinkCall.isFunction(), sinkCall);
+        add(sinkCall, context, printComments);
+      }
       return;
     }
     if (printComments) {

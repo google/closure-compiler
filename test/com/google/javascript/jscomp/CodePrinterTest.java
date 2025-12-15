@@ -24,6 +24,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -4541,6 +4542,32 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     preserveNonJSDocComments = true;
     // TODO(b/228156705): Fix comment printing properly for GETPROP.
     assertPrettyPrint("a.// testComment\nb", "// testComment\na.b;\n");
+  }
+
+  @Test
+  public void testPrintsContentOfClosureUnawareShadow() {
+    Node shadowHost = IR.name("SHADOW");
+    AstFactory astFactory = new Compiler().createAstFactoryWithoutTypes();
+    Node closureUnawareFn = astFactory.createEmptyFunction(AstFactory.type(StandardColors.UNKNOWN));
+    shadowHost.setClosureUnawareShadow(
+        IR.root(IR.script(IR.exprResult(IR.call(IR.name("PRESERVE"), closureUnawareFn)))));
+
+    assertThat(
+            new CodePrinter.Builder(shadowHost).setCompilerOptions(new CompilerOptions()).build())
+        .isEqualTo("function(){}");
+  }
+
+  @Test
+  public void testPrintsContentOfClosureUnawareShadow_legacyStructure() {
+    // TODO: b/421971366 - delete this test case once cl/830654412 is in the release.
+    Node shadowHost = IR.name("SHADOW");
+    AstFactory astFactory = new Compiler().createAstFactoryWithoutTypes();
+    Node closureUnawareFn = astFactory.createEmptyFunction(AstFactory.type(StandardColors.UNKNOWN));
+    shadowHost.setClosureUnawareShadow(IR.root(IR.script(IR.exprResult(closureUnawareFn))));
+
+    assertThat(
+            new CodePrinter.Builder(shadowHost).setCompilerOptions(new CompilerOptions()).build())
+        .isEqualTo("function(){}");
   }
 
   private void checkWithOriginalName(
