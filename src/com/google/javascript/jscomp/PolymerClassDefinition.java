@@ -342,29 +342,20 @@ final class PolymerClassDefinition {
 
     JSDocInfo classInfo = NodeUtil.getBestJSDocInfo(classNode);
 
-    JSDocInfo ctorInfo = null;
     Node constructor = NodeUtil.getEs6ClassConstructorMemberFunctionDef(classNode);
-    if (constructor != null) {
-      ctorInfo = NodeUtil.getBestJSDocInfo(constructor);
-    }
 
     ImmutableList<MemberDefinition> properties =
         PolymerPassStaticUtils.extractProperties(
             propertiesDescriptor, DefinitionType.ES6Class, compiler, constructor);
 
-    List<MemberDefinition> methods = new ArrayList<>();
-    for (Node keyNode = NodeUtil.getClassMembers(classNode).getFirstChild();
-        keyNode != null;
-        keyNode = keyNode.getNext()) {
-      if (!keyNode.isMemberFunctionDef()) {
-        continue;
-      }
-      methods.add(
-          new MemberDefinition(
-              NodeUtil.getBestJSDocInfo(keyNode),
-              keyNode,
-              keyNode.getFirstChild(),
-              enclosingModule));
+    List<MemberDefinition> methods = extractClassMethods(classNode, enclosingModule);
+
+    JSDocInfo ctorInfo = null;
+    if (constructor != null) {
+      ctorInfo = NodeUtil.getBestJSDocInfo(constructor);
+
+      // Add properties assigned to functions in the constructor (i.e. `this.prop = function`).
+      addFunctionAssignmentsFromConstructor(constructor, enclosingModule, methods);
     }
     CompilerInput input = compiler.getInput(NodeUtil.getEnclosingScript(classNode).getInputId());
 
@@ -383,6 +374,56 @@ final class PolymerClassDefinition {
         null,
         null,
         input);
+  }
+
+  /** Extracts true class methods and fields assigned to functions from an ES6 class node. */
+  private static List<MemberDefinition> extractClassMethods(Node classNode, Node enclosingModule) {
+    List<MemberDefinition> methods = new ArrayList<>();
+    for (Node keyNode = NodeUtil.getClassMembers(classNode).getFirstChild();
+        keyNode != null;
+        keyNode = keyNode.getNext()) {
+      if (keyNode.isMemberFunctionDef() || isFunctionField(keyNode)) {
+        methods.add(
+            new MemberDefinition(
+                NodeUtil.getBestJSDocInfo(keyNode),
+                keyNode,
+                keyNode.getFirstChild(),
+                enclosingModule));
+      }
+    }
+    return methods;
+  }
+
+  /** Detects patterns like {@code field = function() {}} and {@code field = () => {})}. */
+  private static boolean isFunctionField(Node field) {
+    if (!field.isMemberFieldDef()) {
+      return false;
+    }
+    Node value = field.getFirstChild();
+    return value != null && value.isFunction();
+  }
+
+  /**
+   * Adds properties assigned to functions in the constructor body (e.g., {@code this.prop =
+   * function()}) to the given list of methods.
+   */
+  private static void addFunctionAssignmentsFromConstructor(
+      Node constructor, Node enclosingModule, List<MemberDefinition> methods) {
+    Node body = NodeUtil.getFunctionBody(constructor.getFirstChild());
+    for (Node stmt = body.getFirstChild(); stmt != null; stmt = stmt.getNext()) {
+      if (!stmt.isExprResult() || !stmt.getFirstChild().isAssign()) {
+        continue;
+      }
+
+      var assignment = stmt.getFirstChild();
+      var propName = assignment.getFirstChild();
+      var propValue = assignment.getLastChild();
+      if (propName.isGetProp() && propName.getFirstChild().isThis() && propValue.isFunction()) {
+        methods.add(
+            new MemberDefinition(
+                NodeUtil.getBestJSDocInfo(propName), propName, propValue, enclosingModule));
+      }
+    }
   }
 
   /**

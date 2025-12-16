@@ -15,9 +15,11 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.rhino.Node;
@@ -124,6 +126,41 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
     assertThat(def.nativeBaseElement).isNull();
     assertThat(def.behaviors).isNull();
     assertThat(def.props).hasSize(2);
+  }
+
+  @Test
+  public void testClassMethods() {
+    PolymerClassDefinition def =
+        parseAndExtractClassDefFromClass(
+            """
+            class A extends Polymer.Element {
+              static get is() { return 'x-element'; }
+              method() {}
+              /** @type {function()} */
+              fieldWithFunction = function() {};
+              fieldWithArrowFunction = () => {};
+              fieldWithNumber = 1;
+              fieldWithoutInitializer;
+              constructor() {
+                super();
+                this.propertyWithFunction = function() {};
+                this.propertyWithArrowFunction = () => {};
+                this.propertyWithNumber = 2;
+              }
+            }
+            """);
+
+    assertThat(def).isNotNull();
+    ImmutableList<String> methodNames =
+        def.methods.stream().map(m -> m.name.getString()).collect(toImmutableList());
+    assertThat(methodNames)
+        .containsExactly(
+            "method",
+            "fieldWithFunction",
+            "fieldWithArrowFunction",
+            "constructor",
+            "propertyWithFunction",
+            "propertyWithArrowFunction");
   }
 
   @Test
