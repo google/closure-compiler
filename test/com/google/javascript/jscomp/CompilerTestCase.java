@@ -18,10 +18,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
@@ -176,9 +174,6 @@ public abstract class CompilerTestCase {
   /** Whether we expect parse warnings in the current test. */
   private boolean expectParseWarningsInThisTest;
 
-  /** An expected symbol table error. Only useful for testing the symbol table error-handling. */
-  private @Nullable DiagnosticType expectedSymbolTableError;
-
   /** Whether the PureFunctionIdentifier pass runs before the pass being tested */
   private boolean computeSideEffects;
 
@@ -315,7 +310,6 @@ public abstract class CompilerTestCase {
     this.computeSideEffects = false;
     this.annotateSourceInfo = false;
     this.expectParseWarningsInThisTest = false;
-    this.expectedSymbolTableError = null;
     this.gatherExternPropertiesEnabled = false;
     this.inferConsts = false;
     this.languageOut = LanguageMode.NO_TRANSPILE;
@@ -1458,18 +1452,6 @@ public abstract class CompilerTestCase {
       ErrorManager[] errorManagers,
       List<JSError> aggregateWarnings,
       int numRepetitions) {
-    // Verify the symbol table.
-    // TODO: lharker - why is this necessary?
-    ErrorManager symbolTableErrorManager = new BlackHoleErrorManager();
-    compiler.setErrorManager(symbolTableErrorManager);
-
-    ImmutableList<JSError> stErrors = symbolTableErrorManager.getErrors();
-    if (expectedSymbolTableError != null) {
-      assertError(getOnlyElement(stErrors)).hasType(expectedSymbolTableError);
-    } else {
-      assertWithMessage("symbol table errors").that(stErrors).isEmpty();
-    }
-
     LightweightMessageFormatter formatter = new LightweightMessageFormatter(compiler);
     if (expectedWarnings.isEmpty()) {
       assertWithMessage(
@@ -1790,10 +1772,6 @@ public abstract class CompilerTestCase {
     }
     compiler.setPreferRegexParser(false);
     return compiler;
-  }
-
-  protected void setExpectedSymbolTableError(DiagnosticType type) {
-    this.expectedSymbolTableError = type;
   }
 
   /** Finds the first matching qualified name node in post-traversal order. */
