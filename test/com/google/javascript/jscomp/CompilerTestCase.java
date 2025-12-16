@@ -1150,7 +1150,6 @@ public abstract class CompilerTestCase {
 
     int numRepetitions = getNumRepetitions();
     ErrorManager[] errorManagers = new ErrorManager[numRepetitions];
-    int aggregateWarningCount = 0;
     List<JSError> aggregateWarnings = new ArrayList<>();
     boolean hasCodeChanged = false;
 
@@ -1339,7 +1338,6 @@ public abstract class CompilerTestCase {
         }
 
         hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
-        aggregateWarningCount += errorManagers[i].getWarningCount();
         aggregateWarnings.addAll(compiler.getWarnings());
 
         if (normalizeEnabled) {
@@ -1353,45 +1351,10 @@ public abstract class CompilerTestCase {
     if (expectedErrors.isEmpty()) {
       assertThat(compiler.getErrors()).isEmpty();
 
-      // Verify the symbol table.
-      ErrorManager symbolTableErrorManager = new BlackHoleErrorManager();
-      compiler.setErrorManager(symbolTableErrorManager);
-      Node expectedRoot = null;
-      if (expected != null) {
-        expectedRoot = parseExpectedJs(expected);
-      }
+      validateWarnings(
+          compiler, expectedWarnings, errorManagers, aggregateWarnings, numRepetitions);
 
-      ImmutableList<JSError> stErrors = symbolTableErrorManager.getErrors();
-      if (expectedSymbolTableError != null) {
-        assertError(getOnlyElement(stErrors)).hasType(expectedSymbolTableError);
-      } else {
-        assertWithMessage("symbol table errors").that(stErrors).isEmpty();
-      }
-      LightweightMessageFormatter formatter = new LightweightMessageFormatter(compiler);
-      if (expectedWarnings.isEmpty()) {
-        assertWithMessage(
-                "aggregate warnings: %s",
-                aggregateWarnings.stream().map(formatter::formatWarning).collect(joining("\n")))
-            .that(aggregateWarnings)
-            .isEmpty();
-      } else {
-        assertWithMessage(
-                "There should be %s warnings, repeated %s time(s). Warnings: \n%s",
-                expectedWarnings.size(), numRepetitions, LINE_JOINER.join(aggregateWarnings))
-            .that(aggregateWarningCount)
-            .isEqualTo(numRepetitions * expectedWarnings.size());
-        for (int i = 0; i < numRepetitions; i++) {
-          assertWithMessage("compile warnings from repetition %s", (i + 1))
-              .that(errorManagers[i].getWarnings())
-              .comparingElementsUsing(DIAGNOSTIC_CORRESPONDENCE)
-              .containsExactlyElementsIn(expectedWarnings);
-          for (JSError warning : errorManagers[i].getWarnings()) {
-            validateSourceLocation(warning);
-          }
-        }
-      }
-
-      // If we ran normalize on the AST, we must also run normalize on th clone before checking for
+      // If we ran normalize on the AST, we must also run normalize on the clone before checking for
       // changes.
       if (normalizeEnabled) {
         boolean hasTypecheckingRun = compiler.hasTypeCheckingRun();
@@ -1402,92 +1365,21 @@ public abstract class CompilerTestCase {
         compiler.setTypeCheckingHasRun(hasTypecheckingRun);
       }
 
-      boolean codeChange = !mainRootClone.isEquivalentWithSideEffectsTo(mainRoot);
-      boolean externsChange = !externsRootClone.isEquivalentWithSideEffectsTo(externsRoot);
-
-      // Generally, externs should not be changed by the compiler passes.
-      if (externsChange && !allowExternsChanges) {
-        assertNode(externsRoot)
-            .usingSerializer(createPrettyPrinter(compiler))
-            .isEqualTo(externsRootClone);
-      }
-
-      if (checkAstChangeMarking) {
-        if (!codeChange && !externsChange) {
-          assertWithMessage("compiler.reportCodeChange() was called even though nothing changed")
-              .that(hasCodeChanged)
-              .isFalse();
-        } else {
-          assertWithMessage(
-                  "compiler.reportCodeChange() should have been called."
-                      + "\nOriginal: %s\nNew: %s",
-                  mainRootClone.toStringTree(), mainRoot.toStringTree())
-              .that(hasCodeChanged)
-              .isTrue();
-        }
+      if (checkAstChangeMarking || !allowExternsChanges) {
+        validateCodeChangeReporting(
+            mainRoot, externsRoot, mainRootClone, externsRootClone, compiler, hasCodeChanged);
       }
 
       if (expected != null) {
-        if (!compareSyntheticCode) {
-          Node scriptRoot = mainRoot.getFirstChild();
-          for (Node child = scriptRoot.getFirstChild(); child != null; ) {
-            Node nextChild = child.getNext();
-            if (NodeUtil.isInSyntheticScript(child)) {
-              child.detach();
-            }
-            child = nextChild;
-          }
-        }
+        Node expectedRoot = parseExpectedJs(expected);
         if (compareAsTree) {
-          if (compareJsDoc) {
-            assertNode(mainRoot)
-                .usingSerializer(createPrettyPrinter(compiler))
-                .withGenericNameReplacements(ImmutableMap.copyOf(genericNameMapping))
-                .isEqualIncludingJsDocTo(expectedRoot);
-          } else {
-            assertNode(mainRoot)
-                .usingSerializer(createPrettyPrinter(compiler))
-                .withGenericNameReplacements(ImmutableMap.copyOf(genericNameMapping))
-                .isEqualTo(expectedRoot);
-          }
+          compareExpectedToActualAsTree(mainRoot, expectedRoot, compiler, genericNameMapping);
         } else {
-          String[] expectedSources = new String[expected.size()];
-          for (int i = 0; i < expected.size(); ++i) {
-            try {
-              expectedSources[i] = expected.get(i).getCode();
-            } catch (IOException e) {
-              throw new RuntimeException("failed to get source code", e);
-            }
-          }
-          assertThat(compiler.toSource(mainRoot).replaceAll(" +\n", "\n"))
-              .isEqualTo(Joiner.on("").join(expectedSources));
+          compareExpectedToActualAsStrings(mainRoot, compiler, expected);
         }
       }
 
-      // Verify normalization is not invalidated.
-      Node normalizeCheckRootClone = root.cloneTree();
-      Node normalizeCheckExternsRootClone = normalizeCheckRootClone.getFirstChild();
-      Node normalizeCheckMainRootClone = normalizeCheckRootClone.getLastChild();
-
-      assertNode(normalizeCheckMainRootClone)
-          .usingSerializer(createPrettyPrinter(compiler))
-          .isEqualTo(mainRoot);
-
-      // TODO(johnlenz): enable this for most test cases.
-      // Currently, this invalidates test for while-loops, for-loop
-      // initializers, and other naming.  However, a set of code
-      // (Closure primitive rewrites, etc) runs before the Normalize pass,
-      // so this can't be force on everywhere.
-      if (normalizeEnabled) {
-        Normalize.builder(compiler)
-            .assertOnChange(true)
-            .build()
-            .process(normalizeCheckExternsRootClone, normalizeCheckMainRootClone);
-
-        assertNode(normalizeCheckMainRootClone)
-            .usingSerializer(createPrettyPrinter(compiler))
-            .isEqualTo(mainRoot);
-      }
+      validateNormalizationInvariants(root, compiler);
     } else {
       assertWithMessage("compile errors")
           .that(compiler.getErrors())
@@ -1557,6 +1449,148 @@ public abstract class CompilerTestCase {
             .build());
     for (PassFactory factory : factories.build()) {
       factory.create(compiler).process(externsRoot, codeRoot);
+    }
+  }
+
+  private void validateWarnings(
+      Compiler compiler,
+      List<Diagnostic> expectedWarnings,
+      ErrorManager[] errorManagers,
+      List<JSError> aggregateWarnings,
+      int numRepetitions) {
+    // Verify the symbol table.
+    // TODO: lharker - why is this necessary?
+    ErrorManager symbolTableErrorManager = new BlackHoleErrorManager();
+    compiler.setErrorManager(symbolTableErrorManager);
+
+    ImmutableList<JSError> stErrors = symbolTableErrorManager.getErrors();
+    if (expectedSymbolTableError != null) {
+      assertError(getOnlyElement(stErrors)).hasType(expectedSymbolTableError);
+    } else {
+      assertWithMessage("symbol table errors").that(stErrors).isEmpty();
+    }
+
+    LightweightMessageFormatter formatter = new LightweightMessageFormatter(compiler);
+    if (expectedWarnings.isEmpty()) {
+      assertWithMessage(
+              "aggregate warnings: %s",
+              aggregateWarnings.stream().map(formatter::formatWarning).collect(joining("\n")))
+          .that(aggregateWarnings)
+          .isEmpty();
+    } else {
+      assertWithMessage(
+              "There should be %s warnings, repeated %s time(s). Warnings: \n%s",
+              expectedWarnings.size(), numRepetitions, LINE_JOINER.join(aggregateWarnings))
+          .that(aggregateWarnings.size())
+          .isEqualTo(numRepetitions * expectedWarnings.size());
+      for (int i = 0; i < numRepetitions; i++) {
+        assertWithMessage("compile warnings from repetition %s", (i + 1))
+            .that(errorManagers[i].getWarnings())
+            .comparingElementsUsing(DIAGNOSTIC_CORRESPONDENCE)
+            .containsExactlyElementsIn(expectedWarnings);
+        for (JSError warning : errorManagers[i].getWarnings()) {
+          validateSourceLocation(warning);
+        }
+      }
+    }
+  }
+
+  private void validateCodeChangeReporting(
+      Node mainRoot,
+      Node externsRoot,
+      Node mainRootClone,
+      Node externsRootClone,
+      Compiler compiler,
+      boolean wasCodeChangeReported) {
+    boolean codeChange = !mainRootClone.isEquivalentWithSideEffectsTo(mainRoot);
+    boolean externsChange = !externsRootClone.isEquivalentWithSideEffectsTo(externsRoot);
+
+    // Generally, externs should not be changed by the compiler passes.
+    if (externsChange && !allowExternsChanges) {
+      assertNode(externsRoot)
+          .usingSerializer(createPrettyPrinter(compiler))
+          .isEqualTo(externsRootClone);
+    }
+    if (checkAstChangeMarking) {
+      if (!codeChange && !externsChange) {
+        assertWithMessage("compiler.reportCodeChange() was called even though nothing changed")
+            .that(wasCodeChangeReported)
+            .isFalse();
+      } else {
+        assertWithMessage(
+                "compiler.reportCodeChange() should have been called." + "\nOriginal: %s\nNew: %s",
+                mainRootClone.toStringTree(), mainRoot.toStringTree())
+            .that(wasCodeChangeReported)
+            .isTrue();
+      }
+    }
+  }
+
+  private void compareExpectedToActualAsTree(
+      Node mainRoot, Node expectedRoot, Compiler compiler, Map<String, String> genericNameMapping) {
+    if (!compareSyntheticCode) {
+      Node scriptRoot = mainRoot.getFirstChild();
+      for (Node child = scriptRoot.getFirstChild(); child != null; ) {
+        Node nextChild = child.getNext();
+        if (NodeUtil.isInSyntheticScript(child)) {
+          child.detach();
+        }
+        child = nextChild;
+      }
+    }
+    if (compareJsDoc) {
+      assertNode(mainRoot)
+          .usingSerializer(createPrettyPrinter(compiler))
+          .withGenericNameReplacements(ImmutableMap.copyOf(genericNameMapping))
+          .isEqualIncludingJsDocTo(expectedRoot);
+    } else {
+      assertNode(mainRoot)
+          .usingSerializer(createPrettyPrinter(compiler))
+          .withGenericNameReplacements(ImmutableMap.copyOf(genericNameMapping))
+          .isEqualTo(expectedRoot);
+    }
+  }
+
+  private void compareExpectedToActualAsStrings(
+      Node mainRoot, Compiler compiler, List<SourceFile> expected) {
+    String[] expectedSources = new String[expected.size()];
+    for (int i = 0; i < expected.size(); ++i) {
+      try {
+        expectedSources[i] = expected.get(i).getCode();
+      } catch (IOException e) {
+        throw new RuntimeException("failed to get source code", e);
+      }
+    }
+    assertThat(compiler.toSource(mainRoot).replaceAll(" +\n", "\n"))
+        .isEqualTo(Joiner.on("").join(expectedSources));
+  }
+
+  private void validateNormalizationInvariants(Node root, Compiler compiler) {
+    Node mainRoot = root.getLastChild();
+
+    // Verify normalization is not invalidated.
+    Node normalizeCheckRootClone = root.cloneTree();
+    Node normalizeCheckExternsRootClone = normalizeCheckRootClone.getFirstChild();
+    Node normalizeCheckMainRootClone = normalizeCheckRootClone.getLastChild();
+
+    assertNode(normalizeCheckMainRootClone)
+        .usingSerializer(createPrettyPrinter(compiler))
+        .isEqualTo(mainRoot);
+
+    // TODO(johnlenz): enable this for most test cases.
+    // Currently, this invalidates test for while-loops, for-loop
+    // initializers, and other naming.  However, a set of code
+    // (Closure primitive rewrites, etc) runs before the Normalize pass,
+    // so this can't be force on everywhere.
+    if (normalizeEnabled) {
+      Normalize.builder(compiler)
+          .assertOnChange(true)
+          .build()
+          .process(normalizeCheckExternsRootClone, normalizeCheckMainRootClone);
+
+      assertNode(normalizeCheckMainRootClone)
+          .usingSerializer(createPrettyPrinter(compiler))
+          .isEqualTo(mainRoot);
     }
   }
 
