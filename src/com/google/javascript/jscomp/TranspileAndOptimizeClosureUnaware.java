@@ -43,9 +43,7 @@ class TranspileAndOptimizeClosureUnaware implements CompilerPass {
       return;
     }
 
-    var shadowOptions = new CompilerOptions();
-    // TODO: b/421971366 - enable simple optimizations + debugging options + transpilation
-    shadowOptions.setFoldConstants(true);
+    var shadowOptions = ClosureUnawareOptions.convert(original.getOptions());
     // TODO: b/421971366 - enable configuring Mode.TRANSPILE_ONLY.
     NestedCompilerRunner shadowCompiler =
         NestedCompilerRunner.create(

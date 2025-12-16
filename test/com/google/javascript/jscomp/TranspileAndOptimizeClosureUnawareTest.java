@@ -16,9 +16,17 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerTestCase.srcs;
+import static java.util.stream.Collectors.joining;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,6 +49,7 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
 
   private int inputCount;
   private int outputCount;
+  private Consumer<CompilerOptions> extraOptions;
 
   @Before
   public void setup() {
@@ -48,6 +57,14 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
     allowExternsChanges();
     this.inputCount = 0;
     this.outputCount = 0;
+    this.extraOptions = options -> {};
+  }
+
+  @Override
+  public CompilerOptions getOptions() {
+    CompilerOptions baseOptions = super.getOptions();
+    extraOptions.accept(baseOptions);
+    return baseOptions;
   }
 
   String createPrettyPrinter(Node n) {
@@ -107,6 +124,95 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
                 "console.log(1 + 2);", "console.log(11 + 22);", "console.log(111 + 222);")),
         expected(
             expectedClosureUnaware("console.log(3);", "console.log(33);", "console.log(333);")));
+  }
+
+  private static String loadFile(Path path) {
+    try (Stream<String> lines = Files.lines(path)) {
+      return lines.collect(joining("\n"));
+    } catch (Exception e) {
+      throw new AssertionError("Failed to load debug log at " + path, e);
+    }
+  }
+
+  private ImmutableList<Path> listFiles(Path dir) {
+    try (Stream<Path> files = Files.list(dir)) {
+      return files.collect(toImmutableList());
+    } catch (Exception e) {
+      throw new AssertionError(e);
+    }
+  }
+
+  @Test
+  public void testSupportsDebugLogging() {
+    enableDebugLogging(true);
+    testNoWarning(closureUnaware("console.log(0 + 1);"));
+
+    Path dir =
+        Path.of(
+            this.getLastCompiler().getOptions().getDebugLogDirectory().toString(),
+            TranspileAndOptimizeClosureUnaware.class.getSimpleName());
+    assertThat(listFiles(dir)).isNotEmpty();
+  }
+
+  @Test
+  public void testSupportsPrintingSourceAfterEachPass() {
+    enableDebugLogging(true);
+    this.extraOptions =
+        (CompilerOptions options) -> {
+          options.setPrintSourceAfterEachPass(true);
+          options.setInputDelimiter("~~test123~ : %name%");
+          options.setPrintInputDelimiter(true);
+        };
+
+    testNoWarning(closureUnaware("console.log(0 + 1);"));
+
+    Path dir =
+        Path.of(
+            this.getLastCompiler().getOptions().getDebugLogDirectory().toString(),
+            TranspileAndOptimizeClosureUnaware.class.getSimpleName());
+    var firstSource = loadFile(dir.resolve("Compiler/source_after_pass/000_parseInputs"));
+    assertThat(firstSource)
+        .isEqualTo(
+            """
+            ~~test123~ : synthetic_base
+            'use strict';
+            ~~test123~ : testcode.shadow0
+            $jscomp_sink_closure_unaware_impl(function(){console.log(0+1)});\
+            """);
+  }
+
+  @Test
+  public void testSupportsPrintingSourceAfterEachPass_withRegexpFilter() {
+    enableDebugLogging(true);
+    this.extraOptions =
+        (CompilerOptions options) -> {
+          options.setPrintSourceAfterEachPass(true);
+          options.setPrettyPrint(true);
+          options.setFilesToPrintAfterEachPassRegexList(ImmutableList.of(".*shadow1"));
+        };
+
+    testNoWarning(
+        srcs(
+            closureUnaware("log('0.0');", "log('0.1');", "log('0.2');"),
+            closureUnaware("log('1.0');", "log('1.1');", "log('1.2');")));
+
+    Path dir =
+        Path.of(
+            this.getLastCompiler().getOptions().getDebugLogDirectory().toString(),
+            TranspileAndOptimizeClosureUnaware.class.getSimpleName());
+    var firstSource = loadFile(dir.resolve("Compiler/source_after_pass/000_parseInputs"));
+    assertThat(firstSource)
+        .isEqualTo(
+            """
+            // testcode0.shadow1
+            $jscomp_sink_closure_unaware_impl(function() {
+              log("0.1");
+            });
+            // testcode1.shadow1
+            $jscomp_sink_closure_unaware_impl(function() {
+              log("1.1");
+            });
+            """);
   }
 
   private String closureUnaware(String... closureUnaware) {
