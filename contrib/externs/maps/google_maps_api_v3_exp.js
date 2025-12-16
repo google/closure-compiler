@@ -76,50 +76,41 @@ google.maps.AddressDescriptor.prototype.areas;
 google.maps.AddressDescriptor.prototype.landmarks;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * @record
  */
 google.maps.AddressValidationLibrary = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.addressValidation.Address}
  */
 google.maps.AddressValidationLibrary.prototype.Address;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.addressValidation.AddressComponent}
  */
 google.maps.AddressValidationLibrary.prototype.AddressComponent;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.addressValidation.AddressMetadata}
  */
 google.maps.AddressValidationLibrary.prototype.AddressMetadata;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.addressValidation.AddressValidation}
  */
 google.maps.AddressValidationLibrary.prototype.AddressValidation;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.addressValidation.ConfirmationLevel}
  */
 google.maps.AddressValidationLibrary.prototype.ConfirmationLevel;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.addressValidation.Geocode}
  */
 google.maps.AddressValidationLibrary.prototype.Geocode;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.addressValidation.Granularity}
  */
 google.maps.AddressValidationLibrary.prototype.Granularity;
@@ -131,19 +122,16 @@ google.maps.AddressValidationLibrary.prototype.Granularity;
 google.maps.AddressValidationLibrary.prototype.PossibleNextAction;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.addressValidation.USPSAddress}
  */
 google.maps.AddressValidationLibrary.prototype.USPSAddress;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.addressValidation.USPSData}
  */
 google.maps.AddressValidationLibrary.prototype.USPSData;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.addressValidation.Verdict}
  */
 google.maps.AddressValidationLibrary.prototype.Verdict;
@@ -11674,8 +11662,6 @@ google.maps.event.addDomListenerOnce = function(
 google.maps.addressValidation = {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Details of the post-processed address. Post-processing includes correcting
  * misspelled parts of the address, replacing incorrect parts, and inferring
  * missing parts.
@@ -11748,8 +11734,6 @@ google.maps.addressValidation.Address.prototype.unconfirmedComponentTypes;
 google.maps.addressValidation.Address.prototype.unresolvedTokens;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Represents a single component of an address (ex. street name, city).
  *
  * Access by calling `const {AddressComponent} = await
@@ -11822,8 +11806,6 @@ google.maps.addressValidation.AddressComponent.prototype.spellCorrected;
 google.maps.addressValidation.AddressComponent.prototype.unexpected;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The metadata for the address. AddressMetadata is not guaranteed to be fully
  * populated for every address sent to the Address Validation API.
  *
@@ -11850,8 +11832,6 @@ google.maps.addressValidation.AddressMetadata.prototype.poBox;
 google.maps.addressValidation.AddressMetadata.prototype.residential;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Static class for accessing the AddressValidation APIs.
  *
  * Access by calling `const {AddressValidation} = await
@@ -11919,8 +11899,6 @@ google.maps.addressValidation.AddressValidation.prototype.toJSON =
     function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Request interface for {@link
  * google.maps.addressValidation.AddressValidation.fetchAddressValidation}.
  * @record
@@ -11976,8 +11954,6 @@ google.maps.addressValidation.AddressValidationRequest.prototype
     .uspsCASSEnabled;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The different possible values indicating the level of certainty that the
  * component is correct.
  *
@@ -11993,8 +11969,6 @@ google.maps.addressValidation.ConfirmationLevel = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Contains information about the place the input was geocoded to.
  *
  * Access by calling `const {Geocode} = await
@@ -12061,8 +12035,6 @@ google.maps.addressValidation.Geocode.prototype.plusCode;
 google.maps.addressValidation.Geocode.prototype.fetchPlace = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The various granularities that an address or a geocode can have. When used to
  * indicate granularity for an <em>address</em>, these values indicate with how
  * fine a granularity the address identifies a mailing destination. For example,
@@ -12157,8 +12129,6 @@ google.maps.addressValidation.PossibleNextAction = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * USPS representation of a US address.
  *
  * Access by calling `const {USPSAddress} = await
@@ -12223,8 +12193,6 @@ google.maps.addressValidation.USPSAddress.prototype.zipCode;
 google.maps.addressValidation.USPSAddress.prototype.zipCodeExtension;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The USPS data for the address. USPSData is not guaranteed to be fully
  * populated for every US or PR address sent to the Address Validation API.
  * It&#39;s recommended to integrate the backup address fields in the response
@@ -12483,8 +12451,6 @@ google.maps.addressValidation.USPSData.prototype.standardizedAddress;
 google.maps.addressValidation.USPSData.prototype.suiteLinkFootnote;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Represents the post-processed address for the supplied address.
  *
  * Access by calling `const {Verdict} = await
@@ -12545,6 +12511,7 @@ google.maps.addressValidation.Verdict.prototype.hasUnconfirmedComponents;
 google.maps.addressValidation.Verdict.prototype.inputGranularity;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * A possible next action to take based on other fields in the API response.
  * See {@link google.maps.addressValidation.PossibleNextAction} for details.
  * @type {!google.maps.addressValidation.PossibleNextAction|null}
@@ -18104,7 +18071,7 @@ google.maps.marker.AdvancedMarkerElementOptions.prototype.collisionBehavior;
  * <code>AdvancedMarkerElement</code>, passing the same DOM element to another
  * <code>AdvancedMarkerElement</code> will move the DOM element and cause the
  * previous <code>AdvancedMarkerElement</code> to look empty.
- * @default {@link google.maps.marker.PinElement.element}
+ * @default {@link google.maps.marker.PinElement}
  * @type {!Node|null|undefined}
  */
 google.maps.marker.AdvancedMarkerElementOptions.prototype.content;
