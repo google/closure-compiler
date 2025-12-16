@@ -224,6 +224,7 @@ final class ScriptNodeDeserializer {
     return n;
   }
 
+  @SuppressWarnings("StatementSwitchToExpressionSwitch") // Mostly simple one-line cases
   private Node deserializeSingleNode(AstNode n, Node templateNode) {
     switch (n.getKind()) {
       case SOURCE_FILE:

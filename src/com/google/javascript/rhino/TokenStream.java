@@ -64,6 +64,7 @@ public final class TokenStream {
    * to do the minimum number of character comparisons to ascertain whether the given name is a
    * keyword, instead of doing string search of the name against JS keywords.
    */
+  @SuppressWarnings("StatementSwitchToExpressionSwitch") // Tricky code written with old switches
   public static boolean isKeyword(String name) {
         boolean id = false;
         String s = name;
