@@ -49,7 +49,13 @@ class ClosureUnawareOptions {
   }
 
   private void setSafeOptimizationAssumptions() {
-    shadowOptions.setFoldConstants(true);
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(shadowOptions);
+    shadowOptions.setRemoveUnusedVariables(CompilerOptions.Reach.ALL);
+
+    shadowOptions.setComputeFunctionSideEffects(false); // unsafe for properties.
+    shadowOptions.setAssumeGettersArePure(false);
+    shadowOptions.setCodingConvention(CodingConventions.getDefault());
+    shadowOptions.setRemoveClosureAsserts(false);
   }
 
   private void copyOutputOptions() {

@@ -126,6 +126,119 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
             expectedClosureUnaware("console.log(3);", "console.log(33);", "console.log(333);")));
   }
 
+  @Test
+  public void testInlineLocalObject() {
+    test(
+        srcs(
+            closureUnaware(
+                """
+                const obj = {x: 1, unused: 2};
+                return obj.x;
+                """)),
+        expected(
+            expectedClosureUnaware(
+                """
+                return 1;
+                """)));
+  }
+
+  @Test
+  public void testDoNotRenameOrFlattenEscapedObjects() {
+    test(
+        srcs(
+            closureUnaware(
+                """
+                const obj = {x: 1, y: 2};
+                foo(obj);
+                return obj.x;
+                """)),
+        expected(
+            expectedClosureUnaware(
+                """
+                const a = {x: 1, y: 2};
+                foo(a);
+                return a.x;
+                """)));
+  }
+
+  @Test
+  public void testAssumeAllPropertyReadsHaveSideEffects() {
+    test(
+        srcs(
+            closureUnaware(
+                """
+                return function(obj) {
+                  const x = obj.x;
+                  // Assume that reading obj.y might have other side effects & affect obj.x.
+                  const y = obj.y;
+                  console.log(x);
+                }
+                """)),
+        expected(
+            expectedClosureUnaware(
+                // TODO: b/421971366 - preserve the `obj.y` read. It could be a side-effectful
+                // getter.
+                """
+                return function(a) {
+                  console.log(a.x);
+                }
+                """)));
+  }
+
+  @Test
+  public void testAssumeAllPropertyWritesHaveSideEffects() {
+    test(
+        closureUnaware(
+            """
+            return function(obj) {
+              const x = obj.x;
+              // Assume that writing to obj.y might have other side effects & affect obj.x.
+              obj.y = 0;
+              console.log(x);
+            }
+            """),
+        expectedClosureUnaware(
+            """
+            return function(a) {
+              const b = a.x;
+              a.y = 0;
+              console.log(b);
+            }
+            """));
+  }
+
+  @Test
+  public void testNoClosureAssertsRemoval() {
+    test(
+        closureUnaware("goog.asserts.assert(true);"),
+        expectedClosureUnaware("goog.asserts.assert(!0);"));
+  }
+
+  @Test
+  public void doesntRenameExternRefs_shadowedLocally() {
+    test(
+        closureUnaware(
+            """
+            return function() {
+              const maybeExternal = () => typeof External === 'undefined' ? null : External;
+              globalThis.foo = function() {
+                const External = maybeExternal();
+                console.log(External);
+              };
+            };
+            """),
+        expectedClosureUnaware(
+            // Regression test: the compiler used to incorrectly obfuscate 'typeof External'
+            // to 'typeof a'.
+            """
+            return function() {
+              globalThis.foo = function() {
+                console.log(typeof External === "undefined" ? null : External);
+              };
+            };
+            """));
+  }
+
   private static String loadFile(Path path) {
     try (Stream<String> lines = Files.lines(path)) {
       return lines.collect(joining("\n"));
