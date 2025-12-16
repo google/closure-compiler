@@ -119,7 +119,7 @@ build_and_prepare() {
   if [[ -f "${mvn_artifact_id}.jar" ]]; then
     echo "Extracting: ${mvn_artifact_id}.jar in the classes directory."
     mkdir "${mvn_artifact_id}-classes"
-    jar xf "${mvn_artifact_id}.jar" -C "${mvn_artifact_id}-classes"
+    (cd "${mvn_artifact_id}-classes" && jar xf "${mvn_temp_wd}/${mvn_artifact_id}.jar")
     rm "${mvn_artifact_id}.jar"
   fi
 
