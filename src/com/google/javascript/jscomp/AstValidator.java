@@ -2125,7 +2125,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateFeature(Feature feature, Node n) {
-    if (n.isClosureUnawareCode()) {
+    if (n.getIsInClosureUnawareSubtree()) {
       // Closure-unaware code is currently hidden from transpilation passes in the compiler, so it
       // might still contain features that should have been transpiled.
       // TODO: b/321233583 - Once JSCompiler can transpile closure-unaware code, remove this
