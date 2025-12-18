@@ -46,7 +46,6 @@ public final class RewriteObjectSpreadTest extends CompilerTestCase {
     enableNormalize();
     enableTypeCheck();
     enableTypeInfoValidation();
-    disableCompareSyntheticCode();
     allowExternsChanges();
     replaceTypesWithColors();
     enableMultistageCompilation();

@@ -89,9 +89,6 @@ public abstract class CompilerTestCase {
   /** Libraries to inject before typechecking */
   final Set<String> librariesToInject;
 
-  /** Whether to include synthetic code when comparing actual to expected */
-  private boolean compareSyntheticCode;
-
   /** Whether to compare input and output as trees instead of strings */
   private boolean compareAsTree;
 
@@ -306,7 +303,6 @@ public abstract class CompilerTestCase {
     this.closurePassEnabledForExpected = false;
     this.compareAsTree = true;
     this.compareJsDoc = true;
-    this.compareSyntheticCode = true;
     this.computeSideEffects = false;
     this.annotateSourceInfo = false;
     this.expectParseWarningsInThisTest = false;
@@ -546,17 +542,6 @@ public abstract class CompilerTestCase {
   protected final void enableCreateModuleMap() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.createModuleMap = true;
-  }
-
-  /**
-   * When comparing expected to actual, ignore nodes created through compiler.ensureLibraryInjected
-   *
-   * <p>This differs from using {@link RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY} in that
-   * the compiler still injects the polyfills when requested.
-   */
-  protected final void disableCompareSyntheticCode() {
-    checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    compareSyntheticCode = false;
   }
 
   /** Run using multistage compilation. */
@@ -1510,16 +1495,6 @@ public abstract class CompilerTestCase {
 
   private void compareExpectedToActualAsTree(
       Node mainRoot, Node expectedRoot, Compiler compiler, Map<String, String> genericNameMapping) {
-    if (!compareSyntheticCode) {
-      Node scriptRoot = mainRoot.getFirstChild();
-      for (Node child = scriptRoot.getFirstChild(); child != null; ) {
-        Node nextChild = child.getNext();
-        if (NodeUtil.isInSyntheticScript(child)) {
-          child.detach();
-        }
-        child = nextChild;
-      }
-    }
     if (compareJsDoc) {
       assertNode(mainRoot)
           .usingSerializer(createPrettyPrinter(compiler))
