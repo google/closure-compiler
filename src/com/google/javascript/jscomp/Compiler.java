@@ -39,6 +39,7 @@ import com.google.common.io.BaseEncoding;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.MustBeClosed;
 import com.google.javascript.jscomp.CodePrinter.LicenseTracker;
 import com.google.javascript.jscomp.CompilerInput.ModuleType;
@@ -4523,6 +4524,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @CanIgnoreReturnValue
+  @FormatMethod
   private static Node checkNotModule(Node script, String msg, Object... args) {
     checkArgument(script.isScript(), script);
     if (!script.hasOneChild()) {
