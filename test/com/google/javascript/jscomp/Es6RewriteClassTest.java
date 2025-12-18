@@ -694,6 +694,30 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testExtends_nonGlobalClass() {
+    test(
+        srcs(
+            """
+            function f() {
+              class C {}
+              class D extends C {}
+            }
+            """),
+        expected(
+            """
+            function f() {
+              /** @constructor */
+              let C = function() {};
+              /** @constructor */
+              let D = function() {
+                return C.apply(this, arguments) || this;
+              };
+              $jscomp.inherits(D, C);
+            }
+            """));
+  }
+
+  @Test
   public void testExtendsExternsClass() {
     test(
         externs(EXTERNS_BASE, "const ns = {}; /** @constructor */ ns.D = function() {};"),
