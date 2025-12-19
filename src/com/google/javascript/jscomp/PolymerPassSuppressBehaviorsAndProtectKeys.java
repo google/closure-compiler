@@ -125,10 +125,7 @@ final class PolymerPassSuppressBehaviorsAndProtectKeys extends ExternsSkippingCa
         continue;
       }
       Node defaultValueKey = defaultValue.getParent();
-      JSDocInfo.Builder suppressDoc =
-          JSDocInfo.Builder.maybeCopyFrom(defaultValueKey.getJSDocInfo());
-      suppressDoc.recordSuppressions(ImmutableSet.of("checkTypes", "globalThis", "visibility"));
-      defaultValueKey.setJSDocInfo(suppressDoc.build());
+      addSuppressionJsDocAnnotations(defaultValueKey);
     }
   }
 
@@ -137,12 +134,15 @@ final class PolymerPassSuppressBehaviorsAndProtectKeys extends ExternsSkippingCa
         keyNode != null;
         keyNode = keyNode.getNext()) {
       if (keyNode.getFirstChild().isFunction()) {
-        keyNode.setJSDocInfo(null);
-        JSDocInfo.Builder suppressDoc = JSDocInfo.builder().parseDocumentation();
-        suppressDoc.recordSuppressions(ImmutableSet.of("checkTypes", "globalThis", "visibility"));
-        keyNode.setJSDocInfo(suppressDoc.build());
+        addSuppressionJsDocAnnotations(keyNode);
       }
     }
     suppressDefaultValues(behaviorValue);
+  }
+
+  private void addSuppressionJsDocAnnotations(Node node) {
+    JSDocInfo.Builder suppressDoc = JSDocInfo.Builder.maybeCopyFrom(node.getJSDocInfo());
+    suppressDoc.recordSuppressions(ImmutableSet.of("checkTypes", "globalThis", "visibility"));
+    node.setJSDocInfo(suppressDoc.build());
   }
 }

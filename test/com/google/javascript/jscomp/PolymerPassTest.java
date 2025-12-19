@@ -2583,7 +2583,10 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
             """),
         expected(
             """
-            /** @polymerBehavior @nocollapse */
+            /**
+             * @nocollapse
+             * @polymerBehavior
+             */
             var FunBehavior = {
               properties: {
                 isFun: {
@@ -2597,16 +2600,31 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
               /** @type {string} */
               foo: 'hooray',
 
-              /** @suppress {checkTypes|globalThis|visibility} */
+              /**
+               * @return {number}
+               * @suppress {checkTypes,globalThis,visibility}
+               */
               get someNumber() {
-                return 5*7+2;
+                return 5 * 7 + 2;
               },
-              /** @suppress {checkTypes|globalThis|visibility} */
-              doSomethingFun: function(funAmount) { alert('Something ' + funAmount + ' fun!'); },
-              /** @suppress {checkTypes|globalThis|visibility} */
+              /**
+               * @param {string} funAmount
+               * @suppress {checkTypes,globalThis,visibility}
+               */
+              doSomethingFun: function(funAmount) {
+                alert('Something ' + funAmount + ' fun!');
+              },
+              /**
+               * @override
+               * @suppress {checkTypes,globalThis,visibility}
+               */
               created: function() {}
             };
-            /** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/
+            /**
+             * @constructor
+             * @extends {PolymerElement}
+             * @implements {PolymerAInterface$UID$0}
+             */
             var A = function() {};
             /** @type {boolean} */
             A.prototype.isFun;
@@ -2633,7 +2651,7 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
                 },
                 name: String,
               }),
-              behaviors: [ FunBehavior ],
+              behaviors: [FunBehavior],
             });
             /** @export */
             A.prototype.doSomethingFun;
@@ -2729,10 +2747,14 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
             """),
         expected(
             """
-            /** @polymerBehavior @nocollapse */
+            /**
+             * @nocollapse
+             * @polymerBehavior
+             */
             var FunBehavior = {
               /**
-               * @suppress {checkTypes|globalThis|visibility}
+               * @protected
+               * @suppress {checkTypes,globalThis,visibility}
                */
               doSomethingFun: function() {},
             };
@@ -2818,12 +2840,24 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
         });
         """,
         """
-        /** @polymerBehavior @nocollapse */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         var FunBehavior = {
-          /** @suppress {checkTypes|globalThis|visibility} */
-          doSomethingFun: function(funAmount) { alert('Something ' + funAmount + ' fun!'); },
+          /**
+           * @param {string} funAmount
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          doSomethingFun: function(funAmount) {
+            alert('Something ' + funAmount + ' fun!');
+          },
         };
-        /** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/
+        /**
+         * @constructor
+         * @extends {PolymerElement}
+         * @implements {PolymerAInterface$UID$0}
+         */
         var A = function() {};
         /** @type {!Array} */
         A.prototype.pets;
@@ -2839,13 +2873,13 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
             name: String,
           }),
           /**
-           * @param {string} funAmount
            * @this {A}
+           * @param {string} funAmount
            */
           doSomethingFun: function(funAmount) {
             alert('Element doing something' + funAmount + ' fun!');
           },
-          behaviors: [ FunBehavior ],
+          behaviors: [FunBehavior],
         });
         /** @export */
         A.prototype.doSomethingFun;
@@ -2875,31 +2909,43 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
         });
         """,
         """
-        /** @polymerBehavior @nocollapse */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         var FunBehavior = {
-          /** @suppress {checkTypes|globalThis|visibility} */
-          doSomethingFun(funAmount) { alert('Something ' + funAmount + ' fun!'); },
+          /**
+           * @param {string} funAmount
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          doSomethingFun(funAmount) {
+            alert("Something " + funAmount + " fun!");
+          },
         };
 
-        /** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/
+        /**
+         * @constructor
+         * @extends {PolymerElement}
+         * @implements {PolymerAInterface$UID$0}
+         */
         var A = function() {};
 
         /** @type {string} */
         A.prototype.name;
 
         A = Polymer(/** @lends {A.prototype} */ {
-          is: 'x-element',
+          is: "x-element",
           properties: $jscomp.reflectObject(A, {
             name: String,
           }),
           /**
-           * @param {string} funAmount
            * @this {A}
+           * @param {string} funAmount
            */
           doSomethingFun(funAmount) {
-            alert('Element doing something' + funAmount + ' fun!');
+            alert("Element doing something" + funAmount + " fun!");
           },
-          behaviors: [ FunBehavior ],
+          behaviors: [FunBehavior],
         });
         /** @export */
         A.prototype.doSomethingFun;
@@ -3023,37 +3069,74 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
         });
         """,
         """
-        /** @polymerBehavior @nocollapse */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         var FunBehavior = {
           properties: {
             isFun: Boolean
           },
-          /** @suppress {checkTypes|globalThis|visibility} */
-          doSomethingFun: function(funAmount) { alert('Something ' + funAmount + ' fun!'); },
-          /** @suppress {checkTypes|globalThis|visibility} */
+          /**
+           * @param {string} funAmount
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          doSomethingFun: function(funAmount) {
+            alert('Something ' + funAmount + ' fun!');
+          },
+          /**
+           * @override
+           * @suppress {checkTypes,globalThis,visibility}
+           */
           created: function() {}
         };
-        /** @polymerBehavior @nocollapse */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         var RadBehavior = {
           properties: {
             howRad: Number
           },
-          /** @suppress {checkTypes|globalThis|visibility} */
-          doSomethingRad: function(radAmount) { alert('Something ' + radAmount + ' rad!'); },
-          /** @suppress {checkTypes|globalThis|visibility} */
+          /**
+           * @param {number} radAmount
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          doSomethingRad: function(radAmount) {
+            alert('Something ' + radAmount + ' rad!');
+          },
+          /**
+           * @override
+           * @suppress {checkTypes,globalThis,visibility}
+           */
           ready: function() {}
         };
-        /** @polymerBehavior @nocollapse */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         var SuperCoolBehaviors = [FunBehavior, RadBehavior];
-        /** @polymerBehavior @nocollapse */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         var BoringBehavior = {
           properties: {
             boringString: String
           },
-          /** @suppress {checkTypes|globalThis|visibility} */
-          doSomething: function(boredYet) { alert(boredYet + ' ' + this.boringString); },
+          /**
+           * @param {boolean} boredYet
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          doSomething: function(boredYet) {
+            alert(boredYet + ' ' + this.boringString);
+          },
         };
-        /** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/
+        /**
+         * @constructor
+         * @extends {PolymerElement}
+         * @implements {PolymerAInterface$UID$0}
+         */
         var A = function() {};
         /** @type {boolean} */
         A.prototype.isFun;
@@ -3092,7 +3175,7 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
             },
             name: String,
           }),
-          behaviors: [ SuperCoolBehaviors, BoringBehavior ],
+          behaviors: [SuperCoolBehaviors, BoringBehavior],
         });
         /** @export */
         A.prototype.doSomething;
@@ -3140,27 +3223,55 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
         });
         """,
         """
-        /** @polymerBehavior @nocollapse */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         var FunBehavior = {
           properties: {
             isFun: Boolean
           },
-          /** @suppress {checkTypes|globalThis|visibility} */
-          doSomethingFun: function(funAmount) { alert('Something ' + funAmount + ' fun!'); },
-          /** @suppress {checkTypes|globalThis|visibility} */
+          /**
+           * @param {string} funAmount
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          doSomethingFun: function(funAmount) {
+            alert('Something ' + funAmount + ' fun!');
+          },
+          /**
+           * @override
+           * @suppress {checkTypes,globalThis,visibility}
+           */
           created: function() {}
         };
-        /** @polymerBehavior @nocollapse */
-        var SuperCoolBehaviors = [FunBehavior, {
-          properties: {
-            howRad: Number
-          },
-          /** @suppress {checkTypes|globalThis|visibility} */
-          doSomethingRad: function(radAmount) { alert('Something ' + radAmount + ' rad!'); },
-          /** @suppress {checkTypes|globalThis|visibility} */
-          ready: function() {}
-        }];
-        /** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
+        var SuperCoolBehaviors = [
+          FunBehavior, {
+            properties: {
+              howRad: Number
+            },
+            /**
+             * @param {number} radAmount
+             * @suppress {checkTypes,globalThis,visibility}
+             */
+            doSomethingRad: function(radAmount) {
+              alert('Something ' + radAmount + ' rad!');
+            },
+            /**
+             * @override
+             * @suppress {checkTypes,globalThis,visibility}
+             */
+            ready: function() {}
+          }
+        ];
+        /**
+         * @constructor
+         * @extends {PolymerElement}
+         * @implements {PolymerAInterface$UID$0}
+         */
         var A = function() {};
         /** @type {boolean} */
         A.prototype.isFun;
@@ -3191,7 +3302,7 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
             },
             name: String,
           }),
-          behaviors: [ SuperCoolBehaviors ],
+          behaviors: [SuperCoolBehaviors],
         });
         /** @export */
         A.prototype.doSomethingRad;
@@ -3321,37 +3432,74 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
         });
         """,
         """
-        /** @polymerBehavior @nocollapse */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         var FunBehavior = {
           properties: {
             isFun: Boolean
           },
-          /** @suppress {checkTypes|globalThis|visibility} */
-          doSomething: function(boredYet) { alert(boredYet + ' ' + this.isFun); },
-          /** @suppress {checkTypes|globalThis|visibility} */
+          /**
+           * @param {boolean} boredYet
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          doSomething: function(boredYet) {
+            alert(boredYet + ' ' + this.isFun);
+          },
+          /**
+           * @override
+           * @suppress {checkTypes,globalThis,visibility}
+           */
           created: function() {}
         };
-        /** @polymerBehavior @nocollapse */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         var RadBehavior = {
           properties: {
             howRad: Number
           },
-          /** @suppress {checkTypes|globalThis|visibility} */
-          doSomething: function(boredYet) { alert(boredYet + ' ' + this.howRad); },
-          /** @suppress {checkTypes|globalThis|visibility} */
+          /**
+           * @param {boolean} boredYet
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          doSomething: function(boredYet) {
+            alert(boredYet + ' ' + this.howRad);
+          },
+          /**
+           * @override
+           * @suppress {checkTypes,globalThis,visibility}
+           */
           ready: function() {}
         };
-        /** @polymerBehavior @nocollapse */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         var SuperCoolBehaviors = [FunBehavior, RadBehavior];
-        /** @polymerBehavior @nocollapse */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         var BoringBehavior = {
           properties: {
             boringString: String
           },
-          /** @suppress {checkTypes|globalThis|visibility} */
-          doSomething: function(boredYet) { alert(boredYet + ' ' + this.boringString); },
+          /**
+           * @param {boolean} boredYet
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          doSomething: function(boredYet) {
+            alert(boredYet + ' ' + this.boringString);
+          },
         };
-        /** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/
+        /**
+         * @constructor
+         * @extends {PolymerElement}
+         * @implements {PolymerAInterface$UID$0}
+         */
         var A = function() {};
         /** @type {boolean} */
         A.prototype.isFun;
@@ -3378,7 +3526,7 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
             },
             name: String,
           }),
-          behaviors: [ SuperCoolBehaviors, BoringBehavior ],
+          behaviors: [SuperCoolBehaviors, BoringBehavior],
         });
         /** @export */
         A.prototype.doSomething;
@@ -3432,36 +3580,67 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
         });
         """,
         """
-        /** @polymerBehavior @nocollapse */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         var FunBehavior = {
           properties: {
             isFun: Boolean
           },
-          /** @suppress {checkTypes|globalThis|visibility} */
-          doSomething(boredYet) { alert(boredYet + ' ' + this.isFun); },
+          /**
+           * @param {boolean} boredYet
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          doSomething(boredYet) {
+            alert(boredYet + ' ' + this.isFun);
+          },
         };
 
-        /** @polymerBehavior @nocollapse */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         var RadBehavior = {
           properties: {
             howRad: Number
           },
-          /** @suppress {checkTypes|globalThis|visibility} */
-          doSomething(boredYet) { alert(boredYet + ' ' + this.howRad); },
+          /**
+           * @param {boolean} boredYet
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          doSomething(boredYet) {
+            alert(boredYet + ' ' + this.howRad);
+          },
         };
 
-        /** @polymerBehavior @nocollapse */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         var SuperCoolBehaviors = [FunBehavior, RadBehavior];
-        /** @polymerBehavior @nocollapse */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         var BoringBehavior = {
           properties: {
             boringString: String
           },
-          /** @suppress {checkTypes|globalThis|visibility} */
-          doSomething(boredYet) { alert(boredYet + ' ' + this.boringString); },
+          /**
+           * @param {boolean} boredYet
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          doSomething(boredYet) {
+            alert(boredYet + ' ' + this.boringString);
+          },
         };
 
-        /** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/
+        /**
+         * @constructor
+         * @extends {PolymerElement}
+         * @implements {PolymerAInterface$UID$0}
+         */
         var A = function() {};
 
         /** @type {boolean} */
@@ -3490,7 +3669,7 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
             },
             name: String,
           }),
-          behaviors: [ SuperCoolBehaviors, BoringBehavior ],
+          behaviors: [SuperCoolBehaviors, BoringBehavior],
         });
         /** @export */
         A.prototype.doSomething;
@@ -3530,7 +3709,10 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
     test(
         js,
         """
-        /** @polymerBehavior @nocollapse */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         var FunBehavior = {
           properties: {
             isFun: {
@@ -3538,13 +3720,24 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
               readOnly: true,
             },
           },
-          /** @suppress {checkTypes|globalThis|visibility} */
-          doSomethingFun: function(funAmount) { alert('Something ' + funAmount + ' fun!');
-        },
-          /** @suppress {checkTypes|globalThis|visibility} */
+          /**
+           * @param {string} funAmount
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          doSomethingFun: function(funAmount) {
+            alert('Something ' + funAmount + ' fun!');
+          },
+          /**
+           * @override
+           * @suppress {checkTypes,globalThis,visibility}
+           */
           created: function() {}
         };
-        /** @constructor @extends {PolymerElement} @implements {PolymerAInterface$m1146332801$0}*/
+        /**
+         * @constructor
+         * @extends {PolymerElement}
+         * @implements {PolymerAInterface$UID$0}
+         */
         var A = function() {};
         /** @type {boolean} */
         A.prototype.isFun;
@@ -3558,7 +3751,10 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
         A.prototype.doSomethingFun = function(funAmount) {
           alert('Something ' + funAmount + ' fun!');
         };
-        /** @param {boolean} isFun @override */
+        /**
+         * @param {boolean} isFun
+         * @override
+         */
         A.prototype._setIsFun = function(isFun) {};
         A = Polymer(/** @lends {A.prototype} */ {
           is: 'x-element',
@@ -3569,7 +3765,7 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
             },
             name: String,
           }),
-          behaviors: [ FunBehavior ],
+          behaviors: [FunBehavior],
         });
         /** @export */
         A.prototype.doSomethingFun;
@@ -3641,29 +3837,45 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
         """,
         """
         (function() {
-          /** @polymerBehavior @nocollapse */
-          Polymer.FunBehavior = {
-            properties: {
-              isFun: {
-                type: Boolean,
-                value: true,
-              }
-            },
-            /** @type {string} */
-            foo: 'hooray',
-            /** @suppress {checkTypes|globalThis|visibility} */
-            get someNumber() {
-              return 5*7+2;
-            },
-            /** @suppress {checkTypes|globalThis|visibility} */
-            doSomethingFun: function(funAmount) {
-              alert('Something ' + funAmount + ' fun!');
-            },
-            /** @suppress {checkTypes|globalThis|visibility} */
-            created: function() {}
-          };
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
+        Polymer.FunBehavior = {
+          properties: {
+            isFun: {
+              type: Boolean,
+              value: true,
+            }
+          },
+          /** @type {string} */
+          foo: 'hooray',
+          /**
+           * @return {number}
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          get someNumber() {
+            return 5 * 7 + 2;
+          },
+          /**
+           * @param {string} funAmount
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          doSomethingFun: function(funAmount) {
+            alert('Something ' + funAmount + ' fun!');
+          },
+          /**
+           * @override
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          created: function() {}
+        };
         })();
-        /** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/
+        /**
+         * @constructor
+         * @extends {PolymerElement}
+         * @implements {PolymerAInterface$UID$0}
+         */
         var A = function() {};
         /** @type {boolean} */
         A.prototype.isFun;
@@ -3689,7 +3901,7 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
             },
             name: String,
           }),
-          behaviors: [ Polymer.FunBehavior ],
+          behaviors: [Polymer.FunBehavior],
         });
         /** @export */
         A.prototype.doSomethingFun;
@@ -3803,40 +4015,66 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
         expected(
             TestExternsBuilder.getClosureExternsAsSource(),
             """
-            goog.module('behaviors.CoolBehavior');
+            goog.module("behaviors.CoolBehavior");
             goog.module.declareLegacyNamespace();
             const MODULE_LOCAL = 0;
-            /** @polymerBehavior @nocollapse */
+            /**
+             * @nocollapse
+             * @polymerBehavior
+             */
             Polymer.FunBehavior = {
-              /** @suppress {checkTypes|globalThis|visibility} */
-              doSomethingFun: function(funAmount) {
+              /**
+               * @param {string} funAmount
+               * @suppress {checkTypes,globalThis,visibility}
+               */
+              doSomethingFun:function(funAmount) {
                 alert(MODULE_LOCAL);
-                alert('Something ' + funAmount + ' fun!');
+                alert("Something " + funAmount + " fun!");
               },
-              /** @suppress {checkTypes|globalThis|visibility} */
+              /**
+               * @override
+               * @suppress {checkTypes,globalThis,visibility}
+               */
               created: function() {}
             };
-            /** @polymerBehavior @nocollapse */
+            /**
+             * @nocollapse
+             * @polymerBehavior
+             */
             Polymer.VeryFunBehavior = [
               Polymer.FunBehavior,
               {
-                /** @suppress {checkTypes|globalThis|visibility} */
+                /**
+                 * @suppress {checkTypes,globalThis,visibility}
+                 */
                 doSomethingVeryFun: function(a, [b], c, veryFun = MODULE_LOCAL) {
                   alert(MODULE_LOCAL);
-                  alert('Something very ' + veryFunAmount + ' fun!');
+                  alert("Something very " + veryFunAmount + " fun!");
                 },
-                /** @suppress {checkTypes|globalThis|visibility} */
+                /**
+                 * @override
+                 * @suppress {checkTypes,globalThis,visibility}
+                 */
                 created: function() {}
               }
-            ]
-            /** @polymerBehavior @nocollapse */
+            ];
+            /**
+             * @nocollapse
+             * @polymerBehavior
+             */
             exports = {
-              /** @suppress {checkTypes|globalThis|visibility} */
+              /**
+               * @param {string} coolAmount
+               * @suppress {checkTypes,globalThis,visibility}
+               */
               doSomethingCool: function(coolAmount) {
                 alert(MODULE_LOCAL);
-                alert('Something ' + funAmount + ' cool!');
+                alert("Something " + funAmount + " cool!");
               },
-              /** @suppress {checkTypes|globalThis|visibility} */
+              /**
+               * @override
+               * @suppress {checkTypes,globalThis,visibility}
+               */
               created: function() {}
             };
             """,
@@ -3912,17 +4150,25 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
         expected(
             TestExternsBuilder.getClosureExternsAsSource(),
             """
-            goog.module('behaviors.CoolBehavior');
+            goog.module("behaviors.CoolBehavior");
             goog.module.declareLegacyNamespace();
             const MODULE_LOCAL = 0;
-            /** @polymerBehavior @nocollapse */
+            /**
+             * @nocollapse
+             * @polymerBehavior
+             */
             exports = {
-              /** @suppress {checkTypes|globalThis|visibility} */
+              /**
+               * @suppress {checkTypes,globalThis,visibility}
+               */
               doSomethingCool: function([coolAmount = MODULE_LOCAL] = [], ...[more]) {
                 alert(MODULE_LOCAL);
-                alert('Something ' + funAmount + ' cool!');
+                alert("Something " + funAmount + " cool!");
               },
-              /** @suppress {checkTypes|globalThis|visibility} */
+              /**
+               * @override
+               * @suppress {checkTypes,globalThis,visibility}
+               */
               created: function() {}
             };
             """,
@@ -3989,29 +4235,58 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
         });
         """,
         """
-        /** @polymerBehavior @nocollapse */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         var FunBehavior = {
           properties: {
             isFun: Boolean
           },
-          /** @suppress {checkTypes|globalThis|visibility} */
-          doSomethingFun: function(funAmount) { alert('Something ' + funAmount + ' fun!'); },
-          /** @suppress {checkTypes|globalThis|visibility} */
+          /**
+           * @param {string} funAmount
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          doSomethingFun: function(funAmount) {
+            alert('Something ' + funAmount + ' fun!');
+          },
+          /**
+           * @override
+           * @suppress {checkTypes,globalThis,visibility}
+           */
           created: function() {}
         };
-        /** @polymerBehavior @nocollapse */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         var RadBehavior = {
           properties: {
             howRad: Number
           },
-          /** @suppress {checkTypes|globalThis|visibility} */
-          doSomethingRad: function(radAmount) { alert('Something ' + radAmount + ' rad!'); },
-          /** @suppress {checkTypes|globalThis|visibility} */
+          /**
+           * @param {number} radAmount
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          doSomethingRad: function(radAmount) {
+            alert('Something ' + radAmount + ' rad!');
+          },
+          /**
+           * @override
+           * @suppress {checkTypes,globalThis,visibility}
+           */
           ready: function() {}
         };
-        /** @polymerBehavior @nocollapse */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         var SuperCoolBehaviors = [FunBehavior, RadBehavior];
-        /** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/
+        /**
+         * @constructor
+         * @extends {PolymerElement}
+         * @implements {PolymerAInterface$UID$0}
+         */
         var A = function() {};
         /** @type {boolean} */
         A.prototype.isFun;
@@ -4042,7 +4317,7 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
             },
             name: String,
           }),
-          behaviors: [ SuperCoolBehaviors, FunBehavior ],
+          behaviors: [SuperCoolBehaviors, FunBehavior],
         });
         /** @export */
         A.prototype.doSomethingRad;
@@ -4867,19 +5142,38 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
         });
         """,
         """
-        /** @nocollapse @polymerBehavior */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         const Behavior1 = {
-          /** @suppress {checkTypes,globalThis,visibility} */
+          /**
+           * @public
+           * @suppress {checkTypes,globalThis,visibility}
+           */
           onAll: function() {},
-          /** @suppress {checkTypes,globalThis,visibility} */
-          onBehavior1: function() {}
+          /**
+           * @public
+           * @return {void}
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          onBehavior1: function() {},
         };
-        /** @nocollapse @polymerBehavior */
+        /**
+         * @nocollapse
+         * @polymerBehavior
+         */
         const Behavior2 = {
-          /** @suppress {checkTypes,globalThis,visibility} */
+          /**
+           * @private
+           * @suppress {checkTypes,globalThis,visibility}
+           */
           onAll: function() {},
-          /** @suppress {checkTypes,globalThis,visibility} */
-          onBehavior2: function() {}
+          /**
+           * @private
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          onBehavior2: function() {},
         };
         /**
          * @constructor
@@ -4897,15 +5191,25 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
         Polymer(/** @lends {TestElementElement.prototype} */ {
           is: "test-element",
           behaviors: [Behavior1, Behavior2],
-          /** @private @this {TestElementElement} */
+          /**
+           * @private
+           * @this {TestElementElement}
+           */
           onAll: function() {},
-          /** @private @this {TestElementElement} */
-          onElement: function() {}
+          /**
+           * @private
+           * @this {TestElementElement}
+           */
+          onElement: function() {},
         });
-        /** @private @export */ TestElementElement.prototype.onElement;
-        /** @private @export */ TestElementElement.prototype.onBehavior2;
-        /** @public @export */ TestElementElement.prototype.onBehavior1;
-        /** @private @export */ TestElementElement.prototype.onAll;
+        /** @private @export */
+        TestElementElement.prototype.onElement;
+        /** @private @export */
+        TestElementElement.prototype.onBehavior2;
+        /** @public @export */
+        TestElementElement.prototype.onBehavior1;
+        /** @private @export */
+        TestElementElement.prototype.onAll;
         """);
   }
 
