@@ -323,6 +323,16 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFoldBlockScopedVariables_bug() {
+    disableNormalize();
+    fold(
+        "function f() { if (x) {return;} else { let c = 1; } var c; return !!c; }",
+        // TODO: b/470408326 - fix this output.
+        // "Uncaught SyntaxError: Identifier 'c' has already been declared"
+        "function f() { if (x){} else { let c = 1; var c; return !!c; } }");
+  }
+
+  @Test
   public void testFoldBlockScopedVariables() {
     // When moving block-scoped variable declarations into inner blocks, first convert them to
     // "var" declarations to avoid breaking any references in inner functions.
