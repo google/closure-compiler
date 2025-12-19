@@ -774,4 +774,30 @@ public final class JSDocInfoPrinterTest {
     assertThat(jsDocInfoPrinter.print(info))
         .isEqualTo("/** @tsType ():string @tsType (x:string):number */ ");
   }
+
+  @Test
+  public void testPolymer() {
+    builder.recordPolymer();
+    builder.recordPolymerBehavior();
+    builder.recordMixinFunction();
+    builder.recordMixinClass();
+    builder.recordCustomElement();
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info))
+        .isEqualTo(
+            """
+            /**
+             * @polymerBehavior
+             * @polymer
+             * @customElement
+             * @mixinClass
+             * @mixinFunction
+             * @polymer
+             * @polymerBehavior
+             * @mixinFunction
+             * @mixinClass
+             * @customElement
+             */
+            """);
+  }
 }
