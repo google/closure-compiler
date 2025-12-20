@@ -115,26 +115,6 @@ public final class JSDocInfoPrinter {
       parts.add("@wizaction");
     }
 
-    if (info.isPolymerBehavior()) {
-      parts.add("@polymerBehavior");
-    }
-
-    if (info.isPolymer()) {
-      parts.add("@polymer");
-    }
-
-    if (info.isCustomElement()) {
-      parts.add("@customElement");
-    }
-
-    if (info.isMixinClass()) {
-      parts.add("@mixinClass");
-    }
-
-    if (info.isMixinFunction()) {
-      parts.add("@mixinFunction");
-    }
-
     if (info.isNoSideEffects()) {
       parts.add("@nosideeffects");
     }

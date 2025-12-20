@@ -787,11 +787,6 @@ public final class JSDocInfoPrinterTest {
         .isEqualTo(
             """
             /**
-             * @polymerBehavior
-             * @polymer
-             * @customElement
-             * @mixinClass
-             * @mixinFunction
              * @polymer
              * @polymerBehavior
              * @mixinFunction
