@@ -170,7 +170,7 @@ public class JSTypeRegistryTest {
 
     // Ensure different instances are independent.
     JSTypeRegistry typeRegistry2 = new JSTypeRegistry(null);
-    assertThat(typeRegistry2.getType(null, name)).isEqualTo(null);
+    assertThat(typeRegistry2.getType(null, name)).isNull();
     assertType(registry.getType(null, name)).isEqualTo(type);
   }
 
