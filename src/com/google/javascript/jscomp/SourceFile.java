@@ -686,10 +686,12 @@ public final class SourceFile implements StaticSourceFile {
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder withPath(String path) {
       return this.withPathInternal(path, null);
     }
 
+    @CanIgnoreReturnValue
     public Builder withPath(Path path) {
       return this.withPathInternal(path.toString(), path);
     }
@@ -781,6 +783,7 @@ public final class SourceFile implements StaticSourceFile {
           this.kind);
     }
 
+    @CanIgnoreReturnValue
     private Builder withPathInternal(String path, @Nullable Path pathWithFilesystem) {
       // Check if this path should be inferred as a ZIP entry path.
       int bangSlashIndex = path.indexOf(BANG_SLASH);

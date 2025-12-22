@@ -22,6 +22,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.BlackHoleErrorManager;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
@@ -118,50 +119,60 @@ public final class RefactoringDriver {
 
     public Builder() {}
 
+    @CanIgnoreReturnValue
     public Builder addExternsFromFile(String filename) {
       externs.add(SourceFile.fromFile(filename));
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder addExternsFromFile(Iterable<String> externs) {
       this.externs.addAll(Lists.transform(ImmutableList.copyOf(externs), TO_SOURCE_FILE_FN));
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder addExternsFromCode(String code) {
       externs.add(SourceFile.fromCode("externs", code));
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder addExterns(Iterable<SourceFile> externs) {
       this.externs.addAll(externs);
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder addInputsFromFile(String filename) {
       inputs.add(SourceFile.fromFile(filename));
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder addInputsFromFile(Iterable<String> inputs) {
       this.inputs.addAll(Lists.transform(ImmutableList.copyOf(inputs), TO_SOURCE_FILE_FN));
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder addInputsFromCode(String code) {
       return addInputsFromCode(code, "input");
     }
 
+    @CanIgnoreReturnValue
     public Builder addInputsFromCode(String code, String filename) {
       inputs.add(SourceFile.fromCode(filename, code));
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder addInputs(Iterable<SourceFile> inputs) {
       this.inputs.addAll(inputs);
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder withCompilerOptions(CompilerOptions compilerOptions) {
       this.compilerOptions = checkNotNull(compilerOptions);
       return this;
