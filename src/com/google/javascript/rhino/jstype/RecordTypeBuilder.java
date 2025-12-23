@@ -40,6 +40,7 @@
 package com.google.javascript.rhino.jstype;
 
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.rhino.Node;
 import java.util.LinkedHashMap;
 
@@ -71,6 +72,7 @@ public final class RecordTypeBuilder {
    * @param propertyNode the node that holds this property definition
    * @return The builder itself for chaining purposes.
    */
+  @CanIgnoreReturnValue
   public RecordTypeBuilder addProperty(String name, JSType type, Node propertyNode) {
     isEmpty = false;
     properties.put(name, new RecordProperty(type, propertyNode));

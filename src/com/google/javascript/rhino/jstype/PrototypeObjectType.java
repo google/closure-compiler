@@ -44,6 +44,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -147,37 +148,44 @@ public class PrototypeObjectType extends ObjectType {
       this.templateTypeMap = registry.getEmptyTemplateTypeMap();
     }
 
+    @CanIgnoreReturnValue
     T setName(String x) {
       this.className = x;
       return castThis();
     }
 
+    @CanIgnoreReturnValue
     final T setImplicitPrototype(ObjectType x) {
       this.implicitPrototype = x;
       return castThis();
     }
 
+    @CanIgnoreReturnValue
     final T setNative(boolean x) {
       this.nativeType = x;
       return castThis();
     }
 
+    @CanIgnoreReturnValue
     final T setAnonymous(boolean x) {
       this.anonymousType = x;
       return castThis();
     }
 
+    @CanIgnoreReturnValue
     final T setTemplateTypeMap(TemplateTypeMap x) {
       this.templateTypeMap = x;
       return castThis();
     }
 
+    @CanIgnoreReturnValue
     final T setTemplateParamCount(int x) {
       this.templateParamCount = x;
       return castThis();
     }
 
     @SuppressWarnings("unchecked")
+    @CanIgnoreReturnValue
     final T castThis() {
       return (T) this;
     }

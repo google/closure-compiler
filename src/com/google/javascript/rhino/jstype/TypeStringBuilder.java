@@ -39,6 +39,8 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+
 /**
  * Visits types to assemble an associated stringification.
  *
@@ -58,16 +60,19 @@ final class TypeStringBuilder {
     return this.isForAnnotations;
   }
 
+  @CanIgnoreReturnValue
   TypeStringBuilder append(String x) {
     this.builder.append(x);
     return this;
   }
 
+  @CanIgnoreReturnValue
   TypeStringBuilder append(JSType x) {
     x.appendTo(this);
     return this;
   }
 
+  @CanIgnoreReturnValue
   TypeStringBuilder appendAll(Iterable<?> elements, String separator) {
     boolean separate = false;
     for (Object e : elements) {
@@ -87,7 +92,7 @@ final class TypeStringBuilder {
     return this;
   }
 
-
+  @CanIgnoreReturnValue
   TypeStringBuilder appendNonNull(JSType type) {
     if (this.isForAnnotations
         && type.isObject()
@@ -102,11 +107,13 @@ final class TypeStringBuilder {
     return this.append(type);
   }
 
+  @CanIgnoreReturnValue
   TypeStringBuilder breakLineAndIndent() {
     this.builder.append("\n").append(this.indentation);
     return this;
   }
 
+  @CanIgnoreReturnValue
   TypeStringBuilder indent(Runnable cb) {
     String lastIndent = this.indentation;
     this.indentation = lastIndent + "  ";

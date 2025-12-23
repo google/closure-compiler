@@ -41,6 +41,7 @@ package com.google.javascript.rhino.testing;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.rhino.ErrorReporter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -68,11 +69,13 @@ public final class TestErrorReporter implements ErrorReporter {
     seenWarnings.put(fmtDiagnosticKey(message, sourceName, line, lineOffset), message);
   }
 
+  @CanIgnoreReturnValue
   public TestErrorReporter expectAllErrors(String... errors) {
     Collections.addAll(this.expectedErrors, errors);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public TestErrorReporter expectAllWarnings(String... warnings) {
     Collections.addAll(this.expectedWarnings, warnings);
     return this;

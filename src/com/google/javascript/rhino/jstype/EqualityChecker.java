@@ -44,6 +44,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import com.google.javascript.rhino.jstype.JSType.MatchStatus;
 import java.util.LinkedHashMap;
@@ -104,6 +105,7 @@ final class EqualityChecker {
   private int recursionDepth = 0;
   private boolean hasRun = false;
 
+  @CanIgnoreReturnValue
   EqualityChecker setEqMethod(EqMethod x) {
     this.checkHasNotRun();
     checkState(this.eqMethod == null);

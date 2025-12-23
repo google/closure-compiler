@@ -46,6 +46,7 @@ import static com.google.javascript.rhino.jstype.JSTypeIterations.allTypesMatch;
 import static com.google.javascript.rhino.jstype.JSTypeIterations.anyTypeMatches;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.rhino.jstype.JSType.MatchStatus;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import java.util.Iterator;
@@ -89,6 +90,7 @@ final class SubtypeChecker {
   private boolean hasRun = false;
   private int recursionDepth = 0;
 
+  @CanIgnoreReturnValue
   SubtypeChecker setSupertype(JSType value) {
     checkHasNotRun();
     checkState(this.initialSupertype == null);
@@ -96,6 +98,7 @@ final class SubtypeChecker {
     return this;
   }
 
+  @CanIgnoreReturnValue
   SubtypeChecker setSubtype(JSType value) {
     checkHasNotRun();
     checkState(this.initialSubtype == null);
@@ -103,6 +106,7 @@ final class SubtypeChecker {
     return this;
   }
 
+  @CanIgnoreReturnValue
   SubtypeChecker setUsingStructuralSubtyping(boolean value) {
     checkHasNotRun();
     checkState(this.isUsingStructuralTyping == null);
@@ -110,6 +114,7 @@ final class SubtypeChecker {
     return this;
   }
 
+  @CanIgnoreReturnValue
   SubtypeChecker setSubtypingMode(SubtypingMode value) {
     checkHasNotRun();
     checkState(this.subtypingMode == null);

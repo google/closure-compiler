@@ -48,6 +48,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -151,6 +152,7 @@ public final class TypeSubject extends Subject {
     return new FunctionTypeSubject();
   }
 
+  @CanIgnoreReturnValue
   public TypeSubject isObjectTypeWithProperty(String propName) {
     isLiteralObject();
     withTypeOfProp(propName).isNotNull();

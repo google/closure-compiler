@@ -1640,6 +1640,7 @@ public class JSDocInfo implements Serializable {
      * instantiating the builder if documentation should be included, since it enables various
      * operations to do work that would otherwise be no-ops.
      */
+    @CanIgnoreReturnValue
     public Builder parseDocumentation() {
       setBit(Bit.INCLUDE_DOCUMENTATION, true);
       return this;

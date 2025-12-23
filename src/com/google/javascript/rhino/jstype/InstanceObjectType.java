@@ -42,6 +42,7 @@ package com.google.javascript.rhino.jstype;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.rhino.Node;
 
 /** An object type that is an instance of some function constructor. */
@@ -64,6 +65,7 @@ final class InstanceObjectType extends PrototypeObjectType {
       super(registry);
     }
 
+    @CanIgnoreReturnValue
     Builder setConstructor(FunctionType x) {
       this.constructor = x;
       return this;

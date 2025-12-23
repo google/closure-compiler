@@ -42,6 +42,7 @@ package com.google.javascript.rhino.jstype;
 import static com.google.javascript.jscomp.base.Tri.FALSE;
 import static com.google.javascript.jscomp.base.Tri.TRUE;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
@@ -90,18 +91,21 @@ public final class EnumType extends PrototypeObjectType implements JSType.WithSo
     }
 
     /** The object literal that creates the enum, a reference to another enum, or null. */
+    @CanIgnoreReturnValue
     public Builder setSource(Node x) {
       this.source = x;
       return this;
     }
 
     /** The ID of the goog.module in which this enum was declared. */
+    @CanIgnoreReturnValue
     public Builder setGoogModuleId(String x) {
       this.googModuleId = x;
       return this;
     }
 
     /** The base type of the individual elements. */
+    @CanIgnoreReturnValue
     public Builder setElementType(JSType x) {
       this.elementType = x;
       return this;
