@@ -285,8 +285,10 @@ public final class ColorPool {
         checkState(proto.hasObject());
         ObjectTypeProto objProto = proto.getObject();
 
-        for (Integer p : objProto.getInstanceTypeList()) {
-          instanceColors.add(this.lookupOrReconcileColor(shard.getId(p)));
+        var instanceTypeIds = objProto.getInstanceTypeList();
+        for (int i = 0; i < instanceTypeIds.size(); i++) {
+          Integer instanceTypePointer = instanceTypeIds.get(i);
+          instanceColors.add(this.lookupOrReconcileColor(shard.getId(instanceTypePointer)));
         }
 
         boolean isClosureAssertBool = objProto.getClosureAssert();
@@ -299,8 +301,11 @@ public final class ColorPool {
         isConstructor |= objProto.getMarkedConstructor();
         isInvalidating |= objProto.getIsInvalidating();
         propertiesKeepOriginalName |= objProto.getPropertiesKeepOriginalName();
-        for (Integer p : objProto.getPrototypeList()) {
-          prototypes.add(this.lookupOrReconcileColor(shard.getId(p)));
+
+        var prototypeIds = objProto.getPrototypeList();
+        for (int i = 0; i < prototypeIds.size(); i++) {
+          Integer prototypePointer = prototypeIds.get(i);
+          prototypes.add(this.lookupOrReconcileColor(shard.getId(prototypePointer)));
         }
         for (int i = 0; i < objProto.getOwnPropertyCount(); i++) {
           ownProperties.add(shard.stringPool.get(objProto.getOwnProperty(i)));
@@ -324,7 +329,9 @@ public final class ColorPool {
       viewToProto.forEach(
           (shard, proto) -> {
             checkState(proto.hasUnion(), proto);
-            for (Integer memberPointer : proto.getUnion().getUnionMemberList()) {
+            var unionMemberList = proto.getUnion().getUnionMemberList();
+            for (int i = 0; i < unionMemberList.size(); i++) {
+              Integer memberPointer = unionMemberList.get(i);
               ColorId memberId = shard.getId(memberPointer);
               Color member = this.lookupOrReconcileColor(memberId);
               checkWellFormed(!member.isUnion(), "Reconciling union with non-union", proto);
@@ -356,22 +363,7 @@ public final class ColorPool {
       TypeProto proto = typePool.getType(i);
       switch (proto.getKindCase()) {
         case OBJECT -> {}
-        case UNION -> {
-          {
-            checkWellFormed(
-                proto.getUnion().getUnionMemberCount() > 1, "Union has too few members", proto);
-            LinkedHashSet<ColorId> members = new LinkedHashSet<>();
-            for (Integer memberPointer : proto.getUnion().getUnionMemberList()) {
-              ColorId memberId =
-                  isAxiomatic(memberPointer)
-                      ? OFFSET_TO_AXIOMATIC_COLOR.get(memberPointer).getId()
-                      : ids[trimOffset(memberPointer)];
-              checkWellFormed(memberId != null, "Union member not found", proto);
-              members.add(memberId);
-            }
-            ids[i] = ColorId.union(members);
-          }
-        }
+        case UNION -> ids[i] = createUnionColorId(proto, ids);
         default -> throw new AssertionError(proto);
       }
     }
@@ -383,6 +375,22 @@ public final class ColorPool {
     }
 
     return ImmutableList.copyOf(ids);
+  }
+
+  private static ColorId createUnionColorId(TypeProto proto, ColorId[] allObjectIds) {
+    checkWellFormed(proto.getUnion().getUnionMemberCount() > 1, "Union has too few members", proto);
+    LinkedHashSet<ColorId> members = new LinkedHashSet<>();
+    var unionMemberList = proto.getUnion().getUnionMemberList();
+    for (int i = 0; i < unionMemberList.size(); i++) {
+      Integer memberPointer = unionMemberList.get(i);
+      ColorId memberId =
+          isAxiomatic(memberPointer)
+              ? OFFSET_TO_AXIOMATIC_COLOR.get(memberPointer).getId()
+              : allObjectIds[trimOffset(memberPointer)];
+      checkWellFormed(memberId != null, "Union member not found", proto);
+      members.add(memberId);
+    }
+    return ColorId.union(members);
   }
 
   private static int validatePointer(int offset, ShardView shard) {

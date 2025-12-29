@@ -44,7 +44,9 @@ public final class StringPool {
 
     ArrayList<String> pool = new ArrayList<>();
     pool.add("");
-    for (ByteString s : proto.getStringsList()) {
+    var stringsList = proto.getStringsList();
+    for (int i = 0; i < stringsList.size(); i++) {
+      ByteString s = stringsList.get(i);
       pool.add(decoder.decode(s));
     }
 

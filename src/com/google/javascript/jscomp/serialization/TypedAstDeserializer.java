@@ -259,7 +259,10 @@ public final class TypedAstDeserializer {
       }
     }
 
-    this.runtimeLibraries.addAll(typedAstProto.getRuntimeLibraryToInjectList());
+    var runtimeLibraryList = typedAstProto.getRuntimeLibraryToInjectList();
+    for (int i = 0; i < runtimeLibraryList.size(); i++) {
+      this.runtimeLibraries.add(runtimeLibraryList.get(i));
+    }
 
     // TODO(b/248351234): can we avoid some of this work if the shard only contains weak srcs?
     // one risk: could checks passes synthesize new externProperties even for weak srcs?
