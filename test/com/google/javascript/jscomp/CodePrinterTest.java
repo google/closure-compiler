@@ -4557,19 +4557,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         .isEqualTo("function(){}");
   }
 
-  @Test
-  public void testPrintsContentOfClosureUnawareShadow_legacyStructure() {
-    // TODO: b/421971366 - delete this test case once cl/830654412 is in the release.
-    Node shadowHost = IR.name("SHADOW");
-    AstFactory astFactory = new Compiler().createAstFactoryWithoutTypes();
-    Node closureUnawareFn = astFactory.createEmptyFunction(AstFactory.type(StandardColors.UNKNOWN));
-    shadowHost.setClosureUnawareShadow(IR.root(IR.script(IR.exprResult(closureUnawareFn))));
-
-    assertThat(
-            new CodePrinter.Builder(shadowHost).setCompilerOptions(new CompilerOptions()).build())
-        .isEqualTo("function(){}");
-  }
-
   private void checkWithOriginalName(
       String code, String expectedCode, CompilerOptions compilerOptions) {
     compilerOptions.setCheckSymbols(true);

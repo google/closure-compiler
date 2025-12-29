@@ -1034,13 +1034,7 @@ public final class AstValidator implements CompilerPass {
     }
     Node shadowJsCall = exprResult.getOnlyChild();
     if (!shadowJsCall.isCall()) {
-
-      // TODO: b/421971366 - remove this special allowance for FUNCTION nodes after cl/830654412
-      // is in the compiler release.
-      if (!shadowJsCall.isFunction()) {
-        violation("Shadow node EXPR_RESULT child is not a function or call", shadowJsCall);
-        return;
-      }
+      violation("Shadow node EXPR_RESULT child is not a call", shadowJsCall);
       return;
     }
     Node shadowJsFunction = shadowJsCall.getLastChild();

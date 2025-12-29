@@ -1761,43 +1761,13 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectInvalid(f, Check.STATEMENT, "Shadow SCRIPT node child is not an expr result node");
 
     shadowHost.setClosureUnawareShadow(IR.root(this.parseValidScript("(x++)").detach()));
-    expectInvalid(f, Check.STATEMENT, "Shadow node EXPR_RESULT child is not a function or call");
+    expectInvalid(f, Check.STATEMENT, "Shadow node EXPR_RESULT child is not a call");
 
     shadowHost.setClosureUnawareShadow(IR.root(this.parseValidScript("x()").detach()));
     expectInvalid(f, Check.STATEMENT, "Shadow node CALL child is not a function");
 
     shadowHost.setClosureUnawareShadow(
         IR.root(this.parseValidScript("sink(function(){})").detach()));
-    expectValid(f, Check.STATEMENT);
-  }
-
-  @Test
-  public void testShadowContent_validatesSingularExpectedStructure_legacyStructure() {
-    // TODO: b/421971366 - delete this test case once cl/830654412 is in the release.
-    // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = TypeInfoValidation.NONE;
-
-    Node shadowHost = IR.name("f");
-    Node f = IR.exprResult(shadowHost);
-    expectValid(f, Check.STATEMENT);
-
-    shadowHost.setClosureUnawareShadow(IR.name("x"));
-    expectInvalid(f, Check.STATEMENT, "Shadow reference node is not a ROOT node");
-
-    shadowHost.setClosureUnawareShadow(IR.root());
-    expectInvalid(f, Check.STATEMENT, "Shadow root node's child is not a script node");
-
-    shadowHost.setClosureUnawareShadow(
-        IR.root(IR.script(IR.exprResult(IR.name("x")), IR.exprResult(IR.name("y")))));
-    expectInvalid(f, Check.STATEMENT, "Shadow SCRIPT node child has more than one child");
-
-    shadowHost.setClosureUnawareShadow(IR.root(this.parseValidScript("function foo(){}").detach()));
-    expectInvalid(f, Check.STATEMENT, "Shadow SCRIPT node child is not an expr result node");
-
-    shadowHost.setClosureUnawareShadow(IR.root(this.parseValidScript("(x++)").detach()));
-    expectInvalid(f, Check.STATEMENT, "Shadow node EXPR_RESULT child is not a function or call");
-
-    shadowHost.setClosureUnawareShadow(IR.root(this.parseValidScript("(function(){})").detach()));
     expectValid(f, Check.STATEMENT);
   }
 

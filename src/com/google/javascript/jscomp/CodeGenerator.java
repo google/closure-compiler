@@ -207,13 +207,8 @@ public class CodeGenerator {
     if (shadow != null) {
       Node script = shadow.getOnlyChild();
       Node sinkCall = script.getOnlyChild().getOnlyChild();
-      if (sinkCall.isCall()) {
-        add(sinkCall.getLastChild(), context, printComments);
-      } else {
-        // TODO: b/421971366 - delete this branch once cl/830654412 is in the release.
-        checkState(sinkCall.isFunction(), sinkCall);
-        add(sinkCall, context, printComments);
-      }
+      checkState(sinkCall.isCall(), sinkCall);
+      add(sinkCall.getLastChild(), context, printComments);
       return;
     }
     if (printComments) {

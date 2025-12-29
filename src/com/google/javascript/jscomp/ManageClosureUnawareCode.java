@@ -305,20 +305,14 @@ final class ManageClosureUnawareCode implements CompilerPass {
       }
 
       // ROOT -> SCRIPT -> EXPR_RESULT -> CALL -> FUNCTION
-      //  or, until cl/830654412 is fully released:
-      // ROOT -> SCRIPT -> EXPR_RESULT -> FUNCTION
       Node shadowScript = shadowAstRoot.getOnlyChild();
       checkState(shadowScript.isScript(), shadowScript);
       checkState(shadowScript.hasOneChild(), shadowScript);
       Node exprResult = shadowScript.getOnlyChild();
       checkState(exprResult.isExprResult(), exprResult);
-      Node originalCodeFunction;
-      if (exprResult.getFirstChild().isCall()) {
-        originalCodeFunction = exprResult.getFirstChild().getLastChild();
-      } else {
-        // TODO: b/421971366 - delete this branch once cl/830654412 is released.
-        originalCodeFunction = exprResult.getFirstChild();
-      }
+      Node callNode = exprResult.getOnlyChild();
+      checkState(callNode.isCall(), callNode);
+      Node originalCodeFunction = callNode.getLastChild();
       checkState(originalCodeFunction.isFunction(), originalCodeFunction);
       originalCodeFunction.detach();
       n.replaceWith(originalCodeFunction);
