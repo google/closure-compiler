@@ -332,7 +332,7 @@ final class ConvertChunksToESModules implements CompilerPass {
     }
   }
 
-  /** Find names in a module that are defined in a different module. */
+  /** Find names in a chunk that are defined in a different chunk. */
   private class FindCrossChunkReferences extends AbstractPreOrderCallback {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -358,10 +358,10 @@ final class ConvertChunksToESModules implements CompilerPass {
       // Ensure every chunk dependency is explicitly listed with an import
       // Dependent chunks may have side effects even if there isn't an explicit name reference
       if (!chunkDependencies.isEmpty()) {
-        Map<JSChunk, Set<String>> namesToImportByModule =
+        Map<JSChunk, Set<String>> namesToImportByChunk =
             crossChunkImports.computeIfAbsent(chunk, (JSChunk k) -> new LinkedHashMap<>());
         for (JSChunk dependency : chunkDependencies) {
-          namesToImportByModule.computeIfAbsent(dependency, (JSChunk k) -> new LinkedHashSet<>());
+          namesToImportByChunk.computeIfAbsent(dependency, (JSChunk k) -> new LinkedHashSet<>());
         }
       }
     }
@@ -441,14 +441,14 @@ final class ConvertChunksToESModules implements CompilerPass {
           crossChunkExports.computeIfAbsent(definingChunk, (JSChunk k) -> new LinkedHashSet<>());
       namesToExport.add(name);
 
-      // Add an import for this name to this module from the source module
-      Map<JSChunk, Set<String>> namesToImportByModule =
+      // Add an import for this name to this chunk from the source chunk
+      Map<JSChunk, Set<String>> namesToImportByChunk =
           crossChunkImports.computeIfAbsent(referencingChunk, (JSChunk k) -> new LinkedHashMap<>());
       if (importType == ImportType.STATIC) {
-        Set<String> importsForModule =
-            namesToImportByModule.computeIfAbsent(
+        Set<String> importsForChunk =
+            namesToImportByChunk.computeIfAbsent(
                 definingChunk, (JSChunk k) -> new LinkedHashSet<>());
-        importsForModule.add(name);
+        importsForChunk.add(name);
       }
     }
     return true;

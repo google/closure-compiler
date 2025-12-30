@@ -28,42 +28,42 @@ import org.junit.runners.JUnit4;
 
 /** Tests for {@link JSChunk} */
 @RunWith(JUnit4.class)
-public final class JSModuleTest {
-  private JSChunk mod1;
-  private JSChunk mod2; // depends on mod1
-  private JSChunk mod3; // depends on mod1
-  private JSChunk mod4; // depends on mod2, mod3
-  private JSChunk mod5; // depends on mod1
+public final class JSChunkTest {
+  private JSChunk chunk1;
+  private JSChunk chunk2; // depends on chunk1
+  private JSChunk chunk3; // depends on chunk1
+  private JSChunk chunk4; // depends on chunk2, chunk3
+  private JSChunk chunk5; // depends on chunk1
 
   @Before
   public void setUp() throws Exception {
-    mod1 = new JSChunk("mod1");
+    chunk1 = new JSChunk("chunk1");
 
-    mod2 = new JSChunk("mod2");
-    mod2.addDependency(mod1);
+    chunk2 = new JSChunk("chunk2");
+    chunk2.addDependency(chunk1);
 
-    mod3 = new JSChunk("mod3");
-    mod3.addDependency(mod1);
+    chunk3 = new JSChunk("chunk3");
+    chunk3.addDependency(chunk1);
 
-    mod4 = new JSChunk("mod4");
-    mod4.addDependency(mod2);
-    mod4.addDependency(mod3);
+    chunk4 = new JSChunk("chunk4");
+    chunk4.addDependency(chunk2);
+    chunk4.addDependency(chunk3);
 
-    mod5 = new JSChunk("mod5");
-    mod5.addDependency(mod1);
+    chunk5 = new JSChunk("chunk5");
+    chunk5.addDependency(chunk1);
   }
 
   @Test
   public void testDependencies() {
-    assertThat(mod1.getAllDependencies()).isEmpty();
-    assertThat(mod2.getAllDependencies()).isEqualTo(ImmutableSet.of(mod1));
-    assertThat(mod3.getAllDependencies()).isEqualTo(ImmutableSet.of(mod1));
-    assertThat(mod4.getAllDependencies()).isEqualTo(ImmutableSet.of(mod1, mod2, mod3));
+    assertThat(chunk1.getAllDependencies()).isEmpty();
+    assertThat(chunk2.getAllDependencies()).isEqualTo(ImmutableSet.of(chunk1));
+    assertThat(chunk3.getAllDependencies()).isEqualTo(ImmutableSet.of(chunk1));
+    assertThat(chunk4.getAllDependencies()).isEqualTo(ImmutableSet.of(chunk1, chunk2, chunk3));
 
-    assertThat(mod1.getThisAndAllDependencies()).isEqualTo(ImmutableSet.of(mod1));
-    assertThat(mod2.getThisAndAllDependencies()).isEqualTo(ImmutableSet.of(mod1, mod2));
-    assertThat(mod3.getThisAndAllDependencies()).isEqualTo(ImmutableSet.of(mod1, mod3));
-    assertThat(mod4.getThisAndAllDependencies()).isEqualTo(ImmutableSet.of(mod1, mod2, mod3, mod4));
+    assertThat(chunk1.getThisAndAllDependencies()).isEqualTo(ImmutableSet.of(chunk1));
+    assertThat(chunk2.getThisAndAllDependencies()).isEqualTo(ImmutableSet.of(chunk1, chunk2));
+    assertThat(chunk3.getThisAndAllDependencies()).isEqualTo(ImmutableSet.of(chunk1, chunk3));
+    assertThat(chunk4.getThisAndAllDependencies()).isEqualTo(ImmutableSet.of(chunk1, chunk2, chunk3, chunk4));
   }
 
   @Test
@@ -76,7 +76,7 @@ public final class JSModuleTest {
         new CompilerInput(SourceFile.fromCode("c.js", "goog.provide('c');goog.require('d')"));
     CompilerInput d = new CompilerInput(SourceFile.fromCode("d.js", "goog.provide('d')"));
 
-    // Independent modules.
+    // Independent chunks.
     CompilerInput e = new CompilerInput(SourceFile.fromCode("e.js", "goog.provide('e')"));
     CompilerInput f = new CompilerInput(SourceFile.fromCode("f.js", "goog.provide('f')"));
 
@@ -93,15 +93,15 @@ public final class JSModuleTest {
 
   private void assertSortedInputs(List<CompilerInput> expected, List<CompilerInput> shuffled)
       throws Exception {
-    JSChunk mod = new JSChunk("mod");
+    JSChunk chunk = new JSChunk("chunk");
     for (CompilerInput input : shuffled) {
       input.setChunk(null);
-      mod.add(input);
+      chunk.add(input);
     }
     Compiler compiler = new Compiler(System.err);
     compiler.initCompilerOptionsIfTesting();
-    mod.sortInputsByDeps(compiler);
+    chunk.sortInputsByDeps(compiler);
 
-    assertThat(mod.getInputs()).isEqualTo(expected);
+    assertThat(chunk.getInputs()).isEqualTo(expected);
   }
 }

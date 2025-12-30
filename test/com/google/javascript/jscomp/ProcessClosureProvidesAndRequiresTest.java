@@ -569,7 +569,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testGoodCrossModuleRequire1() {
+  public void testGoodCrossChunkRequire1() {
     test(
         srcs(
             JSChunkGraphBuilder.forStar()
@@ -581,7 +581,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testGoodCrossModuleRequire2() {
+  public void testGoodCrossChunkRequire2() {
     test(
         srcs(
             JSChunkGraphBuilder.forStar()
@@ -594,7 +594,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testCrossModuleRequireType() {
+  public void testCrossChunkRequireType() {
     test(
         srcs(
             JSChunkGraphBuilder.forStar()
@@ -749,8 +749,8 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testImplicitProvideInIndependentModules() {
-    testModule(
+  public void testImplicitProvideInIndependentChunks() {
+    testChunk(
         new String[] {"", "goog.provide('apps.A');", "goog.provide('apps.B');"},
         new String[] {
           "/** @const */ var apps = {};",
@@ -760,8 +760,8 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testImplicitProvideInIndependentModules2() {
-    testModule(
+  public void testImplicitProvideInIndependentChunks2() {
+    testChunk(
         new String[] {
           "",
           "goog.provide('apps');", //
@@ -777,7 +777,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testImplicitProvideInIndependentModules_onGoogNamespace() {
+  public void testImplicitProvideInIndependentChunks_onGoogNamespace() {
     test(
         externs(""), // exclude the default Closure externs
         srcs(
@@ -803,8 +803,8 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testProvideInIndependentModules1() {
-    testModule(
+  public void testProvideInIndependentChunks1() {
+    testChunk(
         new String[] {
           "", "goog.provide('apps');", "goog.provide('apps.foo');", "goog.provide('apps.foo.B');"
         },
@@ -817,9 +817,9 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testProvideInIndependentModules2() {
+  public void testProvideInIndependentChunks2() {
     // TODO(nicksantos): Make this an error.
-    testModule(
+    testChunk(
         new String[] {
           "",
           "goog.provide('apps');",
@@ -832,9 +832,9 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testProvideInIndependentModules2b() {
+  public void testProvideInIndependentChunks2b() {
     // TODO(nicksantos): Make this an error.
-    testModule(
+    testChunk(
         new String[] {
           "",
           "goog.provide('apps');",
@@ -850,8 +850,8 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testProvideInIndependentModules3() {
-    testModule(
+  public void testProvideInIndependentChunks3() {
+    testChunk(
         new String[] {
           "",
           "goog.provide('apps');",
@@ -867,9 +867,9 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testProvideInIndependentModules3b() {
+  public void testProvideInIndependentChunks3b() {
     // TODO(nicksantos): Make this an error.
-    testModule(
+    testChunk(
         new String[] {
           "",
           "goog.provide('apps');",
@@ -888,10 +888,10 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testProvideInIndependentModules4() {
+  public void testProvideInIndependentChunks4() {
     // Regression test for bug 261:
     // http://blickly.github.io/closure-compiler-issues/#261
-    testModule(
+    testChunk(
         new String[] {
           "",
           "goog.provide('apps');",
@@ -1060,7 +1060,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
     assertNode(root).isEqualIncludingJsDocTo(originalRoot);
   }
 
-  private void testModule(String[] moduleInputs, String[] expected) {
-    test(srcs(JSChunkGraphBuilder.forStar().addChunks(moduleInputs).build()), expected(expected));
+  private void testChunk(String[] chunkInputs, String[] expected) {
+    test(srcs(JSChunkGraphBuilder.forStar().addChunks(chunkInputs).build()), expected(expected));
   }
 }

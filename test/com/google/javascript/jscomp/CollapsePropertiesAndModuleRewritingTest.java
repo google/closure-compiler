@@ -106,11 +106,11 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
     // PropertyCollapseLevel.ALL
     collapseLevel = PropertyCollapseLevel.MODULE_EXPORT;
 
-    JSChunk[] inputModules = new JSChunk[] {new JSChunk("entry"), new JSChunk("mod1")};
-    inputModules[0].add(
+    JSChunk[] inputChunks = new JSChunk[] {new JSChunk("entry"), new JSChunk("mod1")};
+    inputChunks[0].add(
         SourceFile.fromCode(
             "entry.js", "import('./mod1.js').then((ns) => console.log(ns.Foo.bar()));"));
-    inputModules[1].add(
+    inputChunks[1].add(
         SourceFile.fromCode(
             "mod1.js",
             """
@@ -118,10 +118,10 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
               static bar() { return 'bar'; }
             }
             """));
-    inputModules[1].addDependency(inputModules[0]);
+    inputChunks[1].addDependency(inputChunks[0]);
 
-    JSChunk[] expectedModules = new JSChunk[] {new JSChunk("entry"), new JSChunk("mod1")};
-    expectedModules[0].add(
+    JSChunk[] expectedChunks = new JSChunk[] {new JSChunk("entry"), new JSChunk("mod1")};
+    expectedChunks[0].add(
         SourceFile.fromCode(
             "entry.js",
             """
@@ -129,7 +129,7 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
                 .then(jscomp$DynamicImportCallback(() => module$mod1 ))
                 .then(ns => console.log(ns.Foo.bar()));
             """));
-    expectedModules[1].add(
+    expectedChunks[1].add(
         SourceFile.fromCode(
             "mod1.js",
             """
@@ -139,9 +139,9 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
             /** @const */ var module$mod1={};
             /** @const */ module$mod1.Foo = Foo$$module$mod1;
             """));
-    expectedModules[1].addDependency(expectedModules[0]);
+    expectedChunks[1].addDependency(expectedChunks[0]);
 
-    test(srcs(inputModules), expected(expectedModules));
+    test(srcs(inputChunks), expected(expectedChunks));
   }
 
   @Test

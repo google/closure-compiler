@@ -36,7 +36,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testVarDeclarations_acrossModules() {
+  public void testVarDeclarations_acrossChunks() {
     ignoreWarnings(LOAD_WARNING);
     test(
         srcs(

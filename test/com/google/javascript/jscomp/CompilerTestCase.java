@@ -982,7 +982,7 @@ public abstract class CompilerTestCase {
     CompilerOptions options = getOptions();
 
     if (inputs instanceof FlatSources flatSources) {
-      // TODO(bradfordcsmith): Why do we set this only for the non-module case?
+      // TODO(bradfordcsmith): Why do we set this only for the non-chunk case?
       //     I extracted this method from testInternal().
       options.setCheckTypes(parseTypeInfo || this.typeCheckEnabled);
       compiler.init(externs.externs, flatSources.sources, options);
@@ -1815,8 +1815,8 @@ public abstract class CompilerTestCase {
     return new FlatSources(Arrays.asList(files));
   }
 
-  protected static Sources srcs(JSChunk... modules) {
-    return new ChunkSources(modules);
+  protected static Sources srcs(JSChunk... chunks) {
+    return new ChunkSources(chunks);
   }
 
   protected static Expected expected(String srcText) {
@@ -1934,8 +1934,7 @@ public abstract class CompilerTestCase {
     if (srcs instanceof FlatSources flatSources) {
       return expected(flatSources.sources);
     } else if (srcs instanceof ChunkSources chunkSources) {
-      ChunkSources modules = chunkSources;
-      return expected(modules.chunks.toArray(new JSChunk[0]));
+      return expected(chunkSources.chunks.toArray(new JSChunk[0]));
     } else {
       throw new IllegalStateException("unexpected");
     }
@@ -1949,7 +1948,7 @@ public abstract class CompilerTestCase {
    * to the 'test' method, and makes it very clear what function each parameter serves (since the
    * first three can all be represented as simple strings). Moreover, it reduces the combinatorial
    * explosion of different ways to express the parts (a single string, a list of SourceFiles, a
-   * list of modules, a DiagnosticType, a DiagnosticType with an expected message, etc).
+   * list of chunks, a DiagnosticType, a DiagnosticType with an expected message, etc).
    *
    * <p>Note that this API is intended to be a medium-term temporary API while developing and
    * migrating to a more fluent assertion style.

@@ -327,7 +327,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInlineAcrossModules() {
+  public void testInlineAcrossChunks() {
     // TODO(kushal): Make decision about overlap with CrossChunkCodeMotion
     test(
         srcs(

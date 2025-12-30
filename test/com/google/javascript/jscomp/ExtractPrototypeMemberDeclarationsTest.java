@@ -375,13 +375,13 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
         .append(String.format("var %s; %s = y.prototype;", yTmp, yTmp))
         .append(generateExtractedDeclarations(7, 1));
 
-    JSChunk[] expectedModules =
+    JSChunk[] expectedChunks =
         JSChunkGraphBuilder.forStar()
             .addChunk(builderX.toString())
             .addChunk(builderY.toString())
             .build();
 
-    test(srcs(chunks), expected(expectedModules));
+    test(srcs(chunks), expected(expectedChunks));
   }
 
   private String loadPrototype(String qName) {

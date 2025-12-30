@@ -3817,9 +3817,9 @@ public class InlineFunctionsTest extends CompilerTestCase {
         """);
   }
 
-  // Inline a single reference function into deeper modules
+  // Inline a single reference function into deeper chunks
   @Test
-  public void testCrossModuleInlining1() {
+  public void testCrossChunkInlining1() {
     test(
         srcs(
             JSChunkGraphBuilder.forChain()
@@ -3835,10 +3835,10 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "f(1)+g(2)+h(3);"));
   }
 
-  // Inline a single reference function into shallow modules, only if it
+  // Inline a single reference function into shallow chunks, only if it
   // is cheaper than the call itself.
   @Test
-  public void testCrossModuleInlining2() {
+  public void testCrossChunkInlining2() {
     testSame(
         srcs(
             JSChunkGraphBuilder.forChain()
@@ -3860,10 +3860,10 @@ public class InlineFunctionsTest extends CompilerTestCase {
             ""));
   }
 
-  // Inline a multi-reference functions into shallow modules, only if it
+  // Inline a multi-reference functions into shallow chunks, only if it
   // is cheaper than the call itself.
   @Test
-  public void testCrossModuleInlining3() {
+  public void testCrossChunkInlining3() {
     testSame(
         srcs(
             JSChunkGraphBuilder.forChain()
