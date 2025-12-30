@@ -6389,9 +6389,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
       String... warnings) {
     TestErrorReporter errorReporter = new TestErrorReporter().expectAllWarnings(warnings);
     if (allowClosureUnawareCode) {
-      var unused =
-          errorReporter.expectAllWarnings(
-              "@closureUnaware annotation is not allowed in this compilation");
+      errorReporter.expectAllWarnings(
+          "@closureUnaware annotation is not allowed in this compilation");
     }
 
     Config config =
