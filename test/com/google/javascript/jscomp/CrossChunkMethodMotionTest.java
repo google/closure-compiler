@@ -1273,7 +1273,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void doNotMovePrototypeMethodDefinitionThatFollowsFirstUse() {
-    // if the programmer screws up the module order, we don't try to correct
+    // if the programmer screws up the chunk order, we don't try to correct
     // the mistake.
     // call before definition
     test(

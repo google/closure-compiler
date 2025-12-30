@@ -32,8 +32,8 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Checks that all variables are declared, that file-private variables are accessed only in the file
- * that declares them, and that any var references that cross module boundaries respect declared
- * module dependencies.
+ * that declares them, and that any var references that cross chunk boundaries respect declared
+ * chunk dependencies.
  */
 class VarCheck implements ScopedCallback, CompilerPass {
 
@@ -41,24 +41,25 @@ class VarCheck implements ScopedCallback, CompilerPass {
       "JSC_UNDEFINED_VARIABLE",
       "variable {0} is undeclared");
 
-  static final DiagnosticType VIOLATED_MODULE_DEP_ERROR =
+  static final DiagnosticType VIOLATED_CHUNK_DEP_ERROR =
       DiagnosticType.error(
-          "JSC_VIOLATED_MODULE_DEPENDENCY",
-          "module {0} cannot reference {2}, defined in module {1}, since {1} loads after {0}");
+          "JSC_VIOLATED_CHUNK_DEPENDENCY",
+          "chunk {0} cannot reference {2}, defined in chunk {1}, since {1} loads after {0}");
 
-  static final DiagnosticType MISSING_MODULE_DEP_ERROR =
+  static final DiagnosticType MISSING_CHUNK_DEP_ERROR =
       DiagnosticType.warning(
-          "JSC_MISSING_MODULE_DEPENDENCY",
-          "missing module dependency; module {0} should depend"
-              + " on module {1} because it references {2}");
+          "JSC_MISSING_CHUNK_DEPENDENCY",
+          "missing chunk dependency; chunk {0} should depend"
+              + " on chunk {1} because it references {2}");
 
-  static final DiagnosticType STRICT_MODULE_DEP_ERROR = DiagnosticType.disabled(
-      "JSC_STRICT_MODULE_DEPENDENCY",
-      // The newline below causes the JS compiler not to complain when the
-      // referenced module's name changes because, for example, it's a
-      // synthetic module.
-      "cannot reference {2} because of a missing module dependency\n"
-      + "defined in module {1}, referenced from module {0}");
+  static final DiagnosticType STRICT_CHUNK_DEP_ERROR =
+      DiagnosticType.disabled(
+          "JSC_STRICT_CHUNK_DEPENDENCY",
+          // The newline below causes the JS compiler not to complain when the
+          // referenced chunk's name changes because, for example, it's a
+          // synthetic chunk.
+          "cannot reference {2} because of a missing chunk dependency\n"
+              + "defined in chunk {1}, referenced from chunk {0}");
 
   static final DiagnosticType NAME_REFERENCE_IN_EXTERNS_ERROR =
       DiagnosticType.warning(
@@ -233,31 +234,29 @@ class VarCheck implements ScopedCallback, CompilerPass {
       return;
     }
 
-    // Check module dependencies.
-    JSChunk currModule = currInput.getChunk();
-    JSChunk varModule = varInput.getChunk();
+    // Check chunk dependencies.
+    JSChunk currChunk = currInput.getChunk();
+    JSChunk varChunk = varInput.getChunk();
     JSChunkGraph chunkGraph = compiler.getChunkGraph();
-    if (!validityCheck && varModule != currModule && varModule != null && currModule != null) {
-      if (varModule.isWeak()) {
+    if (!validityCheck && varChunk != currChunk && varChunk != null && currChunk != null) {
+      if (varChunk.isWeak()) {
         this.handleUndeclaredVariableRef(t, n);
       }
 
-      if (chunkGraph.dependsOn(currModule, varModule)) {
-        // The module dependency was properly declared.
+      if (chunkGraph.dependsOn(currChunk, varChunk)) {
+        // The chunk dependency was properly declared.
       } else {
         if (scope.isGlobal()) {
-          if (chunkGraph.dependsOn(varModule, currModule)) {
-            // The variable reference violates a declared module dependency.
-            t.report(
-                n, VIOLATED_MODULE_DEP_ERROR, currModule.getName(), varModule.getName(), varName);
+          if (chunkGraph.dependsOn(varChunk, currChunk)) {
+            // The variable reference violates a declared chunk dependency.
+            t.report(n, VIOLATED_CHUNK_DEP_ERROR, currChunk.getName(), varChunk.getName(), varName);
           } else {
-            // The variable reference is between two modules that have no dependency relationship.
+            // The variable reference is between two chunks that have no dependency relationship.
             // This should probably be considered an error, but just issue a warning for now.
-            t.report(
-                n, MISSING_MODULE_DEP_ERROR, currModule.getName(), varModule.getName(), varName);
+            t.report(n, MISSING_CHUNK_DEP_ERROR, currChunk.getName(), varChunk.getName(), varName);
           }
         } else {
-          t.report(n, STRICT_MODULE_DEP_ERROR, currModule.getName(), varModule.getName(), varName);
+          t.report(n, STRICT_CHUNK_DEP_ERROR, currChunk.getName(), varChunk.getName(), varName);
         }
       }
     }

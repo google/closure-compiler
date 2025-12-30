@@ -294,7 +294,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
     return Collections.unmodifiableList(topLevelStatements);
   }
 
-  /** Determines whether the given value is eligible to be moved across modules. */
+  /** Determines whether the given value is eligible to be moved across chunks. */
   private boolean canMoveValue(Scope scope, Node valueNode) {
     // the value is only movable if it's
     // - nothing,

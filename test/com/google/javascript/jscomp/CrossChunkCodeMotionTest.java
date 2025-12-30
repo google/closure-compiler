@@ -27,7 +27,7 @@ import org.junit.runners.JUnit4;
 public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
   private static final String EXTERNS = "alert";
-  private boolean parentModuleCanSeeSymbolsDeclaredInChildren = false;
+  private boolean parentChunkCanSeeSymbolsDeclaredInChildren = false;
 
   public CrossChunkCodeMotionTest() {
     super(EXTERNS);
@@ -39,13 +39,13 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
     super.setUp();
 
     disableScriptFeatureValidation();
-    parentModuleCanSeeSymbolsDeclaredInChildren = false;
+    parentChunkCanSeeSymbolsDeclaredInChildren = false;
   }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CrossChunkCodeMotion(
-        compiler, compiler.getChunkGraph(), parentModuleCanSeeSymbolsDeclaredInChildren);
+        compiler, compiler.getChunkGraph(), parentChunkCanSeeSymbolsDeclaredInChildren);
   }
 
   @Test
@@ -317,7 +317,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
   @Test
   public void testFunctionNonMovement2() {
-    // A generic case where 2 modules depend on the first one. But it's the
+    // A generic case where 2 chunks depend on the first one. But it's the
     // common ancestor, so we can't move.
     testSame(
         srcs(
@@ -359,7 +359,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
   @Test
   public void testEs6ClassMovement_instanceof() {
-    parentModuleCanSeeSymbolsDeclaredInChildren = true;
+    parentChunkCanSeeSymbolsDeclaredInChildren = true;
     test(
         srcs(
             JSChunkGraphBuilder.forStar()
@@ -372,7 +372,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
   @Test
   public void testClassMovement_instanceof() {
-    parentModuleCanSeeSymbolsDeclaredInChildren = true;
+    parentChunkCanSeeSymbolsDeclaredInChildren = true;
     test(
         srcs(
             JSChunkGraphBuilder.forStar()
@@ -386,7 +386,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
   @Test
   public void testEs6ClassMovement_instanceofTurnedOff() {
-    parentModuleCanSeeSymbolsDeclaredInChildren = false;
+    parentChunkCanSeeSymbolsDeclaredInChildren = false;
     testSame(
         srcs(
             JSChunkGraphBuilder.forStar()
@@ -397,7 +397,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
   @Test
   public void testClassMovement_instanceofTurnedOff() {
-    parentModuleCanSeeSymbolsDeclaredInChildren = false;
+    parentChunkCanSeeSymbolsDeclaredInChildren = false;
     testSame(
         srcs(
             JSChunkGraphBuilder.forStar()
@@ -408,7 +408,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
   @Test
   public void testEs6ClassMovement_instanceof2() {
-    parentModuleCanSeeSymbolsDeclaredInChildren = true;
+    parentChunkCanSeeSymbolsDeclaredInChildren = true;
     test(
         srcs(
             JSChunkGraphBuilder.forStar()
@@ -422,7 +422,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
   @Test
   public void testClassMovement_instanceof2() {
-    parentModuleCanSeeSymbolsDeclaredInChildren = true;
+    parentChunkCanSeeSymbolsDeclaredInChildren = true;
     test(
         srcs(
             JSChunkGraphBuilder.forStar()
@@ -436,7 +436,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
   @Test
   public void testClassMovement_alreadyGuardedInstanceof() {
-    parentModuleCanSeeSymbolsDeclaredInChildren = true;
+    parentChunkCanSeeSymbolsDeclaredInChildren = true;
     test(
         srcs(
             JSChunkGraphBuilder.forStar()
@@ -454,7 +454,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
   @Test
   public void testClassMovement_alreadyGuardedInstanceof_functionGuard() {
-    parentModuleCanSeeSymbolsDeclaredInChildren = true;
+    parentChunkCanSeeSymbolsDeclaredInChildren = true;
     test(
         srcs(
             JSChunkGraphBuilder.forStar()
@@ -472,7 +472,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
   @Test
   public void testClassMovement_instanceof3() {
-    parentModuleCanSeeSymbolsDeclaredInChildren = true;
+    parentChunkCanSeeSymbolsDeclaredInChildren = true;
     testSame(
         srcs(
             JSChunkGraphBuilder.forStar()
@@ -483,7 +483,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
   @Test
   public void testClassMovement_instanceof_noRewriteRequired() {
-    parentModuleCanSeeSymbolsDeclaredInChildren = true;
+    parentChunkCanSeeSymbolsDeclaredInChildren = true;
     testSame(
         srcs(
             JSChunkGraphBuilder.forStar()
@@ -494,7 +494,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
   @Test
   public void testClassMovement_instanceof_noRewriteRequired2() {
-    parentModuleCanSeeSymbolsDeclaredInChildren = true;
+    parentChunkCanSeeSymbolsDeclaredInChildren = true;
     testSame(
         srcs(
             JSChunkGraphBuilder.forChain()
@@ -1558,13 +1558,13 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   }
 
   @Test
-  public void testEmptyModule() {
-    // When the dest module is empty, it might try to move the code to the
-    // one of the modules that the empty module depends on. In some cases
-    // this might ended up to be the same module as the definition of the code.
+  public void testEmptyChunk() {
+    // When the dest chunk is empty, it might try to move the code to the
+    // one of the chunks that the empty chunk depends on. In some cases
+    // this might ended up to be the same chunk as the definition of the code.
     // When that happens, CrossChunkCodeMotion might report a code change
     // while nothing is moved. This should not be a problem if we know all
-    // modules are non-empty.
+    // chunks are non-empty.
     JSChunk m1 = new JSChunk("m1");
     m1.add(SourceFile.fromCode("m1", "function x() {}"));
 
@@ -1770,7 +1770,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   }
 
   @Test
-  public void testSmallestCoveringDependencyDoesNotDependOnDeclarationModule() {
+  public void testSmallestCoveringDependencyDoesNotDependOnDeclarationChunk() {
     //       m0
     //      /  \
     //    m1   m2  // declaration in m1
@@ -1833,7 +1833,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
   @Test
   public void testMovedInstanceofIsHandledCorrectly() {
-    parentModuleCanSeeSymbolsDeclaredInChildren = true;
+    parentChunkCanSeeSymbolsDeclaredInChildren = true;
     // no need to guard instanceof
     test(
         srcs(

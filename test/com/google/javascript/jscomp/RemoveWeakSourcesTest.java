@@ -31,7 +31,7 @@ public final class RemoveWeakSourcesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testSingleModule() {
+  public void testSingleChunk() {
     SourceFile strongSrc1 = SourceFile.fromCode("a.js", "var a = 1;", SourceKind.STRONG);
     SourceFile strongSrc2 = SourceFile.fromCode("b.js", "var b = 2;", SourceKind.STRONG);
     SourceFile weakSrc1 = SourceFile.fromCode("c.js", "var c = 3;", SourceKind.WEAK);
@@ -46,7 +46,7 @@ public final class RemoveWeakSourcesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testMultipleModules() {
+  public void testMultipleChunks() {
     SourceFile strongSrc1 = SourceFile.fromCode("a.js", "var a = 1;", SourceKind.STRONG);
     SourceFile strongSrc2 = SourceFile.fromCode("b.js", "var b = 2;", SourceKind.STRONG);
     SourceFile weakSrc1 = SourceFile.fromCode("c.js", "var c = 3;", SourceKind.WEAK);
@@ -74,14 +74,14 @@ public final class RemoveWeakSourcesTest extends CompilerTestCase {
     JSChunk chunkAfter3 = new JSChunk("m3");
     chunkAfter3.add(fillFileSrc);
 
-    JSChunk weakModule = new JSChunk("$weak$");
-    weakModule.add(emptyWeakSrc1);
-    weakModule.add(emptyWeakSrc2);
-    weakModule.add(emptyWeakSrc3);
+    JSChunk weakChunk = new JSChunk("$weak$");
+    weakChunk.add(emptyWeakSrc1);
+    weakChunk.add(emptyWeakSrc2);
+    weakChunk.add(emptyWeakSrc3);
 
-    // Expect the weak sources to be emptied and moved to a separate final module.
+    // Expect the weak sources to be emptied and moved to a separate final chunk.
     test(
         srcs(new JSChunk[] {chunkBefore1, chunkBefore2, chunkBefore3}),
-        expected(new JSChunk[] {chunkAfter1, chunkAfter2, chunkAfter3, weakModule}));
+        expected(new JSChunk[] {chunkAfter1, chunkAfter2, chunkAfter3, weakChunk}));
   }
 }

@@ -39,7 +39,7 @@ import org.jspecify.annotations.Nullable;
  * Rewrites prototype and static methods as global, free functions that take the receiver as their
  * first argument.
  *
- * <p>This transformation simplifies the call graph so smart name removal, cross module code motion
+ * <p>This transformation simplifies the call graph so smart name removal, cross chunk code motion
  * and other passes can do more.
  *
  * <p>To work effectively, this pass depends on {@link
@@ -336,30 +336,30 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
       return false;
     }
 
-    // We can't rewrite functions called in modules that do not depend on the defining module.
+    // We can't rewrite functions called in chunks that do not depend on the defining chunk.
     // This is due to a subtle execution order change introduced by rewriting. Example:
     //
     //     `x.foo().bar()` => `JSCompiler_StaticMethods_bar(x.foo())`
     //
     // Note how `JSCompiler_StaticMethods_bar` will be resolved before `x.foo()` is executed. In
     // the case that `x.foo()` defines `JSCompiler_StaticMethods_bar` (e.g. by dynamically loading
-    // the defining module) this change in ordering will cause a `ReferenceError`. No error would
+    // the defining chunk) this change in ordering will cause a `ReferenceError`. No error would
     // be thrown by the original code because `bar` would be resolved later.
     //
-    // We choose to use module ordering to avoid this issue because:
+    // We choose to use chunk ordering to avoid this issue because:
     //   - The other eligibility checks for devirtualization prevent any other dangerous cases
     //     that JSCompiler supports.
     //   - Rewriting all call-sites in a way that preserves exact ordering (e.g. using
     //     `ExpressionDecomposer`) has a significant code-size impact (circa 2018-11-19).
 
     JSChunkGraph chunkGraph = compiler.getChunkGraph();
-    @Nullable JSChunk definitionModule = chunkForNode(definitionSite);
-    @Nullable JSChunk callModule = chunkForNode(access);
-    if (definitionModule == callModule) {
+    @Nullable JSChunk definitionChunk = chunkForNode(definitionSite);
+    @Nullable JSChunk callChunk = chunkForNode(access);
+    if (definitionChunk == callChunk) {
       // Do nothing.
-    } else if (callModule == null) {
+    } else if (callChunk == null) {
       return false;
-    } else if (!chunkGraph.dependsOn(callModule, definitionModule)) {
+    } else if (!chunkGraph.dependsOn(callChunk, definitionChunk)) {
       return false;
     }
 

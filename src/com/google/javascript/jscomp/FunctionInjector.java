@@ -915,7 +915,7 @@ class FunctionInjector {
 
     int referencesUsingBlockInlining = 0;
 
-    boolean checkModules = isRemovable && fnChunk != null;
+    boolean checkChunks = isRemovable && fnChunk != null;
     JSChunkGraph chunkGraph = compiler.getChunkGraph();
 
     for (Reference ref : refs) {
@@ -923,13 +923,13 @@ class FunctionInjector {
         referencesUsingBlockInlining++;
       }
 
-      // Check if any of the references cross the module boundaries.
-      if (checkModules && ref.chunk != null) {
+      // Check if any of the references cross the chunk boundaries.
+      if (checkChunks && ref.chunk != null) {
         if (ref.chunk != fnChunk && !chunkGraph.dependsOn(ref.chunk, fnChunk)) {
           // Calculate the cost as if the function were non-removable,
           // if it still lowers the cost inline it.
           isRemovable = false;
-          checkModules = false; // no need to check additional modules.
+          checkChunks = false; // no need to check additional chunks.
         }
       }
     }

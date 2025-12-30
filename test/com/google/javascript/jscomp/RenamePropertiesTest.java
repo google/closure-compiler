@@ -343,9 +343,9 @@ public final class RenamePropertiesTest extends CompilerTestCase {
             """);
 
     // Note that properties that occur most often globally get the earliest
-    // names. The "getC" property, which doesn't occur until module 3, is
+    // names. The "getC" property, which doesn't occur until chunk 3, is
     // renamed to an earlier name in the alphabet than "woo", which appears
-    // in module 2, because "getC" occurs more total times across all chunks.
+    // in chunk 2, because "getC" occurs more total times across all chunks.
     // Might be better to give early chunks the shortest names, but this is
     // how the pass currently works.
     assertThat(compiler.toSource(chunk3))

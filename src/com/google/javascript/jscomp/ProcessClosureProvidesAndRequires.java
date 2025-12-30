@@ -403,7 +403,7 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
    *
    * @param ns The namespace whose prefixes may need to be provided.
    * @param node The EXPR of the provide call.
-   * @param module The current module.
+   * @param chunk The current chunk.
    */
   private void registerAnyProvidedPrefixes(String ns, Node node, JSChunk chunk) {
     int pos = ns.indexOf('.');
@@ -660,9 +660,8 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
       } else if (chunkGraph.getChunkCount() > 1) {
         minimumChunk = chunkGraph.getDeepestCommonDependencyInclusive(minimumChunk, newChunk);
       } else {
-        // If there is no module graph, then there must be exactly one
-        // module in the program.
-        checkState(newChunk == minimumChunk, "Missing module graph");
+        // If there is no chunk graph, then there must be exactly one chunk in the program.
+        checkState(newChunk == minimumChunk, "Missing chunk graph");
       }
     }
 

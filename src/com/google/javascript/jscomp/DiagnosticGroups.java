@@ -233,11 +233,11 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup STRICT_MODULE_DEP_CHECK =
       DiagnosticGroups.registerGroup(
           "strictModuleDepCheck",
-          VarCheck.STRICT_MODULE_DEP_ERROR,
+          VarCheck.STRICT_CHUNK_DEP_ERROR,
           CheckClosureImports.CROSS_CHUNK_REQUIRE_ERROR);
 
   public static final DiagnosticGroup VIOLATED_MODULE_DEP =
-      DiagnosticGroups.registerGroup("violatedModuleDep", VarCheck.VIOLATED_MODULE_DEP_ERROR);
+      DiagnosticGroups.registerGroup("violatedModuleDep", VarCheck.VIOLATED_CHUNK_DEP_ERROR);
 
   public static final DiagnosticGroup EXTERNS_VALIDATION =
       DiagnosticGroups.registerGroup(

@@ -80,7 +80,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
    * Creates an instance.
    *
    * @param compiler The compiler
-   * @param chunkGraph The module graph, or null if there are no modules
+   * @param chunkGraph The chunk graph, or null if there are no chunks
    * @param outputStringUsage Outputs all strings and the number of times they were used in the
    *     application to the server log.
    * @param aliasStringsMode The alias strings policy set to either ALL or LARGE
@@ -154,11 +154,11 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
       // The current chunk.
       JSChunk chunk = t.getChunk();
       if (info.occurrences.size() != 1) {
-        // Check whether the current module depends on the module containing
+        // Check whether the current chunk depends on the chunk containing
         // the declaration.
         if (chunk != null && info.chunkToContainDecl != null && chunk != info.chunkToContainDecl) {
-          // We need to declare this string in the deepest module in the
-          // module dependency graph that both of these modules depend on.
+          // We need to declare this string in the deepest chunk in the
+          // chunk dependency graph that both of these chunks depend on.
           chunk = chunkGraph.getDeepestCommonDependencyInclusive(chunk, info.chunkToContainDecl);
         } else {
           // use the previously saved insertion location.

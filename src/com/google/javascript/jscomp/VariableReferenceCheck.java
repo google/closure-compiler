@@ -33,7 +33,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * Checks variables to see if they are referenced before their declaration, or if they are
  * redeclared in a way that is suspicious (i.e. not dictated by control structures). This is a more
- * aggressive version of {@link VarCheck}, but it lacks the cross-module checks.
+ * aggressive version of {@link VarCheck}, but it lacks the cross-chunk checks.
  */
 class VariableReferenceCheck implements CompilerPass {
 

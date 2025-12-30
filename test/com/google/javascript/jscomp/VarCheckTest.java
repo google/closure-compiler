@@ -40,7 +40,7 @@ import org.junit.runners.JUnit4;
 public final class VarCheckTest extends CompilerTestCase {
   private static final String EXTERNS = "var window; function alert() {}";
 
-  private CheckLevel strictModuleDepErrorLevel;
+  private CheckLevel strictChunkDepErrorLevel;
   private boolean validityCheck = false;
 
   private @Nullable CheckLevel externValidationErrorLevel;
@@ -57,7 +57,7 @@ public final class VarCheckTest extends CompilerTestCase {
     super.setUp();
     // Setup value set by individual tests to the appropriate defaults.
     allowExternsChanges();
-    strictModuleDepErrorLevel = CheckLevel.OFF;
+    strictChunkDepErrorLevel = CheckLevel.OFF;
     externValidationErrorLevel = null;
     validityCheck = false;
     declarationCheck = false;
@@ -68,7 +68,7 @@ public final class VarCheckTest extends CompilerTestCase {
     CompilerOptions options = super.getOptions();
     options.setClosurePass(true);
     options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
-    options.setWarningLevel(DiagnosticGroups.STRICT_MODULE_DEP_CHECK, strictModuleDepErrorLevel);
+    options.setWarningLevel(DiagnosticGroups.STRICT_MODULE_DEP_CHECK, strictChunkDepErrorLevel);
     if (externValidationErrorLevel != null) {
       options.setWarningLevel(DiagnosticGroups.EXTERNS_VALIDATION, externValidationErrorLevel);
     }
@@ -533,91 +533,91 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   @Test
-  public void testLegalVarReferenceBetweenModules() {
-    testDependentModules("var x = 10;", "var y = x++;", null);
+  public void testLegalVarReferenceBetweenChunks() {
+    testDependentChunks("var x = 10;", "var y = x++;", null);
   }
 
   @Test
-  public void testLegalLetReferenceBetweenModules() {
-    testDependentModules("let x = 10;", "let y = x++;", null);
+  public void testLegalLetReferenceBetweenChunks() {
+    testDependentChunks("let x = 10;", "let y = x++;", null);
   }
 
   @Test
-  public void testLegalConstReferenceBetweenModules() {
-    testDependentModules("const x = 10;", "const y = x + 1;", null);
+  public void testLegalConstReferenceBetweenChunks() {
+    testDependentChunks("const x = 10;", "const y = x + 1;", null);
   }
 
   @Test
-  public void testMissingModuleDependencyDefault() {
-    testIndependentModules("var x = 10;", "var y = x++;", null, VarCheck.MISSING_MODULE_DEP_ERROR);
+  public void testMissingChunkDependencyDefault() {
+    testIndependentChunks("var x = 10;", "var y = x++;", null, VarCheck.MISSING_CHUNK_DEP_ERROR);
   }
 
   @Test
-  public void testMissingModuleDependencyLetAndConst() {
-    testIndependentModules("let x = 10;", "let y = x++;", null, VarCheck.MISSING_MODULE_DEP_ERROR);
-    testIndependentModules(
-        "const x = 10;", "const y = x + 1;", null, VarCheck.MISSING_MODULE_DEP_ERROR);
+  public void testMissingChunkDependencyLetAndConst() {
+    testIndependentChunks("let x = 10;", "let y = x++;", null, VarCheck.MISSING_CHUNK_DEP_ERROR);
+    testIndependentChunks(
+        "const x = 10;", "const y = x + 1;", null, VarCheck.MISSING_CHUNK_DEP_ERROR);
   }
 
   @Test
-  public void testViolatedModuleDependencyDefault() {
-    testDependentModules("var y = x++;", "var x = 10;", VarCheck.VIOLATED_MODULE_DEP_ERROR);
+  public void testViolatedChunkDependencyDefault() {
+    testDependentChunks("var y = x++;", "var x = 10;", VarCheck.VIOLATED_CHUNK_DEP_ERROR);
   }
 
   @Test
-  public void testViolatedModuleDependencyLetAndConst() {
-    testDependentModules("let y = x++;", "let x = 10;", VarCheck.VIOLATED_MODULE_DEP_ERROR);
-    testDependentModules("const y = x + 1;", "const x = 10;", VarCheck.VIOLATED_MODULE_DEP_ERROR);
+  public void testViolatedChunkDependencyLetAndConst() {
+    testDependentChunks("let y = x++;", "let x = 10;", VarCheck.VIOLATED_CHUNK_DEP_ERROR);
+    testDependentChunks("const y = x + 1;", "const x = 10;", VarCheck.VIOLATED_CHUNK_DEP_ERROR);
   }
 
   @Test
-  public void testMissingModuleDependencySkipNonStrict() {
+  public void testMissingChunkDependencySkipNonStrict() {
     validityCheck = true;
-    testIndependentModules("var x = 10;", "var y = x++;", null, null);
+    testIndependentChunks("var x = 10;", "var y = x++;", null, null);
   }
 
   @Test
-  public void testViolatedModuleDependencySkipNonStrict() {
+  public void testViolatedChunkDependencySkipNonStrict() {
     validityCheck = true;
-    testDependentModules("var y = x++;", "var x = 10;", null);
+    testDependentChunks("var y = x++;", "var x = 10;", null);
   }
 
   @Test
-  public void testMissingModuleDependencySkipNonStrictNotPromoted() {
+  public void testMissingChunkDependencySkipNonStrictNotPromoted() {
     validityCheck = true;
-    strictModuleDepErrorLevel = CheckLevel.ERROR;
-    testIndependentModules("var x = 10;", "var y = x++;", null, null);
+    strictChunkDepErrorLevel = CheckLevel.ERROR;
+    testIndependentChunks("var x = 10;", "var y = x++;", null, null);
   }
 
   @Test
-  public void testViolatedModuleDependencyNonStrictNotPromoted() {
+  public void testViolatedChunkDependencyNonStrictNotPromoted() {
     validityCheck = true;
-    strictModuleDepErrorLevel = CheckLevel.ERROR;
-    testDependentModules("var y = x++;", "var x = 10;", null);
+    strictChunkDepErrorLevel = CheckLevel.ERROR;
+    testDependentChunks("var y = x++;", "var x = 10;", null);
   }
 
   @Test
-  public void testDependentStrictModuleDependencyCheck() {
-    strictModuleDepErrorLevel = CheckLevel.ERROR;
-    testDependentModules(
+  public void testDependentStrictChunkDependencyCheck() {
+    strictChunkDepErrorLevel = CheckLevel.ERROR;
+    testDependentChunks(
         "var f = function() {return new B();};",
         "var B = function() {}",
-        VarCheck.STRICT_MODULE_DEP_ERROR);
+        VarCheck.STRICT_CHUNK_DEP_ERROR);
   }
 
   @Test
-  public void testIndependentStrictModuleDependencyCheck() {
-    strictModuleDepErrorLevel = CheckLevel.ERROR;
-    testIndependentModules(
+  public void testIndependentStrictChunkDependencyCheck() {
+    strictChunkDepErrorLevel = CheckLevel.ERROR;
+    testIndependentChunks(
         "var f = function() {return new B();};",
         "var B = function() {}",
-        VarCheck.STRICT_MODULE_DEP_ERROR,
+        VarCheck.STRICT_CHUNK_DEP_ERROR,
         null);
   }
 
   @Test
-  public void testStarStrictModuleDependencyCheck() {
-    strictModuleDepErrorLevel = CheckLevel.WARNING;
+  public void testStarStrictChunkDependencyCheck() {
+    strictChunkDepErrorLevel = CheckLevel.WARNING;
     testSame(
         srcs(
             JSChunkGraphBuilder.forStar()
@@ -625,39 +625,39 @@ public final class VarCheckTest extends CompilerTestCase {
                 .addChunk("function b() { a(); c(); }")
                 .addChunk("function c() { a(); }")
                 .build()),
-        warning(VarCheck.STRICT_MODULE_DEP_ERROR));
+        warning(VarCheck.STRICT_CHUNK_DEP_ERROR));
   }
 
   @Test
   public void testForwardVarReferenceInLocalScope1() {
-    testDependentModules("var x = 10; function a() {y++;}", "var y = 11; a();", null);
+    testDependentChunks("var x = 10; function a() {y++;}", "var y = 11; a();", null);
   }
 
   @Test
   public void testForwardVarReferenceInLocalScope2() {
     // It would be nice if this pass could use a call graph to flag this case
     // as an error, but it currently doesn't.
-    testDependentModules("var x = 10; function a() {y++;} a();", "var y = 11;", null);
+    testDependentChunks("var x = 10; function a() {y++;} a();", "var y = 11;", null);
   }
 
-  private void testDependentModules(String code1, String code2, @Nullable DiagnosticType error) {
-    testDependentModules(code1, code2, error, null);
+  private void testDependentChunks(String code1, String code2, @Nullable DiagnosticType error) {
+    testDependentChunks(code1, code2, error, null);
   }
 
-  private void testDependentModules(
+  private void testDependentChunks(
       String code1, String code2, DiagnosticType error, @Nullable DiagnosticType warning) {
-    testTwoModules(code1, code2, true, error, warning);
+    testTwoChunks(code1, code2, true, error, warning);
   }
 
-  private void testIndependentModules(
+  private void testIndependentChunks(
       String code1,
       String code2,
       @Nullable DiagnosticType error,
       @Nullable DiagnosticType warning) {
-    testTwoModules(code1, code2, false, error, warning);
+    testTwoChunks(code1, code2, false, error, warning);
   }
 
-  private void testTwoModules(
+  private void testTwoChunks(
       String code1,
       String code2,
       boolean m2DependsOnm1,
@@ -1123,7 +1123,7 @@ public final class VarCheckTest extends CompilerTestCase {
             new JSChunk[] {
               strongChunk, weakChunk,
             }),
-        error(VarCheck.VIOLATED_MODULE_DEP_ERROR),
+        error(VarCheck.VIOLATED_CHUNK_DEP_ERROR),
         error(VarCheck.UNDEFINED_VAR_ERROR));
   }
 

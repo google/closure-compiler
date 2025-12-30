@@ -205,7 +205,7 @@ public final class AliasStringsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testStringsInModules() {
+  public void testStringsInChunks() {
 
     // Aliases must be placed in the correct chunk. The alias for
     // '------adios------' must be lifted from m2 and m3 and go in the
@@ -282,11 +282,11 @@ public final class AliasStringsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testStringsInModules2() {
+  public void testStringsInChunks2() {
 
-    // Aliases must be placed in the correct module. The alias for
+    // Aliases must be placed in the correct chunk. The alias for
     // '------adios------' must be lifted from m2 and m3 and go in the
-    // common parent module m1
+    // common parent chunk m1
 
     JSChunk[] chunks =
         JSChunkGraphBuilder.forBush()
@@ -325,7 +325,7 @@ public final class AliasStringsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testAliasInCommonModuleInclusive() {
+  public void testAliasInCommonChunkInclusive() {
 
     JSChunk[] chunks =
         JSChunkGraphBuilder.forBush()
@@ -336,7 +336,7 @@ public final class AliasStringsTest extends CompilerTestCase {
             .build();
 
     // The "ciao" string is used in m1 and m2.
-    // Since m2 depends on m1, we should create the module there and not force it into m0.
+    // Since m2 depends on m1, we should create the alias there and not force it into m0.
     test(
         srcs(chunks),
         expected(
@@ -354,7 +354,7 @@ public final class AliasStringsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testEmptyModules() {
+  public void testEmptyChunks() {
     JSChunk[] chunks =
         JSChunkGraphBuilder.forStar()
             .addChunk("")

@@ -54,21 +54,21 @@ class AnalyzePrototypeProperties implements CompilerPass {
   private final boolean rootScopeUsesAreGlobal;
 
   private final JSChunkGraph chunkGraph;
-  private final @Nullable JSChunk firstModule;
+  private final @Nullable JSChunk firstChunk;
 
   // Properties that are implicitly used as part of the JS language.
   private static final ImmutableSet<String> IMPLICITLY_USED_PROPERTIES =
       ImmutableSet.of("length", "toString", "valueOf");
 
   // A graph where the nodes are property names or variable names,
-  // and the edges signify the modules where the property is referenced.
+  // and the edges signify the chunks where the property is referenced.
   // For example, if we had the code:
   //
-  // Foo.prototype.bar = function(x) { x.baz(); }; // in module 2.;
+  // Foo.prototype.bar = function(x) { x.baz(); }; // in chunk 2.;
   //
   // then this would be represented in the graph by a node representing
   // "bar", a node representing "baz", and an edge between them representing
-  // module #2.
+  // chunk #2.
   //
   // Similarly, if we had:
   //
@@ -100,7 +100,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
    * Creates a new pass for analyzing prototype properties.
    *
    * @param compiler The compiler.
-   * @param chunkGraph The graph for resolving module dependencies.
+   * @param chunkGraph The graph for resolving chunk dependencies.
    * @param canModifyExterns If true, then we can move prototype properties that are declared in the
    *     externs file.
    * @param anchorUnusedVars If true, then we must mark all vars as referenced, even if they are
@@ -121,9 +121,9 @@ class AnalyzePrototypeProperties implements CompilerPass {
     this.rootScopeUsesAreGlobal = rootScopeUsesAreGlobal;
 
     if (chunkGraph.getChunkCount() > 1) {
-      firstModule = chunkGraph.getRootChunk();
+      firstChunk = chunkGraph.getRootChunk();
     } else {
-      firstModule = null;
+      firstChunk = null;
     }
 
     globalNode.markReference(null);
@@ -590,7 +590,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isGetProp()) {
-        symbolGraph.connect(externNode, firstModule, getNameInfoForName(n.getString(), PROPERTY));
+        symbolGraph.connect(externNode, firstChunk, getNameInfoForName(n.getString(), PROPERTY));
       } else if (n.isMemberFunctionDef() || n.isGetterDef() || n.isSetterDef()) {
         // As of 2019-08-29 the only user of this class is CrossChunkMethodMotion, which never
         // moves static methods, but that could change. So, we're intentionally including static
@@ -611,7 +611,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
         // /** @type {!ObjWithFooMethod} */
         // let objWithFooMethod = Foo; // yes, this is valid
         //
-        symbolGraph.connect(externNode, firstModule, getNameInfoForName(n.getString(), PROPERTY));
+        symbolGraph.connect(externNode, firstChunk, getNameInfoForName(n.getString(), PROPERTY));
       }
     }
   }
@@ -620,9 +620,9 @@ class AnalyzePrototypeProperties implements CompilerPass {
     @Override
     public boolean traverseEdge(NameInfo start, JSChunk edge, NameInfo dest) {
       if (start.isReferenced()) {
-        JSChunk startModule = start.getDeepestCommonModuleRef();
-        if (startModule != null && chunkGraph.dependsOn(startModule, edge)) {
-          return dest.markReference(startModule);
+        JSChunk startChunk = start.getDeepestCommonChunkRef();
+        if (startChunk != null && chunkGraph.dependsOn(startChunk, edge)) {
+          return dest.markReference(startChunk);
         } else {
           return dest.markReference(edge);
         }
@@ -636,7 +636,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     /** The variable for the root of this symbol. */
     Var getRootVar();
 
-    /** Returns the module where this appears. */
+    /** Returns the chunk where this appears. */
     JSChunk getChunk();
   }
 
@@ -890,10 +890,10 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
 
     /**
-     * Mark a reference in a given module to this property name, and record the deepest common
-     * module reference.
+     * Mark a reference in a given chunk to this property name, and record the deepest common chunk
+     * reference.
      *
-     * @param module The module where it was referenced.
+     * @param chunk The chunk where it was referenced.
      * @return Whether the name info has changed.
      */
     boolean markReference(@Nullable JSChunk chunk) {
@@ -919,8 +919,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
       return hasChanged;
     }
 
-    /** Returns the deepest common module of all the references to this property. */
-    JSChunk getDeepestCommonModuleRef() {
+    /** Returns the deepest common chunk of all the references to this property. */
+    JSChunk getDeepestCommonChunkRef() {
       return deepestCommonChunkRef;
     }
 

@@ -314,7 +314,7 @@ class InlineFunctions implements CompilerPass {
         functionState.disallowInlining(compiler, DisallowInliningReason.NOT_CANDIDATE_FUNCTION);
       }
 
-      // Set the module and gather names that need temporaries.
+      // Set the chunk and gather names that need temporaries.
       if (functionState.canInline()) {
         functionState.setChunk(chunk);
 
