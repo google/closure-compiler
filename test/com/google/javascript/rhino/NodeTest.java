@@ -301,6 +301,20 @@ public class NodeTest {
   }
 
   @Test
+  public void isEquivalentToConsidersPresenceOfClosureUnawareShadow() {
+    Node nameShadow1 = IR.name("x");
+    Node nameShadow2 = IR.name("x");
+    Node nameNoShadow = IR.name("x");
+
+    nameShadow1.setClosureUnawareShadow(IR.root());
+    nameShadow2.setClosureUnawareShadow(IR.root());
+
+    assertThat(nameShadow1.isEquivalentTo(nameShadow2)).isTrue();
+    assertThat(nameShadow1.isEquivalentTo(nameNoShadow)).isFalse();
+    assertThat(nameNoShadow.isEquivalentTo(nameShadow1)).isFalse();
+  }
+
+  @Test
   public void testNumberRejects_isNaN() {
     assertNumberNodeRejects(Double.NaN);
     assertNumberNodeRejects(-Double.NaN);

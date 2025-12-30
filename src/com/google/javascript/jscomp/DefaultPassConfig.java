@@ -123,8 +123,6 @@ public final class DefaultPassConfig extends PassConfig {
   protected PassListBuilder getTranspileOnlyPasses() {
     PassListBuilder passes = new PassListBuilder(options);
 
-    passes.maybeAdd(wrapClosureUnawareCode);
-
     // Certain errors in block-scoped variable declarations will prevent correct transpilation
     passes.maybeAdd(checkVariableReferences);
     passes.maybeAdd(checkVars);
@@ -177,8 +175,6 @@ public final class DefaultPassConfig extends PassConfig {
     // do runtime injection of function call arguments based on the function parameter names.
     passes.maybeAdd(invertContextualRenaming);
 
-    passes.maybeAdd(unwrapClosureUnawareCode);
-
     // Es6ConvertSuper may add this so it needs to be removed for transpile-only mode.
     passes.maybeAdd(removePropertyRenamingCalls);
 
@@ -217,7 +213,6 @@ public final class DefaultPassConfig extends PassConfig {
   @Override
   protected PassListBuilder getChecks() {
     PassListBuilder checks = new PassListBuilder(options);
-    checks.maybeAdd(wrapClosureUnawareCode);
 
     checkState(
         !options.skipNonTranspilationPasses,
@@ -535,8 +530,6 @@ public final class DefaultPassConfig extends PassConfig {
         }
         passes.maybeAdd(rescopeGlobalSymbols);
       }
-
-      passes.maybeAdd(unwrapClosureUnawareCode);
       return passes;
     }
 
@@ -720,8 +713,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.chunkOutputType == ChunkOutputType.ES_MODULES) {
       passes.maybeAdd(convertChunksToESModules);
     }
-
-    passes.maybeAdd(unwrapClosureUnawareCode);
 
     // Safety checks.  These should always be the last passes.
     passes.maybeAdd(checkAstValidity);
@@ -2952,17 +2943,5 @@ public final class DefaultPassConfig extends PassConfig {
                           .process(externs, root);
                     }
                   })
-          .build();
-
-  private final PassFactory wrapClosureUnawareCode =
-      PassFactory.builder()
-          .setName("WrapClosureUnawareCode")
-          .setInternalFactory(ManageClosureUnawareCode::wrap)
-          .build();
-
-  private final PassFactory unwrapClosureUnawareCode =
-      PassFactory.builder()
-          .setName("UnwrapClosureUnawareCode")
-          .setInternalFactory(ManageClosureUnawareCode::unwrap)
           .build();
 }

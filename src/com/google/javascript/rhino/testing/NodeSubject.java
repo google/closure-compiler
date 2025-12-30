@@ -645,6 +645,16 @@ public final class NodeSubject extends Subject {
       expectedChild = expectedChild.getNext();
     }
 
+    // `isEquivalentTo` confirms that either both nodes have a shadow root or none do.
+    Node actualShadowAst = actual.getClosureUnawareShadow();
+    Node expectedShadowAst = expected.getClosureUnawareShadow();
+    if (actualShadowAst != null && expectedShadowAst != null) {
+      NodeMismatch mismatch = findFirstMismatch(actualShadowAst, expectedShadowAst, jsDoc);
+      if (mismatch != null) {
+        return mismatch;
+      }
+    }
+
     return null;
   }
 

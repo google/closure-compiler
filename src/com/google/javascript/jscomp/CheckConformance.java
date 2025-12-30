@@ -169,16 +169,14 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
 
   @Override
   public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    // Don't inspect extern files, *.tsmes.closure.js, weak sources, or closureUnaware code.
+    // Don't inspect extern files, *.tsmes.closure.js, weak sources, or @closureUnaware ASTs.
     return !n.isScript()
         || (isScriptOfInterest(t.getInput().getSourceFile())
             && !t.getSourceName().endsWith("tsmes.closure.js"));
   }
 
   private boolean isScriptOfInterest(SourceFile sf) {
-    return !sf.isWeak()
-        && !sf.isExtern()
-        && !sf.isClosureUnawareCode();
+    return !sf.isWeak() && !sf.isExtern();
   }
 
   @Override

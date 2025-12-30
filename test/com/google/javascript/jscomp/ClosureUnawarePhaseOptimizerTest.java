@@ -119,11 +119,6 @@ public final class ClosureUnawarePhaseOptimizerTest extends CompilerTestCase {
     List<PassFactory> passes = new ArrayList<>();
     passes.add(
         PassFactory.builder()
-            .setName("wrapClosureUnawareCode")
-            .setInternalFactory(ManageClosureUnawareCode::wrap)
-            .build());
-    passes.add(
-        PassFactory.builder()
             .setName("gatherShadowNodes")
             .setInternalFactory(
                 (c) ->
@@ -151,12 +146,6 @@ public final class ClosureUnawarePhaseOptimizerTest extends CompilerTestCase {
                     })
             .build());
     passes.addAll(aditionalPasses);
-
-    passes.add(
-        PassFactory.builder()
-            .setName("unwrapClosureUnawareCode")
-            .setInternalFactory(ManageClosureUnawareCode::unwrap)
-            .build());
     phaseopt.consume(passes);
     phaseopt.setValidityCheck(
         PassFactory.builder()

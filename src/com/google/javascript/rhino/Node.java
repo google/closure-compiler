@@ -2328,6 +2328,13 @@ public class Node {
       }
     }
 
+    // TODO: b/421971366 - we should compare the shadow node contents when `recurse` is enabled.
+    boolean thisIsShadowHost = this.getClosureUnawareShadow() != null;
+    boolean nodeIsShadowHost = node.getClosureUnawareShadow() != null;
+    if (thisIsShadowHost != nodeIsShadowHost) {
+      return false;
+    }
+
     if (recurse) {
       for (Node n = first, n2 = node.first; n != null; n = n.next, n2 = n2.next) {
         if (!n.isEquivalentTo(n2, compareType, recurse, jsDoc, sideEffect)) {

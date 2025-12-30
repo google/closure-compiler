@@ -36,14 +36,7 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return this::process;
-  }
-
-  private void process(Node externs, Node root) {
-    Compiler compiler = getLastCompiler();
-    ManageClosureUnawareCode.wrap(compiler).process(externs, root);
-    new TranspileAndOptimizeClosureUnaware(compiler).process(externs, root);
-    ManageClosureUnawareCode.unwrap(compiler).process(externs, root);
+    return new TranspileAndOptimizeClosureUnaware(compiler);
   }
 
   private int inputCount;
@@ -52,8 +45,7 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
 
   @Before
   public void setup() {
-    disableValidateAstChangeMarking();
-    allowExternsChanges();
+    disableCompareJsDoc();
     this.inputCount = 0;
     this.outputCount = 0;
     this.extraOptions = options -> {};
@@ -254,29 +246,6 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
     }
   }
 
-  private String closureUnaware(String... closureUnaware) {
-    String prefix =
-        String.format(
-            """
-            /** @fileoverview @closureUnaware */
-            goog.module('test%d');
-            """,
-            inputCount++);
-    StringBuilder input = new StringBuilder().append(prefix);
-    for (String block : closureUnaware) {
-      input.append(
-          String.format(
-              """
-              /** @closureUnaware */
-              (function() {
-                %s
-              }).call(undefined);
-              """,
-              block));
-    }
-    return input.toString();
-  }
-
   @Test
   public void testFoldConstants_directCallInsteadOfDotCall() {
     test(
@@ -295,25 +264,35 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
             """
             /** @fileoverview @closureUnaware */
             goog.module('test');
+            /** @closureUnaware */
             (function() {
               console.log(3);
             })();
             """));
   }
 
+  private String closureUnaware(String... closureUnaware) {
+    return buildCode(inputCount++, closureUnaware);
+  }
+
   private String expectedClosureUnaware(String... closureUnaware) {
+    return buildCode(outputCount++, closureUnaware);
+  }
+
+  private static String buildCode(int idx, String... closureUnaware) {
     String prefix =
         String.format(
             """
             /** @fileoverview @closureUnaware */
             goog.module('test%d');
             """,
-            outputCount++);
+            idx);
     StringBuilder output = new StringBuilder().append(prefix);
     for (String block : closureUnaware) {
       output.append(
           String.format(
               """
+              /** @closureUnaware */
               (function() {
                 %s
               }).call(undefined);

@@ -676,10 +676,6 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerUnsuppressibleGroup(
           ProcessDefines.INVALID_DEFINE_VALUE, ProcessDefines.INVALID_DEFINE_TYPE);
 
-  public static final DiagnosticGroup INVALID_CLOSURE_UNAWARE_ANNOTATED_CODE =
-      DiagnosticGroups.registerUnsuppressibleGroup(
-          ManageClosureUnawareCode.UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_CODE);
-
   public static final DiagnosticGroup CANNOT_TRANSPILE_FEATURE =
       DiagnosticGroups.registerUnsuppressibleGroup(
           TranspilationUtil.CANNOT_CONVERT, TranspilationUtil.CANNOT_CONVERT_YET);

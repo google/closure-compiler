@@ -2679,16 +2679,19 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   @Test
-  public void testRemovesClosureUnawareCodeAnnotationIfPresent() {
+  public void testRemovesClosureUnawareCodeIfPresent() {
     test(
         """
         /** @fileoverview @closureUnaware */
         goog.module('a.b.c');
+        /** @closureUnaware */
+        (function() {})();
         exports.foo = 10;
         """,
         """
         /**@fileoverview */
         goog.module('a.b.c');
+
         /** @const @type {number} */
         exports.foo;
         """);

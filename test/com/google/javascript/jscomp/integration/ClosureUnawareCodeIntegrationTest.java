@@ -415,11 +415,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
         goog.module('a.b');
         $jscomp_wrap_closure_unaware_code('{ const x = 5 }');
         """,
-        // This error is currently reported as "invalid structure for @closureUnaware annotated
-        // code"
-        // but if we loosen the restrictions then this should be replaced with
-        // DiagnosticGroups.CONFORMANCE_VIOLATIONS (a conformance violation) instead.
-        DiagnosticGroups.INVALID_CLOSURE_UNAWARE_ANNOTATED_CODE);
+        DiagnosticGroups.CONFORMANCE_VIOLATIONS);
   }
 
   @Test
@@ -683,8 +679,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
             .getFirstFirstChild()
             .getFirstChild();
     assertNode(fn).isFunction();
-    assertThat(fn.getJSDocInfo()).isNotNull();
-    assertThat(fn.getJSDocInfo().isClosureUnawareCode()).isTrue();
+    assertThat(fn.getJSDocInfo()).isNull();
     NodeTraversal.builder()
         .setCompiler(lastCompiler)
         .setCallback((NodeTraversal t, Node n, Node parent) -> assertThat(n.isCast()).isFalse())
@@ -736,8 +731,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
 
     Node fn = script.getFirstChild().getFirstFirstChild().getFirstChild();
     assertNode(fn).isFunction();
-    assertThat(fn.getJSDocInfo()).isNotNull();
-    assertThat(fn.getJSDocInfo().isClosureUnawareCode()).isTrue();
+    assertThat(fn.getJSDocInfo()).isNull();
 
     Node fnBlock = fn.getChildAtIndex(2);
     assertNode(fnBlock).isBlock();
@@ -804,8 +798,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
 
     Node fn = script.getFirstChild().getFirstFirstChild().getFirstChild();
     assertNode(fn).isFunction();
-    assertThat(fn.getJSDocInfo()).isNotNull();
-    assertThat(fn.getJSDocInfo().isClosureUnawareCode()).isTrue();
+    assertThat(fn.getJSDocInfo()).isNull();
 
     Node fnBlock = fn.getChildAtIndex(2);
     assertNode(fnBlock).isBlock();

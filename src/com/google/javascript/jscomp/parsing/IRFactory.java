@@ -464,6 +464,36 @@ class IRFactory {
     validateNewDotTarget(n);
     validateLabel(n);
     validateBlockScopedFunctions(n);
+    validateShadowHost(n);
+  }
+
+  private void validateShadowHost(Node n) {
+    if (n.getClosureUnawareShadow() == null) {
+      return;
+    }
+
+    if (firstFileoverview == null || !firstFileoverview.isClosureUnawareCode()) {
+      error(n, "invalid @closureUnaware node: must be in a file annotated with @closureUnaware");
+      return;
+    }
+
+    Node parent = n.getParent();
+    // We only support:
+
+    //  - FUNCTION nodes that are direct CALL callees
+    if (parent.isCall()) {
+      return;
+    }
+    //  - FUNCTION nodes that are children of a GETPROP node that is a direct CALL callee (e.g.
+    //    fn.call or fn.apply can be the CALL callee)
+    Node grandparent = parent.getParent();
+    if (parent.isGetProp() && grandparent != null && grandparent.isCall()) {
+      String calledFn = parent.getString();
+      if (calledFn.equals("call") || calledFn.equals("apply")) {
+        return;
+      }
+    }
+    error(n, "invalid @closureUnaware node: must be directly called");
   }
 
   private void validateAwait(Node n) {
@@ -1021,10 +1051,40 @@ class IRFactory {
       node.setNonJSDocComment(comment);
     }
     if (isRootOfClosureUnawareSubTree) {
+      setSourceInfo(node, tree);
       templateNode = defaultTemplateNode;
+      node = hideClosureUnawareCodeRoot(node);
     }
     setSourceInfo(node, tree);
     return node;
+  }
+
+  static final String JSCOMP_CLOSURE_UNAWARE_CODE_SHADOW_HOST_NAME =
+      "$jscomp_wrap_closure_unaware_code";
+  private static final String JSCOMP_CLOSURE_UNAWARE_SINK_VALUE =
+      "$jscomp_sink_closure_unaware_impl";
+
+  private final Node hideClosureUnawareCodeRoot(Node fn) {
+    if (!fn.isFunction()) {
+      error(fn, "@closureUnaware root must be function");
+      return fn;
+    }
+    fn.setJSDocInfo(null);
+
+    Node shadowNameNode = IR.name(JSCOMP_CLOSURE_UNAWARE_CODE_SHADOW_HOST_NAME);
+
+    Node sinkCall =
+        IR.call(IR.name(JSCOMP_CLOSURE_UNAWARE_SINK_VALUE).srcref(templateNode), fn)
+            .srcref(templateNode);
+    sinkCall.putBooleanProp(Node.FREE_CALL, true);
+    Node script = IR.script(IR.exprResult(sinkCall).srcref(templateNode));
+    Node shadowJsRoot = IR.root(script);
+    script.setStaticSourceFileFrom(templateNode);
+    script.setIsInClosureUnawareSubtree(true);
+
+    shadowNameNode.clonePropsFrom(templateNode);
+    shadowNameNode.setClosureUnawareShadow(shadowJsRoot);
+    return shadowNameNode;
   }
 
   private boolean withinClosureUnawareCodeRange(int line, int lineColumnNo) {
@@ -4266,5 +4326,10 @@ class IRFactory {
 
   Node newBigIntNode(BigInteger value) {
     return Node.newBigInt(value).clonePropsFrom(templateNode);
+  }
+
+  private void error(Node rhinoNode, String message) {
+    errorReporter.error(
+        message, rhinoNode.getSourceFileName(), rhinoNode.getLineno(), rhinoNode.getCharno());
   }
 }

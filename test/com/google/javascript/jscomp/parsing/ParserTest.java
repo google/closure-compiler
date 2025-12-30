@@ -25,6 +25,7 @@ import static com.google.javascript.jscomp.parsing.parser.testing.FeatureSetSubj
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
@@ -32,6 +33,7 @@ import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
+import com.google.javascript.jscomp.testing.CodeSubTree;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -6110,9 +6112,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT_2020;
     expectFeatures(Feature.PUBLIC_CLASS_FIELDS);
     parseWarning(
-        "/** @closureUnaware */ (function() { class C{ a = 2;} }).call(globalThis);",
+        """
+        /** @fileoverview @closureUnaware */
+        /** @closureUnaware */ (
+          function() { class C{ a = 2;} }).call(globalThis);
+        """,
         // This warning is expected - it is used to halt compilation during parsing when
         // closure-unaware code is present when it should not be.
+        "@closureUnaware annotation is not allowed in this compilation",
         "@closureUnaware annotation is not allowed in this compilation");
 
     // Note that the PUBLIC_CLASS_FIELDS feature is not recorded here. This is OK as we currently do
@@ -6126,17 +6133,21 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.PUBLIC_CLASS_FIELDS);
     parseWarning(
         """
+        /** @fileoverview @closureUnaware */
         /** @closureUnaware */ (
-          function() { class C{ a = 2;} }).call(globalThis); class C{ a = 2;
+          function() {
+            class C{ a = 2;}
+        }).call(globalThis);
+        class C{
+          a = 2;
         }
         """,
-        // This warning is expected - it is used to halt compilation during parsing when
-        // closure-unaware code is present when it should not be.
         "@closureUnaware annotation is not allowed in this compilation",
         """
         This language feature is only supported for ECMASCRIPT_2022 mode or better: \
         Public class fields\
-        """);
+        """,
+        "@closureUnaware annotation is not allowed in this compilation");
 
     expectFeatures(Feature.CLASSES, Feature.PUBLIC_CLASS_FIELDS);
   }
@@ -8497,8 +8508,14 @@ console.log(new X(1));
     return doParse(string, warnings).ast;
   }
 
+  @CanIgnoreReturnValue
   private ParseResult doParse(String string, String... warnings) {
     TestErrorReporter testErrorReporter = new TestErrorReporter().expectAllWarnings(warnings);
+    return doParse(string, testErrorReporter);
+  }
+
+  @CanIgnoreReturnValue
+  private ParseResult doParse(String string, TestErrorReporter testErrorReporter) {
     StaticSourceFile file = new SimpleSourceFile("input", SourceKind.STRONG);
     ParseResult result = ParserRunner.parse(file, string, createConfig(), testErrorReporter);
 
@@ -8603,10 +8620,23 @@ console.log(new X(1));
     Node firstUnawareFunctionExprResult = moduleBody.getSecondChild();
     Node awareLet = firstUnawareFunctionExprResult.getNext();
     Node secondUnawareFunctionExprResult = awareLet.getNext();
+    Node firstUnawareShadowHost =
+        firstUnawareFunctionExprResult.getFirstFirstChild().getFirstChild();
+    Node secondUnawareShadowHost =
+        secondUnawareFunctionExprResult.getFirstFirstChild().getFirstChild();
+    Node firstShadowRoot = firstUnawareShadowHost.getClosureUnawareShadow();
+    Node secondShadowRoot = secondUnawareShadowHost.getClosureUnawareShadow();
     Node firstUnawareFunctionFunctionNode =
-        firstUnawareFunctionExprResult.getFirstChild().getFirstChild().getFirstChild();
+        CodeSubTree.findFirstNode(firstShadowRoot, Node::isFunction);
     Node secondUnawareFunctionFunctionNode =
-        secondUnawareFunctionExprResult.getFirstChild().getFirstChild().getFirstChild();
+        CodeSubTree.findFirstNode(secondShadowRoot, Node::isFunction);
+
+    assertNode(firstUnawareShadowHost).isName("$jscomp_wrap_closure_unaware_code");
+    assertNode(secondUnawareShadowHost).isName("$jscomp_wrap_closure_unaware_code");
+    assertThat(firstUnawareShadowHost.getClosureUnawareShadow()).isNotNull();
+    assertThat(firstUnawareShadowHost.getIsInClosureUnawareSubtree()).isFalse();
+    assertThat(secondUnawareShadowHost.getClosureUnawareShadow()).isNotNull();
+    assertThat(secondUnawareShadowHost.getIsInClosureUnawareSubtree()).isFalse();
 
     assertThat(firstUnawareFunctionFunctionNode.getIsInClosureUnawareSubtree()).isTrue();
     assertThat(secondUnawareFunctionFunctionNode.getIsInClosureUnawareSubtree()).isTrue();
@@ -8644,5 +8674,38 @@ console.log(new X(1));
             Node.validateMemorySensitivePropertyGuarantees(
                 firstUnawareFunctionFunctionNode, true, awareLet, false))
         .isTrue();
+  }
+
+  @Test
+  public void closureUnawareAnnotation_usedOutsideFileWithClosureUnaware_errors() {
+    TestErrorReporter errorReporter =
+        new TestErrorReporter()
+            .expectAllErrors(
+                "invalid @closureUnaware node: must be in a file annotated with @closureUnaware")
+            .expectAllWarnings("@closureUnaware annotation is not allowed in this compilation");
+    doParse(
+        """
+        /** @closureUnaware */ (
+          function() {}).call(globalThis);
+        """,
+        errorReporter);
+  }
+
+  @Test
+  public void closureUnawareAnnotation_onNonFunctionCall_errors() {
+    mode = LanguageMode.ECMASCRIPT_2020;
+    expectFeatures(Feature.CONST_DECLARATIONS);
+    TestErrorReporter errorReporter =
+        new TestErrorReporter()
+            .expectAllErrors("@closureUnaware root must be function")
+            .expectAllWarnings(
+                "@closureUnaware annotation is not allowed in this compilation",
+                "@closureUnaware annotation is not allowed in this compilation");
+    doParse(
+        """
+        /** @fileoverview @closureUnaware */
+        /** @closureUnaware */ const x = 0;
+        """,
+        errorReporter);
   }
 }

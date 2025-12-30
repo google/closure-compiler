@@ -89,6 +89,10 @@ class VarCheck implements ScopedCallback, CompilerPass {
   // The arguments variable is special, in that it's declared in every local
   // scope, but not explicitly declared.
   private static final String ARGUMENTS = "arguments";
+  // The IRFactory parse step adds references to this special name for @closureUnaware support, but
+  // it's not actually defined anywhere - just a compiler internal implementation detail.
+  private static final String JSCOMP_CLOSURE_UNAWARE_CODE_SHADOW_HOST_NAME =
+      "$jscomp_wrap_closure_unaware_code";
 
   private static final Node googForwardDeclare = IR.getprop(IR.name("goog"), "forwardDeclare");
 
@@ -162,13 +166,7 @@ class VarCheck implements ScopedCallback, CompilerPass {
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    // VarCheck is one of the few passes that runs after unwrapping closure-unaware code during
-    // finalization, and unfortunately that kind of code can contain all sorts of references.
-    // We could adjust the pass order so that unwrapping happens after this pass, but that would
-    // move VarCheck before AST Validity checking. Instead, we will just teach VarCheck to skip
-    // closure-unaware code.
-    // TODO: b/421971366 - remove this exception.
-    return !(validityCheck && n.getIsInClosureUnawareSubtree());
+    return true;
   }
 
   @Override
@@ -281,6 +279,8 @@ class VarCheck implements ScopedCallback, CompilerPass {
 
     if (n.getParent().isTypeOf()) {
       // `typeof` is used for existence checks.
+    } else if (varName.equals(JSCOMP_CLOSURE_UNAWARE_CODE_SHADOW_HOST_NAME)) {
+      // Compiler internal, we just create an extern for it.
     } else if (strictExternCheck && t.getInput().isExtern()) {
       // The extern checks are stricter, don't report a second error.
     } else {

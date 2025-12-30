@@ -38,25 +38,21 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     allowExternsChanges();
-    // This is instead done via the ValidationCheck in PhaseOptimizer
-    // This set of tests can't use the build-in AST change marking validation
-    // as the "before" is supposed to be identical to the "after" (with changes happening between
-    // each pass). Unfortunately, CompilerTestCase is designed to only handle a single pass running,
-    // and so it sees that the AST hasn't changed (expected) but changes have been reported (yep -
-    // the changes were "done" and then "undone"), and fails.
+    // Wrapping and unwrapping closureUnaware code does not need to record AST changes, as it is
+    // conceptually really part of parsing/pre-code-printing. (We just use the CompilerPass API &
+    // CompilerTestCase class for convenience.)
     disableValidateAstChangeMarking();
+    disableCompareJsDoc();
   }
 
   @Override
   @After
   public void tearDown() throws Exception {
     super.tearDown();
-    runWrapPass = true;
     runUnwrapPass = true;
     gatheredShadowNodeRoot = IR.root();
   }
 
-  private boolean runWrapPass = true;
   private boolean runUnwrapPass = true;
   private Node gatheredShadowNodeRoot = IR.root();
   public Optional<CompilerOptions.LanguageMode> languageInOverride = Optional.empty();
@@ -74,13 +70,6 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
   protected CompilerPass getProcessor(Compiler compiler) {
     PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null);
     List<PassFactory> passes = new ArrayList<>();
-    if (runWrapPass) {
-      passes.add(
-          PassFactory.builder()
-              .setName("wrapClosureUnawareCode")
-              .setInternalFactory(ManageClosureUnawareCode::wrap)
-              .build());
-    }
     passes.add(
         PassFactory.builder()
             .setName("gatherShadowNodes")
@@ -95,6 +84,9 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
                             (Node node) -> {
                               Node shadow = node.getClosureUnawareShadow();
                               if (shadow != null) {
+                                if (!runUnwrapPass) {
+                                  node.setClosureUnawareShadow(null);
+                                }
                                 gatheredShadowNodeRoot.addChildToBack(shadow.cloneTree());
                               }
                             });
@@ -110,17 +102,10 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
               .build());
     }
     phaseopt.consume(passes);
-    phaseopt.setValidityCheck(
-        PassFactory.builder()
-            .setName("validityCheck")
-            .setRunInFixedPointLoop(true)
-            .setInternalFactory(ValidityCheck::new)
-            .build());
     return phaseopt;
   }
 
   private void doTest(String js, String expectedWrapped, List<String> expectedShadowNodeContents) {
-    runWrapPass = true;
     runUnwrapPass = false; // Validate that only wrapping results in the expected wrapped contents.
     test(js, expectedWrapped);
     Node expectedShadowNodeRoot =
@@ -137,9 +122,9 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         .isEqualIncludingJsDocTo(expectedShadowNodeRoot);
 
     // now test with unwrapping enabled so it is a no-op
-    runWrapPass = true;
     runUnwrapPass = true;
-    testSame(js);
+    String jsWithoutClosureUnware = js.replace("@closureUnaware", "");
+    test(js, jsWithoutClosureUnware);
   }
 
   @Test
@@ -164,7 +149,6 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         ImmutableList.of(
             """
             $jscomp_sink_closure_unaware_impl(
-            /** @closureUnaware */
             function() {
               window['foo'] = 5;
             });
@@ -202,7 +186,6 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         ImmutableList.of(
             """
             $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
               function() {
                 window['foo'] = 5;
               });
@@ -238,7 +221,6 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         ImmutableList.of(
             """
             $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
               function() {
                 window['foo'] = 5;
               });
@@ -281,14 +263,12 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         ImmutableList.of(
             """
             $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
               function() {
                 window['foo'] = 5;
               });
             """,
             """
             $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
               function() {
                 window['foo'] = 10;
               });
@@ -335,14 +315,12 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         ImmutableList.of(
             """
             $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
               function() {
                 window['foo'] = 5;
               });
             """,
             """
             $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
               function() {
                 window['foo'] = 10;
               });
@@ -381,7 +359,6 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         ImmutableList.of(
             """
             $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
               function() {
                 function bar() { window['foo'] = 5;} bar();
               });
@@ -419,7 +396,6 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         ImmutableList.of(
             """
             $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
               function() {
                (function() {
                   window['foo'] = 10;
@@ -429,55 +405,45 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
   }
 
   @Test
-  public void testUnwrap_doesNotEmitParseErrorsThatShouldBeSuppressed() {
-    runWrapPass = false;
-    runUnwrapPass = true;
-    languageInOverride = Optional.of(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
-
-    testNoWarning(
-        """
-        /** @fileoverview @closureUnaware */
-        goog.module('foo.bar.baz_raw');
-        $jscomp_wrap_closure_unaware_code('{class C { foo = "bar"; } }');
-        """);
-  }
-
-  @Test
   public void testErrorsOnWrapping_invalidAnnotation_statement() {
-    testError(
-        """
-        /**
-         * @fileoverview
-         * @closureUnaware
-         */
-        goog.module('foo.bar.baz_raw');
-        /** @closureUnaware */
-        exports.bar = 10;
-        """,
-        ManageClosureUnawareCode.UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_CODE);
+    test(
+        srcs(
+            """
+            /**
+             * @fileoverview
+             * @closureUnaware
+             */
+            goog.module('foo.bar.baz_raw');
+            /** @closureUnaware */
+            exports.bar = 10;
+            """),
+        error(RhinoErrorReporter.PARSE_ERROR)
+            .withMessageContaining("@closureUnaware root must be function"));
   }
 
   @Test
   public void testErrorsForScriptsWithoutFileoverviewClosureUnawareAnnotation() {
-    testError(
-        """
-        /**
-         * @fileoverview
-         */
-        goog.module('foo.bar.baz_raw');
-        /** @closureUnaware */
-        (function() {
-          window['foo'] = 10;
-        }).call(globalThis);
-        """,
-        ManageClosureUnawareCode.UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_CODE);
+    test(
+        srcs(
+            """
+            /**
+             * @fileoverview
+             */
+            goog.module('foo.bar.baz_raw');
+            /** @closureUnaware */
+            (function() {
+              window['foo'] = 10;
+            }).call(globalThis);
+            """),
+        error(RhinoErrorReporter.PARSE_ERROR)
+            .withMessageContaining("must be in a file annotated with @closureUnaware"));
   }
 
   @Test
-  public void testErrorsIfMissingNodeLevelAnnotation() {
+  public void testNoErrorIfMissingNodeLevelAnnotation() {
     // It is an error to have a file-level @closureUnaware annotation, but no annotation on some
     // other node to indicate the start of the closure-unaware sub-AST.
-    testError(
+    testSame(
         """
         /**
          * @fileoverview
@@ -485,8 +451,7 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
          */
         goog.module('foo.bar.baz_raw');
         $jscomp_wrap_closure_unaware_code(5)
-        """,
-        ManageClosureUnawareCode.UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_CODE);
+        """);
   }
 
   @Test
@@ -520,7 +485,6 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         ImmutableList.of(
             """
             $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
               function() {
                 // Note that there isn't a JSDoc closureUnaware annotation on the inner function, as
                 // it was never created during parsing of the AST.
@@ -556,7 +520,6 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         ImmutableList.of(
             """
             $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
               function() {
                 window['foo'] = 5;
               });
@@ -591,7 +554,6 @@ public final class ManageClosureUnawareCodeTest extends CompilerTestCase {
         ImmutableList.of(
             """
             $jscomp_sink_closure_unaware_impl(
-              /** @closureUnaware */
               function() {
                 window['foo'] = 5;
               });
