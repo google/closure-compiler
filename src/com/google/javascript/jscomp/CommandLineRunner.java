@@ -1734,7 +1734,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
           .setMixedJsSources(mixedSources)
           .setDefaultToStdin()
           .setJsOutputFile(flags.jsOutputFile)
-          .setModule(flags.chunk)
+          .setChunk(flags.chunk)
           .setVariableMapOutputFile(flags.variableMapOutputFile)
           .setCreateNameMapFiles(flags.createNameMapFiles)
           .setPropertyMapOutputFile(flags.propertyMapOutputFile)
@@ -1744,8 +1744,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
           .setCodingConvention(conv)
           .setSummaryDetailLevel(flags.summaryDetailLevel)
           .setOutputWrapper(flags.outputWrapper)
-          .setModuleWrapper(flags.chunkWrapper)
-          .setModuleOutputPathPrefix(flags.chunkOutputPathPrefix)
+          .setChunkWrapper(flags.chunkWrapper)
+          .setChunkOutputPathPrefix(flags.chunkOutputPathPrefix)
           .setCreateSourceMap(flags.createSourceMap)
           .setSourceMapFormat(flags.sourceMapFormat)
           .setSourceMapLocationMappings(mappings)
@@ -1760,7 +1760,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
           .setOutputManifest(ImmutableList.of(flags.outputManifest))
           .setOutputBundle(bundleFiles)
           .setSkipNormalOutputs(skipNormalOutputs)
-          .setOutputModuleDependencies(flags.outputChunkDependencies)
+          .setOutputChunkDependencies(flags.outputChunkDependencies)
           .setProcessCommonJSModules(flags.processCommonJsModules)
           .setModuleRoots(flags.moduleRoot)
           .setWarningsAllowlistFile(flags.warningsAllowlistFile)
@@ -1803,7 +1803,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
   }
 
   @Override
-  protected void checkModuleName(String name) {
+  protected void checkChunkName(String name) {
     if (!TokenStream.isJSIdentifier(extraChunkNameChars.matcher(name).replaceAll("_"))) {
       throw new FlagUsageException("Invalid chunk name: '" + name + "'");
     }

@@ -81,6 +81,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.zip.GZIPInputStream;
@@ -136,10 +137,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   static final DiagnosticType NO_TREE_GENERATED_ERROR =
       DiagnosticType.error(
           "JSC_NO_TREE_GENERATED_ERROR", "Code contains errors. No tree was generated.");
-  static final DiagnosticType INVALID_MODULE_SOURCEMAP_PATTERN =
+  static final DiagnosticType INVALID_CHUNK_SOURCEMAP_PATTERN =
       DiagnosticType.error(
-          "JSC_INVALID_MODULE_SOURCEMAP_PATTERN",
-          "When using --module flags, the --create_source_map flag must contain "
+          "JSC_INVALID_CHUNK_SOURCEMAP_PATTERN",
+          "When using --chunk or --module flags, the --create_source_map flag must contain "
               + "%outname% in the value.");
 
   static final String WAITING_FOR_INPUT_WARNING = "The compiler is waiting for input via stdin.";
@@ -181,11 +182,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
   private @Nullable Map<String, String> rootRelativePathsMap = null;
 
-  private @Nullable Map<String, String> parsedModuleWrappers = null;
+  private @Nullable Map<String, String> parsedChunkWrappers = null;
 
-  private @Nullable ImmutableMap<String, String> parsedModuleOutputFiles = null;
+  private @Nullable ImmutableMap<String, String> parsedChunkOutputFiles = null;
 
-  private @Nullable ImmutableMap<String, String> parsedModuleConformanceFiles = null;
+  private @Nullable ImmutableMap<String, String> parsedChunkConformanceFiles = null;
 
   private final Gson gson;
 
@@ -215,7 +216,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    *
    * @param externsSupplier A provider for externs.
    * @param inputsSupplier A provider for source inputs.
-   * @param chunksSupplier A provider for modules. Only one of inputsSupplier and chunksSupplier may
+   * @param chunksSupplier A provider for chunks. Only one of inputsSupplier and chunksSupplier may
    *     be non-null.
    * @param exitCodeReceiver A receiver for the status code that would have been passed to
    *     System.exit in non-test mode.
@@ -691,10 +692,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   /**
    * Removes input --ijs files whose basename matches an input --js or --weakdep file.
    *
-   * @throws FlagUsageException If there are both input --ijs files and module specs.
+   * @throws FlagUsageException If there are both input --ijs files and chunk specs.
    */
   private ImmutableList<JSError> deduplicateIjsFiles(
-      List<FlagEntry<JsSourceType>> files, List<String> moduleRoots, boolean hasModuleSpecs) {
+      List<FlagEntry<JsSourceType>> files, List<String> moduleRoots, boolean hasChunkSpecs) {
     ImmutableList.Builder<JSError> errors = ImmutableList.builder();
 
     // First pass: collect the (module root relative) names of --js and --weakdep files.
@@ -714,7 +715,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     while (iterator.hasNext()) {
       FlagEntry<JsSourceType> file = iterator.next();
       if (file.flag == JsSourceType.IJS) {
-        if (hasModuleSpecs) {
+        if (hasChunkSpecs) {
           throw new FlagUsageException("--ijs is incompatible with --chunk or --module.");
         }
         String absoluteName = file.value;
@@ -796,7 +797,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    *
    * @param specs A list of chunk specifications, not null or empty.
    * @param inputs A list of JS file paths, not null
-   * @return An array of module objects
+   * @return An array of chunk objects
    */
   public static List<JSChunk> createJsChunks(List<JsChunkSpec> specs, List<CompilerInput> inputs) {
     checkState(specs != null);
@@ -805,12 +806,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
     List<String> chunkNames = new ArrayList<>(specs.size());
     Map<String, JSChunk> chunksByName = new LinkedHashMap<>();
-    Map<String, Integer> modulesFileCountMap = new LinkedHashMap<>();
+    Map<String, Integer> chunksFileCountMap = new LinkedHashMap<>();
     int numJsFilesExpected = 0;
     int minJsFilesRequired = 0;
     for (JsChunkSpec spec : specs) {
       if (chunksByName.containsKey(spec.name)) {
-        throw new FlagUsageException("Duplicate module name: " + spec.name);
+        throw new FlagUsageException("Duplicate chunk name: " + spec.name);
       }
       JSChunk chunk = new JSChunk(spec.name);
 
@@ -818,16 +819,16 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
         JSChunk other = chunksByName.get(dep);
         if (other == null) {
           throw new FlagUsageException(
-              "Module '"
+              "Chunk '"
                   + spec.name
-                  + "' depends on unknown module '"
+                  + "' depends on unknown chunk '"
                   + dep
-                  + "'. Be sure to list modules in dependency order.");
+                  + "'. Be sure to list chunks in dependency order.");
         }
         chunk.addDependency(other);
       }
 
-      // We will allow modules of zero input.
+      // We will allow chunks of zero input.
       if (spec.numJsFiles < 0) {
         numJsFilesExpected = -1;
       } else {
@@ -838,11 +839,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
         numJsFilesExpected += spec.numJsFiles;
       }
 
-      // Add modules in reverse order so that source files are allocated to
-      // modules in reverse order. This allows the first module
-      // (presumably the base module) to have a size of 'auto'
+      // Add chunks in reverse order so that source files are allocated to
+      // chunks in reverse order. This allows the first chunk
+      // (presumably the base chunk) to have a size of 'auto'
       chunkNames.add(0, spec.name);
-      modulesFileCountMap.put(spec.name, spec.numJsFiles);
+      chunksFileCountMap.put(spec.name, spec.numJsFiles);
       chunksByName.put(spec.name, chunk);
     }
 
@@ -869,55 +870,55 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
 
     int numJsFilesLeft = totalNumJsFiles;
-    int moduleIndex = 0;
+    int chunkIndex = 0;
     for (String chunkName : chunkNames) {
-      // Parse module inputs.
-      int numJsFiles = modulesFileCountMap.get(chunkName);
+      // Parse chunk inputs.
+      int numJsFiles = chunksFileCountMap.get(chunkName);
       JSChunk chunk = chunksByName.get(chunkName);
 
       // Check if the first chunk specified 'auto' for the number of files
-      if (moduleIndex == chunkNames.size() - 1 && numJsFiles == -1) {
+      if (chunkIndex == chunkNames.size() - 1 && numJsFiles == -1) {
         numJsFiles = numJsFilesLeft;
       }
 
-      List<CompilerInput> moduleFiles = inputs.subList(numJsFilesLeft - numJsFiles, numJsFilesLeft);
-      for (CompilerInput input : moduleFiles) {
+      List<CompilerInput> chunkFiles = inputs.subList(numJsFilesLeft - numJsFiles, numJsFilesLeft);
+      for (CompilerInput input : chunkFiles) {
         chunk.add(input);
       }
       numJsFilesLeft -= numJsFiles;
-      moduleIndex++;
+      chunkIndex++;
     }
 
     return new ArrayList<>(chunksByName.values());
   }
 
   /**
-   * Validates the module name. Can be overridden by subclasses.
+   * Validates the chunk name. Can be overridden by subclasses.
    *
-   * @param name The module name
+   * @param name The chunk name
    */
-  protected void checkModuleName(String name) {
+  protected void checkChunkName(String name) {
     if (!TokenStream.isJSIdentifier(name)) {
-      throw new FlagUsageException("Invalid module name: '" + name + "'");
+      throw new FlagUsageException("Invalid chunk name: '" + name + "'");
     }
   }
 
   /**
-   * Parses module wrapper specifications.
+   * Parses chunk wrapper specifications.
    *
-   * @param specs A list of module wrapper specifications, not null. The spec format is: <code>
+   * @param specs A list of chunk wrapper specifications, not null. The spec format is: <code>
    *     name:wrapper</code>. Wrappers.
    * @param chunks The JS chunks whose wrappers are specified
-   * @return A map from module name to module wrapper. Modules with no wrapper will have the empty
+   * @return A map from chunk name to chunk wrapper. Chunks with no wrapper will have the empty
    *     string as their value in this map.
    */
-  public static Map<String, String> parseModuleWrappers(
+  public static Map<String, String> parseChunkWrappers(
       List<String> specs, Iterable<JSChunk> chunks) {
     checkState(specs != null);
 
     Map<String, String> wrappers = new LinkedHashMap<>();
 
-    // Prepopulate the map with module names.
+    // Prepopulate the map with chunk names.
     for (JSChunk c : chunks) {
       wrappers.put(c.getName(), "");
     }
@@ -927,19 +928,19 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       int pos = spec.indexOf(':');
       if (pos == -1) {
         throw new FlagUsageException(
-            "Expected module wrapper to have " + "<name>:<wrapper> format: " + spec);
+            "Expected chunk wrapper to have " + "<name>:<wrapper> format: " + spec);
       }
 
-      // Parse module name.
+      // Parse chunk name.
       String name = spec.substring(0, pos);
       if (!wrappers.containsKey(name)) {
-        throw new FlagUsageException("Unknown module: '" + name + "'");
+        throw new FlagUsageException("Unknown chunk: '" + name + "'");
       }
       String wrapper = spec.substring(pos + 1);
       // Support for %n% and %output%
       wrapper = wrapper.replace("%output%", "%s").replace("%n%", "\n");
       if (!wrapper.contains("%s")) {
-        throw new FlagUsageException("No %s placeholder in module wrapper: '" + wrapper + "'");
+        throw new FlagUsageException("No %s placeholder in chunk wrapper: '" + wrapper + "'");
       }
 
       wrappers.put(name, wrapper);
@@ -948,14 +949,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   /**
-   * Parses module output name specifications.
+   * Parses chunk output name specifications.
    *
-   * @param specs A list of module output name specifications, not null. The spec format is: {@code
+   * @param specs A list of chunk output name specifications, not null. The spec format is: {@code
    *     name:output_file}.
-   * @return A map from module name to module output file name, if declared. Modules with no
+   * @return A map from chunk name to chunk output file name, if declared. Chunks with no
    *     predeclared output file name will have no entry in this map.
    */
-  private static ImmutableMap<String, String> parseModuleOutputFiles(List<String> specs) {
+  private static ImmutableMap<String, String> parseChunkOutputFiles(List<String> specs) {
     checkArgument(specs != null);
 
     ImmutableMap.Builder<String, String> outputFilesBuilder = ImmutableMap.builder();
@@ -985,32 +986,32 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    */
   @VisibleForTesting
   String getChunkOutputFileName(JSChunk m) {
-    if (parsedModuleOutputFiles == null) {
-      parsedModuleOutputFiles = parseModuleOutputFiles(config.moduleOutputFiles);
+    if (parsedChunkOutputFiles == null) {
+      parsedChunkOutputFiles = parseChunkOutputFiles(config.chunkOutputFiles);
     }
-    String outputFile = parsedModuleOutputFiles.get(m.getName());
+    String outputFile = parsedChunkOutputFiles.get(m.getName());
     if (outputFile != null) {
-      return config.moduleOutputPathPrefix + outputFile;
+      return config.chunkOutputPathPrefix + outputFile;
     }
-    return config.moduleOutputPathPrefix + m.getName() + ".js";
+    return config.chunkOutputPathPrefix + m.getName() + ".js";
   }
 
   /** Returns the conformance file name for a chunk. */
   @VisibleForTesting
   String getChunkConformanceFileName(JSChunk m) {
-    if (parsedModuleConformanceFiles == null) {
-      parsedModuleConformanceFiles = parseModuleOutputFiles(config.moduleConformanceFiles);
+    if (parsedChunkConformanceFiles == null) {
+      parsedChunkConformanceFiles = parseChunkOutputFiles(config.chunkConformanceFiles);
     }
-    return parsedModuleConformanceFiles.get(m.getName());
+    return parsedChunkConformanceFiles.get(m.getName());
   }
 
   @VisibleForTesting
-  void writeModuleOutput(String fileName, Appendable out, LicenseTracker lt, JSChunk m)
+  void writeChunkOutput(String fileName, Appendable out, LicenseTracker lt, JSChunk m)
       throws IOException {
-    if (parsedModuleWrappers == null) {
-      parsedModuleWrappers =
-          parseModuleWrappers(
-              config.moduleWrapper, ImmutableList.copyOf(compiler.getChunkGraph().getAllChunks()));
+    if (parsedChunkWrappers == null) {
+      parsedChunkWrappers =
+          parseChunkWrappers(
+              config.chunkWrapper, ImmutableList.copyOf(compiler.getChunkGraph().getAllChunks()));
     }
 
     if (!isOutputInJson()) {
@@ -1022,7 +1023,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
         compiler,
         lt,
         m,
-        parsedModuleWrappers.get(m.getName()).replace("%basename%", baseName),
+        parsedChunkWrappers.get(m.getName()).replace("%basename%", baseName),
         "%s",
         null,
         fileName);
@@ -1164,14 +1165,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
     boolean createCommonJsModules = false;
     if (options.getProcessCommonJSModules()
-        && (config.module.size() == 1 && "auto".equals(config.module.get(0)))) {
+        && (config.chunk.size() == 1 && Objects.equals(config.chunk.get(0), "auto"))) {
       createCommonJsModules = true;
-      config.module.remove(0);
+      config.chunk.remove(0);
     }
 
     List<JsChunkSpec> jsChunkSpecs = new ArrayList<>();
-    for (int i = 0; i < config.module.size(); i++) {
-      jsChunkSpecs.add(JsChunkSpec.create(config.module.get(i), i == 0));
+    for (int i = 0; i < config.chunk.size(); i++) {
+      jsChunkSpecs.add(JsChunkSpec.create(config.chunk.get(i), i == 0));
     }
     List<JsonFileSpec> jsonFiles = null;
 
@@ -1221,7 +1222,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
         if (JsonStreamMode.IN.equals(config.jsonStreamMode)
             || JsonStreamMode.NONE.equals(config.jsonStreamMode)) {
           for (JsChunkSpec m : jsChunkSpecs) {
-            checkModuleName(m.getName());
+            checkChunkName(m.getName());
           }
         }
         ImmutableList.Builder<CompilerInput> inputs = ImmutableList.builder();
@@ -1288,7 +1289,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
 
     if (createCommonJsModules) {
-      // For Commonchunks construct modules from actual inputs.
+      // For CommonJS modules, construct chunks from actual inputs.
       chunks = ImmutableList.copyOf(compiler.getChunks());
       for (JSChunk c : chunks) {
         outputFileNames.add(getChunkOutputFileName(c));
@@ -1527,7 +1528,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
           outputSourceMap(options, config.jsOutputFile);
         }
       } else {
-        DiagnosticType error = outputModuleBinaryAndSourceMaps(compiler.getChunkGraph(), options);
+        DiagnosticType error = outputChunkBinaryAndSourceMaps(compiler.getChunkGraph(), options);
         if (error != null) {
           compiler.report(JSError.make(error));
           return 1;
@@ -1641,57 +1642,57 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
   }
 
-  private @Nullable DiagnosticType outputModuleBinaryAndSourceMaps(
+  private @Nullable DiagnosticType outputChunkBinaryAndSourceMaps(
       JSChunkGraph chunkGraph, B options) throws IOException {
-    Iterable<JSChunk> modules = chunkGraph.getAllChunks();
-    parsedModuleWrappers = parseModuleWrappers(config.moduleWrapper, modules);
+    Iterable<JSChunk> chunks = chunkGraph.getAllChunks();
+    parsedChunkWrappers = parseChunkWrappers(config.chunkWrapper, chunks);
     if (!isOutputInJson()) {
       // make sure the method generates all dirs up to the latest /
-      maybeCreateDirsForPath(config.moduleOutputPathPrefix + "dummy");
+      maybeCreateDirsForPath(config.chunkOutputPathPrefix + "dummy");
     }
 
     // If the source map path is in fact a pattern for each
-    // module, create a stream per-module. Otherwise, create
+    // chunk, create a stream per-chunk. Otherwise, create
     // a single source map.
     Writer mapFileOut = null;
 
     // When the json_streams flag is specified, sourcemaps are always generated
-    // per module
-    if (!(shouldGenerateMapPerModule(options)
+    // per chunk
+    if (!(shouldGenerateMapPerChunk(options)
         || !options.shouldGatherSourceMapInfo()
         || config.jsonStreamMode == JsonStreamMode.OUT
         || config.jsonStreamMode == JsonStreamMode.BOTH)) {
       // warn that this is not supported
-      return INVALID_MODULE_SOURCEMAP_PATTERN;
+      return INVALID_CHUNK_SOURCEMAP_PATTERN;
     }
 
     ChunkGraphAwareLicenseTracker mlicenseTracker = new ChunkGraphAwareLicenseTracker(compiler);
-    for (JSChunk m : modules) {
+    for (JSChunk m : chunks) {
       if (m.getName().equals(JSChunk.WEAK_CHUNK_NAME)) {
-        // Skip the weak module, which is always empty.
+        // Skip the weak chunk, which is always empty.
         continue;
       }
       if (isOutputInJson()) {
-        this.filesToStreamOut.add(createJsonFileFromModule(m));
+        this.filesToStreamOut.add(createJsonFileFromChunk(m));
       } else {
-        if (shouldGenerateMapPerModule(options)) {
+        if (shouldGenerateMapPerChunk(options)) {
           mapFileOut = fileNameToOutputWriter2(expandSourceMapPath(options, m));
         }
 
-        String moduleFilename = getChunkOutputFileName(m);
-        maybeCreateDirsForPath(moduleFilename);
-        try (Writer writer = fileNameToLegacyOutputWriter(moduleFilename)) {
+        String chunkFilename = getChunkOutputFileName(m);
+        maybeCreateDirsForPath(chunkFilename);
+        try (Writer writer = fileNameToLegacyOutputWriter(chunkFilename)) {
           if (options.shouldGatherSourceMapInfo()) {
             compiler.resetAndIntitializeSourceMap();
           }
           mlicenseTracker.setCurrentChunkContext(m);
-          writeModuleOutput(moduleFilename, writer, mlicenseTracker, m);
+          writeChunkOutput(chunkFilename, writer, mlicenseTracker, m);
           if (options.shouldGatherSourceMapInfo()) {
-            compiler.getSourceMap().appendTo(mapFileOut, moduleFilename);
+            compiler.getSourceMap().appendTo(mapFileOut, chunkFilename);
           }
         }
 
-        if (shouldGenerateMapPerModule(options) && mapFileOut != null) {
+        if (shouldGenerateMapPerChunk(options) && mapFileOut != null) {
           mapFileOut.close();
           mapFileOut = null;
         }
@@ -1704,21 +1705,21 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     return null;
   }
 
-  /** Given an output module, convert it to a JSONFileSpec with associated sourcemap */
-  private JsonFileSpec createJsonFileFromModule(JSChunk chunk) throws IOException {
+  /** Given an output chunk, convert it to a JSONFileSpec with associated sourcemap */
+  private JsonFileSpec createJsonFileFromChunk(JSChunk chunk) throws IOException {
     compiler.resetAndIntitializeSourceMap();
 
     String filename = getChunkOutputFileName(chunk);
     StringBuilder output = new StringBuilder();
-    writeModuleOutput(filename, output, new ScriptNodeLicensesOnlyTracker(compiler), chunk);
+    writeChunkOutput(filename, output, new ScriptNodeLicensesOnlyTracker(compiler), chunk);
 
     JsonFileSpec jsonFile = new JsonFileSpec(output.toString(), filename);
 
-    StringBuilder moduleSourceMap = new StringBuilder();
+    StringBuilder chunkSourceMap = new StringBuilder();
 
-    compiler.getSourceMap().appendTo(moduleSourceMap, getChunkOutputFileName(chunk));
+    compiler.getSourceMap().appendTo(chunkSourceMap, getChunkOutputFileName(chunk));
 
-    jsonFile.setSourceMap(moduleSourceMap.toString());
+    jsonFile.setSourceMap(chunkSourceMap.toString());
 
     return jsonFile;
   }
@@ -1779,11 +1780,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   /**
-   * Returns true if and only if a source map file should be generated for each module, as opposed
-   * to one unified map. This is specified by having the source map pattern include the %outname%
+   * Returns true if and only if a source map file should be generated for each chunk, as opposed to
+   * one unified map. This is specified by having the source map pattern include the %outname%
    * variable.
    */
-  protected boolean shouldGenerateMapPerModule(B options) {
+  protected boolean shouldGenerateMapPerChunk(B options) {
     return options.shouldGatherSourceMapInfo()
         && options.getSourceMapOutputPath().contains("%outname%");
   }
@@ -1818,7 +1819,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    * expand to a different value depending on the current output mode. There are three scenarios:
    *
    * <p>1) Single JS output, single extra output: sub in jsOutputPath. 2) Multiple JS output, single
-   * extra output: sub in the base module name. 3) Multiple JS output, multiple extra output: sub in
+   * extra output: sub in the base chunk name. 3) Multiple JS output, multiple extra output: sub in
    * the module output file.
    *
    * <p>Passing a JSChunk to this function automatically triggers case #3. Otherwise, we'll use
@@ -1828,8 +1829,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     String sub;
     if (forChunk != null) {
       sub = getChunkOutputFileName(forChunk);
-    } else if (!config.module.isEmpty()) {
-      sub = config.moduleOutputPathPrefix;
+    } else if (!config.chunk.isEmpty()) {
+      sub = config.chunkOutputPathPrefix;
     } else {
       sub = config.jsOutputFile;
     }
@@ -1935,9 +1936,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
     if (outputFile.isEmpty()) {
       // If we have a js_module_binary rule, output the maps
-      // at modulename_props_map.out, etc.
-      if (!config.moduleOutputPathPrefix.isEmpty()) {
-        basePath = config.moduleOutputPathPrefix;
+      // at chunkname_props_map.out, etc.
+      if (!config.chunkOutputPathPrefix.isEmpty()) {
+        basePath = config.chunkOutputPathPrefix;
       } else {
         basePath = "jscompiler";
       }
@@ -2082,11 +2083,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   /**
-   * Returns true if and only if a manifest or bundle should be generated for each module, as
-   * opposed to one unified manifest.
+   * Returns true if and only if a manifest or bundle should be generated for each chunk, as opposed
+   * to one unified manifest.
    */
-  private boolean shouldGenerateOutputPerModule(String output) {
-    return !config.module.isEmpty() && output != null && output.contains("%outname%");
+  private boolean shouldGenerateOutputPerChunk(String output) {
+    return !config.chunk.isEmpty() && output != null && output.contains("%outname%");
   }
 
   private void outputManifest() throws IOException {
@@ -2119,8 +2120,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
         continue;
       }
 
-      if (shouldGenerateOutputPerModule(output)) {
-        // Generate per-module manifests or bundles.
+      if (shouldGenerateOutputPerChunk(output)) {
+        // Generate per-chunk manifests or bundles.
         Iterable<JSChunk> chunks = compiler.getChunkGraph().getAllChunks();
         for (JSChunk chunk : chunks) {
           try (Writer out = fileNameToOutputWriter2(expandCommandLinePath(output, chunk))) {
@@ -2134,8 +2135,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       } else {
         // Generate a single file manifest or bundle.
         try (Writer out = fileNameToOutputWriter2(expandCommandLinePath(output, null))) {
-          if (config.module.isEmpty()) {
-            // For a single-module compilation, generate a single headerless manifest or bundle
+          if (config.chunk.isEmpty()) {
+            // For a single-chunk compilation, generate a single headerless manifest or bundle
             // containing only the strong files.
             JSChunk chunk = compiler.getChunkGraph().getChunkByName(JSChunk.STRONG_CHUNK_NAME);
             if (isManifest) {
@@ -2144,7 +2145,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
               printBundleTo(chunk, out);
             }
           } else {
-            // For a multi-module compilation, generate a single manifest file with module headers.
+            // For a multi-chunk compilation, generate a single manifest file with chunk headers.
             printChunkGraphManifestOrBundleTo(compiler.getChunkGraph(), out, isManifest);
           }
         }
@@ -2152,22 +2153,22 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
   }
 
-  /** Creates a file containing the current module graph in JSON serialization. */
+  /** Creates a file containing the current chunk graph in JSON serialization. */
   private void outputChunkGraphJson() throws IOException {
-    if (config.outputModuleDependencies != null && config.outputModuleDependencies.length() != 0) {
-      try (Writer out = fileNameToOutputWriter2(config.outputModuleDependencies)) {
+    if (config.outputChunkDependencies != null && config.outputChunkDependencies.length() != 0) {
+      try (Writer out = fileNameToOutputWriter2(config.outputChunkDependencies)) {
         printChunkGraphJsonTo(out);
       }
     }
   }
 
-  /** Prints the current module graph as JSON. */
+  /** Prints the current chunk graph as JSON. */
   @VisibleForTesting
   void printChunkGraphJsonTo(Appendable out) throws IOException {
     out.append(compiler.getChunkGraph().toJson().toString());
   }
 
-  /** Prints a set of modules to the manifest or bundle file. */
+  /** Prints a set of chunks to the manifest or bundle file. */
   @VisibleForTesting
   void printChunkGraphManifestOrBundleTo(JSChunkGraph graph, Appendable out, boolean isManifest)
       throws IOException {
@@ -2175,7 +2176,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     boolean requiresNewline = false;
     for (JSChunk chunk : graph.getAllChunks()) {
       if (!isManifest && chunk.isWeak()) {
-        // Skip the weak module on a multi-module bundle, but not a multi-module manifest.
+        // Skip the weak chunk on a multi-chunk bundle, but not a multi-chunk manifest.
         continue;
       }
 
@@ -2207,7 +2208,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     for (CompilerInput input : chunk.getInputs()) {
       String name = input.getName();
 
-      // Ignore fill files created by the compiler to facilitate cross-module code motion.
+      // Ignore fill files created by the compiler to facilitate cross-chunk code motion.
       if (Compiler.isFillFileName(name)) {
         continue;
       }
@@ -2247,7 +2248,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       String name = input.getName();
       String code = input.getSourceFile().getCode();
 
-      // Ignore empty fill files created by the compiler to facilitate cross-module code motion.
+      // Ignore empty fill files created by the compiler to facilitate cross-chunk code motion.
       // Note that non-empty fill files (ones whose code has actually been moved into) are still
       // emitted. In particular, this ensures that if there are no (real) inputs the bundle will be
       // empty.
@@ -2543,19 +2544,19 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       return saveCompilationStateToFilename;
     }
 
-    private final List<String> module = new ArrayList<>();
+    private final List<String> chunk = new ArrayList<>();
 
     /**
-     * A JavaScript module specification. The format is {@code
-     * <name>:<num-js-files>[:[<dep>,...][:]]]}. Module names must be unique. Each dep is the name
-     * of a module that this module depends on. Modules must be listed in dependency order, and JS
-     * source files must be listed in the corresponding order. Where --module flags occur in
-     * relation to --js flags is unimportant
+     * A JavaScript chunk specification. The format is {@code
+     * <name>:<num-js-files>[:[<dep>,...][:]]]}. Chunk names must be unique. Each dep is the name of
+     * a chunk that this chunk depends on. Chunks must be listed in dependency order, and JS source
+     * files must be listed in the corresponding order. Where --chunk flags occur in relation to
+     * --js flags is unimportant
      */
     @CanIgnoreReturnValue
-    public CommandLineConfig setModule(List<String> module) {
-      this.module.clear();
-      this.module.addAll(module);
+    public CommandLineConfig setChunk(List<String> chunk) {
+      this.chunk.clear();
+      this.chunk.addAll(chunk);
       return this;
     }
 
@@ -2684,54 +2685,54 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       return this;
     }
 
-    private final List<String> moduleWrapper = new ArrayList<>();
+    private final List<String> chunkWrapper = new ArrayList<>();
 
     /**
      * An output wrapper for a JavaScript module (optional). See the flag description for formatting
      * requirements.
      */
     @CanIgnoreReturnValue
-    public CommandLineConfig setModuleWrapper(List<String> moduleWrapper) {
-      this.moduleWrapper.clear();
-      this.moduleWrapper.addAll(moduleWrapper);
+    public CommandLineConfig setChunkWrapper(List<String> chunkWrapper) {
+      this.chunkWrapper.clear();
+      this.chunkWrapper.addAll(chunkWrapper);
       return this;
     }
 
-    private String moduleOutputPathPrefix = "";
+    private String chunkOutputPathPrefix = "";
 
     /**
-     * Prefix for filenames of compiled chunks. {@code <module-name>.js} will be appended to this
-     * prefix. Directories will be created as needed. Use with --module
+     * Prefix for filenames of compiled chunks. {@code <chunk-name>.js} will be appended to this
+     * prefix. Directories will be created as needed. Use with --chunk
      */
     @CanIgnoreReturnValue
-    public CommandLineConfig setModuleOutputPathPrefix(String moduleOutputPathPrefix) {
-      this.moduleOutputPathPrefix = moduleOutputPathPrefix;
+    public CommandLineConfig setChunkOutputPathPrefix(String chunkOutputPathPrefix) {
+      this.chunkOutputPathPrefix = chunkOutputPathPrefix;
       return this;
     }
 
-    private final List<String> moduleOutputFiles = new ArrayList<>();
+    private final List<String> chunkOutputFiles = new ArrayList<>();
 
     /**
      * The output file name for a JavaScript chunk (optional). See the flag description for
      * formatting requirements.
      */
     @CanIgnoreReturnValue
-    public CommandLineConfig setModuleOutputFiles(List<String> moduleOutputFiles) {
-      this.moduleOutputFiles.clear();
-      this.moduleOutputFiles.addAll(moduleOutputFiles);
+    public CommandLineConfig setChunkOutputFiles(List<String> chunkOutputFiles) {
+      this.chunkOutputFiles.clear();
+      this.chunkOutputFiles.addAll(chunkOutputFiles);
       return this;
     }
 
-    private final List<String> moduleConformanceFiles = new ArrayList<>();
+    private final List<String> chunkConformanceFiles = new ArrayList<>();
 
     /**
      * The conformance report file name for a JavaScript chunk (optional). See the flag description
      * for formatting requirements.
      */
     @CanIgnoreReturnValue
-    public CommandLineConfig setModuleConformanceFiles(List<String> moduleConformanceFiles) {
-      this.moduleConformanceFiles.clear();
-      this.moduleConformanceFiles.addAll(moduleConformanceFiles);
+    public CommandLineConfig setChunkConformanceFiles(List<String> chunkConformanceFiles) {
+      this.chunkConformanceFiles.clear();
+      this.chunkConformanceFiles.addAll(chunkConformanceFiles);
       return this;
     }
 
@@ -2865,12 +2866,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       return this;
     }
 
-    private @Nullable String outputModuleDependencies = null;
+    private @Nullable String outputChunkDependencies = null;
 
     /** Sets whether a JSON file representing the dependencies between modules should be created. */
     @CanIgnoreReturnValue
-    public CommandLineConfig setOutputModuleDependencies(String outputModuleDependencies) {
-      this.outputModuleDependencies = outputModuleDependencies;
+    public CommandLineConfig setOutputChunkDependencies(String outputChunkDependencies) {
+      this.outputChunkDependencies = outputChunkDependencies;
       return this;
     }
 
@@ -2903,7 +2904,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
     private boolean processCommonJSModules = false;
 
-    /** Sets whether to process Commonchunks. */
+    /** Sets whether to process CommonJS modules,. */
     @CanIgnoreReturnValue
     public CommandLineConfig setProcessCommonJSModules(boolean processCommonJSModules) {
       this.processCommonJSModules = processCommonJSModules;
@@ -2914,8 +2915,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
     /** Sets the module roots. */
     @CanIgnoreReturnValue
-    public CommandLineConfig setModuleRoots(List<String> jsChunkRoots) {
-      this.moduleRoots = jsChunkRoots;
+    public CommandLineConfig setModuleRoots(List<String> jsModuleRoots) {
+      this.moduleRoots = jsModuleRoots;
       return this;
     }
 
@@ -3116,10 +3117,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
 
     /**
-     * @param specString The spec format is: <code>name:num-js-files[:[dep,...][:]]</code>. Module
+     * Returns a parsed chunk spec.
+     *
+     * @param specString The spec format is: <code>name:num-js-files[:[dep,...][:]]</code>. Chunk
      *     names must not contain the ':' character.
-     * @param isFirstChunk Whether the spec is for the first module.
-     * @return A parsed chunk spec.
+     * @param isFirstChunk Whether the spec is for the first chunk.
      */
     public static JsChunkSpec create(String specString, boolean isFirstChunk) {
       // Format is "<name>:<num-js-files>[:[<dep>,...][:]]".
@@ -3129,14 +3131,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
             "Expected 2-4 colon-delimited parts in " + "chunk spec: " + specString);
       }
 
-      // Parse module name.
+      // Parse chunk name.
       String name = parts[0];
 
-      // Parse module dependencies.
+      // Parse chunk dependencies.
       String[] deps =
           parts.length > 2 && parts[2].length() > 0 ? parts[2].split(",") : new String[0];
 
-      // Parse module inputs.
+      // Parse chunk inputs.
       int numInputs = -1;
       try {
         numInputs = Integer.parseInt(parts[1]);
@@ -3144,23 +3146,23 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
         numInputs = -1;
       }
 
-      // We will allow modules of zero input.
+      // We will allow chunks of zero input.
       if (numInputs < 0) {
-        // A size of 'auto' is only allowed on the base module if
-        // and it must also be the first module
+        // A size of 'auto' is only allowed on the base chunk if
+        // and it must also be the first chunk
         if (parts.length == 2 && "auto".equals(parts[1])) {
           if (!isFirstChunk) {
             throw new FlagUsageException(
                 "Invalid JS file count '"
                     + parts[1]
-                    + "' for module: "
+                    + "' for chunk: "
                     + name
-                    + ". Only the first module may specify "
+                    + ". Only the first chunk may specify "
                     + "a size of 'auto' and it must have no dependencies.");
           }
         } else {
           throw new FlagUsageException(
-              "Invalid JS file count '" + parts[1] + "' for module: " + name);
+              "Invalid JS file count '" + parts[1] + "' for chunk: " + name);
         }
       }
 

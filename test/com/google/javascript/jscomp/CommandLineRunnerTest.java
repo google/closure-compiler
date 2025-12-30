@@ -87,9 +87,9 @@ public final class CommandLineRunnerTest {
   // If set to true, uses comparison by string instead of by AST.
   private boolean useStringComparison = false;
 
-  private ModulePattern useModules = ModulePattern.NONE;
+  private ChunkPattern useChunks = ChunkPattern.NONE;
 
-  private enum ModulePattern {
+  private enum ChunkPattern {
     NONE,
     CHAIN,
     STAR
@@ -150,7 +150,7 @@ public final class CommandLineRunnerTest {
     outReader = new ByteArrayOutputStream();
     errReader = new ByteArrayOutputStream();
     useStringComparison = false;
-    useModules = ModulePattern.NONE;
+    useChunks = ChunkPattern.NONE;
     args.clear();
     exitCodes = new ArrayList<>();
   }
@@ -1359,8 +1359,8 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
-  public void testModuleEntryPoint() {
-    useModules = ModulePattern.STAR;
+  public void testChunkEntryPoint() {
+    useChunks = ChunkPattern.STAR;
     args.add("--dependency_mode=PRUNE");
     args.add("--entry_point=goog:m1:a");
     test(
@@ -1482,7 +1482,7 @@ public final class CommandLineRunnerTest {
 
   @Test
   public void testSourceMapExpansion2() {
-    useModules = ModulePattern.CHAIN;
+    useChunks = ChunkPattern.CHAIN;
     args.add("--create_source_map=%outname%.map");
     args.add("--chunk_output_path_prefix=foo");
     testSame(new String[] {"var x = 3;", "var y = 5;"});
@@ -1492,7 +1492,7 @@ public final class CommandLineRunnerTest {
 
   @Test
   public void testSourceMapExpansion3() {
-    useModules = ModulePattern.CHAIN;
+    useChunks = ChunkPattern.CHAIN;
     args.add("--create_source_map=%outname%.map");
     args.add("--chunk_output_path_prefix=foo_");
     testSame(new String[] {"var x = 3;", "var y = 5;"});
@@ -1504,12 +1504,12 @@ public final class CommandLineRunnerTest {
 
   @Test
   public void testInvalidSourceMapPattern() {
-    useModules = ModulePattern.CHAIN;
+    useChunks = ChunkPattern.CHAIN;
     args.add("--create_source_map=out.map");
     args.add("--chunk_output_path_prefix=foo_");
     test(
         new String[] {"var x = 3;", "var y = 5;"},
-        AbstractCommandLineRunner.INVALID_MODULE_SOURCEMAP_PATTERN);
+        AbstractCommandLineRunner.INVALID_CHUNK_SOURCEMAP_PATTERN);
   }
 
   @Test
@@ -1803,8 +1803,8 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
-  public void testModuleWrapperBaseNameExpansion() throws Exception {
-    useModules = ModulePattern.CHAIN;
+  public void testChunkWrapperBaseNameExpansion() throws Exception {
+    useChunks = ChunkPattern.CHAIN;
     args.add("--chunk_wrapper=m0:%s // %basename%");
     testSame(new String[] {"var x = 3;", "var y = 4;"});
 
@@ -1812,13 +1812,13 @@ public final class CommandLineRunnerTest {
     ScriptNodeLicensesOnlyTracker licenseTracker = new ScriptNodeLicensesOnlyTracker(lastCompiler);
     JSChunk chunk = lastCompiler.getChunkGraph().getRootChunk();
     String filename = lastCommandLineRunner.getChunkOutputFileName(chunk);
-    lastCommandLineRunner.writeModuleOutput(filename, builder, licenseTracker, chunk);
+    lastCommandLineRunner.writeChunkOutput(filename, builder, licenseTracker, chunk);
     assertThat(builder.toString()).isEqualTo("var x=3; // m0.js\n");
   }
 
   @Test
-  public void testModuleWrapperExpansion() throws Exception {
-    useModules = ModulePattern.CHAIN;
+  public void testChunkWrapperExpansion() throws Exception {
+    useChunks = ChunkPattern.CHAIN;
     args.add("--chunk_wrapper=m0:%output%%n%//# SourceMappingUrl=%basename%.map");
     testSame(new String[] {"var x = 3;", "var y = 4;"});
 
@@ -1826,7 +1826,7 @@ public final class CommandLineRunnerTest {
     ScriptNodeLicensesOnlyTracker licenseTracker = new ScriptNodeLicensesOnlyTracker(lastCompiler);
     JSChunk chunk = lastCompiler.getChunkGraph().getRootChunk();
     String filename = lastCommandLineRunner.getChunkOutputFileName(chunk);
-    lastCommandLineRunner.writeModuleOutput(filename, builder, licenseTracker, chunk);
+    lastCommandLineRunner.writeChunkOutput(filename, builder, licenseTracker, chunk);
     assertThat(builder.toString()).isEqualTo("var x=3;\n//# SourceMappingUrl=m0.js.map\n");
   }
 
@@ -1866,8 +1866,8 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
-  public void testChainModuleManifest() throws Exception {
-    useModules = ModulePattern.CHAIN;
+  public void testChainChunkManifest() throws Exception {
+    useChunks = ChunkPattern.CHAIN;
     testSame(new String[] {"var x = 3;", "var y = 5;", "var z = 7;", "var a = 9;"});
 
     StringBuilder builder = new StringBuilder();
@@ -1893,8 +1893,8 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
-  public void testStarModuleManifest() throws Exception {
-    useModules = ModulePattern.STAR;
+  public void testStarChunkManifest() throws Exception {
+    useChunks = ChunkPattern.STAR;
     testSame(new String[] {"var x = 3;", "var y = 5;", "var z = 7;", "var a = 9;"});
 
     StringBuilder builder = new StringBuilder();
@@ -1921,7 +1921,7 @@ public final class CommandLineRunnerTest {
 
   @Test
   public void testOutputChunkGraphJson() throws Exception {
-    useModules = ModulePattern.STAR;
+    useChunks = ChunkPattern.STAR;
     testSame(new String[] {"var x = 3;", "var y = 5;", "var z = 7;", "var a = 9;"});
 
     StringBuilder builder = new StringBuilder();
@@ -2179,13 +2179,13 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
-  public void testProcessCJSWithModuleOutput() {
+  public void testProcessCJSWithChunkOutput() {
     args.add("--process_common_js_modules");
     args.add("--entry_point=foo/bar");
     args.add("--chunk=auto");
     setFilename(0, "foo/bar.js");
     test("exports.test = 1", "var module$foo$bar={default: {}}; module$foo$bar.default.test = 1;");
-    // With modules=auto no direct output is created.
+    // With chunk=auto no direct output is created.
     assertThat(outReader.toString(UTF_8)).isEmpty();
   }
 
@@ -2545,7 +2545,7 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
-  public void testModuleJSON() {
+  public void testChunkJSON() {
     args.add("--process_common_js_modules");
     args.add("--entry_point=foo/bar");
     args.add("--output_chunk_dependencies=test.json");
@@ -3716,10 +3716,10 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
     for (int i = 0; i < original.length; i++) {
       args.add("--js");
       args.add("/path/to/input" + i + ".js");
-      if (useModules == ModulePattern.CHAIN) {
+      if (useChunks == ChunkPattern.CHAIN) {
         args.add("--chunk");
         args.add("m" + i + ":1" + (i > 0 ? (":m" + (i - 1)) : ""));
-      } else if (useModules == ModulePattern.STAR) {
+      } else if (useChunks == ChunkPattern.STAR) {
         args.add("--chunk");
         args.add("m" + i + ":1" + (i > 0 ? ":m0" : ""));
       }
@@ -3848,9 +3848,9 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
       assertWithMessage(new String(errReader.toByteArray(), UTF_8)).fail();
     }
     Supplier<List<SourceFile>> inputsSupplier = null;
-    Supplier<List<JSChunk>> modulesSupplier = null;
+    Supplier<List<JSChunk>> chunksSupplier = null;
 
-    switch (useModules) {
+    switch (useChunks) {
       case NONE -> {
         List<SourceFile> inputs = new ArrayList<>();
         for (int i = 0; i < original.length; i++) {
@@ -3859,11 +3859,11 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
         inputsSupplier = Suppliers.ofInstance(inputs);
       }
       case STAR ->
-          modulesSupplier =
+          chunksSupplier =
               Suppliers.<List<JSChunk>>ofInstance(
                   ImmutableList.copyOf(JSChunkGraphBuilder.forStar().addChunks(original).build()));
       case CHAIN ->
-          modulesSupplier =
+          chunksSupplier =
               Suppliers.<List<JSChunk>>ofInstance(
                   ImmutableList.copyOf(JSChunkGraphBuilder.forChain().addChunks(original).build()));
     }
@@ -3871,7 +3871,7 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
     runner.enableTestMode(
         Suppliers.ofInstance(externs),
         inputsSupplier,
-        modulesSupplier,
+        chunksSupplier,
         exitCode -> {
           exitCodes.add(exitCode);
           return null;
