@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.CompilerOptions.ClosureUnawareMode;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ConformanceConfig;
@@ -52,10 +53,12 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setDevMode(DevMode.EVERY_PASS);
+    options.setClosureUnawareMode(ClosureUnawareMode.PASS_THROUGH);
     options.setCodingConvention(new GoogleCodingConvention());
     options.setRenamePrefixNamespaceAssumeCrossChunkNames(true);
     options.setAssumeGettersArePure(false);
     options.setPrettyPrint(true);
+    options.setClosurePass(true);
     return options;
   }
 
@@ -126,6 +129,39 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
 
           const xUnused = ClazzWithStatic.Create();
           globalThis['a_b'] = xUnused;
+        }).call(globalThis);
+        """);
+  }
+
+  @Test
+  public void testOptimizeClosureUnawareCode_doesNotRunTranspilationYet() {
+    CompilerOptions options = createCompilerOptions();
+    options.setGeneratePseudoNames(true);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setClosureUnawareMode(ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION);
+
+    test(
+        options,
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('a.b');
+        /** @closureUnaware */
+        (function() {
+          class Clazz {}
+          globalThis['a_b'] = Clazz;
+        }).call(globalThis);
+        exports = globalThis['a_b'];
+        """,
+        // TODO: b/421971366 turn on class transpilation.
+        """
+        (function() {
+          class $Clazz$$ {}
+          globalThis.a_b = $Clazz$$;
         }).call(globalThis);
         """);
   }
@@ -241,6 +277,32 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
         (function() {
           const x = 5;
         }).call(globalThis);
+        """);
+  }
+
+  @Test
+  public void testOptimizeClosureUnawareCode_doesRemoveUselessCode() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    options.setClosureUnawareMode(ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION);
+
+    test(
+        options,
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('a.b');
+        /** @closureUnaware */
+        (function() {
+          const x = 5;
+        }).call(globalThis);
+        """,
+        """
+        (function() {}).call(globalThis);
         """);
   }
 

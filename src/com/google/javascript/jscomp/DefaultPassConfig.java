@@ -856,6 +856,11 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(j2clPass);
     }
 
+    if (options.getClosureUnawareMode()
+        == CompilerOptions.ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION) {
+      passes.maybeAdd(transpileAndOptimizeClosureUnaware);
+    }
+
     TranspilationPasses.addTranspilationRuntimeLibraries(passes);
 
     if (options.rewritePolyfills
@@ -2943,5 +2948,11 @@ public final class DefaultPassConfig extends PassConfig {
                           .process(externs, root);
                     }
                   })
+          .build();
+
+  private final PassFactory transpileAndOptimizeClosureUnaware =
+      PassFactory.builder()
+          .setName("TranspileAndOptimizeClosureUnaware")
+          .setInternalFactory((compiler) -> new TranspileAndOptimizeClosureUnaware(compiler))
           .build();
 }
