@@ -3600,4 +3600,38 @@ public final class CompilerTest {
     options.setDeadPropertyAssignmentElimination(false);
     assertThat(options.shouldRunDeadPropertyAssignmentElimination()).isFalse();
   }
+
+  @Test
+  public void testAssumePropertiesAreStaticallyAnalyzable_compatibleWithSimpleOptimizationsMode() {
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setAssumePropertiesAreStaticallyAnalyzable(false);
+    Compiler compiler = new Compiler();
+    SourceFile externs = SourceFile.fromCode("externs.js", "");
+    SourceFile input = SourceFile.fromCode("input.js", "");
+
+    compiler.compile(externs, input, options);
+
+    assertThat(compiler.getErrors()).isEmpty();
+  }
+
+  @Test
+  public void testAssumePropertiesAreStaticallyAnalyzable_forbidsPropertyRenaming() {
+    CompilerOptions options = new CompilerOptions();
+    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setAssumePropertiesAreStaticallyAnalyzable(false);
+    Compiler compiler = new Compiler();
+    SourceFile externs = SourceFile.fromCode("externs.js", "");
+    SourceFile input = SourceFile.fromCode("input.js", ";");
+
+    var ex =
+        assertThrows(
+            IllegalArgumentException.class, () -> compiler.compile(externs, input, options));
+
+    assertThat(ex)
+        .hasMessageThat()
+        .isEqualTo(
+            "Precondition for pass renameProperties failed: "
+                + "requires assumePropertiesAreStaticallyAnalyzable to be enabled");
+  }
 }

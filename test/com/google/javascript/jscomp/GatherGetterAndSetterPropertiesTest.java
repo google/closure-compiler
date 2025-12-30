@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import org.junit.Test;
@@ -346,6 +347,20 @@ public class GatherGetterAndSetterPropertiesTest extends CompilerTestCase {
         """);
 
     assertThat(getLastAccessorSummary().getKind("prop")).isEqualTo(PropertyAccessKind.NORMAL);
+  }
+
+  @Test
+  public void noAssumePropertiesAreStaticallyAnalyzable() {
+    CompilerOptions options = new CompilerOptions();
+    options.setAssumePropertiesAreStaticallyAnalyzable(false);
+    Compiler compiler = new Compiler();
+    compiler.init(ImmutableList.of(), ImmutableList.of(), options);
+
+    new GatherGetterAndSetterProperties(compiler)
+        .process(compiler.getExternsRoot(), compiler.getJsRoot());
+
+    assertThat(compiler.getAccessorSummary().getKind("dne"))
+        .isEqualTo(PropertyAccessKind.GETTER_AND_SETTER);
   }
 
   private AccessorSummary getLastAccessorSummary() {

@@ -56,6 +56,7 @@ class ClosureUnawareOptions {
     shadowOptions.setAssumeGettersArePure(false);
     shadowOptions.setCodingConvention(CodingConventions.getDefault());
     shadowOptions.setRemoveClosureAsserts(false);
+    shadowOptions.setAssumePropertiesAreStaticallyAnalyzable(false);
   }
 
   private void copyOutputOptions() {

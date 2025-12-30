@@ -1139,6 +1139,30 @@ public class CompilerOptions {
   }
 
   /**
+   * When {@code true}, the compiler assumes that all non-quoted properties are only referenced by
+   * their non-quoted names (not reflectively), or otherwise are defined in the externs. This is
+   * basically the set of assumptions that {@link PropertyRenamingPolicy.ALL_UNQUOTED} makes, but
+   * has repercussions beyond just property renaming.
+   *
+   * <p>When {@code false}, the compiler does not attempt to do any property optimizations.
+   *
+   * <p>NOTE: lharker - I added this in 2025 specifically for @closureUnaware support. Previously
+   * this was always implicitly true. I've tried to update various parts of the compiler to check
+   * this field, rather than assuming property definitions are known, but it's quite likely there
+   * are still some silent assumptions somewhere. So this is still experimental and needs more
+   * validation on real code.
+   */
+  private boolean assumePropertiesAreStaticallyAnalyzable = true;
+
+  public void setAssumePropertiesAreStaticallyAnalyzable(boolean x) {
+    this.assumePropertiesAreStaticallyAnalyzable = x;
+  }
+
+  public boolean getAssumePropertiesAreStaticallyAnalyzable() {
+    return assumePropertiesAreStaticallyAnalyzable;
+  }
+
+  /**
    * Assume that static (class-side) inheritance is not being used and that static methods will not
    * be referenced via `this` or through subclasses.
    *
@@ -2919,6 +2943,7 @@ public class CompilerOptions {
         .add("angularPass", angularPass)
         .add("assumeClosuresOnlyCaptureReferences", assumeClosuresOnlyCaptureReferences)
         .add("assumeGettersArePure", assumeGettersArePure)
+        .add("assumePropertiesAreStaticallyAnalyzable", assumePropertiesAreStaticallyAnalyzable)
         .add("assumeStrictThis", assumeStrictThis())
         .add("browserResolverPrefixReplacements", browserResolverPrefixReplacements)
         .add("checkDeterminism", getCheckDeterminism())

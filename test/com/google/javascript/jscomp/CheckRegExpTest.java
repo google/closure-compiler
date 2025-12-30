@@ -29,8 +29,9 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public final class CheckRegExpTest extends CompilerTestCase {
-  @Nullable CheckRegExp last = null;
-  boolean reportErrors;
+  private @Nullable CheckRegExp last = null;
+  private boolean reportErrors;
+  private boolean assumeAllGlobalRegexpUsagesVisible;
 
   public CheckRegExpTest() {
     super("var RegExp;");
@@ -41,6 +42,7 @@ public final class CheckRegExpTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     this.reportErrors = true;
+    this.assumeAllGlobalRegexpUsagesVisible = true;
   }
 
   @Override
@@ -52,7 +54,7 @@ public final class CheckRegExpTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    last = new CheckRegExp(compiler, reportErrors);
+    last = new CheckRegExp(compiler, assumeAllGlobalRegexpUsagesVisible, reportErrors);
     return last;
   }
 
@@ -149,5 +151,23 @@ public final class CheckRegExpTest extends CompilerTestCase {
   @Test
   public void testInvalidRange() {
     this.testWarning("\"asdf\".match(/[z-a]/)", CheckRegExp.MALFORMED_REGEXP);
+  }
+
+  @Test
+  public void testCanAssumeAllGlobalRegexpUsagesVisible() {
+    this.assumeAllGlobalRegexpUsagesVisible = true;
+
+    testSame("");
+
+    assertThat(last.isGlobalRegExpPropertiesUsed()).isFalse();
+  }
+
+  @Test
+  public void testCannotAssumeAllGlobalRegexpUsagesVisible() {
+    this.assumeAllGlobalRegexpUsagesVisible = false;
+
+    testSame("");
+
+    assertThat(last.isGlobalRegExpPropertiesUsed()).isTrue();
   }
 }

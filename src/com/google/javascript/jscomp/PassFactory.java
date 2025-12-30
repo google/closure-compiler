@@ -36,6 +36,16 @@ public abstract class PassFactory {
 
   public abstract Function<CompilerOptions, Boolean> getCondition();
 
+  record PreconditionResult(boolean success, String message) {
+    static final PreconditionResult SUCCESS = new PreconditionResult(true, null);
+  }
+
+  /**
+   * Runs before this pass runs to validate preconditions. Throws an exception if any are violated
+   * (unlike {@link #getCondition()}.)
+   */
+  abstract Function<CompilerOptions, PreconditionResult> getPreconditionCheck();
+
   /** Whether this factory must or must not appear in a {@link PhaseOptimizer} loop. */
   public abstract boolean isRunInFixedPointLoop();
 
@@ -61,6 +71,9 @@ public abstract class PassFactory {
 
     public abstract Builder setCondition(Function<CompilerOptions, Boolean> cond);
 
+    public abstract Builder setPreconditionCheck(
+        Function<CompilerOptions, PreconditionResult> assertion);
+
     public abstract Builder setInternalFactory(
         Function<AbstractCompiler, ? extends CompilerPass> x);
 
@@ -77,7 +90,16 @@ public abstract class PassFactory {
   public static Builder builder() {
     return new AutoValue_PassFactory.Builder()
         .setRunInFixedPointLoop(false)
-        .setCondition((o) -> true);
+        .setCondition((o) -> true)
+        .setPreconditionCheck((o) -> PreconditionResult.SUCCESS);
+  }
+
+  void validatePreconditions(CompilerOptions options) {
+    PreconditionResult canRun = getPreconditionCheck().apply(options);
+    if (!canRun.success) {
+      throw new IllegalArgumentException(
+          String.format("Precondition for pass %s failed: %s", this.getName(), canRun.message()));
+    }
   }
 
   /** Create a no-op pass that can only run once. Used to break up loops. */

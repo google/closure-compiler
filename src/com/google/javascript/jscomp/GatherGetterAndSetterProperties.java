@@ -48,7 +48,13 @@ public final class GatherGetterAndSetterProperties implements CompilerPass {
     // For now we traverse both trees every time because there's no reason we have to treat them
     // differently.
     checkState(externs.getParent() == root.getParent());
-    compiler.setAccessorSummary(AccessorSummary.create(gather(compiler, externs.getParent())));
+    final AccessorSummary accessorSummary;
+    if (compiler.getOptions().getAssumePropertiesAreStaticallyAnalyzable()) {
+      accessorSummary = AccessorSummary.create(gather(compiler, externs.getParent()));
+    } else {
+      accessorSummary = AccessorSummary.createAssumingAlwaysGetterAndSetter();
+    }
+    compiler.setAccessorSummary(accessorSummary);
   }
 
   static ImmutableMap<String, PropertyAccessKind> gather(AbstractCompiler compiler, Node root) {

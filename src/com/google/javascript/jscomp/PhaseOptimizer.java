@@ -224,6 +224,7 @@ class PhaseOptimizer implements CompilerPass {
     @Override
     public void process(Node externs, Node root) {
       logger.fine("Running pass " + name);
+      factory.validatePreconditions(compiler.getOptions());
       if (validityCheck != null) {
         // Before running the pass, clone the AST so you can check the
         // changed AST against the clone after the pass finishes.

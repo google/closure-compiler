@@ -34,6 +34,7 @@ import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.LocaleDataPasses.ProtectGoogLocale;
+import com.google.javascript.jscomp.PassFactory.PreconditionResult;
 import com.google.javascript.jscomp.ScopedAliases.InvalidModuleGetHandling;
 import com.google.javascript.jscomp.disambiguate.AmbiguateProperties;
 import com.google.javascript.jscomp.disambiguate.DisambiguateProperties;
@@ -1785,7 +1786,11 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.CHECK_REG_EXP)
           .setInternalFactory(
               (compiler) -> {
-                final CheckRegExp pass = new CheckRegExp(compiler, /* reportErrors= */ true);
+                final CheckRegExp pass =
+                    new CheckRegExp(
+                        compiler,
+                        options.getAssumePropertiesAreStaticallyAnalyzable(),
+                        /* reportErrors= */ true);
 
                 return new CompilerPass() {
                   @Override
@@ -1804,7 +1809,10 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> {
                 final CheckRegExp regExpCheck =
-                    new CheckRegExp(compiler, /* reportErrors= */ false);
+                    new CheckRegExp(
+                        compiler,
+                        options.getAssumePropertiesAreStaticallyAnalyzable(),
+                        /* reportErrors= */ false);
 
                 return new CompilerPass() {
                   @Override
@@ -2189,6 +2197,12 @@ public final class DefaultPassConfig extends PassConfig {
                       .setHaveModulesBeenRewritten(options.getProcessCommonJSModules())
                       .setModuleResolutionMode(options.getModuleResolutionMode())
                       .build())
+          .setPreconditionCheck(
+              (options) ->
+                  new PreconditionResult(
+                      options.getPropertyCollapseLevel() == PropertyCollapseLevel.NONE
+                          || options.getAssumePropertiesAreStaticallyAnalyzable(),
+                      "requires assumePropertiesAreStaticallyAnalyzable to be enabled"))
           .build();
 
   /** Rewrite properties as variables. */
@@ -2207,6 +2221,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new DisambiguateProperties(compiler, options.getPropertiesThatMustDisambiguate()))
+          .setPreconditionCheck(DefaultPassConfig::requirePropertiesAreStaticallyAnalyzable)
           .build();
 
   /** Rewrite instance methods as static methods, to make them easier to inline. */
@@ -2220,6 +2235,7 @@ public final class DefaultPassConfig extends PassConfig {
                       .setConsiderExterns(false)
                       .addPass(new DevirtualizeMethods(compiler))
                       .build())
+          .setPreconditionCheck(DefaultPassConfig::requirePropertiesAreStaticallyAnalyzable)
           .build();
 
   /**
@@ -2240,6 +2256,7 @@ public final class DefaultPassConfig extends PassConfig {
                       // Remove all parameters that are constants or unused.
                       .addPass(new OptimizeParameters(compiler))
                       .build())
+          .setPreconditionCheck(DefaultPassConfig::requirePropertiesAreStaticallyAnalyzable)
           .build();
 
   /** Removes ECMAScript class constructors when an implicit constructor is sufficient. */
@@ -2262,6 +2279,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("markPureFunctions")
           .setInternalFactory(PureFunctionIdentifier.Driver::new)
+          .setPreconditionCheck(DefaultPassConfig::requirePropertiesAreStaticallyAnalyzable)
           .build();
 
   /** Inlines variables heuristically. */
@@ -2298,6 +2316,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("inlineSimpleMethods")
           .setRunInFixedPointLoop(true)
           .setInternalFactory(InlineSimpleMethods::new)
+          .setPreconditionCheck(DefaultPassConfig::requirePropertiesAreStaticallyAnalyzable)
           .build();
 
   /** Kills dead assignments. */
@@ -2314,6 +2333,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("deadPropertyAssignmentElimination")
           .setRunInFixedPointLoop(true)
           .setInternalFactory(DeadPropertyAssignmentElimination::new)
+          .setPreconditionCheck(DefaultPassConfig::requirePropertiesAreStaticallyAnalyzable)
           .build();
 
   /** Inlines function calls. */
@@ -2449,6 +2469,7 @@ public final class DefaultPassConfig extends PassConfig {
 
                 return new ExtractPrototypeMemberDeclarations(compiler, pattern);
               })
+          .setPreconditionCheck(DefaultPassConfig::requirePropertiesAreStaticallyAnalyzable)
           .build();
 
   /** Rewrites common function definitions to be more compact. */
@@ -2502,6 +2523,7 @@ public final class DefaultPassConfig extends PassConfig {
                       options.getPropertyReservedNamingFirstChars(),
                       options.getPropertyReservedNamingNonFirstChars(),
                       compiler.getExternProperties()))
+          .setPreconditionCheck(DefaultPassConfig::requirePropertiesAreStaticallyAnalyzable)
           .build();
 
   /** Mark the point at which the normalized AST assumptions no longer hold. */
@@ -2569,6 +2591,7 @@ public final class DefaultPassConfig extends PassConfig {
                   }
                 };
               })
+          .setPreconditionCheck(DefaultPassConfig::requirePropertiesAreStaticallyAnalyzable)
           .build();
 
   /** Inlines calls to property renaming functions. */
@@ -2955,4 +2978,11 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("TranspileAndOptimizeClosureUnaware")
           .setInternalFactory((compiler) -> new TranspileAndOptimizeClosureUnaware(compiler))
           .build();
+
+  private static PreconditionResult requirePropertiesAreStaticallyAnalyzable(
+      CompilerOptions options) {
+    return new PreconditionResult(
+        options.getAssumePropertiesAreStaticallyAnalyzable(),
+        "requires assumePropertiesAreStaticallyAnalyzable to be enabled");
+  }
 }

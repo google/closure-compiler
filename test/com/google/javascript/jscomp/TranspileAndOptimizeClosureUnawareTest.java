@@ -167,11 +167,11 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
                 """)),
         expected(
             expectedClosureUnaware(
-                // TODO: b/421971366 - preserve the `obj.y` read. It could be a side-effectful
-                // getter.
                 """
                 return function(a) {
-                  console.log(a.x);
+                  const b = a.x;
+                  a.y;
+                  console.log(b);
                 }
                 """)));
   }
@@ -224,10 +224,21 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
             """
             return function() {
               globalThis.foo = function() {
-                console.log(typeof External === "undefined" ? null : External);
+              const a = typeof External === "undefined" ? null : External;
+              console.log(a);
               };
             };
             """));
+  }
+
+  @Test
+  public void testAssumeRegexpMayHaveGlobalSideEffects() {
+    // References to the global RegExp object make regular expression calls unoptimizable. In the
+    // main AST the CheckRegExp pass looks for these references. But in @closureUnaware compilation,
+    // we cannot assume that the CheckRegexpPass will see all possible Regexp usages.
+    // Hence we cannot remove the seemingly unused `/abc/.match(str)` call.
+    // Note that we still remove completely unused regex literals.
+    test(closureUnaware("/abc/.match(str); /unused/"), expectedClosureUnaware("/abc/.match(str);"));
   }
 
   private static String loadFile(Path path) {

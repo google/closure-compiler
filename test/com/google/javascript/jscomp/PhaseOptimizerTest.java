@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
@@ -175,6 +176,34 @@ public final class PhaseOptimizerTest {
     } catch (IllegalArgumentException e) {
       return;
     }
+  }
+
+  @Test
+  public void preconditionCheck_success() {
+    PassFactory passFactory =
+        PassFactory.builder()
+            .setName("myPass")
+            .setInternalFactory((compiler) -> createPass("myPass", 0))
+            .setPreconditionCheck((options) -> new PassFactory.PreconditionResult(true, null))
+            .build();
+    optimizer.addOneTimePass(passFactory);
+    assertPasses("myPass");
+  }
+
+  @Test
+  public void preconditionCheck_failure() {
+    PassFactory passFactory =
+        PassFactory.builder()
+            .setName("myPass")
+            .setInternalFactory((compiler) -> createPass("myPass", 0))
+            .setPreconditionCheck((options) -> new PassFactory.PreconditionResult(false, "message"))
+            .build();
+    optimizer.addOneTimePass(passFactory);
+
+    IllegalArgumentException ex =
+        assertThrows(IllegalArgumentException.class, () -> assertPasses("myPass"));
+
+    assertThat(ex).hasMessageThat().isEqualTo("Precondition for pass myPass failed: message");
   }
 
   public void assertPasses(String... names) {

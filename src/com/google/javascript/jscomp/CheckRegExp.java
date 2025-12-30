@@ -66,13 +66,19 @@ class CheckRegExp extends AbstractPostOrderCallback implements CompilerPass {
   private final AbstractCompiler compiler;
   private final boolean reportErrors;
   private boolean globalRegExpPropertiesUsed = false;
+  private final boolean assumeAllGlobalRegexpUsagesVisible;
 
   public boolean isGlobalRegExpPropertiesUsed() {
-    return globalRegExpPropertiesUsed;
+    if (assumeAllGlobalRegexpUsagesVisible) {
+      return globalRegExpPropertiesUsed;
+    }
+    return true;
   }
 
-  public CheckRegExp(AbstractCompiler compiler, boolean reportErrors) {
+  public CheckRegExp(
+      AbstractCompiler compiler, boolean assumeAllGlobalRegexpUsagesVisible, boolean reportErrors) {
     this.compiler = compiler;
+    this.assumeAllGlobalRegexpUsagesVisible = assumeAllGlobalRegexpUsagesVisible;
     this.reportErrors = reportErrors;
   }
 

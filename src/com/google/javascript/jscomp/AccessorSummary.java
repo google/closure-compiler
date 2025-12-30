@@ -65,6 +65,8 @@ final class AccessorSummary implements Serializable {
     }
   }
 
+  private final boolean assumeAlwaysGetterAndSetter;
+
   static AccessorSummary create(Map<String, PropertyAccessKind> accessors) {
     // TODO(nickreid): Efficiently verify that no entry in `accessor` is `NORMAL`.
     return new AccessorSummary(ImmutableMap.copyOf(accessors));
@@ -74,6 +76,12 @@ final class AccessorSummary implements Serializable {
 
   private AccessorSummary(ImmutableMap<String, PropertyAccessKind> accessors) {
     this.accessors = accessors;
+    this.assumeAlwaysGetterAndSetter = false;
+  }
+
+  private AccessorSummary(boolean assumeAlwaysGetterAndSetter) {
+    this.accessors = ImmutableMap.of();
+    this.assumeAlwaysGetterAndSetter = assumeAlwaysGetterAndSetter;
   }
 
   public ImmutableMap<String, PropertyAccessKind> getAccessors() {
@@ -81,6 +89,14 @@ final class AccessorSummary implements Serializable {
   }
 
   public PropertyAccessKind getKind(String name) {
+    if (assumeAlwaysGetterAndSetter) {
+      return PropertyAccessKind.GETTER_AND_SETTER;
+    }
     return accessors.getOrDefault(name, PropertyAccessKind.NORMAL);
+  }
+
+  /** Returns an accessor summary that assumes every access is a potential getter or setter. */
+  public static AccessorSummary createAssumingAlwaysGetterAndSetter() {
+    return new AccessorSummary(true);
   }
 }
