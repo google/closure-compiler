@@ -48,8 +48,8 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * A class for the internal representation of an input to the compiler. Wraps a {@link JsAst} and
- * maintain state such as module for the input and whether the input is an extern. Also calculates
- * provided and required types.
+ * maintain state such as the {@link JSChunk} for the input and whether the input is an extern. Also
+ * calculates provided and required types.
  */
 public class CompilerInput implements DependencyInfo {
 
@@ -553,13 +553,13 @@ public class CompilerInput implements DependencyInfo {
 
   /** Sets the chunk to which the input belongs. */
   public void setChunk(JSChunk chunk) {
-    // An input may only belong to one module.
+    // An input may only belong to one chunk.
     checkArgument(chunk == null || this.chunk == null || this.chunk == chunk);
     this.chunk = chunk;
   }
 
-  /** Overrides the module to which the input belongs. */
-  void overrideModule(JSChunk chunk) {
+  /** Overrides the chunk to which the input belongs. */
+  void overrideChunk(JSChunk chunk) {
     this.chunk = chunk;
   }
 

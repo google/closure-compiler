@@ -557,17 +557,17 @@ public final class DefaultPassConfig extends PassConfig {
       passes.addAll(getPostL10nOptimizations());
     }
 
-    passes.maybeAdd(createEmptyPass("beforeModuleMotion"));
+    passes.maybeAdd(createEmptyPass("beforeChunkMotion"));
 
     if (options.shouldRunCrossChunkCodeMotion()) {
-      passes.maybeAdd(crossModuleCodeMotion);
+      passes.maybeAdd(crossChunkCodeMotion);
     }
 
     if (options.shouldRunCrossChunkMethodMotion()) {
-      passes.maybeAdd(crossModuleMethodMotion);
+      passes.maybeAdd(crossChunkMethodMotion);
     }
 
-    passes.maybeAdd(createEmptyPass("afterModuleMotion"));
+    passes.maybeAdd(createEmptyPass("afterChunkMotion"));
 
     if (options.optimizeESClassConstructors && options.getOutputFeatureSet().contains(ES2015)) {
       passes.maybeAdd(optimizeConstructors);
@@ -1040,13 +1040,13 @@ public final class DefaultPassConfig extends PassConfig {
     // In the future, we might want to improve our analysis in
     // CrossChunkCodeMotion so we don't need to do this.
     if (options.shouldRunCrossChunkCodeMotion()) {
-      passes.maybeAdd(crossModuleCodeMotion);
+      passes.maybeAdd(crossChunkCodeMotion);
     }
 
     // Method devirtualization benefits from property disambiguation so
     // it should run after that pass but before passes that do
-    // optimizations based on global names (like cross module code motion
-    // and inline functions).  Smart Name Removal does better if run before
+    // optimizations based on global names (like cross-chunk code motion
+    // and inline functions).  RemoveUnusedCode does better if run before
     // this pass.
     if (options.devirtualizeMethods) {
       passes.maybeAdd(devirtualizeMethods);
@@ -2394,8 +2394,8 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory removeUnusedCodeOnce =
       removeUnusedCode.toBuilder().setRunInFixedPointLoop(false).build();
 
-  /** Move global symbols to a deeper common module */
-  private final PassFactory crossModuleCodeMotion =
+  /** Move global symbols to a deeper common chunk */
+  private final PassFactory crossChunkCodeMotion =
       PassFactory.builder()
           .setName(PassNames.CROSS_CHUNK_CODE_MOTION)
           .setRunInFixedPointLoop(true)
@@ -2407,8 +2407,8 @@ public final class DefaultPassConfig extends PassConfig {
                       options.parentChunkCanSeeSymbolsDeclaredInChildren))
           .build();
 
-  /** Move methods to a deeper common module */
-  private final PassFactory crossModuleMethodMotion =
+  /** Move methods to a deeper common chunk */
+  private final PassFactory crossChunkMethodMotion =
       PassFactory.builder()
           .setName(PassNames.CROSS_CHUNK_METHOD_MOTION)
           .setRunInFixedPointLoop(true)
@@ -2416,7 +2416,7 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) ->
                   new CrossChunkMethodMotion(
                       compiler,
-                      compiler.getCrossModuleIdGenerator(),
+                      compiler.getCrossChunkIdGenerator(),
                       /* canModifyExterns= */ false, // remove this
                       options.crossChunkCodeMotionNoStubMethods))
           .build();

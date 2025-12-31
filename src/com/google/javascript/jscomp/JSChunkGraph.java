@@ -731,7 +731,7 @@ public final class JSChunkGraph implements Serializable {
               throw new MissingChunkException(entryPoint.moduleName());
             } else {
               entryPointInput = sorter.getInputProviding(entryPoint.closureNamespace());
-              entryPointInput.overrideModule(chunk);
+              entryPointInput.overrideChunk(chunk);
             }
           }
         } catch (MissingProvideException e) {

@@ -50,8 +50,8 @@ public interface DependencyInfo {
       PARSED_FROM_DEPS,
       /** CommonJS require() call. */
       COMMON_JS,
-      /** Compiler module dependencies. */
-      COMPILER_MODULE
+      /** Compiler chunk graph dependencies. */
+      COMPILER_CHUNK
     }
 
     public static ImmutableList<String> asSymbolList(Iterable<Require> requires) {
@@ -74,8 +74,8 @@ public interface DependencyInfo {
       return builder().setRawText(rawPath).setSymbol(symbol).setType(Type.COMMON_JS).build();
     }
 
-    public static Require compilerModule(String symbol) {
-      return builder().setRawText(symbol).setSymbol(symbol).setType(Type.COMPILER_MODULE).build();
+    public static Require compilerChunk(String symbol) {
+      return builder().setRawText(symbol).setSymbol(symbol).setType(Type.COMPILER_CHUNK).build();
     }
 
     public static Require parsedFromDeps(String symbol) {

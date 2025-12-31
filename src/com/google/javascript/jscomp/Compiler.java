@@ -148,18 +148,18 @@ import org.jspecify.annotations.Nullable;
 // TODO(tbreisacher): Rename Compiler to JsCompiler and remove this suppression.
 @SuppressWarnings("JavaLangClash")
 public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFileMapping {
-  static final DiagnosticType MODULE_DEPENDENCY_ERROR =
+  static final DiagnosticType CHUNK_DEPENDENCY_ERROR =
       DiagnosticType.error(
-          "JSC_MODULE_DEPENDENCY_ERROR",
-          "Bad dependency: {0} -> {1}. " + "Modules must be listed in dependency order.");
+          "JSC_CHUNK_DEPENDENCY_ERROR",
+          "Bad dependency: {0} -> {1}. " + "Chunks must be listed in dependency order.");
 
   static final DiagnosticType MISSING_ENTRY_ERROR =
       DiagnosticType.error(
           "JSC_MISSING_ENTRY_ERROR", "required entry point \"{0}\" never provided");
 
-  static final DiagnosticType MISSING_MODULE_ERROR =
+  static final DiagnosticType MISSING_CHUNK_ERROR =
       DiagnosticType.error(
-          "JSC_MISSING_MODULE_ERROR", "unknown module \"{0}\" specified in entry point spec");
+          "JSC_MISSING_CHUNK_ERROR", "unknown chunk \"{0}\" specified in entry point spec");
 
   private @Nullable CompilerOptions options = null;
 
@@ -168,7 +168,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // The externs inputs
   private final ArrayList<CompilerInput> externs = new ArrayList<>();
 
-  // The source module graph, denoting dependencies between chunks.
+  // The source chunk graph, denoting dependencies between chunks.
   private JSChunkGraph chunkGraph;
 
   // The module loader for resolving paths into module URIs.
@@ -521,7 +521,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (this.isDebugLoggingEnabled()) {
       // Log to separate files for convenience.
       logToFile("externs.log", externs::toString);
-      // To get a pretty-printed JSON module graph, change the string generation expression to
+      // To get a pretty-printed JSON chunk graph, change the string generation expression to
       //
       // new GsonBuilder().setPrettyPrinting().create().toJson(chunkGraph.toJson())
       //
@@ -536,7 +536,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       err.println("==== Externs ====");
       err.println(externs);
       err.println("==== Inputs ====");
-      // To get a pretty-printed JSON module graph, change this line to
+      // To get a pretty-printed JSON chunk graph, change this line to
       //
       // err.println(
       //     new GsonBuilder().setPrettyPrinting().create().toJson(chunkGraph.toJson()));
@@ -788,11 +788,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     addFilesToSourceMap(sources);
   }
 
-  /** Initializes the instance state needed for a compile job if the sources are in modules. */
+  /** Initializes the instance state needed for a compile job if the sources are in chunks. */
   public void initChunks(List<SourceFile> externs, List<JSChunk> chunks, CompilerOptions options) {
     initOptions(options);
 
-    checkFirstModule(chunks);
+    checkFirstChunk(chunks);
 
     this.externs.clear();
     for (SourceFile file : externs) {
@@ -803,16 +803,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     try {
       this.chunkGraph = new JSChunkGraph(chunks);
     } catch (ChunkDependenceException e) {
-      // problems with the module format.  Report as an error.  The
+      // problems with the chunk format.  Report as an error.  The
       // message gives all details.
       report(
           JSError.make(
-              MODULE_DEPENDENCY_ERROR, e.getChunk().getName(), e.getDependentChunk().getName()));
+              CHUNK_DEPENDENCY_ERROR, e.getChunk().getName(), e.getDependentChunk().getName()));
       return;
     }
 
-    // Creating the module graph can move weak source around, and end up with empty modules.
-    fillEmptyModules(getChunks());
+    // Creating the chunk graph can move weak source around, and end up with empty chunks.
+    fillEmptyChunks(getChunks());
 
     this.commentsPerFile = new ConcurrentHashMap<>(chunkGraph.getInputCount());
     initBasedOnOptions();
@@ -868,24 +868,24 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  private static final DiagnosticType EMPTY_MODULE_LIST_ERROR =
-      DiagnosticType.error("JSC_EMPTY_MODULE_LIST_ERROR", "At least one module must be provided");
+  private static final DiagnosticType EMPTY_CHUNK_LIST_ERROR =
+      DiagnosticType.error("JSC_EMPTY_CHUNK_LIST_ERROR", "At least one chunk must be provided");
 
-  private static final DiagnosticType EMPTY_ROOT_MODULE_ERROR =
+  private static final DiagnosticType EMPTY_ROOT_CHUNK_ERROR =
       DiagnosticType.error(
-          "JSC_EMPTY_ROOT_MODULE_ERROR",
-          "Root module ''{0}'' must contain at least one source code input");
+          "JSC_EMPTY_ROOT_CHUNK_ERROR",
+          "Root chunk ''{0}'' must contain at least one source code input");
 
   /**
    * Verifies that at least one chunk has been provided and that the first one has at least one
    * source code input.
    */
-  private void checkFirstModule(List<JSChunk> chunks) {
+  private void checkFirstChunk(List<JSChunk> chunks) {
     if (chunks.isEmpty()) {
-      report(JSError.make(EMPTY_MODULE_LIST_ERROR));
+      report(JSError.make(EMPTY_CHUNK_LIST_ERROR));
     } else if (chunks.get(0).getInputs().isEmpty() && chunks.size() > 1) {
-      // The root module may only be empty if there is exactly 1 module.
-      report(JSError.make(EMPTY_ROOT_MODULE_ERROR, chunks.get(0).getName()));
+      // The root chunk may only be empty if there is exactly 1 chunk.
+      report(JSError.make(EMPTY_ROOT_CHUNK_ERROR, chunks.get(0).getName()));
     }
   }
 
@@ -895,7 +895,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /** Fill any empty chunks with a place holder file. It makes any cross chunk motion easier. */
-  private void fillEmptyModules(Iterable<JSChunk> chunks) {
+  private void fillEmptyChunks(Iterable<JSChunk> chunks) {
     for (JSChunk chunk : chunks) {
       if (!chunk.getName().equals(JSChunk.WEAK_CHUNK_NAME) && chunk.getInputs().isEmpty()) {
         CompilerInput input =
@@ -907,10 +907,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /**
-   * Rebuilds the internal input map by iterating over all modules. This is necessary if inputs have
-   * been added to or removed from a module after an {@link #init} or {@link #initChunks} call.
+   * Rebuilds the internal input map by iterating over all chunks. This is necessary if inputs have
+   * been added to or removed from a chunk after an {@link #init} or {@link #initChunks} call.
    */
-  public void rebuildInputsFromModules() {
+  @VisibleForTesting
+  void rebuildInputsFromChunks() {
     initInputsByIdMap();
   }
 
@@ -1087,12 +1088,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(chunkGraph != null, "No inputs. Did you call init() or initChunks()?");
     checkState(!hasErrors());
     checkState(!options.getInstrumentForCoverageOnly());
-    JSChunk weakModule = chunkGraph.getChunkByName(JSChunk.WEAK_CHUNK_NAME);
-    if (weakModule != null) {
+    JSChunk weakChunk = chunkGraph.getChunkByName(JSChunk.WEAK_CHUNK_NAME);
+    if (weakChunk != null) {
       for (CompilerInput i : chunkGraph.getAllInputs()) {
         if (i.getSourceFile().isWeak()) {
-          checkState(
-              i.getChunk() == weakModule, "Expected all weak files to be in the weak module.");
+          checkState(i.getChunk() == weakChunk, "Expected all weak files to be in the weak chunk.");
         }
       }
     }
@@ -1848,10 +1848,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /**
-   * Gets the graph of JS source modules.
+   * Gets the graph of JS source chunks.
    *
    * <p>Returns null if {@code #init} or {@code #initChunks} hasn't been called yet. Otherwise, the
-   * result is always a module graph, even in the degenerate case where there's only one module.
+   * result is always a chunk graph, even in the degenerate case where there's only one chunk.
    */
   @Override
   @Nullable JSChunkGraph getChunkGraph() {
@@ -1859,10 +1859,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /**
-   * Gets the JS source modules in dependency order.
+   * Gets the JS source chunks in dependency order.
    *
    * <p>Returns null if {@code #init} or {@code #initChunks} hasn't been called yet. Otherwise, the
-   * result is always non-empty, even in the degenerate case where there's only one module.
+   * result is always non-empty, even in the degenerate case where there's only one chunk.
    */
   public @Nullable Iterable<JSChunk> getChunks() {
     return chunkGraph != null ? chunkGraph.getAllChunks() : null;
@@ -2297,13 +2297,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       } catch (MissingProvideException e) {
         report(JSError.make(MISSING_ENTRY_ERROR, e.getMessage()));
       } catch (MissingChunkException e) {
-        report(JSError.make(MISSING_MODULE_ERROR, e.getMessage()));
+        report(JSError.make(MISSING_CHUNK_ERROR, e.getMessage()));
       }
     }
     hoistExterns(originalInputs);
 
-    // Manage dependencies may move weak sources around, and end up with empty modules.
-    fillEmptyModules(getChunks());
+    // Manage dependencies may move weak sources around, and end up with empty chunks.
+    fillEmptyChunks(getChunks());
     hoistNoCompileFiles();
 
     if (staleInputs) {
@@ -2510,8 +2510,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   private void repartitionInputs() {
-    fillEmptyModules(getChunks());
-    rebuildInputsFromModules();
+    fillEmptyChunks(getChunks());
+    rebuildInputsFromChunks();
   }
 
   /**
@@ -2699,7 +2699,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           for (int i = 0; i < numInputs; i++) {
             Node scriptNode = inputs.get(i).getAstRoot(Compiler.this);
             if (scriptNode == null) {
-              throw new IllegalArgumentException("Bad module: " + chunk.getName());
+              throw new IllegalArgumentException("Bad chunk: " + chunk.getName());
             }
             toSource(cb, licenseTracker, i, scriptNode);
           }
@@ -2985,7 +2985,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           log.log("Chunk %s depends on chunk %s", currentChunk, depChunk);
           if (!this.licensesFromChunks.containsKey(depChunk)) {
             throw new IllegalStateException(
-                "Module aware license analysis error - analysis out of order.");
+                "Chunk aware license analysis error - analysis out of order.");
           }
           this.currentChunkLicencesInTDeps.addAll(this.licensesFromChunks.get(depChunk));
         }
@@ -3059,14 +3059,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /**
-   * Converts the parse tree for each input in a module back to JS code, using the given License
+   * Converts the parse tree for each input in a chunk back to JS code, using the given License
    * Tracker implementation to decide which licenses should be emitted before each input file.
    *
    * @param licenseTracker The license tracker implementation to use. {@link
    *     ChunkGraphAwareLicenseTracker} is a suitable implementation when this method is being
-   *     called on each module in the chunk graph in dependency order - see its javadoc on how to
-   *     use it correctly.
-   * @param module the chunk being converted to source.
+   *     called on each chunk in the chunk graph in dependency order - see its javadoc on how to use
+   *     it correctly.
+   * @param chunk the chunk being converted to source.
    */
   public String[] toSourceArray(LicenseTracker licenseTracker, final JSChunk chunk) {
     return runInCompilerThread(
@@ -3082,7 +3082,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           for (int i = 0; i < numInputs; i++) {
             Node scriptNode = inputs.get(i).getAstRoot(Compiler.this);
             if (scriptNode == null) {
-              throw new IllegalArgumentException("Bad module input: " + inputs.get(i).getName());
+              throw new IllegalArgumentException("Bad chunk input: " + inputs.get(i).getName());
             }
 
             cb.reset();
@@ -3705,20 +3705,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return checkNotModule(firstInput.getAstRoot(this), "Cannot insert code into a module");
     }
 
-    ImmutableList<CompilerInput> moduleInputs = chunk.getInputs();
-    if (!moduleInputs.isEmpty()) {
+    ImmutableList<CompilerInput> chunkInputs = chunk.getInputs();
+    if (!chunkInputs.isEmpty()) {
       return checkNotModule(
-          moduleInputs.get(0).getAstRoot(this), "Cannot insert code into a module");
+          chunkInputs.get(0).getAstRoot(this), "Cannot insert code into a module");
     }
-    throw new IllegalStateException("Root module has no inputs");
+    throw new IllegalStateException("Root chunk has no inputs");
   }
 
   public SourceMap getSourceMap() {
     return sourceMap;
   }
 
-  /** Ids for cross-module method stubbing, so that each method has a unique id. */
-  private IdGenerator crossModuleIdGenerator = new IdGenerator();
+  /** Ids for cross-chunk method stubbing, so that each method has a unique id. */
+  private IdGenerator crossChunkIdGenerator = new IdGenerator();
 
   /** Arguments passed to getCssName() found during compilation. */
   private @Nullable Set<String> cssNames = null;
@@ -3790,8 +3790,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  public IdGenerator getCrossModuleIdGenerator() {
-    return crossModuleIdGenerator;
+  public IdGenerator getCrossChunkIdGenerator() {
+    return crossChunkIdGenerator;
   }
 
   @Override
@@ -4173,10 +4173,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final Set<String> cssNames;
     private final String idGeneratorMap;
     private final boolean transpiledFiles;
-    private final IdGenerator crossModuleIdGenerator;
+    private final IdGenerator crossChunkIdGenerator;
     private final boolean runJ2clPasses;
     private final ImmutableList<InputId> externs;
-    private final ImmutableListMultimap<JSChunk, InputId> moduleToInputList;
+    private final ImmutableListMultimap<JSChunk, InputId> chunkToInputList;
     private final ImmutableList<String> injectedLibraries;
     private final int lastInjectedLibraryIndexInFirstScript;
     private final AccessorSummary accessorSummary;
@@ -4196,11 +4196,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.cssNames = compiler.cssNames;
       this.idGeneratorMap = compiler.idGeneratorMap;
       this.transpiledFiles = compiler.transpiledFiles;
-      this.crossModuleIdGenerator = compiler.crossModuleIdGenerator;
+      this.crossChunkIdGenerator = compiler.crossChunkIdGenerator;
       this.runJ2clPasses = compiler.runJ2clPasses;
       this.externs =
           compiler.externs.stream().map(CompilerInput::getInputId).collect(toImmutableList());
-      this.moduleToInputList = mapJSModulesToInputIds(compiler.chunkGraph.getAllChunks());
+      this.chunkToInputList = mapJsChunksToInputIds(compiler.chunkGraph.getAllChunks());
       this.injectedLibraries = compiler.getRuntimeJsLibManager().getInjectedLibraries();
       Node lastInjectedLibrary = compiler.getRuntimeJsLibManager().getLastInjectedLibrary();
       this.lastInjectedLibraryIndexInFirstScript =
@@ -4241,7 +4241,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     stringMap = compilerState.stringMap;
     idGeneratorMap = compilerState.idGeneratorMap;
     transpiledFiles = compilerState.transpiledFiles;
-    crossModuleIdGenerator = compilerState.crossModuleIdGenerator;
+    crossChunkIdGenerator = compilerState.crossChunkIdGenerator;
     runJ2clPasses = compilerState.runJ2clPasses;
 
     // We don't save changeStamp, because its value turned out to be non-deterministic
@@ -4255,16 +4255,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     instrumentationMapping = compilerState.instrumentationMappping;
   }
 
-  private static final ImmutableListMultimap<JSChunk, InputId> mapJSModulesToInputIds(
-      Iterable<JSChunk> jsModules) {
-    ImmutableListMultimap.Builder<JSChunk, InputId> jsmoduleToInputId =
+  private static final ImmutableListMultimap<JSChunk, InputId> mapJsChunksToInputIds(
+      Iterable<JSChunk> jsChunks) {
+    ImmutableListMultimap.Builder<JSChunk, InputId> jsChunkToInputId =
         ImmutableListMultimap.builder();
-    for (JSChunk jsModule : jsModules) {
-      jsmoduleToInputId.putAll(
-          jsModule,
-          jsModule.getInputs().stream().map(CompilerInput::getInputId).collect(toImmutableList()));
+    for (JSChunk jsChunk : jsChunks) {
+      jsChunkToInputId.putAll(
+          jsChunk,
+          jsChunk.getInputs().stream().map(CompilerInput::getInputId).collect(toImmutableList()));
     }
-    return jsmoduleToInputId.build();
+    return jsChunkToInputId.build();
   }
 
   public void saveState(OutputStream outputStream) throws IOException {
@@ -4387,8 +4387,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.externs.add(input);
     }
 
-    for (JSChunk deserializedModule : getChunks()) {
-      for (InputId inputId : compilerState.moduleToInputList.get(deserializedModule)) {
+    for (JSChunk deserializedChunk : getChunks()) {
+      for (InputId inputId : compilerState.chunkToInputList.get(deserializedChunk)) {
         SourceFile src = codeFiles.get(inputId.getIdName());
         if (src == null) {
           // The auto-generated empty fill files used to facilitate CCCM for
@@ -4404,7 +4404,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         scriptNodeByFilename.put(src.getName(), script);
 
         putCompilerInput(input); // overwrite the old input
-        deserializedModule.add(input);
+        deserializedChunk.add(input);
       }
     }
 
@@ -4509,10 +4509,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
 
       // Add all the compilation sources to the source map as potential sources
-      Iterable<JSChunk> allModules = getChunks();
-      if (allModules != null) {
+      Iterable<JSChunk> allChunks = getChunks();
+      if (allChunks != null) {
         List<SourceFile> sourceFiles = new ArrayList<>();
-        for (JSChunk chunk : allModules) {
+        for (JSChunk chunk : allChunks) {
           for (CompilerInput input : chunk.getInputs()) {
             SourceFile sourceFile = input.getSourceFile();
             if (sourceFile.isStubSourceFileForAlreadyProvidedInput()) {

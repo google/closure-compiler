@@ -598,7 +598,7 @@ public final class CompilerTest {
   }
 
   @Test
-  public void testRebuildInputsFromModule() {
+  public void testRebuildInputsFromChunk() {
     ImmutableList<JSChunk> chunks = ImmutableList.of(new JSChunk("m1"), new JSChunk("m2"));
     chunks.get(0).add(SourceFile.fromCode("in1", ""));
     chunks.get(1).add(SourceFile.fromCode("in2", ""));
@@ -608,7 +608,7 @@ public final class CompilerTest {
 
     chunks.get(1).add(SourceFile.fromCode("in3", ""));
     assertThat(compiler.getInput(new InputId("in3"))).isNull();
-    compiler.rebuildInputsFromModules();
+    compiler.rebuildInputsFromChunks();
     assertThat(compiler.getInput(new InputId("in3"))).isNotNull();
   }
 
@@ -2581,7 +2581,7 @@ public final class CompilerTest {
     assertThat(compiler.toSource()).isEqualTo("var a={};a.b={};var d={};");
   }
 
-  private void weakSourcesModulesHelper(boolean saveAndRestore) throws Exception {
+  private void weakSourcesChunksHelper(boolean saveAndRestore) throws Exception {
     JSChunk m1 = new JSChunk("m1");
     m1.add(SourceFile.fromCode("weak1.js", "goog.provide('a');", SourceKind.WEAK));
     m1.add(SourceFile.fromCode("strong1.js", "goog.provide('a.b');", SourceKind.STRONG));
@@ -2611,7 +2611,7 @@ public final class CompilerTest {
 
       restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
 
-      // restoring state creates new JSModule objects. the old ones are stale.
+      // restoring state creates new JSChunk objects. the old ones are stale.
       m1 = compiler.getChunkGraph().getChunkByName("m1");
       m2 = compiler.getChunkGraph().getChunkByName("m2");
     }
@@ -2620,24 +2620,24 @@ public final class CompilerTest {
 
     assertThat(compiler.getChunkGraph().getChunkCount()).isEqualTo(3);
 
-    JSChunk weakModule = compiler.getChunkGraph().getChunkByName("$weak$");
+    JSChunk weakChunk = compiler.getChunkGraph().getChunkByName("$weak$");
     ScriptNodeLicensesOnlyTracker lt = new ScriptNodeLicensesOnlyTracker(compiler);
-    assertThat(weakModule).isNotNull();
+    assertThat(weakChunk).isNotNull();
 
     assertThat(compiler.toSource(lt, m1)).isEqualTo("var a={};a.b={};");
 
     assertThat(compiler.toSource(lt, m2)).isEqualTo("var d={};");
-    assertThat(compiler.toSource(lt, weakModule)).isEmpty();
+    assertThat(compiler.toSource(lt, weakChunk)).isEmpty();
   }
 
   @Test
-  public void testWeakSourcesModules() throws Exception {
-    weakSourcesModulesHelper(/* saveAndRestore= */ false);
+  public void testWeakSourcesChunks() throws Exception {
+    weakSourcesChunksHelper(/* saveAndRestore= */ false);
   }
 
   @Test
   public void testWeakSourcesSaveRestore() throws Exception {
-    weakSourcesModulesHelper(/* saveAndRestore= */ true);
+    weakSourcesChunksHelper(/* saveAndRestore= */ true);
   }
 
   @Test
@@ -2683,7 +2683,7 @@ public final class CompilerTest {
   }
 
   @Test
-  public void testPreexistingWeakModule() throws Exception {
+  public void testPreexistingWeakChunk() throws Exception {
     JSChunk strong = new JSChunk("m");
     strong.add(SourceFile.fromCode("strong.js", "goog.provide('a');", SourceKind.STRONG));
     JSChunk weak = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
@@ -2711,7 +2711,7 @@ public final class CompilerTest {
   }
 
   @Test
-  public void testPreexistingWeakModuleWithAdditionalStrongSources() throws Exception {
+  public void testPreexistingWeakChunkWithAdditionalStrongSources() throws Exception {
     JSChunk strong = new JSChunk("m");
     strong.add(SourceFile.fromCode("strong.js", "goog.provide('a');", SourceKind.STRONG));
     JSChunk weak = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
@@ -2734,7 +2734,7 @@ public final class CompilerTest {
   }
 
   @Test
-  public void testPreexistingWeakModuleWithMissingWeakSources() throws Exception {
+  public void testPreexistingWeakChunkWithMissingWeakSources() throws Exception {
     JSChunk strong = new JSChunk("m");
     strong.add(SourceFile.fromCode("strong.js", "goog.provide('a');", SourceKind.STRONG));
     strong.add(
@@ -2760,7 +2760,7 @@ public final class CompilerTest {
   }
 
   @Test
-  public void testPreexistingWeakModuleWithIncorrectDependencies() throws Exception {
+  public void testPreexistingWeakChunkWithIncorrectDependencies() throws Exception {
     JSChunk m1 = new JSChunk("m1");
     JSChunk m2 = new JSChunk("m2");
     JSChunk weak = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
@@ -3417,7 +3417,7 @@ public final class CompilerTest {
   }
 
   @Test
-  public void testTypedAstFilesystemWithModules_doesNotParseWeakFileTypedAstContents() {
+  public void testTypedAstFilesystemWithChunks_doesNotParseWeakFileTypedAstContents() {
     // Given
     SourceFile weakFile = SourceFile.fromCode("weak.js", "0", SourceKind.WEAK);
     SourceFile strongFile = SourceFile.fromCode("strong.js", "1");

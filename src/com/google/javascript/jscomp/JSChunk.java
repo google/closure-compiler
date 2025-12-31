@@ -109,8 +109,8 @@ public final class JSChunk implements Serializable, DependencyInfo {
   @Override
   public ImmutableList<Require> getRequires() {
     ImmutableList.Builder<Require> builder = ImmutableList.builder();
-    for (JSChunk m : deps) {
-      builder.add(Require.compilerModule(m.getName()));
+    for (JSChunk chunk : deps) {
+      builder.add(Require.compilerChunk(chunk.getName()));
     }
     return builder.build();
   }

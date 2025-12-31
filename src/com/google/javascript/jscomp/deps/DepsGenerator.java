@@ -286,7 +286,7 @@ public class DepsGenerator {
               }
             }
             case GOOG_REQUIRE_SYMBOL, PARSED_FROM_DEPS -> {}
-            case COMMON_JS, COMPILER_MODULE ->
+            case COMMON_JS, COMPILER_CHUNK ->
                 throw new IllegalStateException("Unexpected import type: " + require.getType());
           }
         }

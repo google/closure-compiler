@@ -79,7 +79,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   public abstract @Nullable Node getScriptNode(String filename);
 
-  /** Gets the module graph. */
+  /** Gets the chunk graph. */
   abstract @Nullable JSChunkGraph getChunkGraph();
 
   /**
@@ -125,14 +125,14 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   /** Sets the mapping for instrumentation parameter encoding. */
   public abstract void setInstrumentationMapping(VariableMap instrumentationMapping);
 
-  /** Sets the id generator for cross-module motion. */
+  /** Sets the id generator for cross-chunk motion. */
   public abstract void setIdGeneratorMap(String serializedIdMappings);
 
   /** Gets whether any file needed to transpile any feature */
   public abstract boolean getTranspiledFiles();
 
-  /** Gets the id generator for cross-module motion. */
-  public abstract IdGenerator getCrossModuleIdGenerator();
+  /** Gets the id generator for cross-chunk motion. */
+  public abstract IdGenerator getCrossChunkIdGenerator();
 
   /** Sets the naming map for anonymous functions */
   public abstract void setAnonymousFunctionNameMap(VariableMap functionMap);
@@ -230,12 +230,12 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   public abstract void reportAmbiguatePropertiesSummary(Supplier<String> summarySupplier);
 
   /**
-   * Gets a suitable SCRIPT node to serve as a parent for code insertion. If {@code module} contains
+   * Gets a suitable SCRIPT node to serve as a parent for code insertion. If {@code chunk} contains
    * any inputs, the returned node will be the SCRIPT node corresponding to its first input. If
-   * {@code module} is empty, on the other hand, then the returned node will be the first SCRIPT
-   * node in a non-empty module that {@code module} depends on (the deepest one possible).
+   * {@code chunk} is empty, on the other hand, then the returned node will be the first SCRIPT node
+   * in a non-empty chunk that {@code chunk} depends on (the deepest one possible).
    *
-   * @param module A module. If null, will return the first SCRIPT node of all modules.
+   * @param chunk A chunk. If null, will return the first SCRIPT node of all chunks.
    * @return A SCRIPT node (never null).
    */
   abstract Node getNodeForCodeInsertion(@Nullable JSChunk chunk);
@@ -284,9 +284,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   private static final String FILL_FILE_SUFFIX = "$fillFile";
 
-  /** Empty modules get an empty "fill" file, so that we can move code into an empty module. */
-  static final String createFillFileName(String moduleName) {
-    return moduleName + FILL_FILE_SUFFIX;
+  /** Empty chunks get an empty "fill" file, so that we can move code into an empty chunk. */
+  static final String createFillFileName(String chunkName) {
+    return chunkName + FILL_FILE_SUFFIX;
   }
 
   /** Returns whether a file name was created by {@link createFillFileName}. */

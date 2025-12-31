@@ -80,22 +80,22 @@ public final class JSChunkGraphTest {
     graph = new JSChunkGraph(new JSChunk[] {chunkA, chunkB, chunkC, chunkD, chunkE, chunkF});
   }
 
-  private JSChunk getWeakModule() {
+  private JSChunk getWeakChunk() {
     return graph.getChunkByName(JSChunk.WEAK_CHUNK_NAME);
   }
 
   @Test
-  public void testMakesWeakModuleIfNotPassed() {
+  public void testMakesWeakChunkIfNotPassed() {
     makeDeps();
     makeGraph();
     assertThat(graph.getChunkCount()).isEqualTo(7);
     assertThat(graph.getChunksByName()).containsKey(JSChunk.WEAK_CHUNK_NAME);
-    assertThat(getWeakModule().getAllDependencies())
+    assertThat(getWeakChunk().getAllDependencies())
         .containsExactly(chunkA, chunkB, chunkC, chunkD, chunkE, chunkF);
   }
 
   @Test
-  public void testAcceptExistingWeakModule() {
+  public void testAcceptExistingWeakChunk() {
     makeDeps();
     JSChunk weakChunk = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
 
@@ -116,7 +116,7 @@ public final class JSChunkGraphTest {
   }
 
   @Test
-  public void testExistingWeakModuleMustHaveDependenciesOnAllOtherModules() {
+  public void testExistingWeakChunkMustHaveDependenciesOnAllOtherChunks() {
     makeDeps();
     JSChunk weakChunk = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
 
@@ -139,7 +139,7 @@ public final class JSChunkGraphTest {
   }
 
   @Test
-  public void testWeakFileCannotExistOutsideWeakModule() {
+  public void testWeakFileCannotExistOutsideWeakChunk() {
     makeDeps();
     JSChunk weakChunk = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
 
@@ -165,7 +165,7 @@ public final class JSChunkGraphTest {
   }
 
   @Test
-  public void testStrongFileCannotExistInWeakModule() {
+  public void testStrongFileCannotExistInWeakChunk() {
     makeDeps();
     JSChunk weakChunk = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
 
@@ -228,7 +228,7 @@ public final class JSChunkGraphTest {
   }
 
   @Test
-  public void testModuleDepth() {
+  public void testChunkDepth() {
     makeDeps();
     makeGraph();
     assertWithMessage("chunkA should have depth 0").that(chunkA.getDepth()).isEqualTo(0);
@@ -377,7 +377,7 @@ public final class JSChunkGraphTest {
         DependencyOptions.pruneForEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("c2")));
     ImmutableList<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
 
-    // Everything gets pushed up into module c, because that's
+    // Everything gets pushed up into chunk c, because that's
     // the only one that has entry points.
     assertInputs(chunkA);
     assertInputs(chunkB);
@@ -427,7 +427,7 @@ public final class JSChunkGraphTest {
         DependencyOptions.pruneForEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("a1")));
     ImmutableList<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
 
-    // Everything gets pushed up into module c, because that's
+    // Everything gets pushed up into chunk c, because that's
     // the only one that has entry points.
     assertInputs(a, "a2", "a3", "a1");
 
@@ -493,16 +493,16 @@ public final class JSChunkGraphTest {
   public void testToJson() {
     makeDeps();
     makeGraph();
-    JsonArray modules = graph.toJson();
-    assertThat(modules).hasSize(7);
-    for (int i = 0; i < modules.size(); i++) {
-      JsonObject m = modules.get(i).getAsJsonObject();
+    JsonArray chunks = graph.toJson();
+    assertThat(chunks).hasSize(7);
+    for (int i = 0; i < chunks.size(); i++) {
+      JsonObject m = chunks.get(i).getAsJsonObject();
       assertThat(m.get("name")).isNotNull();
       assertThat(m.get("dependencies")).isNotNull();
       assertThat(m.get("transitive-dependencies")).isNotNull();
       assertThat(m.get("inputs")).isNotNull();
     }
-    JsonObject m = modules.get(3).getAsJsonObject();
+    JsonObject m = chunks.get(3).getAsJsonObject();
     assertThat(m.get("name").getAsString()).isEqualTo("chunkD");
     assertThat(m.get("dependencies").getAsJsonArray().toString()).isEqualTo("[\"chunkB\"]");
     assertThat(m.get("transitive-dependencies").getAsJsonArray()).hasSize(2);
@@ -619,7 +619,7 @@ public final class JSChunkGraphTest {
       for (CompilerInput input : chunkA.getInputs()) {
         input.setCompiler(compiler);
         for (String require : orderedRequires.get(input.getSourceFile().getName())) {
-          input.addOrderedRequire(Require.compilerModule(require));
+          input.addOrderedRequire(Require.compilerChunk(require));
         }
         input.setHasFullParseDependencyInfo(true);
       }
@@ -663,7 +663,7 @@ public final class JSChunkGraphTest {
 
     makeGraph();
 
-    assertThat(getWeakModule().getInputs().stream().map(CompilerInput::getSourceFile))
+    assertThat(getWeakChunk().getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(weak1, weak2);
     assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(strong1, strong2);
@@ -690,7 +690,7 @@ public final class JSChunkGraphTest {
     makeGraph();
     graph.manageDependencies(compiler, DependencyOptions.sortOnly());
 
-    assertThat(getWeakModule().getInputs().stream().map(CompilerInput::getSourceFile))
+    assertThat(getWeakChunk().getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(weak1, weak2);
     assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(strong1, strong2);
@@ -722,7 +722,7 @@ public final class JSChunkGraphTest {
                 ModuleIdentifier.forFile("strong1"), ModuleIdentifier.forFile("strong2"))));
 
     assertThat(
-            getWeakModule().getInputs().stream()
+            getWeakChunk().getInputs().stream()
                 .map(CompilerInput::getSourceFile)
                 .collect(Collectors.toList()))
         .isEmpty();
@@ -764,7 +764,7 @@ public final class JSChunkGraphTest {
                 ModuleIdentifier.forFile("strong1"), ModuleIdentifier.forFile("strong2"))));
 
     assertThat(
-            getWeakModule().getInputs().stream()
+            getWeakChunk().getInputs().stream()
                 .map(CompilerInput::getSourceFile)
                 .collect(Collectors.toList()))
         .isEmpty();
@@ -794,7 +794,7 @@ public final class JSChunkGraphTest {
         DependencyOptions.pruneLegacyForEntryPoints(
             ImmutableList.of(ModuleIdentifier.forFile("strong"))));
 
-    assertThat(getWeakModule().getInputs().stream().map(CompilerInput::getSourceFile))
+    assertThat(getWeakChunk().getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(weak);
     assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(strong, moocher);
@@ -821,7 +821,7 @@ public final class JSChunkGraphTest {
     makeGraph();
     graph.manageDependencies(compiler, DependencyOptions.sortOnly());
 
-    assertThat(getWeakModule().getInputs()).isEmpty();
+    assertThat(getWeakChunk().getInputs()).isEmpty();
     assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(weak1, strong1, weak2, strong2);
   }
@@ -851,7 +851,7 @@ public final class JSChunkGraphTest {
             ImmutableList.of(
                 ModuleIdentifier.forFile("strong1"), ModuleIdentifier.forFile("strong2"))));
 
-    assertThat(getWeakModule().getInputs().stream().map(CompilerInput::getSourceFile))
+    assertThat(getWeakChunk().getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(weak1, weak2);
     assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(strong1, strong2);
@@ -888,7 +888,7 @@ public final class JSChunkGraphTest {
         DependencyOptions.pruneForEntryPoints(
             ImmutableList.of(ModuleIdentifier.forFile("strong1"))));
 
-    assertThat(getWeakModule().getInputs().stream().map(CompilerInput::getSourceFile))
+    assertThat(getWeakChunk().getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(weak1, weak2, weak3, strongFromWeak);
     assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
         .containsExactly(strong1);
@@ -931,25 +931,25 @@ public final class JSChunkGraphTest {
   }
 
   private void assertSmallestCoveringSubtree(
-      JSChunk expected, JSChunk parentTree, JSChunk... modules) {
-    assertSmallestCoveringSubtree(expected, graph, parentTree, modules);
+      JSChunk expected, JSChunk parentTree, JSChunk... chunks) {
+    assertSmallestCoveringSubtree(expected, graph, parentTree, chunks);
   }
 
   private void assertSmallestCoveringSubtree(
-      JSChunk expected, JSChunkGraph graph, JSChunk parentTree, JSChunk... modules) {
-    BitSet modulesBitSet = new BitSet();
-    for (JSChunk m : modules) {
-      modulesBitSet.set(m.getIndex());
+      JSChunk expected, JSChunkGraph graph, JSChunk parentTree, JSChunk... chunks) {
+    BitSet chunksBitSet = new BitSet();
+    for (JSChunk m : chunks) {
+      chunksBitSet.set(m.getIndex());
     }
-    assertSmallestCoveringSubtree(expected, graph, parentTree, modulesBitSet);
+    assertSmallestCoveringSubtree(expected, graph, parentTree, chunksBitSet);
   }
 
   private void assertSmallestCoveringSubtree(
-      JSChunk expected, JSChunkGraph graph, JSChunk parentTree, BitSet modules) {
-    JSChunk actual = graph.getSmallestCoveringSubtree(parentTree, modules);
+      JSChunk expected, JSChunkGraph graph, JSChunk parentTree, BitSet chunks) {
+    JSChunk actual = graph.getSmallestCoveringSubtree(parentTree, chunks);
     assertWithMessage(
             "Smallest covering subtree of %s in %s should be %s but was %s",
-            parentTree, modules, expected, actual)
+            parentTree, chunks, expected, actual)
         .that(actual)
         .isEqualTo(expected);
   }
