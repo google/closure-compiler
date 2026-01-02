@@ -15,12 +15,18 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.FunctionInjector.Reference;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -42,22 +48,25 @@ public class J2clPass implements CompilerPass {
       return;
     }
 
+    List<InlineSpec> inlinings = new ArrayList<>();
+
     /*
      * Inline functions in Arrays that take references to static $isInstance() functions. This
      * ensures that the references will be fully qualified to work with collapse properties.
      */
-    inlineFunctionsInFile(
-        root,
-        "Arrays.impl.java.js",
-        ImmutableSet.of(
-            "$create",
-            "$createWithInitializer",
-            "$init",
-            "$instanceIsOfType",
-            "$castTo",
-            "$stampType"),
-        InliningMode.DIRECT);
-    inlineFunctionsInFile(root, "Casts.impl.java.js", ImmutableSet.of("$to"), InliningMode.DIRECT);
+    inlinings.add(
+        new InlineSpec(
+            "Arrays.impl.java.js",
+            ImmutableSet.of(
+                "$create",
+                "$createWithInitializer",
+                "$init",
+                "$instanceIsOfType",
+                "$castTo",
+                "$stampType"),
+            InliningMode.DIRECT));
+    inlinings.add(
+        new InlineSpec("Casts.impl.java.js", ImmutableSet.of("$to"), InliningMode.DIRECT));
 
     /*
      * Inlines all Interface.$markImplementor(FooClass) metaclass calls so that FooClass and others
@@ -68,27 +77,28 @@ public class J2clPass implements CompilerPass {
      * implementing Java interfaces (not recommended but widely used in xplat) needs calls to
      * $markImplementor.
      */
-    inlineFunctionsInFile(
-        root, ALL_CLASS_FILE_NAMES, ImmutableSet.of("$markImplementor"), InliningMode.BLOCK);
+    inlinings.add(
+        new InlineSpec(
+            ALL_CLASS_FILE_NAMES, ImmutableSet.of("$markImplementor"), InliningMode.BLOCK));
 
     /*
      * Inlines class metadata calls so they become optimizable and avoids escaping of constructor.
      */
-    inlineFunctionsInFile(
-        root,
-        "Util.impl.java.js",
-        ImmutableSet.of(
-            "$setClassMetadata",
-            "$setClassMetadataForInterface",
-            "$setClassMetadataForEnum",
-            "$setClassMetadataForPrimitive"),
-        InliningMode.BLOCK);
+    inlinings.add(
+        new InlineSpec(
+            "Util.impl.java.js",
+            ImmutableSet.of(
+                "$setClassMetadata",
+                "$setClassMetadataForInterface",
+                "$setClassMetadataForEnum",
+                "$setClassMetadataForPrimitive"),
+            InliningMode.BLOCK));
+
+    new ClassStaticFunctionsInliner(root, inlinings).run();
   }
 
-  private void inlineFunctionsInFile(
-      Node root, String classFileName, Set<String> fnNamesToInline, InliningMode inliningMode) {
-    new ClassStaticFunctionsInliner(root, classFileName, fnNamesToInline, inliningMode).run();
-  }
+  private record InlineSpec(
+      String classFileName, Set<String> fnNamesToInline, InliningMode inliningMode) {}
 
   /**
    * Collects references to certain function definitions in a certain class and then inlines fully
@@ -98,27 +108,25 @@ public class J2clPass implements CompilerPass {
    * collected fully qualified function names once the module prefix has been added.
    */
   private class ClassStaticFunctionsInliner {
-    private final String classFileName;
-    private final Set<String> fnNamesToInline;
-    private final InliningMode inliningMode;
-    private final Map<String, Node> fnsToInlineByQualifiedName = new LinkedHashMap<>();
+    private final Map<String, InlinableFunction> fnsToInlineByQualifiedName = new LinkedHashMap<>();
     private final FunctionInjector injector;
     private final Node root;
+    private final List<InlineSpec> inlineSpecs;
 
-    private ClassStaticFunctionsInliner(
-        Node root, String classFileName, Set<String> fnNamesToInline, InliningMode inliningMode) {
+    private record InlinableFunction(Node impl, InliningMode inliningMode) {}
+
+    private ClassStaticFunctionsInliner(Node root, List<InlineSpec> inlineSpecs) {
       this.root = root;
-      this.classFileName = classFileName;
-      this.fnNamesToInline = fnNamesToInline;
-      this.inliningMode = inliningMode;
-
+      this.inlineSpecs = inlineSpecs;
       this.injector =
           new FunctionInjector.Builder(compiler)
               .safeNameIdSupplier(safeNameIdSupplier)
               .assumeStrictThis(true)
               .assumeMinimumCapture(true)
               .build();
-      this.injector.setKnownConstantFunctions(ImmutableSet.copyOf(fnNamesToInline));
+      ImmutableSet<String> fnNamesToInline =
+          inlineSpecs.stream().flatMap(b -> b.fnNamesToInline.stream()).collect(toImmutableSet());
+      this.injector.setKnownConstantFunctions(fnNamesToInline);
     }
 
     private void run() {
@@ -126,21 +134,34 @@ public class J2clPass implements CompilerPass {
       NodeTraversal.traverse(compiler, root, new StaticCallInliner());
     }
 
+    private ImmutableList<InlineSpec> findMatchingSpecsForFile(String sourceFileName) {
+      ImmutableList.Builder<InlineSpec> matchingSpecs = ImmutableList.builder();
+      for (InlineSpec inlineSpec : inlineSpecs) {
+        if (inlineSpec.classFileName.equals(ALL_CLASS_FILE_NAMES)
+            || sourceFileName.endsWith(inlineSpec.classFileName)) {
+          matchingSpecs.add(inlineSpec);
+        }
+      }
+      return matchingSpecs.build();
+    }
+
     private class FunctionDefsCollector implements NodeTraversal.Callback {
+      // This list is initialized every time the node traversal enters a new script. It contains
+      // all InlineSpecs whose classFileName matches the script's filename.
+      private ImmutableList<InlineSpec> currFileInlineSpecs;
+
       @Override
-      public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-        // Only look inside the referenced class file.
-        return !n.isScript()
-            || n.getSourceFileName().endsWith(classFileName)
-            || classFileName.equals(ALL_CLASS_FILE_NAMES);
+      public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+        if (n.isScript()) {
+          this.currFileInlineSpecs = findMatchingSpecsForFile(n.getSourceFileName());
+          return !this.currFileInlineSpecs.isEmpty();
+        }
+        return true;
       }
 
       @Override
       public void visit(NodeTraversal t, Node n, Node parent) {
-        // If we arrive here then we're already inside the desired script.
-
         // Only look at named function declarations that are fully qualified.
-        final String qualifiedFnName;
         final String fnName;
         switch (n.getToken()) {
           case ASSIGN -> {
@@ -153,22 +174,32 @@ public class J2clPass implements CompilerPass {
             if (!qualifiedNameNode.isGetProp() || !qualifiedNameNode.isQualifiedName()) {
               return;
             }
-
-            qualifiedFnName = qualifiedNameNode.getQualifiedName();
             fnName = qualifiedNameNode.getString();
           }
-          case MEMBER_FUNCTION_DEF -> {
-            qualifiedFnName = NodeUtil.getBestLValueName(n);
-            fnName = n.getString();
-          }
+          case MEMBER_FUNCTION_DEF -> fnName = n.getString();
           default -> {
             return;
           }
         }
-
-        if (fnNamesToInline.contains(fnName)) {
+        for (InlineSpec inlineSpec : currFileInlineSpecs) {
+          if (!inlineSpec.fnNamesToInline.contains(fnName)) {
+            continue;
+          }
           // Then store a reference to it.
-          fnsToInlineByQualifiedName.put(qualifiedFnName, n.getLastChild());
+          InlinableFunction inlinableFunction =
+              new InlinableFunction(n.getLastChild(), inlineSpec.inliningMode);
+          String qualifiedFnName =
+              switch (n.getToken()) {
+                case ASSIGN -> n.getFirstChild().getQualifiedName();
+                case MEMBER_FUNCTION_DEF -> NodeUtil.getBestLValueName(n);
+                default -> throw new AssertionError();
+              };
+          var previousValue = fnsToInlineByQualifiedName.put(qualifiedFnName, inlinableFunction);
+          checkState(
+              previousValue == null,
+              "expected each function to match at most one InliningSpec, but found:\n%s\n%s",
+              previousValue,
+              inlinableFunction);
         }
       }
     }
@@ -189,11 +220,13 @@ public class J2clPass implements CompilerPass {
 
         // ... and that reference a function definition we want to inline
         String qualifiedFnName = qualifiedNameNode.getQualifiedName();
-        String fnName = qualifiedNameNode.getString();
-        Node fnImpl = fnsToInlineByQualifiedName.get(qualifiedFnName);
-        if (fnImpl == null) {
+        InlinableFunction fn = fnsToInlineByQualifiedName.get(qualifiedFnName);
+        if (fn == null) {
           return;
         }
+        String fnName = qualifiedNameNode.getString();
+        Node fnImpl = fn.impl();
+        InliningMode inliningMode = fn.inliningMode();
 
         // Ensure that the function only has a single return statement when direct inlining.
         if (inliningMode == InliningMode.DIRECT
