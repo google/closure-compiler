@@ -50,6 +50,7 @@ final class NestedCompilerRunner {
   private final AbstractCompiler original;
   private final CompilerOptions shadowOptions;
   private final Mode mode;
+  private final PassConfig shadowPassConfig;
 
   enum Mode {
     TRANSPILE_AND_OPTIMIZE,
@@ -57,15 +58,22 @@ final class NestedCompilerRunner {
   }
 
   private NestedCompilerRunner(
-      AbstractCompiler original, CompilerOptions shadowOptions, Mode mode) {
+      AbstractCompiler original,
+      CompilerOptions shadowOptions,
+      Mode mode,
+      PassConfig shadowPassConfig) {
     this.original = original;
     this.shadowOptions = shadowOptions;
     this.mode = mode;
+    this.shadowPassConfig = shadowPassConfig;
   }
 
   static NestedCompilerRunner create(
-      AbstractCompiler original, CompilerOptions shadowOptions, Mode mode) {
-    return new NestedCompilerRunner(original, shadowOptions, mode);
+      AbstractCompiler original,
+      CompilerOptions shadowOptions,
+      Mode mode,
+      PassConfig shadowPassConfig) {
+    return new NestedCompilerRunner(original, shadowOptions, mode, shadowPassConfig);
   }
 
   @CanIgnoreReturnValue
@@ -105,6 +113,7 @@ final class NestedCompilerRunner {
 
     ImmutableList<JSChunk> chunks = createChunks();
     shadowCompiler.initChunks(ImmutableList.of(), chunks, shadowOptions);
+    shadowCompiler.setPassConfig(shadowPassConfig);
     shadowCompiler.parseForCompilation();
   }
 

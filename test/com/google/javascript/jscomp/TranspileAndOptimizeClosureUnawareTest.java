@@ -17,8 +17,10 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerTestCase.srcs;
 import static java.util.stream.Collectors.joining;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
@@ -309,12 +311,11 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
             }).call(globalThis);
             """),
         expected(
-            // TODO: b/830636484 inject $jscomp_inherits as a parameter in the closure unaware fn.
             """
             /** @fileoverview @closureUnaware */
             goog.module("test");
             /** @closureUnaware */
-            (function() {
+            (function(c) {
               /** @constructor */
               var a = function() {};
               a.prototype.method = function() {
@@ -324,10 +325,114 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
               var b = function() {
                 return a.apply(this, arguments) || this;
               };
-              $jscomp_inherits(b, a);
+              c(b, a);
               return new b();
-            }).call(globalThis);
+            }).call(globalThis, $jscomp.inherits);
             """));
+
+    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
+        .containsExactly("es6/util/construct", "es6/util/inherits", "es6/util/arrayfromiterable");
+  }
+
+  @Test
+  public void runtimeLibraryInjection_injectsOnlyWhatsNeededPerScript() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
+
+    test(
+        srcs(
+            closureUnaware("return {...obj};"),
+            closureUnaware("return [...arr];"),
+            closureUnaware(
+                """
+                class Parent {}
+                class Child extends Parent {}
+                return new Child();
+                """)),
+        expected(
+            // Note that Object.assign doesn't need to be injected because it's a polyfill, not a
+            // runtime library field.
+            """
+            /** @fileoverview @closureUnaware */
+            goog.module("test0");
+            /** @closureUnaware */
+            (function() {
+              return Object.assign({}, obj);
+            }).call(undefined);
+            """,
+            """
+            /** @fileoverview @closureUnaware */
+            goog.module("test1");
+            /** @closureUnaware */
+            (function(a) {
+              return [].concat(a(arr));
+            }).call(undefined, $jscomp.arrayFromIterable);
+            """,
+            """
+            /** @fileoverview @closureUnaware */
+            goog.module("test2");
+            /** @closureUnaware */
+            (function(a) {
+              var b = function() {}, c = function() {
+                return b.apply(this, arguments) || this;
+              };
+              a(c, b);
+              return new c();
+            }).call(undefined, $jscomp.inherits);
+            """));
+
+    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
+        .containsExactly(
+            "es6/util/construct",
+            "es6/util/inherits",
+            "es6/util/arrayfromiterable",
+            "es6/object/assign");
+  }
+
+  @Test
+  public void runtimeFieldInjection_injectsAfterExistingParameters() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
+    test(
+        srcs(
+            """
+            /** @fileoverview @closureUnaware */
+            goog.module('test');
+
+            /** @closureUnaware */
+            (function(foo, bar, rest) {
+              return [foo, bar, ...rest];
+            }).call(undefined, 1, 2, [3, 4, 5]);
+            """),
+        expected(
+            """
+            /** @fileoverview @closureUnaware */
+            goog.module("test");
+            /** @closureUnaware */
+            (function(a, b, c, d) {
+              return [a, b].concat(d(c));
+            }).call(undefined, 1, 2, [3, 4, 5], $jscomp.arrayFromIterable);
+            """));
+  }
+
+  @Test
+  public void runtimeFieldInjection_incompatibleWithRestArg() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
+
+    // To make injecting runtime library parameters simpler, assume that closure unaware functions
+    // never have rest parameters.
+    assertThrows(
+        IllegalStateException.class,
+        () ->
+            test(
+                srcs(
+                    """
+                    /** @fileoverview @closureUnaware */
+                    goog.module('test');
+
+                    /** @closureUnaware */
+                    (function(...rest) {
+                      return async function foo() {};
+                    }).call(undefined, 1, 2);
+                    """)));
   }
 
   @Test

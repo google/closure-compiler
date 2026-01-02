@@ -32,6 +32,7 @@ import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.GoogleCodingConvention;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager.RuntimeLibraryMode;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -204,6 +205,50 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
               return exports;
             });
             """);
+  }
+
+  @Test
+  public void testTranspileClosureUnaware_transpilesClassInheritance() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setGeneratePseudoNames(true);
+    options.setClosureUnawareMode(ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION);
+    options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_AND_VALIDATE_FIELDS);
+
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(SourceFile.fromCode("jscomp.js", "var $jscomp;"))
+            .build();
+
+    test(
+        options,
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('a.b');
+        /** @closureUnaware */
+        (function() {
+          class Parent {}
+          class Child extends Parent {}
+          globalThis['a_b'] = [Child];
+        }).call(globalThis);
+        """,
+        """
+        (function($$jscomp_inherits$$) {
+        var $Parent$$ = function() {},
+            $Child$$ = function() {
+              return $Parent$$.apply(this, arguments) || this;
+            };
+          $$jscomp_inherits$$($Child$$, $Parent$$);
+          globalThis.a_b = [$Child$$];
+        }).call(globalThis, $jscomp.inherits);
+        """);
+
+    assertThat(lastCompiler.getRuntimeJsLibManager().getInjectedLibraries())
+        .containsExactly("es6/util/inherits", "es6/util/construct", "es6/util/arrayfromiterable");
   }
 
   @Test
@@ -859,6 +904,70 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     assertThat(
             nodesWithNonJsdocComments.stream().map(n -> n.getNonJSDocComment().getCommentString()))
         .containsExactly("/** hello world! */", "/** @type {string | number} */");
+  }
+
+  @Test
+  public void testOptimizeClosureUnawareCode_preservesOnlyLicenseJsdoc() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setClosureUnawareMode(ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION);
+
+    options.setPreserveNonJSDocComments(true);
+    options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
+
+    // Normally, the RemoveCastNodes would remove all the CAST nodes from the AST before it is ever
+    // serialized into a TypedAST. We don't want to run RemoveCastNodes over closure-unaware code,
+    // so instead this test validates that during parsing we never create CAST nodes to begin with.
+    test(
+        options,
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('a.b');
+        /** @closureUnaware */
+        (function() {
+          /**
+        // This @date tag is ignored - it isn't parsed as JSDoc and doesn't end up in the
+        // license text.
+           * @date 1900-01-01
+           * @license FOO BAR BAZ!
+           */
+          const z = /** hello world! */ (5);
+          const x = /** @type {string | number} */ (5);
+        }).call(globalThis);
+        """,
+        """
+        (function() {}).call(globalThis);
+        """);
+
+    Node script = lastCompiler.getRoot().getSecondChild().getFirstChild();
+    assertNode(script).isScript();
+    assertThat(script.getJSDocInfo()).isNotNull();
+    assertThat(script.getJSDocInfo().getLicense()).isEqualTo(" FOO BAR BAZ!\n");
+
+    Node fn = script.getFirstChild().getFirstFirstChild().getFirstChild();
+    assertNode(fn).isFunction();
+    assertThat(fn.getJSDocInfo()).isNull();
+
+    Node fnBlock = fn.getChildAtIndex(2);
+    assertNode(fnBlock).isBlock();
+
+    // From within the expected closure-unaware code block, we want to ensure that no AST node has
+    // any jsdocinfo or non-jsdoc-comment attached to it.
+    NodeTraversal.builder()
+        .setCompiler(lastCompiler)
+        .setCallback(
+            (NodeTraversal t, Node n, Node parent) -> {
+              var nonJsDocComment = n.getNonJSDocComment();
+              assertThat(nonJsDocComment).isNull();
+
+              JSDocInfo info = n.getJSDocInfo();
+              assertThat(info).isNull();
+            })
+        .traverse(fnBlock);
   }
 
   @Test

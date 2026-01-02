@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.javascript.jscomp.parsing.FeatureCollector;
 import com.google.javascript.rhino.Node;
@@ -46,10 +47,13 @@ class TranspileAndOptimizeClosureUnaware implements CompilerPass {
       return;
     }
 
-    var shadowOptions = ClosureUnawareOptions.convert(original.getOptions());
     setScriptFeaturesets(collector.shadowAsts.values());
+    var shadowOptions = ClosureUnawareOptions.convert(original.getOptions());
+    var shadowPassConfig =
+        new RuntimeLibInjectionPassConfig(
+            shadowOptions, createInjectRuntimeLibrariesPass(collector.shadowAsts.values()));
     NestedCompilerRunner shadowCompiler =
-        NestedCompilerRunner.create(original, shadowOptions, mode);
+        NestedCompilerRunner.create(original, shadowOptions, mode, shadowPassConfig);
 
     initShadowInputs(shadowCompiler, collector.shadowAsts);
     shadowCompiler.compile();
@@ -130,5 +134,46 @@ class TranspileAndOptimizeClosureUnaware implements CompilerPass {
       collector.visitScript(shadowScript);
       shadowScript.putProp(Node.FEATURE_SET, collector.allFeatures());
     }
+  }
+
+  private static final class RuntimeLibInjectionPassConfig extends PassConfig.PassConfigDelegate {
+    private final PassFactory injectRuntimeLibs;
+
+    private RuntimeLibInjectionPassConfig(CompilerOptions options, PassFactory injectRuntimeLibs) {
+      super(new DefaultPassConfig(options));
+      this.injectRuntimeLibs = injectRuntimeLibs;
+    }
+
+    @Override
+    protected PassListBuilder getTranspileOnlyPasses() {
+      var passes = super.getTranspileOnlyPasses();
+      passes.addAfter(injectRuntimeLibs, PassNames.MARK_UNNORMALIZED);
+      return passes;
+    }
+
+    @Override
+    protected PassListBuilder getFinalizations() {
+      var passes = super.getFinalizations();
+      passes.addAfter(injectRuntimeLibs, PassNames.MARK_UNNORMALIZED);
+      return passes;
+    }
+  }
+
+  private PassFactory createInjectRuntimeLibrariesPass(Collection<ShadowAst> shadowAsts) {
+    ImmutableList.Builder<InjectClosureUnawareRuntimeLibraries.ClosureUnawareCallSite> callSites =
+        ImmutableList.builder();
+    for (ShadowAst shadowAst : shadowAsts) {
+      Node closureUnawareFunction =
+          NodeUtil.findPreorder(shadowAst.script(), Node::isFunction, (childToVisit) -> true);
+      callSites.add(
+          new InjectClosureUnawareRuntimeLibraries.ClosureUnawareCallSite(
+              shadowAst.callNode(), closureUnawareFunction));
+    }
+    return PassFactory.builder()
+        .setName("injectClosureUnawareRuntimeLibs")
+        .setInternalFactory(
+            (compiler) ->
+                new InjectClosureUnawareRuntimeLibraries(original, compiler, callSites.build()))
+        .build();
   }
 }

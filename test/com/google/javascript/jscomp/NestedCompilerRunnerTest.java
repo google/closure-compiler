@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -49,7 +50,9 @@ public class NestedCompilerRunnerTest {
   public void emptyInputListSucceeds() {
     original.init(ImmutableList.of(), ImmutableList.of(), options);
 
-    NestedCompilerRunner.create(original, options, Mode.TRANSPILE_AND_OPTIMIZE).compile();
+    NestedCompilerRunner.create(
+            original, options, Mode.TRANSPILE_AND_OPTIMIZE, new DefaultPassConfig(options))
+        .compile();
 
     verifyCompilationSucceeded();
   }
@@ -59,7 +62,8 @@ public class NestedCompilerRunnerTest {
     original.init(ImmutableList.of(), ImmutableList.of(), options);
     Node script = createScript("");
 
-    NestedCompilerRunner.create(original, options, Mode.TRANSPILE_AND_OPTIMIZE)
+    NestedCompilerRunner.create(
+            original, options, Mode.TRANSPILE_AND_OPTIMIZE, new DefaultPassConfig(options))
         .addScript(script, "test")
         .compile();
 
@@ -74,7 +78,8 @@ public class NestedCompilerRunnerTest {
 
     Node script = createScript("console.log(1 + 2)");
 
-    NestedCompilerRunner.create(original, options, Mode.TRANSPILE_AND_OPTIMIZE)
+    NestedCompilerRunner.create(
+            original, options, Mode.TRANSPILE_AND_OPTIMIZE, new DefaultPassConfig(options))
         .addScript(script, "test")
         .compile();
 
@@ -103,7 +108,8 @@ public class NestedCompilerRunnerTest {
             console.log((Math.random() < 0.5 ? new A() : new B()).error());
             """);
 
-    NestedCompilerRunner.create(original, options, Mode.TRANSPILE_AND_OPTIMIZE)
+    NestedCompilerRunner.create(
+            original, options, Mode.TRANSPILE_AND_OPTIMIZE, new DefaultPassConfig(options))
         .addScript(script, "test")
         .compile();
 
@@ -128,7 +134,8 @@ public class NestedCompilerRunnerTest {
             console.log(used);
             """);
 
-    NestedCompilerRunner.create(original, options, Mode.TRANSPILE_AND_OPTIMIZE)
+    NestedCompilerRunner.create(
+            original, options, Mode.TRANSPILE_AND_OPTIMIZE, new DefaultPassConfig(options))
         .addScript(script, "test")
         .compile();
 
@@ -145,7 +152,8 @@ public class NestedCompilerRunnerTest {
     // Use the exponential operator as a very trivial transpilation test case.
     Node script = createScript("const x = 3 ** 4;");
 
-    NestedCompilerRunner.create(original, options, Mode.TRANSPILE_AND_OPTIMIZE)
+    NestedCompilerRunner.create(
+            original, options, Mode.TRANSPILE_AND_OPTIMIZE, new DefaultPassConfig(options))
         .addScript(script, "test")
         .compile();
 
@@ -162,7 +170,8 @@ public class NestedCompilerRunnerTest {
     // Use the exponential operator as a very trivial transpilation test case.
     Node script = createScript("const x = 3 ** 4;");
 
-    NestedCompilerRunner.create(original, options, Mode.TRANSPILE_ONLY)
+    NestedCompilerRunner.create(
+            original, options, Mode.TRANSPILE_ONLY, new DefaultPassConfig(options))
         .addScript(script, "test")
         .compile();
 
@@ -178,7 +187,8 @@ public class NestedCompilerRunnerTest {
 
     Node script = createScript("alert({external: 1, internal: 2});");
 
-    NestedCompilerRunner.create(original, options, Mode.TRANSPILE_AND_OPTIMIZE)
+    NestedCompilerRunner.create(
+            original, options, Mode.TRANSPILE_AND_OPTIMIZE, new DefaultPassConfig(options))
         .addScript(script, "test")
         .compile();
 
@@ -186,8 +196,38 @@ public class NestedCompilerRunnerTest {
     assertNode(script).isEqualTo(parse("alert({external: 1, a: 2})"));
   }
 
-  // TODO: lharker - add a test showing that stack traces are understandable and don't omit the
-  // NestedCompilerRunner thread.
+  @Test
+  public void stackTrace_specifiesInShadowAstCompilation() {
+    PassConfig alwaysThrowsPassConfig =
+        new PassConfig.PassConfigDelegate(new DefaultPassConfig(options)) {
+          @Override
+          public PassListBuilder getOptimizations() {
+            var passes = new PassListBuilder(options);
+            passes.maybeAdd(
+                PassFactory.builder()
+                    .setName("throw")
+                    .setInternalFactory(
+                        (compiler) -> {
+                          throw new AssertionError("foobarbaz");
+                        })
+                    .build());
+            return passes;
+          }
+        };
+    original.init(ImmutableList.of(), ImmutableList.of(), options);
+    var compilerRunner =
+        NestedCompilerRunner.create(
+                original, options, Mode.TRANSPILE_AND_OPTIMIZE, alwaysThrowsPassConfig)
+            .addScript(createScript(""), "test");
+
+    RuntimeException ex = assertThrows(RuntimeException.class, compilerRunner::compile);
+
+    assertThat(ex)
+        .hasMessageThat()
+        .isEqualTo("Exception during compilation: <shadow AST compilation>");
+    assertThat(ex).hasCauseThat().hasMessageThat().isEqualTo("foobarbaz");
+  }
+
   // TODO: lharker - add a test for debug logging.
 
   @Test
@@ -197,7 +237,8 @@ public class NestedCompilerRunnerTest {
 
     Node script = createScript("/** @type {string} */ const x = 0;");
 
-    NestedCompilerRunner.create(original, options, Mode.TRANSPILE_AND_OPTIMIZE)
+    NestedCompilerRunner.create(
+            original, options, Mode.TRANSPILE_AND_OPTIMIZE, new DefaultPassConfig(options))
         .addScript(script, "test")
         .compile();
 

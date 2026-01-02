@@ -170,6 +170,8 @@ public final class DefaultPassConfig extends PassConfig {
     passes.maybeAdd(gatherGettersAndSetters);
 
     TranspilationPasses.addTranspilationPasses(passes, options);
+
+    passes.maybeAdd(markUnnormalized);
     // The transpilation passes may rely on normalize making all variables unique,
     // but we're doing only transpilation, so we want to put back the original variable names
     // wherever we can to meet user expectations.
