@@ -17,8 +17,10 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerTestCase.srcs;
 import static java.util.stream.Collectors.joining;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
@@ -239,6 +241,69 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
     // Hence we cannot remove the seemingly unused `/abc/.match(str)` call.
     // Note that we still remove completely unused regex literals.
     test(closureUnaware("/abc/.match(str); /unused/"), expectedClosureUnaware("/abc/.match(str);"));
+  }
+
+  @Test
+  public void transpilesExponentialOperator_ifTargetingES2015() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
+    test(
+        srcs(closureUnaware("console.log(x ** y);")),
+        expected(expectedClosureUnaware("console.log(Math.pow(x, y));")));
+  }
+
+  @Test
+  public void doesNotTranspileExponentialOperator_ifTargetingES2017() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
+    test(
+        srcs(closureUnaware("console.log(x ** y);")),
+        expected(expectedClosureUnaware("console.log(x ** y);")));
+  }
+
+  @Test
+  public void classInheritance_injectsRequiredRuntimeLibraries() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
+    // TODO: b/830636484 - enable runtime library injection and fix this test.
+    var ex =
+        assertThrows(
+            Exception.class,
+            () ->
+                test(
+                    srcs(
+                        """
+                        /** @fileoverview @closureUnaware */
+                        goog.module('test');
+                        /** @closureUnaware */
+                        (function() {
+                          class Parent {
+                            method() {
+                              return 10;
+                            }
+                          }
+                          class Child extends Parent {}
+                          return new Child();
+                        }).call(globalThis);
+                        """)));
+    assertThat(ex).hasCauseThat().hasMessageThat().contains("NAME $jscomp");
+  }
+
+  @Test
+  public void doesNotAutomaticallyInjectPolyfills() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2019);
+    // Use `globalThis` inside @closureUnaware code. The compiler will typically detect that
+    // `globalThis` is defined in ES2020 so is not present in the ES2019 output, and then add
+    // a polyfill for `globalThis`.
+    // But we do not support this automatic polyfill detection in @closureUnaware code, as it's
+    // more difficult to statically analyze. (Particularly in the case of polyfilled methods).
+    testSame(
+        srcs(
+            """
+            /** @fileoverview @closureUnaware */
+            goog.module('test');
+            /** @closureUnaware */
+            (function() {
+              return globalThis.FOO;
+            }).call(globalThis);
+            """));
   }
 
   private static String loadFile(Path path) {

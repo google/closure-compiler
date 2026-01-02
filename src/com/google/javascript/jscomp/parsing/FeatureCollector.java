@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,6 +36,21 @@ public final class FeatureCollector {
 
   public FeatureSet allFeatures() {
     return scriptFeatures;
+  }
+
+  public void visitScript(Node script) {
+    ArrayList<FeatureContext> emptyContext = new ArrayList<>();
+    emptyContext.add(FeatureContext.NONE);
+    this.visitRecursive(emptyContext, script);
+  }
+
+  private void visitRecursive(List<FeatureContext> contextStack, Node node) {
+    var newContext = visitSingleNode(contextStack, node);
+    contextStack.add(newContext);
+    for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
+      visitRecursive(contextStack, child);
+    }
+    contextStack.remove(contextStack.size() - 1);
   }
 
   /**

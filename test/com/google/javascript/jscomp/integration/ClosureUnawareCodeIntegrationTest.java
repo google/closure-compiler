@@ -134,7 +134,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
   }
 
   @Test
-  public void testOptimizeClosureUnawareCode_doesNotRunTranspilationYet() {
+  public void testOptimizeClosureUnawareCode_runsTranspilation() {
     CompilerOptions options = createCompilerOptions();
     options.setGeneratePseudoNames(true);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -157,11 +157,9 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
         }).call(globalThis);
         exports = globalThis['a_b'];
         """,
-        // TODO: b/421971366 turn on class transpilation.
         """
         (function() {
-          class $Clazz$$ {}
-          globalThis.a_b = $Clazz$$;
+          globalThis.a_b = function() {};
         }).call(globalThis);
         """);
   }

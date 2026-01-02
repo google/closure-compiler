@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import java.nio.file.Path;
 
 class ClosureUnawareOptions {
@@ -41,11 +41,12 @@ class ClosureUnawareOptions {
   }
 
   private void setTranspilationOptions() {
-    // TODO: b/421971366 add transpilation support.
-    shadowOptions.setOutputFeatureSet(FeatureSet.ES_NEXT);
-
-    // currently we have no plans to automatically detect required polyfills.
-    shadowOptions.setRewritePolyfills(false);
+    // TODO: b/421971366 - look into adding an option to use Reflect.construct for subclass
+    // transpilation, in the
+    // case we can't prove it's not a subclass of an ES6 class (not being transpiled)
+    shadowOptions.setRewritePolyfills(false); // for now, we ignore polyfills that may be needed.
+    shadowOptions.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.NO_OP);
+    shadowOptions.setOutputFeatureSet(original.getOutputFeatureSet());
   }
 
   private void setSafeOptimizationAssumptions() {

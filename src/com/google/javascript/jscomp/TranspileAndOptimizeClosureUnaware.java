@@ -19,8 +19,9 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.FeatureCollector;
 import com.google.javascript.rhino.Node;
+import java.util.Collection;
 
 /**
  * Runs a new Compiler instance over all @closureUnaware code (i.e. "shadow roots") in the AST.
@@ -44,6 +45,7 @@ class TranspileAndOptimizeClosureUnaware implements CompilerPass {
     }
 
     var shadowOptions = ClosureUnawareOptions.convert(original.getOptions());
+    setScriptFeaturesets(collector.shadowAsts.values());
     // TODO: b/421971366 - enable configuring Mode.TRANSPILE_ONLY.
     NestedCompilerRunner shadowCompiler =
         NestedCompilerRunner.create(
@@ -102,10 +104,6 @@ class TranspileAndOptimizeClosureUnaware implements CompilerPass {
       for (ShadowAst shadowAst : perFileInputs.get(sourceFile)) {
         String uniqueName = sourceFile.getName() + ".shadow" + indexInFile++;
         shadowCompiler.addScript(shadowAst.script().detach(), uniqueName);
-
-        // TODO: b/421971366 - attach the correct FeatureSet, either here or possibly during
-        // parsing.
-        shadowAst.script().putProp(Node.FEATURE_SET, FeatureSet.BARE_MINIMUM);
       }
     }
   }
@@ -122,6 +120,15 @@ class TranspileAndOptimizeClosureUnaware implements CompilerPass {
       // Remove traces of the shadow compilation.
       script.setInputId(null);
       script.setStaticSourceFile(null);
+    }
+  }
+
+  private void setScriptFeaturesets(Collection<ShadowAst> inputs) {
+    for (ShadowAst shadowAst : inputs) {
+      Node shadowScript = shadowAst.script();
+      FeatureCollector collector = new FeatureCollector();
+      collector.visitScript(shadowScript);
+      shadowScript.putProp(Node.FEATURE_SET, collector.allFeatures());
     }
   }
 }

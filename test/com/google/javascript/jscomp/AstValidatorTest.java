@@ -1578,6 +1578,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @SuppressWarnings("MustBeClosedChecker")
   public void testUnresolvedTypesAreBanned() {
     Compiler compiler = createCompiler();
+    compiler.initOptions(getOptions());
     JSTypeRegistry registry = compiler.getTypeRegistry();
     JSTypeResolver.Closer closer = registry.getResolver().openForDefinition();
 
@@ -1684,7 +1685,9 @@ public final class AstValidatorTest extends CompilerTestCase {
    * @return list of violations
    */
   private List<String> doCheck(Node n, Check level) {
-    AstValidator validator = createValidator(createCompiler());
+    Compiler compiler = createCompiler();
+    compiler.initOptions(getOptions());
+    AstValidator validator = createValidator(compiler);
     switch (level) {
       case SCRIPT -> validator.validateScript(n);
       case STATEMENT -> validator.validateStatement(n);
@@ -1787,8 +1790,14 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectInvalid(
         myFunction,
         Check.EXPRESSION,
-        "Type information missing\nmyFunction",
+        """
+        Type information missing
+        /** @requireInlining */ myFunction\
+        """,
         "@requireInlining node failed to be inlined.",
-        "Type information missing\nmyFunction");
+        """
+        Type information missing
+        /** @requireInlining */ myFunction\
+        """);
   }
 }

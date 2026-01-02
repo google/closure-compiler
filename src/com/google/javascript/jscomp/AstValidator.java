@@ -68,6 +68,8 @@ public final class AstValidator implements CompilerPass {
   /** Validate that all required inlinings were performed. */
   private final boolean shouldValidateRequiredInlinings;
 
+  private final boolean shouldValidateFeaturesInClosureUnaware;
+
   public AstValidator(
       AbstractCompiler compiler,
       ViolationHandler handler,
@@ -77,6 +79,9 @@ public final class AstValidator implements CompilerPass {
     this.violationHandler = handler;
     this.isScriptFeatureValidationEnabled = validateScriptFeatures;
     this.shouldValidateRequiredInlinings = shouldValidateRequiredInlinings;
+    this.shouldValidateFeaturesInClosureUnaware =
+        compiler.getOptions().getClosureUnawareMode()
+            == CompilerOptions.ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION;
   }
 
   public AstValidator(AbstractCompiler compiler) {
@@ -447,7 +452,7 @@ public final class AstValidator implements CompilerPass {
    *     a BLOCK or IF)
    */
   private void validateTypeInformation(Node n) {
-    if (n.isClosureUnawareCode()) {
+    if (n.getIsInClosureUnawareSubtree()) {
       // We don't expect closure-unaware code to have type information.
       // TODO: b/321233583 - Maybe this should be a separate validation step, to ensure that nothing
       // tries to infer type information where we are mostly unsure of it?
@@ -2119,10 +2124,11 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateFeature(Feature feature, Node n) {
-    if (n.getIsInClosureUnawareSubtree()) {
-      // Closure-unaware code is currently hidden from transpilation passes in the compiler, so it
+    if (!shouldValidateFeaturesInClosureUnaware && n.getIsInClosureUnawareSubtree()) {
+      // Closure-unaware code is currently hidden from transpilation passes in the compiler when
+      // options.setClosureUnawareMode(Mode.PASS_THROUGH) is enabled, so the AST
       // might still contain features that should have been transpiled.
-      // TODO: b/321233583 - Once JSCompiler can transpile closure-unaware code, remove this
+      // TODO: b/321233583 - Once JSCompiler always transpiles closure-unaware code, remove this
       // early-return to validate that all closure-unaware code is transpiled properly.
       return;
     }
