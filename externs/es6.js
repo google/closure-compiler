@@ -810,6 +810,9 @@ Int8Array.from = function(source, mapFn, thisArg) {};
  */
 Int8Array.of = function(var_args) {};
 
+/** @override */
+Int8Array.prototype[Symbol.iterator] = function() {};
+
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
@@ -847,6 +850,9 @@ Uint8Array.from = function(source, mapFn, thisArg) {};
  */
 Uint8Array.of = function(var_args) {};
 
+/** @override */
+Uint8Array.prototype[Symbol.iterator] = function() {};
+
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
@@ -883,6 +889,9 @@ Uint8ClampedArray.from = function(source, mapFn, thisArg) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/of
  */
 Uint8ClampedArray.of = function(var_args) {};
+
+/** @override */
+Uint8ClampedArray.prototype[Symbol.iterator] = function() {};
 
 
 /**
@@ -930,6 +939,9 @@ Int16Array.from = function(source, mapFn, thisArg) {};
  */
 Int16Array.of = function(var_args) {};
 
+/** @override */
+Int16Array.prototype[Symbol.iterator] = function() {};
+
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
@@ -966,6 +978,9 @@ Uint16Array.from = function(source, mapFn, thisArg) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/of
  */
 Uint16Array.of = function(var_args) {};
+
+/** @override */
+Uint16Array.prototype[Symbol.iterator] = function() {};
 
 
 /**
@@ -1004,6 +1019,9 @@ Int32Array.from = function(source, mapFn, thisArg) {};
  */
 Int32Array.of = function(var_args) {};
 
+/** @override */
+Int32Array.prototype[Symbol.iterator] = function() {};
+
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
@@ -1041,6 +1059,9 @@ Uint32Array.from = function(source, mapFn, thisArg) {};
  */
 Uint32Array.of = function(var_args) {};
 
+/** @override */
+Uint32Array.prototype[Symbol.iterator] = function() {};
+
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
@@ -1048,7 +1069,7 @@ Uint32Array.of = function(var_args) {};
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float16Array
@@ -1074,6 +1095,10 @@ Float16Array.from = function(source, mapFn, thisArg) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/of
  */
 Float16Array.of = function(var_args) {};
+
+/** @override */
+Float16Array.prototype[Symbol.iterator] = function() {};
+
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
@@ -1111,6 +1136,9 @@ Float32Array.from = function(source, mapFn, thisArg) {};
  */
 Float32Array.of = function(var_args) {};
 
+/** @override */
+Float32Array.prototype[Symbol.iterator] = function() {};
+
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
@@ -1147,6 +1175,9 @@ Float64Array.from = function(source, mapFn, thisArg) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/of
  */
 Float64Array.of = function(var_args) {};
+
+/** @override */
+Float64Array.prototype[Symbol.iterator] = function() {};
 
 
 /**
@@ -1219,6 +1250,10 @@ BigInt64Array.prototype.toSorted = function(compareFn) {};
  */
 BigInt64Array.prototype.with = function(index, value) {};
 
+/** @override */
+BigInt64Array.prototype[Symbol.iterator] = function() {};
+
+
 /**
  * @param {number|ArrayBufferView|Array<bigint>|ArrayBuffer|SharedArrayBuffer}
  *     lengthOrArrayOrBuffer
@@ -1288,6 +1323,10 @@ BigUint64Array.prototype.toSorted = function(compareFn) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/with
  */
 BigUint64Array.prototype.with = function(index, value) {};
+
+/** @override */
+BigUint64Array.prototype[Symbol.iterator] = function() {};
+
 
 /**
  * @param {ArrayBuffer|SharedArrayBuffer} buffer
