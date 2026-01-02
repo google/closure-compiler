@@ -38,12 +38,13 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new TranspileAndOptimizeClosureUnaware(compiler);
+    return new TranspileAndOptimizeClosureUnaware(compiler, mode);
   }
 
   private int inputCount;
   private int outputCount;
   private Consumer<CompilerOptions> extraOptions;
+  private NestedCompilerRunner.Mode mode;
 
   @Before
   public void setup() {
@@ -51,6 +52,7 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
     this.inputCount = 0;
     this.outputCount = 0;
     this.extraOptions = options -> {};
+    this.mode = NestedCompilerRunner.Mode.TRANSPILE_AND_OPTIMIZE;
   }
 
   @Override
@@ -257,6 +259,35 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
     test(
         srcs(closureUnaware("console.log(x ** y);")),
         expected(expectedClosureUnaware("console.log(x ** y);")));
+  }
+
+  @Test
+  public void transpileOnlyMode_transpilesExponentialOperator_ifTargettingES2015() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
+    this.mode = NestedCompilerRunner.Mode.TRANSPILE_ONLY;
+    disableCompareJsDoc();
+    test(
+        srcs(closureUnaware("console.log(x ** y);")),
+        expected(expectedClosureUnaware("console.log(Math.pow(x, y));")));
+  }
+
+  @Test
+  public void transpileOnlyMode_doesNotTranspileExponentialOperator_ifTargetingES2017() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
+    this.mode = NestedCompilerRunner.Mode.TRANSPILE_ONLY;
+    disableCompareJsDoc();
+    test(
+        srcs(closureUnaware("console.log(x ** y);")),
+        expected(expectedClosureUnaware("console.log(x ** y);")));
+  }
+
+  @Test
+  public void transpileOnlyMode_doesNotRunConstantFolding() {
+    this.mode = NestedCompilerRunner.Mode.TRANSPILE_ONLY;
+    disableCompareJsDoc();
+    test(
+        srcs(closureUnaware("console.log(1 + 2);")),
+        expected(expectedClosureUnaware("console.log(1 + 2);")));
   }
 
   @Test

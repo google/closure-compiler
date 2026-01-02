@@ -165,6 +165,48 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
   }
 
   @Test
+  public void testTranspileOnlyClosureUnawareCode_runsTranspilation() {
+    CompilerOptions options = createCompilerOptions();
+    options.setGeneratePseudoNames(true);
+    options.setSkipNonTranspilationPasses(true);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setClosureUnawareMode(ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION);
+
+    Compiler lastCompiler =
+        compile(
+            options,
+            """
+            /**
+             * @fileoverview
+             * @closureUnaware
+             */
+            goog.module('a.b');
+            /** @closureUnaware */
+            (function() {
+              class Clazz {}
+              globalThis['a_b'] = Clazz;
+            }).call(globalThis);
+            exports = globalThis['a_b'];
+            """);
+
+    assertThat(lastCompiler.toSource())
+        .isEqualTo(
+            """
+            goog.loadModule(function(exports) {
+              "use strict";
+              goog.module("a.b");
+              (function() {
+                var Clazz = function() {
+                };
+                globalThis["a_b"] = Clazz;
+              }).call(globalThis);
+              exports = globalThis["a_b"];
+              return exports;
+            });
+            """);
+  }
+
+  @Test
   public void testNoOptimizeClosureUnawareCode_transpilationAndWhitespaceOnly() {
     CompilerOptions options = createCompilerOptions();
     options.setSkipNonTranspilationPasses(true);

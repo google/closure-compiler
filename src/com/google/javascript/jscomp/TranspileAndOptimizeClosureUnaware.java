@@ -31,9 +31,11 @@ import java.util.Collection;
  */
 class TranspileAndOptimizeClosureUnaware implements CompilerPass {
   private final AbstractCompiler original;
+  private final NestedCompilerRunner.Mode mode;
 
-  TranspileAndOptimizeClosureUnaware(AbstractCompiler original) {
+  TranspileAndOptimizeClosureUnaware(AbstractCompiler original, NestedCompilerRunner.Mode mode) {
     this.original = original;
+    this.mode = mode;
   }
 
   @Override
@@ -46,10 +48,8 @@ class TranspileAndOptimizeClosureUnaware implements CompilerPass {
 
     var shadowOptions = ClosureUnawareOptions.convert(original.getOptions());
     setScriptFeaturesets(collector.shadowAsts.values());
-    // TODO: b/421971366 - enable configuring Mode.TRANSPILE_ONLY.
     NestedCompilerRunner shadowCompiler =
-        NestedCompilerRunner.create(
-            original, shadowOptions, NestedCompilerRunner.Mode.TRANSPILE_AND_OPTIMIZE);
+        NestedCompilerRunner.create(original, shadowOptions, mode);
 
     initShadowInputs(shadowCompiler, collector.shadowAsts);
     shadowCompiler.compile();

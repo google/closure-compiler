@@ -148,6 +148,11 @@ public final class DefaultPassConfig extends PassConfig {
 
     TranspilationPasses.addTranspilationRuntimeLibraries(passes);
 
+    if (options.getClosureUnawareMode()
+        == CompilerOptions.ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION) {
+      passes.maybeAdd(transpileOnlyClosureUnaware);
+    }
+
     if (options.needsTranspilationFrom(ES2015) && options.getRewritePolyfills()) {
       if (options.getIsolatePolyfills()) {
         throw new IllegalStateException("Polyfill isolation cannot be used in transpileOnly mode");
@@ -2973,10 +2978,22 @@ public final class DefaultPassConfig extends PassConfig {
                   })
           .build();
 
+  private final PassFactory transpileOnlyClosureUnaware =
+      PassFactory.builder()
+          .setName("TranspileOnlyClosureUnaware")
+          .setInternalFactory(
+              (compiler) ->
+                  new TranspileAndOptimizeClosureUnaware(
+                      compiler, NestedCompilerRunner.Mode.TRANSPILE_ONLY))
+          .build();
+
   private final PassFactory transpileAndOptimizeClosureUnaware =
       PassFactory.builder()
           .setName("TranspileAndOptimizeClosureUnaware")
-          .setInternalFactory((compiler) -> new TranspileAndOptimizeClosureUnaware(compiler))
+          .setInternalFactory(
+              (compiler) ->
+                  new TranspileAndOptimizeClosureUnaware(
+                      compiler, NestedCompilerRunner.Mode.TRANSPILE_AND_OPTIMIZE))
           .build();
 
   private static PreconditionResult requirePropertiesAreStaticallyAnalyzable(
