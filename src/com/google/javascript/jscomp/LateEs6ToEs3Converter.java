@@ -76,10 +76,22 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     if (n.isScript()) {
-      // For all scripts, initialize the injection point to be top of the script
-      templateLitInsertionPoint = n.getFirstChild();
+      templateLitInsertionPoint = findTemplateLitInsertionPoint(n);
     }
     return true;
+  }
+
+  private static Node findTemplateLitInsertionPoint(Node script) {
+    if (script.getIsInClosureUnawareSubtree()) {
+      // For all closure-unaware scripts, initialize the injection point within the closure
+      // aware function.
+      Node closureUnawareBlock = NodeUtil.findClosureUnawareScriptRoot(script);
+      return NodeUtil.getInsertionPointAfterAllInnerFunctionDeclarations(closureUnawareBlock);
+    }
+    // For all other scripts, initialize the injection point to be top of the script. The spec
+    // requires a single unique array per template literal, so for a template literal in a function
+    // e.g. it would be incorrect to initialize a new array per every function call.
+    return script.getFirstChild();
   }
 
   @Override

@@ -822,6 +822,22 @@ public final class NodeUtil {
   }
 
   /**
+   * Returns the closureUnaware function body within a script modelling a shadow AST
+   *
+   * <p>TranspileAndOptimizeClosureUnaware pass models each @closureUnaware block as a function
+   * body, and will throw a runtime exception if any pass inserts new code outside that function
+   * body. So we sometimes need to map from an actual script node to the
+   * corresponding @closureUnaware script-esque block.
+   *
+   * <p>TODO: lharker - if we end up needing this special logic often, consider instead making
+   * TranspileAndOptimizeclosureUnaware support inserting code at the script level.
+   */
+  static Node findClosureUnawareScriptRoot(Node script) {
+    checkArgument(script.isScript() && script.getIsInClosureUnawareSubtree(), script);
+    return NodeUtil.findPreorder(script, Node::isBlock, (c) -> true);
+  }
+
+  /**
    * Returns the node within the given block at which something can be inserted such that it's after
    * all inner function declarations in that block. We want this because normalization expects all
    * inner function declarations to be hoisted. If there's not good insertion point (e.g. the block

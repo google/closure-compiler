@@ -455,6 +455,46 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
             """));
   }
 
+  @Test
+  public void taggedTemplateLitTranspilation() {
+    extraOptions = (options) -> options.setGeneratePseudoNames(true);
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
+
+    test(
+        srcs(
+            closureUnaware(
+                """
+                function tag(strings, ...values) {
+                  return {strings, values};
+                }
+                tag`a${42}b`;
+                tag`a${42}b`; // identical template lit
+                tag`a${-42}b`; // identical template strings, different substitution content
+                """)),
+        expected(
+            """
+            /** @fileoverview @closureUnaware */
+            goog.module('test0');
+            /** @closureUnaware */
+            (function($$jscomp_getRestArguments$$, $$jscomp_createTemplateTagFirstArg$$) {
+              function $tag$$($strings$$) {
+                var $values$$ = $$jscomp_getRestArguments$$.apply(1, arguments);
+                return {strings:$strings$$, values:$values$$};
+              }
+              /** @noinline */
+              var $$jscomp$templatelit$m854121055$0$$ =
+                      $$jscomp_createTemplateTagFirstArg$$(["a", "b"]),
+                  $$jscomp$templatelit$m854121055$1$$ =
+                      $$jscomp_createTemplateTagFirstArg$$(["a", "b"]),
+                  $$jscomp$templatelit$m854121055$2$$ =
+                      $$jscomp_createTemplateTagFirstArg$$(["a", "b"]);
+              $tag$$($$jscomp$templatelit$m854121055$0$$, 42);
+              $tag$$($$jscomp$templatelit$m854121055$1$$, 42);
+              $tag$$($$jscomp$templatelit$m854121055$2$$, -42);
+            }).call(undefined, $jscomp.getRestArguments, $jscomp.createTemplateTagFirstArg);
+            """));
+  }
+
   private static String loadFile(Path path) {
     try (Stream<String> lines = Files.lines(path)) {
       return lines.collect(joining("\n"));
