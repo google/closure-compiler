@@ -17,10 +17,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerTestCase.srcs;
 import static java.util.stream.Collectors.joining;
-import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
@@ -293,28 +291,43 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
   @Test
   public void classInheritance_injectsRequiredRuntimeLibraries() {
     setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
-    // TODO: b/830636484 - enable runtime library injection and fix this test.
-    var ex =
-        assertThrows(
-            Exception.class,
-            () ->
-                test(
-                    srcs(
-                        """
-                        /** @fileoverview @closureUnaware */
-                        goog.module('test');
-                        /** @closureUnaware */
-                        (function() {
-                          class Parent {
-                            method() {
-                              return 10;
-                            }
-                          }
-                          class Child extends Parent {}
-                          return new Child();
-                        }).call(globalThis);
-                        """)));
-    assertThat(ex).hasCauseThat().hasMessageThat().contains("NAME $jscomp");
+
+    test(
+        srcs(
+            """
+            /** @fileoverview @closureUnaware */
+            goog.module('test');
+            /** @closureUnaware */
+            (function() {
+              class Parent {
+                method() {
+                  return 10;
+                }
+              }
+              class Child extends Parent {}
+              return new Child();
+            }).call(globalThis);
+            """),
+        expected(
+            // TODO: b/830636484 inject $jscomp_inherits as a parameter in the closure unaware fn.
+            """
+            /** @fileoverview @closureUnaware */
+            goog.module("test");
+            /** @closureUnaware */
+            (function() {
+              /** @constructor */
+              var a = function() {};
+              a.prototype.method = function() {
+                return 10;
+              };
+              /** @constructor */
+              var b = function() {
+                return a.apply(this, arguments) || this;
+              };
+              $jscomp_inherits(b, a);
+              return new b();
+            }).call(globalThis);
+            """));
   }
 
   @Test

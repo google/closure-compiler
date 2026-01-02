@@ -37,6 +37,7 @@ import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -2074,6 +2075,29 @@ public class AstFactoryTest {
 
     // Then
     assertNode(result).matchesQualifiedName("$jscomp.global");
+  }
+
+  @Test
+  public void testCreateRuntimeField_inExternMode_succeeds_andUsesUnderscoredName() {
+    // Given
+    Node externs = IR.script();
+    externs.setStaticSourceFile(SourceFile.fromCode("externs.js", "", SourceKind.EXTERN));
+    this.runtimeJsLibManager =
+        RuntimeJsLibManager.create(
+            RuntimeJsLibManager.RuntimeLibraryMode.EXTERN_FIELD_NAMES,
+            new TestResourceProvider(),
+            compiler.getChangeTracker(),
+            () -> externs);
+    AstFactory astFactory = createTestAstFactoryWithoutTypes();
+    StaticScope scope = new MapBasedScope(ImmutableMap.of());
+    RuntimeJsLibManager.JsLibField field = runtimeJsLibManager.getJsLibField("$jscomp.global");
+    runtimeJsLibManager.injectLibForField("$jscomp.global");
+
+    // When
+    var result = astFactory.createQName(scope, field);
+
+    // Then
+    assertNode(result).matchesName("$jscomp_global");
   }
 
   @Test

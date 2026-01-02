@@ -781,14 +781,17 @@ final class AstFactory {
     String qname = field.assertInjected().qualifiedName();
     List<String> parts = DOT_SPLITTER.splitToList(qname);
     String baseName = checkNotNull(Iterables.getFirst(parts, null));
-    checkState(baseName.equals("$jscomp"), "Unexpected Field name %s", baseName);
-    Node baseNameNode = createJscomp();
-    setJSTypeOrColor(type(unknownType, StandardColors.UNKNOWN), baseNameNode);
+    checkState(baseName.startsWith("$jscomp"), "Unexpected Field name %s", baseName);
+
+    Node baseNameNode =
+        baseName.equals("$jscomp")
+            ? createJscomp()
+            : createName(baseName, type(unknownType, StandardColors.UNKNOWN));
     if (lifeCycleStage.isNormalized()) {
       baseNameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     }
     Iterable<String> propertyNames = Iterables.skip(parts, 1);
-    return createQName(scope, "$jscomp", baseNameNode, propertyNames);
+    return createQName(scope, baseName, baseNameNode, propertyNames);
   }
 
   Node createQNameWithUnknownType(String qname) {

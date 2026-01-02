@@ -45,7 +45,14 @@ class ClosureUnawareOptions {
     // transpilation, in the
     // case we can't prove it's not a subclass of an ES6 class (not being transpiled)
     shadowOptions.setRewritePolyfills(false); // for now, we ignore polyfills that may be needed.
-    shadowOptions.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.NO_OP);
+    switch (original.getRuntimeLibraryMode()) {
+      case NO_OP ->
+          shadowOptions.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.NO_OP);
+      case RECORD_ONLY, RECORD_AND_VALIDATE_FIELDS, INJECT ->
+          shadowOptions.setRuntimeLibraryMode(
+              RuntimeJsLibManager.RuntimeLibraryMode.EXTERN_FIELD_NAMES);
+      case EXTERN_FIELD_NAMES -> throw new AssertionError();
+    }
     shadowOptions.setOutputFeatureSet(original.getOutputFeatureSet());
   }
 

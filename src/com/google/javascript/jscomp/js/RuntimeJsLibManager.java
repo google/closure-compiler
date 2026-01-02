@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.js;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -27,6 +28,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.ChangeTracker;
 import com.google.javascript.jscomp.resources.ResourceLoader;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -61,6 +63,13 @@ public final class RuntimeJsLibManager {
     // inject a runtime library, and will also validate injection in JsLibField::assertInjected, but
     // does not modify the AST.
     RECORD_AND_VALIDATE_FIELDS,
+    // for @closureUnaware nested compilation. When asked to inject a field, the compiler adds an
+    // @extern definition of the field name to prevent misoptimization, and uses a different
+    // identifier from the original uncompiled field name.
+    // The RuntimeJsLibManager is not responsible for actually defining the external field name
+    // definitions; the code using EXTERN_FIELD_NAMES mode must enure that everything field from
+    // getExternedFields() is actually loaded at runtime.
+    EXTERN_FIELD_NAMES,
   }
 
   /** Loads /js resources into AST format */
@@ -155,6 +164,18 @@ public final class RuntimeJsLibManager {
     return ImmutableList.copyOf(injectedLibs);
   }
 
+  /**
+   * Returns a list of all fields previously injected, via one of the other methods on this class.
+   */
+  public ImmutableList<ExternedField> getExternedFields() {
+    if (this.mode != RuntimeLibraryMode.EXTERN_FIELD_NAMES) {
+      return ImmutableList.of();
+    }
+    return internedFields.values().stream()
+        .filter(InternalField::isInjected)
+        .collect(toImmutableList());
+  }
+
   private InternalField createField(String fieldName) {
     checkArgument(!fieldName.isEmpty(), fieldName);
 
@@ -166,27 +187,43 @@ public final class RuntimeJsLibManager {
 
     String resourceName =
         checkNotNull(FieldsTable.INSTANCE.get(propName), "Cannot find definition of %s", fieldName);
-    // TODO: b/421971366 - allow @closureUnaware transpilation to use a different local name for
-    // fields.
-    return new InternalField(resourceName, fieldName);
+
+    String compiledName =
+        switch (mode) {
+          case EXTERN_FIELD_NAMES -> fieldName.replace('.', '_');
+          case NO_OP, RECORD_ONLY, RECORD_AND_VALIDATE_FIELDS, INJECT -> fieldName;
+        };
+
+    return new InternalField(resourceName, compiledName, fieldName);
   }
 
   /**
    * A $jscomp.* field (could be a method, class, or any arbitrary value) that exists in some
    * runtime library under the js/ directory.
    */
-  private final class InternalField implements InjectedJsLibField {
+  private final class InternalField implements ExternedField {
     /** The file containing this field, e.g. "es6/generator". */
     private final String resourceName;
 
-    /** The name by which compiler passes should refer to this field. */
+    /**
+     * The name by which compiler passes should refer to this field, e.g. `$jscomp.inherits` or
+     * `$jscomp_inherits`.
+     */
     private final String qualifiedName;
+
+    /** The original fully qualified name of this field, e.g. `$jscomp.inherits`. */
+    private final String uncompiledName;
 
     private boolean injected = false;
 
-    private InternalField(String resourceName, String qualifiedName) {
+    private InternalField(String resourceName, String qualifiedName, String uncompiledName) {
       this.resourceName = resourceName;
       this.qualifiedName = qualifiedName;
+      this.uncompiledName = uncompiledName;
+    }
+
+    private boolean isInjected() {
+      return this.injected;
     }
 
     private void markInjected() {
@@ -198,8 +235,8 @@ public final class RuntimeJsLibManager {
     public InternalField assertInjected() {
       switch (mode) {
         case NO_OP, RECORD_ONLY -> {}
-        case RECORD_AND_VALIDATE_FIELDS, INJECT ->
-            checkState(this.injected, "Field %s is not injected", this.qualifiedName);
+        case RECORD_AND_VALIDATE_FIELDS, INJECT, EXTERN_FIELD_NAMES ->
+            checkState(this.injected, "Field %s is not injected", this.uncompiledName);
       }
       return this;
     }
@@ -214,12 +251,22 @@ public final class RuntimeJsLibManager {
 
     @Override
     public String toString() {
-      return Strings.lenientFormat("Field<%s, %s>", qualifiedName, resourceName);
+      return Strings.lenientFormat("Field<%s, %s>", uncompiledName, resourceName);
     }
 
     @Override
     public String qualifiedName() {
       return this.qualifiedName;
+    }
+
+    @Override
+    public String uncompiledName() {
+      return this.uncompiledName;
+    }
+
+    @Override
+    public String resourceName() {
+      return this.resourceName;
     }
   }
 
@@ -245,6 +292,8 @@ public final class RuntimeJsLibManager {
   public interface JsLibField {
     boolean matches(Node node);
 
+    String resourceName();
+
     InjectedJsLibField assertInjected();
   }
 
@@ -256,13 +305,40 @@ public final class RuntimeJsLibManager {
    * to prevent code from creating new AST references to a field that's not actually injected (yet).
    */
   public interface InjectedJsLibField extends JsLibField {
+    /** Returns the name of the field as it is available to the compiler. */
     String qualifiedName();
+  }
+
+  /**
+   * A {@link InjectedJsLibField} that was injected in {@link RuntimeLibraryMode#EXTERN_FIELD_NAMES}
+   * mode, and so has both a regular "qualified name" by which transpilation passes should refer to
+   * it - this is the externed name - but also provides the uncompiled, raw name of the field.
+   *
+   * <p>Only {@link ExternedField} instances provide access to the uncompiled name. Most use sites
+   * should use the compiled/qualified name, which may or may not equal the uncompiled name. So to
+   * try and minimize confusion, we only expose the uncompiled name when this is actually an
+   * external field injection.
+   */
+  public interface ExternedField extends InjectedJsLibField {
+
+    /** Returns the uncompiled name of the field, as it is seen in the raw runtime lib. */
+    String uncompiledName();
   }
 
   /** Injects the runtime library that defines the given $jscomp.* field. */
   public void injectLibForField(String fieldName) {
     InternalField field = getJsLibFieldInternal(fieldName);
+    if (field.isInjected()) {
+      return; // already done.
+    }
     field.markInjected();
+    if (this.mode == RuntimeLibraryMode.EXTERN_FIELD_NAMES) {
+      Node externRoot = nodeForCodeInsertion.get();
+      checkState(externRoot.isFromExterns(), externRoot);
+      Node declaration = IR.var(IR.name(field.qualifiedName()));
+      declaration.getFirstChild().putBooleanProp(Node.IS_CONSTANT_NAME, true);
+      externRoot.addChildToBack(declaration);
+    }
     ensureLibraryInjected(field.resourceName, /* force= */ false);
   }
 
@@ -287,7 +363,7 @@ public final class RuntimeJsLibManager {
         case NO_OP -> {
           return lastInjectedLibrary;
         }
-        case RECORD_ONLY, RECORD_AND_VALIDATE_FIELDS -> {
+        case RECORD_ONLY, RECORD_AND_VALIDATE_FIELDS, EXTERN_FIELD_NAMES -> {
           this.recordLibraryInjected(resourceName);
           return lastInjectedLibrary;
         }

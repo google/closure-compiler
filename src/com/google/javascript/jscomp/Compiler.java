@@ -842,7 +842,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             options.getRuntimeLibraryMode(),
             this::loadResourceContents,
             changeTracker,
-            this::getNodeForRuntimeCodeInsertion);
+            options.getRuntimeLibraryMode()
+                    == RuntimeJsLibManager.RuntimeLibraryMode.EXTERN_FIELD_NAMES
+                ? this::getSynthesizedExternsRoot
+                : this::getNodeForRuntimeCodeInsertion);
   }
 
   @Override
@@ -3936,6 +3939,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     scriptNodeByFilename.put(input.getSourceFile().getName(), root);
 
     return input;
+  }
+
+  private Node getSynthesizedExternsRoot() {
+    CompilerInput externsInput = getSynthesizedExternsInput();
+    return externsInput.getAstRoot(this);
   }
 
   @Override

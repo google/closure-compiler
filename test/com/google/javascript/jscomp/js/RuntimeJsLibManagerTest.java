@@ -20,12 +20,15 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static org.junit.Assert.assertThrows;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.ChangeTracker;
 import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.js.RuntimeJsLibManager.RuntimeLibraryMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -413,6 +416,91 @@ public class RuntimeJsLibManagerTest {
 
     assertThat(field.matches(IR.name("foo"))).isFalse();
     assertThat(field.matches(JSCOMP_INHERITS)).isTrue();
+  }
+
+  @Test
+  public void externFieldNamesMode_doesNotInject_butRecordsLibraries() {
+    RuntimeJsLibManager manager =
+        RuntimeJsLibManager.create(
+            RuntimeLibraryMode.EXTERN_FIELD_NAMES,
+            new StubResourceLoader(ImmutableMap.of("lib", "0")),
+            new ChangeTracker(),
+            () -> IR.script());
+
+    Node injected = manager.ensureLibraryInjected("lib", /* force= */ false);
+
+    assertThat(injected).isNull();
+    assertThat(manager.getInjectedLibraries()).containsExactly("lib");
+  }
+
+  @Test
+  public void externFieldNamesMode_doesRecordAndInject_withForceInjection() {
+    Node script = IR.script();
+    RuntimeJsLibManager manager =
+        RuntimeJsLibManager.create(
+            RuntimeLibraryMode.EXTERN_FIELD_NAMES,
+            new StubResourceLoader(ImmutableMap.of("lib", "0")),
+            new ChangeTracker(),
+            () -> script);
+
+    manager.ensureLibraryInjected("lib", /* force= */ true);
+
+    assertThat(manager.getInjectedLibraries()).containsExactly("lib");
+    assertNode(script).isEqualTo(js("0;"));
+  }
+
+  @Test
+  public void externFieldNamesMode_injectLibForField_recordsAndAddsExternDecl() {
+    Node externs = IR.script();
+    externs.setStaticSourceFile(SourceFile.fromCode("ex.js", "", SourceKind.EXTERN));
+    RuntimeJsLibManager manager =
+        RuntimeJsLibManager.create(
+            RuntimeLibraryMode.EXTERN_FIELD_NAMES,
+            new StubResourceLoader(ImmutableMap.of()),
+            new ChangeTracker(),
+            () -> externs);
+
+    manager.injectLibForField("$jscomp.inherits");
+
+    assertThat(manager.getInjectedLibraries()).containsExactly("es6/util/inherits");
+    ImmutableList<RuntimeJsLibManager.ExternedField> externedFields = manager.getExternedFields();
+    assertThat(externedFields).hasSize(1);
+    assertThat(externedFields.get(0).uncompiledName()).isEqualTo("$jscomp.inherits");
+    assertThat(externedFields.get(0).qualifiedName()).isEqualTo("$jscomp_inherits");
+    assertNode(externs).isEqualTo(js("var $jscomp_inherits;"));
+    assertThat(externs.getOnlyChild().getOnlyChild().getBooleanProp(Node.IS_CONSTANT_NAME))
+        .isTrue();
+  }
+
+  @Test
+  public void externFieldNamesMode_injectLibForFieldTwice_doesNotAddDuplicateExterns() {
+    Node externs = IR.script();
+    externs.setStaticSourceFile(SourceFile.fromCode("ex.js", "", SourceKind.EXTERN));
+    RuntimeJsLibManager manager =
+        RuntimeJsLibManager.create(
+            RuntimeLibraryMode.EXTERN_FIELD_NAMES,
+            new StubResourceLoader(ImmutableMap.of()),
+            new ChangeTracker(),
+            () -> externs);
+
+    manager.injectLibForField("$jscomp.inherits");
+    manager.injectLibForField("$jscomp.inherits");
+
+    assertNode(externs).isEqualTo(js("var $jscomp_inherits;"));
+  }
+
+  @Test
+  public void externFieldNamesMode_noinjectLibForField_thenAssertInjected_fails() {
+    RuntimeJsLibManager manager =
+        RuntimeJsLibManager.create(
+            RuntimeLibraryMode.EXTERN_FIELD_NAMES,
+            new StubResourceLoader(ImmutableMap.of()),
+            new ChangeTracker(),
+            () -> IR.script());
+
+    RuntimeJsLibManager.JsLibField field = manager.getJsLibField("$jscomp.inherits");
+
+    assertThrows(IllegalStateException.class, field::assertInjected);
   }
 
   private static Node js(String code) {
