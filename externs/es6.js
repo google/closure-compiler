@@ -460,6 +460,7 @@ var AllowSharedBufferSource;
  * @extends {ArrayBufferView}
  * @template TArrayBuffer (unused)
  * @see https://tc39.es/ecma262/multipage/indexed-collections.html#sec-typedarray-objects
+ * @see https://tc39.es/ecma262/multipage/ordinary-and-exotic-objects-behaviours.html#typedarray
  */
 function TypedArray() {}
 
