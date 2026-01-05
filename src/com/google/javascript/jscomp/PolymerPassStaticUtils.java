@@ -31,7 +31,9 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -151,6 +153,98 @@ final class PolymerPassStaticUtils {
         }
       }
     }
+  }
+
+  /**
+   * Ensures that methods registered in the static {@code observers} block, as well as methods
+   * referenced in the {@code observer} and {@code computed} fields on a Polymer property block
+   * declaration are exported and marked {@code @noCollapse}.
+   */
+  static void protectObserverAndPropertyFunctionKeys(Node behaviorObjLit) {
+    checkState(behaviorObjLit.isObjectLit());
+
+    Set<String> methodsToProtect = new LinkedHashSet<>();
+    methodsToProtect.addAll(addObserverMethodsToProtect(behaviorObjLit));
+    methodsToProtect.addAll(addPropertyMethodsToProtect(behaviorObjLit));
+
+    for (Node keyNode = behaviorObjLit.getFirstChild();
+        keyNode != null;
+        keyNode = keyNode.getNext()) {
+      // Note: This also is true for object literal methods.
+      if (!NodeUtil.isObjectLitKey(keyNode)) {
+        continue;
+      }
+
+      String keyName = NodeUtil.getObjectOrClassLitKeyName(keyNode);
+      if (!methodsToProtect.contains(keyName)) {
+        continue;
+      }
+
+      addExportAndNoCollapseToKey(keyNode);
+    }
+  }
+
+  /** Finds methods referenced in the 'observers' property and returns them as a Set. */
+  private static Set<String> addObserverMethodsToProtect(Node behaviorObjLit) {
+    Set<String> methodsToProtect = new LinkedHashSet<>();
+    Node observers = NodeUtil.getFirstPropMatchingKey(behaviorObjLit, "observers");
+    if (observers != null && observers.isArrayLit()) {
+      for (Node child = observers.getFirstChild(); child != null; child = child.getNext()) {
+        if (!child.isStringLit()) {
+          continue;
+        }
+
+        String name = extractMethodName(child.getString());
+        if (name != null) {
+          methodsToProtect.add(name);
+        }
+      }
+    }
+    return methodsToProtect;
+  }
+
+  /** Finds methods referenced in the 'properties' property and returns them as a Set. */
+  private static Set<String> addPropertyMethodsToProtect(Node behaviorObjLit) {
+    Set<String> methodsToProtect = new LinkedHashSet<>();
+    Node properties = NodeUtil.getFirstPropMatchingKey(behaviorObjLit, "properties");
+    if (properties != null && properties.isObjectLit()) {
+      for (Node prop = properties.getFirstChild(); prop != null; prop = prop.getNext()) {
+        if (!prop.getLastChild().isObjectLit()) {
+          continue;
+        }
+
+        Node observer = NodeUtil.getFirstPropMatchingKey(prop.getLastChild(), "observer");
+        if (observer != null && observer.isStringLit()) {
+          methodsToProtect.add(observer.getString());
+        }
+
+        Node computed = NodeUtil.getFirstPropMatchingKey(prop.getLastChild(), "computed");
+        if (computed != null && computed.isStringLit()) {
+          String name = extractMethodName(computed.getString());
+          if (name != null) {
+            methodsToProtect.add(name);
+          }
+        }
+      }
+    }
+    return methodsToProtect;
+  }
+
+  private static @Nullable String extractMethodName(String signature) {
+    int openParenIndex = signature.indexOf('(');
+    return openParenIndex > 0 ? signature.substring(0, openParenIndex).trim() : null;
+  }
+
+  /**
+   * Ensures the given key node (or methodFunction) is exported and adds `@nocollapse` to its JSDoc.
+   *
+   * @param keyNode The key node from an object literal.
+   */
+  private static void addExportAndNoCollapseToKey(Node keyNode) {
+    JSDocInfo.Builder newDocs = JSDocInfo.Builder.maybeCopyFrom(keyNode.getJSDocInfo());
+    newDocs.recordNoCollapse();
+    newDocs.recordExport();
+    keyNode.setJSDocInfo(newDocs.build());
   }
 
   /**

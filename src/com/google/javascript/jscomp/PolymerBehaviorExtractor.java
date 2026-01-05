@@ -113,6 +113,7 @@ final class PolymerBehaviorExtractor {
       if (behaviorName.isObjectLit()) {
         PolymerPassStaticUtils.switchDollarSignPropsToBrackets(behaviorName, compiler);
         PolymerPassStaticUtils.quoteListenerAndHostAttributeKeys(behaviorName, compiler);
+        PolymerPassStaticUtils.protectObserverAndPropertyFunctionKeys(behaviorName);
         if (NodeUtil.getFirstPropMatchingKey(behaviorName, "is") != null) {
           compiler.report(JSError.make(behaviorName, PolymerPassErrors.POLYMER_INVALID_BEHAVIOR));
         }
