@@ -369,9 +369,12 @@ Intl.DisplayNames.prototype.resolvedOptions = function() {};
 /**
  * @constructor
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/PluralRules#Syntax
+ * @see https://tc39.es/ecma402/#sec-intl.pluralrules
  * @param {string|Array<string>=} locales
  * @param {{
- *   localeMatcher: (string|undefined), type: (string|undefined),
+ *   type: (string|undefined),
+ *   localeMatcher: (string|undefined),
+ *   notation: (string|undefined),
  *   minimumIntegerDigits: (number|undefined),
  *   minimumFractionDigits: (number|undefined),
  *   maximumFractionDigits: (number|undefined),
