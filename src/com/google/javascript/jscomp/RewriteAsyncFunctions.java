@@ -368,7 +368,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
             if (n.matchesName("arguments")) {
               n.setString(ASYNC_ARGUMENTS + asyncThisAndArgumentsContext.uniqueId);
               if (compiler.getLifeCycleStage().isNormalized()) {
-                // TODO: b/322009741 - Stop depending on lifeCycleStage.isNormalized() to decide
+                // TODO: user - Stop depending on lifeCycleStage.isNormalized() to decide
                 // constness
                 n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
               }

@@ -313,14 +313,14 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         };
         b.a = 'original';
         b.c = a.a;
-        // TODO: b/299055739 - a.b() is not defined because its definition was removed
+        // TODO: user - a.b() is not defined because its definition was removed
         a.b();
         console.log('ID: ' + a.a);
         b = a = tslib_1.__decorate([function(c) {
           return c;
         }], b);
         new b();
-        // TODO: b/299055739 - a.b() is not defined because its definition was removed
+        // TODO: user - a.b() is not defined because its definition was removed
         a.b();
         console.log('ID: ' + a.a);
         """);

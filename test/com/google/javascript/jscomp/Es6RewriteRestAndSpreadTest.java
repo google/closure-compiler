@@ -695,7 +695,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
           return rest;
         }
         """);
-    // TODO: b/421971366 - we should instead assert that es6/util/restarguments was already injected
+    // TODO: user - we should instead assert that es6/util/restarguments was already injected
     // before this point, by InjectTranspilationRuntimeLibraries.
     assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
         .containsExactly("es6/util/restarguments");

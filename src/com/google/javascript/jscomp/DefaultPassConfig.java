@@ -588,7 +588,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.collapseAnonymousFunctions) {
-      // TODO: b/197349249 - Maybe we should just move this pass after denormalization. It seems
+      // TODO: user - Maybe we should just move this pass after denormalization. It seems
       // weird to convert from function expression to function declaration while we're still
       // supposed to be in a normalized state. But it requires testing as perhaps some optimizations
       // in that range will get affected if we skip this rewriting.
@@ -1018,7 +1018,7 @@ public final class DefaultPassConfig extends PassConfig {
       // above or below from accidentally becoming part of the loop.
       passes.maybeAdd(createEmptyPass(PassNames.BEFORE_EARLY_OPTIMIZATION_LOOP));
       passes.addAll(getEarlyOptimizationLoopPasses());
-      // TODO(): Remove this early loop or rename the option that enables it
+      // TODO():: Remove this early loop or rename the option that enables it
       // to something more appropriate.
       passes.maybeAdd(createEmptyPass(PassNames.AFTER_EARLY_OPTIMIZATION_LOOP));
     }

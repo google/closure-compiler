@@ -344,7 +344,7 @@ class FunctionArgumentInjector {
         // avoid creating a temporary.
         //
         // This is done to help inline common trivial functions
-        // TODO: b/407603216 - return `true` when return expressions don't have
+        // TODO: user - return `true` when return expressions don't have
         // references that can be side-effected
         requiresTemporary = false;
       } else if (compiler.getAstAnalyzer().mayEffectMutableState(cArg) && references > 0) {

@@ -635,7 +635,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
         function f(x){return x}
         var y=f(i++)
         """,
-        // TODO: b/407603216 - Inline using DIRECT mode when return expressions don't have
+        // TODO: user - Inline using DIRECT mode when return expressions don't have
         // references that can be side-effected. The output code can be `var y=i++`
         """
         var y = i++;

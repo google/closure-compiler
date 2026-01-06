@@ -606,5 +606,5 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
     return output.toString();
   }
 
-  // TODO: b/421971366 - add a greater variety of test cases.
+  // TODO: user - add a greater variety of test cases.
 }

@@ -1450,7 +1450,7 @@ public final class TypeCheckCovarianceTest {
             var bad = function(a) { return a; };
             """)
         .addDiagnostic(
-            // TODO: b/807854446 - this should not error.
+            // TODO: user - this should not error.
             // this diagnostic is not expected - we would expect the override of takes(*) with
             // takes(number) to be valid because ReadonlyArray is covariant and the T=number
             // template

@@ -192,7 +192,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             }
             /** @constructor */
             var i0$classdecl$var0 = function() {};
-            // TODO : b/299055739 - This property collapse breaks the output code.
+            // TODO : user - This property collapse breaks the output code.
             var i0$classdecl$var0$foo = function() {
             // "i0$classdecl$var0.foo = function() {", // this is the correct line
               console.log('Hello');

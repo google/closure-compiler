@@ -5645,7 +5645,7 @@ async function abc() {
           "",
           "",
           """
-          // TODO: b/454591584 - Event.Type should not have been collapsed / pruned.
+          // TODO: user - Event.Type should not have been collapsed / pruned.
           var $jspb$platypi$duck$parts$MutableEvent$$ = class {
             constructor($type$$) {
               this.$type_$ = $type$$;
@@ -5711,7 +5711,7 @@ async function abc() {
         alert(foo(obj));
         """,
         """
-        // TODO: b/454591584 - Event.Type should not have been collapsed / pruned.
+        // TODO: user - Event.Type should not have been collapsed / pruned.
         class $Event$$ {}
 
         class $EventComponent$$ {

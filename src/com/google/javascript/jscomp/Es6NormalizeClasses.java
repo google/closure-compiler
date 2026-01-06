@@ -716,7 +716,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     }
 
     // If there are no super references, place all the static initialization code after the class.
-    // TODO: b/236744850 - Also skip if there are private field refs.
+    // TODO: user - Also skip if there are private field refs.
     if (!NodeUtil.has(
         staticInitTempParent,
         /* pred= */ Node::isSuper,

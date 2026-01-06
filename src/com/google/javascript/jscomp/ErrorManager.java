@@ -100,7 +100,7 @@ public interface ErrorManager extends ErrorHandler {
    * being used by ConformanceAllowlister to generate allowlist updates (therefore not reported).
    * For all violations other violations (except in generated code), this method returns true.
    */
-  // TODO: b/332922526 - Rename this method and all its overrides to
+  // TODO: user - Rename this method and all its overrides to
   // {@code shouldReportConformanceViolationIgnoringAllowlists} or similar.
   default boolean shouldReportConformanceViolation(
       Requirement requirement,

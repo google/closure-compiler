@@ -18,7 +18,7 @@
  * @fileoverview Externs for Underscore 1.5.2.
  *
  * TODO: Wrapper objects.
- * TODO: _.bind - for some reason this plays up in practice.
+ * TODO: user - for some reason this plays up in practice.
  *
  * @see http://documentcloud.github.com/underscore/
  * @externs

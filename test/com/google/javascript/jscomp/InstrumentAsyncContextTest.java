@@ -201,7 +201,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         """);
   }
 
-  // TODO: b/371578480 - test break and continue inside for-await
+  // TODO: user - test break and continue inside for-await
 
   // A block is added if necessary so that the post-loop resume call is appropriately sequenced.
   @Test
