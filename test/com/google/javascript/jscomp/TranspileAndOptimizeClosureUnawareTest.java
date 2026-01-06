@@ -310,12 +310,17 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
               return new Child();
             }).call(globalThis);
             """),
+        // NOTE: we could make transpilation smart enough to detect that we don't need the
+        // $jscomp.construct call here. Currently it only attempts to analyze superclasses
+        // defined in the global scope, and @closureUnaware code is never global. We could
+        // easily make the pass look up the definition of 'Parent' in the function-local scope, but
+        // decided not to as of Jan 2026, as it isn't clearly worth the added complexity.
         expected(
             """
             /** @fileoverview @closureUnaware */
             goog.module("test");
             /** @closureUnaware */
-            (function(c) {
+            (function(c, d) {
               /** @constructor */
               var a = function() {};
               a.prototype.method = function() {
@@ -323,11 +328,11 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
               };
               /** @constructor */
               var b = function() {
-                return a.apply(this, arguments) || this;
+                return c(a, arguments, this.constructor);
               };
-              c(b, a);
+              d(b, a);
               return new b();
-            }).call(globalThis, $jscomp.inherits);
+            }).call(globalThis, $jscomp.construct, $jscomp.inherits);
             """));
 
     assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
@@ -371,13 +376,13 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
             /** @fileoverview @closureUnaware */
             goog.module("test2");
             /** @closureUnaware */
-            (function(a) {
+            (function(a, d) {
               var b = function() {}, c = function() {
-                return b.apply(this, arguments) || this;
+                return a(b, arguments, this.constructor);
               };
-              a(c, b);
+              d(c, b);
               return new c();
-            }).call(undefined, $jscomp.inherits);
+            }).call(undefined, $jscomp.construct, $jscomp.inherits);
             """));
 
     assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
@@ -386,6 +391,40 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
             "es6/util/inherits",
             "es6/util/arrayfromiterable",
             "es6/object/assign");
+  }
+
+  @Test
+  public void classInheritance_usesReflectConstructForUnknownSuperclass() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
+
+    test(
+        srcs(
+            """
+            /** @fileoverview @closureUnaware */
+            goog.module('test');
+            /** @closureUnaware */
+            (function() {
+              class Child extends UnknownParent {}
+              return new Child();
+            }).call(globalThis);
+            """),
+        expected(
+            """
+            /** @fileoverview @closureUnaware */
+            goog.module("test");
+            /** @closureUnaware */
+            (function(b, c) {
+              /** @constructor */
+              var a = function() {
+                return b(UnknownParent, arguments, this.constructor);
+              };
+              c(a, UnknownParent);
+              return new a();
+            }).call(globalThis, $jscomp.construct, $jscomp.inherits);
+            """));
+
+    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
+        .containsExactly("es6/util/construct", "es6/util/inherits", "es6/util/arrayfromiterable");
   }
 
   @Test

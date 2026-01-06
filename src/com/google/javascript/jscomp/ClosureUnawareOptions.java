@@ -41,9 +41,6 @@ class ClosureUnawareOptions {
   }
 
   private void setTranspilationOptions() {
-    // TODO: b/421971366 - look into adding an option to use Reflect.construct for subclass
-    // transpilation, in the
-    // case we can't prove it's not a subclass of an ES6 class (not being transpiled)
     shadowOptions.setRewritePolyfills(false); // for now, we ignore polyfills that may be needed.
     switch (original.getRuntimeLibraryMode()) {
       case NO_OP ->
@@ -53,6 +50,8 @@ class ClosureUnawareOptions {
               RuntimeJsLibManager.RuntimeLibraryMode.EXTERN_FIELD_NAMES);
       case EXTERN_FIELD_NAMES -> throw new AssertionError();
     }
+    shadowOptions.setEs6SubclassTranspilation(
+        CompilerOptions.Es6SubclassTranspilation.SAFE_REFLECT_CONSTRUCT);
     shadowOptions.setOutputFeatureSet(original.getOutputFeatureSet());
   }
 
