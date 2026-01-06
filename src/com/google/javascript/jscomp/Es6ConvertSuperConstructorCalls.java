@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.CompilerOptions.Es6SubclassTranspilation;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.colors.Color;
@@ -62,8 +63,10 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
   private GlobalNamespace globalNamespace;
   private final StaticScope transpilationNamespace;
   private final UniqueIdSupplier uniqueIdSupplier;
+  private final Es6SubclassTranspilation es6SubclassTranspilation;
 
-  public Es6ConvertSuperConstructorCalls(AbstractCompiler compiler) {
+  public Es6ConvertSuperConstructorCalls(
+      AbstractCompiler compiler, Es6SubclassTranspilation es6SubclassTranspilation) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.transpilationNamespace = compiler.getTranspilationNamespace();
@@ -73,6 +76,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
     var runtimeJsLibManager = compiler.getRuntimeJsLibManager();
     this.jscompInherits = runtimeJsLibManager.getJsLibField("$jscomp.inherits");
     this.jscompConstruct = runtimeJsLibManager.getJsLibField("$jscomp.construct");
+    this.es6SubclassTranspilation = es6SubclassTranspilation;
   }
 
   @Override
@@ -305,12 +309,17 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
     // 1. We must use the value it returns, if defined, as the 'this' value in the constructor
     //    we're currently transpiling, and we must also return it from this constructor.
     // 2. It may be an ES6 class defined outside of the sources we can see.
-    //
+    if (es6SubclassTranspilation == Es6SubclassTranspilation.SAFE_REFLECT_CONSTRUCT) {
+      // To safely extend the ES5 classes we're generating here, we must use
+      // `$jscomp.construct`, which is our wrapper around `Reflect.construct`.
+      rewriteSuperCallsToJsCompConstructCalls(
+          constructor, superCalls, superClassNameNode, thisType, uniqueSuperThisName);
+      return;
+    }
     // The code below works as long as the class we're extending is an ES5 class, but will
     // break if we're extending an ES6 class (#2), because it calls the superclass constructor
     // without using `new` or `Reflect.construct()`
-    // TODO(b/36789413): We should use $jscomp.construct() here to avoid breakage when extending
-    // an ES6 class.
+    // TODO(b/36789413): we should always use `$jscomp.construct`.
     Node constructorBody = checkNotNull(constructor.getChildAtIndex(2));
     Node firstStatement = constructorBody.getFirstChild();
     Node firstSuperCall = superCalls.get(0);

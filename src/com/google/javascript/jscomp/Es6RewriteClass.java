@@ -23,6 +23,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.auto.value.AutoBuilder;
 import com.google.common.base.Preconditions;
+import com.google.javascript.jscomp.CompilerOptions.Es6SubclassTranspilation;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.js.RuntimeJsLibManager.JsLibField;
@@ -50,11 +51,13 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
   private final StaticScope transpilationNamespace;
   private final JsLibField jscompInherits;
 
-  public Es6RewriteClass(AbstractCompiler compiler) {
+  public Es6RewriteClass(
+      AbstractCompiler compiler, Es6SubclassTranspilation es6SubclassTranspilation) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.transpilationNamespace = compiler.getTranspilationNamespace();
-    this.convertSuperConstructorCalls = new Es6ConvertSuperConstructorCalls(compiler);
+    this.convertSuperConstructorCalls =
+        new Es6ConvertSuperConstructorCalls(compiler, es6SubclassTranspilation);
     this.jscompInherits = compiler.getRuntimeJsLibManager().getJsLibField("$jscomp.inherits");
   }
 

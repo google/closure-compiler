@@ -878,6 +878,13 @@ public class CompilerOptions {
    */
   private LanguageMode injectPolyfillsNewerThan = null;
 
+  /**
+   * Whether to emit the safe but slower/more verbose transpilation of class super, when the
+   * compiler cannot statically determine whether the superclass is an ES6 class.
+   */
+  private Es6SubclassTranspilation es6SubclassTranspilation =
+      Es6SubclassTranspilation.CONCISE_UNSAFE;
+
   /** Whether to instrument reentrant functions for AsyncContext. */
   private boolean instrumentAsyncContext = false;
 
@@ -2789,6 +2796,35 @@ public class CompilerOptions {
     return this.instrumentAsyncContext;
   }
 
+  /**
+   * Configures the transpiled output for ES6 classes when targeting ES5.
+   *
+   * <p>This is needed for transpilation of ES6 classes that extend some unknown superclass, in case
+   * that superclass is still a native ES6 class at runtime (not transpiled to ES5).
+   *
+   * <p>The default is {@link Es6SubclassTranspilation#CONCISE_UNSAFE}, which assumes that if a
+   * superclass in an extends clause cannot be statically analyzed, it's safe to assume it is an ES5
+   * class.
+   *
+   * <p>The "safe" behavior relies on {@code $jscomp.construct}, which is our wrapper for {@code
+   * Reflect.construct}. This is correct, but has the disadvantage of pulling in more helper
+   * utilities into the compiled output and of the transpiled output being slightly larger.
+   *
+   * <p>TODO: b/36789413 - always enable the "safe" transpilation.
+   */
+  public enum Es6SubclassTranspilation {
+    CONCISE_UNSAFE,
+    SAFE_REFLECT_CONSTRUCT
+  }
+
+  public void setEs6SubclassTranspilation(Es6SubclassTranspilation es6SubclassTranspilation) {
+    this.es6SubclassTranspilation = es6SubclassTranspilation;
+  }
+
+  public Es6SubclassTranspilation getEs6SubclassTranspilation() {
+    return this.es6SubclassTranspilation;
+  }
+
   /** Sets list of libraries to always inject, even if not needed. */
   public void setForceLibraryInjection(Iterable<String> libraries) {
     this.forceLibraryInjection = ImmutableList.copyOf(libraries);
@@ -2985,6 +3021,7 @@ public class CompilerOptions {
         .add("errorFormat", errorFormat)
         .add("errorHandler", errorHandler)
         .add("es6ModuleTranspilation", es6ModuleTranspilation)
+        .add("es6SubclassTranspilation", es6SubclassTranspilation)
         .add("exportLocalPropertyDefinitions", exportLocalPropertyDefinitions)
         .add("exportTestFunctions", exportTestFunctions)
         .add("externExportsPath", externExportsPath)

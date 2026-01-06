@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.TypedScopeCreator.DYNAMIC_EXTENDS_WITHOUT_JSDOC;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
+import com.google.javascript.jscomp.CompilerOptions.Es6SubclassTranspilation;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.StandardColors;
@@ -47,6 +48,8 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
           .addJSCompLibraries()
           .build();
 
+  private Es6SubclassTranspilation es6SubclassTranspilation;
+
   public Es6RewriteClassTest() {
     super(EXTERNS_BASE);
   }
@@ -62,6 +65,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     replaceTypesWithColors();
     enableMultistageCompilation();
     setGenericNameReplacements(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS);
+    es6SubclassTranspilation = Es6SubclassTranspilation.CONCISE_UNSAFE;
   }
 
   private static PassFactory makePassFactory(
@@ -74,7 +78,9 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
     optimizer.addOneTimePass(makePassFactory("es6NormalizeClasses", Es6NormalizeClasses::new));
     optimizer.addOneTimePass(makePassFactory("es6ConvertSuper", Es6ConvertSuper::new));
-    optimizer.addOneTimePass(makePassFactory("es6RewriteClass", Es6RewriteClass::new));
+    optimizer.addOneTimePass(
+        makePassFactory(
+            "es6RewriteClass", (c) -> new Es6RewriteClass(compiler, es6SubclassTranspilation)));
     return optimizer;
   }
 
@@ -238,6 +244,29 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
          */
         const CLASS_DECL$0 = function() {
           return D.apply(this, arguments) || this;
+        };
+        $jscomp.inherits(CLASS_DECL$0, D);
+        CLASS_DECL$0.prototype.f = function() { D.prototype.g.call(this); };
+        f(CLASS_DECL$0)
+        """);
+  }
+
+  @Test
+  public void testAnonymousWithSuper_reflectConstruct() {
+    es6SubclassTranspilation = Es6SubclassTranspilation.SAFE_REFLECT_CONSTRUCT;
+    enableClosurePass();
+    ignoreWarnings(FunctionTypeBuilder.RESOLVED_TAG_EMPTY, TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
+    test(
+        """
+        goog.forwardDeclare('D')
+        f(class extends D { f() { super.g() } })
+        """,
+        """
+        goog.forwardDeclare('D')
+        /** @constructor
+         */
+        const CLASS_DECL$0 = function() {
+          return $jscomp.construct(D, arguments, this.constructor);
         };
         $jscomp.inherits(CLASS_DECL$0, D);
         CLASS_DECL$0.prototype.f = function() { D.prototype.g.call(this); };
@@ -623,6 +652,21 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testExtendsWithImplicitConstructor_knownSuperclass_doesNotEs6SubclassTranspilation() {
+    es6SubclassTranspilation = Es6SubclassTranspilation.SAFE_REFLECT_CONSTRUCT;
+    test(
+        "class D {} class C extends D {}",
+        """
+        /** @constructor */
+        let D = function() {};
+        /** @constructor
+         */
+        let C = function() { D.apply(this, arguments); };
+        $jscomp.inherits(C, D);
+        """);
+  }
+
+  @Test
   public void testExtendsWithSpreadsPassedToSuper() {
     test(
         """
@@ -711,6 +755,31 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
               /** @constructor */
               let D = function() {
                 return C.apply(this, arguments) || this;
+              };
+              $jscomp.inherits(D, C);
+            }
+            """));
+  }
+
+  @Test
+  public void testExtends_nonGlobalClass_usingReflectConstruct() {
+    es6SubclassTranspilation = Es6SubclassTranspilation.SAFE_REFLECT_CONSTRUCT;
+    test(
+        srcs(
+            """
+            function f() {
+              class C {}
+              class D extends C {}
+            }
+            """),
+        expected(
+            """
+            function f() {
+              /** @constructor */
+              let C = function() {};
+              /** @constructor */
+              let D = function() {
+                return $jscomp.construct(C, arguments, this.constructor);
               };
               $jscomp.inherits(D, C);
             }
@@ -1325,6 +1394,47 @@ $jscomp.inherits(C, AggregateError);
             $jscomp$super$this$m1146332801$0 = D.call(this, 'positive: ' + strArg) || this;
           } else {
             $jscomp$super$this$m1146332801$0 = D.call(this, 'negative: ' + strArg) || this;
+          }
+          $jscomp$super$this$m1146332801$0.n = n;
+          return $jscomp$super$this$m1146332801$0;
+        }
+        $jscomp.inherits(C, D);
+        """);
+  }
+
+  @Test
+  public void testAlternativeSuperCalls_withUnknownSuperclass_es6SubclassTranspilation() {
+    // Class being extended is unknown, so we must assume super() could change the value of `this`.
+    enableClosurePass();
+    ignoreWarnings(FunctionTypeBuilder.RESOLVED_TAG_EMPTY);
+    es6SubclassTranspilation = Es6SubclassTranspilation.SAFE_REFLECT_CONSTRUCT;
+    test(
+        """
+        goog.forwardDeclare('D');
+        class C extends D {
+          /** @param {string} strArg
+           * @param {number} n */
+          constructor(strArg, n) {
+            if (n >= 0) {
+              super('positive: ' + strArg);
+            } else {
+              super('negative: ' + strArg);
+            }
+            this.n = n;
+          }
+        }
+        """,
+        """
+        goog.forwardDeclare('D');
+        /** @constructor */
+        let C = function(strArg, n) {
+          var $jscomp$super$this$m1146332801$0;
+          if (n >= 0) {
+            $jscomp$super$this$m1146332801$0 =
+                $jscomp.construct(D, ["positive: " + strArg], this.constructor);
+          } else {
+            $jscomp$super$this$m1146332801$0 =
+                $jscomp.construct(D, ["negative: " + strArg], this.constructor);
           }
           $jscomp$super$this$m1146332801$0.n = n;
           return $jscomp$super$this$m1146332801$0;
@@ -2065,6 +2175,27 @@ $jscomp.inherits(FooPromise, Promise);
             /** @constructor */
             let CodeClass = function() {
               return ExternsClass.apply(this, arguments) || this;
+            };
+            $jscomp.inherits(CodeClass,ExternsClass)
+            """));
+  }
+
+  @Test
+  public void testInheritFromExterns_withReflectConstruct() {
+    es6SubclassTranspilation = Es6SubclassTranspilation.SAFE_REFLECT_CONSTRUCT;
+    test(
+        externs(
+            EXTERNS_BASE
+                + """
+                /** @constructor */ function ExternsClass() {}
+                ExternsClass.m = function() {};
+                """),
+        srcs("class CodeClass extends ExternsClass {}"),
+        expected(
+            """
+            /** @constructor */
+            let CodeClass = function() {
+              return $jscomp.construct(ExternsClass, arguments, this.constructor);
             };
             $jscomp.inherits(CodeClass,ExternsClass)
             """));
