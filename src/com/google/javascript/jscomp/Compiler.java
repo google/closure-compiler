@@ -1189,7 +1189,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       runValidityCheck();
     }
 
-    // TODO: user - try removing this. We shouldn't need it as the code printer
+    // TODO: b/421971366 - try removing this. We shouldn't need it as the code printer
     // will already print out @closureUnaware contents.
     ManageClosureUnawareCode.unwrap(this).process(externsRoot, jsRoot);
 

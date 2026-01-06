@@ -312,7 +312,7 @@ public final class TypeCheckSymbolsTest {
             /** @type {null} */
             const x = o[Symbol.myProp];
             """)
-        // TODO: user - make this an error. Before the typechecker supported well-known
+        // TODO: b/433500540 - make this an error. Before the typechecker supported well-known
         // symbols, it loosely allowed symbol access on any object & typed it as `?`, so this is
         // for legacy compatibility.
         .run();
@@ -340,7 +340,7 @@ public final class TypeCheckSymbolsTest {
             use(new C()[Symbol.good]);
             use(new C()[Symbol.bad]);
             """)
-        // TODO: user - emit a missing property error on `use(new C()[Symbol.bad])`
+        // TODO: b/433500540 - emit a missing property error on `use(new C()[Symbol.bad])`
         .run();
   }
 

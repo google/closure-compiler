@@ -327,7 +327,7 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
     disableNormalize();
     fold(
         "function f() { if (x) {return;} else { let c = 1; } var c; return !!c; }",
-        // TODO: user - fix this output.
+        // TODO: b/470408326 - fix this output.
         // "Uncaught SyntaxError: Identifier 'c' has already been declared"
         "function f() { if (x){} else { let c = 1; var c; return !!c; } }");
   }

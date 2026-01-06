@@ -1120,7 +1120,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
         }
         """;
 
-    // TODO: user - This should not be an error.
+    // TODO: b/416023147 - This should not be an error.
     test(srcs(fooFileSrc, "const barCopy = new Foo().bar;"), error(BAD_PRIVATE_PROPERTY_ACCESS));
 
     // This is fine.

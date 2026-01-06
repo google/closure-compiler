@@ -835,8 +835,6 @@ public class CompilerOptions {
   List<String> replaceStringsFunctionDescriptions;
 
   String replaceStringsPlaceholderToken;
-  // A previous map of replacements to strings.
-  VariableMap replaceStringsInputMap;
 
   /** List of properties that we report invalidation errors for. */
   private ImmutableSet<String> propertiesThatMustDisambiguate;
@@ -2562,7 +2560,7 @@ public class CompilerOptions {
    * <p>PASS_THROUGH: they are entirely hidden from the compiler, as if they were an evaled string.
    *
    * <p>SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION: This is *experimental* - we want to support some
-   * minimal transpilation & safe optimizations. TODO: user - implement this flag.
+   * minimal transpilation & safe optimizations. TODO: b/421971366 - implement this flag.
    */
   public enum ClosureUnawareMode {
     PASS_THROUGH,
@@ -2810,7 +2808,7 @@ public class CompilerOptions {
    * Reflect.construct}. This is correct, but has the disadvantage of pulling in more helper
    * utilities into the compiled output and of the transpiled output being slightly larger.
    *
-   * <p>TODO: user - always enable the "safe" transpilation.
+   * <p>TODO: b/36789413 - always enable the "safe" transpilation.
    */
   public enum Es6SubclassTranspilation {
     CONCISE_UNSAFE,

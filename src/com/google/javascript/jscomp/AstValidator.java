@@ -64,7 +64,7 @@ public final class AstValidator implements CompilerPass {
   /** Validate that a SCRIPT's FeatureSet property includes all features if this is enabled. */
   private final boolean isScriptFeatureValidationEnabled;
 
-  // TODO: user - make this the default.
+  // TODO: varomodt - make this the default.
   /** Validate that all required inlinings were performed. */
   private final boolean shouldValidateRequiredInlinings;
 
@@ -454,7 +454,7 @@ public final class AstValidator implements CompilerPass {
   private void validateTypeInformation(Node n) {
     if (n.getIsInClosureUnawareSubtree()) {
       // We don't expect closure-unaware code to have type information.
-      // TODO: user - Maybe this should be a separate validation step, to ensure that nothing
+      // TODO: b/321233583 - Maybe this should be a separate validation step, to ensure that nothing
       // tries to infer type information where we are mostly unsure of it?
 
       return;
@@ -2128,7 +2128,7 @@ public final class AstValidator implements CompilerPass {
       // Closure-unaware code is currently hidden from transpilation passes in the compiler when
       // options.setClosureUnawareMode(Mode.PASS_THROUGH) is enabled, so the AST
       // might still contain features that should have been transpiled.
-      // TODO: user - Once JSCompiler always transpiles closure-unaware code, remove this
+      // TODO: b/321233583 - Once JSCompiler always transpiles closure-unaware code, remove this
       // early-return to validate that all closure-unaware code is transpiled properly.
       return;
     }

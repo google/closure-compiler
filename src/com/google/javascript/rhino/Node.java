@@ -2328,7 +2328,7 @@ public class Node {
       }
     }
 
-    // TODO: user - we should compare the shadow node contents when `recurse` is enabled.
+    // TODO: b/421971366 - we should compare the shadow node contents when `recurse` is enabled.
     boolean thisIsShadowHost = this.getClosureUnawareShadow() != null;
     boolean nodeIsShadowHost = node.getClosureUnawareShadow() != null;
     if (thisIsShadowHost != nodeIsShadowHost) {

@@ -90,7 +90,7 @@ final class NestedCompilerRunner {
 
     shadowScript.setInputId(shadowInput.getInputId());
     shadowScript.setStaticSourceFile(shadowFile);
-    // TODO: user - should we also update the shadow script children with this source file?
+    // TODO: b/421971366 - should we also update the shadow script children with this source file?
 
     this.inputs.add(shadowInput);
     return this;

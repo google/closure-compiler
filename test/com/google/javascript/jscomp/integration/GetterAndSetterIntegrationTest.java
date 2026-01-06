@@ -1522,7 +1522,7 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
         """
         class Parent {
           static get greeting() {
-            // TODO: user - Properties used in getters and setters should not be removed
+            // TODO: b/130682799 - Properties used in getters and setters should not be removed
             return "Hello " + this.getName();
           }
         }
@@ -1572,7 +1572,7 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             configurable: !0,
             enumerable: !0,
             get: function() {
-              // TODO: user - Properties used in getters and setters should not be removed
+              // TODO: b/130682799 - Properties used in getters and setters should not be removed
               return 'Hello ' + this.getName();
             }
           }
@@ -1710,7 +1710,7 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
         """
         class Parent {
           static get greeting() {
-            // TODO: user - Properties used in getters and setters should not be removed
+            // TODO: b/130682799 - Properties used in getters and setters should not be removed
             return "Hello " + this.getName();
           }
         }
@@ -1744,7 +1744,7 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             configurable: !0,
             enumerable: !0,
             get: function() {
-              // TODO: user - Properties used in getters and setters should not be removed
+              // TODO: b/130682799 - Properties used in getters and setters should not be removed
               return 'Hello ' + this.getName();
             }
           }
