@@ -438,7 +438,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
 
     options.setProcessCommonJSModules(config.processCommonJSModules);
-    options.moduleRoots = config.moduleRoots;
+    options.setModuleRoots(config.moduleRoots);
     options.angularPass = config.angularPass;
 
     if (!config.jsonWarningsFile.isEmpty()) {

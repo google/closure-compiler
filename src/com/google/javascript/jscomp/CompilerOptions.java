@@ -282,6 +282,10 @@ public class CompilerOptions {
     this.inputSourceMaps = inputSourceMaps;
   }
 
+  ImmutableMap<String, SourceMapInput> getInputSourceMaps() {
+    return this.inputSourceMaps;
+  }
+
   /**
    * Whether to infer consts. This should not be configurable by external clients. This is a
    * transitional flag for a new type of const analysis.
@@ -293,6 +297,10 @@ public class CompilerOptions {
   // TODO(tbreisacher): Remove this method after ctemplate issues are solved.
   public void setInferConst(boolean value) {
     inferConsts = value;
+  }
+
+  boolean shouldInferConsts() {
+    return inferConsts;
   }
 
   /**
@@ -401,7 +409,7 @@ public class CompilerOptions {
    * A set of extra annotation names which are accepted and silently ignored when encountered in a
    * source file. Defaults to null which has the same effect as specifying an empty set.
    */
-  @Nullable Set<String> extraAnnotationNames;
+  @Nullable ImmutableSet<String> extraAnnotationNames;
 
   // TODO(bradfordcsmith): Investigate how can we use multi-threads as default.
   int numParallelThreads = 1;
@@ -417,6 +425,10 @@ public class CompilerOptions {
    */
   public void setNumParallelThreads(int parallelism) {
     numParallelThreads = parallelism;
+  }
+
+  int getNumParallelThreads() {
+    return numParallelThreads;
   }
 
   // --------------------------------
@@ -596,6 +608,10 @@ public class CompilerOptions {
     renamePrefixNamespaceAssumeCrossChunkNames = assume;
   }
 
+  boolean assumeCrossChunkNamesForRenamePrefixNamespace() {
+    return renamePrefixNamespaceAssumeCrossChunkNames;
+  }
+
   private PropertyCollapseLevel collapsePropertiesLevel;
 
   /**
@@ -669,6 +685,10 @@ public class CompilerOptions {
     this.nameGenerator = nameGenerator;
   }
 
+  NameGenerator getNameGenerator() {
+    return nameGenerator;
+  }
+
   // --------------------------------
   // Special-purpose alterations
   // --------------------------------
@@ -690,6 +710,10 @@ public class CompilerOptions {
 
     this.replaceMessagesWithChromeI18n = replaceMessagesWithChromeI18n;
     this.tcProjectId = tcProjectId;
+  }
+
+  String getTcProjectId() {
+    return tcProjectId;
   }
 
   /**
@@ -811,7 +835,7 @@ public class CompilerOptions {
   public @Nullable CssRenamingMap cssRenamingMap;
 
   /** Skiplist used in the renaming of CSS class names. */
-  @Nullable Set<String> cssRenamingSkiplist;
+  @Nullable ImmutableSet<String> cssRenamingSkiplist;
 
   /** Replace id generators */
   boolean replaceIdGenerators = true; // true by default for legacy reasons.
@@ -832,7 +856,7 @@ public class CompilerOptions {
   String idGeneratorsMapSerialized;
 
   /** Configuration strings */
-  List<String> replaceStringsFunctionDescriptions;
+  ImmutableList<String> replaceStringsFunctionDescriptions;
 
   String replaceStringsPlaceholderToken;
 
@@ -846,7 +870,7 @@ public class CompilerOptions {
   private boolean processCommonJSModules = false;
 
   /** CommonJS module prefix. */
-  List<String> moduleRoots = ImmutableList.of(ModuleLoader.DEFAULT_FILENAME_PREFIX);
+  ImmutableList<String> moduleRoots = ImmutableList.of(ModuleLoader.DEFAULT_FILENAME_PREFIX);
 
   /** Inject polyfills */
   boolean rewritePolyfills = false;
@@ -887,7 +911,7 @@ public class CompilerOptions {
   private boolean instrumentAsyncContext = false;
 
   /** Runtime libraries to always inject. */
-  List<String> forceLibraryInjection = ImmutableList.of();
+  ImmutableList<String> forceLibraryInjection = ImmutableList.of();
 
   /** Runtime libraries to never inject. */
   private RuntimeLibraryMode runtimeLibraryMode = RuntimeLibraryMode.INJECT;
@@ -907,6 +931,10 @@ public class CompilerOptions {
   public void setAssumeForwardDeclaredForMissingTypes(
       boolean assumeForwardDeclaredForMissingTypes) {
     this.assumeForwardDeclaredForMissingTypes = assumeForwardDeclaredForMissingTypes;
+  }
+
+  boolean assumeForwardDeclaredForMissingTypes() {
+    return assumeForwardDeclaredForMissingTypes;
   }
 
   // --------------------------------
@@ -966,6 +994,10 @@ public class CompilerOptions {
     this.preferSingleQuotes = enabled;
   }
 
+  boolean shouldPreferSingleQuotes() {
+    return preferSingleQuotes;
+  }
+
   boolean trustedStrings;
 
   /**
@@ -975,6 +1007,10 @@ public class CompilerOptions {
    */
   public void setTrustedStrings(boolean yes) {
     trustedStrings = yes;
+  }
+
+  boolean assumeTrustedStrings() {
+    return trustedStrings;
   }
 
   // Should only be used when debugging compiler bugs.
@@ -990,6 +1026,10 @@ public class CompilerOptions {
     this.printSourceAfterEachPass = printSource;
   }
 
+  boolean shouldPrintSourceAfterEachPass() {
+    return printSourceAfterEachPass;
+  }
+
   public void setFilesToPrintAfterEachPassRegexList(List<String> filePathRegexList) {
     this.filesToPrintAfterEachPassRegexList = filePathRegexList;
   }
@@ -1000,6 +1040,18 @@ public class CompilerOptions {
 
   public void setQnameUsesToPrintAfterEachPassList(List<String> qnameRegexList) {
     this.qnameUsesToPrintAfterEachPassList = qnameRegexList;
+  }
+
+  List<String> getFilesToPrintAfterEachPassRegexList() {
+    return filesToPrintAfterEachPassRegexList;
+  }
+
+  List<String> getChunksToPrintAfterEachPassRegexList() {
+    return chunksToPrintAfterEachPassRegexList;
+  }
+
+  List<String> getQnameUsesToPrintAfterEachPassList() {
+    return qnameUsesToPrintAfterEachPassList;
   }
 
   private TracerMode tracer;
@@ -1095,7 +1147,7 @@ public class CompilerOptions {
    */
   boolean resolveSourceMapAnnotations = true;
 
-  public List<? extends SourceMap.LocationMapping> sourceMapLocationMappings = ImmutableList.of();
+  ImmutableList<? extends SourceMap.LocationMapping> sourceMapLocationMappings = ImmutableList.of();
 
   /** Whether to include full file contents in the source map. */
   boolean sourceMapIncludeSourcesContent = false;
@@ -1269,6 +1321,10 @@ public class CompilerOptions {
     this.wrapGoogModulesForWhitespaceOnly = enable;
   }
 
+  boolean shouldWrapGoogModulesForWhitespaceOnly() {
+    return this.wrapGoogModulesForWhitespaceOnly;
+  }
+
   /** Print all configuration options to stderr after the compiler is initialized. */
   boolean printConfig = false;
 
@@ -1331,6 +1387,10 @@ public class CompilerOptions {
    */
   public void setPrintConfig(boolean printConfig) {
     this.printConfig = printConfig;
+  }
+
+  boolean shouldPrintConfig() {
+    return this.printConfig;
   }
 
   private boolean allowDynamicImport = false;
@@ -1615,6 +1675,10 @@ public class CompilerOptions {
     this.replaceIdGenerators = replaceIdGenerators;
   }
 
+  boolean shouldReplaceIdGenerators() {
+    return replaceIdGenerators;
+  }
+
   /** Sets the id generators to replace. */
   public void setIdGenerators(Set<String> idGenerators) {
     ImmutableMap.Builder<String, RenamingMap> builder = ImmutableMap.builder();
@@ -1629,6 +1693,10 @@ public class CompilerOptions {
     this.idGenerators = ImmutableMap.copyOf(idGenerators);
   }
 
+  Map<String, RenamingMap> getIdGenerators() {
+    return idGenerators;
+  }
+
   /**
    * A previous map of ids (serialized to a string by a previous compile). This will be used as a
    * hint during the ReplaceIdGenerators pass, which will attempt to reuse the same ids.
@@ -1637,14 +1705,26 @@ public class CompilerOptions {
     this.idGeneratorsMapSerialized = previousMappings;
   }
 
+  String getIdGeneratorsMapSerialized() {
+    return idGeneratorsMapSerialized;
+  }
+
   /** Sets the hash function to use for Xid */
   public void setXidHashFunction(Xid.HashFunction xidHashFunction) {
     this.xidHashFunction = xidHashFunction;
   }
 
+  Xid.HashFunction getXidHashFunction() {
+    return xidHashFunction;
+  }
+
   /** Sets the hash function to use for chunk ID generation */
   public void setChunkIdHashFunction(Xid.HashFunction chunkIdHashFunction) {
     this.chunkIdHashFunction = chunkIdHashFunction;
+  }
+
+  Xid.HashFunction getChunkIdHashFunction() {
+    return chunkIdHashFunction;
   }
 
   private Reach inlineFunctionsLevel;
@@ -1664,8 +1744,16 @@ public class CompilerOptions {
     this.maxFunctionSizeAfterInlining = funAstSize;
   }
 
+  int getMaxFunctionSizeAfterInlining() {
+    return maxFunctionSizeAfterInlining;
+  }
+
   public void setInlineVariables(boolean inlineVariables) {
     this.inlineVariables = inlineVariables;
+  }
+
+  boolean shouldInlineVariables() {
+    return inlineVariables;
   }
 
   /** Set the variable inlining policy for the compiler. */
@@ -1713,23 +1801,43 @@ public class CompilerOptions {
     }
   }
 
+  boolean shouldRemoveUnusedVariables() {
+    return removeUnusedVars;
+  }
+
+  boolean shouldRemoveUnusedLocalVariables() {
+    return removeUnusedLocalVars;
+  }
+
   /** Sets the functions whose debug strings to replace. */
   public void setReplaceStringsConfiguration(
       String placeholderToken, List<String> functionDescriptors) {
     this.replaceStringsPlaceholderToken = placeholderToken;
-    this.replaceStringsFunctionDescriptions = new ArrayList<>(functionDescriptors);
+    this.replaceStringsFunctionDescriptions = ImmutableList.copyOf(functionDescriptors);
   }
 
   public void setRemoveAbstractMethods(boolean remove) {
     this.removeAbstractMethods = remove;
   }
 
+  boolean shouldRemoveAbstractMethods() {
+    return removeAbstractMethods;
+  }
+
   public void setRemoveClosureAsserts(boolean remove) {
     this.removeClosureAsserts = remove;
   }
 
+  boolean shouldRemoveClosureAsserts() {
+    return removeClosureAsserts;
+  }
+
   public void setRemoveJ2clAsserts(boolean remove) {
     this.removeJ2clAsserts = remove;
+  }
+
+  boolean shouldRemoveJ2clAsserts() {
+    return removeJ2clAsserts;
   }
 
   public void setColorizeErrorOutput(boolean colorizeErrorOutput) {
@@ -1744,12 +1852,24 @@ public class CompilerOptions {
     this.checksOnly = checksOnly;
   }
 
+  boolean isChecksOnly() {
+    return this.checksOnly;
+  }
+
   public void setOutputJs(OutputJs outputJs) {
     this.outputJs = outputJs;
   }
 
+  OutputJs getOutputJs() {
+    return this.outputJs;
+  }
+
   public void setGenerateExports(boolean generateExports) {
     this.generateExports = generateExports;
+  }
+
+  boolean shouldGenerateExports() {
+    return this.generateExports;
   }
 
   public void setExportLocalPropertyDefinitions(boolean export) {
@@ -1764,6 +1884,10 @@ public class CompilerOptions {
     this.angularPass = angularPass;
   }
 
+  boolean getAngularPass() {
+    return angularPass;
+  }
+
   public void setPolymerVersion(Integer polymerVersion) {
     checkArgument(
         polymerVersion == null || polymerVersion == 1 || polymerVersion == 2,
@@ -1773,6 +1897,10 @@ public class CompilerOptions {
     // don't. The public API is an integer for historical reasons & in case we need to modify it
     // in the future.
     this.polymerPass = polymerVersion != null;
+  }
+
+  boolean isPolymerPassEnabled() {
+    return polymerPass;
   }
 
   public void setChromePass(boolean chromePass) {
@@ -1787,12 +1915,24 @@ public class CompilerOptions {
     this.j2clPassMode = j2clPassMode;
   }
 
+  J2clPassMode getJ2clPass() {
+    return j2clPassMode;
+  }
+
   public void setJ2clMinifierEnabled(boolean enabled) {
     this.j2clMinifierEnabled = enabled;
   }
 
+  boolean isJ2clMinifierEnabled() {
+    return j2clMinifierEnabled;
+  }
+
   public void setJ2clMinifierPruningManifest(String j2clMinifierPruningManifest) {
     this.j2clMinifierPruningManifest = j2clMinifierPruningManifest;
+  }
+
+  String getJ2clMinifierPruningManifest() {
+    return j2clMinifierPruningManifest;
   }
 
   public void setCodingConvention(CodingConvention codingConvention) {
@@ -1821,8 +1961,16 @@ public class CompilerOptions {
     this.summaryDetailLevel = summaryDetailLevel;
   }
 
+  int getSummaryDetailLevel() {
+    return summaryDetailLevel;
+  }
+
   public void setExtraAnnotationNames(Iterable<String> extraAnnotationNames) {
     this.extraAnnotationNames = ImmutableSet.copyOf(extraAnnotationNames);
+  }
+
+  ImmutableSet<String> getExtraAnnotationNames() {
+    return extraAnnotationNames;
   }
 
   /** Sets the output charset. */
@@ -1993,6 +2141,10 @@ public class CompilerOptions {
     this.errorHandler = handler;
   }
 
+  ErrorHandler getErrorHandler() {
+    return errorHandler;
+  }
+
   /** If true, enables type inference. If checkTypes is enabled, this flag has no effect. */
   public void setInferTypes(boolean enable) {
     inferTypes = enable;
@@ -2122,8 +2274,16 @@ public class CompilerOptions {
     this.skipNonTranspilationPasses = skipNonTranspilationPasses;
   }
 
+  boolean getSkipNonTranspilationPasses() {
+    return skipNonTranspilationPasses;
+  }
+
   public void setDevMode(DevMode devMode) {
     this.devMode = devMode;
+  }
+
+  DevMode getDevMode() {
+    return devMode;
   }
 
   public void setCheckDeterminism(boolean checkDeterminism) {
@@ -2138,20 +2298,40 @@ public class CompilerOptions {
     this.messageBundle = messageBundle;
   }
 
+  MessageBundle getMessageBundle() {
+    return messageBundle;
+  }
+
   public void setCheckSymbols(boolean checkSymbols) {
     this.checkSymbols = checkSymbols;
+  }
+
+  boolean getCheckSymbols() {
+    return checkSymbols;
   }
 
   public void setCheckSuspiciousCode(boolean checkSuspiciousCode) {
     this.checkSuspiciousCode = checkSuspiciousCode;
   }
 
+  boolean getCheckSuspiciousCode() {
+    return checkSuspiciousCode;
+  }
+
   public void setCheckTypes(boolean checkTypes) {
     this.checkTypes = checkTypes;
   }
 
+  boolean getCheckTypes() {
+    return checkTypes;
+  }
+
   public void setFoldConstants(boolean foldConstants) {
     this.foldConstants = foldConstants;
+  }
+
+  public boolean shouldFoldConstants() {
+    return foldConstants;
   }
 
   public void setDeadAssignmentElimination(boolean deadAssignmentElimination) {
@@ -2180,6 +2360,10 @@ public class CompilerOptions {
     this.inlineConstantVars = inlineConstantVars;
   }
 
+  boolean shouldInlineConstantVars() {
+    return inlineConstantVars;
+  }
+
   public void setCrossChunkCodeMotion(boolean crossChunkCodeMotion) {
     this.crossChunkCodeMotion = crossChunkCodeMotion;
   }
@@ -2188,25 +2372,49 @@ public class CompilerOptions {
     this.crossChunkCodeMotionNoStubMethods = crossChunkCodeMotionNoStubMethods;
   }
 
+  boolean getCrossChunkCodeMotionNoStubMethods() {
+    return crossChunkCodeMotionNoStubMethods;
+  }
+
   public void setParentChunkCanSeeSymbolsDeclaredInChildren(
       boolean parentChunkCanSeeSymbolsDeclaredInChildren) {
     this.parentChunkCanSeeSymbolsDeclaredInChildren = parentChunkCanSeeSymbolsDeclaredInChildren;
+  }
+
+  boolean getParentChunkCanSeeSymbolsDeclaredInChildren() {
+    return parentChunkCanSeeSymbolsDeclaredInChildren;
   }
 
   public void setCrossChunkMethodMotion(boolean crossChunkMethodMotion) {
     this.crossChunkMethodMotion = crossChunkMethodMotion;
   }
 
+  boolean getCrossChunkMethodMotion() {
+    return crossChunkMethodMotion;
+  }
+
   public void setCoalesceVariableNames(boolean coalesceVariableNames) {
     this.coalesceVariableNames = coalesceVariableNames;
+  }
+
+  boolean shouldCoalesceVariableNames() {
+    return coalesceVariableNames;
   }
 
   public void setInlineLocalVariables(boolean inlineLocalVariables) {
     this.inlineLocalVariables = inlineLocalVariables;
   }
 
+  boolean shouldInlineLocalVariables() {
+    return inlineLocalVariables;
+  }
+
   public void setFlowSensitiveInlineVariables(boolean enabled) {
     this.flowSensitiveInlineVariables = enabled;
+  }
+
+  boolean getFlowSensitiveInlineVariables() {
+    return flowSensitiveInlineVariables;
   }
 
   public void setSmartNameRemoval(boolean smartNameRemoval) {
@@ -2218,6 +2426,10 @@ public class CompilerOptions {
       this.removeUnusedVars = true;
       this.removeUnusedPrototypeProperties = true;
     }
+  }
+
+  boolean getSmartNameRemoval() {
+    return smartNameRemoval;
   }
 
   public void setExtractPrototypeMemberDeclarations(boolean enabled) {
@@ -2233,6 +2445,10 @@ public class CompilerOptions {
     this.extractPrototypeMemberDeclarations = mode;
   }
 
+  ExtractPrototypeMemberDeclarationsMode getExtractPrototypeMemberDeclarationsMode() {
+    return extractPrototypeMemberDeclarations;
+  }
+
   public void setRemoveUnusedPrototypeProperties(boolean enabled) {
     this.removeUnusedPrototypeProperties = enabled;
     // InlineSimpleMethods makes similar assumptions to
@@ -2240,12 +2456,28 @@ public class CompilerOptions {
     this.inlineGetters = enabled;
   }
 
+  boolean shouldRemoveUnusedPrototypeProperties() {
+    return removeUnusedPrototypeProperties;
+  }
+
+  boolean shouldInlineGetters() {
+    return inlineGetters;
+  }
+
   public void setCollapseVariableDeclarations(boolean enabled) {
     this.collapseVariableDeclarations = enabled;
   }
 
+  boolean shouldCollapseVariableDeclarations() {
+    return collapseVariableDeclarations;
+  }
+
   public void setCollapseAnonymousFunctions(boolean enabled) {
     this.collapseAnonymousFunctions = enabled;
+  }
+
+  boolean shouldCollapseAnonymousFunctions() {
+    return collapseAnonymousFunctions;
   }
 
   public void setAliasStringsMode(AliasStringsMode aliasStringsMode) {
@@ -2260,8 +2492,16 @@ public class CompilerOptions {
     this.outputJsStringUsage = outputJsStringUsage;
   }
 
+  boolean shouldOutputJsStringUsage() {
+    return outputJsStringUsage;
+  }
+
   public void setConvertToDottedProperties(boolean convertToDottedProperties) {
     this.convertToDottedProperties = convertToDottedProperties;
+  }
+
+  boolean shouldConvertToDottedProperties() {
+    return convertToDottedProperties;
   }
 
   public void setUseTypesForLocalOptimization(boolean useTypesForLocalOptimization) {
@@ -2296,8 +2536,16 @@ public class CompilerOptions {
     this.rewriteFunctionExpressions = rewriteFunctionExpressions;
   }
 
+  boolean shouldRewriteFunctionExpressions() {
+    return rewriteFunctionExpressions;
+  }
+
   public void setOptimizeCalls(boolean optimizeCalls) {
     this.optimizeCalls = optimizeCalls;
+  }
+
+  boolean shouldOptimizeCalls() {
+    return optimizeCalls;
   }
 
   public boolean getOptimizeESClassConstructors() {
@@ -2312,6 +2560,10 @@ public class CompilerOptions {
     this.variableRenaming = variableRenaming;
   }
 
+  VariableRenamingPolicy getVariableRenaming() {
+    return variableRenaming;
+  }
+
   public void setPropertyRenaming(PropertyRenamingPolicy propertyRenaming) {
     this.propertyRenaming = propertyRenaming;
   }
@@ -2324,16 +2576,32 @@ public class CompilerOptions {
     this.labelRenaming = labelRenaming;
   }
 
+  boolean shouldRenameLabels() {
+    return labelRenaming;
+  }
+
   public void setReserveRawExports(boolean reserveRawExports) {
     this.reserveRawExports = reserveRawExports;
+  }
+
+  boolean shouldReserveRawExports() {
+    return reserveRawExports;
   }
 
   public void setPreferStableNames(boolean preferStableNames) {
     this.preferStableNames = preferStableNames;
   }
 
+  boolean shouldPreferStableNames() {
+    return this.preferStableNames;
+  }
+
   public void setGeneratePseudoNames(boolean generatePseudoNames) {
     this.generatePseudoNames = generatePseudoNames;
+  }
+
+  boolean shouldGeneratePseudoNames() {
+    return this.generatePseudoNames;
   }
 
   public void setPropertyRenamingOnlyCompilationMode(boolean propertyRenamingOnlyCompilationMode) {
@@ -2346,6 +2614,10 @@ public class CompilerOptions {
 
   public void setRenamePrefix(String renamePrefix) {
     this.renamePrefix = renamePrefix;
+  }
+
+  String getRenamePrefix() {
+    return this.renamePrefix;
   }
 
   public String getRenamePrefixNamespace() {
@@ -2366,12 +2638,24 @@ public class CompilerOptions {
         fullyCollapse ? PropertyCollapseLevel.ALL : PropertyCollapseLevel.NONE;
   }
 
+  PropertyCollapseLevel getCollapsePropertiesLevel() {
+    return this.collapsePropertiesLevel;
+  }
+
   public void setDevirtualizeMethods(boolean devirtualizeMethods) {
     this.devirtualizeMethods = devirtualizeMethods;
   }
 
+  boolean shouldDevirtualizeMethods() {
+    return this.devirtualizeMethods;
+  }
+
   public void setComputeFunctionSideEffects(boolean computeFunctionSideEffects) {
     this.computeFunctionSideEffects = computeFunctionSideEffects;
+  }
+
+  boolean shouldComputeFunctionSideEffects() {
+    return this.computeFunctionSideEffects;
   }
 
   public void setDisambiguateProperties(boolean disambiguateProperties) {
@@ -2394,12 +2678,24 @@ public class CompilerOptions {
     this.inputVariableMap = inputVariableMap;
   }
 
+  VariableMap getInputVariableMap() {
+    return this.inputVariableMap;
+  }
+
   public void setInputPropertyMap(VariableMap inputPropertyMap) {
     this.inputPropertyMap = inputPropertyMap;
   }
 
+  VariableMap getInputPropertyMap() {
+    return this.inputPropertyMap;
+  }
+
   public void setExportTestFunctions(boolean exportTestFunctions) {
     this.exportTestFunctions = exportTestFunctions;
+  }
+
+  boolean shouldExportTestFunctions() {
+    return this.exportTestFunctions;
   }
 
   public void setSyntheticBlockStartMarker(String syntheticBlockStartMarker) {
@@ -2410,8 +2706,20 @@ public class CompilerOptions {
     this.syntheticBlockEndMarker = syntheticBlockEndMarker;
   }
 
+  String getSyntheticBlockStartMarker() {
+    return this.syntheticBlockStartMarker;
+  }
+
+  String getSyntheticBlockEndMarker() {
+    return this.syntheticBlockEndMarker;
+  }
+
   public void setLocale(String locale) {
     this.locale = locale;
+  }
+
+  String getLocale() {
+    return this.locale;
   }
 
   public void setDoLateLocalization(boolean doLateLocalization) {
@@ -2431,8 +2739,16 @@ public class CompilerOptions {
     this.markAsCompiled = markAsCompiled;
   }
 
+  boolean shouldMarkAsCompiled() {
+    return this.markAsCompiled;
+  }
+
   public void setClosurePass(boolean closurePass) {
     this.closurePass = closurePass;
+  }
+
+  boolean getClosurePass() {
+    return this.closurePass;
   }
 
   /**
@@ -2461,12 +2777,24 @@ public class CompilerOptions {
     this.preserveTypeAnnotations = preserveTypeAnnotations;
   }
 
+  boolean shouldPreserveTypeAnnotations() {
+    return this.preserveTypeAnnotations;
+  }
+
   public void setGentsMode(boolean gentsMode) {
     this.gentsMode = gentsMode;
   }
 
+  boolean getGentsMode() {
+    return this.gentsMode;
+  }
+
   public void setGatherCssNames(boolean gatherCssNames) {
     this.gatherCssNames = gatherCssNames;
+  }
+
+  boolean shouldGatherCssNames() {
+    return this.gatherCssNames;
   }
 
   /**
@@ -2493,12 +2821,20 @@ public class CompilerOptions {
     this.stripNameSuffixes = ImmutableSet.copyOf(stripNameSuffixes);
   }
 
+  ImmutableSet<String> getStripNameSuffixes() {
+    return this.stripNameSuffixes;
+  }
+
   /**
    * @deprecated StripCode is deprecated. Code should be designed to be removed by other means.
    */
   @Deprecated
   public void setStripNamePrefixes(Set<String> stripNamePrefixes) {
     this.stripNamePrefixes = ImmutableSet.copyOf(stripNamePrefixes);
+  }
+
+  ImmutableSet<String> getStripNamePrefixes() {
+    return this.stripNamePrefixes;
   }
 
   public void addCustomPass(CustomPassExecutionTime time, CompilerPass customPass) {
@@ -2541,17 +2877,34 @@ public class CompilerOptions {
     this.cssRenamingMap = cssRenamingMap;
   }
 
+  CssRenamingMap getCssRenamingMap() {
+    return this.cssRenamingMap;
+  }
+
   public void setCssRenamingSkiplist(Set<String> skiplist) {
-    this.cssRenamingSkiplist = skiplist;
+    this.cssRenamingSkiplist = ImmutableSet.copyOf(skiplist);
+  }
+
+  ImmutableSet<String> getCssRenamingSkiplist() {
+    return this.cssRenamingSkiplist;
   }
 
   public void setReplaceStringsFunctionDescriptions(
       List<String> replaceStringsFunctionDescriptions) {
-    this.replaceStringsFunctionDescriptions = replaceStringsFunctionDescriptions;
+    this.replaceStringsFunctionDescriptions =
+        ImmutableList.copyOf(replaceStringsFunctionDescriptions);
+  }
+
+  ImmutableList<String> getReplaceStringsFunctionDescriptions() {
+    return this.replaceStringsFunctionDescriptions;
   }
 
   public void setReplaceStringsPlaceholderToken(String replaceStringsPlaceholderToken) {
     this.replaceStringsPlaceholderToken = replaceStringsPlaceholderToken;
+  }
+
+  String getReplaceStringsPlaceholderToken() {
+    return this.replaceStringsPlaceholderToken;
   }
 
   /**
@@ -2593,12 +2946,24 @@ public class CompilerOptions {
     this.lineBreak = lineBreak;
   }
 
+  boolean shouldAddLineBreak() {
+    return this.lineBreak;
+  }
+
   public void setPrintInputDelimiter(boolean printInputDelimiter) {
     this.printInputDelimiter = printInputDelimiter;
   }
 
+  boolean shouldPrintInputDelimiter() {
+    return this.printInputDelimiter;
+  }
+
   public void setInputDelimiter(String inputDelimiter) {
     this.inputDelimiter = inputDelimiter;
+  }
+
+  String getInputDelimiter() {
+    return this.inputDelimiter;
   }
 
   public void setDebugLogDirectory(@Nullable Path dir) {
@@ -2683,29 +3048,57 @@ public class CompilerOptions {
     this.applyInputSourceMaps = applyInputSourceMaps;
   }
 
+  boolean getApplyInputSourceMaps() {
+    return this.applyInputSourceMaps;
+  }
+
   public void setResolveSourceMapAnnotations(boolean resolveSourceMapAnnotations) {
     this.resolveSourceMapAnnotations = resolveSourceMapAnnotations;
+  }
+
+  boolean getResolveSourceMapAnnotations() {
+    return this.resolveSourceMapAnnotations;
   }
 
   public void setSourceMapIncludeSourcesContent(boolean sourceMapIncludeSourcesContent) {
     this.sourceMapIncludeSourcesContent = sourceMapIncludeSourcesContent;
   }
 
+  boolean getSourceMapIncludeSourcesContent() {
+    return this.sourceMapIncludeSourcesContent;
+  }
+
   public void setParseInlineSourceMaps(boolean parseInlineSourceMaps) {
     this.parseInlineSourceMaps = parseInlineSourceMaps;
+  }
+
+  boolean getParseInlineSourceMaps() {
+    return this.parseInlineSourceMaps;
   }
 
   public void setSourceMapDetailLevel(SourceMap.DetailLevel sourceMapDetailLevel) {
     this.sourceMapDetailLevel = sourceMapDetailLevel;
   }
 
+  SourceMap.DetailLevel getSourceMapDetailLevel() {
+    return this.sourceMapDetailLevel;
+  }
+
   public void setSourceMapFormat(SourceMap.Format sourceMapFormat) {
     this.sourceMapFormat = sourceMapFormat;
   }
 
+  SourceMap.Format getSourceMapFormat() {
+    return this.sourceMapFormat;
+  }
+
   public void setSourceMapLocationMappings(
       List<? extends SourceMap.LocationMapping> sourceMapLocationMappings) {
-    this.sourceMapLocationMappings = sourceMapLocationMappings;
+    this.sourceMapLocationMappings = ImmutableList.copyOf(sourceMapLocationMappings);
+  }
+
+  ImmutableList<? extends SourceMap.LocationMapping> getSourceMapLocationMappings() {
+    return this.sourceMapLocationMappings;
   }
 
   /**
@@ -2752,7 +3145,11 @@ public class CompilerOptions {
 
   /** Sets the module roots. */
   public void setModuleRoots(List<String> moduleRoots) {
-    this.moduleRoots = moduleRoots;
+    this.moduleRoots = ImmutableList.copyOf(moduleRoots);
+  }
+
+  ImmutableList<String> getModuleRoots() {
+    return this.moduleRoots;
   }
 
   /** Sets whether to rewrite polyfills. */
@@ -2826,6 +3223,10 @@ public class CompilerOptions {
   /** Sets list of libraries to always inject, even if not needed. */
   public void setForceLibraryInjection(Iterable<String> libraries) {
     this.forceLibraryInjection = ImmutableList.copyOf(libraries);
+  }
+
+  ImmutableList<String> getForceLibraryInjectionList() {
+    return this.forceLibraryInjection;
   }
 
   /** Sets the set of libraries to never inject, even if required. */
@@ -2948,8 +3349,16 @@ public class CompilerOptions {
     this.useSizeHeuristicToStopOptimizationLoop = mayStopEarly;
   }
 
+  boolean shouldUseSizeHeuristicToStopOptimizationLoop() {
+    return this.useSizeHeuristicToStopOptimizationLoop;
+  }
+
   public void setMaxOptimizationLoopIterations(int maxIterations) {
     this.optimizationLoopMaxIterations = maxIterations;
+  }
+
+  int getMaxOptimizationLoopIterations() {
+    return this.optimizationLoopMaxIterations;
   }
 
   public ChunkOutputType getChunkOutputType() {
