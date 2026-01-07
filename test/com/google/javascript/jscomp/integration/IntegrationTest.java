@@ -4411,14 +4411,14 @@ public final class IntegrationTest extends IntegrationTestCase {
           var JSCompiler_temp_const$jscomp$0;
           return (0, $jscomp.asyncExecutePromiseGeneratorProgram)(
               function ($jscomp$generator$context$98447280$5) {
-                if ($jscomp$generator$context$98447280$5.getNextAddress() == 1) {
+                if ($jscomp$generator$context$98447280$5.nextAddress == 1) {
                   JSCompiler_temp_const = A;
                   JSCompiler_temp_const$jscomp$0 = A$doSomething;
                   return $jscomp$generator$context$98447280$5.yield(3, 2);
                 }
                 JSCompiler_temp_const$jscomp$0.call(
                     JSCompiler_temp_const,
-                    $jscomp$generator$context$98447280$5.getYieldResult());
+                    $jscomp$generator$context$98447280$5.yieldResult);
                 $jscomp$generator$context$98447280$5.jumpToEnd();
               });
         }

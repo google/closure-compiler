@@ -2271,7 +2271,7 @@ function inorder1(t) {
   var $jscomp$iter$1;
   var KEY$1$x;
   return $jscomp.generator.createGenerator(inorder1, function($jscomp$generator$context$m1146332801$2) {
-    switch($jscomp$generator$context$m1146332801$2.getNextAddress()) {
+    switch($jscomp$generator$context$m1146332801$2.nextAddress) {
       case 1:
         $jscomp$iter$0 = (0, $jscomp.makeIterator)([]);
         KEY$0$x = $jscomp$iter$0.next();

@@ -327,7 +327,7 @@ final class Es6RewriteGenerators implements CompilerPass {
 
         // $jscomp.asyncExecutePromiseGeneratorFunction
         Node callTarget = generatorFunction.getPrevious();
-        checkState(callTarget.isGetProp() || callTarget.isName(), callTarget);
+        checkState(callTarget.isGetProp());
 
         // Use original async function as a hoist block for local generator variables:
         // generator function -> call -> return -> async function body
@@ -1272,53 +1272,47 @@ final class Es6RewriteGenerators implements CompilerPass {
         optimizeCaseIds();
 
         // If number of cases is small we render them without using "switch"
-        //   switch ($context.getNextAddress()) {
+        //   switch ($context.nextAddress) {
         //     case 1: a();
         //     case 2: b();
         //     case 3: c();
         //   }
         // are rendered as:
-        //   if ($context.getNextAddress() == 1) a();
-        //   if ($context.getNextAddress() != 3) b();
+        //   if ($context.nextAddress == 1) a();
+        //   if ($context.nextAddress != 3) b();
         //   c();
         if (allCases.size() == 2 || allCases.size() == 3) {
           generatorBody.addChildToBack(
               astFactory
                   .createIf(
                       astFactory.createEq(
-                          callContextMethod(
-                              generatorBody,
-                              "getNextAddress",
-                              type(JSTypeNative.NUMBER_TYPE, StandardColors.NUMBER)),
+                          getContextField(generatorBody, "nextAddress"),
                           astFactory.createNumber(1)),
                       allCases.remove(0).caseBlock)
                   .srcrefTreeIfMissing(generatorBody));
         }
 
         // If number of cases is small we render them without using "switch"
-        //   switch ($context.getNextAddress()) {
+        //   switch ($context.nextAddress) {
         //     case 1: a();
         //     case 2: b();
         //   }
         // are rendered as:
-        //   if ($context.getNextAddress() == 1) a();
+        //   if ($context.nextAddress == 1) a();
         //   b();
         if (allCases.size() == 2) {
           generatorBody.addChildToBack(
               astFactory
                   .createIf(
                       astFactory.createNe(
-                          callContextMethod(
-                              generatorBody,
-                              "getNextAddress",
-                              type(JSTypeNative.NUMBER_TYPE, StandardColors.NUMBER)),
+                          getContextField(generatorBody, "nextAddress"),
                           astFactory.createNumber(allCases.get(1).id)),
                       allCases.remove(0).caseBlock)
                   .srcrefTreeIfMissing(generatorBody));
         }
 
         // If number of cases is small we render them without using "switch"
-        //   switch ($context.getNextAddress()) {
+        //   switch ($context.nextAddress) {
         //     case 1: a();
         //   }
         // are rendered as:
@@ -1329,14 +1323,9 @@ final class Es6RewriteGenerators implements CompilerPass {
           return;
         }
 
-        //  switch ($jscomp$generator$context.getNextAddress()) {}
+        //  switch ($jscomp$generator$context.nextAddress) {}
         Node switchNode =
-            IR.switchNode(
-                    callContextMethod(
-                        generatorBody,
-                        "getNextAddress",
-                        type(JSTypeNative.NUMBER_TYPE, StandardColors.NUMBER)))
-                .srcref(generatorBody);
+            IR.switchNode(getContextField(generatorBody, "nextAddress")).srcref(generatorBody);
         generatorBody.addChildToBack(switchNode);
         Node switchBody = switchNode.getSecondChild().srcref(generatorBody);
 
@@ -1589,7 +1578,7 @@ final class Es6RewriteGenerators implements CompilerPass {
 
       /** Instructs a state machine program to consume a yield result after yielding. */
       Node yieldResult(Node sourceNode) {
-        return callContextMethod(sourceNode, "getYieldResult", type(StandardColors.UNKNOWN));
+        return getContextField(sourceNode, "yieldResult");
       }
 
       /** Adds references to catch and finally blocks to the transpilation context. */
