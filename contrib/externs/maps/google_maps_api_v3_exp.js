@@ -2976,7 +2976,7 @@ google.maps.DistanceMatrixService = function() {};
 /**
  * Issues a distance matrix request.
  * @param {!google.maps.DistanceMatrixRequest} request
- * @param {(function(?google.maps.DistanceMatrixResponse,
+ * @param {(function((!google.maps.DistanceMatrixResponse|null),
  *     !google.maps.DistanceMatrixStatus): void)=} callback
  * @return {!Promise<!google.maps.DistanceMatrixResponse>}
  */
@@ -6483,8 +6483,8 @@ google.maps.MapOptions.prototype.zoomControl;
 google.maps.MapOptions.prototype.zoomControlOptions;
 
 /**
- * If <code>false</code>, prevents the map from being dragged. Dragging is
- * enabled by default.
+ * If <code>false</code>, prevents the map from being dragged and zoomed by
+ * mouse and touch gestures. Dragging is enabled by default.
  * @type {boolean|null|undefined}
  * @deprecated Deprecated in 2017. To disable dragging on the map, you can use
  *     the <code>gestureHandling</code> property, and set it to
@@ -20963,6 +20963,12 @@ google.maps.places.PlaceAutocompleteElement.prototype.name;
 google.maps.places.PlaceAutocompleteElement.prototype.origin;
 
 /**
+ * The placeholder text to display in the input element.
+ * @type {string}
+ */
+google.maps.places.PlaceAutocompleteElement.prototype.placeholder;
+
+/**
  * A language identifier for the language in which the results should be
  * returned, if possible. Results in the selected language may be given a higher
  * ranking, but suggestions are not restricted to this language. See the <a
@@ -20992,6 +20998,12 @@ google.maps.places.PlaceAutocompleteElement.prototype.requestedRegion;
  * @type {!google.maps.UnitSystem|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElement.prototype.unitSystem;
+
+/**
+ * The value of the input element.
+ * @type {string}
+ */
+google.maps.places.PlaceAutocompleteElement.prototype.value;
 
 
 
@@ -21050,6 +21062,12 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedRegion;
  * @type {!google.maps.UnitSystem|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElementOptions.prototype.unitSystem;
+
+/**
+ * The value of the input element.
+ * @type {string|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype.value;
 
 /**
  * Configures a {@link google.maps.places.PlaceDetailsCompactElement}, {@link
