@@ -34,7 +34,7 @@ public final class AngularPassTest extends CompilerTestCase {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     // enables angularPass.
-    options.angularPass = true;
+    options.setAngularPass(true);
     return options;
   }
 

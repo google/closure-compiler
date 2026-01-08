@@ -1382,7 +1382,7 @@ public abstract class CompilerTestCase {
 
     GatherModuleMetadata gatherModuleMetadata =
         new GatherModuleMetadata(
-            compiler, options.getProcessCommonJSModules(), options.moduleResolutionMode);
+            compiler, options.getProcessCommonJSModules(), options.getModuleResolutionMode());
     factories.maybeAdd(
         PassFactory.builder()
             .setName(PassNames.GATHER_MODULE_METADATA)
