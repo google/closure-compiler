@@ -54,6 +54,7 @@ import com.google.javascript.jscomp.StrictWarningsGuard;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
 import com.google.javascript.jscomp.js.RuntimeJsLibManager;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager.RuntimeLibraryMode;
 import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
@@ -5419,10 +5420,17 @@ async function abc() {
   }
 
   @Test
-  public void forceLetConstTranspilationAlsoLowersDestructuringAndClasses_withEs2015Out() {
+  public void forceLetConstTranspilationAlsoLowersObjectDestructuringAndClasses_withEs2015Out() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     options.setExperimentalForceTranspiles(ExperimentalForceTranspile.LET_CONST);
+    options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_AND_VALIDATE_FIELDS);
+    options.setPrettyPrint(true);
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(new TestExternsBuilder().addJSCompLibraries().buildExternsFile("jscomp.js"))
+            .build();
 
     // check that we transpile the ES2016 `**`, let/const, classes and the ES2015 destructuring
     // parameter
@@ -5443,6 +5451,77 @@ async function abc() {
           return Math.pow(num, 3)
         };
         window['C'] = $jscomp$classDecl$98447280$0
+        """);
+  }
+
+  @Test
+  public void forceLetConstTranspilationAlsoLowersArrayDestructuring_withEs2015Out() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.LET_CONST);
+    options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_AND_VALIDATE_FIELDS);
+    options.setPrettyPrint(true);
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(new TestExternsBuilder().addJSCompLibraries().buildExternsFile("jscomp.js"))
+            .build();
+
+    // This test is to document the current compiler behavior of
+    // ExperimentalForceTranspile.LET_CONST also transpiling array destructuring parameters.
+    // This isn't strictly necessary, but otherwise would require more refactoring of the
+    // transpilation passes.
+    // TODO: b/474152725 - fix this crash.
+    var ex =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                test(
+                    options,
+                    """
+                    window['C'] = function([...strs]) {
+                      return `${strs}`;
+                    };
+                    """,
+                    """
+                    window["C"] = function($jscomp$destructuring$var0) {
+                      var $jscomp$destructuring$var1 = (0,$jscomp.makeIterator)($jscomp$destructuring$var0);
+                      var strs = (0,$jscomp.arrayFromIterator)($jscomp$destructuring$var1);
+                      return `${strs}`;
+                    };
+                    """));
+    assertThat(ex).hasMessageThat().contains("Field $jscomp.arrayFromIterator is not injected");
+  }
+
+  @Test
+  public void forceLetConstTranspilationAlsoLowersDefaultParameters_withEs2015Out() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.LET_CONST);
+    options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_AND_VALIDATE_FIELDS);
+    options.setPrettyPrint(true);
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(new TestExternsBuilder().addJSCompLibraries().buildExternsFile("jscomp.js"))
+            .build();
+
+    // This test is to document the current compiler behavior of
+    // ExperimentalForceTranspile.LET_CONST also transpiling default parameters.
+    // This isn't strictly necessary, but otherwise would require more refactoring of the
+    // transpilation passes.
+    test(
+        options,
+        """
+        window['C'] = function(str = '') {
+          return `${str}`;
+        };
+        """,
+        """
+        window["C"] = function(str) {
+          str = str === void 0 ? "" : str;
+          return `${str}`;
+        };
         """);
   }
 
