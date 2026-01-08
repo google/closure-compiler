@@ -324,7 +324,7 @@ final class CheckClosureImports implements CompilerPass {
 
       if (!currentModule.isEs6Module()
           && !currentModule.isGoogModule()
-          && compiler.getOptions().moduleResolutionMode != ResolutionMode.WEBPACK) {
+          && compiler.getOptions().getModuleResolutionMode() != ResolutionMode.WEBPACK) {
         // Here we are making a heuristic check of the use of goog.module.get.  There are many
         // different ways to deliberately subvert these checks.  What we are trying to avoid
         // is accidential use of a `goog.provide` file as module scoped. So we want to avoid:

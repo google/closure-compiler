@@ -1382,7 +1382,7 @@ final class ClosureRewriteModule implements CompilerPass {
   }
 
   private String namespaceIdToXid(String namespaceId) {
-    Xid.HashFunction hashFunction = this.compiler.getOptions().chunkIdHashFunction;
+    Xid.HashFunction hashFunction = this.compiler.getOptions().getChunkIdHashFunction();
     Xid xid = hashFunction == null ? new Xid() : new Xid(hashFunction);
     return xid.get(namespaceId);
   }

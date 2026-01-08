@@ -259,8 +259,8 @@ public final class AstValidator implements CompilerPass {
         // setWrapGoogModulesForWhitespaceOnly=false
         // TODO: b/294420383 Ideally the LateEs6ToEs3Rewriter pass should not inject code above the
         // module body node
-        if (compiler.getOptions().skipNonTranspilationPasses) {
-          if (!compiler.getOptions().wrapGoogModulesForWhitespaceOnly) {
+        if (compiler.getOptions().getSkipNonTranspilationPasses()) {
+          if (!compiler.getOptions().shouldWrapGoogModulesForWhitespaceOnly()) {
             validateModuleContents(n);
             return;
           }
@@ -268,9 +268,9 @@ public final class AstValidator implements CompilerPass {
         violation("Expected statement but was " + n.getToken() + ".", n);
       }
       default -> {
-        if (n.isModuleBody() && compiler.getOptions().skipNonTranspilationPasses) {
+        if (n.isModuleBody() && compiler.getOptions().getSkipNonTranspilationPasses()) {
           checkState(
-              !compiler.getOptions().wrapGoogModulesForWhitespaceOnly,
+              !compiler.getOptions().shouldWrapGoogModulesForWhitespaceOnly(),
               "Modules can exist in transpiler only if setWrapGoogModulesForWhitespaceOnly is"
                   + " false");
           validateModuleContents(n);
