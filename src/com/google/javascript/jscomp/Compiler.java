@@ -1477,6 +1477,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             .setUseTypesForLocalOptimization(options.shouldUseTypesForLocalOptimization())
             .setAssumeGettersArePure(options.getAssumeGettersArePure())
             .setHasRegexpGlobalReferences(this.hasRegExpGlobalReferences())
+            .setAssumeKnownBuiltinsArePure(options.getAssumePropertiesAreStaticallyAnalyzable())
             .build();
     return new AstAnalyzer(analysisSettings, typeRegistry, getAccessorSummary());
   }

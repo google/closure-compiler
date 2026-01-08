@@ -76,6 +76,7 @@ public class AstAnalyzer {
   private final AccessorSummary accessorSummary;
   private final boolean useTypesForLocalOptimization;
   private final boolean assumeGettersArePure;
+  private final boolean assumeKnownBuiltinsArePure;
   private final boolean hasRegexpGlobalReferences;
 
   AstAnalyzer(
@@ -90,12 +91,14 @@ public class AstAnalyzer {
     this.useTypesForLocalOptimization = options.useTypesForLocalOptimization;
     this.assumeGettersArePure = options.assumeGettersArePure;
     this.hasRegexpGlobalReferences = options.hasRegexpGlobalReferences;
+    this.assumeKnownBuiltinsArePure = options.assumeKnownBuiltinsArePure;
   }
 
   static record Options(
       boolean useTypesForLocalOptimization,
       boolean assumeGettersArePure,
-      boolean hasRegexpGlobalReferences) {
+      boolean hasRegexpGlobalReferences,
+      boolean assumeKnownBuiltinsArePure) {
     @AutoBuilder
     static interface Builder {
       Builder setUseTypesForLocalOptimization(boolean value);
@@ -103,6 +106,8 @@ public class AstAnalyzer {
       Builder setAssumeGettersArePure(boolean value);
 
       Builder setHasRegexpGlobalReferences(boolean value);
+
+      Builder setAssumeKnownBuiltinsArePure(boolean value);
 
       Options build();
     }
@@ -154,11 +159,12 @@ public class AstAnalyzer {
     // Built-in functions with no side effects.
     if (callee.isName()) {
       String name = callee.getString();
-      if (BUILTIN_FUNCTIONS_WITHOUT_SIDEEFFECTS.contains(name)) {
+      if (assumeKnownBuiltinsArePure && BUILTIN_FUNCTIONS_WITHOUT_SIDEEFFECTS.contains(name)) {
         return false;
       }
     } else if (callee.isGetProp() || callee.isOptChainGetProp()) {
       if (callNode.hasOneChild()
+          && assumeKnownBuiltinsArePure
           && OBJECT_METHODS_WITHOUT_SIDEEFFECTS.contains(callee.getString())) {
         return false;
       }
@@ -171,7 +177,8 @@ public class AstAnalyzer {
       // Many common Math functions have no side-effects.
       // TODO(nicksantos): This is a terrible terrible hack, until
       // I create a definitionProvider that understands namespacing.
-      if (callee.getFirstChild().isName()
+      if (assumeKnownBuiltinsArePure
+          && callee.getFirstChild().isName()
           && callee.isQualifiedName()
           && callee.getFirstChild().getString().equals("Math")) {
         switch (callee.getString()) {
@@ -218,7 +225,7 @@ public class AstAnalyzer {
         }
       }
 
-      if (!hasRegexpGlobalReferences) {
+      if (!hasRegexpGlobalReferences && assumeKnownBuiltinsArePure) {
         if (callee.getFirstChild().isRegExp() && REGEXP_METHODS.contains(callee.getString())) {
           return false;
         } else if (isTypedAsString(callee.getFirstChild())) {
@@ -516,7 +523,9 @@ public class AstAnalyzer {
     }
 
     Node nameNode = newNode.getFirstChild();
-    return !nameNode.isName() || !CONSTRUCTORS_WITHOUT_SIDE_EFFECTS.contains(nameNode.getString());
+    return !nameNode.isName()
+        || !assumeKnownBuiltinsArePure
+        || !CONSTRUCTORS_WITHOUT_SIDE_EFFECTS.contains(nameNode.getString());
   }
 
   /**

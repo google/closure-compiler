@@ -246,6 +246,11 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDontAssumeToStringAndValueOfArePure() {
+    testSame(closureUnaware("x.toString(); x.valueOf();"));
+  }
+
+  @Test
   public void transpilesExponentialOperator_ifTargetingES2015() {
     setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     test(
