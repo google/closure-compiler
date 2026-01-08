@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.SetMultimap;
 import com.google.common.primitives.Chars;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.RestrictedApi;
@@ -802,7 +802,7 @@ public class CompilerOptions {
   ImmutableSet<String> stripNamePrefixes;
 
   /** Custom passes */
-  protected transient @Nullable Multimap<CustomPassExecutionTime, CompilerPass> customPasses;
+  private transient @Nullable SetMultimap<CustomPassExecutionTime, CompilerPass> customPasses;
 
   /** Replacements for @defines. Will be Boolean, Numbers, or Strings */
   private final LinkedHashMap<String, Object> defineReplacements;
@@ -2842,6 +2842,12 @@ public class CompilerOptions {
       customPasses = LinkedHashMultimap.create();
     }
     customPasses.put(time, customPass);
+  }
+
+  ImmutableList<CompilerPass> getCustomPassesAt(CustomPassExecutionTime executionTime) {
+    return this.customPasses == null
+        ? ImmutableList.of()
+        : ImmutableList.copyOf(this.customPasses.get(executionTime));
   }
 
   public void setDefineReplacements(Map<String, Object> defineReplacements) {

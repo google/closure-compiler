@@ -1418,15 +1418,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   /** Runs custom passes that are designated to run at a particular time. */
   private void runCustomPasses(CustomPassExecutionTime executionTime) {
-    if (options.customPasses != null) {
-      Tracer t = newTracer("runCustomPasses");
-      try {
-        for (CompilerPass p : options.customPasses.get(executionTime)) {
-          process(p);
-        }
-      } finally {
-        stopTracer(t, "runCustomPasses");
+    ImmutableList<CompilerPass> customPasses = options.getCustomPassesAt(executionTime);
+    Tracer t = newTracer("runCustomPasses");
+    try {
+      for (CompilerPass p : customPasses) {
+        process(p);
       }
+    } finally {
+      stopTracer(t, "runCustomPasses");
     }
   }
 

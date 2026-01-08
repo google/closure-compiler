@@ -1059,9 +1059,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(devirtualizeMethods);
     }
 
-    if (options.customPasses != null) {
-      passes.maybeAdd(getCustomPasses(CustomPassExecutionTime.BEFORE_OPTIMIZATION_LOOP));
-    }
+    passes.maybeAdd(getCustomPasses(CustomPassExecutionTime.BEFORE_OPTIMIZATION_LOOP));
 
     passes.maybeAdd(createEmptyPass(PassNames.BEFORE_MAIN_OPTIMIZATIONS));
 
@@ -1077,9 +1075,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Some optimizations belong outside the loop because running them more
     // than once would either have no benefit or be incorrect.
-    if (options.customPasses != null) {
-      passes.maybeAdd(getCustomPasses(CustomPassExecutionTime.AFTER_OPTIMIZATION_LOOP));
-    }
+    passes.maybeAdd(getCustomPasses(CustomPassExecutionTime.AFTER_OPTIMIZATION_LOOP));
 
     assertValidOrderForOptimizations(passes);
     return passes;
@@ -2709,7 +2705,7 @@ public final class DefaultPassConfig extends PassConfig {
   private PassFactory getCustomPasses(final CustomPassExecutionTime executionTime) {
     return PassFactory.builder()
         .setName("runCustomPasses")
-        .setInternalFactory((compiler) -> runInSerial(options.customPasses.get(executionTime)))
+        .setInternalFactory((compiler) -> runInSerial(options.getCustomPassesAt(executionTime)))
         .build();
   }
 
