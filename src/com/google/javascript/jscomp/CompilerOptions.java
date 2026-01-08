@@ -512,9 +512,6 @@ public class CompilerOptions {
   /** Removes unused member properties */
   boolean removeUnusedClassProperties;
 
-  /** Removes unused constructor properties */
-  boolean removeUnusedConstructorProperties;
-
   /** Removes unused variables */
   boolean removeUnusedVars;
 
@@ -3516,7 +3513,6 @@ public class CompilerOptions {
         .add("removeClosureAsserts", removeClosureAsserts)
         .add("removeJ2clAsserts", removeJ2clAsserts)
         .add("removeUnusedClassProperties", removeUnusedClassProperties)
-        .add("removeUnusedConstructorProperties", removeUnusedConstructorProperties)
         .add("removeUnusedLocalVars", removeUnusedLocalVars)
         .add("removeUnusedPrototypeProperties", removeUnusedPrototypeProperties)
         .add("removeUnusedVars", removeUnusedVars)
