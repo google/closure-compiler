@@ -1493,8 +1493,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setWarningLevel(DiagnosticGroups.UNDEFINED_VARIABLES, CheckLevel.OFF);
-    options.syntheticBlockStartMarker = "START";
-    options.syntheticBlockEndMarker = "END";
+    options.setSyntheticBlockStartMarker("START");
+    options.setSyntheticBlockEndMarker("END");
     test(
         options,
         """
@@ -1533,8 +1533,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setClosurePass(true);
     options.setWarningLevel(DiagnosticGroups.UNDEFINED_VARIABLES, CheckLevel.OFF);
-    options.syntheticBlockStartMarker = "START";
-    options.syntheticBlockEndMarker = "END";
+    options.setSyntheticBlockStartMarker("START");
+    options.setSyntheticBlockEndMarker("END");
     Compiler result =
         compile(
             options,

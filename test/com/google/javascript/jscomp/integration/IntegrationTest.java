@@ -807,7 +807,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   public void testExportTestFunctionsOn1() {
     CompilerOptions options = createCompilerOptions();
-    options.exportTestFunctions = true;
+    options.setExportTestFunctions(true);
     test(
         options,
         "function testFoo() {}",
@@ -1678,10 +1678,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckSuspiciousCode(true);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.ERROR);
     options.setGenerateExports(true);
-    options.exportTestFunctions = true;
+    options.setExportTestFunctions(true);
     options.setClosurePass(true);
-    options.syntheticBlockStartMarker = "synStart";
-    options.syntheticBlockEndMarker = "synEnd";
+    options.setSyntheticBlockStartMarker("synStart");
+    options.setSyntheticBlockEndMarker("synEnd");
     options.setCheckSymbols(true);
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     test(options, CLOSURE_BOILERPLATE, CLOSURE_COMPILED);
@@ -1690,8 +1690,8 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   public void testTypeCheckingWithSyntheticBlocks() {
     CompilerOptions options = createCompilerOptions();
-    options.syntheticBlockStartMarker = "synStart";
-    options.syntheticBlockEndMarker = "synEnd";
+    options.setSyntheticBlockStartMarker("synStart");
+    options.setSyntheticBlockEndMarker("synEnd");
     options.setCheckTypes(true);
 
     // We used to have a bug where the CFG drew an
@@ -2709,7 +2709,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     String code = "var x = f(); function f() { return 3; }";
     testSame(options, code);
 
-    options.rewriteGlobalDeclarationsForTryCatchWrapping = true;
+    options.setRewriteGlobalDeclarationsForTryCatchWrapping(true);
     test(options, code, "var f = function() { return 3; }; var x = f();");
   }
 
@@ -2814,7 +2814,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     String expected = "function f() { return this.bar; } f.prototype.a = 3;";
     testSame(options, code);
 
-    options.convertToDottedProperties = true;
+    options.setConvertToDottedProperties(true);
     options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
     test(options, code, expected);
   }
@@ -2874,7 +2874,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setVariableRenaming(VariableRenamingPolicy.ALL);
     test(options, code, all);
 
-    options.reserveRawExports = true;
+    options.setReserveRawExports(true);
   }
 
   @Test
@@ -2886,10 +2886,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     String noexport = "var a = 3;   function b() { window['a'] = 5; }";
     String export = "var b = 3;   function c() { window['a'] = 5; }";
 
-    options.reserveRawExports = false;
+    options.setReserveRawExports(false);
     test(options, code, noexport);
 
-    options.reserveRawExports = true;
+    options.setReserveRawExports(true);
     test(options, code, export);
   }
 
@@ -2900,7 +2900,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     String expected = "a: for(;true;) { break a; }";
     testSame(options, code);
 
-    options.labelRenaming = true;
+    options.setLabelRenaming(true);
     test(options, code, expected);
   }
 
@@ -3639,8 +3639,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setDeadAssignmentElimination(true);
     options.setRemoveUnusedVariables(Reach.ALL);
-    options.syntheticBlockStartMarker = "START";
-    options.syntheticBlockEndMarker = "END";
+    options.setSyntheticBlockStartMarker("START");
+    options.setSyntheticBlockEndMarker("END");
     test(
         options,
         "var x; x = 1; START(); x = 1;END();x()",
@@ -3651,8 +3651,8 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testBug4152835() {
     CompilerOptions options = createCompilerOptions();
     options.setFoldConstants(true);
-    options.syntheticBlockStartMarker = "START";
-    options.syntheticBlockEndMarker = "END";
+    options.setSyntheticBlockStartMarker("START");
+    options.setSyntheticBlockEndMarker("END");
     test(options, "START();END()", "{START();{}END()}");
   }
 
@@ -3660,8 +3660,8 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testNoFuseIntoSyntheticBlock() {
     CompilerOptions options = createCompilerOptions();
     options.setFoldConstants(true);
-    options.syntheticBlockStartMarker = "START";
-    options.syntheticBlockEndMarker = "END";
+    options.setSyntheticBlockStartMarker("START");
+    options.setSyntheticBlockEndMarker("END");
     testSame(options, "for(;;) { x = 1; {START(); {z = 3} END()} }");
     testSame(options, "x = 1; y = 2; {START(); {z = 3} END()} f()");
   }
@@ -3990,7 +3990,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     String code = "var x = f; function f() { return 3; }";
     testSame(options, code);
-    assertThat(options.rewriteGlobalDeclarationsForTryCatchWrapping).isFalse();
+    assertThat(options.shouldRewriteGlobalDeclarationsForTryCatchWrapping()).isFalse();
     options.setRenamePrefixNamespace("_");
     test(options, code, "_.f = function() { return 3; }; _.x = _.f;");
   }
@@ -4655,8 +4655,8 @@ async function abc() {
     // collected.
 
     CompilerOptions options = createCompilerOptions();
-    options.checkTypes = true;
-    options.devirtualizeMethods = true;
+    options.setCheckTypes(true);
+    options.setDevirtualizeMethods(true);
 
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);

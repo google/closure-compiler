@@ -114,9 +114,6 @@ public class CompilerOptions {
     MODULE_EXPORT
   }
 
-  // TODO(nicksantos): All public properties of this class should be made
-  // package-private, and have a public setter.
-
   /** Should the compiled output start with "'use strict';"? */
   private Optional<Boolean> emitUseStrict = Optional.absent();
 
@@ -382,7 +379,7 @@ public class CompilerOptions {
   private DependencyOptions dependencyOptions = DependencyOptions.none();
 
   /** Returns localized replacement for MSG_* variables */
-  public @Nullable MessageBundle messageBundle = null;
+  @Nullable MessageBundle messageBundle = null;
 
   /** Whether we should report an error if a message is absent from a bundle. */
   private boolean strictMessageReplacement;
@@ -393,13 +390,13 @@ public class CompilerOptions {
 
   /** Checks that all symbols are defined */
   // TODO(tbreisacher): Remove this and deprecate the corresponding setter.
-  public boolean checkSymbols;
+  boolean checkSymbols;
 
   /** Checks for suspicious statements that have no effect */
-  public boolean checkSuspiciousCode;
+  boolean checkSuspiciousCode;
 
   /** Checks types on expressions */
-  public boolean checkTypes;
+  boolean checkTypes;
 
   /** Deprecated. Please use setWarningLevel(DiagnosticGroups.GLOBAL_THIS, level) instead. */
   @Deprecated
@@ -436,7 +433,7 @@ public class CompilerOptions {
   // --------------------------------
 
   /** Folds constants (e.g. (2 + 3) to 5) */
-  public boolean foldConstants;
+  boolean foldConstants;
 
   /** Remove assignments to values that can not be referenced */
   private boolean deadAssignmentElimination;
@@ -445,7 +442,7 @@ public class CompilerOptions {
   private Tri deadPropertyAssignmentElimination;
 
   /** Inlines constants (symbols that are all CAPS) */
-  public boolean inlineConstantVars;
+  boolean inlineConstantVars;
 
   /** For projects that want to avoid the creation of giant functions after inlining. */
   int maxFunctionSizeAfterInlining;
@@ -478,7 +475,7 @@ public class CompilerOptions {
   boolean parentChunkCanSeeSymbolsDeclaredInChildren;
 
   /** Merge two variables together as one. */
-  public boolean coalesceVariableNames;
+  boolean coalesceVariableNames;
 
   /** Move methods to a deeper chunk */
   private boolean crossChunkMethodMotion;
@@ -487,17 +484,17 @@ public class CompilerOptions {
   boolean inlineGetters;
 
   /** Inlines variables */
-  public boolean inlineVariables;
+  boolean inlineVariables;
 
   /** Inlines variables */
   boolean inlineLocalVariables;
 
   // TODO(user): This is temporary. Once flow sensitive inlining is stable
   // Remove this.
-  public boolean flowSensitiveInlineVariables;
+  boolean flowSensitiveInlineVariables;
 
   /** Removes code associated with unused global names */
-  public boolean smartNameRemoval;
+  boolean smartNameRemoval;
 
   public enum ExtractPrototypeMemberDeclarationsMode {
     OFF,
@@ -510,25 +507,25 @@ public class CompilerOptions {
   ExtractPrototypeMemberDeclarationsMode extractPrototypeMemberDeclarations;
 
   /** Removes unused member prototypes */
-  public boolean removeUnusedPrototypeProperties;
+  boolean removeUnusedPrototypeProperties;
 
   /** Removes unused member properties */
-  public boolean removeUnusedClassProperties;
+  boolean removeUnusedClassProperties;
 
   /** Removes unused constructor properties */
   boolean removeUnusedConstructorProperties;
 
   /** Removes unused variables */
-  public boolean removeUnusedVars;
+  boolean removeUnusedVars;
 
   /** Removes unused variables in local scope. */
-  public boolean removeUnusedLocalVars;
+  boolean removeUnusedLocalVars;
 
   /** Collapses multiple variable declarations into one */
-  public boolean collapseVariableDeclarations;
+  boolean collapseVariableDeclarations;
 
   /** Collapses anonymous function declarations into named function declarations */
-  public boolean collapseAnonymousFunctions;
+  boolean collapseAnonymousFunctions;
 
   /** Aliases string literals to global instances, to reduce code size. */
   private AliasStringsMode aliasStringsMode;
@@ -537,15 +534,15 @@ public class CompilerOptions {
   boolean outputJsStringUsage;
 
   /** Converts quoted property accesses to dot syntax (a['b'] &rarr; a.b) */
-  public boolean convertToDottedProperties;
+  boolean convertToDottedProperties;
 
   /** Reduces the size of common function expressions. */
-  public boolean rewriteFunctionExpressions;
+  boolean rewriteFunctionExpressions;
 
   /**
    * Remove unused function arguments, remove unused return values, and inlines constant parameters.
    */
-  public boolean optimizeCalls;
+  boolean optimizeCalls;
 
   /** Removes trivial constructors where ES class implicit constructors are sufficient. */
   boolean optimizeESClassConstructors;
@@ -566,7 +563,7 @@ public class CompilerOptions {
   // --------------------------------
 
   /** Controls which variables get renamed. */
-  public VariableRenamingPolicy variableRenaming;
+  VariableRenamingPolicy variableRenaming;
 
   /** Controls which properties get renamed. */
   PropertyRenamingPolicy propertyRenaming;
@@ -575,10 +572,10 @@ public class CompilerOptions {
   private boolean propertyRenamingOnlyCompilationMode;
 
   /** Controls label renaming. */
-  public boolean labelRenaming;
+  boolean labelRenaming;
 
   /** Reserve property names on the global this object. */
-  public boolean reserveRawExports;
+  boolean reserveRawExports;
 
   /**
    * Use a renaming heuristic with better stability across source changes. With this option each
@@ -588,13 +585,13 @@ public class CompilerOptions {
   boolean preferStableNames;
 
   /** Generate pseudo names for variables and properties for debugging purposes. */
-  public boolean generatePseudoNames;
+  boolean generatePseudoNames;
 
   /** Specifies a prefix for all globals */
-  public @Nullable String renamePrefix;
+  @Nullable String renamePrefix;
 
   /** Specifies the name of an object that will be used to store all non-extern globals. */
-  public String renamePrefixNamespace;
+  String renamePrefixNamespace;
 
   /**
    * Used by tests of the RescopeGlobalSymbols pass to avoid having declare 2 chunks in simple
@@ -643,13 +640,13 @@ public class CompilerOptions {
    * Devirtualize prototype method by rewriting them to be static calls that take the this pointer
    * as their first argument
    */
-  public boolean devirtualizeMethods;
+  boolean devirtualizeMethods;
 
   /**
    * Use @nosideeffects annotations, function bodies and name graph to determine if calls have side
    * effects.
    */
-  public boolean computeFunctionSideEffects;
+  boolean computeFunctionSideEffects;
 
   /** Rename properties to disambiguate between unrelated fields based on type information. */
   private boolean disambiguateProperties;
@@ -676,7 +673,7 @@ public class CompilerOptions {
   VariableMap inputPropertyMap;
 
   /** Whether to export test functions. */
-  public boolean exportTestFunctions;
+  boolean exportTestFunctions;
 
   /** Shared name generator */
   NameGenerator nameGenerator;
@@ -739,11 +736,11 @@ public class CompilerOptions {
   /** A CodingConvention to use during the compile. */
   private CodingConvention codingConvention;
 
-  public @Nullable String syntheticBlockStartMarker;
-  public @Nullable String syntheticBlockEndMarker;
+  @Nullable String syntheticBlockStartMarker;
+  @Nullable String syntheticBlockEndMarker;
 
   /** Compiling locale */
-  public @Nullable String locale;
+  @Nullable String locale;
 
   /**
    * If true, then perform localization passes as late as possible.
@@ -756,10 +753,10 @@ public class CompilerOptions {
   private boolean doLateLocalization;
 
   /** Sets the special "COMPILED" value to true */
-  public boolean markAsCompiled;
+  boolean markAsCompiled;
 
   /** Processes goog.provide() and goog.require() calls */
-  public boolean closurePass;
+  boolean closurePass;
 
   /** Do not strip goog.provide()/goog.require() calls from the code. */
   private boolean preserveClosurePrimitives;
@@ -790,7 +787,7 @@ public class CompilerOptions {
   boolean removeJ2clAsserts = true;
 
   /** Gather CSS names (requires closurePass) */
-  public boolean gatherCssNames;
+  boolean gatherCssNames;
 
   /** Names of types to strip */
   ImmutableSet<String> stripTypes;
@@ -811,7 +808,7 @@ public class CompilerOptions {
   private TweakProcessing tweakProcessing;
 
   /** Move top-level function declarations to the top */
-  public boolean rewriteGlobalDeclarationsForTryCatchWrapping;
+  boolean rewriteGlobalDeclarationsForTryCatchWrapping;
 
   boolean checksOnly;
 
@@ -827,12 +824,12 @@ public class CompilerOptions {
 
   OutputJs outputJs;
 
-  public boolean generateExports;
+  boolean generateExports;
 
   boolean exportLocalPropertyDefinitions;
 
   /** Map used in the renaming of CSS class names. */
-  public @Nullable CssRenamingMap cssRenamingMap;
+  @Nullable CssRenamingMap cssRenamingMap;
 
   /** Skiplist used in the renaming of CSS class names. */
   @Nullable ImmutableSet<String> cssRenamingSkiplist;
@@ -942,26 +939,26 @@ public class CompilerOptions {
   // --------------------------------
 
   /** Do not strip closure-style type annotations from code. */
-  public boolean preserveTypeAnnotations;
+  boolean preserveTypeAnnotations;
 
   /**
    * To distinguish between gents and non-gents mode so that we can turn off checking the sanity of
    * the source location of comments, and also provide a different mode for comment printing between
    * those two.
    */
-  public boolean gentsMode;
+  boolean gentsMode;
 
   /** Output in pretty indented format */
   private boolean prettyPrint;
 
   /** Line break the output a bit more aggressively */
-  public boolean lineBreak;
+  boolean lineBreak;
 
   /** Prints a separator comment before each JS script */
-  public boolean printInputDelimiter;
+  boolean printInputDelimiter;
 
   /** The string to use as the separator for printInputDelimiter */
-  public String inputDelimiter = "// Input %num%";
+  String inputDelimiter = "// Input %num%";
 
   /**
    * A directory into which human readable debug log files can be written.
@@ -1077,7 +1074,7 @@ public class CompilerOptions {
 
   private boolean colorizeErrorOutput;
 
-  public ErrorFormat errorFormat;
+  ErrorFormat errorFormat;
 
   private ComposeWarningsGuard warningsGuard = new ComposeWarningsGuard();
 
@@ -1127,10 +1124,10 @@ public class CompilerOptions {
   private boolean shouldAlwaysGatherSourceMapInfo = false;
 
   /** The detail level for the generated source map. */
-  public SourceMap.DetailLevel sourceMapDetailLevel = SourceMap.DetailLevel.ALL;
+  SourceMap.DetailLevel sourceMapDetailLevel = SourceMap.DetailLevel.ALL;
 
   /** The source map file format */
-  public SourceMap.Format sourceMapFormat = SourceMap.Format.DEFAULT;
+  SourceMap.Format sourceMapFormat = SourceMap.Format.DEFAULT;
 
   /** Whether to parse inline source maps. */
   boolean parseInlineSourceMaps = true;
@@ -1752,7 +1749,7 @@ public class CompilerOptions {
     this.inlineVariables = inlineVariables;
   }
 
-  boolean shouldInlineVariables() {
+  public boolean shouldInlineVariables() {
     return inlineVariables;
   }
 
@@ -1801,11 +1798,11 @@ public class CompilerOptions {
     }
   }
 
-  boolean shouldRemoveUnusedVariables() {
+  public boolean shouldRemoveUnusedVariables() {
     return removeUnusedVars;
   }
 
-  boolean shouldRemoveUnusedLocalVariables() {
+  public boolean shouldRemoveUnusedLocalVariables() {
     return removeUnusedLocalVars;
   }
 
@@ -1868,7 +1865,7 @@ public class CompilerOptions {
     this.generateExports = generateExports;
   }
 
-  boolean shouldGenerateExports() {
+  public boolean shouldGenerateExports() {
     return this.generateExports;
   }
 
@@ -2298,7 +2295,7 @@ public class CompilerOptions {
     this.messageBundle = messageBundle;
   }
 
-  MessageBundle getMessageBundle() {
+  public MessageBundle getMessageBundle() {
     return messageBundle;
   }
 
@@ -2306,7 +2303,7 @@ public class CompilerOptions {
     this.checkSymbols = checkSymbols;
   }
 
-  boolean getCheckSymbols() {
+  public boolean getCheckSymbols() {
     return checkSymbols;
   }
 
@@ -2314,7 +2311,7 @@ public class CompilerOptions {
     this.checkSuspiciousCode = checkSuspiciousCode;
   }
 
-  boolean getCheckSuspiciousCode() {
+  public boolean getCheckSuspiciousCode() {
     return checkSuspiciousCode;
   }
 
@@ -2322,7 +2319,7 @@ public class CompilerOptions {
     this.checkTypes = checkTypes;
   }
 
-  boolean getCheckTypes() {
+  public boolean getCheckTypes() {
     return checkTypes;
   }
 
@@ -2360,7 +2357,7 @@ public class CompilerOptions {
     this.inlineConstantVars = inlineConstantVars;
   }
 
-  boolean shouldInlineConstantVars() {
+  public boolean shouldInlineConstantVars() {
     return inlineConstantVars;
   }
 
@@ -2397,7 +2394,7 @@ public class CompilerOptions {
     this.coalesceVariableNames = coalesceVariableNames;
   }
 
-  boolean shouldCoalesceVariableNames() {
+  public boolean shouldCoalesceVariableNames() {
     return coalesceVariableNames;
   }
 
@@ -2428,7 +2425,7 @@ public class CompilerOptions {
     }
   }
 
-  boolean getSmartNameRemoval() {
+  public boolean getSmartNameRemoval() {
     return smartNameRemoval;
   }
 
@@ -2456,7 +2453,7 @@ public class CompilerOptions {
     this.inlineGetters = enabled;
   }
 
-  boolean shouldRemoveUnusedPrototypeProperties() {
+  public boolean shouldRemoveUnusedPrototypeProperties() {
     return removeUnusedPrototypeProperties;
   }
 
@@ -2468,7 +2465,7 @@ public class CompilerOptions {
     this.collapseVariableDeclarations = enabled;
   }
 
-  boolean shouldCollapseVariableDeclarations() {
+  public boolean shouldCollapseVariableDeclarations() {
     return collapseVariableDeclarations;
   }
 
@@ -2476,7 +2473,7 @@ public class CompilerOptions {
     this.collapseAnonymousFunctions = enabled;
   }
 
-  boolean shouldCollapseAnonymousFunctions() {
+  public boolean shouldCollapseAnonymousFunctions() {
     return collapseAnonymousFunctions;
   }
 
@@ -2500,7 +2497,7 @@ public class CompilerOptions {
     this.convertToDottedProperties = convertToDottedProperties;
   }
 
-  boolean shouldConvertToDottedProperties() {
+  public boolean shouldConvertToDottedProperties() {
     return convertToDottedProperties;
   }
 
@@ -2536,7 +2533,7 @@ public class CompilerOptions {
     this.rewriteFunctionExpressions = rewriteFunctionExpressions;
   }
 
-  boolean shouldRewriteFunctionExpressions() {
+  public boolean shouldRewriteFunctionExpressions() {
     return rewriteFunctionExpressions;
   }
 
@@ -2544,7 +2541,7 @@ public class CompilerOptions {
     this.optimizeCalls = optimizeCalls;
   }
 
-  boolean shouldOptimizeCalls() {
+  public boolean shouldOptimizeCalls() {
     return optimizeCalls;
   }
 
@@ -2560,7 +2557,7 @@ public class CompilerOptions {
     this.variableRenaming = variableRenaming;
   }
 
-  VariableRenamingPolicy getVariableRenaming() {
+  public VariableRenamingPolicy getVariableRenaming() {
     return variableRenaming;
   }
 
@@ -2576,7 +2573,7 @@ public class CompilerOptions {
     this.labelRenaming = labelRenaming;
   }
 
-  boolean shouldRenameLabels() {
+  public boolean shouldRenameLabels() {
     return labelRenaming;
   }
 
@@ -2600,7 +2597,7 @@ public class CompilerOptions {
     this.generatePseudoNames = generatePseudoNames;
   }
 
-  boolean shouldGeneratePseudoNames() {
+  public boolean shouldGeneratePseudoNames() {
     return this.generatePseudoNames;
   }
 
@@ -2646,7 +2643,7 @@ public class CompilerOptions {
     this.devirtualizeMethods = devirtualizeMethods;
   }
 
-  boolean shouldDevirtualizeMethods() {
+  public boolean shouldDevirtualizeMethods() {
     return this.devirtualizeMethods;
   }
 
@@ -2654,7 +2651,7 @@ public class CompilerOptions {
     this.computeFunctionSideEffects = computeFunctionSideEffects;
   }
 
-  boolean shouldComputeFunctionSideEffects() {
+  public boolean shouldComputeFunctionSideEffects() {
     return this.computeFunctionSideEffects;
   }
 
@@ -2718,7 +2715,7 @@ public class CompilerOptions {
     this.locale = locale;
   }
 
-  String getLocale() {
+  public String getLocale() {
     return this.locale;
   }
 
@@ -2747,7 +2744,7 @@ public class CompilerOptions {
     this.closurePass = closurePass;
   }
 
-  boolean getClosurePass() {
+  public boolean getClosurePass() {
     return this.closurePass;
   }
 
@@ -2879,11 +2876,15 @@ public class CompilerOptions {
     this.rewriteGlobalDeclarationsForTryCatchWrapping = rewrite;
   }
 
+  public boolean shouldRewriteGlobalDeclarationsForTryCatchWrapping() {
+    return this.rewriteGlobalDeclarationsForTryCatchWrapping;
+  }
+
   public void setCssRenamingMap(CssRenamingMap cssRenamingMap) {
     this.cssRenamingMap = cssRenamingMap;
   }
 
-  CssRenamingMap getCssRenamingMap() {
+  public CssRenamingMap getCssRenamingMap() {
     return this.cssRenamingMap;
   }
 
@@ -2968,7 +2969,7 @@ public class CompilerOptions {
     this.inputDelimiter = inputDelimiter;
   }
 
-  String getInputDelimiter() {
+  public String getInputDelimiter() {
     return this.inputDelimiter;
   }
 

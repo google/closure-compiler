@@ -512,7 +512,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
 
     options.setInstrumentForCoverageOption(InstrumentOption.PRODUCTION);
     options.setPrettyPrint(true);
-    options.preserveTypeAnnotations = true;
+    options.setPreserveTypeAnnotations(true);
     return options;
   }
 }
