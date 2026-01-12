@@ -289,7 +289,7 @@ public class CompilerOptions {
    *
    * <p>TODO(nicksantos): Remove this option.
    */
-  private boolean inferConsts = true;
+  boolean inferConsts = true;
 
   // TODO(tbreisacher): Remove this method after ctemplate issues are solved.
   public void setInferConst(boolean value) {
@@ -352,19 +352,19 @@ public class CompilerOptions {
   }
 
   /** Even if checkTypes is disabled, clients such as IDEs might want to still infer types. */
-  private boolean inferTypes;
+  boolean inferTypes;
 
   /**
    * Configures the compiler to skip as many passes as possible. If transpilation is requested, it
    * will be run, but all others passes will be skipped.
    */
-  private boolean skipNonTranspilationPasses;
+  boolean skipNonTranspilationPasses;
 
   /**
    * Configures the compiler to run expensive validity checks after every pass. Only intended for
    * internal development.
    */
-  private DevMode devMode;
+  DevMode devMode;
 
   /**
    * Configures the compiler to log a hash code of the AST after every pass. Only intended for
@@ -379,7 +379,7 @@ public class CompilerOptions {
   private DependencyOptions dependencyOptions = DependencyOptions.none();
 
   /** Returns localized replacement for MSG_* variables */
-  private @Nullable MessageBundle messageBundle = null;
+  @Nullable MessageBundle messageBundle = null;
 
   /** Whether we should report an error if a message is absent from a bundle. */
   private boolean strictMessageReplacement;
@@ -390,13 +390,13 @@ public class CompilerOptions {
 
   /** Checks that all symbols are defined */
   // TODO(tbreisacher): Remove this and deprecate the corresponding setter.
-  private boolean checkSymbols;
+  boolean checkSymbols;
 
   /** Checks for suspicious statements that have no effect */
-  private boolean checkSuspiciousCode;
+  boolean checkSuspiciousCode;
 
   /** Checks types on expressions */
-  private boolean checkTypes;
+  boolean checkTypes;
 
   /** Deprecated. Please use setWarningLevel(DiagnosticGroups.GLOBAL_THIS, level) instead. */
   @Deprecated
@@ -406,10 +406,10 @@ public class CompilerOptions {
    * A set of extra annotation names which are accepted and silently ignored when encountered in a
    * source file. Defaults to null which has the same effect as specifying an empty set.
    */
-  private @Nullable ImmutableSet<String> extraAnnotationNames;
+  @Nullable ImmutableSet<String> extraAnnotationNames;
 
   // TODO(bradfordcsmith): Investigate how can we use multi-threads as default.
-  private int numParallelThreads = 1;
+  int numParallelThreads = 1;
 
   /**
    * Sets the level of parallelism for compilation passes that can exploit multi-threading.
@@ -433,7 +433,7 @@ public class CompilerOptions {
   // --------------------------------
 
   /** Folds constants (e.g. (2 + 3) to 5) */
-  private boolean foldConstants;
+  boolean foldConstants;
 
   /** Remove assignments to values that can not be referenced */
   private boolean deadAssignmentElimination;
@@ -442,15 +442,15 @@ public class CompilerOptions {
   private Tri deadPropertyAssignmentElimination;
 
   /** Inlines constants (symbols that are all CAPS) */
-  private boolean inlineConstantVars;
+  boolean inlineConstantVars;
 
   /** For projects that want to avoid the creation of giant functions after inlining. */
-  private int maxFunctionSizeAfterInlining;
+  int maxFunctionSizeAfterInlining;
 
   static final int UNLIMITED_FUN_SIZE_AFTER_INLINING = -1;
 
   /** More aggressive function inlining */
-  private boolean assumeClosuresOnlyCaptureReferences;
+  boolean assumeClosuresOnlyCaptureReferences;
 
   /** Inlines properties */
   private boolean inlineProperties;
@@ -465,36 +465,36 @@ public class CompilerOptions {
    * methods for mixin behavior, such as goog.object.extend, since the prototype assignments will be
    * removed from the parent chunk and moved to a later chunk.
    */
-  private boolean crossChunkCodeMotionNoStubMethods;
+  boolean crossChunkCodeMotionNoStubMethods;
 
   /**
    * Whether when chunk B depends on chunk A and chunk B declares a symbol, this symbol can be seen
    * in A after B has been loaded. This is often true, but may not be true when loading code using
    * nested eval.
    */
-  private boolean parentChunkCanSeeSymbolsDeclaredInChildren;
+  boolean parentChunkCanSeeSymbolsDeclaredInChildren;
 
   /** Merge two variables together as one. */
-  private boolean coalesceVariableNames;
+  boolean coalesceVariableNames;
 
   /** Move methods to a deeper chunk */
   private boolean crossChunkMethodMotion;
 
   /** Inlines trivial getters */
-  private boolean inlineGetters;
+  boolean inlineGetters;
 
   /** Inlines variables */
-  private boolean inlineVariables;
+  boolean inlineVariables;
 
   /** Inlines variables */
-  private boolean inlineLocalVariables;
+  boolean inlineLocalVariables;
 
   // TODO(user): This is temporary. Once flow sensitive inlining is stable
   // Remove this.
-  private boolean flowSensitiveInlineVariables;
+  boolean flowSensitiveInlineVariables;
 
   /** Removes code associated with unused global names */
-  private boolean smartNameRemoval;
+  boolean smartNameRemoval;
 
   public enum ExtractPrototypeMemberDeclarationsMode {
     OFF,
@@ -504,97 +504,97 @@ public class CompilerOptions {
   }
 
   /** Extracts common prototype member declarations */
-  private ExtractPrototypeMemberDeclarationsMode extractPrototypeMemberDeclarations;
+  ExtractPrototypeMemberDeclarationsMode extractPrototypeMemberDeclarations;
 
   /** Removes unused member prototypes */
-  private boolean removeUnusedPrototypeProperties;
+  boolean removeUnusedPrototypeProperties;
 
   /** Removes unused member properties */
-  private boolean removeUnusedClassProperties;
+  boolean removeUnusedClassProperties;
 
   /** Removes unused variables */
-  private boolean removeUnusedVars;
+  boolean removeUnusedVars;
 
   /** Removes unused variables in local scope. */
-  private boolean removeUnusedLocalVars;
+  boolean removeUnusedLocalVars;
 
   /** Collapses multiple variable declarations into one */
-  private boolean collapseVariableDeclarations;
+  boolean collapseVariableDeclarations;
 
   /** Collapses anonymous function declarations into named function declarations */
-  private boolean collapseAnonymousFunctions;
+  boolean collapseAnonymousFunctions;
 
   /** Aliases string literals to global instances, to reduce code size. */
   private AliasStringsMode aliasStringsMode;
 
   /** Print string usage as part of the compilation log. */
-  private boolean outputJsStringUsage;
+  boolean outputJsStringUsage;
 
   /** Converts quoted property accesses to dot syntax (a['b'] &rarr; a.b) */
-  private boolean convertToDottedProperties;
+  boolean convertToDottedProperties;
 
   /** Reduces the size of common function expressions. */
-  private boolean rewriteFunctionExpressions;
+  boolean rewriteFunctionExpressions;
 
   /**
    * Remove unused function arguments, remove unused return values, and inlines constant parameters.
    */
-  private boolean optimizeCalls;
+  boolean optimizeCalls;
 
   /** Removes trivial constructors where ES class implicit constructors are sufficient. */
-  private boolean optimizeESClassConstructors;
+  boolean optimizeESClassConstructors;
 
   /** Use type information to enable additional optimization opportunities. */
-  private boolean useTypesForLocalOptimization;
+  boolean useTypesForLocalOptimization;
 
-  private boolean useSizeHeuristicToStopOptimizationLoop = true;
+  boolean useSizeHeuristicToStopOptimizationLoop = true;
 
   /**
    * Do up to this many iterations of the optimization loop. Setting this field to some small
    * number, say 3 or 4, allows a large project to build faster, but sacrifice some code size.
    */
-  private int optimizationLoopMaxIterations;
+  int optimizationLoopMaxIterations;
 
   // --------------------------------
   // Renaming
   // --------------------------------
 
   /** Controls which variables get renamed. */
-  private VariableRenamingPolicy variableRenaming;
+  VariableRenamingPolicy variableRenaming;
 
   /** Controls which properties get renamed. */
-  private PropertyRenamingPolicy propertyRenaming;
+  PropertyRenamingPolicy propertyRenaming;
 
   /** Controls if property renaming only compilation mode is needed. */
   private boolean propertyRenamingOnlyCompilationMode;
 
   /** Controls label renaming. */
-  private boolean labelRenaming;
+  boolean labelRenaming;
 
   /** Reserve property names on the global this object. */
-  private boolean reserveRawExports;
+  boolean reserveRawExports;
 
   /**
    * Use a renaming heuristic with better stability across source changes. With this option each
    * symbol is more likely to receive the same name between builds. The cost may be a slight
    * increase in code size.
    */
-  private boolean preferStableNames;
+  boolean preferStableNames;
 
   /** Generate pseudo names for variables and properties for debugging purposes. */
-  private boolean generatePseudoNames;
+  boolean generatePseudoNames;
 
   /** Specifies a prefix for all globals */
-  private @Nullable String renamePrefix;
+  @Nullable String renamePrefix;
 
   /** Specifies the name of an object that will be used to store all non-extern globals. */
-  private String renamePrefixNamespace;
+  String renamePrefixNamespace;
 
   /**
    * Used by tests of the RescopeGlobalSymbols pass to avoid having declare 2 chunks in simple
    * cases.
    */
-  private boolean renamePrefixNamespaceAssumeCrossChunkNames = false;
+  boolean renamePrefixNamespaceAssumeCrossChunkNames = false;
 
   /** Useful for tests to avoid having to declare two chunks */
   @VisibleForTesting
@@ -623,7 +623,7 @@ public class CompilerOptions {
   }
 
   /** Split object literals into individual variables when possible. */
-  private boolean collapseObjectLiterals;
+  boolean collapseObjectLiterals;
 
   public void setCollapseObjectLiterals(boolean enabled) {
     collapseObjectLiterals = enabled;
@@ -637,13 +637,13 @@ public class CompilerOptions {
    * Devirtualize prototype method by rewriting them to be static calls that take the this pointer
    * as their first argument
    */
-  private boolean devirtualizeMethods;
+  boolean devirtualizeMethods;
 
   /**
    * Use @nosideeffects annotations, function bodies and name graph to determine if calls have side
    * effects.
    */
-  private boolean computeFunctionSideEffects;
+  boolean computeFunctionSideEffects;
 
   /** Rename properties to disambiguate between unrelated fields based on type information. */
   private boolean disambiguateProperties;
@@ -652,7 +652,7 @@ public class CompilerOptions {
   private boolean ambiguateProperties;
 
   /** Input sourcemap files, indexed by the JS files they refer to */
-  private ImmutableMap<String, SourceMapInput> inputSourceMaps;
+  ImmutableMap<String, SourceMapInput> inputSourceMaps;
 
   /**
    * Input variable renaming map.
@@ -664,16 +664,16 @@ public class CompilerOptions {
    * particular names. Point questioners to this post:
    * http://closuretools.blogspot.com/2011/01/property-by-any-other-name-part-3.html
    */
-  private VariableMap inputVariableMap;
+  VariableMap inputVariableMap;
 
   /** Input property renaming map. */
-  private VariableMap inputPropertyMap;
+  VariableMap inputPropertyMap;
 
   /** Whether to export test functions. */
-  private boolean exportTestFunctions;
+  boolean exportTestFunctions;
 
   /** Shared name generator */
-  private NameGenerator nameGenerator;
+  NameGenerator nameGenerator;
 
   public void setNameGenerator(NameGenerator nameGenerator) {
     this.nameGenerator = nameGenerator;
@@ -690,7 +690,7 @@ public class CompilerOptions {
   /** Replace UI strings with chrome.i18n.getMessage calls. Used by Chrome extensions/apps. */
   private boolean replaceMessagesWithChromeI18n;
 
-  private String tcProjectId;
+  String tcProjectId;
 
   public void setReplaceMessagesWithChromeI18n(
       boolean replaceMessagesWithChromeI18n, String tcProjectId) {
@@ -733,11 +733,11 @@ public class CompilerOptions {
   /** A CodingConvention to use during the compile. */
   private CodingConvention codingConvention;
 
-  private @Nullable String syntheticBlockStartMarker;
-  private @Nullable String syntheticBlockEndMarker;
+  @Nullable String syntheticBlockStartMarker;
+  @Nullable String syntheticBlockEndMarker;
 
   /** Compiling locale */
-  private @Nullable String locale;
+  @Nullable String locale;
 
   /**
    * If true, then perform localization passes as late as possible.
@@ -750,50 +750,50 @@ public class CompilerOptions {
   private boolean doLateLocalization;
 
   /** Sets the special "COMPILED" value to true */
-  private boolean markAsCompiled;
+  boolean markAsCompiled;
 
   /** Processes goog.provide() and goog.require() calls */
-  private boolean closurePass;
+  boolean closurePass;
 
   /** Do not strip goog.provide()/goog.require() calls from the code. */
   private boolean preserveClosurePrimitives;
 
   /** Processes AngularJS-specific annotations */
-  private boolean angularPass;
+  boolean angularPass;
 
   /** Processes Polymer code */
-  private boolean polymerPass;
+  boolean polymerPass;
 
   /** Processes cr.* functions */
   private boolean chromePass;
 
   /** Processes the output of J2CL */
-  private J2clPassMode j2clPassMode;
+  J2clPassMode j2clPassMode;
 
-  private boolean j2clMinifierEnabled = true;
+  boolean j2clMinifierEnabled = true;
 
-  private @Nullable String j2clMinifierPruningManifest = null;
+  @Nullable String j2clMinifierPruningManifest = null;
 
   /** Remove goog.abstractMethod assignments and @abstract methods. */
-  private boolean removeAbstractMethods;
+  boolean removeAbstractMethods;
 
   /** Remove goog.asserts calls. */
-  private boolean removeClosureAsserts;
+  boolean removeClosureAsserts;
 
   /** Remove J2CL assert calls. */
-  private boolean removeJ2clAsserts = true;
+  boolean removeJ2clAsserts = true;
 
   /** Gather CSS names (requires closurePass) */
-  private boolean gatherCssNames;
+  boolean gatherCssNames;
 
   /** Names of types to strip */
-  private ImmutableSet<String> stripTypes;
+  ImmutableSet<String> stripTypes;
 
   /** Name suffixes that determine which variables and properties to strip */
-  private ImmutableSet<String> stripNameSuffixes;
+  ImmutableSet<String> stripNameSuffixes;
 
   /** Name prefixes that determine which variables and properties to strip */
-  private ImmutableSet<String> stripNamePrefixes;
+  ImmutableSet<String> stripNamePrefixes;
 
   /** Custom passes */
   private transient @Nullable SetMultimap<CustomPassExecutionTime, CompilerPass> customPasses;
@@ -805,9 +805,9 @@ public class CompilerOptions {
   private TweakProcessing tweakProcessing;
 
   /** Move top-level function declarations to the top */
-  private boolean rewriteGlobalDeclarationsForTryCatchWrapping;
+  boolean rewriteGlobalDeclarationsForTryCatchWrapping;
 
-  private boolean checksOnly;
+  boolean checksOnly;
 
   /** What type of JS file should be output by this compilation */
   public static enum OutputJs {
@@ -819,40 +819,40 @@ public class CompilerOptions {
     NORMAL,
   }
 
-  private OutputJs outputJs;
+  OutputJs outputJs;
 
-  private boolean generateExports;
+  boolean generateExports;
 
-  private boolean exportLocalPropertyDefinitions;
+  boolean exportLocalPropertyDefinitions;
 
   /** Map used in the renaming of CSS class names. */
-  private @Nullable CssRenamingMap cssRenamingMap;
+  @Nullable CssRenamingMap cssRenamingMap;
 
   /** Skiplist used in the renaming of CSS class names. */
-  private ImmutableSet<String> cssRenamingSkiplist;
+  @Nullable ImmutableSet<String> cssRenamingSkiplist;
 
   /** Replace id generators */
-  private boolean replaceIdGenerators = true; // true by default for legacy reasons.
+  boolean replaceIdGenerators = true; // true by default for legacy reasons.
 
   /** Id generators to replace. */
-  private ImmutableMap<String, RenamingMap> idGenerators;
+  ImmutableMap<String, RenamingMap> idGenerators;
 
   /** Hash function to use for xid generation. */
-  private Xid.HashFunction xidHashFunction;
+  Xid.HashFunction xidHashFunction;
 
   /** Hash function to use for generating chunk ID. */
-  private Xid.HashFunction chunkIdHashFunction;
+  Xid.HashFunction chunkIdHashFunction;
 
   /**
    * A previous map of ids (serialized to a string by a previous compile). This will be used as a
    * hint during the ReplaceIdGenerators pass, which will attempt to reuse the same ids.
    */
-  private String idGeneratorsMapSerialized;
+  String idGeneratorsMapSerialized;
 
   /** Configuration strings */
-  private ImmutableList<String> replaceStringsFunctionDescriptions;
+  ImmutableList<String> replaceStringsFunctionDescriptions;
 
-  private String replaceStringsPlaceholderToken;
+  String replaceStringsPlaceholderToken;
 
   /** List of properties that we report invalidation errors for. */
   private ImmutableSet<String> propertiesThatMustDisambiguate;
@@ -864,11 +864,10 @@ public class CompilerOptions {
   private boolean processCommonJSModules = false;
 
   /** CommonJS module prefix. */
-  private ImmutableList<String> moduleRoots =
-      ImmutableList.of(ModuleLoader.DEFAULT_FILENAME_PREFIX);
+  ImmutableList<String> moduleRoots = ImmutableList.of(ModuleLoader.DEFAULT_FILENAME_PREFIX);
 
   /** Inject polyfills */
-  private boolean rewritePolyfills = false;
+  boolean rewritePolyfills = false;
 
   /** Isolates injected polyfills from the global scope. */
   private boolean isolatePolyfills = false;
@@ -906,18 +905,18 @@ public class CompilerOptions {
   private boolean instrumentAsyncContext = false;
 
   /** Runtime libraries to always inject. */
-  private ImmutableList<String> forceLibraryInjection = ImmutableList.of();
+  ImmutableList<String> forceLibraryInjection = ImmutableList.of();
 
   /** Runtime libraries to never inject. */
   private RuntimeLibraryMode runtimeLibraryMode = RuntimeLibraryMode.INJECT;
 
-  private boolean assumeForwardDeclaredForMissingTypes = false;
+  boolean assumeForwardDeclaredForMissingTypes = false;
 
   /**
    * A Set of goog.requires to be removed. If null, ALL of the unused goog.requires will be counted
    * as a candidate to be removed.
    */
-  private @Nullable ImmutableSet<String> unusedImportsToRemove;
+  @Nullable ImmutableSet<String> unusedImportsToRemove;
 
   /**
    * If {@code true}, considers all missing types to be forward declared (useful for partial
@@ -937,26 +936,26 @@ public class CompilerOptions {
   // --------------------------------
 
   /** Do not strip closure-style type annotations from code. */
-  private boolean preserveTypeAnnotations;
+  boolean preserveTypeAnnotations;
 
   /**
    * To distinguish between gents and non-gents mode so that we can turn off checking the sanity of
    * the source location of comments, and also provide a different mode for comment printing between
    * those two.
    */
-  private boolean gentsMode;
+  boolean gentsMode;
 
   /** Output in pretty indented format */
   private boolean prettyPrint;
 
   /** Line break the output a bit more aggressively */
-  private boolean lineBreak;
+  boolean lineBreak;
 
   /** Prints a separator comment before each JS script */
-  private boolean printInputDelimiter;
+  boolean printInputDelimiter;
 
   /** The string to use as the separator for printInputDelimiter */
-  private String inputDelimiter = "// Input %num%";
+  String inputDelimiter = "// Input %num%";
 
   /**
    * A directory into which human readable debug log files can be written.
@@ -979,7 +978,7 @@ public class CompilerOptions {
   /** Whether to write keyword properties as foo['class'] instead of foo.class; needed for IE8. */
   private boolean quoteKeywordProperties;
 
-  private boolean preferSingleQuotes;
+  boolean preferSingleQuotes;
 
   /**
    * Normally, when there are an equal number of single and double quotes in a string, the compiler
@@ -993,7 +992,7 @@ public class CompilerOptions {
     return preferSingleQuotes;
   }
 
-  private boolean trustedStrings;
+  boolean trustedStrings;
 
   /**
    * Some people want to put arbitrary user input into strings, which are then run through the
@@ -1009,13 +1008,13 @@ public class CompilerOptions {
   }
 
   // Should only be used when debugging compiler bugs.
-  private boolean printSourceAfterEachPass;
+  boolean printSourceAfterEachPass;
 
   // Used to narrow down the printed source when overall input size is large. If these are both
   // empty the entire source is printed.
-  private List<String> filesToPrintAfterEachPassRegexList = ImmutableList.of();
-  private List<String> chunksToPrintAfterEachPassRegexList = ImmutableList.of();
-  private List<String> qnameUsesToPrintAfterEachPassList = ImmutableList.of();
+  List<String> filesToPrintAfterEachPassRegexList = ImmutableList.of();
+  List<String> chunksToPrintAfterEachPassRegexList = ImmutableList.of();
+  List<String> qnameUsesToPrintAfterEachPassList = ImmutableList.of();
 
   public void setPrintSourceAfterEachPass(boolean printSource) {
     this.printSourceAfterEachPass = printSource;
@@ -1072,19 +1071,19 @@ public class CompilerOptions {
 
   private boolean colorizeErrorOutput;
 
-  private ErrorFormat errorFormat;
+  ErrorFormat errorFormat;
 
   private ComposeWarningsGuard warningsGuard = new ComposeWarningsGuard();
 
-  private int summaryDetailLevel = 1;
+  int summaryDetailLevel = 1;
 
-  private int lineLengthThreshold = DEFAULT_LINE_LENGTH_THRESHOLD;
+  int lineLengthThreshold = DEFAULT_LINE_LENGTH_THRESHOLD;
 
   /**
    * Whether to use the original names of nodes in the code output. This option is only really
    * useful when using the compiler to print code meant to check in to source.
    */
-  private boolean useOriginalNamesInOutput = false;
+  boolean useOriginalNamesInOutput = false;
 
   // --------------------------------
   // Special Output Options
@@ -1122,34 +1121,33 @@ public class CompilerOptions {
   private boolean shouldAlwaysGatherSourceMapInfo = false;
 
   /** The detail level for the generated source map. */
-  private SourceMap.DetailLevel sourceMapDetailLevel = SourceMap.DetailLevel.ALL;
+  SourceMap.DetailLevel sourceMapDetailLevel = SourceMap.DetailLevel.ALL;
 
   /** The source map file format */
-  private SourceMap.Format sourceMapFormat = SourceMap.Format.DEFAULT;
+  SourceMap.Format sourceMapFormat = SourceMap.Format.DEFAULT;
 
   /** Whether to parse inline source maps. */
-  private boolean parseInlineSourceMaps = true;
+  boolean parseInlineSourceMaps = true;
 
   /**
    * Whether to apply input source maps to the output, i.e. map back to original inputs from input
    * files that have source maps applied to them.
    */
-  private boolean applyInputSourceMaps = false;
+  boolean applyInputSourceMaps = false;
 
   /**
    * Whether to resolve source mapping annotations. Cannot do this in an appengine or js environment
    * since we don't have access to the filesystem.
    */
-  private boolean resolveSourceMapAnnotations = true;
+  boolean resolveSourceMapAnnotations = true;
 
-  private ImmutableList<? extends SourceMap.LocationMapping> sourceMapLocationMappings =
-      ImmutableList.of();
+  ImmutableList<? extends SourceMap.LocationMapping> sourceMapLocationMappings = ImmutableList.of();
 
   /** Whether to include full file contents in the source map. */
-  private boolean sourceMapIncludeSourcesContent = false;
+  boolean sourceMapIncludeSourcesContent = false;
 
   /** Charset to use when generating code. If null, then output ASCII. */
-  private transient Charset outputCharset;
+  transient Charset outputCharset;
 
   /** When set, assume that apparently side-effect free code is meaningful. */
   private boolean protectHiddenSideEffects;
@@ -1247,7 +1245,7 @@ public class CompilerOptions {
   }
 
   /** Handler for compiler warnings and errors. */
-  private transient @Nullable ErrorHandler errorHandler;
+  transient @Nullable ErrorHandler errorHandler;
 
   private InstrumentOption instrumentForCoverageOption;
 
@@ -1311,7 +1309,7 @@ public class CompilerOptions {
   }
 
   /** For use in {@link CompilationLevel#WHITESPACE_ONLY} mode, when using goog.module. */
-  private boolean wrapGoogModulesForWhitespaceOnly = true;
+  boolean wrapGoogModulesForWhitespaceOnly = true;
 
   public void setWrapGoogModulesForWhitespaceOnly(boolean enable) {
     this.wrapGoogModulesForWhitespaceOnly = enable;
@@ -1322,7 +1320,7 @@ public class CompilerOptions {
   }
 
   /** Print all configuration options to stderr after the compiler is initialized. */
-  private boolean printConfig = false;
+  boolean printConfig = false;
 
   /** Are the input files written for strict mode? */
   private Optional<Boolean> isStrictModeInput = Optional.absent();
@@ -1363,7 +1361,7 @@ public class CompilerOptions {
   }
 
   /** Which algorithm to use for locating ES6 and CommonJS modules */
-  private ResolutionMode moduleResolutionMode;
+  ResolutionMode moduleResolutionMode;
 
   /**
    * Map of prefix replacements for use when moduleResolutionMode is {@link
@@ -1374,7 +1372,7 @@ public class CompilerOptions {
   private ModuleLoader.PathEscaper pathEscaper;
 
   /** Which entries to look for in package.json files when processing modules */
-  private List<String> packageJsonEntryNames;
+  List<String> packageJsonEntryNames;
 
   /**
    * Should the compiler print its configuration options to stderr when they are initialized?
@@ -1416,7 +1414,7 @@ public class CompilerOptions {
     return this.dynamicImportAlias != null;
   }
 
-  private ChunkOutputType chunkOutputType;
+  ChunkOutputType chunkOutputType;
 
   /**
    * Initializes compiler options. All options are disabled by default.
