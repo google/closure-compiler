@@ -340,7 +340,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Creates a message formatter instance corresponding to the value of {@link CompilerOptions}. */
   private MessageFormatter createMessageFormatter() {
     boolean colorize = options.shouldColorizeErrorOutput();
-    return options.getErrorFormat().toFormatter(this, colorize);
+    return options.errorFormat.toFormatter(this, colorize);
   }
 
   private void initExperimentalForceTranspileOptions(CompilerOptions options) {
@@ -399,16 +399,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         setErrorManager(new LoggerErrorManager(createMessageFormatter(), logger));
       } else {
         ImmutableSet.Builder<ErrorReportGenerator> builder = ImmutableSet.builder();
-        builder
-            .add(
-                new PrintStreamErrorReportGenerator(
-                    createMessageFormatter(), this.outStream, options.getSummaryDetailLevel()))
-            .addAll(options.getExtraReportGenerators());
+        builder.add(
+            new PrintStreamErrorReportGenerator(
+                createMessageFormatter(), this.outStream, options.summaryDetailLevel));
+        builder.addAll(options.getExtraReportGenerators());
         setErrorManager(new SortingErrorManager(builder.build()));
       }
     }
 
-    if (options.getSkipNonTranspilationPasses()) {
+    if (options.skipNonTranspilationPasses) {
       options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.NO_OP);
     }
 
@@ -443,7 +442,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       options.setUseTypesForOptimization(false);
     }
 
-    if (options.assumeForwardDeclaredForMissingTypes()) {
+    if (options.assumeForwardDeclaredForMissingTypes) {
       this.forwardDeclaredTypes =
           new AbstractSet<String>() {
             @Override
@@ -502,13 +501,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     if (options.shouldRunDeadAssignmentElimination()
-        && !(options.shouldRemoveUnusedVariables() || options.shouldRemoveUnusedLocalVariables())) {
+        && !(options.removeUnusedVars || options.removeUnusedLocalVars)) {
       throw new IllegalArgumentException(
           "Invalid flag combination: enabling dead assignment elimination also requires unused"
               + " variable removal. Either disable dead assignment elimination or enable unused"
               + " variable removal.");
     }
-    if (options.shouldRunDeadPropertyAssignmentElimination() && options.isPolymerPassEnabled()) {
+    if (options.shouldRunDeadPropertyAssignmentElimination() && options.polymerPass) {
       // The Polymer source is usually not included in the compilation, but it creates
       // getters/setters for many properties in compiled code. Dead property property assignment
       // elimination is only safe when it knows about getters/setters.
@@ -573,10 +572,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   protected void reconcileOptionsWithGuards() {
     // DiagnosticGroups override the plain checkTypes option.
     if (options.enables(DiagnosticGroups.CHECK_TYPES)) {
-      options.setCheckTypes(true);
+      options.checkTypes = true;
     } else if (options.disables(DiagnosticGroups.CHECK_TYPES)) {
-      options.setCheckTypes(false);
-    } else if (!options.getCheckTypes()) {
+      options.checkTypes = false;
+    } else if (!options.checkTypes) {
       // If DiagnosticGroups did not override the plain checkTypes
       // option, and checkTypes is disabled, then turn off the
       // parser type warnings.
@@ -584,7 +583,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           DiagnosticGroup.forType(RhinoErrorReporter.TYPE_PARSE_ERROR), CheckLevel.OFF);
     }
 
-    if (!options.getCheckTypes()) {
+    if (!options.checkTypes) {
       options.setWarningLevel(DiagnosticGroups.BOUNDED_GENERICS, CheckLevel.OFF);
     }
 
@@ -593,22 +592,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // checks the externs file for validity. If you don't want to warn
     // about missing variable declarations, we shut that specific
     // error off.
-    if (!options.getCheckSymbols() && !options.enables(DiagnosticGroups.CHECK_VARIABLES)) {
+    if (!options.checkSymbols && !options.enables(DiagnosticGroups.CHECK_VARIABLES)) {
       options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF);
     }
 
     // If we're in transpile-only mode, we don't need to do checks for suspicious var usages.
     // Since we still have to run VariableReferenceCheck before transpilation to check block-scoped
     // variables, though, we disable the unnecessary warnings it produces relating to vars here.
-    if (options.getSkipNonTranspilationPasses()
-        && !options.enables(DiagnosticGroups.CHECK_VARIABLES)) {
+    if (options.skipNonTranspilationPasses && !options.enables(DiagnosticGroups.CHECK_VARIABLES)) {
       options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF);
     }
 
     // If we're in transpile-only mode, we don't need to check for missing requires unless the user
     // explicitly enables missing-provide checks.
-    if (options.getSkipNonTranspilationPasses()
-        && !options.enables(DiagnosticGroups.MISSING_PROVIDE)) {
+    if (options.skipNonTranspilationPasses && !options.enables(DiagnosticGroups.MISSING_PROVIDE)) {
       options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.OFF);
     }
 
@@ -722,8 +719,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                     requiredInputFiles,
                     typedAstListStream,
                     deserializeTypes,
-                    options.getResolveSourceMapAnnotations(),
-                    options.getParseInlineSourceMaps());
+                    options.resolveSourceMapAnnotations,
+                    options.parseInlineSourceMaps);
               } finally {
                 stopTracer(tracer, "deserializeTypedAst");
               }
@@ -764,8 +761,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             SYNTHETIC_EXTERNS_FILE,
             colorPoolBuilder,
             Compiler.class.getResourceAsStream(path),
-            this.getOptions().getResolveSourceMapAnnotations(),
-            this.getOptions().getParseInlineSourceMaps());
+            this.getOptions().resolveSourceMapAnnotations,
+            this.getOptions().parseInlineSourceMaps);
 
     // Re-index the runtime libraries by file name rather than SourceFile object
     LinkedHashMap<String, Supplier<Node>> runtimeLibraryTypedAsts = new LinkedHashMap<>();
@@ -824,7 +821,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     initAST();
 
-    if (isDebugLoggingEnabled() || options.shouldPrintConfig()) {
+    if (isDebugLoggingEnabled() || options.printConfig) {
       // Always print configuration logs when debug logging is enabled.
       // NOTE: initChunks() is called by every execution path through the compiler code that
       // actually performs a compilation action. That's what makes this a good place to put this
@@ -858,14 +855,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   /** Do any initialization that is dependent on the compiler options. */
   public void initBasedOnOptions() {
-    inputSourceMaps.putAll(options.getInputSourceMaps());
+    inputSourceMaps.putAll(options.inputSourceMaps);
     // Create the source map if necessary.
     if (options.shouldGatherSourceMapInfo()) {
-      sourceMap = options.getSourceMapFormat().getInstance();
-      sourceMap.setPrefixMappings(options.getSourceMapLocationMappings());
-      if (options.getApplyInputSourceMaps()) {
+      sourceMap = options.sourceMapFormat.getInstance();
+      sourceMap.setPrefixMappings(options.sourceMapLocationMappings);
+      if (options.applyInputSourceMaps) {
         sourceMap.setSourceFileMapping(this);
-        if (options.getSourceMapIncludeSourcesContent()) {
+        if (options.sourceMapIncludeSourcesContent) {
           for (SourceMapInput inputSourceMap : inputSourceMaps.values()) {
             addSourceMapSourceFiles(inputSourceMap);
           }
@@ -1158,7 +1155,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   private void performChecks() {
-    if (options.getSkipNonTranspilationPasses()) {
+    if (options.skipNonTranspilationPasses) {
       // i.e. whitespace-only mode, which will not work with goog.module without:
       whitespaceOnlyPasses();
       if (options.needsTranspilationFrom(options.getLanguageIn().toFeatureSet())) {
@@ -1188,7 +1185,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   /** Performs all the bookkeeping required at the end of a compilation. */
   private void performPostCompilationTasksInternal() {
-    if (options.getDevMode() == DevMode.START_AND_END) {
+    if (options.devMode == DevMode.START_AND_END) {
       runValidityCheck();
     }
 
@@ -1367,7 +1364,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private PhaseOptimizer createPhaseOptimizer() {
     PhaseOptimizer phaseOptimizer = new PhaseOptimizer(this, tracker);
-    if (options.getDevMode() == DevMode.EVERY_PASS) {
+    if (options.devMode == DevMode.EVERY_PASS) {
       phaseOptimizer.setValidityCheck(validityCheck);
     }
     if (options.getCheckDeterminism()) {
@@ -1566,7 +1563,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   private void maybePrintSourceAfterEachPass(String passName) {
-    if (!options.shouldPrintSourceAfterEachPass()) {
+    if (!options.printSourceAfterEachPass) {
       return;
     }
 
@@ -1597,10 +1594,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   final String getCurrentJsSource() {
     this.resetAndIntitializeSourceMap();
 
-    List<String> fileNameRegexList = options.getFilesToPrintAfterEachPassRegexList();
-    List<String> chunkNameRegexList = options.getChunksToPrintAfterEachPassRegexList();
-    final Set<String> qnameSet =
-        new LinkedHashSet<>(options.getQnameUsesToPrintAfterEachPassList());
+    List<String> fileNameRegexList = options.filesToPrintAfterEachPassRegexList;
+    List<String> chunkNameRegexList = options.chunksToPrintAfterEachPassRegexList;
+    final Set<String> qnameSet = new LinkedHashSet<>(options.qnameUsesToPrintAfterEachPassList);
     StringBuilder builder = new StringBuilder();
 
     if (fileNameRegexList.isEmpty() && chunkNameRegexList.isEmpty() && qnameSet.isEmpty()) {
@@ -2016,7 +2012,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (abstractInterpreter == null) {
       ChainableReverseAbstractInterpreter interpreter =
           new SemanticReverseAbstractInterpreter(getTypeRegistry());
-      if (options.getClosurePass()) {
+      if (options.closurePass) {
         interpreter =
             new ClosureReverseAbstractInterpreter(getTypeRegistry()).append(interpreter).getFirst();
       }
@@ -2092,7 +2088,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     this.moduleLoader =
         ModuleLoader.builder()
-            .setModuleRoots(options.getModuleRoots())
+            .setModuleRoots(options.moduleRoots)
             .setInputs(chunkGraph.getAllInputs())
             .setFactory(moduleResolverFactory)
             .setPathResolver(PathResolver.RELATIVE)
@@ -2111,7 +2107,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   @Nullable
   Node parseInputs() {
-    boolean devMode = options.getDevMode() != DevMode.OFF;
+    boolean devMode = options.devMode != DevMode.OFF;
 
     // If old roots exist (we are parsing a second time), detach each of the
     // individual file parse trees.
@@ -2124,8 +2120,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     try {
       // Parse externs sources.
-      if (options.getNumParallelThreads() > 1) {
-        new PrebuildAst(this, options.getNumParallelThreads()).prebuild(externs);
+      if (options.numParallelThreads > 1) {
+        new PrebuildAst(this, options.numParallelThreads).prebuild(externs);
       }
       for (CompilerInput input : externs) {
         Node n = checkNotNull(input.getAstRoot(this));
@@ -2194,8 +2190,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
 
       // Build the AST.
-      if (options.getNumParallelThreads() > 1) {
-        new PrebuildAst(this, options.getNumParallelThreads()).prebuild(chunkGraph.getAllInputs());
+      if (options.numParallelThreads > 1) {
+        new PrebuildAst(this, options.numParallelThreads).prebuild(chunkGraph.getAllInputs());
       }
 
       for (CompilerInput input : chunkGraph.getAllInputs()) {
@@ -2209,12 +2205,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
         if (options.shouldGatherSourceMapInfo()
             || options.getExternExportsPath() != null
-            || !options.getReplaceStringsFunctionDescriptions().isEmpty()) {
+            || !options.replaceStringsFunctionDescriptions.isEmpty()) {
 
           // Annotate the nodes in the tree with information from the
           // input file. This information is used to construct the SourceMap.
           SourceInformationAnnotator sia =
-              Objects.equals(options.getDevMode(), DevMode.OFF)
+              DevMode.OFF.equals(options.devMode)
                   ? SourceInformationAnnotator.create()
                   : SourceInformationAnnotator.createWithAnnotationChecks(input.getName());
           NodeTraversal.traverse(this, n, sia);
@@ -2511,9 +2507,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   private void maybeDoThreadedParsing() {
-    if (options.getNumParallelThreads() > 1) {
-      new PrebuildDependencyInfo(options.getNumParallelThreads())
-          .prebuild(chunkGraph.getAllInputs());
+    if (options.numParallelThreads > 1) {
+      new PrebuildDependencyInfo(options.numParallelThreads).prebuild(chunkGraph.getAllInputs());
     }
   }
 
@@ -2558,8 +2553,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         filteredInputs.add(input);
       }
     }
-    if (options.getNumParallelThreads() > 1) {
-      new PrebuildAst(this, options.getNumParallelThreads()).prebuild(filteredInputs);
+    if (options.numParallelThreads > 1) {
+      new PrebuildAst(this, options.numParallelThreads).prebuild(filteredInputs);
     }
     for (CompilerInput input : filteredInputs) {
       input.setCompiler(this);
@@ -2732,13 +2727,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       final Node root) {
     runInCompilerThread(
         () -> {
-          if (options.shouldPrintInputDelimiter()) {
+          if (options.printInputDelimiter) {
             if ((cb.getLength() > 0) && !cb.endsWith("\n")) {
               cb.append("\n"); // Make sure that the label starts on a new line
             }
             checkState(root.isScript());
 
-            String delimiter = options.getInputDelimiter();
+            String delimiter = options.inputDelimiter;
 
             String inputName = root.getInputId().getIdName();
             String sourceName = root.getSourceFileName();
@@ -3432,8 +3427,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         mode,
         options.isParseJsDocDocumentation(),
         options.canContinueAfterErrors() ? RunMode.KEEP_GOING : RunMode.STOP_AFTER_ERROR,
-        options.getExtraAnnotationNames(),
-        options.getParseInlineSourceMaps(),
+        options.extraAnnotationNames,
+        options.parseInlineSourceMaps,
         strictMode);
   }
 
@@ -3461,8 +3456,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     if (level.isOn()) {
       initCompilerOptionsIfTesting();
-      if (getOptions().getErrorHandler() != null) {
-        getOptions().getErrorHandler().report(level, error);
+      if (getOptions().errorHandler != null) {
+        getOptions().errorHandler.report(level, error);
       }
       errorManager.report(level, error);
     }
@@ -3549,7 +3544,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   public void addInputSourceMap(String sourceFileName, SourceMapInput inputSourceMap) {
     inputSourceMaps.put(sourceFileName, inputSourceMap);
-    if (options.getSourceMapIncludeSourcesContent() && sourceMap != null) {
+    if (options.sourceMapIncludeSourcesContent && sourceMap != null) {
       addSourceMapSourceFiles(inputSourceMap);
     }
   }
@@ -4131,7 +4126,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private synchronized void addFilesToSourceMap(Iterable<SourceFile> files) {
     // synchronized annotation guards concurrent access to sourceMap during parsing.
-    if (getOptions().getSourceMapIncludeSourcesContent() && getSourceMap() != null) {
+    if (getOptions().sourceMapIncludeSourcesContent && getSourceMap() != null) {
       for (SourceFile file : files) {
         try {
           getSourceMap().addSourceFile(file.getName(), file.getCode());
@@ -4358,8 +4353,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             allInputFiles.build(),
             inputStream,
             compilerState.typeCheckingHasRun,
-            this.getOptions().getResolveSourceMapAnnotations(),
-            this.getOptions().getParseInlineSourceMaps());
+            this.getOptions().resolveSourceMapAnnotations,
+            this.getOptions().parseInlineSourceMaps);
 
     restoreFromState(compilerState);
 
@@ -4513,8 +4508,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return;
     }
     sourceMap.reset();
-    if (options.getSourceMapIncludeSourcesContent()) {
-      if (options.getApplyInputSourceMaps()) {
+    if (options.sourceMapIncludeSourcesContent) {
+      if (options.applyInputSourceMaps) {
         // Add any input source map content files to the source map as potential sources
         for (SourceMapInput inputSourceMap : inputSourceMaps.values()) {
           addSourceMapSourceFiles(inputSourceMap);

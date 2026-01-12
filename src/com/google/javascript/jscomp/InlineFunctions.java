@@ -1287,10 +1287,10 @@ class InlineFunctions implements CompilerPass {
     if (!options.shouldInlineProperties()) {
       problems.add("missing shouldInlineProperties");
     }
-    if (!options.shouldInlineConstantVars()) {
+    if (!options.inlineConstantVars) {
       problems.add("missing inlineConstantVars");
     }
-    if (!options.getSmartNameRemoval()) {
+    if (!options.smartNameRemoval) {
       problems.add("missing smartNameRemoval");
     }
     if (!options.getInlineFunctionsLevel().isOn()) {
@@ -1309,15 +1309,15 @@ class InlineFunctions implements CompilerPass {
       problems.add("missing property collapsing");
     }
     // Avoid inlining failures due to asserts.
-    if (!options.shouldRemoveClosureAsserts()) {
+    if (!options.removeClosureAsserts) {
       problems.add("missing removeClosureAsserts");
     }
     // We need more than one inlining pass for most required inlinings to work. This
     // eliminates 'fast' mode.
-    if (options.getMaxOptimizationLoopIterations() == 1) {
+    if (options.optimizationLoopMaxIterations == 1) {
       problems.add(
           "optimizationLoopMaxIterations should be >= 2, but is: "
-              + options.getMaxOptimizationLoopIterations());
+              + options.optimizationLoopMaxIterations);
     }
     if (problems.isEmpty()) {
       return new ShouldRequireInlining(true, "");

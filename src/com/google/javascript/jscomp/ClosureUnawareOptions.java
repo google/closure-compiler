@@ -68,23 +68,22 @@ class ClosureUnawareOptions {
 
   private void copyOutputOptions() {
     shadowOptions.setPrettyPrint(original.isPrettyPrint());
-    shadowOptions.setGeneratePseudoNames(original.shouldGeneratePseudoNames());
-    shadowOptions.setErrorHandler(original.getErrorHandler());
-    shadowOptions.setErrorFormat(original.getErrorFormat());
+    shadowOptions.setGeneratePseudoNames(original.generatePseudoNames);
+    shadowOptions.setErrorHandler(original.errorHandler);
+    shadowOptions.setErrorFormat(original.errorFormat);
 
     // TODO: lharker - is there any use in propagating the VariableMap & PropertyMap?
   }
 
   private void copyDebugOptions() {
     shadowOptions.setTracerMode(original.getTracerMode());
-    shadowOptions.setDevMode(original.getDevMode());
+    shadowOptions.setDevMode(original.devMode);
 
-    shadowOptions.setPrintSourceAfterEachPass(original.shouldPrintSourceAfterEachPass());
+    shadowOptions.setPrintSourceAfterEachPass(original.printSourceAfterEachPass);
     shadowOptions.setFilesToPrintAfterEachPassRegexList(
-        original.getFilesToPrintAfterEachPassRegexList());
-    shadowOptions.setPrintInputDelimiter(original.shouldPrintInputDelimiter());
-
-    shadowOptions.setInputDelimiter(original.getInputDelimiter());
+        original.filesToPrintAfterEachPassRegexList);
+    shadowOptions.setPrintInputDelimiter(original.printInputDelimiter);
+    shadowOptions.setInputDelimiter(original.inputDelimiter);
 
     shadowOptions.setDebugLogFilter(original.getDebugLogFilter());
     Path debugLogDirectory = original.getDebugLogDirectory();

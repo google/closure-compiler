@@ -201,7 +201,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(rewriteScriptsToEs6Modules);
     }
 
-    if (options.shouldWrapGoogModulesForWhitespaceOnly()) {
+    if (options.wrapGoogModulesForWhitespaceOnly) {
       passes.maybeAdd(whitespaceWrapGoogModules);
     }
     return passes;
@@ -213,7 +213,7 @@ public final class DefaultPassConfig extends PassConfig {
       TranspilationPasses.addEs6ModulePass(checks, preprocessorSymbolTableFactory);
     }
 
-    if (options.getClosurePass()) {
+    if (options.closurePass) {
       checks.maybeAdd(closureRewriteModule);
     }
   }
@@ -223,8 +223,8 @@ public final class DefaultPassConfig extends PassConfig {
     PassListBuilder checks = new PassListBuilder(options);
 
     checkState(
-        !options.getSkipNonTranspilationPasses(),
-        "options.getSkipNonTranspilationPasses() cannot be mixed with PassConfig::getChecks. Call"
+        !options.skipNonTranspilationPasses,
+        "options.skipNonTranspilationPasses cannot be mixed with PassConfig::getChecks. Call"
             + " PassConfig::getTranspileOnlyPasses instead.");
 
     if (options.isPropertyRenamingOnlyCompilationMode()) {
@@ -253,7 +253,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.maybeAdd(closureGoogScopeAliasesForIjs);
       checks.maybeAdd(generateIjs);
       checks.maybeAdd(removeExtraRequires);
-      if (options.shouldWrapGoogModulesForWhitespaceOnly()) {
+      if (options.wrapGoogModulesForWhitespaceOnly) {
         checks.maybeAdd(whitespaceWrapGoogModules);
       }
       checks.maybeAdd(removeSyntheticScript);
@@ -300,7 +300,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.maybeAdd(lintChecks);
     }
 
-    if (options.getClosurePass() && options.enables(DiagnosticGroups.LINT_CHECKS)) {
+    if (options.closurePass && options.enables(DiagnosticGroups.LINT_CHECKS)) {
       checks.maybeAdd(checkRequiresAndProvidesSorted);
     }
 
@@ -320,13 +320,13 @@ public final class DefaultPassConfig extends PassConfig {
       checks.maybeAdd(checkVars);
     }
 
-    if (options.getClosurePass()) {
+    if (options.closurePass) {
       checks.maybeAdd(checkClosureImports);
     }
 
     checks.maybeAdd(checkStrictMode);
 
-    if (options.getClosurePass()) {
+    if (options.closurePass) {
       checks.maybeAdd(closureCheckModule);
     }
 
@@ -334,15 +334,15 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.maybeAdd(checkSideEffects);
 
-    if (options.getAngularPass()) {
+    if (options.angularPass) {
       checks.maybeAdd(angularPass);
     }
 
-    if (options.getClosurePass()) {
+    if (options.closurePass) {
       checks.maybeAdd(closureGoogScopeAliases);
     }
 
-    if (options.getClosurePass()) {
+    if (options.closurePass) {
       checks.maybeAdd(closurePrimitives);
     }
 
@@ -353,7 +353,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     // It's important that the PolymerPass run *after* the ClosurePrimitives and ChromePass rewrites
     // and *before* the suspicious code checks. This is enforced in the assertValidOrder method.
-    if (options.isPolymerPassEnabled()) {
+    if (options.polymerPass) {
       checks.maybeAdd(polymerPass);
     }
 
@@ -363,19 +363,19 @@ public final class DefaultPassConfig extends PassConfig {
       checks.maybeAdd(checkVars);
     }
 
-    if (options.shouldInferConsts()) {
+    if (options.inferConsts) {
       checks.maybeAdd(inferConsts);
     }
 
-    if (options.shouldComputeFunctionSideEffects()) {
+    if (options.computeFunctionSideEffects) {
       checks.maybeAdd(checkRegExp);
     }
 
     checks.maybeAdd(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
 
-    if (options.getCheckTypes() || options.getInferTypes()) {
+    if (options.checkTypes || options.inferTypes) {
       checks.maybeAdd(inferTypes);
-      if (options.getCheckTypes()) {
+      if (options.checkTypes) {
         checks.maybeAdd(checkTypes);
       } else {
         checks.maybeAdd(inferJsDocInfo);
@@ -410,13 +410,13 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // CheckSuspiciousCode requires type information, so must run after the type checker.
-    if (options.getCheckSuspiciousCode()
+    if (options.checkSuspiciousCode
         || options.enables(DiagnosticGroups.GLOBAL_THIS)
         || options.enables(DiagnosticGroups.DEBUGGER_STATEMENT_PRESENT)) {
       checks.maybeAdd(suspiciousCode);
     }
 
-    if (options.getJ2clPass().shouldAddJ2clPasses()) {
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
       checks.maybeAdd(j2clSourceFileChecker);
     }
 
@@ -446,11 +446,11 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.maybeAdd(processDefinesCheck);
 
-    if (options.getJ2clPass().shouldAddJ2clPasses()) {
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
       checks.maybeAdd(j2clChecksPass);
     }
 
-    if (options.shouldGenerateExports()) {
+    if (options.generateExports) {
       checks.maybeAdd(generateExports);
     }
 
@@ -463,7 +463,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.maybeAdd(externExports);
     }
 
-    if (!options.isChecksOnly()) {
+    if (!options.checksOnly) {
       checks.maybeAdd(removeWeakSources);
     }
 
@@ -505,7 +505,7 @@ public final class DefaultPassConfig extends PassConfig {
       return passes;
     }
 
-    if (options.getSkipNonTranspilationPasses()) {
+    if (options.skipNonTranspilationPasses) {
       // Reaching this if-condition means the 'getChecks()' phase has been skipped in favor of
       // 'getTranspileOnlyPasses'.
       return passes;
@@ -523,21 +523,18 @@ public final class DefaultPassConfig extends PassConfig {
     PassListBuilder passes = new PassListBuilder(options);
 
     if (options.isPropertyRenamingOnlyCompilationMode()) {
-      if (options.shouldRewriteGlobalDeclarationsForTryCatchWrapping()
-          || options.getRenamePrefixNamespace() != null) {
+      if (options.rewriteGlobalDeclarationsForTryCatchWrapping
+          || options.renamePrefixNamespace != null) {
         passes.maybeAdd(rewriteGlobalDeclarationsForTryCatchWrapping);
       }
 
       passes.maybeAdd(renameProperties);
 
-      if (options.getRenamePrefixNamespace() != null
-          && options.getChunkOutputType() == ChunkOutputType.GLOBAL_NAMESPACE) {
-        if (!GLOBAL_SYMBOL_NAMESPACE_PATTERN
-            .matcher(options.getRenamePrefixNamespace())
-            .matches()) {
+      if (options.renamePrefixNamespace != null
+          && options.chunkOutputType == ChunkOutputType.GLOBAL_NAMESPACE) {
+        if (!GLOBAL_SYMBOL_NAMESPACE_PATTERN.matcher(options.renamePrefixNamespace).matches()) {
           throw new IllegalArgumentException(
-              "Illegal character in renamePrefixNamespace name: "
-                  + options.getRenamePrefixNamespace());
+              "Illegal character in renamePrefixNamespace name: " + options.renamePrefixNamespace);
         }
         passes.maybeAdd(rescopeGlobalSymbols);
       }
@@ -552,7 +549,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(peepholeOptimizationsOnce);
     }
 
-    if (options.shouldInlineVariables() || options.shouldInlineLocalVariables()) {
+    if (options.inlineVariables || options.inlineLocalVariables) {
       passes.maybeAdd(flowSensitiveInlineVariables);
 
       // After inlining variable uses, some variables may be unused.
@@ -579,8 +576,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.maybeAdd(createEmptyPass("afterChunkMotion"));
 
-    if (options.getOptimizeESClassConstructors()
-        && options.getOutputFeatureSet().contains(ES2015)) {
+    if (options.optimizeESClassConstructors && options.getOutputFeatureSet().contains(ES2015)) {
       passes.maybeAdd(optimizeConstructors);
     }
 
@@ -591,7 +587,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(isolatePolyfills);
     }
 
-    if (options.shouldCollapseAnonymousFunctions()) {
+    if (options.collapseAnonymousFunctions) {
       // TODO: b/197349249 - Maybe we should just move this pass after denormalization. It seems
       // weird to convert from function expression to function declaration while we're still
       // supposed to be in a normalized state. But it requires testing as perhaps some optimizations
@@ -600,10 +596,10 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // Move functions before extracting prototype member declarations.
-    if (options.shouldRewriteGlobalDeclarationsForTryCatchWrapping()
+    if (options.rewriteGlobalDeclarationsForTryCatchWrapping
         // renamePrefixNamescape relies on rewriteGlobalDeclarationsForTryCatchWrapping
         // to preserve semantics.
-        || options.getRenamePrefixNamespace() != null) {
+        || options.renamePrefixNamespace != null) {
       passes.maybeAdd(rewriteGlobalDeclarationsForTryCatchWrapping);
     }
 
@@ -611,32 +607,31 @@ public final class DefaultPassConfig extends PassConfig {
     // The mapped name anonymous function pass makes use of information that
     // the extract prototype member declarations pass removes so the former
     // happens before the latter.
-    if (options.getExtractPrototypeMemberDeclarationsMode()
-        != ExtractPrototypeMemberDeclarationsMode.OFF) {
+    if (options.extractPrototypeMemberDeclarations != ExtractPrototypeMemberDeclarationsMode.OFF) {
       passes.maybeAdd(extractPrototypeMemberDeclarations);
     }
 
     if (options.shouldAmbiguateProperties()
-        && options.getPropertyRenaming() == PropertyRenamingPolicy.ALL_UNQUOTED
+        && options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED
         && options.isTypecheckingEnabled()) {
       passes.maybeAdd(ambiguateProperties);
     }
 
     passes.maybeAdd(createEmptyPass(PassNames.BEFORE_RENAME_PROPERTIES));
-    if (options.getPropertyRenaming() == PropertyRenamingPolicy.ALL_UNQUOTED) {
+    if (options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED) {
       passes.maybeAdd(renameProperties);
     } else {
       passes.maybeAdd(removePropertyRenamingCalls);
     }
 
     // Reserve global names added to the "windows" object.
-    if (options.shouldReserveRawExports()) {
+    if (options.reserveRawExports) {
       passes.maybeAdd(gatherRawExports);
     }
 
     // This comes after property renaming because quoted property names must
     // not be renamed.
-    if (options.shouldConvertToDottedProperties()) {
+    if (options.convertToDottedProperties) {
       passes.maybeAdd(convertToDottedProperties);
     }
 
@@ -644,7 +639,7 @@ public final class DefaultPassConfig extends PassConfig {
     // pass may convert dotted properties into quoted properties.  It
     // is beneficial to run before alias strings, alias keywords and
     // variable renaming.
-    if (options.shouldRewriteFunctionExpressions()) {
+    if (options.rewriteFunctionExpressions) {
       passes.maybeAdd(rewriteFunctionExpressions);
     }
 
@@ -654,7 +649,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(aliasStrings);
     }
 
-    if (options.shouldCoalesceVariableNames()) {
+    if (options.coalesceVariableNames) {
       // Passes after this point can no longer depend on normalized AST
       // assumptions because the code is marked as un-normalized
       passes.maybeAdd(coalesceVariableNames);
@@ -662,7 +657,7 @@ public final class DefaultPassConfig extends PassConfig {
       // coalesceVariables creates identity assignments and more redundant code
       // that can be removed, rerun the peephole optimizations to clean them
       // up.
-      if (options.shouldFoldConstants()) {
+      if (options.foldConstants) {
         passes.maybeAdd(peepholeOptimizationsOnce);
       }
     }
@@ -670,7 +665,7 @@ public final class DefaultPassConfig extends PassConfig {
     // Passes after this point can no longer depend on normalized AST assumptions.
     passes.maybeAdd(markUnnormalized);
 
-    if (options.shouldCollapseVariableDeclarations()) {
+    if (options.collapseVariableDeclarations) {
       passes.maybeAdd(exploitAssign);
       passes.maybeAdd(collapseVariableDeclarations);
     }
@@ -680,22 +675,22 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.maybeAdd(createEmptyPass(PassNames.BEFORE_VARIABLE_RENAMING));
 
-    if (options.getVariableRenaming() != VariableRenamingPolicy.ALL) {
+    if (options.variableRenaming != VariableRenamingPolicy.ALL) {
       // If we're leaving some (or all) variables with their old names,
       // then we need to undo any of the markers we added for distinguishing
       // local variables ("x" -> "x$jscomp$1").
       passes.maybeAdd(invertContextualRenaming);
     }
 
-    if (options.getVariableRenaming() != VariableRenamingPolicy.OFF) {
+    if (options.variableRenaming != VariableRenamingPolicy.OFF) {
       passes.maybeAdd(renameVars);
     }
 
-    if (options.shouldRenameLabels()) {
+    if (options.labelRenaming) {
       passes.maybeAdd(renameLabels);
     }
 
-    if (options.shouldFoldConstants()) {
+    if (options.foldConstants) {
       passes.maybeAdd(latePeepholeOptimizations);
     }
 
@@ -708,12 +703,11 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(stripSideEffectProtection);
     }
 
-    if (options.getRenamePrefixNamespace() != null
-        && options.getChunkOutputType() == ChunkOutputType.GLOBAL_NAMESPACE) {
-      if (!GLOBAL_SYMBOL_NAMESPACE_PATTERN.matcher(options.getRenamePrefixNamespace()).matches()) {
+    if (options.renamePrefixNamespace != null
+        && options.chunkOutputType == ChunkOutputType.GLOBAL_NAMESPACE) {
+      if (!GLOBAL_SYMBOL_NAMESPACE_PATTERN.matcher(options.renamePrefixNamespace).matches()) {
         throw new IllegalArgumentException(
-            "Illegal character in renamePrefixNamespace name: "
-                + options.getRenamePrefixNamespace());
+            "Illegal character in renamePrefixNamespace name: " + options.renamePrefixNamespace);
       }
       passes.maybeAdd(rescopeGlobalSymbols);
     }
@@ -724,7 +718,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // Must run after all non-safety-check passes as the optimizations do not support modules.
-    if (options.getChunkOutputType() == ChunkOutputType.ES_MODULES) {
+    if (options.chunkOutputType == ChunkOutputType.ES_MODULES) {
       passes.maybeAdd(convertChunksToESModules);
     }
 
@@ -737,13 +731,13 @@ public final class DefaultPassConfig extends PassConfig {
   private PassListBuilder getEarlyOptimizationLoopPasses() {
     PassListBuilder earlyLoopPasses = new PassListBuilder(options);
 
-    if (options.shouldInlineVariables() || options.shouldInlineLocalVariables()) {
+    if (options.inlineVariables || options.inlineLocalVariables) {
       earlyLoopPasses.maybeAdd(inlineVariables);
-    } else if (options.shouldInlineConstantVars()) {
+    } else if (options.inlineConstantVars) {
       earlyLoopPasses.maybeAdd(inlineConstants);
     }
 
-    if (options.getCollapseObjectLiterals()) {
+    if (options.collapseObjectLiterals) {
       earlyLoopPasses.maybeAdd(collapseObjectLiterals);
     }
 
@@ -751,7 +745,7 @@ public final class DefaultPassConfig extends PassConfig {
       earlyLoopPasses.maybeAdd(removeUnusedCode);
     }
 
-    if (options.shouldFoldConstants()) {
+    if (options.foldConstants) {
       earlyLoopPasses.maybeAdd(peepholeOptimizations);
     }
 
@@ -796,11 +790,11 @@ public final class DefaultPassConfig extends PassConfig {
     // doing to clean up after localization are included.
     PassListBuilder loopPasses = new PassListBuilder(options);
 
-    if (options.shouldOptimizeCalls()) {
+    if (options.optimizeCalls) {
       loopPasses.maybeAdd(optimizeCalls);
     }
 
-    if (options.getJ2clPass().shouldAddJ2clPasses()) {
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
       loopPasses.maybeAdd(j2clConstantHoisterPass);
       loopPasses.maybeAdd(j2clClinitPass);
     }
@@ -812,9 +806,9 @@ public final class DefaultPassConfig extends PassConfig {
       loopPasses.maybeAdd(inlineFunctions);
     }
 
-    if (options.shouldInlineVariables() || options.shouldInlineLocalVariables()) {
+    if (options.inlineVariables || options.inlineLocalVariables) {
       loopPasses.maybeAdd(inlineVariables);
-    } else if (options.shouldInlineConstantVars()) {
+    } else if (options.inlineConstantVars) {
       loopPasses.maybeAdd(inlineConstants);
     }
 
@@ -822,7 +816,7 @@ public final class DefaultPassConfig extends PassConfig {
       loopPasses.maybeAdd(removeUnusedCode);
     }
 
-    if (options.shouldFoldConstants()) {
+    if (options.foldConstants) {
       loopPasses.maybeAdd(peepholeOptimizations);
     }
 
@@ -837,7 +831,7 @@ public final class DefaultPassConfig extends PassConfig {
   private PassListBuilder getEarlyOptimizationPasses() {
     PassListBuilder passes = new PassListBuilder(options);
     // At this point all checks have been done.
-    if (options.shouldExportTestFunctions()) {
+    if (options.exportTestFunctions) {
       passes.maybeAdd(exportTestFunctions);
     }
 
@@ -850,7 +844,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(checkRegExpForOptimizations);
 
       // This runs during getChecks(), so only needs to be run here if using precompiled .typedasts
-      if (options.getJ2clPass().shouldAddJ2clPasses()) {
+      if (options.j2clPassMode.shouldAddJ2clPasses()) {
         passes.maybeAdd(j2clSourceFileChecker);
       }
     } else {
@@ -861,12 +855,12 @@ public final class DefaultPassConfig extends PassConfig {
     // This is expected to do nothing when in a monolithic build
     passes.maybeAdd(removeUnnecessarySyntheticExterns);
 
-    if (options.getSyntheticBlockStartMarker() != null) {
+    if (options.syntheticBlockStartMarker != null) {
       // This pass must run before the first fold constants pass.
       passes.maybeAdd(createSyntheticBlocks);
     }
 
-    if (options.getJ2clPass().shouldAddJ2clPasses()) {
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
       passes.maybeAdd(j2clPass);
     }
 
@@ -877,7 +871,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     TranspilationPasses.addTranspilationRuntimeLibraries(passes);
 
-    if (options.getRewritePolyfills()
+    if (options.rewritePolyfills
         || options.getIsolatePolyfills()
         || options.getInjectPolyfillsNewerThan() != null) {
       TranspilationPasses.addRewritePolyfillPass(passes);
@@ -885,7 +879,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.maybeAdd(injectRuntimeLibraries);
 
-    if (options.getClosurePass()) {
+    if (options.closurePass) {
       passes.maybeAdd(closureProvidesRequires);
     }
 
@@ -911,7 +905,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // Replace 'goog.getCssName' before processing defines
-    if (options.getClosurePass() && !options.shouldPreserveGoogLibraryPrimitives()) {
+    if (options.closurePass && !options.shouldPreserveGoogLibraryPrimitives()) {
       passes.maybeAdd(closureReplaceGetCssName);
     }
 
@@ -926,7 +920,7 @@ public final class DefaultPassConfig extends PassConfig {
     // TODO(b/329447979): Add an early removeUnusedCode pass here
     TranspilationPasses.addTranspilationPasses(passes, options);
 
-    if (options.getJ2clPass().shouldAddJ2clPasses()) {
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
       passes.maybeAdd(j2clUtilGetDefineRewriterPass);
     }
 
@@ -940,12 +934,11 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Abstract method removal works best on minimally modified code, and also
     // only needs to run once.
-    if (options.getClosurePass()
-        && (options.shouldRemoveAbstractMethods() || options.shouldRemoveClosureAsserts())) {
+    if (options.closurePass && (options.removeAbstractMethods || options.removeClosureAsserts)) {
       passes.maybeAdd(closureCodeRemoval);
     }
 
-    if (options.shouldRemoveJ2clAsserts()) {
+    if (options.removeJ2clAsserts) {
       passes.maybeAdd(j2clAssertRemovalPass);
     }
 
@@ -953,27 +946,27 @@ public final class DefaultPassConfig extends PassConfig {
     passes.maybeAdd(inlineAndCollapseProperties);
 
     if (options.getTweakProcessing().shouldStrip()
-        || !options.getStripTypes().isEmpty()
-        || !options.getStripNameSuffixes().isEmpty()
-        || !options.getStripNamePrefixes().isEmpty()) {
+        || !options.stripTypes.isEmpty()
+        || !options.stripNameSuffixes.isEmpty()
+        || !options.stripNamePrefixes.isEmpty()) {
       passes.maybeAdd(stripCode);
     }
 
     // Ideally this pass would run before transpilation which would allow it to be simplified.
     // It needs to run after `inlineAndCollapseProperties` in order to identify idGenerator calls.
-    if (options.shouldReplaceIdGenerators()) {
+    if (options.replaceIdGenerators) {
       passes.maybeAdd(replaceIdGenerators);
     }
 
     // Inline getters/setters in J2CL classes so that Object.defineProperties() calls (resulting
     // from desugaring) don't block class stripping.
-    if (options.getJ2clPass().shouldAddJ2clPasses()
+    if (options.j2clPassMode.shouldAddJ2clPasses()
         && options.getPropertyCollapseLevel() == PropertyCollapseLevel.ALL) {
       // Relies on collapseProperties-triggered aggressive alias inlining.
       passes.maybeAdd(j2clPropertyInlinerPass);
     }
 
-    if (options.shouldInferConsts()) {
+    if (options.inferConsts) {
       passes.maybeAdd(inferConsts);
     }
 
@@ -984,14 +977,13 @@ public final class DefaultPassConfig extends PassConfig {
     // Running RemoveUnusedCode before disambiguate properties allows disambiguate properties to be
     // more effective if code that would prevent disambiguation can be removed.
     // TODO(b/66971163): Rename options since we're not actually using smartNameRemoval here now.
-    if (options.getSmartNameRemoval()) {
+    if (options.smartNameRemoval) {
 
       // These passes remove code that is dead because of define flags.
       // If the dead code is weakly typed, running these passes before property
       // disambiguation results in more code removal.
       // The passes are one-time on purpose. (The later runs are loopable.)
-      if (options.shouldFoldConstants()
-          && (options.shouldInlineVariables() || options.shouldInlineLocalVariables())) {
+      if (options.foldConstants && (options.inlineVariables || options.inlineLocalVariables)) {
         passes.maybeAdd(earlyInlineVariables);
         passes.maybeAdd(earlyPeepholeOptimizations);
       }
@@ -1007,7 +999,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(disambiguateProperties);
     }
 
-    if (options.shouldComputeFunctionSideEffects()) {
+    if (options.computeFunctionSideEffects) {
       passes.maybeAdd(markPureFunctions);
     }
 
@@ -1021,7 +1013,7 @@ public final class DefaultPassConfig extends PassConfig {
    */
   private PassListBuilder getLateOptimizationPasses() {
     PassListBuilder passes = new PassListBuilder(options);
-    if (options.getSmartNameRemoval()) {
+    if (options.smartNameRemoval) {
       // Place one-time marker passes around this loop to prevent the addition of a looping pass
       // above or below from accidentally becoming part of the loop.
       passes.maybeAdd(createEmptyPass(PassNames.BEFORE_EARLY_OPTIMIZATION_LOOP));
@@ -1033,7 +1025,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     // This needs to come after the inline constants pass, which is run within
     // the code removing passes.
-    if (options.getClosurePass()) {
+    if (options.closurePass) {
       passes.maybeAdd(closureOptimizePrimitives);
     }
 
@@ -1042,7 +1034,7 @@ public final class DefaultPassConfig extends PassConfig {
     // after disambiguate properties and smart name removal so that it can
     // correctly identify logging types and can replace references to string
     // expressions.
-    if (!options.getReplaceStringsFunctionDescriptions().isEmpty()) {
+    if (!options.replaceStringsFunctionDescriptions.isEmpty()) {
       passes.maybeAdd(replaceStrings);
     }
 
@@ -1063,7 +1055,7 @@ public final class DefaultPassConfig extends PassConfig {
     // optimizations based on global names (like cross-chunk code motion
     // and inline functions).  RemoveUnusedCode does better if run before
     // this pass.
-    if (options.shouldDevirtualizeMethods()) {
+    if (options.devirtualizeMethods) {
       passes.maybeAdd(devirtualizeMethods);
     }
 
@@ -1074,7 +1066,7 @@ public final class DefaultPassConfig extends PassConfig {
     // Because FlowSensitiveInlineVariables does not operate on the global scope due to compilation
     // time, we need to run it once before InlineFunctions so that we don't miss inlining
     // opportunities when a function will be inlined into the global scope.
-    if (options.shouldInlineVariables() || options.shouldInlineLocalVariables()) {
+    if (options.inlineVariables || options.inlineLocalVariables) {
       passes.maybeAdd(flowSensitiveInlineVariables);
     }
 
@@ -1092,7 +1084,7 @@ public final class DefaultPassConfig extends PassConfig {
   /** Creates the passes for the main optimization loop. */
   private PassListBuilder getMainOptimizationLoop() {
     PassListBuilder passes = new PassListBuilder(options);
-    if (options.shouldInlineGetters()) {
+    if (options.inlineGetters) {
       passes.maybeAdd(inlineSimpleMethods);
     }
 
@@ -1104,11 +1096,11 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(deadPropertyAssignmentElimination);
     }
 
-    if (options.shouldOptimizeCalls()) {
+    if (options.optimizeCalls) {
       passes.maybeAdd(optimizeCalls);
     }
 
-    if (options.getJ2clPass().shouldAddJ2clPasses()) {
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
       passes.maybeAdd(j2clConstantHoisterPass);
       passes.maybeAdd(j2clClinitPass);
     }
@@ -1120,9 +1112,9 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(inlineFunctions);
     }
 
-    if (options.shouldInlineVariables() || options.shouldInlineLocalVariables()) {
+    if (options.inlineVariables || options.inlineLocalVariables) {
       passes.maybeAdd(inlineVariables);
-    } else if (options.shouldInlineConstantVars()) {
+    } else if (options.inlineConstantVars) {
       passes.maybeAdd(inlineConstants);
     }
 
@@ -1130,7 +1122,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(deadAssignmentsElimination);
     }
 
-    if (options.getCollapseObjectLiterals()) {
+    if (options.collapseObjectLiterals) {
       passes.maybeAdd(collapseObjectLiterals);
     }
 
@@ -1138,7 +1130,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(removeUnusedCode);
     }
 
-    if (options.shouldFoldConstants()) {
+    if (options.foldConstants) {
       passes.maybeAdd(peepholeOptimizations);
     }
 
@@ -1156,11 +1148,11 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   private boolean shouldRunRemoveUnusedCode() {
-    return options.shouldRemoveUnusedVariables()
-        || options.shouldRemoveUnusedLocalVariables()
-        || options.shouldRemoveUnusedPrototypeProperties()
+    return options.removeUnusedVars
+        || options.removeUnusedLocalVars
+        || options.removeUnusedPrototypeProperties
         || options.isRemoveUnusedClassProperties()
-        || options.getRewritePolyfills();
+        || options.rewritePolyfills;
   }
 
   private final PassFactory checkSideEffects =
@@ -1170,7 +1162,7 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) ->
                   new CheckSideEffects(
                       compiler,
-                      options.getCheckSuspiciousCode(),
+                      options.checkSuspiciousCode,
                       options.shouldProtectHiddenSideEffects()))
           .build();
 
@@ -1188,7 +1180,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> {
                 List<NodeTraversal.Callback> sharedCallbacks = new ArrayList<>();
-                if (options.getCheckSuspiciousCode()) {
+                if (options.checkSuspiciousCode) {
                   sharedCallbacks.add(new CheckSuspiciousCode());
                   sharedCallbacks.add(new CheckDuplicateCase(compiler));
                 }
@@ -1387,7 +1379,7 @@ public final class DefaultPassConfig extends PassConfig {
                 final GenerateExports pass =
                     new GenerateExports(
                         compiler,
-                        options.shouldExportLocalPropertyDefinitions(),
+                        options.exportLocalPropertyDefinitions,
                         convention.getExportSymbolFunction(),
                         convention.getExportPropertyFunction());
                 return new CompilerPass() {
@@ -1498,7 +1490,7 @@ public final class DefaultPassConfig extends PassConfig {
             (compiler) ->
                 new ReplaceMessages(
                         compiler,
-                        options.getMessageBundle(),
+                        options.messageBundle,
                         /* allow messages with goog.getMsg */
                         options.getStrictMessageReplacement())
                     .getFullReplacementPass())
@@ -1516,7 +1508,7 @@ public final class DefaultPassConfig extends PassConfig {
             (compiler) ->
                 new ReplaceMessages(
                         compiler,
-                        options.getMessageBundle(),
+                        options.messageBundle,
                         /* allow messages with goog.getMsg */
                         options.getStrictMessageReplacement())
                     .getMsgProtectionPass())
@@ -1531,7 +1523,7 @@ public final class DefaultPassConfig extends PassConfig {
             (compiler) ->
                 new ReplaceMessages(
                         compiler,
-                        options.getMessageBundle(),
+                        options.messageBundle,
                         /* allow messages with goog.getMsg */
                         options.getStrictMessageReplacement())
                     .getReplacementCompletionPass())
@@ -1544,7 +1536,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new ReplaceMessagesForChrome(
-                      compiler, new GoogleJsMessageIdGenerator(options.getTcProjectId())
+                      compiler, new GoogleJsMessageIdGenerator(options.tcProjectId)
                       /* allow messages with goog.getMsg */
                       ))
           .build();
@@ -1580,8 +1572,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new InjectRuntimeLibraries(
-                      compiler,
-                      ImmutableSet.copyOf(compiler.getOptions().getForceLibraryInjectionList())))
+                      compiler, ImmutableSet.copyOf(compiler.getOptions().forceLibraryInjection)))
           .build();
 
   private final PassFactory removeWeakSources =
@@ -1657,16 +1648,16 @@ public final class DefaultPassConfig extends PassConfig {
                     @Override
                     public void process(Node externs, Node jsRoot) {
                       Optional<ImmutableSet.Builder<String>> cssNames =
-                          options.shouldGatherCssNames()
+                          options.gatherCssNames
                               ? Optional.of(ImmutableSet.builder())
                               : Optional.empty();
 
                       ReplaceCssNames pass =
                           new ReplaceCssNames(
                               compiler,
-                              options.getCssRenamingMap(),
+                              options.cssRenamingMap,
                               cssName -> cssNames.ifPresent(builder -> builder.add(cssName)),
-                              options.getCssRenamingSkiplist());
+                              options.cssRenamingSkiplist);
                       pass.process(externs, jsRoot);
 
                       compiler.setCssNames(cssNames.isPresent() ? cssNames.get().build() : null);
@@ -1683,9 +1674,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new CreateSyntheticBlocks(
-                      compiler,
-                      options.getSyntheticBlockStartMarker(),
-                      options.getSyntheticBlockEndMarker()))
+                      compiler, options.syntheticBlockStartMarker, options.syntheticBlockEndMarker))
           .build();
 
   private final PassFactory earlyPeepholeOptimizations =
@@ -1694,10 +1683,10 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> {
                 boolean useTypesForOptimization =
-                    compiler.getOptions().shouldUseTypesForLocalOptimization();
+                    compiler.getOptions().useTypesForLocalOptimization;
                 List<AbstractPeepholeOptimization> peepholeOptimizations = new ArrayList<>();
                 peepholeOptimizations.add(new PeepholeRemoveDeadCode());
-                if (compiler.getOptions().getJ2clPass().shouldAddJ2clPasses()) {
+                if (compiler.getOptions().j2clPassMode.shouldAddJ2clPasses()) {
                   peepholeOptimizations.add(
                       new J2clEqualitySameRewriterPass(useTypesForOptimization));
                 }
@@ -1712,9 +1701,9 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> {
                 InlineVariables.Mode mode;
-                if (options.shouldInlineVariables()) {
+                if (options.inlineVariables) {
                   mode = InlineVariables.Mode.ALL;
-                } else if (options.shouldInlineLocalVariables()) {
+                } else if (options.inlineLocalVariables) {
                   mode = InlineVariables.Mode.LOCALS_ONLY;
                 } else {
                   throw new IllegalStateException("No variable inlining option set.");
@@ -1727,15 +1716,14 @@ public final class DefaultPassConfig extends PassConfig {
   private static CompilerPass createPeepholeOptimizationsPass(
       AbstractCompiler compiler, String passName) {
     final boolean late = false;
-    final boolean useTypesForOptimization =
-        compiler.getOptions().shouldUseTypesForLocalOptimization();
+    final boolean useTypesForOptimization = compiler.getOptions().useTypesForLocalOptimization;
     List<AbstractPeepholeOptimization> optimizations = new ArrayList<>();
     optimizations.add(new MinimizeExitPoints());
     optimizations.add(new PeepholeMinimizeConditions(late));
     optimizations.add(new PeepholeSubstituteAlternateSyntax(late));
     optimizations.add(new PeepholeReplaceKnownMethods(late, useTypesForOptimization));
     optimizations.add(new PeepholeRemoveDeadCode());
-    if (compiler.getOptions().getJ2clPass().shouldAddJ2clPasses()) {
+    if (compiler.getOptions().j2clPassMode.shouldAddJ2clPasses()) {
       optimizations.add(new J2clEqualitySameRewriterPass(useTypesForOptimization));
       optimizations.add(new J2clStringValueOfRewriterPass());
       optimizations.add(new J2clUndefinedChecksRewriterPass());
@@ -1771,8 +1759,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> {
                 final boolean late = true;
-                final boolean useTypesForOptimization =
-                    options.shouldUseTypesForLocalOptimization();
+                final boolean useTypesForOptimization = options.useTypesForLocalOptimization;
                 return new PeepholeOptimizationsPass(
                     compiler,
                     "latePeepholeOptimizations",
@@ -2063,7 +2050,7 @@ public final class DefaultPassConfig extends PassConfig {
                     .putReplacements(getAdditionalReplacements(options))
                     .putReplacements(options.getDefineReplacements())
                     .setMode(mode)
-                    .setRecognizeClosureDefines(compiler.getOptions().getClosurePass())
+                    .setRecognizeClosureDefines(compiler.getOptions().closurePass)
                     .setEnableZonesDefineName(options.getEnableZonesDefineName())
                     .setZoneInputPattern(options.getZoneInputPattern())
                     .setUnknownDefinesToIgnore(options.getUnknownDefinesToIgnore())
@@ -2087,9 +2074,9 @@ public final class DefaultPassConfig extends PassConfig {
                       StripCode pass =
                           new StripCode(
                               compiler,
-                              options.getStripTypes(),
-                              options.getStripNameSuffixes(),
-                              options.getStripNamePrefixes(),
+                              options.stripTypes,
+                              options.stripNameSuffixes,
+                              options.stripNamePrefixes,
                               options.getTweakProcessing().shouldStrip());
 
                       pass.process(externs, jsRoot);
@@ -2129,10 +2116,10 @@ public final class DefaultPassConfig extends PassConfig {
                           new ReplaceIdGenerators(
                               compiler,
                               options.needsTranspilationOf(Feature.TEMPLATE_LITERALS),
-                              options.getIdGenerators(),
-                              options.shouldGeneratePseudoNames(),
-                              options.getIdGeneratorsMapSerialized(),
-                              options.getXidHashFunction());
+                              options.idGenerators,
+                              options.generatePseudoNames,
+                              options.idGeneratorsMapSerialized,
+                              options.xidHashFunction);
                       pass.process(externs, root);
                       compiler.setIdGeneratorMap(pass.getSerializedIdMappings());
                     }
@@ -2151,8 +2138,8 @@ public final class DefaultPassConfig extends PassConfig {
                       ReplaceStrings pass =
                           new ReplaceStrings(
                               compiler,
-                              options.getReplaceStringsPlaceholderToken(),
-                              options.getReplaceStringsFunctionDescriptions());
+                              options.replaceStringsPlaceholderToken,
+                              options.replaceStringsFunctionDescriptions);
                       pass.process(externs, root);
                       compiler.setStringMap(pass.getStringMap());
                     }
@@ -2166,9 +2153,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new ClosureCodeRemoval(
-                      compiler,
-                      options.shouldRemoveAbstractMethods(),
-                      options.shouldRemoveClosureAsserts()))
+                      compiler, options.removeAbstractMethods, options.removeClosureAsserts))
           .build();
 
   /** Special case optimizations for closure functions. */
@@ -2189,8 +2174,8 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) ->
                   new RescopeGlobalSymbols(
                       compiler,
-                      options.getRenamePrefixNamespace(),
-                      options.assumeCrossChunkNamesForRenamePrefixNamespace()))
+                      options.renamePrefixNamespace,
+                      options.renamePrefixNamespaceAssumeCrossChunkNames))
           .build();
 
   /** Converts cross chunk references into ES Module import and export statements. */
@@ -2308,9 +2293,9 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> {
                 InlineVariables.Mode mode;
-                if (options.shouldInlineVariables()) {
+                if (options.inlineVariables) {
                   mode = InlineVariables.Mode.ALL;
-                } else if (options.shouldInlineLocalVariables()) {
+                } else if (options.inlineLocalVariables) {
                   mode = InlineVariables.Mode.LOCALS_ONLY;
                 } else {
                   throw new IllegalStateException("No variable inlining option set.");
@@ -2366,8 +2351,8 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler.getUniqueNameIdSupplier(),
                       options.getInlineFunctionsLevel(),
                       options.assumeStrictThis() || options.expectStrictModeInput(),
-                      options.assumeClosuresOnlyCaptureReferences(),
-                      options.getMaxFunctionSizeAfterInlining()))
+                      options.assumeClosuresOnlyCaptureReferences,
+                      options.maxFunctionSizeAfterInlining))
           .build();
 
   /** Inlines constant properties. */
@@ -2392,11 +2377,10 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new RemoveUnusedCode.Builder(compiler)
-                      .removeLocalVars(options.shouldRemoveUnusedLocalVariables())
-                      .removeGlobals(options.shouldRemoveUnusedVariables())
+                      .removeLocalVars(options.removeUnusedLocalVars)
+                      .removeGlobals(options.removeUnusedVars)
                       .preserveFunctionExpressionNames(false)
-                      .removeUnusedPrototypeProperties(
-                          options.shouldRemoveUnusedPrototypeProperties())
+                      .removeUnusedPrototypeProperties(options.removeUnusedPrototypeProperties)
                       .removeUnusedThisProperties(options.isRemoveUnusedClassProperties())
                       .removeUnusedObjectDefinePropertiesDefinitions(
                           options.isRemoveUnusedClassProperties())
@@ -2404,7 +2388,7 @@ public final class DefaultPassConfig extends PassConfig {
                       // Otherwise, we might end up removing polyfills the user specifically asked
                       // to include.
                       .removeUnusedPolyfills(
-                          options.getForceLibraryInjectionList().isEmpty()
+                          options.forceLibraryInjection.isEmpty()
                               && options.getInjectPolyfillsNewerThan() == null)
                       .assumeGettersArePure(options.getAssumeGettersArePure())
                       .build())
@@ -2423,7 +2407,7 @@ public final class DefaultPassConfig extends PassConfig {
                   new CrossChunkCodeMotion(
                       compiler,
                       compiler.getChunkGraph(),
-                      options.getParentChunkCanSeeSymbolsDeclaredInChildren()))
+                      options.parentChunkCanSeeSymbolsDeclaredInChildren))
           .build();
 
   /** Move methods to a deeper common chunk */
@@ -2437,7 +2421,7 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler,
                       compiler.getCrossChunkIdGenerator(),
                       /* canModifyExterns= */ false, // remove this
-                      options.getCrossChunkCodeMotionNoStubMethods()))
+                      options.crossChunkCodeMotionNoStubMethods))
           .build();
 
   /** A data-flow based variable inliner. */
@@ -2452,8 +2436,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.COALESCE_VARIABLE_NAMES)
           .setInternalFactory(
-              (compiler) ->
-                  new CoalesceVariableNames(compiler, options.shouldGeneratePseudoNames()))
+              (compiler) -> new CoalesceVariableNames(compiler, options.generatePseudoNames))
           .build();
 
   /** Collapses assignment expressions (e.g., {@code x = 3; y = x;} becomes {@code y = x = 3;}. */
@@ -2480,7 +2463,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> {
                 Pattern pattern =
-                    switch (options.getExtractPrototypeMemberDeclarationsMode()) {
+                    switch (options.extractPrototypeMemberDeclarations) {
                       case USE_GLOBAL_TEMP -> Pattern.USE_GLOBAL_TEMP;
                       case USE_CHUNK_TEMP -> Pattern.USE_CHUNK_TEMP;
                       case USE_IIFE -> Pattern.USE_IIFE;
@@ -2525,7 +2508,7 @@ public final class DefaultPassConfig extends PassConfig {
                   new AliasStrings(
                       compiler,
                       compiler.getChunkGraph(),
-                      options.shouldOutputJsStringUsage(),
+                      options.outputJsStringUsage,
                       options.getAliasStringsMode()))
           .build();
 
@@ -2593,19 +2576,19 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("renameProperties")
           .setInternalFactory(
               (compiler) -> {
-                checkState(options.getPropertyRenaming() == PropertyRenamingPolicy.ALL_UNQUOTED);
-                final VariableMap prevPropertyMap = options.getInputPropertyMap();
+                checkState(options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED);
+                final VariableMap prevPropertyMap = options.inputPropertyMap;
                 return new CompilerPass() {
                   @Override
                   public void process(Node externs, Node root) {
                     RenameProperties rprop =
                         new RenameProperties(
                             compiler,
-                            options.shouldGeneratePseudoNames(),
+                            options.generatePseudoNames,
                             prevPropertyMap,
                             options.getPropertyReservedNamingFirstChars(),
                             options.getPropertyReservedNamingNonFirstChars(),
-                            options.getNameGenerator());
+                            options.nameGenerator);
                     rprop.process(externs, root);
                     compiler.setPropertyMap(rprop.getPropertyMap());
                   }
@@ -2627,7 +2610,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("renameVars")
           .setInternalFactory(
               (compiler) -> {
-                final VariableMap prevVariableMap = options.getInputVariableMap();
+                final VariableMap prevVariableMap = options.inputVariableMap;
                 return new CompilerPass() {
                   @Override
                   public void process(Node externs, Node root) {
@@ -2642,23 +2625,23 @@ public final class DefaultPassConfig extends PassConfig {
       AbstractCompiler compiler, VariableMap prevVariableMap, Node externs, Node root) {
     Set<Character> reservedChars = ImmutableSet.of();
     Set<String> reservedNames = new LinkedHashSet<>();
-    if (options.getRenamePrefixNamespace() != null) {
+    if (options.renamePrefixNamespace != null) {
       // don't use the prefix name as a global symbol.
-      reservedNames.add(options.getRenamePrefixNamespace());
+      reservedNames.add(options.renamePrefixNamespace);
     }
     reservedNames.addAll(compiler.getExportedNames());
     reservedNames.addAll(ParserRunner.getReservedVars());
     RenameVars rn =
         new RenameVars(
             compiler,
-            options.getRenamePrefix(),
-            options.getVariableRenaming() == VariableRenamingPolicy.LOCAL,
-            options.shouldGeneratePseudoNames(),
-            options.shouldPreferStableNames(),
+            options.renamePrefix,
+            options.variableRenaming == VariableRenamingPolicy.LOCAL,
+            options.generatePseudoNames,
+            options.preferStableNames,
             prevVariableMap,
             reservedChars,
             reservedNames,
-            options.getNameGenerator());
+            options.nameGenerator);
     rn.process(externs, root);
     return rn.getVariableMap();
   }
@@ -2742,12 +2725,12 @@ public final class DefaultPassConfig extends PassConfig {
   static Map<String, Node> getAdditionalReplacements(CompilerOptions options) {
     Map<String, Node> additionalReplacements = new LinkedHashMap<>();
 
-    if (options.shouldMarkAsCompiled() || options.getClosurePass()) {
+    if (options.markAsCompiled || options.closurePass) {
       additionalReplacements.put(COMPILED_CONSTANT_NAME, IR.trueNode());
     }
 
-    if (options.getClosurePass() && options.getLocale() != null && !options.doLateLocalization()) {
-      additionalReplacements.put(CLOSURE_LOCALE_CONSTANT_NAME, IR.string(options.getLocale()));
+    if (options.closurePass && options.locale != null && !options.doLateLocalization()) {
+      additionalReplacements.put(CLOSURE_LOCALE_CONSTANT_NAME, IR.string(options.locale));
     }
 
     return additionalReplacements;
@@ -2911,9 +2894,7 @@ public final class DefaultPassConfig extends PassConfig {
                 // Force creation of the synthetic input so that we create metadata for it
                 compiler.getSynthesizedExternsInput();
                 return new GatherModuleMetadata(
-                    compiler,
-                    options.getProcessCommonJSModules(),
-                    options.getModuleResolutionMode());
+                    compiler, options.getProcessCommonJSModules(), options.moduleResolutionMode);
               })
           .build();
 
@@ -2989,7 +2970,7 @@ public final class DefaultPassConfig extends PassConfig {
                     @Override
                     public void process(Node externs, Node root) {
                       new LocaleDataPasses.LocaleSubstitutions(
-                              compiler, compiler.getOptions().getLocale())
+                              compiler, compiler.getOptions().locale)
                           .process(externs, root);
                     }
                   })

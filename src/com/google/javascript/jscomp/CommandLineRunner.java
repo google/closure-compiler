@@ -1448,7 +1448,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private void applyToOptions(CompilerOptions options) {
       switch (this) {
         case PRETTY_PRINT -> options.setPrettyPrint(true);
-        case PRINT_INPUT_DELIMITER -> options.setPrintInputDelimiter(true);
+        case PRINT_INPUT_DELIMITER -> options.printInputDelimiter = true;
         case SINGLE_QUOTES -> options.setPreferSingleQuotes(true);
       }
     }
@@ -1892,9 +1892,9 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       formattingOption.applyToOptions(options);
     }
 
-    options.setClosurePass(flags.processClosurePrimitives);
+    options.closurePass = flags.processClosurePrimitives;
 
-    options.setAngularPass(flags.angularPass);
+    options.angularPass = flags.angularPass;
 
     options.setPolymerVersion(flags.polymerVersion);
 
@@ -1911,11 +1911,11 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       }
     }
 
-    options.setRemoveJ2clAsserts(flags.removeJ2cLAsserts);
+    options.removeJ2clAsserts = flags.removeJ2cLAsserts;
 
-    options.setRenamePrefix(flags.renamePrefix);
+    options.renamePrefix = flags.renamePrefix;
 
-    options.setRenamePrefixNamespace(flags.renamePrefixNamespace);
+    options.renamePrefixNamespace = flags.renamePrefixNamespace;
 
     options.setPreserveTypeAnnotations(flags.preserveTypeAnnotations);
 
@@ -1925,16 +1925,16 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       options.setForceLibraryInjection(flags.forceInjectLibraries);
     }
 
-    options.setRewritePolyfills(
+    options.rewritePolyfills =
         flags.rewritePolyfills
-            && options.getLanguageIn().toFeatureSet().contains(FeatureSet.ES2015));
+            && options.getLanguageIn().toFeatureSet().contains(FeatureSet.ES2015);
     options.setIsolatePolyfills(flags.isolatePolyfills);
 
     if (!flags.translationsFile.isEmpty()) {
       try {
-        options.setMessageBundle(
+        options.messageBundle =
             new XtbMessageBundle(
-                new FileInputStream(flags.translationsFile), flags.translationsProject));
+                new FileInputStream(flags.translationsFile), flags.translationsProject);
       } catch (IOException e) {
         throw new RuntimeException("Reading XTB file", e);
       }
@@ -1947,7 +1947,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       // In ADVANCED mode, goog.getMsg is going to be renamed anyway,
       // so we might as well inline it. But shut off the i18n warnings,
       // because the user didn't really ask for i18n.
-      options.setMessageBundle(new EmptyMessageBundle());
+      options.messageBundle = new EmptyMessageBundle();
       options.setWarningLevel(DiagnosticGroups.MSG_CONVENTIONS, CheckLevel.OFF);
     }
 
@@ -2016,7 +2016,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "--chunk_output_type is set to ES_MODULES.");
       }
 
-      options.setChunkOutputType(flags.chunkOutputType);
+      options.chunkOutputType = flags.chunkOutputType;
       options.setEmitUseStrict(false);
 
       if (level == CompilationLevel.ADVANCED_OPTIMIZATIONS) {
