@@ -5470,26 +5470,20 @@ async function abc() {
     // ExperimentalForceTranspile.LET_CONST also transpiling array destructuring parameters.
     // This isn't strictly necessary, but otherwise would require more refactoring of the
     // transpilation passes.
-    // TODO: b/474152725 - fix this crash.
-    var ex =
-        assertThrows(
-            RuntimeException.class,
-            () ->
-                test(
-                    options,
-                    """
-                    window['C'] = function([...strs]) {
-                      return `${strs}`;
-                    };
-                    """,
-                    """
-                    window["C"] = function($jscomp$destructuring$var0) {
-                      var $jscomp$destructuring$var1 = (0,$jscomp.makeIterator)($jscomp$destructuring$var0);
-                      var strs = (0,$jscomp.arrayFromIterator)($jscomp$destructuring$var1);
-                      return `${strs}`;
-                    };
-                    """));
-    assertThat(ex).hasMessageThat().contains("Field $jscomp.arrayFromIterator is not injected");
+    test(
+        options,
+        """
+        window['C'] = function([...strs]) {
+          return `${strs}`;
+        };
+        """,
+        """
+        window["C"] = function($jscomp$destructuring$var0) {
+          var $jscomp$destructuring$var1 = (0,$jscomp.makeIterator)($jscomp$destructuring$var0);
+          var strs = (0,$jscomp.arrayFromIterator)($jscomp$destructuring$var1);
+          return `${strs}`;
+        };
+        """);
   }
 
   @Test

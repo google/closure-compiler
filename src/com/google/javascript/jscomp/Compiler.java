@@ -364,7 +364,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                       Feature.CONST_DECLARATIONS,
                       Feature.FOR_OF,
                       Feature.ARRAY_DESTRUCTURING,
-                      Feature.OBJECT_DESTRUCTURING));
+                      Feature.OBJECT_DESTRUCTURING,
+                      Feature.ARRAY_PATTERN_REST,
+                      Feature.DEFAULT_PARAMETERS));
           // TODO(rishipal): Fall through because of
           // https://b.corp.google.com/issues/239426154#comment57
         case CLASS:
