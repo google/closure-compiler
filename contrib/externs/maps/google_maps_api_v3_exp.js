@@ -20296,7 +20296,7 @@ google.maps.places.Place.prototype.evChargeAmenitySummary;
 google.maps.places.Place.prototype.evChargeOptions;
 
 /**
- * The locations’s full address.
+ * The location’s full address.
  * @type {string|null|undefined}
  */
 google.maps.places.Place.prototype.formattedAddress;
@@ -20536,6 +20536,12 @@ google.maps.places.Place.prototype.requestedLanguage;
 google.maps.places.Place.prototype.requestedRegion;
 
 /**
+ * The unique resource name for this place.
+ * @type {string}
+ */
+google.maps.places.Place.prototype.resourceName;
+
+/**
  * A list of reviews for this Place.
  * @type {!Array<!google.maps.places.Review>|undefined}
  */
@@ -20618,6 +20624,12 @@ google.maps.places.Place.prototype.servesVegetarianFood;
  * @type {boolean|null|undefined}
  */
 google.maps.places.Place.prototype.servesWine;
+
+/**
+ * The location’s short address.
+ * @type {string|null|undefined}
+ */
+google.maps.places.Place.prototype.shortFormattedAddress;
 
 /**
  * URI to the svg image mask resource that can be used to represent a place’s
