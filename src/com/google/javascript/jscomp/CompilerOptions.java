@@ -145,7 +145,8 @@ public class CompilerOptions {
     YEAR_2022(2022, FeatureSet.BROWSER_2022),
     YEAR_2023(2023, FeatureSet.BROWSER_2023),
     YEAR_2024(2024, FeatureSet.BROWSER_2024),
-    YEAR_2025(2025, FeatureSet.BROWSER_2025);
+    YEAR_2025(2025, FeatureSet.BROWSER_2025),
+    YEAR_2026(2026, FeatureSet.BROWSER_2026);
 
     private final int year;
     private final FeatureSet featureSet;
@@ -160,7 +161,8 @@ public class CompilerOptions {
             2022, YEAR_2022,
             2023, YEAR_2023,
             2024, YEAR_2024,
-            2025, YEAR_2025
+            2025, YEAR_2025,
+            2026, YEAR_2026
             // go/keep-sorted end
             );
 
@@ -172,7 +174,7 @@ public class CompilerOptions {
     static BrowserFeaturesetYear from(int year) {
       checkState(
           YEAR_MAP.containsKey(year),
-          "Illegal browser_featureset_year=%s. We support values 2012, or 2018..2025 only",
+          "Illegal browser_featureset_year=%s. We support values 2012, or 2018..2026 only",
           year);
       return YEAR_MAP.get(year);
     }

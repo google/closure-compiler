@@ -62,6 +62,9 @@ public final class CompilerOptionsTest {
 
     options.setBrowserFeaturesetYear(2025);
     assertThat(options.getOutputFeatureSet()).isEqualTo(FeatureSet.BROWSER_2025);
+
+    options.setBrowserFeaturesetYear(2026);
+    assertThat(options.getOutputFeatureSet()).isEqualTo(FeatureSet.BROWSER_2026);
   }
 
   @Test
