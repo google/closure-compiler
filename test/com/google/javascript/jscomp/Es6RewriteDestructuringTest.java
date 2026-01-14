@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -1595,6 +1596,43 @@ function f(first, ...$jscomp$destructuring$var0) {
                 return $jscomp$destructuring$var3
               })();
         """);
+  }
+
+  @Test
+  public void testObjectPatternWithRestAssignStatement_assignedToProperty() {
+    // TODO: b/475285460 - fix the output of this test: it should assign to `obj.rest`, not just
+    // `rest`.
+    test(
+        "var a, obj = {}; ({a, ...obj.rest} = foo());",
+        """
+        var a;
+        var obj = {};
+        var $jscomp$destructuring$var0 = foo();
+        var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);
+        a = $jscomp$destructuring$var0.a;
+        rest = (delete $jscomp$destructuring$var1.a, $jscomp$destructuring$var1);
+        """);
+  }
+
+  @Test
+  public void testObjectPatternInAssignExpression_inGeneratorUsingYield() {
+    // TODO: b/475296868 - fix this crash. Currently Es6RewriteDestructuring is moving the yields
+    // into a regular arrow function (and arrow functions can't be generators anyway).
+    var ex =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                test(
+                    """
+                    function *g(o) {
+                      return yield zzz(), ({[yield a]: o.a} = foo(yield b(), yield c())), yield zzz();
+                    }
+                    """,
+                    """
+                    """));
+    assertThat(ex)
+        .hasMessageThat()
+        .contains("'yield' expression is not within a generator function.");
   }
 
   @Test
