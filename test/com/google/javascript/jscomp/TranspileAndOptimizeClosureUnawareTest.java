@@ -539,6 +539,39 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
             """));
   }
 
+  @Test
+  public void bigintLiteral_passedThroughUntranspiled() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
+
+    test(closureUnaware("return 123n + 456n;"), expectedClosureUnaware("return 579n;"));
+  }
+
+  @Test
+  public void untranspilableRegexFeature_passedThroughUntranspiled() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
+
+    // ES2018 feature: https://github.com/tc39/proposal-regexp-dotall-flag
+    // ES2022 feature: https://github.com/tc39/proposal-regexp-match-indices
+    testSame(closureUnaware("return /a/sd"));
+  }
+
+  @Test
+  public void computedGetterSetter_inEs5Out_passedThroughUntranspiled() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
+    // JSCompiler does not support transpiling computed getters/setters in object literals down to
+    // ES5. For closureUnaware, verify they are passed through unchanged.
+    testSame(
+        closureUnaware(
+            """
+            return {
+              get [x()]() {
+                return 1;
+              },
+              set [x()](a) {}
+            };
+            """));
+  }
+
   private static String loadFile(Path path) {
     try (Stream<String> lines = Files.lines(path)) {
       return lines.collect(joining("\n"));

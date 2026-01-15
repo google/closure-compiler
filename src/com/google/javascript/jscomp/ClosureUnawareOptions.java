@@ -33,6 +33,8 @@ class ClosureUnawareOptions {
   }
 
   private CompilerOptions toCompilerOptions() {
+    // TODO: b/473813461 - refactor to make sure this class doesn't accidentally skip copying
+    // any options.
     setTranspilationOptions();
     setSafeOptimizationAssumptions();
     copyOutputOptions();
@@ -53,6 +55,17 @@ class ClosureUnawareOptions {
     shadowOptions.setEs6SubclassTranspilation(
         CompilerOptions.Es6SubclassTranspilation.SAFE_REFLECT_CONSTRUCT);
     shadowOptions.setOutputFeatureSet(original.getOutputFeatureSet());
+
+    // To aid rollout of @closureUnaware transpilation, ignore warnings about untranspilable
+    // features for now. (Any project using @closureUnaware today (i.e. early 2026) gets zero
+    // transpilation, so rolling out with these suppressions is an incremental improvement.)
+
+    // DiagnosticGroups.CANNOT_TRANSPILE_FEATURE: features for which the compiler theoretically
+    // might support transpilation, but does not currently.
+    shadowOptions.setWarningLevel(DiagnosticGroups.CANNOT_TRANSPILE_FEATURE, CheckLevel.OFF);
+    // DiagnosticGroups.UNSTRANSPILABLE_FEATURES: features JSCompiler will never transpile, like
+    // regex syntax.
+    shadowOptions.setWarningLevel(DiagnosticGroups.UNSTRANSPILABLE_FEATURES, CheckLevel.OFF);
   }
 
   private void setSafeOptimizationAssumptions() {
@@ -71,8 +84,6 @@ class ClosureUnawareOptions {
     shadowOptions.setGeneratePseudoNames(original.generatePseudoNames);
     shadowOptions.setErrorHandler(original.errorHandler);
     shadowOptions.setErrorFormat(original.errorFormat);
-
-    // TODO: lharker - is there any use in propagating the VariableMap & PropertyMap?
   }
 
   private void copyDebugOptions() {
