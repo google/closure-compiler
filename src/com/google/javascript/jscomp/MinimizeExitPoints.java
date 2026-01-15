@@ -31,6 +31,7 @@ import org.jspecify.annotations.Nullable;
 class MinimizeExitPoints extends AbstractPeepholeOptimization {
   @Override
   Node optimizeSubtree(Node n) {
+    checkState(this.isASTNormalized(), "MinimizeExitPoints requires the AST to be normalized");
     switch (n.getToken()) {
       case LABEL -> tryMinimizeExits(n.getLastChild(), Token.BREAK, n.getFirstChild().getString());
       case FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, WHILE ->

@@ -546,7 +546,7 @@ public final class DefaultPassConfig extends PassConfig {
         passes.maybeAdd(getReplaceProtectedMessagesPass());
       }
       passes.maybeAdd(substituteLocaleData);
-      passes.maybeAdd(peepholeOptimizationsOnce);
+      passes.maybeAdd(peepholeOptimizationsOnceNormalized);
     }
 
     if (options.inlineVariables || options.inlineLocalVariables) {
@@ -658,7 +658,7 @@ public final class DefaultPassConfig extends PassConfig {
       // that can be removed, rerun the peephole optimizations to clean them
       // up.
       if (options.foldConstants) {
-        passes.maybeAdd(peepholeOptimizationsOnce);
+        passes.maybeAdd(peepholeOptimizationsOnceNonNormalized);
       }
     }
 
@@ -1714,11 +1714,18 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Various peephole optimizations. */
   private static CompilerPass createPeepholeOptimizationsPass(
-      AbstractCompiler compiler, String passName) {
+      AbstractCompiler compiler, String passName, boolean expectAstIsNormalized) {
+    checkArgument(
+        expectAstIsNormalized == compiler.getLifeCycleStage().isNormalized(),
+        compiler.getLifeCycleStage());
     final boolean late = false;
     final boolean useTypesForOptimization = compiler.getOptions().useTypesForLocalOptimization;
+
     List<AbstractPeepholeOptimization> optimizations = new ArrayList<>();
-    optimizations.add(new MinimizeExitPoints());
+    if (expectAstIsNormalized) {
+      // MinimizeExitPoints requires the AST to be normalized.
+      optimizations.add(new MinimizeExitPoints());
+    }
     optimizations.add(new PeepholeMinimizeConditions(late));
     optimizations.add(new PeepholeSubstituteAlternateSyntax(late));
     optimizations.add(new PeepholeReplaceKnownMethods(late, useTypesForOptimization));
@@ -1740,16 +1747,31 @@ public final class DefaultPassConfig extends PassConfig {
           .setRunInFixedPointLoop(true)
           .setInternalFactory(
               (compiler) ->
-                  createPeepholeOptimizationsPass(compiler, PassNames.PEEPHOLE_OPTIMIZATIONS))
+                  createPeepholeOptimizationsPass(compiler, PassNames.PEEPHOLE_OPTIMIZATIONS, true))
           .build();
 
   /** Various peephole optimizations. */
-  private final PassFactory peepholeOptimizationsOnce =
+  private final PassFactory peepholeOptimizationsOnceNormalized =
       PassFactory.builder()
           .setName(PassNames.PEEPHOLE_OPTIMIZATIONS)
           .setInternalFactory(
               (compiler) ->
-                  createPeepholeOptimizationsPass(compiler, PassNames.PEEPHOLE_OPTIMIZATIONS))
+                  createPeepholeOptimizationsPass(
+                      compiler,
+                      PassNames.PEEPHOLE_OPTIMIZATIONS,
+                      /* expectAstIsNormalized= */ true))
+          .build();
+
+  /** Various peephole optimizations. */
+  private final PassFactory peepholeOptimizationsOnceNonNormalized =
+      PassFactory.builder()
+          .setName(PassNames.PEEPHOLE_OPTIMIZATIONS)
+          .setInternalFactory(
+              (compiler) ->
+                  createPeepholeOptimizationsPass(
+                      compiler,
+                      PassNames.PEEPHOLE_OPTIMIZATIONS,
+                      /* expectAstIsNormalized= */ false))
           .build();
 
   /** Same as peepholeOptimizations but aggressively merges code together */
