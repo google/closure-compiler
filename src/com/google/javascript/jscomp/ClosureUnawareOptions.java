@@ -63,9 +63,9 @@ class ClosureUnawareOptions {
     // DiagnosticGroups.CANNOT_TRANSPILE_FEATURE: features for which the compiler theoretically
     // might support transpilation, but does not currently.
     shadowOptions.setWarningLevel(DiagnosticGroups.CANNOT_TRANSPILE_FEATURE, CheckLevel.OFF);
-    // DiagnosticGroups.UNSTRANSPILABLE_FEATURES: features JSCompiler will never transpile, like
+    // DiagnosticGroups.UNTRANSPILABLE_FEATURES: features JSCompiler will never transpile, like
     // regex syntax.
-    shadowOptions.setWarningLevel(DiagnosticGroups.UNSTRANSPILABLE_FEATURES, CheckLevel.OFF);
+    shadowOptions.setWarningLevel(DiagnosticGroups.UNTRANSPILABLE_FEATURES, CheckLevel.OFF);
   }
 
   private void setSafeOptimizationAssumptions() {

@@ -5010,7 +5010,7 @@ async function abc() {
             """);
 
     // But we won't emit ES 2018 regexp features.
-    DiagnosticGroup untranspilable = DiagnosticGroups.UNSTRANSPILABLE_FEATURES;
+    DiagnosticGroup untranspilable = DiagnosticGroups.UNTRANSPILABLE_FEATURES;
     test(options, googDefine + "/foo/s", untranspilable);
     test(options, googDefine + "/(?<foo>.)/", untranspilable);
     test(options, googDefine + "/(?<=foo)/", untranspilable);
@@ -5040,7 +5040,7 @@ async function abc() {
         googDefineOutput + "document.querySelector('input')?.children?.[0];");
 
     // We won't emit regexp lookbehind.
-    DiagnosticGroup untranspilable = DiagnosticGroups.UNSTRANSPILABLE_FEATURES;
+    DiagnosticGroup untranspilable = DiagnosticGroups.UNTRANSPILABLE_FEATURES;
     test(options, googDefine + "/(?<=oo)/", untranspilable);
     test(options, googDefine + "/(?<!foo)/", untranspilable);
 
