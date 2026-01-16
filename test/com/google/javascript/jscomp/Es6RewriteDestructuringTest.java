@@ -1600,8 +1600,6 @@ function f(first, ...$jscomp$destructuring$var0) {
 
   @Test
   public void testObjectPatternWithRestAssignStatement_assignedToProperty() {
-    // TODO: b/475285460 - fix the output of this test: it should assign to `obj.rest`, not just
-    // `rest`.
     test(
         "var a, obj = {}; ({a, ...obj.rest} = foo());",
         """
@@ -1610,7 +1608,7 @@ function f(first, ...$jscomp$destructuring$var0) {
         var $jscomp$destructuring$var0 = foo();
         var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);
         a = $jscomp$destructuring$var0.a;
-        rest = (delete $jscomp$destructuring$var1.a, $jscomp$destructuring$var1);
+        obj.rest = (delete $jscomp$destructuring$var1.a, $jscomp$destructuring$var1);
         """);
   }
 

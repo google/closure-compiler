@@ -565,9 +565,10 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
 
         Node restName = child.getOnlyChild(); // e.g. get `rest` from `const {...rest} = {};`
         if (restName.getString().startsWith(DESTRUCTURING_TEMP_VAR)) {
+          checkState(restName.isName(), restName);
           newLHS = createTempVarNameNode(restName.getString(), type(restName));
         } else {
-          newLHS = astFactory.createName(restName.getString(), type(restName));
+          newLHS = restName.detach();
         }
         newRHS = objectPatternRestRHS(objectPattern, child, restTempVarName, propsToDeleteForRest);
       } else {
