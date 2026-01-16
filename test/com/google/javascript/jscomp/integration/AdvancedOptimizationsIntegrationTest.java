@@ -158,25 +158,24 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         function isDeclaredInLoop(path) {
           var $jscomp$loop$98447280$2 = {parentPath:void 0, key:void 0};
           for (function($jscomp$loop$98447280$2) {
-            return function() {
-              $jscomp$loop$98447280$2.parentPath = path.parentPath;
-              $jscomp$loop$98447280$2.key = path.key;
-              return path;
+            return function($jscomp$destructuring$var1) {
+              $jscomp$loop$98447280$2.parentPath = $jscomp$destructuring$var1.parentPath;
+              $jscomp$loop$98447280$2.key = $jscomp$destructuring$var1.key;
+              return $jscomp$destructuring$var1;
             };
-          }($jscomp$loop$98447280$2)();
+          }($jscomp$loop$98447280$2)(path);
           $jscomp$loop$98447280$2.parentPath;
           $jscomp$loop$98447280$2 = {
             parentPath:$jscomp$loop$98447280$2.parentPath,
             key:$jscomp$loop$98447280$2.key
           },
           function($jscomp$loop$98447280$2) {
-            return function() {
-              var $jscomp$destructuring$var3 = $jscomp$loop$98447280$2.parentPath;
+            return function($jscomp$destructuring$var3) {
               $jscomp$loop$98447280$2.parentPath = $jscomp$destructuring$var3.parentPath;
               $jscomp$loop$98447280$2.key = $jscomp$destructuring$var3.key;
               return $jscomp$destructuring$var3;
             };
-          }($jscomp$loop$98447280$2)()) {
+          }($jscomp$loop$98447280$2)($jscomp$loop$98447280$2.parentPath)) {
             return isDeclaredInLoop($jscomp$loop$98447280$2.parentPath);
            }
           return !1;
