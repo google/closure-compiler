@@ -1007,7 +1007,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         parent.addChildToBack(var);
       }
     }
-    this.addFeatureToEnclosingScript(parent, Feature.LET_DECLARATIONS);
+    this.addFeatureToEnclosingScript(Feature.LET_DECLARATIONS);
   }
 
   /**

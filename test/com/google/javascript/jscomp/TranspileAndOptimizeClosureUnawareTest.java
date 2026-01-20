@@ -125,24 +125,26 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
   public void testFoldConstants_regressionTest_crashInNodeUtilAddFeatureToScript() {
     setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_NEXT);
 
-    // TODO: b/421970620 - fix this crash.
-    assertThrows(
-        RuntimeException.class,
-        () ->
-            testSame(
-                closureUnaware(
-                    """
-                    return function f() {
-                      function referenceX() { return x; }
+    test(
+        closureUnaware(
+            """
+            return function f() {
+              function referenceX() { return x; }
 
-                      return 1;
+              return 1;
 
-                      // Regression test for a crash in PeepholeRemoveDeadCode.
-                      let x = 0;
-                      referenceX();
-                      x++;
-                    }
-                    """)));
+              // Regression test for a crash in PeepholeRemoveDeadCode.
+              let x = 0;
+              referenceX();
+              x++;
+            }
+            """),
+        expectedClosureUnaware(
+            """
+            return function() {
+              return 1;
+            }
+            """));
   }
 
   @Test

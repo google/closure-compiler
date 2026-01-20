@@ -250,9 +250,9 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
               @Override
               public Node optimizeSubtree(Node node) {
                 if (node.isAdd()) {
-                  this.addFeatureToEnclosingScript(node, Feature.LET_DECLARATIONS);
-                  this.addFeatureToEnclosingScript(node, Feature.LET_DECLARATIONS);
-                  this.addFeatureToEnclosingScript(node, Feature.CLASSES);
+                  this.addFeatureToEnclosingScript(Feature.LET_DECLARATIONS);
+                  this.addFeatureToEnclosingScript(Feature.LET_DECLARATIONS);
+                  this.addFeatureToEnclosingScript(Feature.CLASSES);
                 }
                 return node;
               }
@@ -260,13 +260,13 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
             new AbstractPeepholeOptimization() {
               @Override
               public Node optimizeSubtree(Node node) {
-                if (node.isAdd()) {
-                  this.addFeatureToEnclosingScript(node, Feature.CONST_DECLARATIONS);
+                if (node.isSub()) {
+                  this.addFeatureToEnclosingScript(Feature.CONST_DECLARATIONS);
                 }
                 return node;
               }
             });
-    testSame("(3 + 4);");
+    testSame("(3 + 4); function sub() { return 3 - 4; }");
     Compiler compiler = getLastCompiler();
     Node script = checkNotNull(compiler.getScriptNode("testcode"));
     assertThat(script.getProp(Node.FEATURE_SET))
