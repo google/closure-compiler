@@ -85,9 +85,9 @@ public enum CompilationLevel {
   }
 
   public void setDebugOptionsForCompilationLevel(CompilerOptions options) {
-    options.generatePseudoNames = true;
-    options.removeClosureAsserts = false;
-    options.removeJ2clAsserts = false;
+    options.setGeneratePseudoNames(true);
+    options.setRemoveClosureAsserts(false);
+    options.setRemoveJ2clAsserts(true);
   }
 
   /**
@@ -105,7 +105,7 @@ public enum CompilationLevel {
    */
   private static void applyTranspileOnlyOptions(CompilerOptions options) {
     // ReplaceIdGenerators is on by default, but should not run in TRANSPILE_ONLY mode.
-    options.replaceIdGenerators = false;
+    options.setReplaceIdGenerators(false);
 
     options.setClosurePass(true);
     options.setRenamingPolicy(VariableRenamingPolicy.OFF, PropertyRenamingPolicy.OFF);
@@ -115,10 +115,10 @@ public enum CompilationLevel {
     options.setCoalesceVariableNames(false);
     options.setDeadAssignmentElimination(false);
     options.setCollapseVariableDeclarations(false);
-    options.convertToDottedProperties = false;
-    options.labelRenaming = false;
+    options.setConvertToDottedProperties(false);
+    options.setLabelRenaming(false);
     options.setRemoveUnusedVariables(Reach.NONE);
-    options.collapseObjectLiterals = false;
+    options.setCollapseObjectLiterals(false);
     /*
      * Turn off protecting side-effect free nodes by making them parameters to a extern function
      * call.
@@ -137,7 +137,7 @@ public enum CompilationLevel {
     options.setDependencyOptions(DependencyOptions.sortOnly());
 
     // ReplaceIdGenerators is on by default, but should not run in simple mode.
-    options.replaceIdGenerators = false;
+    options.setReplaceIdGenerators(false);
 
     // Does not call applyBasicCompilationOptions(options) because the call to
     // skipAllCompilerPasses() cannot be easily undone.
@@ -152,10 +152,10 @@ public enum CompilationLevel {
     options.setDeadAssignmentElimination(true);
     options.setDeadPropertyAssignmentElimination(false);
     options.setCollapseVariableDeclarations(true);
-    options.convertToDottedProperties = true;
-    options.labelRenaming = true;
+    options.setConvertToDottedProperties(true);
+    options.setLabelRenaming(true);
     options.setRemoveUnusedVariables(Reach.LOCAL_ONLY);
-    options.collapseObjectLiterals = true;
+    options.setCollapseObjectLiterals(true);
     options.setProtectHiddenSideEffects(true);
   }
 
@@ -244,7 +244,7 @@ public enum CompilationLevel {
    */
   public void setWrappedOutputOptimizations(CompilerOptions options) {
     // Global variables and properties names can't conflict.
-    options.reserveRawExports = false;
+    options.setReserveRawExports(false);
     switch (this) {
       case SIMPLE_OPTIMIZATIONS -> {
         // Enable global variable optimizations (but not property optimizations)

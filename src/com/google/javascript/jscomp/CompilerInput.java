@@ -689,8 +689,8 @@ public class CompilerInput implements DependencyInfo {
         if (compiler.getOptions().preservesDetailedSourceInfo()) {
           compiler.addComments(sourceFile.getName(), result.comments);
         }
-        if (result.sourceMapURL != null && compiler.getOptions().resolveSourceMapAnnotations) {
-          boolean parseInline = compiler.getOptions().parseInlineSourceMaps;
+        if (result.sourceMapURL != null && compiler.getOptions().getResolveSourceMapAnnotations()) {
+          boolean parseInline = compiler.getOptions().getParseInlineSourceMaps();
           SourceFile sourceMapSourceFile =
               SourceMapResolver.extractSourceMap(sourceFile, result.sourceMapURL, parseInline);
           if (sourceMapSourceFile != null) {

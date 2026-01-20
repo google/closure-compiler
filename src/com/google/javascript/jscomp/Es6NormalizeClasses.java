@@ -109,7 +109,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     transpileClassFields = options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS);
 
     doStaticInheritanceRewrites =
-        options.getAssumeStaticInheritanceIsNotUsed() && !options.skipNonTranspilationPasses;
+        options.getAssumeStaticInheritanceIsNotUsed() && !options.getSkipNonTranspilationPasses();
 
     // Es6ConvertSuper handles static super rewrites otherwise.
     doStaticSuperRewrites = !options.needsTranspilationOf(Feature.SUPER);

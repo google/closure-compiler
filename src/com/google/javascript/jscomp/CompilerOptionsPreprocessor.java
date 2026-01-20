@@ -28,7 +28,7 @@ public final class CompilerOptionsPreprocessor {
 
   static void preprocess(CompilerOptions options) {
     if (options.getInlineFunctionsLevel() == CompilerOptions.Reach.NONE
-        && options.maxFunctionSizeAfterInlining
+        && options.getMaxFunctionSizeAfterInlining()
             != CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING) {
       throw new InvalidOptionsException(
           "max_function_size_after_inlining has no effect if inlining is disabled.");

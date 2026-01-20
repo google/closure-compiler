@@ -716,7 +716,7 @@ public final class CodePrinter {
     public Builder setCompilerOptions(CompilerOptions options) {
       this.options = options;
       this.prettyPrint = options.isPrettyPrint();
-      this.lineBreak = options.lineBreak;
+      this.lineBreak = options.shouldAddLineBreak();
       return this;
     }
 
@@ -856,20 +856,20 @@ public final class CodePrinter {
       boolean tagAsStrict,
       boolean lineBreak,
       CodeGeneratorFactory codeGeneratorFactory) {
-    checkState(options.sourceMapDetailLevel != null);
+    checkState(options.getSourceMapDetailLevel() != null);
 
     MappedCodePrinter mcp =
         outputFormat == Format.COMPACT
             ? new CompactCodePrinter(
                 lineBreak,
-                options.lineLengthThreshold,
+                options.getLineLengthThreshold(),
                 options.shouldGatherSourceMapInfo(),
-                options.sourceMapDetailLevel,
+                options.getSourceMapDetailLevel(),
                 licenseTracker)
             : new PrettyCodePrinter(
-                options.lineLengthThreshold,
+                options.getLineLengthThreshold(),
                 options.shouldGatherSourceMapInfo(),
-                options.sourceMapDetailLevel,
+                options.getSourceMapDetailLevel(),
                 licenseTracker);
     CodeGenerator cg = codeGeneratorFactory.getCodeGenerator(outputFormat, mcp);
 

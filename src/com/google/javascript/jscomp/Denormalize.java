@@ -58,7 +58,7 @@ class Denormalize implements CompilerPass, NodeTraversal.Callback, Behavior {
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
     // Don't inline the VAR declaration if this compilation involves old-style ctemplates.
-    if (compiler.getOptions().syntheticBlockStartMarker == null) {
+    if (compiler.getOptions().getSyntheticBlockStartMarker() == null) {
       (new ReferenceCollector(compiler, this, new SyntacticScopeCreator(compiler))).process(root);
     }
   }

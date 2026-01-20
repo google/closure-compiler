@@ -94,8 +94,8 @@ class PhaseOptimizer implements CompilerPass {
     this.inLoop = false;
     this.lastChange = START_TIME;
     this.useSizeHeuristicToStopOptimizationLoop =
-        comp.getOptions().useSizeHeuristicToStopOptimizationLoop;
-    int maxIterations = comp.getOptions().optimizationLoopMaxIterations;
+        comp.getOptions().shouldUseSizeHeuristicToStopOptimizationLoop();
+    int maxIterations = comp.getOptions().getMaxOptimizationLoopIterations();
     if (maxIterations > 0 && maxIterations <= MAX_LOOPS) {
       this.optimizationLoopMaxIterations = maxIterations;
     } else {

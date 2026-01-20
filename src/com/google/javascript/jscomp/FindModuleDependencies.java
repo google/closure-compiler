@@ -130,7 +130,7 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
     if (supportsCommonJsModules
         && n.isFunction()
         && ProcessCommonJSModules.isCommonJsDynamicImportCallback(
-            n, compiler.getOptions().moduleResolutionMode)) {
+            n, compiler.getOptions().getModuleResolutionMode())) {
       if (dynamicImportScope == null) {
         dynamicImportScope = t.getScope();
       }
@@ -141,7 +141,7 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    ModuleLoader.ResolutionMode resolutionMode = compiler.getOptions().moduleResolutionMode;
+    ModuleLoader.ResolutionMode resolutionMode = compiler.getOptions().getModuleResolutionMode();
     if (NodeUtil.isShallowStatementTree(parent)) {
       if (n.isExprResult()) {
         Node maybeGetProp = n.getFirstFirstChild();
