@@ -1730,7 +1730,8 @@ public final class DefaultPassConfig extends PassConfig {
         expectAstIsNormalized == compiler.getLifeCycleStage().isNormalized(),
         compiler.getLifeCycleStage());
     final boolean late = false;
-    final boolean useTypesForOptimization = compiler.getOptions().useTypesForLocalOptimization;
+    final boolean useTypesForOptimization =
+        compiler.getOptions().shouldUseTypesForLocalOptimization();
     List<AbstractPeepholeOptimization> optimizations = new ArrayList<>();
     if (expectAstIsNormalized) {
       // MinimizeExitPoints requires the AST to be normalized.
