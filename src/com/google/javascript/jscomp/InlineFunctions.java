@@ -1312,6 +1312,10 @@ class InlineFunctions implements CompilerPass {
     if (!options.shouldRemoveClosureAsserts()) {
       problems.add("missing removeClosureAsserts");
     }
+    // Avoid inlining failures due to being unable to devirtualize a method.
+    if (!options.shouldDevirtualizeMethods()) {
+      problems.add("missing devirtualizeMethods");
+    }
     // We need more than one inlining pass for most required inlinings to work. This
     // eliminates 'fast' mode.
     if (options.getMaxOptimizationLoopIterations() == 1) {
