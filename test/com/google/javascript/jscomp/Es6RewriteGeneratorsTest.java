@@ -164,7 +164,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         beforeBody,
         varDecls,
         """
-        switch (GEN_CONTEXT$0.nextAddress) {
+        switch (GEN_CONTEXT$0.getNextAddressJsc()) {
           case 1:
         AFTER_BODY
         }
@@ -296,7 +296,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
           return $jscomp.generator.createGenerator(
               f,
               function (GEN_CONTEXT$0) {
-                 if (GEN_CONTEXT$0.nextAddress == 1) {
+                 if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
                    i = 0;
                    GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(obj);
                  }
@@ -333,7 +333,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
           return $jscomp.generator.createGenerator(
               f,
               function (GEN_CONTEXT$0) {
-                 if (GEN_CONTEXT$0.nextAddress == 1) {
+                 if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
                    i = 0;
         // TODO(bradfordcsmith): Maybe it would be better if we hoisted this function
         // expression out so it doesn't create a new closure every time we enter this
@@ -393,7 +393,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
           var GEN_FORIN$0$0;
           return (0, $jscomp.asyncExecutePromiseGeneratorProgram)(
               function (GEN_CONTEXT$0) {
-                 if (GEN_CONTEXT$0.nextAddress == 1) {
+                 if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
                    i = 0;
                    GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(obj);
                  }
@@ -442,11 +442,11 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var i = 0; yield i; i = 1; yield i; i = i + 1; yield i;",
         "var i;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           i = 0;
           return GEN_CONTEXT$0.yield(i, 2);
         }
-        if (GEN_CONTEXT$0.nextAddress != 3) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 3) {
           i = 1;
           return GEN_CONTEXT$0.yield(i, 3);
         }
@@ -474,7 +474,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
           return $jscomp.generator.createGenerator(
               gen,
               function(GEN_CONTEXT$0) {
-                if (GEN_CONTEXT$0.nextAddress==1) {
+                if (GEN_CONTEXT$0.getNextAddressJsc()==1) {
                   i=2;
                   return GEN_CONTEXT$0.yield(i,2);
                 }
@@ -559,11 +559,11 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var i = 0; for (var j = yield; j < 10; j++) { i += j; }",
         "var i; var j;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           i = 0;
           return GEN_CONTEXT$0.yield(void 0, 2);
         }
-        j = GEN_CONTEXT$0.yieldResult;
+        j = GEN_CONTEXT$0.getYieldResultJsc();
         for (; j < 10; j++) {
           i = i + j; // normalization rewrote this
         }
@@ -576,11 +576,11 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "for (var yieldResult; yieldResult === undefined; yieldResult = yield 1) {}",
         "var yieldResult;",
         """
-          if (GEN_CONTEXT$0.nextAddress == 1) {
+          if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
             if (!(yieldResult === undefined)) return GEN_CONTEXT$0.jumpTo(0);
             return GEN_CONTEXT$0.yield(1,5);
           }
-          yieldResult = GEN_CONTEXT$0.yieldResult;
+          yieldResult = GEN_CONTEXT$0.getYieldResultJsc();
           return GEN_CONTEXT$0.jumpTo(1);
         """);
 
@@ -588,10 +588,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "for (var j = 0; j < 10; j++) { yield j; }",
         "var j;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           j = 0;
         }
-        if (GEN_CONTEXT$0.nextAddress != 3) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 3) {
           if (!(j < 10)) {
             return GEN_CONTEXT$0.jumpTo(0);
           }
@@ -605,11 +605,11 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var i = 0; for (var j = 0; j < 10; j++) { i += j; yield 5; }",
         "var i; var j;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           i = 0;
           j = 0;
         }
-        if (GEN_CONTEXT$0.nextAddress != 3) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 3) {
           if (!(j < 10)) {
             return GEN_CONTEXT$0.jumpTo(0);
           }
@@ -656,10 +656,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var j = 0; while (j < 10) { yield j; j++; } yield 5",
         "var j;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           j = 0;
         }
-        if (GEN_CONTEXT$0.nextAddress != 5) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 5) {
           if (!(j < 10)) {
             return GEN_CONTEXT$0.yield(5, 0);
           }
@@ -673,13 +673,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var j = 0; while (yield) { j++; }",
         "var j;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           j = 0;
         }
-        if (GEN_CONTEXT$0.nextAddress != 5) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 5) {
           return GEN_CONTEXT$0.yield(void 0, 5);
         }
-        if (!(GEN_CONTEXT$0.yieldResult)) {
+        if (!(GEN_CONTEXT$0.getYieldResultJsc())) {
           return GEN_CONTEXT$0.jumpTo(0);
         }
         j++;
@@ -704,12 +704,12 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
           var JSCompiler_temp_const$jscomp$1;
           var JSCompiler_temp_const$jscomp$3;
           return $jscomp.generator.createGenerator(f, function(GEN_CONTEXT$0) {
-            switch(GEN_CONTEXT$0.nextAddress) {
+            switch(GEN_CONTEXT$0.getNextAddressJsc()) {
               case 1:
                 o = {bar:function(x) {}};
                 return GEN_CONTEXT$0.yield(5, 2);
               case 2:
-                if (!(JSCompiler_temp$jscomp$0 = GEN_CONTEXT$0.yieldResult)) {
+                if (!(JSCompiler_temp$jscomp$0 = GEN_CONTEXT$0.getYieldResultJsc())) {
                   GEN_CONTEXT$0.jumpTo(3);
                   break;
                 }
@@ -721,7 +721,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
                 JSCompiler_temp$jscomp$0 =
                     JSCompiler_temp_const$jscomp$1.call(
                         JSCompiler_temp_const$jscomp$3,
-                        GEN_CONTEXT$0.yieldResult);
+                        GEN_CONTEXT$0.getYieldResultJsc());
               case 3:
                 JSCompiler_temp$jscomp$0;
                 GEN_CONTEXT$0.jumpToEnd();
@@ -737,12 +737,12 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "return a + (a = b) + (b = yield) + a;",
         "var JSCompiler_temp_const$jscomp$0;",
         """
-          if (GEN_CONTEXT$0.nextAddress == 1) {
+          if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
             JSCompiler_temp_const$jscomp$0 = a + (a = b);
             return GEN_CONTEXT$0.yield(void 0, 2);
           }
           return GEN_CONTEXT$0.return(
-        JSCompiler_temp_const$jscomp$0 + (b = GEN_CONTEXT$0.yieldResult) + a);
+        JSCompiler_temp_const$jscomp$0 + (b = GEN_CONTEXT$0.getYieldResultJsc()) + a);
         """);
 
     rewriteGeneratorSwitchBodyWithVars(
@@ -751,13 +751,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         """
           return GEN_CONTEXT$0.yield(1, 3);
         case 3:
-          JSCompiler_temp_const$jscomp$0=GEN_CONTEXT$0.yieldResult;
+          JSCompiler_temp_const$jscomp$0=GEN_CONTEXT$0.getYieldResultJsc();
           return GEN_CONTEXT$0.yield(2, 4);
         case 4:
           return GEN_CONTEXT$0.yield(
-              JSCompiler_temp_const$jscomp$0 + GEN_CONTEXT$0.yieldResult, 2);
+              JSCompiler_temp_const$jscomp$0 + GEN_CONTEXT$0.getYieldResultJsc(), 2);
         case 2:
-          return GEN_CONTEXT$0.return(GEN_CONTEXT$0.yieldResult);
+          return GEN_CONTEXT$0.return(GEN_CONTEXT$0.getYieldResultJsc());
         """);
 
     rewriteGeneratorBodyWithVars(
@@ -768,14 +768,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         var JSCompiler_temp_const$jscomp$0;
         """,
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           o = {bar: function(x) {}};
           JSCompiler_temp_const$jscomp$1 = o;
           JSCompiler_temp_const$jscomp$0 = JSCompiler_temp_const$jscomp$1.bar;
           return GEN_CONTEXT$0.yield(5, 2);
         }
         JSCompiler_temp_const$jscomp$0.call(
-            JSCompiler_temp_const$jscomp$1, GEN_CONTEXT$0.yieldResult);
+            JSCompiler_temp_const$jscomp$1, GEN_CONTEXT$0.getYieldResultJsc());
         GEN_CONTEXT$0.jumpToEnd();
         """);
   }
@@ -806,9 +806,9 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBody(
         "l: if (yield) { break l; }",
         """
-          if (GEN_CONTEXT$0.nextAddress == 1)
+          if (GEN_CONTEXT$0.getNextAddressJsc() == 1)
             return GEN_CONTEXT$0.yield(void 0, 3);
-          if (GEN_CONTEXT$0.yieldResult) {
+          if (GEN_CONTEXT$0.getYieldResultJsc()) {
             return GEN_CONTEXT$0.jumpTo(0);
           }
           GEN_CONTEXT$0.jumpToEnd();
@@ -817,10 +817,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBody(
         "l: if (yield) { while (1) {break l;} }",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           return GEN_CONTEXT$0.yield(void 0, 3);
         }
-        if (GEN_CONTEXT$0.yieldResult) {
+        if (GEN_CONTEXT$0.getYieldResultJsc()) {
           for (; 1;) {
             return GEN_CONTEXT$0.jumpTo(0);
           }
@@ -831,7 +831,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBody(
         "l: for (;;) { yield i; continue l; }",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           return GEN_CONTEXT$0.yield(i, 5);
         }
         return GEN_CONTEXT$0.jumpTo(1);
@@ -841,10 +841,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBody(
         "l1: l2: if (yield) break l1; else break l2;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           return GEN_CONTEXT$0.yield(void 0, 3);
         }
-        if(GEN_CONTEXT$0.yieldResult) {
+        if(GEN_CONTEXT$0.getYieldResultJsc()) {
           return GEN_CONTEXT$0.jumpTo(0);
         } else {
           return GEN_CONTEXT$0.jumpTo(0);
@@ -859,7 +859,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBody(
         "while (true) {yield; break;}",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           if (!true) {
             return GEN_CONTEXT$0.jumpTo(0);
           }
@@ -893,7 +893,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         var GEN_FORIN$0$0;
         """,
         """
-        switch (GEN_CONTEXT$0.nextAddress) {
+        switch (GEN_CONTEXT$0.getNextAddressJsc()) {
           case 1:
             gen = generatorSrc();
             gotResponse = false;
@@ -918,7 +918,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBody(
         "do { do { do { yield; } while (3) } while (2) } while (1)",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           return GEN_CONTEXT$0.yield(void 0, 10);
         }
         if (3) {
@@ -940,11 +940,11 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var j = 0; if (yield) { j = 1; }",
         "var j;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           j = 0;
           return GEN_CONTEXT$0.yield(void 0, 2);
         }
-        if (GEN_CONTEXT$0.yieldResult) { j = 1; }
+        if (GEN_CONTEXT$0.getYieldResultJsc()) { j = 1; }
         GEN_CONTEXT$0.jumpToEnd();
         """);
 
@@ -1028,12 +1028,12 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         }
         """,
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           if (i < 1) {
             return GEN_CONTEXT$0.jumpTo(8);
           }
         }
-        if (GEN_CONTEXT$0.nextAddress != 8) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 8) {
           if (!false) {
             return GEN_CONTEXT$0.jumpTo(0);
           }
@@ -1089,10 +1089,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "return this[yield];",
         "var GEN_THIS$0 = this;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1)
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1)
           return GEN_CONTEXT$0.yield(void 0, 2);
         return GEN_CONTEXT$0.return(
-            GEN_THIS$0[GEN_CONTEXT$0.yieldResult]);
+            GEN_THIS$0[GEN_CONTEXT$0.getYieldResultJsc()]);
         """);
   }
 
@@ -1102,10 +1102,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var j = 0; while (j < 10) { yield j; break; }",
         "var j;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           j = 0;
         }
-        if (GEN_CONTEXT$0.nextAddress != 5) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 5) {
           if (!(j < 10)) {
             return GEN_CONTEXT$0.jumpTo(0);
           }
@@ -1119,10 +1119,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var j = 0; while (j < 10) { yield j; continue; }",
         "var j;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           j = 0;
         }
-        if (GEN_CONTEXT$0.nextAddress != 5) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 5) {
           if (!(j < 10)) {
             return GEN_CONTEXT$0.jumpTo(0);
           }
@@ -1136,10 +1136,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "for (var j = 0; j < 10; j++) { yield j; break; }",
         "var j;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           j = 0;
         }
-        if (GEN_CONTEXT$0.nextAddress != 5) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 5) {
           if (!(j < 10)) {
             return GEN_CONTEXT$0.jumpTo(0);
           }
@@ -1176,7 +1176,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBody(
         "do { yield j; } while (j < 10);",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           return GEN_CONTEXT$0.yield(j, 4);
         }
         if (j<10) {
@@ -1188,10 +1188,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBody(
         "do {} while (yield 1);",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           return GEN_CONTEXT$0.yield(1, 5);
         }
-        if (GEN_CONTEXT$0.yieldResult) {
+        if (GEN_CONTEXT$0.getYieldResultJsc()) {
           return GEN_CONTEXT$0.jumpTo(1);
         }
         GEN_CONTEXT$0.jumpToEnd();
@@ -1215,10 +1215,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBody(
         "return (yield 1);",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           return GEN_CONTEXT$0.yield(1, 2);
         }
-        return GEN_CONTEXT$0.return(GEN_CONTEXT$0.yieldResult);
+        return GEN_CONTEXT$0.return(GEN_CONTEXT$0.getYieldResultJsc());
         """);
   }
 
@@ -1240,10 +1240,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var i = yield * n;",
         "var i;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           return GEN_CONTEXT$0.yieldAll(n, 2);
         }
-        i = GEN_CONTEXT$0.yieldResult;
+        i = GEN_CONTEXT$0.getYieldResultJsc();
         GEN_CONTEXT$0.jumpToEnd();
         """);
   }
@@ -1268,14 +1268,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "0 || (yield 1);",
         "var JSCompiler_temp$jscomp$0;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           if(JSCompiler_temp$jscomp$0 = 0) {
             return GEN_CONTEXT$0.jumpTo(2);
           }
           return GEN_CONTEXT$0.yield(1, 3);
         }
-        if (GEN_CONTEXT$0.nextAddress != 2) {
-          JSCompiler_temp$jscomp$0=GEN_CONTEXT$0.yieldResult;
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 2) {
+          JSCompiler_temp$jscomp$0=GEN_CONTEXT$0.getYieldResultJsc();
         }
         JSCompiler_temp$jscomp$0;
         GEN_CONTEXT$0.jumpToEnd();
@@ -1285,14 +1285,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "0 && (yield 1);",
         "var JSCompiler_temp$jscomp$0;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           if(!(JSCompiler_temp$jscomp$0=0)) {
             return GEN_CONTEXT$0.jumpTo(2);
           }
           return GEN_CONTEXT$0.yield(1, 3);
         }
-        if (GEN_CONTEXT$0.nextAddress != 2) {
-          JSCompiler_temp$jscomp$0=GEN_CONTEXT$0.yieldResult;
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 2) {
+          JSCompiler_temp$jscomp$0=GEN_CONTEXT$0.getYieldResultJsc();
         }
         JSCompiler_temp$jscomp$0;
         GEN_CONTEXT$0.jumpToEnd();
@@ -1302,15 +1302,15 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "0 ? 1 : (yield 1);",
         "var JSCompiler_temp$jscomp$0;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           if(0) {
             JSCompiler_temp$jscomp$0 = 1;
             return GEN_CONTEXT$0.jumpTo(2);
           }
           return GEN_CONTEXT$0.yield(1, 3);
         }
-        if (GEN_CONTEXT$0.nextAddress != 2) {
-          JSCompiler_temp$jscomp$0 = GEN_CONTEXT$0.yieldResult;
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 2) {
+          JSCompiler_temp$jscomp$0 = GEN_CONTEXT$0.getYieldResultJsc();
         }
         JSCompiler_temp$jscomp$0;
         GEN_CONTEXT$0.jumpToEnd();
@@ -1330,15 +1330,15 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         var vg;
         """,
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           va = 10;
           return GEN_CONTEXT$0.yield(10, 2);
         }
-        if (GEN_CONTEXT$0.nextAddress != 3) {
-          vc = GEN_CONTEXT$0.yieldResult;
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 3) {
+          vc = GEN_CONTEXT$0.getYieldResultJsc();
           return GEN_CONTEXT$0.yield(20, 3);
         }
-        vd = GEN_CONTEXT$0.yieldResult;
+        vd = GEN_CONTEXT$0.getYieldResultJsc();
         vg = 'test';
         GEN_CONTEXT$0.jumpToEnd();
         """);
@@ -1354,15 +1354,15 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         var vg;
         """,
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           va = 10;
           return GEN_CONTEXT$0.yield(10, 2);
         }
-        if (GEN_CONTEXT$0.nextAddress != 3) {
-          vc = GEN_CONTEXT$0.yieldResult;
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 3) {
+          vc = GEN_CONTEXT$0.getYieldResultJsc();
           return GEN_CONTEXT$0.yield(20, 3);
         }
-        vd = GEN_CONTEXT$0.yieldResult;
+        vd = GEN_CONTEXT$0.getYieldResultJsc();
         vg = 'test';
         GEN_CONTEXT$0.jumpToEnd();
         """);
@@ -1425,11 +1425,11 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             yield 1;}
         """,
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           return GEN_CONTEXT$0.yield(void 0, 2);
         }
-        if (GEN_CONTEXT$0.nextAddress != 3) {
-          switch (GEN_CONTEXT$0.yieldResult) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 3) {
+          switch (GEN_CONTEXT$0.getYieldResultJsc()) {
             default:
             case 1:
               return GEN_CONTEXT$0.jumpTo(3)
@@ -1456,10 +1456,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "for (var i in yield) { }",
         "var i;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           return GEN_CONTEXT$0.yield(void 0, 2);
         }
-        for (i in GEN_CONTEXT$0.yieldResult) { }
+        for (i in GEN_CONTEXT$0.getYieldResultJsc()) { }
         GEN_CONTEXT$0.jumpToEnd();
         """);
 
@@ -1470,7 +1470,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         var GEN_FORIN$0$0;
         """,
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(j);
         }
         if (!((i = GEN_FORIN$0$0.getNext()) != null)) {
@@ -1486,12 +1486,12 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         var GEN_FORIN$0$0;
         """,
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           return GEN_CONTEXT$0.yield(void 0, 2)
         }
-        if (GEN_CONTEXT$0.nextAddress != 3) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 3) {
           GEN_FORIN$0$0 =
-              GEN_CONTEXT$0.forIn(GEN_CONTEXT$0.yieldResult);
+              GEN_CONTEXT$0.forIn(GEN_CONTEXT$0.getYieldResultJsc());
         }
         if (!((i = GEN_FORIN$0$0.getNext()) != null)) {
           return GEN_CONTEXT$0.jumpTo(0);
@@ -1503,14 +1503,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "for (i[yield] in j) {}",
         "var GEN_FORIN$0$0; var JSCompiler_temp_const$jscomp$0;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn(j);
         }
-        if (GEN_CONTEXT$0.nextAddress != 5) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 5) {
           JSCompiler_temp_const$jscomp$0 = i;
           return GEN_CONTEXT$0.yield(void 0, 5);
         }
-        if (!((JSCompiler_temp_const$jscomp$0[GEN_CONTEXT$0.yieldResult] =
+        if (!((JSCompiler_temp_const$jscomp$0[GEN_CONTEXT$0.getYieldResultJsc()] =
             GEN_FORIN$0$0.getNext()) != null)) {
           return GEN_CONTEXT$0.jumpTo(0);
         }
@@ -1524,11 +1524,11 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "try {yield 1;} catch (e) {}",
         "var e;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           GEN_CONTEXT$0.setCatchFinallyBlocks(2);
           return GEN_CONTEXT$0.yield(1, 4);
         }
-        if (GEN_CONTEXT$0.nextAddress != 2) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 2) {
           return GEN_CONTEXT$0.leaveTryBlock(0)
         }
         e = GEN_CONTEXT$0.enterCatchBlock();
@@ -1570,11 +1570,11 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "l1: try { break l1; } catch (e) { yield; } finally {}",
         "var e;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           GEN_CONTEXT$0.setCatchFinallyBlocks(3, 4);
           return GEN_CONTEXT$0.jumpThroughFinallyBlocks(0);
         }
-        if (GEN_CONTEXT$0.nextAddress != 3) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 3) {
           GEN_CONTEXT$0.enterFinallyBlock();
           return GEN_CONTEXT$0.leaveFinallyBlock(0);
         }
@@ -1589,11 +1589,11 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "try {yield 1;} catch (e) {} finally {b();}",
         "var e;",
         """
-        if (GEN_CONTEXT$0.nextAddress == 1) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
           GEN_CONTEXT$0.setCatchFinallyBlocks(2, 3);
           return GEN_CONTEXT$0.yield(1, 3);
         }
-        if (GEN_CONTEXT$0.nextAddress != 2) {
+        if (GEN_CONTEXT$0.getNextAddressJsc() != 2) {
           GEN_CONTEXT$0.enterFinallyBlock();
           b();
           return GEN_CONTEXT$0.leaveFinallyBlock(0);
@@ -1634,7 +1634,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
           x = GEN_CONTEXT$0.enterCatchBlock();
           return GEN_CONTEXT$0.yield(x, 9);
         case 9:
-          throw GEN_CONTEXT$0.yieldResult;
+          throw GEN_CONTEXT$0.getYieldResultJsc();
           GEN_CONTEXT$0.jumpTo(5);
           break;
         case 6:
@@ -1723,10 +1723,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             var GEN_FORIN$0$0;
             """,
             """
-            if (GEN_CONTEXT$0.nextAddress == 1) {
+            if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
               GEN_FORIN$0$0 = GEN_CONTEXT$0.forIn([]);
             }
-            if (GEN_CONTEXT$0.nextAddress != 4) {
+            if (GEN_CONTEXT$0.getNextAddressJsc() != 4) {
               if (!((i = GEN_FORIN$0$0.getNext()) != null)) {
                 return GEN_CONTEXT$0.jumpTo(4);
               }
@@ -1799,11 +1799,11 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "try {yield 1;} catch (e) {}",
             "var e;",
             """
-            if (GEN_CONTEXT$0.nextAddress == 1) {
+            if (GEN_CONTEXT$0.getNextAddressJsc() == 1) {
               GEN_CONTEXT$0.setCatchFinallyBlocks(2);
               return GEN_CONTEXT$0.yield(1, 4);
             }
-            if (GEN_CONTEXT$0.nextAddress != 2) {
+            if (GEN_CONTEXT$0.getNextAddressJsc() != 2) {
               return GEN_CONTEXT$0.leaveTryBlock(0)
             }
             e = GEN_CONTEXT$0.enterCatchBlock();

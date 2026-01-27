@@ -294,26 +294,30 @@ $jscomp.generator.Context.prototype.throw_ = function(e) {
  *
  * @final
  * @return {number}
+ * @requireInlining
  */
-$jscomp.generator.Context.prototype.getNextAddress = function() {
+$jscomp.generator.Context.prototype.getNextAddressJsc = function() {
   return this.nextAddress;
 };
 
-$jscomp.generator.Context.prototype['getNextAddress'] =
-    $jscomp.generator.Context.prototype.getNextAddress;
+$jscomp.generator.Context.prototype['getNextAddressJsc'] = function() {
+  return this.nextAddress;
+};
 
 /**
  * Returns the value that was set by the last yield expression.
  *
  * @final
  * @return {number}
+ * @requireInlining
  */
-$jscomp.generator.Context.prototype.getYieldResult = function() {
+$jscomp.generator.Context.prototype.getYieldResultJsc = function() {
   return this.yieldResult;
 };
 
-$jscomp.generator.Context.prototype['getYieldResult'] =
-    $jscomp.generator.Context.prototype.getYieldResult;
+$jscomp.generator.Context.prototype['getYieldResultJsc'] = function() {
+  return this.yieldResult;
+};
 
 /**
  * Returns a value as the result of generator function.
