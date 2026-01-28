@@ -22572,6 +22572,31 @@ google.maps.places.PlaceReview.prototype.aspects;
 
 /**
  * Configures a {@link google.maps.places.PlaceDetailsElement} to show a
+ * place&#39;s review summary. Append this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it. For example:
+ * <pre><code> &lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-review-summary&gt;&lt;/gmp-place-review-summary&gt;<br>
+ * &lt;/gmp-place-content-config&gt;<br> </code></pre>
+ *
+ * Access by calling `const {PlaceReviewSummaryElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PlaceReviewSummaryElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceReviewSummaryElement = function() {};
+
+
+
+/**
+ * Options for <code>PlaceReviewSummaryElement</code>.
+ * @record
+ */
+google.maps.places.PlaceReviewSummaryElementOptions = function() {};
+
+/**
+ * Configures a {@link google.maps.places.PlaceDetailsElement} to show a
  * place&#39;s reviews. Append this element as a child of a {@link
  * google.maps.places.PlaceContentConfigElement} to use it. For example:
  * <pre><code> &lt;gmp-place-content-config&gt;<br>
