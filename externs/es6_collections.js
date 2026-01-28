@@ -91,6 +91,15 @@ ReadonlyMap.prototype[Symbol.iterator] = function() {};
  */
 function Map(opt_iterable) {}
 
+/**
+ * @param {!Iterable<T>} items
+ * @param {function(T, number): K} callbackFn
+ * @return {!Map<K, !Array<T>>}
+ * @template T, K
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/groupBy
+ */
+Map.groupBy = function(items, callbackFn) {};
+
 /** @return {void} */
 Map.prototype.clear = function() {};
 
