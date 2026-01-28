@@ -39,7 +39,6 @@ import com.google.javascript.jscomp.CheckConformance.Rule;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.ConformanceConfig.LibraryLevelNonAllowlistedConformanceViolationsBehavior;
 import com.google.javascript.jscomp.Requirement.Severity;
-import com.google.javascript.jscomp.Requirement.WhitelistEntry;
 import com.google.javascript.jscomp.base.LinkedIdentityHashSet;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.JSDocInfo;
@@ -163,7 +162,7 @@ public final class ConformanceRules {
   private static class AllowList {
     final @Nullable ImmutableList<String> prefixes;
     final @Nullable Pattern regexp;
-    final @Nullable WhitelistEntry allowlistEntry;
+    final @Nullable RequirementScopeEntry allowlistEntry;
 
     AllowList(List<String> prefixes, List<String> regexps) throws InvalidRequirementSpec {
       this.prefixes = ImmutableList.<String>copyOf(prefixes);
@@ -171,7 +170,7 @@ public final class ConformanceRules {
       this.allowlistEntry = null;
     }
 
-    AllowList(WhitelistEntry allowlistEntry) throws InvalidRequirementSpec {
+    AllowList(RequirementScopeEntry allowlistEntry) throws InvalidRequirementSpec {
       this.prefixes = ImmutableList.copyOf(allowlistEntry.getPrefixList());
       this.regexp = buildPattern(allowlistEntry.getRegexpList());
       this.allowlistEntry = allowlistEntry;
@@ -238,10 +237,10 @@ public final class ConformanceRules {
 
       // build allowlists
       ImmutableList.Builder<AllowList> allowlistsBuilder = new ImmutableList.Builder<>();
-      for (WhitelistEntry entry : requirement.getWhitelistEntryList()) {
+      for (RequirementScopeEntry entry : requirement.getWhitelistEntryList()) {
         allowlistsBuilder.add(new AllowList(entry));
       }
-      for (WhitelistEntry entry : requirement.getAllowlistEntryList()) {
+      for (RequirementScopeEntry entry : requirement.getAllowlistEntryList()) {
         allowlistsBuilder.add(new AllowList(entry));
       }
 

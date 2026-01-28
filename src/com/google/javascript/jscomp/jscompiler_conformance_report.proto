@@ -101,7 +101,7 @@ message JsCompilerConformanceReport {
     // the allowlist_entry containing all files that are allowed to violate
     // the requirement.
     Requirement requirement = 1;
-    Requirement.WhitelistEntry allowlist_entry = 2;
+    RequirementScopeEntry allowlist_entry = 2;
     // The path to the file that contained the violation.
     string path = 3;
     int32 line_no = 4;

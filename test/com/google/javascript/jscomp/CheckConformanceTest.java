@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
 import com.google.javascript.jscomp.CompilerOptions.ConformanceReportingMode;
 import com.google.javascript.jscomp.ConformanceRules.AbstractRule;
 import com.google.javascript.jscomp.ConformanceRules.ConformanceResult;
-import com.google.javascript.jscomp.Requirement.WhitelistEntry;
 import com.google.javascript.rhino.Node;
 import com.google.protobuf.TextFormat;
 import com.google.protobuf.TextFormat.ParseException;
@@ -3746,13 +3745,15 @@ public final class CheckConformanceTest extends CompilerTestCase {
         .setRuleId("a")
         .addWhitelist("x")
         .addWhitelistRegexp("m")
-        .addWhitelistEntry(WhitelistEntry.newBuilder().addPrefix("x2").addRegexp("m2").build());
+        .addWhitelistEntry(
+            RequirementScopeEntry.newBuilder().addPrefix("x2").addRegexp("m2").build());
     builder
         .addRequirementBuilder()
         .setExtends("a")
         .addWhitelist("y")
         .addWhitelistRegexp("n")
-        .addWhitelistEntry(WhitelistEntry.newBuilder().addPrefix("a2").addRegexp("y2").build());
+        .addWhitelistEntry(
+            RequirementScopeEntry.newBuilder().addPrefix("a2").addRegexp("y2").build());
     CheckConformance checkConformance = new CheckConformance(compiler);
     List<Requirement> requirements =
         checkConformance.mergeRequirements(
@@ -3775,13 +3776,15 @@ public final class CheckConformanceTest extends CompilerTestCase {
         .setRuleId("a")
         .addAllowlist("x")
         .addAllowlistRegexp("m")
-        .addAllowlistEntry(WhitelistEntry.newBuilder().addPrefix("x2").addRegexp("m2").build());
+        .addAllowlistEntry(
+            RequirementScopeEntry.newBuilder().addPrefix("x2").addRegexp("m2").build());
     builder
         .addRequirementBuilder()
         .setExtends("a")
         .addAllowlist("y")
         .addAllowlistRegexp("n")
-        .addAllowlistEntry(WhitelistEntry.newBuilder().addPrefix("a2").addRegexp("y2").build());
+        .addAllowlistEntry(
+            RequirementScopeEntry.newBuilder().addPrefix("a2").addRegexp("y2").build());
     CheckConformance checkConformance = new CheckConformance(compiler);
     List<Requirement> requirements =
         checkConformance.mergeRequirements(

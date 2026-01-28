@@ -87,47 +87,10 @@ message Requirement {
   // generated files.
   repeated string allowlist_regexp = 18;
 
-  message WhitelistEntry {
-    enum Reason {
-      UNSPECIFIED = 0;
-      LEGACY = 1;
-      OUT_OF_SCOPE = 2;
-      MANUALLY_REVIEWED = 3;
-    }
-
-    optional Reason reason = 1;
-
-    // A list of google3-relative path prefixes to be allowlisted.
-    // Do not include the `blaze-out/cfg/(bin|genfiles)` prefix for generated
-    // files.
-    repeated string prefix = 2;
-
-    // A list of google3-relative path regexps to be allowlisted.
-    // Do not include the `blaze-out/cfg/(bin|genfiles)` prefix for generated
-    // files.
-    repeated string regexp = 3;
-
-    // Short explanation.
-    optional string explanation = 4;
-
-    repeated string comment = 5;
-
-    // If you build automation to remove unused entries, you can use this flag
-    // to enable/disable it.
-    optional bool automatically_prune = 6;
-
-    // Only use this if you have a very good reason. This suppresses a finding
-    // from generated conformance results when it passes and therefore prevents
-    // downstream tooling from inspecting the finding.
-    optional bool
-        do_not_record_violations_in_summary_because_this_is_gencode_and_always_safe =
-            7 [deprecated = true];
-  }
-
   // DEPRECATED: Use allowlist_entry instead.
-  repeated WhitelistEntry whitelist_entry = 14 [deprecated = true];
+  repeated RequirementScopeEntry whitelist_entry = 14 [deprecated = true];
 
-  repeated WhitelistEntry allowlist_entry = 19;
+  repeated RequirementScopeEntry allowlist_entry = 19;
 
   // Optional: A list of source paths that will be checked for the requirement
   // (the opposite of allowlist/whitelist).
@@ -317,4 +280,52 @@ message Requirement {
   // CUSTOM requirements may use extensions, each extension should use
   // a CL number as a unique identifier.
   extensions 1000000 to max;
+}
+
+message RequirementScopeEntry {
+  enum Reason {
+    UNSPECIFIED = 0;
+    LEGACY = 1;
+    OUT_OF_SCOPE = 2;
+    MANUALLY_REVIEWED = 3;
+  }
+
+  optional Reason reason = 1;
+
+  // A list of google3-relative path prefixes to be allowlisted.
+  // Do not include the `blaze-out/cfg/(bin|genfiles)` prefix for generated
+  // files.
+  repeated string prefix = 2;
+
+  // A list of google3-relative path regexps to be allowlisted.
+  // Do not include the `blaze-out/cfg/(bin|genfiles)` prefix for generated
+  // files.
+  repeated string regexp = 3;
+
+  // Short explanation.
+  optional string explanation = 4;
+
+  repeated string comment = 5;
+
+  // If you build automation to remove unused entries, you can use this flag
+  // to enable/disable it.
+  optional bool automatically_prune = 6;
+
+  // Only use this if you have a very good reason. This suppresses a finding
+  // from generated conformance results when it passes and therefore prevents
+  // downstream tooling from inspecting the finding.
+  optional bool
+      do_not_record_violations_in_summary_because_this_is_gencode_and_always_safe =
+          7 [deprecated = true];
+}
+
+// A decoupled proto that contains the lists that determine the scope of a
+// conformance Requirement.
+message RequirementScope {
+  // The Requirement that this scope refers to.
+  optional string rule_id = 1;
+
+  repeated RequirementScopeEntry allowlist = 2;
+
+  repeated RequirementScopeEntry only_apply_to = 3;
 }
