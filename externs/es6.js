@@ -809,6 +809,72 @@ Int8Array.of = function(var_args) {};
 
 
 /**
+ * Options to use when decoding base64 into a Uint8Array.
+ * @record
+ */
+function Uint8ArrayBase64Options() {}
+
+/**
+ * Specifies the base64 alphabet to use. This can either be "base64", which will include the special characters `+`
+ * and `/`, or "base64url", which will include the special characters `-` and `_`. If not specified, it defaults to
+ * "base64".
+ * @type {(undefined|string)}
+ */
+Uint8ArrayBase64Options.prototype.alphabet;
+
+/**
+ * Specifies how to handle the last chunk of the base64 string if it is an incomplete chunk. The value "strict" requires
+ * that any incomplete chunk be padded with `=` characters and any trailing bits must be zero. The value
+ * "stop-before-partial" indicates that decoding should only handle complete chunks and ignore partial chunks, allowing
+ * them to be handled separately if desired (such as in future calls). The default value is "loose", which will decode
+ * an incomplete chunk even if not padded by `=`.
+ * @type {(undefined|string)}
+ */
+Uint8ArrayBase64Options.prototype.lastChunkHandling;
+
+
+/**
+ * Results from Uint8Array.prototype.setFromBase64.
+ * @record
+ */
+function Uint8ArraySetFromBase64Results() {}
+
+/**
+ * The number of characters read from the base64 string. If the entire string's contents fit into the Uint8Array,
+ * this will be equal to string.length. Otherwise, this will be equal to the number of 4-character chunks that
+ * fit into the array.
+ * @type {number}
+ */
+Uint8ArraySetFromBase64Results.prototype.read;
+
+/**
+ * The number of bytes written into the Uint8Array.
+ * @type {number}
+ */
+Uint8ArraySetFromBase64Results.prototype.written;
+
+/**
+ * Options to use when invoking Uint8Array.prototype.toBase64.
+ * @record
+ */
+function Uint8ArrayToBase64Options() {}
+
+/**
+ * Specifies the base64 alphabet to use. This can either be "base64", which will include the special characters `+`
+ * and `/`, or "base64url", which will include the special characters `-` and `_`. If not specified, it defaults to
+ * "base64".
+ * @type {(undefined|string)}
+ */
+Uint8ArrayToBase64Options.prototype.alphabet;
+
+/**
+ * If true, the output base64 string will omit any `=` padding characters at the end. Defaults to false.
+ * @type {(undefined|boolean)}
+ */
+Uint8ArrayToBase64Options.prototype.omitPadding;
+
+
+/**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
  *     length or array or buffer
  *     NOTE: We require that at least this first argument be present even though
@@ -844,6 +910,46 @@ Uint8Array.from = function(source, mapFn, thisArg) {};
  */
 Uint8Array.of = function(var_args) {};
 
+/**
+ * Creates a new Uint8Array from a base64 encoded string.
+ * @param {!string} string a base64 string encoded array
+ * @param {Uint8ArrayBase64Options=} options an object specifying how to read the base64 string
+ * @return {!Uint8Array} a newly created array with the specified bytes
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/fromBase64
+ */
+Uint8Array.fromBase64 = function(string, options) {};
+
+/**
+ * Creates a new Uint8Array from a case-insensitive hex string with even length.
+ * @param {!string} string a hex string encoded array of bytes
+ * @return {!Uint8Array} a newly created array with the specified bytes
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/fromHex
+ */
+Uint8Array.fromHex = function(string) {};
+
+/**
+ * Sets the contents of the Uint8Array from a base64 encoded string.
+ * @param {!string} string a base64 string encoded array to write into this array
+ * @param {Uint8ArrayBase64Options=} options an object specifying how to read the base64 string
+ * @return {!Uint8ArraySetFromBase64Results} results about the operation
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/setFromBase64
+ */
+Uint8Array.prototype.setFromBase64 = function(string, options) {};
+
+/**
+ * Encodes the contents of the Uint8Array into a base64 string.
+ * @param {Uint8ArrayToBase64Options=} options an object specifying how to encode the base64 string
+ * @return {!string} a base64 encoded string representing the contents of this array
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/toBase64
+ */
+Uint8Array.prototype.toBase64 = function(options) {};
+
+/**
+ * Encodes the contents of the Uint8Array into a hex string.
+ * @return {!string} a hex encoded string representing the contents of this array
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/toHex
+ */
+Uint8Array.prototype.toHex = function() {};
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
