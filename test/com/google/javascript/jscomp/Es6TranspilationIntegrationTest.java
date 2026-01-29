@@ -2509,8 +2509,11 @@ function inorder1(t) {
 
   @Test
   public void testComputedPropCannotConvert() {
-    testError("var o = { get [foo]() {}}", CANNOT_CONVERT_YET);
-    testError("var o = { set [foo](val) {}}", CANNOT_CONVERT_YET);
+    testError(
+        "var o = { get [foo]() {}}", ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT);
+    testError(
+        "var o = { set [foo](val) {}}",
+        ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT);
   }
 
   @Test

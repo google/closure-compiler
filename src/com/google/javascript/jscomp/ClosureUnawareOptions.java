@@ -60,11 +60,8 @@ class ClosureUnawareOptions {
     // features for now. (Any project using @closureUnaware today (i.e. early 2026) gets zero
     // transpilation, so rolling out with these suppressions is an incremental improvement.)
 
-    // DiagnosticGroups.CANNOT_TRANSPILE_FEATURE: features for which the compiler theoretically
-    // might support transpilation, but does not currently.
-    shadowOptions.setWarningLevel(DiagnosticGroups.CANNOT_TRANSPILE_FEATURE, CheckLevel.OFF);
-    // DiagnosticGroups.UNTRANSPILABLE_FEATURES: features JSCompiler will never transpile, like
-    // regex syntax.
+    // DiagnosticGroups.UNTRANSPILABLE_FEATURES: features JSCompiler will never transpile but
+    // can pass through unchanged to the output, such as newer regex syntax.
     shadowOptions.setWarningLevel(DiagnosticGroups.UNTRANSPILABLE_FEATURES, CheckLevel.OFF);
   }
 

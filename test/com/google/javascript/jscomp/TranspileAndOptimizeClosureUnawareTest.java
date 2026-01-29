@@ -598,6 +598,14 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
             """));
   }
 
+  @Test
+  public void generator_cannotConvertCaseStatementContainingYield_errors() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
+    testError(
+        closureUnaware("function *f(b, i) {switch (i) { case yield: return b; }} return f;"),
+        TranspilationUtil.CANNOT_CONVERT_YET);
+  }
+
   private static String loadFile(Path path) {
     try (Stream<String> lines = Files.lines(path)) {
       return lines.collect(joining("\n"));

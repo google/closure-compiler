@@ -41,6 +41,7 @@ import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
 import com.google.javascript.jscomp.js.RuntimeJsLibManager;
+import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -2569,7 +2570,13 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
 
-    test(options, "import.meta", DiagnosticGroups.CANNOT_TRANSPILE_FEATURE);
+    Compiler compiler = compile(options, "import.meta");
+    assertThat(compiler.getResult().success).isFalse();
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(JSCompCorrespondences.DESCRIPTION_EQUALITY)
+        .containsExactly(
+            "This code cannot be transpiled. import.meta. Use --chunk_output_type=ES_MODULES to"
+                + " allow passthrough support.");
   }
 
   @Test

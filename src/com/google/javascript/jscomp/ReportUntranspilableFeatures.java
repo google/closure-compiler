@@ -34,8 +34,17 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Looks for presence of features that are not supported for transpilation (mostly new RegExp
- * features and bigint literal). Reports errors for any features are present in the root and not
- * present in the targeted output language.
+ * features and bigint literal).
+ *
+ * <p>Reports errors for any features are present in the root and not present in the targeted output
+ * language.
+ *
+ * <p>Note: the errors reported by this pass are suppressible. In most cases the right thing to do
+ * if suppressing them is instead to bump the output language level; for example, someone who only
+ * needs to support ES2020 but is setting --language_out=ECMASCRIPT_2015 will see errors on ES2018
+ * regex literal syntax. The best solution is to set --language_out=ECMASCRIPT_2020. A second
+ * solution, which we support but do not recommend, is to suppress these errors & let the compiler
+ * silently output untranspiled ES2018 regex literals.
  */
 public final class ReportUntranspilableFeatures extends AbstractPeepholeTranspilation {
 

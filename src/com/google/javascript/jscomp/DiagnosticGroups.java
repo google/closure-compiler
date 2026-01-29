@@ -676,10 +676,6 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerUnsuppressibleGroup(
           ProcessDefines.INVALID_DEFINE_VALUE, ProcessDefines.INVALID_DEFINE_TYPE);
 
-  public static final DiagnosticGroup CANNOT_TRANSPILE_FEATURE =
-      DiagnosticGroups.registerUnsuppressibleGroup(
-          TranspilationUtil.CANNOT_CONVERT, TranspilationUtil.CANNOT_CONVERT_YET);
-
   public static final DiagnosticGroup MISSING_POLYFILL =
       DiagnosticGroups.registerGroup(
           "missingPolyfill", RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR);

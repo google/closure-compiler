@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -226,8 +225,11 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
 
   @Test
   public void testComputedPropCannotConvert() {
-    testError("var o = { get [foo]() {}}", CANNOT_CONVERT_YET);
-    testError("var o = { set [foo](val) {}}", CANNOT_CONVERT_YET);
+    testError(
+        "var o = { get [foo]() {}}", ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT);
+    testError(
+        "var o = { set [foo](val) {}}",
+        ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT);
   }
 
   @Test
