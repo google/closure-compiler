@@ -606,6 +606,71 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
         TranspilationUtil.CANNOT_CONVERT_YET);
   }
 
+  @Test
+  public void noInstrumentAsyncContext_doesNotInstrumentAwait() {
+    extraOptions =
+        (options) -> {
+          options.setInstrumentAsyncContext(false);
+          options.setGeneratePseudoNames(true);
+        };
+    this.mode = NestedCompilerRunner.Mode.TRANSPILE_ONLY;
+    testSame(
+        """
+        /** @fileoverview @closureUnaware */
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        /** @closureUnaware */
+        (function() {
+          async function f() {
+            await 1;
+          }
+          return f;
+        })();
+        """);
+  }
+
+  @Test
+  public void instrumentAsyncContext_instrumentsAwait() {
+    extraOptions =
+        (options) -> {
+          options.setInstrumentAsyncContext(true);
+          options.setGeneratePseudoNames(true);
+        };
+    this.mode = NestedCompilerRunner.Mode.TRANSPILE_ONLY;
+    test(
+        """
+        /** @fileoverview @closureUnaware */
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        /** @closureUnaware */
+        (function() {
+          async function f() {
+            await 1;
+          }
+          return f;
+        })();
+        """,
+        """
+        /** @fileoverview @closureUnaware */
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        /** @closureUnaware */
+        (function($jscomp_asyncContextStart) {
+          async function f() {
+            var ᵃᶜfactorym854121055$0 = $jscomp_asyncContextStart();
+            var ᵃᶜsuspendm854121055$0 = ᵃᶜfactorym854121055$0();
+            var ᵃᶜresumem854121055$0 = ᵃᶜfactorym854121055$0(1);
+            try {
+              ᵃᶜresumem854121055$0(await ᵃᶜsuspendm854121055$0(1));
+            } finally {
+              ᵃᶜsuspendm854121055$0();
+            }
+          }
+          return f;
+        })($jscomp.asyncContextStart);
+        """);
+  }
+
   private static String loadFile(Path path) {
     try (Stream<String> lines = Files.lines(path)) {
       return lines.collect(joining("\n"));

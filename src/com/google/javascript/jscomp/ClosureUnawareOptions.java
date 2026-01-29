@@ -55,6 +55,7 @@ class ClosureUnawareOptions {
     shadowOptions.setEs6SubclassTranspilation(
         CompilerOptions.Es6SubclassTranspilation.SAFE_REFLECT_CONSTRUCT);
     shadowOptions.setOutputFeatureSet(original.getOutputFeatureSet());
+    shadowOptions.setInstrumentAsyncContext(original.getInstrumentAsyncContext());
 
     // To aid rollout of @closureUnaware transpilation, ignore warnings about untranspilable
     // features for now. (Any project using @closureUnaware today (i.e. early 2026) gets zero
