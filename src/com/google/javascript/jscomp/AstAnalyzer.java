@@ -162,6 +162,14 @@ public class AstAnalyzer {
       if (assumeKnownBuiltinsArePure && BUILTIN_FUNCTIONS_WITHOUT_SIDEEFFECTS.contains(name)) {
         return false;
       }
+      // Array constructor with a single numeric length argument has no side effects
+      // This handles Array() called without the 'new' keyword
+      if ("Array".equals(name)) {
+        Node arg = callee.getNext();
+        if (arg != null && arg.isNumber()) {
+          return false;
+        }
+      }
     } else if (callee.isGetProp() || callee.isOptChainGetProp()) {
       if (callNode.hasOneChild()
           && assumeKnownBuiltinsArePure
@@ -523,6 +531,15 @@ public class AstAnalyzer {
     }
 
     Node nameNode = newNode.getFirstChild();
+    if (nameNode.isName() && "Array".equals(nameNode.getString())) {
+      // Array constructor with a single numeric length argument has no side effects
+      // Array(length) creates an empty array of the given length
+      Node arg = nameNode.getNext();
+      if (arg != null && arg.isNumber()) {
+        return false;
+      }
+    }
+
     return !nameNode.isName()
         || !assumeKnownBuiltinsArePure
         || !CONSTRUCTORS_WITHOUT_SIDE_EFFECTS.contains(nameNode.getString());
