@@ -63,7 +63,7 @@ jobs:
           ref: ${{ inputs.ref || github.sha }}
 
       # https://github.com/bazel-contrib/setup-bazel
-      - uses: bazel-contrib/setup-bazel@43d7d5ceab59a307da44fc7585faa2a2fff4f88d # v0.16.0
+      - uses: bazel-contrib/setup-bazel@083175551ceeceebc757ebee2127fde78840ca77 # v0.18.0
         with:
           # Avoid downloading Bazel every time.
           bazelisk-cache: true
