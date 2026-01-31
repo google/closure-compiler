@@ -965,6 +965,41 @@ public final class AstAnalyzerTest {
   }
 
   @RunWith(JUnit4.class)
+  public static final class ArrayFunctionCallBehavior {
+    @Test
+    public void lengthArg_assumingPureBuiltins() {
+      ParseHelper parseHelper = new ParseHelper();
+      parseHelper.assumeBuiltinsPure = true;
+      Node func = parseHelper.parseFirst(CALL, "Array(10);");
+      assertThat(parseHelper.getAstAnalyzer().functionCallHasSideEffects(func)).isFalse();
+    }
+
+    @Test
+    public void lengthArg_notAssumingPureBuiltins() {
+      ParseHelper parseHelper = new ParseHelper();
+      parseHelper.assumeBuiltinsPure = false;
+      Node func = parseHelper.parseFirst(CALL, "Array(10);");
+      assertThat(parseHelper.getAstAnalyzer().functionCallHasSideEffects(func)).isTrue();
+    }
+
+    @Test
+    public void multipleArgs_assumingPureBuiltins() {
+      ParseHelper parseHelper = new ParseHelper();
+      parseHelper.assumeBuiltinsPure = true;
+      Node func = parseHelper.parseFirst(CALL, "Array(1,2,3);");
+      assertThat(parseHelper.getAstAnalyzer().functionCallHasSideEffects(func)).isFalse();
+    }
+
+    @Test
+    public void multipleArgs_notAssumingPureBuiltins() {
+      ParseHelper parseHelper = new ParseHelper();
+      parseHelper.assumeBuiltinsPure = false;
+      Node func = parseHelper.parseFirst(CALL, "Array(1,2,3);");
+      assertThat(parseHelper.getAstAnalyzer().functionCallHasSideEffects(func)).isTrue();
+    }
+  }
+
+  @RunWith(JUnit4.class)
   public static class ConstructorCallHasSideEffects {
     @Test
     public void byDefaultAConstructorCallHasSideEffects() {
