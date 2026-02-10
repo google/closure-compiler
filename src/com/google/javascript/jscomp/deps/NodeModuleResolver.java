@@ -206,6 +206,19 @@ public class NodeModuleResolver extends ModuleResolver {
     return loadAddress;
   }
 
+  @Override
+  public @Nullable String resolveJsModuleSilently(String scriptAddress, String moduleAddress) {
+    String loadAddress;
+    if (ModuleLoader.isAbsoluteIdentifier(moduleAddress)
+            || ModuleLoader.isRelativeIdentifier(moduleAddress)) {
+      loadAddress = resolveJsModuleNodeFileOrDirectory(scriptAddress, moduleAddress);
+    } else {
+      loadAddress = resolveJsModuleFromRegistry(scriptAddress, moduleAddress);
+    }
+
+    return loadAddress;
+  }
+
   public @Nullable String resolveJsModuleFile(String scriptAddress, String moduleAddress) {
     for (String extension : FILE_EXTENSIONS_TO_SEARCH) {
       String moduleAddressCandidate = moduleAddress + extension;

@@ -148,6 +148,32 @@ public class BrowserWithTransformedPrefixesModuleResolver extends ModuleResolver
   }
 
   @Override
+  public @Nullable String resolveJsModuleSilently(String scriptAddress, String moduleAddress) {
+    String transformedAddress = moduleAddress;
+
+    boolean replaced = false;
+
+    for (PrefixReplacement prefixReplacement : prefixReplacements) {
+      if (moduleAddress.startsWith(prefixReplacement.prefix())) {
+        transformedAddress =
+                prefixReplacement.replacement()
+                        + moduleAddress.substring(prefixReplacement.prefix().length());
+        replaced = true;
+        break;
+      }
+    }
+
+    // If ambiguous after the loop it was not transformed and the original moduleAddress is
+    // ambiguous with an unrecognized prefix. Allow transformed paths to be ambiguous after
+    // transformation to maybe match how files are passed to the compiler.
+    if (!replaced && ModuleLoader.isAmbiguousIdentifier(transformedAddress)) {
+      return null;
+    }
+
+    return locate(scriptAddress, transformedAddress);
+  }
+
+  @Override
   public String resolveModuleAsPath(String scriptAddress, String moduleAddress) {
     if (ModuleLoader.isRelativeIdentifier(moduleAddress)) {
       return super.resolveModuleAsPath(scriptAddress, moduleAddress);

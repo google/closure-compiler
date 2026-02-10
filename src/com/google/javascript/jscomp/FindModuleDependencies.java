@@ -177,7 +177,7 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
       ModuleLoader.ModulePath modulePath =
           t.getInput()
               .getPath()
-              .resolveJsModule(path, n.getSourceFileName(), n.getLineno(), n.getCharno());
+              .resolveJsModuleSilently(path);
       if (modulePath != null) {
         t.getInput().addDynamicRequire(modulePath.toModuleName());
       }
