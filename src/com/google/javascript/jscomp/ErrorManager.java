@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.ConformanceConfig.LibraryLevelNonAllowlistedConformanceViolationsBehavior;
-import com.google.javascript.jscomp.Requirement.WhitelistEntry;
 
 /**
  * The error manager is in charge of storing, organizing and displaying errors and warnings
@@ -104,7 +103,7 @@ public interface ErrorManager extends ErrorHandler {
   // {@code shouldReportConformanceViolationIgnoringAllowlists} or similar.
   default boolean shouldReportConformanceViolation(
       Requirement requirement,
-      Optional<WhitelistEntry> whitelistEntry,
+      Optional<RequirementScopeEntry> allowlistEntry,
       JSError diagnostic,
       LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior,
       boolean isAllowlisted) {

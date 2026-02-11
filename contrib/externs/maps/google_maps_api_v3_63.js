@@ -2976,7 +2976,7 @@ google.maps.DistanceMatrixService = function() {};
 /**
  * Issues a distance matrix request.
  * @param {!google.maps.DistanceMatrixRequest} request
- * @param {(function(?google.maps.DistanceMatrixResponse,
+ * @param {(function((!google.maps.DistanceMatrixResponse|null),
  *     !google.maps.DistanceMatrixStatus): void)=} callback
  * @return {!Promise<!google.maps.DistanceMatrixResponse>}
  */
@@ -5076,7 +5076,7 @@ google.maps.LatLngAltitudeLiteral = function() {};
  * Distance (in meters) above the ground surface. Negative value means
  * underneath the ground surface.
  * @default <code>0</code>
- * @type {number}
+ * @type {number|null|undefined}
  */
 google.maps.LatLngAltitudeLiteral.prototype.altitude;
 
@@ -6483,8 +6483,8 @@ google.maps.MapOptions.prototype.zoomControl;
 google.maps.MapOptions.prototype.zoomControlOptions;
 
 /**
- * If <code>false</code>, prevents the map from being dragged. Dragging is
- * enabled by default.
+ * If <code>false</code>, prevents the map from being dragged and zoomed by
+ * mouse and touch gestures. Dragging is enabled by default.
  * @type {boolean|null|undefined}
  * @deprecated Deprecated in 2017. To disable dragging on the map, you can use
  *     the <code>gestureHandling</code> property, and set it to
@@ -8209,9 +8209,9 @@ google.maps.PlacesLibrary.prototype.ConsumerAlertDetails;
 google.maps.PlacesLibrary.prototype.ContentBlock;
 
 /**
- * @type {typeof google.maps.places.EvChargeAmenitySummary}
+ * @type {typeof google.maps.places.EVChargeAmenitySummary}
  */
-google.maps.PlacesLibrary.prototype.EvChargeAmenitySummary;
+google.maps.PlacesLibrary.prototype.EVChargeAmenitySummary;
 
 /**
  * @type {typeof google.maps.places.EVChargeOptions}
@@ -19332,6 +19332,59 @@ google.maps.places.ContentBlock.prototype.contentLanguageCode;
 google.maps.places.ContentBlock.prototype.referencedPlaces;
 
 /**
+ * AI-generated summary of amenities near the EV charging station. This only
+ * applies to places with type <code>electric_vehicle_charging_station</code>.
+ *
+ * Access by calling `const {EVChargeAmenitySummary} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.EVChargeAmenitySummary = function() {};
+
+/**
+ * A summary of the nearby coffee options.
+ * @type {!google.maps.places.ContentBlock|null}
+ */
+google.maps.places.EVChargeAmenitySummary.prototype.coffee;
+
+/**
+ * The text for the disclosure relating to this summary.
+ * @type {string|null}
+ */
+google.maps.places.EVChargeAmenitySummary.prototype.disclosureText;
+
+/**
+ * The language code of the disclosure text.
+ * @type {string|null}
+ */
+google.maps.places.EVChargeAmenitySummary.prototype.disclosureTextLanguageCode;
+
+/**
+ * A URI to report a problem with the summary.
+ * @type {string|null}
+ */
+google.maps.places.EVChargeAmenitySummary.prototype.flagContentURI;
+
+/**
+ * An overview of the available amenities.
+ * @type {!google.maps.places.ContentBlock|null}
+ */
+google.maps.places.EVChargeAmenitySummary.prototype.overview;
+
+/**
+ * A summary of the nearby restaurants.
+ * @type {!google.maps.places.ContentBlock|null}
+ */
+google.maps.places.EVChargeAmenitySummary.prototype.restaurant;
+
+/**
+ * A summary of nearby stores.
+ * @type {!google.maps.places.ContentBlock|null}
+ */
+google.maps.places.EVChargeAmenitySummary.prototype.store;
+
+/**
  * Information about the EV charging station hosted in the place.
  *
  * Access by calling `const {EVChargeOptions} = await
@@ -19432,59 +19485,6 @@ google.maps.places.EVSearchOptions.prototype.connectorTypes;
  * @type {number|undefined}
  */
 google.maps.places.EVSearchOptions.prototype.minimumChargingRateKw;
-
-/**
- * AI-generated summary of amenities near the EV charging station. This only
- * applies to places with type <code>electric_vehicle_charging_station</code>.
- *
- * Access by calling `const {EvChargeAmenitySummary} = await
- * google.maps.importLibrary("places")`. See
- * https://developers.google.com/maps/documentation/javascript/libraries.
- * @constructor
- */
-google.maps.places.EvChargeAmenitySummary = function() {};
-
-/**
- * A summary of the nearby coffee options.
- * @type {!google.maps.places.ContentBlock|null}
- */
-google.maps.places.EvChargeAmenitySummary.prototype.coffee;
-
-/**
- * The text for the disclosure relating to this summary.
- * @type {string|null}
- */
-google.maps.places.EvChargeAmenitySummary.prototype.disclosureText;
-
-/**
- * The language code of the disclosure text.
- * @type {string|null}
- */
-google.maps.places.EvChargeAmenitySummary.prototype.disclosureTextLanguageCode;
-
-/**
- * A URI to report a problem with the summary.
- * @type {string|null}
- */
-google.maps.places.EvChargeAmenitySummary.prototype.flagContentURI;
-
-/**
- * An overview of the available amenities.
- * @type {!google.maps.places.ContentBlock|null}
- */
-google.maps.places.EvChargeAmenitySummary.prototype.overview;
-
-/**
- * A summary of the nearby restaurants.
- * @type {!google.maps.places.ContentBlock|null}
- */
-google.maps.places.EvChargeAmenitySummary.prototype.restaurant;
-
-/**
- * A summary of nearby stores.
- * @type {!google.maps.places.ContentBlock|null}
- */
-google.maps.places.EvChargeAmenitySummary.prototype.store;
 
 /**
  * Options for fetching Place fields.
@@ -20283,8 +20283,8 @@ google.maps.places.Place.prototype.editorialSummary;
 google.maps.places.Place.prototype.editorialSummaryLanguageCode;
 
 /**
- * The EvChargeAmenitySummary for this place.
- * @type {!google.maps.places.EvChargeAmenitySummary|null|undefined}
+ * The EVChargeAmenitySummary for this place.
+ * @type {!google.maps.places.EVChargeAmenitySummary|null|undefined}
  */
 google.maps.places.Place.prototype.evChargeAmenitySummary;
 
@@ -20296,7 +20296,7 @@ google.maps.places.Place.prototype.evChargeAmenitySummary;
 google.maps.places.Place.prototype.evChargeOptions;
 
 /**
- * The locations’s full address.
+ * The location’s full address.
  * @type {string|null|undefined}
  */
 google.maps.places.Place.prototype.formattedAddress;
@@ -20536,6 +20536,12 @@ google.maps.places.Place.prototype.requestedLanguage;
 google.maps.places.Place.prototype.requestedRegion;
 
 /**
+ * The unique place resource name.
+ * @type {string}
+ */
+google.maps.places.Place.prototype.resourceName;
+
+/**
  * A list of reviews for this Place.
  * @type {!Array<!google.maps.places.Review>|undefined}
  */
@@ -20618,6 +20624,21 @@ google.maps.places.Place.prototype.servesVegetarianFood;
  * @type {boolean|null|undefined}
  */
 google.maps.places.Place.prototype.servesWine;
+
+/**
+ * The location’s short address.
+ * @type {string|null|undefined}
+ */
+google.maps.places.Place.prototype.shortFormattedAddress;
+
+/**
+ * The list of sub-destinations for this place. Sub-destinations are specific
+ * places associated with a main place. These provide more specific destinations
+ * for users who are searching within a large or complex place, like an airport,
+ * national park, university, or stadium.
+ * @type {!Array<!google.maps.places.Place>|undefined}
+ */
+google.maps.places.Place.prototype.subDestinations;
 
 /**
  * URI to the svg image mask resource that can be used to represent a place’s
@@ -20963,6 +20984,12 @@ google.maps.places.PlaceAutocompleteElement.prototype.name;
 google.maps.places.PlaceAutocompleteElement.prototype.origin;
 
 /**
+ * The placeholder text to display in the input element.
+ * @type {string}
+ */
+google.maps.places.PlaceAutocompleteElement.prototype.placeholder;
+
+/**
  * A language identifier for the language in which the results should be
  * returned, if possible. Results in the selected language may be given a higher
  * ranking, but suggestions are not restricted to this language. See the <a
@@ -20992,6 +21019,12 @@ google.maps.places.PlaceAutocompleteElement.prototype.requestedRegion;
  * @type {!google.maps.UnitSystem|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElement.prototype.unitSystem;
+
+/**
+ * The value of the input element.
+ * @type {string}
+ */
+google.maps.places.PlaceAutocompleteElement.prototype.value;
 
 
 
@@ -21052,6 +21085,12 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.requestedRegion;
 google.maps.places.PlaceAutocompleteElementOptions.prototype.unitSystem;
 
 /**
+ * The value of the input element.
+ * @type {string|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype.value;
+
+/**
  * Configures a {@link google.maps.places.PlaceDetailsCompactElement}, {@link
  * google.maps.places.PlaceDetailsElement} or {@link
  * google.maps.places.PlaceSearchElement} to show a custom set of content.
@@ -21075,6 +21114,7 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.unitSystem;
  * google.maps.places.PlaceOpeningHoursElement}, {@link
  * google.maps.places.PlacePhoneNumberElement}, {@link
  * google.maps.places.PlacePlusCodeElement}, {@link
+ * google.maps.places.PlaceReviewSummaryElement}, {@link
  * google.maps.places.PlaceReviewsElement}, {@link
  * google.maps.places.PlaceSummaryElement}, {@link
  * google.maps.places.PlaceTypeSpecificHighlightsElement}, {@link
@@ -21947,7 +21987,7 @@ google.maps.places.PlaceOptions = function() {};
 
 /**
  * The unique place id.
- * @type {string}
+ * @type {string|undefined}
  */
 google.maps.places.PlaceOptions.prototype.id;
 
@@ -21971,6 +22011,12 @@ google.maps.places.PlaceOptions.prototype.requestedLanguage;
  * @type {string|null|undefined}
  */
 google.maps.places.PlaceOptions.prototype.requestedRegion;
+
+/**
+ * The unique place resource name.
+ * @type {string|undefined}
+ */
+google.maps.places.PlaceOptions.prototype.resourceName;
 
 /**
  * Configures a {@link google.maps.places.PlaceDetailsElement} to show a
@@ -22539,6 +22585,31 @@ google.maps.places.PlaceReview.prototype.time;
  * @deprecated This field is no longer available.
  */
 google.maps.places.PlaceReview.prototype.aspects;
+
+/**
+ * Configures a {@link google.maps.places.PlaceDetailsElement} to show a
+ * place&#39;s review summary. Append this element as a child of a {@link
+ * google.maps.places.PlaceContentConfigElement} to use it. For example:
+ * <pre><code> &lt;gmp-place-content-config&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-review-summary&gt;&lt;/gmp-place-review-summary&gt;<br>
+ * &lt;/gmp-place-content-config&gt;<br> </code></pre>
+ *
+ * Access by calling `const {PlaceReviewSummaryElement} = await
+ * google.maps.importLibrary("places")`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PlaceReviewSummaryElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceReviewSummaryElement = function() {};
+
+
+
+/**
+ * Options for <code>PlaceReviewSummaryElement</code>.
+ * @record
+ */
+google.maps.places.PlaceReviewSummaryElementOptions = function() {};
 
 /**
  * Configures a {@link google.maps.places.PlaceDetailsElement} to show a

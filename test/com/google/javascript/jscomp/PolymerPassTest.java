@@ -3381,6 +3381,119 @@ a.B = Polymer(/** @lends {a.B.prototype} */ {
         """);
   }
 
+  @Test
+  public void testBehaviorMethodsInPropertiesAndObservers() {
+    test(
+        """
+        /** @polymerBehavior */
+        var FunBehavior = {
+          properties: {
+            computedProp: {
+              type: String,
+              computed: 'quotedProp(prop1, prop2)',
+            },
+            observedProp: {
+              type: String,
+              observer: 'observeProp',
+            },
+          },
+          observers: [
+            'observeList(item1, item2)',
+            'observeAnotherList(item3)',
+          ],
+          'quotedProp': function(prop1, prop2) {},
+          observeProp() {},
+          observeList: function(item1, item2) {},
+          observeAnotherList(item3) {},
+          unreferencedMethod: function() {},
+        };
+        var A = Polymer({
+          is: 'x-element',
+          behaviors: [ FunBehavior ],
+        });
+        """,
+        """
+        /**
+         * @polymerBehavior
+         * @nocollapse
+         * @polymerBehavior
+         */
+        var FunBehavior = {
+          properties: {
+            computedProp: {
+              type: String,
+              computed: 'quotedProp(prop1, prop2)',
+            },
+            observedProp: {
+              type: String,
+              observer: 'observeProp',
+            },
+          },
+          observers: [
+            'observeList(item1, item2)',
+            'observeAnotherList(item3)',
+          ],
+          /**
+           * @export
+           * @nocollapse
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          'quotedProp': function(prop1, prop2) {},
+          /**
+           * @export
+           * @nocollapse
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          observeProp() {},
+          /**
+           * @export
+           * @nocollapse
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          observeList: function(item1, item2) {},
+          /**
+           * @export
+           * @nocollapse
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          observeAnotherList(item3) {},
+          /**
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          unreferencedMethod: function() {},
+        };
+        /**
+         * @constructor
+         * @extends {PolymerElement}
+         * @implements {PolymerAInterface$UID$0}
+         */
+        var A = function() {};
+        /** @type {string} */
+        A.prototype.computedProp;
+        /** @type {string} */
+        A.prototype.observedProp;
+        A.prototype.quotedProp = function(prop1, prop2) {};
+        A.prototype.observeProp = function() {};
+        A.prototype.observeList = function(item1, item2) {};
+        A.prototype.observeAnotherList = function(item3) {};
+        A.prototype.unreferencedMethod = function() {};
+        A = Polymer(/** @lends {A.prototype} */ {
+          is: 'x-element',
+          behaviors: [FunBehavior],
+        });
+        /** @export */
+        A.prototype.unreferencedMethod;
+        /** @export */
+        A.prototype.observeAnotherList;
+        /** @export */
+        A.prototype.observeList;
+        /** @export */
+        A.prototype.observeProp;
+        /** @export */
+        A.prototype.quotedProp;
+        """);
+  }
+
   /**
    * If an element has two or more behaviors which define the same function, only the last
    * behavior's function should be copied over to the element's prototype.

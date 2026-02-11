@@ -40,7 +40,7 @@ jobs:
     # Checkout the piper-cut-cl.json from the most recent two commits
     - name: Checkout Current closure-compiler Commit
       # https://github.com/marketplace/actions/checkout
-      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         fetch-depth: 2
         sparse-checkout: |
@@ -68,7 +68,7 @@ jobs:
     # This is much more expensive than just checking out the most recent
     # 2 commits, as done above, so only do this if actually cutting a release
     - name: Checkout all closure-compiler commits and tags
-      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       if: ${{ steps.detect_changes.outputs.foundNewRelease == 'true' }}
       with:
         # a depth of 0 triggers a fetch of all historical commits/branches/tags
@@ -116,13 +116,13 @@ jobs:
           check_secret "MAVEN_GPG_PASSPHRASE" "${{ secrets.MAVEN_GPG_PASSPHRASE }}"
 
       - name: Checkout the repo at the release tag
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ needs.tag_release_version_id.outputs.tag }}
 
       # Maven and Bazel require Java to be available.
       - name: Setup Java
-        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5.1.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           java-version: '21'
           distribution: 'zulu'

@@ -213,4 +213,80 @@ public class PolymerPassSuppressBehaviorsAndProtectKeysTest extends CompilerTest
     testError(
         "/** @polymerBehavior */ let FunBehavior;", PolymerPassErrors.POLYMER_UNQUALIFIED_BEHAVIOR);
   }
+
+  @Test
+  public void testMethodsInPropertiesAndObserversAreProtected() {
+    test(
+        """
+        /** @polymerBehavior */
+        var FunBehavior = {
+          properties: {
+            computedProp: {
+              computed: 'quotedProp(prop1, prop2)',
+            },
+            observedProp: {
+              observer: 'observeProp',
+            },
+          },
+          observers: [
+            'observeList(item1, item2)',
+            'observeAnotherList(item3)',
+          ],
+          'quotedProp': function(prop1, prop2) {},
+          observeProp() {},
+          observeList: function(item1, item2) {},
+          observeAnotherList(item3) {},
+          unreferencedMethod: function() {},
+        };
+        """,
+        """
+        /**
+         * @polymerBehavior
+         * @nocollapse
+         * @polymerBehavior
+         */
+        var FunBehavior = {
+          properties: {
+            computedProp: {
+              computed: 'quotedProp(prop1, prop2)',
+            },
+            observedProp: {
+              observer: 'observeProp',
+            },
+          },
+          observers: [
+            'observeList(item1, item2)',
+            'observeAnotherList(item3)',
+          ],
+          /**
+           * @export
+           * @nocollapse
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          'quotedProp': function(prop1, prop2) {},
+          /**
+           * @export
+           * @nocollapse
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          observeProp() {},
+          /**
+           * @export
+           * @nocollapse
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          observeList: function(item1, item2) {},
+          /**
+           * @export
+           * @nocollapse
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          observeAnotherList(item3) {},
+          /**
+           * @suppress {checkTypes,globalThis,visibility}
+           */
+          unreferencedMethod: function() {},
+        };
+        """);
+  }
 }

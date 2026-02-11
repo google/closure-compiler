@@ -2271,7 +2271,7 @@ function inorder1(t) {
   var $jscomp$iter$1;
   var KEY$1$x;
   return $jscomp.generator.createGenerator(inorder1, function($jscomp$generator$context$m1146332801$2) {
-    switch($jscomp$generator$context$m1146332801$2.nextAddress) {
+    switch($jscomp$generator$context$m1146332801$2.getNextAddressJsc()) {
       case 1:
         $jscomp$iter$0 = (0, $jscomp.makeIterator)([]);
         KEY$0$x = $jscomp$iter$0.next();
@@ -2509,8 +2509,11 @@ function inorder1(t) {
 
   @Test
   public void testComputedPropCannotConvert() {
-    testError("var o = { get [foo]() {}}", CANNOT_CONVERT_YET);
-    testError("var o = { set [foo](val) {}}", CANNOT_CONVERT_YET);
+    testError(
+        "var o = { get [foo]() {}}", ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT);
+    testError(
+        "var o = { set [foo](val) {}}",
+        ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT);
   }
 
   @Test

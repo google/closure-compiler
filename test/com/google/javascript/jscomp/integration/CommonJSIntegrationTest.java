@@ -475,7 +475,7 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
     options.setModuleResolutionMode(ModuleLoader.ResolutionMode.NODE);
     // For debugging failures
     options.setPrettyPrint(true);
-    options.preserveTypeAnnotations = true;
+    options.setPreserveTypeAnnotations(true);
     return options;
   }
 }

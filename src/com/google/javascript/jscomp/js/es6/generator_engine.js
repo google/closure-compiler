@@ -154,7 +154,7 @@ $jscomp.generator.Context = function() {
    * The value that will be sent to the program as the result of suspended
    * yield expression.
    *
-   * @type {?}
+   * @private {?}
    */
   this.yieldResult = undefined;
 
@@ -163,7 +163,7 @@ $jscomp.generator.Context = function() {
    *
    * <p>Program execution starts at 1 and ends at 0.
    *
-   * @type {number}
+   * @private {number}
    */
   this.nextAddress = 1;
 
@@ -287,6 +287,38 @@ $jscomp.generator.Context.prototype.throw_ = function(e) {
   this.jumpToErrorHandler_();
 };
 
+/** Public methods */
+
+/**
+ * Returns the next address in the state machine.
+ *
+ * @final
+ * @return {number}
+ * @requireInlining
+ */
+$jscomp.generator.Context.prototype.getNextAddressJsc = function() {
+  return this.nextAddress;
+};
+
+$jscomp.generator.Context.prototype['getNextAddressJsc'] = function() {
+  return this.nextAddress;
+};
+
+/**
+ * Returns the value that was set by the last yield expression.
+ *
+ * @final
+ * @return {number}
+ * @requireInlining
+ */
+$jscomp.generator.Context.prototype.getYieldResultJsc = function() {
+  return this.yieldResult;
+};
+
+$jscomp.generator.Context.prototype['getYieldResultJsc'] = function() {
+  return this.yieldResult;
+};
+
 /**
  * Returns a value as the result of generator function.
  *
@@ -299,6 +331,9 @@ $jscomp.generator.Context.prototype.return = function(value) {
   this.abruptCompletion_ = {return: /** @type {VALUE} */ (value)};
   this.nextAddress = this.finallyAddress_;
 };
+
+$jscomp.generator.Context.prototype['return'] =
+    $jscomp.generator.Context.prototype.return;
 
 /**
  * Changes the context so the program execution will continue from the given
@@ -313,6 +348,8 @@ $jscomp.generator.Context.prototype.jumpThroughFinallyBlocks = function(
   this.abruptCompletion_ = {jumpTo: nextAddress};
   this.nextAddress = this.finallyAddress_;
 };
+$jscomp.generator.Context.prototype['jumpThroughFinallyBlocks'] =
+    $jscomp.generator.Context.prototype.jumpThroughFinallyBlocks;
 
 /**
  * Pauses the state machine program assosiated with generator function to yield
@@ -329,6 +366,8 @@ $jscomp.generator.Context.prototype.yield = function(value, resumeAddress) {
   this.nextAddress = resumeAddress;
   return {value: value};
 };
+$jscomp.generator.Context.prototype['yield'] =
+    $jscomp.generator.Context.prototype.yield;
 
 /**
  * Causes the state machine program to yield all values from an iterator.
@@ -356,6 +395,8 @@ $jscomp.generator.Context.prototype.yieldAll = function(
   this.yieldAllIterator_ = iterator;
   return this.yield(result.value, resumeAddress);
 };
+$jscomp.generator.Context.prototype['yieldAll'] =
+    $jscomp.generator.Context.prototype.yieldAll;
 
 /**
  * Changes the context so the program execution will continue from the given
@@ -368,6 +409,8 @@ $jscomp.generator.Context.prototype.yieldAll = function(
 $jscomp.generator.Context.prototype.jumpTo = function(nextAddress) {
   this.nextAddress = nextAddress;
 };
+$jscomp.generator.Context.prototype['jumpTo'] =
+    $jscomp.generator.Context.prototype.jumpTo;
 
 /**
  * Changes the context so the program execution ends.
@@ -378,6 +421,8 @@ $jscomp.generator.Context.prototype.jumpTo = function(nextAddress) {
 $jscomp.generator.Context.prototype.jumpToEnd = function() {
   this.nextAddress = 0;
 };
+$jscomp.generator.Context.prototype['jumpToEnd'] =
+    $jscomp.generator.Context.prototype.jumpToEnd;
 
 /**
  * Sets catch / finally handlers.
@@ -395,6 +440,8 @@ $jscomp.generator.Context.prototype.setCatchFinallyBlocks = function(
     this.finallyAddress_ = finallyAddress;
   }
 };
+$jscomp.generator.Context.prototype['setCatchFinallyBlocks'] =
+    $jscomp.generator.Context.prototype.setCatchFinallyBlocks;
 
 /**
  * Sets finally handler.
@@ -408,6 +455,8 @@ $jscomp.generator.Context.prototype.setFinallyBlock = function(finallyAddress) {
   this.catchAddress_ = 0;
   this.finallyAddress_ = finallyAddress || 0;
 };
+$jscomp.generator.Context.prototype['setFinallyBlock'] =
+    $jscomp.generator.Context.prototype.setFinallyBlock;
 
 /**
  * Sets a catch handler and jumps to the next address.
@@ -423,6 +472,8 @@ $jscomp.generator.Context.prototype.leaveTryBlock = function(
   this.nextAddress = nextAddress;
   this.catchAddress_ = catchAddress || 0;
 };
+$jscomp.generator.Context.prototype['leaveTryBlock'] =
+    $jscomp.generator.Context.prototype.leaveTryBlock;
 
 /**
  * Initializes exception variable in the beginning of catch block.
@@ -442,6 +493,8 @@ $jscomp.generator.Context.prototype.enterCatchBlock = function(
   this.abruptCompletion_ = null;
   return exception;
 };
+$jscomp.generator.Context.prototype['enterCatchBlock'] =
+    $jscomp.generator.Context.prototype.enterCatchBlock;
 
 /**
  * Saves the current throw context which will be restored at the end of finally
@@ -466,6 +519,8 @@ $jscomp.generator.Context.prototype.enterFinallyBlock = function(
   this.catchAddress_ = nextCatchAddress || 0;
   this.finallyAddress_ = nextFinallyAddress || 0;
 };
+$jscomp.generator.Context.prototype['enterFinallyBlock'] =
+    $jscomp.generator.Context.prototype.enterFinallyBlock;
 
 /**
  * Figures out whether the program execution should continue normally, or jump
@@ -581,6 +636,8 @@ $jscomp.generator.Context.prototype.leaveFinallyBlock = function(
     this.nextAddress = nextAddress;
   }
 };
+$jscomp.generator.Context.prototype['leaveFinallyBlock'] =
+    $jscomp.generator.Context.prototype.leaveFinallyBlock;
 
 /**
  * Is used in transpilation of `for in` statements.
@@ -602,6 +659,11 @@ $jscomp.generator.Context.prototype.leaveFinallyBlock = function(
 $jscomp.generator.Context.prototype.forIn = function(object) {
   return new $jscomp.generator.Context.PropertyIterator(object);
 };
+$jscomp.generator.Context.prototype['forIn'] =
+    $jscomp.generator.Context.prototype.forIn;
+
+
+/** End public methods */
 
 /**
  * @constructor
@@ -650,6 +712,8 @@ $jscomp.generator.Context.PropertyIterator.prototype.getNext = function() {
   }
   return null;
 };
+$jscomp.generator.Context.PropertyIterator.prototype['getNext'] =
+    $jscomp.generator.Context.PropertyIterator.prototype.getNext;
 
 /**
  * Engine handling execution of a state machine associated with the generator

@@ -1701,7 +1701,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           }
 
           // closure_test_suite looks for test*() functions
-          if (compiler.getOptions().exportTestFunctions && currentModuleName.startsWith("test")) {
+          if (compiler.getOptions().shouldExportTestFunctions()
+              && currentModuleName.startsWith("test")) {
             return;
           }
 

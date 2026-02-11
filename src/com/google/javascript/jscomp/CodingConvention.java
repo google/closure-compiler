@@ -329,13 +329,6 @@ public interface CodingConvention extends Serializable {
   public ObjectLiteralCast getObjectLiteralCast(Node callNode);
 
   /**
-   * Gets a collection of all properties that are defined indirectly on global
-   * objects. (For example, Closure defines superClass_ in the goog.inherits
-   * call).
-   */
-  public Collection<String> getIndirectlyDeclaredProperties();
-
-  /**
    * Returns the set of AssertionFunction.
    */
   public Collection<AssertionFunctionSpec> getAssertionFunctions();

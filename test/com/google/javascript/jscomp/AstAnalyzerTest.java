@@ -80,6 +80,7 @@ import static com.google.javascript.rhino.Token.YIELD;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.Node;
@@ -113,29 +114,41 @@ public final class AstAnalyzerTest {
     Token token;
     boolean globalRegExp;
     boolean assumeGettersArePure;
+    boolean assumeBuiltinsPure = true;
 
+    @CanIgnoreReturnValue
     AnalysisCase expect(boolean b) {
       this.expect = b;
       return this;
     }
 
+    @CanIgnoreReturnValue
     AnalysisCase js(String s) {
       this.js = s;
       return this;
     }
 
+    @CanIgnoreReturnValue
     AnalysisCase token(Token t) {
       this.token = t;
       return this;
     }
 
+    @CanIgnoreReturnValue
     AnalysisCase globalRegExp(boolean b) {
       this.globalRegExp = b;
       return this;
     }
 
+    @CanIgnoreReturnValue
     AnalysisCase assumeGettersArePure(boolean b) {
       this.assumeGettersArePure = b;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    AnalysisCase assumeBuiltinsPure(boolean b) {
+      this.assumeBuiltinsPure = b;
       return this;
     }
 
@@ -154,6 +167,7 @@ public final class AstAnalyzerTest {
     private boolean useTypesForLocalOptimizations = false;
     private boolean hasGlobalRegexpReferences = true;
     private boolean assumeGettersArePure = true;
+    private boolean assumeBuiltinsPure = true;
     private JSTypeRegistry typeRegistry;
     private final AccessorSummary accessorSummary =
         AccessorSummary.create(
@@ -195,6 +209,7 @@ public final class AstAnalyzerTest {
     Node parseCase(AnalysisCase kase) {
       this.hasGlobalRegexpReferences = kase.globalRegExp;
       this.assumeGettersArePure = kase.assumeGettersArePure;
+      this.assumeBuiltinsPure = kase.assumeBuiltinsPure;
       Node root = parseInternal(kase.js);
       if (kase.token == null) {
         return root.getFirstChild();
@@ -209,6 +224,7 @@ public final class AstAnalyzerTest {
               .setUseTypesForLocalOptimization(useTypesForLocalOptimizations)
               .setHasRegexpGlobalReferences(hasGlobalRegexpReferences)
               .setAssumeGettersArePure(assumeGettersArePure)
+              .setAssumeKnownBuiltinsArePure(assumeBuiltinsPure)
               .build(),
           typeRegistry,
           accessorSummary);
@@ -372,6 +388,7 @@ public final class AstAnalyzerTest {
           // Cases in need of differentiation.
           kase().expect(false).js("[1]"),
           kase().expect(false).js("[1, 2]"),
+          kase().expect(false).js("[1, 2]").assumeBuiltinsPure(false),
           kase().expect(true).js("i++"),
           kase().expect(true).js("[b, [a, i++]]"),
           kase().expect(true).js("i=3"),
@@ -404,6 +421,7 @@ public final class AstAnalyzerTest {
           kase().expect(false).js("(class Foo extends Bar { })"),
           kase().expect(true).js("(class extends foo() { })"),
           kase().expect(false).js("a"),
+          kase().expect(false).js("a").assumeBuiltinsPure(false),
           kase().expect(false).js("a.b"),
           kase().expect(false).js("a.b.c"),
           kase().expect(false).js("[b, c [d, [e]]]"),
@@ -436,6 +454,7 @@ public final class AstAnalyzerTest {
           kase().expect(false).js("new Array"),
           kase().expect(false).js("new Array(4)"),
           kase().expect(false).js("new Array('a', 'b', 'c')"),
+          kase().expect(true).js("new Array()").assumeBuiltinsPure(false),
           kase().expect(true).js("new SomeClassINeverHeardOf()"),
           kase().expect(true).js("new SomeClassINeverHeardOf()"),
           kase().expect(false).js("({}).foo = 4"),
@@ -456,7 +475,11 @@ public final class AstAnalyzerTest {
           kase().expect(false).js("({},[]).foo = 2;"),
           kase().expect(true).js("delete a.b"),
           kase().expect(false).js("Math.random();"),
+          kase().expect(true).js("Math.random();").assumeBuiltinsPure(false),
           kase().expect(true).js("Math.random(seed);"),
+          kase().expect(true).js("Math.random(seed);").assumeBuiltinsPure(false),
+          kase().expect(false).js("Math.sin(1, 10);"),
+          kase().expect(true).js("Math.sin(1, 10);").assumeBuiltinsPure(false),
           kase().expect(false).js("[1, 1].foo;"),
           kase().expect(true).js("export var x = 0;"),
           kase().expect(true).js("export let x = 0;"),
@@ -632,9 +655,13 @@ public final class AstAnalyzerTest {
           kase().expect(false).token(SUPER).js("super.foo()"),
 
           // IObject methods
-          // "toString" and "valueOf" are assumed to be side-effect free
+          // "toString" and "valueOf" are by default assumed to be side-effect free
           kase().expect(false).js("o.toString()"),
           kase().expect(false).js("o.valueOf()"),
+          // "toString" and "valueOf" are not assumed to be side-effect free when
+          // assumeKnownBuiltinsArePure is false.
+          kase().expect(true).js("o.toString()").assumeBuiltinsPure(false),
+          kase().expect(true).js("o.valueOf()").assumeBuiltinsPure(false),
           // other methods depend on the extern definitions
           kase().expect(true).js("o.watch()"),
 
@@ -644,9 +671,15 @@ public final class AstAnalyzerTest {
 
           // RegExp instance methods have global side-effects, so whether they are
           // considered side-effect free depends on whether the global properties
-          // are referenced.
+          // are referenced and whether we assume that the built-in methods are not overwritten
+          // with impure variants.
           kase().expect(true).js("(/abc/gi).test('')").globalRegExp(true),
           kase().expect(false).js("(/abc/gi).test('')").globalRegExp(false),
+          kase()
+              .expect(true)
+              .js("(/abc/gi).test('')")
+              .globalRegExp(false)
+              .assumeBuiltinsPure(false),
           kase().expect(true).js("(/abc/gi).test(a)").globalRegExp(true),
           kase().expect(false).js("(/abc/gi).test(b)").globalRegExp(false),
           kase().expect(true).js("(/abc/gi).exec('')").globalRegExp(true),
@@ -915,10 +948,19 @@ public final class AstAnalyzerTest {
     }
 
     @Test
-    public void test() {
+    public void test_assumingPureBuiltins() {
       ParseHelper parseHelper = new ParseHelper();
+      parseHelper.assumeBuiltinsPure = true;
       Node func = parseHelper.parseFirst(CALL, String.format("%s(1);", functionName));
       assertThat(parseHelper.getAstAnalyzer().functionCallHasSideEffects(func)).isFalse();
+    }
+
+    @Test
+    public void test_noAssumePureBuiltins() {
+      ParseHelper parseHelper = new ParseHelper();
+      parseHelper.assumeBuiltinsPure = false;
+      Node func = parseHelper.parseFirst(CALL, String.format("%s(1);", functionName));
+      assertThat(parseHelper.getAstAnalyzer().functionCallHasSideEffects(func)).isTrue();
     }
   }
 

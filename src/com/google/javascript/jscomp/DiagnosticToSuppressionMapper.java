@@ -61,6 +61,7 @@ public final class DiagnosticToSuppressionMapper {
     Set<String> validSuppressions = new HashSet<>(this.validSuppressions);
     // deprecated in favor of "visibility"
     validSuppressions.remove("accessControls");
+    validSuppressions.remove("missingSourcesWarnings");
 
     LinkedHashMap<DiagnosticType, String> diagnosticToSuppression = new LinkedHashMap<>();
 

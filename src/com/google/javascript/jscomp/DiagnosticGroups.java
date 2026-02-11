@@ -170,7 +170,7 @@ public class DiagnosticGroups {
   // TODO(b/123768968) remove this diagnostic group, do not allow this suppression. Instead the only
   // work around should be to raise the output language to a high enough level. We need to suppress
   // right now because we don't have any language output level higher than ES5.
-  public static final DiagnosticGroup UNSTRANSPILABLE_FEATURES =
+  public static final DiagnosticGroup UNTRANSPILABLE_FEATURES =
       DiagnosticGroups.registerGroup(
           "untranspilableFeatures", ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT);
 
@@ -675,10 +675,6 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup INVALID_DEFINES =
       DiagnosticGroups.registerUnsuppressibleGroup(
           ProcessDefines.INVALID_DEFINE_VALUE, ProcessDefines.INVALID_DEFINE_TYPE);
-
-  public static final DiagnosticGroup CANNOT_TRANSPILE_FEATURE =
-      DiagnosticGroups.registerUnsuppressibleGroup(
-          TranspilationUtil.CANNOT_CONVERT, TranspilationUtil.CANNOT_CONVERT_YET);
 
   public static final DiagnosticGroup MISSING_POLYFILL =
       DiagnosticGroups.registerGroup(

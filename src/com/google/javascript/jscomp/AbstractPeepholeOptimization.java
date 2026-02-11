@@ -17,14 +17,15 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.StaticSourceFile;
 import java.math.BigInteger;
+import java.util.LinkedHashSet;
 
 /**
  * An abstract class whose implementations run peephole optimizations:
@@ -38,9 +39,14 @@ abstract class AbstractPeepholeOptimization {
   /** Intentionally not exposed to subclasses */
   private AstAnalyzer astAnalyzer;
 
-  /** Features added to scripts during the optimization. */
-  private final LinkedHashMultimap<StaticSourceFile, Feature> newFeatures =
-      LinkedHashMultimap.create();
+  /**
+   * New parser features added in some {@link #optimizeSubtree} call.
+   *
+   * <p>{@link PeepholeOptimizationsPass} uses this to call {@link NodeUtil#addFeaturesToScript} in
+   * closer to O(1) time, as this class doesn't know what script node it's currently in, and would
+   * need to walk the AST.
+   */
+  private final LinkedHashSet<Feature> newFeatures = new LinkedHashSet<>();
 
   /**
    * Given a node to optimize and a traversal, optimize the node. Subclasses
@@ -100,11 +106,11 @@ abstract class AbstractPeepholeOptimization {
    * called again.
    */
   void endTraversal() {
-    for (StaticSourceFile file : newFeatures.keySet()) {
-      Node script = compiler.getScriptNode(file.getName());
-      NodeUtil.addFeaturesToScript(
-          script, FeatureSet.BARE_MINIMUM.with(newFeatures.get(file)), this.compiler);
-    }
+    checkState(
+        this.newFeatures.isEmpty(),
+        "Expected getNewFeatures() to be empty in endTraversal() but found %s for %s",
+        this.newFeatures,
+        this.getClass().getName());
     this.compiler = null;
     astAnalyzer = null;
   }
@@ -244,7 +250,24 @@ abstract class AbstractPeepholeOptimization {
     NodeUtil.markNewScopesChanged(n, compiler);
   }
 
-  protected final void addFeatureToEnclosingScript(Node n, Feature feature) {
-    newFeatures.put(n.getStaticSourceFile(), feature);
+  /** Calls {@link NodeUtil#addFeatureToScript} with the script currently being visited. */
+  protected final void addFeatureToEnclosingScript(Feature feature) {
+    // NOTE: we could implement this as
+    //  protected final void addFeatureToEnclosingScript(Node node, Feature feature) {
+    //     NodeUtil.addFeatureToScript(NodeUtil.getEnclosingScript(node), ...
+    // This is expected to be behaviorally equivalent.
+    // However, walking the AST to get the enclosing script is O(depth of the AST) per call. With
+    // the  current implementation, we let PeepholeOptimizationsPass to find the script in what's
+    // usually O(1) time, or worst case it only calls getEnclosingScript() once per NodeTraversal
+    // and then caches the result.
+    newFeatures.add(feature);
+  }
+
+  final ImmutableSet<Feature> getNewFeatures() {
+    return ImmutableSet.copyOf(newFeatures);
+  }
+
+  final void clearNewFeatures() {
+    newFeatures.clear();
   }
 }

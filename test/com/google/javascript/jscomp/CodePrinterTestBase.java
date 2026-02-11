@@ -60,7 +60,7 @@ public abstract class CodePrinterTestBase {
     lastCompiler = compiler;
     CompilerOptions options = new CompilerOptions();
     options.setTrustedStrings(trustedStrings);
-    options.preserveTypeAnnotations = preserveTypeAnnotations;
+    options.setPreserveTypeAnnotations(preserveTypeAnnotations);
     options.setOutputCharset(outputCharset);
     options.setLanguageIn(languageMode);
     if (preserveNonJSDocComments) {
@@ -135,7 +135,7 @@ public abstract class CodePrinterTestBase {
     CompilerOptions options = new CompilerOptions();
     options.setOutputCharset(outputCharset);
     options.setTrustedStrings(trustedStrings);
-    options.preserveTypeAnnotations = preserveTypeAnnotations;
+    options.setPreserveTypeAnnotations(preserveTypeAnnotations);
     options.setPreserveNonJSDocComments(preserveNonJSDocComments);
     options.setLanguageOut(languageMode);
     builder.setOptions(options);

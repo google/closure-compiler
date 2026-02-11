@@ -357,3 +357,43 @@ $jscomp.polyfill('Map',
 
   return PolyfillMap;
 }, 'es6', 'es3');
+
+// Note: This needs to be defined here as opposed to requiring an
+// es6/map/groupby.js file above so that the Map polyfill is defined first.
+$jscomp.polyfill('Map.groupBy', function(orig) {
+  if (orig) return orig;
+
+  /**
+   * Groups elements of the provided iterable into a map using keys returned
+   * by the input callback function.
+   *
+   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/groupBy
+   *
+   * @param {!Iterable<VALUE>} items An iterable of items to be grouped.
+   * @param {function(VALUE, number): KEY} callbackFn A function that
+   *     provides the key for each item.
+   * @return {!Map<KEY, !Array<VALUE>>}
+   * @template KEY, VALUE
+   */
+  var polyfill = function(items, callbackFn) {
+    if (typeof callbackFn !== 'function') {
+      throw new TypeError('callbackFn must be a function');
+    }
+    var result = new Map();
+    var index = 0;
+    var iter = $jscomp.makeIterator(items);
+    for (var entry = iter.next(); !entry.done; entry = iter.next()) {
+      var item = entry.value;
+      var key = callbackFn(item, index++);
+      var group = result.get(key);
+      if (!group) {
+        group = [];
+        result.set(key, group);
+      }
+      group.push(item);
+    }
+    return result;
+  };
+
+  return polyfill;
+}, 'es_next', 'es3');

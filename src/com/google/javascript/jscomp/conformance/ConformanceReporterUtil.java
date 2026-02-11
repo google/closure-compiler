@@ -21,7 +21,7 @@ import com.google.javascript.jscomp.ConformanceConfig.LibraryLevelNonAllowlisted
 import com.google.javascript.jscomp.JsCompilerConformanceReport.ConformanceViolation;
 import com.google.javascript.jscomp.JsCompilerConformanceReport.ConformanceViolation.LibraryDepsConformanceCheckerAllowlistReason;
 import com.google.javascript.jscomp.Requirement;
-import com.google.javascript.jscomp.Requirement.WhitelistEntry;
+import com.google.javascript.jscomp.RequirementScopeEntry;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
@@ -30,7 +30,7 @@ public final class ConformanceReporterUtil {
 
   public static ConformanceViolation toProto(
       Requirement req,
-      Optional<WhitelistEntry> allowlistEntry,
+      Optional<RequirementScopeEntry> allowlistEntry,
       String sourceName,
       int lineNumber,
       int charno,
@@ -49,7 +49,7 @@ public final class ConformanceReporterUtil {
 
     violation.setRequirement(reqBuilder.build());
 
-    WhitelistEntry.Builder allowlistEntryBuilder = WhitelistEntry.newBuilder();
+    RequirementScopeEntry.Builder allowlistEntryBuilder = RequirementScopeEntry.newBuilder();
     if (allowlistEntry.isPresent() && allowlistEntry.get().hasReason()) {
       allowlistEntryBuilder.setReason(allowlistEntry.get().getReason());
     }

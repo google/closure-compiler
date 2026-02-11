@@ -78,7 +78,8 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
               final ProtectGoogLocale extract = new ProtectGoogLocale(compiler);
               extract.process(externs, root);
               final LocaleDataPasses.LocaleSubstitutions subs =
-                  new LocaleDataPasses.LocaleSubstitutions(compiler, compiler.getOptions().locale);
+                  new LocaleDataPasses.LocaleSubstitutions(
+                      compiler, compiler.getOptions().getLocale());
               subs.process(externs, root);
             }
           };

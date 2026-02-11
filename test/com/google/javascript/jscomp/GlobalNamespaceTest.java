@@ -1624,7 +1624,7 @@ public final class GlobalNamespaceTest {
     // Disabling transpilation also disables these passes that we need to have run when
     // testing behavior related to module metadata.
     new GatherModuleMetadata(
-            compiler, options.getProcessCommonJSModules(), options.moduleResolutionMode)
+            compiler, options.getProcessCommonJSModules(), options.getModuleResolutionMode())
         .process(compiler.getExternsRoot(), compiler.getJsRoot());
     new ModuleMapCreator(compiler, compiler.getModuleMetadataMap())
         .process(compiler.getExternsRoot(), compiler.getJsRoot());

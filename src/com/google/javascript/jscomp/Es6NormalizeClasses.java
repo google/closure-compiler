@@ -33,7 +33,9 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
@@ -109,7 +111,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     transpileClassFields = options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS);
 
     doStaticInheritanceRewrites =
-        options.getAssumeStaticInheritanceIsNotUsed() && !options.skipNonTranspilationPasses;
+        options.getAssumeStaticInheritanceIsNotUsed() && !options.getSkipNonTranspilationPasses();
 
     // Es6ConvertSuper handles static super rewrites otherwise.
     doStaticSuperRewrites = !options.needsTranspilationOf(Feature.SUPER);
@@ -537,7 +539,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     ctorCreator.synthesizeClassConstructorIfMissing(t, record.classNode);
     Node ctor = NodeUtil.getEs6ClassConstructorMemberFunctionDef(record.classNode);
     Node ctorBlock = ctor.getFirstChild().getLastChild();
-    Node insertionPoint = addTemporaryInsertionPoint(ctorBlock);
+    Node insertionPoint = addTemporaryInsertionPoint(ctorBlock, record);
 
     while (!instanceMembers.isEmpty()) {
       Node instanceMember = instanceMembers.remove();
@@ -567,8 +569,19 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
    *
    * <p>Returns the added temporary empty node
    */
-  private Node addTemporaryInsertionPoint(Node ctorBlock) {
+  private Node addTemporaryInsertionPoint(Node ctorBlock, ClassRecord classRecord) {
+    checkState(
+        classRecord.superCalls.size() <= 1,
+        "classes with public fields must have only one super() call at the constructor root: %s",
+        classRecord.classNode);
+
     Node tempNode = IR.empty();
+    if (classRecord.superCalls.size() == 1) {
+      Node stmt = ensureSuperCallIsOwnStatement(classRecord.superCalls.get(0));
+      tempNode.insertAfter(stmt);
+      return tempNode;
+    }
+    // Search for super() calls added by SynthesizeExplicitConstructors.
     for (Node stmt = ctorBlock.getFirstChild(); stmt != null; stmt = stmt.getNext()) {
       if (NodeUtil.isExprCall(stmt) && stmt.getFirstFirstChild().isSuper()) {
         tempNode.insertAfter(stmt);
@@ -583,6 +596,25 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       ctorBlock.addChildToBack(tempNode);
     }
     return tempNode;
+  }
+
+  /**
+   * Returns a statement containing either {@code super(...);} or {@code var tmp = super(...)},
+   * extracting the given super call into a {@code tmp} variable if necessary.
+   */
+  private Node ensureSuperCallIsOwnStatement(Node superCall) {
+    Node parent = superCall.getParent();
+    if (parent.isExprResult()) {
+      return parent; // No extraction needed.
+    }
+    checkState(
+        expressionDecomposer.canExposeExpression(superCall) != DecompositionType.UNDECOMPOSABLE,
+        "Cannot decompose super() call in a class with class fields. Move super() call to the"
+            + " root of the constructor. %s",
+        superCall);
+    expressionDecomposer.maybeExposeExpression(superCall);
+    expressionDecomposer.moveExpression(superCall);
+    return NodeUtil.getEnclosingStatement(superCall);
   }
 
   /**
@@ -801,8 +833,8 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
   }
 
   /**
-   * Visits {@code this} and {@code super} nodes in the class. Only makes changes in static
-   * contexts.
+   * Visits {@code this} and {@code super} nodes in the class. Only makes changes in static contexts
+   * and records super calls in the constructor for later.
    *
    * <p>For static {@code this}, we can only replace with the class name if in a static
    * initialization context (i.e. in a static field initializer or a static block).
@@ -812,6 +844,13 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
    * <p>Note: This runs before {@link #rewriteStaticMembers} so the static members are still there.
    */
   private void visitThisAndSuper(NodeTraversal t, Node n) {
+    if (isSuperCall(n.getParent())) {
+      // super(...); calls are only legal in a constructor so we don't need to check for static
+      // context.
+      ClassRecord classRecord = classStack.peek();
+      classRecord.superCalls.add(n.getParent());
+      return;
+    }
     Node rootNode = t.getClosestScopeRootNodeBindingThisOrSuper();
     Node rootParent = rootNode.getParent();
     if (rootNode.isFunction()
@@ -859,6 +898,10 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       n.replaceWith(newNameNode);
       t.reportCodeChange(newNameNode);
     }
+  }
+
+  private static boolean isSuperCall(Node n) {
+    return n.isCall() && n.getFirstChild().isSuper();
   }
 
   // Note: Assumes that we have already filtered out non-static members and non-static blocks.
@@ -948,6 +991,17 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
 
     /** Set of all the Vars defined in the constructor arguments scope and constructor body scope */
     ImmutableSet<Var> constructorVars = ImmutableSet.of();
+
+    /**
+     * List of all the {@code super()} calls within the constructor, if any.
+     *
+     * <p>It's legal for classes to have more than one super() call, hence this is a list rather
+     * than an {@code Optional<Node>}. However, public class field transpilation will throw an error
+     * if this list has more than one entry in a class with a public field; see {@link
+     * Es6NormalizeClasses#ensureSuperCallIsOwnStatement}. We wait to emit this error until after
+     * traversing the entire class body to find public fields.
+     */
+    final List<Node> superCalls = new ArrayList<>();
 
     ClassRecord(
         Node classNameNode,

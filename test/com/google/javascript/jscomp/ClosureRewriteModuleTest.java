@@ -44,6 +44,7 @@ import org.junit.runners.JUnit4;
 public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
   private boolean preserveClosurePrimitives = false;
+  private boolean allowMissingSources = false;
 
   public ClosureRewriteModuleTest() {
     super(new TestExternsBuilder().addClosureExterns().addPromise().addConsole().build());
@@ -69,6 +70,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     preserveClosurePrimitives = false;
+    allowMissingSources = false;
     enableCreateModuleMap();
     enableTypeInfoValidation();
   }
@@ -80,6 +82,9 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
     options.setPreserveClosurePrimitives(this.preserveClosurePrimitives);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
+    if (allowMissingSources) {
+      options.setWarningLevel(DiagnosticGroups.MISSING_SOURCES_WARNINGS, CheckLevel.OFF);
+    }
     options.setPrettyPrint(true);
     return options;
   }
@@ -1638,18 +1643,17 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
   @Test
   public void testGoogRequireDynamic_then_missingSources() {
+    allowMissingSources = true;
     test(
         srcs(
             """
             async function test() {
-              /** @suppress {missingSourcesWarnings} */
               goog.requireDynamic('a.b.c').then((foo) => {console.log(foo.Foo);});
             }
             """),
         expected(
             """
             async function test() {
-              /** @suppress {missingSourcesWarnings} */
               null.then((foo) => {console.log(foo.Foo);});
             }
             """));

@@ -41,6 +41,7 @@ import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
 import com.google.javascript.jscomp.js.RuntimeJsLibManager;
+import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -158,25 +159,24 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         function isDeclaredInLoop(path) {
           var $jscomp$loop$98447280$2 = {parentPath:void 0, key:void 0};
           for (function($jscomp$loop$98447280$2) {
-            return function() {
-              $jscomp$loop$98447280$2.parentPath = path.parentPath;
-              $jscomp$loop$98447280$2.key = path.key;
-              return path;
+            return function($jscomp$destructuring$var1) {
+              $jscomp$loop$98447280$2.parentPath = $jscomp$destructuring$var1.parentPath;
+              $jscomp$loop$98447280$2.key = $jscomp$destructuring$var1.key;
+              return $jscomp$destructuring$var1;
             };
-          }($jscomp$loop$98447280$2)();
+          }($jscomp$loop$98447280$2)(path);
           $jscomp$loop$98447280$2.parentPath;
           $jscomp$loop$98447280$2 = {
             parentPath:$jscomp$loop$98447280$2.parentPath,
             key:$jscomp$loop$98447280$2.key
           },
           function($jscomp$loop$98447280$2) {
-            return function() {
-              var $jscomp$destructuring$var3 = $jscomp$loop$98447280$2.parentPath;
+            return function($jscomp$destructuring$var3) {
               $jscomp$loop$98447280$2.parentPath = $jscomp$destructuring$var3.parentPath;
               $jscomp$loop$98447280$2.key = $jscomp$destructuring$var3.key;
               return $jscomp$destructuring$var3;
             };
-          }($jscomp$loop$98447280$2)()) {
+          }($jscomp$loop$98447280$2)($jscomp$loop$98447280$2.parentPath)) {
             return isDeclaredInLoop($jscomp$loop$98447280$2.parentPath);
            }
           return !1;
@@ -1493,8 +1493,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setWarningLevel(DiagnosticGroups.UNDEFINED_VARIABLES, CheckLevel.OFF);
-    options.syntheticBlockStartMarker = "START";
-    options.syntheticBlockEndMarker = "END";
+    options.setSyntheticBlockStartMarker("START");
+    options.setSyntheticBlockEndMarker("END");
     test(
         options,
         """
@@ -1533,8 +1533,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setClosurePass(true);
     options.setWarningLevel(DiagnosticGroups.UNDEFINED_VARIABLES, CheckLevel.OFF);
-    options.syntheticBlockStartMarker = "START";
-    options.syntheticBlockEndMarker = "END";
+    options.setSyntheticBlockStartMarker("START");
+    options.setSyntheticBlockEndMarker("END");
     Compiler result =
         compile(
             options,
@@ -2570,7 +2570,13 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
 
-    test(options, "import.meta", DiagnosticGroups.CANNOT_TRANSPILE_FEATURE);
+    Compiler compiler = compile(options, "import.meta");
+    assertThat(compiler.getResult().success).isFalse();
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(JSCompCorrespondences.DESCRIPTION_EQUALITY)
+        .containsExactly(
+            "This code cannot be transpiled. import.meta. Use --chunk_output_type=ES_MODULES to"
+                + " allow passthrough support.");
   }
 
   @Test

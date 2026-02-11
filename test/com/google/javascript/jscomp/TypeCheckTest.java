@@ -29007,14 +29007,14 @@ It's possible that a local variable called 'service' is shadowing the intended g
   public void testGoogRequireDynamic_missingSources() {
     // regression test for case that used to throw an exception
     newTest()
+        // reference to dynamically loaded namespace.
+        .suppress(DiagnosticGroups.MISSING_SOURCES_WARNINGS)
         .addSource(
             """
             class Test {
              /**
               * @return {!Object}
               *
-              * @suppress {missingSourcesWarnings} reference to dynamically loaded
-              * namespace.
               * @suppress {checkTypes}
               */
             testGoogRequireDynamicStubbedAndWithLoadedModule() {

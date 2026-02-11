@@ -66,7 +66,7 @@ public class ConformanceAllowlister {
             @Override
             public synchronized boolean shouldReportConformanceViolation(
                 Requirement requirement,
-                Optional<Requirement.WhitelistEntry> whitelistEntry,
+                Optional<RequirementScopeEntry> whitelistEntry,
                 JSError diagnostic,
                 LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior,
                 boolean isAllowlisted) {

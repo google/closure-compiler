@@ -30,6 +30,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -299,7 +300,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
     patternParam.replaceWith(newParam);
     Node newDecl = IR.var(patternParam, createTempVarNameNode(tempVarName, paramType));
     newDecl.srcrefTreeIfMissing(patternParam);
-    
+
     if (insertSpot == null) {
       // insert new declarations only after all inner function declarations in that function body to
       // preserve normalization
@@ -565,9 +566,10 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
 
         Node restName = child.getOnlyChild(); // e.g. get `rest` from `const {...rest} = {};`
         if (restName.getString().startsWith(DESTRUCTURING_TEMP_VAR)) {
+          checkState(restName.isName(), restName);
           newLHS = createTempVarNameNode(restName.getString(), type(restName));
         } else {
-          newLHS = astFactory.createName(restName.getString(), type(restName));
+          newLHS = restName.detach();
         }
         newRHS = objectPatternRestRHS(objectPattern, child, restTempVarName, propsToDeleteForRest);
       } else {
@@ -769,34 +771,36 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
    * Transform
    *   [x, y] = rhs
    * into
-   *   {@code (() => {
-   *     let temp0 = rhs;
+   *   {@code ((temp0) => {
    *     var temp1 = $jscomp.makeIterator(temp0);
    *     var x = temp0.next().value;
    *     var y = temp0.next().value;
    *     return temp0;
-   *   })()}
+   *   })(rhs)}
    *
    * Transform
    *   {x: a, y: b} = rhs
    * into
-   *   {@code (() => {
-   *     let temp0 = rhs;
+   *   {@code ((temp0) => {
    *     var temp1 = temp0;
    *     var a = temp0.x;
    *     var b = temp0.y;
    *     return temp0;
-   *   })()}
+   *   })(rhs)}
    * </pre>
    */
   private void wrapAssignOrDestructuringInCallToArrow(NodeTraversal t, Node assignment) {
-    String tempVarName = getTempVariableName();
+    Node lhs = assignment.getFirstChild();
     Node rhs = assignment.getLastChild().detach();
+    // NOTE: we do not presently support await/yield in the LHS of nested destructuring assignments.
+    // See b/475296868.
+    validateNoAwaitOrYieldInNestedAssignmentPattern(lhs);
+
+    String tempVarName = getTempVariableName();
 
     Node tempVarModel = createTempVarNameNode(tempVarName, type(rhs));
-    // let temp0 = rhs;
-    Node newAssignment = IR.let(tempVarModel.cloneNode(), rhs);
-    NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
+    //  ((temp0) => {...})
+    Node paramList = IR.paramList(tempVarModel.cloneNode());
     // [x, y] = temp0;
     Node replacementExpr =
         astFactory.createAssign(assignment.removeFirstChild(), tempVarModel.cloneNode());
@@ -805,23 +809,41 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
     Node returnNode = IR.returnNode(tempVarModel.cloneNode());
 
     // Create a function to hold these assignments:
-    Node block = IR.block(newAssignment, exprResult, returnNode);
-    Node arrowFn = astFactory.createZeroArgFunction(/* name= */ "", block, /* returnType= */ null);
+    Node block = IR.block(exprResult, returnNode);
+    Node arrowFn =
+        astFactory.createFunction(
+            /* name= */ "",
+            paramList,
+            block,
+            type(JSTypeNative.UNKNOWN_TYPE, StandardColors.UNKNOWN));
     arrowFn.setIsArrowFunction(true);
 
     // Create a call to the function, and replace the pattern with the call.
-    Node call = astFactory.createCall(arrowFn, type(rhs));
+    Node call = astFactory.createCall(arrowFn, type(rhs), rhs);
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.ARROW_FUNCTIONS, compiler);
     call.srcrefTreeIfMissing(assignment);
     call.putBooleanProp(Node.FREE_CALL, true);
     assignment.replaceWith(call);
     NodeUtil.markNewScopesChanged(call, compiler);
+
     replacePattern(
         t,
         replacementExpr.getFirstChild(),
         replacementExpr.getLastChild(),
         replacementExpr,
         exprResult);
+  }
+
+  private void validateNoAwaitOrYieldInNestedAssignmentPattern(Node pattern) {
+    boolean hasAwaitOrYieldInLhs =
+        NodeUtil.findPreorder(
+                pattern, (n) -> n.isAwait() || n.isYield(), NodeUtil.MATCH_NOT_FUNCTION)
+            != null;
+    checkState(
+        !hasAwaitOrYieldInLhs,
+        "Cannot transpile yet: destructuring assignment referencing await or yield in lhs, in"
+            + " nested sub-expression: %s",
+        pattern);
   }
 
   /** for (let [a, b, c] = arr; a < b; a++) */
@@ -842,7 +864,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
           insertionPoint.replaceWith(block);
           block.addChildToBack(insertionPoint);
         }
-        // Fall through
+      // Fall through
 
       case VAR:
         {

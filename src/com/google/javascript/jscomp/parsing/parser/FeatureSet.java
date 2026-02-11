@@ -173,6 +173,11 @@ public final class FeatureSet implements Serializable {
   // Chrome 112 (2023). Firefox 116 (2023). Safari 17 (2023).
   public static final FeatureSet BROWSER_2025 = ES2022_MODULES;
 
+  // Note: Only "RegExp syntax features again for ES2025. The 'i', 'm', and 's' flags, as well
+  // as support for duplicate named capture groups. As of Jan 5 2026, Safari hasn't yet
+  // implemented the new flags.
+  public static final FeatureSet BROWSER_2026 = ES2022_MODULES;
+
   public static final FeatureSet ALL = ES_UNSUPPORTED.with(LangVersion.TYPESCRIPT.features());
 
   private enum LangVersion {

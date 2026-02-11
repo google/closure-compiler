@@ -16,8 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+
 import com.google.common.annotations.VisibleForTesting;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
 import java.util.Arrays;
 import java.util.List;
@@ -83,7 +84,7 @@ class PeepholeOptimizationsPass implements CompilerPass {
     endTraversal();
   }
 
-  private class PeepCallback extends AbstractPostOrderCallback {
+  private class PeepCallback extends NodeTraversal.AbstractScopedCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       Node currentNode = n;
@@ -92,6 +93,29 @@ class PeepholeOptimizationsPass implements CompilerPass {
         if (currentNode == null) {
           return;
         }
+      }
+    }
+
+    @Override
+    public void enterScope(NodeTraversal t) {}
+
+    @Override
+    public void exitScope(NodeTraversal t) {
+      // Call updateFeatures() here, instead of immediately after
+      // `optim.optimizeSubtree(currentNode)` in visit, to avoid repeating work for
+      // every AST node x every peephole optimization. In practice, profiling shows a small
+      // but measurable improvement for large projects. See comments on cl/856752797.
+      updateFeatures(t);
+    }
+
+    private void updateFeatures(NodeTraversal t) {
+      for (AbstractPeepholeOptimization optim : peepholeOptimizations) {
+        var newFeatures = optim.getNewFeatures();
+        if (!newFeatures.isEmpty()) {
+          NodeUtil.addFeaturesToScript(
+              t.getCurrentScript(), FeatureSet.BARE_MINIMUM.with(newFeatures), compiler);
+        }
+        optim.clearNewFeatures();
       }
     }
   }

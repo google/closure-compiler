@@ -231,6 +231,7 @@ final class PolymerClassRewriter {
     addTypesToFunctions(objLit, cls.target.getQualifiedName(), cls.defType);
     PolymerPassStaticUtils.switchDollarSignPropsToBrackets(objLit, compiler);
     PolymerPassStaticUtils.quoteListenerAndHostAttributeKeys(objLit, compiler);
+    PolymerPassStaticUtils.protectObserverAndPropertyFunctionKeys(objLit);
 
     for (MemberDefinition prop : cls.props) {
       if (prop.value.isObjectLit()) {

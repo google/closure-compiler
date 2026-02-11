@@ -47,7 +47,7 @@ final class PolymerPassSuppressBehaviorsAndProtectKeys extends ExternsSkippingCa
 
       // Find listener and hostAttribute keys in the behavior, and mark them as quoted.
       // This ensures that the keys are not renamed.
-      traverseBehaviorandfindListenerAndHostAttributeAndMarkKeysAsQuoted(n);
+      traverseBehaviorsAndProtectKeys(n);
 
       // Add @nocollapse.
       JSDocInfo.Builder newDocs = JSDocInfo.Builder.maybeCopyFrom(n.getJSDocInfo());
@@ -63,13 +63,14 @@ final class PolymerPassSuppressBehaviorsAndProtectKeys extends ExternsSkippingCa
   }
 
   /** Traverse the behavior, find listener and hostAttribute keys, and mark them as quoted. */
-  private void traverseBehaviorandfindListenerAndHostAttributeAndMarkKeysAsQuoted(Node n) {
+  private void traverseBehaviorsAndProtectKeys(Node n) {
     if (n.isObjectLit()) {
       PolymerPassStaticUtils.quoteListenerAndHostAttributeKeys(n, compiler);
+      PolymerPassStaticUtils.protectObserverAndPropertyFunctionKeys(n);
     }
 
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-      traverseBehaviorandfindListenerAndHostAttributeAndMarkKeysAsQuoted(child);
+      traverseBehaviorsAndProtectKeys(child);
     }
   }
 

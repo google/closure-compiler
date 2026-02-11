@@ -229,11 +229,6 @@ public final class CodingConventions {
     public ObjectLiteralCast getObjectLiteralCast(Node callNode) {
       return nextConvention.getObjectLiteralCast(callNode);
     }
-
-    @Override
-    public Collection<String> getIndirectlyDeclaredProperties() {
-      return nextConvention.getIndirectlyDeclaredProperties();
-    }
   }
 
 
@@ -468,11 +463,6 @@ public final class CodingConventions {
     @Override
     public Cache describeCachingCall(Node node) {
       return null;
-    }
-
-    @Override
-    public Collection<String> getIndirectlyDeclaredProperties() {
-      return ImmutableList.of();
     }
 
     private static @Nullable Node safeNext(Node n) {

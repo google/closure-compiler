@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -94,13 +95,15 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         """
         const aClosures = [];
         const bClosures = [];
-        for (let a = 0, b, c, $jscomp$destructuring$var0$unused = (() => {
-          let $jscomp$destructuring$var1 = [a, 3];
-          var $jscomp$destructuring$var2 = (0,$jscomp.makeIterator)($jscomp$destructuring$var1);
-          b = $jscomp$destructuring$var2.next().value;
-          c = $jscomp$destructuring$var2.next().value;
-          return $jscomp$destructuring$var1;
-        })(); b < c; a--, b++) {
+        for (let a = 0, b, c,
+                 $jscomp$destructuring$var0$unused = ($jscomp$destructuring$var1 => {
+                   var $jscomp$destructuring$var2 =
+                       (0, $jscomp.makeIterator)($jscomp$destructuring$var1);
+                   b = $jscomp$destructuring$var2.next().value;
+                   c = $jscomp$destructuring$var2.next().value;
+                   return $jscomp$destructuring$var1;
+                 })([a, 3]);
+             b < c; a--, b++) {
           aClosures.push(() => {
             return a;
           });
@@ -131,19 +134,19 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         """,
         """
         function isDeclaredInLoop(path) {
-          for (let parentPath, key, $jscomp$destructuring$var0$unused = (() => {
-            let $jscomp$destructuring$var1 = path;
-            var $jscomp$destructuring$var2 = $jscomp$destructuring$var1;
-            parentPath = $jscomp$destructuring$var2.parentPath;
-            key = $jscomp$destructuring$var2.key;
-            return $jscomp$destructuring$var1;
-          })(); parentPath; (() => {
-            let $jscomp$destructuring$var3 = parentPath;
-            var $jscomp$destructuring$var4 = $jscomp$destructuring$var3;
-            parentPath = $jscomp$destructuring$var4.parentPath;
-            key = $jscomp$destructuring$var4.key;
-            return $jscomp$destructuring$var3;
-          })()) {
+          for (let parentPath, key,
+               $jscomp$destructuring$var0$unused = ($jscomp$destructuring$var1 => {
+                 var $jscomp$destructuring$var2 = $jscomp$destructuring$var1;
+                 parentPath = $jscomp$destructuring$var2.parentPath;
+                 key = $jscomp$destructuring$var2.key;
+                 return $jscomp$destructuring$var1;
+               })(path);
+               parentPath; ($jscomp$destructuring$var3 => {
+                 var $jscomp$destructuring$var4 = $jscomp$destructuring$var3;
+                 parentPath = $jscomp$destructuring$var4.parentPath;
+                 key = $jscomp$destructuring$var4.key;
+                 return $jscomp$destructuring$var3;
+               })(parentPath)) {
             return isDeclaredInLoop(parentPath);
           }
           return false;
@@ -283,20 +286,22 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         }
         """,
         """
-        A: B: for (let z = 1, b, $jscomp$destructuring$var0$unused = (() => {
-             let $jscomp$destructuring$var1 = foo();
-             var $jscomp$destructuring$var2 = $jscomp$destructuring$var1;
-             var $jscomp$destructuring$var3 = $jscomp$destructuring$var2.x;
-             b = $jscomp$destructuring$var3.a === void 0 ?
-                 'default' : $jscomp$destructuring$var3.a;
-             return $jscomp$destructuring$var1;
-           })(), x = 0, c, $jscomp$destructuring$var4$unused = (() => {
-             let $jscomp$destructuring$var5 = bar();
-             var $jscomp$destructuring$var6 = $jscomp$destructuring$var5;
-             c = $jscomp$destructuring$var6.c;
-             return $jscomp$destructuring$var5;
-           })(); true; c++) {
-        }
+        A: B: for (let z = 1, b,
+                   $jscomp$destructuring$var0$unused = ($jscomp$destructuring$var1 => {
+                     var $jscomp$destructuring$var2 = $jscomp$destructuring$var1;
+                     var $jscomp$destructuring$var3 = $jscomp$destructuring$var2.x;
+                     b = $jscomp$destructuring$var3.a === void 0 ?
+                         'default' :
+                         $jscomp$destructuring$var3.a;
+                     return $jscomp$destructuring$var1;
+                   })(foo()),
+                   x = 0, c,
+                   $jscomp$destructuring$var4$unused = ($jscomp$destructuring$var5 => {
+                     var $jscomp$destructuring$var6 = $jscomp$destructuring$var5;
+                     c = $jscomp$destructuring$var6.c;
+                     return $jscomp$destructuring$var5;
+                   })(bar());
+                   true; c++) {}
         """);
   }
 
@@ -696,20 +701,25 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     test(
         "A: B: for (let z = 1, [a = 'default'] = foo(), x = 0, [c] = bar(); true; c++) { }",
         """
-        A: B: for (let z = 1, a, $jscomp$destructuring$var0$unused = (() => {
-           let $jscomp$destructuring$var1 = foo();
-           var $jscomp$destructuring$var2 = (0, $jscomp.makeIterator)($jscomp$destructuring$var1);
-           var $jscomp$destructuring$var3 = $jscomp$destructuring$var2.next().value;
-           a = $jscomp$destructuring$var3 === void 0 ?
-               'default' : $jscomp$destructuring$var3;
-           return $jscomp$destructuring$var1;
-         })(), x = 0, c, $jscomp$destructuring$var4$unused = (() => {
-           let $jscomp$destructuring$var5 = bar();
-           var $jscomp$destructuring$var6 = (0, $jscomp.makeIterator)($jscomp$destructuring$var5);
-           c = $jscomp$destructuring$var6.next().value;
-           return $jscomp$destructuring$var5;
-         })();
-        true; c++) {}
+        A: B: for (let z = 1, a,
+                   $jscomp$destructuring$var0$unused = ($jscomp$destructuring$var1 => {
+                     var $jscomp$destructuring$var2 =
+                         (0, $jscomp.makeIterator)($jscomp$destructuring$var1);
+                     var $jscomp$destructuring$var3 =
+                         $jscomp$destructuring$var2.next().value;
+                     a = $jscomp$destructuring$var3 === void 0 ?
+                         'default' :
+                         $jscomp$destructuring$var3;
+                     return $jscomp$destructuring$var1;
+                   })(foo()),
+                   x = 0, c,
+                   $jscomp$destructuring$var4$unused = ($jscomp$destructuring$var5 => {
+                     var $jscomp$destructuring$var6 =
+                         (0, $jscomp.makeIterator)($jscomp$destructuring$var5);
+                     c = $jscomp$destructuring$var6.next().value;
+                     return $jscomp$destructuring$var5;
+                   })(bar());
+                   true; c++) {}
         """);
   }
 
@@ -1123,14 +1133,13 @@ function f(first, ...$jscomp$destructuring$var0) {
             var x;
             var a;
             var b;
-            x = (()=>{
-               let $jscomp$destructuring$var0 = [1,2];
-               var $jscomp$destructuring$var1 =
-                   (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
-               a = $jscomp$destructuring$var1.next().value;
-               b = $jscomp$destructuring$var1.next().value;
-               return $jscomp$destructuring$var0;
-            })();
+            x = ($jscomp$destructuring$var0 => {
+              var $jscomp$destructuring$var1 =
+                  (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+              a = $jscomp$destructuring$var1.next().value;
+              b = $jscomp$destructuring$var1.next().value;
+              return $jscomp$destructuring$var0;
+            })([1, 2]);
             """));
 
     test(
@@ -1144,17 +1153,18 @@ function f(first, ...$jscomp$destructuring$var0) {
             """),
         expected(
             """
-            var foo = function () {
-             var x; var a; var b;
-             x = (()=>{
-               let $jscomp$destructuring$var0 = [1,2];
-               var $jscomp$destructuring$var1 =
-                   (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
-               a = $jscomp$destructuring$var1.next().value;
-               b = $jscomp$destructuring$var1.next().value;
-               return $jscomp$destructuring$var0;
-             })();
-            }
+            var foo = function() {
+              var x;
+              var a;
+              var b;
+              x = ($jscomp$destructuring$var0 => {
+                var $jscomp$destructuring$var1 =
+                    (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+                a = $jscomp$destructuring$var1.next().value;
+                b = $jscomp$destructuring$var1.next().value;
+                return $jscomp$destructuring$var0;
+              })([1, 2]);
+            };
             foo();
             """));
 
@@ -1168,15 +1178,13 @@ function f(first, ...$jscomp$destructuring$var0) {
         expected(
             """
             var prefix;
-            for (;;(() => {
-               let $jscomp$destructuring$var0 =
-                   /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix));
-               var $jscomp$destructuring$var1 =
-                   (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
-               $jscomp$destructuring$var1.next();
-               prefix = $jscomp$destructuring$var1.next().value;
-               return $jscomp$destructuring$var0;
-             })()){
+            for (;; ($jscomp$destructuring$var0 => {
+                  var $jscomp$destructuring$var1 =
+                      (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+                  $jscomp$destructuring$var1.next();
+                  prefix = $jscomp$destructuring$var1.next().value;
+                  return $jscomp$destructuring$var0;
+                })(/\\.?([^.]+)$/.exec(prefix))) {
             }
             """));
 
@@ -1191,16 +1199,14 @@ function f(first, ...$jscomp$destructuring$var0) {
         expected(
             """
             var prefix;
-            for (;;(() => {
-               let $jscomp$destructuring$var0 =
-                   /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix));
-               var $jscomp$destructuring$var1 =
-            (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
-               $jscomp$destructuring$var1.next();
-               prefix = $jscomp$destructuring$var1.next().value;
-               return $jscomp$destructuring$var0;
-             })()){
-             console.log(prefix);
+            for (;; ($jscomp$destructuring$var0 => {
+                  var $jscomp$destructuring$var1 =
+                      (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+                  $jscomp$destructuring$var1.next();
+                  prefix = $jscomp$destructuring$var1.next().value;
+                  return $jscomp$destructuring$var0;
+                })(/\\.?([^.]+)$/.exec(prefix))) {
+              console.log(prefix);
             }
             """));
 
@@ -1215,13 +1221,12 @@ function f(first, ...$jscomp$destructuring$var0) {
         expected(
             """
             var x = 1;
-            for (; x < 3; (()=>{
-               let $jscomp$destructuring$var0 = [3,4]
+            for (; x < 3; (($jscomp$destructuring$var0) => {
                var $jscomp$destructuring$var1 =
                    (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
                x = $jscomp$destructuring$var1.next().value;
                return $jscomp$destructuring$var0;
-             })()){
+             })([3, 4])){
             console.log(x);
             }
             """));
@@ -1232,51 +1237,47 @@ function f(first, ...$jscomp$destructuring$var0) {
     test(
         "var x = ({a: b, c: d} = foo());",
         """
-        var x = (()=>{
-           let $jscomp$destructuring$var0 = foo();
-           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
-           b = $jscomp$destructuring$var1.a;
-           d = $jscomp$destructuring$var1.c;
-           return $jscomp$destructuring$var0;
-        })();
+        var x = ($jscomp$destructuring$var0 => {
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          b = $jscomp$destructuring$var1.a;
+          d = $jscomp$destructuring$var1.c;
+          return $jscomp$destructuring$var0;
+        })(foo());
         """);
 
     test(
         "var x = ({a: b, c: d} = foo());",
         """
-        var x = (()=>{
-           let $jscomp$destructuring$var0 = foo();
-           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
-           b = $jscomp$destructuring$var1.a;
-           d = $jscomp$destructuring$var1.c;
-           return $jscomp$destructuring$var0;
-        })();
+        var x = ($jscomp$destructuring$var0 => {
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          b = $jscomp$destructuring$var1.a;
+          d = $jscomp$destructuring$var1.c;
+          return $jscomp$destructuring$var0;
+        })(foo());
         """);
 
     test(
         "var x; var y = ({a: x} = foo());",
         """
         var x;
-        var y = (()=>{
-           let $jscomp$destructuring$var0 = foo();
-           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
-           x = $jscomp$destructuring$var1.a;
-           return $jscomp$destructuring$var0;
-        })();
+        var y = ($jscomp$destructuring$var0 => {
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          x = $jscomp$destructuring$var1.a;
+          return $jscomp$destructuring$var0;
+        })(foo());
         """);
 
     test(
         "var x; var y = (() => {return {a,b} = foo();})();",
         """
         var x;
-        var y = (()=>{
-           return (()=>{
-               let $jscomp$destructuring$var0 = foo();
-               var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
-               a = $jscomp$destructuring$var1.a;
-               b = $jscomp$destructuring$var1.b;
-               return $jscomp$destructuring$var0;
-           })();
+        var y = (() => {
+          return ($jscomp$destructuring$var0 => {
+            var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+            a = $jscomp$destructuring$var1.a;
+            b = $jscomp$destructuring$var1.b;
+            return $jscomp$destructuring$var0;
+          })(foo());
         })();
         """);
   }
@@ -1511,18 +1512,17 @@ function f(first, ...$jscomp$destructuring$var0) {
         var d;
         var rest;
         var pre;
-        pre = foo(),
-              (() => {
-                let $jscomp$destructuring$var0 = foo();
-                var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
-                var $jscomp$destructuring$var2=Object.assign({},$jscomp$destructuring$var1);
-                b = $jscomp$destructuring$var1.a;
-                d = $jscomp$destructuring$var1.c;
-                rest = (delete $jscomp$destructuring$var2.a,
-                        delete $jscomp$destructuring$var2.c,
-                        $jscomp$destructuring$var2);
-                return $jscomp$destructuring$var0
-              })();
+        pre = foo(), ($jscomp$destructuring$var0 => {
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          var $jscomp$destructuring$var2 =
+              Object.assign({}, $jscomp$destructuring$var1);
+          b = $jscomp$destructuring$var1.a;
+          d = $jscomp$destructuring$var1.c;
+          rest =
+              (delete $jscomp$destructuring$var2.a, delete $jscomp$destructuring$var2.c,
+               $jscomp$destructuring$var2);
+          return $jscomp$destructuring$var0;
+        })(foo());
         """);
 
     test(
@@ -1532,36 +1532,40 @@ function f(first, ...$jscomp$destructuring$var0) {
         var d;
         var rest;
         var post;
-        (() => {
-          let $jscomp$destructuring$var0 = foo();
+        ($jscomp$destructuring$var0 => {
           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
-          var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);
+          var $jscomp$destructuring$var2 =
+              Object.assign({}, $jscomp$destructuring$var1);
           b = $jscomp$destructuring$var1.a;
           d = $jscomp$destructuring$var1.c;
-          rest = (delete $jscomp$destructuring$var2.a,
-                  delete $jscomp$destructuring$var2.c,
-                  $jscomp$destructuring$var2);
-          return $jscomp$destructuring$var0
-        })(), post = foo();
+          rest =
+              (delete $jscomp$destructuring$var2.a, delete $jscomp$destructuring$var2.c,
+               $jscomp$destructuring$var2);
+          return $jscomp$destructuring$var0;
+        })(foo()),
+            post = foo();
         """);
 
     test(
         "var b,d,rest,pre,post; pre = foo(), {a: b, c: d, ...rest} = foo(), post = foo();",
         """
-        var b; var d; var rest; var pre; var post;
-        pre = foo(),
-              (() => {
-                let $jscomp$destructuring$var0 = foo();
-                var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
-                var $jscomp$destructuring$var2=Object.assign({},$jscomp$destructuring$var1);
-                b = $jscomp$destructuring$var1.a;
-                d = $jscomp$destructuring$var1.c;
-                rest = (delete $jscomp$destructuring$var2.a,
-                        delete $jscomp$destructuring$var2.c,
-                        $jscomp$destructuring$var2);
-                return $jscomp$destructuring$var0
-              })(),
-              post = foo();
+        var b;
+        var d;
+        var rest;
+        var pre;
+        var post;
+        pre = foo(), ($jscomp$destructuring$var0 => {
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          var $jscomp$destructuring$var2 =
+              Object.assign({}, $jscomp$destructuring$var1);
+          b = $jscomp$destructuring$var1.a;
+          d = $jscomp$destructuring$var1.c;
+          rest =
+              (delete $jscomp$destructuring$var2.a, delete $jscomp$destructuring$var2.c,
+               $jscomp$destructuring$var2);
+          return $jscomp$destructuring$var0;
+        })(foo()),
+            post = foo();
         """);
 
     test(
@@ -1571,29 +1575,155 @@ function f(first, ...$jscomp$destructuring$var0) {
          {a: b2, c: d2, ...rest2} = foo());
         """,
         """
-        var b1; var d1; var rest1; var b2; var d2; var rest2;
-              (() => {
-                let $jscomp$destructuring$var0 = foo();
-                var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
-                var $jscomp$destructuring$var2=Object.assign({},$jscomp$destructuring$var1);
-                b1 = $jscomp$destructuring$var1.a;
-                d1 = $jscomp$destructuring$var1.c;
-                rest1 = (delete $jscomp$destructuring$var2.a,
-                         delete $jscomp$destructuring$var2.c,
-                         $jscomp$destructuring$var2);
-                return $jscomp$destructuring$var0
-              })(),
-              (() => {
-                let $jscomp$destructuring$var3 = foo();
-                var $jscomp$destructuring$var4 = $jscomp$destructuring$var3;
-                var $jscomp$destructuring$var5=Object.assign({},$jscomp$destructuring$var4);
-                b2 = $jscomp$destructuring$var4.a;
-                d2 = $jscomp$destructuring$var4.c;
-                rest2 = (delete $jscomp$destructuring$var5.a,
-                         delete $jscomp$destructuring$var5.c,
-                         $jscomp$destructuring$var5);
-                return $jscomp$destructuring$var3
-              })();
+        var b1;
+        var d1;
+        var rest1;
+        var b2;
+        var d2;
+        var rest2;
+        ($jscomp$destructuring$var0 => {
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          var $jscomp$destructuring$var2 =
+              Object.assign({}, $jscomp$destructuring$var1);
+          b1 = $jscomp$destructuring$var1.a;
+          d1 = $jscomp$destructuring$var1.c;
+          rest1 =
+              (delete $jscomp$destructuring$var2.a, delete $jscomp$destructuring$var2.c,
+               $jscomp$destructuring$var2);
+          return $jscomp$destructuring$var0;
+        })(foo()),
+            ($jscomp$destructuring$var3 => {
+              var $jscomp$destructuring$var4 = $jscomp$destructuring$var3;
+              var $jscomp$destructuring$var5 =
+                  Object.assign({}, $jscomp$destructuring$var4);
+              b2 = $jscomp$destructuring$var4.a;
+              d2 = $jscomp$destructuring$var4.c;
+              rest2 =
+                  (delete $jscomp$destructuring$var5.a,
+                   delete $jscomp$destructuring$var5.c, $jscomp$destructuring$var5);
+              return $jscomp$destructuring$var3;
+            })(foo());
+        """);
+  }
+
+  @Test
+  public void testObjectPatternWithRestAssignStatement_assignedToProperty() {
+    test(
+        "var a, obj = {}; ({a, ...obj.rest} = foo());",
+        """
+        var a;
+        var obj = {};
+        var $jscomp$destructuring$var0 = foo();
+        var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);
+        a = $jscomp$destructuring$var0.a;
+        obj.rest = (delete $jscomp$destructuring$var1.a, $jscomp$destructuring$var1);
+        """);
+  }
+
+  @Test
+  public void testObjectPatternInAssignExpression_inGeneratorUsingYield() {
+    // Test usage of yield in the RHS of the assign. We need to make it an argument to the arrow
+    // function, as we cannot reference 'yield' within the arrow function body itself.
+    test(
+        """
+        function *g(o) {
+          return yield zzz(), ({[a]: o.a} = foo(yield b(), yield c())), yield zzz();
+        }
+        """,
+        """
+        function* g(o) {
+          return yield zzz(), ($jscomp$destructuring$var0 => {
+            var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+            o.a = $jscomp$destructuring$var1[a];
+            return $jscomp$destructuring$var0;
+          })(foo(yield b(), yield c())), yield zzz();
+        }
+        """);
+    // A yield in the LHS is explicitly unsupported, for now. We could also provide it as an
+    // argument, but it's more complicated than just providing the entire RHS, and we haven't seen
+    // any actual instances of someone trying to put yield here.
+    // Additionally, the compiler actually refuses to parse yield in a destructuring pattern default
+    // value, e.g. `function *g() { const {x = yield 0} = {}; }`. The edge case of someone
+    // using yield in either a computed key, or as the assignment target, seems very very unlikely.
+    var ex =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                test(
+                    """
+                    function *g(o) {
+                      return ({[yield 0]: o[yield a]} = foo());
+                    }
+                    """,
+                    """
+                    """));
+    assertThat(ex)
+        .hasMessageThat()
+        .contains(
+            "Cannot transpile yet: destructuring assignment referencing await or yield in lhs");
+  }
+
+  @Test
+  public void testDestructuringAssign_notInExprResult_cannotDecomposeToStatement() {
+    // Test a case where we cannot trivially extract the destructuring expression to a statement.
+    // Instead we wrap it in an arrow function.
+    test(
+        """
+        for (let
+          a = 0,
+          b = ([z] = y);;
+        ) {}
+        """,
+        """
+        for (let a = 0, b = ($jscomp$destructuring$var0 => {
+                          var $jscomp$destructuring$var1 =
+                              (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+                          z = $jscomp$destructuring$var1.next().value;
+                          return $jscomp$destructuring$var0;
+                        })(y);
+             ;) {
+        }
+        """);
+
+    test(
+        """
+        function *gen() {
+          for (let
+            a = 0,
+            b = ([z] = yield y);;
+          ) {}
+        }
+        """,
+        """
+        function* gen() {
+          for (let a = 0, b = ($jscomp$destructuring$var0 => {
+                            var $jscomp$destructuring$var1 =
+                                (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+                            z = $jscomp$destructuring$var1.next().value;
+                            return $jscomp$destructuring$var0;
+                          })(yield y);
+               ;) {
+          }
+        }
+        """);
+
+    test(
+        """
+        async function f() {
+          for (let a = 0, b = ([z] = await y());;) {}
+        }
+        """,
+        """
+        async function f() {
+          for (let a = 0, b = ($jscomp$destructuring$var0 => {
+                            var $jscomp$destructuring$var1 =
+                                (0, $jscomp.makeIterator)($jscomp$destructuring$var0);
+                            z = $jscomp$destructuring$var1.next().value;
+                            return $jscomp$destructuring$var0;
+                          })(await y());
+               ;) {
+          }
+        }
         """);
   }
 
@@ -1602,35 +1732,41 @@ function f(first, ...$jscomp$destructuring$var0) {
     test(
         "var x,b,d,rest; x = ({a: b, c: d, ...rest} = foo());",
         """
-        var x; var b; var d; var rest;
-        x = (()=>{
-            let $jscomp$destructuring$var0 = foo();
-            var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
-            var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);
-            b = $jscomp$destructuring$var1.a;
-            d = $jscomp$destructuring$var1.c;
-            rest = (delete $jscomp$destructuring$var2.a,
-                    delete $jscomp$destructuring$var2.c,
-                    $jscomp$destructuring$var2);
-            return $jscomp$destructuring$var0
-        })();
+        var x;
+        var b;
+        var d;
+        var rest;
+        x = ($jscomp$destructuring$var0 => {
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          var $jscomp$destructuring$var2 =
+              Object.assign({}, $jscomp$destructuring$var1);
+          b = $jscomp$destructuring$var1.a;
+          d = $jscomp$destructuring$var1.c;
+          rest =
+              (delete $jscomp$destructuring$var2.a, delete $jscomp$destructuring$var2.c,
+               $jscomp$destructuring$var2);
+          return $jscomp$destructuring$var0;
+        })(foo());
         """);
 
     test(
         "var x,b,d,rest; baz({a: b, c: d, ...rest} = foo());",
         """
-        var x; var b; var d; var rest;
-        baz((()=>{
-            let $jscomp$destructuring$var0 = foo();
-            var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
-            var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);
-            b = $jscomp$destructuring$var1.a;
-            d = $jscomp$destructuring$var1.c;
-            rest = (delete $jscomp$destructuring$var2.a,
-                    delete $jscomp$destructuring$var2.c,
-                    $jscomp$destructuring$var2);
-            return $jscomp$destructuring$var0;
-        })());
+        var x;
+        var b;
+        var d;
+        var rest;
+        baz(($jscomp$destructuring$var0 => {
+          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
+          var $jscomp$destructuring$var2 =
+              Object.assign({}, $jscomp$destructuring$var1);
+          b = $jscomp$destructuring$var1.a;
+          d = $jscomp$destructuring$var1.c;
+          rest =
+              (delete $jscomp$destructuring$var2.a, delete $jscomp$destructuring$var2.c,
+               $jscomp$destructuring$var2);
+          return $jscomp$destructuring$var0;
+        })(foo()));
         """);
   }
 
@@ -1824,15 +1960,14 @@ function f(first, ...$jscomp$destructuring$var0) {
         "function f() { return {x:a, ...rest} = foo(); }",
         """
         function f() {
-          return (() => {
-            let $jscomp$destructuring$var0 = foo();
+          return ($jscomp$destructuring$var0 => {
             var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
-            var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);
+            var $jscomp$destructuring$var2 =
+                Object.assign({}, $jscomp$destructuring$var1);
             a = $jscomp$destructuring$var1.x;
-            rest = (delete $jscomp$destructuring$var2.x,
-                    $jscomp$destructuring$var2);
-            return $jscomp$destructuring$var0
-          })();
+            rest = (delete $jscomp$destructuring$var2.x, $jscomp$destructuring$var2);
+            return $jscomp$destructuring$var0;
+          })(foo());
         }
         """);
   }

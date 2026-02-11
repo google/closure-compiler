@@ -79,11 +79,11 @@ public class ThreadSafeDelegatingErrorManager implements ErrorManager {
   @Override
   public synchronized boolean shouldReportConformanceViolation(
       Requirement requirement,
-      Optional<Requirement.WhitelistEntry> whitelistEntry,
+      Optional<RequirementScopeEntry> allowlistEntry,
       JSError diagnostic,
       LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior,
       boolean isAllowlisted) {
     return delegated.shouldReportConformanceViolation(
-        requirement, whitelistEntry, diagnostic, behavior, isAllowlisted);
+        requirement, allowlistEntry, diagnostic, behavior, isAllowlisted);
   }
 }

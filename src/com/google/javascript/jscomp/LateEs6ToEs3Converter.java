@@ -174,8 +174,13 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
     while (currElement != null) {
       if (currElement.getBooleanProp(Node.COMPUTED_PROP_GETTER)
           || currElement.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
-        TranspilationUtil.cannotConvertYet(
-            compiler, currElement, "computed getter/setter in an object literal");
+        compiler.report(
+            JSError.make(
+                currElement,
+                ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT,
+                "computed getter/setter in an object literal",
+                "ES2015",
+                ""));
         return;
       } else if (currElement.isGetterDef() || currElement.isSetterDef()) {
         currElement = currElement.getNext();

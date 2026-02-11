@@ -42,22 +42,12 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
       "JSC_REFLECT_OBJECTLIT_EXPECTED",
       "Object literal expected as second argument");
 
-  private final ImmutableSet<String> indirectlyDeclaredProperties;
-
   public ClosureCodingConvention() {
     this(CodingConventions.getDefault());
   }
 
   public ClosureCodingConvention(CodingConvention wrapped) {
     super(wrapped);
-
-    ImmutableSet.Builder<String> props = ImmutableSet.builder();
-    props.add(
-        "superClass_",
-        "instance_",
-        "getInstance");
-    props.addAll(wrapped.getIndirectlyDeclaredProperties());
-    indirectlyDeclaredProperties = props.build();
   }
 
   /**
@@ -452,11 +442,6 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
       return target.getString().equals("goog$reflect$cache");
     }
     return false;
-  }
-
-  @Override
-  public ImmutableSet<String> getIndirectlyDeclaredProperties() {
-    return indirectlyDeclaredProperties;
   }
 
   private static @Nullable Node safeNext(Node n) {

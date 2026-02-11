@@ -236,15 +236,20 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
           globalThis['a_b'] = [Child];
         }).call(globalThis);
         """,
+        // NOTE: we could make transpilation smart enough to detect that we don't need the
+        // $jscomp.construct call here. Currently it only attempts to analyze superclasses
+        // defined in the global scope, and @closureUnaware code is never global. We could
+        // easily make the pass look up the definition of 'Parent' in the function-local scope, but
+        // decided not to as of Jan 2026, as it isn't clearly worth the added complexity.
         """
-        (function($$jscomp_inherits$$) {
+        (function($$jscomp_construct$$, $$jscomp_inherits$$) {
         var $Parent$$ = function() {},
             $Child$$ = function() {
-              return $Parent$$.apply(this, arguments) || this;
+              return $$jscomp_construct$$($Parent$$, arguments, this.constructor);
             };
           $$jscomp_inherits$$($Child$$, $Parent$$);
           globalThis.a_b = [$Child$$];
-        }).call(globalThis, $jscomp.inherits);
+        }).call(globalThis, $jscomp.construct, $jscomp.inherits);
         """);
 
     assertThat(lastCompiler.getRuntimeJsLibManager().getInjectedLibraries())

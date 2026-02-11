@@ -255,7 +255,7 @@ public final class SourceMapTest extends SourceMapTestCase {
   protected CompilerOptions getCompilerOptions() {
     CompilerOptions options = super.getCompilerOptions();
     if (mappings != null) {
-      options.sourceMapLocationMappings = mappings;
+      options.setSourceMapLocationMappings(mappings);
     }
 
     if (!this.inputMaps.buildOrThrow().isEmpty()) {

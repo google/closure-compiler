@@ -1517,7 +1517,7 @@ public final class CommandLineRunnerTest {
     args.add("--js_output_file");
     args.add("/path/to/out.js");
     testSame("var x = 3;");
-    assertThat(lastCompiler.getOptions().sourceMapFormat).isEqualTo(SourceMap.Format.DEFAULT);
+    assertThat(lastCompiler.getOptions().getSourceMapFormat()).isEqualTo(SourceMap.Format.DEFAULT);
   }
 
   @Test
@@ -1526,7 +1526,7 @@ public final class CommandLineRunnerTest {
     args.add("/path/to/out.js");
     args.add("--source_map_format=V3");
     testSame("var x = 3;");
-    assertThat(lastCompiler.getOptions().sourceMapFormat).isEqualTo(SourceMap.Format.V3);
+    assertThat(lastCompiler.getOptions().getSourceMapFormat()).isEqualTo(SourceMap.Format.V3);
   }
 
   @Test
@@ -1537,7 +1537,8 @@ public final class CommandLineRunnerTest {
     args.add("--source_map_location_mapping=foo/|http://bar");
     testSame("var x = 3;");
 
-    List<? extends LocationMapping> mappings = lastCompiler.getOptions().sourceMapLocationMappings;
+    List<? extends LocationMapping> mappings =
+        lastCompiler.getOptions().getSourceMapLocationMappings();
     assertThat(ImmutableSet.copyOf(mappings))
         .containsExactly(new SourceMap.PrefixLocationMapping("foo/", "http://bar"));
   }
@@ -1551,7 +1552,8 @@ public final class CommandLineRunnerTest {
     args.add("--source_map_location_mapping=xxx/|http://yyy");
     testSame("var x = 3;");
 
-    List<? extends LocationMapping> mappings = lastCompiler.getOptions().sourceMapLocationMappings;
+    List<? extends LocationMapping> mappings =
+        lastCompiler.getOptions().getSourceMapLocationMappings();
     assertThat(ImmutableSet.copyOf(mappings))
         .containsExactly(
             new SourceMap.PrefixLocationMapping("foo/", "http://bar"),
@@ -1796,7 +1798,7 @@ public final class CommandLineRunnerTest {
     args.add("--source_map_input=input2|input2.sourcemap");
     testSame("var x = 3;");
 
-    ImmutableMap<String, SourceMapInput> inputMaps = lastCompiler.getOptions().inputSourceMaps;
+    ImmutableMap<String, SourceMapInput> inputMaps = lastCompiler.getOptions().getInputSourceMaps();
     assertThat(inputMaps).hasSize(2);
     assertThat(inputMaps.get("input1").getOriginalPath()).isEqualTo("input1.sourcemap");
     assertThat(inputMaps.get("input2").getOriginalPath()).isEqualTo("input2.sourcemap");
@@ -1859,10 +1861,10 @@ public final class CommandLineRunnerTest {
   @Test
   public void testCharSetExpansion() {
     testSame("");
-    assertThat(lastCompiler.getOptions().outputCharset).isEqualTo(US_ASCII);
+    assertThat(lastCompiler.getOptions().getOutputCharset()).isEqualTo(US_ASCII);
     args.add("--charset=UTF-8");
     testSame("");
-    assertThat(lastCompiler.getOptions().outputCharset).isEqualTo(UTF_8);
+    assertThat(lastCompiler.getOptions().getOutputCharset()).isEqualTo(UTF_8);
   }
 
   @Test
@@ -3309,10 +3311,10 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
   @Test
   public void testCrossChunkCodeMotionNoStubMethods() {
     testSame("");
-    assertThat(lastCompiler.getOptions().crossChunkCodeMotionNoStubMethods).isFalse();
+    assertThat(lastCompiler.getOptions().getCrossChunkCodeMotionNoStubMethods()).isFalse();
     args.add("--assume_no_prototype_method_enumeration=true");
     testSame("");
-    assertThat(lastCompiler.getOptions().crossChunkCodeMotionNoStubMethods).isTrue();
+    assertThat(lastCompiler.getOptions().getCrossChunkCodeMotionNoStubMethods()).isTrue();
   }
 
   @Test

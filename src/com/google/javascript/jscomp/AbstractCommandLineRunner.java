@@ -320,7 +320,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     DiagnosticGroups diagnosticGroups = getDiagnosticGroups();
 
     if (config.shouldSaveAfterStage1() || config.shouldContinueCompilation()) {
-      if (options.checksOnly) {
+      if (options.isChecksOnly()) {
         throw new FlagUsageException(
             "checks_only mode is incompatible with multi-stage compilation");
       }
@@ -361,12 +361,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       options.setDependencyOptions(config.dependencyOptions);
     }
 
-    options.devMode = config.jscompDevMode;
+    options.setDevMode(config.jscompDevMode);
     options.setCodingConvention(config.codingConvention);
     options.setSummaryDetailLevel(config.summaryDetailLevel);
     options.setTrustedStrings(true);
 
-    legacyOutputCharset = options.outputCharset = getLegacyOutputCharset();
+    legacyOutputCharset = getLegacyOutputCharset();
+    options.setOutputCharset(legacyOutputCharset);
     outputCharset2 = getOutputCharset2();
     inputCharset = getInputCharset();
 
@@ -395,11 +396,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     } else if (isOutputInJson()) {
       options.setSourceMapOutputPath("%outname%");
     }
-    options.sourceMapDetailLevel = config.sourceMapDetailLevel;
-    options.sourceMapFormat = config.sourceMapFormat;
-    options.sourceMapLocationMappings = config.sourceMapLocationMappings;
-    options.parseInlineSourceMaps = config.parseInlineSourceMaps;
-    options.applyInputSourceMaps = config.applyInputSourceMaps;
+    options.setSourceMapDetailLevel(config.sourceMapDetailLevel);
+    options.setSourceMapFormat(config.sourceMapFormat);
+    options.setSourceMapLocationMappings(config.sourceMapLocationMappings);
+    options.setParseInlineSourceMaps(config.parseInlineSourceMaps);
+    options.setApplyInputSourceMaps(config.applyInputSourceMaps);
 
     ImmutableMap.Builder<String, SourceMapInput> inputSourceMaps = new ImmutableMap.Builder<>();
     for (Map.Entry<String, String> files : config.sourceMapInputFiles.entrySet()) {
@@ -407,14 +408,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
           SourceFile.builder().withKind(SourceKind.NON_CODE).withPath(files.getValue()).build();
       inputSourceMaps.put(files.getKey(), new SourceMapInput(sourceMap));
     }
-    options.inputSourceMaps = inputSourceMaps.buildOrThrow();
+    options.setInputSourceMaps(inputSourceMaps.buildOrThrow());
 
     if (!config.variableMapInputFile.isEmpty()) {
-      options.inputVariableMap = VariableMap.load(config.variableMapInputFile);
+      options.setInputVariableMap(VariableMap.load(config.variableMapInputFile));
     }
 
     if (!config.propertyMapInputFile.isEmpty()) {
-      options.inputPropertyMap = VariableMap.load(config.propertyMapInputFile);
+      options.setInputPropertyMap(VariableMap.load(config.propertyMapInputFile));
     }
 
     if (!config.outputManifests.isEmpty()) {
@@ -438,8 +439,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
 
     options.setProcessCommonJSModules(config.processCommonJSModules);
-    options.moduleRoots = config.moduleRoots;
-    options.angularPass = config.angularPass;
+    options.setModuleRoots(config.moduleRoots);
+    options.setAngularPass(config.angularPass);
 
     if (!config.jsonWarningsFile.isEmpty()) {
       options.addReportGenerator(
@@ -1045,11 +1046,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       @Nullable Function<String, String> escaper,
       String filename)
       throws IOException {
-    if (compiler.getOptions().outputJs == OutputJs.SENTINEL) {
+    if (compiler.getOptions().getOutputJs() == OutputJs.SENTINEL) {
       out.append("// No JS output because the compiler was run in checks-only mode.\n");
       return;
     }
-    checkState(compiler.getOptions().outputJs == OutputJs.NORMAL);
+    checkState(compiler.getOptions().getOutputJs() == OutputJs.NORMAL);
 
     String code = chunk == null ? compiler.toSource() : compiler.toSource(licenseTracker, chunk);
     writeOutput(out, compiler, code, wrapper, codePlaceholder, escaper, filename);
@@ -1197,8 +1198,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       }
 
       if (foundJsonInputSourceMap) {
-        inputSourceMaps.putAll(options.inputSourceMaps);
-        options.inputSourceMaps = inputSourceMaps.buildOrThrow();
+        inputSourceMaps.putAll(options.getInputSourceMaps());
+        options.setInputSourceMaps(inputSourceMaps.buildOrThrow());
       }
 
       compiler.initWebpackMap(inputPathByWebpackId.buildOrThrow());
@@ -1363,7 +1364,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     } else {
       // This is the code path taken when "building" a library by just checking it for errors
       // and generating an .ijs file and also when doing a full compilation.
-      actionMetricsName = compiler.getOptions().checksOnly ? "checks-only" : "full compile";
+      actionMetricsName = compiler.getOptions().isChecksOnly() ? "checks-only" : "full compile";
       runStage1 = true;
       runStage2 = true;
       runStage3 = true;
@@ -1516,7 +1517,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       outputBundle();
       outputChunkGraphJson();
       return 0;
-    } else if (options.outputJs != OutputJs.NONE && result.success) {
+    } else if (options.getOutputJs() != OutputJs.NONE && result.success) {
       outputChunkGraphJson();
       if (chunks == null) {
         outputSingleBinary(options);
@@ -2230,8 +2231,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     CompilerOptions options = compiler.getOptions();
     // Prebuild ASTs before they're needed in getLoadFlags, for performance and because
     // StackOverflowErrors can be hit if not prebuilt.
-    if (options.numParallelThreads > 1) {
-      new PrebuildAst(compiler, compiler.getOptions().numParallelThreads).prebuild(inputs);
+    if (options.getNumParallelThreads() > 1) {
+      new PrebuildAst(compiler, compiler.getOptions().getNumParallelThreads()).prebuild(inputs);
     }
     if (options.getRuntimeLibraryMode() == RuntimeJsLibManager.RuntimeLibraryMode.INJECT) {
       // ES6 modules will need a runtime in a bundle. Skip appending this runtime if there are no

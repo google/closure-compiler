@@ -2897,6 +2897,76 @@ chrome.enterprise.reportingPrivate.AntiVirusProductState = {
 chrome.enterprise.reportingPrivate.AntiVirusSignal;
 
 /**
+ * @enum {string}
+ * @see https://developer.chrome.com/docs/extensions/reference/api/types#type-LevelOfControl
+ */
+chrome.types.LevelOfControl = {
+  NOT_CONTROLLABLE: 'not_controllable',
+  CONTROLLED_BY_OTHER_EXTENSIONS: 'controlled_by_other_extensions',
+  CONTROLLABLE_BY_THIS_EXTENSION: 'controllable_by_this_extension',
+  CONTROLLED_BY_THIS_EXTENSION_: 'controlled_by_this_extension'
+};
+
+
+/** @const */
+chrome.proxyOverrideRulesPrivate = {};
+
+/** @enum {string} */
+chrome.proxyOverrideRulesPrivate.DnsProbeResult = {
+  RESOLVED: 'resolved',
+  NOT_FOUND: 'not_found',
+};
+
+/**
+ * @typedef {{
+ *   Host: string,
+ *   Result: !chrome.proxyOverrideRulesPrivate.DnsProbeResult
+ * }}
+ */
+chrome.proxyOverrideRulesPrivate.DnsProbe;
+
+/**
+ * @typedef {{
+ *   DnsProbe: (!chrome.proxyOverrideRulesPrivate.DnsProbe|undefined)
+ * }}
+ */
+chrome.proxyOverrideRulesPrivate.ProxyOverrideRuleCondition;
+
+/**
+ * @typedef {{
+ *   DestinationMatchers: (!Array<string>|undefined),
+ *   ExcludeDestinationMatchers: (!Array<string>|undefined),
+ *   ProxyList: !Array<string>,
+ *   Conditions: (!Array<!chrome.proxyOverrideRulesPrivate.ProxyOverrideRuleCondition>|undefined)
+ * }}
+ */
+chrome.proxyOverrideRulesPrivate.ProxyOverrideRule;
+
+/**
+ * The details object returned by or passed to callbacks for
+ * chrome.proxyOverrideRulesPrivate.proxyOverrideRules.get() and .onChange()
+ * respectively.
+ * @typedef {{
+ *   value: !Array<!chrome.proxyOverrideRulesPrivate.ProxyOverrideRule>,
+ *   levelOfControl: !chrome.types.LevelOfControl,
+ *   incognitoSpecific: (boolean|undefined)
+ * }}
+ */
+chrome.proxyOverrideRulesPrivate.ProxyOverrideRulesGetResult;
+
+/**
+ * Manages the ProxyOverrideRules setting.
+ * This object is an instance of the global ChromeSetting type.
+ *
+ * When using .get(), the callback receives a !chrome.proxyOverrideRulesPrivate.ProxyOverrideRulesGetResult.
+ * When using .set(), the details.value should be an !Array<!chrome.proxyOverrideRulesPrivate.ProxyOverrideRule>.
+ * The .onChange event also provides a !chrome.proxyOverrideRulesPrivate.ProxyOverrideRulesGetResult to its listeners.
+ *
+ * @type {!ChromeSetting}
+ */
+chrome.proxyOverrideRulesPrivate.proxyOverrideRules;
+
+/**
  * @see https://developer.chrome.com/extensions/extension.html
  * @const
  */

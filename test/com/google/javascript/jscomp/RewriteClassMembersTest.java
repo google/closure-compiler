@@ -15,6 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
@@ -3067,5 +3070,111 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         CLASS_DECL$0.x = 1;
         foo(CLASS_DECL$0);
         """);
+  }
+
+  @Test
+  public void testNestedSuperCallWithClassField_inCommaStatement() {
+    // We want to support this code pattern in case the compiler is asked to transpile classes that
+    // were already minified by some other minifier, as that often leads to combining super()
+    // calls with other code in the constructor.
+    test(
+        """
+        class A { constructor(...args) {} }
+        class B extends A {
+          prop;
+          constructor() {
+            (super(1, 2, 3), bar());
+          }
+        }
+        """,
+        """
+        class A { constructor(...args) {} }
+        class B extends A {
+          constructor() {
+            var JSCompiler_inline_result$jscomp$0 = super(1, 2, 3);
+            this.prop = void 0;
+            (JSCompiler_inline_result$jscomp$0,  bar());
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testSuperCallInComplexExpression() {
+    test(
+        """
+        class A { constructor(...args) {} }
+        class B extends A {
+          prop = 0;
+          constructor(a) {
+            foo(bar(), super(1, 2, 3), baz());
+          }
+        }
+        """,
+        """
+        class A { constructor(...args) {} }
+        class B extends A {
+          constructor(a) {
+            var JSCompiler_temp_const$jscomp$1 = foo;
+            var JSCompiler_temp_const$jscomp$0 = bar();
+            var JSCompiler_inline_result$jscomp$2 = super(1, 2, 3);
+            this.prop = 0;
+            JSCompiler_temp_const$jscomp$1(
+                JSCompiler_temp_const$jscomp$0, JSCompiler_inline_result$jscomp$2, baz());
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testSuperCallInComplexExpression_cannotDecompose() {
+    var ex =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                test(
+                    """
+                    class A { constructor(...args) {} }
+                    class B extends A {
+                      prop = 0;
+                      constructor(a) {
+                        for (const x = foo(), y = super();;) {}
+                      }
+                    }
+                    """,
+                    """
+                    """));
+    assertThat(ex)
+        .hasMessageThat()
+        .contains(
+            "Cannot decompose super() call in a class with class fields. Move super() call to the"
+                + " root of the constructor.");
+  }
+
+  @Test
+  public void testConditionalSuperCalls() {
+    var ex =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                test(
+                    """
+                    class A { constructor(...args) {} }
+                    class B extends A {
+                      prop = 0;
+                      constructor(a) {
+                        if (a < 0) {
+                          super(-1);
+                        } else {
+                          super(1);
+                        }
+                      }
+                    }
+                    """,
+                    ""));
+    assertThat(ex)
+        .hasMessageThat()
+        .contains(
+            "classes with public fields must have only one super() call at the constructor root");
   }
 }

@@ -87,7 +87,7 @@ public final class PhaseOptimizerTest {
   @Test
   public void testCapLoopIterations() {
     CompilerOptions options = compiler.getOptions();
-    options.optimizationLoopMaxIterations = 1;
+    options.setMaxOptimizationLoopIterations(1);
     optimizer = new PhaseOptimizer(compiler, tracker);
     Loop loop = optimizer.addFixedPointLoop();
     addLoopedPass(loop, PassNames.PEEPHOLE_OPTIMIZATIONS, 2);

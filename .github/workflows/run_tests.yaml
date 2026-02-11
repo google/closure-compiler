@@ -48,7 +48,7 @@ jobs:
     steps:
       - name: Setup Java
         # https://github.com/marketplace/actions/setup-java-jdk
-        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5.1.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           distribution: zulu
           java-version: '21'
@@ -58,12 +58,12 @@ jobs:
         # Clone closure-compiler repo from the commit under test into current directory.
       - name: Checkout Current closure-compiler Commit
         # https://github.com/marketplace/actions/checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ inputs.ref || github.sha }}
 
       # https://github.com/bazel-contrib/setup-bazel
-      - uses: bazel-contrib/setup-bazel@4fd964a13a440a8aeb0be47350db2fc640f19ca8 # v0.15.0
+      - uses: bazel-contrib/setup-bazel@43d7d5ceab59a307da44fc7585faa2a2fff4f88d # v0.16.0
         with:
           # Avoid downloading Bazel every time.
           bazelisk-cache: true
@@ -87,7 +87,7 @@ jobs:
         # storage.
       - name: Share Unshaded Compiler
         # https://github.com/marketplace/actions/upload-a-build-artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: unshaded_compiler
           path: ${{ env.UNSYMLINK_DIR }}/compiler_uberjar_deploy.jar
@@ -101,7 +101,7 @@ jobs:
     steps:
       - name: Setup Java
         # https://github.com/marketplace/actions/setup-java-jdk
-        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5.1.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           distribution: zulu
           java-version: '21'
@@ -110,14 +110,14 @@ jobs:
 
       - name: Setup Node.js
         # https://github.com/marketplace/actions/setup-node-js-environment
-        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: ${{ env.VERSION_NODEJS }}
 
         # Clone closure-compiler-npm repo from master into the current directory.
       - name: Checkout Current closure-compiler-npm Commit
         # https://github.com/marketplace/actions/checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: chadkillingsworth/closure-compiler-npm
           ref: master
@@ -126,7 +126,7 @@ jobs:
         # submodule
       - name: Checkout Current closure-compiler Commit
         # https://github.com/marketplace/actions/checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           path: compiler
           ref: ${{ inputs.ref || github.sha }}
@@ -135,7 +135,7 @@ jobs:
         # ./compiler/bazel-bin.
       - name: Grab Unshaded Compiler
         # https://github.com/marketplace/actions/download-a-build-artifact
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: unshaded_compiler
           # Put the binary where bazel would have put it.

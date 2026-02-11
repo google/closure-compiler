@@ -122,6 +122,32 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFoldConstants_regressionTest_crashInNodeUtilAddFeatureToScript() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_NEXT);
+
+    test(
+        closureUnaware(
+            """
+            return function f() {
+              function referenceX() { return x; }
+
+              return 1;
+
+              // Regression test for a crash in PeepholeRemoveDeadCode.
+              let x = 0;
+              referenceX();
+              x++;
+            }
+            """),
+        expectedClosureUnaware(
+            """
+            return function() {
+              return 1;
+            }
+            """));
+  }
+
+  @Test
   public void testInlineLocalObject() {
     test(
         srcs(
@@ -246,6 +272,11 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDontAssumeToStringAndValueOfArePure() {
+    testSame(closureUnaware("x.toString(); x.valueOf();"));
+  }
+
+  @Test
   public void transpilesExponentialOperator_ifTargetingES2015() {
     setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     test(
@@ -310,12 +341,17 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
               return new Child();
             }).call(globalThis);
             """),
+        // NOTE: we could make transpilation smart enough to detect that we don't need the
+        // $jscomp.construct call here. Currently it only attempts to analyze superclasses
+        // defined in the global scope, and @closureUnaware code is never global. We could
+        // easily make the pass look up the definition of 'Parent' in the function-local scope, but
+        // decided not to as of Jan 2026, as it isn't clearly worth the added complexity.
         expected(
             """
             /** @fileoverview @closureUnaware */
             goog.module("test");
             /** @closureUnaware */
-            (function(c) {
+            (function(c, d) {
               /** @constructor */
               var a = function() {};
               a.prototype.method = function() {
@@ -323,11 +359,11 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
               };
               /** @constructor */
               var b = function() {
-                return a.apply(this, arguments) || this;
+                return c(a, arguments, this.constructor);
               };
-              c(b, a);
+              d(b, a);
               return new b();
-            }).call(globalThis, $jscomp.inherits);
+            }).call(globalThis, $jscomp.construct, $jscomp.inherits);
             """));
 
     assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
@@ -371,13 +407,13 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
             /** @fileoverview @closureUnaware */
             goog.module("test2");
             /** @closureUnaware */
-            (function(a) {
+            (function(a, d) {
               var b = function() {}, c = function() {
-                return b.apply(this, arguments) || this;
+                return a(b, arguments, this.constructor);
               };
-              a(c, b);
+              d(c, b);
               return new c();
-            }).call(undefined, $jscomp.inherits);
+            }).call(undefined, $jscomp.construct, $jscomp.inherits);
             """));
 
     assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
@@ -386,6 +422,40 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
             "es6/util/inherits",
             "es6/util/arrayfromiterable",
             "es6/object/assign");
+  }
+
+  @Test
+  public void classInheritance_usesReflectConstructForUnknownSuperclass() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
+
+    test(
+        srcs(
+            """
+            /** @fileoverview @closureUnaware */
+            goog.module('test');
+            /** @closureUnaware */
+            (function() {
+              class Child extends UnknownParent {}
+              return new Child();
+            }).call(globalThis);
+            """),
+        expected(
+            """
+            /** @fileoverview @closureUnaware */
+            goog.module("test");
+            /** @closureUnaware */
+            (function(b, c) {
+              /** @constructor */
+              var a = function() {
+                return b(UnknownParent, arguments, this.constructor);
+              };
+              c(a, UnknownParent);
+              return new a();
+            }).call(globalThis, $jscomp.construct, $jscomp.inherits);
+            """));
+
+    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
+        .containsExactly("es6/util/construct", "es6/util/inherits", "es6/util/arrayfromiterable");
   }
 
   @Test
@@ -493,6 +563,47 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
               $tag$$($$jscomp$templatelit$m854121055$2$$, -42);
             }).call(undefined, $jscomp.getRestArguments, $jscomp.createTemplateTagFirstArg);
             """));
+  }
+
+  @Test
+  public void bigintLiteral_passedThroughUntranspiled() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
+
+    test(closureUnaware("return 123n + 456n;"), expectedClosureUnaware("return 579n;"));
+  }
+
+  @Test
+  public void untranspilableRegexFeature_passedThroughUntranspiled() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
+
+    // ES2018 feature: https://github.com/tc39/proposal-regexp-dotall-flag
+    // ES2022 feature: https://github.com/tc39/proposal-regexp-match-indices
+    testSame(closureUnaware("return /a/sd"));
+  }
+
+  @Test
+  public void computedGetterSetter_inEs5Out_passedThroughUntranspiled() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
+    // JSCompiler does not support transpiling computed getters/setters in object literals down to
+    // ES5. For closureUnaware, verify they are passed through unchanged.
+    testSame(
+        closureUnaware(
+            """
+            return {
+              get [x()]() {
+                return 1;
+              },
+              set [x()](a) {}
+            };
+            """));
+  }
+
+  @Test
+  public void generator_cannotConvertCaseStatementContainingYield_errors() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
+    testError(
+        closureUnaware("function *f(b, i) {switch (i) { case yield: return b; }} return f;"),
+        TranspilationUtil.CANNOT_CONVERT_YET);
   }
 
   private static String loadFile(Path path) {

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static org.junit.Assert.assertThrows;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,6 +34,7 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
     super.setUp();
 
     disableScriptFeatureValidation();
+    enableNormalize();
   }
 
   @Override
@@ -56,20 +59,20 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
     fold("f:{if(a()){b();break f;}else;}", "f:{if(a()){b();}else;}");
     fold("f:{if(a()){break f;}else;}", "f:{if(a()){}else;}");
 
-    fold("f:while(a())break f;", "f:while(a())break f");
+    fold("f:for(;a();)break f;", "f:for(;a();)break f");
     foldSame("f:for(x in a())break f");
 
-    foldSame("f:{while(a())break;}");
+    foldSame("f:{for(;a();)break;}");
     foldSame("f:{for(x in a())break}");
 
-    fold("f:try{break f;}catch(e){break f;}", "f:try{}catch(e){}");
+    fold("f:try{break f;}catch(e){break f;}", "f: { try{}catch(e){} }");
     fold(
         "f:try{if(a()){break f;}else{break f;} break f;}catch(e){}",
-        "f:try{if(a()){}else{}}catch(e){}");
+        "f:{ try{if(a()){}else{}}catch(e){} }");
 
-    fold("f:g:break f", "");
+    fold("f:g:break f", "f: g: {}");
     fold("f:g:{if(a()){break f;}else{break f;} break f;}", "f:g:{if(a()){}else{}}");
-    fold("function f() { a: break a; }", "function f() {}");
+    fold("function f() { a: break a; }", "function f() { a: {} }");
     fold("function f() { a: { break a; } }", "function f() { a: {} }");
   }
 
@@ -101,10 +104,10 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
         }
         """);
 
-    fold("function f(){while(a())return;}", "function f(){while(a())return}");
+    fold("function f(){for(;a();)return;}", "function f(){for(;a();)return}");
     foldSame("function f(){for(x in a())return}");
 
-    fold("function f(){while(a())break;}", "function f(){while(a())break}");
+    fold("function f(){for(;a();)break;}", "function f(){for(;a();)break}");
     foldSame("function f(){for(x in a())break}");
 
     fold(
@@ -117,12 +120,36 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
         "function f(){try{if(a()){return;}else{return;} return;}catch(e){}}",
         "function f(){try{if(a()){}else{}}catch(e){}}");
 
-    fold("function f(){g:return}", "function f(){}");
+    fold("function f(){g:return}", "function f(){g: {}}");
     fold(
-        "function f(){g:if(a()){return;}else{return;} return;}", "function f(){g:if(a()){}else{}}");
+        "function f(){g:if(a()){return;}else{return;} return;}",
+        "function f(){g:{if(a()){}else{}}}");
     fold(
-        "function f(){try{g:if(a()){throw 9;} return;}finally{return}}",
-        "function f(){try{g:if(a()){throw 9;}}finally{return}}");
+        """
+        function f() {
+          try {
+            g: if (a()) {
+              throw 9;
+            }
+            return;
+          } finally {
+            return;
+          }
+        }
+        """,
+        """
+        function f() {
+          try {
+            g: {
+              if (a()) {
+                throw 9;
+              }
+            }
+          } finally {
+            return;
+          }
+        }
+        """);
   }
 
   @Test
@@ -131,10 +158,10 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
         """
         function f(a) {
           if (a) {
-            const a = Math.random();
+            const aInner = Math.random();
 
-            if (a < 0.5) {
-                return a;
+            if (aInner < 0.5) {
+                return aInner;
             }
           }
 
@@ -145,37 +172,9 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
 
   @Test
   public void testWhileContinueOptimization() {
-    fold("while(true){if(x)continue; x=3; continue; }", "while(true)if(x);else x=3");
-    foldSame("while(true){a();continue;b();}");
-    fold("while(true){if(true){a();continue;}else;b();}", "while(true){if(true){a();}else{b()}}");
-    fold(
-        "while(true){if(false){a();continue;}else;b();continue;}",
-        "while(true){if(false){a()}else{b();}}");
-    fold("while(true){if(a()){b();continue;}else;c();}", "while(true){if(a()){b();}else{c();}}");
-    fold("while(true){if(a()){b();}else{c();continue;}}", "while(true){if(a()){b();}else{c();}}");
-    fold("while(true){if(a()){b();continue;}else;}", "while(true){if(a()){b();}else;}");
-    fold(
-        "while(true){if(a()){continue;}else{continue;} continue;}", "while(true){if(a()){}else{}}");
-    fold(
-        "while(true){if(a()){continue;}else{continue;} b();}",
-        "while(true){if(a()){}else{continue;b();}}");
-
-    fold("while(true)while(a())continue;", "while(true)while(a());");
-    fold("while(true)for(x in a())continue", "while(true)for(x in a());");
-
-    fold("while(true)while(a())break;", "while(true)while(a())break");
-    foldSame("while(true)for(x in a())break");
-
-    fold("while(true){try{continue;}catch(e){continue;}}", "while(true){try{}catch(e){}}");
-    fold(
-        "while(true){try{if(a()){continue;}else{continue;} continue;}catch(e){}}",
-        "while(true){try{if(a()){}else{}}catch(e){}}");
-
-    fold("while(true){g:continue}", "while(true){}");
-    // This case could be improved.
-    fold(
-        "while(true){g:if(a()){continue;}else{continue;} continue;}",
-        "while(true){g:if(a());else;}");
+    // Normalization should convert all WHILE loops to FOR loops, so just have a simple test
+    // verifying that happens & we don't need explicit WHILE loop support.
+    fold("while(true){if(x)continue; x=3; continue; }", "for(;true;)if(x);else x=3");
   }
 
   @Test
@@ -200,10 +199,10 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
         "do{if(a()){continue;}else{continue;} b();}while(true)",
         "do{if(a()){}else{continue; b();}}while(true)");
 
-    fold("do{while(a())continue;}while(true)", "do while(a());while(true)");
+    fold("do{for(;a();)continue;}while(true)", "do for(;a(););while(true)");
     fold("do{for(x in a())continue}while(true)", "do for(x in a());while(true)");
 
-    fold("do{while(a())break;}while(true)", "do while(a())break;while(true)");
+    fold("do{for(;a();)break;}while(true)", "do for(;a();)break;while(true)");
     foldSame("do for(x in a())break;while(true)");
 
     fold("do{try{continue;}catch(e){continue;}}while(true)", "do{try{}catch(e){}}while(true)");
@@ -211,11 +210,11 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
         "do{try{if(a()){continue;}else{continue;} continue;}catch(e){}}while(true)",
         "do{try{if(a()){}else{}}catch(e){}}while(true)");
 
-    fold("do{g:continue}while(true)", "do{}while(true)");
+    fold("do{g:continue}while(true)", "do{g: {}}while(true)");
     // This case could be improved.
     fold(
         "do{g:if(a()){continue;}else{continue;} continue;}while(true)",
-        "do{g:if(a());else;}while(true)");
+        "do{g: { if(a());else; } }while(true)");
 
     fold("do { foo(); continue; } while(false)", "do { foo(); } while(false)");
     fold("do { foo(); break; } while(false)", "do { foo(); } while(false)");
@@ -262,42 +261,45 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
         "async () => { for await (x of y){if(a()){b();}else{c();continue;}}}",
         "async () => { for await (x of y){if(a()){b();}else{c();}}}");
 
-    fold("for(x=0;x<y;x++){if(a()){b();continue;}else;}", "for(x=0;x<y;x++){if(a()){b();}else;}");
+    fold("for(x=0;x<y;x++){if(a()){b();continue;}else;}", "x=0;for(;x<y;x++){if(a()){b();}else;}");
     fold(
         "for(x=0;x<y;x++){if(a()){continue;}else{continue;} continue;}",
-        "for(x=0;x<y;x++){if(a()){}else{}}");
+        "x=0;for(;x<y;x++){if(a()){}else{}}");
     fold(
         "for(x=0;x<y;x++){if(a()){continue;}else{continue;} b();}",
-        "for(x=0;x<y;x++){if(a()){}else{continue; b();}}");
+        "x=0;for(;x<y;x++){if(a()){}else{continue; b();}}");
 
-    fold("for(x=0;x<y;x++)while(a())continue;", "for(x=0;x<y;x++)while(a());");
-    fold("for(x=0;x<y;x++)for(x in a())continue", "for(x=0;x<y;x++)for(x in a());");
+    fold("for(x=0;x<y;x++)for(;a();)continue;", "x=0;for(;x<y;x++)for(;a(););");
+    fold("for(x=0;x<y;x++)for(x in a())continue", "x=0;for(;x<y;x++)for(x in a());");
 
-    fold("for(x=0;x<y;x++)while(a())break;", "for(x=0;x<y;x++)while(a())break");
-    foldSame("for(x=0;x<y;x++)for(x in a())break");
+    fold("for(x=0;x<y;x++)for(;a();)break;", "x=0;for(;x<y;x++)for(;a();)break");
+    foldSame("x=0;for(;x<y;x++)for(x in a())break");
 
     fold(
-        "for(x=0;x<y;x++){try{continue;}catch(e){continue;}}", "for(x=0;x<y;x++){try{}catch(e){}}");
+        "for(x=0;x<y;x++){try{continue;}catch(e){continue;}}",
+        "x=0;for(;x<y;x++){try{}catch(e){}}");
     fold(
         "for(x=0;x<y;x++){try{if(a()){continue;}else{continue;} continue;}catch(e){}}",
-        "for(x=0;x<y;x++){try{if(a()){}else{}}catch(e){}}");
+        "x=0;for(;x<y;x++){try{if(a()){}else{}}catch(e){}}");
 
-    fold("for(x=0;x<y;x++){g:continue}", "for(x=0;x<y;x++){}");
+    fold("for(x=0;x<y;x++){g:continue}", "x=0;for(;x<y;x++){ g: {} }");
     fold(
         "for(x=0;x<y;x++){g:if(a()){continue;}else{continue;} continue;}",
-        "for(x=0;x<y;x++){g:if(a());else;}");
+        "x=0;for(;x<y;x++){g:{if(a());else;}}");
   }
 
   @Test
   public void testCodeMotionDoesntBreakFunctionHoisting() {
     fold(
         "function f() { if (x) return; foo(); function foo() {} }",
-        "function f() { if (x); else { function foo() {} foo(); } }");
+        // Note: normalization moves all function declarations to the beginning of a block.
+        // This test cases was originally added before requiring normalization.
+        "function f() { function foo() {} if (x) {} else { foo(); } }");
   }
 
   @Test
   public void testDontRemoveBreakInTryFinally() {
-    foldSame("function f() {b:try{throw 9} finally {break b} return 1;}");
+    foldSame("function f() {b: {try{throw 9} finally {break b}} return 1;}");
   }
 
   /**
@@ -323,13 +325,9 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testFoldBlockScopedVariables_bug() {
+  public void testThrowsExceptionIfAstNotNormalized() {
     disableNormalize();
-    fold(
-        "function f() { if (x) {return;} else { let c = 1; } var c; return !!c; }",
-        // TODO: b/470408326 - fix this output.
-        // "Uncaught SyntaxError: Identifier 'c' has already been declared"
-        "function f() { if (x){} else { let c = 1; var c; return !!c; } }");
+    assertThrows(RuntimeException.class, () -> foldSame(""));
   }
 
   @Test
@@ -351,7 +349,7 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
         "function f() { if (x) {} else { var c = 3; } }");
     fold(
         "function f() { if (x) {return;} let a = 3; let b = () => a; }",
-        "function f() { if (x) {} else { var a = 3; var b = () => a;} }");
+        "function f() { if (x) {} else { var a = 3; var b = () => { return a; }} }");
     fold(
         "function f() { if (x) { if (y) {return;} let c = 3; } }",
         "function f() { if (x) { if (y) {} else { var c = 3; } } }");
@@ -369,14 +367,16 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
           for (let x of param) {
             if (x < 0) continue;
             let y = x * 2;
-            arr.push(() => y); // If y was a var, this would capture the wrong value.
-           }
+            arr.push(() => {
+              return y;
+            }); // If y were a var, this would capture the wrong value.
+          }
           return arr;
         }
         """);
 
     // Additional tests for different kinds of loops.
-    foldSame("function f() { while (true) { if (true) {return;} let c = 3; } }");
+    foldSame("function f() { for (;true;) { if (true) {return;} let c = 3; } }");
     foldSame("function f() { do { if (true) {return;} let c = 3; } while (x); }");
     foldSame("function f() { for (;;) { if (true) { return; } let c = 3; } }");
     foldSame("function f(y) { for(x in []){ if(x) { return; } let c = 3; } }");

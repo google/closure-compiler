@@ -206,7 +206,7 @@ public final class CompilerTest {
         ImmutableList.of(SourceFile.fromCode(origSourceName, "<div ng-show='foo()'>"));
 
     CompilerOptions options = new CompilerOptions();
-    options.inputSourceMaps = inputSourceMaps;
+    options.setInputSourceMaps(inputSourceMaps);
     Compiler compiler = new Compiler();
     compiler.init(new ArrayList<SourceFile>(), originalSources, options);
 
@@ -402,8 +402,8 @@ public final class CompilerTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setSourceMapOutputPath("fake/source_map_path.js.map");
-    options.inputSourceMaps = inputSourceMaps;
-    options.applyInputSourceMaps = true;
+    options.setInputSourceMaps(inputSourceMaps);
+    options.setApplyInputSourceMaps(true);
     Compiler compiler = new Compiler();
     compiler.compile(
         EMPTY_EXTERNS.get(0),
@@ -432,8 +432,8 @@ public final class CompilerTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setSourceMapOutputPath("fake/source_map_path.js.map");
-    options.applyInputSourceMaps = true;
-    options.sourceMapIncludeSourcesContent = true;
+    options.setApplyInputSourceMaps(true);
+    options.setSourceMapIncludeSourcesContent(true);
     String code =
         SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=" + BASE64_ENCODED_SOURCE_MAP_WITH_CONTENT;
     Compiler compiler = new Compiler();
@@ -456,8 +456,8 @@ public final class CompilerTest {
   public void testNoSourceMapIsGeneratedWithoutPath() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.applyInputSourceMaps = true;
-    options.sourceMapIncludeSourcesContent = true;
+    options.setApplyInputSourceMaps(true);
+    options.setSourceMapIncludeSourcesContent(true);
     String code =
         SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=" + BASE64_ENCODED_SOURCE_MAP_WITH_CONTENT;
     Compiler compiler = new Compiler();
@@ -1561,7 +1561,7 @@ public final class CompilerTest {
     // when executing a partial compilation and it expects to request source
     // maps when running the final stage later.
     options.setAlwaysGatherSourceMapInfo(true);
-    options.applyInputSourceMaps = true;
+    options.setApplyInputSourceMaps(true);
     options.setSourceMapIncludeSourcesContent(true);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     List<SourceFile> externs =
@@ -1648,7 +1648,7 @@ public final class CompilerTest {
     // In real usage AbstractCommandLineRunner is responsible for actually writing the file whose
     // path is stored in this field.
     options.setSourceMapOutputPath("dummy");
-    options.applyInputSourceMaps = true;
+    options.setApplyInputSourceMaps(true);
     options.setSourceMapIncludeSourcesContent(true);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     List<SourceFile> externs =

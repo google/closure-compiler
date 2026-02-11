@@ -307,10 +307,10 @@ public final class JsMessageVisitorTest {
 
     compilerOptions = new CompilerOptions();
     // NOTE: "testcode" is the file name used by compiler.parseTestCode(code)
-    compilerOptions.inputSourceMaps =
+    compilerOptions.setInputSourceMaps(
         ImmutableMap.of(
             "testcode",
-            new SourceMapInput(SourceFile.fromCode("example.srcmap", output.toString())));
+            new SourceMapInput(SourceFile.fromCode("example.srcmap", output.toString()))));
 
     extractMessagesSafely(
         """

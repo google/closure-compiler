@@ -33,6 +33,8 @@ class ClosureUnawareOptions {
   }
 
   private CompilerOptions toCompilerOptions() {
+    // TODO: b/473813461 - refactor to make sure this class doesn't accidentally skip copying
+    // any options.
     setTranspilationOptions();
     setSafeOptimizationAssumptions();
     copyOutputOptions();
@@ -41,9 +43,6 @@ class ClosureUnawareOptions {
   }
 
   private void setTranspilationOptions() {
-    // TODO: b/421971366 - look into adding an option to use Reflect.construct for subclass
-    // transpilation, in the
-    // case we can't prove it's not a subclass of an ES6 class (not being transpiled)
     shadowOptions.setRewritePolyfills(false); // for now, we ignore polyfills that may be needed.
     switch (original.getRuntimeLibraryMode()) {
       case NO_OP ->
@@ -53,7 +52,18 @@ class ClosureUnawareOptions {
               RuntimeJsLibManager.RuntimeLibraryMode.EXTERN_FIELD_NAMES);
       case EXTERN_FIELD_NAMES -> throw new AssertionError();
     }
+    shadowOptions.setEs6SubclassTranspilation(
+        CompilerOptions.Es6SubclassTranspilation.SAFE_REFLECT_CONSTRUCT);
     shadowOptions.setOutputFeatureSet(original.getOutputFeatureSet());
+    shadowOptions.setInstrumentAsyncContext(original.getInstrumentAsyncContext());
+
+    // To aid rollout of @closureUnaware transpilation, ignore warnings about untranspilable
+    // features for now. (Any project using @closureUnaware today (i.e. early 2026) gets zero
+    // transpilation, so rolling out with these suppressions is an incremental improvement.)
+
+    // DiagnosticGroups.UNTRANSPILABLE_FEATURES: features JSCompiler will never transpile but
+    // can pass through unchanged to the output, such as newer regex syntax.
+    shadowOptions.setWarningLevel(DiagnosticGroups.UNTRANSPILABLE_FEATURES, CheckLevel.OFF);
   }
 
   private void setSafeOptimizationAssumptions() {
@@ -69,22 +79,21 @@ class ClosureUnawareOptions {
 
   private void copyOutputOptions() {
     shadowOptions.setPrettyPrint(original.isPrettyPrint());
-    shadowOptions.setGeneratePseudoNames(original.generatePseudoNames);
-    shadowOptions.setErrorHandler(original.errorHandler);
-    shadowOptions.setErrorFormat(original.errorFormat);
-
-    // TODO: lharker - is there any use in propagating the VariableMap & PropertyMap?
+    shadowOptions.setGeneratePseudoNames(original.shouldGeneratePseudoNames());
+    shadowOptions.setErrorHandler(original.getErrorHandler());
+    shadowOptions.setErrorFormat(original.getErrorFormat());
   }
 
   private void copyDebugOptions() {
     shadowOptions.setTracerMode(original.getTracerMode());
-    shadowOptions.setDevMode(original.devMode);
+    shadowOptions.setDevMode(original.getDevMode());
 
-    shadowOptions.setPrintSourceAfterEachPass(original.printSourceAfterEachPass);
+    shadowOptions.setPrintSourceAfterEachPass(original.shouldPrintSourceAfterEachPass());
     shadowOptions.setFilesToPrintAfterEachPassRegexList(
-        original.filesToPrintAfterEachPassRegexList);
-    shadowOptions.setPrintInputDelimiter(original.printInputDelimiter);
-    shadowOptions.setInputDelimiter(original.inputDelimiter);
+        original.getFilesToPrintAfterEachPassRegexList());
+    shadowOptions.setPrintInputDelimiter(original.shouldPrintInputDelimiter());
+
+    shadowOptions.setInputDelimiter(original.getInputDelimiter());
 
     shadowOptions.setDebugLogFilter(original.getDebugLogFilter());
     Path debugLogDirectory = original.getDebugLogDirectory();

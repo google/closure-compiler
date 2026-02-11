@@ -78,11 +78,11 @@ public class CodeGenerator {
     cc = consumer;
 
     this.outputCharsetEncoder = new OutputCharsetEncoder(options.getOutputCharset());
-    this.preferSingleQuotes = options.preferSingleQuotes;
-    this.trustedStrings = options.trustedStrings;
-    this.preserveTypeAnnotations = options.preserveTypeAnnotations;
+    this.preferSingleQuotes = options.shouldPreferSingleQuotes();
+    this.trustedStrings = options.assumeTrustedStrings();
+    this.preserveTypeAnnotations = options.shouldPreserveTypeAnnotations();
     this.printNonJSDocComments = options.getPreserveNonJSDocComments();
-    this.gentsMode = options.gentsMode;
+    this.gentsMode = options.getGentsMode();
     this.quoteKeywordProperties = options.shouldQuoteKeywordProperties();
     this.useOriginalName = options.getUseOriginalNamesInOutput();
     this.outputFeatureSet = options.getOutputFeatureSet();

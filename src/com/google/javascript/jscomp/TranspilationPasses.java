@@ -265,7 +265,10 @@ public class TranspilationPasses {
   static final PassFactory es6RewriteClass =
       PassFactory.builder()
           .setName("Es6RewriteClass")
-          .setInternalFactory(Es6RewriteClass::new)
+          .setInternalFactory(
+              (compiler) ->
+                  new Es6RewriteClass(
+                      compiler, compiler.getOptions().getEs6SubclassTranspilation()))
           .build();
 
   static final PassFactory getEs6RewriteDestructuring(ObjectDestructuringRewriteMode rewriteMode) {
