@@ -105,22 +105,30 @@ public class BrowserWithTransformedPrefixesModuleResolver extends ModuleResolver
             .collect(joining(", "));
   }
 
-  @Override
-  public @Nullable String resolveJsModule(
-      String scriptAddress, String moduleAddress, String sourcename, int lineno, int colno) {
-    String transformedAddress = moduleAddress;
+  private String replacePathPrefixes(String moduleAddress) {
+    if(moduleAddress == null) {
+      return null;
+    }
 
-    boolean replaced = false;
+    String transformedAddress = moduleAddress;
 
     for (PrefixReplacement prefixReplacement : prefixReplacements) {
       if (moduleAddress.startsWith(prefixReplacement.prefix())) {
-        transformedAddress =
-            prefixReplacement.replacement()
-                + moduleAddress.substring(prefixReplacement.prefix().length());
-        replaced = true;
+        transformedAddress = prefixReplacement.replacement()
+                        + moduleAddress.substring(prefixReplacement.prefix().length());
         break;
       }
     }
+
+    return transformedAddress;
+  }
+
+  @Override
+  public @Nullable String resolveJsModule(
+      String scriptAddress, String moduleAddress, String sourcename, int lineno, int colno) {
+    String transformedAddress = replacePathPrefixes(moduleAddress);
+
+    boolean replaced = transformedAddress != null && !transformedAddress.equals(moduleAddress);
 
     // If ambiguous after the loop it was not transformed and the original moduleAddress is
     // ambiguous with an unrecognized prefix. Allow transformed paths to be ambiguous after
@@ -149,19 +157,9 @@ public class BrowserWithTransformedPrefixesModuleResolver extends ModuleResolver
 
   @Override
   public @Nullable String resolveJsModuleSilently(String scriptAddress, String moduleAddress) {
-    String transformedAddress = moduleAddress;
+    String transformedAddress = replacePathPrefixes(moduleAddress);
 
-    boolean replaced = false;
-
-    for (PrefixReplacement prefixReplacement : prefixReplacements) {
-      if (moduleAddress.startsWith(prefixReplacement.prefix())) {
-        transformedAddress =
-                prefixReplacement.replacement()
-                        + moduleAddress.substring(prefixReplacement.prefix().length());
-        replaced = true;
-        break;
-      }
-    }
+    boolean replaced = transformedAddress != null && !transformedAddress.equals(moduleAddress);
 
     // If ambiguous after the loop it was not transformed and the original moduleAddress is
     // ambiguous with an unrecognized prefix. Allow transformed paths to be ambiguous after

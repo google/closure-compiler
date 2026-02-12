@@ -625,10 +625,7 @@ public final class ModuleLoaderTest {
                       public @Nullable String resolveJsModuleSilently(
                               String scriptAddress,
                               String moduleAddress) {
-                        if (moduleAddress.startsWith("@custom/")) {
-                          moduleAddress = moduleAddress.substring(8);
-                        }
-                        return super.locate(scriptAddress, moduleAddress);
+                        return resolveJsModule(scriptAddress, moduleAddress, "", 0, 0);
                       }
                     })
             .build();
