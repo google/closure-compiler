@@ -147,7 +147,7 @@ public class BrowserWithTransformedPrefixesModuleResolver extends ModuleResolver
     }
 
     String loadAddress = locate(scriptAddress, transformedAddress);
-    if (transformedAddress == null) {
+    if (loadAddress == null) {
       errorHandler.report(
           CheckLevel.WARNING,
           JSError.make(sourcename, lineno, colno, ModuleLoader.LOAD_WARNING, moduleAddress));
