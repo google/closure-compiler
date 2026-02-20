@@ -128,13 +128,16 @@ public final class TranspileOnlyIntegrationTest extends IntegrationTestCase {
         }
         """,
         """
-        var Bar = function() {};
+        var Bar=function() {};
         var $jscomp$classExtends$98447280$0 = function() {
-          Bar.apply(this, arguments)
-        };
-        $jscomp.inherits($jscomp$classExtends$98447280$0, Bar);
+          var $jscomp$classDecl$98447280$1 = function() {
+            Bar.apply(this, arguments)
+          };
+          $jscomp.inherits($jscomp$classDecl$98447280$1, Bar);
+          return $jscomp$classDecl$98447280$1;
+        }();
         var Foo = function() {
-          $jscomp$classExtends$98447280$0.apply(this, arguments)
+          return $jscomp$classExtends$98447280$0.apply(this,arguments) || this;
         };
         $jscomp.inherits(Foo, $jscomp$classExtends$98447280$0);
         Foo.x = void 0

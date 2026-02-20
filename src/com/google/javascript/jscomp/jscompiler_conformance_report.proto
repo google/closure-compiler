@@ -87,7 +87,7 @@ message JsCompilerConformanceReport {
   // /dev/stdout to indicate output was written to stdout. For tsetse
   // reporting, the filename field gets set to the violations report path
   // itself (see logTsetseFindings() in
-  // google3/third_party/bazel_rules/rules_typescript/internal/tsc_wrapped/tsc_wrapped.ts).
+  // google3/javascript/typescript/tsc_wrapped/tsc_wrapped.ts).
   // TODO(b/393659358): consider using proto oneof for this field
   string filename = 1;
 

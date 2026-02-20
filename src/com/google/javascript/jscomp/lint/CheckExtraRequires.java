@@ -58,7 +58,10 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
 
   public static final DiagnosticType EXTRA_REQUIRE_WARNING =
       DiagnosticType.disabled(
-          "JSC_EXTRA_REQUIRE_WARNING", "extra require: ''{0}'' is never referenced in this file");
+          "JSC_EXTRA_REQUIRE_WARNING",
+          "extra require: ''{0}'' is never referenced in this file"
+
+          );
 
   // TODO(b/130215517): This should eventually be removed and exceptions suppressed
   private static final ImmutableSet<String> DEFAULT_EXTRA_NAMESPACES =

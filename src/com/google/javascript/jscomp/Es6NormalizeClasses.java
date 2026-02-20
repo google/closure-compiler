@@ -144,58 +144,18 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
             || scriptFeatures.contains(Feature.PUBLIC_CLASS_FIELDS);
       }
       case CLASS -> {
-        // First, rewrite complex extends expressions. This must happen before class extraction
-        // to ensure the class's structure is simplified first.
-        if (shouldExtractExtends(n)) {
-          if (!canExtractExtendsSimply(n)) {
-            // When a class is used in an expressions where adding an alias as the previous
-            // statement might change execution order of a side-effect causing statement, wrap the
-            // class in an IIFE so that decomposition can happen safely.
-            pushDownNodeIntoNewIife(n);
-
-            // The parent of the class has been updated so reflect that.
-            parent = n.getParent();
-          }
-          extractExtends(t, n);
-        }
-
-        // Second, extract the class itself if it's in an expression context or it needs a name.
-        // We do the actual class extraction in pre-order so that we can rewrite the inner class
-        // name to the new outer name if needed.
-        if (shouldExtractClass(n)) {
-          if (expressionDecomposer.canExposeExpression(n) != DecompositionType.MOVABLE) {
-            // When class is not movable, we wrap it inside an IIFE. We have observed unsafe
-            // circumstances where decomposing causes issues so this is safer. See b/417772606.
-            pushDownNodeIntoNewIife(n);
-          }
-          extractClass(t, n);
-
-          // The parent of the class has been updated so reflect that.
-          parent = n.getParent();
-        }
-
-        // Finally, create the ClassRecord which will be referenced when we visit the class later.
-
-        // Either the assigned name for a class expression or the class declaration name (in which
-        // case this would be the same as `bindingIdentifier`).
-        Node classNameNode = NodeUtil.getNameNode(n);
-        checkState(classNameNode != null, "Class missing a name: %s", n);
         // The class name for declarations and class expression inner names.
         Optional<Node> bindingIdentifier =
             n.getFirstChild().isName() ? Optional.of(n.getFirstChild()) : Optional.empty();
-        Optional<Node> superClassNameNode =
-            n.getSecondChild().isQualifiedName()
-                ? Optional.of(n.getSecondChild())
-                : Optional.empty();
-        Node classInsertionPoint = getStatementDeclaringClass(n, classNameNode);
-        checkState(classInsertionPoint != null, "Class was not extracted: %s", n);
-        classStack.addFirst(
-            new ClassRecord(
-                classNameNode,
-                bindingIdentifier,
-                /* classNode= */ n,
-                superClassNameNode,
-                classInsertionPoint));
+
+        // Generate any needed normalized class names in pre-order so that we can rewrite the inner
+        // class name to the new outer name if needed.
+        // (We don't actually do the normalization in pre-order because that can cause
+        // NodeTraversal to skip traversing other parts of the AST.)
+        NormalizedNames normalized = generateNormalizedClassNames(t, n);
+
+        // Create the ClassRecord which will be referenced when we visit the class later.
+        classStack.addFirst(new ClassRecord(normalized, bindingIdentifier, /* classNode= */ n));
       }
       case COMPUTED_FIELD_DEF -> {
         checkState(!classStack.isEmpty());
@@ -271,8 +231,8 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     return false;
   }
 
-  private void extractExtends(NodeTraversal t, Node classNode) {
-    String name = generateUniqueClassExtendsVarName(t);
+  private void extractExtends(NodeTraversal t, ClassRecord classRecord) {
+    Node classNode = classRecord.classNode;
 
     Node statement = NodeUtil.getEnclosingStatement(classNode);
     Node originalExtends = classNode.getSecondChild();
@@ -285,13 +245,9 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
           .replaceWith(IR.empty().srcref(originalExtends.getFirstChild()));
     }
 
-    Node nameNode =
-        astFactory.createConstantName(name, type(originalExtends)).srcref(originalExtends);
+    Node nameNode = classRecord.normalizedNames.superClassNode.get();
     originalExtends.replaceWith(nameNode);
-    Node extendsAlias =
-        astFactory
-            .createSingleConstNameDeclaration(name, originalExtends)
-            .srcrefTreeIfMissing(originalExtends);
+    Node extendsAlias = IR.constNode(nameNode.cloneNode(), originalExtends).srcref(originalExtends);
     extendsAlias.insertBefore(statement);
     NodeUtil.addFeatureToScript(
         NodeUtil.getEnclosingScript(classNode), Feature.CONST_DECLARATIONS, compiler);
@@ -340,15 +296,15 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     return true;
   }
 
-  private void extractClass(NodeTraversal t, Node classNode) {
+  private void extractClass(NodeTraversal t, ClassRecord classRecord) {
+    Node classNode = classRecord.classNode;
     Node parent = classNode.getParent();
 
-    String name = generateUniqueClassDeclVarName(t);
     JSDocInfo info = NodeUtil.getBestJSDocInfo(classNode);
 
     Node statement = NodeUtil.getEnclosingStatement(parent);
     // class name node used as LHS in newly created assignment
-    Node classNameLhs = astFactory.createConstantName(name, type(classNode));
+    Node classNameLhs = classRecord.createNewNameReferenceNode();
     // class name node that replaces the class literal in the original statement
     Node classNameRhs = classNameLhs.cloneTree();
     classNode.replaceWith(classNameRhs);
@@ -451,9 +407,38 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
         ClassRecord currClassRecord = classStack.removeFirst();
         checkState(currClassRecord.classNode == n, "unexpected node: %s", n);
 
-        // The parent passed to visit is the parent before shouldTraverse is called.
-        // The AST may be modified in shouldTraverse, so we have to get the current parent.
-        parent = n.getParent();
+        // First, rewrite complex extends expressions. This must happen before class extraction
+        // to ensure the class's structure is simplified first.
+        if (currClassRecord.normalizedNames.shouldExtractExtends) {
+          if (!canExtractExtendsSimply(n)) {
+            // When a class is used in an expressions where adding an alias as the previous
+            // statement might change execution order of a side-effect causing statement, wrap the
+            // class in an IIFE so that decomposition can happen safely.
+            pushDownNodeIntoNewIife(n);
+
+            // The parent of the class has been updated so reflect that.
+            parent = n.getParent();
+          }
+          extractExtends(t, currClassRecord);
+        }
+
+        // Second, extract the class itself if it's in an expression context or it needs a name.
+        if (currClassRecord.normalizedNames.shouldExtractClass) {
+          if (expressionDecomposer.canExposeExpression(n) != DecompositionType.MOVABLE) {
+            // When class is not movable, we wrap it inside an IIFE. We have observed unsafe
+            // circumstances where decomposing causes issues so this is safer. See b/417772606.
+            pushDownNodeIntoNewIife(n);
+          }
+          extractClass(t, currClassRecord);
+
+          // The parent of the class has been updated so reflect that.
+          parent = n.getParent();
+        }
+
+        Node classNameNode = NodeUtil.getNameNode(n);
+        checkState(classNameNode != null, "Class missing a name: %s", n);
+        Node classInsertionPoint = getStatementDeclaringClass(n, classNameNode);
+        checkState(classInsertionPoint != null, "Class was not extracted: %s", n);
 
         // For class expressions, remove the inner name if it's present.
         // Note: Safe because we removed all static initialization logic, ensured the class has a
@@ -465,11 +450,11 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
         }
 
         // Rewrite parts of the class based on the record.
-        rewriteSideEffectedComputedProps(t, currClassRecord);
+        rewriteSideEffectedComputedProps(t, currClassRecord, classInsertionPoint);
         if (transpileClassFields) {
           rewriteInstanceMembers(t, currClassRecord);
         }
-        rewriteStaticMembers(t, currClassRecord);
+        rewriteStaticMembers(t, currClassRecord, classInsertionPoint);
       }
       case NAME -> maybeUpdateClassSelfRef(t, n);
       case THIS, SUPER -> visitThisAndSuper(t, n);
@@ -478,7 +463,8 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
   }
 
   /** Rewrites and moves all side effected computed field keys to the top */
-  private void rewriteSideEffectedComputedProps(NodeTraversal t, ClassRecord record) {
+  private void rewriteSideEffectedComputedProps(
+      NodeTraversal t, ClassRecord record, Node insertionPoint) {
     Deque<Node> computedPropsWithSideEffects = record.computedPropsWithSideEffects;
 
     if (computedPropsWithSideEffects.isEmpty()) {
@@ -487,7 +473,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
 
     while (!computedPropsWithSideEffects.isEmpty()) {
       Node computedPropMember = computedPropsWithSideEffects.remove();
-      extractExpressionFromCompField(t, record, computedPropMember);
+      extractExpressionFromCompField(t, record, computedPropMember, insertionPoint);
     }
     t.reportCodeChange();
   }
@@ -515,7 +501,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
    * </pre>
    */
   private void extractExpressionFromCompField(
-      NodeTraversal t, ClassRecord record, Node memberField) {
+      NodeTraversal t, ClassRecord record, Node memberField, Node insertionPoint) {
     checkArgument(memberField.isComputedFieldDef() || memberField.isComputedProp(), memberField);
 
     Node compExpression = memberField.removeFirstChild();
@@ -525,7 +511,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
             .srcrefTreeIfMissing(record.classNode);
     Node compFieldName = compFieldVar.getFirstChild();
     memberField.addChildToFront(compFieldName.cloneNode());
-    compFieldVar.insertBefore(record.insertionPoint);
+    compFieldVar.insertBefore(insertionPoint);
     compFieldVar.srcrefTreeIfMissing(record.classNode);
   }
 
@@ -710,7 +696,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
   }
 
   /** Rewrites and moves all static blocks and fields */
-  private void rewriteStaticMembers(NodeTraversal t, ClassRecord record) {
+  private void rewriteStaticMembers(NodeTraversal t, ClassRecord record, Node insertionPoint) {
     Deque<Node> staticMembers = record.staticMembers;
     if (staticMembers.isEmpty()) {
       return;
@@ -755,9 +741,9 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
         /* traverseChildrenPred= */ (n) ->
             !n.isClass() && (!n.isFunction() || n.isArrowFunction()))) {
       while (staticInitTempParent.hasChildren()) {
-        staticInitTempParent.getLastChild().detach().insertAfter(record.insertionPoint);
+        staticInitTempParent.getLastChild().detach().insertAfter(insertionPoint);
       }
-      t.reportCodeChange(record.insertionPoint.getParent());
+      t.reportCodeChange(insertionPoint.getParent());
       return;
     }
 
@@ -796,7 +782,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
                 type(JSTypeNative.VOID_TYPE, StandardColors.NULL_OR_VOID))
             .srcrefTree(classMembers);
     Node staticInitCallStmt = astFactory.exprResult(staticInitCall);
-    staticInitCallStmt.insertAfter(record.insertionPoint);
+    staticInitCallStmt.insertAfter(insertionPoint);
   }
 
   private void maybeUpdateClassSelfRef(NodeTraversal t, Node nameNode) {
@@ -809,7 +795,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       if (
       // Skip if the inner class name is the same as the class name (either this is a class
       // declaration or the outer and inner class names are the same).
-      bindingIdentifier.getString().equals(klass.classNameNode.getQualifiedName())
+      bindingIdentifier.matchesName(klass.normalizedNames.classNameNode)
           // Skip if this IS the inner class name node (removed later when we visit the class).
           || nameNode == bindingIdentifier
           // Skip if this nameNode is not equal to the inner class name.
@@ -888,8 +874,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       newNameNode = classRecord.createNewNameReferenceNode().srcrefTree(n);
     } else if (doStaticSuperRewrites && n.isSuper()) {
       // For a static super, we can always rewrite the super as something else.
-      checkState(classRecord.superClassNameNode.isPresent(), classRecord.classNode);
-      newNameNode = classRecord.superClassNameNode.get().cloneTree();
+      newNameNode = classRecord.createNewSuperclassReferenceNode();
     }
 
     if (newNameNode != null) {
@@ -924,24 +909,6 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
   }
 
   private static class ClassRecord {
-    /**
-     * The node for the qualified name of the class.
-     *
-     * <p>{@code "C"} as in:
-     *
-     * <ul>
-     *   <li>{@code class C {}}
-     *   <li>{@code const C = class D {};}
-     *   <li>{@code const C = class {};}
-     * </ul>
-     *
-     * <p>{@code "ns.C"} as in:
-     *
-     * <ul>
-     *   <li>{@code const ns = {}; ns.C = class {};}
-     * </ul>
-     */
-    final Node classNameNode;
 
     /**
      * The binding identifier (a.k.a. name node) of the class itself.
@@ -965,20 +932,10 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     final Node classNode;
 
     /**
-     * The name node of the super class, if present.
-     *
-     * <p>The node for {@code E} as in:
-     *
-     * <ul>
-     *   <li>{@code class C extends E {}}
-     *   <li>{@code const D = class C extends E {};}
-     *   <li>{@code const D = class extends E {};}
-     * </ul>
+     * The final post-normalized names for the class and extends clause. These may or may not match
+     * the original names (if there were any original names).
      */
-    final Optional<Node> superClassNameNode;
-
-    /** Insert before or after this node to add stuff outside the class. */
-    final Node insertionPoint;
+    final NormalizedNames normalizedNames;
 
     /** Instance fields in the class. */
     final Deque<Node> instanceMembers = new ArrayDeque<>();
@@ -1003,17 +960,10 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
      */
     final List<Node> superCalls = new ArrayList<>();
 
-    ClassRecord(
-        Node classNameNode,
-        Optional<Node> bindingIdentifier,
-        Node classNode,
-        Optional<Node> superClassNameNode,
-        Node insertionPoint) {
-      this.classNameNode = classNameNode;
+    ClassRecord(NormalizedNames normalizedNames, Optional<Node> bindingIdentifier, Node classNode) {
+      this.normalizedNames = normalizedNames;
       this.bindingIdentifier = bindingIdentifier;
       this.classNode = classNode;
-      this.superClassNameNode = superClassNameNode;
-      this.insertionPoint = insertionPoint;
     }
 
     void recordField(Node field) {
@@ -1050,13 +1000,95 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     }
 
     Node createNewNameReferenceNode() {
-      if (classNameNode.isName()) {
+      if (normalizedNames.classNameNode().isName()) {
         // Don't cloneTree() here, because the name may have a child node, the class itself.
-        return classNameNode.cloneNode();
+        return normalizedNames.classNameNode().cloneNode();
       }
 
       // Must cloneTree() for a qualified name.
-      return classNameNode.cloneTree();
+      return normalizedNames.classNameNode().cloneTree();
     }
+
+    Node createNewSuperclassReferenceNode() {
+      if (normalizedNames.superClassNode().isEmpty()) {
+        throw new IllegalArgumentException("no superclass");
+      }
+      return normalizedNames.superClassNode().get().cloneTree();
+    }
+  }
+
+  /**
+   * Information about a class *after* it has been normalized.
+   *
+   * <p>This is used to store information about the class that is potentially computed during the
+   * normalization process. The nodes are not guaranteed to be present in the original AST.
+   *
+   * @param classNameNode The node for the qualified name of the class.
+   *     <p>{@code "C"} as in:
+   *     <ul>
+   *       <li>{@code class C {}}
+   *       <li>{@code const C = class D {};}
+   *       <li>{@code const C = class {};}
+   *     </ul>
+   *     <p>{@code "ns.C"} as in:
+   *     <ul>
+   *       <li>{@code const ns = {}; ns.C = class {};}
+   *     </ul>
+   *
+   * @param superClassNode The name node of the super class, if present.
+   *     <p>The node for {@code E} as in:
+   *     <ul>
+   *       <li>{@code class C extends E {}}
+   *       <li>{@code const D = class C extends E {};}
+   *       <li>{@code const D = class extends E {};}
+   *     </ul>
+   *
+   * @param shouldExtractClass Whether the class needs to be extracted into a new variable.
+   * @param shouldExtractExtends Whether the extends clause needs to be extracted into a new
+   *     variable.
+   */
+  private record NormalizedNames(
+      Node classNameNode,
+      Optional<Node> superClassNode,
+      boolean shouldExtractClass,
+      boolean shouldExtractExtends) {
+    NormalizedNames {
+      checkArgument(classNameNode.isQualifiedName(), classNameNode);
+      checkArgument(
+          superClassNode.isEmpty() || superClassNode.get().isQualifiedName(), superClassNode);
+    }
+  }
+
+  /**
+   * Checks whether the class and/or extends clause need to be normalized into a separate variable
+   * declaration. If so, generates a new unique name/names. Returns the {@link NormalizedNames} with
+   * the results. (If the class does not need normalization, then the {@link NormalizedNames} will
+   * match the original class name and extends clause.)
+   */
+  private NormalizedNames generateNormalizedClassNames(NodeTraversal t, Node classNode) {
+    Node extendsClause = classNode.getSecondChild();
+
+    boolean shouldExtractExtends = shouldExtractExtends(classNode);
+    Optional<Node> superClass;
+    if (shouldExtractExtends) {
+      String name = generateUniqueClassExtendsVarName(t);
+      superClass = Optional.of(astFactory.createName(name, type(extendsClause)));
+    } else {
+      superClass = extendsClause.isEmpty() ? Optional.empty() : Optional.of(extendsClause);
+    }
+
+    boolean shouldExtractClass =
+        shouldExtractClass(classNode)
+            || (shouldExtractExtends && !canExtractExtendsSimply(classNode));
+    Node classNameNodeTemplate;
+    if (shouldExtractClass) {
+      String name = generateUniqueClassDeclVarName(t);
+      classNameNodeTemplate = astFactory.createConstantName(name, type(classNode));
+    } else {
+      classNameNodeTemplate = NodeUtil.getNameNode(classNode);
+    }
+
+    return new NormalizedNames(
+        classNameNodeTemplate, superClass, shouldExtractClass, shouldExtractExtends);
   }
 }

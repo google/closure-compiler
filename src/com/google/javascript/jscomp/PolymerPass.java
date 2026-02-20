@@ -16,6 +16,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_EXTENDS;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISSING_EXTERNS;
 
@@ -146,6 +148,9 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
       rewriter.propertySinkExternInjected = propertySinkExternInjected;
       rewriter.rewritePolymerClassDeclaration(node, traversal, def);
       propertySinkExternInjected = rewriter.propertySinkExternInjected;
+
+      // Support Polymer implicit property edge cases by just @exporting all non-private properties.
+      exportTsickleProps(def.definition, def.target.getQualifiedName());
     }
   }
 
@@ -204,6 +209,77 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
     parent.addChildrenAfter(stmts, polymerElementExterns);
 
     compiler.reportChangeToEnclosingScope(stmts);
+  }
+
+  /**
+   * Finds the tsickle-generated {@code if (false)} block and exports all non-private properties.
+   */
+  private static void exportTsickleProps(Node classNode, String classQualifiedName) {
+    Node classStmt = checkNotNull(NodeUtil.getEnclosingStatement(classNode));
+
+    for (Node sibling = classStmt.getNext(); sibling != null; sibling = sibling.getNext()) {
+      Node ifBlock = maybeGetTsicklePropTypesIfBlock(sibling);
+      if (ifBlock == null) {
+        continue;
+      }
+
+      for (Node stmt = ifBlock.getFirstChild(); stmt != null; stmt = stmt.getNext()) {
+        Node prop = getTsickleClassPrototypeProp(stmt, classQualifiedName);
+        if (prop == null) {
+          continue;
+        }
+
+        JSDocInfo jsdoc = checkNotNull(prop.getJSDocInfo(), "No JSDoc found for %s", prop);
+        if (jsdoc.getVisibility() == JSDocInfo.Visibility.PRIVATE) {
+          continue;
+        }
+
+        JSDocInfo.Builder builder = JSDocInfo.Builder.copyFrom(jsdoc);
+        builder.recordExport();
+        // @export implicitly overwrites visibility.
+        builder.overwriteVisibility(JSDocInfo.Visibility.INHERITED);
+        prop.setJSDocInfo(builder.build());
+      }
+    }
+  }
+
+  /**
+   * If the given node is an {@code if (false) {}}, returns its block node. Otherwise returns {@code
+   * null}.
+   */
+  private static @Nullable Node maybeGetTsicklePropTypesIfBlock(Node node) {
+    if (!node.isIf()) {
+      return null;
+    }
+    Node condition = node.getFirstChild();
+    if (!condition.isFalse()) {
+      return null;
+    }
+    Node block = condition.getNext();
+    checkState(block != null && block.isBlock(), "Expected block but got %s", block);
+    return block;
+  }
+
+  /**
+   * Looks for {@code ClassName.prototype.foo} expressions and returns the property node (if found).
+   */
+  private static @Nullable Node getTsickleClassPrototypeProp(Node stmt, String classQualifiedName) {
+    if (!stmt.isExprResult()) {
+      return null;
+    }
+    Node expr = stmt.getFirstChild();
+    if (!expr.isGetProp()) {
+      return null;
+    }
+    Node owner = expr.getFirstChild();
+    if (!owner.isGetProp() || !owner.getString().equals("prototype")) {
+      return null;
+    }
+    Node classRef = owner.getFirstChild();
+    if (!classRef.matchesQualifiedName(classQualifiedName)) {
+      return null;
+    }
+    return expr;
   }
 
   /** Any member of a Polymer element or Behavior. These can be functions, properties, etc. */

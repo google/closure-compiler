@@ -6018,4 +6018,145 @@ PtTestComponentElement.prototype._abc = function() {
 };
 """));
   }
+
+  @Test
+  public void testPolymerPropsAllExported_updatesNonPrivateProps() {
+    test(
+        """
+        class C extends Polymer.Element {
+          static get is() { return 'x-element'; }
+
+          static get properties() {
+            return {
+              explicitProp: {
+                type: Number,
+              },
+            };
+          }
+
+          constructor() {
+            super();
+            this.explicitProp = 1;
+            this.implicitProp = 2;
+            // Note: This will also be detected as a method.
+            this.implicitMethod = () => {};
+            this.privateProp = 3;
+          }
+        }
+        if (false) {
+          /** @public @type {number} */
+          C.prototype.explicitProp;
+          /** @public @type {number} */
+          C.prototype.implicitProp;
+          /** @public @type {function()} */
+          C.prototype.implicitMethod;
+          /** @private @type {number} */
+          C.prototype.privateProp;
+        }
+        """,
+        """
+        /**
+         * @implements {PolymerCInterface$UID$0}
+         */
+        class C extends Polymer.Element {
+          /**
+           * @return {string}
+           */
+          static get is() {
+            return "x-element";
+          }
+          /**
+           * @return {PolymerElementProperties}
+           */
+          static get properties() {
+            return $jscomp.reflectObject(C, {explicitProp:{type:Number,},});
+          }
+          constructor() {
+            super();
+            this.explicitProp = 1;
+            this.implicitProp = 2;
+            this.implicitMethod = () => {};
+            this.privateProp = 3;
+          }
+        }
+        /** @type {number} */
+        C.prototype.explicitProp;
+        /** @export */
+        C.prototype.implicitMethod;
+        /** @export */
+        C.prototype.constructor;
+        if (false) {
+          /** @export @type {number} */
+          C.prototype.explicitProp;
+          /** @export @type {number} */
+          C.prototype.implicitProp;
+          /** @export @type {function()} */
+          C.prototype.implicitMethod;
+          /** @private @type {number} */
+          C.prototype.privateProp;
+        }
+        """);
+  }
+
+  @Test
+  public void testPolymerPropsAllExported_ignoresOtherClass() {
+    test(
+        """
+        class C extends Polymer.Element {
+          static get is() { return 'x-element'; }
+
+          constructor() {
+            super();
+            this.explicitProp = 1;
+          }
+        }
+        if (false) {
+          /** @public @type {number} */
+          C.prototype.explicitProp;
+        }
+
+        // Not a Polymer element
+        class D {
+          constructor() {
+            this.explicitProp = 1;
+          }
+        }
+        if (false) {
+          /** @public @type {number} */
+          D.prototype.explicitProp;
+        }
+        """,
+        """
+        /**
+         * @implements {PolymerCInterface$UID$0}
+         */
+        class C extends Polymer.Element {
+          /**
+           * @return {string}
+           */
+          static get is() {
+            return "x-element";
+          }
+          constructor() {
+            super();
+            this.explicitProp = 1;
+          }
+        }
+        /** @export */
+        C.prototype.constructor;
+        if (false) {
+          /** @export @type {number} */
+          C.prototype.explicitProp;
+        }
+        class D {
+          constructor() {
+            this.explicitProp = 1;
+          }
+        }
+        if (false) {
+          /** @public @type {number} */
+          D.prototype.explicitProp;
+        }
+        """);
+  }
 }

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.integration;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
@@ -24,6 +25,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.GoogleCodingConvention;
+import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Test;
@@ -418,6 +420,10 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
   @Test
   public void testEs6RewriteClassExtendsExpression() {
     CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF);
+    options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
+    options.setGeneratePseudoNames(true);
 
     String src =
         """
@@ -439,18 +445,11 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
         """;
     String expected =
         """
-        const $jscomp$classExtends$98447280$0 = class {
-          constructor(e) {
-            this.databaseInfo = e, this.databaseId = e.databaseId
-          }
-        };
-        class __PRIVATE_WebChannelConnection extends $jscomp$classExtends$98447280$0 {
-          constructor(e) {
-            super(e), this.forceLongPolling = e.forceLongPolling,
-                      this.autoDetectLongPolling = e.autoDetectLongPolling,
-                      this.useFetchStreams = e.useFetchStreams,
-                      this.longPollingOptions = e.longPollingOptions;
-            console.log('test')
+        const $$jscomp$classExtends$98447280$0$$ = class {};
+        class __PRIVATE_WebChannelConnection extends $$jscomp$classExtends$98447280$0$$ {
+          constructor() {
+            super();
+            console.log("test");
           }
         }
         """;
