@@ -93,4 +93,15 @@ public class WebpackModuleResolver extends NodeModuleResolver {
     }
     return loadAddress;
   }
+
+  @Override
+  public @Nullable String resolveJsModuleSilently(String scriptAddress, String moduleAddress) {
+    String loadAddress = modulesById.get(moduleAddress);
+    if (loadAddress == null) {
+      // Module paths may still be used in type nodes so we need to fall back
+      // to node module resolution for those.
+      return super.resolveJsModuleSilently(scriptAddress, moduleAddress);
+    }
+    return loadAddress;
+  }
 }
