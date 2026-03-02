@@ -1282,7 +1282,7 @@ google.maps.Data.Geometry = function() {};
  * Repeatedly invokes the given function, passing a point from the geometry to
  * the function on each invocation.
  * @param {function(!google.maps.LatLng): void} callback
- * @return {undefined}
+ * @return {void}
  */
 google.maps.Data.Geometry.prototype.forEachLatLng = function(callback) {};
 
@@ -16563,6 +16563,13 @@ google.maps.maps3d.CameraOptions = function() {};
 google.maps.maps3d.CameraOptions.prototype.altitudeMode;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * See {@link google.maps.maps3d.Map3DElement.cameraPosition}.
+ * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.maps3d.CameraOptions.prototype.cameraPosition;
+
+/**
  * See {@link google.maps.maps3d.Map3DElement.center}.
  * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
  */
@@ -16989,10 +16996,13 @@ google.maps.maps3d.Map3DElement.prototype.defaultUIDisabled;
  * This method orbits the camera around a given location for a given duration.
  * The animation can be repeated by the given number of {@link
  * google.maps.maps3d.FlyAroundAnimationOptions.repeatCount} times. <br /><br />
- * The camera will move in a clockwise direction. <br /><br /> The method is
- * asynchronous because animations can only start after the map has loaded a
- * minimum amount. The method returns once the animation has been started. <br
- * /><br /> If the number of {@link
+ * The camera will move in a clockwise direction. <br /><br /> The location
+ * being orbited around is specified via {@link
+ * google.maps.maps3d.CameraOptions.center}. This is the location that will show
+ * in the center of the viewport during the orbit animation, while the camera
+ * moves around it. <br /><br /> The method is asynchronous because animations
+ * can only start after the map has loaded a minimum amount. The method returns
+ * once the animation has been started. <br /><br /> If the number of {@link
  * google.maps.maps3d.FlyAroundAnimationOptions.repeatCount} times is zero, no
  * spin will occur, and the animation will complete immediately after it starts.
  * @param {!google.maps.maps3d.FlyAroundAnimationOptions} options
@@ -17003,9 +17013,13 @@ google.maps.maps3d.Map3DElement.prototype.flyCameraAround = function(
 
 /**
  * This method moves the camera parabolically from the current location to a
- * given end location over a given duration. <br /><br /> The method is
- * asynchronous because animations can only start after the map has loaded a
- * minimum amount. The method returns once the animation has been started.
+ * given end location over a given duration. End location can be specified
+ * via {@link google.maps.maps3d.CameraOptions.cameraPosition}, which controls
+ * the exact camera position, or via {@link
+ * google.maps.maps3d.CameraOptions.center}, which controls the visible viewport
+ * center of the map. <br /><br /> The method is asynchronous because animations
+ * can only start after the map has loaded a minimum amount. The method returns
+ * once the animation has been started.
  * @param {!google.maps.maps3d.FlyToAnimationOptions} options
  * @return {undefined}
  */
