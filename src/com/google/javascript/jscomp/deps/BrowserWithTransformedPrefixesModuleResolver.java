@@ -147,13 +147,9 @@ public class BrowserWithTransformedPrefixesModuleResolver extends ModuleResolver
       return null;
     }
 
-    String loadAddress = locate(scriptAddress, transformedAddress);
-    if (transformedAddress == null) {
-      errorHandler.report(
-          CheckLevel.WARNING,
-          JSError.make(sourcename, lineno, colno, ModuleLoader.LOAD_WARNING, moduleAddress));
-    }
-    return loadAddress;
+    // A null load address is not an error for this resolver, because it is expected that the
+    // module may be supplied at runtime.
+    return locate(scriptAddress, transformedAddress);
   }
 
   @Override
