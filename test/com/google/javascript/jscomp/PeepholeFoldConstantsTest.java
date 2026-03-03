@@ -718,7 +718,6 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("a = x ?? true ? b : c");
 
     testSame("x = foo() ?? true ?? bar()");
-    ;
     test("x = foo() ?? (true && bar())", "x = foo() ?? bar()");
     testSame("x = (foo() || false) ?? bar()");
 
