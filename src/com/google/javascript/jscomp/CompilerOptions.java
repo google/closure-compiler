@@ -2060,20 +2060,8 @@ public class CompilerOptions {
   }
 
   /** Options to force transpile specific features for performance experiments. */
+  @Deprecated
   public enum ExperimentalForceTranspile {
-    /**
-     * Causes let/const to always be removed from the output featureset if present previously.
-     *
-     * <pre>{@code
-     * For targets that set `options.setForceLetConstTranspilation(true)`:
-     * - if they already set <= ES5 output, no change
-     * - if they set >= ES6 output, then { force transpile let/const + classes + rewrite ESModules +
-     * isolatePolyfills + rewritePolyfills}
-     *
-     * }</pre>
-     */
-    LET_CONST,
-
     /**
      * Causes classes to always be removed from the output featureset if present previously.
      *
@@ -2087,10 +2075,17 @@ public class CompilerOptions {
      */
     CLASS,
 
-    /** Transpile all features down to ES5 except ASYNC AWAIT */
+    /**
+     * Transpile all features down to ES5 except ASYNC AWAIT
+     *
+     * @deprecated Use setLanguageOut(LanguageMode.ECMASCRIPT5), or
+     *     setLangaugeOut(LanguageMode.ECMASCRIPT_2017) instead.
+     */
+    @Deprecated
     ALL_EXCEPT_ASYNC_AWAIT
   };
 
+  @Deprecated
   public void setExperimentalForceTranspiles(
       ExperimentalForceTranspile... experimentalForceTranspile) {
     if (experimentalForceTranspile.length > 1) {

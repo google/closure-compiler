@@ -353,37 +353,19 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     for (ExperimentalForceTranspile experimentalForceTranspile :
         options.getExperimentalForceTranspiles()) {
       switch (experimentalForceTranspile) {
-        case LET_CONST:
-          // TODO(b/239426154): Update let/const transpiler to work in the presence of these other
-          // features when transpiling so that let/const alone can be lowered.
-          options.setOutputFeatureSet(
-              options
-                  .getOutputFeatureSet()
-                  .without(
-                      Feature.LET_DECLARATIONS,
-                      Feature.CONST_DECLARATIONS,
-                      Feature.FOR_OF,
-                      Feature.ARRAY_DESTRUCTURING,
-                      Feature.OBJECT_DESTRUCTURING,
-                      Feature.ARRAY_PATTERN_REST,
-                      Feature.DEFAULT_PARAMETERS));
-        // TODO(rishipal): Fall through because of
-        // https://b.corp.google.com/issues/239426154#comment57
-        case CLASS:
-          options.setOutputFeatureSet(
-              options
-                  .getOutputFeatureSet()
-                  .without(
-                      Feature.CLASSES,
-                      Feature.CLASS_GETTER_SETTER,
-                      Feature.PUBLIC_CLASS_FIELDS,
-                      Feature.CLASS_STATIC_BLOCK,
-                      Feature.NEW_TARGET));
-          break;
-        case ALL_EXCEPT_ASYNC_AWAIT:
-          options.setOutputFeatureSet(
-              FeatureSet.ES5.with(Feature.ASYNC_FUNCTIONS, Feature.ASYNC_GENERATORS));
-          break;
+        case CLASS ->
+            options.setOutputFeatureSet(
+                options
+                    .getOutputFeatureSet()
+                    .without(
+                        Feature.CLASSES,
+                        Feature.CLASS_GETTER_SETTER,
+                        Feature.PUBLIC_CLASS_FIELDS,
+                        Feature.CLASS_STATIC_BLOCK,
+                        Feature.NEW_TARGET));
+        case ALL_EXCEPT_ASYNC_AWAIT ->
+            options.setOutputFeatureSet(
+                FeatureSet.ES5.with(Feature.ASYNC_FUNCTIONS, Feature.ASYNC_GENERATORS));
       }
     }
   }

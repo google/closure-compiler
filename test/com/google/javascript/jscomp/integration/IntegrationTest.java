@@ -5299,23 +5299,6 @@ async function abc() {
   }
 
   @Test
-  public void forceLetConstTranspilationKeepAsync_doesNotKeepClass_withNoTranspile() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageOut(LanguageMode.NO_TRANSPILE);
-    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.LET_CONST);
-
-    // test transpiling classes but leave async functions untranspiled
-    test(
-        options,
-        "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
-        """
-        var $jscomp$classDecl$98447280$0 = function() {};
-        $jscomp$classDecl$98447280$0.prototype.f = async function(p) { await p; return 0 };
-        window['C'] = $jscomp$classDecl$98447280$0
-        """);
-  }
-
-  @Test
   public void forceClassTranspilationKeepAsyncFunctions_withEs2021Out() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
@@ -5327,23 +5310,6 @@ async function abc() {
         "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
         """
         const $jscomp$classDecl$98447280$0 = function() {};
-        $jscomp$classDecl$98447280$0.prototype.f = async function(p) { await p; return 0 };
-        window['C'] = $jscomp$classDecl$98447280$0
-        """);
-  }
-
-  @Test
-  public void forceLetConstTranspilationKeepsAsyncFunctions_doesNotKeepClass_withEs2021Out() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
-    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.LET_CONST);
-
-    // test transpiling let/const, classes but leave async functions untranspiled
-    test(
-        options,
-        "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
-        """
-        var $jscomp$classDecl$98447280$0 = function() {};
         $jscomp$classDecl$98447280$0.prototype.f = async function(p) { await p; return 0 };
         window['C'] = $jscomp$classDecl$98447280$0
         """);
@@ -5415,106 +5381,6 @@ async function abc() {
         const $jscomp$classDecl$98447280$0 = function() {};
         $jscomp$classDecl$98447280$0.prototype.f = function({num}) { return Math.pow(num, 3) };
         window['C'] = $jscomp$classDecl$98447280$0
-        """);
-  }
-
-  @Test
-  public void forceLetConstTranspilationAlsoLowersObjectDestructuringAndClasses_withEs2015Out() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
-    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.LET_CONST);
-    options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_AND_VALIDATE_FIELDS);
-    options.setPrettyPrint(true);
-    externs =
-        ImmutableList.<SourceFile>builder()
-            .addAll(externs)
-            .add(new TestExternsBuilder().addJSCompLibraries().buildExternsFile("jscomp.js"))
-            .build();
-
-    // check that we transpile the ES2016 `**`, let/const, classes and the ES2015 destructuring
-    // parameter
-    test(
-        options,
-        """
-        window['C'] = /** @dict */ class C {
-          f({num}) {
-            return num ** 3;
-          }
-        }
-        """,
-        """
-        var $jscomp$classDecl$98447280$0 = function() {};
-        $jscomp$classDecl$98447280$0.prototype.f = function($jscomp$destructuring$var0) {
-          var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
-          var num = $jscomp$destructuring$var1.num;
-          return Math.pow(num, 3)
-        };
-        window['C'] = $jscomp$classDecl$98447280$0
-        """);
-  }
-
-  @Test
-  public void forceLetConstTranspilationAlsoLowersArrayDestructuring_withEs2015Out() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
-    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.LET_CONST);
-    options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_AND_VALIDATE_FIELDS);
-    options.setPrettyPrint(true);
-    externs =
-        ImmutableList.<SourceFile>builder()
-            .addAll(externs)
-            .add(new TestExternsBuilder().addJSCompLibraries().buildExternsFile("jscomp.js"))
-            .build();
-
-    // This test is to document the current compiler behavior of
-    // ExperimentalForceTranspile.LET_CONST also transpiling array destructuring parameters.
-    // This isn't strictly necessary, but otherwise would require more refactoring of the
-    // transpilation passes.
-    test(
-        options,
-        """
-        window['C'] = function([...strs]) {
-          return `${strs}`;
-        };
-        """,
-        """
-        window["C"] = function($jscomp$destructuring$var0) {
-          var $jscomp$destructuring$var1 = (0,$jscomp.makeIterator)($jscomp$destructuring$var0);
-          var strs = (0,$jscomp.arrayFromIterator)($jscomp$destructuring$var1);
-          return `${strs}`;
-        };
-        """);
-  }
-
-  @Test
-  public void forceLetConstTranspilationAlsoLowersDefaultParameters_withEs2015Out() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
-    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.LET_CONST);
-    options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_AND_VALIDATE_FIELDS);
-    options.setPrettyPrint(true);
-    externs =
-        ImmutableList.<SourceFile>builder()
-            .addAll(externs)
-            .add(new TestExternsBuilder().addJSCompLibraries().buildExternsFile("jscomp.js"))
-            .build();
-
-    // This test is to document the current compiler behavior of
-    // ExperimentalForceTranspile.LET_CONST also transpiling default parameters.
-    // This isn't strictly necessary, but otherwise would require more refactoring of the
-    // transpilation passes.
-    test(
-        options,
-        """
-        window['C'] = function(str = '') {
-          return `${str}`;
-        };
-        """,
-        """
-        window["C"] = function(str) {
-          str = str === void 0 ? "" : str;
-          return `${str}`;
-        };
         """);
   }
 
