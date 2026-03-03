@@ -87,7 +87,6 @@ public final class DotFormatterTest {
   @Test
   public void testToDotSimpleStringKey() throws Exception {
     Node ast = Node.newString(Token.STRING_KEY, "key");
-    ;
 
     String expected =
         """
