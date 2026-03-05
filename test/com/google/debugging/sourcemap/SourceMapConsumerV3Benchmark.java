@@ -58,6 +58,6 @@ public class SourceMapConsumerV3Benchmark {
 
     long memoryUsed = (after - before) / 1024 / 1024;
     System.out.println("Memory used: " + memoryUsed + " MB");
-    assertThat(memoryUsed).isLessThan(85);
+    assertThat(memoryUsed).isLessThan(70);
   }
 }

@@ -89,11 +89,15 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
     }
 
     lineCount = sourceMapObject.getLineCount();
-    mappings = new Mappings(lineCount);
     sourceRoot = sourceMapObject.getSourceRoot();
     sources = sourceMapObject.getSources();
     sourcesContent = sourceMapObject.getSourcesContent();
     names = sourceMapObject.getNames();
+
+    boolean useCompactMappings =
+        (sources.length < 65535) && (names == null || names.length < 65535);
+
+    mappings = new Mappings(lineCount, useCompactMappings);
 
     // The value type of each extension is the native JSON type (e.g. JsonObject, or JSONObject
     // when compiled with GWT).
@@ -161,7 +165,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
       return getPreviousMapping(lineNumber);
     }
 
-    int index = search(column, start, end - 5);
+    int index = search(column, start, end - mappings.getEntrySize());
     Preconditions.checkState(index >= 0, "unexpected:%s", index);
     return getOriginalMappingForEntry(index, Precision.EXACT);
   }
@@ -290,7 +294,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
             previousNameId = mappings.getNameId();
           }
 
-          entriesCount += 5;
+          entriesCount += mappings.getEntrySize();
 
           // Consume the separating token, if there is one.
           tryConsumeToken(',');
@@ -333,20 +337,21 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
 
   /** Perform a binary search on the array to find a section that covers the target column. */
   private int search(int target, int start, int end) {
+    int entrySize = mappings.getEntrySize();
     while (true) {
-      int mid = ((end - start) / 10) * 5 + start;
+      int mid = ((end - start) / (entrySize * 2)) * entrySize + start;
       int compare = mappings.atIndex(mid).getGeneratedColumn() - target;
       if (compare == 0) {
         return mid;
       } else if (compare < 0) {
         // it is in the upper half
-        start = mid + 5;
+        start = mid + entrySize;
         if (start > end) {
           return end;
         }
       } else {
         // it is in the lower half
-        end = mid - 5;
+        end = mid - entrySize;
         if (end < start) {
           return end;
         }
@@ -361,7 +366,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
       }
       lineNumber--;
     } while (mappings.getLineStart(lineNumber) == mappings.getLineStart(lineNumber + 1));
-    int index = mappings.getLineStart(lineNumber + 1) - 5;
+    int index = mappings.getLineStart(lineNumber + 1) - mappings.getEntrySize();
     return getOriginalMappingForEntry(index, Precision.APPROXIMATE_LINE);
   }
 
@@ -398,7 +403,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
       int start = mappings.getLineStart(targetLine);
       int end = mappings.getLineStart(targetLine + 1);
 
-      for (int i = start; i < end; i += 5) {
+      for (int i = start; i < end; i += mappings.getEntrySize()) {
         mappings.atIndex(i);
         int sourceFileId = mappings.getSourceFileId();
         int sourceLine = mappings.getSourceLine();
@@ -460,7 +465,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
   private final class Mappings {
     // flatEntries stores all entries sequentially.
     // Each entry is packed into 5 consecutive integers:
-    // [generatedCol, sourceFileId, sourceLine, sourceCol, nameId].
+    // [generatedCol, sourceLine, sourceCol, sourceFileId, nameId].
     // For unmapped entries, sourceFileId (and other source-related fields) will be set to UNMAPPED
     // (-1).
     private int[] flatEntries;
@@ -471,12 +476,19 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
     private int lineCount;
     private int index;
 
-    Mappings(int lineCount) {
+    private final int entrySize;
+
+    Mappings(int lineCount, boolean useCompactMappings) {
       this.lineCount = lineCount;
+      this.entrySize = useCompactMappings ? 4 : 5;
       int estimatedEntries = (lineCount >= 0) ? lineCount * 2 : 1000;
-      this.flatEntries = new int[estimatedEntries * 5];
+      this.flatEntries = new int[estimatedEntries * entrySize];
       int estimatedLines = (lineCount >= 0) ? lineCount : 1000;
       this.lineStart = new int[estimatedLines + 1];
+    }
+
+    int getEntrySize() {
+      return entrySize;
     }
 
     @CanIgnoreReturnValue
@@ -490,18 +502,26 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
     }
 
     int getSourceFileId() {
-      return flatEntries[index + 1];
-    }
-
-    int getSourceLine() {
-      return flatEntries[index + 2];
-    }
-
-    int getSourceColumn() {
+      if (entrySize == 4) {
+        int val = flatEntries[index + 3] >> 16;
+        return (val == -1 || (val & 0xFFFF) == 0xFFFF) ? UNMAPPED : (val & 0xFFFF);
+      }
       return flatEntries[index + 3];
     }
 
+    int getSourceLine() {
+      return flatEntries[index + 1];
+    }
+
+    int getSourceColumn() {
+      return flatEntries[index + 2];
+    }
+
     int getNameId() {
+      if (entrySize == 4) {
+        int val = flatEntries[index + 3] & 0xFFFF;
+        return (val == 0xFFFF) ? UNMAPPED : val;
+      }
       return flatEntries[index + 4];
     }
 
@@ -530,9 +550,93 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
         int previousSrcColumn,
         int previousNameId)
         throws SourceMapParseException {
-      if (entriesCount + 5 > flatEntries.length) {
+      if (entriesCount + entrySize > flatEntries.length) {
         flatEntries = Arrays.copyOf(flatEntries, flatEntries.length * 2);
       }
+      // `entrySize == 4` indicates `useCompactMappings` is true, meaning the number of
+      // unique source files and names are both small enough (under 65535) that their IDs
+      // can be bit-packed into a single integer. Otherwise, they each get their own integer.
+      if (entrySize == 4) {
+        setEntryCompact(
+            entriesCount,
+            vals,
+            entryValues,
+            previousCol,
+            previousSrcId,
+            previousSrcLine,
+            previousSrcColumn,
+            previousNameId);
+      } else {
+        setEntryNormal(
+            entriesCount,
+            vals,
+            entryValues,
+            previousCol,
+            previousSrcId,
+            previousSrcLine,
+            previousSrcColumn,
+            previousNameId);
+      }
+    }
+
+    private void setEntryCompact(
+        int entriesCount,
+        int[] vals,
+        int entryValues,
+        int previousCol,
+        int previousSrcId,
+        int previousSrcLine,
+        int previousSrcColumn,
+        int previousNameId)
+        throws SourceMapParseException {
+      // The `vals` array holds the decoded VLQ values in the exact order established
+      // by the SourceMap V3 specification:
+      // [generatedCol, sourceFileId, sourceLine, sourceCol, nameId]
+      // We reorder these values when storing them in `flatEntries` to minimize branching
+      // overhead during lookups, putting `sourceLine` and `sourceColumn` before the IDs.
+      switch (entryValues) {
+        case 1 -> {
+          flatEntries[entriesCount] = vals[0] + previousCol;
+          flatEntries[entriesCount + 1] = UNMAPPED;
+          flatEntries[entriesCount + 2] = UNMAPPED;
+          flatEntries[entriesCount + 3] = UNMAPPED; // Both IDs are -1
+        }
+        case 4 -> {
+          flatEntries[entriesCount] = vals[0] + previousCol;
+          flatEntries[entriesCount + 1] = vals[2] + previousSrcLine;
+          flatEntries[entriesCount + 2] = vals[3] + previousSrcColumn;
+          int srcId = vals[1] + previousSrcId;
+          flatEntries[entriesCount + 3] = (srcId << 16) | 0xFFFF;
+        }
+        case 5 -> {
+          flatEntries[entriesCount] = vals[0] + previousCol;
+          flatEntries[entriesCount + 1] = vals[2] + previousSrcLine;
+          flatEntries[entriesCount + 2] = vals[3] + previousSrcColumn;
+          int srcId = vals[1] + previousSrcId;
+          int nameId = vals[4] + previousNameId;
+          flatEntries[entriesCount + 3] = (srcId << 16) | (nameId & 0xFFFF);
+        }
+        default ->
+            throw new SourceMapParseException(
+                "Unexpected number of values for entry:" + entryValues);
+      }
+    }
+
+    private void setEntryNormal(
+        int entriesCount,
+        int[] vals,
+        int entryValues,
+        int previousCol,
+        int previousSrcId,
+        int previousSrcLine,
+        int previousSrcColumn,
+        int previousNameId)
+        throws SourceMapParseException {
+      // The `vals` array holds the decoded VLQ values in the exact order established
+      // by the SourceMap V3 specification:
+      // [generatedCol, sourceFileId, sourceLine, sourceCol, nameId]
+      // We reorder these values when storing them in `flatEntries` to minimize branching
+      // overhead during lookups, putting `sourceLine` and `sourceColumn` before the IDs.
       switch (entryValues) {
         case 1 -> {
           flatEntries[entriesCount] = vals[0] + previousCol;
@@ -543,16 +647,16 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
         }
         case 4 -> {
           flatEntries[entriesCount] = vals[0] + previousCol;
-          flatEntries[entriesCount + 1] = vals[1] + previousSrcId;
-          flatEntries[entriesCount + 2] = vals[2] + previousSrcLine;
-          flatEntries[entriesCount + 3] = vals[3] + previousSrcColumn;
+          flatEntries[entriesCount + 1] = vals[2] + previousSrcLine;
+          flatEntries[entriesCount + 2] = vals[3] + previousSrcColumn;
+          flatEntries[entriesCount + 3] = vals[1] + previousSrcId;
           flatEntries[entriesCount + 4] = UNMAPPED;
         }
         case 5 -> {
           flatEntries[entriesCount] = vals[0] + previousCol;
-          flatEntries[entriesCount + 1] = vals[1] + previousSrcId;
-          flatEntries[entriesCount + 2] = vals[2] + previousSrcLine;
-          flatEntries[entriesCount + 3] = vals[3] + previousSrcColumn;
+          flatEntries[entriesCount + 1] = vals[2] + previousSrcLine;
+          flatEntries[entriesCount + 2] = vals[3] + previousSrcColumn;
+          flatEntries[entriesCount + 3] = vals[1] + previousSrcId;
           flatEntries[entriesCount + 4] = vals[4] + previousNameId;
         }
         default ->
@@ -564,8 +668,9 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
     void validateEntry(int entriesCount, int line) {
       Preconditions.checkState(
           lineCount < 0 || line < lineCount, "line=%s, lineCount=%s", line, lineCount);
-      int sourceFileId = flatEntries[entriesCount + 1];
-      int nameId = flatEntries[entriesCount + 4];
+      atIndex(entriesCount);
+      int sourceFileId = getSourceFileId();
+      int nameId = getNameId();
       checkState(sourceFileId == UNMAPPED || sourceFileId < sources.length);
       checkState(nameId == UNMAPPED || nameId < names.length);
     }
@@ -596,7 +701,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
       int start = mappings.getLineStart(i);
       int end = mappings.getLineStart(i + 1);
       if (start != end) {
-        for (int j = start; j < end; j += 5) {
+        for (int j = start; j < end; j += mappings.getEntrySize()) {
           mappings.atIndex(j);
           if (pending) {
             FilePosition endPosition = new FilePosition(i, mappings.getGeneratedColumn());
