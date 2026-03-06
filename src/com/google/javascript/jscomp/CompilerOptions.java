@@ -2063,19 +2063,6 @@ public class CompilerOptions {
   @Deprecated
   public enum ExperimentalForceTranspile {
     /**
-     * Causes classes to always be removed from the output featureset if present previously.
-     *
-     * <pre>{@code
-     * For targets that set `options.setForceClassTranspilation(true)`:
-     * - if they already set <= ES5 output, no change
-     * - if they set >= ES6 output, then { force transpile classes + rewrite ESModules +
-     * isolatePolyfills + rewritePolyfills}
-     *
-     * }</pre>
-     */
-    CLASS,
-
-    /**
      * Transpile all features down to ES5 except ASYNC AWAIT
      *
      * @deprecated Use setLanguageOut(LanguageMode.ECMASCRIPT5), or

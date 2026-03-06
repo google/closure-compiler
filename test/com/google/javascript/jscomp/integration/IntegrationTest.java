@@ -5282,40 +5282,6 @@ async function abc() {
   }
 
   @Test
-  public void forceClassTranspilationKeepAsync_withNoTranspile() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageOut(LanguageMode.NO_TRANSPILE);
-    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.CLASS);
-
-    // test transpiling classes but leave async functions untranspiled
-    test(
-        options,
-        "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
-        """
-        const $jscomp$classDecl$98447280$0 = function() {};
-        $jscomp$classDecl$98447280$0.prototype.f = async function(p) { await p; return 0 };
-        window['C'] = $jscomp$classDecl$98447280$0
-        """);
-  }
-
-  @Test
-  public void forceClassTranspilationKeepAsyncFunctions_withEs2021Out() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
-    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.CLASS);
-
-    // test transpiling classes but leave async functions untranspiled
-    test(
-        options,
-        "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
-        """
-        const $jscomp$classDecl$98447280$0 = function() {};
-        $jscomp$classDecl$98447280$0.prototype.f = async function(p) { await p; return 0 };
-        window['C'] = $jscomp$classDecl$98447280$0
-        """);
-  }
-
-  @Test
   public void forceTranspileExceptAsyncAwait_doesNotRemoveAsyncAwait() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(
@@ -5364,24 +5330,6 @@ async function abc() {
     testNoWarnings(options, "class C { async f(p) { let obj = await p; return obj?.prop; } }");
     assertThat(lastCompiler.toSource()).doesNotContain("async ");
     assertThat(lastCompiler.toSource()).doesNotContain("await ");
-  }
-
-  @Test
-  public void forceClassTranspilationKeepDestructuring_withEs2015Out() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
-    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.CLASS);
-
-    // check that we can transpile the ES2016 `**` + classes, but leave the ES2015 destructuring
-    // parameter behind.
-    test(
-        options,
-        "window['C'] = /** @dict */ class C { f({num}) { return num ** 3; } }",
-        """
-        const $jscomp$classDecl$98447280$0 = function() {};
-        $jscomp$classDecl$98447280$0.prototype.f = function({num}) { return Math.pow(num, 3) };
-        window['C'] = $jscomp$classDecl$98447280$0
-        """);
   }
 
   @Test

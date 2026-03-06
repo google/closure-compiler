@@ -353,16 +353,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     for (ExperimentalForceTranspile experimentalForceTranspile :
         options.getExperimentalForceTranspiles()) {
       switch (experimentalForceTranspile) {
-        case CLASS ->
-            options.setOutputFeatureSet(
-                options
-                    .getOutputFeatureSet()
-                    .without(
-                        Feature.CLASSES,
-                        Feature.CLASS_GETTER_SETTER,
-                        Feature.PUBLIC_CLASS_FIELDS,
-                        Feature.CLASS_STATIC_BLOCK,
-                        Feature.NEW_TARGET));
         case ALL_EXCEPT_ASYNC_AWAIT ->
             options.setOutputFeatureSet(
                 FeatureSet.ES5.with(Feature.ASYNC_FUNCTIONS, Feature.ASYNC_GENERATORS));
