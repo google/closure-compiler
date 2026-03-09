@@ -13,6 +13,11 @@ message OptimizationJsdoc {
   int32 description_pointer = 3;
   int32 meaning_pointer = 4;
   int32 alternate_message_id_pointer = 5;
+
+  // Used by @closureUnaware rewriting. String pool value that corresponds to
+  // the PerFileClosureUnawareMode enum. Defined as a string for future
+  // extensibility.
+  int32 closure_unaware_mode_pointer = 6;
 }
 
 enum JsdocTag {

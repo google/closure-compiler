@@ -8676,6 +8676,56 @@ console.log(new X(1));
   }
 
   @Test
+  public void closureUnawareAnnotation_specifyMinificationLevel_inFileOverview_succeeds() {
+    TestErrorReporter errorReporter =
+        new TestErrorReporter()
+            .expectAllWarnings(
+                "@closureUnaware annotation is not allowed in this compilation",
+                "@closureUnaware annotation is not allowed in this compilation");
+    doParse(
+        """
+        /** @fileoverview @closureUnaware {SIMPLE} */
+        /** @closureUnaware */ (
+          function() {}).call(globalThis);
+        """,
+        errorReporter);
+  }
+
+  @Test
+  public void closureUnawareAnnotation_specifyMinificationLevel_inPerFunctionDoc_errors() {
+    TestErrorReporter errorReporter =
+        new TestErrorReporter()
+            .expectAllErrors("@closureUnaware mode can only be specified at the fileoverview level")
+            .expectAllWarnings(
+                "@closureUnaware annotation is not allowed in this compilation",
+                "@closureUnaware annotation is not allowed in this compilation");
+    doParse(
+        """
+        /** @fileoverview @closureUnaware */
+        /** @closureUnaware {SIMPLE} */ (
+          function() {}).call(globalThis);
+        """,
+        errorReporter);
+  }
+
+  @Test
+  public void closureUnawareAnnotation_specifyMinificationLevel_inMultipleDoc_errors() {
+    TestErrorReporter errorReporter =
+        new TestErrorReporter()
+            .expectAllErrors("@closureUnaware mode can only be specified at the fileoverview level")
+            .expectAllWarnings(
+                "@closureUnaware annotation is not allowed in this compilation",
+                "@closureUnaware annotation is not allowed in this compilation");
+    doParse(
+        """
+        /** @fileoverview @closureUnaware {SIMPLE} */
+        /** @closureUnaware {SIMPLE} */ (
+          function() {}).call(globalThis);
+        """,
+        errorReporter);
+  }
+
+  @Test
   public void closureUnawareAnnotation_usedOutsideFileWithClosureUnaware_errors() {
     TestErrorReporter errorReporter =
         new TestErrorReporter()

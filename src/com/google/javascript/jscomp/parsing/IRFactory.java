@@ -131,6 +131,7 @@ import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.PerFileClosureUnawareMode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NonJSDocComment;
 import com.google.javascript.rhino.QualifiedName;
@@ -1068,6 +1069,10 @@ class IRFactory {
     if (!fn.isFunction()) {
       error(fn, "@closureUnaware root must be function");
       return fn;
+    }
+    JSDocInfo info = fn.getJSDocInfo();
+    if (info.getPerFileClosureUnawareMode() != PerFileClosureUnawareMode.UNSPECIFIED) {
+      error(fn, "@closureUnaware mode can only be specified at the fileoverview level");
     }
     fn.setJSDocInfo(null);
 

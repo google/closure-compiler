@@ -833,7 +833,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     assertThat(result.compiler.toSource(result.sourceRoot))
         .isEqualTo(
             """
-            goog.module("test");(function(){window["foo"]=5})()\
+            /** @closureUnaware */ goog.module("test");(function(){window["foo"]=5})()\
             """);
 
     NodeTraversal.Callback cb =

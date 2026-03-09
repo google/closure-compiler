@@ -53,6 +53,7 @@ import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.rhino.JSDocInfo.PerFileClosureUnawareMode;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -167,8 +168,7 @@ public class JSDocInfoTest {
     builder.recordReturnType(fromString("string"));
     JSDocInfo info = builder.build();
 
-    assertType(resolve(info.getBaseType()))
-        .isEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
+    assertType(resolve(info.getBaseType())).isEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
     assertThat(info.getDescription()).isNull();
     assertThat(info.getEnumParameterType()).isNull();
     assertThat(info.getParameterCount()).isEqualTo(0);
@@ -188,8 +188,7 @@ public class JSDocInfoTest {
 
     assertThat(info.getBaseType()).isNull();
     assertThat(info.getDescription()).isNull();
-    assertType(resolve(info.getEnumParameterType()))
-        .isEqualTo(getNativeType(STRING_TYPE));
+    assertType(resolve(info.getEnumParameterType())).isEqualTo(getNativeType(STRING_TYPE));
     assertThat(info.getParameterCount()).isEqualTo(0);
     assertThat(info.getReturnType()).isNull();
     assertThat(info.getType()).isNull();
@@ -247,8 +246,7 @@ public class JSDocInfoTest {
     assertThat(info.getType()).isNull();
     assertThat(info.getTypedefType()).isNull();
     assertThat(info.getReturnType()).isNull();
-    assertType(resolve(info.getEnumParameterType()))
-        .isEqualTo(getNativeType(BOOLEAN_TYPE));
+    assertType(resolve(info.getEnumParameterType())).isEqualTo(getNativeType(BOOLEAN_TYPE));
   }
 
   @Test
@@ -354,7 +352,6 @@ public class JSDocInfoTest {
     builder.recordCustomElement();
     JSDocInfo info = builder.build();
     assertThat(info.isCustomElement()).isTrue();
-
   }
 
   @Test
@@ -450,8 +447,7 @@ public class JSDocInfoTest {
 
     JSDocInfo cloned = info.clone();
 
-    assertType(resolve(cloned.getBaseType()))
-        .isEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
+    assertType(resolve(cloned.getBaseType())).isEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
     assertThat(cloned.getDescription()).isEqualTo("The source info");
     assertType(resolve(cloned.getReturnType())).isEqualTo(getNativeType(STRING_TYPE));
     assertThat(cloned.isConstant()).isTrue();
@@ -492,16 +488,14 @@ public class JSDocInfoTest {
     JSDocInfo cloned = info.clone(true);
 
     assertThat(cloned.getBaseType().getRoot()).isNotSameInstanceAs(info.getBaseType().getRoot());
-    assertType(resolve(cloned.getBaseType()))
-        .isEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
+    assertType(resolve(cloned.getBaseType())).isEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
     assertThat(cloned.getDescription()).isEqualTo("The source info");
     assertThat(cloned.getReturnType().getRoot())
         .isNotSameInstanceAs(info.getReturnType().getRoot());
     assertType(resolve(cloned.getReturnType())).isEqualTo(getNativeType(STRING_TYPE));
     assertThat(cloned.getParameterType("a").getRoot())
         .isNotSameInstanceAs(info.getParameterType("a").getRoot());
-    assertType(resolve(cloned.getParameterType("a")))
-        .isEqualTo(getNativeType(STRING_TYPE));
+    assertType(resolve(cloned.getParameterType("a"))).isEqualTo(getNativeType(STRING_TYPE));
   }
 
   @Test
@@ -763,6 +757,37 @@ public class JSDocInfoTest {
     builder = JSDocInfo.builder();
     builder.recordClosurePrimitiveId("asserts.fail");
     assertThat(JSDocInfo.areEquivalent(assertsFailJSDoc, builder.build())).isTrue();
+  }
+
+  @Test
+  public void testRecordClosureUnaware_perFileMode() {
+    JSDocInfo.Builder builder = JSDocInfo.builder();
+    builder.recordClosureUnawareCode(PerFileClosureUnawareMode.WHITESPACE);
+    JSDocInfo info = builder.build();
+
+    assertThat(info.isClosureUnawareCode()).isTrue();
+    assertThat(info.getPerFileClosureUnawareMode()).isEqualTo(PerFileClosureUnawareMode.WHITESPACE);
+  }
+
+  @Test
+  public void testRecordClosureUnaware_perFileMode_duplicate() {
+    JSDocInfo.Builder builder = JSDocInfo.builder();
+    builder.recordClosureUnawareCode(PerFileClosureUnawareMode.WHITESPACE);
+    builder.recordClosureUnawareCode(PerFileClosureUnawareMode.SIMPLE);
+    JSDocInfo info = builder.build();
+
+    assertThat(info.isClosureUnawareCode()).isTrue();
+    assertThat(info.getPerFileClosureUnawareMode()).isEqualTo(PerFileClosureUnawareMode.WHITESPACE);
+  }
+
+  @Test
+  public void testNoClosureUnawarePerFileMode_defaultsToUnspecified() {
+    JSDocInfo.Builder builder = JSDocInfo.builder();
+    builder.recordClosureUnawareCode();
+    JSDocInfo info = builder.build();
+    assertThat(info.isClosureUnawareCode()).isTrue();
+    assertThat(info.getPerFileClosureUnawareMode())
+        .isEqualTo(PerFileClosureUnawareMode.UNSPECIFIED);
   }
 
   /** Gets the type expression for a simple type name. */

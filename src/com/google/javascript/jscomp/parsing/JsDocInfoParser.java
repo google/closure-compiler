@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.PerFileClosureUnawareMode;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Msg;
@@ -858,15 +859,7 @@ public final class JsDocInfoParser {
           return eatUntilEOLIfNotAnnotation();
         }
         case CLOSURE_UNAWARE_CODE -> {
-          if (!jsdocBuilder.recordClosureUnawareCode()) {
-            addParserWarning(Msg.JSDOC_CLOSURE_UNAWARE_CODE_EXTRA);
-          } else {
-            // This warning that is always reported is translated into an off-by-default error,
-            // and that is conditionally elevated into a build-blocking error using the relevant
-            // DiagnosticGroup flags.
-            addParserWarning(Msg.JSDOC_CLOSURE_UNAWARE_CODE_INVALID);
-          }
-          return eatUntilEOLIfNotAnnotation();
+          return parseClosureUnawareCode();
         }
         case THROWS -> {
           lineno = stream.getLineno();
@@ -2868,5 +2861,35 @@ public final class JsDocInfoParser {
     }
     stream.ungetChar(c);
     return matched;
+  }
+
+  private JsDocToken parseClosureUnawareCode() {
+    // This warning that is always reported is translated into an off-by-default error,
+    // and that is conditionally elevated into a build-blocking error using the relevant
+    // DiagnosticGroup flags.
+    addParserWarning(Msg.JSDOC_CLOSURE_UNAWARE_CODE_INVALID);
+    if (!match(JsDocToken.LEFT_CURLY)) {
+      if (!jsdocBuilder.recordClosureUnawareCode()) {
+        addParserWarning(Msg.JSDOC_CLOSURE_UNAWARE_CODE_EXTRA);
+      }
+      return eatUntilEOLIfNotAnnotation(current());
+    }
+    var token = next();
+    if (match(JsDocToken.STRING)) {
+      String value = stream.getString();
+      PerFileClosureUnawareMode mode =
+          switch (value) {
+            case "WHITESPACE" -> PerFileClosureUnawareMode.WHITESPACE;
+            case "SIMPLE" -> PerFileClosureUnawareMode.SIMPLE;
+            default -> {
+              addParserWarning(Msg.JSDOC_CLOSURE_UNAWARE_CONFIG_INVALID_VALUE, value);
+              yield PerFileClosureUnawareMode.SIMPLE;
+            }
+          };
+      if (!jsdocBuilder.recordClosureUnawareCode(mode)) {
+        addParserWarning(Msg.JSDOC_CLOSURE_UNAWARE_CODE_EXTRA);
+      }
+    }
+    return eatUntilEOLIfNotAnnotation(token);
   }
 }

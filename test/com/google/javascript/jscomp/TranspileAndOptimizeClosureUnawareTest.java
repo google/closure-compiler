@@ -48,6 +48,7 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
 
   @Before
   public void setup() {
+    enableMultistageCompilation();
     disableCompareJsDoc();
     this.inputCount = 0;
     this.outputCount = 0;
@@ -644,6 +645,52 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
             (function() {
               console.log(3);
             })();
+            """));
+  }
+
+  @Test
+  public void testSupportsClosureUnawareTag_simpleOptimizations() {
+    test(
+        srcs(
+            """
+            /**
+             * @fileoverview
+             * @closureUnaware {SIMPLE}
+             */
+            goog.module('test');
+            /** @closureUnaware */
+            (function() {
+              console.log(1 + 2);
+            }).call(undefined);
+            """),
+        expected(
+            """
+            /**
+             * @fileoverview
+             * @closureUnaware {SIMPLE}
+             */
+            goog.module('test');
+            /** @closureUnaware */
+            (function() {
+              console.log(3);
+            }).call(undefined);
+            """));
+  }
+
+  @Test
+  public void testSupportsClosureUnawareTag_whitespaceOnly() {
+    testSame(
+        srcs(
+            """
+            /**
+             * @fileoverview
+             * @closureUnaware {WHITESPACE}
+             */
+            goog.module('test');
+            /** @closureUnaware */
+            (function() {
+              console.log(1 + 2);
+            }).call(undefined);
             """));
   }
 

@@ -56,6 +56,7 @@ public enum Msg {
   JSDOC_CLOSUREPRIMITIVE_INVALID("invalid id in @closurePrimitive tag."),
   JSDOC_CLOSUREPRIMITIVE_MISSING("missing id in @closurePrimitive tag."),
   JSDOC_CLOSURE_UNAWARE_CODE_EXTRA("extra @closureUnaware tag"),
+  JSDOC_CLOSURE_UNAWARE_CONFIG_INVALID_VALUE("invalid value for @closureUnaware: {0}"),
   JSDOC_CLOSURE_UNAWARE_CODE_INVALID(
       "@closureUnaware annotation is not allowed in this compilation"),
   JSDOC_COLLAPSIBLEORBREAKMYCODE("extra @collapsibleOrBreakMyCode tag"),

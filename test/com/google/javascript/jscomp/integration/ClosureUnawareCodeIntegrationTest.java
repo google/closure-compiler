@@ -371,6 +371,53 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
   }
 
   @Test
+  public void testOptimizeClosureUnawareCode_canBeConfiguredPerScript() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setClosureUnawareMode(ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
+
+    test(
+        options,
+        new String[] {
+          """
+          /**
+           * @fileoverview
+           * @closureUnaware {SIMPLE}
+           */
+          goog.module('optimize.me');
+          /** @closureUnaware */
+          (function() {
+            const removeMe = 5;
+          }).call(globalThis);
+          """,
+          """
+          /**
+           * @fileoverview
+           * @closureUnaware {WHITESPACE}
+           */
+          goog.module('no.optimize');
+          /** @closureUnaware */
+          (function() {
+            const keepMe = 5;
+          }).call(globalThis);
+          """
+        },
+        new String[] {
+          """
+          (function() {
+          }).call(globalThis);
+          """,
+          """
+          (function() {
+            const keepMe = 5;
+          }).call(globalThis);
+          """
+        });
+  }
+
+  @Test
   public void testOptimizeClosureUnawareCode_doesRemoveUselessCode() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
