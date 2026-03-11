@@ -7954,19 +7954,19 @@ google.maps.OverlayView.preventMapHitsFrom = function(element) {};
  * to the MapPanes. This method is called after onAdd(), and is called on change
  * of zoom or center. It is not recommended to do computationally expensive work
  * in this method.
- * @return {undefined}
+ * @return {void}
  */
 google.maps.OverlayView.prototype.draw = function() {};
 
 /**
- * @return {google.maps.Map|google.maps.StreetViewPanorama}
+ * @return {!google.maps.Map|!google.maps.StreetViewPanorama}
  */
 google.maps.OverlayView.prototype.getMap = function() {};
 
 /**
  * Returns the panes in which this OverlayView can be rendered. The panes are
  * not initialized until <code>onAdd</code> is called by the API.
- * @return {?google.maps.MapPanes}
+ * @return {!google.maps.MapPanes|null}
  */
 google.maps.OverlayView.prototype.getPanes = function() {};
 
@@ -7982,20 +7982,20 @@ google.maps.OverlayView.prototype.getProjection = function() {};
  * Implement this method to initialize the overlay DOM elements. This method is
  * called once after setMap() is called with a valid map. At this point, panes
  * and projection will have been initialized.
- * @return {undefined}
+ * @return {void}
  */
 google.maps.OverlayView.prototype.onAdd = function() {};
 
 /**
  * Implement this method to remove your elements from the DOM. This method is
  * called once following a call to setMap(null).
- * @return {undefined}
+ * @return {void}
  */
 google.maps.OverlayView.prototype.onRemove = function() {};
 
 /**
  * Adds the overlay to the map or panorama.
- * @param {google.maps.Map|google.maps.StreetViewPanorama|null} map The map or
+ * @param {!google.maps.Map|!google.maps.StreetViewPanorama|null} map The map or
  *     panorama. If <code>null</code>, the layer will be removed.
  * @return {undefined}
  */
@@ -16685,7 +16685,8 @@ google.maps.maps3d.FlyAroundAnimationOptions.prototype.durationMillis;
 
 /**
  * Specifies the number of times an animation should repeat. If the number is
- * zero, the animation will complete immediately after it starts.
+ * zero, the animation will complete immediately after it starts. If
+ * Number.Infinity is passed, the animation will repeat forever.
  * @type {number|undefined}
  */
 google.maps.maps3d.FlyAroundAnimationOptions.prototype.repeatCount;
@@ -21108,7 +21109,8 @@ google.maps.places.Place.prototype.getNextOpeningTime = function(date) {};
 google.maps.places.Place.prototype.isOpen = function(date) {};
 
 /**
- * @return {!Object} a JSON object with all the requested Place properties.
+ * Converts to a plain object.
+ * @return {!Object}
  */
 google.maps.places.Place.prototype.toJSON = function() {};
 
@@ -25194,12 +25196,6 @@ google.maps.routes.DirectionalLocation = function() {};
 google.maps.routes.DirectionalLocation.prototype.heading;
 
 /**
- * Converts to an object.
- * @return {!google.maps.routes.DirectionalLocationLiteral}
- */
-google.maps.routes.DirectionalLocation.prototype.toJSON = function() {};
-
-/**
  * Object literals are accepted in place of {@link
  * google.maps.routes.DirectionalLocation} instances as a convenience. These are
  * converted to {@link google.maps.routes.DirectionalLocation} when the Maps JS
@@ -25246,12 +25242,6 @@ google.maps.routes.FallbackInfo.prototype.reason;
  * @type {!google.maps.routes.FallbackRoutingMode|null|undefined}
  */
 google.maps.routes.FallbackInfo.prototype.routingMode;
-
-/**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.FallbackInfo.prototype.toJSON = function() {};
 
 /**
  * The reason that a fallback response was returned in a {@link
@@ -25348,12 +25338,6 @@ google.maps.routes.GeocodedWaypoint.prototype.placeId;
 google.maps.routes.GeocodedWaypoint.prototype.types;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.GeocodedWaypoint.prototype.toJSON = function() {};
-
-/**
  * Contains {@link google.maps.routes.GeocodedWaypoint}s for origin,
  * destination, and intermediate waypoints. Only populated for address
  * waypoints.
@@ -25384,12 +25368,6 @@ google.maps.routes.GeocodingResults.prototype.intermediates;
  * @type {!google.maps.routes.GeocodedWaypoint|null|undefined}
  */
 google.maps.routes.GeocodingResults.prototype.origin;
-
-/**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.GeocodingResults.prototype.toJSON = function() {};
 
 /**
  * Provides summarized information about a multi-modal segment of the {@link
@@ -25440,12 +25418,6 @@ google.maps.routes.MultiModalSegment.prototype.stepStartIndex;
 google.maps.routes.MultiModalSegment.prototype.travelMode;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.MultiModalSegment.prototype.toJSON = function() {};
-
-/**
  * Encapsulates information about a road feature along a stretch of polyline.
  *
  * Access by calling `const {PolylineDetailInfo} = await
@@ -25474,12 +25446,6 @@ google.maps.routes.PolylineDetailInfo.prototype.presence;
 google.maps.routes.PolylineDetailInfo.prototype.startIndex;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.PolylineDetailInfo.prototype.toJSON = function() {};
-
-/**
  * Details corresponding to a given index or contiguous segment of a polyline.
  * Given a polyline with points P_0, P_1, ... , P_N (zero-based index), the
  * <code>PolylineDetails</code> describes a road feature for a given interval.
@@ -25502,12 +25468,6 @@ google.maps.routes.PolylineDetails.prototype.flyoverInfo;
  * @type {!Array<!google.maps.routes.PolylineDetailInfo>}
  */
 google.maps.routes.PolylineDetails.prototype.narrowRoadInfo;
-
-/**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.PolylineDetails.prototype.toJSON = function() {};
 
 /**
  * Specifies the quality of the polyline.
@@ -25936,12 +25896,6 @@ google.maps.routes.RouteLeg.prototype.stepsOverview;
 google.maps.routes.RouteLeg.prototype.travelAdvisory;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteLeg.prototype.toJSON = function() {};
-
-/**
  * Text representations of the {@link google.maps.routes.RouteLeg}.
  *
  * Access by calling `const {RouteLegLocalizedValues} = await
@@ -25993,12 +25947,6 @@ google.maps.routes.RouteLegLocalizedValues.prototype.staticDuration;
  * @type {string|null}
  */
 google.maps.routes.RouteLegLocalizedValues.prototype.staticDurationLanguage;
-
-/**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteLegLocalizedValues.prototype.toJSON = function() {};
 
 /**
  * Contains a segment of a <code>RouteLeg</code>. A step corresponds to a single
@@ -26082,12 +26030,6 @@ google.maps.routes.RouteLegStep.prototype.transitDetails;
 google.maps.routes.RouteLegStep.prototype.travelMode;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteLegStep.prototype.toJSON = function() {};
-
-/**
  * Text representations of properties of the <code>RouteLegStep</code>.
  *
  * Access by calling `const {RouteLegStepLocalizedValues} = await
@@ -26128,12 +26070,6 @@ google.maps.routes.RouteLegStepLocalizedValues.prototype.staticDuration;
 google.maps.routes.RouteLegStepLocalizedValues.prototype.staticDurationLanguage;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteLegStepLocalizedValues.prototype.toJSON = function() {};
-
-/**
  * Contains additional information that the user should be informed about on
  * a {@link google.maps.routes.RouteLeg}.
  *
@@ -26150,8 +26086,8 @@ google.maps.routes.RouteLegTravelAdvisory = function() {};
  * google.maps.routes.ComputeRoutesRequest.routingPreference}. The intervals
  * cover the entire polyline of the {@link google.maps.routes.RouteLeg} without
  * overlap. The start point of a specified interval is the same as the end point
- * of the preceding interval. <br><br> Example: <br> <pre> <code> polyline: A
- * ---- B ---- C ---- D ---- E ---- F ---- G <br> speedReadingIntervals: [A,C),
+ * of the preceding interval. <br><br> Example: <br> <pre> <code>polyline: A
+ * ---- B ---- C ---- D ---- E ---- F ---- G<br> speedReadingIntervals: [A,C),
  * [C,D), [D,G) </code> </pre>
  * @type {!Array<!google.maps.routes.SpeedReadingInterval>|undefined}
  */
@@ -26161,19 +26097,13 @@ google.maps.routes.RouteLegTravelAdvisory.prototype.speedReadingIntervals;
  * Contains information about tolls on the specific {@link
  * google.maps.routes.RouteLeg}. This field is only populated if tolls are
  * expected on the {@link google.maps.routes.RouteLeg}. If this field is set
- * but {@link google.maps.routes.TollInfo.estimatedPrices} is not populated,then
- * the route leg contains tolls but the estimated price is unknown. If this
+ * but {@link google.maps.routes.TollInfo.estimatedPrices} is not populated,
+ * then the route leg contains tolls but the estimated price is unknown. If this
  * field is empty, then there are no tolls on the {@link
  * google.maps.routes.RouteLeg}.
  * @type {google.maps.routes.TollInfo|null}
  */
 google.maps.routes.RouteLegTravelAdvisory.prototype.tollInfo;
-
-/**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteLegTravelAdvisory.prototype.toJSON = function() {};
 
 /**
  * Text representations of properties of the <code>Route</code>.
@@ -26244,12 +26174,6 @@ google.maps.routes.RouteLocalizedValues.prototype.transitFare;
 google.maps.routes.RouteLocalizedValues.prototype.transitFareLanguage;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteLocalizedValues.prototype.toJSON = function() {};
-
-/**
  * A matrix of routes computed for a set of origin/destination pairs by {@link
  * google.maps.routes.RouteMatrix.computeRouteMatrix}
  *
@@ -26295,7 +26219,7 @@ google.maps.routes.RouteMatrix.prototype.rows;
 google.maps.routes.RouteMatrix.computeRouteMatrix = function(request) {};
 
 /**
- * Converts to an object.
+ * Converts to a plain object.
  * @return {!Object}
  */
 google.maps.routes.RouteMatrix.prototype.toJSON = function() {};
@@ -26375,12 +26299,6 @@ google.maps.routes.RouteMatrixItem.prototype.staticDurationMillis;
 google.maps.routes.RouteMatrixItem.prototype.travelAdvisory;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteMatrixItem.prototype.toJSON = function() {};
-
-/**
  * The condition of a route for a given origin/destination pair.
  *
  * Access by calling `const {RouteMatrixItemCondition} = await
@@ -26411,12 +26329,6 @@ google.maps.routes.RouteMatrixItemCondition = {
  * @constructor
  */
 google.maps.routes.RouteMatrixItemError = function() {};
-
-/**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteMatrixItemError.prototype.toJSON = function() {};
 
 /**
  * Text representations of the {@link google.maps.routes.RouteMatrixItem}.
@@ -26489,13 +26401,6 @@ google.maps.routes.RouteMatrixItemLocalizedValues.prototype.transitFare;
 google.maps.routes.RouteMatrixItemLocalizedValues.prototype.transitFareLanguage;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteMatrixItemLocalizedValues.prototype.toJSON =
-    function() {};
-
-/**
  * A single origin for a {@link google.maps.routes.ComputeRouteMatrixRequest}.
  * @record
  */
@@ -26533,12 +26438,6 @@ google.maps.routes.RouteMatrixRow = function() {};
  * @type {!Array<!google.maps.routes.RouteMatrixItem>}
  */
 google.maps.routes.RouteMatrixRow.prototype.items;
-
-/**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteMatrixRow.prototype.toJSON = function() {};
 
 /**
  * Encapsulates a set of optional conditions to satisfy when calculating routes.
@@ -26689,8 +26588,8 @@ google.maps.routes.RouteTravelAdvisory.prototype
  * google.maps.routes.ComputeRoutesRequest.routingPreference}. The intervals
  * cover the entire polyline of the {@link google.maps.routes.Route} without
  * overlap. The start point of a specified interval is the same as the end point
- * of the preceding interval. <br><br> Example: <br> <pre> <code> polyline: A
- * ---- B ---- C ---- D ---- E ---- F ---- G <br> speedReadingIntervals: [A,C),
+ * of the preceding interval. <br><br> Example: <br> <pre> <code>polyline: A
+ * ---- B ---- C ---- D ---- E ---- F ---- G<br> speedReadingIntervals: [A,C),
  * [C,D), [D,G) </code> </pre>
  * @type {!Array<!google.maps.routes.SpeedReadingInterval>|undefined}
  */
@@ -26700,7 +26599,7 @@ google.maps.routes.RouteTravelAdvisory.prototype.speedReadingIntervals;
  * Contains information about tolls on the {@link google.maps.routes.Route}.
  * This field is only populated if tolls are expected on the {@link
  * google.maps.routes.Route}. If this field is set but {@link
- * google.maps.routes.TollInfo.estimatedPrices} is not populated,then the route
+ * google.maps.routes.TollInfo.estimatedPrices} is not populated, then the route
  * contains tolls but the estimated price is unknown. If this field is empty,
  * then there are no tolls on the {@link google.maps.routes.Route}.
  * @type {!google.maps.routes.TollInfo|null|undefined}
@@ -26716,12 +26615,6 @@ google.maps.routes.RouteTravelAdvisory.prototype.tollInfo;
  * @type {!google.maps.places.Money|null|undefined}
  */
 google.maps.routes.RouteTravelAdvisory.prototype.transitFare;
-
-/**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteTravelAdvisory.prototype.toJSON = function() {};
 
 /**
  * Factors to take into consideration when calculating a route.
@@ -26826,12 +26719,6 @@ google.maps.routes.SpeedReadingInterval.prototype.speed;
 google.maps.routes.SpeedReadingInterval.prototype.startPolylinePointIndex;
 
 /**
- * Converts to an object.
- * @return {undefined}
- */
-google.maps.routes.SpeedReadingInterval.prototype.toJSON = function() {};
-
-/**
  * Provides overview information about a list of {@link
  * google.maps.routes.RouteLeg.steps}.
  *
@@ -26850,12 +26737,6 @@ google.maps.routes.StepsOverview = function() {};
 google.maps.routes.StepsOverview.prototype.multiModalSegments;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.StepsOverview.prototype.toJSON = function() {};
-
-/**
  * Encapsulates toll information on a {@link google.maps.routes.Route} or {@link
  * google.maps.routes.RouteLeg}.
  *
@@ -26872,16 +26753,11 @@ google.maps.routes.TollInfo = function() {};
  * contains an amount for each currency that is expected to be charged by toll
  * stations. Typically this list will contain only one item for routes with
  * tolls in one currency. For international trips, this list may contain
- * multiple items to reflect tolls in different currencies.
+ * multiple items to reflect tolls in different currencies. This field may be an
+ * empty array if tolls are expected but the estimated price is unknown.
  * @type {!Array<!google.maps.places.Money>|null|undefined}
  */
 google.maps.routes.TollInfo.prototype.estimatedPrices;
-
-/**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.TollInfo.prototype.toJSON = function() {};
 
 /**
  * Information about a transit agency.
@@ -26910,12 +26786,6 @@ google.maps.routes.TransitAgency.prototype.phoneNumber;
  * @type {!URL|null}
  */
 google.maps.routes.TransitAgency.prototype.url;
-
-/**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.TransitAgency.prototype.toJSON = function() {};
 
 /**
  * Additional information about a transit step in a route.
@@ -26994,12 +26864,6 @@ google.maps.routes.TransitDetails.prototype.transitLine;
 google.maps.routes.TransitDetails.prototype.tripShortText;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.TransitDetails.prototype.toJSON = function() {};
-
-/**
  * Information about a transit line.
  *
  * Access by calling `const {TransitLine} = await
@@ -27060,12 +26924,6 @@ google.maps.routes.TransitLine.prototype.url;
 google.maps.routes.TransitLine.prototype.vehicle;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.TransitLine.prototype.toJSON = function() {};
-
-/**
  * Preferences for <code>TRANSIT</code> based routes that influence the route
  * that is returned.
  * @record
@@ -27108,12 +26966,6 @@ google.maps.routes.TransitStop.prototype.location;
  * @type {string|null}
  */
 google.maps.routes.TransitStop.prototype.name;
-
-/**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.TransitStop.prototype.toJSON = function() {};
 
 /**
  * Information about a vehicle used in transit routes.
@@ -27159,12 +27011,6 @@ google.maps.routes.TransitVehicle.prototype.nameLanguage;
  * @type {string|null}
  */
 google.maps.routes.TransitVehicle.prototype.vehicleType;
-
-/**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.TransitVehicle.prototype.toJSON = function() {};
 
 /**
  * A set of values describing the vehicle&#39;s emission type. Applies only to
