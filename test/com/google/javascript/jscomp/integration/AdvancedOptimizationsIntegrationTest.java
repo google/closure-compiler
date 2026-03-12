@@ -776,7 +776,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
     externs = ImmutableList.of(new TestExternsBuilder().addBigInt().buildExternsFile("externs.js"));
-    test(options, "1n + 'asdf'", "'1nasdf'");
+    test(options, "1n + 'asdf'", "'1asdf'");
   }
 
   @Test

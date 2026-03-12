@@ -565,7 +565,7 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.getStringValue(parseExpr("false"))).isEqualTo("false");
       assertThat(NodeUtil.getStringValue(parseExpr("null"))).isEqualTo("null");
       assertThat(NodeUtil.getStringValue(parseExpr("0"))).isEqualTo("0");
-      assertThat(NodeUtil.getStringValue(parseExpr("1n"))).isEqualTo("1n");
+      assertThat(NodeUtil.getStringValue(parseExpr("1n"))).isEqualTo("1");
       assertThat(NodeUtil.getStringValue(parseExpr("''"))).isEmpty();
       assertThat(NodeUtil.getStringValue(parseExpr("undefined"))).isEqualTo("undefined");
       assertThat(NodeUtil.getStringValue(parseExpr("void 0"))).isEqualTo("undefined");

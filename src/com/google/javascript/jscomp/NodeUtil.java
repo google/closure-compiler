@@ -233,7 +233,7 @@ public final class NodeUtil {
         }
         yield null;
       }
-      case BIGINT -> n.getBigInt() + "n";
+      case BIGINT -> n.getBigInt().toString();
       case FALSE -> "false";
       case TRUE -> "true";
       case NULL -> "null";

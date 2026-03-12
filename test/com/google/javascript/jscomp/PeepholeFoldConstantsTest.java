@@ -981,8 +981,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("x = 'a' + 'bc'", "x = 'abc'");
     test("x = 'a' + 5", "x = 'a5'");
     test("x = 5 + 'a'", "x = '5a'");
-    test("x = 'a' + 5n", "x = 'a5n'");
-    test("x = 5n + 'a'", "x = '5na'");
+    test("x = 'a' + 5n", "x = 'a5'");
+    test("x = 5n + 'a'", "x = '5a'");
     test("x = 'a' + ''", "x = 'a'");
     test("x = 'a' + foo()", "x = 'a'+foo()");
     test("x = foo() + 'a' + 'b'", "x = foo()+'ab'");
