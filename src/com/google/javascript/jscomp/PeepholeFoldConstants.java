@@ -1024,9 +1024,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return replace(oldNode, left);
   }
 
-  private boolean isSafeTemplateStringValue(String s) {
+  /**
+   * Simplify escaping and value calculations by avoiding problematic characters when merging
+   * strings into template literals.
+   */
+  private boolean isSimpleTemplateStringValue(String s) {
     for (int i = 0; i < s.length(); i++) {
       switch (s.charAt(i)) {
+        // See: https://tc39.es/ecma262/#prod-LineTerminator
         case '`', '$', '{', '\\', '\n', '\r', '\u2028', '\u2029' -> {
           return false;
         }
@@ -1071,7 +1076,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         if (expr != null
             && (expr.isStringLit() || expr.isNumber() || expr.isTrue() || expr.isFalse())) {
           String strValue = getSideEffectFreeStringValue(expr);
-          if (strValue != null && isSafeTemplateStringValue(strValue)) {
+          if (strValue != null && isSimpleTemplateStringValue(strValue)) {
             Node nextNext = next.getNext();
             if (nextNext != null && nextNext.isTemplateLitString()) {
               String curCooked = cur.getCookedString();
