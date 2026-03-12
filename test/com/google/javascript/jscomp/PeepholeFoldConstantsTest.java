@@ -2053,7 +2053,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
           constructor() {this.x = true;}
         }
         """);
-    test("function foo() {return `${false && y}`}", "function foo() {return `${false}`}");
+    test("function foo() {return `${false && y}`}", "function foo() {return `false`}");
   }
 
   @Test
@@ -2343,6 +2343,46 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
         """
         const a = foo`${b}` + bar`${b}`;
         """);
+  }
+
+  @Test
+  public void testFoldTemplateLiteralSubstitutions() {
+    // Basic substitution
+    test("`a${'b'}c`", "`abc`");
+    // Number substitution
+    test("`a${123}c`", "`a123c`");
+    // Boolean substitution
+    test("`a${true}c`", "`atruec`");
+    test("`a${false}c`", "`afalsec`");
+
+    // Multiple substitutions
+    test("`a${'b'}c${'d'}e`", "`abcde`");
+    // Adjacent substitutions
+    test("`${'a'}${'b'}`", "`ab`");
+    // Empty strings
+    test("`${''}a${''}`", "`a`");
+
+    // Corner cases where it should NOT fold
+    testSame("`a${'`'}c`");
+    testSame("`a${'$'}c`");
+    testSame("`a${'\\\\'}c`");
+    testSame("`a${'\\\\n'}c`");
+    testSame("`a${'\\\\r'}c`");
+    testSame("`${x} ${'$'}${'{'}`"); // specifically tests that $ and { are not folded together
+    test("`$${''}{${''}`", "`$${''}{`");
+    // These should not fold because \0 followed by a digit is a syntax error in untagged templates.
+    testSame("`\\0${'77'}`");
+    testSame("`\\0${77}`");
+    test("`\\0${'a'}`", "`\\0a` ");
+    test("`\\\\0${'7'}`", "`\\\\07` ");
+    test("`\\0${''}${'7'}`", "`\\0${'7'}`");
+
+    // Tagged template literals should NOT fold
+    testSame("tag`a${'b'}c`");
+
+    // Non-constant substitutions should NOT fold
+    testSame("`a${x}c`");
+    testSame("`a${foo()}c`");
   }
 
   @Test

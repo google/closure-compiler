@@ -77,6 +77,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       }
       case VOID -> tryReduceVoid(subtree);
       case OPTCHAIN_GETPROP, GETPROP -> tryFoldGetProp(subtree);
+      case TEMPLATELIT -> tryFoldTemplateLiteralSubstitutions(subtree);
       default -> {
         tryReduceOperandsForOp(subtree);
         yield tryFoldBinaryOperator(subtree);
@@ -1021,6 +1022,116 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // Detach the updated left node and replace the old node with it.
     left.detach();
     return replace(oldNode, left);
+  }
+
+  private boolean isSafeTemplateStringValue(String s) {
+    for (int i = 0; i < s.length(); i++) {
+      switch (s.charAt(i)) {
+        case '`', '$', '{', '\\', '\n', '\r', '\u2028', '\u2029' -> {
+          return false;
+        }
+        default -> {}
+      }
+    }
+    return true;
+  }
+
+  /** returns true if the raw string ends with an unescaped backslash */
+  private boolean endsWithUnescapedBackslash(String raw) {
+    int backslashCount = 0;
+    for (int i = raw.length() - 1; i >= 0; i--) {
+      if (raw.charAt(i) == '\\') {
+        backslashCount++;
+      } else {
+        break;
+      }
+    }
+    return backslashCount % 2 != 0;
+  }
+
+  private Node tryFoldTemplateLiteralSubstitutions(Node n) {
+    if (n.getParent() != null && n.getParent().isTaggedTemplateLit()) {
+      return n;
+    }
+
+    boolean changed = false;
+    Node cur = n.getFirstChild();
+    if (cur == null) {
+      return n;
+    }
+
+    while (cur != null) {
+      Node next = cur.getNext();
+      if (next == null) {
+        break;
+      }
+
+      if (cur.isTemplateLitString() && next.isTemplateLitSub()) {
+        Node expr = next.getFirstChild();
+        if (expr != null
+            && (expr.isStringLit() || expr.isNumber() || expr.isTrue() || expr.isFalse())) {
+          String strValue = getSideEffectFreeStringValue(expr);
+          if (strValue != null && isSafeTemplateStringValue(strValue)) {
+            Node nextNext = next.getNext();
+            if (nextNext != null && nextNext.isTemplateLitString()) {
+              String curCooked = cur.getCookedString();
+              String nextNextCooked = nextNext.getCookedString();
+
+              // Avoid creating a new `${` sequence when folding.
+              if (strValue.isEmpty() && curCooked.endsWith("$") && nextNextCooked.startsWith("{")) {
+                cur = next;
+                continue;
+              }
+
+              String combinedCooked = curCooked + strValue + nextNextCooked;
+              String combinedRaw = cur.getRawString() + strValue + nextNext.getRawString();
+
+              // Avoid creating a restricted octal escape sequence (e.g. \07)
+              if (isRestrictedOctalEscape(cur.getRawString(), strValue)
+                  || isRestrictedOctalEscape(
+                      cur.getRawString() + strValue, nextNext.getRawString())) {
+                cur = next;
+                continue;
+              }
+
+              Node newStringNode = IR.templateLiteralString(combinedCooked, combinedRaw);
+              newStringNode.srcrefTree(cur);
+
+              cur.replaceWith(newStringNode);
+              next.detach();
+              nextNext.detach();
+
+              cur = newStringNode;
+              changed = true;
+              continue;
+            }
+          }
+        }
+      }
+      cur = cur.getNext();
+    }
+
+    if (changed) {
+      reportChangeToEnclosingScope(n);
+    }
+    return n;
+  }
+
+  private boolean isRestrictedOctalEscape(String prefixRaw, String suffixRaw) {
+    if (suffixRaw.isEmpty()) {
+      return false;
+    }
+    char firstChar = suffixRaw.charAt(0);
+    if (firstChar < '0' || firstChar > '9') {
+      return false;
+    }
+
+    // Check if prefix ends with an unescaped \0
+    if (prefixRaw.endsWith("0")) {
+      String beforeZero = prefixRaw.substring(0, prefixRaw.length() - 1);
+      return endsWithUnescapedBackslash(beforeZero);
+    }
+    return false;
   }
 
   private Node tryFoldAdd(Node node, Node left, Node right) {
