@@ -1740,6 +1740,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         continue; // We only want to inline arrays into arrays and objects into objects.
       }
 
+      if (parentLit.isObjectLit() && !isSafeToFlattenObjectLitSpread(innerLit)) {
+        continue;
+      }
+
       parentLit.addChildrenAfter(innerLit.removeChildren(), spread);
       spread.detach();
       reportChangeToEnclosingScope(parentLit);
@@ -1944,5 +1948,17 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private static Node bigintNode(BigInteger val, Node srcref) {
     Node tree = (val.signum() < 0) ? IR.neg(IR.bigint(val.negate())) : IR.bigint(val);
     return tree.srcrefTree(srcref);
+  }
+
+  private static boolean isSafeToFlattenObjectLitSpread(Node innerLit) {
+    for (Node prop = innerLit.getFirstChild(); prop != null; prop = prop.getNext()) {
+      // Object spread converts all properties to regular data properties. This step evaluates
+      // any getters and omits any setters. See https://tc39.es/ecma262/#sec-copydataproperties.
+      // For simplicity, we just back off and do not flatten spread in this case.
+      if (NodeUtil.isGetOrSetKey(prop)) {
+        return false;
+      }
+    }
+    return true;
   }
 }

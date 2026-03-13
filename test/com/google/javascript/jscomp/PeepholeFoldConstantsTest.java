@@ -1472,6 +1472,31 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDontFoldObjectSpread_withGetterSetter() {
+    numRepetitions = 1;
+
+    // At runtime, object spread converts getters to regular data properties, and omits setters.
+    // We back off on folding spread with getters & setters.
+    // In theory, we could make the compiler smart enough to turn
+    //   `{...{get a() { return 1; }}}` into `{a: 1}`, or `{...{set a(v) { }}}` into `{}`, but
+    // it doesn't seem worth the complexity right now.
+    testSame("x = {...{get a() { return 1; }}}");
+    testSame("x = {...{set a(v) { }}}");
+
+    // Test case with side-effects. If in the future we implement spread folding for getters/setters
+    // we would need to preserve evaluation of the console.log.
+    testSame("x = {...{get a() { console.log('hi'); return 1; }}}");
+  }
+
+  @Test
+  public void testDontFoldObjectSpread_withComputedGetterSetter() {
+    numRepetitions = 1;
+
+    testSame("x = {...{get [a]() { return 1; }}}");
+    testSame("x = {...{set [a](v) { }}}");
+  }
+
+  @Test
   public void testDontFoldMixedObjectAndArraySpread() {
     numRepetitions = 1;
     testSame("x = [...{}]");
