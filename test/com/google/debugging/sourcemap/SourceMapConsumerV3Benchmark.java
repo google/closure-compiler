@@ -19,6 +19,8 @@ package com.google.debugging.sourcemap;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.gson.Gson;
+import com.sun.management.ThreadMXBean;
+import java.lang.management.ManagementFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -49,8 +51,13 @@ public class SourceMapConsumerV3Benchmark {
     Thread.sleep(100);
     long before = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 
+    ThreadMXBean threadMxBean = (ThreadMXBean) ManagementFactory.getThreadMXBean();
+    long startAllocated = threadMxBean.getThreadAllocatedBytes(Thread.currentThread().threadId());
+
     SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
     consumer.parse(json);
+
+    long endAllocated = threadMxBean.getThreadAllocatedBytes(Thread.currentThread().threadId());
 
     System.gc();
     Thread.sleep(100);
@@ -59,5 +66,9 @@ public class SourceMapConsumerV3Benchmark {
     long memoryUsed = (after - before) / 1024 / 1024;
     System.out.println("Memory used: " + memoryUsed + " MB");
     assertThat(memoryUsed).isLessThan(70);
+
+    long allocatedBytes = (endAllocated - startAllocated) / 1024 / 1024;
+    System.out.println("Allocated memory: " + allocatedBytes + " MB");
+    assertThat(allocatedBytes).isLessThan(180);
   }
 }

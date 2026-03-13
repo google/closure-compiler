@@ -676,8 +676,12 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
     }
 
     void trim(int entriesCount, int linesCount) {
-      this.flatEntries = Arrays.copyOf(flatEntries, entriesCount);
-      this.lineStart = Arrays.copyOf(lineStart, linesCount + 1);
+      if (flatEntries.length > entriesCount) {
+        this.flatEntries = Arrays.copyOf(flatEntries, entriesCount);
+      }
+      if (lineStart.length > linesCount + 1) {
+        this.lineStart = Arrays.copyOf(lineStart, linesCount + 1);
+      }
       this.lineCount = linesCount;
     }
   }
