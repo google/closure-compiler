@@ -406,8 +406,9 @@ ArrayBuffer.isView = function(arg) {};
 
 
 /**
- * @constructor
+ * @interface
  * @template TArrayBuffer (unused)
+ * @see https://webidl.spec.whatwg.org/#ArrayBufferView
  */
 function ArrayBufferView() {}
 
@@ -453,13 +454,15 @@ var AllowSharedBufferSource;
 
 
 /**
- * @constructor
- * @implements {IArrayLike<number>}
- * @implements {Iterable<number>}
+ * @interface
+ * @extends {IArrayLike<number>}
+ * @extends {Iterable<number>}
  * @extends {ArrayBufferView}
  * @template TArrayBuffer (unused)
+ * @see https://tc39.es/ecma262/multipage/indexed-collections.html#sec-typedarray-objects
+ * @see https://tc39.es/ecma262/multipage/ordinary-and-exotic-objects-behaviours.html#typedarray
  */
-function TypedArray() {};
+function TypedArray() {}
 
 /** @const {number} */
 TypedArray.prototype.BYTES_PER_ELEMENT;
@@ -771,7 +774,7 @@ TypedArray.prototype[Symbol.iterator] = function() {};
  * @param {number=} opt_length
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments} If the user passes a backing array, then indexed
  *     accesses will modify the backing array. JSCompiler does not model
@@ -806,6 +809,9 @@ Int8Array.from = function(source, mapFn, thisArg) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/of
  */
 Int8Array.of = function(var_args) {};
+
+/** @override */
+Int8Array.prototype[Symbol.iterator] = function() {};
 
 
 /**
@@ -886,7 +892,7 @@ Uint8ArrayToBase64Options.prototype.omitPadding;
  * @param {number=} opt_length
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -911,6 +917,9 @@ Uint8Array.from = function(source, mapFn, thisArg) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/of
  */
 Uint8Array.of = function(var_args) {};
+
+/** @override */
+Uint8Array.prototype[Symbol.iterator] = function() {};
 
 /**
  * Creates a new Uint8Array from a base64 encoded string.
@@ -963,7 +972,7 @@ Uint8Array.prototype.toHex = function() {};
  * @param {number=} opt_length
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -989,6 +998,9 @@ Uint8ClampedArray.from = function(source, mapFn, thisArg) {};
  */
 Uint8ClampedArray.of = function(var_args) {};
 
+/** @override */
+Uint8ClampedArray.prototype[Symbol.iterator] = function() {};
+
 
 /**
  * @typedef {Uint8ClampedArray}
@@ -1009,7 +1021,7 @@ var CanvasPixelArray;
  * @param {number=} opt_length
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -1035,6 +1047,9 @@ Int16Array.from = function(source, mapFn, thisArg) {};
  */
 Int16Array.of = function(var_args) {};
 
+/** @override */
+Int16Array.prototype[Symbol.iterator] = function() {};
+
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
@@ -1046,7 +1061,7 @@ Int16Array.of = function(var_args) {};
  * @param {number=} opt_length
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -1072,6 +1087,9 @@ Uint16Array.from = function(source, mapFn, thisArg) {};
  */
 Uint16Array.of = function(var_args) {};
 
+/** @override */
+Uint16Array.prototype[Symbol.iterator] = function() {};
+
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
@@ -1083,7 +1101,7 @@ Uint16Array.of = function(var_args) {};
  * @param {number=} opt_length
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -1109,6 +1127,9 @@ Int32Array.from = function(source, mapFn, thisArg) {};
  */
 Int32Array.of = function(var_args) {};
 
+/** @override */
+Int32Array.prototype[Symbol.iterator] = function() {};
+
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
@@ -1120,7 +1141,7 @@ Int32Array.of = function(var_args) {};
  * @param {number=} opt_length
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -1146,6 +1167,9 @@ Uint32Array.from = function(source, mapFn, thisArg) {};
  */
 Uint32Array.of = function(var_args) {};
 
+/** @override */
+Uint32Array.prototype[Symbol.iterator] = function() {};
+
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
@@ -1153,7 +1177,7 @@ Uint32Array.of = function(var_args) {};
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float16Array
@@ -1180,6 +1204,10 @@ Float16Array.from = function(source, mapFn, thisArg) {};
  */
 Float16Array.of = function(var_args) {};
 
+/** @override */
+Float16Array.prototype[Symbol.iterator] = function() {};
+
+
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
  *     length or array or buffer
@@ -1190,7 +1218,7 @@ Float16Array.of = function(var_args) {};
  * @param {number=} opt_length
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -1216,6 +1244,9 @@ Float32Array.from = function(source, mapFn, thisArg) {};
  */
 Float32Array.of = function(var_args) {};
 
+/** @override */
+Float32Array.prototype[Symbol.iterator] = function() {};
+
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
@@ -1227,7 +1258,7 @@ Float32Array.of = function(var_args) {};
  * @param {number=} opt_length
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -1253,6 +1284,9 @@ Float64Array.from = function(source, mapFn, thisArg) {};
  */
 Float64Array.of = function(var_args) {};
 
+/** @override */
+Float64Array.prototype[Symbol.iterator] = function() {};
+
 
 /**
  * @param {number|ArrayBufferView|Array<bigint>|ArrayBuffer|SharedArrayBuffer}
@@ -1264,7 +1298,7 @@ Float64Array.of = function(var_args) {};
  * @param {number=} bufferLength
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -1324,6 +1358,10 @@ BigInt64Array.prototype.toSorted = function(compareFn) {};
  */
 BigInt64Array.prototype.with = function(index, value) {};
 
+/** @override */
+BigInt64Array.prototype[Symbol.iterator] = function() {};
+
+
 /**
  * @param {number|ArrayBufferView|Array<bigint>|ArrayBuffer|SharedArrayBuffer}
  *     lengthOrArrayOrBuffer
@@ -1334,7 +1372,7 @@ BigInt64Array.prototype.with = function(index, value) {};
  * @param {number=} bufferLength
  * @template TArrayBuffer (unused)
  * @constructor
- * @extends {TypedArray}
+ * @implements {TypedArray}
  * @throws {Error}
  * @modifies {arguments}
  */
@@ -1394,12 +1432,16 @@ BigUint64Array.prototype.toSorted = function(compareFn) {};
  */
 BigUint64Array.prototype.with = function(index, value) {};
 
+/** @override */
+BigUint64Array.prototype[Symbol.iterator] = function() {};
+
+
 /**
  * @param {ArrayBuffer|SharedArrayBuffer} buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_byteLength
  * @constructor
- * @extends {ArrayBufferView}
+ * @implements {ArrayBufferView}
  * @throws {Error}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays/DataView
  */
