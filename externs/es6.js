@@ -875,6 +875,28 @@ Uint8ArrayToBase64Options.prototype.alphabet;
  */
 Uint8ArrayToBase64Options.prototype.omitPadding;
 
+/**
+ * Results from Uint8Array.prototype.setFromHex.
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/setFromHex#return_value
+ * @interface
+ * @struct
+ */
+function Uint8ArraySetFromHexResults() {}
+
+/**
+ * The number of hex characters read from the input string. If the decoded data fits into the
+ * array, it is the length of the input string; otherwise, it is the number of complete hex
+ * characters that fit into the array.
+ * @type {number}
+ */
+Uint8ArraySetFromHexResults.prototype.read;
+
+/**
+ * The number of bytes written into the Uint8Array. Will never be greater than this Uint8Array's
+ * length.
+ * @type {number}
+ */
+Uint8ArraySetFromHexResults.prototype.written;
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
@@ -937,6 +959,14 @@ Uint8Array.fromHex = function(string) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/setFromBase64
  */
 Uint8Array.prototype.setFromBase64 = function(string, options) {};
+
+/**
+ * Sets the contents of the Uint8Array from a hex encoded even length string. The string may
+ * contain uppercase or lowercase hex characters.
+ * @param {string} string a hex string of even length
+ * @return {!Uint8ArraySetFromHexResults} results containing read and written stats
+ */
+Uint8Array.prototype.setFromHex = function(string) {};
 
 /**
  * Encodes the contents of the Uint8Array into a base64 string.
