@@ -878,6 +878,7 @@ Uint8ArrayToBase64Options.prototype.omitPadding;
 /**
  * Results from Uint8Array.prototype.setFromHex.
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/setFromHex#return_value
+ * @interface
  * @struct
  */
 function Uint8ArraySetFromHexResults() {}
