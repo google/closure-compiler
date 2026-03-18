@@ -23,9 +23,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.errorprone.annotations.DoNotCall;
 import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.StandardColors;
 import java.util.BitSet;
 import java.util.LinkedHashMap;
-import org.jspecify.annotations.Nullable;
 
 /**
  * A struct representing a {@link Color} for use in ambiguation.
@@ -65,7 +65,6 @@ final class ColorGraphNode {
   }
 
   static ColorGraphNode create(Color single, int index) {
-    checkNotNull(single);
     checkArgument(index >= 0);
     return new ColorGraphNode(single, index);
   }
@@ -73,10 +72,17 @@ final class ColorGraphNode {
   @VisibleForTesting
   static ColorGraphNode createForTesting(int index) {
     checkArgument(index < 0); // All test nodes have negative indexs to differentiate them.
-    return new ColorGraphNode(null, index);
+    return new ColorGraphNode(StandardColors.UNKNOWN, index);
   }
 
-  private ColorGraphNode(@Nullable Color single, int index) {
+  @VisibleForTesting
+  static ColorGraphNode createForTesting(Color single, int index) {
+    checkArgument(index < 0); // All test nodes have negative indexs to differentiate them.
+    return new ColorGraphNode(single, index);
+  }
+
+  private ColorGraphNode(Color single, int index) {
+    checkNotNull(single);
     this.index = index;
     this.color = single;
   }
