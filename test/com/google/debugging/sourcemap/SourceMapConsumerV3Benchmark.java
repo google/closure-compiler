@@ -18,6 +18,7 @@ package com.google.debugging.sourcemap;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.common.testing.GcFinalization;
 import com.google.gson.Gson;
 import com.sun.management.ThreadMXBean;
 import java.lang.management.ManagementFactory;
@@ -47,8 +48,7 @@ public class SourceMapConsumerV3Benchmark {
                 .setNames("__BASIC__")
                 .build());
 
-    System.gc();
-    Thread.sleep(100);
+    GcFinalization.awaitFullGc();
     long before = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 
     ThreadMXBean threadMxBean = (ThreadMXBean) ManagementFactory.getThreadMXBean();
@@ -59,8 +59,7 @@ public class SourceMapConsumerV3Benchmark {
 
     long endAllocated = threadMxBean.getThreadAllocatedBytes(Thread.currentThread().threadId());
 
-    System.gc();
-    Thread.sleep(100);
+    GcFinalization.awaitFullGc();
     long after = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 
     long memoryUsed = (after - before) / 1024 / 1024;
