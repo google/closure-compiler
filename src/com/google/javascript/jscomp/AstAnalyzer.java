@@ -163,9 +163,9 @@ public class AstAnalyzer {
         return false;
       }
     } else if (callee.isGetProp() || callee.isOptChainGetProp()) {
-      if (callNode.hasOneChild()
-          && assumeKnownBuiltinsArePure
-          && OBJECT_METHODS_WITHOUT_SIDEEFFECTS.contains(callee.getString())) {
+      if (assumeKnownBuiltinsArePure
+          && OBJECT_METHODS_WITHOUT_SIDEEFFECTS.contains(callee.getString())
+          && (callNode.hasOneChild() || isNumericToStringCall(callee))) {
         return false;
       }
 
@@ -274,6 +274,32 @@ public class AstAnalyzer {
       }
     }
 
+    return false;
+  }
+
+  private boolean isNumericToStringCall(Node callee) {
+    return (callee.isGetProp() || callee.isOptChainGetProp())
+        && "toString".equals(callee.getString())
+        && isTypedAsNumberOrBigInt(callee.getFirstChild());
+  }
+
+  private boolean isTypedAsNumberOrBigInt(Node n) {
+    if (n.isNumber() || n.isBigInt()) {
+      return true;
+    }
+    if (useTypesForLocalOptimization) {
+      Color color = n.getColor();
+      if (color != null) {
+        return color.equals(StandardColors.NUMBER) || color.equals(StandardColors.BIGINT);
+      }
+      JSType type = n.getJSType();
+      if (type != null) {
+        return type.isNumberValueType()
+            || type.isNumberObjectType()
+            || type.isBigIntValueType()
+            || type.isBigIntObjectType();
+      }
+    }
     return false;
   }
 
