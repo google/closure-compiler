@@ -487,23 +487,25 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
   @Test
   public void runtimeFieldInjection_incompatibleWithRestArg() {
     setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
+    this.mode = NestedCompilerRunner.Mode.TRANSPILE_ONLY;
 
     // To make injecting runtime library parameters simpler, assume that closure unaware functions
     // never have rest parameters.
-    assertThrows(
-        IllegalStateException.class,
-        () ->
-            test(
-                srcs(
-                    """
-                    /** @fileoverview @closureUnaware */
-                    goog.module('test');
+    Sources parts =
+        srcs(
+            """
+            /** @fileoverview @closureUnaware */
+            goog.module('test');
 
-                    /** @closureUnaware */
-                    (function(...rest) {
-                      return async function foo() {};
-                    }).call(undefined, 1, 2);
-                    """)));
+            /** @closureUnaware */
+            (function(...rest) {
+              return async function foo() {};
+            }).call(undefined, 1, 2);
+            """);
+    var ex = assertThrows(IllegalStateException.class, () -> test(parts));
+    assertThat(ex)
+        .hasMessageThat()
+        .contains("rest parameters not allowed in closureUnaware function");
   }
 
   @Test
