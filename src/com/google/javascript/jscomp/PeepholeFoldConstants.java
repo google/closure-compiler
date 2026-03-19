@@ -1144,10 +1144,20 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     if (NodeUtil.mayBeString(node, shouldUseTypes)) {
       if (left.isTemplateLit() && right.isTemplateLit()) {
-        // TODO: account for cases of template literal + other data type (any order)
-        // (e.g. string + template literal, template literal + number)
         return foldAddTemplateLiterals(node, left, right);
-      } else if (NodeUtil.isLiteralValue(left, false) && NodeUtil.isLiteralValue(right, false)) {
+      } else if (left.isTemplateLit()) {
+        String rightStr = getSideEffectFreeStringValue(right);
+        if (rightStr != null && isSimpleTemplateStringValue(rightStr)) {
+          return foldTemplateLiteralAndConstant(node, left, rightStr);
+        }
+      } else if (right.isTemplateLit()) {
+        String leftStr = getSideEffectFreeStringValue(left);
+        if (leftStr != null && isSimpleTemplateStringValue(leftStr)) {
+          return foldConstantAndTemplateLiteral(node, leftStr, right);
+        }
+      }
+
+      if (NodeUtil.isLiteralValue(left, false) && NodeUtil.isLiteralValue(right, false)) {
         // '6' + 7
         return tryFoldAddConstantString(node, left, right);
       } else if (left.isStringLit() && left.getString().isEmpty() && isStringTyped(right)) {
@@ -1162,6 +1172,42 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       // Try arithmetic add
       return tryFoldArithmeticOp(node, left, right);
     }
+  }
+
+  private Node foldTemplateLiteralAndConstant(Node oldNode, Node left, String rightStr) {
+    Node lastLeft = left.getLastChild();
+    checkState(lastLeft.isTemplateLitString());
+
+    if (isRestrictedOctalEscape(lastLeft.getRawString(), rightStr)) {
+      return oldNode;
+    }
+
+    Node mergeNode =
+        IR.templateLiteralString(
+            lastLeft.getCookedString() + rightStr, lastLeft.getRawString() + rightStr);
+    mergeNode.srcrefTreeIfMissing(lastLeft);
+
+    lastLeft.replaceWith(mergeNode);
+    left.detach();
+    return replace(oldNode, left);
+  }
+
+  private Node foldConstantAndTemplateLiteral(Node oldNode, String leftStr, Node right) {
+    Node firstRight = right.getFirstChild();
+    checkState(firstRight.isTemplateLitString());
+
+    if (isRestrictedOctalEscape(leftStr, firstRight.getRawString())) {
+      return oldNode;
+    }
+
+    Node mergeNode =
+        IR.templateLiteralString(
+            leftStr + firstRight.getCookedString(), leftStr + firstRight.getRawString());
+    mergeNode.srcrefTreeIfMissing(firstRight);
+
+    firstRight.replaceWith(mergeNode);
+    right.detach();
+    return replace(oldNode, right);
   }
 
   @CanIgnoreReturnValue

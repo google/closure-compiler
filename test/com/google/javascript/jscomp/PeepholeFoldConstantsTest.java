@@ -2411,6 +2411,47 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFoldAddTemplateLiteralAndConstant() {
+    // String merge
+    test("`a${x}` + 'b'", "`a${x}b` ");
+    test("'a' + `b${x}`", "`ab${x}` ");
+
+    // Number merge
+    test("`a${x}` + 1", "`a${x}1` ");
+    test("1 + `a${x}`", "`1a${x}` ");
+
+    // Boolean merge
+    test("`a${x}` + true", "`a${x}true` ");
+    test("true + `a${x}`", "`truea${x}` ");
+
+    // BigInt merge
+    test("`a${x}` + 10n", "`a${x}10` ");
+
+    // Null/Undefined merge
+    test("`a${x}` + null", "`a${x}null` ");
+    test("`a${x}` + undefined", "`a${x}undefined` ");
+
+    // Nested templates
+    test("`a${x}` + `b` ", "`a${x}b` ");
+    test("`a` + `b${x}` ", "`ab${x}` ");
+
+    // Restricted octal escape
+    testSame("`\\0` + 7");
+    testSame("`\\0` + '7'");
+    test("`\\0a` + '7'", "`\\0a7` ");
+
+    // Safety - special chars should NOT fold
+    testSame("`a${x}` + '$'");
+    testSame("`a${x}` + '{'");
+    testSame("`a${x}` + '`'");
+    testSame("`a${x}` + '\\\\'");
+    testSame("`a${x}` + '\\\\n'");
+
+    // Compound addition
+    test("`a` + `b${x}` + `c` + 'd'", "`ab${x}cd` ");
+  }
+
+  @Test
   public void
       testFoldAddTemplateLiterals_validateRawAndCookedStringForSpecialChars_andValidateChildren() {
     // This is a bit tricky because there are two layers of escaping.
