@@ -91,7 +91,8 @@ final class GatherExternProperties implements NodeTraversal.Callback, CompilerPa
             externProperties.add(n.getString());
           }
         }
-        case MEMBER_FUNCTION_DEF -> externProperties.add(n.getString());
+        case MEMBER_FUNCTION_DEF, MEMBER_FIELD_DEF, GETTER_DEF, SETTER_DEF ->
+            externProperties.add(n.getString());
         default -> {}
       }
     }

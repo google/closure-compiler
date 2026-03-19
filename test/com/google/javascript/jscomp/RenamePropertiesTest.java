@@ -792,6 +792,19 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassFieldsInExterns() {
+    String externs =
+        """
+        class Foo {
+          helloWorld;
+          get bar() {}
+          set baz(v) {}
+        }
+        """;
+    testSame(externs(externs), srcs("new Foo().helloWorld; new Foo().bar; new Foo().baz = 1;"));
+  }
+
+  @Test
   public void testClassFieldWithFunctionRHS() {
     test(
         """

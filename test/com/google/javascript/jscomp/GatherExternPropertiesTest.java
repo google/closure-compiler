@@ -309,6 +309,36 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
         "yObj");
   }
 
+  @Test
+  public void testExternClassField() {
+    assertExternProperties(
+        """
+        class Foo {
+          /** @type {string} */
+          helloWorld;
+          constructor() {
+            this.goodbye;
+          }
+        }
+        """,
+        "helloWorld",
+        "goodbye",
+        "constructor");
+  }
+
+  @Test
+  public void testExternClassGetterSetter() {
+    assertExternProperties(
+        """
+        class Foo {
+          get bar() { return 1; }
+          set baz(v) {}
+        }
+        """,
+        "bar",
+        "baz");
+  }
+
   private static Postcondition expectExterns(final String... properties) {
     return compiler ->
         assertThat(compiler.getExternProperties()).containsExactlyElementsIn(properties);
