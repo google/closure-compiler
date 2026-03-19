@@ -87,6 +87,10 @@ class ClosureUnawareOptions {
     // DiagnosticGroups.UNTRANSPILABLE_FEATURES: features JSCompiler will never transpile but
     // can pass through unchanged to the output, such as newer regex syntax.
     shadowOptions.setWarningLevel(DiagnosticGroups.UNTRANSPILABLE_FEATURES, CheckLevel.OFF);
+
+    // No point in trying to run the TranspileAndOptimizeClosureUnaware pass recursively - we don't
+    // support nesting @closureUnaware code blocks.
+    shadowOptions.setClosureUnawareMode(CompilerOptions.ClosureUnawareMode.PASS_THROUGH);
   }
 
   private void setSafeOptimizationAssumptions() {

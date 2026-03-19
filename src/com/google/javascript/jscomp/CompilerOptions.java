@@ -2910,7 +2910,8 @@ public class CompilerOptions {
     SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION
   }
 
-  private ClosureUnawareMode closureUnawareMode = ClosureUnawareMode.PASS_THROUGH;
+  private ClosureUnawareMode closureUnawareMode =
+      ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION;
 
   /**
    * Opts into experimental support for transpiling/optimizing @closureUnaware code blocks, rather
