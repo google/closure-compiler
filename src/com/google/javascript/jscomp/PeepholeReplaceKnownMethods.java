@@ -32,8 +32,10 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.TreeSet;
 import org.jspecify.annotations.Nullable;
 
 /** Just to fold known methods when they are called with constants. */
@@ -92,6 +94,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
             case "Number" -> {
               return tryFoldKnownNumberMethods(subtree, callTarget);
             }
+            case "Object" -> {
+              return tryFoldKnownObjectMethods(subtree, callTarget);
+            }
             default -> {}
           }
         }
@@ -121,6 +126,119 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     subtree.replaceWith(arraylit);
     reportChangeToEnclosingScope(arraylit);
     return arraylit;
+  }
+
+  /** Tries to evaluate a method on the Object object */
+  private Node tryFoldKnownObjectMethods(Node subtree, Node callTarget) {
+    checkArgument(subtree.isCall() && callTarget.isGetProp());
+
+    if (!callTarget.getString().equals("keys")) {
+      return subtree;
+    }
+    Node arg = callTarget.getNext();
+    if (arg == null || arg.getNext() != null || !arg.isObjectLit()) {
+      return subtree;
+    }
+
+    // Preserve side effects in declaration order while collecting the final enumerable own keys.
+    TreeSet<Long> arrayIndexKeys = new TreeSet<>();
+    LinkedHashSet<String> otherKeys = new LinkedHashSet<>();
+    List<Node> sideEffectExpressions = new ArrayList<>();
+
+    for (Node child = arg.getFirstChild(); child != null; child = child.getNext()) {
+      String key;
+      Node valueNode;
+      switch (child.getToken()) {
+        case STRING_KEY -> {
+          key = child.getString();
+          valueNode = child.getFirstChild();
+        }
+        case GETTER_DEF, SETTER_DEF, MEMBER_FUNCTION_DEF -> {
+          key = child.getString();
+          valueNode = child.getFirstChild();
+        }
+        case COMPUTED_PROP -> {
+          // Key may be constant after inlining (e.g. [LangCode.EN] -> ["en"])
+          Node keyExpr = child.getFirstChild();
+          if (keyExpr == null) {
+            return subtree;
+          }
+          String keyStr = getSideEffectFreeStringValue(keyExpr);
+          if (keyStr == null) {
+            return subtree;
+          }
+          key = keyStr;
+          valueNode = child.getSecondChild();
+        }
+        case OBJECT_SPREAD -> {
+          // Spread adds keys from another object at runtime - cannot fold
+          return subtree;
+        }
+        default -> {
+          continue;
+        }
+      }
+      if (valueNode != null && mayHaveSideEffects(valueNode)) {
+        sideEffectExpressions.add(valueNode.cloneTree());
+      }
+      if (isProtoSetterDefinition(child)) {
+        continue;
+      }
+      Long arrayIndex = getArrayIndexKey(key);
+      if (arrayIndex != null) {
+        arrayIndexKeys.add(arrayIndex);
+      } else {
+        otherKeys.add(key);
+      }
+    }
+
+    Node arrayLit = IR.arraylit();
+    for (Long key : arrayIndexKeys) {
+      arrayLit.addChildToBack(IR.string(String.valueOf(key)));
+    }
+    for (String key : otherKeys) {
+      arrayLit.addChildToBack(IR.string(key));
+    }
+    arrayLit.srcrefTreeIfMissing(subtree);
+
+    Node replacement;
+    if (sideEffectExpressions.isEmpty()) {
+      replacement = arrayLit;
+    } else {
+      // Build comma expression: (expr1, expr2, ..., arrayLit)
+      Node comma = sideEffectExpressions.get(0);
+      for (int i = 1; i < sideEffectExpressions.size(); i++) {
+        comma = IR.comma(comma, sideEffectExpressions.get(i));
+      }
+      replacement = IR.comma(comma, arrayLit);
+      replacement.srcrefTreeIfMissing(subtree);
+    }
+
+    markFunctionsDeleted(subtree);
+    subtree.replaceWith(replacement);
+    markNewScopesChanged(replacement);
+    reportChangeToEnclosingScope(replacement);
+    return replacement;
+  }
+
+  /**
+   * Returns the numeric value of a canonical array index string, or {@code null} if it is not.
+   * See https://tc39.es/ecma262/multipage/ecmascript-data-types-and-values.html#array-index
+   */
+  private static @Nullable Long getArrayIndexKey(String key) {
+    try {
+      long n = Long.parseLong(key, 10);
+      return 0 <= n && n < 0xFFFFFFFFL && key.equals(String.valueOf(n)) ? n : null;
+    } catch (NumberFormatException e) {
+      return null;
+    }
+  }
+
+  /** Returns whether this object-literal member is parsed as a {@code __proto__} prototype setter. */
+  private static boolean isProtoSetterDefinition(Node keyNode) {
+    return keyNode.isStringKey()
+        && keyNode.getString().equals("__proto__")
+        && !keyNode.isShorthandProperty();
   }
 
   private Node tryFoldKnownNumberMethods(Node subtree, Node callTarget) {

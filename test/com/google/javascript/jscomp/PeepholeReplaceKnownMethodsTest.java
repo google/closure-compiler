@@ -44,6 +44,17 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
              * @template T
              */
             Array.of = function(var_args) {};
+            /**
+             * @param {!Object} obj
+             * @return {!Array<string>}
+             * @nosideeffects
+             */
+            Object.keys = function(obj) {};
+            /**
+             * @nosideeffects
+             * @return {number}
+             */
+            function noSideEffectFn() { return 4; }
             """);
   }
 
@@ -55,6 +66,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     useTypes = true;
     disableTypeCheck();
     enableNormalize();
+    enableComputeSideEffects();
   }
 
   @Override
@@ -468,6 +480,168 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   @Test
   public void testFoldMathFunctionsBug() {
     foldSame("Math[0]()");
+  }
+
+  @Test
+  public void testFoldObjectKeys() {
+    fold("Object.keys({})", "[]");
+    fold("Object.keys({a: 1, b: 2})", "['a', 'b']");
+    fold("Object.keys({a: 1, b: 2, c: 3})", "['a', 'b', 'c']");
+    fold("Object.keys({b: 1, a: 2})", "['b', 'a']");
+    fold("Object.keys({'': 1, a: 2})", "['', 'a']");
+    // Integer-like keys come first, sorted numerically
+    fold("Object.keys({b: 1, 2: 0, a: 2, 1: 0})", "['1', '2', 'b', 'a']");
+    fold("Object.keys({10n: 0, 2: 0, 1: 0})", "['1', '2', '10']");
+    fold(
+        "Object.keys({3n: 'bigint 3n', '1': 'string 1', 'a': 'string a', '2': 'string 2'})",
+        "['1', '2', '3', 'a']");
+    fold(
+        "Object.keys({4294967295: 2, 4294967294: 1, 1: 3, '01': 4})",
+        "['1', '4294967294', '4294967295', '01']");
+    // No folding for non-object-literal
+    foldSame("Object.keys(x)");
+    foldSame("Object.keys(f())");
+  }
+
+  @Test
+  public void testFoldObjectKeys_floatProperties() {
+    // Float keys: 3.00...01 and 1.99...99 coerce to "3" and "2"; string key stays as-is
+    fold(
+        "Object.keys({3.0000000000000001: 'a', '2.00000000000000000000000000001': 'b', 1.9999999999999999: 'c'})",
+        "['2', '3', '2.00000000000000000000000000001']");
+    // 1.999999999999999 is not integer-like, so c (insertion order) comes last
+    fold(
+        "Object.keys({3.0000000000000001: 'a', '2.00000000000000000000000000001': 'b', 1.999999999999999: 'c'})",
+        "['3', '2.00000000000000000000000000001', '1.999999999999999']");
+    fold("Object.keys({.9999999999999999: 2, 0: 'zero'})", "['0', '0.9999999999999999']");
+    fold("Object.keys({.99999999999999999: 2, 0: 'zero'})", "['0', '1']");
+  }
+
+  @Test
+  public void testFoldObjectKeys_duplicateDefinitions() {
+    fold("Object.keys({a: 1, a: 2})", "['a']");
+    fold("Object.keys({a: 1, b: 2, a: 3, c: 4})", "['a', 'b', 'c']");
+    fold("Object.keys({a() {}, a: 1})", "['a']");
+    fold("Object.keys({a: 1, a() {}})", "['a']");
+    fold("Object.keys({get a() { return 1; }, set a(v) {}})", "['a']");
+    fold("Object.keys({a() {}, ['a']: 1})", "['a']");
+    fold("Object.keys({a: 1, ['a']: 2, get a() { return 3; }})", "['a']");
+    fold("Object.keys({1: 1, ['1']: 2, a: 3})", "['1', 'a']");
+    fold("Object.keys({2: 1, 1: 2, 2: 3, a: 4})", "['1', '2', 'a']");
+  }
+
+  @Test
+  public void testFoldObjectKeys_methodDefinitions() {
+    fold("Object.keys({a() {}})", "['a']");
+    fold("Object.keys({a() {}, b() {}, c() {}})", "['a', 'b', 'c']");
+    fold("Object.keys({2() {}, 1() {}, a() {}})", "['1', '2', 'a']");
+    fold("Object.keys({b() {}, 2() {}, a() {}, 1() {}})", "['1', '2', 'b', 'a']");
+    fold("Object.keys({*a() {}})", "['a']");
+    fold("Object.keys({*a() {}, b() {}, *c() {}})", "['a', 'b', 'c']");
+    fold("Object.keys({async a() {}})", "['a']");
+    fold("Object.keys({async a() {}, b() {}, async c() {}})", "['a', 'b', 'c']");
+  }
+
+  @Test
+  public void testFoldObjectKeys_methodsMixedWithValues() {
+    fold("Object.keys({a() {}, b: 1})", "['a', 'b']");
+    fold("Object.keys({a: 1, b() {}, c: 2})", "['a', 'b', 'c']");
+    fold("Object.keys({2() {}, 1: 1, a() {}, b: 2})", "['1', '2', 'a', 'b']");
+    fold("Object.keys({a() {}, b() {}, c: 1})", "['a', 'b', 'c']");
+    fold("Object.keys({a: 1, b() {}, c() {}, d: 2})", "['a', 'b', 'c', 'd']");
+    fold("Object.keys({*a() {}, b: 1, *c() {}})", "['a', 'b', 'c']");
+    fold("Object.keys({async a() {}, b: 1, async c() {}})", "['a', 'b', 'c']");
+  }
+
+  @Test
+  public void testFoldObjectKeys_protoSetterDefinitions() {
+    fold("Object.keys({__proto__: null})", "[]");
+    fold("Object.keys({'__proto__': null})", "[]");
+    fold("Object.keys({__proto__: 0, a: 1})", "['a']");
+    fold("Object.keys({__proto__: null, a: 1})", "['a']");
+    fold("Object.keys({a: 1, __proto__: null})", "['a']");
+    fold("Object.keys({a: 1, __proto__: null, b: 2})", "['a', 'b']");
+    fold("Object.keys({1: 0, a: 1, __proto__: null, b: 2})", "['1', 'a', 'b']");
+    fold("Object.keys({__proto__})", "['__proto__']");
+    fold("Object.keys({['__proto__']: 1, a: 1})", "['__proto__', 'a']");
+    fold("Object.keys({__proto__() {}, a: 1})", "['__proto__', 'a']");
+    fold("Object.keys({a: 1, __proto__() {}, b: 2})", "['a', '__proto__', 'b']");
+    fold("Object.keys({get __proto__() { return 1; }, a: 1})", "['__proto__', 'a']");
+    fold("Object.keys({a: 1, get __proto__() { return 1; }, b: 2})", "['a', '__proto__', 'b']");
+    fold("Object.keys({set __proto__(v) {}, a: 1})", "['__proto__', 'a']");
+    fold("Object.keys({a: 1, set __proto__(v) {}, b: 2})", "['a', '__proto__', 'b']");
+    fold("Object.keys({__proto__: null, ['__proto__']: 1, a: 1})", "['__proto__', 'a']");
+    fold("Object.keys({__proto__: null, __proto__() {}, a: 1})", "['__proto__', 'a']");
+    fold("Object.keys({a: 1, __proto__: null, ['__proto__']: 2, b: 3})", "['a', '__proto__', 'b']");
+  }
+
+  @Test
+  public void testFoldObjectKeys_withSideEffects() {
+    // Side effects in values are preserved via comma operator
+    fold("Object.keys({a: f() + 1, b: 1})", "(f() + 1, ['a', 'b'])");
+    fold("Object.keys({a: 1, b: g(), c: 2})", "(g(), ['a', 'b', 'c'])");
+    fold("Object.keys({a: x(), b: y(), c: 1})", "(x(), y(), ['a', 'b', 'c'])");
+    fold("Object.keys({a: (f(), 1), b: 2})", "(f(), 1, ['a', 'b'])");
+    fold("Object.keys({a: (() => { return g(); })(), b: 2})", "((() => { return g(); })(), ['a', 'b'])");
+    fold("Object.keys({a: (function() { return h(); })(), b: 2})", "((function() { return h(); })(), ['a', 'b'])");
+    fold("Object.keys({a: cond ? x() : y(), b: 1})", "((cond ? x() : y()), ['a', 'b'])");
+    // Array order changes (integer keys sorted) but side effect call order stays (declaration order)
+    fold("Object.keys({3: f(), 1: g(), 2: h(), a: 1})", "(f(), g(), h(), ['1', '2', '3', 'a'])");
+    // @nosideeffects value expressions are not preserved - just the array
+    fold("Object.keys({a: noSideEffectFn(), b: 1})", "['a', 'b']");
+    fold("Object.keys({a: 2 * noSideEffectFn(), b: 1})", "['a', 'b']");
+    fold("Object.keys({a: Math.cos(noSideEffectFn()) + 1, b: 1})", "['a', 'b']");
+    // 6 members: literals, side-effect fns, @nosideeffects fn; array sorted, side effects in decl order
+    fold(
+        "Object.keys({0: 0, 5: fn5(), 4: fn4(), 3: noSideEffectFn(), 2: 1, 1: fn1()})",
+        "(fn5(), fn4(), fn1(), ['0', '1', '2', '3', '4', '5'])");
+    // Side effects are preserved even when later keys overwrite earlier ones
+    fold("Object.keys({a: f(), a: g(), b: 1})", "(f(), g(), ['a', 'b'])");
+    fold("Object.keys({a() {}, b: f(), c() {}})", "(f(), ['a', 'b', 'c'])");
+    fold("Object.keys({a: f(), ['a']: g(), b: 1})", "(f(), g(), ['a', 'b'])");
+    // __proto__ setter values still execute but do not add a key
+    fold("Object.keys({__proto__: f(), a: g()})", "(f(), g(), ['a'])");
+    fold("Object.keys({a: 1, __proto__: (f(), null), b: 2})", "(f(), null, ['a', 'b'])");
+    fold("Object.keys({__proto__: f(), ['__proto__']: g(), a: 1})", "(f(), g(), ['__proto__', 'a'])");
+  }
+
+  @Test
+  public void testFoldObjectKeys_computedPropertySkipped() {
+    // Object.keys({[x]: 1, a: 2}) - computed key is variable, cannot be folded
+    foldSame("Object.keys({[x]: 1, a: 2})");
+    foldSame("Object.keys({[3 + 4]: 1, a: 2})");
+    foldSame("Object.keys({a: 1, ...x, b: 2})");
+  }
+
+  @Test
+  public void testFoldObjectKeys_computedPropertyWithConstant() {
+    // Literal keys in computed props - covers inlined constants like [LangCode.EN] -> ['en']
+    fold("Object.keys({['en']: 'Hi', ['es']: 'Hola'})", "['en', 'es']");
+    fold("Object.keys({[1]: 'a', [2]: 'b'})", "['1', '2']");
+    fold("Object.keys({[2]: 'b', [1]: 'a'})", "['1', '2']");
+    fold("Object.keys({['']: 1, a: 2})", "['', 'a']");
+    fold("Object.keys({[-0]: 'a', [0]: 'b', a: 'c'})", "['0', 'a']");
+    fold("Object.keys({['__proto__']: 1, ['__proto__']: 2, a: 1})", "['__proto__', 'a']");
+    fold("Object.keys({ 0: '0', [-1]: '-1' })", "['0', '-1']");
+  }
+
+  @Test
+  public void testFoldObjectKeys_shorthandProperties() {
+    fold("Object.keys({a})", "['a']");
+    fold("Object.keys({a, b})", "['a', 'b']");
+    fold("Object.keys({a, b: 1, c})", "['a', 'b', 'c']");
+    fold("Object.keys({__proto__})", "['__proto__']");
+    fold("Object.keys({2: 1, a, 1: 0, b})", "['1', '2', 'a', 'b']");
+  }
+
+  @Test
+  public void testFoldObjectKeys_parenthesizedObjectLiteral() {
+    fold("Object.keys(({a: 1, b: 2}))", "['a', 'b']");
+    fold("Object.keys((({a() {}, b: 1})))", "['a', 'b']");
+    fold("Object.keys(((({'': 1, a: 2}))))", "['', 'a']");
+    fold(
+        "Object.keys(((({3.0000000000000001: 'a', '2.00000000000000000000000000001': 'b', 1.9999999999999999: 'c'}))))",
+        "['2', '3', '2.00000000000000000000000000001']");
   }
 
   @Test
