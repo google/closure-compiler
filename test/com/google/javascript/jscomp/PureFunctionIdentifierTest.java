@@ -3669,6 +3669,16 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNumberToStringWithRadixIsPure() {
+    assertPureCallsMarked("var x = 0; x.toString(16);", ImmutableList.of("x.toString"));
+  }
+
+  @Test
+  public void testOptionalChainNumberToStringWithRadixIsPure() {
+    assertPureCallsMarked("var x = 0; x?.toString(16);", ImmutableList.of("x?.toString"));
+  }
+
+  @Test
   public void testDynamicImport() {
     ignoreWarnings(DiagnosticGroups.MODULE_LOAD);
     assertNoPureCalls("import('./module.js')");
