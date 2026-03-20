@@ -651,14 +651,34 @@ RTCDTMFToneChangeEvent.prototype.tone;
 
 /**
  * @interface
+ * @see https://www.w3.org/TR/webrtc-encoded-transform/#RTCEncodedFrameMetadata
+ */
+function RTCEncodedFrameMetadata() {}
+
+/** @type {!Array<number>|undefined} */
+RTCEncodedFrameMetadata.prototype.contributingSources;
+
+/** @type {string|undefined} */
+RTCEncodedFrameMetadata.prototype.mimeType;
+
+/** @type {number|undefined} */
+RTCEncodedFrameMetadata.prototype.payloadType;
+
+/** @type {number|undefined} */
+RTCEncodedFrameMetadata.prototype.rtpTimestamp;
+
+/** @type {number|undefined} */
+RTCEncodedFrameMetadata.prototype.synchronizationSource;
+
+/**
+ * @interface
+ * @extends {RTCEncodedFrameMetadata}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCEncodedVideoFrame/getMetadata
+ * @see https://www.w3.org/TR/webrtc-encoded-transform/#RTCEncodedVideoFrameMetadata
  */
 function RTCEncodedVideoFrameMetadata() {}
 
-/** @type {Array<number>|undefined} */
-RTCEncodedVideoFrameMetadata.prototype.contributingSources;
-
-/** @type {Array<number>|undefined} */
+/** @type {!Array<number>|undefined} */
 RTCEncodedVideoFrameMetadata.prototype.dependencies;
 
 /** @type {number|undefined} */
@@ -668,13 +688,7 @@ RTCEncodedVideoFrameMetadata.prototype.frameId;
 RTCEncodedVideoFrameMetadata.prototype.height;
 
 /** @type {number|undefined} */
-RTCEncodedVideoFrameMetadata.prototype.payloadType;
-
-/** @type {number|undefined} */
 RTCEncodedVideoFrameMetadata.prototype.spatialIndex;
-
-/** @type {number|undefined} */
-RTCEncodedVideoFrameMetadata.prototype.synchronizationSource;
 
 /** @type {number|undefined} */
 RTCEncodedVideoFrameMetadata.prototype.temporalIndex;
@@ -716,21 +730,14 @@ RTCEncodedVideoFrame.prototype.getMetadata = function() {};
 
 /**
  * @interface
+ * @extends {RTCEncodedFrameMetadata}
  * @see https://developer.mozilla.org/docs/Web/API/RTCEncodedAudioFrame/getMetadata
+ * @see https://www.w3.org/TR/webrtc-encoded-transform/#RTCEncodedAudioFrameMetadata
  */
 function RTCEncodedAudioFrameMetadata() {}
 
-/** @type {Array<number>|undefined} */
-RTCEncodedAudioFrameMetadata.prototype.contributingSources;
-
-/** @type {number|undefined} */
-RTCEncodedAudioFrameMetadata.prototype.payloadType;
-
 /** @type {number|undefined} */
 RTCEncodedAudioFrameMetadata.prototype.sequenceNumber;
-
-/** @type {number|undefined} */
-RTCEncodedAudioFrameMetadata.prototype.synchronizationSource;
 
 
 /**
