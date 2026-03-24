@@ -3367,15 +3367,14 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     var thrown =
         assertThrows(
             RuntimeException.class,
-            () -> {
-              test(
-                  options,
-                  """
-                  /** @requireInlining */ function foo(q) { console.log(q); console.log('bye'); }
-                  console.log(/** @type {?} */ (foo).name);
-                  """,
-                  "");
-            });
+            () ->
+                test(
+                    options,
+                    """
+                    /** @requireInlining */ function foo(q) { console.log(q); console.log('bye'); }
+                    console.log(/** @type {?} */ (foo).name);
+                    """,
+                    ""));
     assertThat(thrown).hasMessageThat().contains("Validity check failed for earlyInlineVariables");
     assertThat(thrown).hasCauseThat().isInstanceOf(IllegalStateException.class);
     assertThat(thrown)
@@ -3392,12 +3391,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setValidateRequiredInlinings(true);
 
-    var thrown =
-        assertThrows(
-            IllegalStateException.class,
-            () -> {
-              test(options, "", "");
-            });
+    var thrown = assertThrows(IllegalStateException.class, () -> test(options, "", ""));
     assertThat(thrown).hasMessageThat().contains("shouldValidateRequiredInlinings");
     assertThat(thrown).hasMessageThat().contains("missing property collapsing");
   }
