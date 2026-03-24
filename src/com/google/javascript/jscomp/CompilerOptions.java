@@ -2063,13 +2063,13 @@ public class CompilerOptions {
   @Deprecated
   public enum ExperimentalForceTranspile {
     /**
-     * Transpile all features down to ES5 except ASYNC AWAIT
+     * Transpile performance sensitive features away, preserving ASYNC/AWAIT for debuggability
      *
      * @deprecated Use setLanguageOut(LanguageMode.ECMASCRIPT5), or
      *     setLangaugeOut(LanguageMode.ECMASCRIPT_2017) instead.
      */
     @Deprecated
-    ALL_EXCEPT_ASYNC_AWAIT
+    PERFORMANT_WITH_ASYNC_STACKS
   }
 
   @Deprecated
@@ -2077,7 +2077,8 @@ public class CompilerOptions {
       ExperimentalForceTranspile... experimentalForceTranspile) {
     if (experimentalForceTranspile.length > 1) {
       checkState(
-          !experimentalForceTranspiles.contains(ExperimentalForceTranspile.ALL_EXCEPT_ASYNC_AWAIT));
+          !experimentalForceTranspiles.contains(
+              ExperimentalForceTranspile.PERFORMANT_WITH_ASYNC_STACKS));
     }
     experimentalForceTranspiles = ImmutableList.copyOf(experimentalForceTranspile);
   }

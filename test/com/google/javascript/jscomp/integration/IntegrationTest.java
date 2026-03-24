@@ -5282,12 +5282,12 @@ async function abc() {
   }
 
   @Test
-  public void forceTranspileExceptAsyncAwait_doesNotRemoveAsyncAwait() {
+  public void performantWithAsyncStacks_doesNotRemoveAsyncAwait() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(
         LanguageMode
             .ECMASCRIPT_2021); // does not matter when setForceTranspileExceptAsyncAwait(true)
-    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.ALL_EXCEPT_ASYNC_AWAIT);
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.PERFORMANT_WITH_ASYNC_STACKS);
 
     // test transpiling let/const and classes but leave async functions untranspiled
     test(
@@ -5301,12 +5301,12 @@ async function abc() {
   }
 
   @Test
-  public void forceTranspileExceptAsyncAwait_doesNotRemoveAsyncAwait2() {
+  public void performantWithAsyncStacks_doesNotRemoveAsyncAwait2() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(
         LanguageMode
             .ECMASCRIPT_2021); // does not matter when setForceTranspileExceptAsyncAwait(true)
-    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.ALL_EXCEPT_ASYNC_AWAIT);
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.PERFORMANT_WITH_ASYNC_STACKS);
 
     // test transpiling let/const, opt-chain and classes but leave async functions untranspiled
     test(
@@ -5321,12 +5321,13 @@ async function abc() {
   }
 
   @Test
-  public void forceTranspileExceptAsyncAwait_withEs5Out() {
+  public void performantWithAsyncStacks_withEs5Out() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.ALL_EXCEPT_ASYNC_AWAIT);
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.PERFORMANT_WITH_ASYNC_STACKS);
 
-    // respects ES5 mode and lowers async await down to ES5 despite forcing `ALL_EXCEPT_ASYNC_AWAIT`
+    // respects ES5 mode and lowers async await down to ES5 despite forcing
+    // `PERFORMANT_WITH_ASYNC_STACKS`
     testNoWarnings(options, "class C { async f(p) { let obj = await p; return obj?.prop; } }");
     assertThat(lastCompiler.toSource()).doesNotContain("async ");
     assertThat(lastCompiler.toSource()).doesNotContain("await ");
