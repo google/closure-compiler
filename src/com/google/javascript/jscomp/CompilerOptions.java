@@ -2070,7 +2070,7 @@ public class CompilerOptions {
      */
     @Deprecated
     ALL_EXCEPT_ASYNC_AWAIT
-  };
+  }
 
   @Deprecated
   public void setExperimentalForceTranspiles(
