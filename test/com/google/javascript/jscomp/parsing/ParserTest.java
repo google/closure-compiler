@@ -5106,6 +5106,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testExternsLanguageMode() {
+    mode = LanguageMode.ECMASCRIPT3;
+    strictMode = SLOPPY;
+
+    parse("/** @fileoverview\n@externs\n*/\n const x = 1;");
+  }
+
+  @Test
   public void testUnicodeInIdentifiers() {
     parse("var à");
     parse("var cosθ");

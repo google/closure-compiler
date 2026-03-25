@@ -1177,6 +1177,10 @@ class IRFactory {
     if (withinClosureUnawareCodeRange(node.location.start.line, node.location.start.column)) {
       return;
     }
+    // Externs should not produce warnings about the input language mode.
+    if (currentFileIsExterns) {
+      return;
+    }
     if (!isSupportedForInputLanguageMode(feature)) {
       errorReporter.warning(
           languageFeatureWarningMessage(feature), sourceName, lineno(node), charno(node));
@@ -1189,6 +1193,10 @@ class IRFactory {
     if (withinClosureUnawareCodeRange(token.location.start.line, token.location.start.column)) {
       return;
     }
+    // Externs should not produce warnings about the input language mode.
+    if (currentFileIsExterns) {
+      return;
+    }
     if (!isSupportedForInputLanguageMode(feature)) {
       errorReporter.warning(
           languageFeatureWarningMessage(feature), sourceName, lineno(token), charno(token));
@@ -1198,6 +1206,10 @@ class IRFactory {
   void maybeWarnForFeature(Node node, Feature feature) {
     features = features.with(feature);
     if (withinClosureUnawareCodeRange(node.getLineno(), node.getCharno())) {
+      return;
+    }
+    // Externs should not produce warnings about the input language mode.
+    if (currentFileIsExterns) {
       return;
     }
     if (!isSupportedForInputLanguageMode(feature)) {
