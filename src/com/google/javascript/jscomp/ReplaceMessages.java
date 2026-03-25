@@ -911,11 +911,11 @@ public final class ReplaceMessages {
 
   /** Options for escaping characters in translated messages. */
   record MsgOptions(
-      /** True if the message is defined using the ICU template declaration method. */
+      /* True if the message is defined using the ICU template declaration method. */
       boolean isIcuTemplate,
-      /** Replace `'<'` with `'&lt;'` in the message. */
+      /* Replace `'<'` with `'&lt;'` in the message. */
       boolean escapeLessThan,
-      /**
+      /*
        * Replace these escaped entities with their literal characters in the message (Overrides
        * escapeLessThan)
        *
