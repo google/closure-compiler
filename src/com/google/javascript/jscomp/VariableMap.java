@@ -117,7 +117,11 @@ public final class VariableMap implements Serializable {
 
   /** Deserializes the variable map from a byte array returned by {@link #toBytes()}. */
   public static VariableMap fromBytes(byte[] bytes) throws ParseException {
-    String string = new String(bytes, UTF_8);
+    return fromLines(new String(bytes, UTF_8));
+  }
+
+  /** Deserializes the variable map from a string. */
+  public static VariableMap fromLines(String string) throws ParseException {
     ImmutableMap.Builder<String, String> map = ImmutableMap.builder();
     int startOfLine = 0;
     while (startOfLine < string.length()) {
