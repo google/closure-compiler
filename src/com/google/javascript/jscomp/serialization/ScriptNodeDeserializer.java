@@ -100,14 +100,11 @@ final class ScriptNodeDeserializer {
      * Visits a single AST node and returns the corresponding Node.
      *
      * @param astNode The AST node to visit.
-     * @param contextStack The context stack to use for the node. If feature collection should not
-     *     occur, this should be null.
+     * @param contextStack The context stack to use for the node.
      * @param sourceFileTemplate A template node to use for the node.
      */
     private Node visit(
-        AstNode astNode,
-        @Nullable List<FeatureContext> contextStack,
-        @Nullable Node sourceFileTemplate) {
+        AstNode astNode, List<FeatureContext> contextStack, @Nullable Node sourceFileTemplate) {
       if (sourceFileTemplate == null || astNode.getSourceFile() != 0) {
         // 0 == 'not set'
         sourceFileTemplate =
@@ -141,12 +138,13 @@ final class ScriptNodeDeserializer {
         AstNode serializedShadowChild = astNode.getChild(0);
         Node closureUnawareSubtreeTemplateNode = sourceFileTemplate.cloneTree();
         closureUnawareSubtreeTemplateNode.setIsInClosureUnawareSubtree(true);
-        // Unlike normal deserialization, we want to avoid recording features for code within the
-        // shadow because we don't run transpilation passes over it and later stages of the compiler
-        // attempt to validate that transpilation has successfully run over the entire AST and no
-        // features remain that won't work in the given language output level.
+        // Note: we intentionally pass `contextStack` to visit() in order to capture any
+        // language features present in the shadow AST, like const syntax, into the main AST
+        // featureset. We are doing this to align ScriptNodeDeserializer with the existing behavior
+        // in IRFactory. (In the future we could consider instead giving each shadow AST script
+        // its own separate featureset, but that would be a larger change.)
         Node shadowedCode =
-            this.visit(serializedShadowChild, null, closureUnawareSubtreeTemplateNode);
+            this.visit(serializedShadowChild, contextStack, closureUnawareSubtreeTemplateNode);
         this.owner().setOriginalNameIfPresent(serializedShadowChild, shadowedCode);
         // The shadowed code is only the "source" parts of the shadow structure, and does not
         // include the synthetic code that is needed for the compiler to consider it a valid
@@ -169,9 +167,7 @@ final class ScriptNodeDeserializer {
         this.owner().setOriginalNameIfPresent(child, deserializedChild);
       }
 
-      if (contextStack != null) {
-        contextStack.removeLast();
-      }
+      contextStack.removeLast();
 
       return n;
     }

@@ -36,6 +36,7 @@ import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.serialization.TypedAstDeserializer.DeserializedAst;
 import com.google.javascript.jscomp.testing.CodeSubTree;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
@@ -849,6 +850,41 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
         };
 
     NodeTraversal.traverse(result.compiler, shadowedContent, cb);
+  }
+
+  @Test
+  public void shadowAsts_featuresSetOnMainAstScript() throws IOException {
+    Result result =
+        runWithoutExpected(
+            externs(new TestExternsBuilder().addClosureExterns().build()),
+            srcs(
+                """
+                /** @closureUnaware @fileoverview */
+                goog.module('test');
+
+                /** @closureUnaware */
+                (function() {
+                  const x = 5;
+                })();
+                """));
+
+    Node shadowHost =
+        CodeSubTree.findFirstNode(result.sourceRoot, (n) -> n.getClosureUnawareShadow() != null);
+    Node shadowScript = shadowHost.getClosureUnawareShadow().getOnlyChild();
+    Node mainScript = result.sourceRoot.getOnlyChild();
+    checkState(mainScript.isScript(), mainScript);
+    checkState(shadowScript.isScript(), shadowScript);
+
+    // The main AST script contains the "const" feature; the shadow AST featureset is null.
+    // NOTE: this behavior was selected for consistency with the parser/IRFactory and to address
+    // AstValidator breakages. However, we could consider instead setting the featureset on
+    // the shadow script directly, and omitting CONST_DECLARATIONS in the main script featureset.
+    // At present, the main advantage of doing so seems to be a potential performance gain because
+    // transpilation passes on the main AST can skip any features only in the shadow AST, but we
+    // don't expect that performance gain to be significant.
+    assertThat(mainScript.getProp(Node.FEATURE_SET))
+        .isEqualTo(FeatureSet.BARE_MINIMUM.with(Feature.CONST_DECLARATIONS));
+    assertThat(shadowScript.getProp(Node.FEATURE_SET)).isNull();
   }
 
   @Test

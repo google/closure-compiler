@@ -54,8 +54,6 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
     this.outputCount = 0;
     this.extraOptions = options -> {};
     this.mode = NestedCompilerRunner.Mode.TRANSPILE_AND_OPTIMIZE;
-    // TODO: b/494231728 - re-enable this.
-    disableAstValidation();
   }
 
   @Override
