@@ -1466,6 +1466,11 @@ public final class ConformanceRules {
       customRule.check(t, n, behavior);
     }
 
+    @Override
+    public @Nullable Precondition getPrecondition() {
+      return customRule.getPrecondition();
+    }
+
     private Rule createRule(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
       try {
