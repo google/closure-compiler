@@ -41,6 +41,7 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.MustBeClosed;
+import com.google.gson.GsonBuilder;
 import com.google.javascript.jscomp.CodePrinter.LicenseTracker;
 import com.google.javascript.jscomp.CompilerInput.ModuleType;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
@@ -497,13 +498,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (this.isDebugLoggingEnabled()) {
       // Log to separate files for convenience.
       logToFile("externs.log", externs::toString);
-      // To get a pretty-printed JSON chunk graph, change the string generation expression to
-      //
-      // new GsonBuilder().setPrettyPrinting().create().toJson(chunkGraph.toJson())
-      //
-      // TODO(bradfordcsmith): Come up with a JSON-printing version that will work when this code is
-      // compiled with J2CL, so we can permanently improve this.
-      logToFile("inputs.json", () -> Iterables.toString(chunkGraph.getAllInputs()));
+      logToFile(
+          "inputs.json",
+          new GsonBuilder().setPrettyPrinting().create().toJson(chunkGraph.toJson())::toString);
       logToFile("options.log", () -> options.toString());
       logToFile("warningsGuard.log", () -> warningsGuard.toString());
     } else {
@@ -512,18 +509,19 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       err.println("==== Externs ====");
       err.println(externs);
       err.println("==== Inputs ====");
-      // To get a pretty-printed JSON chunk graph, change this line to
-      //
-      // err.println(
-      //     new GsonBuilder().setPrettyPrinting().create().toJson(chunkGraph.toJson()));
-      //
-      // TODO(bradfordcsmith): Come up with a JSON-printing version that will work when this code is
-      // compiled with J2CL, so we can permanently improve this.
-      err.println(Iterables.toString(chunkGraph.getAllInputs()));
+      err.println(new GsonBuilder().setPrettyPrinting().create().toJson(chunkGraph.toJson()));
       err.println("==== CompilerOptions ====");
       err.println(options);
       err.println("==== WarningsGuard ====");
       err.println(warningsGuard);
+    }
+  }
+
+  private void maybeLogPrunedInputs() {
+    if (this.isDebugLoggingEnabled()) {
+      logToFile(
+          "inputs_pruned.json",
+          new GsonBuilder().setPrettyPrinting().create().toJson(chunkGraph.toJson())::toString);
     }
   }
 
@@ -2290,6 +2288,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (staleInputs) {
       repartitionInputs();
     }
+    maybeLogPrunedInputs();
   }
 
   /**
