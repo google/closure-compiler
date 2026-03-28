@@ -22,14 +22,14 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Java implementation of the source map parser.
- */
+/** Java implementation of the source map parser. */
 public class SourceMapObjectParser {
   // Gson objects are safe to share across threads and are somewhat expensive to construct. Use a
   // single instance.  This is Safe per gson docs:
@@ -42,7 +42,6 @@ public class SourceMapObjectParser {
 
     try {
       JsonObject sourceMapRoot = gson.fromJson(contents, JsonObject.class);
-
       builder.setVersion(sourceMapRoot.get("version").getAsInt());
       builder.setFile(getStringOrNull(sourceMapRoot, "file"));
       builder.setLineCount(
@@ -77,6 +76,60 @@ public class SourceMapObjectParser {
     return builder.build();
   }
 
+  // TODO: fenghaolw - Migrate everyone to use this method and rename it to parse.
+  public static SourceMapObject parseFast(String contents) throws SourceMapParseException {
+    SourceMapObject.Builder builder = SourceMapObject.builder();
+    builder.setLineCount(-1);
+
+    try {
+      SourceMapJsonLexer lexer = new SourceMapJsonLexer(contents);
+      lexer.beginObject();
+      Map<String, Object> extensions = new LinkedHashMap<>();
+
+      while (lexer.hasNext()) {
+        String name = lexer.nextName();
+        switch (name) {
+          case "version" -> builder.setVersion(lexer.nextInt());
+          case "file" -> builder.setFile(lexer.nextStringOrNull());
+          case "lineCount" -> builder.setLineCount(lexer.nextInt());
+          case "mappings" -> builder.setMappings(lexer.nextStringOrNull());
+          case "sourceRoot" -> builder.setSourceRoot(lexer.nextStringOrNull());
+          case "sections" -> {
+            String rawSections = lexer.nextRawValue();
+            JsonArray sectionsArray = gson.fromJson(rawSections, JsonArray.class);
+            ImmutableList.Builder<SourceMapSection> listBuilder = ImmutableList.builder();
+            for (JsonElement each : sectionsArray) {
+              listBuilder.add(buildSection(each.getAsJsonObject()));
+            }
+            builder.setSections(listBuilder.build());
+          }
+          case "sources" -> builder.setSources(readStringArray(lexer));
+          case "sourcesContent" -> builder.setSourcesContent(readStringArray(lexer));
+          case "names" -> builder.setNames(readStringArray(lexer));
+          default -> {
+            if (name.startsWith("x_")) {
+              extensions.put(name, gson.fromJson(lexer.nextRawValue(), JsonElement.class));
+            } else {
+              lexer.skipValue();
+            }
+          }
+        }
+        lexer.checkComma();
+      }
+      lexer.endObject();
+      lexer.skipWhitespace();
+      if (lexer.pos < lexer.length) {
+        throw new SourceMapParseException("Unexpected trailing characters");
+      }
+      builder.setExtensions(Collections.unmodifiableMap(extensions));
+
+    } catch (Exception ex) {
+      throw new SourceMapParseException("Parse exception: " + ex);
+    }
+
+    return builder.build();
+  }
+
   private static SourceMapSection buildSection(JsonObject section) throws SourceMapParseException {
     JsonObject offset = section.get("offset").getAsJsonObject();
     int line = offset.get("line").getAsInt();
@@ -88,7 +141,12 @@ public class SourceMapObjectParser {
     } else if (section.has("url")) {
       return SourceMapSection.forURL(section.get("url").getAsString(), line, column);
     } else if (section.has("map")) {
-      return SourceMapSection.forMap(section.get("map").toString(), line, column);
+      JsonElement map = section.get("map");
+      String mapStr =
+          map.isJsonPrimitive() && map.getAsJsonPrimitive().isString()
+              ? map.getAsString()
+              : map.toString();
+      return SourceMapSection.forMap(mapStr, line, column);
     }
 
     throw new SourceMapParseException(
@@ -96,7 +154,9 @@ public class SourceMapObjectParser {
   }
 
   private static @Nullable String getStringOrNull(JsonObject object, String key) {
-    return object.has(key) ? object.get(key).getAsString() : null;
+    return (object.has(key) && !object.get(key).isJsonNull())
+        ? object.get(key).getAsString()
+        : null;
   }
 
   private static String @Nullable [] getJavaStringArray(JsonElement element) {
@@ -111,6 +171,23 @@ public class SourceMapObjectParser {
       result[i] = item.isJsonNull() ? null : item.getAsString();
     }
     return result;
+  }
+
+  private static String @Nullable [] readStringArray(SourceMapJsonLexer lexer)
+      throws SourceMapParseException {
+    lexer.skipWhitespace();
+    if (lexer.pos < lexer.length && lexer.json.startsWith("null", lexer.pos)) {
+      lexer.pos += 4;
+      return null;
+    }
+    List<String> list = new ArrayList<>();
+    lexer.beginArray();
+    while (lexer.hasNext()) {
+      list.add(lexer.nextStringOrNull());
+      lexer.checkComma();
+    }
+    lexer.endArray();
+    return list.toArray(new String[0]);
   }
 
   private SourceMapObjectParser() {}
