@@ -97,7 +97,23 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
     boolean useCompactMappings =
         (sources.length < 65535) && (names == null || names.length < 65535);
 
-    mappings = new Mappings(lineCount, useCompactMappings);
+    int estimatedEntries = (lineCount >= 0) ? lineCount * 2 : 1000;
+    if (sourceMapObject.getMappings() != null) {
+      // Estimate the number of entries in the string encoding. A entry has 5 values
+      // and a separator, for a minimum of 6 characters.
+      //
+      // It is better to overestimate than underestimate the number of entries - otherwise, we
+      // will have to resize the array many times.
+      // XJS base chunk, for example, have ~1000 lines but the map has ~266,000 entries.
+      // If we start small (e.g. 2000), we need multiple allocations/copies as it grows: 2k -> 4k
+      // -> ... -> 512k. Because 266K lies between 256K and 512K, it tops off at 512K and the
+      // final trim() will still trigger an Arrays.copyOf to scale back down to 266K!
+      // If we start with a bigger estimate, we might still need to trim down at the end, but we
+      // save potentially many array copies.
+      estimatedEntries = Math.max(estimatedEntries, sourceMapObject.getMappings().length() / 6);
+    }
+
+    mappings = new Mappings(lineCount, useCompactMappings, estimatedEntries);
 
     // The value type of each extension is the native JSON type (e.g. JsonObject, or JSONObject
     // when compiled with GWT).
@@ -478,10 +494,9 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
 
     private final int entrySize;
 
-    Mappings(int lineCount, boolean useCompactMappings) {
+    Mappings(int lineCount, boolean useCompactMappings, int estimatedEntries) {
       this.lineCount = lineCount;
       this.entrySize = useCompactMappings ? 4 : 5;
-      int estimatedEntries = (lineCount >= 0) ? lineCount * 2 : 1000;
       this.flatEntries = new int[estimatedEntries * entrySize];
       int estimatedLines = (lineCount >= 0) ? lineCount : 1000;
       this.lineStart = new int[estimatedLines + 1];
