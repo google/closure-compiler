@@ -17,7 +17,9 @@ package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.CompilerOptions.ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -1129,6 +1131,34 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     assertThat(
             nodesWithNonJsdocComments.stream().map(n -> n.getNonJSDocComment().getCommentString()))
         .containsExactly("// A B C\n/** FOO BAR BAZ! */\n// D E F");
+  }
+
+  @Test
+  public void testNoOptimizeClosureUnawareCode_doesntRunTranspilation() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setClosureUnawareMode(SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION);
+    options.setDevMode(DevMode.START_AND_END);
+
+    String inputWithConst =
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware {WHITESPACE}
+         */
+        goog.module('a.b');
+        /** @closureUnaware */
+        (function() {
+          const x = 5;
+        }).call(globalThis);
+        """;
+
+    // TODO: b/497826311 - fix AstValidator crash & update the expected output to preserve
+    // 'const x = 5;'.
+    var ex = assertThrows(RuntimeException.class, () -> compile(options, inputWithConst));
+    assertThat(ex).hasMessageThat().contains("AST should not contain const declaration.");
   }
 
   // TODO how can I test whether source info is being properly retained?
