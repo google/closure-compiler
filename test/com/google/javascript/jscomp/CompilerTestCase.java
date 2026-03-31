@@ -385,7 +385,8 @@ public abstract class CompilerTestCase {
     if (debugLoggingEnabled) {
       CompilerTestCaseUtils.setDebugLogDirectoryOn(options);
     }
-    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(
+        RuntimeJsLibManager.RuntimeLibraryMode.RECORD_AND_VALIDATE_FIELDS);
 
     return options;
   }

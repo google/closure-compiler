@@ -61,7 +61,12 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new LateEs6ToEs3Converter(compiler);
+    PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
+    optimizer.addOneTimePass(
+        makePassFactory(
+            "injectTranspilationRuntimeLibraries", InjectTranspilationRuntimeLibraries::new));
+    optimizer.addOneTimePass(makePassFactory("lateEs6ToEs3Converter", LateEs6ToEs3Converter::new));
+    return optimizer;
   }
 
   @Test

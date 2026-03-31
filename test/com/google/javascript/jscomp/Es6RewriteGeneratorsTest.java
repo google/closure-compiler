@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -60,6 +61,8 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
           "GEN_FUNC", "$jscomp$generator$function$",
           "GEN_THIS", "$jscomp$generator$this$");
 
+  private ImmutableList<String> extraRuntimeLibFields = ImmutableList.of();
+
   public Es6RewriteGeneratorsTest() {
     super(
         new TestExternsBuilder()
@@ -96,6 +99,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     replaceTypesWithColors();
     enableMultistageCompilation();
     setGenericNameReplacements(SPECIAL_VARIABLES_MAP);
+    extraRuntimeLibFields = ImmutableList.of();
   }
 
   @Override
@@ -107,7 +111,22 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new Es6RewriteGenerators(compiler);
+    PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
+    optimizer.addOneTimePass(
+        makePassFactory(
+            "extraRuntimeLibraries",
+            (AbstractCompiler c) -> {
+              return (externs, js) -> {
+                for (String field : extraRuntimeLibFields) {
+                  c.getRuntimeJsLibManager().injectLibForField(field);
+                }
+              };
+            }));
+    optimizer.addOneTimePass(
+        makePassFactory(
+            "injectTranspilationRuntimeLibraries", InjectTranspilationRuntimeLibraries::new));
+    optimizer.addOneTimePass(makePassFactory("es6RewriteGenerators", Es6RewriteGenerators::new));
+    return optimizer;
   }
 
   private void rewriteGeneratorBody(String beforeBody, String afterBody) {
@@ -174,6 +193,9 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
   @Test
   public void testGeneratorForAsyncFunction() {
+    // Needed for the hardcoded `$jscomp.asyncExecutePromiseGeneratorProgram` reference, since we
+    // are not actually transpiling any async functions.
+    extraRuntimeLibFields = ImmutableList.of("$jscomp.asyncExecutePromiseGeneratorProgram");
     test(
         """
         f = function() {
@@ -354,6 +376,9 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
   @Test
   public void testContainsClosureAndTranspiledFromAsync() {
+    // Needed for the hardcoded `$jscomp.asyncExecutePromiseGeneratorProgram` reference, since we
+    // are not actually transpiling any async functions.
+    extraRuntimeLibFields = ImmutableList.of("$jscomp.asyncExecutePromiseGeneratorProgram");
     test(
         """
         function f(o) {

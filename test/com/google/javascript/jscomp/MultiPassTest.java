@@ -415,6 +415,7 @@ public final class MultiPassTest extends CompilerTestCase {
     replaceTypesWithColors();
 
     passes = new ArrayList<>();
+    addInjectTranspilationRuntimeLibraries();
     addNormalization(); // adding normalization triggers {@code ValidityCheck.checkVars}
     addDestructuringPass();
     addArrowFunctionPass();
@@ -529,6 +530,14 @@ public final class MultiPassTest extends CompilerTestCase {
         PassFactory.builder()
             .setName("arrowFunctionPass")
             .setInternalFactory(Es6RewriteArrowFunction::new)
+            .build());
+  }
+
+  private void addInjectTranspilationRuntimeLibraries() {
+    passes.add(
+        PassFactory.builder()
+            .setName("injectTranspilationRuntimeLibraries")
+            .setInternalFactory(InjectTranspilationRuntimeLibraries::new)
             .build());
   }
 }

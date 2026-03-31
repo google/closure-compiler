@@ -51,7 +51,12 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new Es6ForOfConverter(compiler);
+    PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
+    optimizer.addOneTimePass(
+        makePassFactory(
+            "injectTranspilationRuntimeLibraries", InjectTranspilationRuntimeLibraries::new));
+    optimizer.addOneTimePass(makePassFactory("es6ForOfConverter", Es6ForOfConverter::new));
+    return optimizer;
   }
 
   @Test

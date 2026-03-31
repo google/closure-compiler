@@ -65,7 +65,13 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return RewriteAsyncFunctions.create(compiler);
+    PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
+    optimizer.addOneTimePass(
+        makePassFactory(
+            "injectTranspilationRuntimeLibraries", InjectTranspilationRuntimeLibraries::new));
+    optimizer.addOneTimePass(
+        makePassFactory("rewriteAsyncFunctions", RewriteAsyncFunctions::create));
+    return optimizer;
   }
 
   private final Color getGlobalColor(ColorId colorId) {

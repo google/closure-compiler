@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.jscomp.js.RuntimeJsLibManager;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -36,11 +37,19 @@ public final class InjectTranspilationRuntimeLibraries implements CompilerPass {
 
   private final RuntimeJsLibManager runtimeLibs;
   private boolean injectedClassExtendsLibraries;
+  private final boolean shouldInstrumentAsyncContext;
 
   public InjectTranspilationRuntimeLibraries(AbstractCompiler compiler) {
+    this(compiler, compiler.getOptions().getInstrumentAsyncContext());
+  }
+
+  @VisibleForTesting
+  InjectTranspilationRuntimeLibraries(
+      AbstractCompiler compiler, boolean shouldInstrumentAsyncContext) {
     this.compiler = compiler;
     this.runtimeLibs = compiler.getRuntimeJsLibManager();
     this.injectedClassExtendsLibraries = false;
+    this.shouldInstrumentAsyncContext = shouldInstrumentAsyncContext;
   }
 
   @Override
@@ -138,7 +147,7 @@ public final class InjectTranspilationRuntimeLibraries implements CompilerPass {
       runtimeLibs.injectLibForField("$jscomp.getRestArguments");
     }
 
-    if (compiler.getOptions().getInstrumentAsyncContext()
+    if (shouldInstrumentAsyncContext
         // NOTE: async functions only matter for output features, since we don't bother
         // instrumenting them if they're being transpiled away.  Generators are relevant
         // regardless of whether they're transpiled or not.
