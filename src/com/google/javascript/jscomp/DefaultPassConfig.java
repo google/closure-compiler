@@ -148,10 +148,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     TranspilationPasses.addTranspilationRuntimeLibraries(passes);
 
-    if (options.getClosureUnawareMode()
-        == CompilerOptions.ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION) {
-      passes.maybeAdd(transpileOnlyClosureUnaware);
-    }
+    passes.maybeAdd(transpileOnlyClosureUnaware);
 
     if (options.needsTranspilationFrom(ES2015) && options.getRewritePolyfills()) {
       if (options.getIsolatePolyfills()) {
@@ -870,10 +867,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(j2clPass);
     }
 
-    if (options.getClosureUnawareMode()
-        == CompilerOptions.ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION) {
-      passes.maybeAdd(transpileAndOptimizeClosureUnaware);
-    }
+    passes.maybeAdd(transpileAndOptimizeClosureUnaware);
 
     TranspilationPasses.addTranspilationRuntimeLibraries(passes);
 

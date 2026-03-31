@@ -68,8 +68,6 @@ public final class AstValidator implements CompilerPass {
   /** Validate that all required inlinings were performed. */
   private final boolean shouldValidateRequiredInlinings;
 
-  private final boolean shouldValidateFeaturesInClosureUnaware;
-
   public AstValidator(
       AbstractCompiler compiler,
       ViolationHandler handler,
@@ -79,9 +77,6 @@ public final class AstValidator implements CompilerPass {
     this.violationHandler = handler;
     this.isScriptFeatureValidationEnabled = validateScriptFeatures;
     this.shouldValidateRequiredInlinings = shouldValidateRequiredInlinings;
-    this.shouldValidateFeaturesInClosureUnaware =
-        compiler.getOptions().getClosureUnawareMode()
-            == CompilerOptions.ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION;
   }
 
   public AstValidator(AbstractCompiler compiler) {
@@ -2131,14 +2126,6 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateFeature(Feature feature, Node n) {
-    if (!shouldValidateFeaturesInClosureUnaware && n.getIsInClosureUnawareSubtree()) {
-      // Closure-unaware code is currently hidden from transpilation passes in the compiler when
-      // options.setClosureUnawareMode(Mode.PASS_THROUGH) is enabled, so the AST
-      // might still contain features that should have been transpiled.
-      // TODO: b/321233583 - Once JSCompiler always transpiles closure-unaware code, remove this
-      // early-return to validate that all closure-unaware code is transpiled properly.
-      return;
-    }
     FeatureSet allowbleFeatures = compiler.getAllowableFeatures();
     // Checks that feature present in the AST is recorded in the compiler's featureSet.
     if (!n.isFromExterns() && !allowbleFeatures.has(feature)) {
