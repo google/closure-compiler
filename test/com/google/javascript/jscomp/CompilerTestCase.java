@@ -2131,4 +2131,8 @@ public abstract class CompilerTestCase {
             .setPrettyPrint(true)
             .build();
   }
+
+  static PassFactory makePassFactory(String name, Function<AbstractCompiler, CompilerPass> pass) {
+    return PassFactory.builder().setName(name).setInternalFactory(pass).build();
+  }
 }

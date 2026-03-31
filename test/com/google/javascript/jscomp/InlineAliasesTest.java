@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.InlineAndCollapseProperties.ALIAS_CYCLE;
 
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
-import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,11 +27,6 @@ import org.junit.runners.JUnit4;
 /** Unit tests for {@link InlineAndCollapseProperties.InlineAliases}. */
 @RunWith(JUnit4.class)
 public class InlineAliasesTest extends CompilerTestCase {
-
-  private static PassFactory makePassFactory(
-      String name, Function<AbstractCompiler, CompilerPass> pass) {
-    return PassFactory.builder().setName(name).setInternalFactory(pass).build();
-  }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {

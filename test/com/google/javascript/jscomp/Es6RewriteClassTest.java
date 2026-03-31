@@ -27,7 +27,6 @@ import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -66,11 +65,6 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     enableMultistageCompilation();
     setGenericNameReplacements(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS);
     es6SubclassTranspilation = Es6SubclassTranspilation.CONCISE_UNSAFE;
-  }
-
-  private static PassFactory makePassFactory(
-      String name, Function<AbstractCompiler, CompilerPass> pass) {
-    return PassFactory.builder().setName(name).setInternalFactory(pass).build();
   }
 
   @Override
