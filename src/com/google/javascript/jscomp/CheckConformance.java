@@ -128,6 +128,9 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
             return true;
           }
         };
+
+    public static final Precondition IS_CONSTRUCTOR_OR_CLASS =
+        n -> n.isClass() || NodeUtil.isConstructor(n);
   }
 
   private static final class Category {
