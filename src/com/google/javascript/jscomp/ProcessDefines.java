@@ -810,7 +810,7 @@ class ProcessDefines implements CompilerPass {
     final @Nullable Node valueParent;
     final @Nullable Node value;
 
-    public Define(
+    Define(
         String defineName,
         Name name,
         Ref declaration,

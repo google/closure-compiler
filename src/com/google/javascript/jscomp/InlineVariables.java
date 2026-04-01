@@ -152,7 +152,7 @@ class InlineVariables implements CompilerPass {
      *
      * <p>Mutually exclusive with `shouldWaitForAliasedVar()`.
      */
-    public boolean shouldInline() {
+    boolean shouldInline() {
       return false;
     }
 
@@ -164,7 +164,7 @@ class InlineVariables implements CompilerPass {
      *
      * <p>Mutually exclusive with `shouldInline()`
      */
-    public boolean shouldWaitForAliasedVar() {
+    boolean shouldWaitForAliasedVar() {
       return false;
     }
 
@@ -174,17 +174,17 @@ class InlineVariables implements CompilerPass {
      * @return The `Var` for which this one is an alias
      * @throws `UnsupportedOperationException` if `shouldWaitForAliasedVar()` is `false`.
      */
-    public Var getAliasedVar() {
+    Var getAliasedVar() {
       throw new UnsupportedOperationException("no aliased Var");
     }
 
     /** True if it is safe for aliases of this variable to inline this variable's name. */
-    public boolean isSafeToInlineAliases() {
+    boolean isSafeToInlineAliases() {
       return false;
     }
 
     /** Performs the inline operation. */
-    public void performInline() {
+    void performInline() {
       throw new UnsupportedOperationException("cannot inline");
     }
   }
@@ -1010,8 +1010,8 @@ class InlineVariables implements CompilerPass {
   }
 
   private static class InitiallyUnknown<T> {
-    protected boolean isKnown = false;
-    protected @Nullable T value = null;
+    boolean isKnown = false;
+    @Nullable T value = null;
 
     boolean isKnown() {
       return isKnown;

@@ -97,8 +97,7 @@ final class ClosureCodeRemoval implements CompilerPass {
      * @param assignNode The parent ASSIGN node
      * @param traversal Access to further levels, assumed to start at 1
      */
-    public RemovableAssignment(Node nameNode, Node assignNode,
-        NodeTraversal traversal) {
+    RemovableAssignment(Node nameNode, Node assignNode, NodeTraversal traversal) {
       this.node = nameNode;
       this.parent = assignNode;
 
@@ -111,10 +110,8 @@ final class ClosureCodeRemoval implements CompilerPass {
       lastAncestor = ancestor.getParent();
     }
 
-    /**
-     * Remove this node.
-     */
-    public void remove() {
+    /** Remove this node. */
+    void remove() {
       Node rhs = node.getNext();
       Node last = parent;
       for (Node ancestor : assignAncestors) {

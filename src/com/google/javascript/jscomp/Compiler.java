@@ -300,9 +300,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * given originalPath+sourceMapPath, what sourceFile did we find?
    */
   private static class ResolvedSourceMap {
-    public String originalPath;
-    public String sourceMapPath;
-    public String relativePath;
+    String originalPath;
+    String sourceMapPath;
+    String relativePath;
   }
 
   /**
@@ -2806,11 +2806,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final Set<String> currentlySeenLicenses = new LinkedHashSet<>();
     private String lastSeenFile = "";
 
-    public SeenSetLicenseTracker(AbstractCompiler compiler) {
+    SeenSetLicenseTracker(AbstractCompiler compiler) {
       this.compiler = compiler;
     }
 
-    protected boolean shouldUseLicenseInfo(Node node) {
+    boolean shouldUseLicenseInfo(Node node) {
       return !node.isRoot() && !node.isScript();
     }
 

@@ -2272,7 +2272,7 @@ a = temp$jscomp$2;
     private final AbstractCompiler compiler;
     private final Node node;
 
-    public NodeToSource(AbstractCompiler compiler, Node node) {
+    NodeToSource(AbstractCompiler compiler, Node node) {
       this.compiler = compiler;
       this.node = node;
     }

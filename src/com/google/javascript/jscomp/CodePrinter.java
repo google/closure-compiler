@@ -60,10 +60,10 @@ public final class CodePrinter {
     private final boolean createSrcMap;
     private final SourceMap.DetailLevel sourceMapDetailLevel;
     private final @Nullable LicenseTracker licenseTracker;
-    protected final StringBuilder code = new StringBuilder(1024);
-    protected final int lineLengthThreshold;
-    protected int lineLength = 0;
-    protected int lineIndex = 0;
+    final StringBuilder code = new StringBuilder(1024);
+    final int lineLengthThreshold;
+    int lineLength = 0;
+    int lineIndex = 0;
 
     MappedCodePrinter(
         int lineLengthThreshold,
@@ -207,7 +207,7 @@ public final class CodePrinter {
       }
     }
 
-    public String getCode() {
+    String getCode() {
       return code.toString();
     }
 
@@ -216,11 +216,11 @@ public final class CodePrinter {
       return (code.length() > 0) ? code.charAt(code.length() - 1) : '\0';
     }
 
-    protected final int getCurrentCharIndex() {
+    final int getCurrentCharIndex() {
       return lineLength;
     }
 
-    protected final int getCurrentLineIndex() {
+    final int getCurrentLineIndex() {
       return lineIndex;
     }
 

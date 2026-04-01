@@ -348,7 +348,7 @@ final class ConvertChunksToESModules implements CompilerPass {
       return true;
     }
 
-    public void visitScript(NodeTraversal t, Node script) {
+    void visitScript(NodeTraversal t, Node script) {
       checkState(script.isScript());
       JSChunk chunk = t.getChunk();
       ImmutableList<JSChunk> chunkDependencies = chunk.getDependencies();

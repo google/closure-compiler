@@ -50,7 +50,7 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
       this.string = string;
     }
 
-    public String toJs() {
+    String toJs() {
       return string;
     }
   }

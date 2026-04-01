@@ -1159,40 +1159,40 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     private boolean canBeSideEffected;
     private boolean mayBeUndefined;
 
-    public Parameter(Node arg, boolean shouldRemove) {
+    Parameter(Node arg, boolean shouldRemove) {
       this.shouldRemove = shouldRemove;
       this.arg = arg;
     }
 
-    public Node getArg() {
+    Node getArg() {
       return arg;
     }
 
-    public boolean shouldRemove() {
+    boolean shouldRemove() {
       return shouldRemove;
     }
 
-    public void setShouldRemove(boolean value) {
+    void setShouldRemove(boolean value) {
       shouldRemove = value;
     }
 
-    public void setHasSideEffects(boolean hasSideEffects) {
+    void setHasSideEffects(boolean hasSideEffects) {
       this.hasSideEffects = hasSideEffects;
     }
 
-    public boolean hasSideEffects() {
+    boolean hasSideEffects() {
       return hasSideEffects;
     }
 
-    public void setCanBeSideEffected(boolean canBeSideEffected) {
+    void setCanBeSideEffected(boolean canBeSideEffected) {
       this.canBeSideEffected = canBeSideEffected;
     }
 
-    public boolean canBeSideEffected() {
+    boolean canBeSideEffected() {
       return canBeSideEffected;
     }
 
-    public void setMayBeUndefined(boolean mayBeUndefined) {
+    void setMayBeUndefined(boolean mayBeUndefined) {
       this.mayBeUndefined = mayBeUndefined;
     }
 

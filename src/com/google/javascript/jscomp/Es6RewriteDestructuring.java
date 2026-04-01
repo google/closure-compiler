@@ -139,7 +139,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
     final Node pattern;
     boolean hasNestedObjectRest;
 
-    public PatternNestingLevel(Node pattern, boolean hasNestedRest) {
+    PatternNestingLevel(Node pattern, boolean hasNestedRest) {
       this.pattern = pattern;
       this.hasNestedObjectRest = hasNestedRest;
     }

@@ -60,7 +60,7 @@ public abstract class AbstractMessageFormatter implements MessageFormatter {
       this.controlCharacter = controlCharacter;
     }
 
-    public String getControlCharacter() {
+    String getControlCharacter() {
       return controlCharacter;
     }
   }

@@ -1733,7 +1733,7 @@ class RemoveUnusedCode implements CompilerPass {
      * If this object represents a variable declaration or assignment of a value, this is the node
      * representing where the value is being stored. e.g. the LHS of an assignment.
      */
-    protected final @Nullable Node targetNode;
+    final @Nullable Node targetNode;
 
     private final boolean isPrototypeDotPropertyReference;
     private final boolean isThisDotPropertyReference;
@@ -1764,7 +1764,7 @@ class RemoveUnusedCode implements CompilerPass {
       }
     }
 
-    public void applyContinuations() {
+    void applyContinuations() {
       if (!continuationsAreApplied) {
         continuationsAreApplied = true;
         for (Continuation c : continuations) {
@@ -1830,12 +1830,12 @@ class RemoveUnusedCode implements CompilerPass {
       return isThisDotPropertyReference;
     }
 
-    public boolean isObjectDefinePropertiesDefinition() {
+    boolean isObjectDefinePropertiesDefinition() {
       return false;
     }
 
     // TODO(b/134610338): Combine this method with `isPrototypeProperty`.
-    public boolean isStaticProperty() {
+    boolean isStaticProperty() {
       return false;
     }
 
@@ -1854,7 +1854,7 @@ class RemoveUnusedCode implements CompilerPass {
      *   use(something instanceof X); // can't be certain there are no instances of X
      * </code></pre>
      */
-    public boolean preventsRemovalOfVariableWithNonLocalValueOrPrototype() {
+    boolean preventsRemovalOfVariableWithNonLocalValueOrPrototype() {
       return false;
     }
   }
@@ -1969,11 +1969,11 @@ class RemoveUnusedCode implements CompilerPass {
       return new UnusedReadReference(this, referenceNode);
     }
 
-    public Removable buildInstanceofName(Node instanceofNode) {
+    Removable buildInstanceofName(Node instanceofNode) {
       return new InstanceofName(this, instanceofNode);
     }
 
-    public Removable buildWeakUsageCall(Node weakUsageCall) {
+    Removable buildWeakUsageCall(Node weakUsageCall) {
       return new WeakUsageCall(this, weakUsageCall);
     }
   }
@@ -2429,7 +2429,7 @@ class RemoveUnusedCode implements CompilerPass {
   private class NameDeclarationStatement extends Removable {
     private final Node declarationStatement;
 
-    public NameDeclarationStatement(RemovableBuilder builder, Node declarationStatement) {
+    NameDeclarationStatement(RemovableBuilder builder, Node declarationStatement) {
       super(declarationStatement.getOnlyChild(), builder);
       checkArgument(NodeUtil.isNameDeclaration(declarationStatement), declarationStatement);
       this.declarationStatement = declarationStatement;
@@ -2933,7 +2933,7 @@ class RemoveUnusedCode implements CompilerPass {
     boolean hasFunctionOrClassLiteralValue = false;
     boolean requiresLocalLiteralValueForRemoval = false;
 
-    public RealVarInfo(String varName) {
+    RealVarInfo(String varName) {
       this.varName = varName;
     }
 

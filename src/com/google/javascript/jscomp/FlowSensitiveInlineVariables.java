@@ -84,11 +84,11 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
     // (but not properties defined on that name)
     private final @Nullable Set<String> namesToCheck;
 
-    public SideEffectPredicate() {
+    SideEffectPredicate() {
       namesToCheck = null;
     }
 
-    public SideEffectPredicate(Set<String> names) {
+    SideEffectPredicate(Set<String> names) {
       this.namesToCheck = names;
     }
 
@@ -288,7 +288,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
   private class GatherCandidatesCfgNodeCallback extends AbstractCfgNodeTraversalCallback {
     @Nullable Node cfgNode = null;
 
-    public void setCfgNode(Node cfgNode) {
+    void setCfgNode(Node cfgNode) {
       this.cfgNode = cfgNode;
     }
 

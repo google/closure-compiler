@@ -321,7 +321,7 @@ class OptimizeConstructors implements CompilerPass, OptimizeCalls.CallGraphCompi
           hasVarArgs, NodeUtil.getFunctionParameters(fn).getChildCount());
     }
 
-    public boolean isEquivalentConstructorDefinition(Node constructorMember) {
+    boolean isEquivalentConstructorDefinition(Node constructorMember) {
       // `constructorHasRemovableDefinition` has already checked the subclass definition. We
       // know that it has a trivial constructor and that the parameters are passed to the super call
       // in the same order as they are declared in the parameter list, etc.

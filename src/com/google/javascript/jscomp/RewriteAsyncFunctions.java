@@ -185,9 +185,9 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
      * @param n This context's root node or one of its descendents.
      * @return this context or a new one for a child context
      */
-    public abstract LexicalContext getContextForNode(NodeTraversal t, Node n);
+    abstract LexicalContext getContextForNode(NodeTraversal t, Node n);
 
-    public abstract void visit(NodeTraversal t, Node n);
+    abstract void visit(NodeTraversal t, Node n);
   }
 
   /** Defines behavior for nodes in the root scope, outside of any functions. */
@@ -217,8 +217,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
   private final class ParameterListContext extends LexicalContext {
     final FunctionContext functionContext;
 
-    public ParameterListContext(
-        FunctionContext functionContext, Node contextRootNode, String uniqueId) {
+    ParameterListContext(FunctionContext functionContext, Node contextRootNode, String uniqueId) {
       super(contextRootNode, uniqueId);
       this.functionContext = checkNotNull(functionContext);
     }

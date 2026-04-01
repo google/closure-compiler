@@ -264,7 +264,7 @@ class ReplaceCssNames implements CompilerPass {
       }
     }
 
-    public SassGeneratedCssTsExpert createSassGeneratedCssTsExpert(Node n) {
+    SassGeneratedCssTsExpert createSassGeneratedCssTsExpert(Node n) {
       boolean hasSassGeneratedCssTsJsDoc =
           n.getJSDocInfo() != null && n.getJSDocInfo().isSassGeneratedCssTs();
 
@@ -293,12 +293,12 @@ class ReplaceCssNames implements CompilerPass {
     }
 
     private static class SassGeneratedCssTsExpert {
-      public final boolean hasSassGeneratedCssTsJsDoc;
-      public final JSError sassGeneratedCssTsValidationError;
-      public final boolean isCssClosureClassesAssignment;
-      public final String cssClosureClassesQualifiedName;
+      final boolean hasSassGeneratedCssTsJsDoc;
+      final JSError sassGeneratedCssTsValidationError;
+      final boolean isCssClosureClassesAssignment;
+      final String cssClosureClassesQualifiedName;
 
-      public SassGeneratedCssTsExpert(
+      SassGeneratedCssTsExpert(
           boolean hasSassGeneratedCssTsJsDoc,
           JSError sassGeneratedCssTsValidationError,
           boolean isCssClosureClassesAssignment,
@@ -311,8 +311,8 @@ class ReplaceCssNames implements CompilerPass {
     }
 
     private static class TraversalState {
-      public boolean inSassGeneratedCssTsScript;
-      public String cssClosureClassesQualifiedName;
+      boolean inSassGeneratedCssTsScript;
+      String cssClosureClassesQualifiedName;
     }
   }
 

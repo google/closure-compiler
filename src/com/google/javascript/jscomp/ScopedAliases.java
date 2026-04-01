@@ -275,7 +275,7 @@ class ScopedAliases implements CompilerPass {
     }
 
     /** Checks to see if this references another alias. */
-    public boolean referencesOtherAlias(Set<Var> deletedAliasVars) {
+    boolean referencesOtherAlias(Set<Var> deletedAliasVars) {
       Node aliasDefinition = aliasVar.getInitialValue();
       String qname = getAliasedNamespace(aliasDefinition);
       int dotIndex = qname.indexOf('.');
@@ -284,7 +284,7 @@ class ScopedAliases implements CompilerPass {
       return otherAliasVar != null && !deletedAliasVars.contains(otherAliasVar);
     }
 
-    public abstract void applyAlias(AbstractCompiler compiler);
+    abstract void applyAlias(AbstractCompiler compiler);
   }
 
   private static boolean isValidAliasRhs(Node rhs) {

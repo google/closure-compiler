@@ -418,7 +418,7 @@ class OptimizeCalls implements CompilerPass {
     final ReferenceMap references;
     private Scope globalScope;
 
-    public ReferenceMapBuildingCallback(ReferenceMap references) {
+    ReferenceMapBuildingCallback(ReferenceMap references) {
       this.externProps = safeSet(compiler.getExternProperties());
       this.references = references;
     }

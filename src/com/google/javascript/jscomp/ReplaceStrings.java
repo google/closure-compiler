@@ -87,7 +87,7 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
       this.excludedFilenameSuffixes = excludedFilenameSuffixes;
     }
 
-    public boolean isReplaceAll() {
+    boolean isReplaceAll() {
       return parameters.size() == 1 && parameters.contains(REPLACE_ALL_VALUE);
     }
   }

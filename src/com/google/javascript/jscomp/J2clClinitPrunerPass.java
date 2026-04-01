@@ -446,11 +446,11 @@ public class J2clClinitPrunerPass implements CompilerPass {
     private final Set<T> currentSet = new LinkedHashSet<>();
     private final @Nullable HierarchicalSet<T> parent;
 
-    public HierarchicalSet(@Nullable HierarchicalSet<T> parent) {
+    HierarchicalSet(@Nullable HierarchicalSet<T> parent) {
       this.parent = parent;
     }
 
-    public boolean add(T o) {
+    boolean add(T o) {
       return !parentsContains(o) && currentSet.add(o);
     }
 

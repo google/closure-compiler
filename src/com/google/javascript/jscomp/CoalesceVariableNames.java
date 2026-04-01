@@ -644,7 +644,7 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
     }
 
     /** Returns whether any LiveRangeChecker would be interested in the node. */
-    public static boolean shouldVisit(Node n) {
+    static boolean shouldVisit(Node n) {
       return (n.isName() || (n.hasChildren() && n.getFirstChild().isName()));
     }
 

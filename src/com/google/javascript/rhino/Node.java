@@ -446,11 +446,11 @@ public class Node {
       this.next = next;
     }
 
-    public abstract int getIntValue();
+    abstract int getIntValue();
 
-    public abstract Object getObjectValue();
+    abstract Object getObjectValue();
 
-    public abstract PropListItem chain(@Nullable PropListItem next);
+    abstract PropListItem chain(@Nullable PropListItem next);
   }
 
   // A base class for Object storing props

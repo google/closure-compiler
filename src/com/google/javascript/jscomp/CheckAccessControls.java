@@ -1182,7 +1182,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
     ES6_CLASS_INVOCATION,
     ES6_CLASS_NAMESPACE;
 
-    public static IdentifierBehaviour select(Node target) {
+    static IdentifierBehaviour select(Node target) {
       JSType type = target.getJSType();
       if (type == null || !type.isFunctionType()) {
         // If we aren't sure what we're dealing with be more strict.

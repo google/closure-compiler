@@ -82,7 +82,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
       final Node setKey;
       boolean isSafeToInline;
 
-      public J2clProperty(Node getKey, Node setKey) {
+      J2clProperty(Node getKey, Node setKey) {
         this.getKey = getKey;
         this.setKey = setKey;
         this.isSafeToInline = true;
@@ -93,7 +93,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
 
     /** A J2CL property with a getter and setter from an Object.defineProperties call */
     private class J2clPropertyEs5 extends J2clProperty {
-      public J2clPropertyEs5(Node getKey, Node setKey) {
+      J2clPropertyEs5(Node getKey, Node setKey) {
         super(getKey, setKey);
         checkArgument(getKey.isStringKey() && getKey.getString().equals("get"), getKey);
         checkArgument(
@@ -117,7 +117,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
 
     /** A J2CL property created with a ES6-style static getter and setter */
     private class J2clPropertyEs6 extends J2clProperty {
-      public J2clPropertyEs6(Node getKey, Node setKey) {
+      J2clPropertyEs6(Node getKey, Node setKey) {
         super(getKey, setKey);
         checkArgument(getKey.isGetterDef(), getKey);
         checkArgument(setKey == null || setKey.isSetterDef(), setKey);

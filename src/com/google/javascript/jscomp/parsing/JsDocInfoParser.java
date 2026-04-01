@@ -1727,7 +1727,7 @@ public final class JsDocInfoParser {
     private final String string;
     private final JsDocToken token;
 
-    public ExtractionInfo(String string, JsDocToken token) {
+    ExtractionInfo(String string, JsDocToken token) {
       this.string = string;
       this.token = token;
     }
@@ -1739,7 +1739,7 @@ public final class JsDocInfoParser {
     final int lineno;
     final int charno;
 
-    public ExtendedTypeInfo(JSTypeExpression type, int lineno, int charno) {
+    ExtendedTypeInfo(JSTypeExpression type, int lineno, int charno) {
       this.type = type;
       this.lineno = lineno;
       this.charno = charno;

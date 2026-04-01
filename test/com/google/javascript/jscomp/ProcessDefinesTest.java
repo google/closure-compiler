@@ -1115,7 +1115,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   private class ProcessDefinesWithInjectedNamespace implements CompilerPass {
     private final Compiler compiler;
 
-    public ProcessDefinesWithInjectedNamespace(Compiler compiler) {
+    ProcessDefinesWithInjectedNamespace(Compiler compiler) {
       this.compiler = compiler;
     }
 

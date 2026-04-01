@@ -1005,7 +1005,7 @@ class InlineAndCollapseProperties implements CompilerPass {
    */
   private static class RewriteSimpleDestructuringAliases extends AbstractPostOrderCallback {
 
-    public static boolean isSimpleDestructuringAlias(Node n) {
+    static boolean isSimpleDestructuringAlias(Node n) {
       if (!NodeUtil.isStatement(n) || !n.isConst()) {
         return false;
       }

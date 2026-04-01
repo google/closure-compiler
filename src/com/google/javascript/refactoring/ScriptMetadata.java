@@ -116,7 +116,7 @@ public final class ScriptMetadata {
 
     private final ScriptMetadata toFill;
 
-    public FillerCallback(ScriptMetadata toFill) {
+    FillerCallback(ScriptMetadata toFill) {
       this.toFill = toFill;
     }
 

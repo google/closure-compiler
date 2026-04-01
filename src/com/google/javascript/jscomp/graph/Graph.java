@@ -57,7 +57,7 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
     private final Annotatable first;
     private final Annotation second;
 
-    public AnnotationState(Annotatable annotatable, Annotation annotation) {
+    AnnotationState(Annotatable annotatable, Annotation annotation) {
       this.first = annotatable;
       this.second = annotation;
     }
@@ -70,7 +70,7 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
   private static class GraphAnnotationState extends ArrayList<AnnotationState> {
     private static final long serialVersionUID = 1L;
 
-    public GraphAnnotationState(int size) {
+    GraphAnnotationState(int size) {
       super(size);
     }
   }

@@ -74,8 +74,8 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
   private ImmutableSet<String> exportPropertyFunctionNames;
 
   private abstract class Export {
-    protected final String symbolName;
-    protected final Node value;
+    final String symbolName;
+    final Node value;
 
     Export(String symbolName, Node value) {
       this.symbolName = checkNotNull(symbolName);
@@ -376,7 +376,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
      * If the given value is a qualified name which refers a function or object literal, the node is
      * returned. Otherwise, {@code null} is returned.
      */
-    protected @Nullable Node getValue() {
+    @Nullable Node getValue() {
       String qualifiedName = value.getQualifiedName();
 
       if (qualifiedName == null) {
@@ -413,7 +413,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
    */
   private class SymbolExport extends Export {
 
-    public SymbolExport(String symbolName, Node value) {
+    SymbolExport(String symbolName, Node value) {
       super(symbolName, value);
 
       String qualifiedName = value.getQualifiedName();
@@ -435,7 +435,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
   private class PropertyExport extends Export {
     private final String exportPath;
 
-    public PropertyExport(String exportPath, String symbolName, Node value) {
+    PropertyExport(String exportPath, String symbolName, Node value) {
       super(symbolName, value);
 
       this.exportPath = checkNotNull(exportPath);

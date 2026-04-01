@@ -64,7 +64,7 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
     final Node startMarker;
     final Node endMarker;
 
-    public Marker(Node startMarker, Node endMarker) {
+    Marker(Node startMarker, Node endMarker) {
       this.startMarker = startMarker;
       this.endMarker = endMarker;
     }

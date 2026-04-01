@@ -1915,7 +1915,7 @@ class IRFactory {
     }
 
     /** Is this a GETPROP, OPTCHAIN_GETPROP, GETELEM, or OPTCHAIN_GETELEM? */
-    public boolean isNormalOrOptChainGet(Node n) {
+    boolean isNormalOrOptChainGet(Node n) {
       return n.isGetProp() || n.isGetElem() || n.isOptChainGetProp() || n.isOptChainGetElem();
     }
 
@@ -3529,7 +3529,7 @@ class IRFactory {
       };
     }
 
-    public Node process(ParseTree node) {
+    Node process(ParseTree node) {
       switch (node.type) {
         case BINARY_OPERATOR -> {
           return processBinaryExpression(node.asBinaryOperator());
