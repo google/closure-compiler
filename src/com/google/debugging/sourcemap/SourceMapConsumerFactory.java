@@ -16,6 +16,8 @@
 
 package com.google.debugging.sourcemap;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import org.jspecify.annotations.Nullable;
 
 /** Detect and parse the provided source map. */
@@ -59,6 +61,26 @@ public final class SourceMapConsumerFactory {
       }
     }
 
+    throw new SourceMapParseException("unable to detect source map format");
+  }
+
+  /**
+   * Using the fast parser to parse the source map. This only supports version 3 source maps.
+   *
+   * @param contents The string representing the source map file contents.
+   * @return The parsed source map.
+   */
+  public static SourceMapConsumerV3 parseFast(String contents) throws SourceMapParseException {
+    if (contents.startsWith("{")) {
+      SourceMapObject sourceMapObject = SourceMapObjectParser.parseFast(contents);
+      checkArgument(
+          sourceMapObject.getVersion() == 3,
+          "Unknown source map version:%s",
+          sourceMapObject.getVersion());
+      SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
+      consumer.parse(sourceMapObject, null);
+      return consumer;
+    }
     throw new SourceMapParseException("unable to detect source map format");
   }
 }
