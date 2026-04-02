@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISPLACED_PROPERTY_JSDOC;
+import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_PROPERTIES_INVALID;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
@@ -265,6 +266,10 @@ final class PolymerPassStaticUtils {
     Node properties = descriptor;
     if (defType == PolymerClassDefinition.DefinitionType.ObjectLiteral) {
       properties = NodeUtil.getFirstPropMatchingKey(descriptor, "properties");
+      if (properties != null && !properties.isObjectLit()) {
+        compiler.report(JSError.make(properties, POLYMER_PROPERTIES_INVALID));
+        return ImmutableList.of();
+      }
     }
     if (properties == null) {
       return ImmutableList.of();
