@@ -54,7 +54,7 @@ public final class J2clSuppressWarningsGuard extends WarningsGuard {
 
   @Override
   public @Nullable CheckLevel level(JSError error) {
-    if (error.sourceName() == null || !error.sourceName().endsWith(".java.js")) {
+    if (!J2clSourceUtils.isJ2clSource(error.sourceName())) {
       return null;
     }
 

@@ -557,8 +557,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         // Errors in type summary files are suppressed, so no use traversing them.
         return false;
       }
-      String filename = n.getSourceFileName();
-      if (filename != null && filename.endsWith(".java.js")) {
+      if (J2clSourceUtils.isJ2clSource(n)) {
         this.subtypingMode = SubtypingMode.IGNORE_NULL_UNDEFINED;
       } else {
         this.subtypingMode = SubtypingMode.NORMAL;
