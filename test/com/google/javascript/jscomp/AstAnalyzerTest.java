@@ -314,6 +314,10 @@ public final class AstAnalyzerTest {
           kase().js("new Array").token(NEW).expect(true),
           kase().js("new Array(4)").token(NEW).expect(true),
           kase().js("new Array('a', 'b', 'c')").token(NEW).expect(true),
+          kase().js("Array(10)").token(CALL).expect(false),
+          kase().js("Array(1,2,3)").token(CALL).expect(false),
+          kase().js("Array(10)").token(CALL).assumeBuiltinsPure(false).expect(true),
+          kase().js("Array(1,2,3)").token(CALL).assumeBuiltinsPure(false).expect(true),
           kase().js("new SomeClassINeverHeardOf()").token(NEW).expect(true),
 
           // Getters and setters - object rest and spread
@@ -960,41 +964,6 @@ public final class AstAnalyzerTest {
       ParseHelper parseHelper = new ParseHelper();
       parseHelper.assumeBuiltinsPure = false;
       Node func = parseHelper.parseFirst(CALL, String.format("%s(1);", functionName));
-      assertThat(parseHelper.getAstAnalyzer().functionCallHasSideEffects(func)).isTrue();
-    }
-  }
-
-  @RunWith(JUnit4.class)
-  public static final class ArrayFunctionCallBehavior {
-    @Test
-    public void lengthArg_assumingPureBuiltins() {
-      ParseHelper parseHelper = new ParseHelper();
-      parseHelper.assumeBuiltinsPure = true;
-      Node func = parseHelper.parseFirst(CALL, "Array(10);");
-      assertThat(parseHelper.getAstAnalyzer().functionCallHasSideEffects(func)).isFalse();
-    }
-
-    @Test
-    public void lengthArg_notAssumingPureBuiltins() {
-      ParseHelper parseHelper = new ParseHelper();
-      parseHelper.assumeBuiltinsPure = false;
-      Node func = parseHelper.parseFirst(CALL, "Array(10);");
-      assertThat(parseHelper.getAstAnalyzer().functionCallHasSideEffects(func)).isTrue();
-    }
-
-    @Test
-    public void multipleArgs_assumingPureBuiltins() {
-      ParseHelper parseHelper = new ParseHelper();
-      parseHelper.assumeBuiltinsPure = true;
-      Node func = parseHelper.parseFirst(CALL, "Array(1,2,3);");
-      assertThat(parseHelper.getAstAnalyzer().functionCallHasSideEffects(func)).isFalse();
-    }
-
-    @Test
-    public void multipleArgs_notAssumingPureBuiltins() {
-      ParseHelper parseHelper = new ParseHelper();
-      parseHelper.assumeBuiltinsPure = false;
-      Node func = parseHelper.parseFirst(CALL, "Array(1,2,3);");
       assertThat(parseHelper.getAstAnalyzer().functionCallHasSideEffects(func)).isTrue();
     }
   }
