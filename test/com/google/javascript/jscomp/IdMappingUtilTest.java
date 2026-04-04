@@ -18,8 +18,11 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.IdMappingUtil.NEW_LINE;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableMap;
+import java.io.ByteArrayInputStream;
 import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,5 +57,25 @@ public final class IdMappingUtilTest {
 
     assertThat(result).containsKey("gen2");
     assertThat(result.get("gen2")).isEmpty();
+  }
+
+  @Test
+  public void testParseSectionAsStream() throws Exception {
+    StringBuilder mapping = new StringBuilder();
+    mapping
+        .append("[gen1]")
+        .append(NEW_LINE)
+        .append("id1:data1")
+        .append(NEW_LINE)
+        .append("[gen2]")
+        .append(NEW_LINE)
+        .append("id2:data2");
+
+    ImmutableMap<String, String> result =
+        IdMappingUtil.parseSectionAsStream(
+            new ByteArrayInputStream(mapping.toString().getBytes(UTF_8)), "gen1");
+
+    assertThat(result).hasSize(1);
+    assertThat(result).containsEntry("id1", "data1");
   }
 }

@@ -17,20 +17,25 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 /** A utility class for generating and parsing id mappings held by {@link ReplaceIdGenerators}. */
 public final class IdMappingUtil {
 
   @VisibleForTesting static final char NEW_LINE = '\n';
-
-  private static final Splitter LINE_SPLITTER = Splitter.on(NEW_LINE).omitEmptyStrings();
 
   // Prevent instantiation.
   private IdMappingUtil() {}
@@ -56,60 +61,125 @@ public final class IdMappingUtil {
     return sb.toString();
   }
 
-  /**
-   * The expected format looks like this:
-   *
-   * <p>[generatorName1] someId1:someFile:theLine:theColumn ...
-   *
-   * <p>[[generatorName2] someId2:someFile:theLine:theColumn] ...
-   *
-   * <p>The returned data is grouped by generator name (the map key). The inner map provides
-   * mappings from id to content (file, line and column info). In a glimpse, the structure is {@code
-   * Map<generator name, BiMap<id, value>>}.
-   *
-   * <p>@throws IllegalArgumentException malformed input where there it 1) has duplicate generator
-   * name, or 2) the line has no ':' for id and its content.
-   */
+  /** A stateful pull parser for reading id mapping sections and entries line by line. */
+  public static class MappingReader {
+    private final BufferedReader reader;
+    private String currentSection = null;
+    private String currentKey = null;
+    private String currentValue = null;
+    private int lineIndex = 0;
+
+    public MappingReader(BufferedReader reader) {
+      this.reader = reader;
+    }
+
+    public boolean next() throws IOException {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        lineIndex++;
+        if (line.isEmpty()) {
+          continue;
+        }
+        if (line.charAt(0) == '[') {
+          currentSection = line.substring(1, line.length() - 1);
+          currentKey = null;
+          currentValue = null;
+          return true;
+        } else {
+          int split = line.indexOf(':');
+          if (split != -1) {
+            currentKey = line.substring(0, split);
+            currentValue = line.substring(split + 1);
+            return true;
+          } else {
+            throw new IllegalArgumentException(
+                String.format("Cannot parse id map.\n Line: %s, lineIndex: %d", line, lineIndex));
+          }
+        }
+      }
+      return false;
+    }
+
+    public boolean isSection() {
+      return currentKey == null;
+    }
+
+    public String getSection() {
+      return currentSection;
+    }
+
+    public String getKey() {
+      return currentKey;
+    }
+
+    public String getValue() {
+      return currentValue;
+    }
+
+    public int getLineIndex() {
+      return lineIndex;
+    }
+  }
+
+  public static ImmutableMap<String, String> parseSectionAsStream(
+      InputStream stream, String sectionFilter) throws IOException {
+    ImmutableMap.Builder<String, String> mapBuilder = ImmutableMap.builder();
+
+    BufferedReader br = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
+    MappingReader mr = new MappingReader(br);
+    boolean inSection = false;
+
+    while (mr.next()) {
+      if (mr.isSection()) {
+        if (inSection) {
+          break; // Next section found, stop
+        }
+        if (mr.getSection().equals(sectionFilter)) {
+          inSection = true;
+        }
+      } else if (inSection) {
+        mapBuilder.put(mr.getKey(), mr.getValue());
+      }
+    }
+    return mapBuilder.buildKeepingLast();
+  }
+
+  public static Map<String, BiMap<String, String>> parseSerializedIdMappings(BufferedReader br)
+      throws IOException {
+    Map<String, BiMap<String, String>> resultMap = new LinkedHashMap<>();
+    MappingReader mr = new MappingReader(br);
+    BiMap<String, String> currentSectionMap = null;
+    Set<String> sectionNames = new LinkedHashSet<>();
+
+    while (mr.next()) {
+      if (mr.isSection()) {
+        String sectionName = mr.getSection();
+        if (!sectionNames.add(sectionName)) {
+          throw new IllegalArgumentException(
+              String.format(
+                  "Cannot parse id map: Duplicate section %s\n lineIndex: %d",
+                  sectionName, mr.getLineIndex()));
+        }
+        currentSectionMap = HashBiMap.create();
+        resultMap.put(sectionName, currentSectionMap);
+      } else {
+        if (currentSectionMap == null) {
+          throw new IllegalArgumentException("Mapping entry outside of section");
+        }
+        currentSectionMap.put(mr.getKey(), mr.getValue()); // throws if duplicate values
+      }
+    }
+    return resultMap;
+  }
+
   public static Map<String, BiMap<String, String>> parseSerializedIdMappings(String idMappings) {
     if (Strings.isNullOrEmpty(idMappings)) {
       return ImmutableMap.of();
     }
-
-    Map<String, BiMap<String, String>> resultMap = new LinkedHashMap<>();
-    BiMap<String, String> currentSectionMap = null;
-
-    int lineIndex = 0;
-    for (String line : LINE_SPLITTER.split(idMappings)) {
-      lineIndex++;
-      if (line.isEmpty()) {
-        continue;
-      }
-      if (line.charAt(0) == '[') {
-        String currentSection = line.substring(1, line.length() - 1);
-        currentSectionMap = resultMap.get(currentSection);
-        if (currentSectionMap == null) {
-          currentSectionMap = HashBiMap.create();
-          resultMap.put(currentSection, currentSectionMap);
-        } else {
-          throw new IllegalArgumentException(
-              String.format(
-                  "Cannot parse id map: %s\n Line: %s, lineIndex: %d",
-                  idMappings, line, lineIndex));
-        }
-      } else {
-        int split = line.indexOf(':');
-        if (split != -1) {
-          String name = line.substring(0, split);
-          String location = line.substring(split + 1);
-          currentSectionMap.put(name, location);
-        } else {
-          throw new IllegalArgumentException(
-              String.format(
-                  "Cannot parse id map: %s\n Line: %s, lineIndex: %d",
-                  idMappings, line, lineIndex));
-        }
-      }
+    try (BufferedReader br = new BufferedReader(new StringReader(idMappings))) {
+      return parseSerializedIdMappings(br);
+    } catch (IOException e) {
+      throw new IllegalArgumentException("Failed to parse id mappings", e);
     }
-    return resultMap;
   }
 }
