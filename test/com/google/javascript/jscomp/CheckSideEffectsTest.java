@@ -452,4 +452,14 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
         srcs(SourceFile.fromCode("other/file.js", "'require base'")),
         warning(CheckSideEffects.USELESS_CODE_ERROR));
   }
+
+  @Test
+  public void testNumberToStringWithRadixIsUselessCode() {
+    testWarning("(0).toString(16);", e);
+  }
+
+  @Test
+  public void testOptionalChainNumberToStringWithRadixIsUselessCode() {
+    testWarning("(0)?.toString(16);", e);
+  }
 }

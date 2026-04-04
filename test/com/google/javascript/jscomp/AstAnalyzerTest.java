@@ -657,10 +657,18 @@ public final class AstAnalyzerTest {
           // IObject methods
           // "toString" and "valueOf" are by default assumed to be side-effect free
           kase().expect(false).js("o.toString()"),
+          kase().expect(false).js("(0).toString(16)"),
+          kase().expect(false).js("(0n).toString(16)"),
+          kase().expect(false).js("(0)?.toString(16)"),
+          kase().expect(false).js("(0n)?.toString(16)"),
           kase().expect(false).js("o.valueOf()"),
           // "toString" and "valueOf" are not assumed to be side-effect free when
           // assumeKnownBuiltinsArePure is false.
           kase().expect(true).js("o.toString()").assumeBuiltinsPure(false),
+          kase().expect(true).js("(0).toString(16)").assumeBuiltinsPure(false),
+          kase().expect(true).js("(0n).toString(16)").assumeBuiltinsPure(false),
+          kase().expect(true).js("(0)?.toString(16)").assumeBuiltinsPure(false),
+          kase().expect(true).js("(0n)?.toString(16)").assumeBuiltinsPure(false),
           kase().expect(true).js("o.valueOf()").assumeBuiltinsPure(false),
           // other methods depend on the extern definitions
           kase().expect(true).js("o.watch()"),
