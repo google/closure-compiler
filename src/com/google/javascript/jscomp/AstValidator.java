@@ -1865,7 +1865,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateObjectLitComputedPropKey(Node n) {
-    // TODO: b/494231728 - clean up this hack. The right fix is to:
+    // TODO: b/499356003 - clean up this hack. The right fix is to:
     // 1) model computed prop getter/setters with a separate Feature from COMPUTED_PROPERTIES
     // 2) modify the transpilation passes to *not* remove the computed prop getter/setter in object
     // literals feature from the compiler featureset because it can't actually transpile them.
