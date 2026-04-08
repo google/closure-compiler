@@ -28,7 +28,6 @@ import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.testing.NodeSubject;
-import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,11 +48,6 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   public InlineAndCollapsePropertiesTest() {
     super(EXTERNS);
-  }
-
-  private static PassFactory makePassFactory(
-      String name, Function<AbstractCompiler, CompilerPass> pass) {
-    return PassFactory.builder().setName(name).setInternalFactory(pass).build();
   }
 
   @Override

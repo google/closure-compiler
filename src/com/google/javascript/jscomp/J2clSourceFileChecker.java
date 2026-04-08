@@ -30,7 +30,7 @@ final class J2clSourceFileChecker implements CompilerPass {
   private static boolean hasJ2cl(Node root) {
     for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
       checkState(script.isScript());
-      if (script.getSourceFileName() != null && script.getSourceFileName().endsWith(".java.js")) {
+      if (J2clSourceUtils.isJ2clSource(script)) {
         return true;
       }
     }

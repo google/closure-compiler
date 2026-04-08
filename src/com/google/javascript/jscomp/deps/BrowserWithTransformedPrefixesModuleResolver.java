@@ -105,22 +105,31 @@ public class BrowserWithTransformedPrefixesModuleResolver extends ModuleResolver
             .collect(joining(", "));
   }
 
-  @Override
-  public @Nullable String resolveJsModule(
-      String scriptAddress, String moduleAddress, String sourcename, int lineno, int colno) {
-    String transformedAddress = moduleAddress;
+  private @Nullable String replacePathPrefixes(String moduleAddress) {
+    if (moduleAddress == null) {
+      return null;
+    }
 
-    boolean replaced = false;
+    String transformedAddress = moduleAddress;
 
     for (PrefixReplacement prefixReplacement : prefixReplacements) {
       if (moduleAddress.startsWith(prefixReplacement.prefix())) {
         transformedAddress =
             prefixReplacement.replacement()
                 + moduleAddress.substring(prefixReplacement.prefix().length());
-        replaced = true;
         break;
       }
     }
+
+    return transformedAddress;
+  }
+
+  @Override
+  public @Nullable String resolveJsModule(
+      String scriptAddress, String moduleAddress, String sourcename, int lineno, int colno) {
+    String transformedAddress = replacePathPrefixes(moduleAddress);
+
+    boolean replaced = transformedAddress != null && !transformedAddress.equals(moduleAddress);
 
     // If ambiguous after the loop it was not transformed and the original moduleAddress is
     // ambiguous with an unrecognized prefix. Allow transformed paths to be ambiguous after
@@ -138,13 +147,25 @@ public class BrowserWithTransformedPrefixesModuleResolver extends ModuleResolver
       return null;
     }
 
-    String loadAddress = locate(scriptAddress, transformedAddress);
-    if (transformedAddress == null) {
-      errorHandler.report(
-          CheckLevel.WARNING,
-          JSError.make(sourcename, lineno, colno, ModuleLoader.LOAD_WARNING, moduleAddress));
+    // A null load address is not an error for this resolver, because it is expected that the
+    // module may be supplied at runtime.
+    return locate(scriptAddress, transformedAddress);
+  }
+
+  @Override
+  public @Nullable String resolveJsModuleSilently(String scriptAddress, String moduleAddress) {
+    String transformedAddress = replacePathPrefixes(moduleAddress);
+
+    boolean replaced = transformedAddress != null && !transformedAddress.equals(moduleAddress);
+
+    // If ambiguous after the loop it was not transformed and the original moduleAddress is
+    // ambiguous with an unrecognized prefix. Allow transformed paths to be ambiguous after
+    // transformation to maybe match how files are passed to the compiler.
+    if (!replaced && ModuleLoader.isAmbiguousIdentifier(transformedAddress)) {
+      return null;
     }
-    return loadAddress;
+
+    return locate(scriptAddress, transformedAddress);
   }
 
   @Override

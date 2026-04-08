@@ -718,7 +718,6 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("a = x ?? true ? b : c");
 
     testSame("x = foo() ?? true ?? bar()");
-    ;
     test("x = foo() ?? (true && bar())", "x = foo() ?? bar()");
     testSame("x = (foo() || false) ?? bar()");
 
@@ -982,8 +981,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("x = 'a' + 'bc'", "x = 'abc'");
     test("x = 'a' + 5", "x = 'a5'");
     test("x = 5 + 'a'", "x = '5a'");
-    test("x = 'a' + 5n", "x = 'a5n'");
-    test("x = 5n + 'a'", "x = '5na'");
+    test("x = 'a' + 5n", "x = 'a5'");
+    test("x = 5n + 'a'", "x = '5a'");
     test("x = 'a' + ''", "x = 'a'");
     test("x = 'a' + foo()", "x = 'a'+foo()");
     test("x = foo() + 'a' + 'b'", "x = foo()+'ab'");
@@ -1470,6 +1469,31 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("x = {...{a, b}, c, ...{d, e}}", "x = {a, b, c, d, e}");
     test("x = {...{...{a}, b}, c}", "x = {a, b, c}");
     testSame("({...{x}} = obj)");
+  }
+
+  @Test
+  public void testDontFoldObjectSpread_withGetterSetter() {
+    numRepetitions = 1;
+
+    // At runtime, object spread converts getters to regular data properties, and omits setters.
+    // We back off on folding spread with getters & setters.
+    // In theory, we could make the compiler smart enough to turn
+    //   `{...{get a() { return 1; }}}` into `{a: 1}`, or `{...{set a(v) { }}}` into `{}`, but
+    // it doesn't seem worth the complexity right now.
+    testSame("x = {...{get a() { return 1; }}}");
+    testSame("x = {...{set a(v) { }}}");
+
+    // Test case with side-effects. If in the future we implement spread folding for getters/setters
+    // we would need to preserve evaluation of the console.log.
+    testSame("x = {...{get a() { console.log('hi'); return 1; }}}");
+  }
+
+  @Test
+  public void testDontFoldObjectSpread_withComputedGetterSetter() {
+    numRepetitions = 1;
+
+    testSame("x = {...{get [a]() { return 1; }}}");
+    testSame("x = {...{set [a](v) { }}}");
   }
 
   @Test
@@ -2054,7 +2078,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
           constructor() {this.x = true;}
         }
         """);
-    test("function foo() {return `${false && y}`}", "function foo() {return `${false}`}");
+    test("function foo() {return `${false && y}`}", "function foo() {return `false`}");
   }
 
   @Test
@@ -2344,6 +2368,87 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
         """
         const a = foo`${b}` + bar`${b}`;
         """);
+  }
+
+  @Test
+  public void testFoldTemplateLiteralSubstitutions() {
+    // Basic substitution
+    test("`a${'b'}c`", "`abc`");
+    // Number substitution
+    test("`a${123}c`", "`a123c`");
+    // Boolean substitution
+    test("`a${true}c`", "`atruec`");
+    test("`a${false}c`", "`afalsec`");
+
+    // Multiple substitutions
+    test("`a${'b'}c${'d'}e`", "`abcde`");
+    // Adjacent substitutions
+    test("`${'a'}${'b'}`", "`ab`");
+    // Empty strings
+    test("`${''}a${''}`", "`a`");
+
+    // Corner cases where it should NOT fold
+    testSame("`a${'`'}c`");
+    testSame("`a${'$'}c`");
+    testSame("`a${'\\\\'}c`");
+    testSame("`a${'\\\\n'}c`");
+    testSame("`a${'\\\\r'}c`");
+    testSame("`${x} ${'$'}${'{'}`"); // specifically tests that $ and { are not folded together
+    test("`$${''}{${''}`", "`$${''}{`");
+    // These should not fold because \0 followed by a digit is a syntax error in untagged templates.
+    testSame("`\\0${'77'}`");
+    testSame("`\\0${77}`");
+    test("`\\0${'a'}`", "`\\0a` ");
+    test("`\\\\0${'7'}`", "`\\\\07` ");
+    test("`\\0${''}${'7'}`", "`\\0${'7'}`");
+
+    // Tagged template literals should NOT fold
+    testSame("tag`a${'b'}c`");
+
+    // Non-constant substitutions should NOT fold
+    testSame("`a${x}c`");
+    testSame("`a${foo()}c`");
+  }
+
+  @Test
+  public void testFoldAddTemplateLiteralAndConstant() {
+    // String merge
+    test("`a${x}` + 'b'", "`a${x}b` ");
+    test("'a' + `b${x}`", "`ab${x}` ");
+
+    // Number merge
+    test("`a${x}` + 1", "`a${x}1` ");
+    test("1 + `a${x}`", "`1a${x}` ");
+
+    // Boolean merge
+    test("`a${x}` + true", "`a${x}true` ");
+    test("true + `a${x}`", "`truea${x}` ");
+
+    // BigInt merge
+    test("`a${x}` + 10n", "`a${x}10` ");
+
+    // Null/Undefined merge
+    test("`a${x}` + null", "`a${x}null` ");
+    test("`a${x}` + undefined", "`a${x}undefined` ");
+
+    // Nested templates
+    test("`a${x}` + `b` ", "`a${x}b` ");
+    test("`a` + `b${x}` ", "`ab${x}` ");
+
+    // Restricted octal escape
+    testSame("`\\0` + 7");
+    testSame("`\\0` + '7'");
+    test("`\\0a` + '7'", "`\\0a7` ");
+
+    // Safety - special chars should NOT fold
+    testSame("`a${x}` + '$'");
+    testSame("`a${x}` + '{'");
+    testSame("`a${x}` + '`'");
+    testSame("`a${x}` + '\\\\'");
+    testSame("`a${x}` + '\\\\n'");
+
+    // Compound addition
+    test("`a` + `b${x}` + `c` + 'd'", "`ab${x}cd` ");
   }
 
   @Test

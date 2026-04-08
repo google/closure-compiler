@@ -536,8 +536,8 @@ final class PolymerClassRewriter {
     }
 
     if (cls.behaviorProps != null) {
-      for (Map.Entry<MemberDefinition, BehaviorDefinition> itr : cls.behaviorProps.entrySet()) {
-        MemberDefinition prop = itr.getKey(); // Generate the setter for readOnly properties.
+      for (MemberDefinition prop : cls.behaviorProps.keySet()) {
+        // Generate the setter for readOnly properties.
         if (prop.value.isObjectLit()) {
           Node readOnlyValue = NodeUtil.getFirstPropMatchingKey(prop.value, "readOnly");
           if (readOnlyValue != null && readOnlyValue.isTrue()) {

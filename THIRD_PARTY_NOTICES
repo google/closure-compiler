@@ -25,7 +25,7 @@ SOFTWARE.
 ===============================================================================
 ===============================================================================
 
-License for package(s): ['com.google.code.gson:gson', 'com.google.errorprone:error_prone_annotations', 'com.google.guava:failureaccess', 'com.google.guava:guava', 'com.google.guava:guava-testlib', 'com.google.truth.extensions:truth-proto-extension', 'org.jspecify:jspecify']
+License for package(s): ['com.google.code.gson:gson', 'com.google.errorprone:error_prone_annotations', 'com.google.guava:failureaccess', 'com.google.guava:guava', 'com.google.guava:guava-testlib', 'org.jspecify:jspecify']
 
 
                                  Apache License

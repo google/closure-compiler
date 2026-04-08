@@ -35,6 +35,7 @@ import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Marker;
+import com.google.javascript.rhino.JSDocInfo.PerFileClosureUnawareMode;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -2353,6 +2354,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseClosureUnawareCode2() {
     parseFileOverview(
         "@closureUnaware\n@closureUnaware*/",
+        "@closureUnaware annotation is not allowed in this compilation",
         "@closureUnaware annotation is not allowed in this compilation",
         "extra @closureUnaware tag");
   }
@@ -6363,6 +6365,46 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   private JSDocInfo preserveWhitespaceParse(String comment, String... warnings) {
     return parse(comment, JsDocParsing.INCLUDE_DESCRIPTIONS_WITH_WHITESPACE, warnings);
+  }
+
+  @Test
+  public void testClosureUnawareMode_fileoverview_whitespace() {
+    JSDocInfo info =
+        parseFileOverview(
+            "@fileoverview\n@closureUnaware {WHITESPACE} */",
+            "@closureUnaware annotation is not allowed in this compilation");
+    assertThat(info.isClosureUnawareCode()).isTrue();
+    assertThat(info.getPerFileClosureUnawareMode()).isEqualTo(PerFileClosureUnawareMode.WHITESPACE);
+  }
+
+  @Test
+  public void testClosureUnawareMode_fileoverview_simple() {
+    JSDocInfo info =
+        parseFileOverview(
+            "@fileoverview\n@closureUnaware {SIMPLE} */",
+            "@closureUnaware annotation is not allowed in this compilation");
+    assertThat(info.isClosureUnawareCode()).isTrue();
+    assertThat(info.getPerFileClosureUnawareMode()).isEqualTo(PerFileClosureUnawareMode.SIMPLE);
+  }
+
+  @Test
+  public void testSupportsClosureUnaware_invalidValue_warnsAndDefaultsToSimple() {
+    JSDocInfo info =
+        parseFileOverview(
+            "@fileoverview @closureUnaware {FOOBAR} */",
+            "@closureUnaware annotation is not allowed in this compilation",
+            "invalid value for @closureUnaware: FOOBAR");
+    assertThat(info.isClosureUnawareCode()).isTrue();
+    assertThat(info.getPerFileClosureUnawareMode()).isEqualTo(PerFileClosureUnawareMode.SIMPLE);
+  }
+
+  @Test
+  public void testClosureUnawareMode_outsideFileoverview_errorIfSpecified() {
+    JSDocInfo info =
+        parse(
+            "@closureUnaware {SIMPLE} */",
+            "@closureUnaware annotation is not allowed in this compilation");
+    assertThat(info.isClosureUnawareCode()).isTrue();
   }
 
   private JSDocInfo parse(String comment, String... warnings) {

@@ -207,7 +207,7 @@ public class RewriteGoogJsImports implements CompilerPass {
   private static class FindReexports extends AbstractPreOrderCallback {
     private final boolean hasGoogImport;
 
-    public FindReexports(boolean hasGoogImport) {
+    FindReexports(boolean hasGoogImport) {
       this.hasGoogImport = hasGoogImport;
     }
 

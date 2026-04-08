@@ -272,7 +272,9 @@ public final class ConformanceRules {
     }
 
     protected boolean tsIsAllowlisted() {
+      // LINT.IfChange
       return false;
+      // LINT.ThenChange(//depot/google3/java/com/google/javascript/modules/librarydepsconformancechecker/conformance_checker.go)
     }
 
     private static TypeMatchingStrategy getTypeMatchingStrategy(Requirement requirement) {
@@ -1459,6 +1461,11 @@ public final class ConformanceRules {
     }
 
     @Override
+    public @Nullable Precondition getPrecondition() {
+      return customRule.getPrecondition();
+    }
+
+    @Override
     public void check(
         NodeTraversal t, Node n, LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior) {
       customRule.check(t, n, behavior);
@@ -1630,7 +1637,9 @@ public final class ConformanceRules {
     @Override
     protected boolean tsIsAllowlisted() {
       // We expect TypeScript to already check it.
+      // LINT.IfChange
       return true;
+      // LINT.ThenChange(//depot/google3/java/com/google/javascript/modules/librarydepsconformancechecker/conformance_checker.go)
     }
 
     @Override
@@ -1763,7 +1772,9 @@ public final class ConformanceRules {
 
     @Override
     protected boolean tsIsAllowlisted() {
+      // LINT.IfChange
       return true;
+      // LINT.ThenChange(//depot/google3/java/com/google/javascript/modules/librarydepsconformancechecker/conformance_checker.go)
     }
 
     @Override

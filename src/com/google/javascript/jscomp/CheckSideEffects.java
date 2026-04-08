@@ -232,7 +232,8 @@ final class CheckSideEffects extends AbstractPostOrderCallback implements Compil
 
         if (target.getString().equals(J2CL_PROTECTOR_FN)) {
           // Do not let non-J2CL code abuse it.
-          checkState(n.getSourceFileName().endsWith(".java.js"), "Only allowed for J2CL code");
+          checkState(
+              J2clSourceUtils.isJ2clSource(n.getSourceFileName()), "Only allowed for J2CL code");
           NodeUtil.deleteFunctionCall(n, compiler);
           return;
         }

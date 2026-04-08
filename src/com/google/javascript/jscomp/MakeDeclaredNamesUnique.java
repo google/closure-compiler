@@ -538,11 +538,11 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
         this.parent = parent;
       }
 
-      public void addReferencedVariableInfo(VariableInfo variableInfo) {
+      void addReferencedVariableInfo(VariableInfo variableInfo) {
         referencedVariables.add(variableInfo);
       }
 
-      public void recordPotentialConflicts(VariableInfo referencedVariable) {
+      void recordPotentialConflicts(VariableInfo referencedVariable) {
         int thisScopeDepth = scope.getDepth();
         int referencedVariableDeclarationDepth = referencedVariable.getScopeDepth();
         if (thisScopeDepth >= referencedVariableDeclarationDepth) {

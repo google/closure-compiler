@@ -88,7 +88,7 @@ public final class JsMessageExtractor {
      *
      * @return collection of JsMessage objects that was found in js sources.
      */
-    public Collection<JsMessage> getMessages() {
+    Collection<JsMessage> getMessages() {
       return messages;
     }
   }

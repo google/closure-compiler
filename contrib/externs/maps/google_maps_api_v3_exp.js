@@ -152,7 +152,7 @@ google.maps.AirQualityLibrary.prototype.AirQualityMeterElement;
  * google.maps.MarkerOptions.animation} option to play an animation.
  *
  * Access by calling `const {Animation} = await
- * google.maps.importLibrary("marker")`. See
+ * google.maps.importLibrary("marker");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {number}
  */
@@ -168,7 +168,7 @@ google.maps.Animation = {
    * google.maps.Marker.getAnimation} will return <code>null</code>. This type
    * of animation is usually specified during creation of the marker.
    */
-  DROP: 1,
+  DROP: 0,
 };
 
 /**
@@ -209,7 +209,7 @@ google.maps.Area.prototype.place_id;
  * A layer showing bike lanes and paths.
  *
  * Access by calling `const {BicyclingLayer} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {google.maps.MVCObject}
  * @constructor
@@ -303,9 +303,10 @@ google.maps.CameraParams.prototype.zoom;
  * A circle on the Earth&#39;s surface; also known as a &quot;spherical
  * cap&quot;.
  *
- * Access by calling `const {Circle} = await google.maps.importLibrary("maps")`.
- * See https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {(!google.maps.Circle|!google.maps.CircleLiteral|!google.maps.CircleOptions|null)=}
+ * Access by calling `const {Circle} = await
+ * google.maps.importLibrary("maps");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.Circle|!google.maps.CircleLiteral|!google.maps.CircleOptions|null=}
  *     circleOrCircleOptions
  * @extends {google.maps.MVCObject}
  * @constructor
@@ -527,7 +528,7 @@ google.maps.CircleOptions.prototype.zIndex;
 /**
  *
  * Access by calling `const {CollisionBehavior} = await
- * google.maps.importLibrary("marker")`. See
+ * google.maps.importLibrary("marker");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -558,7 +559,7 @@ google.maps.CollisionBehavior = {
  * <code>google.maps.ColorScheme.FOLLOW_SYSTEM</code>.
  *
  * Access by calling `const {ColorScheme} = await
- * google.maps.importLibrary("core")`. See
+ * google.maps.importLibrary("core");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -585,7 +586,7 @@ google.maps.ColorScheme = {
  * location.
  *
  * Access by calling `const {Containment} = await
- * google.maps.importLibrary("geocoding")`. See
+ * google.maps.importLibrary("geocoding");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -641,7 +642,7 @@ google.maps.Containment = {
  * towards the middle of the column.
  *
  * Access by calling `const {ControlPosition} = await
- * google.maps.importLibrary("core")`. See
+ * google.maps.importLibrary("core");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {number}
  */
@@ -653,109 +654,109 @@ google.maps.ControlPosition = {
   /**
    * Equivalent to BOTTOM_RIGHT in LTR, or BOTTOM_LEFT in RTL.
    */
-  BLOCK_END_INLINE_END: 1,
+  BLOCK_END_INLINE_END: 0,
   /**
    * Equivalent to BOTTOM_LEFT in LTR, or BOTTOM_RIGHT in RTL.
    */
-  BLOCK_END_INLINE_START: 2,
+  BLOCK_END_INLINE_START: 0,
   /**
    * Equivalent to TOP_CENTER in both LTR and RTL.
    */
-  BLOCK_START_INLINE_CENTER: 3,
+  BLOCK_START_INLINE_CENTER: 0,
   /**
    * Equivalent to TOP_RIGHT in LTR, or TOP_LEFT in RTL.
    */
-  BLOCK_START_INLINE_END: 4,
+  BLOCK_START_INLINE_END: 0,
   /**
    * Equivalent to TOP_LEFT in LTR, or TOP_RIGHT in RTL.
    */
-  BLOCK_START_INLINE_START: 5,
+  BLOCK_START_INLINE_START: 0,
   /**
    * Elements are positioned in the center of the bottom row. Consider using
    * BLOCK_END_INLINE_CENTER instead.
    */
-  BOTTOM_CENTER: 6,
+  BOTTOM_CENTER: 0,
   /**
    * Elements are positioned in the bottom left and flow towards the middle.
    * Elements are positioned to the right of the Google logo. Consider using
    * BLOCK_END_INLINE_START instead.
    */
-  BOTTOM_LEFT: 7,
+  BOTTOM_LEFT: 0,
   /**
    * Elements are positioned in the bottom right and flow towards the middle.
    * Elements are positioned to the left of the copyrights. Consider using
    * BLOCK_END_INLINE_END instead.
    */
-  BOTTOM_RIGHT: 8,
+  BOTTOM_RIGHT: 0,
   /**
    * Equivalent to RIGHT_CENTER in LTR, or LEFT_CENTER in RTL.
    */
-  INLINE_END_BLOCK_CENTER: 9,
+  INLINE_END_BLOCK_CENTER: 0,
   /**
    * Equivalent to RIGHT_BOTTOM in LTR, or LEFT_BOTTOM in RTL.
    */
-  INLINE_END_BLOCK_END: 10,
+  INLINE_END_BLOCK_END: 0,
   /**
    * Equivalent to RIGHT_TOP in LTR, or LEFT_TOP in RTL.
    */
-  INLINE_END_BLOCK_START: 11,
+  INLINE_END_BLOCK_START: 0,
   /**
    * Equivalent to LEFT_CENTER in LTR, or RIGHT_CENTER in RTL.
    */
-  INLINE_START_BLOCK_CENTER: 12,
+  INLINE_START_BLOCK_CENTER: 0,
   /**
    * Equivalent to LEFT_BOTTOM in LTR, or RIGHT_BOTTOM in RTL.
    */
-  INLINE_START_BLOCK_END: 13,
+  INLINE_START_BLOCK_END: 0,
   /**
    * Equivalent to LEFT_TOP in LTR, or RIGHT_TOP in RTL.
    */
-  INLINE_START_BLOCK_START: 14,
+  INLINE_START_BLOCK_START: 0,
   /**
    * Elements are positioned on the left, above bottom-left elements, and flow
    * upwards. Consider using INLINE_START_BLOCK_END instead.
    */
-  LEFT_BOTTOM: 15,
+  LEFT_BOTTOM: 0,
   /**
    * Elements are positioned in the center of the left side. Consider using
    * INLINE_START_BLOCK_CENTER instead.
    */
-  LEFT_CENTER: 16,
+  LEFT_CENTER: 0,
   /**
    * Elements are positioned on the left, below top-left elements, and flow
    * downwards. Consider using INLINE_START_BLOCK_START instead.
    */
-  LEFT_TOP: 17,
+  LEFT_TOP: 0,
   /**
    * Elements are positioned on the right, above bottom-right elements, and flow
    * upwards. Consider using INLINE_END_BLOCK_END instead.
    */
-  RIGHT_BOTTOM: 18,
+  RIGHT_BOTTOM: 0,
   /**
    * Elements are positioned in the center of the right side. Consider using
    * INLINE_END_BLOCK_CENTER instead.
    */
-  RIGHT_CENTER: 19,
+  RIGHT_CENTER: 0,
   /**
    * Elements are positioned on the right, below top-right elements, and flow
    * downwards. Consider using INLINE_END_BLOCK_START instead.
    */
-  RIGHT_TOP: 20,
+  RIGHT_TOP: 0,
   /**
    * Elements are positioned in the center of the top row. Consider using
    * BLOCK_START_INLINE_CENTER instead.
    */
-  TOP_CENTER: 21,
+  TOP_CENTER: 0,
   /**
    * Elements are positioned in the top left and flow towards the middle.
    * Consider using BLOCK_START_INLINE_START instead.
    */
-  TOP_LEFT: 22,
+  TOP_LEFT: 0,
   /**
    * Elements are positioned in the top right and flow towards the middle.
    * Consider using BLOCK_START_INLINE_END instead.
    */
-  TOP_RIGHT: 23,
+  TOP_RIGHT: 0,
 };
 
 /**
@@ -898,9 +899,9 @@ google.maps.CoreLibrary.prototype.Vector3D;
  * <code>Data</code> object is a collection of <a
  * href="#Data.Feature"><code>Features</code></a>.
  *
- * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps");`.
  * See https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {google.maps.Data.DataOptions=} options
+ * @param {?google.maps.Data.DataOptions=} options
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -915,7 +916,8 @@ google.maps.Data = function(options) {};
  * IDs <code>1234</code> and <code>'1234'</code> are equivalent. Adding a
  * feature with ID <code>1234</code> will replace a feature with ID
  * <code>'1234'</code>, and vice versa.
- * @param {(google.maps.Data.Feature|google.maps.Data.FeatureOptions)=} feature
+ * @param {google.maps.Data.Feature|google.maps.Data.FeatureOptions|null=}
+ *     feature
  * @return {!google.maps.Data.Feature}
  */
 google.maps.Data.prototype.add = function(feature) {};
@@ -925,7 +927,7 @@ google.maps.Data.prototype.add = function(feature) {};
  * imported features are returned. Throws an exception if the GeoJSON could not
  * be imported.
  * @param {!Object} geoJson
- * @param {google.maps.Data.GeoJsonOptions=} options
+ * @param {?google.maps.Data.GeoJsonOptions=} options
  * @return {!Array<!google.maps.Data.Feature>}
  */
 google.maps.Data.prototype.addGeoJson = function(geoJson, options) {};
@@ -948,7 +950,7 @@ google.maps.Data.prototype.forEach = function(callback) {};
 
 /**
  * Returns the position of the drawing controls on the map.
- * @return {google.maps.ControlPosition}
+ * @return {?google.maps.ControlPosition}
  */
 google.maps.Data.prototype.getControlPosition = function() {};
 
@@ -957,7 +959,7 @@ google.maps.Data.prototype.getControlPosition = function() {};
  * order they are displayed. This does not include the <code>null</code> drawing
  * mode, which is added by default. Possible drawing modes are
  * <code>"Point"</code>, <code>"LineString"</code> or <code>"Polygon"</code>.
- * @return {Array<string>}
+ * @return {?Array<string>}
  */
 google.maps.Data.prototype.getControls = function() {};
 
@@ -983,13 +985,13 @@ google.maps.Data.prototype.getFeatureById = function(id) {};
 
 /**
  * Returns the map on which the features are displayed.
- * @return {google.maps.Map}
+ * @return {?google.maps.Map}
  */
 google.maps.Data.prototype.getMap = function() {};
 
 /**
  * Gets the style for all features in the collection.
- * @return {google.maps.Data.StylingFunction|google.maps.Data.StyleOptions}
+ * @return {google.maps.Data.StylingFunction|google.maps.Data.StyleOptions|null}
  */
 google.maps.Data.prototype.getStyle = function() {};
 
@@ -999,7 +1001,7 @@ google.maps.Data.prototype.getStyle = function() {};
  * issues, we recommend you fetch the GeoJSON using your choice of AJAX library,
  * and then call <code>addGeoJson()</code>.
  * @param {string} url
- * @param {google.maps.Data.GeoJsonOptions=} options
+ * @param {?google.maps.Data.GeoJsonOptions=} options
  * @param {(function(!Array<!google.maps.Data.Feature>): void)=} callback
  * @return {undefined}
  */
@@ -1027,14 +1029,14 @@ google.maps.Data.prototype.remove = function(feature) {};
  * of the given feature reverts to the style specified by
  * <code>setStyle()</code>. <p>If no feature is given, all features have their
  * style reverted.</p>
- * @param {google.maps.Data.Feature=} feature
+ * @param {?google.maps.Data.Feature=} feature
  * @return {undefined}
  */
 google.maps.Data.prototype.revertStyle = function(feature) {};
 
 /**
  * Sets the position of the drawing controls on the map.
- * @param {google.maps.ControlPosition} controlPosition
+ * @param {?google.maps.ControlPosition} controlPosition
  * @return {undefined}
  */
 google.maps.Data.prototype.setControlPosition = function(controlPosition) {};
@@ -1045,7 +1047,7 @@ google.maps.Data.prototype.setControlPosition = function(controlPosition) {};
  * mode, which is added by default. If <code>null</code>, drawing controls are
  * disabled and not displayed. Possible drawing modes are <code>"Point"</code>,
  * <code>"LineString"</code> or <code>"Polygon"</code>.
- * @param {Array<string>} controls
+ * @param {?Array<string>} controls
  * @return {undefined}
  */
 google.maps.Data.prototype.setControls = function(controls) {};
@@ -1064,7 +1066,7 @@ google.maps.Data.prototype.setDrawingMode = function(drawingMode) {};
 /**
  * Renders the features on the specified map. If map is set to
  * <code>null</code>, the features will be removed from the map.
- * @param {google.maps.Map} map
+ * @param {?google.maps.Map} map
  * @return {undefined}
  */
 google.maps.Data.prototype.setMap = function(map) {};
@@ -1075,7 +1077,8 @@ google.maps.Data.prototype.setMap = function(map) {};
  * either an object with the desired style options, or a function that computes
  * the style for each feature. The function will be called every time a
  * feature&#39;s properties are updated.
- * @param {google.maps.Data.StylingFunction|google.maps.Data.StyleOptions} style
+ * @param {google.maps.Data.StylingFunction|google.maps.Data.StyleOptions|null}
+ *     style
  * @return {undefined}
  */
 google.maps.Data.prototype.setStyle = function(style) {};
@@ -1162,9 +1165,9 @@ google.maps.Data.DataOptions.prototype.style;
 /**
  * A feature has a geometry, an id, and a set of properties.
  *
- * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps");`.
  * See https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {google.maps.Data.FeatureOptions=} options
+ * @param {?google.maps.Data.FeatureOptions=} options
  * @constructor
  */
 google.maps.Data.Feature = function(options) {};
@@ -1179,7 +1182,7 @@ google.maps.Data.Feature.prototype.forEachProperty = function(callback) {};
 
 /**
  * Returns the feature&#39;s geometry.
- * @return {google.maps.Data.Geometry}
+ * @return {?google.maps.Data.Geometry}
  */
 google.maps.Data.Feature.prototype.getGeometry = function() {};
 
@@ -1206,7 +1209,7 @@ google.maps.Data.Feature.prototype.removeProperty = function(name) {};
 
 /**
  * Sets the feature&#39;s geometry.
- * @param {google.maps.Data.Geometry|google.maps.LatLng|google.maps.LatLngLiteral}
+ * @param {google.maps.Data.Geometry|google.maps.LatLng|google.maps.LatLngLiteral|null}
  *     newGeometry
  * @return {undefined}
  */
@@ -1282,7 +1285,7 @@ google.maps.Data.Geometry = function() {};
  * Repeatedly invokes the given function, passing a point from the geometry to
  * the function on each invocation.
  * @param {function(!google.maps.LatLng): void} callback
- * @return {undefined}
+ * @return {void}
  */
 google.maps.Data.Geometry.prototype.forEachLatLng = function(callback) {};
 
@@ -1301,7 +1304,7 @@ google.maps.Data.Geometry.prototype.getType = function() {};
  * <code>LatLng</code> or <code>LatLngLiteral</code> objects are automatically
  * converted to <code>Data.Point</code> geometry objects.
  *
- * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps");`.
  * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!Array<!google.maps.Data.Geometry|!google.maps.LatLng|!google.maps.LatLngLiteral>}
  *     elements
@@ -1348,7 +1351,7 @@ google.maps.Data.GeometryCollection.prototype.getType = function() {};
 /**
  * A LineString geometry contains a number of <code>LatLng</code>s.
  *
- * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps");`.
  * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>} elements
  * @implements {google.maps.Data.Geometry}
@@ -1395,7 +1398,7 @@ google.maps.Data.LineString.prototype.getType = function() {};
  * a closed LineString. There is no need to make the first <code>LatLng</code>
  * equal to the last <code>LatLng</code>. The LinearRing is closed implicitly.
  *
- * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps");`.
  * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>} elements
  * @implements {google.maps.Data.Geometry}
@@ -1453,7 +1456,7 @@ google.maps.Data.MouseEvent.prototype.feature;
 /**
  * A MultiLineString geometry contains a number of <code>LineString</code>s.
  *
- * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps");`.
  * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!Array<!google.maps.Data.LineString|!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>>}
  *     elements
@@ -1500,7 +1503,7 @@ google.maps.Data.MultiLineString.prototype.getType = function() {};
 /**
  * A MultiPoint geometry contains a number of <code>LatLng</code>s.
  *
- * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps");`.
  * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>} elements
  * @implements {google.maps.Data.Geometry}
@@ -1545,7 +1548,7 @@ google.maps.Data.MultiPoint.prototype.getType = function() {};
 /**
  * A MultiPolygon geometry contains a number of <code>Data.Polygon</code>s.
  *
- * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps");`.
  * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!Array<!google.maps.Data.Polygon|!Array<!google.maps.Data.LinearRing|!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>>>}
  *     elements
@@ -1591,7 +1594,7 @@ google.maps.Data.MultiPolygon.prototype.getType = function() {};
 /**
  * A Point geometry contains a single <code>LatLng</code>.
  *
- * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps");`.
  * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.LatLng|!google.maps.LatLngLiteral} latLng
  * @implements {google.maps.Data.Geometry}
@@ -1626,7 +1629,7 @@ google.maps.Data.Point.prototype.getType = function() {};
  * href="https://developers.google.com/maps/documentation/javascript/examples/layer-data-polygon">sample
  * polygon with a hole</a>.
  *
- * Access by calling `const {Data} = await google.maps.importLibrary("maps")`.
+ * Access by calling `const {Data} = await google.maps.importLibrary("maps");`.
  * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!Array<!google.maps.Data.LinearRing|!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>>}
  *     elements
@@ -2074,27 +2077,32 @@ google.maps.DirectionsPolyline = function() {};
 google.maps.DirectionsPolyline.prototype.points;
 
 /**
- * Renders directions obtained from the <code><a
- * href="#DirectionsService">DirectionsService</a></code>.
  *
  * Access by calling `const {DirectionsRenderer} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {google.maps.DirectionsRendererOptions=} opts
+ * @param {?google.maps.DirectionsRendererOptions=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
+ * @deprecated google.maps.DirectionsRenderer is deprecated as of February 25th,
+ *     2026. At this time, google.maps.DirectionsRenderer is not scheduled to be
+ *     discontinued and will continue to receive bug fixes for any major
+ *     regressions. At least 12 months notice will be given before support is
+ *     discontinued. Please see <a
+ *     href="https://developers.google.com/maps/legacy">https://developers.google.com/maps/legacy</a>
+ *     for additional details.
  */
 google.maps.DirectionsRenderer = function(opts) {};
 
 /**
  * Returns the renderer&#39;s current set of directions.
- * @return {google.maps.DirectionsResult}
+ * @return {?google.maps.DirectionsResult}
  */
 google.maps.DirectionsRenderer.prototype.getDirections = function() {};
 
 /**
  * Returns the map on which the <code>DirectionsResult</code> is rendered.
- * @return {google.maps.Map}
+ * @return {?google.maps.Map}
  */
 google.maps.DirectionsRenderer.prototype.getMap = function() {};
 
@@ -2116,7 +2124,7 @@ google.maps.DirectionsRenderer.prototype.getRouteIndex = function() {};
  * Set the renderer to use the result from the <code>DirectionsService</code>.
  * Setting a valid set of directions in this manner will display the directions
  * on the renderer&#39;s designated map and panel.
- * @param {google.maps.DirectionsResult} directions
+ * @param {?google.maps.DirectionsResult} directions
  * @return {undefined}
  */
 google.maps.DirectionsRenderer.prototype.setDirections = function(
@@ -2125,7 +2133,7 @@ google.maps.DirectionsRenderer.prototype.setDirections = function(
 /**
  * This method specifies the map on which directions will be rendered. Pass
  * <code>null</code> to remove the directions from the map.
- * @param {google.maps.Map} map
+ * @param {?google.maps.Map} map
  * @return {undefined}
  */
 google.maps.DirectionsRenderer.prototype.setMap = function(map) {};
@@ -2133,7 +2141,7 @@ google.maps.DirectionsRenderer.prototype.setMap = function(map) {};
 /**
  * Change the options settings of this <code>DirectionsRenderer</code> after
  * initialization.
- * @param {google.maps.DirectionsRendererOptions} options
+ * @param {?google.maps.DirectionsRendererOptions} options
  * @return {undefined}
  */
 google.maps.DirectionsRenderer.prototype.setOptions = function(options) {};
@@ -2508,20 +2516,26 @@ google.maps.DirectionsRoute.prototype.warnings;
 google.maps.DirectionsRoute.prototype.waypoint_order;
 
 /**
- * A service for computing directions between two or more places.
  *
  * Access by calling `const {DirectionsService} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
+ * @deprecated google.maps.DirectionsService is deprecated as of February 25th,
+ *     2026. At this time, google.maps.DirectionsService is not scheduled to be
+ *     discontinued and will continue to receive bug fixes for any major
+ *     regressions. At least 12 months notice will be given before support is
+ *     discontinued. Please see <a
+ *     href="https://developers.google.com/maps/legacy">https://developers.google.com/maps/legacy</a>
+ *     for additional details.
  */
 google.maps.DirectionsService = function() {};
 
 /**
  * Issue a directions search request.
  * @param {!google.maps.DirectionsRequest} request
- * @param {((function((!google.maps.DirectionsResult|null),
- *     !google.maps.DirectionsStatus): void)|undefined)=} callback
+ * @param {(function((!google.maps.DirectionsResult|null),
+ *     !google.maps.DirectionsStatus): void)=} callback
  * @return {!Promise<!google.maps.DirectionsResult>}
  */
 google.maps.DirectionsService.prototype.route = function(request, callback) {};
@@ -2533,7 +2547,7 @@ google.maps.DirectionsService.prototype.route = function(request, callback) {};
  * <code>google.maps.DirectionsStatus.OK</code>.
  *
  * Access by calling `const {DirectionsStatus} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -2700,20 +2714,6 @@ google.maps.DirectionsStep.prototype.lat_lngs;
 google.maps.DirectionsStep.prototype.polyline;
 
 /**
- * @enum {?}
- * @deprecated Deprecated as of 2011. Use {\@link
- *     mapsapi.directions.service.directionsConstants.TravelMode} instead.
- */
-google.maps.DirectionsTravelMode = {};
-
-/**
- * @enum {?}
- * @deprecated Deprecated as of 2011. Use {\@link
- *     mapsapi.directions.service.directionsConstants.UnitSystem} instead.
- */
-google.maps.DirectionsUnitSystem = {};
-
-/**
  * A <code>DirectionsWaypoint</code> represents a location between origin and
  * destination through which the trip should be routed.
  * @record
@@ -2764,7 +2764,7 @@ google.maps.Distance.prototype.value;
  * <code>'OK'</code>.
  *
  * Access by calling `const {DistanceMatrixElementStatus} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -2964,12 +2964,18 @@ google.maps.DistanceMatrixResponseRow = function() {};
 google.maps.DistanceMatrixResponseRow.prototype.elements;
 
 /**
- * A service for computing distances between multiple origins and destinations.
  *
  * Access by calling `const {DistanceMatrixService} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
+ * @deprecated google.maps.DistanceMatrixService is deprecated as of February
+ *     25th, 2026. At this time, google.maps.DistanceMatrixService is not
+ *     scheduled to be discontinued and will continue to receive bug fixes for
+ *     any major regressions. At least 12 months notice will be given before
+ *     support is discontinued. Please see <a
+ *     href="https://developers.google.com/maps/legacy">https://developers.google.com/maps/legacy</a>
+ *     for additional details.
  */
 google.maps.DistanceMatrixService = function() {};
 
@@ -2991,7 +2997,7 @@ google.maps.DistanceMatrixService.prototype.getDistanceMatrix = function(
  * <code>google.maps.DistanceMatrixStatus.OK</code>.
  *
  * Access by calling `const {DistanceMatrixStatus} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -3136,7 +3142,7 @@ google.maps.ElevationResult.prototype.resolution;
  * elevation data.
  *
  * Access by calling `const {ElevationService} = await
- * google.maps.importLibrary("elevation")`. See
+ * google.maps.importLibrary("elevation");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -3170,7 +3176,7 @@ google.maps.ElevationService.prototype.getElevationForLocations = function(
  * <code>google.maps.ElevationStatus.OK</code>.
  *
  * Access by calling `const {ElevationStatus} = await
- * google.maps.importLibrary("elevation")`. See
+ * google.maps.importLibrary("elevation");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -3216,7 +3222,7 @@ google.maps.ErrorEvent.prototype.error;
  * Extra computations to perform while completing a geocoding request.
  *
  * Access by calling `const {ExtraGeocodeComputation} = await
- * google.maps.importLibrary("geocoding")`. See
+ * google.maps.importLibrary("geocoding");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -3374,7 +3380,7 @@ google.maps.FeatureStyleOptions.prototype.strokeWeight;
  * Identifiers for feature types.
  *
  * Access by calling `const {FeatureType} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -3427,7 +3433,7 @@ google.maps.FullscreenControlOptions.prototype.position;
  * A service for converting between an address and a <code>LatLng</code>.
  *
  * Access by calling `const {Geocoder} = await
- * google.maps.importLibrary("geocoding")`. See
+ * google.maps.importLibrary("geocoding");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -3436,8 +3442,8 @@ google.maps.Geocoder = function() {};
 /**
  * Geocode a request.
  * @param {!google.maps.GeocoderRequest} request
- * @param {((function((!Array<!google.maps.GeocoderResult>|null),
- *     !google.maps.GeocoderStatus): void)|null)=} callback
+ * @param {(function((!Array<!google.maps.GeocoderResult>|null),
+ *     !google.maps.GeocoderStatus): void)|null=} callback
  * @return {!Promise<!google.maps.GeocoderResponse>}
  */
 google.maps.Geocoder.prototype.geocode = function(request, callback) {};
@@ -3548,7 +3554,7 @@ google.maps.GeocoderGeometry.prototype.viewport;
  * <code>google.maps.GeocoderLocationType.ROOFTOP</code>.
  *
  * Access by calling `const {GeocoderLocationType} = await
- * google.maps.importLibrary("geocoding")`. See
+ * google.maps.importLibrary("geocoding");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -3780,7 +3786,7 @@ google.maps.GeocoderResult.prototype.types;
  * <code>google.maps.GeocoderStatus.OK</code>.
  *
  * Access by calling `const {GeocoderStatus} = await
- * google.maps.importLibrary("geocoding")`. See
+ * google.maps.importLibrary("geocoding");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -3875,11 +3881,11 @@ google.maps.GeometryLibrary.prototype.spherical;
  * A rectangular image overlay on the map.
  *
  * Access by calling `const {GroundOverlay} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {string} url
- * @param {google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral} bounds
- * @param {google.maps.GroundOverlayOptions=} opts
+ * @param {google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral|null} bounds
+ * @param {?google.maps.GroundOverlayOptions=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -3887,13 +3893,13 @@ google.maps.GroundOverlay = function(url, bounds, opts) {};
 
 /**
  * Gets the <code>LatLngBounds</code> of this overlay.
- * @return {google.maps.LatLngBounds}
+ * @return {?google.maps.LatLngBounds}
  */
 google.maps.GroundOverlay.prototype.getBounds = function() {};
 
 /**
  * Returns the map on which this ground overlay is displayed.
- * @return {google.maps.Map}
+ * @return {?google.maps.Map}
  */
 google.maps.GroundOverlay.prototype.getMap = function() {};
 
@@ -3912,7 +3918,7 @@ google.maps.GroundOverlay.prototype.getUrl = function() {};
 /**
  * Renders the ground overlay on the specified map. If map is set to
  * <code>null</code>, the overlay is removed.
- * @param {google.maps.Map} map
+ * @param {?google.maps.Map} map
  * @return {undefined}
  */
 google.maps.GroundOverlay.prototype.setMap = function(map) {};
@@ -4070,9 +4076,9 @@ google.maps.IconSequence.prototype.repeat;
  * image tiles.
  *
  * Access by calling `const {ImageMapType} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {google.maps.ImageMapTypeOptions} opts
+ * @param {?google.maps.ImageMapTypeOptions} opts
  * @implements {google.maps.MapType}
  * @extends {google.maps.MVCObject}
  * @constructor
@@ -4100,7 +4106,7 @@ google.maps.ImageMapType.prototype.minZoom;
 google.maps.ImageMapType.prototype.name;
 
 /**
- * @type {google.maps.Projection}
+ * @type {?google.maps.Projection}
  */
 google.maps.ImageMapType.prototype.projection;
 
@@ -4110,7 +4116,7 @@ google.maps.ImageMapType.prototype.projection;
 google.maps.ImageMapType.prototype.radius;
 
 /**
- * @type {google.maps.Size}
+ * @type {?google.maps.Size}
  */
 google.maps.ImageMapType.prototype.tileSize;
 
@@ -4122,9 +4128,9 @@ google.maps.ImageMapType.prototype.tileSize;
 google.maps.ImageMapType.prototype.getOpacity = function() {};
 
 /**
- * @param {google.maps.Point} tileCoord Tile coordinates.
+ * @param {?google.maps.Point} tileCoord Tile coordinates.
  * @param {number} zoom Tile zoom.
- * @param {Document} ownerDocument The document which owns this tile.
+ * @param {?Document} ownerDocument The document which owns this tile.
  * @return {?Element} Resulting tile.
  * @override
  */
@@ -4200,10 +4206,10 @@ google.maps.ImageMapTypeOptions.prototype.tileSize;
  * An overlay that looks like a bubble and is often connected to a marker.
  *
  * Access by calling `const {InfoWindow} = await
- * google.maps.importLibrary("maps")` or `const {InfoWindow} = await
- * google.maps.importLibrary("streetView")`. See
+ * google.maps.importLibrary("maps");` or `const {InfoWindow} = await
+ * google.maps.importLibrary("streetView");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {(!google.maps.InfoWindowOptions|null)=} opts
+ * @param {!google.maps.InfoWindowOptions|null=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -4271,10 +4277,10 @@ google.maps.InfoWindow.prototype.getZIndex = function() {};
  * google.maps.InfoWindowOpenOptions} interface as the single argument for this
  * method. To prevent changing browser focus on open, set {@link
  * google.maps.InfoWindowOpenOptions.shouldFocus} to <code>false</code>.
- * @param {(!google.maps.InfoWindowOpenOptions|!google.maps.Map|!google.maps.StreetViewPanorama|null)=}
+ * @param {!google.maps.InfoWindowOpenOptions|!google.maps.Map|!google.maps.StreetViewPanorama|null=}
  *     options Either an InfoWindowOpenOptions object (recommended) or the
  *     map|panorama on which to render this InfoWindow.
- * @param {(!google.maps.MVCObject|!google.maps.marker.AdvancedMarkerElement|null)=}
+ * @param {!google.maps.MVCObject|!google.maps.marker.AdvancedMarkerElement|null=}
  *     anchor The anchor to which this InfoWindow will be positioned. If the
  *     anchor is non-null, the InfoWindow will be positioned at the top-center
  *     of the anchor. The InfoWindow will be rendered on the same map or
@@ -4284,14 +4290,14 @@ google.maps.InfoWindow.prototype.getZIndex = function() {};
 google.maps.InfoWindow.prototype.open = function(options, anchor) {};
 
 /**
- * @param {(string|!Element|!Text|null)=} content The content to be displayed by
+ * @param {string|!Element|!Text|null=} content The content to be displayed by
  *     this InfoWindow.
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.setContent = function(content) {};
 
 /**
- * @param {(string|!Element|!Text|null)=} headerContent The header content to be
+ * @param {string|!Element|!Text|null=} headerContent The header content to be
  *     displayed by this InfoWindow. See {@link
  *     google.maps.InfoWindowOptions.headerContent}.
  * @return {undefined}
@@ -4299,22 +4305,21 @@ google.maps.InfoWindow.prototype.setContent = function(content) {};
 google.maps.InfoWindow.prototype.setHeaderContent = function(headerContent) {};
 
 /**
- * @param {(boolean|null)=} headerDisabled Specifies whether to disable the
- *     whole header row. See {@link
- *     google.maps.InfoWindowOptions.headerDisabled}.
+ * @param {boolean|null=} headerDisabled Specifies whether to disable the whole
+ *     header row. See {@link google.maps.InfoWindowOptions.headerDisabled}.
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.setHeaderDisabled = function(
     headerDisabled) {};
 
 /**
- * @param {(!google.maps.InfoWindowOptions|null)=} options
+ * @param {!google.maps.InfoWindowOptions|null=} options
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.setOptions = function(options) {};
 
 /**
- * @param {(!google.maps.LatLng|!google.maps.LatLngLiteral|null)=} position The
+ * @param {!google.maps.LatLng|!google.maps.LatLngLiteral|null=} position The
  *     LatLng position at which to display this InfoWindow.
  * @return {undefined}
  */
@@ -4621,9 +4626,9 @@ google.maps.KmlFeatureData.prototype.snippet;
  * <code>KmlFeatureData</code> object is provided for each feature when clicked.
  *
  * Access by calling `const {KmlLayer} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {google.maps.KmlLayerOptions=} opts Options for this layer.
+ * @param {?google.maps.KmlLayerOptions=} opts Options for this layer.
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -4631,26 +4636,26 @@ google.maps.KmlLayer = function(opts) {};
 
 /**
  * Get the default viewport for the layer being displayed.
- * @return {google.maps.LatLngBounds}
+ * @return {?google.maps.LatLngBounds}
  */
 google.maps.KmlLayer.prototype.getDefaultViewport = function() {};
 
 /**
  * Get the map on which the KML Layer is being rendered.
- * @return {google.maps.Map}
+ * @return {?google.maps.Map}
  */
 google.maps.KmlLayer.prototype.getMap = function() {};
 
 /**
  * Get the metadata associated with this layer, as specified in the layer
  * markup.
- * @return {google.maps.KmlLayerMetadata}
+ * @return {?google.maps.KmlLayerMetadata}
  */
 google.maps.KmlLayer.prototype.getMetadata = function() {};
 
 /**
  * Get the status of the layer, set once the requested document has loaded.
- * @return {google.maps.KmlLayerStatus}
+ * @return {?google.maps.KmlLayerStatus}
  */
 google.maps.KmlLayer.prototype.getStatus = function() {};
 
@@ -4669,13 +4674,13 @@ google.maps.KmlLayer.prototype.getZIndex = function() {};
 /**
  * Renders the KML Layer on the specified map. If map is set to
  * <code>null</code>, the layer is removed.
- * @param {google.maps.Map} map
+ * @param {?google.maps.Map} map
  * @return {undefined}
  */
 google.maps.KmlLayer.prototype.setMap = function(map) {};
 
 /**
- * @param {google.maps.KmlLayerOptions} options
+ * @param {?google.maps.KmlLayerOptions} options
  * @return {undefined}
  */
 google.maps.KmlLayer.prototype.setOptions = function(options) {};
@@ -4792,7 +4797,7 @@ google.maps.KmlLayerOptions.prototype.zIndex;
  * example, <code>'OK'</code> or <code>google.maps.KmlLayerStatus.OK</code>.
  *
  * Access by calling `const {KmlLayerStatus} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -4947,8 +4952,9 @@ google.maps.Landmark.prototype.types;
  * google.maps.LatLng(new google.maps.LatLng(-34, 151));<br> new
  * google.maps.LatLng(new google.maps.LatLng(-34, 151), true);<br> </pre>
  *
- * Access by calling `const {LatLng} = await google.maps.importLibrary("core")`.
- * See https://developers.google.com/maps/documentation/javascript/libraries.
+ * Access by calling `const {LatLng} = await
+ * google.maps.importLibrary("core");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {number|!google.maps.LatLngLiteral|!google.maps.LatLng}
  *     latOrLatLngOrLatLngLiteral
  * @param {?(number|boolean)=} lngOrNoClampNoWrap
@@ -4960,7 +4966,7 @@ google.maps.LatLng = function(
 
 /**
  * Comparison function.
- * @param {google.maps.LatLng} other
+ * @param {?google.maps.LatLng} other
  * @return {boolean}
  */
 google.maps.LatLng.prototype.equals = function(other) {};
@@ -5015,7 +5021,7 @@ google.maps.LatLng.prototype.toUrlValue = function(precision) {};
  * ground surface.</li> </ul>
  *
  * Access by calling `const {LatLngAltitude} = await
- * google.maps.importLibrary("core")`. See
+ * google.maps.importLibrary("core");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral}
  *     value The initializing value.
@@ -5057,11 +5063,11 @@ google.maps.LatLngAltitude.prototype.lng;
 google.maps.LatLngAltitude.prototype.equals = function(other) {};
 
 /**
- * @return {!google.maps.LatLngAltitudeLiteral} A JSON representation of this
- *     object.
- * @override
+ * Converts to a plain object.
+ * @param {string=} key
+ * @return {!google.maps.LatLngAltitudeLiteral}
  */
-google.maps.LatLngAltitude.prototype.toJSON = function() {};
+google.maps.LatLngAltitude.prototype.toJSON = function(key) {};
 
 /**
  * Object literals are accepted in place of <code>LatLngAltitude</code> objects,
@@ -5103,11 +5109,11 @@ google.maps.LatLngAltitudeLiteral.prototype.lng;
  * degrees longitudinal meridian.
  *
  * Access by calling `const {LatLngBounds} = await
- * google.maps.importLibrary("core")`. See
+ * google.maps.importLibrary("core");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {(google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral|null)=}
+ * @param {google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral|null=}
  *     swOrLatLngBounds
- * @param {(google.maps.LatLng|google.maps.LatLngLiteral|null)=} ne
+ * @param {google.maps.LatLng|google.maps.LatLngLiteral|null=} ne
  * @constructor
  */
 google.maps.LatLngBounds = function(swOrLatLngBounds, ne) {};
@@ -5317,9 +5323,9 @@ google.maps.LocationElevationResponse.prototype.results;
 /**
  *
  * Access by calling `const {MVCArray} = await
- * google.maps.importLibrary("core")`. See
+ * google.maps.importLibrary("core");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {Array<T>=} array
+ * @param {?Array<T>=} array
  * @extends {google.maps.MVCObject}
  * @template T
  * @constructor
@@ -5406,7 +5412,7 @@ google.maps.MVCArray.prototype.setAt = function(i, elem) {};
  * supported.
  *
  * Access by calling `const {MVCObject} = await
- * google.maps.importLibrary("core")`. See
+ * google.maps.importLibrary("core");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -5480,7 +5486,7 @@ google.maps.MVCObject.prototype.unbindAll = function() {};
 
 /**
  *
- * Access by calling `const {Map} = await google.maps.importLibrary("maps")`.
+ * Access by calling `const {Map} = await google.maps.importLibrary("maps");`.
  * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!HTMLElement} mapDiv The map will render to fill this element.
  * @param {!google.maps.MapOptions=} opts Options
@@ -5532,7 +5538,7 @@ google.maps.Map.prototype.overlayMapTypes;
  * animates depends on an internal heuristic.
  * @param {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral} bounds
  *     Bounds to show.
- * @param {(number|!google.maps.Padding)=} padding Padding in pixels. The bounds
+ * @param {number|!google.maps.Padding=} padding Padding in pixels. The bounds
  *     will be fit in the part of the map that remains after padding is removed.
  *     A number value will yield the same padding on all 4 sides. Supply 0 here
  *     to make a fitBounds idempotent on the result of getBounds.
@@ -5727,7 +5733,7 @@ google.maps.Map.prototype.panTo = function(latLng) {};
  * changed.
  * @param {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral}
  *     latLngBounds The bounds to pan the map to.
- * @param {(number|!google.maps.Padding)=} padding Padding in pixels. A number
+ * @param {number|!google.maps.Padding=} padding Padding in pixels. A number
  *     value will yield the same padding on all 4 sides. The default value is 0.
  * @return {undefined}
  */
@@ -5953,7 +5959,7 @@ google.maps.MapCapabilities.prototype.isWebGLOverlayViewAvailable;
  * google.maps.MapElement.innerMap} property.
  *
  * Access by calling `const {MapElement} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.MapElementOptions=} options
  * @implements {google.maps.MapElementOptions}
@@ -6034,8 +6040,6 @@ google.maps.MapElement.prototype.tiltInteractionDisabled;
  * @type {number|null}
  */
 google.maps.MapElement.prototype.zoom;
-
-
 
 /**
  * MapElementOptions object used to define the properties that can be set on a
@@ -6672,7 +6676,7 @@ google.maps.MapTypeControlOptions.prototype.style;
  * Identifiers for common MapTypesControls.
  *
  * Access by calling `const {MapTypeControlStyle} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {number}
  */
@@ -6686,11 +6690,11 @@ google.maps.MapTypeControlStyle = {
   /**
    * A dropdown menu for the screen realestate conscious.
    */
-  DROPDOWN_MENU: 1,
+  DROPDOWN_MENU: 0,
   /**
    * The standard horizontal radio buttons bar.
    */
-  HORIZONTAL_BAR: 2,
+  HORIZONTAL_BAR: 0,
 };
 
 /**
@@ -6699,7 +6703,7 @@ google.maps.MapTypeControlStyle = {
  * <code>google.maps.MapTypeId.SATELLITE</code>.
  *
  * Access by calling `const {MapTypeId} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -6728,7 +6732,7 @@ google.maps.MapTypeId = {
  * A registry for MapType instances, keyed by MapType id.
  *
  * Access by calling `const {MapTypeRegistry} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {google.maps.MVCObject}
  * @constructor
@@ -6739,7 +6743,7 @@ google.maps.MapTypeRegistry = function() {};
  * Sets the registry to associate the passed string identifier with the passed
  * MapType.
  * @param {string} id Identifier of the MapType to add to the registry.
- * @param {!google.maps.MapType|?} mapType MapType object to add to the
+ * @param {!google.maps.MapType|*} mapType MapType object to add to the
  *     registry.
  * @return {undefined}
  */
@@ -6764,7 +6768,7 @@ google.maps.MapTypeStyle = function() {};
  * usage and allowed values, see the <a
  * href="https://developers.google.com/maps/documentation/javascript/style-reference#style-elements">style
  * reference</a>.
- * @type {string|null|undefined}
+ * @type {?string|undefined}
  */
 google.maps.MapTypeStyle.prototype.elementType;
 
@@ -6774,7 +6778,7 @@ google.maps.MapTypeStyle.prototype.elementType;
  * to be <code>'all'</code>. For details of usage and allowed values, see the <a
  * href="https://developers.google.com/maps/documentation/javascript/style-reference#style-features">style
  * reference</a>.
- * @type {string|null|undefined}
+ * @type {?string|undefined}
  */
 google.maps.MapTypeStyle.prototype.featureType;
 
@@ -6797,6 +6801,23 @@ google.maps.Maps3DLibrary = function() {};
  * @type {typeof google.maps.maps3d.AltitudeMode}
  */
 google.maps.Maps3DLibrary.prototype.AltitudeMode;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * @type {typeof google.maps.maps3d.AutofitsCameraAnimation}
+ */
+google.maps.Maps3DLibrary.prototype.AutofitsCameraAnimation;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * @type {typeof google.maps.maps3d.CirclePathElement}
+ */
+google.maps.Maps3DLibrary.prototype.CirclePathElement;
+
+/**
+ * @type {typeof google.maps.maps3d.FlattenerElement}
+ */
+google.maps.Maps3DLibrary.prototype.FlattenerElement;
 
 /**
  * @type {typeof google.maps.maps3d.GestureHandling}
@@ -6827,6 +6848,16 @@ google.maps.Maps3DLibrary.prototype.Marker3DElement;
  * @type {typeof google.maps.maps3d.Marker3DInteractiveElement}
  */
 google.maps.Maps3DLibrary.prototype.Marker3DInteractiveElement;
+
+/**
+ * @type {typeof google.maps.maps3d.MarkerElement}
+ */
+google.maps.Maps3DLibrary.prototype.MarkerElement;
+
+/**
+ * @type {typeof google.maps.maps3d.MarkerInteractiveElement}
+ */
+google.maps.Maps3DLibrary.prototype.MarkerInteractiveElement;
 
 /**
  * @type {typeof google.maps.maps3d.Model3DElement}
@@ -7037,7 +7068,7 @@ google.maps.MapsLibrary.prototype.ZoomChangeEvent;
  * Base class for managing network errors in Maps.
  *
  * Access by calling `const {MapsNetworkError} = await
- * google.maps.importLibrary("core")`. See
+ * google.maps.importLibrary("core");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {Error}
  * @constructor
@@ -7061,7 +7092,7 @@ google.maps.MapsNetworkError.prototype.endpoint;
  * instances.
  *
  * Access by calling `const {MapsNetworkErrorEndpoint} = await
- * google.maps.importLibrary("core")`. See
+ * google.maps.importLibrary("core");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -7165,7 +7196,7 @@ google.maps.MapsNetworkErrorEndpoint = {
  * code in HTTP).
  *
  * Access by calling `const {MapsRequestError} = await
- * google.maps.importLibrary("core")`. See
+ * google.maps.importLibrary("core");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {google.maps.MapsNetworkError}
  * @constructor
@@ -7177,7 +7208,7 @@ google.maps.MapsRequestError = function() {};
  * 5xx code in HTTP).
  *
  * Access by calling `const {MapsServerError} = await
- * google.maps.importLibrary("core")`. See
+ * google.maps.importLibrary("core");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {google.maps.MapsNetworkError}
  * @constructor
@@ -7187,7 +7218,7 @@ google.maps.MapsServerError = function() {};
 /**
  *
  * Access by calling `const {Marker} = await
- * google.maps.importLibrary("marker")`. See
+ * google.maps.importLibrary("marker");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.MarkerOptions=} opts
  * @extends {google.maps.MVCObject}
@@ -7325,7 +7356,7 @@ google.maps.Marker.prototype.setDraggable = function(flag) {};
 /**
  * Set the icon for the {@link google.maps.Marker}. See {@link
  * google.maps.MarkerOptions.icon}.
- * @param {(string|google.maps.Icon|google.maps.Symbol|null)=} icon
+ * @param {string|google.maps.Icon|google.maps.Symbol|null=} icon
  * @return {undefined}
  */
 google.maps.Marker.prototype.setIcon = function(icon) {};
@@ -7333,8 +7364,8 @@ google.maps.Marker.prototype.setIcon = function(icon) {};
 /**
  * Set the label for the {@link google.maps.Marker}. See {@link
  * google.maps.MarkerOptions.label}.
- * @param {(string|google.maps.MarkerLabel|null)=} label The label can either be
- *     a character string or a {@link google.maps.MarkerLabel} object.
+ * @param {string|google.maps.MarkerLabel|null=} label The label can either be a
+ *     character string or a {@link google.maps.MarkerLabel} object.
  * @return {undefined}
  */
 google.maps.Marker.prototype.setLabel = function(label) {};
@@ -7363,7 +7394,7 @@ google.maps.Marker.prototype.setOptions = function(options) {};
 
 /**
  * Set the postition for the {@link google.maps.Marker}.
- * @param {(google.maps.LatLng|google.maps.LatLngLiteral|null)=} latlng The new
+ * @param {google.maps.LatLng|google.maps.LatLngLiteral|null=} latlng The new
  *     position.
  * @return {undefined}
  */
@@ -7718,7 +7749,7 @@ google.maps.MaxZoomResult.prototype.zoom;
  * available for a given location.
  *
  * Access by calling `const {MaxZoomService} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -7744,7 +7775,7 @@ google.maps.MaxZoomService.prototype.getMaxZoomAtLatLng = function(
  * <code>google.maps.MaxZoomStatus.OK</code>.
  *
  * Access by calling `const {MaxZoomStatus} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -7781,7 +7812,7 @@ google.maps.MotionTrackingControlOptions.prototype.position;
  * [0, 360) degrees.</li> </ul>
  *
  * Access by calling `const {Orientation3D} = await
- * google.maps.importLibrary("core")`. See
+ * google.maps.importLibrary("core");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.Orientation3D|!google.maps.Orientation3DLiteral} value
  *     The initializing value.
@@ -7831,11 +7862,11 @@ google.maps.Orientation3D.prototype.tilt;
 google.maps.Orientation3D.prototype.equals = function(other) {};
 
 /**
- * Converts to JSON representation. This function is intended to be used via
- * JSON.stringify.
+ * Converts to a plain object.
+ * @param {string=} key
  * @return {!google.maps.Orientation3DLiteral}
  */
-google.maps.Orientation3D.prototype.toJSON = function() {};
+google.maps.Orientation3D.prototype.toJSON = function(key) {};
 
 /**
  * Object literals are accepted in place of <code>Orientation3D</code> objects,
@@ -7888,8 +7919,8 @@ google.maps.Orientation3DLiteral.prototype.tilt;
  * the element, such as zoom, center, or map type.
  *
  * Access by calling `const {OverlayView} = await
- * google.maps.importLibrary("maps")` or `const {OverlayView} = await
- * google.maps.importLibrary("streetView")`. See
+ * google.maps.importLibrary("maps");` or `const {OverlayView} = await
+ * google.maps.importLibrary("streetView");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {google.maps.MVCObject}
  * @constructor
@@ -7919,19 +7950,19 @@ google.maps.OverlayView.preventMapHitsFrom = function(element) {};
  * to the MapPanes. This method is called after onAdd(), and is called on change
  * of zoom or center. It is not recommended to do computationally expensive work
  * in this method.
- * @return {undefined}
+ * @return {void}
  */
 google.maps.OverlayView.prototype.draw = function() {};
 
 /**
- * @return {google.maps.Map|google.maps.StreetViewPanorama}
+ * @return {!google.maps.Map|!google.maps.StreetViewPanorama}
  */
 google.maps.OverlayView.prototype.getMap = function() {};
 
 /**
  * Returns the panes in which this OverlayView can be rendered. The panes are
  * not initialized until <code>onAdd</code> is called by the API.
- * @return {?google.maps.MapPanes}
+ * @return {!google.maps.MapPanes|null}
  */
 google.maps.OverlayView.prototype.getPanes = function() {};
 
@@ -7947,20 +7978,20 @@ google.maps.OverlayView.prototype.getProjection = function() {};
  * Implement this method to initialize the overlay DOM elements. This method is
  * called once after setMap() is called with a valid map. At this point, panes
  * and projection will have been initialized.
- * @return {undefined}
+ * @return {void}
  */
 google.maps.OverlayView.prototype.onAdd = function() {};
 
 /**
  * Implement this method to remove your elements from the DOM. This method is
  * called once following a call to setMap(null).
- * @return {undefined}
+ * @return {void}
  */
 google.maps.OverlayView.prototype.onRemove = function() {};
 
 /**
  * Adds the overlay to the map or panorama.
- * @param {google.maps.Map|google.maps.StreetViewPanorama|null} map The map or
+ * @param {!google.maps.Map|!google.maps.StreetViewPanorama|null} map The map or
  *     panorama. If <code>null</code>, the layer will be removed.
  * @return {undefined}
  */
@@ -8379,13 +8410,18 @@ google.maps.PlacesLibrary.prototype.SearchByTextRankPreference;
 google.maps.PlacesLibrary.prototype.SearchNearbyRankPreference;
 
 /**
+ * @type {typeof google.maps.places.SecondaryOpeningHours}
+ */
+google.maps.PlacesLibrary.prototype.SecondaryOpeningHours;
+
+/**
  * @type {typeof google.maps.places.StringRange}
  */
 google.maps.PlacesLibrary.prototype.StringRange;
 
 /**
  *
- * Access by calling `const {Point} = await google.maps.importLibrary("core")`.
+ * Access by calling `const {Point} = await google.maps.importLibrary("core");`.
  * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {number} x
  * @param {number} y
@@ -8464,9 +8500,9 @@ google.maps.PolyMouseEvent.prototype.vertex;
  * you.
  *
  * Access by calling `const {Polygon} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {(!google.maps.PolygonOptions|null)=} opts
+ * @param {!google.maps.PolygonOptions|null=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -8680,9 +8716,9 @@ google.maps.PolygonOptions.prototype.zIndex;
  * A polyline is a linear overlay of connected line segments on the map.
  *
  * Access by calling `const {Polyline} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {(!google.maps.PolylineOptions|null)=} opts
+ * @param {!google.maps.PolylineOptions|null=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -8898,7 +8934,7 @@ google.maps.Projection.prototype.fromPointToLatLng = function(
  * href="https://grpc.github.io/grpc/core/md_doc_statuscodes.html">https://grpc.github.io/grpc/core/md_doc_statuscodes.html</a>.
  *
  * Access by calling `const {RPCStatus} = await
- * google.maps.importLibrary("core")`. See
+ * google.maps.importLibrary("core");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -9002,9 +9038,9 @@ google.maps.RPCStatus = {
  * A rectangle overlay.
  *
  * Access by calling `const {Rectangle} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {(!google.maps.RectangleOptions|null)=} opts
+ * @param {!google.maps.RectangleOptions|null=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -9180,7 +9216,7 @@ google.maps.RectangleOptions.prototype.zIndex;
 /**
  *
  * Access by calling `const {RenderingType} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -9322,6 +9358,12 @@ google.maps.RoutesLibrary.prototype.RoadFeatureState;
  * @type {typeof google.maps.routes.Route}
  */
 google.maps.RoutesLibrary.prototype.Route;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * @type {typeof google.maps.routes.Route3DElement}
+ */
+google.maps.RoutesLibrary.prototype.Route3DElement;
 
 /**
  * @type {typeof google.maps.routes.RouteLabel}
@@ -9500,7 +9542,7 @@ google.maps.ScaleControlStyle = {
  * Settings which control the behavior of the Maps JavaScript API as a whole.
  *
  * Access by calling `const {Settings} = await
- * google.maps.importLibrary("core")`. See
+ * google.maps.importLibrary("core");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -9535,7 +9577,7 @@ google.maps.Settings.getInstance = function() {};
 
 /**
  *
- * Access by calling `const {Size} = await google.maps.importLibrary("core")`.
+ * Access by calling `const {Size} = await google.maps.importLibrary("core");`.
  * See https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {number} width
  * @param {number} height
@@ -9578,7 +9620,7 @@ google.maps.Size.prototype.toString = function() {};
  * target.
  *
  * Access by calling `const {SpatialRelationship} = await
- * google.maps.importLibrary("geocoding")`. See
+ * google.maps.importLibrary("geocoding");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -9659,7 +9701,7 @@ google.maps.StreetViewControlOptions.prototype.sources;
  * A layer that illustrates the locations where Street View is available.
  *
  * Access by calling `const {StreetViewCoverageLayer} = await
- * google.maps.importLibrary("streetView")`. See
+ * google.maps.importLibrary("streetView");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {google.maps.MVCObject}
  * @constructor
@@ -9847,7 +9889,7 @@ google.maps.StreetViewPanoRequest.prototype.pano;
  * <code>&lt;div&gt;</code> or bound to a <code>Map</code>.
  *
  * Access by calling `const {StreetViewPanorama} = await
- * google.maps.importLibrary("streetView")`. See
+ * google.maps.importLibrary("streetView");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!HTMLElement} container
  * @param {?google.maps.StreetViewPanoramaOptions=} opts
@@ -9876,7 +9918,7 @@ google.maps.StreetViewPanorama.prototype.focus = function() {};
 
 /**
  * Returns the set of navigation links for the Street View panorama.
- * @return {Array<google.maps.StreetViewLink>}
+ * @return {?Array<?google.maps.StreetViewLink>}
  */
 google.maps.StreetViewPanorama.prototype.getLinks = function() {};
 
@@ -9956,7 +9998,7 @@ google.maps.StreetViewPanorama.prototype.registerPanoProvider = function(
 
 /**
  * Sets the set of navigation links for the Street View panorama.
- * @param {Array<google.maps.StreetViewLink>} links
+ * @param {?Array<?google.maps.StreetViewLink>} links
  * @return {undefined}
  */
 google.maps.StreetViewPanorama.prototype.setLinks = function(links) {};
@@ -10267,7 +10309,7 @@ google.maps.StreetViewPov.prototype.pitch;
  * <code>google.maps.StreetViewPreference.BEST</code>.
  *
  * Access by calling `const {StreetViewPreference} = await
- * google.maps.importLibrary("streetView")`. See
+ * google.maps.importLibrary("streetView");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -10305,7 +10347,7 @@ google.maps.StreetViewResponse.prototype.data;
  * data.
  *
  * Access by calling `const {StreetViewService} = await
- * google.maps.importLibrary("streetView")`. See
+ * google.maps.importLibrary("streetView");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -10329,7 +10371,7 @@ google.maps.StreetViewService.prototype.getPanorama = function(
  * are specified as strings. For example, <code>'outdoor'</code>.
  *
  * Access by calling `const {StreetViewSource} = await
- * google.maps.importLibrary("streetView")`. See
+ * google.maps.importLibrary("streetView");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -10360,7 +10402,7 @@ google.maps.StreetViewSource = {
  * <code>google.maps.StreetViewStatus.OK</code>.
  *
  * Access by calling `const {StreetViewStatus} = await
- * google.maps.importLibrary("streetView")`. See
+ * google.maps.importLibrary("streetView");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -10425,7 +10467,7 @@ google.maps.StreetViewTileData.prototype.getTileUrl = function(
  * The possible positions of the stroke on a polygon.
  *
  * Access by calling `const {StrokePosition} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {number}
  */
@@ -10438,21 +10480,21 @@ google.maps.StrokePosition = {
   /**
    * The stroke lies inside the polygon.
    */
-  INSIDE: 1,
+  INSIDE: 0,
   /**
    * The stroke lies outside the polygon.
    */
-  OUTSIDE: 2,
+  OUTSIDE: 0,
 };
 
 /**
  * Creates a <code>MapType</code> with a custom style.
  *
  * Access by calling `const {StyledMapType} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {Array<google.maps.MapTypeStyle>} styles
- * @param {google.maps.StyledMapTypeOptions=} options
+ * @param {?Array<?google.maps.MapTypeStyle>} styles
+ * @param {?google.maps.StyledMapTypeOptions=} options
  * @implements {google.maps.MapType}
  * @extends {google.maps.MVCObject}
  * @constructor
@@ -10480,7 +10522,7 @@ google.maps.StyledMapType.prototype.minZoom;
 google.maps.StyledMapType.prototype.name;
 
 /**
- * @type {google.maps.Projection}
+ * @type {?google.maps.Projection}
  */
 google.maps.StyledMapType.prototype.projection;
 
@@ -10490,14 +10532,14 @@ google.maps.StyledMapType.prototype.projection;
 google.maps.StyledMapType.prototype.radius;
 
 /**
- * @type {google.maps.Size}
+ * @type {?google.maps.Size}
  */
 google.maps.StyledMapType.prototype.tileSize;
 
 /**
- * @param {google.maps.Point} tileCoord Tile coordinates.
+ * @param {?google.maps.Point} tileCoord Tile coordinates.
  * @param {number} zoom Tile zoom.
- * @param {Document} ownerDocument The document which owns this tile.
+ * @param {?Document} ownerDocument The document which owns this tile.
  * @return {?Element} Resulting tile.
  * @override
  */
@@ -10642,7 +10684,7 @@ google.maps.Symbol.prototype.strokeWeight;
  * Built-in symbol paths.
  *
  * Access by calling `const {SymbolPath} = await
- * google.maps.importLibrary("core")`. See
+ * google.maps.importLibrary("core");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {number}
  */
@@ -10654,19 +10696,19 @@ google.maps.SymbolPath = {
   /**
    * A backward-pointing open arrow.
    */
-  BACKWARD_OPEN_ARROW: 1,
+  BACKWARD_OPEN_ARROW: 0,
   /**
    * A circle.
    */
-  CIRCLE: 2,
+  CIRCLE: 0,
   /**
    * A forward-pointing closed arrow.
    */
-  FORWARD_CLOSED_ARROW: 3,
+  FORWARD_CLOSED_ARROW: 0,
   /**
    * A forward-pointing open arrow.
    */
-  FORWARD_OPEN_ARROW: 4,
+  FORWARD_OPEN_ARROW: 0,
 };
 
 /**
@@ -10700,7 +10742,7 @@ google.maps.Time.prototype.value;
  * A traffic layer.
  *
  * Access by calling `const {TrafficLayer} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.TrafficLayerOptions=} opts
  * @extends {google.maps.MVCObject}
@@ -10756,7 +10798,7 @@ google.maps.TrafficLayerOptions.prototype.map;
  * <code>'bestguess'</code> or <code>google.maps.TrafficModel.BEST_GUESS</code>.
  *
  * Access by calling `const {TrafficModel} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -10897,7 +10939,7 @@ google.maps.TransitFare.prototype.value;
  * A transit layer.
  *
  * Access by calling `const {TransitLayer} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {google.maps.MVCObject}
  * @constructor
@@ -10981,7 +11023,7 @@ google.maps.TransitLine.prototype.vehicle;
  * <code>google.maps.TransitMode.BUS</code>.
  *
  * Access by calling `const {TransitMode} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -11058,7 +11100,7 @@ google.maps.TransitOptions.prototype.routingPreference;
  * or <code>google.maps.TransitRoutePreference.LESS_WALKING</code>.
  *
  * Access by calling `const {TransitRoutePreference} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -11133,7 +11175,7 @@ google.maps.TransitVehicle.prototype.type;
  * <code>google.maps.TravelMode.BICYCLING</code>.
  *
  * Access by calling `const {TravelMode} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -11165,7 +11207,7 @@ google.maps.TravelMode = {
  * href="#DirectionsRequest">DirectionsRequest</a></code></i>.
  *
  * Access by calling `const {UnitSystem} = await
- * google.maps.importLibrary("core")`. See
+ * google.maps.importLibrary("core");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {number}
  */
@@ -11179,7 +11221,7 @@ google.maps.UnitSystem = {
    * Specifies that distances in the <code>DirectionsResult</code> should be
    * expressed in metric units.
    */
-  METRIC: 1,
+  METRIC: 0,
 };
 
 /**
@@ -11189,7 +11231,7 @@ google.maps.UnitSystem = {
  * <li>y is a real number.</li> <li>z is a real number.</li> </ul>
  *
  * Access by calling `const {Vector3D} = await
- * google.maps.importLibrary("core")`. See
+ * google.maps.importLibrary("core");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.Vector3D|!google.maps.Vector3DLiteral} value The
  *     initializing value.
@@ -11225,11 +11267,11 @@ google.maps.Vector3D.prototype.z;
 google.maps.Vector3D.prototype.equals = function(other) {};
 
 /**
- * Converts to JSON representation. This function is intended to be used via
- * JSON.stringify.
+ * Converts to a plain object.
+ * @param {string=} key
  * @return {!google.maps.Vector3DLiteral}
  */
-google.maps.Vector3D.prototype.toJSON = function() {};
+google.maps.Vector3D.prototype.toJSON = function(key) {};
 
 /**
  * Object literals are accepted in place of <code>Vector3D</code> objects, as a
@@ -11261,7 +11303,7 @@ google.maps.Vector3DLiteral.prototype.z;
  * Possible values for vehicle types.
  *
  * Access by calling `const {VehicleType} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -11430,7 +11472,7 @@ google.maps.WebGLDrawOptions.prototype.transformer;
  * google.maps.Map.DEMO_MAP_ID} as the {@link google.maps.MapOptions.mapId}).
  *
  * Access by calling `const {WebGLOverlayView} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {google.maps.MVCObject}
  * @constructor
@@ -11530,7 +11572,7 @@ google.maps.WebGLStateOptions.prototype.gl;
  * This event is created from monitoring zoom change.
  *
  * Access by calling `const {ZoomChangeEvent} = await
- * google.maps.importLibrary("maps")`. See
+ * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {Event}
  * @constructor
@@ -11551,112 +11593,6 @@ google.maps.ZoomControlOptions = function() {};
 google.maps.ZoomControlOptions.prototype.position;
 
 /**
- * Namespace for all public event functions
- *
- * Access by calling `const {event} = await google.maps.importLibrary("core")`.
- * See https://developers.google.com/maps/documentation/javascript/libraries.
- * @constructor
- */
-google.maps.event = function() {};
-
-/**
- * Adds the given listener function to the given event name for the given object
- * instance. Returns an identifier for this listener that can be used with
- * removeListener().
- * @param {!Object} instance
- * @param {string} eventName
- * @param {!Function} handler
- * @return {!google.maps.MapsEventListener}
- */
-google.maps.event.addListener = function(instance, eventName, handler) {};
-
-/**
- * Like addListener, but the handler removes itself after handling the first
- * event.
- * @param {!Object} instance
- * @param {string} eventName
- * @param {!Function} handler
- * @return {!google.maps.MapsEventListener}
- */
-google.maps.event.addListenerOnce = function(instance, eventName, handler) {};
-
-/**
- * Removes all listeners for all events for the given instance.
- * @param {!Object} instance
- * @return {void}
- */
-google.maps.event.clearInstanceListeners = function(instance) {};
-
-/**
- * Removes all listeners for the given event for the given instance.
- * @param {!Object} instance
- * @param {string} eventName
- * @return {void}
- */
-google.maps.event.clearListeners = function(instance, eventName) {};
-
-/**
- * Returns if there are listeners for the given event on the given instance. Can
- * be used to save the computation of expensive event details.
- * @param {!Object} instance
- * @param {string} eventName
- * @return {boolean}
- */
-google.maps.event.hasListeners = function(instance, eventName) {};
-
-/**
- * Removes the given listener, which should have been returned by addListener
- * above. Equivalent to calling <code>listener.remove()</code>.
- * @param {!google.maps.MapsEventListener} listener
- * @return {void}
- */
-google.maps.event.removeListener = function(listener) {};
-
-/**
- * Triggers the given event. All arguments after eventName are passed as
- * arguments to the listeners.
- * @param {!Object} instance
- * @param {string} eventName
- * @param {...?} eventArgs
- * @return {void}
- */
-google.maps.event.trigger = function(instance, eventName, eventArgs) {};
-
-/**
- * Cross browser event handler registration. This listener is removed by calling
- * removeListener(handle) for the handle that is returned by this function.
- * @param {!Object} instance
- * @param {string} eventName
- * @param {!Function} handler
- * @param {boolean=} capture
- * @return {!google.maps.MapsEventListener}
- * @deprecated <code>google.maps.event.addDomListener()</code> is deprecated,
- *     use the standard <a
- *     href="https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener">addEventListener()</a>
- *     method instead. The feature will continue to work and there is no plan to
- *     decommission it.
- */
-google.maps.event.addDomListener = function(
-    instance, eventName, handler, capture) {};
-
-/**
- * Wrapper around addDomListener that removes the listener after the first
- * event.
- * @param {!Object} instance
- * @param {string} eventName
- * @param {!Function} handler
- * @param {boolean=} capture
- * @return {!google.maps.MapsEventListener}
- * @deprecated <code>google.maps.event.addDomListenerOnce()</code> is
- *     deprecated, use the standard <a
- *     href="https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener">addEventListener()</a>
- *     method instead. The feature will continue to work and there is no plan to
- *     decommission it.
- */
-google.maps.event.addDomListenerOnce = function(
-    instance, eventName, handler, capture) {};
-
-/**
  * @const
  */
 google.maps.addressValidation = {};
@@ -11667,7 +11603,7 @@ google.maps.addressValidation = {};
  * missing parts.
  *
  * Access by calling `const {Address} = await
- * google.maps.importLibrary("addressValidation")`. See
+ * google.maps.importLibrary("addressValidation");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -11737,7 +11673,7 @@ google.maps.addressValidation.Address.prototype.unresolvedTokens;
  * Represents a single component of an address (ex. street name, city).
  *
  * Access by calling `const {AddressComponent} = await
- * google.maps.importLibrary("addressValidation")`. See
+ * google.maps.importLibrary("addressValidation");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -11810,7 +11746,7 @@ google.maps.addressValidation.AddressComponent.prototype.unexpected;
  * populated for every address sent to the Address Validation API.
  *
  * Access by calling `const {AddressMetadata} = await
- * google.maps.importLibrary("addressValidation")`. See
+ * google.maps.importLibrary("addressValidation");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -11835,7 +11771,7 @@ google.maps.addressValidation.AddressMetadata.prototype.residential;
  * Static class for accessing the AddressValidation APIs.
  *
  * Access by calling `const {AddressValidation} = await
- * google.maps.importLibrary("addressValidation")`. See
+ * google.maps.importLibrary("addressValidation");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -11889,14 +11825,6 @@ google.maps.addressValidation.AddressValidation.prototype.verdict;
  */
 google.maps.addressValidation.AddressValidation.fetchAddressValidation =
     function(request) {};
-
-/**
- * Converts the AddressValidation class to a JSON object with the same
- * properties.
- * @return {!Object}
- */
-google.maps.addressValidation.AddressValidation.prototype.toJSON =
-    function() {};
 
 /**
  * Request interface for {@link
@@ -11958,7 +11886,7 @@ google.maps.addressValidation.AddressValidationRequest.prototype
  * component is correct.
  *
  * Access by calling `const {ConfirmationLevel} = await
- * google.maps.importLibrary("addressValidation")`. See
+ * google.maps.importLibrary("addressValidation");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -11972,7 +11900,7 @@ google.maps.addressValidation.ConfirmationLevel = {
  * Contains information about the place the input was geocoded to.
  *
  * Access by calling `const {Geocode} = await
- * google.maps.importLibrary("addressValidation")`. See
+ * google.maps.importLibrary("addressValidation");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -12046,7 +11974,7 @@ google.maps.addressValidation.Geocode.prototype.fetchPlace = function() {};
  * the address is more granular.
  *
  * Access by calling `const {Granularity} = await
- * google.maps.importLibrary("addressValidation")`. See
+ * google.maps.importLibrary("addressValidation");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -12089,7 +12017,7 @@ google.maps.addressValidation.Granularity = {
  * of address accuracy or deliverability.
  *
  * Access by calling `const {PossibleNextAction} = await
- * google.maps.importLibrary("addressValidation")`. See
+ * google.maps.importLibrary("addressValidation");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -12132,7 +12060,7 @@ google.maps.addressValidation.PossibleNextAction = {
  * USPS representation of a US address.
  *
  * Access by calling `const {USPSAddress} = await
- * google.maps.importLibrary("addressValidation")`. See
+ * google.maps.importLibrary("addressValidation");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -12199,7 +12127,7 @@ google.maps.addressValidation.USPSAddress.prototype.zipCodeExtension;
  * if you utilize uspsData as the primary part of the response.
  *
  * Access by calling `const {USPSData} = await
- * google.maps.importLibrary("addressValidation")`. See
+ * google.maps.importLibrary("addressValidation");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -12454,7 +12382,7 @@ google.maps.addressValidation.USPSData.prototype.suiteLinkFootnote;
  * Represents the post-processed address for the supplied address.
  *
  * Access by calling `const {Verdict} = await
- * google.maps.importLibrary("addressValidation")`. See
+ * google.maps.importLibrary("addressValidation");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -12538,7 +12466,7 @@ google.maps.airQuality = {};
  * Displays air quality information for a given location.
  *
  * Access by calling `const {AirQualityMeterElement} = await
- * google.maps.importLibrary("airQuality")`. See
+ * google.maps.importLibrary("airQuality");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.airQuality.AirQualityMeterElementOptions=} options
  * @implements {google.maps.airQuality.AirQualityMeterElementOptions}
@@ -12565,8 +12493,6 @@ google.maps.airQuality.AirQualityMeterElement.prototype.location;
  * @type {string|null}
  */
 google.maps.airQuality.AirQualityMeterElement.prototype.requestedLanguage;
-
-
 
 /**
  * AirQualityMeterElement options.
@@ -12626,9 +12552,9 @@ google.maps.drawing.DrawingControlOptions.prototype.position;
  * allowing the user to switch drawing mode.
  *
  * Access by calling `const {DrawingManager} = await
- * google.maps.importLibrary("drawing")`. See
+ * google.maps.importLibrary("drawing");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {google.maps.drawing.DrawingManagerOptions=} options
+ * @param {?google.maps.drawing.DrawingManagerOptions=} options
  * @extends {google.maps.MVCObject}
  * @constructor
  * @deprecated Drawing library functionality in the Maps JavaScript API is
@@ -12649,7 +12575,7 @@ google.maps.drawing.DrawingManager.prototype.getDrawingMode = function() {};
  * Returns the <code>Map</code> to which the <code>DrawingManager</code> is
  * attached, which is the <code>Map</code> on which the overlays created will be
  * placed.
- * @return {google.maps.Map}
+ * @return {?google.maps.Map}
  */
 google.maps.drawing.DrawingManager.prototype.getMap = function() {};
 
@@ -12669,14 +12595,14 @@ google.maps.drawing.DrawingManager.prototype.setDrawingMode = function(
 /**
  * Attaches the <code>DrawingManager</code> object to the specified
  * <code>Map</code>.
- * @param {google.maps.Map} map
+ * @param {?google.maps.Map} map
  * @return {undefined}
  */
 google.maps.drawing.DrawingManager.prototype.setMap = function(map) {};
 
 /**
  * Sets the <code>DrawingManager</code>&#39;s options.
- * @param {google.maps.drawing.DrawingManagerOptions} options
+ * @param {?google.maps.drawing.DrawingManagerOptions} options
  * @return {undefined}
  */
 google.maps.drawing.DrawingManager.prototype.setOptions = function(options) {};
@@ -12788,7 +12714,7 @@ google.maps.drawing.OverlayCompleteEvent.prototype.type;
  * <code>google.maps.drawing.OverlayType.POLYGON</code>.
  *
  * Access by calling `const {OverlayType} = await
- * google.maps.importLibrary("drawing")`. See
+ * google.maps.importLibrary("drawing");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -12821,6 +12747,112 @@ google.maps.drawing.OverlayType = {
 };
 
 /**
+ * Namespace for all public event functions
+ *
+ * Access by calling `const {event} = await google.maps.importLibrary("core");`.
+ * See https://developers.google.com/maps/documentation/javascript/libraries.
+ * @const
+ */
+google.maps.event = {};
+
+/**
+ * Adds the given listener function to the given event name for the given object
+ * instance. Returns an identifier for this listener that can be used with
+ * removeListener().
+ * @param {!Object} instance
+ * @param {string} eventName
+ * @param {!Function} handler
+ * @return {!google.maps.MapsEventListener}
+ */
+google.maps.event.addListener = function(instance, eventName, handler) {};
+
+/**
+ * Like addListener, but the handler removes itself after handling the first
+ * event.
+ * @param {!Object} instance
+ * @param {string} eventName
+ * @param {!Function} handler
+ * @return {!google.maps.MapsEventListener}
+ */
+google.maps.event.addListenerOnce = function(instance, eventName, handler) {};
+
+/**
+ * Removes all listeners for all events for the given instance.
+ * @param {!Object} instance
+ * @return {void}
+ */
+google.maps.event.clearInstanceListeners = function(instance) {};
+
+/**
+ * Removes all listeners for the given event for the given instance.
+ * @param {!Object} instance
+ * @param {string} eventName
+ * @return {void}
+ */
+google.maps.event.clearListeners = function(instance, eventName) {};
+
+/**
+ * Returns if there are listeners for the given event on the given instance. Can
+ * be used to save the computation of expensive event details.
+ * @param {!Object} instance
+ * @param {string} eventName
+ * @return {boolean}
+ */
+google.maps.event.hasListeners = function(instance, eventName) {};
+
+/**
+ * Removes the given listener, which should have been returned by addListener
+ * above. Equivalent to calling <code>listener.remove()</code>.
+ * @param {!google.maps.MapsEventListener} listener
+ * @return {void}
+ */
+google.maps.event.removeListener = function(listener) {};
+
+/**
+ * Triggers the given event. All arguments after eventName are passed as
+ * arguments to the listeners.
+ * @param {!Object} instance
+ * @param {string} eventName
+ * @param {...*} eventArgs
+ * @return {void}
+ */
+google.maps.event.trigger = function(instance, eventName, eventArgs) {};
+
+/**
+ * Cross browser event handler registration. This listener is removed by calling
+ * removeListener(handle) for the handle that is returned by this function.
+ * @param {!Object} instance
+ * @param {string} eventName
+ * @param {!Function} handler
+ * @param {boolean=} capture
+ * @return {!google.maps.MapsEventListener}
+ * @deprecated <code>google.maps.event.addDomListener()</code> is deprecated,
+ *     use the standard <a
+ *     href="https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener">addEventListener()</a>
+ *     method instead. The feature will continue to work and there is no plan to
+ *     decommission it.
+ */
+google.maps.event.addDomListener = function(
+    instance, eventName, handler, capture) {};
+
+/**
+ * Wrapper around addDomListener that removes the listener after the first
+ * event.
+ * @param {!Object} instance
+ * @param {string} eventName
+ * @param {!Function} handler
+ * @param {boolean=} capture
+ * @return {!google.maps.MapsEventListener}
+ * @deprecated <code>google.maps.event.addDomListenerOnce()</code> is
+ *     deprecated, use the standard <a
+ *     href="https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener">addEventListener()</a>
+ *     method instead. The feature will continue to work and there is no plan to
+ *     decommission it.
+ */
+google.maps.event.addDomListenerOnce = function(
+    instance, eventName, handler, capture) {};
+
+/**
  * @const
  */
 google.maps.geometry = {};
@@ -12829,11 +12861,11 @@ google.maps.geometry = {};
  * Utilities for polyline encoding and decoding.
  *
  * Access by calling `const {encoding} = await
- * google.maps.importLibrary("geometry")`. See
+ * google.maps.importLibrary("geometry");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @constructor
+ * @const
  */
-google.maps.geometry.encoding = function() {};
+google.maps.geometry.encoding = {};
 
 /**
  * Decodes an encoded path string into a sequence of LatLngs.
@@ -12854,11 +12886,11 @@ google.maps.geometry.encoding.encodePath = function(path) {};
  * Utility functions for computations involving polygons and polylines.
  *
  * Access by calling `const {poly} = await
- * google.maps.importLibrary("geometry")`. See
+ * google.maps.importLibrary("geometry");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @constructor
+ * @const
  */
-google.maps.geometry.poly = function() {};
+google.maps.geometry.poly = {};
 
 /**
  * Computes whether the given point lies inside the specified polygon.
@@ -12887,11 +12919,11 @@ google.maps.geometry.poly.isLocationOnEdge = function(
  * default radius is Earth&#39;s radius of 6378137 meters.
  *
  * Access by calling `const {spherical} = await
- * google.maps.importLibrary("geometry")`. See
+ * google.maps.importLibrary("geometry");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @constructor
+ * @const
  */
-google.maps.geometry.spherical = function() {};
+google.maps.geometry.spherical = {};
 
 /**
  * Returns the unsigned area of a closed path, in the range [0, 2×pi×radius²].
@@ -12994,6 +13026,18 @@ google.maps.geometry.spherical.computeSignedArea = function(loop, radius) {};
 google.maps.geometry.spherical.interpolate = function(from, to, fraction) {};
 
 /**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * Returns the position which lies the given fraction of the way along the given
+ * path. If passing LatLngAltitude objects, altitude is currently ignored, but
+ * future versions may take altitude into account.
+ * @param {!Array<!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral>}
+ *     path
+ * @param {number} fraction
+ * @return {!google.maps.LatLngLiteral}
+ */
+google.maps.geometry.spherical.traversePath = function(path, fraction) {};
+
+/**
  * @const
  */
 google.maps.journeySharing = {};
@@ -13026,35 +13070,35 @@ google.maps.journeySharing.AuthTokenContext = function() {};
 /**
  * When provided, the minted token should have a private
  * <code>DeliveryVehicleId</code> claim for the provided deliveryVehicleId.
- * @type {string|null|undefined}
+ * @type {?string|undefined}
  */
 google.maps.journeySharing.AuthTokenContext.prototype.deliveryVehicleId;
 
 /**
  * When provided, the minted token should have a private <code>TaskId</code>
  * claim for the provided taskId.
- * @type {string|null|undefined}
+ * @type {?string|undefined}
  */
 google.maps.journeySharing.AuthTokenContext.prototype.taskId;
 
 /**
  * When provided, the minted token should have a private <code>TrackingId</code>
  * claim for the provided trackingId.
- * @type {string|null|undefined}
+ * @type {?string|undefined}
  */
 google.maps.journeySharing.AuthTokenContext.prototype.trackingId;
 
 /**
  * When provided, the minted token should have a private <code>TripId</code>
  * claim for the provided tripId.
- * @type {string|null|undefined}
+ * @type {?string|undefined}
  */
 google.maps.journeySharing.AuthTokenContext.prototype.tripId;
 
 /**
  * When provided, the minted token should have a private <code>VehicleId</code>
  * claim for the provided vehicleId.
- * @type {string|null|undefined}
+ * @type {?string|undefined}
  */
 google.maps.journeySharing.AuthTokenContext.prototype.vehicleId;
 
@@ -13087,7 +13131,7 @@ google.maps.journeySharing.AuthTokenFetcherOptions.prototype.serviceType;
  * Automatic viewport mode.
  *
  * Access by calling `const {AutomaticViewportMode} = await
- * google.maps.importLibrary("journeySharing")`. See
+ * google.maps.importLibrary("journeySharing");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -13270,7 +13314,7 @@ google.maps.journeySharing.DeliveryVehicleStop.prototype.tasks;
  * google.maps.journeySharing.DeliveryVehicleStop}.
  *
  * Access by calling `const {DeliveryVehicleStopState} = await
- * google.maps.importLibrary("journeySharing")`. See
+ * google.maps.importLibrary("journeySharing");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -13298,7 +13342,7 @@ google.maps.journeySharing.DeliveryVehicleStopState = {
  * Delivery Fleet Location Provider.
  *
  * Access by calling `const {FleetEngineDeliveryFleetLocationProvider} = await
- * google.maps.importLibrary("journeySharing")`. See
+ * google.maps.importLibrary("journeySharing");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.journeySharing.FleetEngineDeliveryFleetLocationProviderOptions}
  *     options Options to pass to the location provider.
@@ -13310,7 +13354,7 @@ google.maps.journeySharing.FleetEngineDeliveryFleetLocationProvider = function(
 
 /**
  * The filter applied when fetching the delivery vehicles.
- * @type {string|null|undefined}
+ * @type {?string|undefined}
  */
 google.maps.journeySharing.FleetEngineDeliveryFleetLocationProvider.prototype
     .deliveryVehicleFilter;
@@ -13374,8 +13418,8 @@ google.maps.journeySharing.FleetEngineDeliveryFleetLocationProviderOptions
  * marker have changed.<br><br>See {@link
  * google.maps.journeySharing.DeliveryVehicleMarkerCustomizationFunctionParams}
  * for a list of supplied parameters and their uses.</li></ul>
- * @type {(function(!google.maps.journeySharing.DeliveryVehicleMarkerCustomizationFunctionParams):
- *     void)|null|undefined}
+ * @type {?(function(!google.maps.journeySharing.DeliveryVehicleMarkerCustomizationFunctionParams):
+ *     void)|undefined}
  */
 google.maps.journeySharing.FleetEngineDeliveryFleetLocationProviderOptions
     .prototype.deliveryVehicleMarkerCustomization;
@@ -13430,7 +13474,7 @@ google.maps.journeySharing.FleetEngineDeliveryFleetLocationProviderUpdateEvent
  * Delivery Vehicle Location Provider.
  *
  * Access by calling `const {FleetEngineDeliveryVehicleLocationProvider} = await
- * google.maps.importLibrary("journeySharing")`. See
+ * google.maps.importLibrary("journeySharing");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions}
  *     options Options to pass to the location provider.
@@ -13702,8 +13746,8 @@ google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions
  * changed.<br><br>See {@link
  * google.maps.journeySharing.TaskMarkerCustomizationFunctionParams} for a list
  * of supplied parameters and their uses.</li></ul>
- * @type {(function(!google.maps.journeySharing.TaskMarkerCustomizationFunctionParams):
- *     void)|null|undefined}
+ * @type {?(function(!google.maps.journeySharing.TaskMarkerCustomizationFunctionParams):
+ *     void)|undefined}
  */
 google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions
     .prototype.taskOutcomeMarkerCustomization;
@@ -13742,7 +13786,7 @@ google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderUpdateEvent
  * Fleet Location Provider.
  *
  * Access by calling `const {FleetEngineFleetLocationProvider} = await
- * google.maps.importLibrary("journeySharing")`. See
+ * google.maps.importLibrary("journeySharing");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.journeySharing.FleetEngineFleetLocationProviderOptions}
  *     options Options to pass to the location provider.
@@ -13772,7 +13816,7 @@ google.maps.journeySharing.FleetEngineFleetLocationProvider.prototype
 
 /**
  * The filter applied when fetching the vehicles.
- * @type {string|null|undefined}
+ * @type {?string|undefined}
  */
 google.maps.journeySharing.FleetEngineFleetLocationProvider.prototype
     .vehicleFilter;
@@ -13848,8 +13892,8 @@ google.maps.journeySharing.FleetEngineFleetLocationProviderOptions.prototype
  * marker have changed.<br><br>See {@link
  * google.maps.journeySharing.VehicleMarkerCustomizationFunctionParams} for a
  * list of supplied parameters and their uses.</li></ul>
- * @type {(function(!google.maps.journeySharing.VehicleMarkerCustomizationFunctionParams):
- *     void)|null|undefined}
+ * @type {?(function(!google.maps.journeySharing.VehicleMarkerCustomizationFunctionParams):
+ *     void)|undefined}
  */
 google.maps.journeySharing.FleetEngineFleetLocationProviderOptions.prototype
     .vehicleMarkerCustomization;
@@ -13874,7 +13918,7 @@ google.maps.journeySharing.FleetEngineFleetLocationProviderUpdateEvent.prototype
  * Types of Fleet Engine services.
  *
  * Access by calling `const {FleetEngineServiceType} = await
- * google.maps.importLibrary("journeySharing")`. See
+ * google.maps.importLibrary("journeySharing");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -13901,7 +13945,7 @@ google.maps.journeySharing.FleetEngineServiceType = {
  * Shipment location provider.
  *
  * Access by calling `const {FleetEngineShipmentLocationProvider} = await
- * google.maps.importLibrary("journeySharing")`. See
+ * google.maps.importLibrary("journeySharing");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.journeySharing.FleetEngineShipmentLocationProviderOptions}
  *     options Options for the location provider.
@@ -14128,7 +14172,7 @@ google.maps.journeySharing.FleetEngineTaskFilterOptions.prototype.state;
  * Trip location provider.
  *
  * Access by calling `const {FleetEngineTripLocationProvider} = await
- * google.maps.importLibrary("journeySharing")`. See
+ * google.maps.importLibrary("journeySharing");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.journeySharing.FleetEngineTripLocationProviderOptions}
  *     options Options for the location provider.
@@ -14388,7 +14432,7 @@ google.maps.journeySharing.FleetEngineTripLocationProviderUpdateEvent.prototype
  * Vehicle Location Provider.
  *
  * Access by calling `const {FleetEngineVehicleLocationProvider} = await
- * google.maps.importLibrary("journeySharing")`. See
+ * google.maps.importLibrary("journeySharing");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.journeySharing.FleetEngineVehicleLocationProviderOptions}
  *     options Options to pass to the location provider.
@@ -14671,7 +14715,7 @@ google.maps.journeySharing.FleetEngineVehicleLocationProviderUpdateEvent
  * The map view.
  *
  * Access by calling `const {JourneySharingMapView} = await
- * google.maps.importLibrary("journeySharing")`. See
+ * google.maps.importLibrary("journeySharing");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.journeySharing.JourneySharingMapViewOptions} options
  *     Options for the map view.
@@ -15063,7 +15107,7 @@ google.maps.journeySharing.JourneySharingMapViewOptions = function() {};
  * enables the map view to automatically adjust the viewport to fit vehicle
  * markers, location markers, and any visible anticipated route polylines. Set
  * this to NONE to turn off automatic fitting.
- * @type {google.maps.journeySharing.AutomaticViewportMode|null|undefined}
+ * @type {?google.maps.journeySharing.AutomaticViewportMode|undefined}
  */
 google.maps.journeySharing.JourneySharingMapViewOptions.prototype
     .automaticViewportMode;
@@ -15083,7 +15127,7 @@ google.maps.journeySharing.JourneySharingMapViewOptions.prototype
 
 /**
  * Map options passed into the google.maps.Map constructor.
- * @type {google.maps.MapOptions|null|undefined}
+ * @type {?google.maps.MapOptions|undefined}
  */
 google.maps.journeySharing.JourneySharingMapViewOptions.prototype.mapOptions;
 
@@ -15110,7 +15154,7 @@ google.maps.journeySharing.JourneySharingMapViewOptions.prototype
  * different MarkerSetupOptions objects. If markerOptions is unset or null, it
  * will be overwritten with the default. Any value set for markerOptions.map or
  * markerOptions.position will be ignored.
- * @type {google.maps.journeySharing.MarkerSetup|null|undefined}
+ * @type {?google.maps.journeySharing.MarkerSetup|undefined}
  * @deprecated Marker setup is deprecated. Use the
  *     <code>MarkerCustomizationFunction</code> methods for your location
  *     provider instead. This field will be removed in the future.
@@ -15131,7 +15175,7 @@ google.maps.journeySharing.JourneySharingMapViewOptions.prototype
  * MarkerSetupOptions objects. If markerOptions is unset or null, it will be
  * overwritten with the default. Any value set for markerOptions.map or
  * markerOptions.position will be ignored.
- * @type {google.maps.journeySharing.MarkerSetup|null|undefined}
+ * @type {?google.maps.journeySharing.MarkerSetup|undefined}
  * @deprecated Marker setup is deprecated. Use the
  *     <code>MarkerCustomizationFunction</code> methods for your location
  *     provider instead. This field will be removed in the future.
@@ -15152,7 +15196,7 @@ google.maps.journeySharing.JourneySharingMapViewOptions.prototype
  * different MarkerSetupOptions objects. If markerOptions is unset or null, it
  * will be overwritten with the default. Any value set for markerOptions.map or
  * markerOptions.position will be ignored.
- * @type {google.maps.journeySharing.MarkerSetup|null|undefined}
+ * @type {?google.maps.journeySharing.MarkerSetup|undefined}
  * @deprecated Marker setup is deprecated. Use the
  *     <code>MarkerCustomizationFunction</code> methods for your location
  *     provider instead. This field will be removed in the future.
@@ -15173,7 +15217,7 @@ google.maps.journeySharing.JourneySharingMapViewOptions.prototype
  * different MarkerSetupOptions objects. If markerOptions is unset or null, it
  * will be overwritten with the default. Any value set for markerOptions.map or
  * markerOptions.position will be ignored.
- * @type {google.maps.journeySharing.MarkerSetup|null|undefined}
+ * @type {?google.maps.journeySharing.MarkerSetup|undefined}
  * @deprecated Marker setup is deprecated. Use the
  *     <code>MarkerCustomizationFunction</code> methods for your location
  *     provider instead. This field will be removed in the future.
@@ -15194,7 +15238,7 @@ google.maps.journeySharing.JourneySharingMapViewOptions.prototype
  * MarkerSetupOptions objects. If markerOptions is unset or null, it will be
  * overwritten with the default. Any value set for markerOptions.map or
  * markerOptions.position will be ignored.
- * @type {google.maps.journeySharing.MarkerSetup|null|undefined}
+ * @type {?google.maps.journeySharing.MarkerSetup|undefined}
  * @deprecated Marker setup is deprecated. Use the
  *     <code>MarkerCustomizationFunction</code> methods for your location
  *     provider instead. This field will be removed in the future.
@@ -15215,7 +15259,7 @@ google.maps.journeySharing.JourneySharingMapViewOptions.prototype
  * MarkerSetupOptions objects. If markerOptions is unset or null, it will be
  * overwritten with the default. Any value set for markerOptions.map or
  * markerOptions.position will be ignored.
- * @type {google.maps.journeySharing.MarkerSetup|null|undefined}
+ * @type {?google.maps.journeySharing.MarkerSetup|undefined}
  * @deprecated Marker setup is deprecated. Use the
  *     <code>MarkerCustomizationFunction</code> methods for your location
  *     provider instead. This field will be removed in the future.
@@ -15237,7 +15281,7 @@ google.maps.journeySharing.JourneySharingMapViewOptions.prototype
  * polylineOptions or visible is unset or null, it will be overwritten with the
  * default. Any values set for polylineOptions.map or polylineOptions.path will
  * be ignored.
- * @type {google.maps.journeySharing.PolylineSetup|null|undefined}
+ * @type {?google.maps.journeySharing.PolylineSetup|undefined}
  * @deprecated Polyline setup is deprecated. Use the
  *     <code>PolylineCustomizationFunction</code> methods for your location
  *     provider instead. This field will be removed in the future.
@@ -15258,7 +15302,7 @@ google.maps.journeySharing.JourneySharingMapViewOptions.prototype
  * PolylineSetupOptions objects. <br><br>Any values set for polylineOptions.map
  * or polylineOptions.path will be ignored. Any unset or null value will be
  * overwritten with the default.
- * @type {google.maps.journeySharing.PolylineSetup|null|undefined}
+ * @type {?google.maps.journeySharing.PolylineSetup|undefined}
  * @deprecated Polyline setup is deprecated. Use the
  *     <code>PolylineCustomizationFunction</code> methods for your location
  *     provider instead. This field will be removed in the future.
@@ -15279,7 +15323,7 @@ google.maps.journeySharing.JourneySharingMapViewOptions.prototype
  * MarkerSetupOptions objects. If markerOptions is unset or null, it will be
  * overwritten with the default. Any value set for markerOptions.map or
  * markerOptions.position will be ignored.
- * @type {google.maps.journeySharing.MarkerSetup|null|undefined}
+ * @type {?google.maps.journeySharing.MarkerSetup|undefined}
  * @deprecated Marker setup is deprecated. Use the
  *     <code>MarkerCustomizationFunction</code> methods for your location
  *     provider instead. This field will be removed in the future.
@@ -15300,7 +15344,7 @@ google.maps.journeySharing.JourneySharingMapViewOptions.prototype
  * different MarkerSetupOptions objects. If markerOptions is unset or null, it
  * will be overwritten with the default. Any value set for markerOptions.map or
  * markerOptions.position will be ignored.
- * @type {google.maps.journeySharing.MarkerSetup|null|undefined}
+ * @type {?google.maps.journeySharing.MarkerSetup|undefined}
  * @deprecated Marker setup is deprecated. Use the
  *     <code>MarkerCustomizationFunction</code> methods for your location
  *     provider instead. This field will be removed in the future.
@@ -15375,7 +15419,7 @@ google.maps.journeySharing.MarkerSetupOptions = function() {};
 
 /**
  * Marker options.
- * @type {google.maps.MarkerOptions|null|undefined}
+ * @type {?google.maps.MarkerOptions|undefined}
  */
 google.maps.journeySharing.MarkerSetupOptions.prototype.markerOptions;
 
@@ -15494,13 +15538,13 @@ google.maps.journeySharing.PolylineSetupOptions = function() {};
 
 /**
  * Polyline options.
- * @type {google.maps.PolylineOptions|null|undefined}
+ * @type {?google.maps.PolylineOptions|undefined}
  */
 google.maps.journeySharing.PolylineSetupOptions.prototype.polylineOptions;
 
 /**
  * Polyline visibility.
- * @type {boolean|null|undefined}
+ * @type {?boolean|undefined}
  */
 google.maps.journeySharing.PolylineSetupOptions.prototype.visible;
 
@@ -15544,7 +15588,7 @@ google.maps.journeySharing.ShipmentPolylineCustomizationFunctionParams.prototype
  * The classification of polyline speed based on traffic data.
  *
  * Access by calling `const {Speed} = await
- * google.maps.importLibrary("journeySharing")`. See
+ * google.maps.importLibrary("journeySharing");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -15990,7 +16034,7 @@ google.maps.journeySharing.TripPolylineCustomizationFunctionParams.prototype
  * Trip types supported by a {@link google.maps.journeySharing.Vehicle}.
  *
  * Access by calling `const {TripType} = await
- * google.maps.importLibrary("journeySharing")`. See
+ * google.maps.importLibrary("journeySharing");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -16272,7 +16316,7 @@ google.maps.journeySharing.VehicleMarkerCustomizationFunctionParams.prototype
  * google.maps.journeySharing.Vehicle}.
  *
  * Access by calling `const {VehicleNavigationStatus} = await
- * google.maps.importLibrary("journeySharing")`. See
+ * google.maps.importLibrary("journeySharing");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -16320,7 +16364,7 @@ google.maps.journeySharing.VehiclePolylineCustomizationFunctionParams.prototype
  * The current state of a {@link google.maps.journeySharing.Vehicle}.
  *
  * Access by calling `const {VehicleState} = await
- * google.maps.importLibrary("journeySharing")`. See
+ * google.maps.importLibrary("journeySharing");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -16343,7 +16387,7 @@ google.maps.journeySharing.VehicleState = {
  * The type of {@link google.maps.journeySharing.Vehicle}.
  *
  * Access by calling `const {VehicleType} = await
- * google.maps.importLibrary("journeySharing")`. See
+ * google.maps.importLibrary("journeySharing");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -16442,7 +16486,7 @@ google.maps.journeySharing.VehicleWaypointMarkerCustomizationFunctionParams
  * Waypoint types supported by {@link google.maps.journeySharing.Vehicle}.
  *
  * Access by calling `const {WaypointType} = await
- * google.maps.importLibrary("journeySharing")`. See
+ * google.maps.importLibrary("journeySharing");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -16475,7 +16519,7 @@ google.maps.maps3d = {};
  * Specifies how altitude components in the coordinates are interpreted.
  *
  * Access by calling `const {AltitudeMode} = await
- * google.maps.importLibrary("maps3d")`. See
+ * google.maps.importLibrary("maps3d");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -16510,6 +16554,28 @@ google.maps.maps3d.AltitudeMode = {
 };
 
 /**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Specifies how the camera should behave when it moves to a new position to
+ * center itself according to its opted-in child elements.
+ *
+ * Access by calling `const {AutofitsCameraAnimation} = await
+ * google.maps.importLibrary("maps3d");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.maps3d.AutofitsCameraAnimation = {
+  /**
+   * Flies to the new position.
+   */
+  FLY_TO: 'FLY_TO',
+  /**
+   * Snaps to the new position without an animation.
+   */
+  NONE: 'NONE',
+};
+
+/**
  * CameraOptions object used to define the properties that can be set on a
  * camera object. The camera object can be anything that has a camera position,
  * e.g. a current map state, or a future requested animation state.
@@ -16518,10 +16584,31 @@ google.maps.maps3d.AltitudeMode = {
 google.maps.maps3d.CameraOptions = function() {};
 
 /**
+ * An enum specifying how to interpret the altitude value of the given
+ * <code>CameraOptions</code> object. This reuses the existing {@link
+ * google.maps.maps3d.AltitudeMode} enum.
+ * @default {@link google.maps.maps3d.AltitudeMode.ABSOLUTE}
+ * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
+ */
+google.maps.maps3d.CameraOptions.prototype.altitudeMode;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.cameraPosition}.
+ * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.maps3d.CameraOptions.prototype.cameraPosition;
+
+/**
  * See {@link google.maps.maps3d.Map3DElement.center}.
  * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
  */
 google.maps.maps3d.CameraOptions.prototype.center;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.fov}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.CameraOptions.prototype.fov;
 
 /**
  * See {@link google.maps.maps3d.Map3DElement.heading}.
@@ -16548,6 +16635,101 @@ google.maps.maps3d.CameraOptions.prototype.roll;
 google.maps.maps3d.CameraOptions.prototype.tilt;
 
 /**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * A 3D circle overlay on a 3D map.
+ *
+ * Access by calling `const {CirclePathElement} = await
+ * google.maps.importLibrary("maps3d");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.maps3d.CirclePathElementOptions=} options
+ * @implements {google.maps.maps3d.CirclePathElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.maps3d.CirclePathElement = function(options) {};
+
+/**
+ * The center of the circle.
+ * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral|null|undefined}
+ */
+google.maps.maps3d.CirclePathElement.prototype.center;
+
+/**
+ * The radius of the circle in meters.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.CirclePathElement.prototype.radius;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * CirclePathElementOptions object used to define the properties that can be set
+ * on a CirclePathElement.
+ * @record
+ */
+google.maps.maps3d.CirclePathElementOptions = function() {};
+
+/**
+ * See {@link google.maps.maps3d.CirclePathElement.center}.
+ * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral|null|undefined}
+ */
+google.maps.maps3d.CirclePathElementOptions.prototype.center;
+
+/**
+ * See {@link google.maps.maps3d.CirclePathElement.radius}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.CirclePathElementOptions.prototype.radius;
+
+/**
+ * A flattener element is used to flatten a specified area on the map.
+ *
+ * Access by calling `const {FlattenerElement} = await
+ * google.maps.importLibrary("maps3d");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.maps3d.FlattenerElementOptions=} options
+ * @implements {google.maps.maps3d.FlattenerElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.maps3d.FlattenerElement = function(options) {};
+
+/**
+ * The ordered sequence of coordinates that designates a closed loop. These
+ * paths define Exclusion Holes within the polygon&#39;s main path, which is the
+ * Flattening Zone. Areas within an innerPath are exempt from flattening.
+ * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>>|null|undefined}
+ */
+google.maps.maps3d.FlattenerElement.prototype.innerPaths;
+
+/**
+ * The ordered sequence of coordinates that designates a closed loop. This loop
+ * defines the Flattening Zone.
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ */
+google.maps.maps3d.FlattenerElement.prototype.path;
+
+/**
+ * FlattenerElementOptions object used to define the properties that can be set
+ * on a FlattenerElement.
+ * @record
+ */
+google.maps.maps3d.FlattenerElementOptions = function() {};
+
+/**
+ * See {@link google.maps.maps3d.FlattenerElement.innerPaths}.
+ * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral>|!Iterable<!google.maps.LatLngLiteral>>|null|undefined}
+ */
+google.maps.maps3d.FlattenerElementOptions.prototype.innerPaths;
+
+/**
+ * See {@link google.maps.maps3d.FlattenerElement.path}.
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ */
+google.maps.maps3d.FlattenerElementOptions.prototype.path;
+
+/**
  * Customization options for the FlyCameraAround Animation.
  * @record
  */
@@ -16569,7 +16751,8 @@ google.maps.maps3d.FlyAroundAnimationOptions.prototype.durationMillis;
 
 /**
  * Specifies the number of times an animation should repeat. If the number is
- * zero, the animation will complete immediately after it starts.
+ * zero, the animation will complete immediately after it starts. If
+ * Number.Infinity is passed, the animation will repeat forever.
  * @type {number|undefined}
  */
 google.maps.maps3d.FlyAroundAnimationOptions.prototype.repeatCount;
@@ -16608,7 +16791,7 @@ google.maps.maps3d.FlyToAnimationOptions.prototype.endCamera;
  * Specifies how gesture events should be handled on the map element.
  *
  * Access by calling `const {GestureHandling} = await
- * google.maps.importLibrary("maps3d")`. See
+ * google.maps.importLibrary("maps3d");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -16637,7 +16820,7 @@ google.maps.maps3d.GestureHandling = {
  * This event is created from clicking a Map3DElement.
  *
  * Access by calling `const {LocationClickEvent} = await
- * google.maps.importLibrary("maps3d")`. See
+ * google.maps.importLibrary("maps3d");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {Event}
  * @constructor
@@ -16659,7 +16842,7 @@ google.maps.maps3d.LocationClickEvent.prototype.position;
  * <code>mode</code> must be set for the 3D Map to start rendering.
  *
  * Access by calling `const {Map3DElement} = await
- * google.maps.importLibrary("maps3d")`. See
+ * google.maps.importLibrary("maps3d");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.maps3d.Map3DElementOptions=} options
  * @implements {google.maps.maps3d.Map3DElementOptions}
@@ -16667,6 +16850,14 @@ google.maps.maps3d.LocationClickEvent.prototype.position;
  * @constructor
  */
 google.maps.maps3d.Map3DElement = function(options) {};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * The animation to use for automatic camera fitting.
+ * @default <code>none</code>
+ * @type {!google.maps.maps3d.AutofitsCameraAnimation|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.autofitsCameraAnimation;
 
 /**
  * When set, restricts the position of the camera within the specified lat/lng
@@ -16681,9 +16872,21 @@ google.maps.maps3d.Map3DElement = function(options) {};
 google.maps.maps3d.Map3DElement.prototype.bounds;
 
 /**
+ * The position of the camera given as a LatLngAltitude. Will be derived if
+ * omitted. If <code>center</code> is omitted but <code>cameraPosition</code> is
+ * specified, <code>center</code> will derive from <code>cameraPosition.</code>
+ * If both are updated in the same run loop, <code>cameraPosition</code> will be
+ * favored. The fields <code>cameraPosition</code> and <code>center</code> can
+ * be one-to-one-derived from each other in context of the given shared heading,
+ * range, roll, and tilt.
+ * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.cameraPosition;
+
+/**
  * The center of the map given as a LatLngAltitude, where altitude is in meters
- * above ground level. Note that this is not necessarily where the camera is
- * located, as the <code>range</code> field affects the camera&#39;s distance
+ * above the mean sea level. Note that this is not necessarily where the camera
+ * is located, as the <code>range</code> field affects the camera&#39;s distance
  * from the map center. If not set, defaults to <code>{lat: 0, lng: 0, altitude:
  * 63170000}</code>. 63170000 meters is a maximum allowed altitude (Earth radius
  * multiplied by 10).
@@ -16704,6 +16907,14 @@ google.maps.maps3d.Map3DElement.prototype.defaultUIHidden;
  * @type {string|null|undefined}
  */
 google.maps.maps3d.Map3DElement.prototype.description;
+
+/**
+ * Specifies the vertical field of view in degrees. Valid values range from 5.0
+ * to 80.0. Higher values increase the visible area but may introduce
+ * perspective distortion. Default: 35.0.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.fov;
 
 /**
  * Controls cooperative gesture handling. When set to <code>COOPERATIVE</code>,
@@ -16743,9 +16954,7 @@ google.maps.maps3d.Map3DElement.prototype.language;
 
 /**
  * Specifies a map ID which will be used to fetch cloud-based map style for the
- * map. This should not be set after the map has been initialized. Therefore we
- * ensure the mapId is only set during initialization and do not publish this
- * attribute to public-facing channels.
+ * map.
  * @type {string|null|undefined}
  */
 google.maps.maps3d.Map3DElement.prototype.mapId;
@@ -16852,16 +17061,17 @@ google.maps.maps3d.Map3DElement.prototype.tilt;
  */
 google.maps.maps3d.Map3DElement.prototype.defaultUIDisabled;
 
-
-
 /**
  * This method orbits the camera around a given location for a given duration.
  * The animation can be repeated by the given number of {@link
  * google.maps.maps3d.FlyAroundAnimationOptions.repeatCount} times. <br /><br />
- * The camera will move in a clockwise direction. <br /><br /> The method is
- * asynchronous because animations can only start after the map has loaded a
- * minimum amount. The method returns once the animation has been started. <br
- * /><br /> If the number of {@link
+ * The camera will move in a clockwise direction. <br /><br /> The location
+ * being orbited around is specified via {@link
+ * google.maps.maps3d.CameraOptions.center}. This is the location that will show
+ * in the center of the viewport during the orbit animation, while the camera
+ * moves around it. <br /><br /> The method is asynchronous because animations
+ * can only start after the map has loaded a minimum amount. The method returns
+ * once the animation has been started. <br /><br /> If the number of {@link
  * google.maps.maps3d.FlyAroundAnimationOptions.repeatCount} times is zero, no
  * spin will occur, and the animation will complete immediately after it starts.
  * @param {!google.maps.maps3d.FlyAroundAnimationOptions} options
@@ -16872,15 +17082,17 @@ google.maps.maps3d.Map3DElement.prototype.flyCameraAround = function(
 
 /**
  * This method moves the camera parabolically from the current location to a
- * given end location over a given duration. <br /><br /> The method is
- * asynchronous because animations can only start after the map has loaded a
- * minimum amount. The method returns once the animation has been started.
+ * given end location over a given duration. End location can be specified
+ * via {@link google.maps.maps3d.CameraOptions.cameraPosition}, which controls
+ * the exact camera position, or via {@link
+ * google.maps.maps3d.CameraOptions.center}, which controls the visible viewport
+ * center of the map. <br /><br /> The method is asynchronous because animations
+ * can only start after the map has loaded a minimum amount. The method returns
+ * once the animation has been started.
  * @param {!google.maps.maps3d.FlyToAnimationOptions} options
  * @return {undefined}
  */
 google.maps.maps3d.Map3DElement.prototype.flyCameraTo = function(options) {};
-
-
 
 /**
  * This method stops any fly animation that might happen to be running. The
@@ -16900,10 +17112,23 @@ google.maps.maps3d.Map3DElement.prototype.stopCameraAnimation = function() {};
 google.maps.maps3d.Map3DElementOptions = function() {};
 
 /**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * See {@link google.maps.maps3d.Map3DElement.autofitsCameraAnimation}.
+ * @type {!google.maps.maps3d.AutofitsCameraAnimation|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.autofitsCameraAnimation;
+
+/**
  * See {@link google.maps.maps3d.Map3DElement.bounds}.
  * @type {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|null|undefined}
  */
 google.maps.maps3d.Map3DElementOptions.prototype.bounds;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.cameraPosition}.
+ * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.cameraPosition;
 
 /**
  * See {@link google.maps.maps3d.Map3DElement.center}.
@@ -16922,6 +17147,12 @@ google.maps.maps3d.Map3DElementOptions.prototype.defaultUIHidden;
  * @type {string|null|undefined}
  */
 google.maps.maps3d.Map3DElementOptions.prototype.description;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.fov}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.fov;
 
 /**
  * See {@link google.maps.maps3d.Map3DElement.gestureHandling}.
@@ -17032,7 +17263,7 @@ google.maps.maps3d.Map3DElementOptions.prototype.defaultUIDisabled;
  * Specifies a mode the map should be rendered in.
  *
  * Access by calling `const {MapMode} = await
- * google.maps.importLibrary("maps3d")`. See
+ * google.maps.importLibrary("maps3d");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -17042,6 +17273,10 @@ google.maps.maps3d.MapMode = {
    * or photorealistic imagery.
    */
   HYBRID: 'HYBRID',
+  /**
+   * This map mode displays a normal street map.
+   */
+  ROADMAP: 'ROADMAP',
   /**
    * This map mode displays satellite, or photorealistic imagery where
    * available.
@@ -17054,7 +17289,7 @@ google.maps.maps3d.MapMode = {
  * for the <code>Marker3DElement</code> to display.
  *
  * Access by calling `const {Marker3DElement} = await
- * google.maps.importLibrary("maps3d")`. See
+ * google.maps.importLibrary("maps3d");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.maps3d.Marker3DElementOptions=} options
  * @implements {google.maps.maps3d.Marker3DElementOptions}
@@ -17071,12 +17306,27 @@ google.maps.maps3d.Marker3DElement = function(options) {};
 google.maps.maps3d.Marker3DElement.prototype.altitudeMode;
 
 /**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * If provided, the specified marker will be made visible within the map
+ * viewport, alongside any other elements that have opted in.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Marker3DElement.prototype.autofitsCamera;
+
+/**
  * An enumeration specifying how a Marker3DElement should behave when it
  * collides with another Marker3DElement or with the basemap labels.
  * @default {@link google.maps.CollisionBehavior.REQUIRED}
  * @type {!google.maps.CollisionBehavior|null|undefined}
  */
 google.maps.maps3d.Marker3DElement.prototype.collisionBehavior;
+
+/**
+ * The collision priority used for collision detection.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Marker3DElement.prototype.collisionPriority;
 
 /**
  * Specifies whether this marker should be drawn or not when it&#39;s occluded.
@@ -17123,8 +17373,6 @@ google.maps.maps3d.Marker3DElement.prototype.sizePreserved;
  */
 google.maps.maps3d.Marker3DElement.prototype.zIndex;
 
-
-
 /**
  * Marker3DElementOptions object used to define the properties that can be set
  * on a Marker3DElement.
@@ -17143,6 +17391,12 @@ google.maps.maps3d.Marker3DElementOptions.prototype.altitudeMode;
  * @type {!google.maps.CollisionBehavior|null|undefined}
  */
 google.maps.maps3d.Marker3DElementOptions.prototype.collisionBehavior;
+
+/**
+ * See {@link google.maps.maps3d.Marker3DElement.collisionPriority}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Marker3DElementOptions.prototype.collisionPriority;
 
 /**
  * See {@link google.maps.maps3d.Marker3DElement.drawsWhenOccluded}.
@@ -17187,7 +17441,7 @@ google.maps.maps3d.Marker3DElementOptions.prototype.zIndex;
  * receives a <code>gmp-click</code> event.
  *
  * Access by calling `const {Marker3DInteractiveElement} = await
- * google.maps.importLibrary("maps3d")`. See
+ * google.maps.importLibrary("maps3d");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.maps3d.Marker3DInteractiveElementOptions=} options
  * @implements {google.maps.maps3d.Marker3DInteractiveElementOptions}
@@ -17209,8 +17463,6 @@ google.maps.maps3d.Marker3DInteractiveElement.prototype.gmpPopoverTargetElement;
  * @type {string}
  */
 google.maps.maps3d.Marker3DInteractiveElement.prototype.title;
-
-
 
 /**
  * Marker3DInteractiveElementOptions object used to define the properties that
@@ -17235,6 +17487,171 @@ google.maps.maps3d.Marker3DInteractiveElementOptions.prototype
 google.maps.maps3d.Marker3DInteractiveElementOptions.prototype.title;
 
 /**
+ * Shows a position on a 3D map. Note that the <code>position</code> must be set
+ * for the <code>MarkerElement</code> to display.
+ *
+ * Access by calling `const {MarkerElement} = await
+ * google.maps.importLibrary("maps3d");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.maps3d.MarkerElementOptions=} options
+ * @implements {google.maps.maps3d.MarkerElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.maps3d.MarkerElement = function(options) {};
+
+/**
+ * Specifies how the altitude component of the position is interpreted.
+ * @default {@link google.maps.maps3d.AltitudeMode.CLAMP_TO_GROUND}
+ * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
+ */
+google.maps.maps3d.MarkerElement.prototype.altitudeMode;
+
+/**
+ * A <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/CSS/length-percentage">CSS
+ * length-percentage</a> value which is used to offset the anchor point from the
+ * top left corner of the marker. This is useful when using a visual which has
+ * an anchor point that is different from the typical bottom center point of the
+ * default marker.
+ * @default -50%
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.MarkerElement.prototype.anchorLeft;
+
+/**
+ * A <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/CSS/length-percentage">CSS
+ * length-percentage</a> value which is used to offset the anchor point from the
+ * top left corner of the marker. This is useful when using a visual which has
+ * an anchor point that is different from the typical bottom center point of the
+ * default marker.
+ * @default -100%
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.MarkerElement.prototype.anchorTop;
+
+/**
+ * An enumeration specifying how a MarkerElement should behave when it collides
+ * with another <code>MarkerElement</code>, <code>Marker3DElement</code>, or
+ * with the basemap labels.
+ * @default {@link google.maps.CollisionBehavior.REQUIRED}
+ * @type {!google.maps.CollisionBehavior|null|undefined}
+ */
+google.maps.maps3d.MarkerElement.prototype.collisionBehavior;
+
+/**
+ * A number which is used to help determine relative priority between {@link
+ * google.maps.CollisionBehavior.OPTIONAL_AND_HIDES_LOWER_PRIORITY} markers
+ * (including {@link google.maps.maps3d.Marker3DElement} ). A higher
+ * <code>collisionPriority</code> value indicates higher priority.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.MarkerElement.prototype.collisionPriority;
+
+/**
+ * The location of the tip of the marker. Altitude is ignored in certain modes
+ * and thus optional.
+ * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.maps3d.MarkerElement.prototype.position;
+
+/**
+ * Rollover text. If provided, an accessibility text (e.g. for use with screen
+ * readers) will be added to the <code>MarkerElement</code> with the provided
+ * value.
+ * @type {string}
+ */
+google.maps.maps3d.MarkerElement.prototype.title;
+
+/**
+ * MarkerElementOptions object used to define the properties that can be set on
+ * a MarkerElement.
+ * @record
+ */
+google.maps.maps3d.MarkerElementOptions = function() {};
+
+/**
+ * See {@link google.maps.maps3d.MarkerElement.altitudeMode}.
+ * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
+ */
+google.maps.maps3d.MarkerElementOptions.prototype.altitudeMode;
+
+/**
+ * See {@link google.maps.maps3d.MarkerElement.anchorLeft}.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.MarkerElementOptions.prototype.anchorLeft;
+
+/**
+ * See {@link google.maps.maps3d.MarkerElement.anchorTop}.
+ * @type {string|null|undefined}
+ */
+google.maps.maps3d.MarkerElementOptions.prototype.anchorTop;
+
+/**
+ * See {@link google.maps.maps3d.MarkerElement.collisionBehavior}.
+ * @type {!google.maps.CollisionBehavior|null|undefined}
+ */
+google.maps.maps3d.MarkerElementOptions.prototype.collisionBehavior;
+
+/**
+ * See {@link google.maps.maps3d.MarkerElement.collisionPriority}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.MarkerElementOptions.prototype.collisionPriority;
+
+/**
+ * See {@link google.maps.maps3d.MarkerElement.position}.
+ * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ */
+google.maps.maps3d.MarkerElementOptions.prototype.position;
+
+/**
+ * See {@link google.maps.maps3d.MarkerElement.title}.
+ * @type {string|undefined}
+ */
+google.maps.maps3d.MarkerElementOptions.prototype.title;
+
+/**
+ * Shows a position on a 3D map. Note that the <code>position</code> must be set
+ * for the <code>MarkerInteractiveElement</code> to display. Unlike
+ * <code>MarkerElement</code>, <code>MarkerInteractiveElement</code> receives a
+ * <code>gmp-click</code> event.
+ *
+ * Access by calling `const {MarkerInteractiveElement} = await
+ * google.maps.importLibrary("maps3d");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.maps3d.MarkerInteractiveElementOptions=} options
+ * @implements {google.maps.maps3d.MarkerInteractiveElementOptions}
+ * @extends {google.maps.maps3d.MarkerElement}
+ * @constructor
+ */
+google.maps.maps3d.MarkerInteractiveElement = function(options) {};
+
+/**
+ * When set, the popover element will be open on this marker&#39;s click.
+ * @type {!google.maps.maps3d.PopoverElement|null|undefined}
+ */
+google.maps.maps3d.MarkerInteractiveElement.prototype.gmpPopoverTargetElement;
+
+/**
+ * MarkerInteractiveElementOptions object used to define the properties that can
+ * be set on a MarkerInteractiveElement.
+ * @extends {google.maps.maps3d.MarkerElementOptions}
+ * @record
+ */
+google.maps.maps3d.MarkerInteractiveElementOptions = function() {};
+
+/**
+ * See {@link
+ * google.maps.maps3d.MarkerInteractiveElement.gmpPopoverTargetElement}.
+ * @type {!google.maps.maps3d.PopoverElement|null|undefined}
+ */
+google.maps.maps3d.MarkerInteractiveElementOptions.prototype
+    .gmpPopoverTargetElement;
+
+/**
  * A 3D model which allows the rendering of gLTF models. Note that the
  * <code>position</code> and the <code>src</code> must be set for the
  * <code>Model3DElement</code> to display. <br /><br /> Core properties of the
@@ -17242,7 +17659,7 @@ google.maps.maps3d.Marker3DInteractiveElementOptions.prototype.title;
  * No extensions or extension properties are currently supported.
  *
  * Access by calling `const {Model3DElement} = await
- * google.maps.importLibrary("maps3d")`. See
+ * google.maps.importLibrary("maps3d");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.maps3d.Model3DElementOptions=} options
  * @implements {google.maps.maps3d.Model3DElementOptions}
@@ -17293,8 +17710,6 @@ google.maps.maps3d.Model3DElement.prototype.scale;
  */
 google.maps.maps3d.Model3DElement.prototype.src;
 
-
-
 /**
  * Model3DElementOptions object used to define the properties that can be set on
  * a Model3DElement.
@@ -17342,7 +17757,7 @@ google.maps.maps3d.Model3DElementOptions.prototype.src;
  * receives a <code>gmp-click</code> event.
  *
  * Access by calling `const {Model3DInteractiveElement} = await
- * google.maps.importLibrary("maps3d")`. See
+ * google.maps.importLibrary("maps3d");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.maps3d.Model3DElementOptions=} options
  * @implements {google.maps.maps3d.Model3DInteractiveElementOptions}
@@ -17350,8 +17765,6 @@ google.maps.maps3d.Model3DElementOptions.prototype.src;
  * @constructor
  */
 google.maps.maps3d.Model3DInteractiveElement = function(options) {};
-
-
 
 /**
  * Model3DInteractiveElementOptions object used to define the properties that
@@ -17368,7 +17781,7 @@ google.maps.maps3d.Model3DInteractiveElementOptions = function() {};
  * being handled by the <code>Map3DElement</code>.
  *
  * Access by calling `const {PlaceClickEvent} = await
- * google.maps.importLibrary("maps3d")`. See
+ * google.maps.importLibrary("maps3d");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {google.maps.maps3d.LocationClickEvent}
  * @constructor
@@ -17397,7 +17810,7 @@ google.maps.maps3d.PlaceClickEvent.prototype.fetchPlace = function() {};
  * a filled region.
  *
  * Access by calling `const {Polygon3DElement} = await
- * google.maps.importLibrary("maps3d")`. See
+ * google.maps.importLibrary("maps3d");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.maps3d.Polygon3DElementOptions=} options
  * @implements {google.maps.maps3d.Polygon3DElementOptions}
@@ -17497,8 +17910,6 @@ google.maps.maps3d.Polygon3DElement.prototype.outerCoordinates;
  */
 google.maps.maps3d.Polygon3DElement.prototype.innerCoordinates;
 
-
-
 /**
  * Polygon3DElementOptions object used to define the properties that can be set
  * on a Polygon3DElement.
@@ -17574,7 +17985,7 @@ google.maps.maps3d.Polygon3DElementOptions.prototype.zIndex;
  * event.
  *
  * Access by calling `const {Polygon3DInteractiveElement} = await
- * google.maps.importLibrary("maps3d")`. See
+ * google.maps.importLibrary("maps3d");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.maps3d.Polygon3DElementOptions=} options
  * @implements {google.maps.maps3d.Polygon3DInteractiveElementOptions}
@@ -17582,8 +17993,6 @@ google.maps.maps3d.Polygon3DElementOptions.prototype.zIndex;
  * @constructor
  */
 google.maps.maps3d.Polygon3DInteractiveElement = function(options) {};
-
-
 
 /**
  * Polygon3DInteractiveElementOptions object used to define the properties that
@@ -17597,7 +18006,7 @@ google.maps.maps3d.Polygon3DInteractiveElementOptions = function() {};
  * A 3D polyline is a linear overlay of connected line segments on a 3D map.
  *
  * Access by calling `const {Polyline3DElement} = await
- * google.maps.importLibrary("maps3d")`. See
+ * google.maps.importLibrary("maps3d");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.maps3d.Polyline3DElementOptions=} options
  * @implements {google.maps.maps3d.Polyline3DElementOptions}
@@ -17612,6 +18021,15 @@ google.maps.maps3d.Polyline3DElement = function(options) {};
  * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
  */
 google.maps.maps3d.Polyline3DElement.prototype.altitudeMode;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * If provided, the specified polyline will be made visible within the map
+ * viewport, alongside any other elements that have opted in.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElement.prototype.autofitsCamera;
 
 /**
  * Specifies whether parts of the polyline which could be occluded are drawn or
@@ -17685,8 +18103,6 @@ google.maps.maps3d.Polyline3DElement.prototype.zIndex;
  *     future release.
  */
 google.maps.maps3d.Polyline3DElement.prototype.coordinates;
-
-
 
 /**
  * Polyline3DElementOptions object used to define the properties that can be set
@@ -17762,7 +18178,7 @@ google.maps.maps3d.Polyline3DElementOptions.prototype.zIndex;
  * event.
  *
  * Access by calling `const {Polyline3DInteractiveElement} = await
- * google.maps.importLibrary("maps3d")`. See
+ * google.maps.importLibrary("maps3d");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.maps3d.Polyline3DElementOptions=} options
  * @implements {google.maps.maps3d.Polyline3DInteractiveElementOptions}
@@ -17770,8 +18186,6 @@ google.maps.maps3d.Polyline3DElementOptions.prototype.zIndex;
  * @constructor
  */
 google.maps.maps3d.Polyline3DInteractiveElement = function(options) {};
-
-
 
 /**
  * Polyline3DInteractiveElementOptions object used to define the properties that
@@ -17786,7 +18200,7 @@ google.maps.maps3d.Polyline3DInteractiveElementOptions = function() {};
  * often connected to a marker.
  *
  * Access by calling `const {PopoverElement} = await
- * google.maps.importLibrary("maps3d")`. See
+ * google.maps.importLibrary("maps3d");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.maps3d.PopoverElementOptions=} options
  * @implements {google.maps.maps3d.PopoverElementOptions}
@@ -17832,11 +18246,9 @@ google.maps.maps3d.PopoverElement.prototype.open;
 /**
  * The position at which to display this popover. If the popover is anchored to
  * an interactive marker, the marker&#39;s position will be used instead.
- * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|!google.maps.maps3d.Marker3DInteractiveElement|string|null|undefined}
+ * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|!google.maps.maps3d.Marker3DInteractiveElement|!google.maps.maps3d.MarkerInteractiveElement|string|null|undefined}
  */
 google.maps.maps3d.PopoverElement.prototype.positionAnchor;
-
-
 
 /**
  * PopoverElementOptions object used to define the properties that can be set on
@@ -17871,7 +18283,7 @@ google.maps.maps3d.PopoverElementOptions.prototype.open;
 
 /**
  * See {@link google.maps.maps3d.PopoverElement.positionAnchor}.
- * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|string|!google.maps.maps3d.Marker3DInteractiveElement|null|undefined}
+ * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|string|!google.maps.maps3d.Marker3DInteractiveElement|!google.maps.maps3d.MarkerInteractiveElement|null|undefined}
  */
 google.maps.maps3d.PopoverElementOptions.prototype.positionAnchor;
 
@@ -17880,7 +18292,7 @@ google.maps.maps3d.PopoverElementOptions.prototype.positionAnchor;
  * <code>Map3DElement</code>. This event bubbles up through the DOM tree.
  *
  * Access by calling `const {SteadyChangeEvent} = await
- * google.maps.importLibrary("maps3d")`. See
+ * google.maps.importLibrary("maps3d");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {Event}
  * @constructor
@@ -17904,7 +18316,7 @@ google.maps.marker = {};
  * marker&#39;s position with <code>event.target.position</code>.
  *
  * Access by calling `const {AdvancedMarkerClickEvent} = await
- * google.maps.importLibrary("marker")`. See
+ * google.maps.importLibrary("marker");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {Event}
  * @constructor
@@ -17916,7 +18328,7 @@ google.maps.marker.AdvancedMarkerClickEvent = function() {};
  * for the <code>AdvancedMarkerElement</code> to display.
  *
  * Access by calling `const {AdvancedMarkerElement} = await
- * google.maps.importLibrary("marker")`. See
+ * google.maps.importLibrary("marker");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.marker.AdvancedMarkerElementOptions=} options
  * @implements {google.maps.marker.AdvancedMarkerElementOptions}
@@ -18008,8 +18420,6 @@ google.maps.marker.AdvancedMarkerElement.prototype.element;
  */
 google.maps.marker.AdvancedMarkerElement.prototype.content;
 
-
-
 /**
  * Adds the given listener function to the given event name in the Maps Eventing
  * system.
@@ -18019,8 +18429,6 @@ google.maps.marker.AdvancedMarkerElement.prototype.content;
  */
 google.maps.marker.AdvancedMarkerElement.prototype.addListener = function(
     eventName, handler) {};
-
-
 
 /**
  * Options for constructing an {@link google.maps.marker.AdvancedMarkerElement}.
@@ -18150,7 +18558,7 @@ google.maps.marker.AdvancedMarkerElementOptions.prototype.zIndex;
  * google.maps.marker.PinElement.scale}.<br> <br>
  *
  * Access by calling `const {PinElement} = await
- * google.maps.importLibrary("marker")`. See
+ * google.maps.importLibrary("marker");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.marker.PinElementOptions=} options
  * @implements {google.maps.marker.PinElementOptions}
@@ -18209,8 +18617,6 @@ google.maps.marker.PinElement.prototype.element;
  *     or {@link google.maps.marker.PinElementOptions.glyphSrc} instead.
  */
 google.maps.marker.PinElement.prototype.glyph;
-
-
 
 /**
  * Options for creating a {@link google.maps.marker.PinElement}.
@@ -18277,7 +18683,7 @@ google.maps.places = {};
 /**
  *
  * Access by calling `const {AccessibilityOptions} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -18323,7 +18729,7 @@ google.maps.places.AccessibilityOptions.prototype
  * Address component for the Place&#39;s location.
  *
  * Access by calling `const {AddressComponent} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -18353,7 +18759,7 @@ google.maps.places.AddressComponent.prototype.types;
  * Information about a data provider for a Place.
  *
  * Access by calling `const {Attribution} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -18376,7 +18782,7 @@ google.maps.places.Attribution.prototype.providerURI;
  * to use any of these colors.
  *
  * Access by calling `const {AttributionColor} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -18399,7 +18805,7 @@ google.maps.places.AttributionColor = {
  * Information about the author of user-generated content.
  *
  * Access by calling `const {AuthorAttribution} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -18430,7 +18836,7 @@ google.maps.places.AuthorAttribution.prototype.uri;
  * list, and is updated as text is entered.
  *
  * Access by calling `const {Autocomplete} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!HTMLInputElement} inputField The <code>&lt;input&gt;</code> text
  *     field to which the <code>Autocomplete</code> should be attached.
@@ -18779,7 +19185,7 @@ google.maps.places.AutocompleteResponse.prototype.predictions;
  * Contains methods related to retrieving Autocomplete predictions.
  *
  * Access by calling `const {AutocompleteService} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  * @deprecated As of March 1st, 2025, google.maps.places.AutocompleteService is
@@ -18831,7 +19237,7 @@ google.maps.places.AutocompleteService.prototype.getQueryPredictions = function(
  * Represents a session token used for tracking an autocomplete session.
  *
  * Access by calling `const {AutocompleteSessionToken} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -18841,7 +19247,7 @@ google.maps.places.AutocompleteSessionToken = function() {};
  * An Autocomplete suggestion result.
  *
  * Access by calling `const {AutocompleteSuggestion} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -19000,7 +19406,7 @@ google.maps.places.AutocompletionRequest.prototype.radius;
  * provides a UI component for the Places Autocomplete API.
  *
  * Access by calling `const {BasicPlaceAutocompleteElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.BasicPlaceAutocompleteElementOptions} options
  * @implements {google.maps.places.BasicPlaceAutocompleteElementOptions}
@@ -19090,8 +19496,6 @@ google.maps.places.BasicPlaceAutocompleteElement.prototype.requestedRegion;
  */
 google.maps.places.BasicPlaceAutocompleteElement.prototype.unitSystem;
 
-
-
 /**
  * Options for constructing a BasicPlaceAutocompleteElement.
  * @record
@@ -19156,7 +19560,7 @@ google.maps.places.BasicPlaceAutocompleteElementOptions.prototype.unitSystem;
  * <code>google.maps.places.BusinessStatus.OPERATIONAL</code>).
  *
  * Access by calling `const {BusinessStatus} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -19196,7 +19600,7 @@ google.maps.places.ComponentRestrictions.prototype.country;
  * same charge rate.
  *
  * Access by calling `const {ConnectorAggregation} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -19244,7 +19648,7 @@ google.maps.places.ConnectorAggregation.prototype.type;
  * by the <code>languageCode</code> field.
  *
  * Access by calling `const {ConsumerAlert} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -19272,7 +19676,7 @@ google.maps.places.ConsumerAlert.prototype.overview;
  * Details of the consumer alert message.
  *
  * Access by calling `const {ConsumerAlertDetails} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -19306,7 +19710,7 @@ google.maps.places.ConsumerAlertDetails.prototype.title;
  * ContentBlock describes the content of a summary and where it came from.
  *
  * Access by calling `const {ContentBlock} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -19336,7 +19740,7 @@ google.maps.places.ContentBlock.prototype.referencedPlaces;
  * applies to places with type <code>electric_vehicle_charging_station</code>.
  *
  * Access by calling `const {EVChargeAmenitySummary} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -19388,7 +19792,7 @@ google.maps.places.EVChargeAmenitySummary.prototype.store;
  * Information about the EV charging station hosted in the place.
  *
  * Access by calling `const {EVChargeOptions} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -19414,7 +19818,7 @@ google.maps.places.EVChargeOptions.prototype.connectorCount;
  * EV charging connector types.
  *
  * Access by calling `const {EVConnectorType} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -19586,7 +19990,7 @@ google.maps.places.FindPlaceFromQueryRequest.prototype.query;
  * formatted.
  *
  * Access by calling `const {FormattableText} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -19617,7 +20021,7 @@ google.maps.places.FormattableText.prototype.text;
  * information is updated regularly.
  *
  * Access by calling `const {FuelOptions} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -19634,7 +20038,7 @@ google.maps.places.FuelOptions.prototype.fuelPrices;
  * Fuel price information for a given type of fuel.
  *
  * Access by calling `const {FuelPrice} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -19662,7 +20066,7 @@ google.maps.places.FuelPrice.prototype.updateTime;
  * Types of fuel.
  *
  * Access by calling `const {FuelType} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -19753,7 +20157,7 @@ google.maps.places.FuelType = {
  * AI-generated summary of the place.
  *
  * Access by calling `const {GenerativeSummary} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -19793,7 +20197,7 @@ google.maps.places.GenerativeSummary.prototype.overviewLanguageCode;
  * Links to trigger different Google Maps actions.
  *
  * Access by calling `const {GoogleMapsLinks} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -19846,7 +20250,7 @@ google.maps.places.LocationRestriction;
  * the vertical {@link google.maps.places.PlaceSearchElement}.
  *
  * Access by calling `const {MediaSize} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -19869,7 +20273,7 @@ google.maps.places.MediaSize = {
  * A representation of an amount of money with its currency type.
  *
  * Access by calling `const {Money} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -19906,7 +20310,7 @@ google.maps.places.Money.prototype.toString = function() {};
  * AI-generated summary of points of interest near the place.
  *
  * Access by calling `const {NeighborhoodSummary} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -19946,7 +20350,7 @@ google.maps.places.NeighborhoodSummary.prototype.overview;
  * Information about business hours of a Place.
  *
  * Access by calling `const {OpeningHours} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -19958,6 +20362,15 @@ google.maps.places.OpeningHours = function() {};
  * @type {!Array<!google.maps.places.OpeningHoursPeriod>}
  */
 google.maps.places.OpeningHours.prototype.periods;
+
+/**
+ * An array of dates representing special days that fall within the current
+ * period. Special days impact the business hours of a place, e.g. Christmas day
+ * or one off closures. Set for currentOpeningHours and
+ * currentSecondaryOpeningHours if there are exceptional hours.
+ * @type {!Array<!Date>}
+ */
+google.maps.places.OpeningHours.prototype.specialDays;
 
 /**
  * An array of seven strings representing the formatted opening hours for each
@@ -19973,7 +20386,7 @@ google.maps.places.OpeningHours.prototype.weekdayDescriptions;
  * A period where the Place is open.
  *
  * Access by calling `const {OpeningHoursPeriod} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -19995,7 +20408,7 @@ google.maps.places.OpeningHoursPeriod.prototype.open;
  * A point where the Place changes its opening status.
  *
  * Access by calling `const {OpeningHoursPoint} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -20025,7 +20438,7 @@ google.maps.places.OpeningHoursPoint.prototype.minute;
 /**
  *
  * Access by calling `const {ParkingOptions} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -20090,7 +20503,7 @@ google.maps.places.ParkingOptions.prototype.hasValetParking;
 /**
  *
  * Access by calling `const {PaymentOptions} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -20132,7 +20545,7 @@ google.maps.places.PaymentOptions.prototype.acceptsNFC;
  * Information about a photo of a Place.
  *
  * Access by calling `const {Photo} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -20196,7 +20609,7 @@ google.maps.places.PhotoOptions.prototype.maxWidth;
 /**
  *
  * Access by calling `const {Place} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceOptions} options
  * @implements {google.maps.places.PlaceOptions}
@@ -20250,6 +20663,22 @@ google.maps.places.Place.prototype.businessStatus;
  * @type {!google.maps.places.ConsumerAlert|null|undefined}
  */
 google.maps.places.Place.prototype.consumerAlert;
+
+/**
+ * The hours of operation for the next seven days (including today). This
+ * includes exceptional hours like holidays and irregular closures.
+ * @type {!google.maps.places.OpeningHours|null|undefined}
+ */
+google.maps.places.Place.prototype.currentOpeningHours;
+
+/**
+ * The current secondary hours of this place which includes exceptional hours
+ * like holidays and irregular closures for the next seven days. Secondary hours
+ * are different from a place&#39;s main hours. For example, a restaurant can
+ * specify drive through hours or delivery hours as its secondary hours.
+ * @type {!Array<!google.maps.places.SecondaryOpeningHours>|undefined}
+ */
+google.maps.places.Place.prototype.currentSecondaryOpeningHours;
 
 /**
  * The location&#39;s display name. <code>null</code> if there is no name.
@@ -20519,9 +20948,20 @@ google.maps.places.Place.prototype.primaryTypeDisplayNameLanguageCode;
 google.maps.places.Place.prototype.rating;
 
 /**
+ * The regular hours of operation for this place. This does not include
+ * exceptional hours like holidays.
  * @type {!google.maps.places.OpeningHours|null|undefined}
  */
 google.maps.places.Place.prototype.regularOpeningHours;
+
+/**
+ * The regular secondary hours of this place which excludes exceptional hours
+ * like holidays and irregular closures. Secondary hours are different from a
+ * place&#39;s main hours. For example, a restaurant can specify drive through
+ * hours or delivery hours as its secondary hours.
+ * @type {!Array<!google.maps.places.SecondaryOpeningHours>|undefined}
+ */
+google.maps.places.Place.prototype.regularSecondaryOpeningHours;
 
 /**
  * The requested language for this place.
@@ -20742,11 +21182,6 @@ google.maps.places.Place.prototype.getNextOpeningTime = function(date) {};
 google.maps.places.Place.prototype.isOpen = function(date) {};
 
 /**
- * @return {!Object} a JSON object with all the requested Place properties.
- */
-google.maps.places.Place.prototype.toJSON = function() {};
-
-/**
  * Configures a {@link google.maps.places.PlaceDetailsCompactElement}, {@link
  * google.maps.places.PlaceDetailsElement}, or {@link
  * google.maps.places.PlaceSearchElement} to show a wheelchair icon if the place
@@ -20757,7 +21192,7 @@ google.maps.places.Place.prototype.toJSON = function() {};
  * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceAccessibleEntranceIconElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceAccessibleEntranceIconElementOptions=}
  *     options
@@ -20766,8 +21201,6 @@ google.maps.places.Place.prototype.toJSON = function() {};
  * @constructor
  */
 google.maps.places.PlaceAccessibleEntranceIconElement = function(options) {};
-
-
 
 /**
  * Options for <code>PlaceAccessibleEntranceIconElement</code>.
@@ -20786,7 +21219,7 @@ google.maps.places.PlaceAccessibleEntranceIconElementOptions = function() {};
  * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceAddressElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceAddressElementOptions=} options
  * @implements {google.maps.places.PlaceAddressElementOptions}
@@ -20794,8 +21227,6 @@ google.maps.places.PlaceAccessibleEntranceIconElementOptions = function() {};
  * @constructor
  */
 google.maps.places.PlaceAddressElement = function(options) {};
-
-
 
 /**
  * Options for <code>PlaceAddressElement</code>.
@@ -20813,7 +21244,7 @@ google.maps.places.PlaceAddressElementOptions = function() {};
  * &lt;/gmp-place-details&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceAllContentElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceAllContentElementOptions=} options
  * @implements {google.maps.places.PlaceAllContentElementOptions}
@@ -20821,8 +21252,6 @@ google.maps.places.PlaceAddressElementOptions = function() {};
  * @constructor
  */
 google.maps.places.PlaceAllContentElement = function(options) {};
-
-
 
 /**
  * Options for <code>PlaceAllContentElement</code>.
@@ -20866,7 +21295,7 @@ google.maps.places.PlaceAspectRating.prototype.type;
  * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceAttributionElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceAttributionElementOptions=} options
  * @implements {google.maps.places.PlaceAttributionElementOptions}
@@ -20888,8 +21317,6 @@ google.maps.places.PlaceAttributionElement.prototype.darkSchemeColor;
  * @type {!google.maps.places.AttributionColor|null|undefined}
  */
 google.maps.places.PlaceAttributionElement.prototype.lightSchemeColor;
-
-
 
 /**
  * Options for <code>PlaceAttributionElement</code>.
@@ -20924,7 +21351,7 @@ google.maps.places.PlaceAttributionElementOptions.prototype.lightSchemeColor;
  * for more details on how sessions work.
  *
  * Access by calling `const {PlaceAutocompleteElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceAutocompleteElementOptions} options
  * @implements {google.maps.places.PlaceAutocompleteElementOptions}
@@ -21025,8 +21452,6 @@ google.maps.places.PlaceAutocompleteElement.prototype.unitSystem;
  * @type {string}
  */
 google.maps.places.PlaceAutocompleteElement.prototype.value;
-
-
 
 /**
  * Options for constructing a PlaceAutocompleteElement. For the description of
@@ -21129,7 +21554,7 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.value;
  * </code></pre>
  *
  * Access by calling `const {PlaceContentConfigElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceContentConfigElementOptions=} options
  * @implements {google.maps.places.PlaceContentConfigElementOptions}
@@ -21137,8 +21562,6 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.value;
  * @constructor
  */
 google.maps.places.PlaceContentConfigElement = function(options) {};
-
-
 
 /**
  * Options for <code>PlaceContentConfigElement</code>.
@@ -21153,7 +21576,7 @@ google.maps.places.PlaceContentConfigElementOptions = function() {};
  * Grounding with Google Maps response.
  *
  * Access by calling `const {PlaceContextualElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceContextualElementOptions=} options
  * @implements {google.maps.places.PlaceContextualElementOptions}
@@ -21167,8 +21590,6 @@ google.maps.places.PlaceContextualElement = function(options) {};
  * @type {string|null|undefined}
  */
 google.maps.places.PlaceContextualElement.prototype.contextToken;
-
-
 
 /**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
@@ -21191,7 +21612,7 @@ google.maps.places.PlaceContextualElementOptions.prototype.contextToken;
  * Element&#39;s list view.
  *
  * Access by calling `const {PlaceContextualListConfigElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceContextualListConfigElementOptions=} options
  * @implements {google.maps.places.PlaceContextualListConfigElementOptions}
@@ -21211,8 +21632,6 @@ google.maps.places.PlaceContextualListConfigElement.prototype.layout;
  * @type {boolean|null|undefined}
  */
 google.maps.places.PlaceContextualListConfigElement.prototype.mapHidden;
-
-
 
 /**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
@@ -21243,7 +21662,7 @@ google.maps.places.PlaceContextualListConfigElementOptions.prototype.mapHidden;
  * view.
  *
  * Access by calling `const {PlaceContextualListLayout} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -21281,7 +21700,7 @@ google.maps.places.PlaceContextualListLayout = {
  * >Places UI Kit API</a> for your project in the Google Cloud console.
  *
  * Access by calling `const {PlaceDetailsCompactElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceDetailsCompactElementOptions=} options
  * @implements {google.maps.places.PlaceDetailsCompactElementOptions}
@@ -21311,8 +21730,6 @@ google.maps.places.PlaceDetailsCompactElement.prototype.place;
  * @type {boolean}
  */
 google.maps.places.PlaceDetailsCompactElement.prototype.truncationPreferred;
-
-
 
 /**
  * Options for <code>PlaceDetailsCompactElement</code>.
@@ -21355,7 +21772,7 @@ google.maps.places.PlaceDetailsCompactElementOptions.prototype
  * >Places UI Kit API</a> for your project in the Google Cloud console.
  *
  * Access by calling `const {PlaceDetailsElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceDetailsElementOptions=} options
  * @implements {google.maps.places.PlaceDetailsElementOptions}
@@ -21370,8 +21787,6 @@ google.maps.places.PlaceDetailsElement = function(options) {};
  * @type {!google.maps.places.Place|undefined}
  */
 google.maps.places.PlaceDetailsElement.prototype.place;
-
-
 
 /**
  * Options for <code>PlaceDetailsElement</code>.
@@ -21392,7 +21807,7 @@ google.maps.places.PlaceDetailsElementOptions = function() {};
  * &lt;/gmp-place-details&gt; </code></pre>
  *
  * Access by calling `const {PlaceDetailsLocationRequestElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceDetailsLocationRequestElementOptions=}
  *     options
@@ -21409,8 +21824,6 @@ google.maps.places.PlaceDetailsLocationRequestElement = function(options) {};
  * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
  */
 google.maps.places.PlaceDetailsLocationRequestElement.prototype.location;
-
-
 
 /**
  * Options for <code>PlaceDetailsLocationRequestElement</code>.
@@ -21429,7 +21842,7 @@ google.maps.places.PlaceDetailsLocationRequestElementOptions.prototype.location;
  * google.maps.places.PlaceDetailsCompactElement}.
  *
  * Access by calling `const {PlaceDetailsOrientation} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -21457,7 +21870,7 @@ google.maps.places.PlaceDetailsOrientation = {
  * &lt;/gmp-place-details&gt; </code></pre>
  *
  * Access by calling `const {PlaceDetailsPlaceRequestElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceDetailsPlaceRequestElementOptions=} options
  * @implements {google.maps.places.PlaceDetailsPlaceRequestElementOptions}
@@ -21474,8 +21887,6 @@ google.maps.places.PlaceDetailsPlaceRequestElement = function(options) {};
  * @type {!google.maps.places.Place|null}
  */
 google.maps.places.PlaceDetailsPlaceRequestElement.prototype.place;
-
-
 
 /**
  * Options for <code>PlaceDetailsPlaceRequestElement</code>.
@@ -21553,15 +21964,13 @@ google.maps.places.PlaceDetailsRequest.prototype.sessionToken;
  * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceFeatureListElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @implements {google.maps.places.PlaceFeatureListElementOptions}
  * @extends {HTMLElement}
  * @constructor
  */
 google.maps.places.PlaceFeatureListElement = function() {};
-
-
 
 /**
  * Options for <code>PlaceFeatureListElement</code>.
@@ -21602,7 +22011,7 @@ google.maps.places.PlaceGeometry.prototype.viewport;
  * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceMediaElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceMediaElementOptions=} options
  * @implements {google.maps.places.PlaceMediaElementOptions}
@@ -21628,8 +22037,6 @@ google.maps.places.PlaceMediaElement.prototype.lightboxPreferred;
  * @type {!google.maps.places.MediaSize|null|undefined}
  */
 google.maps.places.PlaceMediaElement.prototype.preferredSize;
-
-
 
 /**
  * Options for <code>PlaceMediaElement</code>.
@@ -21667,7 +22074,7 @@ google.maps.places.PlaceMediaElementOptions.prototype.preferredSize;
  * </code></pre>
  *
  * Access by calling `const {PlaceNearbySearchRequestElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceNearbySearchRequestElementOptions=} options
  * @implements {google.maps.places.PlaceNearbySearchRequestElementOptions}
@@ -21727,8 +22134,6 @@ google.maps.places.PlaceNearbySearchRequestElement.prototype.maxResultCount;
  * @type {!google.maps.places.SearchNearbyRankPreference|null|undefined}
  */
 google.maps.places.PlaceNearbySearchRequestElement.prototype.rankPreference;
-
-
 
 /**
  * Options for <code>PlaceNearbySearchRequestElement</code>.
@@ -21813,7 +22218,7 @@ google.maps.places.PlaceNearbySearchRequestElementOptions.prototype
  * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceOpenNowStatusElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceOpenNowStatusElementOptions=} options
  * @implements {google.maps.places.PlaceOpenNowStatusElementOptions}
@@ -21821,8 +22226,6 @@ google.maps.places.PlaceNearbySearchRequestElementOptions.prototype
  * @constructor
  */
 google.maps.places.PlaceOpenNowStatusElement = function(options) {};
-
-
 
 /**
  * Options for <code>PlaceOpenNowStatusElement</code>.
@@ -21889,15 +22292,13 @@ google.maps.places.PlaceOpeningHours.prototype.isOpen = function(date) {};
  * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceOpeningHoursElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @implements {google.maps.places.PlaceOpeningHoursElementOptions}
  * @extends {HTMLElement}
  * @constructor
  */
 google.maps.places.PlaceOpeningHoursElement = function() {};
-
-
 
 /**
  * Options for <code>PlaceOpeningHoursElement</code>.
@@ -22027,15 +22428,13 @@ google.maps.places.PlaceOptions.prototype.resourceName;
  * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlacePhoneNumberElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @implements {google.maps.places.PlacePhoneNumberElementOptions}
  * @extends {HTMLElement}
  * @constructor
  */
 google.maps.places.PlacePhoneNumberElement = function() {};
-
-
 
 /**
  * Options for <code>PlacePhoneNumberElement</code>.
@@ -22109,15 +22508,13 @@ google.maps.places.PlacePlusCode.prototype.global_code;
  * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlacePlusCodeElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @implements {google.maps.places.PlacePlusCodeElementOptions}
  * @extends {HTMLElement}
  * @constructor
  */
 google.maps.places.PlacePlusCodeElement = function() {};
-
-
 
 /**
  * Options for <code>PlacePlusCodeElement</code>.
@@ -22129,7 +22526,7 @@ google.maps.places.PlacePlusCodeElementOptions = function() {};
  * Prediction results for a Place Autocomplete prediction.
  *
  * Access by calling `const {PlacePrediction} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -22216,7 +22613,7 @@ google.maps.places.PlacePrediction.prototype.toPlace = function() {};
  * google.maps.places.PlacePrediction.toPlace}.
  *
  * Access by calling `const {PlacePredictionSelectEvent} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {Event}
  * @constructor
@@ -22241,7 +22638,7 @@ google.maps.places.PlacePredictionSelectEvent.prototype.placePrediction;
  * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlacePriceElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlacePriceElementOptions=} options
  * @implements {google.maps.places.PlacePriceElementOptions}
@@ -22249,8 +22646,6 @@ google.maps.places.PlacePredictionSelectEvent.prototype.placePrediction;
  * @constructor
  */
 google.maps.places.PlacePriceElement = function(options) {};
-
-
 
 /**
  * Options for <code>PlacePriceElement</code>.
@@ -22269,7 +22664,7 @@ google.maps.places.PlacePriceElementOptions = function() {};
  * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceRatingElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceRatingElementOptions=} options
  * @implements {google.maps.places.PlaceRatingElementOptions}
@@ -22277,8 +22672,6 @@ google.maps.places.PlacePriceElementOptions = function() {};
  * @constructor
  */
 google.maps.places.PlaceRatingElement = function(options) {};
-
-
 
 /**
  * Options for <code>PlaceRatingElement</code>.
@@ -22595,15 +22988,13 @@ google.maps.places.PlaceReview.prototype.aspects;
  * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceReviewSummaryElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @implements {google.maps.places.PlaceReviewSummaryElementOptions}
  * @extends {HTMLElement}
  * @constructor
  */
 google.maps.places.PlaceReviewSummaryElement = function() {};
-
-
 
 /**
  * Options for <code>PlaceReviewSummaryElement</code>.
@@ -22620,15 +23011,13 @@ google.maps.places.PlaceReviewSummaryElementOptions = function() {};
  * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceReviewsElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @implements {google.maps.places.PlaceReviewsElementOptions}
  * @extends {HTMLElement}
  * @constructor
  */
 google.maps.places.PlaceReviewsElement = function() {};
-
-
 
 /**
  * Options for <code>PlaceReviewsElement</code>.
@@ -22640,7 +23029,7 @@ google.maps.places.PlaceReviewsElementOptions = function() {};
  * Attribution positions for {@link google.maps.places.PlaceSearchElement}.
  *
  * Access by calling `const {PlaceSearchAttributionPosition} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -22676,7 +23065,7 @@ google.maps.places.PlaceSearchAttributionPosition = {
  * >Places UI Kit API</a> for your project in the Google Cloud console.
  *
  * Access by calling `const {PlaceSearchElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceSearchElementOptions=} options
  * @implements {google.maps.places.PlaceSearchElementOptions}
@@ -22723,8 +23112,6 @@ google.maps.places.PlaceSearchElement.prototype.selectable;
  */
 google.maps.places.PlaceSearchElement.prototype.truncationPreferred;
 
-
-
 /**
  * Options for <code>PlaceSearchElement</code>.
  * @record
@@ -22759,7 +23146,7 @@ google.maps.places.PlaceSearchElementOptions.prototype.truncationPreferred;
  * Orientation variants for {@link google.maps.places.PlaceSearchElement}.
  *
  * Access by calling `const {PlaceSearchOrientation} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -22897,7 +23284,7 @@ google.maps.places.PlaceSearchRequest.prototype.name;
  * selection with <code>event.place</code>.
  *
  * Access by calling `const {PlaceSelectEvent} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {Event}
  * @constructor
@@ -22931,7 +23318,7 @@ google.maps.places.PlaceSelectEvent.prototype.place;
  * &lt;/gmp-place-details&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceStandardContentElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceStandardContentElementOptions=} options
  * @implements {google.maps.places.PlaceStandardContentElementOptions}
@@ -22939,8 +23326,6 @@ google.maps.places.PlaceSelectEvent.prototype.place;
  * @constructor
  */
 google.maps.places.PlaceStandardContentElement = function(options) {};
-
-
 
 /**
  * Options for <code>PlaceStandardContentElement</code>.
@@ -22957,15 +23342,13 @@ google.maps.places.PlaceStandardContentElementOptions = function() {};
  * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceSummaryElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @implements {google.maps.places.PlaceSummaryElementOptions}
  * @extends {HTMLElement}
  * @constructor
  */
 google.maps.places.PlaceSummaryElement = function() {};
-
-
 
 /**
  * Options for <code>PlaceSummaryElement</code>.
@@ -22990,7 +23373,7 @@ google.maps.places.PlaceSummaryElementOptions = function() {};
  * </code></pre>
  *
  * Access by calling `const {PlaceTextSearchRequestElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceTextSearchRequestElementOptions=} options
  * @implements {google.maps.places.PlaceTextSearchRequestElementOptions}
@@ -23088,8 +23471,6 @@ google.maps.places.PlaceTextSearchRequestElement.prototype.textQuery;
  */
 google.maps.places.PlaceTextSearchRequestElement.prototype
     .useStrictTypeFiltering;
-
-
 
 /**
  * Options for <code>PlaceTextSearchRequestElement</code>.
@@ -23221,7 +23602,7 @@ google.maps.places.PlaceTextSearchRequestElementOptions.prototype
  * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceTypeElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!google.maps.places.PlaceTypeElementOptions=} options
  * @implements {google.maps.places.PlaceTypeElementOptions}
@@ -23229,8 +23610,6 @@ google.maps.places.PlaceTextSearchRequestElementOptions.prototype
  * @constructor
  */
 google.maps.places.PlaceTypeElement = function(options) {};
-
-
 
 /**
  * Options for <code>PlaceTypeElement</code>.
@@ -23248,15 +23627,13 @@ google.maps.places.PlaceTypeElementOptions = function() {};
  * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceTypeSpecificHighlightsElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @implements {google.maps.places.PlaceTypeSpecificHighlightsElementOptions}
  * @extends {HTMLElement}
  * @constructor
  */
 google.maps.places.PlaceTypeSpecificHighlightsElement = function() {};
-
-
 
 /**
  * Options for <code>PlaceTypeSpecificHighlightsElement</code>.
@@ -23273,15 +23650,13 @@ google.maps.places.PlaceTypeSpecificHighlightsElementOptions = function() {};
  * &lt;/gmp-place-content-config&gt;<br> </code></pre>
  *
  * Access by calling `const {PlaceWebsiteElement} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @implements {google.maps.places.PlaceWebsiteElementOptions}
  * @extends {HTMLElement}
  * @constructor
  */
 google.maps.places.PlaceWebsiteElement = function() {};
-
-
 
 /**
  * Options for <code>PlaceWebsiteElement</code>.
@@ -23294,7 +23669,7 @@ google.maps.places.PlaceWebsiteElementOptions = function() {};
  * a place.
  *
  * Access by calling `const {PlacesService} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!HTMLDivElement|!google.maps.Map} attrContainer
  * @constructor
@@ -23408,7 +23783,7 @@ google.maps.places.PlacesService.prototype.textSearch = function(
  * <code>google.maps.places.PlacesServiceStatus.OK</code>.
  *
  * Access by calling `const {PlacesServiceStatus} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -23449,7 +23824,7 @@ google.maps.places.PlacesServiceStatus = {
  * href="https://plus.codes/">https://plus.codes/</a> for more information.
  *
  * Access by calling `const {PlusCode} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -23476,7 +23851,7 @@ google.maps.places.PlusCode.prototype.globalCode;
  * represent data returned by the Web Service.
  *
  * Access by calling `const {PostalAddress} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @implements {google.maps.places.PostalAddressLiteral}
  * @constructor
@@ -23656,7 +24031,7 @@ google.maps.places.PredictionTerm.prototype.value;
  * Price level for a Place.
  *
  * Access by calling `const {PriceLevel} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -23674,7 +24049,7 @@ google.maps.places.PriceLevel = {
  * $100&quot;).
  *
  * Access by calling `const {PriceRange} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -23781,7 +24156,7 @@ google.maps.places.QueryAutocompletionRequest.prototype.radius;
  * Ranking options for a PlaceSearchRequest.
  *
  * Access by calling `const {RankBy} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {number}
  */
@@ -23793,14 +24168,14 @@ google.maps.places.RankBy = {
   /**
    * Ranks place results by their prominence.
    */
-  PROMINENCE: 1,
+  PROMINENCE: 0,
 };
 
 /**
  * Information about a review of a Place.
  *
  * Access by calling `const {Review} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -23884,7 +24259,7 @@ google.maps.places.Review.prototype.visitDateYear;
  * AI-generated summary of the place user reviews.
  *
  * Access by calling `const {ReviewSummary} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -23933,10 +24308,10 @@ google.maps.places.ReviewSummary.prototype.textLanguageCode;
  * list, and is updated as text is entered.
  *
  * Access by calling `const {SearchBox} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {!HTMLInputElement} inputField
- * @param {(!google.maps.places.SearchBoxOptions|null)=} opts
+ * @param {!google.maps.places.SearchBoxOptions|null=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  * @deprecated As of March 1st, 2025, google.maps.places.SearchBox is not
@@ -23988,7 +24363,7 @@ google.maps.places.SearchBoxOptions.prototype.bounds;
  * RankPreference enum for SearchByTextRequest.
  *
  * Access by calling `const {SearchByTextRankPreference} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -24144,7 +24519,7 @@ google.maps.places.SearchByTextRequest.prototype.rankBy;
  * RankPreference enum for SearchNearbyRequest.
  *
  * Access by calling `const {SearchNearbyRankPreference} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -24267,10 +24642,30 @@ google.maps.places.SearchNearbyRequest.prototype.rankPreference;
 google.maps.places.SearchNearbyRequest.prototype.region;
 
 /**
+ * Information about secondary business hours of a Place.
+ *
+ * Access by calling `const {SecondaryOpeningHours} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {google.maps.places.OpeningHours}
+ * @constructor
+ */
+google.maps.places.SecondaryOpeningHours = function() {};
+
+/**
+ * The type of secondary opening hours. This refers to what the secondary hours
+ * apply to like takeout, delivery, or pickup. See <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/reference/rest/v1/places#secondaryhourstype">SecondaryHoursType</a>
+ * for a list of valid values.
+ * @type {string|null}
+ */
+google.maps.places.SecondaryOpeningHours.prototype.type;
+
+/**
  * Identifies a substring within a given text.
  *
  * Access by calling `const {StringRange} = await
- * google.maps.importLibrary("places")`. See
+ * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -24400,7 +24795,7 @@ google.maps.routes = {};
  * google.maps.routes.RouteMatrix.computeRouteMatrix} request.
  *
  * Access by calling `const {ComputeRouteMatrixExtraComputation} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -24445,7 +24840,7 @@ google.maps.routes.ComputeRouteMatrixRequest.prototype.departureTime;
  * value passed as a string may be an address, a <a
  * href="https://plus.codes">plus code</a>, or a Place resource name. Altitude
  * values are not taken into consideration.
- * @type {!Iterable<string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitudeLiteral|google.maps.routes.DirectionalLocationLiteral|google.maps.places.Place|google.maps.routes.Waypoint>}
+ * @type {!Iterable<string|!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|!google.maps.routes.DirectionalLocationLiteral|!google.maps.places.Place|!google.maps.routes.Waypoint>}
  */
 google.maps.routes.ComputeRouteMatrixRequest.prototype.destinations;
 
@@ -24497,7 +24892,7 @@ google.maps.routes.ComputeRouteMatrixRequest.prototype.language;
  * origins and destinations must be no greater than 100 if {@link
  * google.maps.routes.ComputeRouteMatrixRequest.travelMode} is set to
  * <code>TRANSIT</code>. </li> </ul>
- * @type {!Iterable<string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitudeLiteral|google.maps.routes.DirectionalLocationLiteral|google.maps.places.Place|google.maps.routes.RouteMatrixOrigin|google.maps.routes.Waypoint>}
+ * @type {!Iterable<string|!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|!google.maps.routes.DirectionalLocationLiteral|!google.maps.places.Place|!google.maps.routes.RouteMatrixOrigin|!google.maps.routes.Waypoint>}
  */
 google.maps.routes.ComputeRouteMatrixRequest.prototype.origins;
 
@@ -24569,7 +24964,7 @@ google.maps.routes.ComputeRouteMatrixRequest.prototype.units;
  * google.maps.routes.Route.computeRoutes} request.
  *
  * Access by calling `const {ComputeRoutesExtraComputation} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -24651,7 +25046,7 @@ google.maps.routes.ComputeRoutesRequest.prototype.departureTime;
  * The destination of the route. A value passed as a string may be an address,
  * <a href="https://plus.codes">plus code</a>, or a Place resource name.
  * Altitude values are not taken into consideration for computing routes.
- * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitudeLiteral|google.maps.routes.DirectionalLocationLiteral|google.maps.places.Place|google.maps.routes.Waypoint}
+ * @type {string|!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|!google.maps.routes.DirectionalLocationLiteral|!google.maps.places.Place|!google.maps.routes.Waypoint}
  */
 google.maps.routes.ComputeRoutesRequest.prototype.destination;
 
@@ -24713,7 +25108,7 @@ google.maps.routes.ComputeRoutesRequest.prototype.optimizeWaypointOrder;
  * The origin of the route. A value passed as a string may be an address, <a
  * href="https://plus.codes">plus code</a>, or a Place resource name. Altitude
  * values are not taken into consideration for computing routes.
- * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitudeLiteral|google.maps.routes.DirectionalLocationLiteral|google.maps.places.Place|google.maps.routes.Waypoint}
+ * @type {string|!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|!google.maps.routes.DirectionalLocationLiteral|!google.maps.places.Place|!google.maps.routes.Waypoint}
  */
 google.maps.routes.ComputeRoutesRequest.prototype.origin;
 
@@ -24809,7 +25204,7 @@ google.maps.routes.ComputeRoutesRequest.prototype.units;
  * Encapsulates a geographic point and an optional heading.
  *
  * Access by calling `const {DirectionalLocation} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @implements {google.maps.routes.DirectionalLocationLiteral}
  * @extends {google.maps.LatLngAltitude}
@@ -24828,10 +25223,11 @@ google.maps.routes.DirectionalLocation = function() {};
 google.maps.routes.DirectionalLocation.prototype.heading;
 
 /**
- * Converts to an object.
- * @return {!google.maps.routes.DirectionalLocationLiteral}
+ * Converts to a plain object.
+ * @param {string=} key
+ * @return {!google.maps.LatLngAltitudeLiteral}
  */
-google.maps.routes.DirectionalLocation.prototype.toJSON = function() {};
+google.maps.routes.DirectionalLocation.prototype.toJSON = function(key) {};
 
 /**
  * Object literals are accepted in place of {@link
@@ -24860,7 +25256,7 @@ google.maps.routes.DirectionalLocationLiteral.prototype.heading;
  * fallback.
  *
  * Access by calling `const {FallbackInfo} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -24882,17 +25278,11 @@ google.maps.routes.FallbackInfo.prototype.reason;
 google.maps.routes.FallbackInfo.prototype.routingMode;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.FallbackInfo.prototype.toJSON = function() {};
-
-/**
  * The reason that a fallback response was returned in a {@link
  * google.maps.routes.Route.computeRoutes} response.
  *
  * Access by calling `const {FallbackReason} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -24916,7 +25306,7 @@ google.maps.routes.FallbackReason = {
  * google.maps.routes.Route.computeRoutes} response.
  *
  * Access by calling `const {FallbackRoutingMode} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -24939,7 +25329,7 @@ google.maps.routes.FallbackRoutingMode = {
  * determining what the address was geocoded to.
  *
  * Access by calling `const {GeocodedWaypoint} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -24982,18 +25372,12 @@ google.maps.routes.GeocodedWaypoint.prototype.placeId;
 google.maps.routes.GeocodedWaypoint.prototype.types;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.GeocodedWaypoint.prototype.toJSON = function() {};
-
-/**
  * Contains {@link google.maps.routes.GeocodedWaypoint}s for origin,
  * destination, and intermediate waypoints. Only populated for address
  * waypoints.
  *
  * Access by calling `const {GeocodingResults} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -25020,12 +25404,6 @@ google.maps.routes.GeocodingResults.prototype.intermediates;
 google.maps.routes.GeocodingResults.prototype.origin;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.GeocodingResults.prototype.toJSON = function() {};
-
-/**
  * Provides summarized information about a multi-modal segment of the {@link
  * google.maps.routes.RouteLeg.steps} of a route. A multi-modal segment is
  * defined as one or more contiguous {@link
@@ -25033,7 +25411,7 @@ google.maps.routes.GeocodingResults.prototype.toJSON = function() {};
  * google.maps.TravelMode}.
  *
  * Access by calling `const {MultiModalSegment} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -25074,16 +25452,10 @@ google.maps.routes.MultiModalSegment.prototype.stepStartIndex;
 google.maps.routes.MultiModalSegment.prototype.travelMode;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.MultiModalSegment.prototype.toJSON = function() {};
-
-/**
  * Encapsulates information about a road feature along a stretch of polyline.
  *
  * Access by calling `const {PolylineDetailInfo} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -25108,18 +25480,12 @@ google.maps.routes.PolylineDetailInfo.prototype.presence;
 google.maps.routes.PolylineDetailInfo.prototype.startIndex;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.PolylineDetailInfo.prototype.toJSON = function() {};
-
-/**
  * Details corresponding to a given index or contiguous segment of a polyline.
  * Given a polyline with points P_0, P_1, ... , P_N (zero-based index), the
  * <code>PolylineDetails</code> describes a road feature for a given interval.
  *
  * Access by calling `const {PolylineDetails} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -25138,16 +25504,10 @@ google.maps.routes.PolylineDetails.prototype.flyoverInfo;
 google.maps.routes.PolylineDetails.prototype.narrowRoadInfo;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.PolylineDetails.prototype.toJSON = function() {};
-
-/**
  * Specifies the quality of the polyline.
  *
  * Access by calling `const {PolylineQuality} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -25172,7 +25532,7 @@ google.maps.routes.PolylineQuality = {
  * google.maps.routes.ComputeRoutesRequest}.
  *
  * Access by calling `const {ReferenceRoute} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -25191,7 +25551,7 @@ google.maps.routes.ReferenceRoute = {
  * Encapsulates the states of road features along a stretch of polyline.
  *
  * Access by calling `const {RoadFeatureState} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -25211,7 +25571,7 @@ google.maps.routes.RoadFeatureState = {
  * join beginning, ending, and intermediate waypoints.
  *
  * Access by calling `const {Route} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -25378,6 +25738,14 @@ google.maps.routes.Route.prototype.warnings;
 google.maps.routes.Route.computeRoutes = function(request) {};
 
 /**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * Creates 3D polylines for the route based on the data available for the route.
+ * @param {!google.maps.routes.RoutePolyline3DOptions=} options
+ * @return {!Promise<!Array<!google.maps.maps3d.Polyline3DElement>>}
+ */
+google.maps.routes.Route.prototype.create3DPolylines = function(options) {};
+
+/**
  * Creates polylines for the route based on the data available. <br><br>
  * Multi-modal polylines: <ul> <li> Requirements: <ul> <li> The
  * <code>&quot;path&quot;</code> and <code>&quot;legs&quot;</code> fields must
@@ -25412,6 +25780,16 @@ google.maps.routes.Route.computeRoutes = function(request) {};
 google.maps.routes.Route.prototype.createPolylines = function(options) {};
 
 /**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * Creates a popover for the route based on the data available for the route,
+ * configured in a way suitable for annotating a route on a map. Currently
+ * uses {@link google.maps.routes.Route.localizedValues} and {@link
+ * google.maps.routes.Route.path}, if available.
+ * @return {!Promise<!google.maps.maps3d.PopoverElement>}
+ */
+google.maps.routes.Route.prototype.createPopover = function() {};
+
+/**
  * Creates markers for the route labeled &#39;A&#39;, &#39;B&#39;, &#39;C&#39;,
  * etc. for each waypoint. Markers have default styling applied. Options can be
  * passed in to alter the marker style based on the marker index or properties
@@ -25420,26 +25798,122 @@ google.maps.routes.Route.prototype.createPolylines = function(options) {};
  * the route has no legs. <br><br> The <code>&quot;legs&quot;</code> field must
  * be requested in {@link google.maps.routes.ComputeRoutesRequest.fields} in
  * order for intermediate waypoints to be included.
- * @param {(!google.maps.marker.AdvancedMarkerElementOptions|(function(!google.maps.marker.AdvancedMarkerElementOptions,
+ * @param {!google.maps.marker.AdvancedMarkerElementOptions|(function(!google.maps.marker.AdvancedMarkerElementOptions,
  *     !google.maps.routes.WaypointMarkerDetails):
- *     !google.maps.marker.AdvancedMarkerElementOptions))=} options
+ *     !google.maps.marker.AdvancedMarkerElementOptions)=} options
  * @return {!Promise<!Array<!google.maps.marker.AdvancedMarkerElement>>}
  */
 google.maps.routes.Route.prototype.createWaypointAdvancedMarkers = function(
     options) {};
 
 /**
- * Converts to an object.
- * @return {!Object}
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * A web component for 3D route rendering. Currently support origin and
+ * destination parameters to render a polyline in 3D space in a 3D map.
+ *
+ * Access by calling `const {Route3DElement} = await
+ * google.maps.importLibrary("routes");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.routes.Route3DElementOptions=} options
+ * @implements {google.maps.routes.Route3DElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
  */
-google.maps.routes.Route.prototype.toJSON = function() {};
+google.maps.routes.Route3DElement = function(options) {};
+
+/**
+ * If provided, the specified route will be made visible within the map
+ * viewport, alongside any other elements that have opted in.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.routes.Route3DElement.prototype.autofitsCamera;
+
+/**
+ * If provided, the route will be computed with the specified departure time.
+ * When specifying via HTML attribute, use the ISO 8601 format for reliable
+ * results across browsers. For information on usage requirements, see {@link
+ * google.maps.routes.ComputeRoutesRequest.departureTime}.
+ * @type {!Date|null|undefined}
+ */
+google.maps.routes.Route3DElement.prototype.departureTime;
+
+/**
+ * The destination of the route.
+ * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitude|google.maps.LatLngAltitudeLiteral|google.maps.places.Place|null}
+ */
+google.maps.routes.Route3DElement.prototype.destination;
+
+/**
+ * The origin of the route.
+ * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitude|google.maps.LatLngAltitudeLiteral|google.maps.places.Place|null}
+ */
+google.maps.routes.Route3DElement.prototype.origin;
+
+/**
+ * If provided, the route will be computed with traffic information along the
+ * route that&#39;s based on the {@link google.maps.routes.RoutingPreference}
+ * specified, and use traffic-specific coloring.
+ * @type {!google.maps.routes.RoutingPreference|null|undefined}
+ */
+google.maps.routes.Route3DElement.prototype.routingPreference;
+
+/**
+ * If provided, the polyline is based on the specified travel mode.
+ * @type {!google.maps.TravelMode|null|undefined}
+ */
+google.maps.routes.Route3DElement.prototype.travelMode;
+
+/**
+ * Route3DElementOptions object used to define the properties that can be set on
+ * a Route3DElement.
+ * @record
+ */
+google.maps.routes.Route3DElementOptions = function() {};
+
+/**
+ * Whether or not to opt into automatically fitting the camera to the route.
+ * @type {boolean|null|undefined}
+ */
+google.maps.routes.Route3DElementOptions.prototype.autofitsCamera;
+
+/**
+ * See {@link google.maps.routes.Route3DElement.departureTime}.
+ * @type {!Date|null|undefined}
+ */
+google.maps.routes.Route3DElementOptions.prototype.departureTime;
+
+/**
+ * See {@link google.maps.routes.Route3DElement.destination}.
+ * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitude|google.maps.LatLngAltitudeLiteral|google.maps.places.Place|null}
+ */
+google.maps.routes.Route3DElementOptions.prototype.destination;
+
+/**
+ * See {@link google.maps.routes.Route3DElement.origin}.
+ * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitude|google.maps.LatLngAltitudeLiteral|google.maps.places.Place|null}
+ */
+google.maps.routes.Route3DElementOptions.prototype.origin;
+
+/**
+ * See {@link google.maps.routes.Route3DElement.routingPreference}.
+ * @type {!google.maps.routes.RoutingPreference|null|undefined}
+ */
+google.maps.routes.Route3DElementOptions.prototype.routingPreference;
+
+/**
+ * See {@link google.maps.routes.Route3DElement.travelMode}.
+ * @type {!google.maps.TravelMode|null|undefined}
+ */
+google.maps.routes.Route3DElementOptions.prototype.travelMode;
 
 /**
  * Labels for the route that are useful to identify specific properties to
  * compare against others.
  *
  * Access by calling `const {RouteLabel} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -25470,7 +25944,7 @@ google.maps.routes.RouteLabel = {
  * Contains a segment between non-<code>via</code> waypoints.
  *
  * Access by calling `const {RouteLeg} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -25570,16 +26044,10 @@ google.maps.routes.RouteLeg.prototype.stepsOverview;
 google.maps.routes.RouteLeg.prototype.travelAdvisory;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteLeg.prototype.toJSON = function() {};
-
-/**
  * Text representations of the {@link google.maps.routes.RouteLeg}.
  *
  * Access by calling `const {RouteLegLocalizedValues} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -25629,17 +26097,11 @@ google.maps.routes.RouteLegLocalizedValues.prototype.staticDuration;
 google.maps.routes.RouteLegLocalizedValues.prototype.staticDurationLanguage;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteLegLocalizedValues.prototype.toJSON = function() {};
-
-/**
  * Contains a segment of a <code>RouteLeg</code>. A step corresponds to a single
  * navigation instruction. Route legs are made up of steps.
  *
  * Access by calling `const {RouteLegStep} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -25716,16 +26178,10 @@ google.maps.routes.RouteLegStep.prototype.transitDetails;
 google.maps.routes.RouteLegStep.prototype.travelMode;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteLegStep.prototype.toJSON = function() {};
-
-/**
  * Text representations of properties of the <code>RouteLegStep</code>.
  *
  * Access by calling `const {RouteLegStepLocalizedValues} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -25762,17 +26218,11 @@ google.maps.routes.RouteLegStepLocalizedValues.prototype.staticDuration;
 google.maps.routes.RouteLegStepLocalizedValues.prototype.staticDurationLanguage;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteLegStepLocalizedValues.prototype.toJSON = function() {};
-
-/**
  * Contains additional information that the user should be informed about on
  * a {@link google.maps.routes.RouteLeg}.
  *
  * Access by calling `const {RouteLegTravelAdvisory} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -25784,8 +26234,8 @@ google.maps.routes.RouteLegTravelAdvisory = function() {};
  * google.maps.routes.ComputeRoutesRequest.routingPreference}. The intervals
  * cover the entire polyline of the {@link google.maps.routes.RouteLeg} without
  * overlap. The start point of a specified interval is the same as the end point
- * of the preceding interval. <br><br> Example: <br> <pre> <code> polyline: A
- * ---- B ---- C ---- D ---- E ---- F ---- G <br> speedReadingIntervals: [A,C),
+ * of the preceding interval. <br><br> Example: <br> <pre> <code>polyline: A
+ * ---- B ---- C ---- D ---- E ---- F ---- G<br> speedReadingIntervals: [A,C),
  * [C,D), [D,G) </code> </pre>
  * @type {!Array<!google.maps.routes.SpeedReadingInterval>|undefined}
  */
@@ -25795,8 +26245,8 @@ google.maps.routes.RouteLegTravelAdvisory.prototype.speedReadingIntervals;
  * Contains information about tolls on the specific {@link
  * google.maps.routes.RouteLeg}. This field is only populated if tolls are
  * expected on the {@link google.maps.routes.RouteLeg}. If this field is set
- * but {@link google.maps.routes.TollInfo.estimatedPrices} is not populated,then
- * the route leg contains tolls but the estimated price is unknown. If this
+ * but {@link google.maps.routes.TollInfo.estimatedPrices} is not populated,
+ * then the route leg contains tolls but the estimated price is unknown. If this
  * field is empty, then there are no tolls on the {@link
  * google.maps.routes.RouteLeg}.
  * @type {google.maps.routes.TollInfo|null}
@@ -25804,16 +26254,10 @@ google.maps.routes.RouteLegTravelAdvisory.prototype.speedReadingIntervals;
 google.maps.routes.RouteLegTravelAdvisory.prototype.tollInfo;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteLegTravelAdvisory.prototype.toJSON = function() {};
-
-/**
  * Text representations of properties of the <code>Route</code>.
  *
  * Access by calling `const {RouteLocalizedValues} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -25878,17 +26322,11 @@ google.maps.routes.RouteLocalizedValues.prototype.transitFare;
 google.maps.routes.RouteLocalizedValues.prototype.transitFareLanguage;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteLocalizedValues.prototype.toJSON = function() {};
-
-/**
  * A matrix of routes computed for a set of origin/destination pairs by {@link
  * google.maps.routes.RouteMatrix.computeRouteMatrix}
  *
  * Access by calling `const {RouteMatrix} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -25929,17 +26367,11 @@ google.maps.routes.RouteMatrix.prototype.rows;
 google.maps.routes.RouteMatrix.computeRouteMatrix = function(request) {};
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteMatrix.prototype.toJSON = function() {};
-
-/**
  * Contains route information computed for an origin/destination pair passed
  * to {@link google.maps.routes.RouteMatrix.computeRouteMatrix}.
  *
  * Access by calling `const {RouteMatrixItem} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -26009,16 +26441,10 @@ google.maps.routes.RouteMatrixItem.prototype.staticDurationMillis;
 google.maps.routes.RouteMatrixItem.prototype.travelAdvisory;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteMatrixItem.prototype.toJSON = function() {};
-
-/**
  * The condition of a route for a given origin/destination pair.
  *
  * Access by calling `const {RouteMatrixItemCondition} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -26039,7 +26465,7 @@ google.maps.routes.RouteMatrixItemCondition = {
  * origin/destination pair.
  *
  * Access by calling `const {RouteMatrixItemError} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @extends {Error}
  * @constructor
@@ -26047,16 +26473,10 @@ google.maps.routes.RouteMatrixItemCondition = {
 google.maps.routes.RouteMatrixItemError = function() {};
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteMatrixItemError.prototype.toJSON = function() {};
-
-/**
  * Text representations of the {@link google.maps.routes.RouteMatrixItem}.
  *
  * Access by calling `const {RouteMatrixItemLocalizedValues} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -26123,13 +26543,6 @@ google.maps.routes.RouteMatrixItemLocalizedValues.prototype.transitFare;
 google.maps.routes.RouteMatrixItemLocalizedValues.prototype.transitFareLanguage;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteMatrixItemLocalizedValues.prototype.toJSON =
-    function() {};
-
-/**
  * A single origin for a {@link google.maps.routes.ComputeRouteMatrixRequest}.
  * @record
  */
@@ -26145,7 +26558,7 @@ google.maps.routes.RouteMatrixOrigin.prototype.routeModifiers;
  * The location of the origin. A value passed as a string may be an address or
  * <a href="https://plus.codes">plus code</a>. Altitude values for are not taken
  * into consideration.
- * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitudeLiteral|google.maps.routes.DirectionalLocationLiteral|google.maps.places.Place|google.maps.routes.Waypoint}
+ * @type {string|!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|!google.maps.routes.DirectionalLocationLiteral|!google.maps.places.Place|!google.maps.routes.Waypoint}
  */
 google.maps.routes.RouteMatrixOrigin.prototype.waypoint;
 
@@ -26156,7 +26569,7 @@ google.maps.routes.RouteMatrixOrigin.prototype.waypoint;
  * destination.
  *
  * Access by calling `const {RouteMatrixRow} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -26167,12 +26580,6 @@ google.maps.routes.RouteMatrixRow = function() {};
  * @type {!Array<!google.maps.routes.RouteMatrixItem>}
  */
 google.maps.routes.RouteMatrixRow.prototype.items;
-
-/**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteMatrixRow.prototype.toJSON = function() {};
 
 /**
  * Encapsulates a set of optional conditions to satisfy when calculating routes.
@@ -26234,6 +26641,33 @@ google.maps.routes.RouteModifiers.prototype.tollPasses;
 google.maps.routes.RouteModifiers.prototype.vehicleInfo;
 
 /**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Options for creating route 3D polylines.
+ * @record
+ */
+google.maps.routes.RoutePolyline3DOptions = function() {};
+
+/**
+ * The color scheme to use for the 3D polyline. When specified as
+ * <code>FOLLOW_SYSTEM</code> while the map <code>colorScheme</code> is also
+ * <code>FOLLOW_SYSTEM</code>, the polylines will be drawn in the same
+ * dark/light mode as the map. When not specified, {@link
+ * google.maps.routes.Route.create3DPolylines} attempts to use the
+ * <code>colorScheme</code> of the map or falls back to the system default.
+ * @type {!google.maps.ColorScheme|undefined}
+ */
+google.maps.routes.RoutePolyline3DOptions.prototype.colorScheme;
+
+/**
+ * Options for customizing the style of a 3D polyline.
+ * @type {!google.maps.maps3d.Polyline3DElementOptions|(function(!google.maps.maps3d.Polyline3DElementOptions,
+ *     !google.maps.routes.RoutePolylineDetails):
+ *     !google.maps.maps3d.Polyline3DElementOptions)|undefined}
+ */
+google.maps.routes.RoutePolyline3DOptions.prototype.polylineOptions;
+
+/**
  * Details about a section of a route corresponding to a polyline that can be
  * used to customize the polyline style.
  * @record
@@ -26243,21 +26677,21 @@ google.maps.routes.RoutePolylineDetails = function() {};
 /**
  * The speed reading of the section of the route corresponding to this polyline.
  * Only populated for routes with traffic information.
- * @type {!google.maps.routes.Speed|null|undefined|undefined}
+ * @type {!google.maps.routes.Speed|null|undefined}
  */
 google.maps.routes.RoutePolylineDetails.prototype.speed;
 
 /**
  * The transit details of the section of the route corresponding to this
  * polyline. Only populated for routes with transit information.
- * @type {!google.maps.routes.TransitDetails|null|undefined|undefined}
+ * @type {!google.maps.routes.TransitDetails|null|undefined}
  */
 google.maps.routes.RoutePolylineDetails.prototype.transitDetails;
 
 /**
  * The travel mode of the section of the route corresponding to this polyline.
  * Empty for traffic polylines.
- * @type {!google.maps.TravelMode|null|undefined|undefined}
+ * @type {!google.maps.TravelMode|null|undefined}
  */
 google.maps.routes.RoutePolylineDetails.prototype.travelMode;
 
@@ -26295,7 +26729,7 @@ google.maps.routes.RoutePolylineOptions.prototype.polylineOptions;
  * a {@link google.maps.routes.Route}.
  *
  * Access by calling `const {RouteTravelAdvisory} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -26323,8 +26757,8 @@ google.maps.routes.RouteTravelAdvisory.prototype
  * google.maps.routes.ComputeRoutesRequest.routingPreference}. The intervals
  * cover the entire polyline of the {@link google.maps.routes.Route} without
  * overlap. The start point of a specified interval is the same as the end point
- * of the preceding interval. <br><br> Example: <br> <pre> <code> polyline: A
- * ---- B ---- C ---- D ---- E ---- F ---- G <br> speedReadingIntervals: [A,C),
+ * of the preceding interval. <br><br> Example: <br> <pre> <code>polyline: A
+ * ---- B ---- C ---- D ---- E ---- F ---- G<br> speedReadingIntervals: [A,C),
  * [C,D), [D,G) </code> </pre>
  * @type {!Array<!google.maps.routes.SpeedReadingInterval>|undefined}
  */
@@ -26334,7 +26768,7 @@ google.maps.routes.RouteTravelAdvisory.prototype.speedReadingIntervals;
  * Contains information about tolls on the {@link google.maps.routes.Route}.
  * This field is only populated if tolls are expected on the {@link
  * google.maps.routes.Route}. If this field is set but {@link
- * google.maps.routes.TollInfo.estimatedPrices} is not populated,then the route
+ * google.maps.routes.TollInfo.estimatedPrices} is not populated, then the route
  * contains tolls but the estimated price is unknown. If this field is empty,
  * then there are no tolls on the {@link google.maps.routes.Route}.
  * @type {!google.maps.routes.TollInfo|null|undefined}
@@ -26352,16 +26786,10 @@ google.maps.routes.RouteTravelAdvisory.prototype.tollInfo;
 google.maps.routes.RouteTravelAdvisory.prototype.transitFare;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.RouteTravelAdvisory.prototype.toJSON = function() {};
-
-/**
  * Factors to take into consideration when calculating a route.
  *
  * Access by calling `const {RoutingPreference} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -26390,7 +26818,7 @@ google.maps.routes.RoutingPreference = {
  * The classification of polyline speed based on traffic data.
  *
  * Access by calling `const {Speed} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -26435,7 +26863,7 @@ google.maps.routes.SpeedPath.prototype.speed;
  * interval.
  *
  * Access by calling `const {SpeedReadingInterval} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -26460,17 +26888,11 @@ google.maps.routes.SpeedReadingInterval.prototype.speed;
 google.maps.routes.SpeedReadingInterval.prototype.startPolylinePointIndex;
 
 /**
- * Converts to an object.
- * @return {undefined}
- */
-google.maps.routes.SpeedReadingInterval.prototype.toJSON = function() {};
-
-/**
  * Provides overview information about a list of {@link
  * google.maps.routes.RouteLeg.steps}.
  *
  * Access by calling `const {StepsOverview} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -26484,17 +26906,11 @@ google.maps.routes.StepsOverview = function() {};
 google.maps.routes.StepsOverview.prototype.multiModalSegments;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.StepsOverview.prototype.toJSON = function() {};
-
-/**
  * Encapsulates toll information on a {@link google.maps.routes.Route} or {@link
  * google.maps.routes.RouteLeg}.
  *
  * Access by calling `const {TollInfo} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -26506,22 +26922,17 @@ google.maps.routes.TollInfo = function() {};
  * contains an amount for each currency that is expected to be charged by toll
  * stations. Typically this list will contain only one item for routes with
  * tolls in one currency. For international trips, this list may contain
- * multiple items to reflect tolls in different currencies.
+ * multiple items to reflect tolls in different currencies. This field may be an
+ * empty array if tolls are expected but the estimated price is unknown.
  * @type {!Array<!google.maps.places.Money>|null|undefined}
  */
 google.maps.routes.TollInfo.prototype.estimatedPrices;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.TollInfo.prototype.toJSON = function() {};
-
-/**
  * Information about a transit agency.
  *
  * Access by calling `const {TransitAgency} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -26546,16 +26957,10 @@ google.maps.routes.TransitAgency.prototype.phoneNumber;
 google.maps.routes.TransitAgency.prototype.url;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.TransitAgency.prototype.toJSON = function() {};
-
-/**
  * Additional information about a transit step in a route.
  *
  * Access by calling `const {TransitDetails} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -26628,16 +27033,10 @@ google.maps.routes.TransitDetails.prototype.transitLine;
 google.maps.routes.TransitDetails.prototype.tripShortText;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.TransitDetails.prototype.toJSON = function() {};
-
-/**
  * Information about a transit line.
  *
  * Access by calling `const {TransitLine} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -26694,12 +27093,6 @@ google.maps.routes.TransitLine.prototype.url;
 google.maps.routes.TransitLine.prototype.vehicle;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.TransitLine.prototype.toJSON = function() {};
-
-/**
  * Preferences for <code>TRANSIT</code> based routes that influence the route
  * that is returned.
  * @record
@@ -26724,7 +27117,7 @@ google.maps.routes.TransitPreference.prototype.routingPreference;
  * Information about a transit stop.
  *
  * Access by calling `const {TransitStop} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -26744,16 +27137,10 @@ google.maps.routes.TransitStop.prototype.location;
 google.maps.routes.TransitStop.prototype.name;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.TransitStop.prototype.toJSON = function() {};
-
-/**
  * Information about a vehicle used in transit routes.
  *
  * Access by calling `const {TransitVehicle} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @constructor
  */
@@ -26795,17 +27182,11 @@ google.maps.routes.TransitVehicle.prototype.nameLanguage;
 google.maps.routes.TransitVehicle.prototype.vehicleType;
 
 /**
- * Converts to an object.
- * @return {!Object}
- */
-google.maps.routes.TransitVehicle.prototype.toJSON = function() {};
-
-/**
  * A set of values describing the vehicle&#39;s emission type. Applies only to
  * the <code>DRIVING</code> travel mode.
  *
  * Access by calling `const {VehicleEmissionType} = await
- * google.maps.importLibrary("routes")`. See
+ * google.maps.importLibrary("routes");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
  */
@@ -26850,7 +27231,7 @@ google.maps.routes.Waypoint = function() {};
 /**
  * The location of the waypoint. A string may be an address, a <a
  * href="https://plus.codes">plus code</a>, or a Place resource name.
- * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitudeLiteral|google.maps.routes.DirectionalLocationLiteral|google.maps.places.Place}
+ * @type {string|!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|!google.maps.routes.DirectionalLocationLiteral|!google.maps.places.Place}
  */
 google.maps.routes.Waypoint.prototype.location;
 
@@ -26933,9 +27314,9 @@ google.maps.visualization = {};
  * of data at geographical points.
  *
  * Access by calling `const {HeatmapLayer} = await
- * google.maps.importLibrary("visualization")`. See
+ * google.maps.importLibrary("visualization");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {google.maps.visualization.HeatmapLayerOptions=} opts
+ * @param {?google.maps.visualization.HeatmapLayerOptions=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  * @deprecated The Heatmap Layer functionality in the Maps JavaScript API is no

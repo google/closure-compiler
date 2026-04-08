@@ -28,7 +28,6 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
       String.m_equals__java_lang_String__java_lang_Object__boolean =
         function(opt_a, opt_b) {};
       """;
-  ;
 
   private static boolean useTypes;
 

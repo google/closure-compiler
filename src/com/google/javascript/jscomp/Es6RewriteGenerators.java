@@ -308,7 +308,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       return false;
     }
 
-    public void transpile() {
+    void transpile() {
       Node generatorFunction = originalGeneratorBody.getParent();
       checkState(generatorFunction.isGeneratorFunction());
       generatorFunction.putBooleanProp(Node.GENERATOR_FN, false);
@@ -1268,7 +1268,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       }
 
       /** Finalizes transpilation by dumping all generated "case" nodes. */
-      public void finalizeTransformation(Node generatorBody) {
+      void finalizeTransformation(Node generatorBody) {
         optimizeCaseIds();
 
         // If number of cases is small we render them without using "switch"
@@ -1348,7 +1348,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       }
 
       /** Ensures that the context has an empty state. */
-      public void checkStateIsEmpty() {
+      void checkStateIsEmpty() {
         checkState(namedLabels.isEmpty());
         checkState(breakCases.isEmpty());
         checkState(continueCases.isEmpty());
@@ -1789,8 +1789,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       }
 
       /** Adds a named labels to the context. */
-      public void pushLabels(
-          ArrayList<Node> labelNames, Case breakCase, @Nullable Case continueCase) {
+      void pushLabels(ArrayList<Node> labelNames, Case breakCase, @Nullable Case continueCase) {
         for (Node labelName : labelNames) {
           checkState(labelName.isLabelName());
           namedLabels.put(labelName.getString(), new LabelCases(breakCase, continueCase));
@@ -1798,7 +1797,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       }
 
       /** Removes the named labels from the context. */
-      public void popLabels(ArrayList<Node> labelNames) {
+      void popLabels(ArrayList<Node> labelNames) {
         for (Node labelName : labelNames) {
           checkState(labelName.isLabelName());
           namedLabels.remove(labelName.getString());
@@ -1806,25 +1805,25 @@ final class Es6RewriteGenerators implements CompilerPass {
       }
 
       /** Adds "break" jump point to the context */
-      public void pushBreakContext(Case breakCase) {
+      void pushBreakContext(Case breakCase) {
         breakCases.push(breakCase);
       }
 
       /** Adds "break" and "continue" jump points to the context */
-      public void pushBreakContinueContext(Case breakCase, Case continueCase) {
+      void pushBreakContinueContext(Case breakCase, Case continueCase) {
         pushBreakContext(breakCase);
         continueCases.push(continueCase);
       }
 
       /** Removes "break" jump point from the context, restoring the previous one */
-      public void popBreakContext() {
+      void popBreakContext() {
         breakCases.pop();
       }
 
       /**
        * Removes "break" and "continue" jump points from the context, restoring the previous ones.
        */
-      public void popBreakContinueContext() {
+      void popBreakContinueContext() {
         popBreakContext();
         continueCases.pop();
       }

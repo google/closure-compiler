@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import java.util.ArrayList;
-import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,11 +48,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   public CollapsePropertiesTest() {
     super(EXTERNS);
-  }
-
-  private static PassFactory makePassFactory(
-      String name, Function<AbstractCompiler, CompilerPass> pass) {
-    return PassFactory.builder().setName(name).setInternalFactory(pass).build();
   }
 
   @Override

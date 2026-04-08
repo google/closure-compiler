@@ -53,6 +53,9 @@ public abstract class ModuleResolver {
   public abstract @Nullable String resolveJsModule(
       String scriptAddress, String moduleAddress, String sourcename, int lineno, int colno);
 
+  public abstract @Nullable String resolveJsModuleSilently(
+      String scriptAddress, String moduleAddress);
+
   public String resolveModuleAsPath(String scriptAddress, String moduleAddress) {
     if (!moduleAddress.endsWith(".js")) {
       moduleAddress += ".js";

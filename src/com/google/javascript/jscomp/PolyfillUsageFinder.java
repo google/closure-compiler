@@ -253,7 +253,7 @@ final class PolyfillUsageFinder {
         case ONLY_UNGUARDED -> !isGuarded;
       };
     }
-  };
+  }
 
   private class Traverser extends GuardedCallback<String> {
 

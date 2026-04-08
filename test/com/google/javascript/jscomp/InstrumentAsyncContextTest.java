@@ -101,7 +101,18 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new InstrumentAsyncContext(compiler, instrumentAwait);
+    PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
+    optimizer.addOneTimePass(
+        makePassFactory(
+            "injectTranspilationRuntimeLibraries",
+            (c) ->
+                new InjectTranspilationRuntimeLibraries(
+                    compiler, /* shouldInstrumentAsyncContext= */ true)));
+    optimizer.addOneTimePass(
+        makePassFactory(
+            "instrumentAsyncContext",
+            (c) -> new InstrumentAsyncContext(compiler, instrumentAwait)));
+    return optimizer;
   }
 
   @Override

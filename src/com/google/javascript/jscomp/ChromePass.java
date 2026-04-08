@@ -311,7 +311,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
     private final Map<String, String> exports;
     private final Node namespaceBlock;
 
-    public RenameInternalsToExternalsCallback(
+    RenameInternalsToExternalsCallback(
         String namespaceName, Map<String, String> exports, Node namespaceBlock) {
       this.namespaceName = namespaceName;
       this.exports = exports;

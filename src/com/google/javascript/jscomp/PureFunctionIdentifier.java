@@ -166,7 +166,8 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           "JSC_UNUSED_ARTIFICIAL_PURE_ANNOTATION",
           "Artificial @nosideeffects annotation cannot be enforced: found ambiguous definitions of"
               + " {0}.\n\n"
-              + "Side-effectful definitions:\n  {1}");
+              + "Side-effectful definitions:\n  {1}"
+          );
 
   private final boolean assumeGettersArePure;
 

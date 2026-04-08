@@ -27,7 +27,6 @@ import com.google.javascript.rhino.Node;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import org.junit.Before;
 import org.junit.Test;
@@ -1606,11 +1605,6 @@ public final class NormalizeTest extends CompilerTestCase {
     // TODO(johnlenz): fix this so it is just another test case.
     CompilerTestCase tester =
         new CompilerTestCase() {
-
-          private static PassFactory makePassFactory(
-              String name, Function<AbstractCompiler, CompilerPass> pass) {
-            return PassFactory.builder().setName(name).setInternalFactory(pass).build();
-          }
 
           @Override
           protected CompilerPass getProcessor(final Compiler compiler) {

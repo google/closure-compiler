@@ -18,13 +18,13 @@ package com.google.javascript.jscomp.integration;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
-import com.google.javascript.jscomp.CompilerOptions.ClosureUnawareMode;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ConformanceConfig;
@@ -54,7 +54,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setDevMode(DevMode.EVERY_PASS);
-    options.setClosureUnawareMode(ClosureUnawareMode.PASS_THROUGH);
     options.setCodingConvention(new GoogleCodingConvention());
     options.setRenamePrefixNamespaceAssumeCrossChunkNames(true);
     options.setAssumeGettersArePure(false);
@@ -92,7 +91,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
         """
         /**
          * @fileoverview
-         * @closureUnaware
+         * @closureUnaware {WHITESPACE}
          */
         goog.module('a.b');
         /** @closureUnaware */
@@ -141,7 +140,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.setClosureUnawareMode(ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION);
 
     test(
         options,
@@ -171,7 +169,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     options.setGeneratePseudoNames(true);
     options.setSkipNonTranspilationPasses(true);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.setClosureUnawareMode(ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION);
 
     Compiler lastCompiler =
         compile(
@@ -212,7 +209,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setGeneratePseudoNames(true);
-    options.setClosureUnawareMode(ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION);
     options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_AND_VALIDATE_FIELDS);
 
     externs =
@@ -257,6 +253,47 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
   }
 
   @Test
+  public void testTranspileOnlyClosureUnawareCode_passesThroughComputedGetterSetter_toEs5() {
+    CompilerOptions options = createCompilerOptions();
+    options.setGeneratePseudoNames(true);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setDevMode(DevMode.EVERY_PASS);
+
+    test(
+        options,
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware
+         */
+        goog.module('a.b');
+        /** @closureUnaware */
+        (function() {
+          const obj = {
+            get [x()]() {
+              return 1;
+            },
+            set [x()](value) {
+            },
+          };
+          globalThis['a_b'] = obj;
+        }).call(globalThis);
+        """,
+        """
+        var module$exports$a$b = {};
+        (function() {
+          var $obj$$ = {
+            get [x()]() {
+              return 1;
+            },
+            set [x()]($value$$) {}
+          };
+          globalThis.a_b = $obj$$;
+        }).call(globalThis);
+        """);
+  }
+
+  @Test
   public void testNoOptimizeClosureUnawareCode_transpilationAndWhitespaceOnly() {
     CompilerOptions options = createCompilerOptions();
     options.setSkipNonTranspilationPasses(true);
@@ -277,7 +314,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
               """
               /**
                * @fileoverview
-               * @closureUnaware
+               * @closureUnaware {WHITESPACE}
                */
               goog.module('a.b');
               /** @closureUnaware */
@@ -355,7 +392,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
         """
         /**
          * @fileoverview
-         * @closureUnaware
+         * @closureUnaware {WHITESPACE}
          */
         goog.module('a.b');
         /** @closureUnaware */
@@ -371,12 +408,57 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
   }
 
   @Test
+  public void testOptimizeClosureUnawareCode_canBeConfiguredPerScript() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
+
+    test(
+        options,
+        new String[] {
+          """
+          /**
+           * @fileoverview
+           * @closureUnaware {SIMPLE}
+           */
+          goog.module('optimize.me');
+          /** @closureUnaware */
+          (function() {
+            const removeMe = 5;
+          }).call(globalThis);
+          """,
+          """
+          /**
+           * @fileoverview
+           * @closureUnaware {WHITESPACE}
+           */
+          goog.module('no.optimize');
+          /** @closureUnaware */
+          (function() {
+            const keepMe = 5;
+          }).call(globalThis);
+          """
+        },
+        new String[] {
+          """
+          (function() {
+          }).call(globalThis);
+          """,
+          """
+          (function() {
+            const keepMe = 5;
+          }).call(globalThis);
+          """
+        });
+  }
+
+  @Test
   public void testOptimizeClosureUnawareCode_doesRemoveUselessCode() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
-    options.setClosureUnawareMode(ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION);
 
     test(
         options,
@@ -411,7 +493,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
         """
         /**
          * @fileoverview
-         * @closureUnaware
+         * @closureUnaware {WHITESPACE}
          */
         goog.module('a.b');
         /** @closureUnaware */
@@ -459,7 +541,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
         """
         /**
          * @fileoverview
-         * @closureUnaware
+         * @closureUnaware {WHITESPACE}
          * @suppress {uselessCode}
          */
         goog.module('a.b');
@@ -495,7 +577,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
         """
         /**
          * @fileoverview
-         * @closureUnaware
+         * @closureUnaware {WHITESPACE}
          * @suppress {uselessCode}
          */
         goog.module('a.b');
@@ -562,7 +644,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
         """
         /**
          * @fileoverview
-         * @closureUnaware
+         * @closureUnaware {WHITESPACE}
          */
         goog.module('a.b');
         $jscomp_wrap_closure_unaware_code('{ const x = 5 }');
@@ -623,13 +705,14 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
 
     test(
         options,
         """
         /**
          * @fileoverview
-         * @closureUnaware
+         * @closureUnaware {WHITESPACE}
          */
         goog.module('a.b');
         /** @closureUnaware */
@@ -656,6 +739,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
 
     // this test-case is trying to ensure that even when there are jsdoc comments in the
     // closure-unaware portions of the AST that aren't attached to specific nodes / expressions
@@ -668,7 +752,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
         """
         /**
          * @fileoverview
-         * @closureUnaware
+         * @closureUnaware {WHITESPACE}
          */
         goog.module('a.b');
         /** @closureUnaware */
@@ -694,6 +778,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
 
     // this test-case is trying to ensure that even when there are jsdoc comments in the
     // closure-unaware portions of the AST that aren't attached to specific nodes / expressions
@@ -707,7 +792,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
         """
         /**
          * @fileoverview
-         * @closureUnaware
+         * @closureUnaware {WHITESPACE}
          */
         goog.module('a.b');
         /** @closureUnaware */
@@ -734,6 +819,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
 
     // this test-case is trying to ensure that even when the special handling for JSDoc comments in
     // closureUnaware code we can still report jsdoc errors for code that is not within the
@@ -743,7 +829,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
         """
         /**
          * @fileoverview
-         * @closureUnaware
+         * @closureUnaware {WHITESPACE}
          */
         goog.module('a.b');
         // This is invalid JSDoc, but it isn't within the subtree of a node annotated as
@@ -770,6 +856,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
 
     // this test-case is trying to ensure that even when the special handling for JSDoc comments in
     // closureUnaware code we can still report jsdoc errors for code that is not within the
@@ -781,7 +868,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
         """
         /**
          * @fileoverview
-         * @closureUnaware
+         * @closureUnaware {WHITESPACE}
          */
         goog.module('a.b');
         /** @closureUnaware */
@@ -800,6 +887,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
 
     // Normally, the RemoveCastNodes would remove all the CAST nodes from the AST before it is ever
     // serialized into a TypedAST. We don't want to run RemoveCastNodes over closure-unaware code,
@@ -809,7 +897,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
         """
         /**
          * @fileoverview
-         * @closureUnaware
+         * @closureUnaware {WHITESPACE}
          */
         goog.module('a.b');
         /** @closureUnaware */
@@ -843,6 +931,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
 
     options.setPreserveNonJSDocComments(true);
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
@@ -855,7 +944,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
         """
         /**
          * @fileoverview
-         * @closureUnaware
+         * @closureUnaware {WHITESPACE}
          */
         goog.module('a.b');
         /** @closureUnaware */
@@ -916,7 +1005,6 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
-    options.setClosureUnawareMode(ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION);
 
     options.setPreserveNonJSDocComments(true);
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
@@ -980,6 +1068,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
 
     options.setPreserveNonJSDocComments(true);
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
@@ -992,7 +1081,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
         """
         /**
          * @fileoverview
-         * @closureUnaware
+         * @closureUnaware {WHITESPACE}
          */
         goog.module('a.b');
         /** @closureUnaware */
@@ -1040,6 +1129,33 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     assertThat(
             nodesWithNonJsdocComments.stream().map(n -> n.getNonJSDocComment().getCommentString()))
         .containsExactly("// A B C\n/** FOO BAR BAZ! */\n// D E F");
+  }
+
+  @Test
+  public void testNoOptimizeClosureUnawareCode_doesntRunTranspilation() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setDevMode(DevMode.START_AND_END);
+
+    String inputWithConst =
+        """
+        /**
+         * @fileoverview
+         * @closureUnaware {WHITESPACE}
+         */
+        goog.module('a.b');
+        /** @closureUnaware */
+        (function() {
+          const x = 5;
+        }).call(globalThis);
+        """;
+
+    // TODO: b/497826311 - fix AstValidator crash & update the expected output to preserve
+    // 'const x = 5;'.
+    var ex = assertThrows(RuntimeException.class, () -> compile(options, inputWithConst));
+    assertThat(ex).hasMessageThat().contains("AST should not contain const declaration.");
   }
 
   // TODO how can I test whether source info is being properly retained?

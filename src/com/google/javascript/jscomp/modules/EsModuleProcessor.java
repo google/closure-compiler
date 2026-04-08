@@ -361,7 +361,7 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
       return imports;
     }
 
-    public ResolveExportResult resolveImport(
+    ResolveExportResult resolveImport(
         ModuleRequestResolver moduleRequestResolver,
         String name,
         Set<ExportTrace> resolveSet,
@@ -375,8 +375,7 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
       return b;
     }
 
-    public ResolveExportResult resolveImport(
-        ModuleRequestResolver moduleRequestResolver, String name) {
+    ResolveExportResult resolveImport(ModuleRequestResolver moduleRequestResolver, String name) {
       return resolveImport(
           moduleRequestResolver, name, new LinkedHashSet<>(), new LinkedHashSet<>());
     }

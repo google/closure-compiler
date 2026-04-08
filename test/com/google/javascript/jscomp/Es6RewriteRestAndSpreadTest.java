@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -40,7 +39,10 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new Es6RewriteRestAndSpread(compiler);
+    return (externs, root) -> {
+      new InjectTranspilationRuntimeLibraries(compiler).process(externs, root);
+      new Es6RewriteRestAndSpread(compiler).process(externs, root);
+    };
   }
 
   @Before
@@ -569,8 +571,6 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
           return zero;
         }
         """);
-    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
-        .containsExactly("es6/util/restarguments");
   }
 
   @Test
@@ -643,8 +643,6 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
          return two;
         }
         """);
-    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
-        .containsExactly("es6/util/restarguments");
   }
 
   @Test
@@ -657,8 +655,6 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
           return two;
         }
         """);
-    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
-        .containsExactly("es6/util/restarguments");
   }
 
   @Test
@@ -683,21 +679,5 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
           one = (one === undefined) ? 1 : one;
         }
         """);
-  }
-
-  @Test
-  public void testRuntimeLibraryInjectionOccurs() {
-    test(
-        "function f(...rest) { return rest; }",
-        """
-        function f() {
-          let rest = $jscomp.getRestArguments.apply(0, arguments);
-          return rest;
-        }
-        """);
-    // TODO: b/421971366 - we should instead assert that es6/util/restarguments was already injected
-    // before this point, by InjectTranspilationRuntimeLibraries.
-    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries())
-        .containsExactly("es6/util/restarguments");
   }
 }

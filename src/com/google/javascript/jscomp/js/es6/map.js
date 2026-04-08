@@ -370,7 +370,7 @@ $jscomp.polyfill('Map.groupBy', function(orig) {
    * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/groupBy
    *
    * @param {!Iterable<VALUE>} items An iterable of items to be grouped.
-   * @param {function(VALUE, number): KEY} callbackFn A function that
+   * @param {function(VALUE, number=): KEY} callbackFn A function that
    *     provides the key for each item.
    * @return {!Map<KEY, !Array<VALUE>>}
    * @template KEY, VALUE

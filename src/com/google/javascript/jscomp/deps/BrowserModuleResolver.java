@@ -67,4 +67,11 @@ public class BrowserModuleResolver extends ModuleResolver {
     }
     return loadAddress;
   }
+
+  @Override
+  public @Nullable String resolveJsModuleSilently(String scriptAddress, String moduleAddress) {
+    return ModuleLoader.isAmbiguousIdentifier(moduleAddress)
+        ? null
+        : locate(scriptAddress, moduleAddress);
+  }
 }

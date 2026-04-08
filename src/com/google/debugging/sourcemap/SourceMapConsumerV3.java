@@ -19,10 +19,10 @@ package com.google.debugging.sourcemap;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
 import com.google.debugging.sourcemap.Base64VLQ.CharIterator;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Precision;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,10 +43,11 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
   private String[] sources;
   private String[] sourcesContent;
   private String[] names;
-  private int lineCount;
   private @Nullable String file;
-  // Slots in the lines list will be null if the line does not have any entries.
-  private @Nullable ArrayList<ArrayList<Entry>> lines = null;
+  private int lineCount;
+
+  private Mappings mappings = null;
+
   /** originalFile path ==> original line ==> target mappings */
   private Map<String, Map<Integer, Collection<OriginalMapping>>>
       reverseSourceMapping;
@@ -93,11 +94,26 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
     sourcesContent = sourceMapObject.getSourcesContent();
     names = sourceMapObject.getNames();
 
-    if (lineCount >= 0) {
-      lines = new ArrayList<>(lineCount);
-    } else {
-      lines = new ArrayList<>();
+    boolean useCompactMappings =
+        (sources.length < 65535) && (names == null || names.length < 65535);
+
+    int estimatedEntries = (lineCount >= 0) ? lineCount * 2 : 1000;
+    if (sourceMapObject.getMappings() != null) {
+      // Estimate the number of entries in the string encoding. A entry has 5 values
+      // and a separator, for a minimum of 6 characters.
+      //
+      // It is better to overestimate than underestimate the number of entries - otherwise, we
+      // will have to resize the array many times.
+      // XJS base chunk, for example, have ~1000 lines but the map has ~266,000 entries.
+      // If we start small (e.g. 2000), we need multiple allocations/copies as it grows: 2k -> 4k
+      // -> ... -> 512k. Because 266K lies between 256K and 512K, it tops off at 512K and the
+      // final trim() will still trigger an Arrays.copyOf to scale back down to 266K!
+      // If we start with a bigger estimate, we might still need to trim down at the end, but we
+      // save potentially many array copies.
+      estimatedEntries = Math.max(estimatedEntries, sourceMapObject.getMappings().length() / 6);
     }
+
+    mappings = new Mappings(lineCount, useCompactMappings, estimatedEntries);
 
     // The value type of each extension is the native JSON type (e.g. JsonObject, or JSONObject
     // when compiled with GWT).
@@ -149,28 +165,25 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
     lineNumber--;
     column--;
 
-    if (lineNumber < 0 || lineNumber >= lines.size()) {
+    if (lineNumber < 0 || lineNumber >= mappings.getParsedLineCount()) {
       return null;
     }
 
-    checkState(lineNumber >= 0);
-    checkState(column >= 0);
+    int start = mappings.getLineStart(lineNumber);
+    int end = mappings.getLineStart(lineNumber + 1);
 
     // If the line is empty return the previous mapping.
-    if (lines.get(lineNumber) == null) {
+    if (start == end) {
       return getPreviousMapping(lineNumber);
     }
 
-    ArrayList<Entry> entries = lines.get(lineNumber);
-    // No empty lists.
-    checkState(!entries.isEmpty());
-    if (entries.get(0).getGeneratedColumn() > column) {
+    if (mappings.atIndex(start).getGeneratedColumn() > column) {
       return getPreviousMapping(lineNumber);
     }
 
-    int index = search(entries, column, 0, entries.size() - 1);
+    int index = search(column, start, end - mappings.getEntrySize());
     Preconditions.checkState(index >= 0, "unexpected:%s", index);
-    return getOriginalMappingForEntry(entries.get(index), Precision.EXACT);
+    return getOriginalMappingForEntry(index, Precision.EXACT);
   }
 
   @Override
@@ -252,17 +265,21 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
     }
 
     void build() throws SourceMapParseException {
-      int [] temp = new int[MAX_ENTRY_VALUES];
-      ArrayList<Entry> entries = new ArrayList<>();
+      int[] temp = new int[MAX_ENTRY_VALUES];
+
+      int entriesCount = 0;
+      int linesCount = 0;
+
+      mappings.setLineStart(0, 0);
+
       while (content.hasNext()) {
         // ';' denotes a new line.
         if (tryConsumeToken(';')) {
           // The line is complete, store the result
-          completeLine(entries);
-          if (!entries.isEmpty()) {
-            // A new array list for the next line.
-            entries = new ArrayList<>();
-          }
+          linesCount++;
+          mappings.setLineStart(linesCount, entriesCount);
+          line++;
+          previousCol = 0;
         } else {
           // grab the next entry for the current line.
           int entryValues = 0;
@@ -270,10 +287,30 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
             temp[entryValues] = nextValue();
             entryValues++;
           }
-          Entry entry = decodeEntry(temp, entryValues);
 
-          validateEntry(entry);
-          entries.add(entry);
+          mappings.setEntry(
+              entriesCount,
+              temp,
+              entryValues,
+              previousCol,
+              previousSrcId,
+              previousSrcLine,
+              previousSrcColumn,
+              previousNameId);
+          mappings.validateEntry(entriesCount, line);
+
+          mappings.atIndex(entriesCount);
+          previousCol = mappings.getGeneratedColumn();
+          if (entryValues >= 4) {
+            previousSrcId = mappings.getSourceFileId();
+            previousSrcLine = mappings.getSourceLine();
+            previousSrcColumn = mappings.getSourceColumn();
+          }
+          if (entryValues == 5) {
+            previousNameId = mappings.getNameId();
+          }
+
+          entriesCount += mappings.getEntrySize();
 
           // Consume the separating token, if there is one.
           tryConsumeToken(',');
@@ -282,97 +319,14 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
 
       // Some source map generator (e.g.UglifyJS) generates lines without
       // a trailing line separator. So add the rest of the content.
-      if (!entries.isEmpty()) {
-        completeLine(entries);
+      if (entriesCount > mappings.getLineStart(linesCount)) {
+        linesCount++;
+        mappings.setLineStart(linesCount, entriesCount);
       }
+
+      mappings.trim(entriesCount, linesCount);
     }
 
-    private void completeLine(ArrayList<Entry> entries) {
-      // The line is complete, store the result for the line,
-      // null if the line is empty.
-      if (!entries.isEmpty()) {
-        lines.add(entries);
-      } else {
-        lines.add(null);
-      }
-      line++;
-      previousCol = 0;
-    }
-
-    private void validateEntry(Entry entry) {
-      Preconditions.checkState((lineCount < 0) || (line < lineCount),
-          "line=%s, lineCount=%s", line, lineCount);
-      checkState(entry.getSourceFileId() == UNMAPPED || entry.getSourceFileId() < sources.length);
-      checkState(entry.getNameId() == UNMAPPED || entry.getNameId() < names.length);
-    }
-
-    /**
-     * Decodes the next entry, using the previous encountered values to
-     * decode the relative values.
-     *
-     * @param vals An array of integers that represent values in the entry.
-     * @param entryValues The number of entries in the array.
-     * @return The entry object.
-     */
-    private Entry decodeEntry(int[] vals, int entryValues) throws SourceMapParseException {
-      Entry entry;
-      return switch (entryValues) {
-        case 1 ->
-        // The first values, if present are in the following order:
-        //   0: the starting column in the current line of the generated file
-        //   1: the id of the original source file
-        //   2: the starting line in the original source
-        //   3: the starting column in the original source
-        //   4: the id of the original symbol name
-        // The values are relative to the last encountered value for that field.
-        // Note: the previously column value for the generated file is reset
-        // to '0' when a new line is encountered.  This is done in the 'build'
-        // method.
-        {
-          // An unmapped section of the generated file.
-          entry = new UnmappedEntry(vals[0] + previousCol);
-          // Set the values see for the next entry.
-          previousCol = entry.getGeneratedColumn();
-          yield entry;
-        }
-        case 4 -> {
-          // A mapped section of the generated file.
-          entry =
-              new UnnamedEntry(
-                  vals[0] + previousCol,
-                  vals[1] + previousSrcId,
-                  vals[2] + previousSrcLine,
-                  vals[3] + previousSrcColumn);
-          // Set the values see for the next entry.
-          previousCol = entry.getGeneratedColumn();
-          previousSrcId = entry.getSourceFileId();
-          previousSrcLine = entry.getSourceLine();
-          previousSrcColumn = entry.getSourceColumn();
-          yield entry;
-        }
-        case 5 -> {
-          // A mapped section of the generated file, that has an associated
-          // name.
-          entry =
-              new NamedEntry(
-                  vals[0] + previousCol,
-                  vals[1] + previousSrcId,
-                  vals[2] + previousSrcLine,
-                  vals[3] + previousSrcColumn,
-                  vals[4] + previousNameId);
-          // Set the values see for the next entry.
-          previousCol = entry.getGeneratedColumn();
-          previousSrcId = entry.getSourceFileId();
-          previousSrcLine = entry.getSourceLine();
-          previousSrcColumn = entry.getSourceColumn();
-          previousNameId = entry.getNameId();
-          yield entry;
-        }
-        default ->
-            throw new SourceMapParseException(
-                "Unexpected number of values for entry:" + entryValues);
-      };
-    }
 
     private boolean tryConsumeToken(char token) {
       if (content.hasNext() && content.peek() == token) {
@@ -397,25 +351,23 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
     }
   }
 
-  /**
-   * Perform a binary search on the array to find a section that covers
-   * the target column.
-   */
-  private static int search(ArrayList<Entry> entries, int target, int start, int end) {
+  /** Perform a binary search on the array to find a section that covers the target column. */
+  private int search(int target, int start, int end) {
+    int entrySize = mappings.getEntrySize();
     while (true) {
-      int mid = ((end - start) / 2) + start;
-      int compare = compareEntry(entries, mid, target);
+      int mid = ((end - start) / (entrySize * 2)) * entrySize + start;
+      int compare = mappings.atIndex(mid).getGeneratedColumn() - target;
       if (compare == 0) {
         return mid;
       } else if (compare < 0) {
         // it is in the upper half
-        start = mid + 1;
+        start = mid + entrySize;
         if (start > end) {
           return end;
         }
       } else {
         // it is in the lower half
-        end = mid - 1;
+        end = mid - entrySize;
         if (end < start) {
           return end;
         }
@@ -423,92 +375,82 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
     }
   }
 
-  /**
-   * Compare an array entry's column value to the target column value.
-   */
-  private static int compareEntry(ArrayList<Entry> entries, int entry, int target) {
-    return entries.get(entry).getGeneratedColumn() - target;
-  }
-
-  /** Returns the mapping entry that proceeds the supplied line or null if no such entry exists. */
   private @Nullable OriginalMapping getPreviousMapping(int lineNumber) {
     do {
       if (lineNumber == 0) {
         return null;
       }
       lineNumber--;
-    } while (lines.get(lineNumber) == null);
-    ArrayList<Entry> entries = lines.get(lineNumber);
-    return getOriginalMappingForEntry(Iterables.getLast(entries), Precision.APPROXIMATE_LINE);
+    } while (mappings.getLineStart(lineNumber) == mappings.getLineStart(lineNumber + 1));
+    int index = mappings.getLineStart(lineNumber + 1) - mappings.getEntrySize();
+    return getOriginalMappingForEntry(index, Precision.APPROXIMATE_LINE);
   }
 
   /** Creates an "OriginalMapping" object for the given entry object. */
-  private @Nullable OriginalMapping getOriginalMappingForEntry(Entry entry, Precision precision) {
-    if (entry.getSourceFileId() == UNMAPPED) {
+  private @Nullable OriginalMapping getOriginalMappingForEntry(int index, Precision precision) {
+    mappings.atIndex(index);
+    int sourceFileId = mappings.getSourceFileId();
+    if (sourceFileId == UNMAPPED) {
       return null;
     } else {
       // Adjust the line/column here to be start at 1.
       OriginalMapping.Builder x =
           OriginalMapping.newBuilder()
-              .setOriginalFile(sources[entry.getSourceFileId()])
-              .setLineNumber(entry.getSourceLine() + 1)
-              .setColumnPosition(entry.getSourceColumn() + 1)
+              .setOriginalFile(sources[sourceFileId])
+              .setLineNumber(mappings.getSourceLine() + 1)
+              .setColumnPosition(mappings.getSourceColumn() + 1)
               .setPrecision(precision);
-      if (entry.getNameId() != UNMAPPED) {
-        x.setIdentifier(names[entry.getNameId()]);
+      int nameId = mappings.getNameId();
+      if (nameId != UNMAPPED) {
+        x.setIdentifier(names[nameId]);
       }
       return x.build();
     }
   }
 
   /**
-   * Reverse the source map; the created mapping will allow us to quickly go
-   * from a source file and line number to a collection of target
-   * OriginalMappings.
+   * Reverse the source map; the created mapping will allow us to quickly go from a source file and
+   * line number to a collection of target OriginalMappings.
    */
   private void createReverseMapping() {
     reverseSourceMapping = new LinkedHashMap<>();
 
-    for (int targetLine = 0; targetLine < lines.size(); targetLine++) {
-      ArrayList<Entry> entries = lines.get(targetLine);
+    for (int targetLine = 0; targetLine < mappings.getParsedLineCount(); targetLine++) {
+      int start = mappings.getLineStart(targetLine);
+      int end = mappings.getLineStart(targetLine + 1);
 
-      if (entries != null) {
-        for (Entry entry : entries) {
-          if (entry.getSourceFileId() != UNMAPPED && entry.getSourceLine() != UNMAPPED) {
-            String originalFile = sources[entry.getSourceFileId()];
+      for (int i = start; i < end; i += mappings.getEntrySize()) {
+        mappings.atIndex(i);
+        int sourceFileId = mappings.getSourceFileId();
+        int sourceLine = mappings.getSourceLine();
+        if (sourceFileId != UNMAPPED && sourceLine != UNMAPPED) {
+          String originalFile = sources[sourceFileId];
 
-            reverseSourceMapping.computeIfAbsent(
-                originalFile,
-                (String k) -> new LinkedHashMap<Integer, Collection<OriginalMapping>>());
+          Map<Integer, Collection<OriginalMapping>> lineToCollectionMap =
+              reverseSourceMapping.computeIfAbsent(
+                  originalFile,
+                  (String k) -> new LinkedHashMap<Integer, Collection<OriginalMapping>>());
 
-            Map<Integer, Collection<OriginalMapping>> lineToCollectionMap =
-                reverseSourceMapping.get(originalFile);
-
-            int sourceLine = entry.getSourceLine();
-
-            if (!lineToCollectionMap.containsKey(sourceLine)) {
-              lineToCollectionMap.put(sourceLine,
-                  new ArrayList<OriginalMapping>(1));
-            }
-
-            Collection<OriginalMapping> mappings =
-                lineToCollectionMap.get(sourceLine);
-
-            OriginalMapping.Builder builder =
-                OriginalMapping.newBuilder()
-                    .setLineNumber(targetLine)
-                    .setColumnPosition(entry.getGeneratedColumn());
-
-            mappings.add(builder.build());
+          if (!lineToCollectionMap.containsKey(sourceLine)) {
+            lineToCollectionMap.put(sourceLine, new ArrayList<OriginalMapping>(1));
           }
+
+          Collection<OriginalMapping> mappingsLine = lineToCollectionMap.get(sourceLine);
+
+          OriginalMapping.Builder builder =
+              OriginalMapping.newBuilder()
+                  .setLineNumber(targetLine)
+                  .setColumnPosition(mappings.getGeneratedColumn());
+
+          mappingsLine.add(builder.build());
         }
       }
     }
   }
 
   /**
-   * A implementation of the Base64VLQ CharIterator used for decoding the
-   * mappings encoded in the JSON string.
+   * A implementation of the Base64VLQ CharIterator used for decoding the mappings encoded in the
+   * JSON string.
    */
   private static class StringCharIterator implements CharIterator {
     final String content;
@@ -535,106 +477,227 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
     }
   }
 
-  /**
-   * Represents a mapping entry in the source map.
-   */
-  private interface Entry {
-    int getGeneratedColumn();
-    int getSourceFileId();
-    int getSourceLine();
-    int getSourceColumn();
-    int getNameId();
-  }
+  /** A container for mapping entries. */
+  private final class Mappings {
+    // flatEntries stores all entries sequentially.
+    // Each entry is packed into 5 consecutive integers:
+    // [generatedCol, sourceLine, sourceCol, sourceFileId, nameId].
+    // For unmapped entries, sourceFileId (and other source-related fields) will be set to UNMAPPED
+    // (-1).
+    private int[] flatEntries;
+    // lineStart[i] is the index of the first entry for line i in flatEntries.
+    // The length of lineStart is lineCount + 1, where lineStart[lineCount] is the total number of
+    // entries.
+    private int[] lineStart;
+    private int lineCount;
+    private int index;
 
-  /**
-   * This class represents a portion of the generated file, that is not mapped
-   * to a section in the original source.
-   */
-  private static class UnmappedEntry implements Entry {
-    private final int column;
+    private final int entrySize;
 
-    UnmappedEntry(int column) {
-      this.column = column;
+    Mappings(int lineCount, boolean useCompactMappings, int estimatedEntries) {
+      this.lineCount = lineCount;
+      this.entrySize = useCompactMappings ? 4 : 5;
+      this.flatEntries = new int[estimatedEntries * entrySize];
+      int estimatedLines = (lineCount >= 0) ? lineCount : 1000;
+      this.lineStart = new int[estimatedLines + 1];
     }
 
-    @Override
-    public int getGeneratedColumn() {
-      return column;
+    int getEntrySize() {
+      return entrySize;
     }
 
-    @Override
-    public int getSourceFileId() {
-      return UNMAPPED;
+    @CanIgnoreReturnValue
+    Mappings atIndex(int index) {
+      this.index = index;
+      return this;
     }
 
-    @Override
-    public int getSourceLine() {
-      return UNMAPPED;
+    int getGeneratedColumn() {
+      return flatEntries[index];
     }
 
-    @Override
-    public int getSourceColumn() {
-      return UNMAPPED;
+    int getSourceFileId() {
+      if (entrySize == 4) {
+        int val = flatEntries[index + 3] >> 16;
+        return (val == -1 || (val & 0xFFFF) == 0xFFFF) ? UNMAPPED : (val & 0xFFFF);
+      }
+      return flatEntries[index + 3];
     }
 
-    @Override
-    public int getNameId() {
-      return UNMAPPED;
-    }
-  }
-
-  /**
-   * This class represents a portion of the generated file, that is mapped
-   * to a section in the original source.
-   */
-  private static class UnnamedEntry extends UnmappedEntry {
-    private final int srcFile;
-    private final int srcLine;
-    private final int srcColumn;
-
-    UnnamedEntry(int column, int srcFile, int srcLine, int srcColumn) {
-      super(column);
-      this.srcFile = srcFile;
-      this.srcLine = srcLine;
-      this.srcColumn = srcColumn;
+    int getSourceLine() {
+      return flatEntries[index + 1];
     }
 
-    @Override
-    public int getSourceFileId() {
-      return srcFile;
+    int getSourceColumn() {
+      return flatEntries[index + 2];
     }
 
-    @Override
-    public int getSourceLine() {
-      return srcLine;
+    int getNameId() {
+      if (entrySize == 4) {
+        int val = flatEntries[index + 3] & 0xFFFF;
+        return (val == 0xFFFF) ? UNMAPPED : val;
+      }
+      return flatEntries[index + 4];
     }
 
-    @Override
-    public int getSourceColumn() {
-      return srcColumn;
+    int getParsedLineCount() {
+      return lineCount;
     }
 
-    @Override
-    public int getNameId() {
-      return UNMAPPED;
-    }
-  }
-
-  /**
-   * This class represents a portion of the generated file, that is mapped
-   * to a section in the original source, and is associated with a name.
-   */
-  private static class NamedEntry extends UnnamedEntry {
-    private final int name;
-
-    NamedEntry(int column, int srcFile, int srcLine, int srcColumn, int name) {
-      super(column, srcFile, srcLine, srcColumn);
-      this.name = name;
+    int getLineStart(int line) {
+      return lineStart[line];
     }
 
-    @Override
-    public int getNameId() {
-      return name;
+    void setLineStart(int line, int entriesCount) {
+      if (line >= lineStart.length) {
+        lineStart = Arrays.copyOf(lineStart, lineStart.length * 2);
+      }
+      lineStart[line] = entriesCount;
+    }
+
+    void setEntry(
+        int entriesCount,
+        int[] vals,
+        int entryValues,
+        int previousCol,
+        int previousSrcId,
+        int previousSrcLine,
+        int previousSrcColumn,
+        int previousNameId)
+        throws SourceMapParseException {
+      if (entriesCount + entrySize > flatEntries.length) {
+        flatEntries = Arrays.copyOf(flatEntries, flatEntries.length * 2);
+      }
+      // `entrySize == 4` indicates `useCompactMappings` is true, meaning the number of
+      // unique source files and names are both small enough (under 65535) that their IDs
+      // can be bit-packed into a single integer. Otherwise, they each get their own integer.
+      if (entrySize == 4) {
+        setEntryCompact(
+            entriesCount,
+            vals,
+            entryValues,
+            previousCol,
+            previousSrcId,
+            previousSrcLine,
+            previousSrcColumn,
+            previousNameId);
+      } else {
+        setEntryNormal(
+            entriesCount,
+            vals,
+            entryValues,
+            previousCol,
+            previousSrcId,
+            previousSrcLine,
+            previousSrcColumn,
+            previousNameId);
+      }
+    }
+
+    private void setEntryCompact(
+        int entriesCount,
+        int[] vals,
+        int entryValues,
+        int previousCol,
+        int previousSrcId,
+        int previousSrcLine,
+        int previousSrcColumn,
+        int previousNameId)
+        throws SourceMapParseException {
+      // The `vals` array holds the decoded VLQ values in the exact order established
+      // by the SourceMap V3 specification:
+      // [generatedCol, sourceFileId, sourceLine, sourceCol, nameId]
+      // We reorder these values when storing them in `flatEntries` to minimize branching
+      // overhead during lookups, putting `sourceLine` and `sourceColumn` before the IDs.
+      switch (entryValues) {
+        case 1 -> {
+          flatEntries[entriesCount] = vals[0] + previousCol;
+          flatEntries[entriesCount + 1] = UNMAPPED;
+          flatEntries[entriesCount + 2] = UNMAPPED;
+          flatEntries[entriesCount + 3] = UNMAPPED; // Both IDs are -1
+        }
+        case 4 -> {
+          flatEntries[entriesCount] = vals[0] + previousCol;
+          flatEntries[entriesCount + 1] = vals[2] + previousSrcLine;
+          flatEntries[entriesCount + 2] = vals[3] + previousSrcColumn;
+          int srcId = vals[1] + previousSrcId;
+          flatEntries[entriesCount + 3] = (srcId << 16) | 0xFFFF;
+        }
+        case 5 -> {
+          flatEntries[entriesCount] = vals[0] + previousCol;
+          flatEntries[entriesCount + 1] = vals[2] + previousSrcLine;
+          flatEntries[entriesCount + 2] = vals[3] + previousSrcColumn;
+          int srcId = vals[1] + previousSrcId;
+          int nameId = vals[4] + previousNameId;
+          flatEntries[entriesCount + 3] = (srcId << 16) | (nameId & 0xFFFF);
+        }
+        default ->
+            throw new SourceMapParseException(
+                "Unexpected number of values for entry:" + entryValues);
+      }
+    }
+
+    private void setEntryNormal(
+        int entriesCount,
+        int[] vals,
+        int entryValues,
+        int previousCol,
+        int previousSrcId,
+        int previousSrcLine,
+        int previousSrcColumn,
+        int previousNameId)
+        throws SourceMapParseException {
+      // The `vals` array holds the decoded VLQ values in the exact order established
+      // by the SourceMap V3 specification:
+      // [generatedCol, sourceFileId, sourceLine, sourceCol, nameId]
+      // We reorder these values when storing them in `flatEntries` to minimize branching
+      // overhead during lookups, putting `sourceLine` and `sourceColumn` before the IDs.
+      switch (entryValues) {
+        case 1 -> {
+          flatEntries[entriesCount] = vals[0] + previousCol;
+          flatEntries[entriesCount + 1] = UNMAPPED;
+          flatEntries[entriesCount + 2] = UNMAPPED;
+          flatEntries[entriesCount + 3] = UNMAPPED;
+          flatEntries[entriesCount + 4] = UNMAPPED;
+        }
+        case 4 -> {
+          flatEntries[entriesCount] = vals[0] + previousCol;
+          flatEntries[entriesCount + 1] = vals[2] + previousSrcLine;
+          flatEntries[entriesCount + 2] = vals[3] + previousSrcColumn;
+          flatEntries[entriesCount + 3] = vals[1] + previousSrcId;
+          flatEntries[entriesCount + 4] = UNMAPPED;
+        }
+        case 5 -> {
+          flatEntries[entriesCount] = vals[0] + previousCol;
+          flatEntries[entriesCount + 1] = vals[2] + previousSrcLine;
+          flatEntries[entriesCount + 2] = vals[3] + previousSrcColumn;
+          flatEntries[entriesCount + 3] = vals[1] + previousSrcId;
+          flatEntries[entriesCount + 4] = vals[4] + previousNameId;
+        }
+        default ->
+            throw new SourceMapParseException(
+                "Unexpected number of values for entry:" + entryValues);
+      }
+    }
+
+    void validateEntry(int entriesCount, int line) {
+      Preconditions.checkState(
+          lineCount < 0 || line < lineCount, "line=%s, lineCount=%s", line, lineCount);
+      atIndex(entriesCount);
+      int sourceFileId = getSourceFileId();
+      int nameId = getNameId();
+      checkState(sourceFileId == UNMAPPED || sourceFileId < sources.length);
+      checkState(nameId == UNMAPPED || nameId < names.length);
+    }
+
+    void trim(int entriesCount, int linesCount) {
+      if (flatEntries.length > entriesCount) {
+        this.flatEntries = Arrays.copyOf(flatEntries, entriesCount);
+      }
+      if (lineStart.length > linesCount + 1) {
+        this.lineStart = Arrays.copyOf(lineStart, linesCount + 1);
+      }
+      this.lineCount = linesCount;
     }
   }
 
@@ -653,16 +716,14 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
     FilePosition sourceStartPosition = null;
     FilePosition startPosition = null;
 
-    final int lineCount = lines.size();
-    for (int i = 0; i < lineCount; i++) {
-      ArrayList<Entry> line = lines.get(i);
-      if (line != null) {
-        final int entryCount = line.size();
-        for (int j = 0; j < entryCount; j++) {
-          Entry entry = line.get(j);
+    for (int i = 0; i < mappings.getParsedLineCount(); i++) {
+      int start = mappings.getLineStart(i);
+      int end = mappings.getLineStart(i + 1);
+      if (start != end) {
+        for (int j = start; j < end; j += mappings.getEntrySize()) {
+          mappings.atIndex(j);
           if (pending) {
-            FilePosition endPosition = new FilePosition(
-                i, entry.getGeneratedColumn());
+            FilePosition endPosition = new FilePosition(i, mappings.getGeneratedColumn());
             visitor.visit(
                 sourceName,
                 symbolName,
@@ -672,15 +733,15 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
             pending = false;
           }
 
-          if (entry.getSourceFileId() != UNMAPPED) {
+          int sourceFileId = mappings.getSourceFileId();
+          if (sourceFileId != UNMAPPED) {
             pending = true;
-            sourceName = sources[entry.getSourceFileId()];
-            symbolName = (entry.getNameId() != UNMAPPED)
-                ? names[entry.getNameId()] : null;
-            sourceStartPosition = new FilePosition(
-                entry.getSourceLine(), entry.getSourceColumn());
-            startPosition = new FilePosition(
-                i, entry.getGeneratedColumn());
+            sourceName = sources[sourceFileId];
+            int nameId = mappings.getNameId();
+            symbolName = (nameId != UNMAPPED) ? names[nameId] : null;
+            sourceStartPosition =
+                new FilePosition(mappings.getSourceLine(), mappings.getSourceColumn());
+            startPosition = new FilePosition(i, mappings.getGeneratedColumn());
           }
         }
       }

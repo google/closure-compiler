@@ -1412,10 +1412,12 @@ function postMessage(
  * transferred, not just cloned, meaning that they are no longer usable in the
  * input value.
  * @see https://html.spec.whatwg.org/multipage/structured-data.html#structured-cloning
- * @param {*} value
+ * @modifies {arguments}
+ * @template T
+ * @param {T} value
  * @param {!StructuredSerializeOptions=} options
  * @throws {DOMException}
- * @return {*}
+ * @return {T}
  */
 function structuredClone(value, options) {}
 

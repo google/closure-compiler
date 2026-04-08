@@ -168,6 +168,13 @@ jasmine.Matchers.prototype.toBeDefined = function(expectationFailOutput) {};
  * @param {*=} expectationFailOutput
  * @return {void}
  */
+jasmine.Matchers.prototype.toBeFalse = function(expectationFailOutput) {};
+
+
+/**
+ * @param {*=} expectationFailOutput
+ * @return {void}
+ */
 jasmine.Matchers.prototype.toBeFalsy = function(expectationFailOutput) {};
 
 
@@ -216,6 +223,13 @@ jasmine.Matchers.prototype.toBeCloseTo = function(
  * @param {*=} expectationFailOutput
  * @return {void}
  */
+jasmine.Matchers.prototype.toBeInstanceOf = function(expectationFailOutput) {};
+
+
+/**
+ * @param {*=} expectationFailOutput
+ * @return {void}
+ */
 jasmine.Matchers.prototype.toBeNull = function(expectationFailOutput) {};
 
 
@@ -224,6 +238,13 @@ jasmine.Matchers.prototype.toBeNull = function(expectationFailOutput) {};
  * @return {void}
  */
 jasmine.Matchers.prototype.toBeTruthy = function(expectationFailOutput) {};
+
+
+/**
+ * @param {*=} expectationFailOutput
+ * @return {void}
+ */
+jasmine.Matchers.prototype.toBeTrue = function(expectationFailOutput) {};
 
 
 /**
@@ -473,6 +494,18 @@ jasmine.SpyStrategy.prototype.throwError = function(error) {};
  * @return {!jasmine.Spy}
  */
 jasmine.SpyStrategy.prototype.callFake = function(fn) {};
+
+/**
+ * @param {*} val
+ * @return {!jasmine.Spy}
+ */
+jasmine.SpyStrategy.prototype.resolveTo = function(val) {};
+
+/**
+ * @param {*} val
+ * @return {!jasmine.Spy}
+ */
+jasmine.SpyStrategy.prototype.rejectWith = function(val) {};
 
 
 /** @return {!jasmine.Spy} */

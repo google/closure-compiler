@@ -5473,45 +5473,45 @@ public class JSTypeTest extends BaseJSTypeTestCase {
             }
           }
           if (shouldCheck) {
-            assertWithMessage(typeI + " should not equal " + typeJ)
+            assertWithMessage("%s should not equal %s", typeI, typeJ)
                 .that(typeI.equals(typeJ))
                 .isFalse();
-            assertWithMessage("Named " + typeI + " should not equal " + typeJ)
+            assertWithMessage("Named %s should not equal %s", typeI, typeJ)
                 .that(namedTypeI.equals(namedTypeJ))
                 .isFalse();
-            assertWithMessage("Proxy " + typeI + " should not equal " + typeJ)
+            assertWithMessage("Proxy %s should not equal %s", typeI, typeJ)
                 .that(proxyTypeI.equals(proxyTypeJ))
                 .isFalse();
           }
         }
 
-        assertWithMessage(typeJ + " should be castable to " + typeI)
+        assertWithMessage("%s should be castable to %s", typeJ, typeI)
             .that(typeJ.canCastTo(typeI))
             .isTrue();
-        assertWithMessage(typeJ + " should be castable to Named " + namedTypeI)
+        assertWithMessage("%s should be castable to Named %s", typeJ, namedTypeI)
             .that(typeJ.canCastTo(namedTypeI))
             .isTrue();
-        assertWithMessage(typeJ + " should be castable to Proxy " + proxyTypeI)
+        assertWithMessage("%s should be castable to Proxy %s", typeJ, proxyTypeI)
             .that(typeJ.canCastTo(proxyTypeI))
             .isTrue();
 
-        assertWithMessage("Named " + typeJ + " should be castable to " + typeI)
+        assertWithMessage("Named %s should be castable to %s", typeJ, typeI)
             .that(namedTypeJ.canCastTo(typeI))
             .isTrue();
-        assertWithMessage("Named " + typeJ + " should be castable to Named " + typeI)
+        assertWithMessage("Named %s should be castable to Named %s", typeJ, typeI)
             .that(namedTypeJ.canCastTo(namedTypeI))
             .isTrue();
-        assertWithMessage("Named " + typeJ + " should be castable to Proxy " + typeI)
+        assertWithMessage("Named %s should be castable to Proxy %s", typeJ, typeI)
             .that(namedTypeJ.canCastTo(proxyTypeI))
             .isTrue();
 
-        assertWithMessage("Proxy " + typeJ + " should be castable to " + typeI)
+        assertWithMessage("Proxy %s should be castable to %s", typeJ, typeI)
             .that(proxyTypeJ.canCastTo(typeI))
             .isTrue();
-        assertWithMessage("Proxy " + typeJ + " should be castable to Named " + typeI)
+        assertWithMessage("Proxy %s should be castable to Named %s", typeJ, typeI)
             .that(proxyTypeJ.canCastTo(namedTypeI))
             .isTrue();
-        assertWithMessage("Proxy " + typeJ + " should be castable to Proxy " + typeI)
+        assertWithMessage("Proxy %s should be castable to Proxy %s", typeJ, typeI)
             .that(proxyTypeJ.canCastTo(proxyTypeI))
             .isTrue();
 
@@ -5524,23 +5524,23 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
         if (checkSubtyping) {
           if (i <= j) {
-            assertWithMessage(typeJ + " should be a subtype of " + typeI)
+            assertWithMessage("%s should be a subtype of %s", typeJ, typeI)
                 .that(typeJ.isSubtypeOf(typeI))
                 .isTrue();
-            assertWithMessage("Named " + typeJ + " should be a subtype of Named " + typeI)
+            assertWithMessage("Named %s should be a subtype of Named %s", typeJ, typeI)
                 .that(namedTypeJ.isSubtypeOf(namedTypeI))
                 .isTrue();
-            assertWithMessage("Proxy " + typeJ + " should be a subtype of Proxy " + typeI)
+            assertWithMessage("Proxy %s should be a subtype of Proxy %s", typeJ, typeI)
                 .that(proxyTypeJ.isSubtypeOf(proxyTypeI))
                 .isTrue();
           } else {
-            assertWithMessage(typeJ + " should not be a subtype of " + typeI)
+            assertWithMessage("%s should not be a subtype of %s", typeJ, typeI)
                 .that(typeJ.isSubtypeOf(typeI))
                 .isFalse();
-            assertWithMessage("Named " + typeJ + " should not be a subtype of Named " + typeI)
+            assertWithMessage("Named %s should not be a subtype of Named %s", typeJ, typeI)
                 .that(namedTypeJ.isSubtypeOf(namedTypeI))
                 .isFalse();
-            assertWithMessage("Named " + typeJ + " should not be a subtype of Named " + typeI)
+            assertWithMessage("Named %s should not be a subtype of Named %s", typeJ, typeI)
                 .that(proxyTypeJ.isSubtypeOf(proxyTypeI))
                 .isFalse();
           }
@@ -5950,7 +5950,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void assertUnionContains(UnionType union, JSType type) {
-    assertWithMessage(union + " should contain " + type).that(union.contains(type)).isTrue();
+    assertWithMessage("%s should contain %s", union, type).that(union.contains(type)).isTrue();
   }
 
   /** Tests the factory method {@link JSTypeRegistry#createAnonymousObjectType}}. */

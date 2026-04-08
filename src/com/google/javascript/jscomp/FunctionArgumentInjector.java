@@ -387,8 +387,7 @@ class FunctionArgumentInjector {
 
     if (!requiresTempsUpToThisParameterName.isEmpty()) {
       // mark all names upto requiresTempsUptoParameterName as namesNeedingTemps
-      for (Map.Entry<String, ParamArgPair> entry : argMap.entrySet()) {
-        String parameterName = entry.getKey();
+      for (String parameterName : argMap.keySet()) {
         if (parameterName.equals(THIS_MARKER)
             && NodeUtil.isUndefined(argMap.get(THIS_MARKER).arg())) {
           /* When there is no explicit this arg passed into the call, the argMap contains an entry

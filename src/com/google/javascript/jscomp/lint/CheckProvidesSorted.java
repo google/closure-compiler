@@ -45,7 +45,7 @@ public final class CheckProvidesSorted implements NodeTraversal.Callback {
     COLLECT_ONLY,
     /** Additionally report a warning. */
     COLLECT_AND_REPORT
-  };
+  }
 
   private final Mode mode;
 

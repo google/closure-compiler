@@ -2181,7 +2181,7 @@ public final class SymbolTable {
       };
     }
 
-    public void visitTypeNode(
+    void visitTypeNode(
         ImmutableMap<String, JSTypeExpression> templateTypeNames, SymbolScope scope, Node n) {
       if (n.isStringLit()
           && !isNativeSourcelessType(n.getString())

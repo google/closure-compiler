@@ -237,7 +237,6 @@ public abstract class JsFileLineParser {
       if (closingQuoteIndex == -1) {
         return false;
       }
-      ;
       // Skip escaped quotes
       while (isEscaped(line, closingQuoteIndex)) {
         closingQuoteIndex = line.indexOf(quoteChar, closingQuoteIndex + 1);

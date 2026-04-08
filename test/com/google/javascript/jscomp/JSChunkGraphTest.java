@@ -184,7 +184,6 @@ public final class JSChunkGraphTest {
             () ->
                 new JSChunkGraph(
                     new JSChunk[] {chunkA, chunkB, chunkC, chunkD, chunkE, chunkF, weakChunk}));
-    ;
     assertThat(e).hasMessageThat().contains("Found these strong sources in the weak chunk:\n  a");
   }
 

@@ -35,23 +35,19 @@ import org.jspecify.annotations.Nullable;
 /**
  * Replaces calls to id generators with ids.
  *
- * Use this to get unique and short ids.
+ * <p>Use this to get unique and short ids.
  */
 class ReplaceIdGenerators implements CompilerPass {
   static final DiagnosticType NON_GLOBAL_ID_GENERATOR_CALL =
       DiagnosticType.error(
-          "JSC_NON_GLOBAL_ID_GENERATOR_CALL",
-          "Id generator call must be in the global scope");
+          "JSC_NON_GLOBAL_ID_GENERATOR_CALL", "Id generator call must be in the global scope");
 
   static final DiagnosticType CONDITIONAL_ID_GENERATOR_CALL =
       DiagnosticType.error(
-          "JSC_CONDITIONAL_ID_GENERATOR_CALL",
-          "Id generator call must be unconditional");
+          "JSC_CONDITIONAL_ID_GENERATOR_CALL", "Id generator call must be unconditional");
 
   static final DiagnosticType INVALID_GENERATOR_ID_MAPPING =
-      DiagnosticType.error(
-          "JSC_INVALID_GENERATOR_ID_MAPPING",
-          "Invalid generator id mapping. {0}");
+      DiagnosticType.error("JSC_INVALID_GENERATOR_ID_MAPPING", "Invalid generator id mapping. {0}");
 
   static final DiagnosticType MISSING_NAME_MAP_FOR_GENERATOR =
       DiagnosticType.warning(
@@ -60,8 +56,7 @@ class ReplaceIdGenerators implements CompilerPass {
 
   static final DiagnosticType INVALID_GENERATOR_PARAMETER =
       DiagnosticType.warning(
-          "JSC_INVALID_GENERATOR_PARAMETER",
-          "An id generator must be called with a literal.");
+          "JSC_INVALID_GENERATOR_PARAMETER", "An id generator must be called with a literal.");
 
   static final DiagnosticType INVALID_TEMPLATE_LITERAL_PARAMETER =
       DiagnosticType.warning(
@@ -73,14 +68,13 @@ class ReplaceIdGenerators implements CompilerPass {
       DiagnosticType.error(
           "JSC_SHORTHAND_FUNCTION_NOT_SUPPORTED_IN_ID_GEN",
           "Object literal shorthand functions is not allowed in the "
-          + "arguments of an id generator");
+              + "arguments of an id generator");
 
   static final DiagnosticType COMPUTED_PROP_NOT_SUPPORTED_IN_ID_GEN =
       DiagnosticType.error(
           "JSC_COMPUTED_PROP_NOT_SUPPORTED_IN_ID_GEN",
           "Object literal computed property name is not allowed in the "
-          + "arguments of an id generator");
-
+              + "arguments of an id generator");
 
   private final AbstractCompiler compiler;
   private final boolean templateLiteralsAreTranspiled;
@@ -131,9 +125,7 @@ class ReplaceIdGenerators implements CompilerPass {
                     name, createNameSupplier(RenameStrategy.STABLE, previousMap.get(name)));
           }
         } else {
-          nameGenerators.put(name,
-              createNameSupplier(
-                  RenameStrategy.MAPPED, map));
+          nameGenerators.put(name, createNameSupplier(RenameStrategy.MAPPED, map));
         }
         idGeneratorMaps.put(name, new LinkedHashMap<String, String>());
       }
@@ -150,6 +142,7 @@ class ReplaceIdGenerators implements CompilerPass {
 
   private static interface NameSupplier {
     String getName(String id, String name);
+
     RenameStrategy getRenameStrategy();
   }
 
@@ -158,8 +151,7 @@ class ReplaceIdGenerators implements CompilerPass {
     private final Map<String, String> previousMappings;
     private final RenameStrategy renameStrategy;
 
-    public ObfuscatedNameSupplier(
-        RenameStrategy renameStrategy, BiMap<String, String> previousMappings) {
+    ObfuscatedNameSupplier(RenameStrategy renameStrategy, BiMap<String, String> previousMappings) {
       this.previousMappings = previousMappings.inverse();
       this.generator =
           new DefaultNameGenerator(previousMappings.keySet(), "", ImmutableSet.<Character>of());
@@ -185,7 +177,7 @@ class ReplaceIdGenerators implements CompilerPass {
     private int counter = 0;
     private final RenameStrategy renameStrategy;
 
-    public PseudoNameSupplier(RenameStrategy renameStrategy) {
+    PseudoNameSupplier(RenameStrategy renameStrategy) {
       this.renameStrategy = renameStrategy;
     }
 
@@ -208,6 +200,7 @@ class ReplaceIdGenerators implements CompilerPass {
     public String getName(String id, String name) {
       return Base64.base64EncodeInt(name.hashCode());
     }
+
     @Override
     public RenameStrategy getRenameStrategy() {
       return RenameStrategy.STABLE;
@@ -225,6 +218,7 @@ class ReplaceIdGenerators implements CompilerPass {
     public String getName(String id, String name) {
       return xid.get(name);
     }
+
     @Override
     public RenameStrategy getRenameStrategy() {
       return RenameStrategy.XID;
@@ -251,9 +245,8 @@ class ReplaceIdGenerators implements CompilerPass {
 
   private NameSupplier createNameSupplier(
       RenameStrategy renameStrategy, BiMap<String, String> previousMappings) {
-    previousMappings = previousMappings != null ?
-        previousMappings :
-        ImmutableBiMap.<String, String>of();
+    previousMappings =
+        previousMappings != null ? previousMappings : ImmutableBiMap.<String, String>of();
     if (renameStrategy == RenameStrategy.STABLE) {
       return new StableNameSupplier();
     } else if (renameStrategy == RenameStrategy.XID) {
@@ -288,7 +281,7 @@ class ReplaceIdGenerators implements CompilerPass {
         name = n.getFirstChild().getQualifiedName();
       } else if (NodeUtil.isNameDeclaration(n)) {
         name = n.getFirstChild().getString();
-      } else if (n.isFunction()){
+      } else if (n.isFunction()) {
         name = n.getFirstChild().getString();
         if (name.isEmpty()) {
           return;
@@ -302,24 +295,17 @@ class ReplaceIdGenerators implements CompilerPass {
       if (doc.isConsistentIdGenerator()) {
         consistNameMap.put(name, new LinkedHashMap<String, String>());
         nameGenerators.put(
-            name, createNameSupplier(
-                RenameStrategy.CONSISTENT, previousMap.get(name)));
+            name, createNameSupplier(RenameStrategy.CONSISTENT, previousMap.get(name)));
       } else if (doc.isStableIdGenerator()) {
-        nameGenerators.put(
-            name, createNameSupplier(
-                RenameStrategy.STABLE, previousMap.get(name)));
+        nameGenerators.put(name, createNameSupplier(RenameStrategy.STABLE, previousMap.get(name)));
       } else if (doc.isXidGenerator()) {
-        nameGenerators.put(
-            name, createNameSupplier(
-                RenameStrategy.XID, previousMap.get(name)));
+        nameGenerators.put(name, createNameSupplier(RenameStrategy.XID, previousMap.get(name)));
       } else if (doc.isIdGenerator()) {
         nameGenerators.put(
-            name, createNameSupplier(
-                RenameStrategy.INCONSISTENT, previousMap.get(name)));
+            name, createNameSupplier(RenameStrategy.INCONSISTENT, previousMap.get(name)));
       } else if (doc.isMappedIdGenerator()) {
         NameSupplier supplier = nameGenerators.get(name);
-        if (supplier == null
-            || supplier.getRenameStrategy() != RenameStrategy.MAPPED) {
+        if (supplier == null || supplier.getRenameStrategy() != RenameStrategy.MAPPED) {
           compiler.report(JSError.make(n, MISSING_NAME_MAP_FOR_GENERATOR));
           // skip registering the name in the list of Generators if there no
           // mapping.
@@ -449,8 +435,7 @@ class ReplaceIdGenerators implements CompilerPass {
             return;
           }
 
-          String rename = getObfuscatedName(
-              key, callName, nameGenerator, key.getString());
+          String rename = getObfuscatedName(key, callName, nameGenerator, key.getString());
           key.setString(rename);
           // Prevent standard renaming by marking the key as quoted.
           key.putBooleanProp(Node.QUOTED_PROP, true);
@@ -549,10 +534,8 @@ class ReplaceIdGenerators implements CompilerPass {
     }
   }
 
-
   /**
-   * @return The serialize map of generators and their ids and their
-   *     replacements.
+   * @return The serialize map of generators and their ids and their replacements.
    */
   public String getSerializedIdMappings() {
     return IdMappingUtil.generateSerializedIdMappings(idGeneratorMaps);

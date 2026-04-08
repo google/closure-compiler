@@ -68,8 +68,6 @@ public final class AstValidator implements CompilerPass {
   /** Validate that all required inlinings were performed. */
   private final boolean shouldValidateRequiredInlinings;
 
-  private final boolean shouldValidateFeaturesInClosureUnaware;
-
   public AstValidator(
       AbstractCompiler compiler,
       ViolationHandler handler,
@@ -79,9 +77,6 @@ public final class AstValidator implements CompilerPass {
     this.violationHandler = handler;
     this.isScriptFeatureValidationEnabled = validateScriptFeatures;
     this.shouldValidateRequiredInlinings = shouldValidateRequiredInlinings;
-    this.shouldValidateFeaturesInClosureUnaware =
-        compiler.getOptions().getClosureUnawareMode()
-            == CompilerOptions.ClosureUnawareMode.SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION;
   }
 
   public AstValidator(AbstractCompiler compiler) {
@@ -1870,7 +1865,14 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateObjectLitComputedPropKey(Node n) {
-    validateFeature(Feature.COMPUTED_PROPERTIES, n);
+    // TODO: b/499356003 - clean up this hack. The right fix is to:
+    // 1) model computed prop getter/setters with a separate Feature from COMPUTED_PROPERTIES
+    // 2) modify the transpilation passes to *not* remove the computed prop getter/setter in object
+    // literals feature from the compiler featureset because it can't actually transpile them.
+    // (The transpilation passes report a suppressible error instead).
+    if (!(n.getIsInClosureUnawareSubtree() && NodeUtil.isGetOrSetKey(n))) {
+      validateFeature(Feature.COMPUTED_PROPERTIES, n);
+    }
     validateNodeType(Token.COMPUTED_PROP, n);
     validateProperties(n);
     validateChildCount(n);
@@ -2124,14 +2126,6 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateFeature(Feature feature, Node n) {
-    if (!shouldValidateFeaturesInClosureUnaware && n.getIsInClosureUnawareSubtree()) {
-      // Closure-unaware code is currently hidden from transpilation passes in the compiler when
-      // options.setClosureUnawareMode(Mode.PASS_THROUGH) is enabled, so the AST
-      // might still contain features that should have been transpiled.
-      // TODO: b/321233583 - Once JSCompiler always transpiles closure-unaware code, remove this
-      // early-return to validate that all closure-unaware code is transpiled properly.
-      return;
-    }
     FeatureSet allowbleFeatures = compiler.getAllowableFeatures();
     // Checks that feature present in the AST is recorded in the compiler's featureSet.
     if (!n.isFromExterns() && !allowbleFeatures.has(feature)) {

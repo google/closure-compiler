@@ -131,6 +131,7 @@ import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.PerFileClosureUnawareMode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NonJSDocComment;
 import com.google.javascript.rhino.QualifiedName;
@@ -1069,6 +1070,10 @@ class IRFactory {
       error(fn, "@closureUnaware root must be function");
       return fn;
     }
+    JSDocInfo info = fn.getJSDocInfo();
+    if (info.getPerFileClosureUnawareMode() != PerFileClosureUnawareMode.UNSPECIFIED) {
+      error(fn, "@closureUnaware mode can only be specified at the fileoverview level");
+    }
     fn.setJSDocInfo(null);
 
     Node shadowNameNode = IR.name(JSCOMP_CLOSURE_UNAWARE_CODE_SHADOW_HOST_NAME);
@@ -1172,6 +1177,10 @@ class IRFactory {
     if (withinClosureUnawareCodeRange(node.location.start.line, node.location.start.column)) {
       return;
     }
+    // Externs should not produce warnings about the input language mode.
+    if (currentFileIsExterns) {
+      return;
+    }
     if (!isSupportedForInputLanguageMode(feature)) {
       errorReporter.warning(
           languageFeatureWarningMessage(feature), sourceName, lineno(node), charno(node));
@@ -1184,6 +1193,10 @@ class IRFactory {
     if (withinClosureUnawareCodeRange(token.location.start.line, token.location.start.column)) {
       return;
     }
+    // Externs should not produce warnings about the input language mode.
+    if (currentFileIsExterns) {
+      return;
+    }
     if (!isSupportedForInputLanguageMode(feature)) {
       errorReporter.warning(
           languageFeatureWarningMessage(feature), sourceName, lineno(token), charno(token));
@@ -1193,6 +1206,10 @@ class IRFactory {
   void maybeWarnForFeature(Node node, Feature feature) {
     features = features.with(feature);
     if (withinClosureUnawareCodeRange(node.getLineno(), node.getCharno())) {
+      return;
+    }
+    // Externs should not produce warnings about the input language mode.
+    if (currentFileIsExterns) {
       return;
     }
     if (!isSupportedForInputLanguageMode(feature)) {
@@ -1898,7 +1915,7 @@ class IRFactory {
     }
 
     /** Is this a GETPROP, OPTCHAIN_GETPROP, GETELEM, or OPTCHAIN_GETELEM? */
-    public boolean isNormalOrOptChainGet(Node n) {
+    boolean isNormalOrOptChainGet(Node n) {
       return n.isGetProp() || n.isGetElem() || n.isOptChainGetProp() || n.isOptChainGetElem();
     }
 
@@ -3512,7 +3529,7 @@ class IRFactory {
       };
     }
 
-    public Node process(ParseTree node) {
+    Node process(ParseTree node) {
       switch (node.type) {
         case BINARY_OPERATOR -> {
           return processBinaryExpression(node.asBinaryOperator());

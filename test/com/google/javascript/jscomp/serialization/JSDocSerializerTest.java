@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.serialization;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.PerFileClosureUnawareMode;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -44,5 +45,18 @@ public class JSDocSerializerTest {
     final JSDocInfo convertedJsDocInfo =
         JSDocSerializer.convertJSDocInfoForOptimizations(originalJsDocInfo);
     assertThat(convertedJsDocInfo.isSassGeneratedCssTs()).isTrue();
+  }
+
+  @Test
+  public void preserveSupportsClosureUnaware_simple() {
+    JSDocInfo.Builder builder = JSDocInfo.builder();
+    builder.recordTypeSummary();
+    assertThat(builder.recordClosureUnawareCode(PerFileClosureUnawareMode.SIMPLE)).isTrue();
+    JSDocInfo originalJsDocInfo = builder.build();
+
+    JSDocInfo convertedJsDocInfo =
+        JSDocSerializer.convertJSDocInfoForOptimizations(originalJsDocInfo);
+    assertThat(convertedJsDocInfo.getPerFileClosureUnawareMode())
+        .isEqualTo(PerFileClosureUnawareMode.SIMPLE);
   }
 }

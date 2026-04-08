@@ -640,7 +640,7 @@ public class CompilerInput implements DependencyInfo {
     private @Nullable Node root;
     private FeatureSet features;
 
-    public Node getAstRoot(AbstractCompiler compiler) {
+    Node getAstRoot(AbstractCompiler compiler) {
       if (this.isParsed()) {
         return this.root;
       }
@@ -660,7 +660,7 @@ public class CompilerInput implements DependencyInfo {
       return this.root;
     }
 
-    public void clearAst() {
+    void clearAst() {
       root = null;
       // While we're at it, clear out any saved text in the source file on
       // the assumption that if we're dumping the parse tree, then we probably

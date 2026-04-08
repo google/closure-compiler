@@ -517,6 +517,57 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testVariableReferencesToXidCssClasses() {
+    SourceFile cssVarsDefinition =
+        SourceFile.fromCode(
+            "foo/styles.css.closure.js",
+            """
+            /**
+             * @fileoverview generated from foo/styles.css
+             * @sassGeneratedCssTs
+             */
+            goog.module('foo.styles$2ecss');
+            // These files will be automatically generated, so we know the
+            // exported 'classes' property will always be declared like this.
+            /** @type {{Bar: string, Baz: string}} */
+            exports.classes = {
+              'Bar': obfuscate ? xid('fooStylesBar') : goog.getCssName('fooStylesBar'),
+              'Baz': obfuscate ? xid('fooStylesBaz') : goog.getCssName('fooStylesBaz'),
+            }
+            """);
+    SourceFile cssVarsExpected =
+        SourceFile.fromCode(
+            "foo/styles.css.closure.js",
+            """
+            /**
+             * @fileoverview generated from foo/styles.css
+             * @sassGeneratedCssTs
+             */
+            goog.module('foo.styles$2ecss');
+            /** @type {{Bar: string, Baz: string}} */
+            exports.classes = {
+              'Bar': obfuscate ? xid('fooStylesBar') : 'fsr',
+              'Baz': obfuscate ? xid('fooStylesBaz') : 'fsz',
+            }
+            """);
+    SourceFile importer =
+        SourceFile.fromCode(
+            "foo/importer.closure.js",
+            """
+            goog.module('foo.importer');
+            /** @type {string} */
+            const foo_styles_css = goog.require('foo.styles$2ecss')
+            // Even when the original TS import was
+            // `import {classes as foo} from './path/to/file';`
+            // tsickle will convert references to `foo` into a fully qualified
+            // name like this rather than creating an alias variable named `foo`.
+            var x = foo_styles_css.classes.Bar
+            """);
+    test(srcs(cssVarsDefinition, importer), expected(cssVarsExpected, importer));
+    assertThat(cssNames).containsExactly("fooStylesBar");
+  }
+
+  @Test
   public void testMixedVariableAndStringReferences() {
     SourceFile cssVarsDefinition =
         SourceFile.fromCode(

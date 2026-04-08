@@ -549,7 +549,7 @@ class VarCheck implements ScopedCallback, CompilerPass {
       }
     }
 
-    public void removeDuplicates() {
+    void removeDuplicates() {
       for (Node n : dupDeclNodes) {
         Node parent = n.getParent();
         if (parent != null) {

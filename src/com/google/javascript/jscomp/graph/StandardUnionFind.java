@@ -184,7 +184,7 @@ public class StandardUnionFind<E> implements Serializable, UnionFind<E> {
     final Predicate<Object> isSameRoot =
         new Predicate<Object>() {
 
-          /** some node that's close to the root, or null */
+          /* some node that's close to the root, or null */
           Node<E> nodeForValue = elmap.get(value);
 
           @Override

@@ -312,8 +312,12 @@ public class Node {
 
     @Override
     public boolean isEquivalentTo(
-        Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
-      return super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect)
+        Node node,
+        RecursionMode recursion,
+        TypeComparison typeConfig,
+        JsDocComparison jsDocConfig,
+        SideEffectComparison sideEffectConfig) {
+      return super.isEquivalentTo(node, recursion, typeConfig, jsDocConfig, sideEffectConfig)
           && (this.number == ((NumberNode) node).number); // -0.0 and NaN are forbidden.
     }
 
@@ -337,8 +341,12 @@ public class Node {
 
     @Override
     public boolean isEquivalentTo(
-        Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
-      return super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect)
+        Node node,
+        RecursionMode recursion,
+        TypeComparison typeConfig,
+        JsDocComparison jsDocConfig,
+        SideEffectComparison sideEffectConfig) {
+      return super.isEquivalentTo(node, recursion, typeConfig, jsDocConfig, sideEffectConfig)
           && getBigInt().equals(node.getBigInt());
     }
 
@@ -373,8 +381,12 @@ public class Node {
 
     @Override
     public boolean isEquivalentTo(
-        Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
-      return super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect)
+        Node node,
+        RecursionMode recursion,
+        TypeComparison typeConfig,
+        JsDocComparison jsDocConfig,
+        SideEffectComparison sideEffectConfig) {
+      return super.isEquivalentTo(node, recursion, typeConfig, jsDocConfig, sideEffectConfig)
           && RhinoStringPool.uncheckedEquals(this.str, ((StringNode) node).str);
     }
 
@@ -419,8 +431,12 @@ public class Node {
 
     @Override
     public boolean isEquivalentTo(
-        Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
-      if (!super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect)) {
+        Node node,
+        RecursionMode recursion,
+        TypeComparison typeConfig,
+        JsDocComparison jsDocConfig,
+        SideEffectComparison sideEffectConfig) {
+      if (!super.isEquivalentTo(node, recursion, typeConfig, jsDocConfig, sideEffectConfig)) {
         return false;
       }
 
@@ -446,11 +462,11 @@ public class Node {
       this.next = next;
     }
 
-    public abstract int getIntValue();
+    abstract int getIntValue();
 
-    public abstract Object getObjectValue();
+    abstract Object getObjectValue();
 
-    public abstract PropListItem chain(@Nullable PropListItem next);
+    abstract PropListItem chain(@Nullable PropListItem next);
   }
 
   // A base class for Object storing props
@@ -2133,31 +2149,98 @@ public class Node {
     return false;
   }
 
+  /** Recursion mode for {@link #isEquivalentTo}. */
+  public enum RecursionMode {
+    /** Do not compare children or shadow AST. */
+    SHALLOW,
+    /** Recursively compare children but not shadow AST. */
+    DEEP_NO_SHADOW,
+    /** Recursively compare children and shadow AST. */
+    DEEP;
+
+    public boolean recurseShadowAst() {
+      return this == DEEP;
+    }
+
+    public boolean recurseChildren() {
+      return this == DEEP || this == DEEP_NO_SHADOW;
+    }
+  }
+
+  /** Type comparison mode for {@link #isEquivalentTo}. */
+  public enum TypeComparison {
+    /** Ignore JSTypes/Colors. */
+    IGNORE,
+    /** Compare JSTypes/Colors. */
+    COMPARE
+  }
+
+  /** JsDoc comparison mode for {@link #isEquivalentTo}. */
+  public enum JsDocComparison {
+    /** Ignore JSDoc. */
+    IGNORE,
+    /** Compare JSDoc. */
+    COMPARE
+  }
+
+  /** Side effect comparison mode for {@link #isEquivalentTo}. */
+  public enum SideEffectComparison {
+    /** Ignore side effect flags. */
+    IGNORE,
+    /** Compare side effect flags. */
+    COMPARE
+  }
+
   /** Checks equivalence without going into child nodes */
   public final boolean isEquivalentToShallow(Node node) {
-    return isEquivalentTo(node, false, false, false, false);
+    return isEquivalentTo(
+        node,
+        RecursionMode.SHALLOW,
+        TypeComparison.IGNORE,
+        JsDocComparison.IGNORE,
+        SideEffectComparison.IGNORE);
   }
 
   /** Returns true if this node is equivalent semantically to another including side effects. */
   public final boolean isEquivalentWithSideEffectsTo(Node node) {
-    return isEquivalentTo(node, false, true, false, true);
+    return isEquivalentTo(
+        node,
+        RecursionMode.DEEP,
+        TypeComparison.IGNORE,
+        JsDocComparison.IGNORE,
+        SideEffectComparison.COMPARE);
   }
 
   /** Returns true if this node is equivalent semantically to another including side effects. */
   public final boolean isEquivalentWithSideEffectsToShallow(Node node) {
-    return isEquivalentTo(node, false, false, false, true);
+    return isEquivalentTo(
+        node,
+        RecursionMode.SHALLOW,
+        TypeComparison.IGNORE,
+        JsDocComparison.IGNORE,
+        SideEffectComparison.COMPARE);
   }
 
   /**
    * Returns true if this node is equivalent semantically to another and the types are equivalent.
    */
   public final boolean isEquivalentToTyped(Node node) {
-    return isEquivalentTo(node, true, true, true, false);
+    return isEquivalentTo(
+        node,
+        RecursionMode.DEEP,
+        TypeComparison.COMPARE,
+        JsDocComparison.COMPARE,
+        SideEffectComparison.IGNORE);
   }
 
   /** Returns true if this node is equivalent semantically to another */
   public final boolean isEquivalentTo(Node node) {
-    return isEquivalentTo(node, false, true, false, false);
+    return isEquivalentTo(
+        node,
+        RecursionMode.DEEP,
+        TypeComparison.IGNORE,
+        JsDocComparison.IGNORE,
+        SideEffectComparison.IGNORE);
   }
 
   /**
@@ -2255,7 +2338,10 @@ public class Node {
    * @param recurse Whether to compare the children of the current node. If not, only the count of
    *     the children are compared.
    * @param jsDoc Whether to check that the JsDoc of the nodes are equivalent.
+   * @deprecated Use {@link #isEquivalentTo(Node, RecursionMode, TypeComparison, JsDocComparison,
+   *     SideEffectComparison)} instead.
    */
+  @Deprecated
   final boolean isEquivalentTo(Node node, boolean compareType, boolean recurse, boolean jsDoc) {
     return isEquivalentTo(node, compareType, recurse, jsDoc, false);
   }
@@ -2268,20 +2354,48 @@ public class Node {
    *     the children are compared.
    * @param jsDoc Whether to check that the JsDoc of the nodes are equivalent.
    * @param sideEffect Whether to check that the side-effect flags of the nodes are equivalent.
+   * @deprecated Use {@link #isEquivalentTo(Node, RecursionMode, TypeComparison, JsDocComparison,
+   *     SideEffectComparison)} instead.
+   */
+  @Deprecated
+  public final boolean isEquivalentTo(
+      Node node, boolean compareType, boolean recurse, boolean jsDoc, boolean sideEffect) {
+    return isEquivalentTo(
+        node,
+        recurse ? RecursionMode.DEEP : RecursionMode.SHALLOW,
+        compareType ? TypeComparison.COMPARE : TypeComparison.IGNORE,
+        jsDoc ? JsDocComparison.COMPARE : JsDocComparison.IGNORE,
+        sideEffect ? SideEffectComparison.COMPARE : SideEffectComparison.IGNORE);
+  }
+
+  /**
+   * Returns whether this node is equivalent semantically to the provided node.
+   *
+   * @param node The node to compare to.
+   * @param recursion The recursion mode.
+   * @param typeConfig Type comparison configuration.
+   * @param jsDocConfig JsDoc comparison configuration.
+   * @param sideEffectConfig Side effect comparison configuration.
    */
   public boolean isEquivalentTo(
-      Node node, boolean compareType, boolean recurse, boolean jsDoc, boolean sideEffect) {
+      Node node,
+      RecursionMode recursion,
+      TypeComparison typeConfig,
+      JsDocComparison jsDocConfig,
+      SideEffectComparison sideEffectConfig) {
     if (token != node.token
         || getChildCount() != node.getChildCount()
         || this.getClass() != node.getClass()) {
       return false;
     }
 
-    if (compareType && !Objects.equals(this.jstypeOrColor, node.jstypeOrColor)) {
+    if (typeConfig == TypeComparison.COMPARE
+        && !Objects.equals(this.jstypeOrColor, node.jstypeOrColor)) {
       return false;
     }
 
-    if (jsDoc && !JSDocInfo.areEquivalent(getJSDocInfo(), node.getJSDocInfo())) {
+    if (jsDocConfig == JsDocComparison.COMPARE
+        && !JSDocInfo.areEquivalent(getJSDocInfo(), node.getJSDocInfo())) {
       return false;
     }
 
@@ -2291,7 +2405,8 @@ public class Node {
       // Do nothing
     } else if (thisDte == null || thatDte == null) {
       return false;
-    } else if (!thisDte.isEquivalentTo(thatDte, compareType, recurse, jsDoc)) {
+    } else if (!thisDte.isEquivalentTo(
+        thatDte, recursion, typeConfig, jsDocConfig, sideEffectConfig)) {
       return false;
     }
 
@@ -2318,7 +2433,7 @@ public class Node {
       }
     }
 
-    if (sideEffect) {
+    if (sideEffectConfig == SideEffectComparison.COMPARE) {
       if (this.getSideEffectFlags() != node.getSideEffectFlags()) {
         return false;
       }
@@ -2328,16 +2443,24 @@ public class Node {
       }
     }
 
-    // TODO: b/421971366 - we should compare the shadow node contents when `recurse` is enabled.
     boolean thisIsShadowHost = this.getClosureUnawareShadow() != null;
     boolean nodeIsShadowHost = node.getClosureUnawareShadow() != null;
     if (thisIsShadowHost != nodeIsShadowHost) {
       return false;
     }
 
-    if (recurse) {
+    if (recursion.recurseShadowAst() && thisIsShadowHost && nodeIsShadowHost) {
+      Node thisShadow = this.getClosureUnawareShadow();
+      Node nodeShadow = node.getClosureUnawareShadow();
+      if (!thisShadow.isEquivalentTo(
+          nodeShadow, recursion, typeConfig, jsDocConfig, sideEffectConfig)) {
+        return false;
+      }
+    }
+
+    if (recursion.recurseChildren()) {
       for (Node n = first, n2 = node.first; n != null; n = n.next, n2 = n2.next) {
-        if (!n.isEquivalentTo(n2, compareType, recurse, jsDoc, sideEffect)) {
+        if (!n.isEquivalentTo(n2, recursion, typeConfig, jsDocConfig, sideEffectConfig)) {
           return false;
         }
       }

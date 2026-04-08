@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.javascript.jscomp.parsing.FeatureCollector;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
 
@@ -72,7 +73,20 @@ class TranspileAndOptimizeClosureUnaware implements CompilerPass {
       if (!n.isScript()) {
         return true;
       }
-      return n.isClosureUnawareCode();
+      if (!n.isClosureUnawareCode()) {
+        return false;
+      }
+      JSDocInfo fileJsDoc = n.getJSDocInfo();
+      if (fileJsDoc == null || fileJsDoc.getPerFileClosureUnawareMode() == null) {
+        // TODO: b/475302905 - remove this null check, once the JSC release to always serialize a
+        // ClosureUnawareMode lands.
+        return true;
+      }
+      var minificationLevel = fileJsDoc.getPerFileClosureUnawareMode();
+      return switch (minificationLevel) {
+        case UNSPECIFIED, SIMPLE -> true;
+        case WHITESPACE -> false;
+      };
     }
 
     @Override

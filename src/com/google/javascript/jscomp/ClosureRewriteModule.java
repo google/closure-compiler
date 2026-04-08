@@ -308,11 +308,11 @@ final class ClosureRewriteModule implements CompilerPass {
     // For recognizing top level names.
     Node rootNode;
 
-    public void addChildScript(ScriptDescription childScript) {
+    void addChildScript(ScriptDescription childScript) {
       childScripts.addLast(childScript);
     }
 
-    public ScriptDescription removeFirstChildScript() {
+    ScriptDescription removeFirstChildScript() {
       return childScripts.removeFirst();
     }
 

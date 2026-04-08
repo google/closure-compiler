@@ -77,6 +77,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       }
       case VOID -> tryReduceVoid(subtree);
       case OPTCHAIN_GETPROP, GETPROP -> tryFoldGetProp(subtree);
+      case TEMPLATELIT -> tryFoldTemplateLiteralSubstitutions(subtree);
       default -> {
         tryReduceOperandsForOp(subtree);
         yield tryFoldBinaryOperator(subtree);
@@ -1023,15 +1024,140 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return replace(oldNode, left);
   }
 
+  /**
+   * Simplify escaping and value calculations by avoiding problematic characters when merging
+   * strings into template literals.
+   */
+  private boolean isSimpleTemplateStringValue(String s) {
+    for (int i = 0; i < s.length(); i++) {
+      switch (s.charAt(i)) {
+        // See: https://tc39.es/ecma262/#prod-LineTerminator
+        case '`', '$', '{', '\\', '\n', '\r', '\u2028', '\u2029' -> {
+          return false;
+        }
+        default -> {}
+      }
+    }
+    return true;
+  }
+
+  /** returns true if the raw string ends with an unescaped backslash */
+  private boolean endsWithUnescapedBackslash(String raw) {
+    int backslashCount = 0;
+    for (int i = raw.length() - 1; i >= 0; i--) {
+      if (raw.charAt(i) == '\\') {
+        backslashCount++;
+      } else {
+        break;
+      }
+    }
+    return backslashCount % 2 != 0;
+  }
+
+  private Node tryFoldTemplateLiteralSubstitutions(Node n) {
+    if (n.getParent() != null && n.getParent().isTaggedTemplateLit()) {
+      return n;
+    }
+
+    boolean changed = false;
+    Node cur = n.getFirstChild();
+    if (cur == null) {
+      return n;
+    }
+
+    while (cur != null) {
+      Node next = cur.getNext();
+      if (next == null) {
+        break;
+      }
+
+      if (cur.isTemplateLitString() && next.isTemplateLitSub()) {
+        Node expr = next.getFirstChild();
+        if (expr != null
+            && (expr.isStringLit() || expr.isNumber() || expr.isTrue() || expr.isFalse())) {
+          String strValue = getSideEffectFreeStringValue(expr);
+          if (strValue != null && isSimpleTemplateStringValue(strValue)) {
+            Node nextNext = next.getNext();
+            if (nextNext != null && nextNext.isTemplateLitString()) {
+              String curCooked = cur.getCookedString();
+              String nextNextCooked = nextNext.getCookedString();
+
+              // Avoid creating a new `${` sequence when folding.
+              if (strValue.isEmpty() && curCooked.endsWith("$") && nextNextCooked.startsWith("{")) {
+                cur = next;
+                continue;
+              }
+
+              String combinedCooked = curCooked + strValue + nextNextCooked;
+              String combinedRaw = cur.getRawString() + strValue + nextNext.getRawString();
+
+              // Avoid creating a restricted octal escape sequence (e.g. \07)
+              if (isRestrictedOctalEscape(cur.getRawString(), strValue)
+                  || isRestrictedOctalEscape(
+                      cur.getRawString() + strValue, nextNext.getRawString())) {
+                cur = next;
+                continue;
+              }
+
+              Node newStringNode = IR.templateLiteralString(combinedCooked, combinedRaw);
+              newStringNode.srcrefTree(cur);
+
+              cur.replaceWith(newStringNode);
+              next.detach();
+              nextNext.detach();
+
+              cur = newStringNode;
+              changed = true;
+              continue;
+            }
+          }
+        }
+      }
+      cur = cur.getNext();
+    }
+
+    if (changed) {
+      reportChangeToEnclosingScope(n);
+    }
+    return n;
+  }
+
+  private boolean isRestrictedOctalEscape(String prefixRaw, String suffixRaw) {
+    if (suffixRaw.isEmpty()) {
+      return false;
+    }
+    char firstChar = suffixRaw.charAt(0);
+    if (firstChar < '0' || firstChar > '9') {
+      return false;
+    }
+
+    // Check if prefix ends with an unescaped \0
+    if (prefixRaw.endsWith("0")) {
+      String beforeZero = prefixRaw.substring(0, prefixRaw.length() - 1);
+      return endsWithUnescapedBackslash(beforeZero);
+    }
+    return false;
+  }
+
   private Node tryFoldAdd(Node node, Node left, Node right) {
     checkArgument(node.isAdd());
 
     if (NodeUtil.mayBeString(node, shouldUseTypes)) {
       if (left.isTemplateLit() && right.isTemplateLit()) {
-        // TODO: account for cases of template literal + other data type (any order)
-        // (e.g. string + template literal, template literal + number)
         return foldAddTemplateLiterals(node, left, right);
-      } else if (NodeUtil.isLiteralValue(left, false) && NodeUtil.isLiteralValue(right, false)) {
+      } else if (left.isTemplateLit()) {
+        String rightStr = getSideEffectFreeStringValue(right);
+        if (rightStr != null && isSimpleTemplateStringValue(rightStr)) {
+          return foldTemplateLiteralAndConstant(node, left, rightStr);
+        }
+      } else if (right.isTemplateLit()) {
+        String leftStr = getSideEffectFreeStringValue(left);
+        if (leftStr != null && isSimpleTemplateStringValue(leftStr)) {
+          return foldConstantAndTemplateLiteral(node, leftStr, right);
+        }
+      }
+
+      if (NodeUtil.isLiteralValue(left, false) && NodeUtil.isLiteralValue(right, false)) {
         // '6' + 7
         return tryFoldAddConstantString(node, left, right);
       } else if (left.isStringLit() && left.getString().isEmpty() && isStringTyped(right)) {
@@ -1046,6 +1172,42 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       // Try arithmetic add
       return tryFoldArithmeticOp(node, left, right);
     }
+  }
+
+  private Node foldTemplateLiteralAndConstant(Node oldNode, Node left, String rightStr) {
+    Node lastLeft = left.getLastChild();
+    checkState(lastLeft.isTemplateLitString());
+
+    if (isRestrictedOctalEscape(lastLeft.getRawString(), rightStr)) {
+      return oldNode;
+    }
+
+    Node mergeNode =
+        IR.templateLiteralString(
+            lastLeft.getCookedString() + rightStr, lastLeft.getRawString() + rightStr);
+    mergeNode.srcrefTreeIfMissing(lastLeft);
+
+    lastLeft.replaceWith(mergeNode);
+    left.detach();
+    return replace(oldNode, left);
+  }
+
+  private Node foldConstantAndTemplateLiteral(Node oldNode, String leftStr, Node right) {
+    Node firstRight = right.getFirstChild();
+    checkState(firstRight.isTemplateLitString());
+
+    if (isRestrictedOctalEscape(leftStr, firstRight.getRawString())) {
+      return oldNode;
+    }
+
+    Node mergeNode =
+        IR.templateLiteralString(
+            leftStr + firstRight.getCookedString(), leftStr + firstRight.getRawString());
+    mergeNode.srcrefTreeIfMissing(firstRight);
+
+    firstRight.replaceWith(mergeNode);
+    right.detach();
+    return replace(oldNode, right);
   }
 
   @CanIgnoreReturnValue
@@ -1624,6 +1786,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         continue; // We only want to inline arrays into arrays and objects into objects.
       }
 
+      if (parentLit.isObjectLit() && !isSafeToFlattenObjectLitSpread(innerLit)) {
+        continue;
+      }
+
       parentLit.addChildrenAfter(innerLit.removeChildren(), spread);
       spread.detach();
       reportChangeToEnclosingScope(parentLit);
@@ -1828,5 +1994,17 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private static Node bigintNode(BigInteger val, Node srcref) {
     Node tree = (val.signum() < 0) ? IR.neg(IR.bigint(val.negate())) : IR.bigint(val);
     return tree.srcrefTree(srcref);
+  }
+
+  private static boolean isSafeToFlattenObjectLitSpread(Node innerLit) {
+    for (Node prop = innerLit.getFirstChild(); prop != null; prop = prop.getNext()) {
+      // Object spread converts all properties to regular data properties. This step evaluates
+      // any getters and omits any setters. See https://tc39.es/ecma262/#sec-copydataproperties.
+      // For simplicity, we just back off and do not flatten spread in this case.
+      if (NodeUtil.isGetOrSetKey(prop)) {
+        return false;
+      }
+    }
+    return true;
   }
 }

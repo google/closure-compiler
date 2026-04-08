@@ -17,6 +17,7 @@
 package com.google.debugging.sourcemap;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
@@ -24,6 +25,9 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Precision;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -189,5 +193,173 @@ public final class SourceMapConsumerV3Test {
     // The Previous line mapping was retrieved, and thus it is "approximated"
     assertThat(mapping.getLineNumber()).isEqualTo(9);
     assertThat(mapping.getPrecision()).isEqualTo(Precision.APPROXIMATE_LINE);
+  }
+
+  @Test
+  public void testLargeMappings() throws Exception {
+    // Generate a mapping with many entries to trigger array resizing.
+    StringBuilder mappings = new StringBuilder();
+    for (int i = 0; i < 2000; i++) {
+      // AAAA = [0, 0, 0, 0]
+      mappings.append("AAAA");
+      if (i % 2 == 0) {
+        mappings.append("A"); // 5th value
+      }
+      mappings.append(",");
+    }
+    mappings.append(";");
+
+    consumer.parse(
+        GSON.toJson(
+            TestJsonBuilder.create()
+                .setVersion(3)
+                .setFile("testcode")
+                .setLineCount(1)
+                .setMappings(mappings.toString())
+                .setSources("testcode")
+                .setNames("foo")
+                .build()));
+
+    assertThat(consumer.getLineCount()).isEqualTo(1);
+    OriginalMapping mapping = consumer.getMappingForLine(1, 1);
+    assertThat(mapping).isNotNull();
+  }
+
+  @Test
+  public void testMixedEntryTypes() throws Exception {
+    // Test a mix of 1, 4, and 5 value entries.
+    consumer.parse(
+        GSON.toJson(
+            TestJsonBuilder.create()
+                .setVersion(3)
+                .setFile("testcode")
+                .setLineCount(1)
+                // col 0: A (unmapped)
+                // col 1: CAAA (mapped to src index 0, line 0, col 0 - 4 values)
+                // col 3: EAAAA (mapped to src index 0, line 0, col 0, name index 0 - 5 values)
+                .setMappings("A,CAAA,EAAAA;")
+                .setSources("testcode")
+                .setNames("name1")
+                .build()));
+
+    OriginalMapping m1 = consumer.getMappingForLine(1, 1); // col 0
+    OriginalMapping m2 = consumer.getMappingForLine(1, 2); // col 1
+    OriginalMapping m4 = consumer.getMappingForLine(1, 4); // col 3
+
+    assertThat(m1).isNull();
+    assertThat(m2).isNotNull();
+    assertThat(m4).isNotNull();
+
+    assertThat(m2.getOriginalFile()).isEqualTo("testcode");
+    assertThat(m2.getIdentifier()).isEmpty();
+
+    assertThat(m4.getOriginalFile()).isEqualTo("testcode");
+    assertThat(m4.getIdentifier()).isEqualTo("name1");
+  }
+
+  @Test
+  public void testReverseMapping() throws Exception {
+    consumer.parse(
+        GSON.toJson(
+            TestJsonBuilder.create()
+                .setVersion(3)
+                .setFile("testcode")
+                .setLineCount(1)
+                .setMappings("AAAAA,QAASA,UAAS,EAAG;")
+                .setSources("testcode")
+                .setNames("__BASIC__")
+                .build()));
+
+    Collection<OriginalMapping> reverse = consumer.getReverseMapping("testcode", 0, 0);
+    assertThat(reverse).isNotEmpty();
+  }
+
+  @Test
+  public void testBinarySearchEdgeCases() throws Exception {
+    // Test with different number of entries to verify binary search 'mid' calculation.
+    for (int numEntries = 1; numEntries < 20; numEntries++) {
+      StringBuilder mappings = new StringBuilder();
+      for (int i = 0; i < numEntries; i++) {
+        // VLQ for delta 1 is 'C'
+        // AAAA = [0,0,0,0]
+        // CAAA = [1,0,0,0]
+        // Previous col starts at 0.
+        // First entry: AAAA -> col 0
+        // Subsequent entries: CAAA -> col 1, 2, 3...
+        if (i == 0) {
+          mappings.append("AAAA");
+        } else {
+          mappings.append("CAAA");
+        }
+        mappings.append(",");
+      }
+      mappings.append(";");
+
+      consumer.parse(
+          GSON.toJson(
+              TestJsonBuilder.create()
+                  .setVersion(3)
+                  .setFile("testcode")
+                  .setLineCount(1)
+                  .setMappings(mappings.toString())
+                  .setSources("testcode")
+                  .setNames("foo")
+                  .build()));
+
+      for (int col = 0; col < numEntries; col++) {
+        OriginalMapping mapping = consumer.getMappingForLine(1, col + 1);
+        assertThat(mapping).isNotNull();
+        // All map to source line 0, col 0 (OriginalMapping uses 1-indexed)
+        assertThat(mapping.getLineNumber()).isEqualTo(1);
+        assertThat(mapping.getColumnPosition()).isEqualTo(1);
+      }
+    }
+  }
+
+  @Test
+  public void testVisitMappings() throws Exception {
+    consumer.parse(
+        GSON.toJson(
+            TestJsonBuilder.create()
+                .setVersion(3)
+                .setFile("testcode")
+                .setLineCount(1)
+                .setMappings("AAAAA,QAASA,UAAS,EAAG;")
+                .setSources("testcode")
+                .setNames("__BASIC__")
+                .build()));
+
+    List<String> symbols = new ArrayList<>();
+    consumer.visitMappings(
+        (sourceName, symbolName, sourcePos, startPos, endPos) -> {
+          if (symbolName != null) {
+            symbols.add(symbolName);
+          }
+        });
+
+    assertThat(symbols).containsExactly("__BASIC__", "__BASIC__");
+  }
+
+  @Test
+  public void testInvalidEntryValuesThrows() {
+    // A VLQ of length 2, e.g. "AA" -> [0, 0]
+    String invalidMappings = "AA;";
+
+    SourceMapParseException expected =
+        assertThrows(
+            SourceMapParseException.class,
+            () ->
+                consumer.parse(
+                    GSON.toJson(
+                        TestJsonBuilder.create()
+                            .setVersion(3)
+                            .setFile("testcode")
+                            .setLineCount(1)
+                            .setMappings(invalidMappings)
+                            .setSources("testcode")
+                            .setNames("foo")
+                            .build())));
+
+    assertThat(expected).hasMessageThat().contains("Unexpected number of values for entry:2");
   }
 }

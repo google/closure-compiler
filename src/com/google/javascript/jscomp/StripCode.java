@@ -143,7 +143,6 @@ class StripCode implements CompilerPass {
 
     this.stripNameSuffixesLowerCaseList =
         this.stripNameSuffixes.stream().map(s -> s.toLowerCase(Locale.ROOT)).toArray(String[]::new);
-    ;
   }
 
   @Override

@@ -190,6 +190,17 @@ public class NodeModuleResolver extends ModuleResolver {
   @Override
   public @Nullable String resolveJsModule(
       String scriptAddress, String moduleAddress, String sourcename, int lineno, int colno) {
+    String loadAddress = internalResolveJsModule(scriptAddress, moduleAddress);
+
+    if (loadAddress == null) {
+      errorHandler.report(
+          CheckLevel.WARNING,
+          JSError.make(sourcename, lineno, colno, ModuleLoader.LOAD_WARNING, moduleAddress));
+    }
+    return loadAddress;
+  }
+
+  private @Nullable String internalResolveJsModule(String scriptAddress, String moduleAddress) {
     String loadAddress;
     if (ModuleLoader.isAbsoluteIdentifier(moduleAddress)
         || ModuleLoader.isRelativeIdentifier(moduleAddress)) {
@@ -198,12 +209,12 @@ public class NodeModuleResolver extends ModuleResolver {
       loadAddress = resolveJsModuleFromRegistry(scriptAddress, moduleAddress);
     }
 
-    if (loadAddress == null) {
-      errorHandler.report(
-          CheckLevel.WARNING,
-          JSError.make(sourcename, lineno, colno, ModuleLoader.LOAD_WARNING, moduleAddress));
-    }
     return loadAddress;
+  }
+
+  @Override
+  public @Nullable String resolveJsModuleSilently(String scriptAddress, String moduleAddress) {
+    return internalResolveJsModule(scriptAddress, moduleAddress);
   }
 
   public @Nullable String resolveJsModuleFile(String scriptAddress, String moduleAddress) {

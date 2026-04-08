@@ -27,7 +27,6 @@ import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -68,14 +67,12 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     es6SubclassTranspilation = Es6SubclassTranspilation.CONCISE_UNSAFE;
   }
 
-  private static PassFactory makePassFactory(
-      String name, Function<AbstractCompiler, CompilerPass> pass) {
-    return PassFactory.builder().setName(name).setInternalFactory(pass).build();
-  }
-
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
+    optimizer.addOneTimePass(
+        makePassFactory(
+            "injectTranspilationRuntimeLibraries", InjectTranspilationRuntimeLibraries::new));
     optimizer.addOneTimePass(makePassFactory("es6NormalizeClasses", Es6NormalizeClasses::new));
     optimizer.addOneTimePass(makePassFactory("es6ConvertSuper", Es6ConvertSuper::new));
     optimizer.addOneTimePass(
@@ -2813,7 +2810,6 @@ $jscomp.inherits(FooPromise, Promise);
         let C = function() {};
         C.prototype.foo = function*() { yield 1;};
         """);
-    assertThat(getLastCompiler().getRuntimeJsLibManager().getInjectedLibraries()).isEmpty();
   }
 
   @Test

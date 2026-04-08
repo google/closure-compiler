@@ -174,10 +174,7 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
         && n.getToken() == Token.DYNAMIC_IMPORT
         && n.getFirstChild().isString()) {
       String path = n.getFirstChild().getString();
-      ModuleLoader.ModulePath modulePath =
-          t.getInput()
-              .getPath()
-              .resolveJsModule(path, n.getSourceFileName(), n.getLineno(), n.getCharno());
+      ModuleLoader.ModulePath modulePath = t.getInput().getPath().resolveJsModuleSilently(path);
       if (modulePath != null) {
         t.getInput().addDynamicRequire(modulePath.toModuleName());
       }

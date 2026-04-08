@@ -2060,42 +2060,25 @@ public class CompilerOptions {
   }
 
   /** Options to force transpile specific features for performance experiments. */
+  @Deprecated
   public enum ExperimentalForceTranspile {
     /**
-     * Causes let/const to always be removed from the output featureset if present previously.
+     * Transpile performance sensitive features away, preserving ASYNC/AWAIT for debuggability
      *
-     * <pre>{@code
-     * For targets that set `options.setForceLetConstTranspilation(true)`:
-     * - if they already set <= ES5 output, no change
-     * - if they set >= ES6 output, then { force transpile let/const + classes + rewrite ESModules +
-     * isolatePolyfills + rewritePolyfills}
-     *
-     * }</pre>
+     * @deprecated Use setLanguageOut(LanguageMode.ECMASCRIPT5), or
+     *     setLangaugeOut(LanguageMode.ECMASCRIPT_2017) instead.
      */
-    LET_CONST,
+    @Deprecated
+    PERFORMANT_WITH_ASYNC_STACKS
+  }
 
-    /**
-     * Causes classes to always be removed from the output featureset if present previously.
-     *
-     * <pre>{@code
-     * For targets that set `options.setForceClassTranspilation(true)`:
-     * - if they already set <= ES5 output, no change
-     * - if they set >= ES6 output, then { force transpile classes + rewrite ESModules +
-     * isolatePolyfills + rewritePolyfills}
-     *
-     * }</pre>
-     */
-    CLASS,
-
-    /** Transpile all features down to ES5 except ASYNC AWAIT */
-    ALL_EXCEPT_ASYNC_AWAIT
-  };
-
+  @Deprecated
   public void setExperimentalForceTranspiles(
       ExperimentalForceTranspile... experimentalForceTranspile) {
     if (experimentalForceTranspile.length > 1) {
       checkState(
-          !experimentalForceTranspiles.contains(ExperimentalForceTranspile.ALL_EXCEPT_ASYNC_AWAIT));
+          !experimentalForceTranspiles.contains(
+              ExperimentalForceTranspile.PERFORMANT_WITH_ASYNC_STACKS));
     }
     experimentalForceTranspiles = ImmutableList.copyOf(experimentalForceTranspile);
   }
@@ -2913,33 +2896,6 @@ public class CompilerOptions {
 
   String getReplaceStringsPlaceholderToken() {
     return this.replaceStringsPlaceholderToken;
-  }
-
-  /**
-   * How @closureUnaware code blocks should be handled.
-   *
-   * <p>PASS_THROUGH: they are entirely hidden from the compiler, as if they were an evaled string.
-   *
-   * <p>SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION: This is *experimental* - we want to support some
-   * minimal transpilation & safe optimizations. TODO: b/421971366 - implement this flag.
-   */
-  public enum ClosureUnawareMode {
-    PASS_THROUGH,
-    SIMPLE_OPTIMIZATIONS_AND_TRANSPILATION
-  }
-
-  private ClosureUnawareMode closureUnawareMode = ClosureUnawareMode.PASS_THROUGH;
-
-  /**
-   * Opts into experimental support for transpiling/optimizing @closureUnaware code blocks, rather
-   * than just passing them through compilation unchanged.
-   */
-  public void setClosureUnawareMode(ClosureUnawareMode mode) {
-    this.closureUnawareMode = mode;
-  }
-
-  ClosureUnawareMode getClosureUnawareMode() {
-    return this.closureUnawareMode;
   }
 
   public void setPrettyPrint(boolean prettyPrint) {

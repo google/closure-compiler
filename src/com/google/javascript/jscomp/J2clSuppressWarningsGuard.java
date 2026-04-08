@@ -54,8 +54,15 @@ public final class J2clSuppressWarningsGuard extends WarningsGuard {
 
   @Override
   public @Nullable CheckLevel level(JSError error) {
-    if (error.sourceName() == null || !error.sourceName().endsWith(".java.js")) {
+    if (!J2clSourceUtils.isJ2clSource(error.sourceName())) {
       return null;
+    }
+
+    // Do not warn about deprecated forwardDeclare usages in J2CL generated code as this particular
+    // use-case is still valid, but not elsewhere.
+    if (DiagnosticGroups.DEPRECATED.matches(error)
+        && error.description().contains("forwardDeclare")) {
+      return CheckLevel.OFF;
     }
 
     return DEFAULT_J2CL_SUPRRESIONS.matches(error) ? CheckLevel.OFF : null;

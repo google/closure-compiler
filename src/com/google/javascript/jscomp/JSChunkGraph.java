@@ -96,9 +96,9 @@ public final class JSChunkGraph implements Serializable {
    *
    * <p>If the cache returns null, then the entry hasn't been filled in for that chunk.
    *
-   * <p>NOTE: JSChunk has identity semantics so this map implementation is safe
+   * <p>NOTE: JSChunk has identity semantics so this map implementation is safe.
    */
-  private final LinkedIdentityHashMap<JSChunk, Set<JSChunk>> dependencyMap =
+  private final transient LinkedIdentityHashMap<JSChunk, Set<JSChunk>> dependencyMap =
       new LinkedIdentityHashMap<>();
 
   /** Creates a chunk graph from a list of chunks in dependency order. */

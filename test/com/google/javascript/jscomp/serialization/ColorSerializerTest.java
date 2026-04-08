@@ -514,38 +514,38 @@ public class ColorSerializerTest {
     private int trimmedPoolOffset = -1;
     private boolean isConstructor = false;
 
-    public TestObjectColorBuilder setColorId(String colorIdString) {
+    TestObjectColorBuilder setColorId(String colorIdString) {
       checkArgument(colorIdString.length() <= 8, "color ID string too long: %s", colorIdString);
       return setColorId(ColorId.fromAscii(colorIdString));
     }
 
-    public TestObjectColorBuilder setColorId(ColorId colorId) {
+    TestObjectColorBuilder setColorId(ColorId colorId) {
       this.colorId = colorId;
       return this;
     }
 
-    public TestObjectColorBuilder setTrimmedPoolOffset(int trimmedPoolOffset) {
+    TestObjectColorBuilder setTrimmedPoolOffset(int trimmedPoolOffset) {
       checkState(trimmedPoolOffset >= 0, "invalid trimmedPoolOffset: %s", trimmedPoolOffset);
       this.trimmedPoolOffset = trimmedPoolOffset;
       return this;
     }
 
-    public TestObjectColorBuilder setConstructor(boolean constructor) {
+    TestObjectColorBuilder setConstructor(boolean constructor) {
       isConstructor = constructor;
       return this;
     }
 
-    public TestObjectColorBuilder addInstanceTestColor(TestColor instanceTestColor) {
+    TestObjectColorBuilder addInstanceTestColor(TestColor instanceTestColor) {
       this.instanceTestColors.add(instanceTestColor);
       return this;
     }
 
-    public TestObjectColorBuilder addPrototypeTestColor(TestColor prototypeTestColor) {
+    TestObjectColorBuilder addPrototypeTestColor(TestColor prototypeTestColor) {
       this.prototypeTestColors.add(prototypeTestColor);
       return this;
     }
 
-    public TestObjectColorBuilder addOwnProperty(PooledString ownProperty) {
+    TestObjectColorBuilder addOwnProperty(PooledString ownProperty) {
       ownProperties.add(ownProperty);
       return this;
     }

@@ -352,7 +352,8 @@ public class JSDocInfo implements Serializable {
     PROVIDE_ALREADY_PROVIDED,
 
     WIZ_CALLBACK,
-    LOG_TYPE_IN_COMPILER;
+    LOG_TYPE_IN_COMPILER,
+    CLOSURE_UNAWARE_CONFIG;
 
     final String name;
     final long mask;
@@ -445,6 +446,24 @@ public class JSDocInfo implements Serializable {
     MAPPED,
   }
 
+  /**
+   * Configures whether any @closureUnaware blocks in a file will go through any compiler
+   * optimization passes or transpilation.
+   *
+   * <p>SIMPLE: the file goes through a predefined set of safe optimizations & transpilation
+   *
+   * <p>WHITESPACE: the file goes through no optimizations or transpilation, although code printing
+   * does strip unnecessary whitespace and comments.
+   *
+   * <p>UNSPECIFIED: indicates the annotation was just `@closureUnaware` with no mode specified.
+   * Currently this is equivalent to SIMPLE.
+   */
+  public enum PerFileClosureUnawareMode {
+    UNSPECIFIED,
+    SIMPLE,
+    WHITESPACE;
+  }
+
   private static final Property<Visibility> VISIBILITY = new Property<>("visibility");
   private static final TypeProperty TYPE = new TypeProperty("type");
   private static final TypeProperty RETURN_TYPE = new TypeProperty("returnType");
@@ -494,6 +513,8 @@ public class JSDocInfo implements Serializable {
   private static final Property<String> ENHANCED_NAMESPACE = new Property<>("enhance");
   private static final Property<String> MODS = new Property<>("mods");
   private static final Property<List<String>> TS_TYPES = new Property<>("tsType");
+  private static final Property<PerFileClosureUnawareMode> CLOSURE_UNAWARE_CONFIG_VALUE =
+      new Property<>("perFileClosureUnawareMode");
 
   private static final Property<List<String>> AUTHORS = new Property<>("authors");
   private static final Property<List<String>> SEES = new Property<>("sees");
@@ -1251,7 +1272,14 @@ public class JSDocInfo implements Serializable {
    * SourceFile's TypedAST representation).
    */
   public boolean isClosureUnawareCode() {
-    return checkBit(Bit.CLOSURE_UNAWARE_CODE);
+    return CLOSURE_UNAWARE_CONFIG_VALUE.get(this) != null;
+  }
+
+  /**
+   * Returns the value of the {@code @perFileClosureUnawareMode} annotation, or null if not present.
+   */
+  public @Nullable PerFileClosureUnawareMode getPerFileClosureUnawareMode() {
+    return CLOSURE_UNAWARE_CONFIG_VALUE.get(this);
   }
 
   /** Returns whether JSDoc is annotated with the {@code @usedViaDotConstructor} annotation. */
@@ -2745,12 +2773,19 @@ public class JSDocInfo implements Serializable {
 
     /** Returns whether JSDoc is annotated with the {@code @closureUnaware} annotation. */
     public boolean isClosureUnawareCode() {
-      return checkBit(Bit.CLOSURE_UNAWARE_CODE);
+      return getProp(CLOSURE_UNAWARE_CONFIG_VALUE) != null;
     }
 
     /** Records that this JSDoc was annotated with the {@code @closureUnaware} annotation. */
+    @CanIgnoreReturnValue
     public boolean recordClosureUnawareCode() {
-      return populateBit(Bit.CLOSURE_UNAWARE_CODE, true);
+      return populateProp(CLOSURE_UNAWARE_CONFIG_VALUE, PerFileClosureUnawareMode.UNSPECIFIED);
+    }
+
+    /** Records that this JSDoc was annotated with the {@code @closureUnaware} annotation. */
+    @CanIgnoreReturnValue
+    public boolean recordClosureUnawareCode(PerFileClosureUnawareMode mode) {
+      return populateProp(CLOSURE_UNAWARE_CONFIG_VALUE, mode);
     }
 
     /**
@@ -2759,7 +2794,8 @@ public class JSDocInfo implements Serializable {
      */
     @CanIgnoreReturnValue
     public boolean removeClosureUnawareCode() {
-      return populateBit(Bit.CLOSURE_UNAWARE_CODE, false);
+      var existing = props.remove(CLOSURE_UNAWARE_CONFIG_VALUE);
+      return existing != null;
     }
 
     /** Records that this JSDoc was annotated with the {@code @usedViaDotConstructor} annotation. */

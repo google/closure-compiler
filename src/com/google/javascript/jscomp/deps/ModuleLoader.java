@@ -214,6 +214,21 @@ public final class ModuleLoader {
     }
 
     /**
+     * Resolve a JS module for dynamic imports without reporting errors for unresolved addresses
+     *
+     * @return The resolved module path, or {@code null} if unresolvable (or ambiguous)
+     */
+    public @Nullable ModulePath resolveJsModuleSilently(String moduleAddress) {
+      String loadAddress = moduleResolver.resolveJsModuleSilently(this.path, moduleAddress);
+
+      if (loadAddress != null) {
+        return new ModulePath(loadAddress);
+      }
+
+      return null;
+    }
+
+    /**
      * Treats the module address as a path and returns the name of that module. Does not verify that
      * there is actually a JS file at the provided URI.
      *

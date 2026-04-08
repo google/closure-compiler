@@ -3171,7 +3171,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
           value: "goog.Promise.all"
         }
         """;
-    ;
     extendingConfiguration =
         """
         requirement: {
@@ -3198,7 +3197,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
           value: "goog.Promise.all"
         }
         """;
-    ;
     extendingConfiguration =
         """
         requirement: {
@@ -3226,7 +3224,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
           value: "goog.Promise.all"
         }
         """;
-    ;
     extendingConfiguration =
         """
         requirement: {
@@ -3255,7 +3252,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
           value: "goog.Promise.all"
         }
         """;
-    ;
     // has both rule_id and extends fields set
     extendingConfiguration =
         """
@@ -3312,7 +3308,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
           value: "goog.Promise.all"
         }
         """;
-    ;
     extendingConfiguration =
         """
         # tries to override the library-level behavior, not allowed
@@ -3348,7 +3343,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
           value: "goog.Promise.all"
         }
         """;
-    ;
     extendingConfiguration =
         """
         library_level_non_allowlisted_conformance_violations_behavior: REPORT_AS_BUILD_ERROR
@@ -3378,7 +3372,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
           value: "goog.Promise.all"
         }
         """;
-    ;
     extendingConfiguration =
         """
         library_level_non_allowlisted_conformance_violations_behavior: RECORD_ONLY
@@ -3410,7 +3403,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
           value: "goog.Promise.all"
         }
         """;
-    ;
     extendingConfiguration =
         """
         requirement: {

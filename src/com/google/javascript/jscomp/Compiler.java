@@ -41,6 +41,7 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.MustBeClosed;
+import com.google.gson.GsonBuilder;
 import com.google.javascript.jscomp.CodePrinter.LicenseTracker;
 import com.google.javascript.jscomp.CompilerInput.ModuleType;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
@@ -299,9 +300,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * given originalPath+sourceMapPath, what sourceFile did we find?
    */
   private static class ResolvedSourceMap {
-    public String originalPath;
-    public String sourceMapPath;
-    public String relativePath;
+    String originalPath;
+    String sourceMapPath;
+    String relativePath;
   }
 
   /**
@@ -353,37 +354,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     for (ExperimentalForceTranspile experimentalForceTranspile :
         options.getExperimentalForceTranspiles()) {
       switch (experimentalForceTranspile) {
-        case LET_CONST:
-          // TODO(b/239426154): Update let/const transpiler to work in the presence of these other
-          // features when transpiling so that let/const alone can be lowered.
-          options.setOutputFeatureSet(
-              options
-                  .getOutputFeatureSet()
-                  .without(
-                      Feature.LET_DECLARATIONS,
-                      Feature.CONST_DECLARATIONS,
-                      Feature.FOR_OF,
-                      Feature.ARRAY_DESTRUCTURING,
-                      Feature.OBJECT_DESTRUCTURING,
-                      Feature.ARRAY_PATTERN_REST,
-                      Feature.DEFAULT_PARAMETERS));
-        // TODO(rishipal): Fall through because of
-        // https://b.corp.google.com/issues/239426154#comment57
-        case CLASS:
-          options.setOutputFeatureSet(
-              options
-                  .getOutputFeatureSet()
-                  .without(
-                      Feature.CLASSES,
-                      Feature.CLASS_GETTER_SETTER,
-                      Feature.PUBLIC_CLASS_FIELDS,
-                      Feature.CLASS_STATIC_BLOCK,
-                      Feature.NEW_TARGET));
-          break;
-        case ALL_EXCEPT_ASYNC_AWAIT:
-          options.setOutputFeatureSet(
-              FeatureSet.ES5.with(Feature.ASYNC_FUNCTIONS, Feature.ASYNC_GENERATORS));
-          break;
+        case PERFORMANT_WITH_ASYNC_STACKS ->
+            options.setOutputFeatureSet(
+                FeatureSet.ES5.with(
+                    Feature.ASYNC_FUNCTIONS, Feature.ASYNC_GENERATORS, Feature.GENERATORS));
       }
     }
   }
@@ -524,13 +498,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (this.isDebugLoggingEnabled()) {
       // Log to separate files for convenience.
       logToFile("externs.log", externs::toString);
-      // To get a pretty-printed JSON chunk graph, change the string generation expression to
-      //
-      // new GsonBuilder().setPrettyPrinting().create().toJson(chunkGraph.toJson())
-      //
-      // TODO(bradfordcsmith): Come up with a JSON-printing version that will work when this code is
-      // compiled with J2CL, so we can permanently improve this.
-      logToFile("inputs.json", () -> Iterables.toString(chunkGraph.getAllInputs()));
+      logToFile(
+          "inputs.json",
+          new GsonBuilder().setPrettyPrinting().create().toJson(chunkGraph.toJson())::toString);
       logToFile("options.log", () -> options.toString());
       logToFile("warningsGuard.log", () -> warningsGuard.toString());
     } else {
@@ -539,18 +509,19 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       err.println("==== Externs ====");
       err.println(externs);
       err.println("==== Inputs ====");
-      // To get a pretty-printed JSON chunk graph, change this line to
-      //
-      // err.println(
-      //     new GsonBuilder().setPrettyPrinting().create().toJson(chunkGraph.toJson()));
-      //
-      // TODO(bradfordcsmith): Come up with a JSON-printing version that will work when this code is
-      // compiled with J2CL, so we can permanently improve this.
-      err.println(Iterables.toString(chunkGraph.getAllInputs()));
+      err.println(new GsonBuilder().setPrettyPrinting().create().toJson(chunkGraph.toJson()));
       err.println("==== CompilerOptions ====");
       err.println(options);
       err.println("==== WarningsGuard ====");
       err.println(warningsGuard);
+    }
+  }
+
+  private void maybeLogPrunedInputs() {
+    if (this.isDebugLoggingEnabled()) {
+      logToFile(
+          "inputs_pruned.json",
+          new GsonBuilder().setPrettyPrinting().create().toJson(chunkGraph.toJson())::toString);
     }
   }
 
@@ -2317,6 +2288,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (staleInputs) {
       repartitionInputs();
     }
+    maybeLogPrunedInputs();
   }
 
   /**
@@ -2834,11 +2806,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final Set<String> currentlySeenLicenses = new LinkedHashSet<>();
     private String lastSeenFile = "";
 
-    public SeenSetLicenseTracker(AbstractCompiler compiler) {
+    SeenSetLicenseTracker(AbstractCompiler compiler) {
       this.compiler = compiler;
     }
 
-    protected boolean shouldUseLicenseInfo(Node node) {
+    boolean shouldUseLicenseInfo(Node node) {
       return !node.isRoot() && !node.isScript();
     }
 

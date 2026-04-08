@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.PerFileClosureUnawareMode;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -174,6 +175,10 @@ public final class JSDocSerializer {
     if (jsdoc.isUsedViaDotConstructor()) {
       builder.addKind(JsdocTag.JSDOC_USED_VIA_DOT_CONSTRUCTOR);
     }
+    if (jsdoc.getPerFileClosureUnawareMode() != null) {
+      builder.setClosureUnawareModePointer(
+          stringPool.put(jsdoc.getPerFileClosureUnawareMode().name()));
+    }
 
     OptimizationJsdoc result = builder.build();
     if (OptimizationJsdoc.getDefaultInstance().equals(result)) {
@@ -222,6 +227,12 @@ public final class JSDocSerializer {
       return null;
     }
     JSDocInfo.Builder builder = JSDocInfo.builder();
+
+    if (serializedJsdoc.getClosureUnawareModePointer() != 0) {
+      builder.recordClosureUnawareCode(
+          PerFileClosureUnawareMode.valueOf(
+              stringPool.get(serializedJsdoc.getClosureUnawareModePointer())));
+    }
     if (serializedJsdoc.getLicenseTextPointer() != 0) {
       builder.addLicense(stringPool.get(serializedJsdoc.getLicenseTextPointer()));
     }

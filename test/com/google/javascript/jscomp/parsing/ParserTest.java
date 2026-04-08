@@ -1948,7 +1948,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node yNode = xNode.getNext();
 
     assertThat(xNode.getTrailingNonJSDocCommentString()).contains("/* first */");
-    ;
     assertThat(yNode.getNonJSDocCommentString()).isEmpty();
   }
 
@@ -5104,6 +5103,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
     strictMode = SLOPPY;
 
     parse("/** @fileoverview\n@externs\n*/\n var x = {}; x.function + 1;");
+  }
+
+  @Test
+  public void testExternsLanguageMode() {
+    mode = LanguageMode.ECMASCRIPT3;
+    strictMode = SLOPPY;
+
+    parse("/** @fileoverview\n@externs\n*/\n const x = 1;");
   }
 
   @Test
@@ -8674,6 +8681,56 @@ console.log(new X(1));
             Node.validateMemorySensitivePropertyGuarantees(
                 firstUnawareFunctionFunctionNode, true, awareLet, false))
         .isTrue();
+  }
+
+  @Test
+  public void closureUnawareAnnotation_specifyMinificationLevel_inFileOverview_succeeds() {
+    TestErrorReporter errorReporter =
+        new TestErrorReporter()
+            .expectAllWarnings(
+                "@closureUnaware annotation is not allowed in this compilation",
+                "@closureUnaware annotation is not allowed in this compilation");
+    doParse(
+        """
+        /** @fileoverview @closureUnaware {SIMPLE} */
+        /** @closureUnaware */ (
+          function() {}).call(globalThis);
+        """,
+        errorReporter);
+  }
+
+  @Test
+  public void closureUnawareAnnotation_specifyMinificationLevel_inPerFunctionDoc_errors() {
+    TestErrorReporter errorReporter =
+        new TestErrorReporter()
+            .expectAllErrors("@closureUnaware mode can only be specified at the fileoverview level")
+            .expectAllWarnings(
+                "@closureUnaware annotation is not allowed in this compilation",
+                "@closureUnaware annotation is not allowed in this compilation");
+    doParse(
+        """
+        /** @fileoverview @closureUnaware */
+        /** @closureUnaware {SIMPLE} */ (
+          function() {}).call(globalThis);
+        """,
+        errorReporter);
+  }
+
+  @Test
+  public void closureUnawareAnnotation_specifyMinificationLevel_inMultipleDoc_errors() {
+    TestErrorReporter errorReporter =
+        new TestErrorReporter()
+            .expectAllErrors("@closureUnaware mode can only be specified at the fileoverview level")
+            .expectAllWarnings(
+                "@closureUnaware annotation is not allowed in this compilation",
+                "@closureUnaware annotation is not allowed in this compilation");
+    doParse(
+        """
+        /** @fileoverview @closureUnaware {SIMPLE} */
+        /** @closureUnaware {SIMPLE} */ (
+          function() {}).call(globalThis);
+        """,
+        errorReporter);
   }
 
   @Test

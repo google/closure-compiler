@@ -21,6 +21,8 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableMap;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
@@ -80,6 +82,15 @@ public final class VariableMapTest {
   public void testFromBytesWithEmptyValue() throws ParseException {
     VariableMap vm = VariableMap.fromBytes("AAA:".getBytes(UTF_8));
     assertThat(vm.lookupNewName("AAA")).isEmpty();
+  }
+
+  @Test
+  public void testFromStream() throws ParseException, IOException {
+    VariableMap vm =
+        VariableMap.fromStream(new ByteArrayInputStream("AAA:a\nBBB:b\n".getBytes(UTF_8)));
+    assertThat(vm.getOriginalNameToNewNameMap()).hasSize(2);
+    assertThat(vm.lookupNewName("AAA")).isEqualTo("a");
+    assertThat(vm.lookupNewName("BBB")).isEqualTo("b");
   }
 
   @Test

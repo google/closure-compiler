@@ -233,7 +233,7 @@ public final class NodeUtil {
         }
         yield null;
       }
-      case BIGINT -> n.getBigInt() + "n";
+      case BIGINT -> n.getBigInt().toString();
       case FALSE -> "false";
       case TRUE -> "true";
       case NULL -> "null";
@@ -4221,7 +4221,7 @@ public final class NodeUtil {
 
     private @Nullable Node current;
 
-    public PreOrderIterator(Node root, Predicate<Node> traverseNodePredicate) {
+    PreOrderIterator(Node root, Predicate<Node> traverseNodePredicate) {
       Preconditions.checkNotNull(root);
       this.traverseNodePredicate = traverseNodePredicate;
       this.current = root;

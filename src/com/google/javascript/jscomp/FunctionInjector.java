@@ -490,7 +490,7 @@ class FunctionInjector {
       }
     };
 
-    public abstract void prepare(FunctionInjector injector, Reference ref);
+    abstract void prepare(FunctionInjector injector, Reference ref);
   }
 
   /**

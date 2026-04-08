@@ -941,8 +941,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     }
 
     private static class UmdTestInfo {
-      public final Node enclosingIf;
-      public final Node activeBranch;
+      final Node enclosingIf;
+      final Node activeBranch;
 
       UmdTestInfo(Node enclosingIf, Node activeBranch) {
         this.enclosingIf = enclosingIf;
@@ -1253,7 +1253,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     private final List<Node> functionsToHoist = new ArrayList<>();
     private final boolean defaultExportIsConst;
 
-    public RewriteModule(
+    RewriteModule(
         boolean allowFullRewrite,
         ImmutableCollection<ExportInfo> exports,
         boolean defaultExportIsConst) {

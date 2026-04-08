@@ -35,7 +35,6 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map.Entry;
 
 /**
  * A PerformanceTracker collects statistics about the runtime of each pass, and how much a pass
@@ -294,8 +293,7 @@ public final class PerformanceTracker {
 
     populatePassSummary();
 
-    for (Entry<String, Stats> entry : this.passSummary.entrySet()) {
-      Stats stats = entry.getValue();
+    for (Stats stats : this.passSummary.values()) {
       this.passesRuntime = (int) (this.passesRuntime + stats.runtime);
       this.maxMem = max(this.maxMem, stats.allocMem);
       this.runs += stats.runs;

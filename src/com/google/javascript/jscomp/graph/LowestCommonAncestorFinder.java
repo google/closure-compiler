@@ -109,7 +109,7 @@ public class LowestCommonAncestorFinder<N, E> {
       return create(this.bitset | other.bitset);
     }
 
-    public boolean contains(Color other) {
+    boolean contains(Color other) {
       return (this.bitset & other.bitset) == other.bitset;
     }
 

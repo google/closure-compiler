@@ -1533,7 +1533,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     private final Compiler compiler;
     private @Nullable List<Node> actualTypes = null;
 
-    public TypeVerifyingPass(Compiler compiler) {
+    TypeVerifyingPass(Compiler compiler) {
       this.compiler = compiler;
     }
 

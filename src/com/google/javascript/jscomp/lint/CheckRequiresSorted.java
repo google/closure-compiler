@@ -56,7 +56,7 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
     COLLECT_ONLY,
     /** Additionally report a warning. */
     COLLECT_AND_REPORT
-  };
+  }
 
   /** Primitives that may be called in an import statement. */
   enum ImportPrimitive {
@@ -145,7 +145,7 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
      *
      * <p>In practice, `{Foo: Foo}` gets simplified to `{Foo}`.
      */
-    public DestructuringBinding canonicalizeShorthandProperties() {
+    DestructuringBinding canonicalizeShorthandProperties() {
       return this.isCanonical()
           ? this
           : DestructuringBinding.of(
@@ -267,7 +267,7 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
     }
 
     /** Formats the import statement into code. */
-    public String format() {
+    String format() {
       StringBuilder sb = new StringBuilder();
 
       for (Node node : nodes()) {

@@ -20,6 +20,8 @@ import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.StandardColors;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,8 +32,9 @@ public final class ClusterPropagatorTest {
 
   private final ClusterPropagator propagator = new ClusterPropagator();
 
-  private final ColorGraphNode src = ColorGraphNode.createForTesting(-1);
-  private final ColorGraphNode dest = ColorGraphNode.createForTesting(-2);
+  private static final Color TEST_COLOR = StandardColors.NUMBER;
+  private final ColorGraphNode src = ColorGraphNode.createForTesting(TEST_COLOR, -1);
+  private final ColorGraphNode dest = ColorGraphNode.createForTesting(TEST_COLOR, -2);
 
   private final PropertyClustering prop = new PropertyClustering("prop");
 

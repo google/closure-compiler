@@ -315,6 +315,45 @@ public class NodeTest {
   }
 
   @Test
+  public void isEquivalentToConsidersPresenceOfClosureUnawareShadow_recursively() {
+    Node nameShadow1a = IR.name("x");
+    Node nameShadow1b = IR.name("x");
+    Node nameShadow2 = IR.name("x");
+
+    Node root1Shared = IR.root(IR.script(IR.block()));
+    Node root2 = IR.root();
+
+    nameShadow1a.setClosureUnawareShadow(root1Shared);
+    nameShadow1b.setClosureUnawareShadow(root1Shared.cloneTree());
+    nameShadow2.setClosureUnawareShadow(root2);
+
+    assertThat(nameShadow1a.isEquivalentTo(nameShadow1b)).isTrue();
+    assertThat(nameShadow1a.isEquivalentTo(nameShadow2)).isFalse();
+  }
+
+  @Test
+  public void
+      testIsEquivalentTo_doesNotConsiderPresenceOfClosureUnawareShadow_inDeepNoShadowMode() {
+    Node nameShadow1 = IR.name("x");
+    Node nameShadow2 = IR.name("x");
+
+    Node root1 = IR.root(IR.script(IR.block()));
+    Node root2 = IR.root();
+
+    nameShadow1.setClosureUnawareShadow(root1);
+    nameShadow2.setClosureUnawareShadow(root2);
+
+    assertThat(
+            nameShadow1.isEquivalentTo(
+                nameShadow2,
+                Node.RecursionMode.DEEP_NO_SHADOW,
+                Node.TypeComparison.IGNORE,
+                Node.JsDocComparison.IGNORE,
+                Node.SideEffectComparison.COMPARE))
+        .isTrue();
+  }
+
+  @Test
   public void testNumberRejects_isNaN() {
     assertNumberNodeRejects(Double.NaN);
     assertNumberNodeRejects(-Double.NaN);

@@ -193,7 +193,7 @@ class InlineFunctions implements CompilerPass {
       }
     }
 
-    public void findNamedFunctions(NodeTraversal t, Node n, Node parent) {
+    void findNamedFunctions(NodeTraversal t, Node n, Node parent) {
       if (!NodeUtil.isStatement(n)) {
         // There aren't any interesting functions here.
         return;
@@ -228,7 +228,7 @@ class InlineFunctions implements CompilerPass {
      * Find function expressions that are called directly in the form of
      * (function(a,b,...){...})(a,b,...) or (function(a,b,...){...}).call(this,a,b, ...)
      */
-    public void findFunctionExpressions(NodeTraversal t, Node n) {
+    void findFunctionExpressions(NodeTraversal t, Node n) {
       switch (n.getToken()) {
         case OPTCHAIN_CALL, CALL -> {
           // Functions expressions in the form of:
@@ -417,13 +417,13 @@ class InlineFunctions implements CompilerPass {
    * @see CallVisitor
    */
   private interface CallVisitorCallback {
-    public void visitCallSite(NodeTraversal t, Node callNode, FunctionState functionState);
+    void visitCallSite(NodeTraversal t, Node callNode, FunctionState functionState);
   }
 
   /** Visit call sites for functions in functionMap. */
   private static class CallVisitor extends AbstractPostOrderCallback {
 
-    protected CallVisitorCallback callback;
+    CallVisitorCallback callback;
     private final Map<String, FunctionState> functionMap;
     private final Map<Node, String> anonFunctionMap;
 
@@ -918,19 +918,19 @@ class InlineFunctions implements CompilerPass {
       return (fn != null);
     }
 
-    public void setReferencesThis(boolean referencesThis) {
+    void setReferencesThis(boolean referencesThis) {
       this.referencesThis = referencesThis;
     }
 
-    public boolean getReferencesThis() {
+    boolean getReferencesThis() {
       return this.referencesThis;
     }
 
-    public void setHasInnerFunctions(boolean hasInnerFunctions) {
+    void setHasInnerFunctions(boolean hasInnerFunctions) {
       this.hasInnerFunctions = hasInnerFunctions;
     }
 
-    public boolean hasInnerFunctions() {
+    boolean hasInnerFunctions() {
       return hasInnerFunctions;
     }
 
@@ -944,7 +944,7 @@ class InlineFunctions implements CompilerPass {
       }
     }
 
-    public boolean hasBlockInliningReferences() {
+    boolean hasBlockInliningReferences() {
       for (Reference r : getReferencesInternal().values()) {
         if (r.mode == InliningMode.BLOCK) {
           return true;
@@ -953,28 +953,28 @@ class InlineFunctions implements CompilerPass {
       return false;
     }
 
-    public Function getFn() {
+    Function getFn() {
       return fn;
     }
 
-    public void setFn(Function fn) {
+    void setFn(Function fn) {
       checkState(this.fn == null);
       this.fn = fn;
     }
 
-    public Node getSafeFnNode() {
+    Node getSafeFnNode() {
       return (safeFnNode != null) ? safeFnNode : fn.getFunctionNode();
     }
 
-    public void setSafeFnNode(Node safeFnNode) {
+    void setSafeFnNode(Node safeFnNode) {
       this.safeFnNode = safeFnNode;
     }
 
-    public boolean canInline() {
+    boolean canInline() {
       return inline;
     }
 
-    public boolean encourageInlining() {
+    boolean encourageInlining() {
       if (fn == null) {
         return false;
       }
@@ -985,7 +985,7 @@ class InlineFunctions implements CompilerPass {
       return hasEncourageInliningAnnotation;
     }
 
-    public boolean requireInlining() {
+    boolean requireInlining() {
       if (fn == null) {
         return false;
       }
@@ -996,11 +996,11 @@ class InlineFunctions implements CompilerPass {
       return hasRequireInliningAnnotation;
     }
 
-    public void disallowInlining(AbstractCompiler compiler, DisallowInliningReason reason) {
+    void disallowInlining(AbstractCompiler compiler, DisallowInliningReason reason) {
       disallowInlining(compiler, reason, ShouldWarnWhenRequireInliningCannotInline.YES);
     }
 
-    public void disallowInlining(
+    void disallowInlining(
         AbstractCompiler compiler,
         DisallowInliningReason reason,
         ShouldWarnWhenRequireInliningCannotInline shouldWarnWhenRequireInliningCannotInline) {
@@ -1019,11 +1019,11 @@ class InlineFunctions implements CompilerPass {
       remove = false;
     }
 
-    public boolean canRemove() {
+    boolean canRemove() {
       return remove;
     }
 
-    public void setRemove(
+    void setRemove(
         boolean remove,
         AbstractCompiler compiler,
         CannotRemoveReason reason,
@@ -1031,7 +1031,7 @@ class InlineFunctions implements CompilerPass {
       setRemove(remove, compiler, reason, shouldWarnIfRequireInlining, /* contextNode= */ null);
     }
 
-    public void setRemove(
+    void setRemove(
         boolean remove,
         AbstractCompiler compiler,
         CannotRemoveReason reason,
@@ -1051,15 +1051,15 @@ class InlineFunctions implements CompilerPass {
       this.remove = remove;
     }
 
-    public boolean canInlineDirectly() {
+    boolean canInlineDirectly() {
       return inlineDirectly;
     }
 
-    public void inlineDirectly(boolean directReplacement) {
+    void inlineDirectly(boolean directReplacement) {
       this.inlineDirectly = directReplacement;
     }
 
-    public boolean hasReferences() {
+    boolean hasReferences() {
       return (references != null && !references.isEmpty());
     }
 
@@ -1070,37 +1070,37 @@ class InlineFunctions implements CompilerPass {
       return references;
     }
 
-    public void addReference(Reference ref) {
+    void addReference(Reference ref) {
       if (references == null) {
         references = new LinkedHashMap<>();
       }
       references.put(ref.callNode, ref);
     }
 
-    public Collection<Reference> getReferences() {
+    Collection<Reference> getReferences() {
       return getReferencesInternal().values();
     }
 
-    public Reference getReference(Node n) {
+    Reference getReference(Node n) {
       return getReferencesInternal().get(n);
     }
 
-    public ImmutableSet<String> getNamesToAlias() {
+    ImmutableSet<String> getNamesToAlias() {
       if (namesToAlias == null) {
         return ImmutableSet.of();
       }
       return ImmutableSet.copyOf(namesToAlias);
     }
 
-    public void setNamesToAlias(Set<String> names) {
+    void setNamesToAlias(Set<String> names) {
       namesToAlias = names;
     }
 
-    public void setChunk(JSChunk chunk) {
+    void setChunk(JSChunk chunk) {
       this.chunk = chunk;
     }
 
-    public JSChunk getChunk() {
+    JSChunk getChunk() {
       return chunk;
     }
   }
@@ -1108,25 +1108,25 @@ class InlineFunctions implements CompilerPass {
   /** Interface for dealing with function declarations and function expressions equally */
   private static interface Function {
     /** Gets the name of the function */
-    public String getName();
+    String getName();
 
     /** Gets the name node of the function */
-    public Node getNameNode();
+    Node getNameNode();
 
     /** Gets the function node */
-    public Node getFunctionNode();
+    Node getFunctionNode();
 
     /** Removes itself from the JavaScript */
-    public void remove();
+    void remove();
 
-    public Node getDeclaringBlock();
+    Node getDeclaringBlock();
   }
 
   /** NamedFunction implementation of the Function interface */
   private class NamedFunction implements Function {
     private final Node fn;
 
-    public NamedFunction(Node fn) {
+    NamedFunction(Node fn) {
       this.fn = fn;
     }
 
@@ -1162,7 +1162,7 @@ class InlineFunctions implements CompilerPass {
   private class FunctionVar implements Function {
     private final Node var;
 
-    public FunctionVar(Node var) {
+    FunctionVar(Node var) {
       this.var = var;
     }
 
@@ -1200,7 +1200,7 @@ class InlineFunctions implements CompilerPass {
     private final String fakeName;
     private final Node fakeNameNode;
 
-    public FunctionExpression(Node fn, int index) {
+    FunctionExpression(Node fn, int index) {
       this.fn = fn;
       // A number is not a valid function JavaScript identifier
       // so we don't need to worry about collisions.

@@ -16,47 +16,12 @@
 
 package com.google.debugging.sourcemap;
 
-/**
- * A class representing a partial source map.
- */
-public final class SourceMapSection {
-
-  /**
-   * A URL for a valid source map file that represents a section of a generate
-   * source file such as when multiple files are concatenated together.
-   */
-  private final String value;
-  private final int line;
-  private final int column;
-  private final SectionType type;
+/** A class representing a partial source map. */
+public record SourceMapSection(SectionType type, String value, int line, int column) {
 
   public static enum SectionType {
     URL,
     MAP
-  }
-
-  /**
-   * @param sectionUrl The URL for the partial source map
-   * @param line The number of lines into the file where the represented section
-   *    starts.
-   * @param column The number of characters into the line where the represented
-   *    section starts.
-   * @deprecated
-   */
-  @Deprecated
-  public SourceMapSection(String sectionUrl, int line, int column) {
-    this.type = SectionType.URL;
-    this.value = sectionUrl;
-    this.line = line;
-    this.column = column;
-  }
-
-  private SourceMapSection(
-      SectionType type, String value, int line, int column) {
-    this.type = type;
-    this.value = value;
-    this.line = line;
-    this.column = column;
   }
 
   public static SourceMapSection forMap(String value, int line, int column) {
@@ -68,26 +33,24 @@ public final class SourceMapSection {
   }
 
   public SectionType getSectionType() {
-    return this.type;
+    return type;
   }
 
   /**
-   * @return the value that represents the map for this section.
+   * Returns the value that represents the map for this section. This is either a URL for a valid
+   * source map file that represents a section of a generate source file such as when multiple files
+   * are concatenated together, or a string representing a JSON object that is a source map.
    */
   public String getSectionValue() {
     return value;
   }
 
-  /**
-   * @return the starting line for this section
-   */
+  /** Returns the starting line for this section */
   public int getLine() {
     return line;
   }
 
-  /**
-   * @return the column for this section
-   */
+  /** Returns the starting column for this section */
   public int getColumn() {
     return column;
   }

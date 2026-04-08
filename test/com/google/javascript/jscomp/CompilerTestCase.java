@@ -385,7 +385,8 @@ public abstract class CompilerTestCase {
     if (debugLoggingEnabled) {
       CompilerTestCaseUtils.setDebugLogDirectoryOn(options);
     }
-    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
+    options.setRuntimeLibraryMode(
+        RuntimeJsLibManager.RuntimeLibraryMode.RECORD_AND_VALIDATE_FIELDS);
 
     return options;
   }
@@ -1469,8 +1470,22 @@ public abstract class CompilerTestCase {
       Node externsRootClone,
       Compiler compiler,
       boolean wasCodeChangeReported) {
-    boolean codeChange = !mainRootClone.isEquivalentWithSideEffectsTo(mainRoot);
-    boolean externsChange = !externsRootClone.isEquivalentWithSideEffectsTo(externsRoot);
+    // NOTE: We have to use DEEP_NO_SHADOW here because the code change reporting logic is,
+    // deliberately, unaware of shadows ASTs.
+    boolean codeChange =
+        !mainRootClone.isEquivalentTo(
+            mainRoot,
+            Node.RecursionMode.DEEP_NO_SHADOW,
+            Node.TypeComparison.IGNORE,
+            Node.JsDocComparison.IGNORE,
+            Node.SideEffectComparison.COMPARE);
+    boolean externsChange =
+        !externsRootClone.isEquivalentTo(
+            externsRoot,
+            Node.RecursionMode.DEEP_NO_SHADOW,
+            Node.TypeComparison.IGNORE,
+            Node.JsDocComparison.IGNORE,
+            Node.SideEffectComparison.COMPARE);
 
     // Generally, externs should not be changed by the compiler passes.
     if (externsChange && !allowExternsChanges) {
@@ -2130,5 +2145,9 @@ public abstract class CompilerTestCase {
             .setCompilerOptions(compiler.getOptions())
             .setPrettyPrint(true)
             .build();
+  }
+
+  static PassFactory makePassFactory(String name, Function<AbstractCompiler, CompilerPass> pass) {
+    return PassFactory.builder().setName(name).setInternalFactory(pass).build();
   }
 }

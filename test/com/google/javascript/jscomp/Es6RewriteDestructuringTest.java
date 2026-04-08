@@ -76,9 +76,18 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new Es6RewriteDestructuring.Builder(compiler)
-        .setDestructuringRewriteMode(destructuringRewriteMode)
-        .build();
+    PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
+    optimizer.addOneTimePass(
+        makePassFactory(
+            "injectTranspilationRuntimeLibraries", InjectTranspilationRuntimeLibraries::new));
+    optimizer.addOneTimePass(
+        makePassFactory(
+            "es6RewriteDestructuring",
+            (c) ->
+                new Es6RewriteDestructuring.Builder(c)
+                    .setDestructuringRewriteMode(destructuringRewriteMode)
+                    .build()));
+    return optimizer;
   }
 
   @Test

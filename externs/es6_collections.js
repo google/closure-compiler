@@ -93,7 +93,7 @@ function Map(opt_iterable) {}
 
 /**
  * @param {!Iterable<T>} items
- * @param {function(T, number): K} callbackFn
+ * @param {function(T, number=): K} callbackFn
  * @return {!Map<K, !Array<T>>}
  * @template T, K
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/groupBy
@@ -178,7 +178,6 @@ Map.prototype.values = function() {};
  * @nosideeffects
  */
 Map.prototype[Symbol.iterator] = function() {};
-
 
 /**
  * @constructor @struct

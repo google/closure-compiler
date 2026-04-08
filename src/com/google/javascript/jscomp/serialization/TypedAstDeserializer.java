@@ -300,6 +300,7 @@ public final class TypedAstDeserializer {
         fileShardBuilder.add(existingFile);
       } else {
         SourceFile protoFile = SourceFile.fromProto(p);
+        filePoolBuilder.put(p.getFilename(), protoFile);
         fileShardBuilder.add(protoFile);
       }
     }
