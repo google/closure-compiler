@@ -23785,14 +23785,9 @@ override: number
 
   @Test
   public void testInferredType_unionReceiverSliceCall() {
+    assertUnionMethodCallType("!Array<number>|string", ".slice(0, 3)", "!Array<number>|string");
     assertUnionMethodCallType(
-        "!Array<number>|string",
-        ".slice(0, 3)",
-        "!Array<number>|string");
-    assertUnionMethodCallType(
-        "!Array<number>|!ArrayBuffer",
-        ".slice(0, 3)",
-        "!Array<number>|!ArrayBuffer");
+        "!Array<number>|!ArrayBuffer", ".slice(0, 3)", "!Array<number>|!ArrayBuffer");
     assertUnionMethodCallType(
         "!Array<number>|!ArrayBuffer|!Uint8Array",
         ".slice(0, 3)",
@@ -23802,37 +23797,20 @@ override: number
   @Test
   public void testInferredType_unionReceiverIncludesCall() {
     assertUnionMethodCallType(
-        "!Array<string>|string|!ReadonlyArray<string>",
-        ".includes('a')",
-        "boolean");
-    assertUnionMethodCallType(
-        "!Array<number>|!Uint8Array",
-        ".includes(3)",
-        "boolean");
+        "!Array<string>|string|!ReadonlyArray<string>", ".includes('a')", "boolean");
+    assertUnionMethodCallType("!Array<number>|!Uint8Array", ".includes(3)", "boolean");
   }
 
   @Test
   public void testInferredType_unionReceiverIndexOfCall() {
-    assertUnionMethodCallType(
-        "!Array<string>|string",
-        ".indexOf('a')",
-        "number");
-    assertUnionMethodCallType(
-        "!Array<number>|!Uint8Array",
-        ".indexOf(3)",
-        "number");
+    assertUnionMethodCallType("!Array<string>|string", ".indexOf('a')", "number");
+    assertUnionMethodCallType("!Array<number>|!Uint8Array", ".indexOf(3)", "number");
   }
 
   @Test
   public void testInferredType_unionReceiverToStringCall() {
-    assertUnionMethodCallType(
-        "number|bigint",
-        ".toString()",
-        "string");
-    assertUnionMethodCallType(
-        "bigint|number",
-        ".toString(36)",
-        "string");
+    assertUnionMethodCallType("number|bigint", ".toString()", "string");
+    assertUnionMethodCallType("bigint|number", ".toString(36)", "string");
   }
 
   @Test
@@ -23850,7 +23828,8 @@ override: number
             function callMethodOf(x) {
                 return x%s;
             }
-            """.formatted(receiverType, methodCall));
+            """
+                .formatted(receiverType, methodCall));
 
     Node functionNode = root.getFirstChild();
     assertNode(functionNode).hasToken(Token.FUNCTION);
