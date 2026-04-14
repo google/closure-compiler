@@ -518,8 +518,9 @@ public class TestExternsBuilder {
        * @param {...*} var_args
        * @return {!Array<?>}
        * @this {*}
+       * @nosideeffects
        */
-      ReadonlyArray.prototype.concat;
+      ReadonlyArray.prototype.concat = function(var_args) {};
       /**
        * @param {?number=} begin Zero-based index at which to begin extraction.
        * @param {?number=} end Zero-based index at which to end extraction.  slice
@@ -610,6 +611,7 @@ public class TestExternsBuilder {
        * @param {...*} var_args
        * @return {!Array<?>}
        * @this {*}
+       * @nosideeffects
        */
       Array.prototype.concat = function(var_args) {};
       /**
