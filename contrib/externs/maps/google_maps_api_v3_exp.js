@@ -4626,9 +4626,6 @@ google.maps.KmlFeatureData.prototype.name;
 google.maps.KmlFeatureData.prototype.snippet;
 
 /**
- * A <code>KmlLayer</code> adds geographic markup to the map from a KML, KMZ or
- * GeoRSS file that is hosted on a publicly accessible web server. A
- * <code>KmlFeatureData</code> object is provided for each feature when clicked.
  *
  * Access by calling `const {KmlLayer} = await
  * google.maps.importLibrary("maps");`. See
@@ -4636,6 +4633,9 @@ google.maps.KmlFeatureData.prototype.snippet;
  * @param {?google.maps.KmlLayerOptions=} opts Options for this layer.
  * @extends {google.maps.MVCObject}
  * @constructor
+ * @deprecated As of version 3.65, google.maps.KmlLayer is deprecated. For
+ *     alternative methods of displaying KML data on the map, see <a
+ *     href="https://developers.devsite.corp.google.com/maps/deprecations#kml_layer_deprecated_as_of_april_30_2026">https://developers.devsite.corp.google.com/maps/deprecations#kml_layer_deprecated_as_of_april_30_2026</a>
  */
 google.maps.KmlLayer = function(opts) {};
 
@@ -4970,8 +4970,9 @@ google.maps.LatLng = function(
     latOrLatLngOrLatLngLiteral, lngOrNoClampNoWrap, noClampNoWrap) {};
 
 /**
- * Comparison function.
- * @param {?google.maps.LatLng} other
+ * Comparison function for two LatLngs. Returns true if the coordinates are
+ * within 1e-9 of each other and false otherwise.
+ * @param {!google.maps.LatLng|!google.maps.LatLngLiteral|null|undefined} other
  * @return {boolean}
  */
 google.maps.LatLng.prototype.equals = function(other) {};
@@ -5060,9 +5061,10 @@ google.maps.LatLngAltitude.prototype.lat;
 google.maps.LatLngAltitude.prototype.lng;
 
 /**
- * Comparison function.
- * @param {!google.maps.LatLngAltitude|null} other Another LatLngAltitude
- *     object.
+ * Comparison function for two LatLngAltitudes. Returns true if the coordinates
+ * are within 1e-9 of each other and false otherwise.
+ * @param {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null}
+ *     other Another LatLngAltitude object.
  * @return {boolean} Whether the two objects are equal.
  */
 google.maps.LatLngAltitude.prototype.equals = function(other) {};
@@ -17583,6 +17585,15 @@ google.maps.maps3d.MarkerElement.prototype.anchorLeft;
 google.maps.maps3d.MarkerElement.prototype.anchorTop;
 
 /**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * If provided, the specified marker will be made visible within the map
+ * viewport, alongside any other elements that have opted in.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.MarkerElement.prototype.autofitsCamera;
+
+/**
  * An enumeration specifying how a MarkerElement should behave when it collides
  * with another <code>MarkerElement</code>, <code>Marker3DElement</code>, or
  * with the basemap labels.
@@ -17639,6 +17650,13 @@ google.maps.maps3d.MarkerElementOptions.prototype.anchorLeft;
  * @type {string|null|undefined}
  */
 google.maps.maps3d.MarkerElementOptions.prototype.anchorTop;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * See {@link google.maps.maps3d.MarkerElement.autofitsCamera}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.MarkerElementOptions.prototype.autofitsCamera;
 
 /**
  * See {@link google.maps.maps3d.MarkerElement.collisionBehavior}.
@@ -17878,6 +17896,15 @@ google.maps.maps3d.Polygon3DElement = function(options) {};
 google.maps.maps3d.Polygon3DElement.prototype.altitudeMode;
 
 /**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * If provided, the specified polygon will be made visible within the map
+ * viewport, alongside any other elements that have opted in.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElement.prototype.autofitsCamera;
+
+/**
  * Specifies whether parts of the polygon which could be occluded are drawn or
  * not. Polygons can be occluded by map geometry (e.g. buildings).
  * @default <code>false</code>
@@ -17973,6 +18000,13 @@ google.maps.maps3d.Polygon3DElementOptions = function() {};
  * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
  */
 google.maps.maps3d.Polygon3DElementOptions.prototype.altitudeMode;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * See {@link google.maps.maps3d.Polygon3DElement.autofitsCamera}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElementOptions.prototype.autofitsCamera;
 
 /**
  * See {@link google.maps.maps3d.Polygon3DElement.drawsOccludedSegments}.
