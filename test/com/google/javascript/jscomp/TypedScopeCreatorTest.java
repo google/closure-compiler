@@ -8893,6 +8893,42 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testForwardReferenceInUnion_extendedInterface_regressionTest() {
+    // Regression test for b/497046252#comment11.
+    testSame(
+        srcs(
+            """
+            /** @record */
+            class AtRecord {
+              /** @return {!AtRecord} */
+              getAtRecord() {}
+            }
+
+            /** @type {!Clazz} */
+            let clazzInstance;
+
+            /** @type {!AtRecord|!Clazz} */
+            let union;
+
+            /** @interface @extends {Parent} */
+            class Child {}
+
+            /** @implements {Child} */
+            class Clazz {
+              /** @type {string} */
+              x = 'hi';
+            }
+
+            /** @interface */
+            class Parent {}
+            """));
+    JSType unionType = findNameType("union", globalScope);
+
+    // TODO: b/497046252 - this should be "(AtRecord|Clazz)".
+    assertType(unionType).toStringIsEqualTo("AtRecord");
+  }
+
+  @Test
   public void testMemoization() {
     Node root1 = createEmptyRoot();
     Node root2 = createEmptyRoot();
