@@ -8923,9 +8923,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             class Parent {}
             """));
     JSType unionType = findNameType("union", globalScope);
-
-    // TODO: b/497046252 - this should be "(AtRecord|Clazz)".
-    assertType(unionType).toStringIsEqualTo("AtRecord");
+    assertType(unionType).toStringIsEqualTo("(AtRecord|Clazz)");
   }
 
   @Test

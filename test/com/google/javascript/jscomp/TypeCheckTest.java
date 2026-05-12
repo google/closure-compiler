@@ -19138,7 +19138,7 @@ override: function(this:Foo): number
 
   @Test
   public void testInterfaceExtendsLoop2() {
-    testClosureTypes(
+    testClosureTypesMultipleWarnings(
         """
         /** @record
          * @extends {F} */var G = function() {};
@@ -19150,7 +19150,9 @@ override: function(this:Foo): number
         alert((new H).foo);
         """
             .replace("SUPPRESSION", suppressMissingPropertyFor("H", "foo")),
-        "Cycle detected in inheritance chain of type F");
+        ImmutableList.of(
+            "Cycle detected in inheritance chain of type F",
+            "Could not resolve type in @extends tag of G"));
   }
 
   @Test

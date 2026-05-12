@@ -43,6 +43,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 
 /** An object type that is an instance of some function constructor. */
@@ -229,8 +230,14 @@ final class InstanceObjectType extends PrototypeObjectType {
     return getConstructor().getExtendedInterfaces();
   }
 
-  // The owner will always be a resolved type, so there's no need to set
-  // the constructor in resolveInternal.
-  // (it would lead to infinite loops if we did).
-  // JSType resolveInternal(ErrorReporter reporter);
+  @Override
+  JSType resolveInternal(ErrorReporter reporter) {
+    JSType resolved = super.resolveInternal(reporter);
+    // No need to update the constructor with the result of safeResolve, since the constructor will
+    // always resolve to itself - it's never a forward reference because to create this
+    // InstanceObjectType, we must have the constructor first. But we do need to call resolve on
+    // the constructor to resolve its fields and implemented/extended interfaces, if any.
+    var unused = safeResolve(constructor, reporter);
+    return resolved;
+  }
 }
