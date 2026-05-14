@@ -71,6 +71,13 @@ public final class PerformanceTracker {
   private int externLines = 0;
   private int externSources = 0;
 
+  private int transitiveSummaryLines = 0;
+  private int transitiveSummarySources = 0;
+  private int transitiveSummaryLinesParsed = 0;
+  private int transitiveSummarySourcesParsed = 0;
+
+  private boolean prePruningRecorded = false;
+
   // The following fields for tracking size changes are just estimates.
   // They do not take into account preserved license blocks, newline padding,
   // or pretty printing (if enabled), since they don't use CodePrinter.
@@ -201,8 +208,13 @@ public final class PerformanceTracker {
 
   private void recordInputCount() {
     for (Node n = this.externsRoot.getFirstChild(); n != null; n = n.getNext()) {
-      this.externSources += 1;
-      this.externLines += estimateNumLines(n);
+      if (NodeUtil.isFromTypeSummary(n)) {
+        this.transitiveSummarySources += 1;
+        this.transitiveSummaryLines += estimateNumLines(n);
+      } else {
+        this.externSources += 1;
+        this.externLines += estimateNumLines(n);
+      }
     }
 
     for (Node n = this.jsRoot.getFirstChild(); n != null; n = n.getNext()) {
@@ -349,6 +361,25 @@ public final class PerformanceTracker {
     this.pruningAnalysisSummary = summary;
   }
 
+  void recordPrePruningInputCount(
+      Iterable<CompilerInput> originalInputs, Iterable<CompilerInput> originalExterns) {
+    for (CompilerInput input : originalExterns) {
+      String name = input.getSourceFile().getName();
+      if (name.endsWith(".i.js")) {
+        this.transitiveSummarySourcesParsed += 1;
+        this.transitiveSummaryLinesParsed += input.getSourceFile().getNumLines();
+      }
+    }
+    for (CompilerInput input : originalInputs) {
+      String name = input.getSourceFile().getName();
+      if (name.endsWith(".i.js")) {
+        this.transitiveSummarySourcesParsed += 1;
+        this.transitiveSummaryLinesParsed += input.getSourceFile().getNumLines();
+      }
+    }
+    this.prePruningRecorded = true;
+  }
+
   private String disambiguatePropertiesSummary = "not executed";
 
   public void setDisambiguatePropertiesSummary(String summary) {
@@ -400,6 +431,17 @@ public final class PerformanceTracker {
             "JS sources: " + this.jsSources,
             "Extern lines:   " + this.externLines,
             "Extern sources: " + this.externSources,
+            "Type summary lines (raw input):   "
+                + (this.prePruningRecorded
+                    ? this.transitiveSummaryLinesParsed
+                    : transitiveSummaryLines),
+            "Type summary lines (post-pruning):   " + this.transitiveSummaryLines,
+            "Type summary sources (raw input):   "
+                + (this.prePruningRecorded
+                    ? this.transitiveSummarySourcesParsed
+                    : transitiveSummarySources),
+            "Type summary sources (post-pruning):   " + this.transitiveSummarySources,
+            "",
             "Dependency pruning analysis: " + this.pruningAnalysisSummary));
 
     output.println(

@@ -2271,6 +2271,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // Before dependency pruning, save a copy of the original inputs to use for externs hoisting.
     ImmutableList<CompilerInput> originalInputs = ImmutableList.copyOf(chunkGraph.getAllInputs());
 
+    if (tracker != null) {
+      tracker.recordPrePruningInputCount(originalInputs, externs);
+    }
+
     // Externs must be marked before dependency management since it needs to know what is an extern.
     markExterns(originalInputs);
 
