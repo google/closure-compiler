@@ -2688,7 +2688,7 @@ Atomics.wait = function(typedArray, index, value, timeout) {};
  * @param {number} index
  * @param {number} value
  * @param {number=} timeout
- * @return {!Promise<string>}
+ * @return {{async: boolean, value: (string|!Promise<string>)}}
  */
 Atomics.waitAsync = function(typedArray, index, value, timeout) {};
 
