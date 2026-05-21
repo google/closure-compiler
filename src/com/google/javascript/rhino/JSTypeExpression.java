@@ -165,6 +165,17 @@ public final class JSTypeExpression implements Serializable {
     }
   }
 
+  /** Make the given type expression into an optional type expression, if possible. */
+  public static JSTypeExpression makeVarArgs(JSTypeExpression expr) {
+    if (expr.isOptionalArg() || expr.isVarArgs()) {
+      return expr;
+    } else {
+      Node equals = new Node(Token.ITER_REST, expr.root);
+      equals.clonePropsFrom(expr.root);
+      return new JSTypeExpression(equals, expr.sourceName);
+    }
+  }
+
   /** Does this expression denote an optional {@code @param}? */
   public boolean isOptionalArg() {
     return root.getToken() == Token.EQUALS;

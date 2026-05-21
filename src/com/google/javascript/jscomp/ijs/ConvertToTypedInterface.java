@@ -146,7 +146,7 @@ public class ConvertToTypedInterface implements CompilerPass {
       scriptNode.setJSDocInfo(scriptJsDocBuilder.build());
     }
 
-    FileInfo currentFile = new FileInfo();
+    FileInfo currentFile = new FileInfo(sourceFileName);
     NodeTraversal.traverse(compiler, scriptNode, new RemoveNonDeclarations());
     NodeTraversal.traverse(compiler, scriptNode, new PropagateConstJsdoc(currentFile));
     new SimplifyDeclarations(compiler, currentFile).simplifyAll();
@@ -489,6 +489,7 @@ public class ConvertToTypedInterface implements CompilerPass {
         processClass(decl.getRhs());
       }
       setUndeclaredToUnusableType(decl);
+      elidePrivateMemberType(decl);
       decl.simplify(compiler);
     }
 
@@ -591,6 +592,38 @@ public class ConvertToTypedInterface implements CompilerPass {
       maybeWarnForConstWithoutExplicitType(compiler, decl);
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
       jsdocNode.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
+    }
+
+    private void elidePrivateMemberType(PotentialDeclaration decl) {
+      if (shouldElidePrivateMemberType(decl)) {
+        JSDocInfo jsdoc = decl.getJsDoc();
+        Node jsdocNode = NodeUtil.getBestJSDocInfoNode(decl.getLhs());
+        jsdocNode.setJSDocInfo(JsdocUtil.replaceAnnotatedTypesWithUnusableType(jsdoc));
+      }
+    }
+
+    private boolean shouldElidePrivateMemberType(PotentialDeclaration decl) {
+      // TODO: b/465855752 - roll out elison for JS files as well after depot cleanup.
+      if (!currentFile.isFromTypeScript()) {
+        return false;
+      }
+      JSDocInfo jsdoc = decl.getJsDoc();
+      if (jsdoc == null || jsdoc.getVisibility() != JSDocInfo.Visibility.PRIVATE) {
+        return false;
+      }
+      // Preserve JSDoc declaring a new type name, to avoid loosening types of other public members.
+      if (jsdoc.isConstructorOrInterface()
+          || jsdoc.hasEnumParameterType()
+          || jsdoc.hasTypedefType()) {
+        return false;
+      }
+      // Simple name declarations marked @private are not really treated as private if exported from
+      // a goog.module. (Ultimately we should probably ban marking a local name @private so that we
+      // can drop this special case.)
+      if (decl.getLhs().isName()) {
+        return false;
+      }
+      return JsdocUtil.hasAnnotatedType(jsdoc);
     }
   }
 

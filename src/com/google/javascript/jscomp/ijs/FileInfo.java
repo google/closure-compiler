@@ -29,6 +29,15 @@ final class FileInfo {
   private final Set<String> requiredLocalNames = new LinkedHashSet<>();
   private final ListMultimap<String, PotentialDeclaration> declarations =
       MultimapBuilder.linkedHashKeys().arrayListValues().build();
+  private final boolean isFromTypeScript;
+
+  FileInfo(String sourceFileName) {
+    this.isFromTypeScript = sourceFileName.endsWith(".closure.js");
+  }
+
+  boolean isFromTypeScript() {
+    return isFromTypeScript;
+  }
 
   void recordNameDeclaration(Node qualifiedNameNode) {
     recordDeclaration(PotentialDeclaration.fromName(qualifiedNameNode));

@@ -59,6 +59,30 @@ final class JsdocUtil {
     return builder;
   }
 
+  private static JSTypeExpression replaceWithBottomType(JSTypeExpression original) {
+    if (isUnknownType(original)) {
+      // Emitting the UnusableType can cause errors in code if overriding a property
+      // or method with a more specific type. There's no harm in preserving the `?`, since it's
+      // already loose in the original code.
+      return original;
+    }
+    return newTypeExpr(Node.newString("IjsNoneType"));
+  }
+
+  private static JSTypeExpression replaceWithUnusableType(JSTypeExpression original) {
+    if (isUnknownType(original)) {
+      // Emitting the UnusableType can cause errors in code if overriding a property
+      // or method with a more specific type. There's no harm in preserving the `?`, since it's
+      // already loose in the original code.
+      return original;
+    }
+    return newTypeExpr(Node.newString("UnusableType"));
+  }
+
+  private static JSTypeExpression newTypeExpr(Node typeAst) {
+    return new JSTypeExpression(typeAst.srcrefTree(SYNTETIC_SRCINFO_NODE), SYNTHETIC_FILE_NAME);
+  }
+
   private static JSDocInfo getConstJSDoc(JSDocInfo oldJSDoc, String contents) {
     return getConstJSDoc(oldJSDoc, Node.newString(contents));
   }
@@ -81,6 +105,51 @@ final class JsdocUtil {
     }
     JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(classicJsdoc);
     builder.recordType(inlineJsdoc.getType());
+    return builder.build();
+  }
+
+  static JSDocInfo replaceAnnotatedTypesWithUnusableType(JSDocInfo jsdoc) {
+    JSDocInfo.Builder builder = JSDocInfo.builder();
+    if (jsdoc.hasType()) {
+      builder.recordType(replaceWithUnusableType(jsdoc.getType()));
+    }
+    if (jsdoc.hasReturnType()) {
+      builder.recordReturnType(replaceWithUnusableType(jsdoc.getReturnType()));
+    }
+    for (int i = 0; i < jsdoc.getParameterCount(); i++) {
+      String name = jsdoc.getParameterNameAt(i);
+      var original = jsdoc.getParameterType(name);
+      if (original == null) {
+        continue;
+      }
+      var newType = replaceWithBottomType(original);
+      if (original.isOptionalArg()) {
+        newType = JSTypeExpression.makeOptionalArg(newType);
+      } else if (original.isVarArgs()) {
+        newType = JSTypeExpression.makeVarArgs(newType);
+      }
+      builder.recordParameter(name, newType);
+    }
+    if (jsdoc.hasThisType()) {
+      builder.recordThisType(replaceWithUnusableType(jsdoc.getThisType()));
+    }
+    // NOTE: intentionally *not* replacing @enum, @extends, @implements & @typedef. We have decided
+    // that anything *declaring* a new type name should be preserved. For example - given:
+    //   class MyClass {}
+    //   /** @private @typedef {!Foo|!Bar} */
+    //   MyClass.NestedType; */
+    //   /** @return {!MyClass.NestedType} */
+    //   MyClass.SomeFn = function() { // ...
+    // we choose to preserve the definition of `MyClass.NestedType` in order to make
+    // `MyClass.SomeFn` well-typed.
+
+    // Preserve existing @const or @private/@package/@protected annotations.
+    if (jsdoc.isConstant()) {
+      builder.recordConstancy();
+    }
+    if (jsdoc.getVisibility() != null) {
+      builder.recordVisibility(jsdoc.getVisibility());
+    }
     return builder.build();
   }
 
@@ -162,5 +231,10 @@ final class JsdocUtil {
       default -> {}
     }
     return getConstJSDoc(oldJSDoc, typeAst);
+  }
+
+  private static boolean isUnknownType(JSTypeExpression type) {
+    Node typeAst = type.getRoot();
+    return typeAst.getToken() == Token.QMARK && !typeAst.hasChildren();
   }
 }

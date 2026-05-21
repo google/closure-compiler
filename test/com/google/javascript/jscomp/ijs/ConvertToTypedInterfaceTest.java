@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
+import com.google.javascript.jscomp.SourceFile;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -1233,6 +1234,221 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         a.b.c.helper_ = someComplicatedExpression();
         """,
         "goog.provide('a.b.c');   /** @private @const {UnusableType} */ a.b.c.helper_;");
+  }
+
+  @Test
+  public void testPrivateEs6ClassPropertyTypeOmitted_forNonTypeScript_doesNotOmit() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "bar.js",
+                """
+                class Foo {
+                  constructor() {
+                    /** @private {SomeComplicatedType} */
+                    this.x;
+                  }
+                }
+                """)),
+        expected(
+            """
+            class Foo {
+              constructor() {}
+            }
+            /** @private @type {SomeComplicatedType} */
+            Foo.prototype.x;
+            """));
+  }
+
+  @Test
+  public void testPrivateEs6ClassPropertyTypeOmitted_forTypeScriptFiles() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "foo.closure.js",
+                """
+                class Foo {
+                  constructor() {
+                    /** @private {SomeComplicatedType} */
+                    this.x;
+                  }
+                }
+                """)),
+        expected(
+            """
+            class Foo {
+              constructor() {}
+            }
+            /** @private @type {UnusableType} */
+            Foo.prototype.x;
+            """));
+  }
+
+  @Test
+  public void testNonPrivateVisibility_kept() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "foo.closure.js",
+                """
+                class Foo {
+                  constructor() {
+                    /** @protected {SomeComplicatedType} */
+                    this.x;
+                    /** @package {SomeComplicatedType} */
+                    this.y;
+                    /** @public {SomeComplicatedType} */
+                    this.z;
+                  }
+                }
+                """)),
+        expected(
+            """
+            class Foo {
+              constructor() {}
+            }
+            /** @public @type {SomeComplicatedType} */
+            Foo.prototype.z;
+            /** @package @type {SomeComplicatedType} */
+            Foo.prototype.y;
+            /** @protected @type {SomeComplicatedType} */
+            Foo.prototype.x;
+            """));
+  }
+
+  @Test
+  public void testPrivateEs6ClassPropertyWithQmarkType_doesNotBecomeUnusableType() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "foo.closure.js",
+                """
+                class Foo {
+                  constructor() {
+                    /** @private {?} */
+                    this.x;
+                  }
+                }
+                """)),
+        expected(
+            """
+            class Foo {
+              constructor() {}
+            }
+            /** @private @type {?} */
+            Foo.prototype.x;
+            """));
+  }
+
+  @Test
+  public void testPrivateEs5ClassPropertyTypeOmitted() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "foo.closure.js",
+                """
+                /** @constructor */
+                function Foo() {
+                  /** @const @private {SomeComplicatedType} */ this.x;
+                }
+                """)),
+        expected(
+            """
+            /** @constructor */ function Foo() {}
+            /** @const @private {UnusableType} */ Foo.prototype.x;
+            """));
+  }
+
+  @Test
+  public void testPrivateEs6PrototypeMethodSignatureOmitted() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "foo.closure.js",
+                """
+                class Foo {
+                  /**
+                   * @param {SomeType} a
+                   * @param {SomeType=} b
+                   * @param {...SomeType} c
+                   * @return {OtherType}
+                   * @private
+                   */
+                  x(a, b) {}
+                }
+                """)),
+        expected(
+            """
+            class Foo {
+              /**
+               * @param {IjsNoneType} a
+               * @param {IjsNoneType=} b
+               * @param {...IjsNoneType} c
+               * @return {UnusableType}
+               * @private
+               */
+              x(a, b) {}
+            }
+            """));
+  }
+
+  @Test
+  public void testPrivateEs5PrototypeMethodSignatureOmitted() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "foo.closure.js",
+                """
+                /** @constructor */
+                function Foo() {}
+                /**
+                 * @param {SomeType} a
+                 * @param {SomeType=} b
+                 * @return {OtherType}
+                 * @private
+                 */
+                Foo.prototype.x = function(a, b) {};
+                """)),
+        expected(
+            """
+            /** @constructor */ function Foo() {}
+            /**
+             * @private
+             * @param {IjsNoneType} a
+             * @param {IjsNoneType=} b
+             * @return {UnusableType}
+             */
+            Foo.prototype.x = function(a, b) {};
+            """));
+  }
+
+  @Test
+  public void testDontEmitTypeNameOnPrivate_nonProperty() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "foo.closure.js",
+                """
+                goog.module('a');
+
+                /** @private @typedef {string} */
+                let Typedef;
+                /** @private @enum {string} */
+                const Enum = {A: 0};
+                /** @private {boolean} */
+                const unusedPrivateLocal = true;
+                """)),
+        expected(
+            """
+            goog.module("a");
+
+            /** @private @typedef {string} */
+            let Typedef;
+            /** @private @enum {string} */
+            const Enum = {A: 0};
+            /** @private @const @type {boolean} */
+            var unusedPrivateLocal;
+            """));
   }
 
   @Test
