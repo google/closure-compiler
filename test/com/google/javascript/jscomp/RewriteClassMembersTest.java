@@ -238,6 +238,260 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   }
 
   @Test
+  public void testPrivateIdInOperator_static() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          static #staticField;
+          brandCheck(x) { return #staticField in x; }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateIdInOperator_methodAndAccessor() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          #method() {}
+          get #prop() { return 1; }
+          brandCheck(x) { return #method in x && #prop in x; }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateDestructuringAssignment() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          #x;
+          assignFromObj(obj) {
+            ({ val: this.#x } = obj);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateMethodWithComplexParameters() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          #method(a = 1, ...rest) { return a + rest.length; }
+          callMethod() { return this.#method(10, 20, 30); }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateUpdateAndCompoundAssignment() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          #x = 1;
+          increment() {
+            this.#x++;
+            this.#x += 10;
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateFieldAccess() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          #x = 1;
+          getX(otherObj1) {
+            return otherObj1.#x;
+          }
+          setX(otherObj2, v) {
+            otherObj2.#x = v;
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateFieldAccess_direct() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          #x = 1;
+          getX() {
+            return this.#x;
+          }
+          setX(v) {
+            this.#x = v;
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateMethodAccess() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          #method(paramX) { return paramX + 1; }
+          callMethod(otherObj, argX) {
+            return otherObj.#method(argX);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateMethodAccess_direct() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          #method(paramX) { return paramX + 1; }
+          callMethod(argX) {
+            return this.#method(argX);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateGetterSetterAccess() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          #propVal = 1;
+          get #prop() { return this.#propVal; }
+          set #prop(paramV) { this.#propVal = paramV; }
+          access(otherObj, argV) {
+            otherObj.#prop = otherObj.#prop + argV;
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateGetterSetterAccess_direct() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          #propVal = 1;
+          get #prop() { return this.#propVal; }
+          set #prop(paramV) { this.#propVal = paramV; }
+          access(argV) {
+            this.#prop = this.#prop + argV;
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateStaticMemberAccess() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          static #staticField = 1;
+          static #staticPropVal = 3;
+          static #staticMethod() { return 2; }
+          static get #staticProp() { return this.#staticPropVal; }
+          static set #staticProp(paramV) { this.#staticPropVal = paramV; }
+          static access(argV) {
+            Foo.#staticProp = Foo.#staticField + Foo.#staticMethod() + Foo.#staticProp + argV;
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateStaticMemberAccess_this() {
+    // Verify that static private members can be accessed via `this` (which evaluates to the class
+    // constructor object `Foo` inside static methods and accessors) instead of explicit class name.
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          static #staticField = 1;
+          static #staticPropVal = 3;
+          static #staticMethod() { return 2; }
+          static get #staticProp() { return this.#staticPropVal; }
+          static set #staticProp(paramV) { this.#staticPropVal = paramV; }
+          static access(argV) {
+            this.#staticProp = this.#staticField + this.#staticMethod() + this.#staticProp + argV;
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateOptionalChaining() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          #method() { return 1; }
+          #field = 2;
+          access(otherObj) {
+            return otherObj?.#field + otherObj?.#method();
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateOptionalChaining_direct() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          #method() { return 1; }
+          #field = 2;
+          access() {
+            return this?.#field + this?.#method();
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateInheritanceAndSuper() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Base {
+          constructor() {
+            this.baseProp = 1;
+          }
+        }
+        class Sub extends Base {
+          #field = 2;
+          #method() { return 3; }
+          constructor() {
+            super();
+            this.#field = this.baseProp + this.#method();
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateNestedClassScoping() {
+    // We do NOT expect this to fail after full implementation. In JavaScript, private elements are
+    // lexically scoped, meaning a nested class (Inner) can access private fields of its lexically
+    // enclosing class (Outer). See:
+    // https://tc39.es/ecma262/multipage/ecmascript-language-functions-and-classes.html#sec-runtime-semantics-classdefinitionevaluation
+    // After implementation, `Es6NormalizeClasses` will resolve `o.#x` by searching up the lexical
+    // `classStack` to find `Outer` and transpiling it to use Outer's WeakMap.
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Outer {
+          #x = 1;
+          createInner() {
+            return class Inner {
+              readOuter(o) { return o.#x; }
+            };
+          }
+        }
+        """);
+  }
+
+  @Test
   public void testClassStaticBlock_superRef_onClassWithNameSpace() {
     test(
         """

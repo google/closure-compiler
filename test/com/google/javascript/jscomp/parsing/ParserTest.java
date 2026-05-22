@@ -6442,6 +6442,26 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testPrivateProperty_invalid_subclassAccessingBasePrivateField() {
+    // We expect this to fail because private fields in a base class cannot be accessed by
+    // subclasses.
+    // The JS parser correctly rejects this with a parse error as #baseField is not declared in Sub.
+    parseError(
+        """
+        class Base {
+          #baseField = 1;
+        }
+        class Sub extends Base {
+          constructor() {
+            super();
+            this.#baseField = 2;
+          }
+        }
+        """,
+        PRIVATE_FIELD_NOT_DEFINED);
+  }
+
+  @Test
   public void testPrivateProperty_invalid_deletePrivateField() {
     parseError("class C { #f = 1; method() { delete this.#f; } }", PRIVATE_FIELD_DELETED);
     parseError(
