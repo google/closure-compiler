@@ -2202,8 +2202,7 @@ public final class JSTypeRegistry {
           return addNullabilityBasedOnParseContext(n, nominalType, scope);
         }
 
-        if (!(nominalType instanceof ObjectType objectType)
-            || isNonNullableName(scope, n.getString())) {
+        if (!(nominalType instanceof ObjectType objectType)) {
           return nominalType;
         }
 

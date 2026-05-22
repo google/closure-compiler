@@ -28900,6 +28900,56 @@ It's possible that a local variable called 'service' is shadowing the intended g
   }
 
   @Test
+  public void testBug515079328_genericInTypedef() {
+    newTest()
+        .includeDefaultExterns()
+        .addSource(
+            "internal.js",
+            """
+            goog.module('internal');
+            /**
+             * @record
+             * @template T
+             */
+            function TypeGuard() {}
+            exports.TypeGuard = TypeGuard;
+            """)
+        .addSource(
+            "guards.js",
+            """
+            goog.module('guards');
+            const rt = goog.requireType('internal');
+            /** @typedef {!rt.TypeGuard} */
+            exports.TypeGuard;
+            """)
+        .addSource(
+            "test.js",
+            """
+            goog.module('test');
+            const {TypeGuard} = goog.require('guards');
+            const guards = goog.require('guards');
+            /** @type {!TypeGuard<string>} */
+            const destructuringType = 1;
+
+            /** @type {!guards.TypeGuard<null>} */
+            const nsImportType = 1;
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : number
+            required: TypeGuard<string>
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : number
+            required: TypeGuard<null>
+            """)
+        .run();
+  }
+
+  @Test
   public void testLegacyGoogModuleExportTypecheckedAgainstGlobal_simpleModuleId() {
     newTest()
         .addExterns(
