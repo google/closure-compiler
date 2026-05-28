@@ -8642,6 +8642,36 @@ google.maps.PlacesLibrary.prototype.StringRange;
 google.maps.PlacesLibrary.prototype.TimeZone;
 
 /**
+ * @type {typeof google.maps.places.TransitAgency}
+ */
+google.maps.PlacesLibrary.prototype.TransitAgency;
+
+/**
+ * @type {typeof google.maps.places.TransitIcon}
+ */
+google.maps.PlacesLibrary.prototype.TransitIcon;
+
+/**
+ * @type {typeof google.maps.places.TransitLine}
+ */
+google.maps.PlacesLibrary.prototype.TransitLine;
+
+/**
+ * @type {typeof google.maps.places.TransitStation}
+ */
+google.maps.PlacesLibrary.prototype.TransitStation;
+
+/**
+ * @type {typeof google.maps.places.TransitStop}
+ */
+google.maps.PlacesLibrary.prototype.TransitStop;
+
+/**
+ * @type {typeof google.maps.places.TransitVehicleType}
+ */
+google.maps.PlacesLibrary.prototype.TransitVehicleType;
+
+/**
  *
  * Access by calling `const {Point} = await google.maps.importLibrary("core");`.
  * See https://developers.google.com/maps/documentation/javascript/libraries.
@@ -17721,7 +17751,11 @@ google.maps.maps3d.Marker3DInteractiveElementOptions.prototype.title;
 
 /**
  * Shows a position on a 3D map. Note that the <code>position</code> must be set
- * for the <code>MarkerElement</code> to display.
+ * for the <code>MarkerElement</code> to display.<br><br>
+ * <code>MarkerElement</code> supports high customization via custom HTML
+ * elements, but has lower interaction performance than
+ * <code>Marker3DElement</code>, especially when handling more than 1000 markers
+ * on a map.
  *
  * Access by calling `const {MarkerElement} = await
  * google.maps.importLibrary("maps3d");`. See
@@ -19793,7 +19827,7 @@ google.maps.places.BasicPlaceAutocompleteElement.prototype.description;
  * Whether the input element is disabled. See <a
  * href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#disabled">https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#disabled</a>
  * for details.
- * @type {boolean|null}
+ * @type {boolean|null|undefined}
  */
 google.maps.places.BasicPlaceAutocompleteElement.prototype.disabled;
 
@@ -19857,8 +19891,14 @@ google.maps.places.BasicPlaceAutocompleteElement.prototype.maxlength;
 google.maps.places.BasicPlaceAutocompleteElement.prototype.name;
 
 /**
+ * Whether to hide the clear button.
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.BasicPlaceAutocompleteElement.prototype.noClearButton;
+
+/**
  * Whether to hide the input icon.
- * @type {boolean|null}
+ * @type {boolean|null|undefined}
  */
 google.maps.places.BasicPlaceAutocompleteElement.prototype.noInputIcon;
 
@@ -19888,7 +19928,7 @@ google.maps.places.BasicPlaceAutocompleteElement.prototype
  * Whether the input element is read-only. See <a
  * href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#readonly">https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#readonly</a>
  * for details.
- * @type {boolean|null}
+ * @type {boolean|null|undefined}
  */
 google.maps.places.BasicPlaceAutocompleteElement.prototype.readonly;
 
@@ -19979,6 +20019,11 @@ google.maps.places.BasicPlaceAutocompleteElementOptions.prototype.maxlength;
  * @type {string|null|undefined}
  */
 google.maps.places.BasicPlaceAutocompleteElementOptions.prototype.name;
+
+/**
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.BasicPlaceAutocompleteElementOptions.prototype.noClearButton;
 
 /**
  * @type {boolean|null|undefined}
@@ -21674,6 +21719,13 @@ google.maps.places.Place.prototype.svgIconMaskURI;
 google.maps.places.Place.prototype.timeZone;
 
 /**
+ * Information about the transit station. <code>undefined</code> if the transit
+ * data has not been loaded from the server.
+ * @type {!google.maps.places.TransitStation|null|undefined}
+ */
+google.maps.places.Place.prototype.transitStation;
+
+/**
  * An array of <a
  * href="https://developers.google.com/maps/documentation/places/web-service/supported_types">types
  * for this Place</a> (for example, <code>[&quot;political&quot;,
@@ -21959,7 +22011,7 @@ google.maps.places.PlaceAutocompleteElement.prototype.description;
  * Whether the input element is disabled. See <a
  * href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#disabled">https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#disabled</a>
  * for details.
- * @type {boolean|null}
+ * @type {boolean|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElement.prototype.disabled;
 
@@ -22023,8 +22075,14 @@ google.maps.places.PlaceAutocompleteElement.prototype.maxlength;
 google.maps.places.PlaceAutocompleteElement.prototype.name;
 
 /**
+ * Whether to hide the clear button.
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElement.prototype.noClearButton;
+
+/**
  * Whether to hide the input icon.
- * @type {boolean|null}
+ * @type {boolean|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElement.prototype.noInputIcon;
 
@@ -22054,7 +22112,7 @@ google.maps.places.PlaceAutocompleteElement.prototype
  * Whether the input element is read-only. See <a
  * href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#readonly">https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#readonly</a>
  * for details.
- * @type {boolean|null}
+ * @type {boolean|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElement.prototype.readonly;
 
@@ -22153,6 +22211,11 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.maxlength;
  * @type {string|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElementOptions.prototype.name;
+
+/**
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype.noClearButton;
 
 /**
  * @type {boolean|null|undefined}
@@ -25593,6 +25656,389 @@ google.maps.places.TimeZone.prototype.id;
 google.maps.places.TimeZone.prototype.version;
 
 /**
+ * Represents a transit agency.
+ *
+ * Access by calling `const {TransitAgency} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.TransitAgency = function() {};
+
+/**
+ * The name of the agency in the requested language.
+ * @type {string|null}
+ */
+google.maps.places.TransitAgency.prototype.displayName;
+
+/**
+ * The agency name text&#39;s BCP-47 language code, such as &quot;en-US&quot; or
+ * &quot;sr-Latn&quot;. For more information, see <a
+ * href="http://www.unicode.org/reports/tr35/#Unicode_locale_identifier">http://www.unicode.org/reports/tr35/#Unicode_locale_identifier</a>.
+ * @type {string|null}
+ */
+google.maps.places.TransitAgency.prototype.displayNameLanguageCode;
+
+/**
+ * The URL of the agency&#39;s fare details page.
+ * @type {!URL|null}
+ */
+google.maps.places.TransitAgency.prototype.fareURL;
+
+/**
+ * A localized branded icon of a transit system.
+ * @type {!google.maps.places.TransitIcon|null}
+ */
+google.maps.places.TransitAgency.prototype.icon;
+
+/**
+ * The transit lines that are served by this agency.
+ * @type {!Array<!google.maps.places.TransitLine>}
+ */
+google.maps.places.TransitAgency.prototype.lines;
+
+/**
+ * The URL of the agency&#39;s homepage.
+ * @type {!URL|null}
+ */
+google.maps.places.TransitAgency.prototype.url;
+
+/**
+ * Represents a transit icon.
+ *
+ * Access by calling `const {TransitIcon} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.TransitIcon = function() {};
+
+/**
+ * Whether the name is contained in the icon and there is no need to display it
+ * next to the icon.
+ * @type {boolean|null}
+ */
+google.maps.places.TransitIcon.prototype.nameIncluded;
+
+/**
+ * The URL of the icon.
+ * @type {!URL|null}
+ */
+google.maps.places.TransitIcon.prototype.url;
+
+/**
+ * Represents a transit line.
+ *
+ * Access by calling `const {TransitLine} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.TransitLine = function() {};
+
+/**
+ * The background color of the labels for this transit line in hexadecimal
+ * format (e.g., &quot;#909CE1&quot;). This color can also be used for drawing
+ * shapes for this transit line.
+ * @type {string|null}
+ */
+google.maps.places.TransitLine.prototype.backgroundColor;
+
+/**
+ * The full name of this transit line (e.g., &quot;Sunnydale local&quot;).
+ * @type {string|null}
+ */
+google.maps.places.TransitLine.prototype.displayName;
+
+/**
+ * The transit line full name text&#39;s BCP-47 language code, such as
+ * &quot;en-US&quot; or &quot;sr-Latn&quot;. For more information, see <a
+ * href="http://www.unicode.org/reports/tr35/#Unicode_locale_identifier">http://www.unicode.org/reports/tr35/#Unicode_locale_identifier</a>.
+ * @type {string|null}
+ */
+google.maps.places.TransitLine.prototype.displayNameLanguageCode;
+
+/**
+ * Icon for this particular line.
+ * @type {!google.maps.places.TransitIcon|null}
+ */
+google.maps.places.TransitLine.prototype.icon;
+
+/**
+ * The id of the transit line that can be used to uniquely identify the line
+ * among other transit lines in the same transit station. This identifier is not
+ * guaranteed to be stable across different responses.
+ * @type {string|null}
+ */
+google.maps.places.TransitLine.prototype.id;
+
+/**
+ * The short name of this transit line (e.g., &quot;S2&quot;).
+ * @type {string|null}
+ */
+google.maps.places.TransitLine.prototype.shortDisplayName;
+
+/**
+ * The transit line short name text&#39;s BCP-47 language code, such as
+ * &quot;en-US&quot; or &quot;sr-Latn&quot;. For more information, see <a
+ * href="http://www.unicode.org/reports/tr35/#Unicode_locale_identifier">http://www.unicode.org/reports/tr35/#Unicode_locale_identifier</a>.
+ * @type {string|null}
+ */
+google.maps.places.TransitLine.prototype.shortDisplayNameLanguageCode;
+
+/**
+ * The text color of labels for this transit line in hexadecimal format (e.g.,
+ * &quot;#909CE1&quot;).
+ * @type {string|null}
+ */
+google.maps.places.TransitLine.prototype.textColor;
+
+/**
+ * The URL of a webpage with details about this line.
+ * @type {!URL|null}
+ */
+google.maps.places.TransitLine.prototype.url;
+
+/**
+ * Icon for this particular vehicle type.
+ * @type {!google.maps.places.TransitIcon|null}
+ */
+google.maps.places.TransitLine.prototype.vehicleIcon;
+
+/**
+ * The type of vehicle used.
+ * @type {!google.maps.places.TransitVehicleType|null}
+ */
+google.maps.places.TransitLine.prototype.vehicleType;
+
+/**
+ * Represents transit-specific information for a place.
+ *
+ * Access by calling `const {TransitStation} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.TransitStation = function() {};
+
+/**
+ * The transit agencies that serve this station.
+ * @type {!Array<!google.maps.places.TransitAgency>}
+ */
+google.maps.places.TransitStation.prototype.agencies;
+
+/**
+ * The name of the station in the local language.
+ * @type {string|null}
+ */
+google.maps.places.TransitStation.prototype.displayName;
+
+/**
+ * The local display name text&#39;s BCP-47 language code, such as
+ * &quot;en-US&quot; or &quot;sr-Latn&quot;. For more information, see <a
+ * href="http://www.unicode.org/reports/tr35/#Unicode_locale_identifier">http://www.unicode.org/reports/tr35/#Unicode_locale_identifier</a>.
+ * @type {string|null}
+ */
+google.maps.places.TransitStation.prototype.displayNameLanguageCode;
+
+/**
+ * The transit stops at this station.
+ * @type {!Array<!google.maps.places.TransitStop>}
+ */
+google.maps.places.TransitStation.prototype.stops;
+
+/**
+ * Represents a transit stop.
+ *
+ * Access by calling `const {TransitStop} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @constructor
+ */
+google.maps.places.TransitStop = function() {};
+
+/**
+ * The name of the stop in the requested language.
+ * @type {string|null}
+ */
+google.maps.places.TransitStop.prototype.displayName;
+
+/**
+ * The name of the stop in the requested language&#39;s BCP-47 language code,
+ * such as &quot;en-US&quot; or &quot;sr-Latn&quot;. For more information, see
+ * <a
+ * href="http://www.unicode.org/reports/tr35/#Unicode_locale_identifier">http://www.unicode.org/reports/tr35/#Unicode_locale_identifier</a>.
+ * @type {string|null}
+ */
+google.maps.places.TransitStop.prototype.displayNameLanguageCode;
+
+/**
+ * This field indicates whether there is an accessible path from outside the
+ * station to the stop. It does not indicate whether it is possible to board a
+ * vehicle from the stop.
+ * @type {boolean|null}
+ */
+google.maps.places.TransitStop.prototype.hasWheelchairAccessibleEntrance;
+
+/**
+ * The id of the transit stop that can be used to uniquely identify the stop
+ * among other transit stops in the same transit station. This identifier is not
+ * guaranteed to be stable across different responses.
+ * @type {string|null}
+ */
+google.maps.places.TransitStop.prototype.id;
+
+/**
+ * The stop&#39;s location.
+ * @type {!google.maps.LatLngAltitude|null}
+ */
+google.maps.places.TransitStop.prototype.location;
+
+/**
+ * The platform code represented by this stop. It can be formatted in any way
+ * (e.g., &quot;2&quot;, &quot;Platform 2&quot;, &quot;2-4&quot;, or
+ * &quot;1x&quot;).
+ * @type {string|null}
+ */
+google.maps.places.TransitStop.prototype.platformCode;
+
+/**
+ * The platform code text&#39;s BCP-47 language code, such as &quot;en-US&quot;
+ * or &quot;sr-Latn&quot;. For more information, see <a
+ * href="http://www.unicode.org/reports/tr35/#Unicode_locale_identifier">http://www.unicode.org/reports/tr35/#Unicode_locale_identifier</a>.
+ * @type {string|null}
+ */
+google.maps.places.TransitStop.prototype.platformCodeLanguageCode;
+
+/**
+ * The verbatim text written on the signboard for this platform (e.g.,
+ * &quot;Towards Central&quot; or &quot;East side &amp; Brooklyn&quot;). When
+ * <code>platformCode</code> is absent, this field is potentially the only
+ * identifier for the platform. However, both <code>platformCode</code> and
+ * <code>signageText</code> may be set simultaneously.
+ * @type {string|null}
+ */
+google.maps.places.TransitStop.prototype.signageText;
+
+/**
+ * The signage text&#39;s BCP-47 language code, such as &quot;en-US&quot; or
+ * &quot;sr-Latn&quot;. For more information, see <a
+ * href="http://www.unicode.org/reports/tr35/#Unicode_locale_identifier">http://www.unicode.org/reports/tr35/#Unicode_locale_identifier</a>.
+ * @type {string|null}
+ */
+google.maps.places.TransitStop.prototype.signageTextLanguageCode;
+
+/**
+ * Human readable identifier of the stop, used by transit agencies to
+ * distinguish stops with the same name.
+ * @type {string|null}
+ */
+google.maps.places.TransitStop.prototype.stopCode;
+
+/**
+ * The stop code text&#39;s BCP-47 language code, such as &quot;en-US&quot; or
+ * &quot;sr-Latn&quot;. For more information, see <a
+ * href="http://www.unicode.org/reports/tr35/#Unicode_locale_identifier">http://www.unicode.org/reports/tr35/#Unicode_locale_identifier</a>.
+ * @type {string|null}
+ */
+google.maps.places.TransitStop.prototype.stopCodeLanguageCode;
+
+/**
+ * The type of a transit vehicle.
+ *
+ * Access by calling `const {TransitVehicleType} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.TransitVehicleType = {
+  /**
+   * Airplane.
+   */
+  AIRPLANE: 'AIRPLANE',
+  /**
+   * Bus.
+   */
+  BUS: 'BUS',
+  /**
+   * Cable car.
+   */
+  CABLE_CAR: 'CABLE_CAR',
+  /**
+   * Coach.
+   */
+  COACH: 'COACH',
+  /**
+   * Commuter train.
+   */
+  COMMUTER_TRAIN: 'COMMUTER_TRAIN',
+  /**
+   * Ferry.
+   */
+  FERRY: 'FERRY',
+  /**
+   * Funicular.
+   */
+  FUNICULAR: 'FUNICULAR',
+  /**
+   * Gondola lift.
+   */
+  GONDOLA_LIFT: 'GONDOLA_LIFT',
+  /**
+   * Heavy rail.
+   */
+  HEAVY_RAIL: 'HEAVY_RAIL',
+  /**
+   * High speed train.
+   */
+  HIGH_SPEED_TRAIN: 'HIGH_SPEED_TRAIN',
+  /**
+   * Horse carriage.
+   */
+  HORSE_CARRIAGE: 'HORSE_CARRIAGE',
+  /**
+   * Intercity bus.
+   */
+  INTERCITY_BUS: 'INTERCITY_BUS',
+  /**
+   * Long distance train.
+   */
+  LONG_DISTANCE_TRAIN: 'LONG_DISTANCE_TRAIN',
+  /**
+   * Metro rail.
+   */
+  METRO_RAIL: 'METRO_RAIL',
+  /**
+   * Monorail.
+   */
+  MONORAIL: 'MONORAIL',
+  /**
+   * Rail.
+   */
+  RAIL: 'RAIL',
+  /**
+   * Share taxi.
+   */
+  SHARE_TAXI: 'SHARE_TAXI',
+  /**
+   * Special.
+   */
+  SPECIAL: 'SPECIAL',
+  /**
+   * Subway.
+   */
+  SUBWAY: 'SUBWAY',
+  /**
+   * Tram.
+   */
+  TRAM: 'TRAM',
+  /**
+   * Trolleybus.
+   */
+  TROLLEYBUS: 'TROLLEYBUS',
+};
+
+/**
  * @const
  */
 google.maps.routes = {};
@@ -25670,6 +26116,13 @@ google.maps.routes.ComputeRouteMatrixRequest.prototype.extraComputations;
  * @type {!Iterable<string>}
  */
 google.maps.routes.ComputeRouteMatrixRequest.prototype.fields;
+
+/**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.routes.ComputeRouteMatrixRequest.prototype
+    .internalUsageAttributionIds;
 
 /**
  * The BCP-47 language code, such as &quot;en-US&quot; or &quot;sr-Latn&quot;.
@@ -25886,6 +26339,12 @@ google.maps.routes.ComputeRoutesRequest.prototype.fields;
  * @type {!Iterable<!google.maps.routes.Waypoint>|undefined}
  */
 google.maps.routes.ComputeRoutesRequest.prototype.intermediates;
+
+/**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.routes.ComputeRoutesRequest.prototype.internalUsageAttributionIds;
 
 /**
  * The BCP-47 language code, such as &quot;en-US&quot; or &quot;sr-Latn&quot;.
@@ -26683,6 +27142,12 @@ google.maps.routes.Route3DElement.prototype.departureTime;
 google.maps.routes.Route3DElement.prototype.destination;
 
 /**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.routes.Route3DElement.prototype.internalUsageAttributionIds;
+
+/**
  * The origin of the route.
  * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitude|google.maps.LatLngAltitudeLiteral|google.maps.places.Place|null}
  */
@@ -26726,6 +27191,12 @@ google.maps.routes.Route3DElementOptions.prototype.departureTime;
  * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitude|google.maps.LatLngAltitudeLiteral|google.maps.places.Place|null}
  */
 google.maps.routes.Route3DElementOptions.prototype.destination;
+
+/**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.routes.Route3DElementOptions.prototype.internalUsageAttributionIds;
 
 /**
  * See {@link google.maps.routes.Route3DElement.origin}.
