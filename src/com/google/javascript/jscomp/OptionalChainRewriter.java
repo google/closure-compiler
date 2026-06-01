@@ -162,6 +162,9 @@ class OptionalChainRewriter {
     // function. However, if it isn't undefined, we have to preserve the correct `this` value
     // for the call.
     if (chainParent.isCall()
+        // If the call is explicitly a free call (e.g. `(0, a?.b)()`), we should not preserve
+        // `this`.
+        && !chainParent.getBooleanProp(Node.FREE_CALL)
         // The chain will have been replaced by optChainReplacement during the rewriting above.
         && optChainReplacement.isFirstChildOf(chainParent)
         // The wholeChain variable will still point to the rewritten final Node of the
@@ -275,7 +278,11 @@ class OptionalChainRewriter {
     // NOTE: convertToNonOptionalChain() above will have made the chain start
     // and all the other nodes in the first segment of the chain non-optional,
     // so fullChainStart.isCall() is the right test here.
-    if (NodeUtil.isNormalGet(receiverNode) && fullChainStart.isCall()) {
+    if (NodeUtil.isNormalGet(receiverNode)
+        && fullChainStart.isCall()
+        // Check !FREE_CALL to ensure we don't treat free calls on property
+        // access (e.g. `(0, expr.prop)?.()`) as method calls.
+        && !fullChainStart.getBooleanProp(Node.FREE_CALL)) {
       // `expr.prop?.(x).y`
       // Needs to become
       // `(t1 = (t0 = expr).prop) == null ? void 0 : t1.call(t0, x).y`

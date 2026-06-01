@@ -362,8 +362,7 @@ public final class RewriteOptionalChainingOperatorTest {
                 }
               };
               let tmp0;
-              let tmp1;
-              (tmp1 = (tmp0 = myObj).getFun) == null ? void 0 : (0, tmp1.call)(tmp0).x;
+              (tmp0 = myObj.getFun) == null ? void 0 : tmp0().x;
               """
             },
             {
@@ -382,8 +381,7 @@ public final class RewriteOptionalChainingOperatorTest {
                 }
               };
               let tmp0;
-              let tmp1;
-              (0, ((tmp0 = myObj) == null ? void 0 : (tmp1 = tmp0).getObj).call)(tmp1);
+              ((tmp0 = myObj) == null ? void 0 : tmp0.getObj)();
               """
             }
           });
