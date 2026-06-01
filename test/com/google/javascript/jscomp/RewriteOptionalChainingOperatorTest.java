@@ -345,6 +345,46 @@ public final class RewriteOptionalChainingOperatorTest {
                 label: for (const a of (tmp0 = b) == null ? void 0 : tmp0.c) {}
               }
               """
+            },
+            {
+              """
+              const myObj = {
+                getFun() {
+                  return { x: 3 };
+                }
+              };
+              (0, myObj.getFun)?.().x;
+              """,
+              """
+              const myObj = {
+                getFun() {
+                  return { x: 3 };
+                }
+              };
+              let tmp0;
+              let tmp1;
+              (tmp1 = (tmp0 = myObj).getFun) == null ? void 0 : (0, tmp1.call)(tmp0).x;
+              """
+            },
+            {
+              """
+              const myObj = {
+                getObj() {
+                  return this;
+                }
+              };
+              (0, myObj?.getObj)();
+              """,
+              """
+              const myObj = {
+                getObj() {
+                  return this;
+                }
+              };
+              let tmp0;
+              let tmp1;
+              (0, ((tmp0 = myObj) == null ? void 0 : (tmp1 = tmp0).getObj).call)(tmp1);
+              """
             }
           });
     }
