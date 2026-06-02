@@ -77,7 +77,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   public void testGoogProvide() {
     testSame("goog.provide('my.provide');");
     assertThat(metadataMap().getModulesByGoogNamespace().keySet()).containsExactly("my.provide");
-    assertThat(metadataMap().getModulesByPath().keySet()).contains("testcode");
+    assertThat(metadataMap().getModulesByPath()).containsKey("testcode");
     ModuleMetadata m = metadataMap().getModulesByGoogNamespace().get("my.provide");
     assertThat(m.googNamespaces()).containsExactly("my.provide");
     assertThat(m.isGoogProvide()).isTrue();
@@ -106,7 +106,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     testSame("goog.provide('my.first.provide'); goog.provide('my.second.provide');");
     assertThat(metadataMap().getModulesByGoogNamespace().keySet())
         .containsExactly("my.first.provide", "my.second.provide");
-    assertThat(metadataMap().getModulesByPath().keySet()).contains("testcode");
+    assertThat(metadataMap().getModulesByPath()).containsKey("testcode");
     ModuleMetadata m = metadataMap().getModulesByGoogNamespace().get("my.first.provide");
     assertThat(m.googNamespaces()).containsExactly("my.first.provide", "my.second.provide");
     assertThat(m.isGoogProvide()).isTrue();
@@ -407,7 +407,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   public void testEs6Module() {
     testSame("export var x;");
     assertThat(metadataMap().getModulesByGoogNamespace().keySet()).isEmpty();
-    assertThat(metadataMap().getModulesByPath().keySet()).contains("testcode");
+    assertThat(metadataMap().getModulesByPath()).containsKey("testcode");
     ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
     assertThat(m.googNamespaces()).isEmpty();
     assertThat(m.isEs6Module()).isTrue();
@@ -727,7 +727,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     assertThat(metadataMap().getModulesByPath().get("imported.js").moduleType())
         .isEqualTo(ModuleType.ES6_MODULE);
     // Pruned
-    assertThat(metadataMap().getModulesByPath().keySet()).doesNotContain("notimported.js");
+    assertThat(metadataMap().getModulesByPath()).doesNotContainKey("notimported.js");
   }
 
   @Test
