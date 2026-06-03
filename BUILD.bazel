@@ -304,11 +304,6 @@ gen_java_tests(
             "test/**/*.java",
             "src/**/testing/**/*.java",
         ],
-        exclude = [
-            # Async context transpilation is unsupported. It currently relies on non-open-sourced
-            # Google internal code.
-            "test/com/google/javascript/jscomp/InstrumentAsyncContextTest.java",
-        ]
     ),
     prefix_path = "test/",
     deps = [
