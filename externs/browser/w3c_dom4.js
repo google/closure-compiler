@@ -198,6 +198,30 @@ Document.prototype.replaceChildren = function(nodes) {};
 DocumentFragment.prototype.replaceChildren = function(nodes) {};
 
 /**
+ * @param {!Node} node
+ * @param {?Node} child
+ * @return {undefined}
+ * @see https://developer.mozilla.org/docs/Web/API/Element/moveBefore
+ */
+Element.prototype.moveBefore = function(node, child) {};
+
+/**
+ * @param {!Node} node
+ * @param {?Node} child
+ * @return {undefined}
+ * @see https://developer.mozilla.org/docs/Web/API/Document/moveBefore
+ */
+Document.prototype.moveBefore = function(node, child) {};
+
+/**
+ * @param {!Node} node
+ * @param {?Node} child
+ * @return {undefined}
+ * @see https://developer.mozilla.org/docs/Web/API/DocumentFragment/moveBefore
+ */
+DocumentFragment.prototype.moveBefore = function(node, child) {};
+
+/**
  * @param {...(!Node|string)} nodes
  * @return {undefined}
  * @see https://dom.spec.whatwg.org/#dom-childnode-before
