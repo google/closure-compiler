@@ -6005,7 +6005,7 @@ google.maps.MapElement.prototype.innerMap;
  * Only unique values will be sent. Changes to this value after instantiation
  * may be ignored.
  * @default <code>null</code>
- * @type {!Iterable<string>|null}
+ * @type {!Iterable<string>|null|undefined}
  */
 google.maps.MapElement.prototype.internalUsageAttributionIds;
 
@@ -12774,33 +12774,6 @@ google.maps.airQuality.AirQualityMeterElementOptions.prototype
 google.maps.drawing = {};
 
 /**
- * Options for the rendering of the drawing control.
- * @record
- */
-google.maps.drawing.DrawingControlOptions = function() {};
-
-/**
- * The drawing modes to display in the drawing control, in the order in which
- * they are to be displayed. The hand icon (which corresponds to the
- * <code>null</code> drawing mode) is always available and is not to be
- * specified in this array.
- * @default <code>[{@link google.maps.drawing.OverlayType.MARKER}, {@link
- * google.maps.drawing.OverlayType.POLYLINE}, {@link
- * google.maps.drawing.OverlayType.RECTANGLE}, {@link
- * google.maps.drawing.OverlayType.CIRCLE}, {@link
- * google.maps.drawing.OverlayType.POLYGON}]</code>
- * @type {!Array<!google.maps.drawing.OverlayType>|null|undefined}
- */
-google.maps.drawing.DrawingControlOptions.prototype.drawingModes;
-
-/**
- * Position id. Used to specify the position of the control on the map.
- * @default {@link google.maps.ControlPosition.TOP_LEFT}
- * @type {!google.maps.ControlPosition|null|undefined}
- */
-google.maps.drawing.DrawingControlOptions.prototype.position;
-
-/**
  * Allows users to draw markers, polygons, polylines, rectangles, and circles on
  * the map. The <code>DrawingManager</code>&#39;s drawing mode defines the type
  * of overlay that will be created by the user. Adds a control to the map,
@@ -12809,158 +12782,14 @@ google.maps.drawing.DrawingControlOptions.prototype.position;
  * Access by calling `const {DrawingManager} = await
  * google.maps.importLibrary("drawing");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {?google.maps.drawing.DrawingManagerOptions=} options
  * @extends {google.maps.MVCObject}
  * @constructor
- * @deprecated Drawing library functionality in the Maps JavaScript API is
- *     deprecated. This API was deprecated in August 2025 and will be made
- *     unavailable in a later version of the Maps JavaScript API, releasing in
- *     May 2026. For more info, see <a
- *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>
+ * @deprecated The DrawingManager functionality in the Maps JavaScript API is no
+ *     longer available in the Maps JavaScript API as of version 3.65. For more
+ *     info, see <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>.
  */
-google.maps.drawing.DrawingManager = function(options) {};
-
-/**
- * Returns the <code>DrawingManager</code>&#39;s drawing mode.
- * @return {?google.maps.drawing.OverlayType}
- */
-google.maps.drawing.DrawingManager.prototype.getDrawingMode = function() {};
-
-/**
- * Returns the <code>Map</code> to which the <code>DrawingManager</code> is
- * attached, which is the <code>Map</code> on which the overlays created will be
- * placed.
- * @return {?google.maps.Map}
- */
-google.maps.drawing.DrawingManager.prototype.getMap = function() {};
-
-/**
- * Changes the <code>DrawingManager</code>&#39;s drawing mode, which defines the
- * type of overlay to be added on the map. Accepted values are
- * <code>'marker'</code>, <code>'polygon'</code>, <code>'polyline'</code>,
- * <code>'rectangle'</code>, <code>'circle'</code>, or <code>null</code>. A
- * drawing mode of <code>null</code> means that the user can interact with the
- * map as normal, and clicks do not draw anything.
- * @param {?google.maps.drawing.OverlayType} drawingMode
- * @return {undefined}
- */
-google.maps.drawing.DrawingManager.prototype.setDrawingMode = function(
-    drawingMode) {};
-
-/**
- * Attaches the <code>DrawingManager</code> object to the specified
- * <code>Map</code>.
- * @param {?google.maps.Map} map
- * @return {undefined}
- */
-google.maps.drawing.DrawingManager.prototype.setMap = function(map) {};
-
-/**
- * Sets the <code>DrawingManager</code>&#39;s options.
- * @param {?google.maps.drawing.DrawingManagerOptions} options
- * @return {undefined}
- */
-google.maps.drawing.DrawingManager.prototype.setOptions = function(options) {};
-
-/**
- * Options for the drawing manager.
- * @record
- */
-google.maps.drawing.DrawingManagerOptions = function() {};
-
-/**
- * Options to apply to any new circles created with this
- * <code>DrawingManager</code>. The <code>center</code> and <code>radius</code>
- * properties are ignored, and the <code>map</code> property of a new circle is
- * always set to the <code>DrawingManager</code>&#39;s map.
- * @type {!google.maps.CircleOptions|null|undefined}
- */
-google.maps.drawing.DrawingManagerOptions.prototype.circleOptions;
-
-/**
- * The enabled/disabled state of the drawing control.
- * @default <code>true</code>
- * @type {boolean|null|undefined}
- */
-google.maps.drawing.DrawingManagerOptions.prototype.drawingControl;
-
-/**
- * The display options for the drawing control.
- * @type {!google.maps.drawing.DrawingControlOptions|null|undefined}
- */
-google.maps.drawing.DrawingManagerOptions.prototype.drawingControlOptions;
-
-/**
- * The <code>DrawingManager</code>&#39;s drawing mode, which defines the type of
- * overlay to be added on the map. Accepted values are <code>'marker'</code>,
- * <code>'polygon'</code>, <code>'polyline'</code>, <code>'rectangle'</code>,
- * <code>'circle'</code>, or <code>null</code>. A drawing mode of
- * <code>null</code> means that the user can interact with the map as normal,
- * and clicks do not draw anything.
- * @type {!google.maps.drawing.OverlayType|null|undefined}
- */
-google.maps.drawing.DrawingManagerOptions.prototype.drawingMode;
-
-/**
- * The <code>Map</code> to which the <code>DrawingManager</code> is attached,
- * which is the <code>Map</code> on which the overlays created will be placed.
- * @type {!google.maps.Map|null|undefined}
- */
-google.maps.drawing.DrawingManagerOptions.prototype.map;
-
-/**
- * Options to apply to any new markers created with this
- * <code>DrawingManager</code>. The <code>position</code> property is ignored,
- * and the <code>map</code> property of a new marker is always set to the
- * <code>DrawingManager</code>&#39;s map.
- * @type {!google.maps.MarkerOptions|null|undefined}
- */
-google.maps.drawing.DrawingManagerOptions.prototype.markerOptions;
-
-/**
- * Options to apply to any new polygons created with this
- * <code>DrawingManager</code>. The <code>paths</code> property is ignored, and
- * the <code>map</code> property of a new polygon is always set to the
- * <code>DrawingManager</code>&#39;s map.
- * @type {!google.maps.PolygonOptions|null|undefined}
- */
-google.maps.drawing.DrawingManagerOptions.prototype.polygonOptions;
-
-/**
- * Options to apply to any new polylines created with this
- * <code>DrawingManager</code>. The <code>path</code> property is ignored, and
- * the <code>map</code> property of a new polyline is always set to the
- * <code>DrawingManager</code>&#39;s map.
- * @type {!google.maps.PolylineOptions|null|undefined}
- */
-google.maps.drawing.DrawingManagerOptions.prototype.polylineOptions;
-
-/**
- * Options to apply to any new rectangles created with this
- * <code>DrawingManager</code>. The <code>bounds</code> property is ignored, and
- * the <code>map</code> property of a new rectangle is always set to the
- * <code>DrawingManager</code>&#39;s map.
- * @type {!google.maps.RectangleOptions|null|undefined}
- */
-google.maps.drawing.DrawingManagerOptions.prototype.rectangleOptions;
-
-/**
- * The properties of an overlaycomplete event on a <code>DrawingManager</code>.
- * @record
- */
-google.maps.drawing.OverlayCompleteEvent = function() {};
-
-/**
- * The completed overlay.
- * @type {!google.maps.Marker|!google.maps.Polygon|!google.maps.Polyline|!google.maps.Rectangle|!google.maps.Circle}
- */
-google.maps.drawing.OverlayCompleteEvent.prototype.overlay;
-
-/**
- * The completed overlay&#39;s type.
- * @type {!google.maps.drawing.OverlayType}
- */
-google.maps.drawing.OverlayCompleteEvent.prototype.type;
+google.maps.drawing.DrawingManager = function() {};
 
 /**
  * The types of overlay that may be created by the <code>DrawingManager</code>.
@@ -19484,6 +19313,12 @@ google.maps.places.AutocompleteRequest.prototype.input;
 google.maps.places.AutocompleteRequest.prototype.inputOffset;
 
 /**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.AutocompleteRequest.prototype.internalUsageAttributionIds;
+
+/**
  * The language in which to return results. Will default to the browser&#39;s
  * language preference. The results may be in mixed languages if the language
  * used in <code>input</code> is different from <code>language</code>, or if the
@@ -19860,6 +19695,13 @@ google.maps.places.BasicPlaceAutocompleteElement.prototype.includedPrimaryTypes;
 google.maps.places.BasicPlaceAutocompleteElement.prototype.includedRegionCodes;
 
 /**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.BasicPlaceAutocompleteElement.prototype
+    .internalUsageAttributionIds;
+
+/**
  * A soft boundary or hint to use when searching for places.
  * @type {!google.maps.places.LocationBias|null}
  */
@@ -19998,6 +19840,12 @@ google.maps.places.BasicPlaceAutocompleteElementOptions.prototype
  */
 google.maps.places.BasicPlaceAutocompleteElementOptions.prototype
     .includedRegionCodes;
+
+/**
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.BasicPlaceAutocompleteElementOptions.prototype
+    .internalUsageAttributionIds;
 
 /**
  * @type {!google.maps.places.LocationBias|null|undefined}
@@ -20441,9 +20289,15 @@ google.maps.places.FetchFieldsRequest = function() {};
 
 /**
  * List of fields to be fetched.
- * @type {!Array<string>}
+ * @type {!Iterable<string>}
  */
 google.maps.places.FetchFieldsRequest.prototype.fields;
+
+/**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.FetchFieldsRequest.prototype.internalUsageAttributionIds;
 
 /**
  * A find place from text search request to be sent to {@link
@@ -22044,6 +21898,13 @@ google.maps.places.PlaceAutocompleteElement.prototype.includedPrimaryTypes;
 google.maps.places.PlaceAutocompleteElement.prototype.includedRegionCodes;
 
 /**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElement.prototype
+    .internalUsageAttributionIds;
+
+/**
  * A soft boundary or hint to use when searching for places.
  * @type {!google.maps.places.LocationBias|null}
  */
@@ -22190,6 +22051,12 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype
  */
 google.maps.places.PlaceAutocompleteElementOptions.prototype
     .includedRegionCodes;
+
+/**
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.PlaceAutocompleteElementOptions.prototype
+    .internalUsageAttributionIds;
 
 /**
  * @type {!google.maps.places.LocationBias|null|undefined}
@@ -22459,6 +22326,13 @@ google.maps.places.PlaceContextualListLayout = {
 google.maps.places.PlaceDetailsCompactElement = function(options) {};
 
 /**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.PlaceDetailsCompactElement.prototype
+    .internalUsageAttributionIds;
+
+/**
  * The orientation variant (vertical or horizontal) of the element.
  * @default <code>PlaceDetailsOrientation.VERTICAL</code>
  * @type {!google.maps.places.PlaceDetailsOrientation|null|undefined}
@@ -22485,6 +22359,13 @@ google.maps.places.PlaceDetailsCompactElement.prototype.truncationPreferred;
  * @record
  */
 google.maps.places.PlaceDetailsCompactElementOptions = function() {};
+
+/**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.PlaceDetailsCompactElementOptions.prototype
+    .internalUsageAttributionIds;
 
 /**
  * See {@link google.maps.places.PlaceDetailsCompactElement.orientation}.
@@ -22531,6 +22412,12 @@ google.maps.places.PlaceDetailsCompactElementOptions.prototype
 google.maps.places.PlaceDetailsElement = function(options) {};
 
 /**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.PlaceDetailsElement.prototype.internalUsageAttributionIds;
+
+/**
  * Read only. Place object containing the ID, location, and viewport of the
  * currently rendered place.
  * @type {!google.maps.places.Place|undefined}
@@ -22542,6 +22429,13 @@ google.maps.places.PlaceDetailsElement.prototype.place;
  * @record
  */
 google.maps.places.PlaceDetailsElementOptions = function() {};
+
+/**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.PlaceDetailsElementOptions.prototype
+    .internalUsageAttributionIds;
 
 /**
  * Configures a {@link google.maps.places.PlaceDetailsCompactElement} or {@link
@@ -23847,6 +23741,12 @@ google.maps.places.PlaceSearchElement = function(options) {};
 google.maps.places.PlaceSearchElement.prototype.attributionPosition;
 
 /**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.PlaceSearchElement.prototype.internalUsageAttributionIds;
+
+/**
  * The orientation variant (vertical or horizontal) of the element.
  * @default <code>PlaceSearchOrientation.VERTICAL</code>
  * @type {!google.maps.places.PlaceSearchOrientation|null|undefined}
@@ -23888,6 +23788,13 @@ google.maps.places.PlaceSearchElementOptions = function() {};
  * @type {!google.maps.places.PlaceSearchAttributionPosition|null|undefined}
  */
 google.maps.places.PlaceSearchElementOptions.prototype.attributionPosition;
+
+/**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.PlaceSearchElementOptions.prototype
+    .internalUsageAttributionIds;
 
 /**
  * See {@link google.maps.places.PlaceSearchElement.orientation}.
@@ -25198,6 +25105,12 @@ google.maps.places.SearchByTextRequest.prototype
 google.maps.places.SearchByTextRequest.prototype.includedType;
 
 /**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.SearchByTextRequest.prototype.internalUsageAttributionIds;
+
+/**
  * Used to restrict the search to places that are currently open.
  * @default <code>false</code>
  * @type {boolean|undefined}
@@ -25404,6 +25317,12 @@ google.maps.places.SearchNearbyRequest.prototype.includedPrimaryTypes;
  * @type {!Array<string>|undefined}
  */
 google.maps.places.SearchNearbyRequest.prototype.includedTypes;
+
+/**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.SearchNearbyRequest.prototype.internalUsageAttributionIds;
 
 /**
  * Place details will be displayed with the preferred language if available.
@@ -27137,9 +27056,21 @@ google.maps.routes.Route3DElement.prototype.departureTime;
 
 /**
  * The destination of the route.
- * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitude|google.maps.LatLngAltitudeLiteral|google.maps.places.Place|null}
+ * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitude|google.maps.LatLngAltitudeLiteral|google.maps.places.Place|null|undefined}
  */
 google.maps.routes.Route3DElement.prototype.destination;
+
+/**
+ * Fallback info for the computed routes.
+ * @type {!google.maps.routes.FallbackInfo|null}
+ */
+google.maps.routes.Route3DElement.prototype.fallbackInfo;
+
+/**
+ * Geocoding results for the origin and destination.
+ * @type {!google.maps.routes.GeocodingResults|null}
+ */
+google.maps.routes.Route3DElement.prototype.geocodingResults;
 
 /**
  * Identifiers used to attribute calls to specific packages or OSS libraries.
@@ -27149,9 +27080,16 @@ google.maps.routes.Route3DElement.prototype.internalUsageAttributionIds;
 
 /**
  * The origin of the route.
- * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitude|google.maps.LatLngAltitudeLiteral|google.maps.places.Place|null}
+ * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitude|google.maps.LatLngAltitudeLiteral|google.maps.places.Place|null|undefined}
  */
 google.maps.routes.Route3DElement.prototype.origin;
+
+/**
+ * The primary route along with optional alternate routes, computed from the
+ * Routes API.
+ * @type {!Array<!google.maps.routes.Route>|null}
+ */
+google.maps.routes.Route3DElement.prototype.routes;
 
 /**
  * If provided, the route will be computed with traffic information along the
@@ -27188,7 +27126,7 @@ google.maps.routes.Route3DElementOptions.prototype.departureTime;
 
 /**
  * See {@link google.maps.routes.Route3DElement.destination}.
- * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitude|google.maps.LatLngAltitudeLiteral|google.maps.places.Place|null}
+ * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitude|google.maps.LatLngAltitudeLiteral|google.maps.places.Place|null|undefined}
  */
 google.maps.routes.Route3DElementOptions.prototype.destination;
 
@@ -27200,7 +27138,7 @@ google.maps.routes.Route3DElementOptions.prototype.internalUsageAttributionIds;
 
 /**
  * See {@link google.maps.routes.Route3DElement.origin}.
- * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitude|google.maps.LatLngAltitudeLiteral|google.maps.places.Place|null}
+ * @type {string|google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngAltitude|google.maps.LatLngAltitudeLiteral|google.maps.places.Place|null|undefined}
  */
 google.maps.routes.Route3DElementOptions.prototype.origin;
 
