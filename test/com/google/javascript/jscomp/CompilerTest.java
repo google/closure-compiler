@@ -3175,11 +3175,7 @@ public final class CompilerTest {
     compiler.initWithTypedAstFilesystem(
         ImmutableList.of(), ImmutableList.of(file1), compilerOptions, typedAstListStream);
 
-    assertThrows(
-        Exception.class,
-        () -> {
-          var unused = compiler.getTypedAstDeserializer(file2);
-        });
+    assertThrows(Exception.class, () -> compiler.getTypedAstDeserializer(file2));
 
     Node script = compiler.getRoot().getSecondChild().getFirstChild();
     assertThat(script.getStaticSourceFile()).isSameInstanceAs(file1);
