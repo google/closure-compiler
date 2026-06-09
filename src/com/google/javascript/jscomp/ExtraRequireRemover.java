@@ -109,11 +109,6 @@ public final class ExtraRequireRemover implements CompilerPass, NodeTraversal.Ca
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    if (n.isScript()
-        && n.getJSDocInfo() != null
-        && n.getJSDocInfo().getSuppressions().contains("missingRequire")) {
-      return false;
-    }
     // Skip ES modules. We could support them in the future if desired.
     return !n.isModuleBody() || n.getParent().getBooleanProp(Node.GOOG_MODULE);
   }
@@ -185,6 +180,12 @@ public final class ExtraRequireRemover implements CompilerPass, NodeTraversal.Ca
     // to be referenced in the file, so don't prune it.
     JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(call);
     if (jsDoc != null && jsDoc.getSuppressions().contains("extraRequire")) {
+      return;
+    }
+
+    // Workaround for tsickle bug affecting JSPB imports.
+    // TODO: b/520110716 - Remove this once the bug is fixed.
+    if (isTsickleProtoCall(call)) {
       return;
     }
 
@@ -356,5 +357,13 @@ public final class ExtraRequireRemover implements CompilerPass, NodeTraversal.Ca
         addUsagesOfAllPrefixes(QualifiedName.of(typeName));
       }
     }
+  }
+
+  private static boolean isTsickleProtoCall(Node call) {
+    if (!call.isCall() || !call.getSourceFileName().endsWith(".closure.js")) {
+      return false;
+    }
+    Node moduleId = call.getSecondChild();
+    return moduleId != null && moduleId.isStringLit() && moduleId.getString().startsWith("proto.");
   }
 }

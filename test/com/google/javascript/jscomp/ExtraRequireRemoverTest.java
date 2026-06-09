@@ -212,4 +212,74 @@ public final class ExtraRequireRemoverTest extends CompilerTestCase {
         /** @const */ var FooAlias = a.b.c;
         """);
   }
+
+  @Test
+  public void testIsTsickleProtoCall_closureJs_looksForProtoPrefix() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "test.closure.js",
+                """
+                goog.module('x.y.z');
+
+                const util = goog.require('my.proto.util'); // not a proto message.
+                const Foo = goog.require('proto.some.message');
+                """)),
+        expected(
+            """
+            goog.module('x.y.z');
+
+            const Foo = goog.require('proto.some.message');
+            """));
+  }
+
+  @Test
+  public void testIsTsickleProtoCall_notClosureJs() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "test.js",
+                """
+                goog.module('x.y.z');
+
+                const Foo = goog.require('proto.some.message');
+                """)),
+        expected(
+            """
+            goog.module('x.y.z');
+            """));
+  }
+
+  @Test
+  public void testPruneWithSuppressMissingRequire() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "test.js",
+                """
+                /** @fileoverview @suppress {missingRequire} */
+                goog.module('x.y.z');
+
+                const Foo = goog.require('some.message');
+                """)),
+        expected(
+            """
+            /** @fileoverview @suppress {missingRequire} */
+            goog.module('x.y.z');
+            """));
+  }
+
+  @Test
+  public void testNoPruneWithSuppressExtraRequire() {
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                "test.js",
+                """
+                goog.module('x.y.z');
+
+                /** @suppress {extraRequire} */
+                const Foo = goog.require('some.message');
+                """)));
+  }
 }
