@@ -160,9 +160,11 @@ BaseAudioContext.prototype.createOscillator = function() {};
 /**
  * @param {!Float32Array} real
  * @param {!Float32Array} imag
+ * @param {!PeriodicWaveConstraints=} opt_constraints
  * @return {!PeriodicWave}
  */
-BaseAudioContext.prototype.createPeriodicWave = function(real, imag) {};
+BaseAudioContext.prototype.createPeriodicWave = function(
+    real, imag, opt_constraints) {};
 
 /**
  * @return {!Promise<void>}
@@ -189,8 +191,8 @@ BaseAudioContext.prototype.onstatechange;
 BaseAudioContext.prototype.createAudioWorker = function(scriptURL) {};
 
 /**
- * @param  {!IArrayLike<number>} feedforward
- * @param  {!IArrayLike<number>} feedback
+ * @param  {!Iterable<number>} feedforward
+ * @param  {!Iterable<number>} feedback
  * @return {!IIRFilterNode}
  */
 BaseAudioContext.prototype.createIIRFilter = function(feedforward, feedback) {};
@@ -425,22 +427,16 @@ function AudioParam() {}
 AudioParam.prototype.value;
 
 /**
- * @type {string}
+ * @type {!AutomationRate}
  * See https://www.w3.org/TR/webaudio/#dom-audioparam-automationrate for valid
  * values.
  */
 AudioParam.prototype.automationRate;
 
-/**
- * @deprecated
- * @type {number}
- */
+/** @type {number} */
 AudioParam.prototype.maxValue;
 
-/**
- * @deprecated
- * @type {number}
- */
+/** @type {number} */
 AudioParam.prototype.minValue;
 
 /** @type {number} */
@@ -498,7 +494,7 @@ AudioParam.prototype.setTargetValueAtTime = function(
     target, startTime, timeConstant) {};
 
 /**
- * @param {!Float32Array} values
+ * @param {!Float32Array|!Iterable<number>} values
  * @param {number} startTime
  * @param {number} duration
  * @return {!AudioParam}
@@ -519,6 +515,13 @@ AudioParam.prototype.cancelScheduledValues = function(startTime) {};
  * @return {!AudioParam}
  */
 AudioParam.prototype.cancelAndHoldAtTime = function(cancelTime) {};
+
+/**
+ * @interface
+ * @extends {ReadonlyMap<string, !AudioParam>}
+ * @see https://webaudio.github.io/web-audio-api/#AudioParamMap
+ */
+function AudioParamMap() {}
 
 /**
  * @constructor
@@ -1807,3 +1810,10 @@ AudioParamDescriptor.prototype.minValue;
 
 /** @type {string} */
 AudioParamDescriptor.prototype.name;
+
+/**
+ * @typedef {string}
+ * @see https://www.w3.org/TR/webaudio/#enumdef-automationrate
+ * Valid values: "a-rate", "k-rate"
+ */
+var AutomationRate;

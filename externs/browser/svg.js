@@ -61,9 +61,12 @@ SVGAnimatedNumberList.prototype.animVal;
 
 /**
  * @constructor
+ * @implements {Iterable<!SVGLength>}
  */
 function SVGLengthList(){}
 
+/** @override */
+SVGLengthList.prototype[Symbol.iterator] = function() {};
 
 /**
  * @type {number}
@@ -655,9 +658,12 @@ SVGMatrix.prototype.skewY = function(angle){};
 
 /**
  * @constructor
+ * @implements {Iterable<!SVGNumber>}
  */
 function SVGNumberList(){}
 
+/** @override */
+SVGNumberList.prototype[Symbol.iterator] = function() {};
 
 /**
  * @type {number}
@@ -1946,9 +1952,12 @@ SVGPaint.prototype.setPaint = function(paintType, uri, rgbColor, iccColor){};
 
 /**
  * @constructor
+ * @implements {Iterable<!DOMPoint>}
  */
 function SVGPointList(){}
 
+/** @override */
+SVGPointList.prototype[Symbol.iterator] = function() {};
 
 /**
  * @type {number}
@@ -2007,9 +2016,12 @@ SVGPointList.prototype.appendItem = function(item){};
 
 /**
  * @constructor
+ * @implements {Iterable<!SVGTransform>}
  */
 function SVGTransformList(){}
 
+/** @override */
+SVGTransformList.prototype[Symbol.iterator] = function() {};
 
 /**
  * @type {number}
@@ -2165,9 +2177,12 @@ function SVGTSpanElement(){}
 
 /**
  * @constructor
+ * @implements {Iterable<string>}
  */
 function SVGStringList(){}
 
+/** @override */
+SVGStringList.prototype[Symbol.iterator] = function() {};
 
 /**
  * @type {number}
@@ -5072,6 +5087,18 @@ SVGMarkerElement.SVG_MARKER_ORIENT_ANGLE;
  * @type {number}
  */
 SVGMarkerElement.prototype.SVG_MARKER_ORIENT_ANGLE;
+
+/**
+ * @const
+ * @type {number}
+ */
+SVGMarkerElement.SVG_MARKER_ORIENT_AUTO_START_REVERSE;
+
+/**
+ * @const
+ * @type {number}
+ */
+SVGMarkerElement.prototype.SVG_MARKER_ORIENT_AUTO_START_REVERSE;
 
 
 /**
@@ -8394,12 +8421,28 @@ SVGRectElement.prototype.getPresentationAttribute = function(opt_name){};
  */
 function SVGAElement(){}
 
+/** @type {string} */
+SVGAElement.prototype.download;
+
+/** @type {string} */
+SVGAElement.prototype.hreflang;
+
+/** @type {string} */
+SVGAElement.prototype.ping;
+
+/** @type {string} */
+SVGAElement.prototype.referrerPolicy;
+
+/** @type {string} */
+SVGAElement.prototype.rel;
 
 /**
  * @type {!SVGAnimatedString}
  */
 SVGAElement.prototype.target;
 
+/** @type {string} */
+SVGAElement.prototype.type;
 
 /**
  * @type {!SVGAnimatedBoolean}
@@ -8551,6 +8594,21 @@ SVGElementInstanceList.prototype.item = function(opt_index){};
  * @extends {Element}
  */
 function SVGElement(){}
+
+/** @type {boolean} */
+SVGElement.prototype.autofocus;
+
+/**
+ * Dataset collection.
+ * @const {!DOMStringMap}
+ */
+SVGElement.prototype.dataset;
+
+/**
+ * Cryptographic nonce used by Content Security Policy.
+ * @type {string}
+ */
+SVGElement.prototype.nonce;
 
 /**
  * @type {string}

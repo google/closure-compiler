@@ -6457,6 +6457,19 @@ Document.prototype.activeElement;
 Document.prototype.hasFocus = function() {};
 
 /**
+ * @record
+ * @struct
+ * @see https://html.spec.whatwg.org/multipage/interaction.html#focusoptions
+ */
+function FocusOptions() {}
+
+/** @type {boolean|undefined} */
+FocusOptions.prototype.preventScroll;
+
+/** @type {boolean|undefined} */
+FocusOptions.prototype.focusVisible;
+
+/**
  * @param {{preventScroll: boolean}=} options
  * @return {undefined}
  * @see https://html.spec.whatwg.org/multipage/interaction.html#dom-focus

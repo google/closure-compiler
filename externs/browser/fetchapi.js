@@ -64,6 +64,13 @@ Headers.prototype.append = function(name, value) {};
  */
 Headers.prototype.delete = function(name) {};
 
+/**
+ * @param {function(string, string, !Headers)} callbackfn
+ * @param {*=} opt_thisArg
+ * @return {undefined}
+ */
+Headers.prototype.forEach = function(callbackfn, opt_thisArg) {};
+
 /** @return {!IteratorIterable<!Array<string>>} */
 Headers.prototype.entries = function() {};
 
@@ -95,11 +102,11 @@ Headers.prototype.keys = function() {};
  */
 Headers.prototype.set = function(name, value) {};
 
-/** @return {!Iterator<string>} */
+/** @return {!IteratorIterable<string>} */
 Headers.prototype.values = function() {};
 
 /**
- * @return {!Iterator<!Array<string>>}
+ * @return {!IteratorIterable<!Array<string>>}
  * @override
  */
 Headers.prototype[Symbol.iterator] = function() {};

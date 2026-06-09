@@ -192,8 +192,12 @@ SourceBuffer.prototype.onupdatestart;
  * @constructor
  * @implements {EventTarget}
  * @implements {IArrayLike<!SourceBuffer>}
+ * @implements {Iterable<!SourceBuffer>}
  */
 function SourceBufferList() {}
+
+/** @override */
+SourceBufferList.prototype[Symbol.iterator] = function() {};
 
 /** @type {number} */
 SourceBufferList.prototype.length;

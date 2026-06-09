@@ -108,7 +108,8 @@ var IntersectionObserverCallback;
  *   delay: (number|undefined),
  *   trackVisibility: (boolean|undefined),
  *   root: (?Document|?Element|undefined),
- *   rootMargin: (string|undefined)
+ *   rootMargin: (string|undefined),
+ *   scrollMargin: (string|undefined)
  * }}
  */
 var IntersectionObserverInit;
@@ -138,6 +139,9 @@ IntersectionObserver.prototype.root;
  * @const {string}
  */
 IntersectionObserver.prototype.rootMargin;
+
+/** @const {string} */
+IntersectionObserver.prototype.scrollMargin;
 
 /**
  * A list of thresholds, sorted in increasing numeric order, where each

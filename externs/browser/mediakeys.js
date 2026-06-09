@@ -48,7 +48,7 @@ var MediaKeySystemConfiguration;
 
 /**
  * @param {string} keySystem
- * @param {!Array<!MediaKeySystemConfiguration>} supportedConfigurations
+ * @param {!Array<!MediaKeySystemConfiguration>|!Iterable<!MediaKeySystemConfiguration>} supportedConfigurations
  * @return {!Promise<!MediaKeySystemAccess>}
  * @see https://w3c.github.io/encrypted-media/#navigator-extension-requestmediakeysystemaccess
  */
@@ -126,6 +126,7 @@ MediaKeys.prototype.getStatusForPolicy = function(policy) {};
 
 /**
  * @interface
+ * @extends {Iterable<!Array<!BufferSource|string>>}
  * @see https://w3c.github.io/encrypted-media/#mediakeystatusmap-interface
  */
 function MediaKeyStatusMap() {}
@@ -177,6 +178,11 @@ MediaKeyStatusMap.prototype.keys = function() {};
  */
 MediaKeyStatusMap.prototype.values = function() {};
 
+
+/**
+ * @return {!Iterator<!Array<!BufferSource|string>>}
+ */
+MediaKeyStatusMap.prototype[Symbol.iterator] = function() {};
 
 
 /**

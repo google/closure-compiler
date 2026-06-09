@@ -79,6 +79,11 @@ DOMStringList.prototype.contains = function(str) {};
 DOMStringList.prototype.item = function(index) {};
 
 /**
+ * @return {!IteratorIterable<string>}
+ */
+DOMStringList.prototype[Symbol.iterator] = function() {};
+
+/**
  * @constructor
  * @implements {IArrayLike<!DOMImplementation>}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMImplementationList
