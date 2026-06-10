@@ -177,15 +177,21 @@ public final class ExtraRequireRemoverTest extends CompilerTestCase {
   }
 
   @Test
-  public void testForwardDeclare_inGoogModule_unusedAliasedImportsAreNotPruned() {
-    testSame(
+  public void testForwardDeclare_inGoogModule_unusedAliasedImportsArePruned() {
+    test(
         """
         goog.module('x.y.z');
-        // keep all imports because because aliased goog.forwardDeclare's will not be pruned
 
         const foo = goog.forwardDeclare('foo');
 
         const bar = goog.forwardDeclare('bar');
+
+        /** @const */ var FooAlias = foo;
+        """,
+        """
+        goog.module('x.y.z');
+
+        const foo = goog.forwardDeclare('foo');
 
         /** @const */ var FooAlias = foo;
         """);

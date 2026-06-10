@@ -99,12 +99,7 @@ public final class ExtraRequireRemover implements CompilerPass, NodeTraversal.Ca
 
   /** Extract namespace from goog.require and goog.requireType nodes */
   private String extractNamespaceIfRequire(Node call) {
-    return extractNamespace(call, GOOG_REQUIRE, GOOG_REQUIRE_TYPE);
-  }
-
-  /** Extract namespace from goog.forwardDeclare nodes */
-  private String extractNamespaceIfForwardDeclare(Node call) {
-    return extractNamespace(call, GOOG_FORWARD_DECLARE);
+    return extractNamespace(call, GOOG_REQUIRE, GOOG_REQUIRE_TYPE, GOOG_FORWARD_DECLARE);
   }
 
   @Override
@@ -255,16 +250,6 @@ public final class ExtraRequireRemover implements CompilerPass, NodeTraversal.Ca
     requires.putIfAbsent(localName, node);
   }
 
-  /** Visits and tracks goog.forwardDeclares */
-  private void visitForwardDeclare(String namespace, Node forwardDeclareCall, Node parent) {
-    if (!forwardDeclareCall.getParent().isName()) {
-      visitGoogRequire(namespace, forwardDeclareCall, parent);
-    } else {
-      // aliased goog.forwardDeclare's will not be pruned
-      return;
-    }
-  }
-
   /**
    * Visits local names and adds the name to `usages`.
    *
@@ -309,12 +294,6 @@ public final class ExtraRequireRemover implements CompilerPass, NodeTraversal.Ca
     String required = extractNamespaceIfRequire(call);
     if (required != null) {
       visitGoogRequire(required, call, parent);
-      return;
-    }
-
-    String declare = extractNamespaceIfForwardDeclare(call);
-    if (declare != null) {
-      visitForwardDeclare(declare, call, parent);
       return;
     }
 
