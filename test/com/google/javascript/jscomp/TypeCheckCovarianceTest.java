@@ -1462,7 +1462,7 @@ public final class TypeCheckCovarianceTest {
             found   : MyArray<number,number>
             required: ReadonlyArray<*>
             missing : []
-            mismatch: [includes,takes]
+            mismatch: [includes,indexOf,takes]
             """)
         .addDiagnostic(
             // this diagnostic is correct - ReadonlyArray<number>.returns() returns a number, while
