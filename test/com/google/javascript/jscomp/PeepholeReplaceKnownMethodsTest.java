@@ -764,13 +764,13 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame(
         """
         /** @constructor */ function A() {};
-        A.prototype.substring = function(begin$jscomp$1, end$jscomp$1) {};
+        A.prototype.substring = function(begin$jscomp$2, end$jscomp$2) {};
         function f(/** !A */ a) { a.substring(0, 1); }
         """);
     foldSame(
         """
         /** @constructor */ function A() {};
-        A.prototype.slice = function(begin$jscomp$1, end$jscomp$1) {};
+        A.prototype.slice = function(begin$jscomp$2, end$jscomp$2) {};
         function f(/** !A */ a) { a.slice(0, 1); }
         """);
 
@@ -778,6 +778,108 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSameStringTyped("a.substring(0, 1)");
     foldSameStringTyped("a.substr(0, 1)");
     foldSameStringTyped("''.substring(i, i + 1)");
+  }
+
+  @Test
+  public void testFoldArrayIsArray() {
+    enableTypeCheck();
+    replaceTypesWithColors();
+    disableCompareJsDoc();
+
+    foldArrayIsArrayTyped("!Array", "true");
+    foldArrayIsArrayTyped("!Array<number>", "true");
+    foldArrayIsArrayTyped("!Array<!Array<string>>", "true");
+    foldArrayIsArrayTyped("!ReadonlyArray<string>", "true");
+    foldArrayIsArrayTyped("!ReadonlyArray<string>|!Array<string|bigint>", "true");
+
+    foldArrayIsArrayTyped("number", "false");
+    foldArrayIsArrayTyped("?number", "false");
+    foldArrayIsArrayTyped("symbol", "false");
+    foldArrayIsArrayTyped("number|bigint|?string", "false");
+
+    foldSameArrayIsArrayTyped("{ length: number }");
+    foldSameArrayIsArrayTyped("{ 1: number, 2: number, length: number }");
+    foldSameArrayIsArrayTyped("{ a: !Array<string> }");
+    foldSameArrayIsArrayTyped("Array<number>");
+    foldSameArrayIsArrayTyped("!Array<number>|number");
+  }
+
+  @Test
+  public void testFoldArrayIsArrayPreservesObservableArguments() {
+    ignoreWarnings(TypeCheck.WRONG_ARGUMENT_COUNT);
+    enableTypeCheck();
+
+    fold(
+        """
+        function f(/** number */ x) {
+          return Array.isArray(x++);
+        }
+        """,
+        """
+        function f(x) {
+          return x++, false;
+        }
+        """);
+    fold(
+        """
+        function f(/** !Array<number> */ a) {
+          return Array.isArray(a = []);
+        }
+        """,
+        """
+        function f(a) {
+          return a = [], true;
+        }
+        """);
+    fold(
+        """
+        /**
+         * @param {!Array<number>} a
+         * @param {number} i
+         * @param {number} j
+         */
+        function f(a, i, j) {
+          return Array.isArray(a, i++, --j);
+        }
+        """,
+        """
+        function f(a, i, j) {
+          return i++, --j, true;
+        }
+        """);
+    fold(
+        """
+        function f(/** !Array<number> */ a, /** !Array<number> */ b) {
+          return Array.isArray(a, ...b);
+        }
+        """,
+        """
+        function f(a, b) {
+          return [...b], true;
+        }
+        """);
+    fold(
+        """
+        function f(/** !Array<number> */ a) {
+          return Array.isArray(a, foo() + bar());
+        }
+        """,
+        """
+        function f(a) {
+          return foo(), bar(), true;
+        }
+        """);
+    fold(
+        """
+        function f(/** !Array<bigint> */ a) {
+          return Array.isArray((a.shift(), a));
+        }
+        """,
+        """
+        function f(a) {
+          return a.shift(), true;
+        }
+        """);
   }
 
   @Test
@@ -867,6 +969,16 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   private void foldSameStringTyped(String js) {
     foldStringTyped(js, js);
+  }
+
+  private void foldSameArrayIsArrayTyped(String type) {
+    foldArrayIsArrayTyped(type, "Array.isArray(a)");
+  }
+
+  private void foldArrayIsArrayTyped(String type, String expected) {
+    test(
+        "function f(/** " + type + " */ a) { return Array.isArray(a); }",
+        "function f(/** " + type + " */ a) { return " + expected + "; }");
   }
 
   private void foldStringTyped(String js, String expected) {

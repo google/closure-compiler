@@ -28,6 +28,8 @@ import static com.google.javascript.jscomp.base.JSCompDoubles.isPositive;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.NodeUtil.ValueType;
 import com.google.javascript.jscomp.base.Tri;
+import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -48,7 +50,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       DiagnosticType.warning("JSC_FRACTIONAL_BITWISE_OPERAND", "Fractional bitwise operand: {0}");
 
   private static final double MAX_FOLD_NUMBER = Math.pow(2, 53);
-
   private final boolean late;
 
   private final boolean shouldUseTypes;
@@ -239,46 +240,77 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     reportChangeToEnclosingScope(replacement);
   }
 
-  /**
-   * Folds 'typeof(foo)' if foo is a literal, e.g. typeof("bar") --> "string" typeof(6) --> "number"
-   */
-  private Node tryFoldTypeof(Node originalTypeofNode) {
-    checkArgument(originalTypeofNode.isTypeOf());
-
-    Node argumentNode = originalTypeofNode.getFirstChild();
-    if (argumentNode == null || !NodeUtil.isLiteralValue(argumentNode, true)) {
-      return originalTypeofNode;
-    }
-
-    String typeNameString = null;
-
-    switch (argumentNode.getToken()) {
-      case FUNCTION -> typeNameString = "function";
-      case STRINGLIT -> typeNameString = "string";
-      case NUMBER -> typeNameString = "number";
-      case TRUE, FALSE -> typeNameString = "boolean";
-      case NULL, OBJECTLIT, ARRAYLIT -> typeNameString = "object";
-      case VOID -> typeNameString = "undefined";
-      case NAME -> {
-        // We assume here that programs don't change the value of the
-        // keyword undefined to something other than the value undefined.
-        if (argumentNode.getString().equals("undefined")) {
-          typeNameString = "undefined";
-        }
+  private @Nullable String tryEvalTypeof(Node typeofExpr) {
+    Node operand = typeofExpr.getOnlyChild();
+    switch (operand.getToken()) {
+      case FUNCTION, CLASS -> {
+        return "function";
       }
       default -> {}
     }
+    return switch (NodeUtil.getKnownValueType(operand)) {
+      case STRING -> "string";
+      case NUMBER -> "number";
+      case BIGINT -> "bigint";
+      case BOOLEAN -> "boolean";
+      case NULL, OBJECT -> "object";
+      case VOID -> "undefined";
+      default -> shouldUseTypes ? tryEvalTypeofFromColor(operand.getColor()) : null;
+    };
+  }
 
-    if (typeNameString != null) {
-      Node newNode = IR.string(typeNameString);
-      reportChangeToEnclosingScope(originalTypeofNode);
-      originalTypeofNode.replaceWith(newNode);
-      markFunctionsDeleted(originalTypeofNode);
-
-      return newNode;
+  private static @Nullable String tryEvalTypeofFromColor(@Nullable Color color) {
+    if (color == null) {
+      return null;
     }
+    if (color.isUnion()) {
+      String unionResult = null;
+      for (Color element : color.getUnionElements()) {
+        String elementResult = tryEvalTypeofFromColor(element);
+        if (elementResult == null) {
+          return null;
+        }
+        if (unionResult == null) {
+          unionResult = elementResult;
+        } else if (!unionResult.equals(elementResult)) {
+          return null;
+        }
+      }
+      return unionResult;
+    } else if (color.isConstructor()) {
+      return "function";
+    }
+    ColorId colorId = color.getId();
+    if (color.isPrimitive()) {
+      if (colorId.equals(StandardColors.STRING.getId())) {
+        return "string";
+      } else if (colorId.equals(StandardColors.NUMBER.getId())) {
+        return "number";
+      } else if (colorId.equals(StandardColors.BIGINT.getId())) {
+        return "bigint";
+      } else if (colorId.equals(StandardColors.BOOLEAN.getId())) {
+        return "boolean";
+      } else if (colorId.equals(StandardColors.SYMBOL.getId())) {
+        return "symbol";
+      } else {
+        return null;
+      }
+    }
+    return (colorId.equals(StandardColors.TOP_OBJECT.getId())
+            || colorId.equals(StandardColors.UNKNOWN.getId()))
+        ? null
+        : "object";
+  }
 
-    return originalTypeofNode;
+  /** Folds 'typeof foo' when the runtime result of {@code foo} is known. */
+  private Node tryFoldTypeof(Node typeOfNode) {
+    checkArgument(typeOfNode.isTypeOf());
+
+    String typeName = tryEvalTypeof(typeOfNode);
+    if (typeName != null) {
+      typeOfNode = replaceExpressionWithEvalResult(typeOfNode, IR.string(typeName));
+    }
+    return typeOfNode;
   }
 
   private Node tryFoldUnaryOperator(Node n) {
@@ -1758,8 +1790,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       parent.addChildrenAfter(child.removeChildren(), spread);
       spread.detach();
       reportChangeToEnclosingScope(parent);
+      return parent;
     }
-    return parent;
+    return spread;
   }
 
   /**
